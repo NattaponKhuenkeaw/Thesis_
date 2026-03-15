@@ -3,10 +3,16 @@
 [RequireComponent(typeof(Animator))]
 public class AnimationHandler : MonoBehaviour
 {
+    // =========================================================
+    // Dependencies
+    // =========================================================
     [Header("Dependencies")]
     public Animator anim;
     public PlayerMovement movement;
 
+    // =========================================================
+    // Animator Hashes
+    // =========================================================
     private readonly int speedHash = Animator.StringToHash("Speed");
     private readonly int verticalVelocityHash = Animator.StringToHash("VerticalVelocity");
     private readonly int isGroundedHash = Animator.StringToHash("IsGrounded");
@@ -18,13 +24,24 @@ public class AnimationHandler : MonoBehaviour
     private readonly int isDieHash = Animator.StringToHash("IsDie");
     private readonly int takeDamageHash = Animator.StringToHash("TakeDamage");
 
+    // =========================================================
+    // Private Runtime Data
+    // =========================================================
     private Rigidbody2D rb;
 
+    // =========================================================
+    // Unity Methods
+    // =========================================================
     void Awake()
     {
-        if (anim == null) anim = GetComponent<Animator>();
-        if (movement == null) movement = GetComponentInParent<PlayerMovement>();
-        if (movement != null) rb = movement.GetComponent<Rigidbody2D>();
+        if (anim == null)
+            anim = GetComponent<Animator>();
+
+        if (movement == null)
+            movement = GetComponentInParent<PlayerMovement>();
+
+        if (movement != null)
+            rb = movement.GetComponent<Rigidbody2D>();
     }
 
     void OnEnable()
@@ -47,13 +64,17 @@ public class AnimationHandler : MonoBehaviour
 
     void Update()
     {
-        if (movement == null || anim == null || rb == null) return;
+        if (movement == null || anim == null || rb == null)
+            return;
 
         anim.SetFloat(speedHash, Mathf.Abs(rb.linearVelocity.x));
         anim.SetFloat(verticalVelocityHash, rb.linearVelocity.y);
         anim.SetBool(isGroundedHash, movement.IsGrounded());
     }
 
+    // =========================================================
+    // Public Animation Triggers
+    // =========================================================
     public void TriggerJump()
     {
         anim.SetTrigger(jumpHash);

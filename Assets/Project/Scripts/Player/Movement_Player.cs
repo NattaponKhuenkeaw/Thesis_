@@ -5,40 +5,61 @@ using System;
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerMovement : MonoBehaviour
 {
+    // =========================================================
+    // Dependencies
+    // =========================================================
     [Header("Dependencies")]
     public SpriteRenderer spriteRenderer;
 
+    // =========================================================
+    // Movement Stats
+    // =========================================================
     [Header("Movement Stats")]
     public float speed = 5f;
     public float jumpForce = 10f;
 
+    // =========================================================
+    // Dash Settings
+    // =========================================================
     [Header("Dash Settings")]
     public float dashSpeed = 20f;
     public float dashDuration = 0.2f;
     public float dashCooldown = 1f;
 
+    // =========================================================
+    // Movement Feel
+    // =========================================================
     [Header("Feel")]
     public float jumpStartupTime = 0.05f;
     public float landingLagTime = 0.1f;
 
+    // =========================================================
+    // Physics Checks
+    // =========================================================
     [Header("Physics Checks")]
     public Transform groundCheck;
     public LayerMask groundLayer;
 
+    // =========================================================
+    // Private Runtime Data
+    // =========================================================
     private Rigidbody2D rb;
     private bool isGrounded;
     private bool wasGrounded;
     private bool wasRunning;
+    private bool canDash = true;
 
-    // States
+    // =========================================================
+    // Public States
+    // =========================================================
     public bool IsDashing { get; private set; }
     public bool IsJumping { get; private set; }
     public bool IsLanding { get; private set; }
     public bool CanMove { get; set; } = true;
 
-    private bool canDash = true;
-
-    // Events 
+    // =========================================================
+    // Events
+    // =========================================================
     public event Action<bool> OnGroundedChanged;
     public event Action OnJumpStart;
     public event Action OnDashStart;
@@ -47,10 +68,15 @@ public class PlayerMovement : MonoBehaviour
     public event Action OnLand;
     public event Action OnRunStart;
 
+    // =========================================================
+    // Unity Methods
+    // =========================================================
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
+
+        if (spriteRenderer == null)
+            spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     void Update()
@@ -58,29 +84,33 @@ public class PlayerMovement : MonoBehaviour
         CheckGround();
     }
 
+    // =========================================================
+    // Public Methods
+    // =========================================================
     public void Move(Vector2 input)
     {
         if (!CanMove || IsDashing || IsLanding || IsJumping)
         {
-            rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
             return;
         }
 
-        // Apply movement
+        // Apply horizontal movement
         rb.linearVelocity = new Vector2(input.x * speed, rb.linearVelocity.y);
 
-        // Flip sprite 
-        if (input.x != 0)
+        // Flip sprite by input direction
+        if (input.x != 0f && spriteRenderer != null)
         {
-            if (spriteRenderer != null) spriteRenderer.flipX = input.x < 0;
+            spriteRenderer.flipX = input.x < 0f;
         }
 
-        // Trigger Run Event
-        bool isRunning = input.x != 0 && Mathf.Abs(rb.linearVelocity.x) > 0.1f && isGrounded;
+        // Run event
+        bool isRunning = input.x != 0f && Mathf.Abs(rb.linearVelocity.x) > 0.1f && isGrounded;
         if (isRunning && !wasRunning)
         {
             OnRunStart?.Invoke();
         }
+
         wasRunning = isRunning;
     }
 
@@ -100,9 +130,18 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    public bool IsGrounded()
+    {
+        return isGrounded;
+    }
+
+    // =========================================================
+    // Private Methods
+    // =========================================================
     private void CheckGround()
     {
-        if (groundCheck == null) return;
+        if (groundCheck == null)
+            return;
 
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer);
 
@@ -116,11 +155,13 @@ public class PlayerMovement : MonoBehaviour
                 StartCoroutine(LandingCoroutine());
             }
         }
+
         wasGrounded = isGrounded;
     }
 
-    public bool IsGrounded() => isGrounded;
-
+    // =========================================================
+    // Coroutines
+    // =========================================================
     private IEnumerator JumpCoroutine()
     {
         IsJumping = true;
@@ -135,7 +176,9 @@ public class PlayerMovement : MonoBehaviour
     private IEnumerator LandingCoroutine()
     {
         IsLanding = true;
+
         yield return new WaitForSeconds(landingLagTime);
+
         IsLanding = false;
         OnLandingEnd?.Invoke();
     }
@@ -145,32 +188,38 @@ public class PlayerMovement : MonoBehaviour
         IsDashing = true;
         canDash = false;
         CanMove = false;
+
         OnDashStart?.Invoke();
 
-        float originalScale = rb.gravityScale;
-        rb.gravityScale = 0;
+        float originalGravityScale = rb.gravityScale;
+        rb.gravityScale = 0f;
 
         float dir = 1f;
-        if (spriteRenderer != null) dir = spriteRenderer.flipX ? -1f : 1f;
+        if (spriteRenderer != null)
+        {
+            dir = spriteRenderer.flipX ? -1f : 1f;
+        }
 
         float elapsed = 0f;
+
         while (elapsed < dashDuration)
         {
             float t = elapsed / dashDuration;
             float decelerationFactor = (1f - t) * (1f - t);
             float currentDashSpeed = dashSpeed * decelerationFactor;
 
-            rb.linearVelocity = new Vector2(dir * currentDashSpeed, 0);
+            rb.linearVelocity = new Vector2(dir * currentDashSpeed, 0f);
 
             elapsed += Time.deltaTime;
             yield return null;
         }
 
-        rb.gravityScale = originalScale;
+        rb.gravityScale = originalGravityScale;
         rb.linearVelocity = Vector2.zero;
 
         IsDashing = false;
         CanMove = true;
+
         OnDashEnd?.Invoke();
 
         yield return new WaitForSeconds(dashCooldown);
