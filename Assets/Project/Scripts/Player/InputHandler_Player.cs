@@ -3,22 +3,15 @@ using UnityEngine.InputSystem;
 
 public class PlayerInputHandler : MonoBehaviour
 {
-    // =========================================================
-    // Dependencies
-    // =========================================================
     [Header("Dependencies")]
     public PlayerMovement movement;
     public BasicAttack basicAttack;
     public TeamLoader teamLoader;
+    public SkillController skillController;
+    public UltimateController ultimateController;
 
-    // =========================================================
-    // Input Cache
-    // =========================================================
     private Vector2 moveInput;
 
-    // =========================================================
-    // Unity Methods
-    // =========================================================
     void Awake()
     {
         if (movement == null)
@@ -29,6 +22,12 @@ public class PlayerInputHandler : MonoBehaviour
 
         if (teamLoader == null)
             teamLoader = FindObjectOfType<TeamLoader>();
+
+        if (skillController == null)
+            skillController = GetComponent<SkillController>();
+
+        if (ultimateController == null)
+            ultimateController = GetComponent<UltimateController>();
     }
 
     void Update()
@@ -38,31 +37,31 @@ public class PlayerInputHandler : MonoBehaviour
             movement.Move(moveInput);
         }
 
-        // =====================================================
-        // Prototype Team Slot Switch Input
-        // =====================================================
         if (teamLoader != null && Keyboard.current != null)
         {
             if (Keyboard.current.digit1Key.wasPressedThisFrame)
-            {
                 teamLoader.SwitchToIndex(0);
-            }
 
             if (Keyboard.current.digit2Key.wasPressedThisFrame)
-            {
                 teamLoader.SwitchToIndex(1);
-            }
 
             if (Keyboard.current.digit3Key.wasPressedThisFrame)
-            {
                 teamLoader.SwitchToIndex(2);
-            }
+        }
+
+        if (Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame)
+        {
+            if (skillController != null)
+                skillController.UseSkill();
+        }
+
+        if (Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame)
+        {
+            if (ultimateController != null)
+                ultimateController.UseUltimate();
         }
     }
 
-    // =========================================================
-    // Input Callbacks
-    // =========================================================
     public void OnMove(InputValue value)
     {
         moveInput = value.Get<Vector2>();
@@ -70,6 +69,10 @@ public class PlayerInputHandler : MonoBehaviour
 
     public void OnJump(InputValue value)
     {
+        if ((skillController != null && skillController.IsCasting()) ||
+            (ultimateController != null && ultimateController.IsCasting()))
+            return;
+
         if (value.isPressed && movement != null)
         {
             movement.Jump();
@@ -78,6 +81,10 @@ public class PlayerInputHandler : MonoBehaviour
 
     public void OnDash(InputValue value)
     {
+        if ((skillController != null && skillController.IsCasting()) ||
+            (ultimateController != null && ultimateController.IsCasting()))
+            return;
+
         if (value.isPressed && movement != null)
         {
             movement.Dash();
@@ -86,9 +93,29 @@ public class PlayerInputHandler : MonoBehaviour
 
     public void OnAttack(InputValue value)
     {
+        if ((skillController != null && skillController.IsCasting()) ||
+            (ultimateController != null && ultimateController.IsCasting()))
+            return;
+
         if (value.isPressed && basicAttack != null)
         {
             basicAttack.OnAttackInput();
+        }
+    }
+
+    public void OnSkill(InputValue value)
+    {
+        if (value.isPressed && skillController != null)
+        {
+            skillController.UseSkill();
+        }
+    }
+
+    public void OnUltimate(InputValue value)
+    {
+        if (value.isPressed && ultimateController != null)
+        {
+            ultimateController.UseUltimate();
         }
     }
 }

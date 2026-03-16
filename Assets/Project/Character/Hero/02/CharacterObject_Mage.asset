@@ -40,7 +40,7 @@ MonoBehaviour:
     displayName: Hero
     description: asdfasdfasf
     portrait: {fileID: 0}
-    animatorController: {fileID: 9100000, guid: 815b33a35641994489dd122eacb4e98d, type: 2}
+    animatorController: {fileID: 9100000, guid: 330ac6c97c796b742b5f416d6d89508d, type: 2}
     attackSfx: {fileID: 0}
     skillSfx: {fileID: 0}
     hurtSfx: {fileID: 0}

@@ -6,12 +6,10 @@ using UnityEngine;
 public enum ElementType
 {
     None,
-    Fire,
-    Water,
-    Wind,
     Earth,
-    Ice,
-    Lightning
+    Water,
+    Fire,
+    Wind
 }
 
 public enum CharacterType
@@ -38,4 +36,22 @@ public class CharacterObject : ScriptableObject
     [Header("Data Blocks")]
     public CharacterStats stats = new CharacterStats();
     public CharacterMetaData metaData = new CharacterMetaData();
+
+    // =========================================================
+    // Skill
+    // =========================================================
+    [Header("Skill")]
+    public SkillData skillData = new SkillData();
+
+    // =========================================================
+    // Ultimate
+    // =========================================================
+    [Header("Ultimate")]
+    public UltimateData ultimateData = new UltimateData();
+
+    // =========================================================
+    // Skill Tree
+    // =========================================================
+    [Header("Skill Tree")]
+    public SkillTreeData skillTreeData = new SkillTreeData();
 }

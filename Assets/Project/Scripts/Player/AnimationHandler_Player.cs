@@ -23,6 +23,8 @@ public class AnimationHandler : MonoBehaviour
     private readonly int comboStepHash = Animator.StringToHash("ComboStep");
     private readonly int isDieHash = Animator.StringToHash("IsDie");
     private readonly int takeDamageHash = Animator.StringToHash("TakeDamage");
+    private readonly int skillHash = Animator.StringToHash("Skill");
+    private readonly int ultimateHash = Animator.StringToHash("Ultimate");
 
     // =========================================================
     // Private Runtime Data
@@ -104,5 +106,15 @@ public class AnimationHandler : MonoBehaviour
     public void ResetCombo()
     {
         anim.SetInteger(comboStepHash, 0);
+    }
+
+    public void TriggerSkill()
+    {
+        anim.SetTrigger(skillHash);
+    }
+
+    public void TriggerUltimate()
+    {
+        anim.SetTrigger(ultimateHash);
     }
 }

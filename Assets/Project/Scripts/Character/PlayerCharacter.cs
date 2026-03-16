@@ -17,6 +17,9 @@ public class PlayerCharacter : MonoBehaviour
     public AnimationHandler animationHandler;
     public CharacterRuntime runtime;
 
+    [Header("Extra Controllers")]
+    public SkillController skillController;
+
     // =========================================================
     // Unity Methods
     // =========================================================
@@ -33,6 +36,9 @@ public class PlayerCharacter : MonoBehaviour
 
         if (runtime == null)
             runtime = GetComponent<CharacterRuntime>();
+
+        if (skillController == null)
+            skillController = GetComponent<SkillController>();
     }
 
     void Start()
@@ -48,10 +54,14 @@ public class PlayerCharacter : MonoBehaviour
         if (characterObject == null)
             return;
 
-        ApplyRuntimeData();
         ApplyMovementData();
         ApplyAttackData();
         ApplyAnimationData();
+
+        if (runtime != null)
+        {
+            runtime.SetCharacter(characterObject);
+        }
     }
 
     public void SetCharacter(CharacterObject newCharacter)
@@ -63,14 +73,6 @@ public class PlayerCharacter : MonoBehaviour
     // =========================================================
     // Private Methods
     // =========================================================
-    private void ApplyRuntimeData()
-    {
-        if (runtime != null && characterObject != null)
-        {
-            runtime.SetCharacter(characterObject);
-        }
-    }
-
     private void ApplyMovementData()
     {
         if (movement == null || characterObject == null)
@@ -109,9 +111,15 @@ public class PlayerCharacter : MonoBehaviour
         if (animationHandler == null || characterObject == null)
             return;
 
-        if (animationHandler.anim != null && characterObject.metaData.animatorController != null)
-        {
-            animationHandler.anim.runtimeAnimatorController = characterObject.metaData.animatorController;
-        }
+        if (animationHandler.anim == null)
+            return;
+
+        if (characterObject.metaData == null)
+            return;
+
+        if (characterObject.metaData.animatorController == null)
+            return;
+
+        animationHandler.anim.runtimeAnimatorController = characterObject.metaData.animatorController;
     }
 }
