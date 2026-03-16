@@ -21,9 +21,6 @@ public class UltimateController : MonoBehaviour
     [SerializeField] private float lastUseTime = -999f;
     [SerializeField] private bool isCasting = false;
 
-    // =========================================================
-    // Unity Methods
-    // =========================================================
     void Awake()
     {
         if (playerCharacter == null)
@@ -36,9 +33,6 @@ public class UltimateController : MonoBehaviour
             animationHandler = GetComponentInChildren<AnimationHandler>();
     }
 
-    // =========================================================
-    // Public Methods
-    // =========================================================
     public void UseUltimate()
     {
         if (isCasting)
@@ -79,9 +73,6 @@ public class UltimateController : MonoBehaviour
         return Mathf.Max(remain, 0f);
     }
 
-    // =========================================================
-    // Coroutines
-    // =========================================================
     private IEnumerator CastUltimateRoutine(UltimateData ultimateData)
     {
         isCasting = true;
@@ -114,8 +105,8 @@ public class UltimateController : MonoBehaviour
             {
                 float finalDamage = GetFinalUltimateDamage(ultimateData.damageMultiplier);
                 float finalDuration = GetFinalUltimateDuration(ultimateData.activeDuration);
-
                 Vector2 direction = GetFacingDirection();
+
                 tornado.Initialize(finalDamage, finalDuration, ultimateData.hitInterval, direction);
             }
         }
@@ -132,21 +123,26 @@ public class UltimateController : MonoBehaviour
         isCasting = false;
     }
 
-    // =========================================================
-    // Private Methods
-    // =========================================================
     private Vector3 GetSpawnPosition(Vector2 offset)
     {
         Transform origin = ultimateSpawnPoint != null ? ultimateSpawnPoint : transform;
 
-        Vector3 spawnPos = origin.position + new Vector3(offset.x, offset.y, 0f);
+        Vector3 finalOffset = new Vector3(offset.x, offset.y, 0f);
 
         if (movement != null && movement.spriteRenderer != null && movement.spriteRenderer.flipX)
-        {
-            spawnPos = origin.position + new Vector3(-offset.x, offset.y, 0f);
-        }
+            finalOffset.x = -Mathf.Abs(finalOffset.x);
+        else
+            finalOffset.x = Mathf.Abs(finalOffset.x);
 
-        return spawnPos;
+        return origin.position + finalOffset;
+    }
+
+    private Vector2 GetFacingDirection()
+    {
+        if (movement != null && movement.spriteRenderer != null && movement.spriteRenderer.flipX)
+            return Vector2.left;
+
+        return Vector2.right;
     }
 
     private float GetFinalUltimateDamage(float baseValue)
@@ -198,13 +194,5 @@ public class UltimateController : MonoBehaviour
     private float GetFinalUltimateCooldown(float baseValue)
     {
         return Mathf.Max(baseValue, 0.1f);
-    }
-
-    private Vector2 GetFacingDirection()
-    {
-        if (movement != null && movement.spriteRenderer != null && movement.spriteRenderer.flipX)
-            return Vector2.left;
-
-        return Vector2.right;
     }
 }

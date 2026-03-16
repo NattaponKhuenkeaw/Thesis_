@@ -139,14 +139,14 @@ public class SkillController : MonoBehaviour
     {
         Transform origin = skillSpawnPoint != null ? skillSpawnPoint : transform;
 
-        Vector3 spawnPos = origin.position + new Vector3(offset.x, offset.y, 0f);
+        Vector3 finalOffset = new Vector3(offset.x, offset.y, 0f);
 
         if (movement != null && movement.spriteRenderer != null && movement.spriteRenderer.flipX)
-        {
-            spawnPos = origin.position + new Vector3(-offset.x, offset.y, 0f);
-        }
+            finalOffset.x = -Mathf.Abs(finalOffset.x);
+        else
+            finalOffset.x = Mathf.Abs(finalOffset.x);
 
-        return spawnPos;
+        return origin.position + finalOffset;
     }
 
     private Vector2 GetFacingDirection()

@@ -38,6 +38,12 @@ public class CharacterObject : ScriptableObject
     public CharacterMetaData metaData = new CharacterMetaData();
 
     // =========================================================
+    // Attack Hitbox
+    // =========================================================
+    [Header("Attack Hitbox")]
+    public AttackHitboxData attackHitboxData = new AttackHitboxData();
+
+    // =========================================================
     // Skill
     // =========================================================
     [Header("Skill")]
