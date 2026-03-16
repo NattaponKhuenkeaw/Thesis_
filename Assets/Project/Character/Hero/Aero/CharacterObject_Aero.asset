@@ -21,7 +21,7 @@ MonoBehaviour:
     defense: 6
     elementalMultiplier: 1
     moveSpeed: 6.5
-    jumpForce: 10.5
+    jumpForce: 7
     dashSpeed: 24
     dashDuration: 0.18
     dashCooldown: 0.8
@@ -44,6 +44,13 @@ MonoBehaviour:
     attackSfx: {fileID: 0}
     skillSfx: {fileID: 0}
     hurtSfx: {fileID: 0}
+  attackHitboxData:
+    attack1Offset: {x: 1.5, y: 0}
+    attack1Size: {x: 2, y: 2.22}
+    attack2Offset: {x: 1.6, y: 0}
+    attack2Size: {x: 2, y: 1}
+    attack3Offset: {x: 1.5, y: 0}
+    attack3Size: {x: 2, y: 2.3}
   skillData:
     skillName: Gust Break
     description: "\u0E1B\u0E25\u0E48\u0E2D\u0E22\u0E41\u0E23\u0E07\u0E25\u0E21\u0E01\u0E23\u0E30\u0E41\u0E17\u0E01\u0E14\u0E49\u0E32\u0E19\u0E2B\u0E19\u0E49\u0E32
@@ -54,19 +61,19 @@ MonoBehaviour:
     damageMultiplier: 1.6
     knockbackForce: 7
     skillPrefab: {fileID: 5307899325778561399, guid: 198f1c6a8d7e7444a9d5b2d9a709c05b, type: 3}
-    spawnOffset: {x: 1, y: 0}
+    spawnOffset: {x: 0, y: 0}
   ultimateData:
     ultimateName: Skyfall Tornado
     description: "\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E17\u0E2D\u0E23\u0E4C\u0E19\u0E32\u0E42\u0E14\u0E14\u0E49\u0E32\u0E19\u0E2B\u0E19\u0E49\u0E32
       \u0E17\u0E33\u0E43\u0E2B\u0E49\u0E28\u0E31\u0E15\u0E23\u0E39\u0E25\u0E2D\u0E22\u0E02\u0E36\u0E49\u0E19\u0E41\u0E25\u0E30\u0E23\u0E31\u0E1A\u0E14\u0E32\u0E40\u0E21\u0E08\u0E15\u0E48\u0E2D\u0E40\u0E19\u0E37\u0E48\u0E2D\u0E07"
     elementType: 4
-    cooldown: 1
+    cooldown: 3
     castDuration: 0.4
     activeDuration: 4
     damageMultiplier: 0.6
     hitInterval: 0.4
     ultimatePrefab: {fileID: 5638362975519396571, guid: dc31dc6f951488e4f8feb39cef0755f8, type: 3}
-    spawnOffset: {x: 0, y: 0}
+    spawnOffset: {x: 3, y: 0}
   skillTreeData:
     nodes:
     - nodeId: AERO_SKILL_01

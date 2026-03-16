@@ -10,6 +10,7 @@ public class BasicAttack : MonoBehaviour
     public AnimationHandler animHandler;
     public PlayerMovement movement;
     public GameObject meleeHitbox;
+    public MeleeHitboxController meleeHitboxController;
 
     // =========================================================
     // Combo Settings
@@ -19,9 +20,9 @@ public class BasicAttack : MonoBehaviour
     [SerializeField] private float comboResetDelay = 0.8f;
     [SerializeField] private float comboQueueOpenTime = 0.2f;
 
-    [SerializeField] private float attack1Duration = 0.45f;
-    [SerializeField] private float attack2Duration = 0.45f;
-    [SerializeField] private float attack3Duration = 0.45f;
+    [SerializeField] private float attack1Duration = 0.3f;
+    [SerializeField] private float attack2Duration = 0.34f;
+    [SerializeField] private float attack3Duration = 0.4f;
 
     // =========================================================
     // Runtime States
@@ -39,6 +40,9 @@ public class BasicAttack : MonoBehaviour
     {
         if (meleeHitbox != null)
             meleeHitbox.SetActive(false);
+
+        if (meleeHitboxController == null && meleeHitbox != null)
+            meleeHitboxController = meleeHitbox.GetComponent<MeleeHitboxController>();
     }
 
     void Update()
@@ -60,6 +64,9 @@ public class BasicAttack : MonoBehaviour
         if (movement != null && !movement.IsGrounded())
             return;
 
+        if (isAttacking && !canQueueNext)
+            return;
+
         lastAttackInputTime = Time.time;
 
         if (!isAttacking)
@@ -68,14 +75,31 @@ public class BasicAttack : MonoBehaviour
             return;
         }
 
-        if (canQueueNext)
-        {
-            comboQueued = true;
-        }
+        comboQueued = true;
+    }
+
+    public void SetAttackData(
+        int newMaxCombo,
+        float newComboResetDelay,
+        float newComboQueueOpenTime,
+        float newAttack1Duration,
+        float newAttack2Duration,
+        float newAttack3Duration
+    )
+    {
+        maxCombo = newMaxCombo;
+        comboResetDelay = newComboResetDelay;
+        comboQueueOpenTime = newComboQueueOpenTime;
+        attack1Duration = newAttack1Duration;
+        attack2Duration = newAttack2Duration;
+        attack3Duration = newAttack3Duration;
     }
 
     public void EnableHitbox()
     {
+        if (meleeHitboxController != null)
+            meleeHitboxController.UpdateHitboxShape();
+
         if (meleeHitbox != null)
             meleeHitbox.SetActive(true);
     }
@@ -104,22 +128,14 @@ public class BasicAttack : MonoBehaviour
             animHandler.ResetCombo();
     }
 
-    public void SetAttackData(
-        int newMaxCombo,
-        float newComboResetDelay,
-        float newComboQueueOpenTime,
-        float newAttack1Duration,
-        float newAttack2Duration,
-        float newAttack3Duration
-    )
+    public bool IsAttacking()
     {
-        maxCombo = newMaxCombo;
-        comboResetDelay = newComboResetDelay;
-        comboQueueOpenTime = newComboQueueOpenTime;
+        return isAttacking;
+    }
 
-        attack1Duration = newAttack1Duration;
-        attack2Duration = newAttack2Duration;
-        attack3Duration = newAttack3Duration;
+    public int GetComboStep()
+    {
+        return comboStep;
     }
 
     // =========================================================
@@ -180,33 +196,7 @@ public class BasicAttack : MonoBehaviour
         }
         else
         {
-            if (comboStep >= maxCombo)
-            {
-                ResetCombo();
-            }
-            else
-            {
-                if (movement != null)
-                    movement.CanMove = true;
-            }
+            ResetCombo();
         }
-    }
-
-    // =========================================================
-    // Debug Helpers
-    // =========================================================
-    public int GetComboStep()
-    {
-        return comboStep;
-    }
-
-    public bool IsAttacking()
-    {
-        return isAttacking;
-    }
-
-    public bool CanQueueNext()
-    {
-        return canQueueNext;
     }
 }
