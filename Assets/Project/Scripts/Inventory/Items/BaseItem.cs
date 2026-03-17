@@ -7,7 +7,7 @@ namespace Project.InventorySystem.Items
         [Header("Basic Information")]
         public string id;
         public string itemName;
-        [TextArea(3, 10)]
+        [TextArea(3, 10)] 
         public string description;
         public Sprite icon;
         

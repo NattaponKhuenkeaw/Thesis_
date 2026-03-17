@@ -78,16 +78,47 @@ namespace Project.ShopSystem
         /// </summary>
         public bool TryPurchase(BaseItem item)
         {
-            // Here you would check if player has enough currency.
-            // Assuming they do for now:
-            
-            if (playerInventory != null)
+            if (playerInventory == null) return false;
+
+            if (playerInventory.CanAfford(item.price))
             {
+                playerInventory.SpendCurrency(item.price);
                 playerInventory.AddItem(item);
                 Debug.Log($"Successfully purchased: {item.itemName}");
                 return true;
             }
+            
+            Debug.Log($"Insufficient currency to buy: {item.itemName}");
             return false;
+        }
+
+        /// <summary>
+        /// Attempts to sell the item.
+        /// </summary>
+        public bool TrySell(BaseItem item)
+        {
+            if (playerInventory == null) return false;
+
+            if (playerInventory.HasItem(item))
+            {
+                // Sell for half price (can be adjusted)
+                int sellValue = item.price / 2;
+                playerInventory.AddCurrency(sellValue);
+                playerInventory.RemoveItem(item);
+                Debug.Log($"Successfully sold: {item.itemName} for ${sellValue}");
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Returns a list of all items currently owned by the player.
+        /// </summary>
+        public List<BaseItem> GetSellableItems()
+        {
+            if (playerInventory == null) return new List<BaseItem>();
+            return playerInventory.ownedItems;
         }
     }
 }

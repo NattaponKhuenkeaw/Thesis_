@@ -11,6 +11,9 @@ namespace Project.ShopSystem
         [Tooltip("Items the player has already purchased or acquired.")]
         public List<BaseItem> ownedItems = new List<BaseItem>();
 
+        [Header("Currency")]
+        public int currency = 1000;
+
         /// <summary>
         /// Checks if the player already owns the specified item.
         /// </summary>
@@ -47,6 +50,21 @@ namespace Project.ShopSystem
         public void ClearInventory()
         {
             ownedItems.Clear();
+        }
+
+        public bool CanAfford(int amount)
+        {
+            return currency >= amount;
+        }
+
+        public void SpendCurrency(int amount)
+        {
+            currency -= amount;
+        }
+
+        public void AddCurrency(int amount)
+        {
+            currency += amount;
         }
     }
 }

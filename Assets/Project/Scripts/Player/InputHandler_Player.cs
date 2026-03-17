@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerInputHandler : MonoBehaviour
@@ -32,6 +32,16 @@ public class PlayerInputHandler : MonoBehaviour
 
     void Update()
     {
+        if (Project.UI.InputLockManager.IsLocked)
+        {
+            // If we're locked, maybe ensure movement stops? 
+            // Better to let PlayerMovement handle stopping if Move(Vector2.zero) isn't called,
+            // or we can explicitly pass zero.
+            if (movement != null)
+                movement.Move(Vector2.zero);
+            return;
+        }
+
         if (movement != null)
         {
             movement.Move(moveInput);
@@ -64,11 +74,18 @@ public class PlayerInputHandler : MonoBehaviour
 
     public void OnMove(InputValue value)
     {
+        if (Project.UI.InputLockManager.IsLocked)
+        {
+            moveInput = Vector2.zero;
+            return;
+        }
         moveInput = value.Get<Vector2>();
     }
 
     public void OnJump(InputValue value)
     {
+        if (Project.UI.InputLockManager.IsLocked) return;
+
         if ((skillController != null && skillController.IsCasting()) ||
             (ultimateController != null && ultimateController.IsCasting()))
             return;
@@ -81,6 +98,8 @@ public class PlayerInputHandler : MonoBehaviour
 
     public void OnDash(InputValue value)
     {
+        if (Project.UI.InputLockManager.IsLocked) return;
+
         if ((skillController != null && skillController.IsCasting()) ||
             (ultimateController != null && ultimateController.IsCasting()))
             return;
@@ -93,6 +112,8 @@ public class PlayerInputHandler : MonoBehaviour
 
     public void OnAttack(InputValue value)
     {
+        if (Project.UI.InputLockManager.IsLocked) return;
+
         if ((skillController != null && skillController.IsCasting()) ||
             (ultimateController != null && ultimateController.IsCasting()))
             return;
@@ -105,6 +126,8 @@ public class PlayerInputHandler : MonoBehaviour
 
     public void OnSkill(InputValue value)
     {
+        if (Project.UI.InputLockManager.IsLocked) return;
+
         if (value.isPressed && skillController != null)
         {
             skillController.UseSkill();
@@ -113,6 +136,8 @@ public class PlayerInputHandler : MonoBehaviour
 
     public void OnUltimate(InputValue value)
     {
+        if (Project.UI.InputLockManager.IsLocked) return;
+
         if (value.isPressed && ultimateController != null)
         {
             ultimateController.UseUltimate();

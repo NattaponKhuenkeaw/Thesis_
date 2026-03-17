@@ -1,12 +1,24 @@
 using UnityEngine;
 using TMPro;
 using System.Collections;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 
 public class InteractableWorldUI : MonoBehaviour
 {
+    public enum InteractionType
+    {
+        None,
+        Shop,
+        Dialogue,
+        SavePoint,
+        Custom
+    }
+
     [Header("Settings")]
-    [SerializeField] private string keyString = "E";
-    [SerializeField] private string descriptionString = "Interact";
+    [SerializeField] private InteractionType interactionType;
+    [SerializeField] private string keyString;
+    [SerializeField] private string descriptionString;
     [Tooltip("Offset relative to the player to ensure it doesn't block the front view.")]
     [SerializeField] private Vector3 offsetFromPlayer = new Vector3(1f, 1.5f, -0.5f); 
     [SerializeField] private float floatingSpeed = 2f;
@@ -59,6 +71,30 @@ public class InteractableWorldUI : MonoBehaviour
             if (mainCamera != null)
             {
                 uiCanvasObject.transform.rotation = Quaternion.LookRotation(uiCanvasObject.transform.position - mainCamera.transform.position);
+            }
+
+            // 4. Handle Input
+            HandlePlayerInput();
+        }
+    }
+
+    private void HandlePlayerInput()
+    {
+        if (Keyboard.current != null && !string.IsNullOrEmpty(keyString))
+        {
+            try
+            {
+                string keyPath = keyString.ToLower();
+                KeyControl control = Keyboard.current[keyPath] as KeyControl;
+                if (control != null && control.wasPressedThisFrame)
+                {
+                    OnInteract();
+                }
+            }
+            catch (System.ArgumentException)
+            {
+                // Ignore invalid key paths quietly or log a warning
+                Debug.LogWarning($"[InteractableWorldUI] Invalid key string: '{keyString}'. Please check the Inspector.");
             }
         }
     }
@@ -137,5 +173,40 @@ public class InteractableWorldUI : MonoBehaviour
 
         uiCanvasObject.transform.localScale = targetScale;
         onComplete?.Invoke();
+    }
+
+    private void OnInteract()
+    {
+        if (Project.UI.InputLockManager.IsLocked) return;
+
+        if (isPlayerInRange && playerTransform != null)
+        {
+            Debug.Log($"Player interacted with {gameObject.name}. Type: {interactionType}");
+            
+            // Interaction logic switch
+            switch (interactionType)
+            {
+                case InteractionType.Shop:
+                    Debug.Log("Triggering Shop UI Opening...");
+                    FindFirstObjectByType<Project.ShopSystem.UI.ShopUI>(FindObjectsInactive.Include)?.OpenShopUI();
+                    break;
+
+                case InteractionType.Dialogue:
+                    Debug.Log("Triggering Dialogue...");
+                    break;
+
+                case InteractionType.SavePoint:
+                    Debug.Log("Triggering Save Point...");
+                    break;
+
+                case InteractionType.Custom:
+                    Debug.Log("Triggering Custom Interaction...");
+                    break;
+                    
+                case InteractionType.None:
+                default:
+                    break;
+            }
+        }
     }
 }

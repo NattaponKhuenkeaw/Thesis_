@@ -306,6 +306,7 @@ MonoBehaviour:
   animHandler: {fileID: 235131411220279108}
   movement: {fileID: 7178074295637238383}
   meleeHitbox: {fileID: 811610257282801352}
+  meleeHitboxController: {fileID: 0}
   maxCombo: 3
   comboResetDelay: 0.8
   comboQueueOpenTime: 0.2
@@ -442,7 +443,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
