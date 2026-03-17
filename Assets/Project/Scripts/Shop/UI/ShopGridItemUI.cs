@@ -14,6 +14,10 @@ namespace Project.ShopSystem.UI
         [SerializeField] private TMP_Text nameText;
         [SerializeField] private Button button;
 
+        [Header("Sold Out Overlay")]
+        [Tooltip("A panel that covers the grid item when the item is already owned (one-time buy).")]
+        [SerializeField] private GameObject soldOutPanel;
+
         [Header("Frame Colors by Type")]
         [SerializeField] private Color consumableColor = new Color(0.55f, 0.55f, 0.55f, 1f);   // Grey
         [SerializeField] private Color artifactColor   = new Color(0.6f, 0.15f, 0.15f, 1f);    // Dark Red
@@ -22,7 +26,10 @@ namespace Project.ShopSystem.UI
         private BaseItem currentItem;
         private Action<BaseItem> onClickCallback;
 
-        public void Init(BaseItem item, Action<BaseItem> onClick)
+        /// <summary>
+        /// Initializes the grid item. Pass isSoldOut = true to show the sold-out overlay and block interaction.
+        /// </summary>
+        public void Init(BaseItem item, Action<BaseItem> onClick, bool isSoldOut = false)
         {
             currentItem = item;
             onClickCallback = onClick;
@@ -44,10 +51,25 @@ namespace Project.ShopSystem.UI
                 frameImage.color = GetItemTypeColor(item);
             }
 
+            // Sold-out overlay for one-time-buy items already owned
+            if (soldOutPanel != null)
+            {
+                soldOutPanel.SetActive(isSoldOut);
+            }
+
             if (button != null)
             {
                 button.onClick.RemoveAllListeners();
-                button.onClick.AddListener(OnClicked);
+
+                if (isSoldOut)
+                {
+                    button.interactable = false;
+                }
+                else
+                {
+                    button.interactable = true;
+                    button.onClick.AddListener(OnClicked);
+                }
             }
         }
 
@@ -70,10 +92,18 @@ namespace Project.ShopSystem.UI
             return 3; // Unknown fallback
         }
 
+        /// <summary>
+        /// Returns true if the item is a one-time-buy type (Artifact or Character).
+        /// Consumable items (Item) can be bought multiple times.
+        /// </summary>
+        public static bool IsOneTimeBuyItem(BaseItem item)
+        {
+            return (item is Artifact || item is CharacterItem);
+        }
+
         private void OnClicked()
         {
             onClickCallback?.Invoke(currentItem);
         }
     }
 }
-

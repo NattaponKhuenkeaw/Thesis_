@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Project.InventorySystem;
 using Project.InventorySystem.Items;
+using Project.ShopSystem.UI;
 
 namespace Project.ShopSystem
 {
@@ -45,10 +46,9 @@ namespace Project.ShopSystem
             {
                 if (excludeOwnedItems && playerInventory != null && playerInventory.HasItem(item))
                 {
-                    // Exclude this item because the player already owns it
-                    // NOTE: Depending on design, maybe only Characters/Artifacts are restricted, while consumables can be bought multiple times.
-                    // This can be adjusted by checking 'item is Consumable' etc.
-                    continue;
+                    // Only exclude one-time-buy items (Artifact/Character) that are already owned
+                    if (ShopGridItemUI.IsOneTimeBuyItem(item))
+                        continue;
                 }
                 
                 availablePool.Add(item);
@@ -79,6 +79,15 @@ namespace Project.ShopSystem
         public bool TryPurchase(BaseItem item)
         {
             if (playerInventory == null) return false;
+
+            // Block one-time-buy items that are already owned
+            if (IsItemSoldOut(item))
+            {
+                Debug.Log($"Already owned (one-time buy): {item.itemName}");
+                if (ShopPopupText.Instance != null)
+                    ShopPopupText.Instance.Show("Already Owned!");
+                return false;
+            }
 
             if (playerInventory.CanAfford(item.price))
             {
@@ -119,6 +128,45 @@ namespace Project.ShopSystem
         {
             if (playerInventory == null) return new List<BaseItem>();
             return playerInventory.ownedItems;
+        }
+
+        /// <summary>
+        /// Returns true if the item is a one-time-buy type AND the player already owns it.
+        /// </summary>
+        public bool IsItemSoldOut(BaseItem item)
+        {
+            if (playerInventory == null) return false;
+            return ShopGridItemUI.IsOneTimeBuyItem(item) && playerInventory.HasItem(item);
+        }
+
+        /// <summary>
+        /// Returns how many of this item the player currently owns.
+        /// For one-time-buy items: 0 or 1. For consumables: count in ownedItems list.
+        /// </summary>
+        public int GetOwnedCount(BaseItem item)
+        {
+            if (playerInventory == null) return 0;
+
+            int count = 0;
+            foreach (var owned in playerInventory.ownedItems)
+            {
+                if (owned == item) count++;
+            }
+            return count;
+        }
+
+        /// <summary>
+        /// Returns the max amount for display.
+        /// One-time-buy items (Artifact/Character): 1
+        /// Consumable items: maxStackSize from Item SO
+        /// </summary>
+        public int GetMaxCount(BaseItem item)
+        {
+            if (item is Item consumable)
+                return consumable.maxStackSize;
+            
+            // Artifact and Character are always 1
+            return 1;
         }
     }
 }

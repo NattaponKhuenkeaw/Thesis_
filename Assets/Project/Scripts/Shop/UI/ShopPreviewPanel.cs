@@ -16,6 +16,7 @@ namespace Project.ShopSystem.UI
         [SerializeField] private TMP_Text priceText;
         [SerializeField] private Button actionButton;
         [SerializeField] private TMP_Text actionButtonText;
+        [SerializeField] private TMP_Text amountText;
 
         [Header("Item Type Label")]
         [SerializeField] private Image itemTypeLabelPanel;
@@ -37,8 +38,9 @@ namespace Project.ShopSystem.UI
 
         /// <summary>
         /// Shows the item preview. canAfford is only relevant on the Buy tab.
+        /// ownedCount/maxCount drive the amount display (e.g. "1/1").
         /// </summary>
-        public void ShowItem(BaseItem item, ShopUI.ShopTab tab, bool canAfford, Action onAction)
+        public void ShowItem(BaseItem item, ShopUI.ShopTab tab, bool canAfford, int ownedCount, int maxCount, Action onAction)
         {
             currentItem = item;
             currentTab = tab;
@@ -70,6 +72,10 @@ namespace Project.ShopSystem.UI
 
             // Item type label
             UpdateItemTypeLabel(item);
+
+            // Amount display (e.g. "0/1" or "3/99")
+            if (amountText != null)
+                amountText.text = $"({ownedCount}/{maxCount})";
 
             // Button color & interactability
             SetButtonColor(tab);

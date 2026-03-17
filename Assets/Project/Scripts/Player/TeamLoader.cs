@@ -112,4 +112,42 @@ public class TeamLoader : MonoBehaviour
         currentIndex = index;
         LoadCurrentCharacter();
     }
+
+    /// <summary>
+    /// Replaces the team array with data pushed from the Team Builder UI.
+    /// </summary>
+    public void SetTeamFromUI(CharacterObject[] newTeam)
+    {
+        if (newTeam == null) return;
+
+        team = newTeam;
+
+        // Reset index if current slot is now empty
+        if (currentIndex >= team.Length || team[currentIndex] == null)
+        {
+            // Find the first non-null slot
+            currentIndex = 0;
+            for (int i = 0; i < team.Length; i++)
+            {
+                if (team[i] != null)
+                {
+                    currentIndex = i;
+                    break;
+                }
+            }
+        }
+
+        LoadCurrentCharacter();
+    }
+
+    /// <summary>
+    /// Clears a specific team slot.
+    /// </summary>
+    public void ClearSlot(int index)
+    {
+        if (team == null || index < 0 || index >= team.Length)
+            return;
+
+        team[index] = null;
+    }
 }

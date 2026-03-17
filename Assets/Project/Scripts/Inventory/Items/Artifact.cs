@@ -7,6 +7,10 @@ namespace Project.InventorySystem.Items
     {
         [Header("Artifact Specifics")]
         public bool isEquippable = true;
-        // Add specific modifier data or logic later based on requirements
+
+        [Header("Stat Bonuses")]
+        public float bonusATK = 0f;
+        public float bonusDEF = 0f;
+        public float bonusHP = 0f;
     }
 }

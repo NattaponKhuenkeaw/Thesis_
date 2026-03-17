@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b5f3184f1b0bc8948a16175d985cfbed, type: 3}
-  m_Name: char_2_Korrath
+  m_Name: char_4_Venti
   m_EditorClassIdentifier: Assembly-CSharp::Project.InventorySystem.Items.CharacterItem
-  id: CHAR-002
-  itemName: Korrath
-  description: A stone giant mercenary with a gentle heart. His iron fists crack
-    mountains, not resolve.
-  icon: {fileID: 0}
-  price: 1200
-  characterPrefab: {fileID: 0}
+  id: CHAR-004
+  itemName: Venti
+  description: An aging knight whose burning resolve never dims. Starter unit, loyal
+    to the player from the start.
+  icon: {fileID: 21300000, guid: db176e694b958d746ab66455222fefcf, type: 3}
+  price: 0
+  characterReference: {fileID: 11400000, guid: 5b7af7da96221064ba66f430dca0a9d6, type: 2}

@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b5f3184f1b0bc8948a16175d985cfbed, type: 3}
-  m_Name: char_3_Nyxelle
+  m_Name: char_2_Catgirl
   m_EditorClassIdentifier: Assembly-CSharp::Project.InventorySystem.Items.CharacterItem
-  id: CHAR-003
-  itemName: Nyxelle
-  description: A twin-blade rogue born from the shadow realm. She seeks redemption
-    for her past raids.
-  icon: {fileID: 0}
-  price: 1800
-  characterPrefab: {fileID: 0}
+  id: CHAR-002
+  itemName: Cat Girl
+  description: A stone giant mercenary with a gentle heart. His iron fists crack
+    mountains, not resolve.
+  icon: {fileID: 21300000, guid: 97574e01fba9d5d46932a799feff7584, type: 3}
+  price: 1200
+  characterReference: {fileID: 11400000, guid: 0655d8735ad210a48a57d13aa2dbb699, type: 2}

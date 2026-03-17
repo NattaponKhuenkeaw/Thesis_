@@ -101,7 +101,9 @@ namespace Project.ShopSystem.UI
                 
                 if (slotUI != null)
                 {
-                    slotUI.Init(item, OnGridItemClicked);
+                    // On Buy tab, check if one-time-buy item is already owned → sold out
+                    bool isSoldOut = (currentTab == ShopTab.Buy) && shopManager.IsItemSoldOut(item);
+                    slotUI.Init(item, OnGridItemClicked, isSoldOut);
                     spawnedSlots.Add(slotUI);
                 }
             }
@@ -117,7 +119,10 @@ namespace Project.ShopSystem.UI
                     ? (shopManager != null && shopManager.playerInventory != null && shopManager.playerInventory.CanAfford(item.price))
                     : true;
 
-                previewPanel.ShowItem(item, currentTab, canAfford, () => ProcessTransaction(item));
+                int ownedCount = (shopManager != null) ? shopManager.GetOwnedCount(item) : 0;
+                int maxCount = (shopManager != null) ? shopManager.GetMaxCount(item) : 1;
+
+                previewPanel.ShowItem(item, currentTab, canAfford, ownedCount, maxCount, () => ProcessTransaction(item));
             }
         }
 
