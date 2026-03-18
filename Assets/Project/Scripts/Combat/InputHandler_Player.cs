@@ -9,6 +9,7 @@ public class PlayerInputHandler : MonoBehaviour
     public TeamLoader teamLoader;
     public SkillController skillController;
     public UltimateController ultimateController;
+    public SkillTreeController skillTreeController;
 
     private Vector2 moveInput;
 
@@ -28,10 +29,27 @@ public class PlayerInputHandler : MonoBehaviour
 
         if (ultimateController == null)
             ultimateController = GetComponent<UltimateController>();
+
+        if (skillTreeController == null)
+            skillTreeController = GetComponent<SkillTreeController>();
     }
 
     void Update()
     {
+        if (Keyboard.current != null && skillTreeController != null)
+        {
+            if (Keyboard.current.digit7Key.wasPressedThisFrame)
+                skillTreeController.UnlockNodeById("AERO_SKILL_01");
+
+            if (Keyboard.current.digit8Key.wasPressedThisFrame)
+                skillTreeController.UnlockNodeById("AERO_SKILL_02");
+
+            if (Keyboard.current.digit9Key.wasPressedThisFrame)
+                skillTreeController.UnlockNodeById("AERO_ULT_01");
+
+            if (Keyboard.current.digit0Key.wasPressedThisFrame)
+                skillTreeController.ResetAllNodes();
+        }
         if (movement != null)
         {
             movement.Move(moveInput);
