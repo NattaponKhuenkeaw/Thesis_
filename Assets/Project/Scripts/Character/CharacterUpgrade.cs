@@ -8,5 +8,5 @@ public class CharacterUpgrade
     // =========================================================
     [Header("Upgrade Info")]
     public int level = 1;
-    public int skillTreePoints = 0;
+    public int skillTreePoints = 3;
 }

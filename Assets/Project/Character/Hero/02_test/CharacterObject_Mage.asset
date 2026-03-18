@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 255da7e6c6e2e0147ab812b7ed3943c0, type: 3}
+  m_Name: CharacterObject_CatGirl
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterObject
+  characterId: Mage
+  characterType: 0
+  elementType: 1
+  stats:
+    maxHP: 100
+    attack: 10
+    defense: 5
+    elementalMultiplier: 1
+    moveSpeed: 50
+    jumpForce: 10
+    dashSpeed: 20
+    dashDuration: 0.2
+    dashCooldown: 1
+    jumpStartupTime: 0.05
+    landingLagTime: 0.1
+    maxCombo: 3
+    comboResetDelay: 0.8
+    comboQueueOpenTime: 0.2
+    attack1Duration: 0.45
+    attack2Duration: 0.45
+    attack3Duration: 0.45
+    attack1Multiplier: 1
+    attack2Multiplier: 1.2
+    attack3Multiplier: 1.5
+  metaData:
+    displayName: CatGirl
+    description: A stone giant mercenary with a gentle heart. His iron fists crack
+      mountains, not resolve.
+    portrait: {fileID: 21300000, guid: 97574e01fba9d5d46932a799feff7584, type: 3}
+    animatorController: {fileID: 9100000, guid: 330ac6c97c796b742b5f416d6d89508d, type: 2}
+    attackSfx: {fileID: 0}
+    skillSfx: {fileID: 0}
+    hurtSfx: {fileID: 0}
+  attackHitboxData:
+    attack1Offset: {x: 0.8, y: 0}
+    attack1Size: {x: 1.2, y: 0.8}
+    attack2Offset: {x: 1, y: 0}
+    attack2Size: {x: 1.4, y: 0.8}
+    attack3Offset: {x: 1.2, y: 0.1}
+    attack3Size: {x: 1.6, y: 1}
+  skillData:
+    skillName: 
+    description: 
+    elementType: 0
+    cooldown: 4
+    castDuration: 0.1
+    damageMultiplier: 1.5
+    knockbackForce: 6
+    skillPrefab: {fileID: 0}
+    spawnOffset: {x: 1, y: 0}
+  ultimateData:
+    ultimateName: 
+    description: 
+    elementType: 0
+    cooldown: 12
+    castDuration: 0.25
+    activeDuration: 4
+    damageMultiplier: 0.5
+    hitInterval: 0.4
+    ultimatePrefab: {fileID: 0}
+    spawnOffset: {x: 1.5, y: 0}
+  skillTreeData:
+    nodes: []

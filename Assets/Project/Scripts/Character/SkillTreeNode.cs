@@ -23,6 +23,13 @@ public class SkillTreeNode
     [TextArea] public string description;
 
     // =========================================================
+    // Requirement
+    // =========================================================
+    [Header("Requirement")]
+    public string requiredNodeId;
+    public int pointCost = 1;
+
+    // =========================================================
     // Unlock State
     // =========================================================
     [Header("Unlock State")]

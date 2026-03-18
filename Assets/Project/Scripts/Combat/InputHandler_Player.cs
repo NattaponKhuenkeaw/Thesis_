@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerInputHandler : MonoBehaviour
@@ -9,6 +9,7 @@ public class PlayerInputHandler : MonoBehaviour
     public TeamLoader teamLoader;
     public SkillController skillController;
     public UltimateController ultimateController;
+    public SkillTreeController skillTreeController;
 
     private Vector2 moveInput;
 
@@ -28,20 +29,27 @@ public class PlayerInputHandler : MonoBehaviour
 
         if (ultimateController == null)
             ultimateController = GetComponent<UltimateController>();
+
+        if (skillTreeController == null)
+            skillTreeController = GetComponent<SkillTreeController>();
     }
 
     void Update()
     {
-        if (Project.UI.InputLockManager.IsLocked)
+        if (Keyboard.current != null && skillTreeController != null)
         {
-            // If we're locked, maybe ensure movement stops? 
-            // Better to let PlayerMovement handle stopping if Move(Vector2.zero) isn't called,
-            // or we can explicitly pass zero.
-            if (movement != null)
-                movement.Move(Vector2.zero);
-            return;
-        }
+            if (Keyboard.current.digit7Key.wasPressedThisFrame)
+                skillTreeController.UnlockNodeById("AERO_SKILL_01");
 
+            if (Keyboard.current.digit8Key.wasPressedThisFrame)
+                skillTreeController.UnlockNodeById("AERO_SKILL_02");
+
+            if (Keyboard.current.digit9Key.wasPressedThisFrame)
+                skillTreeController.UnlockNodeById("AERO_ULT_01");
+
+            if (Keyboard.current.digit0Key.wasPressedThisFrame)
+                skillTreeController.ResetAllNodes();
+        }
         if (movement != null)
         {
             movement.Move(moveInput);
@@ -74,18 +82,11 @@ public class PlayerInputHandler : MonoBehaviour
 
     public void OnMove(InputValue value)
     {
-        if (Project.UI.InputLockManager.IsLocked)
-        {
-            moveInput = Vector2.zero;
-            return;
-        }
         moveInput = value.Get<Vector2>();
     }
 
     public void OnJump(InputValue value)
     {
-        if (Project.UI.InputLockManager.IsLocked) return;
-
         if ((skillController != null && skillController.IsCasting()) ||
             (ultimateController != null && ultimateController.IsCasting()))
             return;
@@ -98,8 +99,6 @@ public class PlayerInputHandler : MonoBehaviour
 
     public void OnDash(InputValue value)
     {
-        if (Project.UI.InputLockManager.IsLocked) return;
-
         if ((skillController != null && skillController.IsCasting()) ||
             (ultimateController != null && ultimateController.IsCasting()))
             return;
@@ -112,8 +111,6 @@ public class PlayerInputHandler : MonoBehaviour
 
     public void OnAttack(InputValue value)
     {
-        if (Project.UI.InputLockManager.IsLocked) return;
-
         if ((skillController != null && skillController.IsCasting()) ||
             (ultimateController != null && ultimateController.IsCasting()))
             return;
@@ -126,8 +123,6 @@ public class PlayerInputHandler : MonoBehaviour
 
     public void OnSkill(InputValue value)
     {
-        if (Project.UI.InputLockManager.IsLocked) return;
-
         if (value.isPressed && skillController != null)
         {
             skillController.UseSkill();
@@ -136,8 +131,6 @@ public class PlayerInputHandler : MonoBehaviour
 
     public void OnUltimate(InputValue value)
     {
-        if (Project.UI.InputLockManager.IsLocked) return;
-
         if (value.isPressed && ultimateController != null)
         {
             ultimateController.UseUltimate();
