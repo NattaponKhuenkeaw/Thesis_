@@ -6,12 +6,13 @@ public class MeleeHitboxDamage : MonoBehaviour
     // Dependencies
     // =========================================================
     [Header("Dependencies")]
-    public PlayerCharacter playerCharacter;
     public PlayerMovement movement;
 
     // =========================================================
     // Runtime
     // =========================================================
+    private float currentDamage = 1f;
+    private float currentKnockback = 4f;
     private int lastHitFrame = -1;
 
     // =========================================================
@@ -19,9 +20,6 @@ public class MeleeHitboxDamage : MonoBehaviour
     // =========================================================
     void Awake()
     {
-        if (playerCharacter == null)
-            playerCharacter = GetComponentInParent<PlayerCharacter>();
-
         if (movement == null)
             movement = GetComponentInParent<PlayerMovement>();
     }
@@ -35,29 +33,20 @@ public class MeleeHitboxDamage : MonoBehaviour
         if (enemy == null)
             return;
 
-        float damage = 1f;
-        float knockback = 4f;
         Vector2 direction = Vector2.right;
-
-        if (playerCharacter != null && playerCharacter.characterObject != null)
-        {
-            CharacterStats stats = playerCharacter.characterObject.stats;
-            BasicAttack basicAttack = GetComponentInParent<BasicAttack>();
-
-            damage = stats.attack;
-
-            if (basicAttack != null)
-            {
-                int comboStep = 1;
-                // ถ้าอยากละเอียดภายหลังค่อยดึง combo step จริงมาใช้
-                damage *= stats.attack1Multiplier;
-            }
-        }
-
         if (movement != null && movement.spriteRenderer != null && movement.spriteRenderer.flipX)
             direction = Vector2.left;
 
-        enemy.TakeHit(damage, direction, knockback);
+        enemy.TakeHit(currentDamage, direction, currentKnockback);
         lastHitFrame = Time.frameCount;
+    }
+
+    // =========================================================
+    // Public Methods
+    // =========================================================
+    public void SetHitData(float damage, float knockback)
+    {
+        currentDamage = damage;
+        currentKnockback = knockback;
     }
 }

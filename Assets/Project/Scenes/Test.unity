@@ -2573,7 +2573,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1576577254}
   m_CullTransparentMesh: 1
---- !u!1001 &1601051258
+--- !u!1001 &1632073635
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -2581,47 +2581,47 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 2100287461037987408, guid: 777fdb59cd8f5314ca4f0afca4b23680, type: 3}
+    - target: {fileID: 2100287461037987408, guid: 6168935250679a04f83da5815b9d456e, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 0.14129925
       objectReference: {fileID: 0}
-    - target: {fileID: 2100287461037987408, guid: 777fdb59cd8f5314ca4f0afca4b23680, type: 3}
+    - target: {fileID: 2100287461037987408, guid: 6168935250679a04f83da5815b9d456e, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -3.11436
+      value: -2.2376163
       objectReference: {fileID: 0}
-    - target: {fileID: 2100287461037987408, guid: 777fdb59cd8f5314ca4f0afca4b23680, type: 3}
+    - target: {fileID: 2100287461037987408, guid: 6168935250679a04f83da5815b9d456e, type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2100287461037987408, guid: 777fdb59cd8f5314ca4f0afca4b23680, type: 3}
+    - target: {fileID: 2100287461037987408, guid: 6168935250679a04f83da5815b9d456e, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 2100287461037987408, guid: 777fdb59cd8f5314ca4f0afca4b23680, type: 3}
+    - target: {fileID: 2100287461037987408, guid: 6168935250679a04f83da5815b9d456e, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2100287461037987408, guid: 777fdb59cd8f5314ca4f0afca4b23680, type: 3}
+    - target: {fileID: 2100287461037987408, guid: 6168935250679a04f83da5815b9d456e, type: 3}
       propertyPath: m_LocalRotation.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2100287461037987408, guid: 777fdb59cd8f5314ca4f0afca4b23680, type: 3}
+    - target: {fileID: 2100287461037987408, guid: 6168935250679a04f83da5815b9d456e, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2100287461037987408, guid: 777fdb59cd8f5314ca4f0afca4b23680, type: 3}
+    - target: {fileID: 2100287461037987408, guid: 6168935250679a04f83da5815b9d456e, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2100287461037987408, guid: 777fdb59cd8f5314ca4f0afca4b23680, type: 3}
+    - target: {fileID: 2100287461037987408, guid: 6168935250679a04f83da5815b9d456e, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2100287461037987408, guid: 777fdb59cd8f5314ca4f0afca4b23680, type: 3}
+    - target: {fileID: 2100287461037987408, guid: 6168935250679a04f83da5815b9d456e, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 7851930121724842516, guid: 777fdb59cd8f5314ca4f0afca4b23680, type: 3}
+    - target: {fileID: 7851930121724842516, guid: 6168935250679a04f83da5815b9d456e, type: 3}
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
@@ -2629,7 +2629,7 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 777fdb59cd8f5314ca4f0afca4b23680, type: 3}
+  m_SourcePrefab: {fileID: 100100000, guid: 6168935250679a04f83da5815b9d456e, type: 3}
 --- !u!1 &1739892439
 GameObject:
   m_ObjectHideFlags: 0
@@ -2662,6 +2662,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d041044e96f5be4e82f65a025da3f56, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InteractableWorldUI
+  interactionType: 0
   keyString: E
   descriptionString: Interact
   offsetFromPlayer: {x: 1, y: 1.5, z: -0.5}
@@ -3219,6 +3220,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: WorldCanvas
       objectReference: {fileID: 0}
+    - target: {fileID: 8174095804869119262, guid: 4059b75ef2995834d85c51b2352b454b, type: 3}
+      propertyPath: m_PresetInfoIsWorld
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3320,4 +3325,4 @@ SceneRoots:
   - {fileID: 1739892444}
   - {fileID: 28592926}
   - {fileID: 2091320175}
-  - {fileID: 1601051258}
+  - {fileID: 1632073635}

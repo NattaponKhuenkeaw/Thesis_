@@ -27,7 +27,20 @@ public class PlayerMovement : MonoBehaviour
     public float dashCooldown = 1f;
 
     // =========================================================
-    // Movement Feel
+    // Fall Settings
+    // =========================================================
+    [Header("Fall Settings")]
+    public float fastFallMultiplier = 2.2f;
+
+    // =========================================================
+    // Layer Settings
+    // =========================================================
+    [Header("Layer Settings")]
+    public string playerLayerName = "Player";
+    public string enemyLayerName = "Enemy";
+
+    // =========================================================
+    // Feel
     // =========================================================
     [Header("Feel")]
     public float jumpStartupTime = 0.05f;
@@ -48,9 +61,15 @@ public class PlayerMovement : MonoBehaviour
     private bool wasGrounded;
     private bool wasRunning;
     private bool canDash = true;
+    private bool isHoldingDown;
+    private float originalGravityScale;
+    private float horizontalInput;
+
+    private int playerLayer;
+    private int enemyLayer;
 
     // =========================================================
-    // Public States
+    // States
     // =========================================================
     public bool IsDashing { get; private set; }
     public bool IsJumping { get; private set; }
@@ -77,11 +96,17 @@ public class PlayerMovement : MonoBehaviour
 
         if (spriteRenderer == null)
             spriteRenderer = GetComponent<SpriteRenderer>();
+
+        originalGravityScale = rb.gravityScale;
+
+        playerLayer = LayerMask.NameToLayer(playerLayerName);
+        enemyLayer = LayerMask.NameToLayer(enemyLayerName);
     }
 
     void Update()
     {
         CheckGround();
+        HandleFastFall();
     }
 
     // =========================================================
@@ -89,22 +114,22 @@ public class PlayerMovement : MonoBehaviour
     // =========================================================
     public void Move(Vector2 input)
     {
+        horizontalInput = input.x;
+
         if (!CanMove || IsDashing || IsLanding || IsJumping)
         {
             rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
             return;
         }
 
-        // Apply horizontal movement
         rb.linearVelocity = new Vector2(input.x * speed, rb.linearVelocity.y);
 
-        // Flip sprite by input direction
-        if (input.x != 0f && spriteRenderer != null)
+        if (input.x != 0f)
         {
-            spriteRenderer.flipX = input.x < 0f;
+            if (spriteRenderer != null)
+                spriteRenderer.flipX = input.x < 0f;
         }
 
-        // Run event
         bool isRunning = input.x != 0f && Mathf.Abs(rb.linearVelocity.x) > 0.1f && isGrounded;
         if (isRunning && !wasRunning)
         {
@@ -122,17 +147,32 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    public void Dash()
+    public void Dash(float inputX)
     {
         if (canDash && !IsDashing && !IsJumping && !IsLanding)
         {
-            StartCoroutine(DashCoroutine());
+            StartCoroutine(DashCoroutine(inputX));
         }
+    }
+
+    public void SetDownInput(bool isPressed)
+    {
+        isHoldingDown = isPressed;
+    }
+
+    public void SetMoveInput(Vector2 input)
+    {
+        horizontalInput = input.x;
     }
 
     public bool IsGrounded()
     {
         return isGrounded;
+    }
+
+    public void ApplyAttackMovement(float distance, float duration)
+    {
+        StartCoroutine(AttackMovementCoroutine(distance, duration));
     }
 
     // =========================================================
@@ -159,6 +199,54 @@ public class PlayerMovement : MonoBehaviour
         wasGrounded = isGrounded;
     }
 
+    private void HandleFastFall()
+    {
+        if (IsDashing)
+            return;
+
+        if (isGrounded)
+        {
+            rb.gravityScale = originalGravityScale;
+            return;
+        }
+
+        if (isHoldingDown)
+        {
+            if (rb.linearVelocity.y > 0f)
+            {
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * 0.3f);
+            }
+
+            rb.gravityScale = originalGravityScale * fastFallMultiplier;
+        }
+        else
+        {
+            rb.gravityScale = originalGravityScale;
+        }
+    }
+
+    private void SetDashEnemyCollision(bool canCollide)
+    {
+        if (playerLayer == -1 || enemyLayer == -1)
+            return;
+
+        Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, !canCollide);
+    }
+
+    private float GetDashDirection(float inputX)
+    {
+        if (inputX > 0.1f)
+            return 1f;
+
+        if (inputX < -0.1f)
+            return -1f;
+
+        if (spriteRenderer != null)
+            return spriteRenderer.flipX ? -1f : 1f;
+
+        return 1f;
+    }
+
     // =========================================================
     // Coroutines
     // =========================================================
@@ -176,32 +264,26 @@ public class PlayerMovement : MonoBehaviour
     private IEnumerator LandingCoroutine()
     {
         IsLanding = true;
-
         yield return new WaitForSeconds(landingLagTime);
-
         IsLanding = false;
         OnLandingEnd?.Invoke();
     }
 
-    private IEnumerator DashCoroutine()
+    private IEnumerator DashCoroutine(float inputX)
     {
         IsDashing = true;
         canDash = false;
         CanMove = false;
-
         OnDashStart?.Invoke();
 
-        float originalGravityScale = rb.gravityScale;
+        float savedGravity = rb.gravityScale;
         rb.gravityScale = 0f;
 
-        float dir = 1f;
-        if (spriteRenderer != null)
-        {
-            dir = spriteRenderer.flipX ? -1f : 1f;
-        }
+        SetDashEnemyCollision(false);
+
+        float dir = GetDashDirection(inputX);
 
         float elapsed = 0f;
-
         while (elapsed < dashDuration)
         {
             float t = elapsed / dashDuration;
@@ -214,15 +296,41 @@ public class PlayerMovement : MonoBehaviour
             yield return null;
         }
 
-        rb.gravityScale = originalGravityScale;
+        rb.gravityScale = savedGravity;
         rb.linearVelocity = Vector2.zero;
+
+        SetDashEnemyCollision(true);
 
         IsDashing = false;
         CanMove = true;
-
         OnDashEnd?.Invoke();
 
         yield return new WaitForSeconds(dashCooldown);
         canDash = true;
+    }
+
+    private IEnumerator AttackMovementCoroutine(float distance, float duration)
+    {
+        if (duration <= 0f)
+            yield break;
+
+        float dir = 1f;
+        if (spriteRenderer != null && spriteRenderer.flipX)
+            dir = -1f;
+
+        float elapsed = 0f;
+        Vector3 startPos = transform.position;
+        Vector3 targetPos = startPos + new Vector3(distance * dir, 0f, 0f);
+
+        while (elapsed < duration)
+        {
+            float t = elapsed / duration;
+            transform.position = Vector3.Lerp(startPos, targetPos, t);
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        transform.position = targetPos;
     }
 }

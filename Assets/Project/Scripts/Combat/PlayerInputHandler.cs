@@ -1,11 +1,11 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerInputHandler : MonoBehaviour
+public class InputHandler_Player : MonoBehaviour
 {
     [Header("Dependencies")]
     public PlayerMovement movement;
-    public BasicAttack basicAttack;
+    public PlayerBasicAttack basicAttack;
     public TeamLoader teamLoader;
     public SkillController skillController;
     public UltimateController ultimateController;
@@ -16,10 +16,10 @@ public class PlayerInputHandler : MonoBehaviour
     void Awake()
     {
         if (movement == null)
-            movement = GetComponent<PlayerMovement>();
+            movement = GetComponent < PlayerMovement>();
 
         if (basicAttack == null)
-            basicAttack = GetComponent<BasicAttack>();
+            basicAttack = GetComponent<PlayerBasicAttack>();
 
         if (teamLoader == null)
             teamLoader = FindObjectOfType<TeamLoader>();
@@ -36,20 +36,6 @@ public class PlayerInputHandler : MonoBehaviour
 
     void Update()
     {
-        if (Keyboard.current != null && skillTreeController != null)
-        {
-            if (Keyboard.current.digit7Key.wasPressedThisFrame)
-                skillTreeController.UnlockNodeById("AERO_SKILL_01");
-
-            if (Keyboard.current.digit8Key.wasPressedThisFrame)
-                skillTreeController.UnlockNodeById("AERO_SKILL_02");
-
-            if (Keyboard.current.digit9Key.wasPressedThisFrame)
-                skillTreeController.UnlockNodeById("AERO_ULT_01");
-
-            if (Keyboard.current.digit0Key.wasPressedThisFrame)
-                skillTreeController.ResetAllNodes();
-        }
         if (movement != null)
         {
             movement.Move(moveInput);
@@ -78,11 +64,32 @@ public class PlayerInputHandler : MonoBehaviour
             if (ultimateController != null)
                 ultimateController.UseUltimate();
         }
+
+        if (Keyboard.current != null && skillTreeController != null)
+        {
+            if (Keyboard.current.digit7Key.wasPressedThisFrame)
+                skillTreeController.UnlockNodeById("AERO_SKILL_01");
+
+            if (Keyboard.current.digit8Key.wasPressedThisFrame)
+                skillTreeController.UnlockNodeById("AERO_SKILL_02");
+
+            if (Keyboard.current.digit9Key.wasPressedThisFrame)
+                skillTreeController.UnlockNodeById("AERO_ULT_01");
+
+            if (Keyboard.current.digit0Key.wasPressedThisFrame)
+                skillTreeController.ResetAllNodes();
+        }
     }
 
     public void OnMove(InputValue value)
     {
         moveInput = value.Get<Vector2>();
+
+        if (movement != null)
+        {
+            movement.SetMoveInput(moveInput);
+            movement.SetDownInput(moveInput.y < -0.5f);
+        }
     }
 
     public void OnJump(InputValue value)
@@ -105,7 +112,7 @@ public class PlayerInputHandler : MonoBehaviour
 
         if (value.isPressed && movement != null)
         {
-            movement.Dash();
+            movement.Dash(moveInput.x);
         }
     }
 
