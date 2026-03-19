@@ -14,6 +14,7 @@ public class PlayerBasicAttack : MonoBehaviour
     public GameObject meleeHitbox;
     public MeleeHitboxController meleeHitboxController;
     public MeleeHitboxDamage meleeHitboxDamage;
+    public PlayerActionController actionController;
 
     // =========================================================
     // Runtime States
@@ -22,6 +23,10 @@ public class PlayerBasicAttack : MonoBehaviour
     private bool isAttacking = false;
     private bool comboQueued = false;
     private bool canQueueNext = false;
+    private bool canMoveAfterAttack = false;
+    private bool canDashCancel = false;
+    private bool canJumpCancel = false;
+
     private float lastAttackInputTime = -999f;
 
     // =========================================================
@@ -29,6 +34,9 @@ public class PlayerBasicAttack : MonoBehaviour
     // =========================================================
     void Awake()
     {
+        if (actionController == null)
+            actionController = GetComponent<PlayerActionController>();
+
         if (playerCharacter == null)
             playerCharacter = GetComponent<PlayerCharacter>();
 
@@ -64,33 +72,42 @@ public class PlayerBasicAttack : MonoBehaviour
     // =========================================================
     // Public Methods
     // =========================================================
-    public void OnAttackInput()
+    public bool OnAttackInput()
     {
+        if (actionController != null && !actionController.CanStartAttack() && !isAttacking)
+            return false;
+
         if (movement != null && !movement.IsGrounded())
-            return;
+            return false;
 
         if (isAttacking && !canQueueNext)
-            return;
+            return false;
 
         lastAttackInputTime = Time.time;
 
         if (!isAttacking)
         {
             StartNextAttack();
-            return;
+            return true;
         }
 
         comboQueued = true;
+        return true;
     }
-
     public void ResetCombo()
     {
+        if (actionController != null)
+            actionController.SetState(PlayerActionState.Normal);
+
         StopAllCoroutines();
 
         comboStep = 0;
         isAttacking = false;
         comboQueued = false;
         canQueueNext = false;
+        canMoveAfterAttack = false;
+        canDashCancel = false;
+        canJumpCancel = false;
 
         DisableHitbox();
 
@@ -111,12 +128,31 @@ public class PlayerBasicAttack : MonoBehaviour
         return comboStep;
     }
 
+    public bool CanMoveAfterAttack()
+    {
+        return canMoveAfterAttack;
+    }
+
+    public bool CanDashCancel()
+    {
+        return canDashCancel;
+    }
+
+    public bool CanJumpCancel()
+    {
+        return canJumpCancel;
+    }
+
     // =========================================================
     // Private Methods
     // =========================================================
     private void StartNextAttack()
     {
         BasicAttackComboData comboData = GetComboData();
+
+        if (actionController != null)
+            actionController.SetState(PlayerActionState.Attack);
+
         if (comboData == null)
             return;
 
@@ -131,6 +167,9 @@ public class PlayerBasicAttack : MonoBehaviour
         isAttacking = true;
         comboQueued = false;
         canQueueNext = false;
+        canMoveAfterAttack = false;
+        canDashCancel = false;
+        canJumpCancel = false;
 
         if (movement != null)
             movement.CanMove = false;
@@ -149,17 +188,15 @@ public class PlayerBasicAttack : MonoBehaviour
             yield break;
         }
 
-        // =====================================================
-        // รัน motion ของท่า
-        // =====================================================
+        StartCoroutine(OpenMoveRecoveryRoutine(stepData.moveRecoveryTime));
+        StartCoroutine(OpenDashCancelRoutine(stepData.dashCancelTime));
+        StartCoroutine(OpenJumpCancelRoutine(stepData.jumpCancelTime));
+
         if (stepData.motionData != null && stepData.motionData.useForwardMotion)
         {
             StartCoroutine(AttackMotionRoutine(stepData.motionData));
         }
 
-        // =====================================================
-        // รัน hit frames
-        // =====================================================
         if (stepData.hitFrames != null)
         {
             for (int i = 0; i < stepData.hitFrames.Length; i++)
@@ -172,9 +209,6 @@ public class PlayerBasicAttack : MonoBehaviour
             }
         }
 
-        // =====================================================
-        // เปิด queue ช่วงท้ายท่า
-        // =====================================================
         float waitBeforeQueue = Mathf.Max(stepData.duration - stepData.comboQueueOpenTime, 0.05f);
         yield return new WaitForSeconds(waitBeforeQueue);
 
@@ -266,5 +300,28 @@ public class PlayerBasicAttack : MonoBehaviour
             return null;
 
         return playerCharacter.characterObject.basicAttackComboData;
+    }
+
+
+    // =========================================================
+    // Routine
+    // =========================================================
+
+    private IEnumerator OpenMoveRecoveryRoutine(float time)
+    {
+        yield return new WaitForSeconds(time);
+        canMoveAfterAttack = true;
+    }
+
+    private IEnumerator OpenDashCancelRoutine(float time)
+    {
+        yield return new WaitForSeconds(time);
+        canDashCancel = true;
+    }
+
+    private IEnumerator OpenJumpCancelRoutine(float time)
+    {
+        yield return new WaitForSeconds(time);
+        canJumpCancel = true;
     }
 }

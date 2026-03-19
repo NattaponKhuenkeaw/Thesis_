@@ -10,11 +10,15 @@ public class InputHandler_Player : MonoBehaviour
     public SkillController skillController;
     public UltimateController ultimateController;
     public SkillTreeController skillTreeController;
+    public PlayerActionController actionController;
 
     private Vector2 moveInput;
 
     void Awake()
     {
+        if (actionController == null)
+            actionController = GetComponent<PlayerActionController>();
+
         if (movement == null)
             movement = GetComponent < PlayerMovement>();
 
@@ -79,6 +83,23 @@ public class InputHandler_Player : MonoBehaviour
             if (Keyboard.current.digit0Key.wasPressedThisFrame)
                 skillTreeController.ResetAllNodes();
         }
+
+        if (actionController != null)
+        {
+            if (actionController.HasBufferedDash() && movement != null && actionController.CanStartDash())
+            {
+                actionController.ConsumeDashBuffer();
+                movement.Dash(moveInput.x);
+            }
+            else if (actionController.HasBufferedAttack() && basicAttack != null)
+            {
+                bool accepted = basicAttack.OnAttackInput();
+                if (accepted)
+                {
+                    actionController.ConsumeAttackBuffer();
+                }
+            }
+        }
     }
 
     public void OnMove(InputValue value)
@@ -94,37 +115,54 @@ public class InputHandler_Player : MonoBehaviour
 
     public void OnJump(InputValue value)
     {
-        if ((skillController != null && skillController.IsCasting()) ||
-            (ultimateController != null && ultimateController.IsCasting()))
+        if (!value.isPressed || movement == null)
             return;
 
-        if (value.isPressed && movement != null)
+        bool canJumpNow = true;
+
+        if (basicAttack != null && basicAttack.IsAttacking() && !basicAttack.CanJumpCancel())
         {
+            canJumpNow = false;
+        }
+
+        if (canJumpNow)
+        {
+            if (actionController != null && actionController.IsState(PlayerActionState.Attack))
+                actionController.SetState(PlayerActionState.Normal);
+
             movement.Jump();
         }
     }
 
     public void OnDash(InputValue value)
     {
-        if ((skillController != null && skillController.IsCasting()) ||
-            (ultimateController != null && ultimateController.IsCasting()))
+        if (!value.isPressed || movement == null || actionController == null)
             return;
 
-        if (value.isPressed && movement != null)
+        bool canDashNow = actionController.CanStartDash();
+
+        if (!canDashNow && basicAttack != null && basicAttack.IsAttacking() && basicAttack.CanDashCancel())
+        {
+            canDashNow = true;
+            actionController.SetState(PlayerActionState.Normal);
+        }
+
+        if (canDashNow)
         {
             movement.Dash(moveInput.x);
+        }
+        else
+        {
+            actionController.BufferDash();
         }
     }
 
     public void OnAttack(InputValue value)
     {
-        if ((skillController != null && skillController.IsCasting()) ||
-            (ultimateController != null && ultimateController.IsCasting()))
-            return;
-
-        if (value.isPressed && basicAttack != null)
+        if(value.isPressed && actionController != null)
         {
-            basicAttack.OnAttackInput();
+            actionController.BufferAttack();
+        
         }
     }
 

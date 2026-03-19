@@ -10,6 +10,7 @@ public class UltimateController : MonoBehaviour
     public PlayerCharacter playerCharacter;
     public PlayerMovement movement;
     public AnimationHandler animationHandler;
+    public PlayerActionController actionController;
 
     [Header("Spawn Point")]
     public Transform ultimateSpawnPoint;
@@ -23,6 +24,9 @@ public class UltimateController : MonoBehaviour
 
     void Awake()
     {
+        if (actionController == null)
+            actionController = GetComponent<PlayerActionController>();
+
         if (playerCharacter == null)
             playerCharacter = GetComponent<PlayerCharacter>();
 
@@ -35,6 +39,9 @@ public class UltimateController : MonoBehaviour
 
     public void UseUltimate()
     {
+        if (actionController != null && actionController.IsBusy())
+            return;
+
         if (isCasting)
             return;
 
@@ -75,6 +82,9 @@ public class UltimateController : MonoBehaviour
 
     private IEnumerator CastUltimateRoutine(UltimateData ultimateData)
     {
+        if (actionController != null)
+            actionController.SetState(PlayerActionState.Ultimate);
+
         isCasting = true;
 
         if (movement != null)
@@ -121,6 +131,9 @@ public class UltimateController : MonoBehaviour
             movement.CanMove = true;
 
         isCasting = false;
+
+        if (actionController != null)
+            actionController.SetState(PlayerActionState.Normal);
     }
 
     private Vector3 GetSpawnPosition(Vector2 offset)

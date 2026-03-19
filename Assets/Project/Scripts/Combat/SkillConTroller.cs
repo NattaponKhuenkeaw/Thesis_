@@ -10,6 +10,7 @@ public class SkillController : MonoBehaviour
     public PlayerCharacter playerCharacter;
     public PlayerMovement movement;
     public AnimationHandler animationHandler;
+    public PlayerActionController actionController;
 
     [Header("Spawn Point")]
     public Transform skillSpawnPoint;
@@ -26,6 +27,9 @@ public class SkillController : MonoBehaviour
     // =========================================================
     void Awake()
     {
+        if (actionController == null)
+            actionController = GetComponent<PlayerActionController>();
+
         if (playerCharacter == null)
             playerCharacter = GetComponent<PlayerCharacter>();
 
@@ -41,6 +45,9 @@ public class SkillController : MonoBehaviour
     // =========================================================
     public void UseSkill()
     {
+        if(actionController != null && actionController.IsBusy())
+    return;
+
         if (isCasting)
             return;
 
@@ -84,6 +91,9 @@ public class SkillController : MonoBehaviour
     // =========================================================
     private IEnumerator CastSkillRoutine(SkillData skillData)
     {
+        if (actionController != null)
+            actionController.SetState(PlayerActionState.Skill);
+
         isCasting = true;
 
         if (movement != null)
@@ -130,6 +140,9 @@ public class SkillController : MonoBehaviour
             movement.CanMove = true;
 
         isCasting = false;
+
+        if (actionController != null)
+            actionController.SetState(PlayerActionState.Normal);
     }
 
     // =========================================================

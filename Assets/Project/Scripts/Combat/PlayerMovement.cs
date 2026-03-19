@@ -10,6 +10,8 @@ public class PlayerMovement : MonoBehaviour
     // =========================================================
     [Header("Dependencies")]
     public SpriteRenderer spriteRenderer;
+    public PlayerActionController actionController;
+    public PlayerBasicAttack basicAttack;
 
     // =========================================================
     // Movement Stats
@@ -92,15 +94,23 @@ public class PlayerMovement : MonoBehaviour
     // =========================================================
     void Awake()
     {
+        if (basicAttack == null)
+            basicAttack = GetComponent<PlayerBasicAttack>();
+
         rb = GetComponent<Rigidbody2D>();
 
         if (spriteRenderer == null)
             spriteRenderer = GetComponent<SpriteRenderer>();
 
+        if (actionController == null)
+            actionController = GetComponent<PlayerActionController>();
+
         originalGravityScale = rb.gravityScale;
 
         playerLayer = LayerMask.NameToLayer(playerLayerName);
         enemyLayer = LayerMask.NameToLayer(enemyLayerName);
+        
+        
     }
 
     void Update()
@@ -116,7 +126,13 @@ public class PlayerMovement : MonoBehaviour
     {
         horizontalInput = input.x;
 
-        if (!CanMove || IsDashing || IsLanding || IsJumping)
+        bool attackLocksMovement = false;
+        if (basicAttack != null && basicAttack.IsAttacking() && !basicAttack.CanMoveAfterAttack())
+        {
+            attackLocksMovement = true;
+        }
+
+        if (!CanMove || IsDashing || IsLanding || IsJumping || attackLocksMovement)
         {
             rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
             return;
@@ -149,6 +165,9 @@ public class PlayerMovement : MonoBehaviour
 
     public void Dash(float inputX)
     {
+        if (actionController != null && !actionController.CanStartDash())
+            return;
+
         if (canDash && !IsDashing && !IsJumping && !IsLanding)
         {
             StartCoroutine(DashCoroutine(inputX));
@@ -271,6 +290,9 @@ public class PlayerMovement : MonoBehaviour
 
     private IEnumerator DashCoroutine(float inputX)
     {
+
+        if (actionController != null)
+            actionController.SetState(PlayerActionState.Dash);
         IsDashing = true;
         canDash = false;
         CanMove = false;
@@ -303,6 +325,8 @@ public class PlayerMovement : MonoBehaviour
 
         IsDashing = false;
         CanMove = true;
+        if (actionController != null)
+            actionController.SetState(PlayerActionState.Normal);
         OnDashEnd?.Invoke();
 
         yield return new WaitForSeconds(dashCooldown);
