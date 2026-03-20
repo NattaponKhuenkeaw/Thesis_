@@ -275,7 +275,9 @@ GameObject:
   - component: {fileID: 729008942358398209}
   - component: {fileID: 1841256473808836703}
   - component: {fileID: 618660006823826657}
-  m_Layer: 0
+  - component: {fileID: 5987486934514239479}
+  - component: {fileID: 4447403868070975171}
+  m_Layer: 8
   m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -397,8 +399,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.12704396, y: 1.08}
-  m_Size: {x: 1.6494036, y: 2.2116292}
+  m_Offset: {x: -0.067192435, y: 1.2296289}
+  m_Size: {x: 0.90125823, y: 1.9123714}
   m_Direction: 0
 --- !u!50 &4588551783427010280
 Rigidbody2D:
@@ -470,13 +472,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
   spriteRenderer: {fileID: 2725759407596473945}
+  actionController: {fileID: 4447403868070975171}
+  basicAttack: {fileID: 1830555458098172541}
   speed: 5
   jumpForce: 5
   dashSpeed: 20
   dashDuration: 0.5
   dashCooldown: 1
+  fastFallMultiplier: 2.2
+  playerLayerName: Player
+  enemyLayerName: Enemy
   jumpStartupTime: 0.05
-  landingLagTime: 0.1
+  landingLagTime: 0.05
   groundCheck: {fileID: 3725453944956529812}
   groundLayer:
     serializedVersion: 2
@@ -496,8 +503,10 @@ MonoBehaviour:
   movement: {fileID: 6805025547357927974}
   basicAttack: {fileID: 1830555458098172541}
   teamLoader: {fileID: 0}
-  skillController: {fileID: 0}
-  ultimateController: {fileID: 0}
+  skillController: {fileID: 1841256473808836703}
+  ultimateController: {fileID: 618660006823826657}
+  skillTreeController: {fileID: 5987486934514239479}
+  actionController: {fileID: 0}
 --- !u!114 &1830555458098172541
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -510,16 +519,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 328593476ce52af45b6a4a340d82f970, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BasicAttack
+  playerCharacter: {fileID: 729008942358398209}
   animHandler: {fileID: 8609391793091375473}
   movement: {fileID: 6805025547357927974}
   meleeHitbox: {fileID: 8897039934667919306}
   meleeHitboxController: {fileID: 4491000568439605687}
-  maxCombo: 3
-  comboResetDelay: 0.8
-  comboQueueOpenTime: 0.2
-  attack1Duration: 0.45
-  attack2Duration: 0.45
-  attack3Duration: 0.45
+  meleeHitboxDamage: {fileID: 177103852840526367}
+  actionController: {fileID: 0}
 --- !u!114 &2290124507632602171
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -567,6 +573,7 @@ MonoBehaviour:
   playerCharacter: {fileID: 729008942358398209}
   movement: {fileID: 6805025547357927974}
   animationHandler: {fileID: 8609391793091375473}
+  actionController: {fileID: 0}
   skillSpawnPoint: {fileID: 8770699854844979728}
   lastUseTime: -999
   isCasting: 0
@@ -585,9 +592,38 @@ MonoBehaviour:
   playerCharacter: {fileID: 729008942358398209}
   movement: {fileID: 6805025547357927974}
   animationHandler: {fileID: 8609391793091375473}
+  actionController: {fileID: 0}
   ultimateSpawnPoint: {fileID: 1796744683709129378}
   lastUseTime: -999
   isCasting: 0
+--- !u!114 &5987486934514239479
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7851930121724842516}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2fab8a9e978ecec4c9e4572b6319438b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SkillTreeController
+  playerCharacter: {fileID: 729008942358398209}
+--- !u!114 &4447403868070975171
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7851930121724842516}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 33911c175e17ecf498d14a4330f74c5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerActionController
+  attackBufferTime: 0.12
+  dashBufferTime: 0.12
+  currentState: 0
 --- !u!1 &8299839864095689376
 GameObject:
   m_ObjectHideFlags: 0
@@ -712,7 +748,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8cd271524a85a4740a977157bc7fe266, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MeleeHitboxDamage
-  playerCharacter: {fileID: 729008942358398209}
   movement: {fileID: 6805025547357927974}
 --- !u!114 &2420028943535296925
 MonoBehaviour:
@@ -726,8 +761,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8cd271524a85a4740a977157bc7fe266, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MeleeHitboxDamage
-  playerCharacter: {fileID: 0}
-  movement: {fileID: 0}
+  movement: {fileID: 6805025547357927974}
 --- !u!114 &4491000568439605687
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -740,9 +774,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d3a5bbe6bbf6e947ab957fe3493eb65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MeleeHitboxController
-  playerCharacter: {fileID: 729008942358398209}
   movement: {fileID: 6805025547357927974}
-  basicAttack: {fileID: 1830555458098172541}
   hitboxCollider: {fileID: 6187666453335372405}
   attackAnchor: {fileID: 8039369968335461904}
 --- !u!1 &9160392634024913972
