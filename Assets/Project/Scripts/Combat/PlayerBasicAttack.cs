@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -242,11 +242,15 @@ public class PlayerBasicAttack : MonoBehaviour
         float finalKnockback = hitFrame.knockbackForce;
         float shakeStrength = Mathf.Max(0f, hitFrame.cameraShakeStrength);
 
+        BasicAttackComboData comboData = GetComboData();
+        int maxCombo = comboData != null ? comboData.GetMaxCombo() : 0;
+        bool isLastStep = (comboStep >= maxCombo);
+
         if (meleeHitboxController != null)
             meleeHitboxController.ApplyHitFrame(hitFrame);
 
         if (meleeHitboxDamage != null)
-            meleeHitboxDamage.SetHitData(finalDamage, finalKnockback, shakeStrength);
+            meleeHitboxDamage.SetHitData(finalDamage, finalKnockback, shakeStrength, isLastStep);
 
         EnableHitbox();
 

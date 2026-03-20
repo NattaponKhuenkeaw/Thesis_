@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+using UnityEngine;
+using System.Collections;
 
 public class MeleeHitboxDamage : MonoBehaviour
 {
@@ -16,8 +17,13 @@ public class MeleeHitboxDamage : MonoBehaviour
     private float currentKnockback = 4f;
     private float currentShakeStrength = 0.25f;
 
+    private bool isLastHit = false;
+    private float hitStopDuration = 0.1f;
+    private float hitStopScale = 0.05f;
+
     private int lastHitFrame = -1;
     private bool hasTriggeredShakeThisActivation = false;
+    private bool hasTriggeredHitStopThisActivation = false;
 
     // =========================================================
     // Unity Methods
@@ -42,6 +48,7 @@ public class MeleeHitboxDamage : MonoBehaviour
     void OnEnable()
     {
         hasTriggeredShakeThisActivation = false;
+        hasTriggeredHitStopThisActivation = false;
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -66,16 +73,25 @@ public class MeleeHitboxDamage : MonoBehaviour
             TriggerCameraShake();
             hasTriggeredShakeThisActivation = true;
         }
+
+        if (isLastHit && !hasTriggeredHitStopThisActivation)
+        {
+            TriggerHitStop();
+            hasTriggeredHitStopThisActivation = true;
+        }
     }
 
     // =========================================================
     // Public Methods
     // =========================================================
-    public void SetHitData(float damage, float knockback, float shakeStrength)
+    public void SetHitData(float damage, float knockback, float shakeStrength, bool lastHit = false, float stopDuration = 0.12f, float stopScale = 0.02f)
     {
         currentDamage = damage;
         currentKnockback = knockback;
         currentShakeStrength = Mathf.Max(0f, shakeStrength);
+        isLastHit = lastHit;
+        hitStopDuration = stopDuration;
+        hitStopScale = stopScale;
     }
 
     // =========================================================
@@ -89,5 +105,19 @@ public class MeleeHitboxDamage : MonoBehaviour
         }
 
         cameraShake.Shake(currentShakeStrength);
+    }
+
+    private void TriggerHitStop()
+    {
+        StopCoroutine(HitStopRoutine());
+        StartCoroutine(HitStopRoutine());
+    }
+
+    private IEnumerator HitStopRoutine()
+    {
+        float originalTimeScale = 1f;
+        Time.timeScale = hitStopScale;
+        yield return new WaitForSecondsRealtime(hitStopDuration);
+        Time.timeScale = originalTimeScale;
     }
 }

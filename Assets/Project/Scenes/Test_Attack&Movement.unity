@@ -787,6 +787,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 177103852840526367, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
+      propertyPath: cameraShake
+      value: 
+      objectReference: {fileID: 607552063}
     - target: {fileID: 2100287461037987408, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: m_LocalPosition.x
       value: 4
@@ -831,6 +835,10 @@ PrefabInstance:
       propertyPath: 'team.Array.data[0]'
       value: 
       objectReference: {fileID: 11400000, guid: 27891cf9824752045b475995e212e47e, type: 2}
+    - target: {fileID: 4447403868070975171, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
+      propertyPath: attackBufferTime
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 4588551783427010280, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: m_ExcludeLayers.m_Bits
       value: 0
