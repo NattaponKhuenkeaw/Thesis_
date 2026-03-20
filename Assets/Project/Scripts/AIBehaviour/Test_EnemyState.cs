@@ -1,10 +1,13 @@
-using System;
 using Unity.Behavior;
 
 [BlackboardEnum]
 public enum State
 {
-	Idle,
-	Chase,
-	Attack
+    Idle,
+    Patrol,
+    Notice,
+    Chase,
+    Attack,
+    TakeDamage,
+    Dead
 }
