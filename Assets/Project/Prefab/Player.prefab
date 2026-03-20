@@ -666,7 +666,6 @@ GameObject:
   - component: {fileID: 3604968357025850310}
   - component: {fileID: 6187666453335372405}
   - component: {fileID: 177103852840526367}
-  - component: {fileID: 2420028943535296925}
   - component: {fileID: 4491000568439605687}
   m_Layer: 0
   m_Name: MeleeHitBox
@@ -737,19 +736,6 @@ BoxCollider2D:
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
 --- !u!114 &177103852840526367
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8897039934667919306}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8cd271524a85a4740a977157bc7fe266, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MeleeHitboxDamage
-  movement: {fileID: 6805025547357927974}
---- !u!114 &2420028943535296925
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

@@ -24,6 +24,14 @@ public class MeleeHitboxDamage : MonoBehaviour
     // =========================================================
     void Awake()
     {
+        MeleeHitboxDamage[] damageComponents = GetComponents<MeleeHitboxDamage>();
+        if (damageComponents.Length > 1 && damageComponents[0] != this)
+        {
+            Debug.LogWarning("MeleeHitboxDamage: duplicate component detected, disabling extra instance", this);
+            enabled = false;
+            return;
+        }
+
         if (movement == null)
             movement = GetComponentInParent<PlayerMovement>();
 
@@ -67,7 +75,7 @@ public class MeleeHitboxDamage : MonoBehaviour
     {
         currentDamage = damage;
         currentKnockback = knockback;
-        currentShakeStrength = shakeStrength;
+        currentShakeStrength = Mathf.Max(0f, shakeStrength);
     }
 
     // =========================================================

@@ -40,6 +40,15 @@ public class TeamLoader : MonoBehaviour
 
     void Start()
     {
+        if (HasCurrentTeamCharacter())
+        {
+            LoadCurrentCharacter();
+            return;
+        }
+
+        if (TryUseAssignedCharacter())
+            return;
+
         LoadCurrentCharacter();
     }
 
@@ -149,5 +158,40 @@ public class TeamLoader : MonoBehaviour
             return;
 
         team[index] = null;
+    }
+
+    private bool TryUseAssignedCharacter()
+    {
+        if (playerCharacter == null || playerCharacter.characterObject == null)
+            return false;
+
+        int assignedIndex = FindCharacterIndex(playerCharacter.characterObject);
+        if (assignedIndex >= 0)
+            currentIndex = assignedIndex;
+
+        playerCharacter.ApplyCharacterData();
+        return true;
+    }
+
+    private bool HasCurrentTeamCharacter()
+    {
+        return team != null
+            && currentIndex >= 0
+            && currentIndex < team.Length
+            && team[currentIndex] != null;
+    }
+
+    private int FindCharacterIndex(CharacterObject character)
+    {
+        if (character == null || team == null)
+            return -1;
+
+        for (int i = 0; i < team.Length; i++)
+        {
+            if (team[i] == character)
+                return i;
+        }
+
+        return -1;
     }
 }

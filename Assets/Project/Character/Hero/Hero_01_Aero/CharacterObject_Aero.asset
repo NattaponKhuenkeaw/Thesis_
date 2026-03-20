@@ -64,7 +64,7 @@ MonoBehaviour:
       hitFrames:
       - hitTime: 0.1
         activeDuration: 0.05
-        cameraShakeStrength: 0
+        cameraShakeStrength: 0.01
         offset: {x: 1.08, y: 0.4}
         size: {x: 2.61, y: 1.55}
         damageMultiplier: 1
@@ -83,7 +83,7 @@ MonoBehaviour:
       hitFrames:
       - hitTime: 0.12
         activeDuration: 0.05
-        cameraShakeStrength: 0
+        cameraShakeStrength: 0.01
         offset: {x: 1, y: 0.45}
         size: {x: 1.2, y: 0.85}
         damageMultiplier: 1.15
@@ -102,21 +102,21 @@ MonoBehaviour:
       hitFrames:
       - hitTime: 0.1
         activeDuration: 0.04
-        cameraShakeStrength: 0
+        cameraShakeStrength: 0.1
         offset: {x: 0.9, y: 0.4}
         size: {x: 1.2, y: 0.85}
         damageMultiplier: 0.45
         knockbackForce: 2
       - hitTime: 0.18
         activeDuration: 0.04
-        cameraShakeStrength: 0
+        cameraShakeStrength: 0.1
         offset: {x: 1, y: 0.45}
         size: {x: 1.1, y: 0.75}
         damageMultiplier: 0.45
         knockbackForce: 2
       - hitTime: 0.3
         activeDuration: 0.06
-        cameraShakeStrength: 0
+        cameraShakeStrength: 0.1
         offset: {x: 1.2, y: 0.5}
         size: {x: 1.4, y: 0.9}
         damageMultiplier: 1.2

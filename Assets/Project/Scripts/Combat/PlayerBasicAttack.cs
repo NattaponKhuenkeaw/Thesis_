@@ -240,12 +240,13 @@ public class PlayerBasicAttack : MonoBehaviour
 
         float finalDamage = GetFinalAttackDamage(hitFrame.damageMultiplier);
         float finalKnockback = hitFrame.knockbackForce;
+        float shakeStrength = Mathf.Max(0f, hitFrame.cameraShakeStrength);
 
         if (meleeHitboxController != null)
             meleeHitboxController.ApplyHitFrame(hitFrame);
 
         if (meleeHitboxDamage != null)
-            meleeHitboxDamage.SetHitData(finalDamage, finalKnockback, hitFrame.cameraShakeStrength);
+            meleeHitboxDamage.SetHitData(finalDamage, finalKnockback, shakeStrength);
 
         EnableHitbox();
 

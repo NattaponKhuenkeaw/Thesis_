@@ -24,6 +24,9 @@ public class CameraShakeController : MonoBehaviour
     // =========================================================
     public void Shake(float strength)
     {
+        if (strength <= 0f)
+            return;
+
         if (impulseSource == null)
         {
             Debug.LogWarning("CameraShakeController: impulseSource is null");
