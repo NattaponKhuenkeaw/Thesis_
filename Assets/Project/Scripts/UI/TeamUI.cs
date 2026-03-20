@@ -6,81 +6,78 @@ using Project.TeamBuilder.UI;
 
 namespace Project.UI
 {
-    /// <summary>
-    /// Controls the TeamPanel UI: smooth slide-in animation from the left,
-    /// and closes when clicking outside the panel (LMB on empty area).
-    /// Handles interference from LayoutGroups by overriding position in LateUpdate.
-    /// </summary>
     [RequireComponent(typeof(CanvasGroup))]
     public class TeamUI : MonoBehaviour
     {
-        // =========================================================
-        // Animation Settings
-        // =========================================================
         [Header("Animation Settings")]
-        [Tooltip("How far left (in pixels) the panel starts before sliding into its final position.")]
         [SerializeField] private float slideOffset = 500f;
-
-        [Tooltip("Duration of the slide-in / slide-out animation in seconds.")]
         [SerializeField] private float animationDuration = 0.4f;
 
-        // =========================================================
-        // References (auto-cached)
-        // =========================================================
+        [Header("Team Builder Integration")]
+        [SerializeField] private TeamBuilderUI teamBuilderUI;
+
         private CanvasGroup canvasGroup;
         private RectTransform rectTransform;
-
         private Coroutine activeAnimation;
         private bool isOpen = false;
 
-        [Header("Team Builder Integration")]
-        [Tooltip("Reference to the TeamBuilderUI controller on this panel.")]
-        [SerializeField] private TeamBuilderUI teamBuilderUI;
+        // FIX: Store the resting anchoredPosition as a stable base
+        private Vector2 baseAnchoredPosition;
 
-        /// <summary>The current animated X offset to apply to the layout-controlled position.</summary>
+        // FIX: Track the animated offset separately — drives LateUpdate
         private float currentXOffset = 0f;
 
-        // =========================================================
-        // Unity Methods
-        // =========================================================
+        // FIX: Flag so LateUpdate always runs while panel is active
+        private bool applyOffset = false;
+
         private void Awake()
         {
             canvasGroup = GetComponent<CanvasGroup>();
             rectTransform = GetComponent<RectTransform>();
 
-            // Start hidden
-            currentXOffset = -slideOffset;
             canvasGroup.alpha = 0f;
             canvasGroup.interactable = false;
             canvasGroup.blocksRaycasts = false;
-            gameObject.SetActive(false);
+        }
+
+        private void OnEnable()
+        {
+            // FIX: Capture base position HERE — after the LayoutGroup (if any)
+            // has had a chance to position the element when it becomes active.
+            // Schedule for end of frame so layout has settled.
+            StartCoroutine(CaptureBasePositionNextFrame());
+        }
+
+        private IEnumerator CaptureBasePositionNextFrame()
+        {
+            yield return null; // wait one frame for layout to settle
+            baseAnchoredPosition = rectTransform.anchoredPosition;
+
+            // Apply initial hidden offset immediately after capturing base
+            currentXOffset = -slideOffset;
+            applyOffset = true;
         }
 
         private void Update()
         {
-            // --- Click-outside-to-close ---
             if (!isOpen) return;
 
             if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
             {
-                // Only close if NOT clicking a UI element (like the panel or buttons)
                 if (!EventSystem.current.IsPointerOverGameObject())
-                {
                     Close();
-                }
             }
         }
 
         private void LateUpdate()
         {
-            // IMPORTANT: If this object is a child of a LayoutGroup, we must override
-            // the anchoredPosition in LateUpdate to ensure our slide animation works.
-            if (currentXOffset != 0)
-            {
-                Vector2 pos = rectTransform.anchoredPosition;
-                pos.x += currentXOffset;
-                rectTransform.anchoredPosition = pos;
-            }
+            // FIX: Always SET position from a stable base, never ADD to live value.
+            // This works with or without a LayoutGroup.
+            if (!applyOffset) return;
+
+            Vector2 pos = baseAnchoredPosition;   // ← stable reference, not live pos
+            pos.x += currentXOffset;              // ← SET offset, not accumulate
+            rectTransform.anchoredPosition = pos;
         }
 
         // =========================================================
@@ -95,12 +92,9 @@ namespace Project.UI
             isOpen = true;
             InputLockManager.Lock();
 
-            if (activeAnimation != null)
-                StopCoroutine(activeAnimation);
-
+            if (activeAnimation != null) StopCoroutine(activeAnimation);
             activeAnimation = StartCoroutine(AnimatePanel(true));
 
-            // Notify TeamBuilderUI to load team and refresh grid
             if (teamBuilderUI != null)
                 teamBuilderUI.OnPanelOpened();
         }
@@ -109,7 +103,6 @@ namespace Project.UI
         {
             if (!isOpen) return;
 
-            // Notify TeamBuilderUI to sync team data before closing
             if (teamBuilderUI != null)
                 teamBuilderUI.OnPanelClosed();
 
@@ -117,9 +110,7 @@ namespace Project.UI
             canvasGroup.interactable = false;
             canvasGroup.blocksRaycasts = false;
 
-            if (activeAnimation != null)
-                StopCoroutine(activeAnimation);
-
+            if (activeAnimation != null) StopCoroutine(activeAnimation);
             activeAnimation = StartCoroutine(AnimatePanel(false));
         }
 
@@ -144,17 +135,14 @@ namespace Project.UI
             {
                 elapsed += Time.unscaledDeltaTime;
                 float t = Mathf.Clamp01(elapsed / animationDuration);
-
-                // Smoother Ease-Out cubic curve
-                float curve = 1f - Mathf.Pow(1f - t, 3f);
+                float curve = 1f - Mathf.Pow(1f - t, 3f); // Ease-out cubic
 
                 currentXOffset = Mathf.Lerp(startOffset, targetOffset, curve);
-                canvasGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, t); // Fade can be linear or same curve
+                canvasGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, t);
 
                 yield return null;
             }
 
-            // Snap to final values
             currentXOffset = targetOffset;
             canvasGroup.alpha = targetAlpha;
 
@@ -165,6 +153,7 @@ namespace Project.UI
             }
             else
             {
+                applyOffset = false;
                 gameObject.SetActive(false);
                 InputLockManager.Unlock();
             }

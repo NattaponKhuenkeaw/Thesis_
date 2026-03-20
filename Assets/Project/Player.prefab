@@ -275,6 +275,7 @@ GameObject:
   - component: {fileID: 729008942358398209}
   - component: {fileID: 1841256473808836703}
   - component: {fileID: 618660006823826657}
+  - component: {fileID: 2097604383076971635}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -498,6 +499,7 @@ MonoBehaviour:
   teamLoader: {fileID: 0}
   skillController: {fileID: 0}
   ultimateController: {fileID: 0}
+  skillTreeController: {fileID: 0}
 --- !u!114 &1830555458098172541
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -588,6 +590,19 @@ MonoBehaviour:
   ultimateSpawnPoint: {fileID: 1796744683709129378}
   lastUseTime: -999
   isCasting: 0
+--- !u!114 &2097604383076971635
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7851930121724842516}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2fab8a9e978ecec4c9e4572b6319438b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SkillTreeController
+  playerCharacter: {fileID: 729008942358398209}
 --- !u!1 &8299839864095689376
 GameObject:
   m_ObjectHideFlags: 0

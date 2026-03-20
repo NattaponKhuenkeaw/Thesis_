@@ -166,9 +166,9 @@ namespace Project.TeamBuilder.UI
             }
 
             // Clear stats
-            if (atkText != null) atkText.text = "ATK: --";
-            if (defText != null) defText.text = "DEF: --";
-            if (hpText != null) hpText.text = "HP: --";
+            if (atkText != null) atkText.text = "";
+            if (defText != null) defText.text = "";
+            if (hpText != null) hpText.text = "";
 
             SetActiveState(false);
         }
@@ -210,9 +210,9 @@ namespace Project.TeamBuilder.UI
         {
             if (currentCharacter == null || currentCharacter.characterReference == null)
             {
-                if (atkText != null) atkText.text = "ATK: --";
-                if (defText != null) defText.text = "DEF: --";
-                if (hpText != null) hpText.text = "HP: --";
+                if (atkText != null) atkText.text = "";
+                if (defText != null) defText.text = "";
+                if (hpText != null) hpText.text = "";
                 return;
             }
 
@@ -232,9 +232,9 @@ namespace Project.TeamBuilder.UI
                 }
             }
 
-            if (atkText != null) atkText.text = $"ATK: {totalATK:F0}";
-            if (defText != null) defText.text = $"DEF: {totalDEF:F0}";
-            if (hpText != null) hpText.text = $"HP: {totalHP:F0}";
+            if (atkText != null) atkText.text = $"{totalATK:F0}";
+            if (defText != null) defText.text = $"{totalDEF:F0}";
+            if (hpText != null) hpText.text = $"{totalHP:F0}";
         }
 
         /// <summary>
