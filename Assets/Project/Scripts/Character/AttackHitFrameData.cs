@@ -9,6 +9,7 @@ public class AttackHitFrameData
     [Header("Timing")]
     public float hitTime = 0.1f;
     public float activeDuration = 0.05f;
+    public float cameraShakeStrength = 0.25f;
 
     // =========================================================
     // Hitbox

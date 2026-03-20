@@ -245,7 +245,7 @@ public class PlayerBasicAttack : MonoBehaviour
             meleeHitboxController.ApplyHitFrame(hitFrame);
 
         if (meleeHitboxDamage != null)
-            meleeHitboxDamage.SetHitData(finalDamage, finalKnockback);
+            meleeHitboxDamage.SetHitData(finalDamage, finalKnockback, hitFrame.cameraShakeStrength);
 
         EnableHitbox();
 
