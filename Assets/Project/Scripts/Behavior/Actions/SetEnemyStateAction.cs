@@ -2,6 +2,8 @@ using System;
 using Unity.Properties;
 using UnityEngine;
 
+using Unity.Behavior;
+
 namespace Unity.Behavior
 {
     /// <summary>
@@ -15,7 +17,7 @@ namespace Unity.Behavior
         story: "Set [EnemyState] to [TargetState]",
         category: "Action/Utility",
         id: "c1b2c3d4e5f60001aabbccddeeff0021")]
-    internal partial class SetEnemyStateAction : Action
+    public partial class SetEnemyStateAction : Unity.Behavior.Action
     {
         [SerializeReference] public BlackboardVariable<State> EnemyState;
         [SerializeReference] public BlackboardVariable<State> TargetState;

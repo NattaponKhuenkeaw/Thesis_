@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class GustBreakSkill : MonoBehaviour
 {
@@ -25,7 +25,7 @@ public class GustBreakSkill : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        EnemyTarget enemy = other.GetComponentInParent<EnemyTarget>();
+        EnemyController enemy = other.GetComponentInParent<EnemyController>();
         if (enemy == null)
             return;
 

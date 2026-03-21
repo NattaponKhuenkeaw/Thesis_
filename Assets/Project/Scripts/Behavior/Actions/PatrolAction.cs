@@ -2,8 +2,7 @@ using System;
 using Unity.Properties;
 using UnityEngine;
 
-namespace Unity.Behavior
-{
+using Unity.Behavior;
     /// <summary>
     /// Perform Action: Patrol — picks a random X position within ±PatrolRadius of the
     /// spawn X (Y stays fixed), walks to it, then returns Success.
@@ -16,7 +15,7 @@ namespace Unity.Behavior
         story: "[Agent] patrols (radius [PatrolRadius])",
         category: "Action/Enemy",
         id: "c1b2c3d4e5f60003aabbccddeeff0023")]
-    internal partial class PatrolAction : Action
+    public partial class PatrolAction : Unity.Behavior.Action
     {
         [SerializeReference] public BlackboardVariable<GameObject> Agent;
         [SerializeReference] public BlackboardVariable<float> PatrolRadius  = new BlackboardVariable<float>(4f);
@@ -85,4 +84,3 @@ namespace Unity.Behavior
             m_Controller = null;
         }
     }
-}

@@ -2,8 +2,7 @@ using System;
 using Unity.Properties;
 using UnityEngine;
 
-namespace Unity.Behavior
-{
+using Unity.Behavior;
     /// <summary>
     /// Perform Action: Evasion — when player is too close, strafe sideways (away from player).
     /// Returns Success after EvadeDuration seconds.
@@ -15,7 +14,7 @@ namespace Unity.Behavior
         story: "[Agent] evades [Target] for [EvadeDuration]s",
         category: "Action/Enemy",
         id: "c1b2c3d4e5f60005aabbccddeeff0025")]
-    internal partial class EvasionAction : Action
+    public partial class EvasionAction : Unity.Behavior.Action
     {
         [SerializeReference] public BlackboardVariable<GameObject> Agent;
         [SerializeReference] public BlackboardVariable<GameObject> Target;
@@ -68,4 +67,3 @@ namespace Unity.Behavior
             m_Controller = null;
         }
     }
-}

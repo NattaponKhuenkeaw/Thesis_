@@ -2,8 +2,7 @@ using System;
 using Unity.Properties;
 using UnityEngine;
 
-namespace Unity.Behavior
-{
+using Unity.Behavior;
     /// <summary>
     /// Perform Action: Attack — triggers the attack animation and enables
     /// the enemy's existing hitbox collider for a brief hit-active window,
@@ -17,7 +16,7 @@ namespace Unity.Behavior
         story: "[Agent] attacks [Target]",
         category: "Action/Enemy",
         id: "c1b2c3d4e5f60006aabbccddeeff0026")]
-    internal partial class AttackAction : Action
+    public partial class AttackAction : Unity.Behavior.Action
     {
         [SerializeReference] public BlackboardVariable<GameObject> Agent;
         [SerializeReference] public BlackboardVariable<GameObject> Target;
@@ -92,4 +91,3 @@ namespace Unity.Behavior
             m_Controller = null;
         }
     }
-}

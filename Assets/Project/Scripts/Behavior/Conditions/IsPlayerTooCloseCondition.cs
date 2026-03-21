@@ -2,8 +2,7 @@ using System;
 using Unity.Properties;
 using UnityEngine;
 
-namespace Unity.Behavior
-{
+using Unity.Behavior;
     [Serializable, GeneratePropertyBag]
     [NodeDescription(
         name: "Is Player Too Close",
@@ -11,7 +10,7 @@ namespace Unity.Behavior
         story: "[Target] is too close to [Agent] (< [TooCloseRange])",
         category: "Flow/Detection",
         id: "a1b2c3d4e5f60003aabbccddeeff0003")]
-    internal partial class IsPlayerTooCloseCondition : Condition
+    public partial class IsPlayerTooCloseCondition : Condition
     {
         [SerializeReference] public BlackboardVariable<GameObject> Agent;
         [SerializeReference] public BlackboardVariable<GameObject> Target;
@@ -23,4 +22,3 @@ namespace Unity.Behavior
             return Vector2.Distance(Agent.Value.transform.position, Target.Value.transform.position) < TooCloseRange.Value;
         }
     }
-}

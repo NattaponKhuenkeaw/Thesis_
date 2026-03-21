@@ -2,6 +2,8 @@ using System;
 using Unity.Properties;
 using UnityEngine;
 
+using Unity.Behavior;
+
 namespace Unity.Behavior
 {
     /// <summary>
@@ -19,7 +21,7 @@ namespace Unity.Behavior
         story: "[Agent] notices with exclamation mark",
         category: "Action/Enemy",
         id: "c1b2c3d4e5f60007aabbccddeeff0027")]
-    internal partial class NoticeExclamationAction : Action
+    public partial class NoticeExclamationAction : Unity.Behavior.Action
     {
         [SerializeReference] public BlackboardVariable<GameObject> Agent;
         [Tooltip("The '!' child GameObject to activate. If null, searched by name 'ExclamationMark'.")]

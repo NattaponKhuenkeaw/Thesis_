@@ -2,8 +2,7 @@ using System;
 using Unity.Properties;
 using UnityEngine;
 
-namespace Unity.Behavior
-{
+using Unity.Behavior;
     [Serializable, GeneratePropertyBag]
     [NodeDescription(
         name: "Is Player In Radius",
@@ -11,7 +10,7 @@ namespace Unity.Behavior
         story: "[Agent] detects [Target] within [DetectRadius]",
         category: "Flow/Condition",
         id: "a1b2c3d4e5f60001aabbccddeeff0001")]
-    internal partial class IsPlayerInRadiusCondition : Condition
+    public partial class IsPlayerInRadiusCondition : Condition
     {
         [SerializeReference] public BlackboardVariable<GameObject> Agent;
         [SerializeReference] public BlackboardVariable<GameObject> Target;
@@ -46,4 +45,3 @@ namespace Unity.Behavior
         }
 #endif
     }
-}

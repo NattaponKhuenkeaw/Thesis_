@@ -2,6 +2,8 @@ using System;
 using Unity.Properties;
 using UnityEngine;
 
+using Unity.Behavior;
+
 namespace Unity.Behavior
 {
     /// <summary>
@@ -19,7 +21,7 @@ namespace Unity.Behavior
         story: "[Agent] reacts to being hit",
         category: "Action/Reaction",
         id: "b1b2c3d4e5f60001aabbccddeeff0011")]
-    internal partial class TakeDamageReactionAction : Action
+    public partial class TakeDamageReactionAction : Unity.Behavior.Action
     {
         [SerializeReference] public BlackboardVariable<GameObject> Agent;
         [Tooltip("Brief pause (seconds) while the take-damage animation plays.")]

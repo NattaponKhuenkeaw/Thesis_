@@ -1,6 +1,5 @@
-using Unity.Behavior;
+using UnityEngine;
 
-[BlackboardEnum]
 public enum State
 {
     Idle,
@@ -9,5 +8,5 @@ public enum State
     Chase,
     Attack,
     TakeDamage,
-    Dead
+    Die
 }

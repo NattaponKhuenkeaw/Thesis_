@@ -2,8 +2,7 @@ using System;
 using Unity.Properties;
 using UnityEngine;
 
-namespace Unity.Behavior
-{
+using Unity.Behavior;
     /// <summary>
     /// Perform Action: Chase — follows the player, maintaining at least AttackRange distance.
     /// Returns Running while chasing, Success when the player is within AttackRange.
@@ -15,7 +14,7 @@ namespace Unity.Behavior
         story: "[Agent] chases [Target] (stop at [AttackRange])",
         category: "Action/Enemy",
         id: "c1b2c3d4e5f60004aabbccddeeff0024")]
-    internal partial class ChaseAction : Action
+    public partial class ChaseAction : Unity.Behavior.Action
     {
         [SerializeReference] public BlackboardVariable<GameObject> Agent;
         [SerializeReference] public BlackboardVariable<GameObject> Target;
@@ -70,4 +69,3 @@ namespace Unity.Behavior
             m_Controller = null;
         }
     }
-}

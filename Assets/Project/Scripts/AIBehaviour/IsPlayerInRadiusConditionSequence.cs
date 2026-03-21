@@ -1,28 +1,22 @@
 using System;
 using Unity.Behavior;
 using UnityEngine;
-using Composite = Unity.Behavior.Composite;
 using Unity.Properties;
 
-[Serializable, GeneratePropertyBag]
-[NodeDescription(name: "IsPlayerInRadiusCondition", story: "Is [Player] In [Radius]", category: "Flow", id: "3683c0b2809a134d46b235e9db32f46c")]
-public partial class IsPlayerInRadiusConditionSequence : Composite
+namespace Unity.Behavior
 {
-    [SerializeReference] public BlackboardVariable<GameObject> Player;
-    [SerializeReference] public BlackboardVariable<float> Radius;
-
-    protected override Status OnStart()
+    [Serializable, GeneratePropertyBag]
+    [NodeDescription(name: "IsPlayerInRadius", story: "[Agent] is in attack range of [Target] radius: [AttackRange]", category: "Conditions", id: "3683c0b2809a134d46b235e9db32f46c")]
+    public partial class IsPlayerInRadiusConditionSequence : Condition
     {
-        return Status.Running;
-    }
+        [SerializeReference] public BlackboardVariable<GameObject> Agent;
+        [SerializeReference] public BlackboardVariable<GameObject> Target;
+        [SerializeReference] public BlackboardVariable<float> AttackRange = new BlackboardVariable<float>(1.5f);
 
-    protected override Status OnUpdate()
-    {
-        return Status.Success;
-    }
-
-    protected override void OnEnd()
-    {
+        public override bool IsTrue()
+        {
+            if (Agent.Value == null || Target.Value == null) return false;
+            return Vector2.Distance(Agent.Value.transform.position, Target.Value.transform.position) <= AttackRange.Value;
+        }
     }
 }
-

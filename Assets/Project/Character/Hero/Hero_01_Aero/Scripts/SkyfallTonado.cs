@@ -15,7 +15,7 @@ public class SkyfallTornado : MonoBehaviour
     // =========================================================
     // Runtime
     // =========================================================
-    private readonly Dictionary<EnemyTarget, float> nextHitTime = new Dictionary<EnemyTarget, float>();
+    private readonly Dictionary<EnemyController, float> nextHitTime = new Dictionary<EnemyController, float>();
     private Vector2 direction = Vector2.right;
 
     // =========================================================
@@ -28,7 +28,7 @@ public class SkyfallTornado : MonoBehaviour
 
     void OnTriggerStay2D(Collider2D other)
     {
-        EnemyTarget enemy = other.GetComponentInParent<EnemyTarget>();
+        EnemyController enemy = other.GetComponentInParent<EnemyController>();
         if (enemy == null)
             return;
 
@@ -46,7 +46,7 @@ public class SkyfallTornado : MonoBehaviour
 
     void OnTriggerExit2D(Collider2D other)
     {
-        EnemyTarget enemy = other.GetComponentInParent<EnemyTarget>();
+        EnemyController enemy = other.GetComponentInParent<EnemyController>();
         if (enemy == null)
             return;
 

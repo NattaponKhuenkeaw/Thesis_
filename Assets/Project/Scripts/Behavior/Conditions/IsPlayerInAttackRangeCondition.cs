@@ -2,8 +2,7 @@ using System;
 using Unity.Properties;
 using UnityEngine;
 
-namespace Unity.Behavior
-{
+using Unity.Behavior;
     [Serializable, GeneratePropertyBag]
     [NodeDescription(
         name: "Is Player In Attack Range",
@@ -11,7 +10,7 @@ namespace Unity.Behavior
         story: "[Agent] is in attack range of [Target] ([AttackRange])",
         category: "Flow",
         id: "a1b2c3d4e5f60002aabbccddeeff0002")]
-    internal partial class IsPlayerInAttackRangeCondition : Condition
+    public partial class IsPlayerInAttackRangeCondition : Condition
     {
         [SerializeReference] public BlackboardVariable<GameObject> Agent;
         [SerializeReference] public BlackboardVariable<GameObject> Target;
@@ -23,4 +22,3 @@ namespace Unity.Behavior
             return Vector2.Distance(Agent.Value.transform.position, Target.Value.transform.position) <= AttackRange.Value;
         }
     }
-}

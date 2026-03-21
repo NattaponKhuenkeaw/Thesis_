@@ -2,6 +2,8 @@ using System;
 using Unity.Properties;
 using UnityEngine;
 
+using Unity.Behavior;
+
 namespace Unity.Behavior
 {
     /// <summary>
@@ -15,7 +17,7 @@ namespace Unity.Behavior
         story: "[Agent] dies",
         category: "Action/Reaction",
         id: "b1b2c3d4e5f60002aabbccddeeff0012")]
-    internal partial class DieAction : Action
+    public partial class DieAction : Unity.Behavior.Action
     {
         [SerializeReference] public BlackboardVariable<GameObject> Agent;
         [Tooltip("How long to wait for the death animation before deactivating.")]
