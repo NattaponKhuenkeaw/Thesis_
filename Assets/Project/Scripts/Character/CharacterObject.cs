@@ -50,6 +50,12 @@ public class CharacterObject : ScriptableObject
     public BasicAttackComboData basicAttackComboData = new BasicAttackComboData();
 
     // =========================================================
+    // Neutral Air Combo Data
+    // =========================================================
+    [Header("Neutral Air Combo Data")]
+    public BasicAttackComboData neutralAirComboData = new BasicAttackComboData();
+
+    // =========================================================
     // Skill
     // =========================================================
     [Header("Skill")]

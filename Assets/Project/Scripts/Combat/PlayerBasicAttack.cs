@@ -4,6 +4,12 @@ using System.Collections.Generic;
 
 public class PlayerBasicAttack : MonoBehaviour
 {
+    private enum AttackComboMode
+    {
+        Ground,
+        AirNeutral
+    }
+
     // =========================================================
     // Dependencies
     // =========================================================
@@ -28,6 +34,8 @@ public class PlayerBasicAttack : MonoBehaviour
     private bool canJumpCancel = false;
 
     private float lastAttackInputTime = -999f;
+    private AttackComboMode currentComboMode = AttackComboMode.Ground;
+    private AttackComboMode queuedComboMode = AttackComboMode.Ground;
 
     // =========================================================
     // Unity Methods
@@ -77,7 +85,9 @@ public class PlayerBasicAttack : MonoBehaviour
         if (actionController != null && !actionController.CanStartAttack() && !isAttacking)
             return false;
 
-        if (movement != null && !movement.IsGrounded())
+        AttackComboMode requestedMode = GetRequestedComboMode();
+        BasicAttackComboData comboData = GetComboData(requestedMode);
+        if (comboData == null || comboData.GetMaxCombo() <= 0)
             return false;
 
         if (isAttacking && !canQueueNext)
@@ -87,11 +97,15 @@ public class PlayerBasicAttack : MonoBehaviour
 
         if (!isAttacking)
         {
-            StartNextAttack();
+            if (comboStep > 0 && requestedMode != currentComboMode)
+                ResetCombo();
+
+            StartNextAttack(requestedMode);
             return true;
         }
 
         comboQueued = true;
+        queuedComboMode = requestedMode;
         return true;
     }
     public void ResetCombo()
@@ -108,11 +122,16 @@ public class PlayerBasicAttack : MonoBehaviour
         canMoveAfterAttack = false;
         canDashCancel = false;
         canJumpCancel = false;
+        currentComboMode = AttackComboMode.Ground;
+        queuedComboMode = AttackComboMode.Ground;
 
         DisableHitbox();
 
         if (movement != null)
+        {
+            movement.CancelAttackMotion();
             movement.CanMove = true;
+        }
 
         if (animHandler != null)
             animHandler.ResetCombo();
@@ -146,9 +165,9 @@ public class PlayerBasicAttack : MonoBehaviour
     // =========================================================
     // Private Methods
     // =========================================================
-    private void StartNextAttack()
+    private void StartNextAttack(AttackComboMode attackMode)
     {
-        BasicAttackComboData comboData = GetComboData();
+        BasicAttackComboData comboData = GetComboData(attackMode);
 
         if (actionController != null)
             actionController.SetState(PlayerActionState.Attack);
@@ -160,12 +179,14 @@ public class PlayerBasicAttack : MonoBehaviour
         if (maxCombo <= 0)
             return;
 
-        if (comboStep >= maxCombo)
+        if (comboStep >= maxCombo || attackMode != currentComboMode)
             comboStep = 0;
 
+        currentComboMode = attackMode;
         comboStep++;
         isAttacking = true;
         comboQueued = false;
+        queuedComboMode = attackMode;
         canQueueNext = false;
         canMoveAfterAttack = false;
         canDashCancel = false;
@@ -221,12 +242,17 @@ public class PlayerBasicAttack : MonoBehaviour
         canQueueNext = false;
         isAttacking = false;
 
-        BasicAttackComboData comboData = GetComboData();
+        BasicAttackComboData comboData = GetComboData(currentComboMode);
         int maxCombo = comboData != null ? comboData.GetMaxCombo() : 0;
 
-        if (comboQueued && comboStep < maxCombo)
+        if (comboQueued && queuedComboMode == currentComboMode && comboStep < maxCombo)
         {
-            StartNextAttack();
+            StartNextAttack(currentComboMode);
+        }
+        else if (comboQueued && queuedComboMode != currentComboMode)
+        {
+            comboStep = 0;
+            StartNextAttack(queuedComboMode);
         }
         else
         {
@@ -292,17 +318,28 @@ public class PlayerBasicAttack : MonoBehaviour
 
     private float GetComboResetDelay()
     {
-        BasicAttackComboData comboData = GetComboData();
+        BasicAttackComboData comboData = GetComboData(currentComboMode);
         if (comboData == null)
             return 0.8f;
 
         return comboData.comboResetDelay;
     }
 
-    private BasicAttackComboData GetComboData()
+    private AttackComboMode GetRequestedComboMode()
+    {
+        if (movement != null && !movement.IsGrounded())
+            return AttackComboMode.AirNeutral;
+
+        return AttackComboMode.Ground;
+    }
+
+    private BasicAttackComboData GetComboData(AttackComboMode comboMode)
     {
         if (playerCharacter == null || playerCharacter.characterObject == null)
             return null;
+
+        if (comboMode == AttackComboMode.AirNeutral)
+            return playerCharacter.characterObject.neutralAirComboData;
 
         return playerCharacter.characterObject.basicAttackComboData;
     }

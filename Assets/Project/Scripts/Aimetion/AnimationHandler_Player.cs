@@ -99,6 +99,8 @@ public class AnimationHandler : MonoBehaviour
 
     public void TriggerAttackCombo(int comboStep)
     {
+        // Prioritize attack animation over lingering jump transitions when attacking mid-air.
+        anim.ResetTrigger(jumpHash);
         anim.SetInteger(comboStepHash, comboStep);
         anim.SetTrigger(attackHash);
     }

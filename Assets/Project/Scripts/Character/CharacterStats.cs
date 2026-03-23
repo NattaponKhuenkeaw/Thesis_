@@ -18,52 +18,27 @@ public class CharacterStats
     [Header("Movement")]
     public float moveSpeed = 5f;
     public float jumpForce = 10f;
+    public int maxJumpCount = 1;
+    public int maxAirDashCount = 1;
+    public float groundAcceleration = 80f;
+    public float groundDeceleration = 90f;
+    public float airAcceleration = 55f;
+    public float airDeceleration = 40f;
+    public float airSpeedMultiplier = 1f;
 
     public float dashSpeed = 20f;
     public float dashDuration = 0.2f;
     public float dashCooldown = 1f;
 
+    [Header("Jump Feel")]
+    public float coyoteTime = 0.08f;
+    public float jumpBufferTime = 0.12f;
+    public float jumpCutMultiplier = 0.5f;
+    public float fallGravityMultiplier = 1.6f;
+    public float lowJumpGravityMultiplier = 2.2f;
+    public float maxFallSpeed = 18f;
+
     public float jumpStartupTime = 0.05f;
     public float landingLagTime = 0.1f;
 
-    // =========================================================
-    // Basic Attack
-    // =========================================================
-    [Header("Basic Attack")]
-    public int maxCombo = 3;
-    public float comboResetDelay = 0.8f;
-    public float comboQueueOpenTime = 0.2f;
-
-    public float attack1Duration = 0.45f;
-    public float attack2Duration = 0.45f;
-    public float attack3Duration = 0.45f;
-
-    public float attack1Multiplier = 1f;
-    public float attack2Multiplier = 1.2f;
-    public float attack3Multiplier = 1.5f;
-
-    // =========================================================
-    // Public Methods
-    // =========================================================
-    public float GetAttackDuration(int comboStep)
-    {
-        switch (comboStep)
-        {
-            case 1: return attack1Duration;
-            case 2: return attack2Duration;
-            case 3: return attack3Duration;
-            default: return attack1Duration;
-        }
-    }
-
-    public float GetAttackMultiplier(int comboStep)
-    {
-        switch (comboStep)
-        {
-            case 1: return attack1Multiplier;
-            case 2: return attack2Multiplier;
-            case 3: return attack3Multiplier;
-            default: return attack1Multiplier;
-        }
-    }
 }

@@ -81,9 +81,22 @@ public class PlayerCharacter : MonoBehaviour
 
         movement.speed = stats.moveSpeed;
         movement.jumpForce = stats.jumpForce;
+        movement.maxJumpCount = stats.maxJumpCount;
+        movement.maxAirDashCount = stats.maxAirDashCount;
+        movement.groundAcceleration = stats.groundAcceleration;
+        movement.groundDeceleration = stats.groundDeceleration;
+        movement.airAcceleration = stats.airAcceleration;
+        movement.airDeceleration = stats.airDeceleration;
+        movement.airSpeedMultiplier = stats.airSpeedMultiplier;
         movement.dashSpeed = stats.dashSpeed;
         movement.dashDuration = stats.dashDuration;
         movement.dashCooldown = stats.dashCooldown;
+        movement.coyoteTime = stats.coyoteTime;
+        movement.jumpBufferTime = stats.jumpBufferTime;
+        movement.jumpCutMultiplier = stats.jumpCutMultiplier;
+        movement.fallGravityMultiplier = stats.fallGravityMultiplier;
+        movement.lowJumpGravityMultiplier = stats.lowJumpGravityMultiplier;
+        movement.maxFallSpeed = stats.maxFallSpeed;
         movement.jumpStartupTime = stats.jumpStartupTime;
         movement.landingLagTime = stats.landingLagTime;
     }
