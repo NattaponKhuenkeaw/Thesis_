@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 public class InputHandler_Player : MonoBehaviour
 {
     [Header("Dependencies")]
+    public PlayerInput playerInput;
     public PlayerMovement movement;
     public PlayerBasicAttack basicAttack;
     public TeamLoader teamLoader;
@@ -16,6 +17,9 @@ public class InputHandler_Player : MonoBehaviour
 
     void Awake()
     {
+        if (playerInput == null)
+            playerInput = GetComponent<PlayerInput>();
+
         if (actionController == null)
             actionController = GetComponent<PlayerActionController>();
 
@@ -43,6 +47,13 @@ public class InputHandler_Player : MonoBehaviour
         if (movement != null)
         {
             movement.Move(moveInput);
+
+            if (playerInput != null && playerInput.actions != null)
+            {
+                InputAction jumpAction = playerInput.actions["Jump"];
+                if (jumpAction != null)
+                    movement.SetJumpHeld(jumpAction.IsPressed());
+            }
         }
 
         if (teamLoader != null && Keyboard.current != null)
@@ -115,7 +126,12 @@ public class InputHandler_Player : MonoBehaviour
 
     public void OnJump(InputValue value)
     {
-        if (!value.isPressed || movement == null)
+        if (movement == null)
+            return;
+
+        bool isPressed = value.isPressed;
+
+        if (!isPressed)
             return;
 
         bool canJumpNow = true;

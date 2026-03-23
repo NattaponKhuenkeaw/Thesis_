@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System;
 
@@ -19,6 +19,13 @@ public class PlayerMovement : MonoBehaviour
     [Header("Movement Stats")]
     public float speed = 5f;
     public float jumpForce = 10f;
+    public int maxJumpCount = 1;
+    public int maxAirDashCount = 1;
+    public float groundAcceleration = 80f;
+    public float groundDeceleration = 90f;
+    public float airAcceleration = 55f;
+    public float airDeceleration = 40f;
+    public float airSpeedMultiplier = 1f;
 
     // =========================================================
     // Dash Settings
@@ -33,6 +40,17 @@ public class PlayerMovement : MonoBehaviour
     // =========================================================
     [Header("Fall Settings")]
     public float fastFallMultiplier = 2.2f;
+
+    // =========================================================
+    // Jump Feel
+    // =========================================================
+    [Header("Jump Feel")]
+    public float coyoteTime = 0.08f;
+    public float jumpBufferTime = 0.12f;
+    public float jumpCutMultiplier = 0.5f;
+    public float fallGravityMultiplier = 1.6f;
+    public float lowJumpGravityMultiplier = 2.2f;
+    public float maxFallSpeed = 18f;
 
     // =========================================================
     // Layer Settings
@@ -64,8 +82,16 @@ public class PlayerMovement : MonoBehaviour
     private bool wasRunning;
     private bool canDash = true;
     private bool isHoldingDown;
+    private bool jumpHeld;
     private float originalGravityScale;
     private float horizontalInput;
+    private float jumpBufferedUntil = -999f;
+    private float coyoteUntil = -999f;
+    private int jumpsUsed;
+    private int airDashesUsed;
+    private bool isAttackMotionActive;
+    private float attackMotionVelocityX;
+    private Coroutine attackMotionCoroutine;
 
     private int playerLayer;
     private int enemyLayer;
@@ -109,14 +135,20 @@ public class PlayerMovement : MonoBehaviour
 
         playerLayer = LayerMask.NameToLayer(playerLayerName);
         enemyLayer = LayerMask.NameToLayer(enemyLayerName);
-        
-        
     }
 
     void Update()
     {
         CheckGround();
-        HandleFastFall();
+        TryConsumeBufferedJump();
+        HandleVerticalPhysics();
+        UpdateFacing();
+    }
+
+    void FixedUpdate()
+    {
+        ApplyHorizontalMovement();
+        UpdateRunState();
     }
 
     // =========================================================
@@ -124,43 +156,16 @@ public class PlayerMovement : MonoBehaviour
     // =========================================================
     public void Move(Vector2 input)
     {
-        horizontalInput = input.x;
-
-        bool attackLocksMovement = false;
-        if (basicAttack != null && basicAttack.IsAttacking() && !basicAttack.CanMoveAfterAttack())
-        {
-            attackLocksMovement = true;
-        }
-
-        if (!CanMove || IsDashing || IsLanding || IsJumping || attackLocksMovement)
-        {
-            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
-            return;
-        }
-
-        rb.linearVelocity = new Vector2(input.x * speed, rb.linearVelocity.y);
-
-        if (input.x != 0f)
-        {
-            if (spriteRenderer != null)
-                spriteRenderer.flipX = input.x < 0f;
-        }
-
-        bool isRunning = input.x != 0f && Mathf.Abs(rb.linearVelocity.x) > 0.1f && isGrounded;
-        if (isRunning && !wasRunning)
-        {
-            OnRunStart?.Invoke();
-        }
-
-        wasRunning = isRunning;
+        horizontalInput = Mathf.Clamp(input.x, -1f, 1f);
     }
 
     public void Jump()
     {
-        if (isGrounded && !IsDashing && !IsJumping && !IsLanding)
-        {
-            StartCoroutine(JumpCoroutine());
-        }
+        if (IsDashing || IsLanding)
+            return;
+
+        jumpBufferedUntil = Time.time + jumpBufferTime;
+        TryConsumeBufferedJump();
     }
 
     public void Dash(float inputX)
@@ -168,9 +173,18 @@ public class PlayerMovement : MonoBehaviour
         if (actionController != null && !actionController.CanStartDash())
             return;
 
-        if (canDash && !IsDashing && !IsJumping && !IsLanding)
+        if (CanStartGroundDash())
         {
-            StartCoroutine(DashCoroutine(inputX));
+            StopAttackMotion();
+            StartCoroutine(DashCoroutine(inputX, true));
+            return;
+        }
+
+        if (CanStartAirDash())
+        {
+            StopAttackMotion();
+            airDashesUsed++;
+            StartCoroutine(DashCoroutine(inputX, false));
         }
     }
 
@@ -179,9 +193,19 @@ public class PlayerMovement : MonoBehaviour
         isHoldingDown = isPressed;
     }
 
+    public void SetJumpHeld(bool isPressed)
+    {
+        if (jumpHeld && !isPressed && !isGrounded && rb.linearVelocity.y > 0f && !IsDashing)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * jumpCutMultiplier);
+        }
+
+        jumpHeld = isPressed;
+    }
+
     public void SetMoveInput(Vector2 input)
     {
-        horizontalInput = input.x;
+        horizontalInput = Mathf.Clamp(input.x, -1f, 1f);
     }
 
     public bool IsGrounded()
@@ -191,7 +215,17 @@ public class PlayerMovement : MonoBehaviour
 
     public void ApplyAttackMovement(float distance, float duration)
     {
-        StartCoroutine(AttackMovementCoroutine(distance, duration));
+        StopAttackMotion();
+
+        if (duration <= 0f)
+            return;
+
+        attackMotionCoroutine = StartCoroutine(AttackMovementCoroutine(distance, duration));
+    }
+
+    public void CancelAttackMotion()
+    {
+        StopAttackMotion();
     }
 
     // =========================================================
@@ -204,12 +238,19 @@ public class PlayerMovement : MonoBehaviour
 
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer);
 
+        if (isGrounded)
+        {
+            coyoteUntil = Time.time + coyoteTime;
+            airDashesUsed = 0;
+        }
+
         if (isGrounded != wasGrounded)
         {
             OnGroundedChanged?.Invoke(isGrounded);
 
             if (isGrounded && rb.linearVelocity.y <= 0.1f)
             {
+                jumpsUsed = 0;
                 OnLand?.Invoke();
                 StartCoroutine(LandingCoroutine());
             }
@@ -218,29 +259,93 @@ public class PlayerMovement : MonoBehaviour
         wasGrounded = isGrounded;
     }
 
-    private void HandleFastFall()
+    private void TryConsumeBufferedJump()
+    {
+        if (Time.time > jumpBufferedUntil)
+            return;
+
+        if (IsDashing || IsLanding || IsJumping)
+            return;
+
+        if (!CanStartBufferedJump())
+            return;
+
+        ConsumeJump();
+        jumpBufferedUntil = -999f;
+        StartCoroutine(JumpCoroutine());
+    }
+
+    private bool CanStartBufferedJump()
+    {
+        if (IsGroundJumpAvailable())
+            return true;
+
+        return CanUseAirJump();
+    }
+
+    private bool IsGroundJumpAvailable()
+    {
+        if (jumpsUsed > 0)
+            return false;
+
+        return isGrounded || Time.time <= coyoteUntil;
+    }
+
+    private bool CanUseAirJump()
+    {
+        return jumpsUsed < GetSanitizedMaxJumpCount();
+    }
+
+    private int GetSanitizedMaxJumpCount()
+    {
+        return Mathf.Max(1, maxJumpCount);
+    }
+
+    private void ConsumeJump()
+    {
+        if (IsGroundJumpAvailable())
+        {
+            jumpsUsed = 1;
+        }
+        else
+        {
+            jumpsUsed++;
+        }
+
+        coyoteUntil = -999f;
+    }
+
+    private void HandleVerticalPhysics()
     {
         if (IsDashing)
             return;
 
+        float targetGravity = originalGravityScale;
+
         if (isGrounded)
         {
-            rb.gravityScale = originalGravityScale;
+            rb.gravityScale = targetGravity;
             return;
         }
 
-        if (isHoldingDown)
+        if (isHoldingDown && rb.linearVelocity.y < 0f)
         {
-            if (rb.linearVelocity.y > 0f)
-            {
-                rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * 0.3f);
-            }
-
-            rb.gravityScale = originalGravityScale * fastFallMultiplier;
+            targetGravity *= fastFallMultiplier;
         }
-        else
+        else if (rb.linearVelocity.y < 0f)
         {
-            rb.gravityScale = originalGravityScale;
+            targetGravity *= fallGravityMultiplier;
+        }
+        else if (rb.linearVelocity.y > 0f && !jumpHeld)
+        {
+            targetGravity *= lowJumpGravityMultiplier;
+        }
+
+        rb.gravityScale = targetGravity;
+
+        if (rb.linearVelocity.y < -maxFallSpeed)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, -maxFallSpeed);
         }
     }
 
@@ -250,6 +355,42 @@ public class PlayerMovement : MonoBehaviour
             return;
 
         Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, !canCollide);
+    }
+
+    private void StopAttackMotion()
+    {
+        if (attackMotionCoroutine != null)
+        {
+            StopCoroutine(attackMotionCoroutine);
+            attackMotionCoroutine = null;
+        }
+
+        isAttackMotionActive = false;
+        attackMotionVelocityX = 0f;
+    }
+
+    private bool CanStartGroundDash()
+    {
+        if (!canDash || IsDashing || IsJumping || IsLanding)
+            return false;
+
+        return isGrounded || Time.time <= coyoteUntil;
+    }
+
+    private bool CanStartAirDash()
+    {
+        if (IsDashing || IsJumping || IsLanding)
+            return false;
+
+        if (isGrounded || Time.time <= coyoteUntil)
+            return false;
+
+        return airDashesUsed < GetSanitizedMaxAirDashCount();
+    }
+
+    private int GetSanitizedMaxAirDashCount()
+    {
+        return Mathf.Max(0, maxAirDashCount);
     }
 
     private float GetDashDirection(float inputX)
@@ -266,6 +407,79 @@ public class PlayerMovement : MonoBehaviour
         return 1f;
     }
 
+    private bool IsMovementLocked()
+    {
+        bool attackLocksMovement = basicAttack != null && basicAttack.IsAttacking() && !basicAttack.CanMoveAfterAttack();
+        return !CanMove || IsDashing || IsLanding || IsJumping || attackLocksMovement;
+    }
+
+    private void ApplyHorizontalMovement()
+    {
+        if (rb == null)
+            return;
+
+        if (IsDashing)
+            return;
+
+        if (isAttackMotionActive)
+        {
+            rb.linearVelocity = new Vector2(attackMotionVelocityX, rb.linearVelocity.y);
+            return;
+        }
+
+        if (IsMovementLocked())
+        {
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+            return;
+        }
+
+        float maxHorizontalSpeed = speed * (isGrounded ? 1f : airSpeedMultiplier);
+        float targetX = horizontalInput * maxHorizontalSpeed;
+        float currentX = rb.linearVelocity.x;
+        float acceleration = GetHorizontalAcceleration(targetX, currentX);
+        float nextX = Mathf.MoveTowards(currentX, targetX, acceleration * Time.fixedDeltaTime);
+
+        if (Mathf.Abs(horizontalInput) < 0.01f && Mathf.Abs(nextX) < 0.01f)
+            nextX = 0f;
+
+        rb.linearVelocity = new Vector2(nextX, rb.linearVelocity.y);
+    }
+
+    private float GetHorizontalAcceleration(float targetX, float currentX)
+    {
+        if (Mathf.Abs(targetX) < 0.01f)
+            return isGrounded ? groundDeceleration : airDeceleration;
+
+        bool isChangingDirection = Mathf.Abs(currentX) > 0.01f && Mathf.Sign(targetX) != Mathf.Sign(currentX);
+        float acceleration = isGrounded ? groundAcceleration : airAcceleration;
+
+        if (isChangingDirection && !isGrounded)
+            acceleration *= 1.15f;
+
+        return acceleration;
+    }
+
+    private void UpdateFacing()
+    {
+        if (spriteRenderer == null)
+            return;
+
+        if (horizontalInput > 0.01f)
+            spriteRenderer.flipX = false;
+        else if (horizontalInput < -0.01f)
+            spriteRenderer.flipX = true;
+    }
+
+    private void UpdateRunState()
+    {
+        bool isRunning = Mathf.Abs(horizontalInput) > 0.01f && Mathf.Abs(rb.linearVelocity.x) > 0.1f && isGrounded;
+
+        if (isRunning && !wasRunning)
+            OnRunStart?.Invoke();
+
+        wasRunning = isRunning;
+    }
+
     // =========================================================
     // Coroutines
     // =========================================================
@@ -276,6 +490,7 @@ public class PlayerMovement : MonoBehaviour
 
         yield return new WaitForSeconds(jumpStartupTime);
 
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
         rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
         IsJumping = false;
     }
@@ -288,13 +503,14 @@ public class PlayerMovement : MonoBehaviour
         OnLandingEnd?.Invoke();
     }
 
-    private IEnumerator DashCoroutine(float inputX)
+    private IEnumerator DashCoroutine(float inputX, bool useGroundCooldown)
     {
 
         if (actionController != null)
             actionController.SetState(PlayerActionState.Dash);
         IsDashing = true;
-        canDash = false;
+        if (useGroundCooldown)
+            canDash = false;
         CanMove = false;
         OnDashStart?.Invoke();
 
@@ -321,40 +537,47 @@ public class PlayerMovement : MonoBehaviour
         rb.gravityScale = savedGravity;
         rb.linearVelocity = Vector2.zero;
 
-        SetDashEnemyCollision(true);
-
         IsDashing = false;
         CanMove = true;
         if (actionController != null)
             actionController.SetState(PlayerActionState.Normal);
         OnDashEnd?.Invoke();
 
-        yield return new WaitForSeconds(dashCooldown);
-        canDash = true;
+        if (useGroundCooldown)
+        {
+            yield return new WaitForSeconds(dashCooldown);
+            canDash = true;
+        }
     }
 
     private IEnumerator AttackMovementCoroutine(float distance, float duration)
     {
-        if (duration <= 0f)
-            yield break;
-
         float dir = 1f;
         if (spriteRenderer != null && spriteRenderer.flipX)
             dir = -1f;
 
+        float totalDistance = distance * dir;
         float elapsed = 0f;
-        Vector3 startPos = transform.position;
-        Vector3 targetPos = startPos + new Vector3(distance * dir, 0f, 0f);
+
+        isAttackMotionActive = true;
 
         while (elapsed < duration)
         {
-            float t = elapsed / duration;
-            transform.position = Vector3.Lerp(startPos, targetPos, t);
+            if (IsDashing)
+                break;
 
-            elapsed += Time.deltaTime;
-            yield return null;
+            float deltaTime = Time.fixedDeltaTime;
+            float nextElapsed = Mathf.Min(elapsed + deltaTime, duration);
+            float currentT = elapsed / duration;
+            float nextT = nextElapsed / duration;
+            float currentDistance = Mathf.Lerp(0f, totalDistance, currentT);
+            float nextDistance = Mathf.Lerp(0f, totalDistance, nextT);
+            attackMotionVelocityX = (nextDistance - currentDistance) / Mathf.Max(deltaTime, 0.0001f);
+
+            elapsed = nextElapsed;
+            yield return new WaitForFixedUpdate();
         }
 
-        transform.position = targetPos;
+        StopAttackMotion();
     }
 }

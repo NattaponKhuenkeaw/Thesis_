@@ -21,21 +21,25 @@ MonoBehaviour:
     defense: 6
     elementalMultiplier: 1
     moveSpeed: 6.5
-    jumpForce: 7
-    dashSpeed: 24
-    dashDuration: 0.18
-    dashCooldown: 0.8
+    jumpForce: 15
+    maxJumpCount: 3
+    maxAirDashCount: 3
+    groundAcceleration: 80
+    groundDeceleration: 90
+    airAcceleration: 55
+    airDeceleration: 40
+    airSpeedMultiplier: 1
+    dashSpeed: 30
+    dashDuration: 0.5
+    dashCooldown: 0.01
+    coyoteTime: 0.08
+    jumpBufferTime: 0.12
+    jumpCutMultiplier: 0.5
+    fallGravityMultiplier: 1.6
+    lowJumpGravityMultiplier: 2.2
+    maxFallSpeed: 25
     jumpStartupTime: 0.03
     landingLagTime: 0.06
-    maxCombo: 3
-    comboResetDelay: 0.75
-    comboQueueOpenTime: 0.18
-    attack1Duration: 0.3
-    attack2Duration: 0.34
-    attack3Duration: 0.4
-    attack1Multiplier: 1
-    attack2Multiplier: 1.1
-    attack3Multiplier: 1.4
   metaData:
     displayName: Aero
     description: "\u0E19\u0E31\u0E01\u0E23\u0E1A\u0E18\u0E32\u0E15\u0E38\u0E25\u0E21\u0E2A\u0E32\u0E22\u0E04\u0E27\u0E1A\u0E04\u0E38\u0E21\u0E1E\u0E37\u0E49\u0E19\u0E17\u0E35\u0E48\u0E41\u0E25\u0E30\u0E40\u0E1B\u0E34\u0E14\u0E04\u0E2D\u0E21\u0E42\u0E1A"
@@ -68,7 +72,7 @@ MonoBehaviour:
         offset: {x: 1.08, y: 0.4}
         size: {x: 2.61, y: 1.55}
         damageMultiplier: 1
-        knockbackForce: 3.5
+        knockbackForce: 2
     - stepName: Attack 2
       duration: 0.3
       comboQueueOpenTime: 0.2
@@ -87,7 +91,7 @@ MonoBehaviour:
         offset: {x: 1, y: 0.45}
         size: {x: 1.2, y: 0.85}
         damageMultiplier: 1.15
-        knockbackForce: 4
+        knockbackForce: 2
     - stepName: Attack 3
       duration: 0.55
       comboQueueOpenTime: 0.22
@@ -120,7 +124,29 @@ MonoBehaviour:
         offset: {x: 1.2, y: 0.5}
         size: {x: 1.4, y: 0.9}
         damageMultiplier: 1.2
-        knockbackForce: 5
+        knockbackForce: 3
+  neutralAirComboData:
+    comboResetDelay: 0.8
+    steps:
+    - stepName: Attack 1
+      duration: 0.3
+      comboQueueOpenTime: 0.2
+      moveRecoveryTime: 0.18
+      dashCancelTime: 0.2
+      jumpCancelTime: 0.22
+      motionData:
+        useForwardMotion: 1
+        forwardDistance: 0.45
+        motionStartTime: 0.03
+        motionDuration: 0.1
+      hitFrames:
+      - hitTime: 0.12
+        activeDuration: 0.05
+        cameraShakeStrength: 0.01
+        offset: {x: 1, y: 0.45}
+        size: {x: 1.2, y: 0.85}
+        damageMultiplier: 1.15
+        knockbackForce: 2
   skillData:
     skillName: Gust Break
     description: "\u0E1B\u0E25\u0E48\u0E2D\u0E22\u0E41\u0E23\u0E07\u0E25\u0E21\u0E01\u0E23\u0E30\u0E41\u0E17\u0E01\u0E14\u0E49\u0E32\u0E19\u0E2B\u0E19\u0E49\u0E32
