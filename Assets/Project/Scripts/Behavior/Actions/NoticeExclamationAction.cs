@@ -8,11 +8,8 @@ namespace Unity.Behavior
 {
     /// <summary>
     /// Perform Action: Notice Exclamation — activates an "!" GameObject above the enemy
-    /// and plays a punch-scale pop animation using an AnimationCurve.
-    /// Returns Success after the display duration, leaving the marker deactivated.
-    /// 
-    /// Setup: add a child GameObject named "ExclamationMark" (or assign via Blackboard)
-    /// with a SpriteRenderer showing the "!" sprite.
+    /// prompting player detection, and plays a punch-scale pop animation.
+    /// Returns Success after the display duration.
     /// </summary>
     [Serializable, GeneratePropertyBag]
     [NodeDescription(
@@ -23,11 +20,18 @@ namespace Unity.Behavior
         id: "c1b2c3d4e5f60007aabbccddeeff0027")]
     public partial class NoticeExclamationAction : Unity.Behavior.Action
     {
-        [SerializeReference] public BlackboardVariable<GameObject> Agent;
-        [Tooltip("The '!' child GameObject to activate. If null, searched by name 'ExclamationMark'.")]
-        [SerializeReference] public BlackboardVariable<GameObject> ExclamationMark;
+        [SerializeReference] public BlackboardVariable<GameObject> Agent = new BlackboardVariable<GameObject>();
+        
+        [Tooltip("The '!' child GameObject or Prefab instance to activate. If null, searched by name 'ExclamationMark' on Agent.")]
+        [SerializeReference] public BlackboardVariable<GameObject> ExclamationMark = new BlackboardVariable<GameObject>();
+        
+        [SerializeReference] public BlackboardVariable<GameObject> Target = new BlackboardVariable<GameObject>();
+
         [Tooltip("Total duration to show the '!' before hiding it.")]
         [SerializeReference] public BlackboardVariable<float> DisplayDuration = new BlackboardVariable<float>(0.7f);
+
+        [Tooltip("If true, the exclamation mark faces the camera every frame.")]
+        public bool UseBillboard = true;
 
         // Pop animation curve: goes 0 → 1.3 → 1.0 over 0..1 time
         private static readonly Keyframe[] PopKeys =
@@ -55,7 +59,7 @@ namespace Unity.Behavior
 
             if (m_Mark == null)
             {
-                Debug.LogWarning("No ExclamationMark child found. Skipping notice animation.");
+                Debug.LogWarning($"[NoticeExclamation] No 'ExclamationMark' GameObject found for {Agent.Value.name}.");
                 return Status.Success; // skip gracefully
             }
 
@@ -65,12 +69,32 @@ namespace Unity.Behavior
             m_Mark.transform.localScale = Vector3.zero;
             m_Timer = 0f;
 
+            // Initial billboard alignment
+            UpdateBillboard();
+
+            // Face the player/target
+            if (Target != null && Target.Value != null)
+            {
+                float dirX = Target.Value.transform.position.x - Agent.Value.transform.position.x;
+                if (Mathf.Abs(dirX) > 0.01f)
+                {
+                    Vector3 scale = Agent.Value.transform.localScale;
+                    scale.x = Mathf.Abs(scale.x) * Mathf.Sign(dirX);
+                    Agent.Value.transform.localScale = scale;
+                }
+            }
+
             return Status.Running;
         }
 
         protected override Status OnUpdate()
         {
+            if (m_Mark == null) return Status.Failure;
+            
             m_Timer += Time.deltaTime;
+
+            // Optional billboard
+            UpdateBillboard();
 
             // Drive pop scale animation
             if (m_Timer <= m_PopDuration)
@@ -92,6 +116,15 @@ namespace Unity.Behavior
             }
 
             return Status.Running;
+        }
+
+        private void UpdateBillboard()
+        {
+            if (UseBillboard && Camera.main != null && m_Mark != null)
+            {
+                // Simple billboard to match camera rotation
+                m_Mark.transform.rotation = Camera.main.transform.rotation;
+            }
         }
 
         protected override void OnEnd()

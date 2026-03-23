@@ -22,11 +22,13 @@ using Unity.Behavior;
         [SerializeReference] public BlackboardVariable<float> AttackRange  = new BlackboardVariable<float>(1.5f);
 
         private EnemyController m_Controller;
+        private AnimationHandler_Enemy m_AnimHandler;
 
         protected override Status OnStart()
         {
             if (Agent.Value == null || Target.Value == null) return Status.Failure;
             m_Controller = Agent.Value.GetComponent<EnemyController>();
+            m_AnimHandler = Agent.Value.GetComponentInChildren<AnimationHandler_Enemy>();
             return Status.Running;
         }
 
@@ -41,7 +43,7 @@ using Unity.Behavior;
             // Arrived at attack range
             if (dist <= AttackRange.Value)
             {
-                m_Controller?.SetSpeedParam(0f);
+                m_AnimHandler?.SetSpeed(0f);
                 return Status.Success;
             }
 
@@ -59,13 +61,14 @@ using Unity.Behavior;
                 Agent.Value.transform.localScale = scale;
             }
 
-            m_Controller?.SetSpeedParam(ChaseSpeed.Value);
+            m_AnimHandler?.SetSpeed(ChaseSpeed.Value);
             return Status.Running;
         }
 
         protected override void OnEnd()
         {
-            m_Controller?.SetSpeedParam(0f);
+            m_AnimHandler?.SetSpeed(0f);
             m_Controller = null;
+            m_AnimHandler = null;
         }
     }

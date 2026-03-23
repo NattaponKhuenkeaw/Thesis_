@@ -22,6 +22,7 @@ using Unity.Behavior;
         [SerializeReference] public BlackboardVariable<float> EvadeDuration = new BlackboardVariable<float>(0.5f);
 
         private EnemyController m_Controller;
+        private AnimationHandler_Enemy m_AnimHandler;
         private float m_Timer;
         private float m_Direction; // -1 or +1
 
@@ -29,13 +30,14 @@ using Unity.Behavior;
         {
             if (Agent.Value == null || Target.Value == null) return Status.Failure;
             m_Controller = Agent.Value.GetComponent<EnemyController>();
+            m_AnimHandler = Agent.Value.GetComponentInChildren<AnimationHandler_Enemy>();
             m_Timer = 0f;
 
             // Strafe AWAY from player (opposite direction)
             float playerDir = Target.Value.transform.position.x - Agent.Value.transform.position.x;
             m_Direction = playerDir >= 0f ? -1f : 1f;
 
-            m_Controller?.SetSpeedParam(EvadeSpeed.Value);
+            m_AnimHandler?.SetSpeed(EvadeSpeed.Value);
             return Status.Running;
         }
 
@@ -54,7 +56,7 @@ using Unity.Behavior;
 
             if (m_Timer >= EvadeDuration.Value)
             {
-                m_Controller?.SetSpeedParam(0f);
+                m_AnimHandler?.SetSpeed(0f);
                 return Status.Success;
             }
 
@@ -63,7 +65,8 @@ using Unity.Behavior;
 
         protected override void OnEnd()
         {
-            m_Controller?.SetSpeedParam(0f);
+            m_AnimHandler?.SetSpeed(0f);
             m_Controller = null;
+            m_AnimHandler = null;
         }
     }

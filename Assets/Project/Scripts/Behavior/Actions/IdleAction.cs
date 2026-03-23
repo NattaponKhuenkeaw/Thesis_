@@ -20,13 +20,15 @@ using Unity.Behavior;
         [SerializeReference] public BlackboardVariable<float> IdleDuration = new BlackboardVariable<float>(2f);
 
         private EnemyController m_Controller;
+        private AnimationHandler_Enemy m_AnimHandler;
         private float m_Timer;
 
         protected override Status OnStart()
         {
             if (Agent.Value == null) return Status.Failure;
             m_Controller = Agent.Value.GetComponent<EnemyController>();
-            m_Controller?.SetSpeedParam(0f);
+            m_AnimHandler = Agent.Value.GetComponentInChildren<AnimationHandler_Enemy>();
+            m_AnimHandler?.SetSpeed(0f);
             m_Timer = 0f;
             return Status.Running;
         }
@@ -40,5 +42,6 @@ using Unity.Behavior;
         protected override void OnEnd()
         {
             m_Controller = null;
+            m_AnimHandler = null;
         }
     }

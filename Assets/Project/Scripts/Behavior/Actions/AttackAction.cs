@@ -18,11 +18,11 @@ using Unity.Behavior;
         id: "c1b2c3d4e5f60006aabbccddeeff0026")]
     public partial class AttackAction : Unity.Behavior.Action
     {
-        [SerializeReference] public BlackboardVariable<GameObject> Agent;
-        [SerializeReference] public BlackboardVariable<GameObject> Target;
+        [SerializeReference] public BlackboardVariable<GameObject> Agent = new BlackboardVariable<GameObject>();
+        [SerializeReference] public BlackboardVariable<GameObject> Target = new BlackboardVariable<GameObject>();
 
         [Tooltip("Shared CanAttack flag on the Blackboard (set to false during cooldown, back to true after).")]
-        [SerializeReference] public BlackboardVariable<bool> CanAttack;
+        [SerializeReference] public BlackboardVariable<bool> CanAttack = new BlackboardVariable<bool>();
 
         [Tooltip("How long the hitbox stays active (seconds).")]
         [SerializeReference] public BlackboardVariable<float> HitWindowDuration = new BlackboardVariable<float>(0.2f);
@@ -31,6 +31,7 @@ using Unity.Behavior;
         [SerializeReference] public BlackboardVariable<float> AttackCooldown = new BlackboardVariable<float>(1.2f);
 
         private EnemyController m_Controller;
+        private AnimationHandler_Enemy m_AnimHandler;
         private float m_Timer;
         private bool m_HitboxDisabled;
 
@@ -39,12 +40,13 @@ using Unity.Behavior;
             if (Agent.Value == null) return Status.Failure;
 
             m_Controller = Agent.Value.GetComponent<EnemyController>();
-            if (m_Controller == null) return Status.Failure;
+            m_AnimHandler = Agent.Value.GetComponentInChildren<AnimationHandler_Enemy>();
+            if (m_Controller == null || m_AnimHandler == null) return Status.Failure;
 
             // Set cooldown flag off
             if (CanAttack != null) CanAttack.Value = false;
 
-            m_Controller.TriggerAttackAnim();
+            m_AnimHandler.TriggerAttack();
             m_Controller.SetAttackHitboxActive(true);
             m_HitboxDisabled = false;
             m_Timer = 0f;

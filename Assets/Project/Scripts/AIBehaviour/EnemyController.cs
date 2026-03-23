@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using Unity.Behavior;
 
 /// <summary>
 /// Core enemy component. Holds stats, HP events, and helpers used by
@@ -12,9 +13,9 @@ public class EnemyController : MonoBehaviour
     // Events
     // =========================================================
     /// <summary>Fired when the enemy takes damage. Payload = (damage, knockbackDir).</summary>
-    public event Action<float, Vector2> OnDamaged;
+    public event System.Action<float, Vector2> OnDamaged;
     /// <summary>Fired when HP reaches 0.</summary>
-    public event Action OnDied;
+    public event System.Action OnDied;
 
     // =========================================================
     // Enemy Stats
@@ -35,7 +36,6 @@ public class EnemyController : MonoBehaviour
     // References
     // =========================================================
     [Header("References")]
-    public Animator animator;
     public Rigidbody2D rb;
 
     /// <summary>Child hitbox collider used by AttackAction.</summary>
@@ -44,13 +44,7 @@ public class EnemyController : MonoBehaviour
     /// <summary>Main body collider (disabled on death).</summary>
     public Collider2D bodyCollider;
 
-    // =========================================================
-    // Animator Parameter Hashes
-    // =========================================================
-    private static readonly int HashTakeDamage = Animator.StringToHash("TakeDamage");
-    private static readonly int HashDie        = Animator.StringToHash("Die");
-    private static readonly int HashAttack     = Animator.StringToHash("Attack");
-    private static readonly int HashSpeed      = Animator.StringToHash("Speed");
+    // Removed animation hashes
 
     // =========================================================
     // Unity Methods
@@ -58,12 +52,58 @@ public class EnemyController : MonoBehaviour
     void Awake()
     {
         rb       = GetComponent<Rigidbody2D>();
-        animator = animator != null ? animator : GetComponentInChildren<Animator>();
         currentHP = maxHP;
         isAlive   = true;
 
         // Start with hitbox disabled
-        if (attackHitbox != null) attackHitbox.enabled = false;
+        if (attackHitbox != null)
+        {
+            attackHitbox.enabled = false;
+            var sr = attackHitbox.GetComponent<SpriteRenderer>();
+            if (sr != null) sr.enabled = false;
+
+            var lr = attackHitbox.GetComponent<LineRenderer>();
+            if (lr != null) lr.enabled = false;
+        }
+    }
+
+    void Update()
+    {
+        // Runtime visualization for Game View
+        if (attackHitbox != null && attackHitbox.enabled)
+        {
+            // 1. Auto-scale SpriteRenderer to match Collider size
+            var sr = attackHitbox.GetComponent<SpriteRenderer>();
+            if (sr != null)
+            {
+                if (attackHitbox is BoxCollider2D box)
+                {
+                    sr.drawMode = SpriteDrawMode.Sliced;
+                    // Match the SpriteRenderer size to the Collider size without moving the transform
+                    sr.size = box.size;
+                }
+                else if (attackHitbox is CircleCollider2D circle)
+                {
+                    // For circles, we can't use .size on Simple sprites without scaling the transform.
+                    // If the user wants to keep the transform the same, we skip auto-scaling for circles
+                    // or assume the user has set up the scale manually.
+                }
+            }
+
+            // 2. Beautiful outline using LineRenderer
+            var lr = attackHitbox.GetComponent<LineRenderer>();
+            if (lr != null)
+            {
+                DrawLineRenderer(lr);
+            }
+            else
+            {
+#if UNITY_EDITOR
+                // Fallback to debug lines if no LineRenderer
+                DrawHitboxRuntime();
+#endif
+            }
+        }
     }
 
     // =========================================================
@@ -87,6 +127,13 @@ public class EnemyController : MonoBehaviour
 
         OnDamaged?.Invoke(damage, knockbackDirection);
 
+        // Notify Blackboard for BehaviorGraph
+        var behaviorAgent = GetComponent<BehaviorGraphAgent>();
+        if (behaviorAgent != null && behaviorAgent.BlackboardReference != null)
+        {
+            behaviorAgent.BlackboardReference.SetVariableValue("IsTakeDamage", true);
+        }
+
         if (currentHP <= 0f)
             Die();
     }
@@ -97,8 +144,6 @@ public class EnemyController : MonoBehaviour
         if (!isAlive) return;
         isAlive = false;
 
-        animator?.SetTrigger(HashDie);
-
         if (bodyCollider  != null) bodyCollider.enabled  = false;
         if (attackHitbox  != null) attackHitbox.enabled  = false;
 
@@ -106,25 +151,149 @@ public class EnemyController : MonoBehaviour
     }
 
     // =========================================================
-    // Animator Helpers (called by Action nodes)
+    // Collider Helpers (called by Action nodes)
     // =========================================================
-    public void TriggerTakeDamageAnim() => animator?.SetTrigger(HashTakeDamage);
-    public void TriggerAttackAnim()     => animator?.SetTrigger(HashAttack);
-    public void SetSpeedParam(float speed) => animator?.SetFloat(HashSpeed, speed);
 
     /// <summary>Enable or disable the attack hitbox collider.</summary>
     public void SetAttackHitboxActive(bool active)
     {
-        if (attackHitbox != null) attackHitbox.enabled = active;
+        if (attackHitbox != null)
+        {
+            attackHitbox.enabled = active;
+            // Toggle SpriteRenderer if it exists for runtime visualization
+            var sr = attackHitbox.GetComponent<SpriteRenderer>();
+            if (sr != null) sr.enabled = active;
+
+            // Toggle LineRenderer if it exists
+            var lr = attackHitbox.GetComponent<LineRenderer>();
+            if (lr != null) lr.enabled = active;
+        }
     }
 
     // =========================================================
     // Gizmos
     // =========================================================
 #if UNITY_EDITOR
+    void OnDrawGizmos()
+    {
+        if (attackHitbox != null && attackHitbox.enabled)
+        {
+            Gizmos.color = Color.red;
+            Matrix4x4 oldMatrix = Gizmos.matrix;
+            Gizmos.matrix = attackHitbox.transform.localToWorldMatrix;
+
+            if (attackHitbox is BoxCollider2D box)
+            {
+                Gizmos.DrawWireCube((Vector3)box.offset, (Vector3)box.size);
+            }
+            else if (attackHitbox is CircleCollider2D circle)
+            {
+                Gizmos.DrawWireSphere((Vector3)circle.offset, circle.radius);
+            }
+
+            Gizmos.matrix = oldMatrix;
+        }
+    }
+
     void OnDrawGizmosSelected()
     {
-        // Drawn by individual condition nodes too, but handy here
+        // Also draw a faint version when selected but not attacking
+        if (attackHitbox != null && !attackHitbox.enabled)
+        {
+            Gizmos.color = new Color(1f, 0f, 0f, 0.2f);
+            Matrix4x4 oldMatrix = Gizmos.matrix;
+            Gizmos.matrix = attackHitbox.transform.localToWorldMatrix;
+
+            if (attackHitbox is BoxCollider2D box)
+            {
+                Gizmos.DrawWireCube((Vector3)box.offset, (Vector3)box.size);
+            }
+            else if (attackHitbox is CircleCollider2D circle)
+            {
+                Gizmos.DrawWireSphere((Vector3)circle.offset, circle.radius);
+            }
+
+            Gizmos.matrix = oldMatrix;
+        }
+    }
+
+    private void DrawHitboxRuntime()
+    {
+        Matrix4x4 matrix = attackHitbox.transform.localToWorldMatrix;
+        Color color = Color.red;
+
+        if (attackHitbox is BoxCollider2D box)
+        {
+            Vector3 size = box.size;
+            Vector3 offset = box.offset;
+
+            Vector3 p1 = matrix.MultiplyPoint3x4(offset + new Vector3(-size.x, -size.y) * 0.5f);
+            Vector3 p2 = matrix.MultiplyPoint3x4(offset + new Vector3(size.x, -size.y) * 0.5f);
+            Vector3 p3 = matrix.MultiplyPoint3x4(offset + new Vector3(size.x, size.y) * 0.5f);
+            Vector3 p4 = matrix.MultiplyPoint3x4(offset + new Vector3(-size.x, size.y) * 0.5f);
+
+            Debug.DrawLine(p1, p2, color);
+            Debug.DrawLine(p2, p3, color);
+            Debug.DrawLine(p3, p4, color);
+            Debug.DrawLine(p4, p1, color);
+        }
+        else if (attackHitbox is CircleCollider2D circle)
+        {
+            int segments = 20;
+            float angleStep = 360f / segments;
+            Vector3 prevPt = Vector3.zero;
+
+            for (int i = 0; i <= segments; i++)
+            {
+                float angle = i * angleStep * Mathf.Deg2Rad;
+                Vector3 pt = (Vector3)circle.offset + new Vector3(Mathf.Cos(angle), Mathf.Sin(angle)) * circle.radius;
+                Vector3 worldPt = matrix.MultiplyPoint3x4(pt);
+
+                if (i > 0) Debug.DrawLine(prevPt, worldPt, color);
+                prevPt = worldPt;
+            }
+        }
     }
 #endif
+
+    private void DrawLineRenderer(LineRenderer lr)
+    {
+        if (attackHitbox is BoxCollider2D box)
+        {
+            lr.positionCount = 4;
+            lr.loop = true;
+
+            Vector2 size = box.size;
+            Vector2 offset = box.offset;
+
+            Vector3 p1 = offset + new Vector2(-size.x, -size.y) * 0.5f;
+            Vector3 p2 = offset + new Vector2(size.x, -size.y) * 0.5f;
+            Vector3 p3 = offset + new Vector2(size.x, size.y) * 0.5f;
+            Vector3 p4 = offset + new Vector2(-size.x, size.y) * 0.5f;
+
+            Transform t = attackHitbox.transform;
+            lr.SetPosition(0, t.TransformPoint(p1));
+            lr.SetPosition(1, t.TransformPoint(p2));
+            lr.SetPosition(2, t.TransformPoint(p3));
+            lr.SetPosition(3, t.TransformPoint(p4));
+        }
+        else if (attackHitbox is CircleCollider2D circle)
+        {
+            int segments = 36;
+            lr.positionCount = segments;
+            lr.loop = true;
+            float angleStep = 360f / segments;
+
+            Transform t = attackHitbox.transform;
+            Vector2 offset = circle.offset;
+            float radius = circle.radius;
+
+            for (int i = 0; i < segments; i++)
+            {
+                float angle = i * angleStep * Mathf.Deg2Rad;
+                Vector3 localPoint = offset + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
+                lr.SetPosition(i, t.TransformPoint(localPoint));
+            }
+        }
+    }
 }

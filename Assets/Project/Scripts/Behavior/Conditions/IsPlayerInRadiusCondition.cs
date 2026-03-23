@@ -4,22 +4,23 @@ using UnityEngine;
 
 using Unity.Behavior;
     [Serializable, GeneratePropertyBag]
-    [NodeDescription(
-        name: "Is Player In Radius",
+    [Condition(
+        name: "Is Target In Radius",
         description: "Returns Success if the Target is within DetectRadius of the Agent. Optionally performs a line-of-sight raycast.",
         story: "[Agent] detects [Target] within [DetectRadius]",
-        category: "Flow/Condition",
+        category: "Conditions/Detection",
         id: "a1b2c3d4e5f60001aabbccddeeff0001")]
     public partial class IsPlayerInRadiusCondition : Condition
     {
-        [SerializeReference] public BlackboardVariable<GameObject> Agent;
-        [SerializeReference] public BlackboardVariable<GameObject> Target;
+        [SerializeReference] public BlackboardVariable<GameObject> Agent = new BlackboardVariable<GameObject>();
+        [SerializeReference] public BlackboardVariable<GameObject> Target = new BlackboardVariable<GameObject>();
         [SerializeReference] public BlackboardVariable<float> DetectRadius = new BlackboardVariable<float>(8f);
         [SerializeReference] public BlackboardVariable<bool> RequireLineOfSight = new BlackboardVariable<bool>(false);
-        [SerializeReference] public BlackboardVariable<LayerMask> ObstacleLayer;
+        public LayerMask ObstacleLayer;
 
         public override bool IsTrue()
         {
+            if (Agent == null || Target == null) return false;
             if (Agent.Value == null || Target.Value == null) return false;
 
             float dist = Vector2.Distance(Agent.Value.transform.position, Target.Value.transform.position);
@@ -28,7 +29,7 @@ using Unity.Behavior;
             if (RequireLineOfSight.Value)
             {
                 Vector2 dir = (Vector2)(Target.Value.transform.position - Agent.Value.transform.position);
-                RaycastHit2D hit = Physics2D.Raycast(Agent.Value.transform.position, dir.normalized, dist, ObstacleLayer.Value);
+                RaycastHit2D hit = Physics2D.Raycast(Agent.Value.transform.position, dir.normalized, dist, ObstacleLayer);
                 if (hit.collider != null) return false; // something is blocking
             }
 

@@ -9,7 +9,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsAttack
+    m_ConditionEvent: attackHash
     m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: -2744876322131355330}
@@ -60,7 +60,7 @@ BlendTree:
   m_PrefabAsset: {fileID: 0}
   m_Name: Idle/Attack
   m_Childs: []
-  m_BlendParameter: SpeedMagnitude
+  m_BlendParameter: speedHash
   m_BlendParameterY: Blend
   m_MinThreshold: 0
   m_MaxThreshold: 1
@@ -102,14 +102,26 @@ AnimatorController:
   m_Name: EnemyAnimatorController
   serializedVersion: 5
   m_AnimatorParameters:
-  - m_Name: IsAttack
+  - m_Name: speedHash
+    m_Type: 1
+    m_DefaultFloat: 0
+    m_DefaultInt: 0
+    m_DefaultBool: 0
+    m_Controller: {fileID: 9100000}
+  - m_Name: attackHash
     m_Type: 9
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
     m_Controller: {fileID: 9100000}
-  - m_Name: SpeedMagnitude
-    m_Type: 1
+  - m_Name: takeDamageHash
+    m_Type: 9
+    m_DefaultFloat: 0
+    m_DefaultInt: 0
+    m_DefaultBool: 0
+    m_Controller: {fileID: 9100000}
+  - m_Name: dieHash
+    m_Type: 9
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
@@ -138,7 +150,7 @@ AnimatorStateMachine:
   m_ChildStates:
   - serializedVersion: 1
     m_State: {fileID: -2744876322131355330}
-    m_Position: {x: 520, y: 90, z: 0}
+    m_Position: {x: 510, y: 130, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -6332651493474748293}
     m_Position: {x: 230, y: 250, z: 0}
