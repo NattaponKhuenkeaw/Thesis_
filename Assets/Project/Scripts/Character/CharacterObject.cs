@@ -44,10 +44,16 @@ public class CharacterObject : ScriptableObject
     public CharacterUpgrade upgrade = new CharacterUpgrade();
 
     // =========================================================
-    // Attack Hitbox
+    // Basic Combo Data
     // =========================================================
-    [Header("Attack Hitbox")]
-    public AttackHitboxData attackHitboxData = new AttackHitboxData();
+    [Header("Basic Combo Data")]
+    public BasicAttackComboData basicAttackComboData = new BasicAttackComboData();
+
+    // =========================================================
+    // Neutral Air Combo Data
+    // =========================================================
+    [Header("Neutral Air Combo Data")]
+    public BasicAttackComboData neutralAirComboData = new BasicAttackComboData();
 
     // =========================================================
     // Skill

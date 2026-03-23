@@ -7,12 +7,8 @@ public class MeleeHitboxController : MonoBehaviour
     // Dependencies
     // =========================================================
     [Header("Dependencies")]
-    public PlayerCharacter playerCharacter;
     public PlayerMovement movement;
-    public BasicAttack basicAttack;
     public BoxCollider2D hitboxCollider;
-
-    [Header("Anchor")]
     public Transform attackAnchor;
 
     // =========================================================
@@ -20,14 +16,8 @@ public class MeleeHitboxController : MonoBehaviour
     // =========================================================
     void Awake()
     {
-        if (playerCharacter == null)
-            playerCharacter = GetComponentInParent<PlayerCharacter>();
-
         if (movement == null)
             movement = GetComponentInParent<PlayerMovement>();
-
-        if (basicAttack == null)
-            basicAttack = GetComponentInParent<BasicAttack>();
 
         if (hitboxCollider == null)
             hitboxCollider = GetComponent<BoxCollider2D>();
@@ -36,22 +26,13 @@ public class MeleeHitboxController : MonoBehaviour
     // =========================================================
     // Public Methods
     // =========================================================
-    public void UpdateHitboxShape()
+    public void ApplyHitFrame(AttackHitFrameData hitFrame)
     {
-        if (playerCharacter == null || playerCharacter.characterObject == null)
+        if (hitFrame == null)
             return;
 
-        if (playerCharacter.characterObject.attackHitboxData == null)
-            return;
-
-        int comboStep = 1;
-        if (basicAttack != null)
-            comboStep = basicAttack.GetComboStep();
-
-        AttackHitboxData data = playerCharacter.characterObject.attackHitboxData;
-
-        Vector2 offset = data.GetOffset(comboStep);
-        Vector2 size = data.GetSize(comboStep);
+        Vector2 offset = hitFrame.offset;
+        Vector2 size = hitFrame.size;
 
         if (movement != null && movement.spriteRenderer != null && movement.spriteRenderer.flipX)
             offset.x = -Mathf.Abs(offset.x);
@@ -63,4 +44,5 @@ public class MeleeHitboxController : MonoBehaviour
 
         hitboxCollider.size = size;
     }
+   
 }

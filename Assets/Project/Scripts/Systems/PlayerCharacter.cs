@@ -13,7 +13,7 @@ public class PlayerCharacter : MonoBehaviour
     // =========================================================
     [Header("Dependencies")]
     public PlayerMovement movement;
-    public BasicAttack basicAttack;
+    public PlayerBasicAttack basicAttack;
     public AnimationHandler animationHandler;
     public CharacterRuntime runtime;
 
@@ -29,7 +29,7 @@ public class PlayerCharacter : MonoBehaviour
             movement = GetComponent<PlayerMovement>();
 
         if (basicAttack == null)
-            basicAttack = GetComponent<BasicAttack>();
+            basicAttack = GetComponent<PlayerBasicAttack>();
 
         if (animationHandler == null)
             animationHandler = GetComponentInChildren<AnimationHandler>();
@@ -55,7 +55,6 @@ public class PlayerCharacter : MonoBehaviour
             return;
 
         ApplyMovementData();
-        ApplyAttackData();
         ApplyAnimationData();
 
         if (runtime != null)
@@ -82,28 +81,24 @@ public class PlayerCharacter : MonoBehaviour
 
         movement.speed = stats.moveSpeed;
         movement.jumpForce = stats.jumpForce;
+        movement.maxJumpCount = stats.maxJumpCount;
+        movement.maxAirDashCount = stats.maxAirDashCount;
+        movement.groundAcceleration = stats.groundAcceleration;
+        movement.groundDeceleration = stats.groundDeceleration;
+        movement.airAcceleration = stats.airAcceleration;
+        movement.airDeceleration = stats.airDeceleration;
+        movement.airSpeedMultiplier = stats.airSpeedMultiplier;
         movement.dashSpeed = stats.dashSpeed;
         movement.dashDuration = stats.dashDuration;
         movement.dashCooldown = stats.dashCooldown;
+        movement.coyoteTime = stats.coyoteTime;
+        movement.jumpBufferTime = stats.jumpBufferTime;
+        movement.jumpCutMultiplier = stats.jumpCutMultiplier;
+        movement.fallGravityMultiplier = stats.fallGravityMultiplier;
+        movement.lowJumpGravityMultiplier = stats.lowJumpGravityMultiplier;
+        movement.maxFallSpeed = stats.maxFallSpeed;
         movement.jumpStartupTime = stats.jumpStartupTime;
         movement.landingLagTime = stats.landingLagTime;
-    }
-
-    private void ApplyAttackData()
-    {
-        if (basicAttack == null || characterObject == null)
-            return;
-
-        CharacterStats stats = characterObject.stats;
-
-        basicAttack.SetAttackData(
-            stats.maxCombo,
-            stats.comboResetDelay,
-            stats.comboQueueOpenTime,
-            stats.attack1Duration,
-            stats.attack2Duration,
-            stats.attack3Duration
-        );
     }
 
     private void ApplyAnimationData()

@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 255da7e6c6e2e0147ab812b7ed3943c0, type: 3}
-  m_Name: CharacterObject_Venti
+  m_Name: CharacterObject_Aero
   m_EditorClassIdentifier: Assembly-CSharp::CharacterObject
   characterId: aero_001
   characterType: 0
@@ -21,36 +21,132 @@ MonoBehaviour:
     defense: 6
     elementalMultiplier: 1
     moveSpeed: 6.5
-    jumpForce: 7
-    dashSpeed: 24
-    dashDuration: 0.18
-    dashCooldown: 0.8
+    jumpForce: 15
+    maxJumpCount: 3
+    maxAirDashCount: 3
+    groundAcceleration: 80
+    groundDeceleration: 90
+    airAcceleration: 55
+    airDeceleration: 40
+    airSpeedMultiplier: 1
+    dashSpeed: 30
+    dashDuration: 0.5
+    dashCooldown: 0.01
+    coyoteTime: 0.08
+    jumpBufferTime: 0.12
+    jumpCutMultiplier: 0.5
+    fallGravityMultiplier: 1.6
+    lowJumpGravityMultiplier: 2.2
+    maxFallSpeed: 25
     jumpStartupTime: 0.03
     landingLagTime: 0.06
-    maxCombo: 3
-    comboResetDelay: 0.75
-    comboQueueOpenTime: 0.18
-    attack1Duration: 0.3
-    attack2Duration: 0.34
-    attack3Duration: 0.4
-    attack1Multiplier: 1
-    attack2Multiplier: 1.1
-    attack3Multiplier: 1.4
   metaData:
-    displayName: Venti
+    displayName: Aero
     description: "\u0E19\u0E31\u0E01\u0E23\u0E1A\u0E18\u0E32\u0E15\u0E38\u0E25\u0E21\u0E2A\u0E32\u0E22\u0E04\u0E27\u0E1A\u0E04\u0E38\u0E21\u0E1E\u0E37\u0E49\u0E19\u0E17\u0E35\u0E48\u0E41\u0E25\u0E30\u0E40\u0E1B\u0E34\u0E14\u0E04\u0E2D\u0E21\u0E42\u0E1A"
     portrait: {fileID: 21300000, guid: db176e694b958d746ab66455222fefcf, type: 3}
     animatorController: {fileID: 9100000, guid: 815b33a35641994489dd122eacb4e98d, type: 2}
     attackSfx: {fileID: 0}
     skillSfx: {fileID: 0}
     hurtSfx: {fileID: 0}
-  attackHitboxData:
-    attack1Offset: {x: 1.5, y: 0}
-    attack1Size: {x: 2, y: 2.22}
-    attack2Offset: {x: 1.6, y: 0}
-    attack2Size: {x: 2, y: 1}
-    attack3Offset: {x: 1.5, y: 0}
-    attack3Size: {x: 2, y: 2.3}
+  upgrade:
+    level: 1
+    skillTreePoints: 3
+  basicAttackComboData:
+    comboResetDelay: 0.8
+    steps:
+    - stepName: Attact 1
+      duration: 0.3
+      comboQueueOpenTime: 0.18
+      moveRecoveryTime: 0.18
+      dashCancelTime: 0.2
+      jumpCancelTime: 0
+      motionData:
+        useForwardMotion: 1
+        forwardDistance: 1.26
+        motionStartTime: 0.02
+        motionDuration: 0.08
+      hitFrames:
+      - hitTime: 0.1
+        activeDuration: 0.05
+        cameraShakeStrength: 0.01
+        offset: {x: 1.08, y: 0.4}
+        size: {x: 2.61, y: 1.55}
+        damageMultiplier: 1
+        knockbackForce: 2
+    - stepName: Attack 2
+      duration: 0.3
+      comboQueueOpenTime: 0.2
+      moveRecoveryTime: 0.18
+      dashCancelTime: 0.2
+      jumpCancelTime: 0.22
+      motionData:
+        useForwardMotion: 1
+        forwardDistance: 0.45
+        motionStartTime: 0.03
+        motionDuration: 0.1
+      hitFrames:
+      - hitTime: 0.12
+        activeDuration: 0.05
+        cameraShakeStrength: 0.01
+        offset: {x: 1, y: 0.45}
+        size: {x: 1.2, y: 0.85}
+        damageMultiplier: 1.15
+        knockbackForce: 2
+    - stepName: Attack 3
+      duration: 0.55
+      comboQueueOpenTime: 0.22
+      moveRecoveryTime: 0.18
+      dashCancelTime: 0.2
+      jumpCancelTime: 0.22
+      motionData:
+        useForwardMotion: 1
+        forwardDistance: 0.6
+        motionStartTime: 0.04
+        motionDuration: 0.12
+      hitFrames:
+      - hitTime: 0.1
+        activeDuration: 0.04
+        cameraShakeStrength: 0.1
+        offset: {x: 0.9, y: 0.4}
+        size: {x: 1.2, y: 0.85}
+        damageMultiplier: 0.45
+        knockbackForce: 2
+      - hitTime: 0.18
+        activeDuration: 0.04
+        cameraShakeStrength: 0.1
+        offset: {x: 1, y: 0.45}
+        size: {x: 1.1, y: 0.75}
+        damageMultiplier: 0.45
+        knockbackForce: 2
+      - hitTime: 0.3
+        activeDuration: 0.06
+        cameraShakeStrength: 0.1
+        offset: {x: 1.2, y: 0.5}
+        size: {x: 1.4, y: 0.9}
+        damageMultiplier: 1.2
+        knockbackForce: 3
+  neutralAirComboData:
+    comboResetDelay: 0.8
+    steps:
+    - stepName: Attack 1
+      duration: 0.3
+      comboQueueOpenTime: 0.2
+      moveRecoveryTime: 0.18
+      dashCancelTime: 0.2
+      jumpCancelTime: 0.22
+      motionData:
+        useForwardMotion: 1
+        forwardDistance: 0.45
+        motionStartTime: 0.03
+        motionDuration: 0.1
+      hitFrames:
+      - hitTime: 0.12
+        activeDuration: 0.05
+        cameraShakeStrength: 0.01
+        offset: {x: 1, y: 0.45}
+        size: {x: 1.2, y: 0.85}
+        damageMultiplier: 1.15
+        knockbackForce: 2
   skillData:
     skillName: Gust Break
     description: "\u0E1B\u0E25\u0E48\u0E2D\u0E22\u0E41\u0E23\u0E07\u0E25\u0E21\u0E01\u0E23\u0E30\u0E41\u0E17\u0E01\u0E14\u0E49\u0E32\u0E19\u0E2B\u0E19\u0E49\u0E32
@@ -80,6 +176,8 @@ MonoBehaviour:
       nodeName: Heavy Gust
       description: "\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E41\u0E23\u0E07\u0E1C\u0E25\u0E31\u0E01\u0E02\u0E2D\u0E07
         Gust Break"
+      requiredNodeId: 
+      pointCost: 1
       unlocked: 0
       effectType: 3
       effectValue: 2
@@ -87,6 +185,8 @@ MonoBehaviour:
       nodeName: Sharp Wind
       description: "\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E14\u0E32\u0E40\u0E21\u0E08\u0E02\u0E2D\u0E07
         Gust Break"
+      requiredNodeId: 
+      pointCost: 1
       unlocked: 1
       effectType: 1
       effectValue: 0.25
@@ -94,6 +194,8 @@ MonoBehaviour:
       nodeName: Lasting Storm
       description: "\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E23\u0E30\u0E22\u0E30\u0E40\u0E27\u0E25\u0E32\u0E02\u0E2D\u0E07
         Skyfall Tornado"
+      requiredNodeId: 
+      pointCost: 1
       unlocked: 0
       effectType: 5
       effectValue: 1.5
