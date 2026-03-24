@@ -24,4 +24,10 @@ public class AttackHitFrameData
     [Header("Damage / Knockback")]
     public float damageMultiplier = 1f;
     public float knockbackForce = 4f;
+
+    // =========================================================
+    // Debug
+    // =========================================================
+    [Header("Debug")]
+    public Color debugColor = Color.red;
 }

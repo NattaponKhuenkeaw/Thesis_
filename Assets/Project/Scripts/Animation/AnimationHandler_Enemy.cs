@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Animator))]
@@ -18,6 +19,8 @@ public class AnimationHandler_Enemy : MonoBehaviour
     private readonly int dieHash = Animator.StringToHash("Die");
     private readonly int attackHash = Animator.StringToHash("Attack");
 
+    private HashSet<int> animParamHashes;
+
     // =========================================================
     // Unity Methods
     // =========================================================
@@ -28,6 +31,15 @@ public class AnimationHandler_Enemy : MonoBehaviour
 
         if (enemyController == null)
             enemyController = GetComponentInParent<EnemyController>();
+
+        animParamHashes = new HashSet<int>();
+        if (anim != null && anim.runtimeAnimatorController != null)
+        {
+            foreach (var param in anim.parameters)
+            {
+                animParamHashes.Add(param.nameHash);
+            }
+        }
     }
 
     void OnEnable()
@@ -62,25 +74,29 @@ public class AnimationHandler_Enemy : MonoBehaviour
     }
 
     // =========================================================
-    // Public Animation Triggers
+    // Public Animation Triggers // Check hashes to prevent warnings
     // =========================================================
     public void TriggerTakeDamage()
     {
-        anim.SetTrigger(takeDamageHash);
+        if (animParamHashes != null && animParamHashes.Contains(takeDamageHash))
+            anim.SetTrigger(takeDamageHash);
     }
 
     public void TriggerDie()
     {
-        anim.SetTrigger(dieHash);
+        if (animParamHashes != null && animParamHashes.Contains(dieHash))
+            anim.SetTrigger(dieHash);
     }
 
     public void TriggerAttack()
     {
-        anim.SetTrigger(attackHash);
+        if (animParamHashes != null && animParamHashes.Contains(attackHash))
+            anim.SetTrigger(attackHash);
     }
 
     public void SetSpeed(float speed)
     {
-        anim.SetFloat(speedHash, speed);
+        if (animParamHashes != null && animParamHashes.Contains(speedHash))
+            anim.SetFloat(speedHash, speed);
     }
 }

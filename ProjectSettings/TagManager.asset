@@ -42,14 +42,14 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
-  - name: WorldUI
-    uniqueID: 3465907387
+  - name: Enemy
+    uniqueID: 859588101
     locked: 0
   - name: Player
     uniqueID: 1709949603
     locked: 0
-  - name: Enemy
-    uniqueID: 532520505
+  - name: WorldUI
+    uniqueID: 3465907387
     locked: 0
   m_RenderingLayers:
   - Default

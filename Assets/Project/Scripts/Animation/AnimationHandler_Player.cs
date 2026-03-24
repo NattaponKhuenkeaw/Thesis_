@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 [RequireComponent(typeof(Animator))]
 public class AnimationHandler : MonoBehaviour
@@ -25,11 +25,15 @@ public class AnimationHandler : MonoBehaviour
     private readonly int takeDamageHash = Animator.StringToHash("TakeDamage");
     private readonly int skillHash = Animator.StringToHash("Skill");
     private readonly int ultimateHash = Animator.StringToHash("Ultimate");
+    private readonly int landingHash = Animator.StringToHash("Landing");
+    private readonly int isLandingHash = Animator.StringToHash("IsLanding");
+    private readonly int fallHash = Animator.StringToHash("Fall");
 
     // =========================================================
     // Private Runtime Data
     // =========================================================
     private Rigidbody2D rb;
+    private bool wasFalling;
 
     // =========================================================
     // Unity Methods
@@ -51,7 +55,9 @@ public class AnimationHandler : MonoBehaviour
         if (movement != null)
         {
             movement.OnJumpStart += TriggerJump;
+            movement.OnDoubleJump += TriggerJump;
             movement.OnDashStart += TriggerDash;
+            movement.OnLand += TriggerLanding;
         }
     }
 
@@ -60,7 +66,9 @@ public class AnimationHandler : MonoBehaviour
         if (movement != null)
         {
             movement.OnJumpStart -= TriggerJump;
+            movement.OnDoubleJump -= TriggerJump;
             movement.OnDashStart -= TriggerDash;
+            movement.OnLand -= TriggerLanding;
         }
     }
 
@@ -72,6 +80,17 @@ public class AnimationHandler : MonoBehaviour
         anim.SetFloat(speedHash, Mathf.Abs(rb.linearVelocity.x));
         anim.SetFloat(verticalVelocityHash, rb.linearVelocity.y);
         anim.SetBool(isGroundedHash, movement.IsGrounded());
+        anim.SetBool(isLandingHash, movement.IsLanding);
+
+        // Detect falling state (airborne and moving downwards)
+        bool isFalling = !movement.IsGrounded() && rb.linearVelocity.y < -0.1f && !movement.IsLanding;
+        
+        if (isFalling && !wasFalling)
+        {
+            anim.Play(fallHash, 0, 0f);
+        }
+        
+        wasFalling = isFalling;
     }
 
     // =========================================================
@@ -79,12 +98,19 @@ public class AnimationHandler : MonoBehaviour
     // =========================================================
     public void TriggerJump()
     {
-        anim.SetTrigger(jumpHash);
+        // Using Play(state, layer, time) to force the animation to restart from beginning
+        // even if we are already in the Jump state (essential for double jumps).
+        anim.Play(jumpHash, 0, 0f);
     }
 
     public void TriggerDash()
     {
         anim.SetTrigger(dashHash);
+    }
+
+    public void TriggerLanding()
+    {
+        anim.SetTrigger(landingHash);
     }
 
     public void TriggerTakeDamage()
@@ -118,5 +144,26 @@ public class AnimationHandler : MonoBehaviour
     public void TriggerUltimate()
     {
         anim.SetTrigger(ultimateHash);
+    }
+
+    // =========================================================
+    // Animation Events
+    // =========================================================
+    public void OnImpactStart()
+    {
+        if (movement != null && movement.basicAttack != null)
+            movement.basicAttack.OnImpactStart();
+    }
+
+    public void OnRecoveryStart()
+    {
+        if (movement != null && movement.basicAttack != null)
+            movement.basicAttack.OnRecoveryStart();
+    }
+
+    public void OnAttackEnd()
+    {
+        if (movement != null && movement.basicAttack != null)
+            movement.basicAttack.OnAttackEnd();
     }
 }

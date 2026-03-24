@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 255da7e6c6e2e0147ab812b7ed3943c0, type: 3}
   m_Name: CharacterObject_Raiden
   m_EditorClassIdentifier: Assembly-CSharp::CharacterObject
-  characterId: 
+  characterId: Raiden
   characterType: 0
   elementType: 2
   stats:
@@ -22,20 +22,24 @@ MonoBehaviour:
     elementalMultiplier: 1
     moveSpeed: 5
     jumpForce: 10
+    maxJumpCount: 1
+    maxAirDashCount: 1
+    groundAcceleration: 80
+    groundDeceleration: 90
+    airAcceleration: 55
+    airDeceleration: 40
+    airSpeedMultiplier: 1
     dashSpeed: 20
     dashDuration: 0.2
     dashCooldown: 1
+    coyoteTime: 0.08
+    jumpBufferTime: 0.12
+    jumpCutMultiplier: 0.5
+    fallGravityMultiplier: 1.6
+    lowJumpGravityMultiplier: 2.2
+    maxFallSpeed: 18
     jumpStartupTime: 0.05
     landingLagTime: 0.1
-    maxCombo: 3
-    comboResetDelay: 0.8
-    comboQueueOpenTime: 0.2
-    attack1Duration: 0.45
-    attack2Duration: 0.45
-    attack3Duration: 0.45
-    attack1Multiplier: 1
-    attack2Multiplier: 1.2
-    attack3Multiplier: 1.5
   metaData:
     displayName: Raiden
     description: A twin-blade rogue born from the shadow realm. She seeks redemption
@@ -45,13 +49,15 @@ MonoBehaviour:
     attackSfx: {fileID: 0}
     skillSfx: {fileID: 0}
     hurtSfx: {fileID: 0}
-  attackHitboxData:
-    attack1Offset: {x: 0.8, y: 0}
-    attack1Size: {x: 1.2, y: 0.8}
-    attack2Offset: {x: 1, y: 0}
-    attack2Size: {x: 1.4, y: 0.8}
-    attack3Offset: {x: 1.2, y: 0.1}
-    attack3Size: {x: 1.6, y: 1}
+  upgrade:
+    level: 1
+    skillTreePoints: 3
+  basicAttackComboData:
+    comboResetDelay: 0.8
+    steps: []
+  neutralAirComboData:
+    comboResetDelay: 0.8
+    steps: []
   skillData:
     skillName: 
     description: 

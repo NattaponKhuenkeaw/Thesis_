@@ -109,6 +109,7 @@ public class PlayerMovement : MonoBehaviour
     // =========================================================
     public event Action<bool> OnGroundedChanged;
     public event Action OnJumpStart;
+    public event Action OnDoubleJump;
     public event Action OnDashStart;
     public event Action OnDashEnd;
     public event Action OnLandingEnd;
@@ -248,7 +249,7 @@ public class PlayerMovement : MonoBehaviour
         {
             OnGroundedChanged?.Invoke(isGrounded);
 
-            if (isGrounded && rb.linearVelocity.y <= 0.1f)
+            if (isGrounded)
             {
                 jumpsUsed = 0;
                 OnLand?.Invoke();
@@ -310,6 +311,7 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             jumpsUsed++;
+            OnDoubleJump?.Invoke();
         }
 
         coyoteUntil = -999f;
@@ -462,6 +464,10 @@ public class PlayerMovement : MonoBehaviour
     private void UpdateFacing()
     {
         if (spriteRenderer == null)
+            return;
+
+        bool canUpdateFacing = !IsMovementLocked() || (basicAttack != null && basicAttack.CanSwitchDirection());
+        if (!canUpdateFacing)
             return;
 
         if (horizontalInput > 0.01f)

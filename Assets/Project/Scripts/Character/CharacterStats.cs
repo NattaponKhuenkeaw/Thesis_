@@ -30,15 +30,5 @@ public class CharacterStats
     public float dashDuration = 0.2f;
     public float dashCooldown = 1f;
 
-    [Header("Jump Feel")]
-    public float coyoteTime = 0.08f;
-    public float jumpBufferTime = 0.12f;
-    public float jumpCutMultiplier = 0.5f;
-    public float fallGravityMultiplier = 1.6f;
-    public float lowJumpGravityMultiplier = 2.2f;
-    public float maxFallSpeed = 18f;
-
-    public float jumpStartupTime = 0.05f;
-    public float landingLagTime = 0.1f;
-
+    // End of CharacterStats
 }

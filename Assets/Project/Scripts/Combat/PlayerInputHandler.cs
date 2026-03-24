@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class InputHandler_Player : MonoBehaviour
@@ -44,6 +44,17 @@ public class InputHandler_Player : MonoBehaviour
 
     void Update()
     {
+        if (Project.UI.InputLockManager.IsLocked)
+        {
+            moveInput = Vector2.zero;
+            if (movement != null)
+            {
+                movement.Move(Vector2.zero);
+                movement.SetJumpHeld(false);
+            }
+            return;
+        }
+
         if (movement != null)
         {
             movement.Move(moveInput);
@@ -115,6 +126,8 @@ public class InputHandler_Player : MonoBehaviour
 
     public void OnMove(InputValue value)
     {
+        if (Project.UI.InputLockManager.IsLocked) return;
+
         moveInput = value.Get<Vector2>();
 
         if (movement != null)
@@ -126,6 +139,8 @@ public class InputHandler_Player : MonoBehaviour
 
     public void OnJump(InputValue value)
     {
+        if (Project.UI.InputLockManager.IsLocked) return;
+
         if (movement == null)
             return;
 
@@ -135,11 +150,6 @@ public class InputHandler_Player : MonoBehaviour
             return;
 
         bool canJumpNow = true;
-
-        if (basicAttack != null && basicAttack.IsAttacking() && !basicAttack.CanJumpCancel())
-        {
-            canJumpNow = false;
-        }
 
         if (canJumpNow)
         {
@@ -152,12 +162,14 @@ public class InputHandler_Player : MonoBehaviour
 
     public void OnDash(InputValue value)
     {
+        if (Project.UI.InputLockManager.IsLocked) return;
+
         if (!value.isPressed || movement == null || actionController == null)
             return;
 
         bool canDashNow = actionController.CanStartDash();
 
-        if (!canDashNow && basicAttack != null && basicAttack.IsAttacking() && basicAttack.CanDashCancel())
+        if (!canDashNow && basicAttack != null && basicAttack.IsAttacking())
         {
             canDashNow = true;
             actionController.SetState(PlayerActionState.Normal);
@@ -175,6 +187,8 @@ public class InputHandler_Player : MonoBehaviour
 
     public void OnAttack(InputValue value)
     {
+        if (Project.UI.InputLockManager.IsLocked) return;
+
         if(value.isPressed && actionController != null)
         {
             actionController.BufferAttack();
@@ -184,6 +198,8 @@ public class InputHandler_Player : MonoBehaviour
 
     public void OnSkill(InputValue value)
     {
+        if (Project.UI.InputLockManager.IsLocked) return;
+
         if (value.isPressed && skillController != null)
         {
             skillController.UseSkill();
@@ -192,6 +208,8 @@ public class InputHandler_Player : MonoBehaviour
 
     public void OnUltimate(InputValue value)
     {
+        if (Project.UI.InputLockManager.IsLocked) return;
+
         if (value.isPressed && ultimateController != null)
         {
             ultimateController.UseUltimate();

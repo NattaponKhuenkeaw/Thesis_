@@ -37,4 +37,22 @@ public class AnimationEventRelay : MonoBehaviour
         if (basicAttack != null)
             basicAttack.ResetCombo();
     }
+
+    public void OnImpactStart()
+    {
+        if (basicAttack != null)
+            basicAttack.OnImpactStart();
+    }
+
+    public void OnRecoveryStart()
+    {
+        if (basicAttack != null)
+            basicAttack.OnRecoveryStart();
+    }
+
+    public void OnAttackEnd()
+    {
+        if (basicAttack != null)
+            basicAttack.OnAttackEnd();
+    }
 }

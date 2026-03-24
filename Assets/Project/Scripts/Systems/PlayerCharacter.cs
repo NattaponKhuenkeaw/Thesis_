@@ -91,14 +91,6 @@ public class PlayerCharacter : MonoBehaviour
         movement.dashSpeed = stats.dashSpeed;
         movement.dashDuration = stats.dashDuration;
         movement.dashCooldown = stats.dashCooldown;
-        movement.coyoteTime = stats.coyoteTime;
-        movement.jumpBufferTime = stats.jumpBufferTime;
-        movement.jumpCutMultiplier = stats.jumpCutMultiplier;
-        movement.fallGravityMultiplier = stats.fallGravityMultiplier;
-        movement.lowJumpGravityMultiplier = stats.lowJumpGravityMultiplier;
-        movement.maxFallSpeed = stats.maxFallSpeed;
-        movement.jumpStartupTime = stats.jumpStartupTime;
-        movement.landingLagTime = stats.landingLagTime;
     }
 
     private void ApplyAnimationData()

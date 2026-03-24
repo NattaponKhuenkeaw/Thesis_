@@ -5,18 +5,12 @@ public class AttackStepData
 {
     [Header("Step Info")]
     public string stepName = "Attack";
-    public float duration = 0.3f;
 
-    [Header("Combo Queue")]
-    public float comboQueueOpenTime = 0.2f;
-
-    [Header("Recovery / Cancel")]
-    public float moveRecoveryTime = 0.18f;
-    public float dashCancelTime = 0.20f;
-    public float jumpCancelTime = 0.22f;
-
-    [Header("Motion")]
-    public AttackMotionData motionData = new AttackMotionData();
+    [Header("Forward Motion")]
+    public bool useForwardMotion = false;
+    public float forwardDistance = 0.5f;
+    public float motionStartTime = 0.05f;
+    public float motionDuration = 0.1f;
 
     [Header("Hit Frames")]
     public AttackHitFrameData[] hitFrames;

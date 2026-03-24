@@ -56,7 +56,7 @@ public class MeleeHitboxDamage : MonoBehaviour
         if (lastHitFrame == Time.frameCount)
             return;
 
-        EnemyTarget enemy = other.GetComponentInParent<EnemyTarget>();
+        EnemyController enemy = other.GetComponentInParent<EnemyController>();
         if (enemy == null)
             return;
 

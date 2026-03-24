@@ -4,6 +4,14 @@ using System.Collections.Generic;
 
 public class PlayerBasicAttack : MonoBehaviour
 {
+    public enum AttackFrameState
+    {
+        None,
+        Windup,
+        Impact,
+        Recovery
+    }
+
     private enum AttackComboMode
     {
         Ground,
@@ -28,14 +36,17 @@ public class PlayerBasicAttack : MonoBehaviour
     private int comboStep = 0;
     private bool isAttacking = false;
     private bool comboQueued = false;
-    private bool canQueueNext = false;
-    private bool canMoveAfterAttack = false;
-    private bool canDashCancel = false;
-    private bool canJumpCancel = false;
+    
+    // New Frame Data State
+    private AttackFrameState currentFrameState = AttackFrameState.None;
 
     private float lastAttackInputTime = -999f;
     private AttackComboMode currentComboMode = AttackComboMode.Ground;
     private AttackComboMode queuedComboMode = AttackComboMode.Ground;
+    private int currentHitFrameIndex = 0;
+    private int hitboxActiveCount = 0;
+    private int lastImpactFrame = -1;
+    private bool inputConsumedInCurrentStep = false;
 
     // =========================================================
     // Unity Methods
@@ -64,6 +75,24 @@ public class PlayerBasicAttack : MonoBehaviour
             meleeHitbox.SetActive(false);
     }
 
+    void OnEnable()
+    {
+        if (movement != null)
+        {
+            movement.OnDashStart += ResetCombo;
+            movement.OnJumpStart += ResetCombo;
+        }
+    }
+
+    void OnDisable()
+    {
+        if (movement != null)
+        {
+            movement.OnDashStart -= ResetCombo;
+            movement.OnJumpStart -= ResetCombo;
+        }
+    }
+
     void Update()
     {
         float comboResetDelay = GetComboResetDelay();
@@ -90,9 +119,6 @@ public class PlayerBasicAttack : MonoBehaviour
         if (comboData == null || comboData.GetMaxCombo() <= 0)
             return false;
 
-        if (isAttacking && !canQueueNext)
-            return false;
-
         lastAttackInputTime = Time.time;
 
         if (!isAttacking)
@@ -104,9 +130,31 @@ public class PlayerBasicAttack : MonoBehaviour
             return true;
         }
 
-        comboQueued = true;
-        queuedComboMode = requestedMode;
-        return true;
+        if (inputConsumedInCurrentStep)
+            return false;
+
+        // Reject input during Windup — the current attack hasn't even reached Impact yet
+        if (currentFrameState == AttackFrameState.Windup)
+            return false;
+
+        // Buffer input during Impact — will be consumed when Recovery starts
+        if (currentFrameState == AttackFrameState.Impact)
+        {
+            comboQueued = true;
+            queuedComboMode = requestedMode;
+            inputConsumedInCurrentStep = true;
+            return true;
+        }
+
+        // If in Recovery, immediately start next combo
+        if (currentFrameState == AttackFrameState.Recovery)
+        {
+            inputConsumedInCurrentStep = true;
+            StartNextAttack(requestedMode);
+            return true;
+        }
+
+        return false;
     }
     public void ResetCombo()
     {
@@ -116,16 +164,16 @@ public class PlayerBasicAttack : MonoBehaviour
         StopAllCoroutines();
 
         comboStep = 0;
+        inputConsumedInCurrentStep = false;
         isAttacking = false;
         comboQueued = false;
-        canQueueNext = false;
-        canMoveAfterAttack = false;
-        canDashCancel = false;
-        canJumpCancel = false;
+        currentFrameState = AttackFrameState.None;
         currentComboMode = AttackComboMode.Ground;
         queuedComboMode = AttackComboMode.Ground;
-
-        DisableHitbox();
+        currentHitFrameIndex = 0;
+        hitboxActiveCount = 0;
+        lastImpactFrame = -1;
+        DisableHitbox(true);
 
         if (movement != null)
         {
@@ -147,19 +195,20 @@ public class PlayerBasicAttack : MonoBehaviour
         return comboStep;
     }
 
+    public AttackFrameState GetCurrentFrameState()
+    {
+        return currentFrameState;
+    }
+
+    public bool CanSwitchDirection()
+    {
+        return currentFrameState == AttackFrameState.Windup;
+    }
+
     public bool CanMoveAfterAttack()
     {
-        return canMoveAfterAttack;
-    }
-
-    public bool CanDashCancel()
-    {
-        return canDashCancel;
-    }
-
-    public bool CanJumpCancel()
-    {
-        return canJumpCancel;
+        // Player relies on Dash/Jump cancel, or returns to idle after Recovery
+        return !isAttacking;
     }
 
     // =========================================================
@@ -187,88 +236,123 @@ public class PlayerBasicAttack : MonoBehaviour
         isAttacking = true;
         comboQueued = false;
         queuedComboMode = attackMode;
-        canQueueNext = false;
-        canMoveAfterAttack = false;
-        canDashCancel = false;
-        canJumpCancel = false;
+        
+        currentFrameState = AttackFrameState.Windup;
+        currentHitFrameIndex = 0;
+        hitboxActiveCount = 0;
+        lastImpactFrame = -1;
+        inputConsumedInCurrentStep = false;
 
         if (movement != null)
+        {
+            movement.CancelAttackMotion();
             movement.CanMove = false;
+        }
 
         if (animHandler != null)
             animHandler.TriggerAttackCombo(comboStep);
 
-        StartCoroutine(AttackRoutine(comboData.GetStep(comboStep)));
+        AttackStepData stepData = comboData.GetStep(comboStep);
+        if (stepData != null && stepData.useForwardMotion)
+        {
+            StartCoroutine(AttackMotionRoutine(stepData));
+        }
     }
 
-    private IEnumerator AttackRoutine(AttackStepData stepData)
+    // =========================================================
+    // Animation Event Receivers
+    // =========================================================
+    public void OnImpactStart()
     {
+        if (!isAttacking) return;
+
+        // Deduplicate calls in the same frame (caused by multiple relay components)
+        if (lastImpactFrame == Time.frameCount)
+            return;
+        
+        lastImpactFrame = Time.frameCount;
+        currentFrameState = AttackFrameState.Impact;
+        
+        BasicAttackComboData comboData = GetComboData(currentComboMode);
+        AttackStepData stepData = comboData?.GetStep(comboStep);
+
         if (stepData == null)
         {
-            ResetCombo();
-            yield break;
+            Debug.LogWarning($"[PlayerBasicAttack] OnImpactStart: No StepData found for Step {comboStep} in {currentComboMode} combo!");
+            return;
         }
 
-        StartCoroutine(OpenMoveRecoveryRoutine(stepData.moveRecoveryTime));
-        StartCoroutine(OpenDashCancelRoutine(stepData.dashCancelTime));
-        StartCoroutine(OpenJumpCancelRoutine(stepData.jumpCancelTime));
-
-        if (stepData.motionData != null && stepData.motionData.useForwardMotion)
+        if (stepData.hitFrames == null || stepData.hitFrames.Length == 0)
         {
-            StartCoroutine(AttackMotionRoutine(stepData.motionData));
+            Debug.LogWarning($"[PlayerBasicAttack] OnImpactStart: Step {comboStep} has no HitFrames defined!");
+            return;
         }
 
-        if (stepData.hitFrames != null)
+        // Trigger ONLY the current hit frame sequentially
+        if (currentHitFrameIndex < stepData.hitFrames.Length)
         {
-            for (int i = 0; i < stepData.hitFrames.Length; i++)
+            AttackHitFrameData hitFrame = stepData.hitFrames[currentHitFrameIndex];
+            if (hitFrame != null)
             {
-                AttackHitFrameData hitFrame = stepData.hitFrames[i];
-                if (hitFrame != null)
-                {
-                    StartCoroutine(TriggerHitFrameRoutine(hitFrame));
-                }
+                StartCoroutine(TriggerHitFrameRoutine(hitFrame));
             }
-        }
-
-        float waitBeforeQueue = Mathf.Max(stepData.duration - stepData.comboQueueOpenTime, 0.05f);
-        yield return new WaitForSeconds(waitBeforeQueue);
-
-        canQueueNext = true;
-
-        float remain = stepData.duration - waitBeforeQueue;
-        if (remain > 0f)
-            yield return new WaitForSeconds(remain);
-
-        canQueueNext = false;
-        isAttacking = false;
-
-        BasicAttackComboData comboData = GetComboData(currentComboMode);
-        int maxCombo = comboData != null ? comboData.GetMaxCombo() : 0;
-
-        if (comboQueued && queuedComboMode == currentComboMode && comboStep < maxCombo)
-        {
-            StartNextAttack(currentComboMode);
-        }
-        else if (comboQueued && queuedComboMode != currentComboMode)
-        {
-            comboStep = 0;
-            StartNextAttack(queuedComboMode);
+            currentHitFrameIndex++;
         }
         else
         {
-            ResetCombo();
+            Debug.LogWarning($"[PlayerBasicAttack] OnImpactStart: All {stepData.hitFrames.Length} hit frames already triggered for Step {comboStep}. Check animation events!");
         }
+    }
+
+    public void OnRecoveryStart()
+    {
+        if (!isAttacking) return;
+
+        currentFrameState = AttackFrameState.Recovery;
+        
+        // If attack was queued during Impact, immediately proceed
+        if (comboQueued)
+        {
+            BasicAttackComboData comboData = GetComboData(currentComboMode);
+            int maxCombo = comboData != null ? comboData.GetMaxCombo() : 0;
+
+            if (queuedComboMode == currentComboMode && comboStep < maxCombo)
+            {
+                StartNextAttack(currentComboMode);
+            }
+            else if (queuedComboMode != currentComboMode)
+            {
+                comboStep = 0;
+                StartNextAttack(queuedComboMode);
+            }
+        }
+    }
+
+    public void OnAttackEnd()
+    {
+        if (!isAttacking) return;
+        
+        // IMPORTANT: We only honor OnAttackEnd if the current attack state is Recovery.
+        // If we are in Windup or Impact, then this event is "stale" from a previous 
+        // animation that was interrupted/short-canceled by the next combo step.
+        if (currentFrameState != AttackFrameState.Recovery)
+            return;
+        
+        ResetCombo();
     }
 
     private IEnumerator TriggerHitFrameRoutine(AttackHitFrameData hitFrame)
     {
-        yield return new WaitForSeconds(hitFrame.hitTime);
+        // Hit Time is now respected relative to ImpactStart, but usually you'd want hitTime = 0 
+        // if using Animation Events perfectly. We keep hitTime support if user still uses it.
+        if (hitFrame.hitTime > 0f)
+            yield return new WaitForSeconds(hitFrame.hitTime);
 
         float finalDamage = GetFinalAttackDamage(hitFrame.damageMultiplier);
         float finalKnockback = hitFrame.knockbackForce;
         float shakeStrength = Mathf.Max(0f, hitFrame.cameraShakeStrength);
 
-        BasicAttackComboData comboData = GetComboData();
+        BasicAttackComboData comboData = GetComboData(currentComboMode);
         int maxCombo = comboData != null ? comboData.GetMaxCombo() : 0;
         bool isLastStep = (comboStep >= maxCombo);
 
@@ -285,27 +369,49 @@ public class PlayerBasicAttack : MonoBehaviour
         DisableHitbox();
     }
 
-    private IEnumerator AttackMotionRoutine(AttackMotionData motionData)
+    private IEnumerator AttackMotionRoutine(AttackStepData stepData)
     {
-        if (motionData == null)
+        if (stepData == null)
             yield break;
 
-        yield return new WaitForSeconds(motionData.motionStartTime);
+        yield return new WaitForSeconds(stepData.motionStartTime);
 
         if (movement != null)
-            movement.ApplyAttackMovement(motionData.forwardDistance, motionData.motionDuration);
+            movement.ApplyAttackMovement(stepData.forwardDistance, stepData.motionDuration);
     }
 
     public void EnableHitbox()
     {
+        hitboxActiveCount++;
         if (meleeHitbox != null)
             meleeHitbox.SetActive(true);
     }
 
-    public void DisableHitbox()
+    public void DisableHitbox(bool force = false)
     {
-        if (meleeHitbox != null)
-            meleeHitbox.SetActive(false);
+        if (force)
+        {
+            hitboxActiveCount = 0;
+            if (meleeHitbox != null)
+                meleeHitbox.SetActive(false);
+            return;
+        }
+
+        hitboxActiveCount--;
+        
+        if (hitboxActiveCount < 0)
+        {
+            // This happens if there are redundant 'DisableHitbox' animation events.
+            // We clamp it to 0 and log a tip for the user.
+            hitboxActiveCount = 0;
+            // Debug.LogTip("PlayerBasicAttack: Hitbox count went negative. Consider removing legacy 'DisableHitbox' events from your animation.");
+        }
+
+        if (hitboxActiveCount == 0)
+        {
+            if (meleeHitbox != null)
+                meleeHitbox.SetActive(false);
+        }
     }
 
     private float GetFinalAttackDamage(float hitFrameMultiplier)
@@ -346,24 +452,6 @@ public class PlayerBasicAttack : MonoBehaviour
 
 
     // =========================================================
-    // Routine
-    // =========================================================
+    // Routine removed in favor of Animation Events
 
-    private IEnumerator OpenMoveRecoveryRoutine(float time)
-    {
-        yield return new WaitForSeconds(time);
-        canMoveAfterAttack = true;
-    }
-
-    private IEnumerator OpenDashCancelRoutine(float time)
-    {
-        yield return new WaitForSeconds(time);
-        canDashCancel = true;
-    }
-
-    private IEnumerator OpenJumpCancelRoutine(float time)
-    {
-        yield return new WaitForSeconds(time);
-        canJumpCancel = true;
-    }
 }
