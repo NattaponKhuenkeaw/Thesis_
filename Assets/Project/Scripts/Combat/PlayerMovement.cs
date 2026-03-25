@@ -58,6 +58,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("Layer Settings")]
     public string playerLayerName = "Player";
     public string enemyLayerName = "Enemy";
+    public string oneWayPlatformLayerName = "OneWayPlatform";
 
     // =========================================================
     // Feel
@@ -65,6 +66,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("Feel")]
     public float jumpStartupTime = 0.05f;
     public float landingLagTime = 0.1f;
+    public float dropDownDuration = 0.2f;
 
     // =========================================================
     // Physics Checks
@@ -91,10 +93,19 @@ public class PlayerMovement : MonoBehaviour
     private int airDashesUsed;
     private bool isAttackMotionActive;
     private float attackMotionVelocityX;
+    private float attackMotionVelocityY;
+    private bool attackMotionOverrideVertical;
+    private bool attackMotionOverrideGravity;
+    private float attackMotionGravityScale;
     private Coroutine attackMotionCoroutine;
+    private Coroutine dropDownCoroutine;
+    private Collider2D currentGroundCollider;
+    private Collider2D ignoredGroundCollider;
+    private Collider2D[] solidColliders;
 
     private int playerLayer;
     private int enemyLayer;
+    private int oneWayPlatformLayer;
 
     // =========================================================
     // States
@@ -103,6 +114,7 @@ public class PlayerMovement : MonoBehaviour
     public bool IsJumping { get; private set; }
     public bool IsLanding { get; private set; }
     public bool CanMove { get; set; } = true;
+    public float LastDashStartedTime { get; private set; } = -999f;
 
     // =========================================================
     // Events
@@ -111,6 +123,7 @@ public class PlayerMovement : MonoBehaviour
     public event Action OnJumpStart;
     public event Action OnDashStart;
     public event Action OnDashEnd;
+    public event Action OnAirDashPerformed;
     public event Action OnLandingEnd;
     public event Action OnLand;
     public event Action OnRunStart;
@@ -135,6 +148,8 @@ public class PlayerMovement : MonoBehaviour
 
         playerLayer = LayerMask.NameToLayer(playerLayerName);
         enemyLayer = LayerMask.NameToLayer(enemyLayerName);
+        oneWayPlatformLayer = LayerMask.NameToLayer(oneWayPlatformLayerName);
+        solidColliders = Array.FindAll(GetComponentsInChildren<Collider2D>(), collider => collider != null && !collider.isTrigger);
     }
 
     void Update()
@@ -175,6 +190,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (CanStartGroundDash())
         {
+            LastDashStartedTime = Time.time;
             StopAttackMotion();
             StartCoroutine(DashCoroutine(inputX, true));
             return;
@@ -182,8 +198,10 @@ public class PlayerMovement : MonoBehaviour
 
         if (CanStartAirDash())
         {
+            LastDashStartedTime = Time.time;
             StopAttackMotion();
             airDashesUsed++;
+            OnAirDashPerformed?.Invoke();
             StartCoroutine(DashCoroutine(inputX, false));
         }
     }
@@ -213,14 +231,46 @@ public class PlayerMovement : MonoBehaviour
         return isGrounded;
     }
 
+    public bool WasDashStartedRecently(float window)
+    {
+        if (window <= 0f)
+            return false;
+
+        return Time.time - LastDashStartedTime <= window;
+    }
+
+    public bool TryDropDown()
+    {
+        if (!CanDropDown())
+            return false;
+
+        if (dropDownCoroutine != null)
+            StopCoroutine(dropDownCoroutine);
+
+        dropDownCoroutine = StartCoroutine(DropDownRoutine(currentGroundCollider));
+        return true;
+    }
+
     public void ApplyAttackMovement(float distance, float duration)
+    {
+        AttackMotionData motionData = new AttackMotionData
+        {
+            motionMode = AttackMotionMode.Forward,
+            useForwardMotion = true,
+            forwardDistance = distance,
+            motionDuration = duration
+        };
+        ApplyAttackMovement(motionData);
+    }
+
+    public void ApplyAttackMovement(AttackMotionData motionData)
     {
         StopAttackMotion();
 
-        if (duration <= 0f)
+        if (motionData == null || !motionData.useForwardMotion || motionData.motionDuration <= 0f)
             return;
 
-        attackMotionCoroutine = StartCoroutine(AttackMovementCoroutine(distance, duration));
+        attackMotionCoroutine = StartCoroutine(AttackMovementCoroutine(motionData));
     }
 
     public void CancelAttackMotion()
@@ -236,7 +286,9 @@ public class PlayerMovement : MonoBehaviour
         if (groundCheck == null)
             return;
 
-        isGrounded = Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer);
+        Collider2D[] groundHits = Physics2D.OverlapCircleAll(groundCheck.position, 0.2f, GetGroundCheckMask());
+        currentGroundCollider = GetBestGroundCollider(groundHits);
+        isGrounded = currentGroundCollider != null;
 
         if (isGrounded)
         {
@@ -257,6 +309,44 @@ public class PlayerMovement : MonoBehaviour
         }
 
         wasGrounded = isGrounded;
+    }
+
+    private int GetGroundCheckMask()
+    {
+        int mask = groundLayer.value;
+
+        if (oneWayPlatformLayer >= 0)
+            mask |= 1 << oneWayPlatformLayer;
+
+        return mask;
+    }
+
+    private Collider2D GetBestGroundCollider(Collider2D[] hits)
+    {
+        if (hits == null)
+            return null;
+
+        for (int i = 0; i < hits.Length; i++)
+        {
+            Collider2D hit = hits[i];
+            if (hit == null || hit.isTrigger)
+                continue;
+
+            if (ignoredGroundCollider != null && hit == ignoredGroundCollider)
+                continue;
+
+            return hit;
+        }
+
+        return null;
+    }
+
+    private bool CanDropDown()
+    {
+        return isGrounded
+            && currentGroundCollider != null
+            && oneWayPlatformLayer >= 0
+            && currentGroundCollider.gameObject.layer == oneWayPlatformLayer;
     }
 
     private void TryConsumeBufferedJump()
@@ -320,6 +410,12 @@ public class PlayerMovement : MonoBehaviour
         if (IsDashing)
             return;
 
+        if (isAttackMotionActive && attackMotionOverrideGravity)
+        {
+            rb.gravityScale = attackMotionGravityScale;
+            return;
+        }
+
         float targetGravity = originalGravityScale;
 
         if (isGrounded)
@@ -367,6 +463,10 @@ public class PlayerMovement : MonoBehaviour
 
         isAttackMotionActive = false;
         attackMotionVelocityX = 0f;
+        attackMotionVelocityY = 0f;
+        attackMotionOverrideVertical = false;
+        attackMotionOverrideGravity = false;
+        attackMotionGravityScale = originalGravityScale;
     }
 
     private bool CanStartGroundDash()
@@ -423,7 +523,8 @@ public class PlayerMovement : MonoBehaviour
 
         if (isAttackMotionActive)
         {
-            rb.linearVelocity = new Vector2(attackMotionVelocityX, rb.linearVelocity.y);
+            float verticalVelocity = attackMotionOverrideVertical ? attackMotionVelocityY : rb.linearVelocity.y;
+            rb.linearVelocity = new Vector2(attackMotionVelocityX, verticalVelocity);
             return;
         }
 
@@ -539,7 +640,7 @@ public class PlayerMovement : MonoBehaviour
 
         IsDashing = false;
         CanMove = true;
-        if (actionController != null)
+        if (actionController != null && actionController.IsState(PlayerActionState.Dash))
             actionController.SetState(PlayerActionState.Normal);
         OnDashEnd?.Invoke();
 
@@ -550,34 +651,123 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    private IEnumerator AttackMovementCoroutine(float distance, float duration)
+    private IEnumerator AttackMovementCoroutine(AttackMotionData motionData)
     {
         float dir = 1f;
         if (spriteRenderer != null && spriteRenderer.flipX)
             dir = -1f;
 
-        float totalDistance = distance * dir;
+        Vector2 totalMotion = motionData.motionMode == AttackMotionMode.Vector
+            ? new Vector2(motionData.motionVector.x * dir, motionData.motionVector.y)
+            : new Vector2(motionData.forwardDistance * dir, 0f);
         float elapsed = 0f;
 
         isAttackMotionActive = true;
+        attackMotionOverrideVertical = motionData.motionMode == AttackMotionMode.Vector && Mathf.Abs(totalMotion.y) > 0.001f;
+        attackMotionOverrideGravity = motionData.overrideGravityWhileActive;
+        attackMotionGravityScale = motionData.gravityScaleOverride;
 
-        while (elapsed < duration)
+        while (elapsed < motionData.motionDuration)
         {
             if (IsDashing)
                 break;
 
+            if (motionData.stopOnGroundContact && isGrounded && elapsed > 0.02f)
+                break;
+
             float deltaTime = Time.fixedDeltaTime;
-            float nextElapsed = Mathf.Min(elapsed + deltaTime, duration);
-            float currentT = elapsed / duration;
-            float nextT = nextElapsed / duration;
-            float currentDistance = Mathf.Lerp(0f, totalDistance, currentT);
-            float nextDistance = Mathf.Lerp(0f, totalDistance, nextT);
-            attackMotionVelocityX = (nextDistance - currentDistance) / Mathf.Max(deltaTime, 0.0001f);
+            float nextElapsed = Mathf.Min(elapsed + deltaTime, motionData.motionDuration);
+            float currentT = elapsed / motionData.motionDuration;
+            float nextT = nextElapsed / motionData.motionDuration;
+            Vector2 currentDistance = Vector2.Lerp(Vector2.zero, totalMotion, currentT);
+            Vector2 nextDistance = Vector2.Lerp(Vector2.zero, totalMotion, nextT);
+            Vector2 delta = nextDistance - currentDistance;
+            Vector2 velocity = delta / Mathf.Max(deltaTime, 0.0001f);
+            attackMotionVelocityX = velocity.x;
+
+            if (attackMotionOverrideVertical)
+                attackMotionVelocityY = velocity.y;
 
             elapsed = nextElapsed;
             yield return new WaitForFixedUpdate();
         }
 
         StopAttackMotion();
+    }
+
+    private IEnumerator DropDownRoutine(Collider2D targetCollider)
+    {
+        if (targetCollider == null || solidColliders == null)
+        {
+            dropDownCoroutine = null;
+            yield break;
+        }
+
+        ignoredGroundCollider = targetCollider;
+
+        SetDropDownCollision(targetCollider, true);
+
+        isGrounded = false;
+        currentGroundCollider = null;
+
+        // Force a small downward velocity so the player clears the platform instead of re-contacting immediately.
+        if (rb != null)
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, Mathf.Min(rb.linearVelocity.y, -4f));
+
+        yield return new WaitForSeconds(dropDownDuration);
+
+        float restoreTimeoutAt = Time.time + 0.5f;
+
+        while (targetCollider != null
+            && !HasClearedDropDownCollider(targetCollider)
+            && Time.time < restoreTimeoutAt)
+        {
+            yield return null;
+        }
+
+        SetDropDownCollision(targetCollider, false);
+
+        if (ignoredGroundCollider == targetCollider)
+            ignoredGroundCollider = null;
+
+        dropDownCoroutine = null;
+    }
+
+    private void SetDropDownCollision(Collider2D targetCollider, bool ignore)
+    {
+        if (targetCollider == null || solidColliders == null)
+            return;
+
+        for (int i = 0; i < solidColliders.Length; i++)
+        {
+            Collider2D playerCollider = solidColliders[i];
+            if (playerCollider != null)
+                Physics2D.IgnoreCollision(playerCollider, targetCollider, ignore);
+        }
+    }
+
+    private bool HasClearedDropDownCollider(Collider2D targetCollider)
+    {
+        if (targetCollider == null || solidColliders == null)
+            return true;
+
+        float platformBottom = targetCollider.bounds.min.y;
+        float highestPlayerTop = float.MinValue;
+        bool foundSolidCollider = false;
+
+        for (int i = 0; i < solidColliders.Length; i++)
+        {
+            Collider2D playerCollider = solidColliders[i];
+            if (playerCollider == null)
+                continue;
+
+            highestPlayerTop = Mathf.Max(highestPlayerTop, playerCollider.bounds.max.y);
+            foundSolidCollider = true;
+        }
+
+        if (!foundSolidCollider)
+            return true;
+
+        return highestPlayerTop <= platformBottom - 0.02f;
     }
 }

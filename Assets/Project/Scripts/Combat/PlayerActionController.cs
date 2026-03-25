@@ -1,5 +1,15 @@
 using UnityEngine;
 
+public enum AttackRequestType
+{
+    None,
+    GroundCombo,
+    AirCombo,
+    DashAttack,
+    PlungeAttack,
+    FallKick
+}
+
 public enum PlayerActionState
 {
     Normal,
@@ -27,6 +37,7 @@ public class PlayerActionController : MonoBehaviour
 
     private float attackBufferedUntil = -999f;
     private float dashBufferedUntil = -999f;
+    private AttackRequestType bufferedAttackType = AttackRequestType.None;
 
     // =========================================================
     // Public Methods
@@ -48,6 +59,15 @@ public class PlayerActionController : MonoBehaviour
 
     public void BufferAttack()
     {
+        BufferAttack(AttackRequestType.GroundCombo);
+    }
+
+    public void BufferAttack(AttackRequestType attackType)
+    {
+        if (attackType == AttackRequestType.None)
+            return;
+
+        bufferedAttackType = attackType;
         attackBufferedUntil = Time.time + attackBufferTime;
     }
 
@@ -58,7 +78,13 @@ public class PlayerActionController : MonoBehaviour
 
     public bool HasBufferedAttack()
     {
-        return Time.time <= attackBufferedUntil;
+        if (Time.time > attackBufferedUntil)
+        {
+            bufferedAttackType = AttackRequestType.None;
+            return false;
+        }
+
+        return bufferedAttackType != AttackRequestType.None;
     }
 
     public bool HasBufferedDash()
@@ -69,6 +95,7 @@ public class PlayerActionController : MonoBehaviour
     public void ConsumeAttackBuffer()
     {
         attackBufferedUntil = -999f;
+        bufferedAttackType = AttackRequestType.None;
     }
 
     public void ConsumeDashBuffer()
@@ -80,6 +107,12 @@ public class PlayerActionController : MonoBehaviour
     {
         attackBufferedUntil = -999f;
         dashBufferedUntil = -999f;
+        bufferedAttackType = AttackRequestType.None;
+    }
+
+    public AttackRequestType GetBufferedAttackType()
+    {
+        return HasBufferedAttack() ? bufferedAttackType : AttackRequestType.None;
     }
 
     public bool CanStartAttack()

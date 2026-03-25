@@ -21,7 +21,7 @@ MonoBehaviour:
     defense: 6
     elementalMultiplier: 1
     moveSpeed: 6.5
-    jumpForce: 15
+    jumpForce: 10
     maxJumpCount: 3
     maxAirDashCount: 3
     groundAcceleration: 80
@@ -32,12 +32,12 @@ MonoBehaviour:
     dashSpeed: 30
     dashDuration: 0.5
     dashCooldown: 0.01
-    coyoteTime: 0.08
-    jumpBufferTime: 0.12
-    jumpCutMultiplier: 0.5
-    fallGravityMultiplier: 1.6
-    lowJumpGravityMultiplier: 2.2
-    maxFallSpeed: 25
+    coyoteTime: 0
+    jumpBufferTime: 0
+    jumpCutMultiplier: 1
+    fallGravityMultiplier: 1
+    lowJumpGravityMultiplier: 1
+    maxFallSpeed: 20
     jumpStartupTime: 0.03
     landingLagTime: 0.06
   metaData:
@@ -128,25 +128,128 @@ MonoBehaviour:
   neutralAirComboData:
     comboResetDelay: 0.8
     steps:
-    - stepName: Attack 1
+    - stepName: Attack 01
       duration: 0.3
-      comboQueueOpenTime: 0.2
+      comboQueueOpenTime: 0.18
       moveRecoveryTime: 0.18
       dashCancelTime: 0.2
-      jumpCancelTime: 0.22
+      jumpCancelTime: 0
+      landingLag: 0.08
       motionData:
+        motionMode: 0
         useForwardMotion: 1
-        forwardDistance: 0.45
-        motionStartTime: 0.03
-        motionDuration: 0.1
+        forwardDistance: 1.26
+        motionVector: {x: 0.5, y: 0}
+        motionStartTime: 0.02
+        motionDuration: 0.08
+        overrideGravityWhileActive: 0
+        gravityScaleOverride: 0
+        stopOnGroundContact: 0
       hitFrames:
-      - hitTime: 0.12
+      - hitTime: 0.1
         activeDuration: 0.05
         cameraShakeStrength: 0.01
-        offset: {x: 1, y: 0.45}
-        size: {x: 1.2, y: 0.85}
-        damageMultiplier: 1.15
+        offset: {x: 1.08, y: 0.4}
+        size: {x: 2.61, y: 1.55}
+        damageMultiplier: 1
         knockbackForce: 2
+  dashAttackData:
+    enabled: 1
+    step:
+      stepName: Dash Attack
+      duration: 0.22
+      comboQueueOpenTime: 0
+      moveRecoveryTime: 0.16
+      dashCancelTime: 0
+      jumpCancelTime: 0
+      landingLag: 0
+      motionData:
+        motionMode: 0
+        useForwardMotion: 0
+        forwardDistance: 0.5
+        motionVector: {x: 0.5, y: 0}
+        motionStartTime: 0.02
+        motionDuration: 0.08
+        overrideGravityWhileActive: 0
+        gravityScaleOverride: 0
+        stopOnGroundContact: 0
+      hitFrames:
+      - hitTime: 0.05
+        activeDuration: 0.05
+        cameraShakeStrength: 0.04
+        offset: {x: 1.25, y: 0.45}
+        size: {x: 1.45, y: 0.9}
+        damageMultiplier: 1.25
+        knockbackForce: 3
+    resetAirComboOnUse: 0
+    endOnGroundContact: 0
+    triggerHitOnGroundContact: 0
+  plungeAttackData:
+    enabled: 1
+    step:
+      stepName: Plunge Attack
+      duration: 0.45
+      comboQueueOpenTime: 0
+      moveRecoveryTime: 0.18
+      dashCancelTime: 0
+      jumpCancelTime: 0
+      landingLag: 0.18
+      motionData:
+        motionMode: 1
+        useForwardMotion: 1
+        forwardDistance: 0.5
+        motionVector: {x: 0.35, y: -5.5}
+        motionStartTime: 0.02
+        motionDuration: 0.18
+        overrideGravityWhileActive: 0
+        gravityScaleOverride: 0
+        stopOnGroundContact: 1
+      hitFrames:
+      - hitTime: 0.02
+        activeDuration: 0.08
+        cameraShakeStrength: 0.05
+        offset: {x: 0.35, y: -0.8}
+        size: {x: 1.1, y: 1.45}
+        damageMultiplier: 1.35
+        knockbackForce: 4
+    resetAirComboOnUse: 1
+    endOnGroundContact: 1
+    triggerHitOnGroundContact: 1
+  fallKickData:
+    enabled: 1
+    step:
+      stepName: Fall Kick
+      duration: 0.42
+      comboQueueOpenTime: 0
+      moveRecoveryTime: 0.14
+      dashCancelTime: 0
+      jumpCancelTime: 0
+      landingLag: 0.22
+      motionData:
+        motionMode: 1
+        useForwardMotion: 1
+        forwardDistance: 0.5
+        motionVector: {x: 1.2, y: -6.5}
+        motionStartTime: 0.02
+        motionDuration: 0.16
+        overrideGravityWhileActive: 0
+        gravityScaleOverride: 0
+        stopOnGroundContact: 1
+      hitFrames:
+      - hitTime: 0.1
+        activeDuration: 0.08
+        cameraShakeStrength: 0.08
+        offset: {x: 0.95, y: -0.75}
+        size: {x: 1.2, y: 1.2}
+        damageMultiplier: 1.6
+        knockbackForce: 5
+    resetAirComboOnUse: 1
+    endOnGroundContact: 1
+    triggerHitOnGroundContact: 0
+  airCombatRules:
+    resetAirComboOnAirDash: 1
+    dashAttackInputWindow: 0.12
+    fallKickOverrideWindow: 0.12
   skillData:
     skillName: Gust Break
     description: "\u0E1B\u0E25\u0E48\u0E2D\u0E22\u0E41\u0E23\u0E07\u0E25\u0E21\u0E01\u0E23\u0E30\u0E41\u0E17\u0E01\u0E14\u0E49\u0E32\u0E19\u0E2B\u0E19\u0E49\u0E32

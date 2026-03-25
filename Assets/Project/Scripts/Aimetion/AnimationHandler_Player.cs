@@ -25,6 +25,10 @@ public class AnimationHandler : MonoBehaviour
     private readonly int takeDamageHash = Animator.StringToHash("TakeDamage");
     private readonly int skillHash = Animator.StringToHash("Skill");
     private readonly int ultimateHash = Animator.StringToHash("Ultimate");
+    private const string AttackState1 = "Base Layer.Attack_1";
+    private const string AttackState2 = "Base Layer.Attack_2";
+    private const string AttackState3 = "Base Layer.Attack_3";
+    private const string PlungeAttackState = "Base Layer.PlungeAttack";
 
     // =========================================================
     // Private Runtime Data
@@ -103,6 +107,32 @@ public class AnimationHandler : MonoBehaviour
         anim.ResetTrigger(jumpHash);
         anim.SetInteger(comboStepHash, comboStep);
         anim.SetTrigger(attackHash);
+    }
+
+    public void TriggerSpecialAttack(AttackRequestType attackType)
+    {
+        if (anim == null)
+            return;
+
+        anim.ResetTrigger(jumpHash);
+        anim.ResetTrigger(attackHash);
+        anim.ResetTrigger(dashHash);
+        anim.SetInteger(comboStepHash, 0);
+
+        switch (attackType)
+        {
+            case AttackRequestType.DashAttack:
+                anim.CrossFadeInFixedTime(AttackState2, 0.03f);
+                break;
+
+            case AttackRequestType.PlungeAttack:
+                anim.CrossFadeInFixedTime(PlungeAttackState, 0.03f);
+                break;
+
+            case AttackRequestType.FallKick:
+                anim.CrossFadeInFixedTime(AttackState1, 0.03f);
+                break;
+        }
     }
 
     public void ResetCombo()

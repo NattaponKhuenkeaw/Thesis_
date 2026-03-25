@@ -14,6 +14,7 @@ public class AttackStepData
     public float moveRecoveryTime = 0.18f;
     public float dashCancelTime = 0.20f;
     public float jumpCancelTime = 0.22f;
+    public float landingLag = 0f;
 
     [Header("Motion")]
     public AttackMotionData motionData = new AttackMotionData();

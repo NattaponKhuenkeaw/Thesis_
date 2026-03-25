@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
 
 public class PlayerBasicAttack : MonoBehaviour
 {
@@ -10,9 +9,6 @@ public class PlayerBasicAttack : MonoBehaviour
         AirNeutral
     }
 
-    // =========================================================
-    // Dependencies
-    // =========================================================
     [Header("Dependencies")]
     public PlayerCharacter playerCharacter;
     public AnimationHandler animHandler;
@@ -22,9 +18,6 @@ public class PlayerBasicAttack : MonoBehaviour
     public MeleeHitboxDamage meleeHitboxDamage;
     public PlayerActionController actionController;
 
-    // =========================================================
-    // Runtime States
-    // =========================================================
     private int comboStep = 0;
     private bool isAttacking = false;
     private bool comboQueued = false;
@@ -36,10 +29,8 @@ public class PlayerBasicAttack : MonoBehaviour
     private float lastAttackInputTime = -999f;
     private AttackComboMode currentComboMode = AttackComboMode.Ground;
     private AttackComboMode queuedComboMode = AttackComboMode.Ground;
+    private AttackRequestType currentAttackRequest = AttackRequestType.None;
 
-    // =========================================================
-    // Unity Methods
-    // =========================================================
     void Awake()
     {
         if (actionController == null)
@@ -58,6 +49,18 @@ public class PlayerBasicAttack : MonoBehaviour
             meleeHitboxDamage = meleeHitbox.GetComponent<MeleeHitboxDamage>();
     }
 
+    void OnEnable()
+    {
+        if (movement != null)
+            movement.OnAirDashPerformed += HandleAirDashPerformed;
+    }
+
+    void OnDisable()
+    {
+        if (movement != null)
+            movement.OnAirDashPerformed -= HandleAirDashPerformed;
+    }
+
     void Start()
     {
         if (meleeHitbox != null)
@@ -71,43 +74,26 @@ public class PlayerBasicAttack : MonoBehaviour
         if (!isAttacking && comboStep > 0)
         {
             if (Time.time - lastAttackInputTime > comboResetDelay)
-            {
                 ResetCombo();
-            }
         }
     }
 
-    // =========================================================
-    // Public Methods
-    // =========================================================
     public bool OnAttackInput()
     {
-        if (actionController != null && !actionController.CanStartAttack() && !isAttacking)
-            return false;
-
-        AttackComboMode requestedMode = GetRequestedComboMode();
-        BasicAttackComboData comboData = GetComboData(requestedMode);
-        if (comboData == null || comboData.GetMaxCombo() <= 0)
-            return false;
-
-        if (isAttacking && !canQueueNext)
-            return false;
-
-        lastAttackInputTime = Time.time;
-
-        if (!isAttacking)
-        {
-            if (comboStep > 0 && requestedMode != currentComboMode)
-                ResetCombo();
-
-            StartNextAttack(requestedMode);
-            return true;
-        }
-
-        comboQueued = true;
-        queuedComboMode = requestedMode;
-        return true;
+        return OnAttackInput(AttackRequestType.None);
     }
+
+    public bool OnAttackInput(AttackRequestType attackRequest)
+    {
+        if (attackRequest == AttackRequestType.None)
+            attackRequest = GetDefaultAttackRequest();
+
+        if (IsComboRequest(attackRequest))
+            return HandleComboAttackInput(attackRequest);
+
+        return HandleSpecialAttackInput(attackRequest);
+    }
+
     public void ResetCombo()
     {
         if (actionController != null)
@@ -124,6 +110,7 @@ public class PlayerBasicAttack : MonoBehaviour
         canJumpCancel = false;
         currentComboMode = AttackComboMode.Ground;
         queuedComboMode = AttackComboMode.Ground;
+        currentAttackRequest = AttackRequestType.None;
 
         DisableHitbox();
 
@@ -162,9 +149,67 @@ public class PlayerBasicAttack : MonoBehaviour
         return canJumpCancel;
     }
 
-    // =========================================================
-    // Private Methods
-    // =========================================================
+    public float GetDashAttackInputWindow()
+    {
+        if (playerCharacter == null || playerCharacter.characterObject == null || playerCharacter.characterObject.airCombatRules == null)
+            return 0.12f;
+
+        return playerCharacter.characterObject.airCombatRules.dashAttackInputWindow;
+    }
+
+    public float GetFallKickOverrideWindow()
+    {
+        if (playerCharacter == null || playerCharacter.characterObject == null || playerCharacter.characterObject.airCombatRules == null)
+            return 0.12f;
+
+        return playerCharacter.characterObject.airCombatRules.fallKickOverrideWindow;
+    }
+
+    private bool HandleComboAttackInput(AttackRequestType attackRequest)
+    {
+        if (actionController != null && !actionController.CanStartAttack() && !isAttacking)
+            return false;
+
+        AttackComboMode requestedMode = GetComboModeForRequest(attackRequest);
+        BasicAttackComboData comboData = GetComboData(requestedMode);
+        if (comboData == null || comboData.GetMaxCombo() <= 0)
+            return false;
+
+        if (isAttacking && !canQueueNext)
+            return false;
+
+        lastAttackInputTime = Time.time;
+
+        if (!isAttacking)
+        {
+            if (comboStep > 0 && requestedMode != currentComboMode)
+                ResetCombo();
+
+            StartNextAttack(requestedMode);
+            return true;
+        }
+
+        comboQueued = true;
+        queuedComboMode = requestedMode;
+        return true;
+    }
+
+    private bool HandleSpecialAttackInput(AttackRequestType attackRequest)
+    {
+        if (isAttacking)
+            return false;
+
+        if (!CanStartSpecialAttack(attackRequest))
+            return false;
+
+        SpecialAttackData specialData = GetSpecialAttackData(attackRequest);
+        if (specialData == null || !specialData.enabled || specialData.step == null)
+            return false;
+
+        StartSpecialAttack(attackRequest, specialData);
+        return true;
+    }
+
     private void StartNextAttack(AttackComboMode attackMode)
     {
         BasicAttackComboData comboData = GetComboData(attackMode);
@@ -183,6 +228,7 @@ public class PlayerBasicAttack : MonoBehaviour
             comboStep = 0;
 
         currentComboMode = attackMode;
+        currentAttackRequest = attackMode == AttackComboMode.AirNeutral ? AttackRequestType.AirCombo : AttackRequestType.GroundCombo;
         comboStep++;
         isAttacking = true;
         comboQueued = false;
@@ -201,6 +247,39 @@ public class PlayerBasicAttack : MonoBehaviour
         StartCoroutine(AttackRoutine(comboData.GetStep(comboStep)));
     }
 
+    private void StartSpecialAttack(AttackRequestType attackRequest, SpecialAttackData specialData)
+    {
+        AttackStepData stepData = specialData.step;
+        if (stepData == null)
+            return;
+
+        if (actionController != null)
+            actionController.SetState(PlayerActionState.Attack);
+
+        if (specialData.resetAirComboOnUse)
+            ResetAirComboProgress();
+
+        currentAttackRequest = attackRequest;
+        currentComboMode = AttackComboMode.Ground;
+        queuedComboMode = AttackComboMode.Ground;
+        comboStep = 0;
+        isAttacking = true;
+        comboQueued = false;
+        canQueueNext = false;
+        canMoveAfterAttack = false;
+        canDashCancel = false;
+        canJumpCancel = false;
+        lastAttackInputTime = Time.time;
+
+        if (movement != null)
+            movement.CanMove = false;
+
+        if (animHandler != null)
+            animHandler.TriggerSpecialAttack(attackRequest);
+
+        StartCoroutine(SpecialAttackRoutine(specialData));
+    }
+
     private IEnumerator AttackRoutine(AttackStepData stepData)
     {
         if (stepData == null)
@@ -209,26 +288,7 @@ public class PlayerBasicAttack : MonoBehaviour
             yield break;
         }
 
-        StartCoroutine(OpenMoveRecoveryRoutine(stepData.moveRecoveryTime));
-        StartCoroutine(OpenDashCancelRoutine(stepData.dashCancelTime));
-        StartCoroutine(OpenJumpCancelRoutine(stepData.jumpCancelTime));
-
-        if (stepData.motionData != null && stepData.motionData.useForwardMotion)
-        {
-            StartCoroutine(AttackMotionRoutine(stepData.motionData));
-        }
-
-        if (stepData.hitFrames != null)
-        {
-            for (int i = 0; i < stepData.hitFrames.Length; i++)
-            {
-                AttackHitFrameData hitFrame = stepData.hitFrames[i];
-                if (hitFrame != null)
-                {
-                    StartCoroutine(TriggerHitFrameRoutine(hitFrame));
-                }
-            }
-        }
+        ExecuteAttackStep(stepData);
 
         float waitBeforeQueue = Mathf.Max(stepData.duration - stepData.comboQueueOpenTime, 0.05f);
         yield return new WaitForSeconds(waitBeforeQueue);
@@ -260,6 +320,105 @@ public class PlayerBasicAttack : MonoBehaviour
         }
     }
 
+    private IEnumerator SpecialAttackRoutine(SpecialAttackData specialData)
+    {
+        AttackStepData stepData = specialData.step;
+        if (stepData == null)
+        {
+            ResetCombo();
+            yield break;
+        }
+
+        if (specialData.triggerHitOnGroundContact && movement != null)
+        {
+            ExecuteAttackMotion(stepData.motionData);
+
+            float waitUntil = Time.time + Mathf.Max(stepData.duration, 2f);
+            while (!movement.IsGrounded() && Time.time < waitUntil)
+                yield return null;
+
+            if (movement.IsGrounded())
+            {
+                ExecuteHitFrames(stepData.hitFrames);
+
+                float impactDuration = GetHitFramesTotalDuration(stepData.hitFrames);
+                if (impactDuration > 0f)
+                    yield return new WaitForSeconds(impactDuration);
+
+                if (stepData.landingLag > 0f)
+                    yield return new WaitForSeconds(stepData.landingLag);
+            }
+
+            ResetCombo();
+            yield break;
+        }
+
+        ExecuteAttackStep(stepData);
+
+        float elapsed = 0f;
+        while (elapsed < stepData.duration)
+        {
+            if (specialData.endOnGroundContact && movement != null && movement.IsGrounded() && elapsed > 0.02f)
+                break;
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        if (movement != null && movement.IsGrounded() && stepData.landingLag > 0f)
+            yield return new WaitForSeconds(stepData.landingLag);
+
+        ResetCombo();
+    }
+
+    private void ExecuteAttackStep(AttackStepData stepData)
+    {
+        StartCoroutine(OpenMoveRecoveryRoutine(stepData.moveRecoveryTime));
+        StartCoroutine(OpenDashCancelRoutine(stepData.dashCancelTime));
+        StartCoroutine(OpenJumpCancelRoutine(stepData.jumpCancelTime));
+
+        ExecuteAttackMotion(stepData.motionData);
+        ExecuteHitFrames(stepData.hitFrames);
+    }
+
+    private void ExecuteAttackMotion(AttackMotionData motionData)
+    {
+        if (motionData != null && motionData.useForwardMotion)
+            StartCoroutine(AttackMotionRoutine(motionData));
+    }
+
+    private void ExecuteHitFrames(AttackHitFrameData[] hitFrames)
+    {
+        if (hitFrames == null)
+            return;
+
+        for (int i = 0; i < hitFrames.Length; i++)
+        {
+            AttackHitFrameData hitFrame = hitFrames[i];
+            if (hitFrame != null)
+                StartCoroutine(TriggerHitFrameRoutine(hitFrame));
+        }
+    }
+
+    private float GetHitFramesTotalDuration(AttackHitFrameData[] hitFrames)
+    {
+        if (hitFrames == null)
+            return 0f;
+
+        float totalDuration = 0f;
+
+        for (int i = 0; i < hitFrames.Length; i++)
+        {
+            AttackHitFrameData hitFrame = hitFrames[i];
+            if (hitFrame == null)
+                continue;
+
+            totalDuration = Mathf.Max(totalDuration, hitFrame.hitTime + hitFrame.activeDuration);
+        }
+
+        return totalDuration;
+    }
+
     private IEnumerator TriggerHitFrameRoutine(AttackHitFrameData hitFrame)
     {
         yield return new WaitForSeconds(hitFrame.hitTime);
@@ -268,9 +427,13 @@ public class PlayerBasicAttack : MonoBehaviour
         float finalKnockback = hitFrame.knockbackForce;
         float shakeStrength = Mathf.Max(0f, hitFrame.cameraShakeStrength);
 
-        BasicAttackComboData comboData = GetComboData();
-        int maxCombo = comboData != null ? comboData.GetMaxCombo() : 0;
-        bool isLastStep = (comboStep >= maxCombo);
+        bool isLastStep = !IsComboRequest(currentAttackRequest);
+        if (!isLastStep)
+        {
+            BasicAttackComboData comboData = GetComboData(currentComboMode);
+            int maxCombo = comboData != null ? comboData.GetMaxCombo() : 0;
+            isLastStep = comboStep >= maxCombo;
+        }
 
         if (meleeHitboxController != null)
             meleeHitboxController.ApplyHitFrame(hitFrame);
@@ -293,7 +456,7 @@ public class PlayerBasicAttack : MonoBehaviour
         yield return new WaitForSeconds(motionData.motionStartTime);
 
         if (movement != null)
-            movement.ApplyAttackMovement(motionData.forwardDistance, motionData.motionDuration);
+            movement.ApplyAttackMovement(motionData);
     }
 
     public void EnableHitbox()
@@ -325,12 +488,19 @@ public class PlayerBasicAttack : MonoBehaviour
         return comboData.comboResetDelay;
     }
 
-    private AttackComboMode GetRequestedComboMode()
+    private AttackRequestType GetDefaultAttackRequest()
     {
-        if (movement != null && !movement.IsGrounded())
-            return AttackComboMode.AirNeutral;
+        if (movement != null && (movement.IsJumping || !movement.IsGrounded()))
+            return AttackRequestType.AirCombo;
 
-        return AttackComboMode.Ground;
+        return AttackRequestType.GroundCombo;
+    }
+
+    private AttackComboMode GetComboModeForRequest(AttackRequestType attackRequest)
+    {
+        return attackRequest == AttackRequestType.AirCombo
+            ? AttackComboMode.AirNeutral
+            : AttackComboMode.Ground;
     }
 
     private BasicAttackComboData GetComboData(AttackComboMode comboMode)
@@ -344,10 +514,79 @@ public class PlayerBasicAttack : MonoBehaviour
         return playerCharacter.characterObject.basicAttackComboData;
     }
 
+    private SpecialAttackData GetSpecialAttackData(AttackRequestType attackRequest)
+    {
+        if (playerCharacter == null || playerCharacter.characterObject == null)
+            return null;
 
-    // =========================================================
-    // Routine
-    // =========================================================
+        switch (attackRequest)
+        {
+            case AttackRequestType.DashAttack:
+                return playerCharacter.characterObject.dashAttackData;
+            case AttackRequestType.PlungeAttack:
+                return playerCharacter.characterObject.plungeAttackData;
+            case AttackRequestType.FallKick:
+                return playerCharacter.characterObject.fallKickData;
+            default:
+                return null;
+        }
+    }
+
+    private bool CanStartSpecialAttack(AttackRequestType attackRequest)
+    {
+        if (actionController == null)
+            return false;
+
+        switch (attackRequest)
+        {
+            case AttackRequestType.DashAttack:
+                return movement != null
+                    && movement.IsDashing
+                    && (actionController.IsState(PlayerActionState.Dash) || actionController.CanStartAttack());
+
+            case AttackRequestType.PlungeAttack:
+            case AttackRequestType.FallKick:
+                return movement != null
+                    && !movement.IsGrounded()
+                    && actionController.CanStartAttack();
+
+            default:
+                return false;
+        }
+    }
+
+    private bool IsComboRequest(AttackRequestType attackRequest)
+    {
+        return attackRequest == AttackRequestType.GroundCombo || attackRequest == AttackRequestType.AirCombo;
+    }
+
+    private void HandleAirDashPerformed()
+    {
+        if (!ShouldResetAirComboOnAirDash())
+            return;
+
+        ResetAirComboProgress();
+    }
+
+    private void ResetAirComboProgress()
+    {
+        comboStep = 0;
+
+        if (currentComboMode == AttackComboMode.AirNeutral)
+            currentComboMode = AttackComboMode.Ground;
+
+        if (queuedComboMode == AttackComboMode.AirNeutral)
+            queuedComboMode = AttackComboMode.Ground;
+    }
+
+    private bool ShouldResetAirComboOnAirDash()
+    {
+        if (playerCharacter == null || playerCharacter.characterObject == null)
+            return true;
+
+        AirCombatRulesData rules = playerCharacter.characterObject.airCombatRules;
+        return rules == null || rules.resetAirComboOnAirDash;
+    }
 
     private IEnumerator OpenMoveRecoveryRoutine(float time)
     {

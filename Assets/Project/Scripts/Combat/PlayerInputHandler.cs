@@ -14,6 +14,7 @@ public class InputHandler_Player : MonoBehaviour
     public PlayerActionController actionController;
 
     private Vector2 moveInput;
+    private float pendingPlungeUntil = -999f;
 
     void Awake()
     {
@@ -44,6 +45,8 @@ public class InputHandler_Player : MonoBehaviour
 
     void Update()
     {
+        ResolvePendingPlungeAttack();
+
         if (movement != null)
         {
             movement.Move(moveInput);
@@ -104,7 +107,8 @@ public class InputHandler_Player : MonoBehaviour
             }
             else if (actionController.HasBufferedAttack() && basicAttack != null)
             {
-                bool accepted = basicAttack.OnAttackInput();
+                AttackRequestType attackRequest = actionController.GetBufferedAttackType();
+                bool accepted = basicAttack.OnAttackInput(attackRequest);
                 if (accepted)
                 {
                     actionController.ConsumeAttackBuffer();
@@ -143,6 +147,12 @@ public class InputHandler_Player : MonoBehaviour
 
         if (canJumpNow)
         {
+            if (moveInput.y < -0.5f && movement.TryDropDown())
+                return;
+
+            if (TryQueueDownwardAirSpecial())
+                return;
+
             if (actionController != null && actionController.IsState(PlayerActionState.Attack))
                 actionController.SetState(PlayerActionState.Normal);
 
@@ -155,11 +165,15 @@ public class InputHandler_Player : MonoBehaviour
         if (!value.isPressed || movement == null || actionController == null)
             return;
 
+        if (TryQueueFallKick())
+            return;
+
         bool canDashNow = actionController.CanStartDash();
 
         if (!canDashNow && basicAttack != null && basicAttack.IsAttacking() && basicAttack.CanDashCancel())
         {
             canDashNow = true;
+            basicAttack.ResetCombo();
             actionController.SetState(PlayerActionState.Normal);
         }
 
@@ -177,8 +191,9 @@ public class InputHandler_Player : MonoBehaviour
     {
         if(value.isPressed && actionController != null)
         {
-            actionController.BufferAttack();
-        
+            pendingPlungeUntil = -999f;
+            actionController.BufferAttack(ResolveAttackRequest());
+         
         }
     }
 
@@ -196,5 +211,70 @@ public class InputHandler_Player : MonoBehaviour
         {
             ultimateController.UseUltimate();
         }
+    }
+
+    private AttackRequestType ResolveAttackRequest()
+    {
+        if (movement != null)
+        {
+            float dashAttackWindow = basicAttack != null ? basicAttack.GetDashAttackInputWindow() : 0.12f;
+            if (movement.IsDashing || movement.WasDashStartedRecently(dashAttackWindow))
+                return AttackRequestType.DashAttack;
+
+            if (movement.IsJumping || !movement.IsGrounded())
+                return AttackRequestType.AirCombo;
+        }
+
+        return AttackRequestType.GroundCombo;
+    }
+
+    private bool TryQueueDownwardAirSpecial()
+    {
+        if (movement == null || movement.IsGrounded() || moveInput.y > -0.5f)
+            return false;
+
+        float overrideWindow = basicAttack != null ? basicAttack.GetFallKickOverrideWindow() : 0.12f;
+        pendingPlungeUntil = Time.time + Mathf.Max(0f, overrideWindow);
+
+        if (pendingPlungeUntil <= Time.time && actionController != null)
+        {
+            actionController.BufferAttack(AttackRequestType.PlungeAttack);
+            pendingPlungeUntil = -999f;
+        }
+
+        return true;
+    }
+
+    private bool TryQueueFallKick()
+    {
+        if (movement == null || movement.IsGrounded() || moveInput.y > -0.5f)
+            return false;
+
+        if (Time.time > pendingPlungeUntil)
+            return false;
+
+        actionController.BufferAttack(AttackRequestType.FallKick);
+        pendingPlungeUntil = -999f;
+        return true;
+    }
+
+    private void ResolvePendingPlungeAttack()
+    {
+        if (pendingPlungeUntil <= 0f)
+            return;
+
+        if (movement == null || movement.IsGrounded())
+        {
+            pendingPlungeUntil = -999f;
+            return;
+        }
+
+        if (Time.time < pendingPlungeUntil)
+            return;
+
+        if (actionController != null)
+            actionController.BufferAttack(AttackRequestType.PlungeAttack);
+
+        pendingPlungeUntil = -999f;
     }
 }
