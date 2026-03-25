@@ -21,7 +21,7 @@ MonoBehaviour:
     defense: 6
     elementalMultiplier: 1
     moveSpeed: 6.5
-    jumpForce: 11
+    jumpForce: 19
     maxJumpCount: 3
     maxAirDashCount: 1
     groundAcceleration: 80
@@ -135,8 +135,8 @@ MonoBehaviour:
       motionStartTime: 0.05
       motionDuration: 0.1
       hitFrames:
-      - hitTime: 0.12
-        activeDuration: 0.05
+      - hitTime: 0
+        activeDuration: 0.1
         cameraShakeStrength: 0.01
         offset: {x: 1, y: 0.45}
         size: {x: 1.2, y: 0.85}
@@ -146,7 +146,8 @@ MonoBehaviour:
   plungeAttackData:
     isEnabled: 1
     downwardSpeed: 18
-    impactAnimationStateName: Attack_1
+    fallAnimationStateName: Plunge_Fall
+    impactAnimationStateName: Plunge_Impact
     impactStep:
       stepName: Plunge Impact
       useForwardMotion: 0
@@ -157,8 +158,8 @@ MonoBehaviour:
       - hitTime: 0
         activeDuration: 0.15
         cameraShakeStrength: 0.08
-        offset: {x: 1.1, y: -0.4}
-        size: {x: 1.9, y: 1.2}
+        offset: {x: 0, y: -1.8}
+        size: {x: 2.5, y: 1.2}
         damageMultiplier: 1.8
         knockbackForce: 4
         debugColor: {r: 1, g: 0.4, b: 0, a: 1}

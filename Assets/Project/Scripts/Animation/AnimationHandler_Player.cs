@@ -83,7 +83,8 @@ public class AnimationHandler : MonoBehaviour
         anim.SetBool(isLandingHash, movement.IsLanding);
 
         // Detect falling state (airborne and moving downwards)
-        bool isFalling = !movement.IsGrounded() && rb.linearVelocity.y < -0.1f && !movement.IsLanding;
+        bool suppressFallAnimation = movement.basicAttack != null && movement.basicAttack.IsPlungeInAirPhase();
+        bool isFalling = !suppressFallAnimation && !movement.IsGrounded() && rb.linearVelocity.y < -0.1f && !movement.IsLanding;
         
         if (isFalling && !wasFalling)
         {
@@ -134,6 +135,28 @@ public class AnimationHandler : MonoBehaviour
         anim.SetTrigger(attackHash);
     }
 
+    public void TriggerAirAttack()
+    {
+        if (anim == null)
+            return;
+
+        anim.ResetTrigger(jumpHash);
+        anim.ResetTrigger(landingHash);
+        anim.SetBool(isLandingHash, false);
+        anim.Play("Base Layer.Air_Attack1", 0, 0f);
+    }
+
+    public void TriggerPlungeFall(string stateName)
+    {
+        if (anim == null)
+            return;
+
+        anim.ResetTrigger(jumpHash);
+        anim.ResetTrigger(landingHash);
+        anim.SetBool(isLandingHash, false);
+        PlayStateByName(stateName, "Plunge_Fall");
+    }
+
     public void TriggerPlungeImpact(string stateName)
     {
         if (anim == null)
@@ -143,14 +166,24 @@ public class AnimationHandler : MonoBehaviour
         anim.ResetTrigger(landingHash);
         anim.SetBool(isLandingHash, false);
 
-        string resolvedStateName = stateName;
-        if (string.IsNullOrWhiteSpace(resolvedStateName))
-            resolvedStateName = "Attack_1";
+        PlayStateByName(stateName, "Attack_1");
+    }
 
-        if (!resolvedStateName.Contains("."))
-            resolvedStateName = $"Base Layer.{resolvedStateName}";
+    public void RestoreAirborneState()
+    {
+        if (anim == null || movement == null || rb == null)
+            return;
 
-        anim.Play(resolvedStateName, 0, 0f);
+        if (movement.IsGrounded())
+            return;
+
+        if (rb.linearVelocity.y > 0.1f)
+        {
+            anim.Play(jumpHash, 0, 0f);
+            return;
+        }
+
+        anim.Play(fallHash, 0, 0f);
     }
 
     public void ResetCombo()
@@ -166,6 +199,18 @@ public class AnimationHandler : MonoBehaviour
     public void TriggerUltimate()
     {
         anim.SetTrigger(ultimateHash);
+    }
+
+    private void PlayStateByName(string stateName, string fallbackStateName)
+    {
+        string resolvedStateName = stateName;
+        if (string.IsNullOrWhiteSpace(resolvedStateName))
+            resolvedStateName = fallbackStateName;
+
+        if (!resolvedStateName.Contains("."))
+            resolvedStateName = $"Base Layer.{resolvedStateName}";
+
+        anim.Play(resolvedStateName, 0, 0f);
     }
 
     // =========================================================

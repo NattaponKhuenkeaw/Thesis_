@@ -233,10 +233,18 @@ public class PlayerBasicAttack : MonoBehaviour
             movement.StartPlungeMotion(plungeData.downwardSpeed);
         }
 
+        if (animHandler != null)
+            animHandler.TriggerPlungeFall(plungeData.fallAnimationStateName);
+
         return true;
     }
 
     public bool ShouldSuppressLandingFeedback()
+    {
+        return isPlungeAttacking && !plungeImpactTriggered;
+    }
+
+    public bool IsPlungeInAirPhase()
     {
         return isPlungeAttacking && !plungeImpactTriggered;
     }
@@ -301,7 +309,12 @@ public class PlayerBasicAttack : MonoBehaviour
         }
 
         if (animHandler != null)
-            animHandler.TriggerAttackCombo(comboStep);
+        {
+            if (attackMode == AttackComboMode.AirNeutral)
+                animHandler.TriggerAirAttack();
+            else
+                animHandler.TriggerAttackCombo(comboStep);
+        }
 
         AttackStepData stepData = comboData.GetStep(comboStep);
         if (stepData != null && stepData.useForwardMotion)
@@ -413,8 +426,16 @@ public class PlayerBasicAttack : MonoBehaviour
         // animation that was interrupted/short-canceled by the next combo step.
         if (currentFrameState != AttackFrameState.Recovery)
             return;
-        
+
+        bool shouldRestoreAirborneState = !isPlungeAttacking
+            && currentComboMode == AttackComboMode.AirNeutral
+            && movement != null
+            && !movement.IsGrounded();
+
         ResetCombo();
+
+        if (shouldRestoreAirborneState && animHandler != null)
+            animHandler.RestoreAirborneState();
     }
 
     private IEnumerator TriggerHitFrameRoutine(AttackHitFrameData hitFrame)

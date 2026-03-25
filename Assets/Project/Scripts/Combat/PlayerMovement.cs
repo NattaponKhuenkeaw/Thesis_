@@ -40,6 +40,9 @@ public class PlayerMovement : MonoBehaviour
     // =========================================================
     [Header("Fall Settings")]
     public float fastFallMultiplier = 2.2f;
+    public float riseGravityMultiplier = 1f;
+    public float apexGravityMultiplier = 2.4f;
+    public float apexVelocityThreshold = 1.6f;
 
     // =========================================================
     // Jump Feel
@@ -399,14 +402,23 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        if (isHoldingDown && rb.linearVelocity.y < 0f)
+        if (rb.linearVelocity.y > apexVelocityThreshold)
+        {
+            targetGravity *= riseGravityMultiplier;
+        }
+        else if (isHoldingDown && rb.linearVelocity.y < -apexVelocityThreshold)
         {
             targetGravity *= fastFallMultiplier;
         }
-        else if (rb.linearVelocity.y < 0f)
+        else if (rb.linearVelocity.y < -apexVelocityThreshold)
         {
             targetGravity *= fallGravityMultiplier;
         }
+        else
+        {
+            targetGravity *= apexGravityMultiplier;
+        }
+
         rb.gravityScale = targetGravity;
 
         if (rb.linearVelocity.y < -maxFallSpeed)
