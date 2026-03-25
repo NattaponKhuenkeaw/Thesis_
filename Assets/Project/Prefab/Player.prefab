@@ -382,7 +382,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDamping: 0
   m_AngularDamping: 0.05
-  m_GravityScale: 1
+  m_GravityScale: 1.8
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -451,17 +451,19 @@ MonoBehaviour:
   dashSpeed: 20
   dashDuration: 0.5
   dashCooldown: 1
-  fastFallMultiplier: 100
+  fastFallMultiplier: 2.2
   coyoteTime: 0.08
   jumpBufferTime: 0.12
-  jumpCutMultiplier: 0.5
-  fallGravityMultiplier: 5
-  lowJumpGravityMultiplier: 2.2
+  jumpCutMultiplier: 1
+  fallGravityMultiplier: 1
+  lowJumpGravityMultiplier: 1
   maxFallSpeed: 18
   playerLayerName: Player
   enemyLayerName: Enemy
+  oneWayPlatformLayerName: OneWayPlatform
   jumpStartupTime: 0.05
   landingLagTime: 0.05
+  dropDownDuration: 0.2
   groundCheck: {fileID: 3725453944956529812}
   groundLayer:
     serializedVersion: 2

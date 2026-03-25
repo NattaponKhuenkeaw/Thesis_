@@ -47,6 +47,8 @@ public class PlayerBasicAttack : MonoBehaviour
     private int hitboxActiveCount = 0;
     private int lastImpactFrame = -1;
     private bool inputConsumedInCurrentStep = false;
+    private bool isPlungeAttacking = false;
+    private bool plungeImpactTriggered = false;
 
     // =========================================================
     // Unity Methods
@@ -81,6 +83,7 @@ public class PlayerBasicAttack : MonoBehaviour
         {
             movement.OnDashStart += ResetCombo;
             movement.OnJumpStart += ResetCombo;
+            movement.OnLand += HandlePlungeLanding;
         }
     }
 
@@ -90,6 +93,7 @@ public class PlayerBasicAttack : MonoBehaviour
         {
             movement.OnDashStart -= ResetCombo;
             movement.OnJumpStart -= ResetCombo;
+            movement.OnLand -= HandlePlungeLanding;
         }
     }
 
@@ -173,6 +177,8 @@ public class PlayerBasicAttack : MonoBehaviour
         currentHitFrameIndex = 0;
         hitboxActiveCount = 0;
         lastImpactFrame = -1;
+        isPlungeAttacking = false;
+        plungeImpactTriggered = false;
         DisableHitbox(true);
 
         if (movement != null)
@@ -188,6 +194,51 @@ public class PlayerBasicAttack : MonoBehaviour
     public bool IsAttacking()
     {
         return isAttacking;
+    }
+
+    public bool TryStartPlungeAttack()
+    {
+        PlungeAttackData plungeData = GetPlungeAttackData();
+        if (plungeData == null || !plungeData.isEnabled)
+            return false;
+
+        if (movement == null || movement.IsGrounded() || movement.IsDashing || movement.IsLanding)
+            return false;
+
+        AttackStepData impactStep = plungeData.impactStep;
+        if (impactStep == null || impactStep.hitFrames == null || impactStep.hitFrames.Length == 0)
+            return false;
+
+        if (actionController != null && !actionController.CanStartAttack())
+            return false;
+
+        ResetCombo();
+
+        if (actionController != null)
+            actionController.SetState(PlayerActionState.Attack);
+
+        isAttacking = true;
+        isPlungeAttacking = true;
+        plungeImpactTriggered = false;
+        currentFrameState = AttackFrameState.Windup;
+        currentHitFrameIndex = 0;
+        hitboxActiveCount = 0;
+        lastImpactFrame = -1;
+        inputConsumedInCurrentStep = true;
+
+        if (movement != null)
+        {
+            movement.CancelAttackMotion();
+            movement.CanMove = false;
+            movement.StartPlungeMotion(plungeData.downwardSpeed);
+        }
+
+        return true;
+    }
+
+    public bool ShouldSuppressLandingFeedback()
+    {
+        return isPlungeAttacking && !plungeImpactTriggered;
     }
 
     public int GetComboStep()
@@ -259,6 +310,29 @@ public class PlayerBasicAttack : MonoBehaviour
         }
     }
 
+    private void HandlePlungeLanding()
+    {
+        if (!isPlungeAttacking || plungeImpactTriggered)
+            return;
+
+        plungeImpactTriggered = true;
+        currentFrameState = AttackFrameState.Windup;
+        currentHitFrameIndex = 0;
+        lastImpactFrame = -1;
+
+        PlungeAttackData plungeData = GetPlungeAttackData();
+        AttackStepData impactStep = plungeData != null ? plungeData.impactStep : null;
+
+        if (impactStep != null && impactStep.useForwardMotion)
+            StartCoroutine(AttackMotionRoutine(impactStep));
+
+        if (animHandler != null)
+        {
+            string stateName = plungeData != null ? plungeData.impactAnimationStateName : null;
+            animHandler.TriggerPlungeImpact(stateName);
+        }
+    }
+
     // =========================================================
     // Animation Event Receivers
     // =========================================================
@@ -273,12 +347,11 @@ public class PlayerBasicAttack : MonoBehaviour
         lastImpactFrame = Time.frameCount;
         currentFrameState = AttackFrameState.Impact;
         
-        BasicAttackComboData comboData = GetComboData(currentComboMode);
-        AttackStepData stepData = comboData?.GetStep(comboStep);
+        AttackStepData stepData = GetCurrentStepData();
 
         if (stepData == null)
         {
-            Debug.LogWarning($"[PlayerBasicAttack] OnImpactStart: No StepData found for Step {comboStep} in {currentComboMode} combo!");
+            Debug.LogWarning("[PlayerBasicAttack] OnImpactStart: No StepData found for current attack.");
             return;
         }
 
@@ -309,6 +382,9 @@ public class PlayerBasicAttack : MonoBehaviour
         if (!isAttacking) return;
 
         currentFrameState = AttackFrameState.Recovery;
+
+        if (isPlungeAttacking)
+            return;
         
         // If attack was queued during Impact, immediately proceed
         if (comboQueued)
@@ -424,6 +500,9 @@ public class PlayerBasicAttack : MonoBehaviour
 
     private float GetComboResetDelay()
     {
+        if (isPlungeAttacking)
+            return 0.8f;
+
         BasicAttackComboData comboData = GetComboData(currentComboMode);
         if (comboData == null)
             return 0.8f;
@@ -448,6 +527,26 @@ public class PlayerBasicAttack : MonoBehaviour
             return playerCharacter.characterObject.neutralAirComboData;
 
         return playerCharacter.characterObject.basicAttackComboData;
+    }
+
+    private PlungeAttackData GetPlungeAttackData()
+    {
+        if (playerCharacter == null || playerCharacter.characterObject == null)
+            return null;
+
+        return playerCharacter.characterObject.plungeAttackData;
+    }
+
+    private AttackStepData GetCurrentStepData()
+    {
+        if (isPlungeAttacking)
+        {
+            PlungeAttackData plungeData = GetPlungeAttackData();
+            return plungeData != null ? plungeData.impactStep : null;
+        }
+
+        BasicAttackComboData comboData = GetComboData(currentComboMode);
+        return comboData?.GetStep(comboStep);
     }
 
 

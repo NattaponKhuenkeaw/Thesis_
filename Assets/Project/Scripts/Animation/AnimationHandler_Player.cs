@@ -110,6 +110,9 @@ public class AnimationHandler : MonoBehaviour
 
     public void TriggerLanding()
     {
+        if (movement != null && movement.basicAttack != null && movement.basicAttack.ShouldSuppressLandingFeedback())
+            return;
+
         anim.SetTrigger(landingHash);
     }
 
@@ -129,6 +132,25 @@ public class AnimationHandler : MonoBehaviour
         anim.ResetTrigger(jumpHash);
         anim.SetInteger(comboStepHash, comboStep);
         anim.SetTrigger(attackHash);
+    }
+
+    public void TriggerPlungeImpact(string stateName)
+    {
+        if (anim == null)
+            return;
+
+        anim.ResetTrigger(jumpHash);
+        anim.ResetTrigger(landingHash);
+        anim.SetBool(isLandingHash, false);
+
+        string resolvedStateName = stateName;
+        if (string.IsNullOrWhiteSpace(resolvedStateName))
+            resolvedStateName = "Attack_1";
+
+        if (!resolvedStateName.Contains("."))
+            resolvedStateName = $"Base Layer.{resolvedStateName}";
+
+        anim.Play(resolvedStateName, 0, 0f);
     }
 
     public void ResetCombo()

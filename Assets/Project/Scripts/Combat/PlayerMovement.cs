@@ -58,6 +58,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("Layer Settings")]
     public string playerLayerName = "Player";
     public string enemyLayerName = "Enemy";
+    public string oneWayPlatformLayerName = "OneWayPlatform";
 
     // =========================================================
     // Feel
@@ -65,6 +66,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("Feel")]
     public float jumpStartupTime = 0.05f;
     public float landingLagTime = 0.1f;
+    public float dropDownDuration = 0.2f;
 
     // =========================================================
     // Physics Checks
@@ -89,12 +91,18 @@ public class PlayerMovement : MonoBehaviour
     private float coyoteUntil = -999f;
     private int jumpsUsed;
     private int airDashesUsed;
+    private Coroutine airDashRechargeCoroutine;
     private bool isAttackMotionActive;
     private float attackMotionVelocityX;
     private Coroutine attackMotionCoroutine;
+    private Coroutine dropDownCoroutine;
+    private Collider2D currentGroundCollider;
+    private Collider2D ignoredGroundCollider;
+    private Collider2D[] solidColliders;
 
     private int playerLayer;
     private int enemyLayer;
+    private int oneWayPlatformLayer;
 
     // =========================================================
     // States
@@ -136,6 +144,8 @@ public class PlayerMovement : MonoBehaviour
 
         playerLayer = LayerMask.NameToLayer(playerLayerName);
         enemyLayer = LayerMask.NameToLayer(enemyLayerName);
+        oneWayPlatformLayer = LayerMask.NameToLayer(oneWayPlatformLayerName);
+        solidColliders = Array.FindAll(GetComponentsInChildren<Collider2D>(), collider => collider != null && !collider.isTrigger);
     }
 
     void Update()
@@ -196,11 +206,6 @@ public class PlayerMovement : MonoBehaviour
 
     public void SetJumpHeld(bool isPressed)
     {
-        if (jumpHeld && !isPressed && !isGrounded && rb.linearVelocity.y > 0f && !IsDashing)
-        {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * jumpCutMultiplier);
-        }
-
         jumpHeld = isPressed;
     }
 
@@ -212,6 +217,32 @@ public class PlayerMovement : MonoBehaviour
     public bool IsGrounded()
     {
         return isGrounded;
+    }
+
+    public bool TryDropDown()
+    {
+        if (!CanDropDown())
+            return false;
+
+        if (dropDownCoroutine != null)
+            StopCoroutine(dropDownCoroutine);
+
+        dropDownCoroutine = StartCoroutine(DropDownRoutine(currentGroundCollider));
+        return true;
+    }
+
+    public void StartPlungeMotion(float downwardSpeed)
+    {
+        StopAttackMotion();
+
+        if (rb == null)
+            return;
+
+        float finalDownwardSpeed = Mathf.Max(0f, downwardSpeed);
+        if (finalDownwardSpeed <= 0f)
+            finalDownwardSpeed = jumpForce;
+
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, -finalDownwardSpeed);
     }
 
     public void ApplyAttackMovement(float distance, float duration)
@@ -237,12 +268,13 @@ public class PlayerMovement : MonoBehaviour
         if (groundCheck == null)
             return;
 
-        isGrounded = Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer);
+        Collider2D[] groundHits = Physics2D.OverlapCircleAll(groundCheck.position, 0.2f, GetGroundCheckMask());
+        currentGroundCollider = GetBestGroundCollider(groundHits);
+        isGrounded = currentGroundCollider != null;
 
         if (isGrounded)
         {
             coyoteUntil = Time.time + coyoteTime;
-            airDashesUsed = 0;
         }
 
         if (isGrounded != wasGrounded)
@@ -252,12 +284,49 @@ public class PlayerMovement : MonoBehaviour
             if (isGrounded)
             {
                 jumpsUsed = 0;
+                StartAirDashRecharge();
                 OnLand?.Invoke();
-                StartCoroutine(LandingCoroutine());
+
+                if (!ShouldSuppressLandingFeedback())
+                    StartCoroutine(LandingCoroutine());
+            }
+            else
+            {
+                CancelAirDashRecharge();
             }
         }
 
         wasGrounded = isGrounded;
+    }
+
+    private int GetGroundCheckMask()
+    {
+        int mask = groundLayer.value;
+
+        if (oneWayPlatformLayer >= 0)
+            mask |= 1 << oneWayPlatformLayer;
+
+        return mask;
+    }
+
+    private Collider2D GetBestGroundCollider(Collider2D[] hits)
+    {
+        if (hits == null)
+            return null;
+
+        for (int i = 0; i < hits.Length; i++)
+        {
+            Collider2D hit = hits[i];
+            if (hit == null || hit.isTrigger)
+                continue;
+
+            if (ignoredGroundCollider != null && hit == ignoredGroundCollider)
+                continue;
+
+            return hit;
+        }
+
+        return null;
     }
 
     private void TryConsumeBufferedJump()
@@ -338,11 +407,6 @@ public class PlayerMovement : MonoBehaviour
         {
             targetGravity *= fallGravityMultiplier;
         }
-        else if (rb.linearVelocity.y > 0f && !jumpHeld)
-        {
-            targetGravity *= lowJumpGravityMultiplier;
-        }
-
         rb.gravityScale = targetGravity;
 
         if (rb.linearVelocity.y < -maxFallSpeed)
@@ -393,6 +457,50 @@ public class PlayerMovement : MonoBehaviour
     private int GetSanitizedMaxAirDashCount()
     {
         return Mathf.Max(0, maxAirDashCount);
+    }
+
+    private bool CanDropDown()
+    {
+        return isGrounded
+            && currentGroundCollider != null
+            && oneWayPlatformLayer >= 0
+            && currentGroundCollider.gameObject.layer == oneWayPlatformLayer;
+    }
+
+    private bool ShouldSuppressLandingFeedback()
+    {
+        return basicAttack != null && basicAttack.ShouldSuppressLandingFeedback();
+    }
+
+    private void StartAirDashRecharge()
+    {
+        if (airDashesUsed <= 0)
+            return;
+
+        CancelAirDashRecharge();
+        airDashRechargeCoroutine = StartCoroutine(AirDashRechargeRoutine());
+    }
+
+    private void CancelAirDashRecharge()
+    {
+        if (airDashRechargeCoroutine == null)
+            return;
+
+        StopCoroutine(airDashRechargeCoroutine);
+        airDashRechargeCoroutine = null;
+    }
+
+    private IEnumerator AirDashRechargeRoutine()
+    {
+        float rechargeDelay = Mathf.Max(0f, dashCooldown);
+
+        if (rechargeDelay > 0f)
+            yield return new WaitForSeconds(rechargeDelay);
+
+        if (isGrounded)
+            airDashesUsed = 0;
+
+        airDashRechargeCoroutine = null;
     }
 
     private float GetDashDirection(float inputX)
@@ -585,5 +693,79 @@ public class PlayerMovement : MonoBehaviour
         }
 
         StopAttackMotion();
+    }
+
+    private IEnumerator DropDownRoutine(Collider2D targetCollider)
+    {
+        if (targetCollider == null || solidColliders == null)
+        {
+            dropDownCoroutine = null;
+            yield break;
+        }
+
+        ignoredGroundCollider = targetCollider;
+        SetDropDownCollision(targetCollider, true);
+
+        isGrounded = false;
+        currentGroundCollider = null;
+
+        if (rb != null)
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, Mathf.Min(rb.linearVelocity.y, -4f));
+
+        yield return new WaitForSeconds(dropDownDuration);
+
+        float restoreTimeoutAt = Time.time + 0.5f;
+
+        while (targetCollider != null
+            && !HasClearedDropDownCollider(targetCollider)
+            && Time.time < restoreTimeoutAt)
+        {
+            yield return null;
+        }
+
+        SetDropDownCollision(targetCollider, false);
+
+        if (ignoredGroundCollider == targetCollider)
+            ignoredGroundCollider = null;
+
+        dropDownCoroutine = null;
+    }
+
+    private void SetDropDownCollision(Collider2D targetCollider, bool ignore)
+    {
+        if (targetCollider == null || solidColliders == null)
+            return;
+
+        for (int i = 0; i < solidColliders.Length; i++)
+        {
+            Collider2D playerCollider = solidColliders[i];
+            if (playerCollider != null)
+                Physics2D.IgnoreCollision(playerCollider, targetCollider, ignore);
+        }
+    }
+
+    private bool HasClearedDropDownCollider(Collider2D targetCollider)
+    {
+        if (targetCollider == null || solidColliders == null)
+            return true;
+
+        float platformBottom = targetCollider.bounds.min.y;
+        float highestPlayerTop = float.MinValue;
+        bool foundSolidCollider = false;
+
+        for (int i = 0; i < solidColliders.Length; i++)
+        {
+            Collider2D playerCollider = solidColliders[i];
+            if (playerCollider == null)
+                continue;
+
+            highestPlayerTop = Mathf.Max(highestPlayerTop, playerCollider.bounds.max.y);
+            foundSolidCollider = true;
+        }
+
+        if (!foundSolidCollider)
+            return true;
+
+        return highestPlayerTop <= platformBottom - 0.02f;
     }
 }

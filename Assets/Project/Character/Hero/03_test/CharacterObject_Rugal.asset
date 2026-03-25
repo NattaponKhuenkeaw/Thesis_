@@ -21,9 +21,9 @@ MonoBehaviour:
     defense: 6
     elementalMultiplier: 1
     moveSpeed: 6.5
-    jumpForce: 15
+    jumpForce: 11
     maxJumpCount: 3
-    maxAirDashCount: 3
+    maxAirDashCount: 1
     groundAcceleration: 80
     groundDeceleration: 90
     airAcceleration: 55
@@ -143,6 +143,25 @@ MonoBehaviour:
         damageMultiplier: 1.15
         knockbackForce: 2
         debugColor: {r: 1, g: 0, b: 0, a: 1}
+  plungeAttackData:
+    isEnabled: 1
+    downwardSpeed: 18
+    impactAnimationStateName: Attack_1
+    impactStep:
+      stepName: Plunge Impact
+      useForwardMotion: 0
+      forwardDistance: 0.5
+      motionStartTime: 0
+      motionDuration: 0.1
+      hitFrames:
+      - hitTime: 0
+        activeDuration: 0.15
+        cameraShakeStrength: 0.08
+        offset: {x: 1.1, y: -0.4}
+        size: {x: 1.9, y: 1.2}
+        damageMultiplier: 1.8
+        knockbackForce: 4
+        debugColor: {r: 1, g: 0.4, b: 0, a: 1}
   skillData:
     skillName: Gust Break
     description: "\u0E1B\u0E25\u0E48\u0E2D\u0E22\u0E41\u0E23\u0E07\u0E25\u0E21\u0E01\u0E23\u0E30\u0E41\u0E17\u0E01\u0E14\u0E49\u0E32\u0E19\u0E2B\u0E19\u0E49\u0E32
