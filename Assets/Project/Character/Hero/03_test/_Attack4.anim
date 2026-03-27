@@ -28,7 +28,7 @@ AnimationClip:
         inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
         outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
       - serializedVersion: 3
-        time: 0.21666667
+        time: 0.1625
         value: {x: 0.26, y: -1, z: 0}
         inSlope: {x: 0, y: 0, z: 0}
         outSlope: {x: 0, y: 0, z: 0}
@@ -37,7 +37,7 @@ AnimationClip:
         inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
         outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
       - serializedVersion: 3
-        time: 0.33333334
+        time: 0.25
         value: {x: 0.5, y: -1, z: 0}
         inSlope: {x: 0, y: 0, z: 0}
         outSlope: {x: 0, y: 0, z: 0}
@@ -46,7 +46,7 @@ AnimationClip:
         inWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
         outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334}
       - serializedVersion: 3
-        time: 1.35
+        time: 1.0125
         value: {x: 0.4, y: -1, z: 0}
         inSlope: {x: 0, y: 0, z: 0}
         outSlope: {x: 0, y: 0, z: 0}
@@ -65,32 +65,32 @@ AnimationClip:
     curve:
     - time: 0
       value: {fileID: -2525412094382211129, guid: 9462471a08d54684d909fe204d1874fe, type: 3}
-    - time: 0.11666667
+    - time: 0.0875
       value: {fileID: -4466018942624952416, guid: 9462471a08d54684d909fe204d1874fe, type: 3}
-    - time: 0.21666667
+    - time: 0.1625
       value: {fileID: -5179946449142500021, guid: 9462471a08d54684d909fe204d1874fe, type: 3}
-    - time: 0.33333334
+    - time: 0.25
       value: {fileID: -3627181890211040443, guid: 9462471a08d54684d909fe204d1874fe, type: 3}
-    - time: 0.9166667
+    - time: 0.6875
       value: {fileID: -5179946449142500021, guid: 9462471a08d54684d909fe204d1874fe, type: 3}
-    - time: 1.0166667
+    - time: 0.7625
       value: {fileID: 7288288337751501099, guid: 9462471a08d54684d909fe204d1874fe, type: 3}
-    - time: 1.1333333
+    - time: 0.85
       value: {fileID: 3472289159361825179, guid: 9462471a08d54684d909fe204d1874fe, type: 3}
-    - time: 1.25
+    - time: 0.9375
       value: {fileID: -1646539694850796227, guid: 9462471a08d54684d909fe204d1874fe, type: 3}
-    - time: 1.35
+    - time: 1.0125
       value: {fileID: 3236469775113273206, guid: 9462471a08d54684d909fe204d1874fe, type: 3}
-    - time: 1.4666667
+    - time: 1.1
       value: {fileID: 8625938691818618537, guid: 9462471a08d54684d909fe204d1874fe, type: 3}
-    - time: 1.5833334
+    - time: 1.1875
       value: {fileID: -6728868160861860080, guid: 9462471a08d54684d909fe204d1874fe, type: 3}
     attribute: m_Sprite
     path: 
     classID: 212
     script: {fileID: 0}
     flags: 2
-  m_SampleRate: 60
+  m_SampleRate: 80
   m_WrapMode: 0
   m_Bounds:
     m_Center: {x: 0, y: 0, z: 0}
@@ -132,7 +132,7 @@ AnimationClip:
     m_AdditiveReferencePoseClip: {fileID: 0}
     m_AdditiveReferencePoseTime: 0
     m_StartTime: 0
-    m_StopTime: 1.6
+    m_StopTime: 1.2
     m_OrientationOffsetY: 0
     m_Level: 0
     m_CycleOffset: 0
@@ -153,7 +153,7 @@ AnimationClip:
       serializedVersion: 2
       m_Curve:
       - serializedVersion: 3
-        time: 0.21666667
+        time: 0.1625
         value: 0.26
         inSlope: 0
         outSlope: 0
@@ -162,7 +162,7 @@ AnimationClip:
         inWeight: 0.33333334
         outWeight: 0.33333334
       - serializedVersion: 3
-        time: 0.33333334
+        time: 0.25
         value: 0.5
         inSlope: 0
         outSlope: 0
@@ -171,7 +171,7 @@ AnimationClip:
         inWeight: 0.33333334
         outWeight: 0.33333334
       - serializedVersion: 3
-        time: 1.35
+        time: 1.0125
         value: 0.4
         inSlope: 0
         outSlope: 0
@@ -212,21 +212,21 @@ AnimationClip:
   m_HasGenericRootTransform: 1
   m_HasMotionFloatCurves: 0
   m_Events:
-  - time: 0.33333334
+  - time: 0.25
     functionName: OnImpactStart
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 0.9166667
+  - time: 0.6875
     functionName: OnRecoveryStart
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
-  - time: 1.5833334
+  - time: 1.1875
     functionName: OnAttackEnd
     data: 
     objectReferenceParameter: {fileID: 0}
