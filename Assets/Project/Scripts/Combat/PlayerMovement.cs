@@ -394,6 +394,13 @@ public class PlayerMovement : MonoBehaviour
         if (IsDashing)
             return;
 
+        if (basicAttack != null && basicAttack.ShouldLockAirComboInPlace())
+        {
+            rb.gravityScale = 0f;
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+            return;
+        }
+
         float targetGravity = originalGravityScale;
 
         if (isGrounded)
