@@ -21,6 +21,7 @@ public class AnimationHandler : MonoBehaviour
     private readonly int dashHash = Animator.StringToHash("Dash");
     private readonly int attackHash = Animator.StringToHash("Attack");
     private readonly int comboStepHash = Animator.StringToHash("ComboStep");
+    private readonly int airComboStepHash = Animator.StringToHash("AirComboStep");
     private readonly int isDieHash = Animator.StringToHash("IsDie");
     private readonly int takeDamageHash = Animator.StringToHash("TakeDamage");
     private readonly int skillHash = Animator.StringToHash("Skill");
@@ -83,7 +84,8 @@ public class AnimationHandler : MonoBehaviour
         anim.SetBool(isLandingHash, movement.IsLanding);
 
         // Detect falling state (airborne and moving downwards)
-        bool isFalling = !movement.IsGrounded() && rb.linearVelocity.y < -0.1f && !movement.IsLanding;
+        bool suppressFallAnimation = movement.basicAttack != null && movement.basicAttack.IsPlungeInAirPhase();
+        bool isFalling = !suppressFallAnimation && !movement.IsGrounded() && rb.linearVelocity.y < -0.1f && !movement.IsLanding;
         
         if (isFalling && !wasFalling)
         {
@@ -110,6 +112,9 @@ public class AnimationHandler : MonoBehaviour
 
     public void TriggerLanding()
     {
+        if (movement != null && movement.basicAttack != null && movement.basicAttack.ShouldSuppressLandingFeedback())
+            return;
+
         anim.SetTrigger(landingHash);
     }
 
@@ -127,13 +132,74 @@ public class AnimationHandler : MonoBehaviour
     {
         // Prioritize attack animation over lingering jump transitions when attacking mid-air.
         anim.ResetTrigger(jumpHash);
+        anim.SetInteger(airComboStepHash, 0);
         anim.SetInteger(comboStepHash, comboStep);
         anim.SetTrigger(attackHash);
+    }
+
+    public void TriggerAirAttack(int comboStep)
+    {
+        if (anim == null)
+            return;
+
+        anim.ResetTrigger(attackHash);
+        anim.ResetTrigger(jumpHash);
+        anim.ResetTrigger(landingHash);
+        anim.SetBool(isLandingHash, false);
+        anim.SetInteger(comboStepHash, 0);
+        int normalizedStep = Mathf.Max(1, comboStep);
+        anim.SetInteger(airComboStepHash, normalizedStep);
+
+        if (TryPlayFirstExistingState(GetAirAttackStateCandidates(normalizedStep)))
+            return;
+
+        anim.SetTrigger(attackHash);
+    }
+
+    public void TriggerPlungeFall(string stateName)
+    {
+        if (anim == null)
+            return;
+
+        anim.ResetTrigger(jumpHash);
+        anim.ResetTrigger(landingHash);
+        anim.SetBool(isLandingHash, false);
+        PlayStateByName(stateName, "Plunge_Fall");
+    }
+
+    public void TriggerPlungeImpact(string stateName)
+    {
+        if (anim == null)
+            return;
+
+        anim.ResetTrigger(jumpHash);
+        anim.ResetTrigger(landingHash);
+        anim.SetBool(isLandingHash, false);
+
+        PlayStateByName(stateName, "Attack_1");
+    }
+
+    public void RestoreAirborneState()
+    {
+        if (anim == null || movement == null || rb == null)
+            return;
+
+        if (movement.IsGrounded())
+            return;
+
+        if (rb.linearVelocity.y > 0.1f)
+        {
+            anim.Play(jumpHash, 0, 0f);
+            return;
+        }
+
+        anim.Play(fallHash, 0, 0f);
     }
 
     public void ResetCombo()
     {
         anim.SetInteger(comboStepHash, 0);
+        anim.SetInteger(airComboStepHash, 0);
     }
 
     public void TriggerSkill()
@@ -144,6 +210,51 @@ public class AnimationHandler : MonoBehaviour
     public void TriggerUltimate()
     {
         anim.SetTrigger(ultimateHash);
+    }
+
+    private void PlayStateByName(string stateName, string fallbackStateName)
+    {
+        string resolvedStateName = stateName;
+        if (string.IsNullOrWhiteSpace(resolvedStateName))
+            resolvedStateName = fallbackStateName;
+
+        if (!resolvedStateName.Contains("."))
+            resolvedStateName = $"Base Layer.{resolvedStateName}";
+
+        anim.Play(resolvedStateName, 0, 0f);
+    }
+
+    private string[] GetAirAttackStateCandidates(int comboStep)
+    {
+        int normalizedStep = Mathf.Max(1, comboStep);
+        return normalizedStep switch
+        {
+            1 => new[] { "Air_Attack1", "_AirAttack1", "AirAttack1" },
+            2 => new[] { "Air_Attack2", "_AirAttack2", "AirAttack2" },
+            3 => new[] { "Air_Attack3", "_AirAttack3", "AirAttack3" },
+            _ => new[] { $"Air_Attack{normalizedStep}", $"_AirAttack{normalizedStep}", $"AirAttack{normalizedStep}" }
+        };
+    }
+
+    private bool TryPlayFirstExistingState(string[] stateNames)
+    {
+        if (stateNames == null || stateNames.Length == 0)
+            return false;
+
+        foreach (string stateName in stateNames)
+        {
+            string resolvedStateName = stateName.Contains(".")
+                ? stateName
+                : $"Base Layer.{stateName}";
+
+            if (!anim.HasState(0, Animator.StringToHash(resolvedStateName)))
+                continue;
+
+            anim.Play(resolvedStateName, 0, 0f);
+            return true;
+        }
+
+        return false;
     }
 
     // =========================================================

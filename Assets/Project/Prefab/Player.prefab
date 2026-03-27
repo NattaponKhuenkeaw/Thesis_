@@ -279,6 +279,7 @@ GameObject:
   - component: {fileID: 5362926520501750871}
   - component: {fileID: 3315855471932036482}
   - component: {fileID: 8198639002420490660}
+  - component: {fileID: 5450070007788991123}
   m_Layer: 7
   m_Name: Player
   m_TagString: Player
@@ -382,7 +383,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDamping: 0
   m_AngularDamping: 0.05
-  m_GravityScale: 1
+  m_GravityScale: 2.2
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -451,17 +452,22 @@ MonoBehaviour:
   dashSpeed: 20
   dashDuration: 0.5
   dashCooldown: 1
-  fastFallMultiplier: 100
+  fastFallMultiplier: 3
+  riseGravityMultiplier: 2
+  apexGravityMultiplier: 2.5
+  apexVelocityThreshold: 1.35
   coyoteTime: 0.08
   jumpBufferTime: 0.12
-  jumpCutMultiplier: 0.5
-  fallGravityMultiplier: 5
-  lowJumpGravityMultiplier: 2.2
-  maxFallSpeed: 18
+  jumpCutMultiplier: 0.42
+  fallGravityMultiplier: 2.5
+  lowJumpGravityMultiplier: 1
+  maxFallSpeed: 32
   playerLayerName: Player
   enemyLayerName: Enemy
-  jumpStartupTime: 0.05
+  oneWayPlatformLayerName: OneWayPlatform
+  jumpStartupTime: 0
   landingLagTime: 0.05
+  dropDownDuration: 0.2
   groundCheck: {fileID: 3725453944956529812}
   groundLayer:
     serializedVersion: 2
@@ -519,6 +525,29 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterRuntime
   characterObject: {fileID: 0}
   currentHP: 0
+--- !u!114 &5450070007788991123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7851930121724842516}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 65a0686375154414bad0bb381c355a79, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHUD
+  playerCharacter: {fileID: 729008942358398209}
+  runtime: {fileID: 2290124507632602171}
+  targetCanvas: {fileID: 0}
+  panelSize: {x: 320, y: 92}
+  anchoredPosition: {x: 24, y: -24}
+  createFallbackCanvasIfMissing: 0
+  panelColor: {r: 0.07, g: 0.07, b: 0.09, a: 0.78}
+  barBackgroundColor: {r: 0.18, g: 0.18, b: 0.22, a: 1}
+  barFillColor: {r: 0.88, g: 0.22, b: 0.18, a: 1}
+  nameTextColor: {r: 1, g: 1, b: 1, a: 1}
+  hpTextColor: {r: 1, g: 0.96, b: 0.9, a: 1}
 --- !u!114 &729008942358398209
 MonoBehaviour:
   m_ObjectHideFlags: 0

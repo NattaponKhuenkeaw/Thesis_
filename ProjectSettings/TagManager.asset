@@ -15,6 +15,7 @@ TagManager:
   - Entity
   - Player
   - Enemy
+  - OneWayPlatform
   - 
   - 
   - 

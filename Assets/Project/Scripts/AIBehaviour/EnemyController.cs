@@ -58,6 +58,11 @@ public class EnemyController : MonoBehaviour
         // Start with hitbox disabled
         if (attackHitbox != null)
         {
+            EnemyAttackHitbox damageHitbox = attackHitbox.GetComponent<EnemyAttackHitbox>();
+            if (damageHitbox == null)
+                damageHitbox = attackHitbox.gameObject.AddComponent<EnemyAttackHitbox>();
+
+            damageHitbox.SetHitboxWindowActive(false);
             attackHitbox.enabled = false;
             var sr = attackHitbox.GetComponent<SpriteRenderer>();
             if (sr != null) sr.enabled = false;
@@ -160,6 +165,11 @@ public class EnemyController : MonoBehaviour
         if (attackHitbox != null)
         {
             attackHitbox.enabled = active;
+
+            EnemyAttackHitbox damageHitbox = attackHitbox.GetComponent<EnemyAttackHitbox>();
+            if (damageHitbox != null)
+                damageHitbox.SetHitboxWindowActive(active);
+
             // Toggle SpriteRenderer if it exists for runtime visualization
             var sr = attackHitbox.GetComponent<SpriteRenderer>();
             if (sr != null) sr.enabled = active;

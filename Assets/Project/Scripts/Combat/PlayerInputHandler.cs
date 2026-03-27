@@ -153,6 +153,12 @@ public class InputHandler_Player : MonoBehaviour
 
         if (canJumpNow)
         {
+            if (moveInput.y < -0.5f && movement.TryDropDown())
+                return;
+
+            if (moveInput.y < -0.5f && !movement.IsGrounded() && basicAttack != null && basicAttack.TryStartPlungeAttack())
+                return;
+
             if (actionController != null && actionController.IsState(PlayerActionState.Attack))
                 actionController.SetState(PlayerActionState.Normal);
 

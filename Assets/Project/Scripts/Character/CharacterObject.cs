@@ -19,6 +19,22 @@ public enum CharacterType
     NPC
 }
 
+[System.Serializable]
+public class PlungeAttackData
+{
+    [Header("Settings")]
+    public bool isEnabled = true;
+    public float downwardSpeed = 18f;
+    public string fallAnimationStateName = "Plunge_Fall";
+    public string impactAnimationStateName = "Attack_1";
+
+    [Header("Impact Step")]
+    public AttackStepData impactStep = new AttackStepData
+    {
+        stepName = "Plunge Impact"
+    };
+}
+
 [CreateAssetMenu(fileName = "CharacterObject_", menuName = "Game/Character/Character Object")]
 public class CharacterObject : ScriptableObject
 {
@@ -54,6 +70,12 @@ public class CharacterObject : ScriptableObject
     // =========================================================
     [Header("Neutral Air Combo Data")]
     public BasicAttackComboData neutralAirComboData = new BasicAttackComboData();
+
+    // =========================================================
+    // Plunge Attack
+    // =========================================================
+    [Header("Plunge Attack")]
+    public PlungeAttackData plungeAttackData = new PlungeAttackData();
 
     // =========================================================
     // Skill
