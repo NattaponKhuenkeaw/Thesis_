@@ -111,10 +111,10 @@ public class EnemyWorldUI : MonoBehaviour
         enemyController.OnDied -= HandleDied;
     }
 
-    private void HandleDamaged(float damage, Vector2 knockbackDirection)
+    private void HandleDamaged(HitReactionData data)
     {
         UpdateHealthBar();
-        ShowDamageText(damage);
+        ShowDamageText(data.damage);
     }
 
     private void HandleDied()

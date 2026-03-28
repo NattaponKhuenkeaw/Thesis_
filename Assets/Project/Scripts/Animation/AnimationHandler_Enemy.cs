@@ -63,7 +63,7 @@ public class AnimationHandler_Enemy : MonoBehaviour
     // =========================================================
     // Event Handlers
     // =========================================================
-    private void HandleDamageTaken(float damage, Vector2 knockback)
+    private void HandleDamageTaken(HitReactionData data)
     {
         TriggerTakeDamage();
     }
@@ -98,5 +98,12 @@ public class AnimationHandler_Enemy : MonoBehaviour
     {
         if (animParamHashes != null && animParamHashes.Contains(speedHash))
             anim.SetFloat(speedHash, speed);
+    }
+
+    /// <summary>Sets the Animator playback speed (0 = frozen, 1 = normal).</summary>
+    public void SetAnimatorSpeed(float speed)
+    {
+        if (anim != null)
+            anim.speed = speed;
     }
 }

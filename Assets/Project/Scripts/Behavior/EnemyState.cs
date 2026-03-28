@@ -8,5 +8,7 @@ public enum State
     Chase,
     Attack,
     TakeDamage,
-    Die
+    Die,
+    Hitstun,
+    Knockdown
 }

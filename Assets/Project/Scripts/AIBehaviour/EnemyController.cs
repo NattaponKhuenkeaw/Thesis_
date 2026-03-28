@@ -12,8 +12,8 @@ public class EnemyController : MonoBehaviour
     // =========================================================
     // Events
     // =========================================================
-    /// <summary>Fired when the enemy takes damage. Payload = (damage, knockbackDir).</summary>
-    public event System.Action<float, Vector2> OnDamaged;
+    /// <summary>Fired when the enemy takes damage. Payload = full reaction data.</summary>
+    public event System.Action<HitReactionData> OnDamaged;
     /// <summary>Fired when HP reaches 0.</summary>
     public event System.Action OnDied;
 
@@ -44,6 +44,9 @@ public class EnemyController : MonoBehaviour
     /// <summary>Main body collider (disabled on death).</summary>
     public Collider2D bodyCollider;
 
+    [Header("Hit Reaction")]
+    public EnemyHitReactionHandler hitReactionHandler;
+
     // Removed animation hashes
 
     // =========================================================
@@ -54,6 +57,9 @@ public class EnemyController : MonoBehaviour
         rb       = GetComponent<Rigidbody2D>();
         currentHP = maxHP;
         isAlive   = true;
+
+        if (hitReactionHandler == null)
+            hitReactionHandler = GetComponent<EnemyHitReactionHandler>();
 
         // Start with hitbox disabled
         if (attackHitbox != null)
@@ -115,32 +121,52 @@ public class EnemyController : MonoBehaviour
     // Public API
     // =========================================================
 
-    /// <summary>Called externally (e.g. MeleeHitboxDamage) to apply damage.</summary>
-    public void TakeHit(float damage, Vector2 knockbackDirection, float knockbackForce)
+    /// <summary>
+    /// Full hit-reaction variant. Called by MeleeHitboxDamage with frame-data-driven reaction.
+    /// </summary>
+    public void TakeHit(HitReactionData reactionData, Vector2 attackerPosition)
     {
         if (!isAlive) return;
 
-        currentHP -= damage;
+        currentHP -= reactionData.damage;
         currentHP  = Mathf.Max(currentHP, 0f);
 
-        // Apply knockback
-        if (rb != null)
-        {
-            rb.linearVelocity = Vector2.zero;
-            rb.AddForce(knockbackDirection.normalized * knockbackForce, ForceMode2D.Impulse);
-        }
-
-        OnDamaged?.Invoke(damage, knockbackDirection);
+        // Fire event (AnimationHandler_Enemy triggers TakeDamage anim via this)
+        OnDamaged?.Invoke(reactionData);
 
         // Notify Blackboard for BehaviorGraph
         var behaviorAgent = GetComponent<BehaviorGraphAgent>();
-        if (behaviorAgent != null && behaviorAgent.BlackboardReference != null)
+        if (behaviorAgent != null)
         {
-            behaviorAgent.BlackboardReference.SetVariableValue("IsTakeDamage", true);
+            behaviorAgent.SetVariableValue("IsTakingDamage", true);
+        }
+
+        // Delegate to the hit reaction handler (freeze, knockback, flash, etc.)
+        if (hitReactionHandler != null)
+        {
+            hitReactionHandler.StartReaction(reactionData, attackerPosition);
+        }
+        else
+        {
+            // Fallback: simple knockback if no handler is attached
+            if (rb != null)
+            {
+                rb.linearVelocity = Vector2.zero;
+                rb.AddForce(reactionData.knockbackDirection.normalized * reactionData.knockbackForce, ForceMode2D.Impulse);
+            }
         }
 
         if (currentHP <= 0f)
             Die();
+    }
+
+    /// <summary>
+    /// Legacy overload for backward compatibility. Builds a default HitReactionData.
+    /// </summary>
+    public void TakeHit(float damage, Vector2 knockbackDirection, float knockbackForce)
+    {
+        HitReactionData data = HitReactionData.Default(damage, knockbackDirection, knockbackForce);
+        TakeHit(data, transform.position);
     }
 
     /// <summary>Trigger death sequence (also callable from DieAction node).</summary>

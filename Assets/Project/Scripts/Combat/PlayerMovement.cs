@@ -43,6 +43,7 @@ public class PlayerMovement : MonoBehaviour
     public float riseGravityMultiplier = 1f;
     public float apexGravityMultiplier = 2.4f;
     public float apexVelocityThreshold = 1.6f;
+    public float postAttackGravityGraceDuration = 0.2f;
 
     // =========================================================
     // Jump Feel
@@ -102,6 +103,8 @@ public class PlayerMovement : MonoBehaviour
     private Collider2D currentGroundCollider;
     private Collider2D ignoredGroundCollider;
     private Collider2D[] solidColliders;
+    private float postAttackGraceTimer;
+    private bool wasLockingAirCombo;
 
     private int playerLayer;
     private int enemyLayer;
@@ -394,11 +397,22 @@ public class PlayerMovement : MonoBehaviour
         if (IsDashing)
             return;
 
-        if (basicAttack != null && basicAttack.ShouldLockAirComboInPlace())
+        bool isLocking = basicAttack != null && basicAttack.ShouldLockAirComboInPlace();
+
+        if (isLocking)
         {
             rb.gravityScale = 0f;
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+            wasLockingAirCombo = true;
+            postAttackGraceTimer = 0f;
             return;
+        }
+
+        // Detect transition from Locking -> Not Locking
+        if (wasLockingAirCombo && !isLocking)
+        {
+            postAttackGraceTimer = postAttackGravityGraceDuration;
+            wasLockingAirCombo = false;
         }
 
         float targetGravity = originalGravityScale;
@@ -406,7 +420,17 @@ public class PlayerMovement : MonoBehaviour
         if (isGrounded)
         {
             rb.gravityScale = targetGravity;
+            postAttackGraceTimer = 0f;
             return;
+        }
+
+        // Apply smooth gravity ramp if in grace period
+        if (postAttackGraceTimer > 0f)
+        {
+            float duration = Mathf.Max(0.001f, postAttackGravityGraceDuration);
+            float t = 1f - (postAttackGraceTimer / duration);
+            targetGravity *= t;
+            postAttackGraceTimer -= Time.deltaTime;
         }
 
         if (rb.linearVelocity.y > apexVelocityThreshold)

@@ -5,9 +5,9 @@ public class AttackStepData
 {
     [Header("Step Info")]
     public string stepName = "Attack";
-    public float duration = 0.45f;
-    public float comboQueueOpenTime = 0.12f;
-    public float moveRecoveryTime = 0.3f;
+    [HideInInspector] public float duration = 0.45f;
+    [HideInInspector] public float comboQueueOpenTime = 0.12f;
+    [HideInInspector] public float moveRecoveryTime = 0.3f;
 
     [Header("Forward Motion")]
     public bool useForwardMotion = false;

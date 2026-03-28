@@ -13,6 +13,7 @@ public class MeleeHitboxDamage : MonoBehaviour
     // =========================================================
     // Runtime
     // =========================================================
+    private AttackHitFrameData currentHitFrameData;
     private float currentDamage = 1f;
     private float currentKnockback = 4f;
     private float currentShakeStrength = 0.25f;
@@ -65,7 +66,9 @@ public class MeleeHitboxDamage : MonoBehaviour
         if (movement != null && movement.spriteRenderer != null && movement.spriteRenderer.flipX)
             direction = Vector2.left;
 
-        enemy.TakeHit(currentDamage, direction, currentKnockback);
+        // Build full reaction data from hit frame
+        HitReactionData reactionData = BuildReactionData(direction);
+        enemy.TakeHit(reactionData, transform.position);
         lastHitFrame = Time.frameCount;
 
         if (!hasTriggeredShakeThisActivation)
@@ -84,7 +87,7 @@ public class MeleeHitboxDamage : MonoBehaviour
     // =========================================================
     // Public Methods
     // =========================================================
-    public void SetHitData(float damage, float knockback, float shakeStrength, bool lastHit = false, float stopDuration = 0.12f, float stopScale = 0.02f)
+    public void SetHitData(float damage, float knockback, float shakeStrength, bool lastHit = false, float stopDuration = 0.12f, float stopScale = 0.02f, AttackHitFrameData hitFrameData = null)
     {
         currentDamage = damage;
         currentKnockback = knockback;
@@ -92,6 +95,31 @@ public class MeleeHitboxDamage : MonoBehaviour
         isLastHit = lastHit;
         hitStopDuration = stopDuration;
         hitStopScale = stopScale;
+        currentHitFrameData = hitFrameData;
+    }
+
+    // =========================================================
+    // Build Reaction Data
+    // =========================================================
+    private HitReactionData BuildReactionData(Vector2 direction)
+    {
+        HitReactionData data = HitReactionData.Default(currentDamage, direction, currentKnockback);
+
+        // Override with per-hit-frame data if available
+        if (currentHitFrameData != null)
+        {
+            data.hitstunFrames    = currentHitFrameData.hitstunFrames;
+            data.impactFreezeTime = currentHitFrameData.impactFreezeTime;
+            data.reactionVelocity = currentHitFrameData.reactionVelocity;
+            data.knockbackDuration = currentHitFrameData.knockbackDuration;
+            data.isKnockdown      = currentHitFrameData.isKnockdown;
+            data.snapToAttacker   = currentHitFrameData.snapToAttacker;
+            data.snapOffset       = currentHitFrameData.snapOffset;
+            data.flashColor       = currentHitFrameData.flashColor;
+            data.flashDuration    = currentHitFrameData.flashDuration;
+        }
+
+        return data;
     }
 
     // =========================================================

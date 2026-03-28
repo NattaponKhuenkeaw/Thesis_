@@ -51,8 +51,6 @@ public class PlayerBasicAttack : MonoBehaviour
     private bool isPlungeAttacking = false;
     private bool plungeImpactTriggered = false;
     private int airComboSetsUsedUntilLanding = 0;
-    private bool canQueueNext = false;
-    private bool canMoveAfterAttack = false;
 
     // =========================================================
     // Unity Methods
@@ -146,20 +144,6 @@ public class PlayerBasicAttack : MonoBehaviour
             return true;
         }
 
-        if (ShouldUseInspectorDrivenAirCombo())
-        {
-            if (requestedMode != AttackComboMode.AirNeutral)
-                return false;
-
-            if (!canQueueNext)
-                return false;
-
-            comboQueued = true;
-            queuedComboMode = requestedMode;
-            inputConsumedInCurrentStep = true;
-            return true;
-        }
-
         if (inputConsumedInCurrentStep)
         {
             if (currentComboMode == AttackComboMode.AirNeutral && requestedMode == AttackComboMode.AirNeutral)
@@ -171,22 +155,8 @@ public class PlayerBasicAttack : MonoBehaviour
             return false;
         }
 
-        // Reject input during Windup — the current attack hasn't even reached Impact yet
-        if (currentFrameState == AttackFrameState.Windup)
-        {
-            if (currentComboMode == AttackComboMode.AirNeutral)
-            {
-                comboQueued = true;
-                queuedComboMode = requestedMode;
-                inputConsumedInCurrentStep = true;
-                return true;
-            }
-
-            return false;
-        }
-
-        // Buffer input during Impact — will be consumed when Recovery starts
-        if (currentFrameState == AttackFrameState.Impact)
+        // Buffer input during Windup or Impact — will be consumed when Recovery starts
+        if (currentFrameState == AttackFrameState.Windup || currentFrameState == AttackFrameState.Impact)
         {
             comboQueued = true;
             queuedComboMode = requestedMode;
@@ -204,6 +174,7 @@ public class PlayerBasicAttack : MonoBehaviour
 
         return false;
     }
+
     public void ResetCombo()
     {
         if (actionController != null)
@@ -215,8 +186,6 @@ public class PlayerBasicAttack : MonoBehaviour
         inputConsumedInCurrentStep = false;
         isAttacking = false;
         comboQueued = false;
-        canQueueNext = false;
-        canMoveAfterAttack = false;
         currentFrameState = AttackFrameState.None;
         currentComboMode = AttackComboMode.Ground;
         queuedComboMode = AttackComboMode.Ground;
@@ -322,9 +291,6 @@ public class PlayerBasicAttack : MonoBehaviour
 
     public bool CanMoveAfterAttack()
     {
-        if (ShouldUseInspectorDrivenAirCombo())
-            return canMoveAfterAttack;
-
         return !isAttacking;
     }
 
@@ -365,8 +331,6 @@ public class PlayerBasicAttack : MonoBehaviour
         lastImpactFrame = -1;
         inputConsumedInCurrentStep = carryBufferedAirAdvance;
         pendingAirComboAdvance = false;
-        canQueueNext = false;
-        canMoveAfterAttack = false;
 
         if (movement != null)
         {
@@ -374,22 +338,16 @@ public class PlayerBasicAttack : MonoBehaviour
             movement.CanMove = false;
         }
 
-        if (animHandler != null)
-        {
-            if (attackMode == AttackComboMode.AirNeutral)
-                animHandler.TriggerAirAttack(comboStep);
-            else
-                animHandler.TriggerAttackCombo(comboStep);
-        }
+        if (attackMode == AttackComboMode.AirNeutral)
+            animHandler.TriggerAirAttack(comboStep);
+        else
+            animHandler.TriggerAttackCombo(comboStep);
 
         AttackStepData stepData = comboData.GetStep(comboStep);
         if (stepData != null && stepData.useForwardMotion)
         {
             StartCoroutine(AttackMotionRoutine(stepData));
         }
-
-        if (attackMode == AttackComboMode.AirNeutral)
-            StartCoroutine(AirAttackRoutine(stepData, comboData));
     }
 
     private void HandlePlungeLanding()
@@ -484,7 +442,6 @@ public class PlayerBasicAttack : MonoBehaviour
     public void OnImpactStart()
     {
         if (!isAttacking) return;
-        if (ShouldUseInspectorDrivenAirCombo()) return;
 
         // Deduplicate calls in the same frame (caused by multiple relay components)
         if (lastImpactFrame == Time.frameCount)
@@ -526,7 +483,6 @@ public class PlayerBasicAttack : MonoBehaviour
     public void OnRecoveryStart()
     {
         if (!isAttacking) return;
-        if (ShouldUseInspectorDrivenAirCombo()) return;
 
         currentFrameState = AttackFrameState.Recovery;
 
@@ -554,7 +510,6 @@ public class PlayerBasicAttack : MonoBehaviour
     public void OnAttackEnd()
     {
         if (!isAttacking) return;
-        if (ShouldUseInspectorDrivenAirCombo()) return;
         
         // IMPORTANT: We only honor OnAttackEnd if the current attack state is Recovery.
         // If we are in Windup or Impact, then this event is "stale" from a previous 
@@ -592,62 +547,13 @@ public class PlayerBasicAttack : MonoBehaviour
             meleeHitboxController.ApplyHitFrame(hitFrame);
 
         if (meleeHitboxDamage != null)
-            meleeHitboxDamage.SetHitData(finalDamage, finalKnockback, shakeStrength, isLastStep);
+            meleeHitboxDamage.SetHitData(finalDamage, finalKnockback, shakeStrength, isLastStep, hitFrameData: hitFrame);
 
         EnableHitbox();
 
         yield return new WaitForSeconds(hitFrame.activeDuration);
 
         DisableHitbox();
-    }
-
-    private IEnumerator AirAttackRoutine(AttackStepData stepData, BasicAttackComboData comboData)
-    {
-        if (stepData == null)
-        {
-            FinishAirComboStep();
-            yield break;
-        }
-
-        currentFrameState = AttackFrameState.Windup;
-
-        if (stepData.moveRecoveryTime > 0f)
-            StartCoroutine(OpenMoveRecoveryRoutine(stepData.moveRecoveryTime));
-
-        if (stepData.hitFrames != null)
-        {
-            for (int i = 0; i < stepData.hitFrames.Length; i++)
-            {
-                AttackHitFrameData hitFrame = stepData.hitFrames[i];
-                if (hitFrame != null)
-                    StartCoroutine(TriggerHitFrameRoutine(hitFrame));
-            }
-        }
-
-        float duration = Mathf.Max(0.05f, stepData.duration);
-        float queueWindow = Mathf.Clamp(stepData.comboQueueOpenTime, 0f, duration);
-        float queueOpenDelay = Mathf.Max(0f, duration - queueWindow);
-
-        if (queueOpenDelay > 0f)
-            yield return new WaitForSeconds(queueOpenDelay);
-
-        currentFrameState = AttackFrameState.Recovery;
-        canQueueNext = true;
-
-        float remainingDuration = duration - queueOpenDelay;
-        if (remainingDuration > 0f)
-            yield return new WaitForSeconds(remainingDuration);
-
-        canQueueNext = false;
-
-        int maxCombo = comboData != null ? comboData.GetMaxCombo() : 0;
-        if (comboQueued && queuedComboMode == AttackComboMode.AirNeutral && comboStep < maxCombo)
-        {
-            StartNextAttack(AttackComboMode.AirNeutral);
-            yield break;
-        }
-
-        FinishAirComboStep();
     }
 
     private IEnumerator AttackMotionRoutine(AttackStepData stepData)
@@ -774,11 +680,6 @@ public class PlayerBasicAttack : MonoBehaviour
             animHandler.RestoreAirborneState();
     }
 
-    private bool ShouldUseInspectorDrivenAirCombo()
-    {
-        return isAttacking && !isPlungeAttacking && currentComboMode == AttackComboMode.AirNeutral;
-    }
-
     private bool ShouldKeepAirComboProgressUntilLanding()
     {
         return movement != null
@@ -804,8 +705,6 @@ public class PlayerBasicAttack : MonoBehaviour
 
         isAttacking = false;
         comboQueued = false;
-        canQueueNext = false;
-        canMoveAfterAttack = false;
         inputConsumedInCurrentStep = false;
         pendingAirComboAdvance = false;
         currentFrameState = AttackFrameState.None;
@@ -826,11 +725,9 @@ public class PlayerBasicAttack : MonoBehaviour
             actionController.SetState(PlayerActionState.Normal);
     }
 
-    private IEnumerator OpenMoveRecoveryRoutine(float time)
-    {
-        yield return new WaitForSeconds(time);
-        canMoveAfterAttack = true;
-    }
+    // =========================================================
+    // Routine removed in favor of Animation Events
+    // =========================================================
 
 
     // =========================================================

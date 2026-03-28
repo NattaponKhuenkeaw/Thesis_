@@ -834,6 +834,7 @@ GameObject:
   - component: {fileID: 655673979869406066}
   - component: {fileID: 4337216351384873233}
   - component: {fileID: -1236378588940687432}
+  - component: {fileID: -6515187417249938201}
   m_Layer: 8
   m_Name: EnemyCore
   m_TagString: Enemy
@@ -1045,6 +1046,7 @@ MonoBehaviour:
   rb: {fileID: 6597299547389863175}
   attackHitbox: {fileID: 3145967654918923133}
   bodyCollider: {fileID: 7441673381418920329}
+  hitReactionHandler: {fileID: -6515187417249938201}
 --- !u!114 &4337216351384873233
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1135,6 +1137,20 @@ MonoBehaviour:
   - {x: 0.5, y: -0.5, z: 0}
   - {x: 0.5, y: 0.5, z: 0}
   - {x: -0.5, y: 0.5, z: 0}
+--- !u!114 &-6515187417249938201
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8917136744719106790}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbe01cd655c2e554c89cebf251d6ec5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyHitReactionHandler
+  currentState: 0
+  recoveryDuration: 0.15
 --- !u!1001 &1641500372536904862
 PrefabInstance:
   m_ObjectHideFlags: 0

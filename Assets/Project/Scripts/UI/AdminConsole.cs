@@ -15,7 +15,7 @@ public class AdminConsole : MonoBehaviour
 
     public void SpawnEnemy()
     {
-        Instantiate(enemyPrefab, transform.position = new Vector2(Random.Range(-10, 10), Random.Range(-10, 10)), Quaternion.identity);
+        Instantiate(enemyPrefab, new Vector3(Random.Range(-10, 10), 0, 0), Quaternion.identity);
     }
 
     public void KillAllEnemies()
