@@ -66,11 +66,11 @@ MonoBehaviour:
         knockbackForce: 2
         hitstunFrames: 0
         impactFreezeTime: 1
-        reactionVelocity: {x: 1.5, y: 1}
+        reactionVelocity: {x: 3, y: 0}
         knockbackDuration: 0.25
         isKnockdown: 0
-        snapToAttacker: 0
-        snapOffset: {x: 0, y: 0}
+        snapToAttacker: 1
+        snapOffset: {x: 1, y: 0}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashDuration: 0.1
         debugColor: {r: 0.2040608, g: 1, b: 0, a: 0.39215687}
@@ -95,7 +95,7 @@ MonoBehaviour:
         reactionVelocity: {x: 0, y: 1}
         knockbackDuration: 0.25
         isKnockdown: 1
-        snapToAttacker: 1
+        snapToAttacker: 0
         snapOffset: {x: 0.5, y: -1}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashDuration: 0.1
@@ -118,10 +118,10 @@ MonoBehaviour:
         knockbackForce: 2
         hitstunFrames: 0
         impactFreezeTime: 1
-        reactionVelocity: {x: 0, y: 1}
+        reactionVelocity: {x: 1, y: 7}
         knockbackDuration: 0.25
         isKnockdown: 1
-        snapToAttacker: 1
+        snapToAttacker: 0
         snapOffset: {x: 0.5, y: 2}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashDuration: 0.1
@@ -135,9 +135,9 @@ MonoBehaviour:
         knockbackForce: 2
         hitstunFrames: 4
         impactFreezeTime: 0
-        reactionVelocity: {x: 0, y: 5}
+        reactionVelocity: {x: 1, y: 5}
         knockbackDuration: 1
-        isKnockdown: 0
+        isKnockdown: 1
         snapToAttacker: 0
         snapOffset: {x: 0, y: 0}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -169,10 +169,10 @@ MonoBehaviour:
         knockbackForce: 3
         hitstunFrames: 4
         impactFreezeTime: 0
-        reactionVelocity: {x: 3, y: 3}
+        reactionVelocity: {x: 7, y: 5}
         knockbackDuration: 1
         isKnockdown: 1
-        snapToAttacker: 1
+        snapToAttacker: 0
         snapOffset: {x: 0, y: 0}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashDuration: 0.1
@@ -196,9 +196,9 @@ MonoBehaviour:
         hitstunFrames: 0
         impactFreezeTime: 1
         reactionVelocity: {x: 5, y: 7}
-        knockbackDuration: 1
-        isKnockdown: 0
-        snapToAttacker: 0
+        knockbackDuration: 1.5
+        isKnockdown: 1
+        snapToAttacker: 1
         snapOffset: {x: 0, y: 0}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashDuration: 0.1

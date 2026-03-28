@@ -123,6 +123,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8140162959712842425}
   - component: {fileID: 2292220848718935463}
+  - component: {fileID: 6676529041105921395}
   m_Layer: 0
   m_Name: CameraLookAheadTarget
   m_TagString: Untagged
@@ -158,12 +159,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraLookAhead
   playerRigidbody: {fileID: 0}
-  lookAheadTime: 0.35
-  maxLookAheadDistance: 3
-  applyVertical: 0
-  maxVerticalDistance: 1.5
-  smoothTime: 0.2
-  maxProxySpeed: 20
+  fallLookAheadTime: 0.35
+  maxFallOffset: 3
+  verticalReturnSmoothTime: 0.25
+  horizontalSmoothTime: 0.05
+--- !u!114 &6676529041105921395
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3205738235914087533}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bccbdd11b77ac614fbbc7c332d898f86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraShakeController
+  impulseSource: {fileID: 0}
 --- !u!1 &4444728088541422226
 GameObject:
   m_ObjectHideFlags: 0
@@ -192,7 +204,7 @@ Transform:
   m_GameObject: {fileID: 4444728088541422226}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.00000023841858, y: 1.7604387, z: -16.9}
+  m_LocalPosition: {x: -0.00000023841858, y: 2.2302194, z: -16.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -256,7 +268,7 @@ MonoBehaviour:
   CameraDistance: 16.9
   DeadZoneDepth: 0
   Composition:
-    ScreenPosition: {x: 0, y: 0.2}
+    ScreenPosition: {x: 0, y: 0.1}
     DeadZone:
       Enabled: 1
       Size: {x: 0.2, y: 0.2}
@@ -268,9 +280,9 @@ MonoBehaviour:
   TargetOffset: {x: 0, y: 1, z: 0}
   Damping: {x: 1, y: 1, z: 1}
   Lookahead:
-    Enabled: 0
-    Time: 0
-    Smoothing: 0
+    Enabled: 1
+    Time: 0.4
+    Smoothing: 5
     IgnoreY: 0
 --- !u!114 &2326838387957071511
 MonoBehaviour:
@@ -320,7 +332,7 @@ Transform:
   m_GameObject: {fileID: 8999929430782389086}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.7604387, z: -16.9}
+  m_LocalPosition: {x: 0, y: 2.2302194, z: -16.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
