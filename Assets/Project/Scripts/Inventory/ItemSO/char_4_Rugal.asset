@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b5f3184f1b0bc8948a16175d985cfbed, type: 3}
-  m_Name: char_2_Catgirl
+  m_Name: char_4_Rugal
   m_EditorClassIdentifier: Assembly-CSharp::Project.InventorySystem.Items.CharacterItem
-  id: CHAR-002
-  itemName: Cat Girl
-  description: A stone giant mercenary with a gentle heart. His iron fists crack
-    mountains, not resolve.
-  icon: {fileID: 21300000, guid: 97574e01fba9d5d46932a799feff7584, type: 3}
-  price: 1200
-  characterReference: {fileID: 11400000, guid: c9c99302d3f5d8a43b612bd108aa3f05, type: 2}
+  id: CHAR-004
+  itemName: Venti
+  description: An aging knight whose burning resolve never dims. Starter unit, loyal
+    to the player from the start.
+  icon: {fileID: 21300000, guid: db176e694b958d746ab66455222fefcf, type: 3}
+  price: 0
+  characterReference: {fileID: 11400000, guid: 27891cf9824752045b475995e212e47e, type: 2}

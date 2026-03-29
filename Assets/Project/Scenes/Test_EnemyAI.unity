@@ -757,7 +757,7 @@ PrefabInstance:
     - target: {fileID: 2725759407596473945, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 4923740364241445027, guid: 9462471a08d54684d909fe204d1874fe, type: 3}
+      objectReference: {fileID: -6728868160861860080, guid: fdef43cd8363e3a45bd99337ec9d49ba, type: 3}
     - target: {fileID: 2725759407596473945, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: m_WasSpriteAssigned
       value: 1
@@ -766,6 +766,14 @@ PrefabInstance:
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4071397879458659898, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5349628633214713368, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: 3436f3bf41714a54391f36d8cfdd4294, type: 2}
     - target: {fileID: 5450070007788991123, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: targetCanvas
       value: 

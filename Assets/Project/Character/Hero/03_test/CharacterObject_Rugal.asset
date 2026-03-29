@@ -70,7 +70,7 @@ MonoBehaviour:
         knockbackDuration: 0.25
         isKnockdown: 0
         snapToAttacker: 1
-        snapOffset: {x: 1, y: 0}
+        snapOffset: {x: 1, y: -0.5}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashDuration: 0.1
         debugColor: {r: 0.2040608, g: 1, b: 0, a: 0.39215687}
