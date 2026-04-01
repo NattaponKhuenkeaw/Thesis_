@@ -87,9 +87,8 @@ using Unity.Behavior;
             float dirX = m_TargetPosition.x - pos.x;
             if (Mathf.Abs(dirX) > 0.01f)
             {
-                Vector3 scale = t.localScale;
-                scale.x = Mathf.Abs(scale.x) * Mathf.Sign(dirX);
-                t.localScale = scale;
+                float targetRotY = dirX > 0f ? 0f : 180f;
+                t.eulerAngles = new Vector3(t.eulerAngles.x, targetRotY, t.eulerAngles.z);
             }
 
             m_AnimHandler?.SetSpeed(MoveSpeed.Value);

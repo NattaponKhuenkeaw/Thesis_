@@ -10,7 +10,6 @@ public class PlayerMovement : MonoBehaviour
     // =========================================================
     [Header("Dependencies")]
     public SpriteRenderer spriteRenderer;
-    public PlayerActionController actionController;
     public PlayerBasicAttack basicAttack;
 
     // =========================================================
@@ -85,7 +84,6 @@ public class PlayerMovement : MonoBehaviour
     private Rigidbody2D rb;
     private bool isGrounded;
     private bool wasGrounded;
-    private bool wasRunning;
     private bool canDash = true;
     private bool isHoldingDown;
     private bool jumpHeld;
@@ -117,18 +115,16 @@ public class PlayerMovement : MonoBehaviour
     public bool IsJumping { get; private set; }
     public bool IsLanding { get; private set; }
     public bool CanMove { get; set; } = true;
+    public float HorizontalInput => horizontalInput;
+    public int FacingDirection => transform.eulerAngles.y > 90f ? -1 : 1;
 
     // =========================================================
-    // Events
+    // Events (only those with active subscribers)
     // =========================================================
-    public event Action<bool> OnGroundedChanged;
     public event Action OnJumpStart;
     public event Action OnDoubleJump;
     public event Action OnDashStart;
-    public event Action OnDashEnd;
-    public event Action OnLandingEnd;
     public event Action OnLand;
-    public event Action OnRunStart;
 
     // =========================================================
     // Unity Methods
@@ -143,9 +139,6 @@ public class PlayerMovement : MonoBehaviour
         if (spriteRenderer == null)
             spriteRenderer = GetComponent<SpriteRenderer>();
 
-        if (actionController == null)
-            actionController = GetComponent<PlayerActionController>();
-
         originalGravityScale = rb.gravityScale;
 
         playerLayer = LayerMask.NameToLayer(playerLayerName);
@@ -156,16 +149,15 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        CheckGround();
-        TryConsumeBufferedJump();
-        HandleVerticalPhysics();
-        UpdateFacing();
     }
 
     void FixedUpdate()
     {
+        UpdateFacing();
+        CheckGround();
+        TryConsumeBufferedJump();
+        HandleVerticalPhysics();
         ApplyHorizontalMovement();
-        UpdateRunState();
     }
 
     // =========================================================
@@ -187,9 +179,6 @@ public class PlayerMovement : MonoBehaviour
 
     public void Dash(float inputX)
     {
-        if (actionController != null && !actionController.CanStartDash())
-            return;
-
         if (CanStartGroundDash())
         {
             StopAttackMotion();
@@ -285,8 +274,6 @@ public class PlayerMovement : MonoBehaviour
 
         if (isGrounded != wasGrounded)
         {
-            OnGroundedChanged?.Invoke(isGrounded);
-
             if (isGrounded)
             {
                 jumpsUsed = 0;
@@ -554,10 +541,7 @@ public class PlayerMovement : MonoBehaviour
         if (inputX < -0.1f)
             return -1f;
 
-        if (spriteRenderer != null)
-            return spriteRenderer.flipX ? -1f : 1f;
-
-        return 1f;
+        return FacingDirection;
     }
 
     private bool IsMovementLocked()
@@ -614,28 +598,17 @@ public class PlayerMovement : MonoBehaviour
 
     private void UpdateFacing()
     {
-        if (spriteRenderer == null)
-            return;
-
         bool canUpdateFacing = !IsMovementLocked() || (basicAttack != null && basicAttack.CanSwitchDirection());
         if (!canUpdateFacing)
             return;
 
         if (horizontalInput > 0.01f)
-            spriteRenderer.flipX = false;
+            transform.eulerAngles = new Vector3(transform.eulerAngles.x, 0f, transform.eulerAngles.z);
         else if (horizontalInput < -0.01f)
-            spriteRenderer.flipX = true;
+            transform.eulerAngles = new Vector3(transform.eulerAngles.x, 180f, transform.eulerAngles.z);
     }
 
-    private void UpdateRunState()
-    {
-        bool isRunning = Mathf.Abs(horizontalInput) > 0.01f && Mathf.Abs(rb.linearVelocity.x) > 0.1f && isGrounded;
 
-        if (isRunning && !wasRunning)
-            OnRunStart?.Invoke();
-
-        wasRunning = isRunning;
-    }
 
     // =========================================================
     // Coroutines
@@ -657,14 +630,10 @@ public class PlayerMovement : MonoBehaviour
         IsLanding = true;
         yield return new WaitForSeconds(landingLagTime);
         IsLanding = false;
-        OnLandingEnd?.Invoke();
     }
 
     private IEnumerator DashCoroutine(float inputX, bool useGroundCooldown)
     {
-
-        if (actionController != null)
-            actionController.SetState(PlayerActionState.Dash);
         IsDashing = true;
         if (useGroundCooldown)
             canDash = false;
@@ -692,13 +661,10 @@ public class PlayerMovement : MonoBehaviour
         }
 
         rb.gravityScale = savedGravity;
-        rb.linearVelocity = Vector2.zero;
+        // Removed rb.linearVelocity = Vector2.zero; to prevent dash lag on airborne
 
         IsDashing = false;
         CanMove = true;
-        if (actionController != null)
-            actionController.SetState(PlayerActionState.Normal);
-        OnDashEnd?.Invoke();
 
         if (useGroundCooldown)
         {
@@ -709,9 +675,7 @@ public class PlayerMovement : MonoBehaviour
 
     private IEnumerator AttackMovementCoroutine(float distance, float duration)
     {
-        float dir = 1f;
-        if (spriteRenderer != null && spriteRenderer.flipX)
-            dir = -1f;
+        float dir = FacingDirection;
 
         float totalDistance = distance * dir;
         float elapsed = 0f;

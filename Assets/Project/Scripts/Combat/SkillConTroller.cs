@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public class SkillController : MonoBehaviour
@@ -9,8 +9,7 @@ public class SkillController : MonoBehaviour
     [Header("Dependencies")]
     public PlayerCharacter playerCharacter;
     public PlayerMovement movement;
-    public AnimationHandler animationHandler;
-    public PlayerActionController actionController;
+    public PlayerAnimator animationHandler;
 
     [Header("Spawn Point")]
     public Transform skillSpawnPoint;
@@ -23,13 +22,15 @@ public class SkillController : MonoBehaviour
     [SerializeField] private bool isCasting = false;
 
     // =========================================================
+    // Events
+    // =========================================================
+    public event System.Action OnCastFinished;
+
+    // =========================================================
     // Unity Methods
     // =========================================================
     void Awake()
     {
-        if (actionController == null)
-            actionController = GetComponent<PlayerActionController>();
-
         if (playerCharacter == null)
             playerCharacter = GetComponent<PlayerCharacter>();
 
@@ -37,7 +38,7 @@ public class SkillController : MonoBehaviour
             movement = GetComponent<PlayerMovement>();
 
         if (animationHandler == null)
-            animationHandler = GetComponentInChildren<AnimationHandler>();
+            animationHandler = GetComponentInChildren<PlayerAnimator>();
     }
 
     // =========================================================
@@ -45,9 +46,6 @@ public class SkillController : MonoBehaviour
     // =========================================================
     public void UseSkill()
     {
-        if(actionController != null && actionController.IsBusy())
-    return;
-
         if (isCasting)
             return;
 
@@ -64,6 +62,22 @@ public class SkillController : MonoBehaviour
             return;
 
         StartCoroutine(CastSkillRoutine(skillData));
+    }
+
+    public bool CanUseSkill()
+    {
+        if (isCasting)
+            return false;
+
+        if (playerCharacter == null || playerCharacter.characterObject == null)
+            return false;
+
+        SkillData skillData = playerCharacter.characterObject.skillData;
+        if (skillData == null)
+            return false;
+
+        float finalCooldown = GetFinalSkillCooldown(skillData.cooldown);
+        return Time.time >= lastUseTime + finalCooldown;
     }
 
     public float GetRemainingCooldown()
@@ -89,15 +103,9 @@ public class SkillController : MonoBehaviour
     // =========================================================
     // Coroutines
     // =========================================================
-    private IEnumerator CastSkillRoutine(SkillData skillData)
+    private System.Collections.IEnumerator CastSkillRoutine(SkillData skillData)
     {
-        if (actionController != null)
-            actionController.SetState(PlayerActionState.Skill);
-
         isCasting = true;
-
-        if (movement != null)
-            movement.CanMove = false;
 
         if (animationHandler != null)
             animationHandler.TriggerSkill();
@@ -135,14 +143,9 @@ public class SkillController : MonoBehaviour
         }
 
         lastUseTime = Time.time;
-
-        if (movement != null)
-            movement.CanMove = true;
-
         isCasting = false;
 
-        if (actionController != null)
-            actionController.SetState(PlayerActionState.Normal);
+        OnCastFinished?.Invoke();
     }
 
     // =========================================================
@@ -154,7 +157,7 @@ public class SkillController : MonoBehaviour
 
         Vector3 finalOffset = new Vector3(offset.x, offset.y, 0f);
 
-        if (movement != null && movement.spriteRenderer != null && movement.spriteRenderer.flipX)
+        if (movement != null && movement.FacingDirection == -1)
             finalOffset.x = -Mathf.Abs(finalOffset.x);
         else
             finalOffset.x = Mathf.Abs(finalOffset.x);
@@ -164,7 +167,7 @@ public class SkillController : MonoBehaviour
 
     private Vector2 GetFacingDirection()
     {
-        if (movement != null && movement.spriteRenderer != null && movement.spriteRenderer.flipX)
+        if (movement != null && movement.FacingDirection == -1)
             return Vector2.left;
 
         return Vector2.right;

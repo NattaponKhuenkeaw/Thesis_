@@ -31,8 +31,8 @@ MonoBehaviour:
     airAcceleration: 55
     airDeceleration: 40
     airSpeedMultiplier: 1
-    dashSpeed: 40
-    dashDuration: 0.2
+    dashSpeed: 30
+    dashDuration: 0.6
     dashCooldown: 1
   metaData:
     displayName: Kyo
@@ -54,24 +54,24 @@ MonoBehaviour:
       comboQueueOpenTime: 0
       moveRecoveryTime: 0
       useForwardMotion: 1
-      forwardDistance: 3
+      forwardDistance: 1.7
       motionStartTime: 0
       motionDuration: 0.25
       hitFrames:
       - hitTime: 0
         activeDuration: 0.18
         cameraShakeStrength: 0
-        offset: {x: 1.5, y: -1}
+        offset: {x: 2, y: -1}
         size: {x: 2, y: 2}
         damageMultiplier: 1
-        knockbackForce: 0
+        knockbackForce: 0.25
         hitstunFrames: 1
         impactFreezeTime: 1
         reactionVelocity: {x: 2, y: 0}
         knockbackDuration: 0
         isKnockdown: 0
         snapToAttacker: 1
-        snapOffset: {x: 0, y: -1}
+        snapOffset: {x: 0.1, y: -0.8}
         flashColor: {r: 1, g: 0, b: 0, a: 0.78431374}
         flashDuration: 0.1
         debugColor: {r: 0.3455565, g: 1, b: 0, a: 0.39215687}
@@ -79,7 +79,7 @@ MonoBehaviour:
       duration: 0
       comboQueueOpenTime: 0
       moveRecoveryTime: 0
-      useForwardMotion: 1
+      useForwardMotion: 0
       forwardDistance: 0.3
       motionStartTime: 0.1
       motionDuration: 0.1
@@ -93,11 +93,11 @@ MonoBehaviour:
         knockbackForce: 0
         hitstunFrames: 1
         impactFreezeTime: 1
-        reactionVelocity: {x: 1, y: 10}
+        reactionVelocity: {x: 1, y: 0}
         knockbackDuration: 0
         isKnockdown: 0
-        snapToAttacker: 1
-        snapOffset: {x: 1, y: -1}
+        snapToAttacker: 0
+        snapOffset: {x: 0, y: -0.8}
         flashColor: {r: 1, g: 0, b: 0, a: 0.78431374}
         flashDuration: 0.1
         debugColor: {r: 1, g: 0.9864793, b: 0, a: 0.39215687}
@@ -110,8 +110,8 @@ MonoBehaviour:
         knockbackForce: 0
         hitstunFrames: 1
         impactFreezeTime: 1
-        reactionVelocity: {x: 5, y: 2}
-        knockbackDuration: 0
+        reactionVelocity: {x: 3, y: 2}
+        knockbackDuration: 1
         isKnockdown: 1
         snapToAttacker: 0
         snapOffset: {x: 0, y: 0}

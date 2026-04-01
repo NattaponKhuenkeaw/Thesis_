@@ -9,8 +9,7 @@ public class UltimateController : MonoBehaviour
     [Header("Dependencies")]
     public PlayerCharacter playerCharacter;
     public PlayerMovement movement;
-    public AnimationHandler animationHandler;
-    public PlayerActionController actionController;
+    public PlayerAnimator animationHandler;
 
     [Header("Spawn Point")]
     public Transform ultimateSpawnPoint;
@@ -22,11 +21,13 @@ public class UltimateController : MonoBehaviour
     [SerializeField] private float lastUseTime = -999f;
     [SerializeField] private bool isCasting = false;
 
+    // =========================================================
+    // Events
+    // =========================================================
+    public event System.Action OnCastFinished;
+
     void Awake()
     {
-        if (actionController == null)
-            actionController = GetComponent<PlayerActionController>();
-
         if (playerCharacter == null)
             playerCharacter = GetComponent<PlayerCharacter>();
 
@@ -34,14 +35,11 @@ public class UltimateController : MonoBehaviour
             movement = GetComponent<PlayerMovement>();
 
         if (animationHandler == null)
-            animationHandler = GetComponentInChildren<AnimationHandler>();
+            animationHandler = GetComponentInChildren<PlayerAnimator>();
     }
 
     public void UseUltimate()
     {
-        if (actionController != null && actionController.IsBusy())
-            return;
-
         if (isCasting)
             return;
 
@@ -58,6 +56,22 @@ public class UltimateController : MonoBehaviour
             return;
 
         StartCoroutine(CastUltimateRoutine(ultimateData));
+    }
+
+    public bool CanUseUltimate()
+    {
+        if (isCasting)
+            return false;
+
+        if (playerCharacter == null || playerCharacter.characterObject == null)
+            return false;
+
+        UltimateData ultimateData = playerCharacter.characterObject.ultimateData;
+        if (ultimateData == null)
+            return false;
+
+        float finalCooldown = GetFinalUltimateCooldown(ultimateData.cooldown);
+        return Time.time >= lastUseTime + finalCooldown;
     }
 
     public bool IsCasting()
@@ -80,15 +94,9 @@ public class UltimateController : MonoBehaviour
         return Mathf.Max(remain, 0f);
     }
 
-    private IEnumerator CastUltimateRoutine(UltimateData ultimateData)
+    private System.Collections.IEnumerator CastUltimateRoutine(UltimateData ultimateData)
     {
-        if (actionController != null)
-            actionController.SetState(PlayerActionState.Ultimate);
-
         isCasting = true;
-
-        if (movement != null)
-            movement.CanMove = false;
 
         if (animationHandler != null)
             animationHandler.TriggerUltimate();
@@ -126,14 +134,9 @@ public class UltimateController : MonoBehaviour
         }
 
         lastUseTime = Time.time;
-
-        if (movement != null)
-            movement.CanMove = true;
-
         isCasting = false;
 
-        if (actionController != null)
-            actionController.SetState(PlayerActionState.Normal);
+        OnCastFinished?.Invoke();
     }
 
     private Vector3 GetSpawnPosition(Vector2 offset)
@@ -142,7 +145,7 @@ public class UltimateController : MonoBehaviour
 
         Vector3 finalOffset = new Vector3(offset.x, offset.y, 0f);
 
-        if (movement != null && movement.spriteRenderer != null && movement.spriteRenderer.flipX)
+        if (movement != null && movement.FacingDirection == -1)
             finalOffset.x = -Mathf.Abs(finalOffset.x);
         else
             finalOffset.x = Mathf.Abs(finalOffset.x);
@@ -152,7 +155,7 @@ public class UltimateController : MonoBehaviour
 
     private Vector2 GetFacingDirection()
     {
-        if (movement != null && movement.spriteRenderer != null && movement.spriteRenderer.flipX)
+        if (movement != null && movement.FacingDirection == -1)
             return Vector2.left;
 
         return Vector2.right;

@@ -1,5 +1,9 @@
 using UnityEngine;
 
+/// <summary>
+/// Central player façade. Holds CharacterObject data, runtime HP (absorbed from CharacterRuntime),
+/// and references to all player sub-systems.
+/// </summary>
 public class PlayerCharacter : MonoBehaviour
 {
     // =========================================================
@@ -9,36 +13,47 @@ public class PlayerCharacter : MonoBehaviour
     public CharacterObject characterObject;
 
     // =========================================================
-    // Dependencies
+    // Sub-system References (auto-cached)
     // =========================================================
-    [Header("Dependencies")]
-    public PlayerMovement movement;
-    public PlayerBasicAttack basicAttack;
-    public AnimationHandler animationHandler;
-    public CharacterRuntime runtime;
+    [Header("Sub-systems")]
+    public PlayerStateMachine StateMachine;
+    public PlayerMovement Movement;
+    public PlayerBasicAttack BasicAttack;
+    public PlayerAnimator Animator;
+    public SkillController Skill;
+    public UltimateController Ultimate;
 
-    [Header("Extra Controllers")]
-    public SkillController skillController;
+    // =========================================================
+    // Runtime HP (absorbed from CharacterRuntime)
+    // =========================================================
+    [Header("Runtime Stats")]
+    [SerializeField] private float currentHP;
+
+    public float CurrentHP => currentHP;
+    public float MaxHP => characterObject != null && characterObject.stats != null ? characterObject.stats.maxHP : currentHP;
+    public bool IsDead => currentHP <= 0f;
+
+    private bool deathEventRaised;
+
+    // =========================================================
+    // HP Events
+    // =========================================================
+    public event System.Action<float, float> OnHealthChanged;
+    public event System.Action<float> OnDamaged;
+    public event System.Action<float> OnHealed;
+    public event System.Action OnDied;
+
+    // =========================================================
+    // Convenience (read by animation/movement)
+    // =========================================================
+    public float HorizontalInput => Movement != null ? Movement.HorizontalInput : 0f;
 
     // =========================================================
     // Unity Methods
     // =========================================================
     void Awake()
     {
-        if (movement == null)
-            movement = GetComponent<PlayerMovement>();
-
-        if (basicAttack == null)
-            basicAttack = GetComponent<PlayerBasicAttack>();
-
-        if (animationHandler == null)
-            animationHandler = GetComponentInChildren<AnimationHandler>();
-
-        if (runtime == null)
-            runtime = GetComponent<CharacterRuntime>();
-
-        if (skillController == null)
-            skillController = GetComponent<SkillController>();
+        CacheSubSystems();
     }
 
     void Start()
@@ -56,11 +71,7 @@ public class PlayerCharacter : MonoBehaviour
 
         ApplyMovementData();
         ApplyAnimationData();
-
-        if (runtime != null)
-        {
-            runtime.SetCharacter(characterObject);
-        }
+        InitializeHP();
     }
 
     public void SetCharacter(CharacterObject newCharacter)
@@ -70,35 +81,119 @@ public class PlayerCharacter : MonoBehaviour
     }
 
     // =========================================================
+    // HP Methods (absorbed from CharacterRuntime)
+    // =========================================================
+    public void InitializeHP()
+    {
+        if (characterObject == null)
+            return;
+
+        currentHP = MaxHP;
+        deathEventRaised = false;
+        NotifyHealthChanged();
+    }
+
+    public void TakeDamage(float value)
+    {
+        if (value <= 0f || IsDead)
+            return;
+
+        float previousHP = currentHP;
+        currentHP -= value;
+        currentHP = Mathf.Max(currentHP, 0f);
+
+        float actualDamage = previousHP - currentHP;
+        if (actualDamage <= 0f)
+            return;
+
+        OnDamaged?.Invoke(actualDamage);
+        NotifyHealthChanged();
+
+        if (currentHP <= 0f && !deathEventRaised)
+        {
+            deathEventRaised = true;
+            OnDied?.Invoke();
+
+            // Transition to dead state via state machine
+            if (StateMachine != null)
+                StateMachine.ChangeState(StateMachine.DeadState);
+        }
+        else
+        {
+            // Transition to hitstun state via state machine
+            if (StateMachine != null && !IsDead)
+                StateMachine.ChangeState(StateMachine.HitstunState);
+        }
+    }
+
+    public void Heal(float value)
+    {
+        if (characterObject == null || value <= 0f || IsDead)
+            return;
+
+        float previousHP = currentHP;
+        currentHP += value;
+        currentHP = Mathf.Min(currentHP, MaxHP);
+
+        float actualHeal = currentHP - previousHP;
+        if (actualHeal <= 0f)
+            return;
+
+        OnHealed?.Invoke(actualHeal);
+        NotifyHealthChanged();
+    }
+
+    // =========================================================
     // Private Methods
     // =========================================================
+    private void CacheSubSystems()
+    {
+        if (StateMachine == null)
+            StateMachine = GetComponent<PlayerStateMachine>();
+
+        if (Movement == null)
+            Movement = GetComponent<PlayerMovement>();
+
+        if (BasicAttack == null)
+            BasicAttack = GetComponent<PlayerBasicAttack>();
+
+        if (Animator == null)
+            Animator = GetComponentInChildren<PlayerAnimator>();
+
+        if (Skill == null)
+            Skill = GetComponent<SkillController>();
+
+        if (Ultimate == null)
+            Ultimate = GetComponent<UltimateController>();
+    }
+
     private void ApplyMovementData()
     {
-        if (movement == null || characterObject == null)
+        if (Movement == null || characterObject == null)
             return;
 
         CharacterStats stats = characterObject.stats;
 
-        movement.speed = stats.moveSpeed;
-        movement.jumpForce = stats.jumpForce;
-        movement.maxJumpCount = stats.maxJumpCount;
-        movement.maxAirDashCount = stats.maxAirDashCount;
-        movement.groundAcceleration = stats.groundAcceleration;
-        movement.groundDeceleration = stats.groundDeceleration;
-        movement.airAcceleration = stats.airAcceleration;
-        movement.airDeceleration = stats.airDeceleration;
-        movement.airSpeedMultiplier = stats.airSpeedMultiplier;
-        movement.dashSpeed = stats.dashSpeed;
-        movement.dashDuration = stats.dashDuration;
-        movement.dashCooldown = stats.dashCooldown;
+        Movement.speed = stats.moveSpeed;
+        Movement.jumpForce = stats.jumpForce;
+        Movement.maxJumpCount = stats.maxJumpCount;
+        Movement.maxAirDashCount = stats.maxAirDashCount;
+        Movement.groundAcceleration = stats.groundAcceleration;
+        Movement.groundDeceleration = stats.groundDeceleration;
+        Movement.airAcceleration = stats.airAcceleration;
+        Movement.airDeceleration = stats.airDeceleration;
+        Movement.airSpeedMultiplier = stats.airSpeedMultiplier;
+        Movement.dashSpeed = stats.dashSpeed;
+        Movement.dashDuration = stats.dashDuration;
+        Movement.dashCooldown = stats.dashCooldown;
     }
 
     private void ApplyAnimationData()
     {
-        if (animationHandler == null || characterObject == null)
+        if (Animator == null || characterObject == null)
             return;
 
-        if (animationHandler.anim == null)
+        if (Animator.anim == null)
             return;
 
         if (characterObject.metaData == null)
@@ -107,6 +202,11 @@ public class PlayerCharacter : MonoBehaviour
         if (characterObject.metaData.animatorController == null)
             return;
 
-        animationHandler.anim.runtimeAnimatorController = characterObject.metaData.animatorController;
+        Animator.anim.runtimeAnimatorController = characterObject.metaData.animatorController;
+    }
+
+    private void NotifyHealthChanged()
+    {
+        OnHealthChanged?.Invoke(currentHP, MaxHP);
     }
 }

@@ -41,7 +41,7 @@ public class MeleeHitboxController : MonoBehaviour
         Vector2 offset = hitFrame.offset;
         Vector2 size = hitFrame.size;
 
-        if (movement != null && movement.spriteRenderer != null && movement.spriteRenderer.flipX)
+        if (movement != null && movement.FacingDirection == -1)
             offset.x = -Mathf.Abs(offset.x);
         else
             offset.x = Mathf.Abs(offset.x);

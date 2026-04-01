@@ -2,11 +2,13 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// Player HUD that subscribes to PlayerCharacter HP events (no longer uses CharacterRuntime).
+/// </summary>
 public class PlayerHUD : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private PlayerCharacter playerCharacter;
-    [SerializeField] private CharacterRuntime runtime;
     [SerializeField] private Canvas targetCanvas;
 
     private RectTransform hudRoot;
@@ -14,7 +16,7 @@ public class PlayerHUD : MonoBehaviour
     private Image healthFillImage;
     private TMP_Text nameText;
     private TMP_Text hpText;
-    private CharacterRuntime subscribedRuntime;
+    private PlayerCharacter subscribedPlayer;
     private string lastCharacterKey = string.Empty;
 
     private void Reset()
@@ -34,23 +36,23 @@ public class PlayerHUD : MonoBehaviour
 
     private void OnEnable()
     {
-        RebindRuntimeEvents();
+        RebindEvents();
         RefreshHUD();
     }
 
     private void OnDisable()
     {
-        if (subscribedRuntime == null)
+        if (subscribedPlayer == null)
             return;
 
-        subscribedRuntime.OnHealthChanged -= HandleHealthChanged;
-        subscribedRuntime.OnDied -= HandleDied;
-        subscribedRuntime = null;
+        subscribedPlayer.OnHealthChanged -= HandleHealthChanged;
+        subscribedPlayer.OnDied -= HandleDied;
+        subscribedPlayer = null;
     }
 
     private void LateUpdate()
     {
-        if (hudRoot == null || runtime == null || targetCanvas == null)
+        if (hudRoot == null || playerCharacter == null || targetCanvas == null)
         {
             if (Time.frameCount % 20 == 0)
                 EnsureHudReady();
@@ -68,12 +70,6 @@ public class PlayerHUD : MonoBehaviour
         if (playerCharacter == null)
             playerCharacter = GetComponent<PlayerCharacter>();
 
-        if (runtime == null)
-            runtime = GetComponent<CharacterRuntime>();
-
-        if (runtime == null && playerCharacter != null)
-            runtime = playerCharacter.runtime;
-
         if (targetCanvas == null)
             targetCanvas = FindTargetCanvas();
     }
@@ -86,27 +82,27 @@ public class PlayerHUD : MonoBehaviour
             return;
 
         CreateHudIfNeeded();
-        RebindRuntimeEvents();
+        RebindEvents();
         RefreshHUD();
     }
 
-    private void RebindRuntimeEvents()
+    private void RebindEvents()
     {
-        if (runtime == subscribedRuntime)
+        if (playerCharacter == subscribedPlayer)
             return;
 
-        if (subscribedRuntime != null)
+        if (subscribedPlayer != null)
         {
-            subscribedRuntime.OnHealthChanged -= HandleHealthChanged;
-            subscribedRuntime.OnDied -= HandleDied;
+            subscribedPlayer.OnHealthChanged -= HandleHealthChanged;
+            subscribedPlayer.OnDied -= HandleDied;
         }
 
-        subscribedRuntime = runtime;
+        subscribedPlayer = playerCharacter;
 
-        if (subscribedRuntime != null)
+        if (subscribedPlayer != null)
         {
-            subscribedRuntime.OnHealthChanged += HandleHealthChanged;
-            subscribedRuntime.OnDied += HandleDied;
+            subscribedPlayer.OnHealthChanged += HandleHealthChanged;
+            subscribedPlayer.OnDied += HandleDied;
         }
     }
 
@@ -138,9 +134,6 @@ public class PlayerHUD : MonoBehaviour
         if (playerCharacter == null)
             playerCharacter = GetComponent<PlayerCharacter>();
 
-        if (runtime == null)
-            runtime = GetComponent<CharacterRuntime>();
-
         string displayName = "Player";
         if (playerCharacter != null && playerCharacter.characterObject != null && playerCharacter.characterObject.metaData != null)
         {
@@ -151,7 +144,7 @@ public class PlayerHUD : MonoBehaviour
         if (nameText != null)
             nameText.text = displayName;
 
-        if (runtime == null)
+        if (playerCharacter == null)
         {
             if (hpText != null)
                 hpText.text = "HP -- / --";
@@ -166,8 +159,8 @@ public class PlayerHUD : MonoBehaviour
             return;
         }
 
-        float maxHp = Mathf.Max(1f, runtime.MaxHP);
-        float currentHp = Mathf.Clamp(runtime.CurrentHP, 0f, maxHp);
+        float maxHp = Mathf.Max(1f, playerCharacter.MaxHP);
+        float currentHp = Mathf.Clamp(playerCharacter.CurrentHP, 0f, maxHp);
         float normalizedHp = Mathf.Clamp01(currentHp / maxHp);
 
         if (healthSlider != null)

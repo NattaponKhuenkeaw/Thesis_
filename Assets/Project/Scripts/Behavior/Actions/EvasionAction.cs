@@ -50,9 +50,8 @@ using Unity.Behavior;
             Agent.Value.transform.position += new Vector3(step, 0f, 0f);
 
             // Flip sprite to face the direction of movement
-            Vector3 scale = Agent.Value.transform.localScale;
-            scale.x = Mathf.Abs(scale.x) * m_Direction;
-            Agent.Value.transform.localScale = scale;
+            float targetRotY = m_Direction > 0f ? 0f : 180f;
+            Agent.Value.transform.eulerAngles = new Vector3(Agent.Value.transform.eulerAngles.x, targetRotY, Agent.Value.transform.eulerAngles.z);
 
             if (m_Timer >= EvadeDuration.Value)
             {

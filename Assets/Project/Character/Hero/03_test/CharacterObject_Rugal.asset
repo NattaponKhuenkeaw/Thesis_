@@ -16,12 +16,12 @@ MonoBehaviour:
   characterType: 0
   elementType: 1
   stats:
-    maxHP: 100
-    attack: 12
-    defense: 6
+    maxHP: 120
+    attack: 13
+    defense: 7
     elementalMultiplier: 1
     moveSpeed: 6.5
-    jumpForce: 19
+    jumpForce: 22
     maxJumpCount: 3
     maxAirDashCount: 1
     maxAirComboSetsPerAirtime: 1
@@ -31,9 +31,9 @@ MonoBehaviour:
     airAcceleration: 55
     airDeceleration: 40
     airSpeedMultiplier: 1
-    dashSpeed: 30
+    dashSpeed: 35
     dashDuration: 0.5
-    dashCooldown: 0.01
+    dashCooldown: 0.5
   metaData:
     displayName: Rugal
     description: "\u0E19\u0E31\u0E01\u0E23\u0E1A\u0E18\u0E32\u0E15\u0E38\u0E25\u0E21\u0E2A\u0E32\u0E22\u0E04\u0E27\u0E1A\u0E04\u0E38\u0E21\u0E1E\u0E37\u0E49\u0E19\u0E17\u0E35\u0E48\u0E41\u0E25\u0E30\u0E40\u0E1B\u0E34\u0E14\u0E04\u0E2D\u0E21\u0E42\u0E1A"

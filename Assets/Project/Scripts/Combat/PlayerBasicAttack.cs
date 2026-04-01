@@ -23,12 +23,11 @@ public class PlayerBasicAttack : MonoBehaviour
     // =========================================================
     [Header("Dependencies")]
     public PlayerCharacter playerCharacter;
-    public AnimationHandler animHandler;
+    public PlayerAnimator animHandler;
     public PlayerMovement movement;
     public GameObject meleeHitbox;
     public MeleeHitboxController meleeHitboxController;
     public MeleeHitboxDamage meleeHitboxDamage;
-    public PlayerActionController actionController;
 
     // =========================================================
     // Runtime States
@@ -47,21 +46,26 @@ public class PlayerBasicAttack : MonoBehaviour
     private int hitboxActiveCount = 0;
     private int lastImpactFrame = -1;
     private bool inputConsumedInCurrentStep = false;
-    private bool pendingAirComboAdvance = false;
+    private bool isInputLocked = false;
     private bool isPlungeAttacking = false;
     private bool plungeImpactTriggered = false;
     private int airComboSetsUsedUntilLanding = 0;
+
+    // =========================================================
+    // Events
+    // =========================================================
+    public event System.Action OnComboFinished;
 
     // =========================================================
     // Unity Methods
     // =========================================================
     void Awake()
     {
-        if (actionController == null)
-            actionController = GetComponent<PlayerActionController>();
-
         if (playerCharacter == null)
             playerCharacter = GetComponent<PlayerCharacter>();
+
+        if (animHandler == null)
+            animHandler = GetComponentInChildren<PlayerAnimator>();
 
         if (movement == null)
             movement = GetComponent<PlayerMovement>();
@@ -122,9 +126,6 @@ public class PlayerBasicAttack : MonoBehaviour
     // =========================================================
     public bool OnAttackInput()
     {
-        if (actionController != null && !actionController.CanStartAttack() && !isAttacking)
-            return false;
-
         AttackComboMode requestedMode = GetRequestedComboMode();
         BasicAttackComboData comboData = GetComboData(requestedMode);
         if (comboData == null || comboData.GetMaxCombo() <= 0)
@@ -144,18 +145,13 @@ public class PlayerBasicAttack : MonoBehaviour
             return true;
         }
 
-        if (inputConsumedInCurrentStep)
-        {
-            if (currentComboMode == AttackComboMode.AirNeutral && requestedMode == AttackComboMode.AirNeutral)
-            {
-                pendingAirComboAdvance = true;
-                return true;
-            }
-
+        if (isInputLocked)
             return false;
-        }
 
-        // Buffer input during Windup or Impact — will be consumed when Recovery starts
+        if (inputConsumedInCurrentStep)
+            return false;
+
+        // Buffer input during Impact — will be consumed when Recovery starts
         if (currentFrameState == AttackFrameState.Windup || currentFrameState == AttackFrameState.Impact)
         {
             comboQueued = true;
@@ -177,13 +173,11 @@ public class PlayerBasicAttack : MonoBehaviour
 
     public void ResetCombo()
     {
-        if (actionController != null)
-            actionController.SetState(PlayerActionState.Normal);
-
         StopAllCoroutines();
 
         comboStep = 0;
         inputConsumedInCurrentStep = false;
+        isInputLocked = false;
         isAttacking = false;
         comboQueued = false;
         currentFrameState = AttackFrameState.None;
@@ -192,7 +186,6 @@ public class PlayerBasicAttack : MonoBehaviour
         currentHitFrameIndex = 0;
         hitboxActiveCount = 0;
         lastImpactFrame = -1;
-        pendingAirComboAdvance = false;
         isPlungeAttacking = false;
         plungeImpactTriggered = false;
         DisableHitbox(true);
@@ -205,6 +198,8 @@ public class PlayerBasicAttack : MonoBehaviour
 
         if (animHandler != null)
             animHandler.ResetCombo();
+
+        OnComboFinished?.Invoke();
     }
 
     public bool IsAttacking()
@@ -225,13 +220,9 @@ public class PlayerBasicAttack : MonoBehaviour
         if (impactStep == null || impactStep.hitFrames == null || impactStep.hitFrames.Length == 0)
             return false;
 
-        if (actionController != null && !actionController.CanStartAttack())
-            return false;
+
 
         ResetCombo();
-
-        if (actionController != null)
-            actionController.SetState(PlayerActionState.Attack);
 
         isAttacking = true;
         isPlungeAttacking = true;
@@ -241,6 +232,7 @@ public class PlayerBasicAttack : MonoBehaviour
         hitboxActiveCount = 0;
         lastImpactFrame = -1;
         inputConsumedInCurrentStep = true;
+        isInputLocked = true;
 
         if (movement != null)
         {
@@ -301,9 +293,6 @@ public class PlayerBasicAttack : MonoBehaviour
     {
         BasicAttackComboData comboData = GetComboData(attackMode);
 
-        if (actionController != null)
-            actionController.SetState(PlayerActionState.Attack);
-
         if (comboData == null)
             return;
 
@@ -317,20 +306,18 @@ public class PlayerBasicAttack : MonoBehaviour
         if (attackMode == AttackComboMode.AirNeutral && comboStep == 0)
             airComboSetsUsedUntilLanding++;
 
-        bool carryBufferedAirAdvance = attackMode == AttackComboMode.AirNeutral && pendingAirComboAdvance;
-
         currentComboMode = attackMode;
         comboStep++;
         isAttacking = true;
-        comboQueued = carryBufferedAirAdvance;
+        comboQueued = false;
         queuedComboMode = attackMode;
         
         currentFrameState = AttackFrameState.Windup;
         currentHitFrameIndex = 0;
         hitboxActiveCount = 0;
         lastImpactFrame = -1;
-        inputConsumedInCurrentStep = carryBufferedAirAdvance;
-        pendingAirComboAdvance = false;
+        inputConsumedInCurrentStep = false;
+        isInputLocked = true;
 
         if (movement != null)
         {
@@ -446,6 +433,9 @@ public class PlayerBasicAttack : MonoBehaviour
         // Deduplicate calls in the same frame (caused by multiple relay components)
         if (lastImpactFrame == Time.frameCount)
             return;
+        
+        // Unlock input allowing the player to buffer the next attack sequence
+        isInputLocked = false;
         
         lastImpactFrame = Time.frameCount;
         currentFrameState = AttackFrameState.Impact;
@@ -706,7 +696,7 @@ public class PlayerBasicAttack : MonoBehaviour
         isAttacking = false;
         comboQueued = false;
         inputConsumedInCurrentStep = false;
-        pendingAirComboAdvance = false;
+        isInputLocked = false;
         currentFrameState = AttackFrameState.None;
         currentHitFrameIndex = 0;
         hitboxActiveCount = 0;
@@ -721,8 +711,7 @@ public class PlayerBasicAttack : MonoBehaviour
             movement.CanMove = true;
         }
 
-        if (actionController != null)
-            actionController.SetState(PlayerActionState.Normal);
+        OnComboFinished?.Invoke();
     }
 
     // =========================================================

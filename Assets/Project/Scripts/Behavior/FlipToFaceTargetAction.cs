@@ -55,15 +55,13 @@ namespace Unity.Behavior
             if (Mathf.Abs(directionX) < 0.05f) return;
 
             // If target is to the right (directionX > 0)
-            // If FacingRightByDefault is true, multiplier is 1. If target is right, scale.x should be positive.
-            // If FacingRightByDefault is false, multiplier is -1. If target is right, scale.x should be negative.
-            float multiplier = FacingRightByDefault.Value ? 1f : -1f;
-            float newScaleX = Mathf.Abs(scale.x) * Mathf.Sign(directionX) * multiplier;
+            // If FacingRightByDefault is true, right=0, left=180.
+            // If FacingRightByDefault is false, right=180, left=0.
+            float targetRotY = (directionX > 0) ? (FacingRightByDefault.Value ? 0f : 180f) : (FacingRightByDefault.Value ? 180f : 0f);
 
-            if (!Mathf.Approximately(scale.x, newScaleX))
+            if (!Mathf.Approximately(Transform.Value.eulerAngles.y, targetRotY))
             {
-                scale.x = newScaleX;
-                Transform.Value.localScale = scale;
+                Transform.Value.eulerAngles = new Vector3(Transform.Value.eulerAngles.x, targetRotY, Transform.Value.eulerAngles.z);
             }
         }
     }

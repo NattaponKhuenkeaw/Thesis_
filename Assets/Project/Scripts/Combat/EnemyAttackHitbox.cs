@@ -59,14 +59,11 @@ public class EnemyAttackHitbox : MonoBehaviour
         if (!hitboxWindowActive || enemyController == null || !enemyController.IsAlive)
             return;
 
-        CharacterRuntime runtime = other.GetComponentInParent<CharacterRuntime>();
-        if (runtime == null)
+        PlayerCharacter playerCharacter = other.GetComponentInParent<PlayerCharacter>();
+        if (playerCharacter == null)
             return;
 
-        if (runtime.GetComponentInParent<EnemyController>() != null)
-            return;
-
-        int targetId = runtime.transform.root.gameObject.GetInstanceID();
+        int targetId = playerCharacter.transform.root.gameObject.GetInstanceID();
         if (!hitTargetsThisWindow.Add(targetId))
             return;
 
@@ -74,16 +71,12 @@ public class EnemyAttackHitbox : MonoBehaviour
         if (damage <= 0f)
             return;
 
-        runtime.TakeDamage(damage);
+        playerCharacter.TakeDamage(damage);
 
         if (!triggerPlayerTakeDamageAnimation)
             return;
 
-        PlayerCharacter playerCharacter = runtime.GetComponent<PlayerCharacter>();
-        if (playerCharacter == null)
-            playerCharacter = runtime.GetComponentInParent<PlayerCharacter>();
-
-        if (playerCharacter != null && playerCharacter.animationHandler != null)
-            playerCharacter.animationHandler.TriggerTakeDamage();
+        if (playerCharacter.Animator != null)
+            playerCharacter.Animator.TriggerTakeDamage();
     }
 }

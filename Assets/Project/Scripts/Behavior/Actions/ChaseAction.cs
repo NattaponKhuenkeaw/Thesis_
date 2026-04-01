@@ -56,9 +56,9 @@ using Unity.Behavior;
             float dirX = targetPos.x - agentPos.x;
             if (Mathf.Abs(dirX) > 0.01f)
             {
-                Vector3 scale = Agent.Value.transform.localScale;
-                scale.x = Mathf.Abs(scale.x) * Mathf.Sign(dirX);
-                Agent.Value.transform.localScale = scale;
+                float targetRotY = dirX > 0f ? 0f : 180f;
+                Vector3 rot = Agent.Value.transform.eulerAngles;
+                Agent.Value.transform.eulerAngles = new Vector3(rot.x, targetRotY, rot.z);
             }
 
             m_AnimHandler?.SetSpeed(ChaseSpeed.Value);

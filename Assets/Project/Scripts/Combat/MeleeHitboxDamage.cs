@@ -63,7 +63,7 @@ public class MeleeHitboxDamage : MonoBehaviour
 
         Vector2 direction = Vector2.right;
 
-        if (movement != null && movement.spriteRenderer != null && movement.spriteRenderer.flipX)
+        if (movement != null && movement.FacingDirection == -1)
             direction = Vector2.left;
 
         // Build full reaction data from hit frame

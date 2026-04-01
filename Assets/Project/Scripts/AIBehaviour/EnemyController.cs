@@ -52,10 +52,13 @@ public class EnemyController : MonoBehaviour
     // =========================================================
     // Unity Methods
     // =========================================================
+    void Start()
+    {
+        currentHP = maxHP;
+    }
     void Awake()
     {
         rb       = GetComponent<Rigidbody2D>();
-        currentHP = maxHP;
         isAlive   = true;
 
         if (hitReactionHandler == null)
