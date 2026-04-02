@@ -55,6 +55,13 @@ public class AttackHitFrameData
     public float flashDuration = 0.1f;
 
     // =========================================================
+    // Damage Text Impact
+    // =========================================================
+    [Header("Damage Text Impact")]
+    [Tooltip("Controls how much the damage text pops. Ultimate = biggest, BasicCombo = smallest.")]
+    public DamageImpactTier impactTier = DamageImpactTier.BasicCombo;
+
+    // =========================================================
     // Debug
     // =========================================================
     [Header("Debug")]

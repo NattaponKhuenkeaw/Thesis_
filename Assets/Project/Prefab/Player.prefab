@@ -414,7 +414,6 @@ GameObject:
   - component: {fileID: 1841256473808836703}
   - component: {fileID: 618660006823826657}
   - component: {fileID: 5987486934514239479}
-  - component: {fileID: 5362926520501750871}
   - component: {fileID: 3315855471932036482}
   - component: {fileID: 5450070007788991123}
   - component: {fileID: 6196953050443969776}
@@ -539,12 +538,12 @@ MonoBehaviour:
   jumpCutMultiplier: 0.42
   fallGravityMultiplier: 2.5
   lowJumpGravityMultiplier: 1
-  maxFallSpeed: 32
+  maxFallSpeed: 50
   playerLayerName: Player
   enemyLayerName: Enemy
   oneWayPlatformLayerName: OneWayPlatform
-  jumpStartupTime: 0
-  landingLagTime: 0.05
+  jumpStartupTime: 0.05
+  landingLagTime: 0.1
   dropDownDuration: 0.2
   groundCheck: {fileID: 3725453944956529812}
   groundLayer:
@@ -655,59 +654,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SkillTreeController
   playerCharacter: {fileID: 729008942358398209}
---- !u!114 &5362926520501750871
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7851930121724842516}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 180ecf9b41d478f468eb3e9083753217, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineImpulseSource
-  ImpulseDefinition:
-    ImpulseChannel: 1
-    ImpulseShape: 2
-    CustomImpulseShape:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    ImpulseDuration: 0.2
-    ImpulseType: 0
-    DissipationRate: 0.25
-    RawSignal: {fileID: 0}
-    AmplitudeGain: 1
-    FrequencyGain: 1
-    RepeatMode: 0
-    Randomize: 1
-    TimeEnvelope:
-      AttackShape:
-        serializedVersion: 2
-        m_Curve: []
-        m_PreInfinity: 2
-        m_PostInfinity: 2
-        m_RotationOrder: 4
-      DecayShape:
-        serializedVersion: 2
-        m_Curve: []
-        m_PreInfinity: 2
-        m_PostInfinity: 2
-        m_RotationOrder: 4
-      AttackTime: 0
-      SustainTime: 0.2
-      DecayTime: 0.7
-      ScaleWithImpact: 1
-      HoldForever: 0
-    ImpactRadius: 100
-    DirectionMode: 0
-    DissipationMode: 2
-    DissipationDistance: 100
-    PropagationSpeed: 343
-  DefaultVelocity: {x: 0, y: -1, z: 0}
 --- !u!114 &3315855471932036482
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -720,7 +666,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bccbdd11b77ac614fbbc7c332d898f86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraShakeController
-  impulseSource: {fileID: 5362926520501750871}
+  impulseSource: {fileID: 0}
 --- !u!114 &5450070007788991123
 MonoBehaviour:
   m_ObjectHideFlags: 0

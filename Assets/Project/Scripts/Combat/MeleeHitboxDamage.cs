@@ -25,6 +25,7 @@ public class MeleeHitboxDamage : MonoBehaviour
     private int lastHitFrame = -1;
     private bool hasTriggeredShakeThisActivation = false;
     private bool hasTriggeredHitStopThisActivation = false;
+    private Coroutine hitStopCoroutine;
 
     // =========================================================
     // Unity Methods
@@ -52,6 +53,16 @@ public class MeleeHitboxDamage : MonoBehaviour
         hasTriggeredHitStopThisActivation = false;
     }
 
+    void OnDisable()
+    {
+        if (hitStopCoroutine != null)
+        {
+            StopCoroutine(hitStopCoroutine);
+            hitStopCoroutine = null;
+            Time.timeScale = 1f;
+        }
+    }
+
     void OnTriggerEnter2D(Collider2D other)
     {
         if (lastHitFrame == Time.frameCount)
@@ -71,16 +82,21 @@ public class MeleeHitboxDamage : MonoBehaviour
         enemy.TakeHit(reactionData, transform.position);
         lastHitFrame = Time.frameCount;
 
-        if (!hasTriggeredShakeThisActivation)
-        {
-            TriggerCameraShake();
-            hasTriggeredShakeThisActivation = true;
-        }
+        // Notify CameraManager: player engaged this enemy
+        if (CameraManager.instance != null)
+            CameraManager.instance.EnterCombat(enemy);
 
+        // HitStop (includes shake matched to impact tier)
         if (isLastHit && !hasTriggeredHitStopThisActivation)
         {
             TriggerHitStop();
             hasTriggeredHitStopThisActivation = true;
+        }
+        else if (!hasTriggeredShakeThisActivation)
+        {
+            // Non-last hits: still shake, but lighter
+            TriggerCameraShake();
+            hasTriggeredShakeThisActivation = true;
         }
     }
 
@@ -117,6 +133,7 @@ public class MeleeHitboxDamage : MonoBehaviour
             data.snapOffset       = currentHitFrameData.snapOffset;
             data.flashColor       = currentHitFrameData.flashColor;
             data.flashDuration    = currentHitFrameData.flashDuration;
+            data.impactTier       = currentHitFrameData.impactTier;
         }
 
         return data;
@@ -137,15 +154,29 @@ public class MeleeHitboxDamage : MonoBehaviour
 
     private void TriggerHitStop()
     {
-        StopCoroutine(HitStopRoutine());
-        StartCoroutine(HitStopRoutine());
+        if (hitStopCoroutine != null)
+        {
+            StopCoroutine(hitStopCoroutine);
+        }
+        hitStopCoroutine = StartCoroutine(HitStopRoutine());
     }
 
     private IEnumerator HitStopRoutine()
     {
-        float originalTimeScale = 1f;
         Time.timeScale = hitStopScale;
+
+        // Fire shake during the freeze-frame for dramatic effect
+        DamageImpactTier tier = currentHitFrameData != null
+            ? currentHitFrameData.impactTier
+            : DamageImpactTier.BasicCombo;
+
+        if (cameraShake != null)
+            cameraShake.ShakeByImpact(tier);
+        else if (CameraManager.instance != null)
+            CameraManager.instance.ShakeByImpact(tier);
+
         yield return new WaitForSecondsRealtime(hitStopDuration);
-        Time.timeScale = originalTimeScale;
+        Time.timeScale = 1f;
+        hitStopCoroutine = null;
     }
 }

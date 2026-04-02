@@ -406,7 +406,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2775336080780312221
 RectTransform:
   m_ObjectHideFlags: 0
@@ -454,10 +454,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 
+  m_text: XXX
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 4944a95da4f7b1d4486cf4d741f3a7f6, type: 2}
+  m_sharedMaterial: {fileID: 8521718487953109346, guid: 4944a95da4f7b1d4486cf4d741f3a7f6, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -481,15 +481,15 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 6.7
+  m_fontSize: 39.9
   m_fontSizeBase: 6.7
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
-  m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_fontStyle: 1
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
@@ -1042,6 +1042,7 @@ MonoBehaviour:
   maxHP: 100
   currentHP: 100
   attackDamage: 10
+  combatDisengageRange: 8
   isAlive: 1
   rb: {fileID: 6597299547389863175}
   attackHitbox: {fileID: 3145967654918923133}
@@ -1434,7 +1435,12 @@ MonoBehaviour:
   enemyController: {fileID: 0}
   healthSlider: {fileID: 0}
   damageText: {fileID: 0}
-  damageTextStartOffset: {x: 0, y: 0}
+  damageTextRandomRangeX: {x: -40, y: 40}
+  damageTextRandomRangeY: {x: -10, y: 30}
   damageTextFloatOffset: {x: 0, y: 36}
   damageTextDuration: 0.5
   hideCanvasOnDeath: 1
+  basicComboScale: 1
+  skillScale: 1.4
+  ultimateScale: 2
+  punchScaleOvershoot: 1.3

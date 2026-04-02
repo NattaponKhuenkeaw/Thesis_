@@ -1,6 +1,17 @@
 using UnityEngine;
 
 /// <summary>
+/// Impact tier for damage text scaling.
+/// Ultimate = biggest pop, BasicCombo = smallest.
+/// </summary>
+public enum DamageImpactTier
+{
+    BasicCombo,
+    Skill,
+    Ultimate
+}
+
+/// <summary>
 /// Payload struct that travels from the player's hitbox to the enemy,
 /// carrying everything the enemy needs to play its hit reaction.
 /// Built by MeleeHitboxDamage from AttackHitFrameData on collision.
@@ -50,6 +61,12 @@ public struct HitReactionData
     public float flashDuration;
 
     // =========================================================
+    // Damage Text Impact
+    // =========================================================
+    /// <summary>Controls how large the damage text pops on hit. Ultimate = biggest.</summary>
+    public DamageImpactTier impactTier;
+
+    // =========================================================
     // Factory
     // =========================================================
     /// <summary>Creates a default HitReactionData with sensible fighting-game defaults.</summary>
@@ -68,7 +85,8 @@ public struct HitReactionData
             snapToAttacker     = false,
             snapOffset         = Vector2.zero,
             flashColor         = Color.red,
-            flashDuration      = 0.1f
+            flashDuration      = 0.1f,
+            impactTier         = DamageImpactTier.BasicCombo
         };
     }
 }

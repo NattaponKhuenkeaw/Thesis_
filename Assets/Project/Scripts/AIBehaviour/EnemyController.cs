@@ -16,6 +16,8 @@ public class EnemyController : MonoBehaviour
     public event System.Action<HitReactionData> OnDamaged;
     /// <summary>Fired when HP reaches 0.</summary>
     public event System.Action OnDied;
+    /// <summary>Fired when the enemy's behavior state changes (via SetEnemyStateAction).</summary>
+    public event System.Action<State> OnStateChanged;
 
     // =========================================================
     // Enemy Stats
@@ -24,6 +26,13 @@ public class EnemyController : MonoBehaviour
     public float maxHP = 100f;
     public float currentHP = 100f;
     public float attackDamage = 10f;
+
+    // =========================================================
+    // Combat Camera
+    // =========================================================
+    [Header("Combat Camera")]
+    [Tooltip("Distance at which the combat camera disengages this enemy. Should match detect/patrol radius.")]
+    public float combatDisengageRange = 8f;
 
     // =========================================================
     // State
@@ -182,6 +191,19 @@ public class EnemyController : MonoBehaviour
         if (attackHitbox  != null) attackHitbox.enabled  = false;
 
         OnDied?.Invoke();
+
+        // Remove from combat camera when dead
+        if (CameraManager.instance != null)
+            CameraManager.instance.LeaveCombat(this);
+    }
+
+    /// <summary>
+    /// Called by SetEnemyStateAction when the behavior graph transitions to a new state.
+    /// Broadcasts to listeners (e.g., CameraManager for Notice/Chase → combat cam).
+    /// </summary>
+    public void NotifyStateChanged(State newState)
+    {
+        OnStateChanged?.Invoke(newState);
     }
 
     // =========================================================

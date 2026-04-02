@@ -33,10 +33,16 @@ public class CameraLookAhead : MonoBehaviour
     public float verticalReturnSmoothTime = 0.25f;
 
     // =========================================================
-    // Horizontal Smoothing
+    // Horizontal Look-Ahead
     // =========================================================
-    [Header("Horizontal Smoothing")]
-    [Tooltip("How fast the proxy follows the player horizontally. 0.05 = very tight.")]
+    [Header("Horizontal Look-Ahead")]
+    [Tooltip("Distance the camera looks ahead horizontally.")]
+    public float horizontalLookAheadDistance = 2f;
+
+    [Tooltip("Duration of the horizontal offset tween when changing direction.")]
+    public float horizontalLookAheadDuration = 0.5f;
+
+    [Tooltip("How fast the proxy follows the target X position. 0.05 = very tight.")]
     public float horizontalSmoothTime = 0.05f;
 
     // =========================================================
@@ -46,6 +52,9 @@ public class CameraLookAhead : MonoBehaviour
     private float offsetVelocityY    = 0f;
     private float currentProxyX      = 0f;
     private float proxyVelocityX     = 0f;
+    private float currentHorizontalOffset = 0f;
+    private int currentFacingDirection = 1;
+    private int tweenId = -1;
 
     // =========================================================
     // Unity Methods
@@ -63,7 +72,43 @@ public class CameraLookAhead : MonoBehaviour
         }
 
         if (playerRigidbody != null)
+        {
             currentProxyX = playerRigidbody.position.x;
+            CheckFacingDirection(true); // Initialize offset instantly
+        }
+    }
+
+    private void CheckFacingDirection(bool instant = false)
+    {
+        // Calculate facing direction from Y rotation assuming 0 is right, 180 is left.
+        float yRot = playerRigidbody.transform.eulerAngles.y % 360f;
+        if (yRot < 0f) yRot += 360f;
+
+        int facingDirection = (yRot > 90f && yRot < 270f) ? -1 : 1;
+
+        if (facingDirection != currentFacingDirection || instant)
+        {
+            currentFacingDirection = facingDirection;
+            float targetOffset = currentFacingDirection * horizontalLookAheadDistance;
+
+            if (instant)
+            {
+                currentHorizontalOffset = targetOffset;
+            }
+            else
+            {
+                // Cancel previous tween if needed
+                if (LeanTween.isTweening(tweenId))
+                    LeanTween.cancel(tweenId);
+
+                tweenId = LeanTween.value(gameObject, currentHorizontalOffset, targetOffset, horizontalLookAheadDuration)
+                    .setEaseInOutSine()
+                    .setOnUpdate((float val) => {
+                        currentHorizontalOffset = val;
+                    })
+                    .id;
+            }
+        }
     }
 
     private void LateUpdate()
@@ -71,13 +116,16 @@ public class CameraLookAhead : MonoBehaviour
         if (playerRigidbody == null)
             return;
 
+        CheckFacingDirection();
+
         Vector2 playerPos = playerRigidbody.position;
         float   vy        = playerRigidbody.linearVelocity.y;
 
-        // --- Horizontal: mirror player X tightly (no look-ahead) ---
+        // --- Horizontal: follow player X plus our look-ahead offset ---
+        float targetX = playerPos.x + currentHorizontalOffset;
         currentProxyX = Mathf.SmoothDamp(
             currentProxyX,
-            playerPos.x,
+            targetX,
             ref proxyVelocityX,
             Mathf.Max(horizontalSmoothTime, 0.01f)
         );

@@ -1,0 +1,491 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using Unity.Cinemachine;
+
+/// <summary>
+/// Central camera orchestrator. Manages Explore / Combat virtual camera switching
+/// via Cinemachine vcam priorities, maintains a CinemachineTargetGroup for combat
+/// framing, and provides screen shake via CinemachineImpulseSource.
+///
+/// Scene Setup:
+///   CameraSetUp                          [CameraManager]
+///   ├── MainCamera                       [Camera, CinemachineBrain, PixelPerfectCamera]
+///   ├── CinemachineCamera_Explore        [CinemachineCamera, PositionComposer, Confiner2D, ImpulseListener]
+///   ├── CinemachineCamera_Combat         [CinemachineCamera, GroupFraming, Confiner2D, ImpulseListener]
+///   ├── CombatTargetGroup                [CinemachineTargetGroup]
+///   ├── ConfinderBound                   [BoxCollider2D]
+///   └── CameraLookAheadTarget            [CameraLookAhead]
+/// </summary>
+public class CameraManager : MonoBehaviour
+{
+    // =========================================================
+    // Singleton
+    // =========================================================
+    public static CameraManager instance;
+
+    // =========================================================
+    // Camera References
+    // =========================================================
+    [Header("Virtual Cameras")]
+    [Tooltip("The exploration / follow-player virtual camera.")]
+    [SerializeField] private CinemachineCamera _exploreCam;
+
+    [Tooltip("The combat framing virtual camera (uses TargetGroup).")]
+    [SerializeField] private CinemachineCamera _combatCam;
+
+    [Header("Target Group")]
+    [Tooltip("The CinemachineTargetGroup that the combat cam tracks.")]
+    [SerializeField] private CinemachineTargetGroup _combatTargetGroup;
+
+    [Header("Player Reference")]
+    [Tooltip("Player transform. Auto-found by tag if left blank.")]
+    [SerializeField] private Transform _playerTransform;
+
+    // =========================================================
+    // Camera Priorities
+    // =========================================================
+    [Header("Priority Settings")]
+    [Tooltip("Priority assigned to the active (foreground) camera.")]
+    [SerializeField] private int _activePriority = 20;
+
+    [Tooltip("Priority assigned to the inactive (background) camera.")]
+    [SerializeField] private int _inactivePriority = 0;
+
+    // =========================================================
+    // Combat TargetGroup Weights & Transitions
+    // =========================================================
+    [Header("Combat Transition Settings")]
+    [Tooltip("How fast the camera weight transitions when entering/leaving combat.")]
+    [SerializeField] private float _weightLerpSpeed = 2.0f;
+    
+    [Tooltip("At what percentage of the disengage range should the camera start reducing the enemy's weight? (0.0 to 1.0)")]
+    [SerializeField] private float _distanceFalloffStartRatio = 0.5f;
+
+    [Header("Combat TargetGroup Settings")]
+    [Tooltip("Weight of the player in the combat TargetGroup.")]
+    [SerializeField] private float _playerWeight = 1.0f;
+
+    [Tooltip("Default weight of an enemy in the combat TargetGroup.")]
+    [SerializeField] private float _defaultEnemyWeight = 0.8f;
+
+    [Tooltip("Radius of the player target for framing.")]
+    [SerializeField] private float _playerRadius = 1f;
+
+    [Tooltip("Radius of each enemy target for framing.")]
+    [SerializeField] private float _enemyRadius = 1f;
+
+    // =========================================================
+    // Y Damping Settings (kept from original)
+    // =========================================================
+    [Header("Y Damping Settings")]
+    [SerializeField] private float _fallPanAmount = 0.25f;
+    [SerializeField] private float _normYPanAmount = 2f;
+    [SerializeField] private float _fallYPanTime = 0.35f;
+
+    // =========================================================
+    // Screen Shake (Impulse)
+    // =========================================================
+    [Header("Screen Shake — Impulse")]
+    [Tooltip("CinemachineImpulseSource used for screen shake. Auto-found if null.")]
+    [SerializeField] private CinemachineImpulseSource _impulseSource;
+
+    [Header("Shake Intensity by Impact Tier")]
+    [SerializeField] private float _basicComboShake = 0.15f;
+    [SerializeField] private float _skillShake = 0.4f;
+    [SerializeField] private float _ultimateShake = 0.8f;
+
+    // =========================================================
+    // Runtime State
+    // =========================================================
+    private class EngagedEnemyContext
+    {
+        public float targetMaxWeight;
+        public float currentWeight;
+        public bool isLeaving;
+    }
+
+    private bool _isInCombat;
+    private readonly Dictionary<EnemyController, EngagedEnemyContext> _engagedEnemies = new Dictionary<EnemyController, EngagedEnemyContext>();
+
+    // Y-damping
+    private CinemachinePositionComposer _explorePositionComposer;
+    private Coroutine _lerpYPanCoroutine;
+
+    public bool IsInCombat => _isInCombat;
+    public bool IsLerpingYDamping { get; private set; }
+    public bool LerpedFromPlayerFalling { get; set; }
+
+    // =========================================================
+    // Unity Methods
+    // =========================================================
+    private void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        // Auto-find player
+        if (_playerTransform == null)
+        {
+            GameObject playerObj = GameObject.FindWithTag("Player");
+            if (playerObj != null)
+                _playerTransform = playerObj.transform;
+        }
+
+        // Auto-find impulse source
+        if (_impulseSource == null)
+            _impulseSource = GetComponentInChildren<CinemachineImpulseSource>();
+
+        // Cache explore cam's PositionComposer for Y-damping
+        if (_exploreCam != null)
+            _explorePositionComposer = _exploreCam.GetComponent<CinemachinePositionComposer>();
+
+        // Start in explore mode
+        SetExploreMode();
+    }
+
+    private void OnDestroy()
+    {
+        if (instance == this)
+            instance = null;
+    }
+
+    private void LateUpdate()
+    {
+        if (!_isInCombat || _combatTargetGroup == null || _playerTransform == null) 
+            return;
+
+        List<EnemyController> toRemove = null;
+
+        // Process dynamic weights and range checks for each engaged enemy
+        foreach (var kvp in _engagedEnemies)
+        {
+            EnemyController enemy = kvp.Key;
+            EngagedEnemyContext ctx = kvp.Value;
+
+            if (enemy == null || !enemy.IsAlive)
+            {
+                ctx.isLeaving = true;
+            }
+
+            float desiredWeight = 0f;
+
+            if (!ctx.isLeaving)
+            {
+                float dist = Vector2.Distance(_playerTransform.position, enemy.transform.position);
+
+                if (dist > enemy.combatDisengageRange)
+                {
+                    // Target has walked too far away, exit combat for this enemy
+                    ctx.isLeaving = true;
+                }
+                else
+                {
+                    // Calculate weight based on distance. 
+                    // Weight scales linearly from 1 to 0 after passing the _distanceFalloffStartRatio threshold
+                    float startFalloff = enemy.combatDisengageRange * Mathf.Clamp01(_distanceFalloffStartRatio);
+                    float endFalloff = enemy.combatDisengageRange;
+
+                    float t = 1.0f; // Default full weight
+                    if (endFalloff > startFalloff && dist > startFalloff)
+                    {
+                        t = 1.0f - Mathf.Clamp01((dist - startFalloff) / (endFalloff - startFalloff));
+                    }
+
+                    desiredWeight = ctx.targetMaxWeight * t;
+                }
+            }
+
+            // Smoothly move the current weight towards the desired weight
+            ctx.currentWeight = Mathf.MoveTowards(ctx.currentWeight, desiredWeight, _weightLerpSpeed * Time.deltaTime);
+
+            // Apply to TargetGroup
+            UpdateTargetWeight(enemy.transform, ctx.currentWeight);
+
+            // If completely faded out, we can remove them safely
+            if (ctx.isLeaving && ctx.currentWeight <= 0.01f)
+            {
+                toRemove ??= new List<EnemyController>();
+                toRemove.Add(enemy);
+            }
+        }
+
+        // Clean up left enemies
+        if (toRemove != null)
+        {
+            foreach (var enemy in toRemove)
+            {
+                RemoveFromTargetGroup(enemy.transform);
+                _engagedEnemies.Remove(enemy);
+            }
+        }
+
+        // Return to explore mode if no engaged enemies remain
+        if (_engagedEnemies.Count == 0)
+        {
+            ExitCombatMode();
+        }
+    }
+
+    // =========================================================
+    // Public API — Combat State
+    // =========================================================
+
+    /// <summary>
+    /// Register an enemy as engaged in combat. Adds them to the TargetGroup gracefully.
+    /// switches to combat camera if not already active.
+    /// </summary>
+    public void EnterCombat(EnemyController enemy, float weight = -1f)
+    {
+        if (enemy == null) return;
+
+        float targetWeight = weight < 0f ? _defaultEnemyWeight : weight;
+
+        if (!_engagedEnemies.TryGetValue(enemy, out var ctx))
+        {
+            // Add enemy to target group with 0 weight natively to fade it in
+            AddToTargetGroup(enemy.transform, 0f, _enemyRadius);
+            
+            _engagedEnemies[enemy] = new EngagedEnemyContext
+            {
+                targetMaxWeight = targetWeight,
+                currentWeight = 0f,
+                isLeaving = false
+            };
+
+            Debug.Log($"[CameraManager] EnterCombat: added {enemy.name} (weight={targetWeight:F2})");
+        }
+        else
+        {
+            // Update weight if already engaged, and cancel any "leaving" state
+            ctx.targetMaxWeight = targetWeight;
+            ctx.isLeaving = false;
+        }
+
+        if (!_isInCombat)
+        {
+            _isInCombat = true;
+            EnsurePlayerInTargetGroup();
+            SetCombatMode();
+        }
+    }
+
+    /// <summary>
+    /// Tag an enemy to be removed from the combat TargetGroup.
+    /// It will fade out smoothly before disengaging.
+    /// </summary>
+    public void LeaveCombat(EnemyController enemy)
+    {
+        if (enemy == null) return;
+
+        if (_engagedEnemies.TryGetValue(enemy, out var ctx))
+        {
+            ctx.isLeaving = true;
+            Debug.Log($"[CameraManager] LeaveCombat: fading out {enemy.name}");
+        }
+    }
+
+    /// <summary>
+    /// Dynamically update an engaged enemy's max weight.
+    /// </summary>
+    public void UpdateCombatTarget(EnemyController enemy, float weight)
+    {
+        if (enemy == null) return;
+        
+        if (_engagedEnemies.TryGetValue(enemy, out var ctx))
+        {
+            ctx.targetMaxWeight = weight;
+        }
+    }
+
+    // =========================================================
+    // Public API — Screen Shake
+    // =========================================================
+
+    /// <summary>
+    /// Fire a screen shake impulse with raw strength.
+    /// Works with any active vcam that has a CinemachineImpulseListener.
+    /// </summary>
+    public void Shake(float strength)
+    {
+        if (_impulseSource == null || strength <= 0f) return;
+        _impulseSource.GenerateImpulse(strength);
+    }
+
+    /// <summary>
+    /// Fire a screen shake impulse mapped to a DamageImpactTier.
+    /// Designed to be called during HitStop for dramatic effect.
+    /// </summary>
+    public void ShakeByImpact(DamageImpactTier tier)
+    {
+        float strength = tier switch
+        {
+            DamageImpactTier.BasicCombo => _basicComboShake,
+            DamageImpactTier.Skill     => _skillShake,
+            DamageImpactTier.Ultimate  => _ultimateShake,
+            _                          => _basicComboShake
+        };
+        Shake(strength);
+    }
+
+    // =========================================================
+    // Public API — Y Damping (Explore cam only)
+    // =========================================================
+
+    public void LerpYDamping(bool isPlayerFalling)
+    {
+        if (_explorePositionComposer == null) return;
+
+        if (_lerpYPanCoroutine != null)
+            StopCoroutine(_lerpYPanCoroutine);
+
+        _lerpYPanCoroutine = StartCoroutine(LerpYAction(isPlayerFalling));
+    }
+
+    // =========================================================
+    // Private — Camera Mode Switching (Priority-Based)
+    // =========================================================
+    private void SetExploreMode()
+    {
+        if (_exploreCam != null)
+            _exploreCam.Priority = _activePriority;
+
+        if (_combatCam != null)
+            _combatCam.Priority = _inactivePriority;
+    }
+
+    private void SetCombatMode()
+    {
+        if (_combatCam != null)
+            _combatCam.Priority = _activePriority;
+
+        if (_exploreCam != null)
+            _exploreCam.Priority = _inactivePriority;
+    }
+
+    private void ExitCombatMode()
+    {
+        _isInCombat = false;
+
+        // Leave the Player inside the TargetGroup so the CombatCam doesn't snap
+        // to (0,0), allowing Cinemachine to smoothly blend to the ExploreCam.
+        
+        SetExploreMode();
+
+        Debug.Log("[CameraManager] Exited combat mode → Explore");
+    }
+
+    // =========================================================
+    // Private — TargetGroup Management
+    // =========================================================
+    private void EnsurePlayerInTargetGroup()
+    {
+        if (_combatTargetGroup == null || _playerTransform == null) return;
+
+        // Check if player is already in the group
+        for (int i = 0; i < _combatTargetGroup.Targets.Count; i++)
+        {
+            if (_combatTargetGroup.Targets[i].Object == _playerTransform)
+                return;
+        }
+
+        _combatTargetGroup.Targets.Add(new CinemachineTargetGroup.Target
+        {
+            Object = _playerTransform,
+            Weight = _playerWeight,
+            Radius = _playerRadius
+        });
+    }
+
+    private void AddToTargetGroup(Transform target, float weight, float radius)
+    {
+        if (_combatTargetGroup == null) return;
+
+        _combatTargetGroup.Targets.Add(new CinemachineTargetGroup.Target
+        {
+            Object = target,
+            Weight = weight,
+            Radius = radius
+        });
+    }
+
+    private void RemoveFromTargetGroup(Transform target)
+    {
+        if (_combatTargetGroup == null) return;
+
+        for (int i = _combatTargetGroup.Targets.Count - 1; i >= 0; i--)
+        {
+            if (_combatTargetGroup.Targets[i].Object == target)
+            {
+                _combatTargetGroup.Targets.RemoveAt(i);
+                break;
+            }
+        }
+    }
+
+    private void UpdateTargetWeight(Transform target, float weight)
+    {
+        if (_combatTargetGroup == null) return;
+
+        for (int i = 0; i < _combatTargetGroup.Targets.Count; i++)
+        {
+            if (_combatTargetGroup.Targets[i].Object == target)
+            {
+                var t = _combatTargetGroup.Targets[i];
+                t.Weight = weight;
+                _combatTargetGroup.Targets[i] = t;
+                break;
+            }
+        }
+    }
+
+    // =========================================================
+    // Private — Y Damping Lerp (Explore cam)
+    // =========================================================
+    private IEnumerator LerpYAction(bool isPlayerFalling)
+    {
+        if (_explorePositionComposer == null)
+            yield break;
+
+        IsLerpingYDamping = true;
+
+        float startDampAmount = _explorePositionComposer.Damping.y;
+        float endDampAmount;
+
+        if (isPlayerFalling)
+        {
+            endDampAmount = _fallPanAmount;
+            LerpedFromPlayerFalling = true;
+        }
+        else
+        {
+            endDampAmount = _normYPanAmount;
+        }
+
+        float elapsedTime = 0f;
+        while (elapsedTime < _fallYPanTime)
+        {
+            elapsedTime += Time.deltaTime;
+            float lerpedPanAmount = Mathf.Lerp(startDampAmount, endDampAmount, elapsedTime / _fallYPanTime);
+
+            Vector3 currentDamping = _explorePositionComposer.Damping;
+            currentDamping.y = lerpedPanAmount;
+            _explorePositionComposer.Damping = currentDamping;
+
+            yield return null;
+        }
+
+        Vector3 finalDamping = _explorePositionComposer.Damping;
+        finalDamping.y = endDampAmount;
+        _explorePositionComposer.Damping = finalDamping;
+
+        IsLerpingYDamping = false;
+    }
+}

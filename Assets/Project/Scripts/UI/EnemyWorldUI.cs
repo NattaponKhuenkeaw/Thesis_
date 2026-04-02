@@ -10,16 +10,29 @@ public class EnemyWorldUI : MonoBehaviour
     [SerializeField] private Slider healthSlider;
     [SerializeField] private TMP_Text damageText;
 
-    [Header("Damage Text")]
-    [SerializeField] private Vector2 damageTextStartOffset = new Vector2(0f, 0f);
-    [SerializeField] private Vector2 damageTextFloatOffset = new Vector2(0f, 36f);
+    [Header("Damage Text — Random Position")]
+    [Tooltip("Min/Max X offset for random spawn position on the canvas.")]
+    [SerializeField] private Vector2 damageTextRandomRangeX = new Vector2(-40f, 40f);
+    [Tooltip("Min/Max Y offset for random spawn position on the canvas.")]
+    [SerializeField] private Vector2 damageTextRandomRangeY = new Vector2(-10f, 30f);
+    [Tooltip("Float direction applied on top of the random start position.")]
+    [SerializeField] private Vector2 damageTextFloatOffset = new Vector2(0f, 50f);
     [SerializeField] private float damageTextDuration = 0.5f;
     [SerializeField] private bool hideCanvasOnDeath = true;
+
+    [Header("Impact Scaling")]
+    [Tooltip("Text scale for BasicCombo tier hits (smallest).")]
+    [SerializeField] private float basicComboScale = 1.0f;
+    [Tooltip("Text scale for Skill tier hits (medium).")]
+    [SerializeField] private float skillScale = 1.4f;
+    [Tooltip("Text scale for Ultimate tier hits (biggest).")]
+    [SerializeField] private float ultimateScale = 2.0f;
+    [Tooltip("Overshoot multiplier for the punch-pop effect at start.")]
+    [SerializeField] private float punchScaleOvershoot = 1.3f;
 
     private RectTransform damageTextRect;
     private Coroutine damageTextCoroutine;
     private Color damageTextBaseColor = Color.white;
-    private Vector3 baseLocalScale = Vector3.one;
 
     private void Reset()
     {
@@ -29,7 +42,6 @@ public class EnemyWorldUI : MonoBehaviour
     private void Awake()
     {
         CacheReferences();
-        baseLocalScale = transform.localScale;
 
         if (damageText != null)
         {
@@ -76,19 +88,17 @@ public class EnemyWorldUI : MonoBehaviour
             damageTextRect = damageText.rectTransform;
     }
 
+    /// <summary>
+    /// Counter-rotate so UI always faces the camera regardless of parent Y-rotation.
+    /// </summary>
     private void KeepCanvasFacingForward()
     {
         Transform parentTransform = transform.parent;
         if (parentTransform == null)
             return;
 
-        float parentSignX = Mathf.Sign(parentTransform.lossyScale.x);
-        if (Mathf.Approximately(parentSignX, 0f))
-            parentSignX = 1f;
-
-        Vector3 correctedScale = baseLocalScale;
-        correctedScale.x = Mathf.Abs(baseLocalScale.x) * parentSignX;
-        transform.localScale = correctedScale;
+        float parentYRot = parentTransform.eulerAngles.y;
+        transform.localRotation = Quaternion.Euler(0f, -parentYRot, 0f);
     }
 
     private void SubscribeToEnemyEvents()
@@ -114,7 +124,7 @@ public class EnemyWorldUI : MonoBehaviour
     private void HandleDamaged(HitReactionData data)
     {
         UpdateHealthBar();
-        ShowDamageText(data.damage);
+        ShowDamageText(data.damage, data.impactTier);
     }
 
     private void HandleDied()
@@ -140,7 +150,7 @@ public class EnemyWorldUI : MonoBehaviour
         healthSlider.value = normalizedHp;
     }
 
-    private void ShowDamageText(float damage)
+    private void ShowDamageText(float damage, DamageImpactTier impactTier)
     {
         if (damageText == null)
             return;
@@ -151,28 +161,52 @@ public class EnemyWorldUI : MonoBehaviour
         if (damageTextRect == null)
             damageTextRect = damageText.rectTransform;
 
+        // --- Random start position ---
+        Vector2 randomStart = new Vector2(
+            Random.Range(damageTextRandomRangeX.x, damageTextRandomRangeX.y),
+            Random.Range(damageTextRandomRangeY.x, damageTextRandomRangeY.y));
+
+        // --- Impact tier scale ---
+        float targetScale = impactTier switch
+        {
+            DamageImpactTier.Skill    => skillScale,
+            DamageImpactTier.Ultimate => ultimateScale,
+            _                         => basicComboScale
+        };
+
         damageText.text = Mathf.RoundToInt(damage).ToString();
         damageText.color = damageTextBaseColor;
-        damageTextRect.anchoredPosition = damageTextStartOffset;
+        damageTextRect.anchoredPosition = randomStart;
         damageText.gameObject.SetActive(true);
 
-        damageTextCoroutine = StartCoroutine(DamageTextRoutine());
+        damageTextCoroutine = StartCoroutine(DamageTextRoutine(randomStart, targetScale));
     }
 
-    private IEnumerator DamageTextRoutine()
+    private IEnumerator DamageTextRoutine(Vector2 startPos, float targetScale)
     {
         float elapsed = 0f;
-        Vector2 start = damageTextStartOffset;
-        Vector2 end = damageTextStartOffset + damageTextFloatOffset;
+        Vector2 endPos = startPos + damageTextFloatOffset;
+
+        // Start with punch overshoot and ease down to target scale
+        float punchStart = targetScale * punchScaleOvershoot;
 
         while (elapsed < damageTextDuration)
         {
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / damageTextDuration);
 
+            // Position: lerp from random start to float end
             if (damageTextRect != null)
-                damageTextRect.anchoredPosition = Vector2.Lerp(start, end, t);
+                damageTextRect.anchoredPosition = Vector2.Lerp(startPos, endPos, t);
 
+            // Scale: punch pop ease-out (overshoot → target → shrink away)
+            float scaleT = Mathf.Clamp01(t * 3f); // fast punch in first third
+            float currentScale = Mathf.Lerp(punchStart, targetScale, EaseOutBack(scaleT));
+            // Shrink slightly toward end
+            float shrink = Mathf.Lerp(1f, 0.6f, Mathf.Clamp01((t - 0.5f) * 2f));
+            damageTextRect.localScale = Vector3.one * currentScale * shrink;
+
+            // Alpha: fade out
             Color color = damageTextBaseColor;
             color.a = 1f - t;
             damageText.color = color;
@@ -181,7 +215,18 @@ public class EnemyWorldUI : MonoBehaviour
         }
 
         damageText.color = damageTextBaseColor;
+        damageTextRect.localScale = Vector3.one;
         damageText.gameObject.SetActive(false);
         damageTextCoroutine = null;
+    }
+
+    /// <summary>
+    /// Ease-out-back curve for satisfying punch pop.
+    /// </summary>
+    private static float EaseOutBack(float t)
+    {
+        const float c1 = 1.70158f;
+        const float c3 = c1 + 1f;
+        return 1f + c3 * Mathf.Pow(t - 1f, 3f) + c1 * Mathf.Pow(t - 1f, 2f);
     }
 }
