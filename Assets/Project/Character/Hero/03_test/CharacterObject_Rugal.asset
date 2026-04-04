@@ -32,7 +32,7 @@ MonoBehaviour:
     airDeceleration: 40
     airSpeedMultiplier: 1
     dashSpeed: 35
-    dashDuration: 0.5
+    dashDuration: 0.6
     dashCooldown: 0.5
   metaData:
     displayName: Rugal
@@ -73,6 +73,7 @@ MonoBehaviour:
         snapOffset: {x: 1, y: -0.5}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashDuration: 0.1
+        impactTier: 0
         debugColor: {r: 0.2040608, g: 1, b: 0, a: 0.39215687}
     - stepName: Attack 2
       duration: 0.45
@@ -91,7 +92,7 @@ MonoBehaviour:
         damageMultiplier: 1.15
         knockbackForce: 2
         hitstunFrames: 4
-        impactFreezeTime: 0
+        impactFreezeTime: 1
         reactionVelocity: {x: 0, y: 1}
         knockbackDuration: 0.25
         isKnockdown: 1
@@ -99,6 +100,7 @@ MonoBehaviour:
         snapOffset: {x: 0.5, y: -1}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashDuration: 0.1
+        impactTier: 0
         debugColor: {r: 1, g: 0.8873908, b: 0, a: 0.39215687}
     - stepName: Attack 3
       duration: 0.45
@@ -116,15 +118,16 @@ MonoBehaviour:
         size: {x: 2, y: 1.3}
         damageMultiplier: 0.45
         knockbackForce: 2
-        hitstunFrames: 0
+        hitstunFrames: 1
         impactFreezeTime: 1
         reactionVelocity: {x: 1, y: 7}
-        knockbackDuration: 0.25
+        knockbackDuration: 0.75
         isKnockdown: 1
         snapToAttacker: 0
         snapOffset: {x: 0.5, y: 2}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashDuration: 0.1
+        impactTier: 0
         debugColor: {r: 1, g: 0.0563832, b: 0, a: 0.39215687}
       - hitTime: 0
         activeDuration: 0.1
@@ -142,6 +145,7 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashDuration: 0.1
+        impactTier: 0
         debugColor: {r: 1, g: 0.05882353, b: 0, a: 0.39215687}
       - hitTime: 0
         activeDuration: 0.1
@@ -159,6 +163,7 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashDuration: 0.1
+        impactTier: 0
         debugColor: {r: 1, g: 0.05882353, b: 0, a: 0.39215687}
       - hitTime: 0
         activeDuration: 0.1
@@ -176,6 +181,7 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashDuration: 0.1
+        impactTier: 0
         debugColor: {r: 1, g: 0, b: 0, a: 1}
     - stepName: Attack 4
       duration: 0.45
@@ -202,6 +208,7 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashDuration: 0.1
+        impactTier: 2
         debugColor: {r: 1, g: 1, b: 1, a: 0.39215687}
   neutralAirComboData:
     comboResetDelay: 0.8
@@ -231,6 +238,7 @@ MonoBehaviour:
         snapOffset: {x: 1, y: 0.5}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashDuration: 0.1
+        impactTier: 0
         debugColor: {r: 0.20392157, g: 1, b: 0, a: 1}
     - stepName: Attack 2
       duration: 0.2
@@ -257,6 +265,7 @@ MonoBehaviour:
         snapOffset: {x: 1, y: 0.5}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashDuration: 0.1
+        impactTier: 0
         debugColor: {r: 1, g: 0.8862745, b: 0, a: 1}
     - stepName: Attack 3
       duration: 0.3
@@ -277,12 +286,13 @@ MonoBehaviour:
         hitstunFrames: 12
         impactFreezeTime: 1
         reactionVelocity: {x: 3, y: 1}
-        knockbackDuration: 0.25
+        knockbackDuration: 1
         isKnockdown: 1
         snapToAttacker: 1
         snapOffset: {x: 1, y: -0.3}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashDuration: 0.1
+        impactTier: 2
         debugColor: {r: 1, g: 0.05490196, b: 0, a: 1}
   plungeAttackData:
     isEnabled: 1
@@ -315,6 +325,7 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashDuration: 0.1
+        impactTier: 1
         debugColor: {r: 1, g: 0.4, b: 0, a: 1}
   skillData:
     skillName: Rapponken

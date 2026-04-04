@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class MeleeHitboxDamage : MonoBehaviour
 {
@@ -22,7 +23,8 @@ public class MeleeHitboxDamage : MonoBehaviour
     private float hitStopDuration = 0.1f;
     private float hitStopScale = 0.05f;
 
-    private int lastHitFrame = -1;
+    private HashSet<EnemyController> hitEnemiesThisActivation = new HashSet<EnemyController>();
+
     private bool hasTriggeredShakeThisActivation = false;
     private bool hasTriggeredHitStopThisActivation = false;
     private Coroutine hitStopCoroutine;
@@ -51,6 +53,7 @@ public class MeleeHitboxDamage : MonoBehaviour
     {
         hasTriggeredShakeThisActivation = false;
         hasTriggeredHitStopThisActivation = false;
+        hitEnemiesThisActivation.Clear();
     }
 
     void OnDisable()
@@ -65,12 +68,14 @@ public class MeleeHitboxDamage : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        if (lastHitFrame == Time.frameCount)
-            return;
-
         EnemyController enemy = other.GetComponentInParent<EnemyController>();
         if (enemy == null)
             return;
+
+        if (hitEnemiesThisActivation.Contains(enemy))
+            return;
+
+        hitEnemiesThisActivation.Add(enemy);
 
         Vector2 direction = Vector2.right;
 
@@ -80,7 +85,6 @@ public class MeleeHitboxDamage : MonoBehaviour
         // Build full reaction data from hit frame
         HitReactionData reactionData = BuildReactionData(direction);
         enemy.TakeHit(reactionData, transform.position);
-        lastHitFrame = Time.frameCount;
 
         // Notify CameraManager: player engaged this enemy
         if (CameraManager.instance != null)
@@ -144,12 +148,16 @@ public class MeleeHitboxDamage : MonoBehaviour
     // =========================================================
     private void TriggerCameraShake()
     {
-        if (cameraShake == null || currentShakeStrength <= 0f)
-        {
-            return;
-        }
+        if (currentShakeStrength <= 0f) return;
 
-        cameraShake.Shake(currentShakeStrength);
+        if (cameraShake != null)
+        {
+            cameraShake.Shake(currentShakeStrength);
+        }
+        else if (CameraManager.instance != null)
+        {
+            CameraManager.instance.Shake(currentShakeStrength);
+        }
     }
 
     private void TriggerHitStop()

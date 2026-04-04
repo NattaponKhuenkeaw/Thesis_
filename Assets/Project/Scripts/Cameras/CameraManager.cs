@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Cinemachine;
+using Unity.Behavior;
 
 /// <summary>
 /// Central camera orchestrator. Manages Explore / Combat virtual camera switching
@@ -58,9 +59,12 @@ public class CameraManager : MonoBehaviour
     [Header("Combat Transition Settings")]
     [Tooltip("How fast the camera weight transitions when entering/leaving combat.")]
     [SerializeField] private float _weightLerpSpeed = 2.0f;
-    
+
     [Tooltip("At what percentage of the disengage range should the camera start reducing the enemy's weight? (0.0 to 1.0)")]
     [SerializeField] private float _distanceFalloffStartRatio = 0.5f;
+
+    [Tooltip("Grace period in seconds before completely removing enemy after leaving PatrolRadius.")]
+    [SerializeField] private float _outOfRangeGracePeriod = 1.5f;
 
     [Header("Combat TargetGroup Settings")]
     [Tooltip("Weight of the player in the combat TargetGroup.")]
@@ -103,6 +107,7 @@ public class CameraManager : MonoBehaviour
         public float targetMaxWeight;
         public float currentWeight;
         public bool isLeaving;
+        public float outOfRangeTimer;
     }
 
     private bool _isInCombat;
@@ -181,23 +186,49 @@ public class CameraManager : MonoBehaviour
             {
                 float dist = Vector2.Distance(_playerTransform.position, enemy.transform.position);
 
-                if (dist > enemy.combatDisengageRange)
+                float disengageRange = 8f; // fallback
+                var behaviorAgent = enemy.GetComponent<BehaviorGraphAgent>();
+                if (behaviorAgent != null && behaviorAgent.GetVariable("DetectRadius", out BlackboardVariable<float> radiusVar))
                 {
-                    // Target has walked too far away, exit combat for this enemy
-                    ctx.isLeaving = true;
+                    if (radiusVar != null)
+                    {
+                        disengageRange = radiusVar.Value;
+                    }
+                }
+
+                if (dist > disengageRange)
+                {
+                    // Player has walked too far away.
+                    // Start grace period timer. During this time, they stay at the capped minimum weight.
+                    ctx.outOfRangeTimer += Time.deltaTime;
+                    if (ctx.outOfRangeTimer >= _outOfRangeGracePeriod)
+                    {
+                        // Grace period over, exit combat for this enemy
+                        ctx.isLeaving = true;
+                    }
+                    else
+                    {
+                        // Cap at -90% max weight (10% max weight)
+                        desiredWeight = ctx.targetMaxWeight * 0.1f;
+                    }
                 }
                 else
                 {
-                    // Calculate weight based on distance. 
-                    // Weight scales linearly from 1 to 0 after passing the _distanceFalloffStartRatio threshold
-                    float startFalloff = enemy.combatDisengageRange * Mathf.Clamp01(_distanceFalloffStartRatio);
-                    float endFalloff = enemy.combatDisengageRange;
+                    // Inside range. Reset grace timer.
+                    ctx.outOfRangeTimer = 0f;
 
+                    // Calculate weight based on distance.
+                    // Weight scales linearly from 1 to 0.1 after passing the _distanceFalloffStartRatio threshold
+                    float startFalloff = disengageRange * Mathf.Clamp01(_distanceFalloffStartRatio);
+                    
                     float t = 1.0f; // Default full weight
-                    if (endFalloff > startFalloff && dist > startFalloff)
+                    if (dist > startFalloff && disengageRange > startFalloff)
                     {
-                        t = 1.0f - Mathf.Clamp01((dist - startFalloff) / (endFalloff - startFalloff));
+                        t = 1.0f - Mathf.Clamp01((dist - startFalloff) / (disengageRange - startFalloff));
                     }
+                    
+                    // Cap the minimum weight to -90% (0.1) as long as they are still inside the group
+                    t = Mathf.Max(t, 0.1f);
 
                     desiredWeight = ctx.targetMaxWeight * t;
                 }
@@ -257,7 +288,8 @@ public class CameraManager : MonoBehaviour
             {
                 targetMaxWeight = targetWeight,
                 currentWeight = 0f,
-                isLeaving = false
+                isLeaving = false,
+                outOfRangeTimer = 0f
             };
 
             Debug.Log($"[CameraManager] EnterCombat: added {enemy.name} (weight={targetWeight:F2})");
@@ -267,6 +299,7 @@ public class CameraManager : MonoBehaviour
             // Update weight if already engaged, and cancel any "leaving" state
             ctx.targetMaxWeight = targetWeight;
             ctx.isLeaving = false;
+            ctx.outOfRangeTimer = 0f;
         }
 
         if (!_isInCombat)

@@ -8,25 +8,26 @@ public class PlayerAttackState : PlayerState
 {
     public PlayerAttackState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
+    public override PlayerStateId StateId => PlayerStateId.Attacking;
+    public override PlayerStatePriority Priority => PlayerStatePriority.AttackCombat;
+
     public override void Enter()
     {
-        if (player.BasicAttack != null)
-            player.BasicAttack.OnComboFinished += HandleComboFinished;
+        if (player.Combat != null)
+            player.Combat.OnComboFinished += HandleComboFinished;
     }
 
     public override void Exit()
     {
-        if (player.BasicAttack != null)
-            player.BasicAttack.OnComboFinished -= HandleComboFinished;
+        if (player.Combat != null)
+            player.Combat.OnComboFinished -= HandleComboFinished;
     }
 
     public override void Update()
     {
-        // Safety: if BasicAttack is no longer attacking (timeout / external reset)
-        if (player.BasicAttack != null && !player.BasicAttack.IsAttacking())
-        {
+        // Safety: if Combat is no longer attacking (timeout / external reset)
+        if (player.Combat != null && !player.Combat.IsAttacking())
             ExitToAppropriateState();
-        }
     }
 
     // =========================================================
@@ -34,24 +35,28 @@ public class PlayerAttackState : PlayerState
     // =========================================================
     public override void OnAttackInput()
     {
-        if (player.BasicAttack != null)
-            player.BasicAttack.OnAttackInput();
+        if (player.Combat != null)
+            player.Combat.OnAttackInput();
     }
 
     public override void OnDashInput(float inputX)
     {
-        // Dash cancels attack
-        if (player.BasicAttack != null)
-            player.BasicAttack.ResetCombo();
+        if (player.Movement != null && player.Movement.CanDash())
+        {
+            // Dash cancels attack (Ability > AttackCombat)
+            if (player.Combat != null)
+                player.Combat.ResetCombo();
 
-        fsm.ChangeState(fsm.DashState);
-        fsm.CurrentState.OnDashInput(inputX);
+            fsm.ChangeState(fsm.DashState);
+            fsm.CurrentState.OnDashInput(inputX);
+        }
     }
 
     public override void OnJumpInput()
     {
-        if (player.BasicAttack != null)
-            player.BasicAttack.ResetCombo();
+        // Jump cancels attack (Ability > AttackCombat)
+        if (player.Combat != null)
+            player.Combat.ResetCombo();
 
         fsm.ChangeState(fsm.JumpState);
         fsm.CurrentState.OnJumpInput();

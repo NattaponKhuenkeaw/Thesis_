@@ -10,11 +10,8 @@ public class PlayerJumpState : PlayerState
 
     public PlayerJumpState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
-    public override void Enter()
-    {
-        if (player.Movement != null)
-            player.Movement.CanMove = true;
-    }
+    public override PlayerStateId StateId => PlayerStateId.Jumping;
+    public override PlayerStatePriority Priority => PlayerStatePriority.Ability;
 
     public override void Update()
     {
@@ -56,7 +53,7 @@ public class PlayerJumpState : PlayerState
 
         // Try plunge attack
         if (cachedMoveInput.y < -0.5f && !player.Movement.IsGrounded()
-            && player.BasicAttack != null && player.BasicAttack.TryStartPlungeAttack())
+            && player.Combat != null && player.Combat.TryStartPlungeAttack())
         {
             fsm.ChangeState(fsm.AttackState);
             return;
@@ -70,8 +67,11 @@ public class PlayerJumpState : PlayerState
         if (player.Movement == null)
             return;
 
-        fsm.ChangeState(fsm.DashState);
-        fsm.CurrentState.OnDashInput(inputX);
+        if (player.Movement.CanDash())
+        {
+            fsm.ChangeState(fsm.DashState);
+            fsm.CurrentState.OnDashInput(inputX);
+        }
     }
 
     public override void OnAttackInput()

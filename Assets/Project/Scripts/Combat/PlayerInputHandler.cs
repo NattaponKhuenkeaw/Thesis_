@@ -30,7 +30,7 @@ public class InputHandler_Player : MonoBehaviour
             stateMachine = GetComponent<PlayerStateMachine>();
 
         if (teamLoader == null)
-            teamLoader = FindObjectOfType<TeamLoader>();
+            teamLoader = Object.FindFirstObjectByType<TeamLoader>();
 
         if (skillTreeController == null)
             skillTreeController = GetComponent<SkillTreeController>();

@@ -9,7 +9,7 @@ public class PlayerAnimator : MonoBehaviour
     [Header("Dependencies")]
     public Animator anim;
     public PlayerMovement movement;
-    public PlayerBasicAttack basicAttack;
+    public PlayerBasicAttack combat;
 
     // =========================================================
     // Animator Hashes
@@ -51,8 +51,8 @@ public class PlayerAnimator : MonoBehaviour
         if (movement != null)
             rb = movement.GetComponent<Rigidbody2D>();
             
-        if (basicAttack == null)
-            basicAttack = GetComponentInParent<PlayerBasicAttack>();
+        if (combat == null)
+            combat = GetComponentInParent<PlayerBasicAttack>();
     }
 
     void Update()
@@ -66,7 +66,7 @@ public class PlayerAnimator : MonoBehaviour
         anim.SetBool(isLandingHash, movement.IsLanding);
 
         // Detect falling state (airborne and moving downwards)
-        bool suppressFallAnimation = basicAttack != null && basicAttack.IsPlungeInAirPhase();
+        bool suppressFallAnimation = combat != null && combat.IsPlungeInAirPhase();
         bool isFalling = !suppressFallAnimation && !movement.IsGrounded() && rb.linearVelocity.y < -0.1f && !movement.IsLanding;
         
         if (isFalling && !wasFalling)
@@ -116,7 +116,7 @@ public class PlayerAnimator : MonoBehaviour
 
     public void TriggerLanding()
     {
-        if (basicAttack != null && basicAttack.ShouldSuppressLandingFeedback())
+        if (combat != null && combat.ShouldSuppressLandingFeedback())
             return;
 
         anim.SetTrigger(landingHash);
@@ -266,19 +266,19 @@ public class PlayerAnimator : MonoBehaviour
     // =========================================================
     public void OnImpactStart()
     {
-        if (basicAttack != null)
-            basicAttack.OnImpactStart();
+        if (combat != null)
+            combat.OnImpactStart();
     }
 
     public void OnRecoveryStart()
     {
-        if (basicAttack != null)
-            basicAttack.OnRecoveryStart();
+        if (combat != null)
+            combat.OnRecoveryStart();
     }
 
     public void OnAttackEnd()
     {
-        if (basicAttack != null)
-            basicAttack.OnAttackEnd();
+        if (combat != null)
+            combat.OnAttackEnd();
     }
 }

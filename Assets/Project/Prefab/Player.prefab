@@ -414,7 +414,6 @@ GameObject:
   - component: {fileID: 1841256473808836703}
   - component: {fileID: 618660006823826657}
   - component: {fileID: 5987486934514239479}
-  - component: {fileID: 3315855471932036482}
   - component: {fileID: 5450070007788991123}
   - component: {fileID: 6196953050443969776}
   m_Layer: 7
@@ -654,19 +653,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SkillTreeController
   playerCharacter: {fileID: 729008942358398209}
---- !u!114 &3315855471932036482
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7851930121724842516}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bccbdd11b77ac614fbbc7c332d898f86, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CameraShakeController
-  impulseSource: {fileID: 0}
 --- !u!114 &5450070007788991123
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -820,7 +806,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MeleeHitboxDamage
   movement: {fileID: 6805025547357927974}
-  cameraShake: {fileID: 3315855471932036482}
+  cameraShake: {fileID: 0}
 --- !u!114 &4491000568439605687
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -35,7 +35,7 @@ public class TeamLoader : MonoBehaviour
     void Awake()
     {
         if (playerCharacter == null)
-            playerCharacter = FindObjectOfType<PlayerCharacter>();
+            playerCharacter = Object.FindFirstObjectByType<PlayerCharacter>();
     }
 
     void Start()

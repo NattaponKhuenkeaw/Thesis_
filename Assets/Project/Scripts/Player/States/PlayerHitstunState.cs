@@ -11,18 +11,18 @@ public class PlayerHitstunState : PlayerState
 
     public PlayerHitstunState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
+    public override PlayerStateId StateId => PlayerStateId.Hitstun;
+    public override PlayerStatePriority Priority => PlayerStatePriority.System;
+
     public override void Enter()
     {
         hitstunTimer = hitstunDuration;
 
         if (player.Movement != null)
-        {
-            player.Movement.CanMove = false;
             player.Movement.CancelAttackMotion();
-        }
 
-        if (player.BasicAttack != null)
-            player.BasicAttack.ResetCombo();
+        if (player.Combat != null)
+            player.Combat.ResetCombo();
 
         if (player.Animator != null)
             player.Animator.TriggerTakeDamage();
@@ -40,17 +40,8 @@ public class PlayerHitstunState : PlayerState
                 return;
             }
 
-            if (player.Movement != null)
-                player.Movement.CanMove = true;
-
             fsm.ChangeState(fsm.IdleState);
         }
-    }
-
-    public override void Exit()
-    {
-        if (player.Movement != null)
-            player.Movement.CanMove = true;
     }
 
     /// <summary>

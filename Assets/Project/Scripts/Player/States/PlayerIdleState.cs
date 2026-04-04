@@ -7,22 +7,19 @@ public class PlayerIdleState : PlayerState
 {
     public PlayerIdleState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
+    public override PlayerStateId StateId => PlayerStateId.Idle;
+    public override PlayerStatePriority Priority => PlayerStatePriority.Movement;
+
     public override void Enter()
     {
         if (player.Movement != null)
-        {
             player.Movement.Move(Vector2.zero);
-            player.Movement.CanMove = true;
-        }
     }
 
     public override void Update()
     {
-        // If we became airborne (walked off ledge), transition to Jump state
         if (player.Movement != null && !player.Movement.IsGrounded())
-        {
             fsm.ChangeState(fsm.JumpState);
-        }
     }
 
     // =========================================================
@@ -51,8 +48,11 @@ public class PlayerIdleState : PlayerState
         if (player.Movement == null)
             return;
 
-        fsm.ChangeState(fsm.DashState);
-        fsm.CurrentState.OnDashInput(inputX);
+        if (player.Movement.CanDash())
+        {
+            fsm.ChangeState(fsm.DashState);
+            fsm.CurrentState.OnDashInput(inputX);
+        }
     }
 
     public override void OnAttackInput()

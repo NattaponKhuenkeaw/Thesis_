@@ -1,9 +1,10 @@
 using UnityEngine;
+using System;
 
 /// <summary>
-/// Lightweight C# state machine for the player. Drives all state transitions
-/// and delegates Update/FixedUpdate/input to the current state.
-/// Debug-only events are emitted for state changes.
+/// Centralized C# state machine for the player. Owns the canonical PlayerStateId,
+/// enforces cancel hierarchy via priority, and broadcasts state changes to all
+/// player action scripts via OnStateChanged event.
 /// </summary>
 public class PlayerStateMachine : MonoBehaviour
 {
@@ -31,12 +32,20 @@ public class PlayerStateMachine : MonoBehaviour
     // =========================================================
     public PlayerState CurrentState { get; private set; }
 
+    /// <summary>
+    /// Cheap enum check — no boxing, no type comparison.
+    /// Subscribe-friendly for Inspector visualization across all player scripts.
+    /// </summary>
+    public PlayerStateId CurrentStateId => CurrentState != null ? CurrentState.StateId : PlayerStateId.None;
+
     // =========================================================
-    // Debug Event (editor-only broadcast)
+    // Events (always available, not editor-only)
     // =========================================================
-#if UNITY_EDITOR
-    public event System.Action<PlayerState, PlayerState> OnStateChanged;
-#endif
+    /// <summary>
+    /// Fired on every state transition. Subscribers receive (previousStateId, newStateId).
+    /// PlayerMovement, PlayerAnimator, UI, etc. can subscribe for reactive updates.
+    /// </summary>
+    public event Action<PlayerStateId, PlayerStateId> OnStateChanged;
 
     // =========================================================
     // Unity Methods
@@ -66,26 +75,68 @@ public class PlayerStateMachine : MonoBehaviour
     // =========================================================
     // Public Methods
     // =========================================================
+
+    /// <summary>
+    /// Centralized state transition with Enter/Exit lifecycle.
+    /// Always succeeds — use for natural exits and system transitions
+    /// (e.g., dash complete → idle, TakeDamage → hitstun).
+    /// </summary>
     public void ChangeState(PlayerState newState)
     {
-        if (newState == null)
+        if (newState == null || newState == CurrentState)
             return;
 
-        PlayerState prev = CurrentState;
+        PlayerStateId prevId = CurrentStateId;
         CurrentState?.Exit();
         CurrentState = newState;
         CurrentState.Enter();
 
-#if UNITY_EDITOR
-        string prevName = prev != null ? prev.GetType().Name : "None";
-        string newName = newState.GetType().Name;
+        PlayerStateId newId = CurrentStateId;
 
-        if (prev != newState)
-        {
-            Debug.Log($"[PlayerFSM] {prevName} → {newName}");
-            OnStateChanged?.Invoke(prev, newState);
-        }
+#if UNITY_EDITOR
+        Debug.Log($"[PlayerFSM] {prevId} → {newId}");
 #endif
+
+        OnStateChanged?.Invoke(prevId, newId);
+    }
+
+    /// <summary>
+    /// Priority-gated transition. Only succeeds if the incoming state's
+    /// priority is >= the current state's priority (cancel hierarchy).
+    /// Use for input-driven transitions where lower actions should not
+    /// interrupt higher ones.
+    /// Returns true if transition occurred.
+    /// </summary>
+    public bool TryChangeState(PlayerState newState)
+    {
+        if (newState == null)
+            return false;
+
+        if (!CanInterruptWith(newState.Priority))
+            return false;
+
+        ChangeState(newState);
+        return true;
+    }
+
+    /// <summary>
+    /// Check if the current state can be interrupted by an action
+    /// of the given priority level (cancel hierarchy).
+    /// </summary>
+    public bool CanInterruptWith(PlayerStatePriority incomingPriority)
+    {
+        if (CurrentState == null)
+            return true;
+
+        return (int)incomingPriority >= (int)CurrentState.Priority;
+    }
+
+    /// <summary>
+    /// Convenience: check if current state matches a specific StateId.
+    /// </summary>
+    public bool IsInState(PlayerStateId stateId)
+    {
+        return CurrentStateId == stateId;
     }
 
     /// <summary>

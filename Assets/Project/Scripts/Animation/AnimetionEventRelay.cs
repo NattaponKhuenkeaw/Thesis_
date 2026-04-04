@@ -6,15 +6,15 @@ public class AnimationEventRelay : MonoBehaviour
     // Dependencies
     // =========================================================
     [Header("Dependencies")]
-    public PlayerBasicAttack basicAttack;
+    public PlayerBasicAttack combat;
 
     // =========================================================
     // Unity Methods
     // =========================================================
     void Awake()
     {
-        if (basicAttack == null)
-            basicAttack = GetComponentInParent<PlayerBasicAttack>();
+        if (combat == null)
+            combat = GetComponentInParent<PlayerBasicAttack>();
     }
 
     // =========================================================
@@ -22,37 +22,37 @@ public class AnimationEventRelay : MonoBehaviour
     // =========================================================
     public void EnableHitbox()
     {
-        if (basicAttack != null)
-            basicAttack.EnableHitbox();
+        if (combat != null)
+            combat.EnableHitbox();
     }
 
     public void DisableHitbox()
     {
-        if (basicAttack != null)
-            basicAttack.DisableHitbox();
+        if (combat != null)
+            combat.DisableHitbox();
     }
 
     public void ResetCombo()
     {
-        if (basicAttack != null)
-            basicAttack.ResetCombo();
+        if (combat != null)
+            combat.ResetCombo();
     }
 
     public void OnImpactStart()
     {
-        if (basicAttack != null)
-            basicAttack.OnImpactStart();
+        if (combat != null)
+            combat.OnImpactStart();
     }
 
     public void OnRecoveryStart()
     {
-        if (basicAttack != null)
-            basicAttack.OnRecoveryStart();
+        if (combat != null)
+            combat.OnRecoveryStart();
     }
 
     public void OnAttackEnd()
     {
-        if (basicAttack != null)
-            basicAttack.OnAttackEnd();
+        if (combat != null)
+            combat.OnAttackEnd();
     }
 }

@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class PlayerBasicAttack : MonoBehaviour
+public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
 {
     public enum AttackFrameState
     {
@@ -193,7 +193,6 @@ public class PlayerBasicAttack : MonoBehaviour
         if (movement != null)
         {
             movement.CancelAttackMotion();
-            movement.CanMove = true;
         }
 
         if (animHandler != null)
@@ -237,7 +236,6 @@ public class PlayerBasicAttack : MonoBehaviour
         if (movement != null)
         {
             movement.CancelAttackMotion();
-            movement.CanMove = false;
             movement.StartPlungeMotion(plungeData.downwardSpeed);
         }
 
@@ -322,7 +320,6 @@ public class PlayerBasicAttack : MonoBehaviour
         if (movement != null)
         {
             movement.CancelAttackMotion();
-            movement.CanMove = false;
         }
 
         if (attackMode == AttackComboMode.AirNeutral)
@@ -708,7 +705,6 @@ public class PlayerBasicAttack : MonoBehaviour
         if (movement != null)
         {
             movement.CancelAttackMotion();
-            movement.CanMove = true;
         }
 
         OnComboFinished?.Invoke();

@@ -7,29 +7,22 @@ public class PlayerMoveState : PlayerState
 {
     public PlayerMoveState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
-    public override void Enter()
-    {
-        if (player.Movement != null)
-            player.Movement.CanMove = true;
-    }
+    public override PlayerStateId StateId => PlayerStateId.Running;
+    public override PlayerStatePriority Priority => PlayerStatePriority.Movement;
 
     public override void Update()
     {
         if (player.Movement == null)
             return;
 
-        // If airborne, go to Jump state
         if (!player.Movement.IsGrounded())
         {
             fsm.ChangeState(fsm.JumpState);
             return;
         }
 
-        // If stopped moving, go to Idle
         if (Mathf.Abs(player.Movement.HorizontalInput) < 0.01f)
-        {
             fsm.ChangeState(fsm.IdleState);
-        }
     }
 
     // =========================================================
@@ -58,8 +51,11 @@ public class PlayerMoveState : PlayerState
         if (player.Movement == null)
             return;
 
-        fsm.ChangeState(fsm.DashState);
-        fsm.CurrentState.OnDashInput(inputX);
+        if (player.Movement.CanDash())
+        {
+            fsm.ChangeState(fsm.DashState);
+            fsm.CurrentState.OnDashInput(inputX);
+        }
     }
 
     public override void OnAttackInput()

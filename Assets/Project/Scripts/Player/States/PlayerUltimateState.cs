@@ -7,6 +7,9 @@ public class PlayerUltimateState : PlayerState
 {
     public PlayerUltimateState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
+    public override PlayerStateId StateId => PlayerStateId.Ultimate;
+    public override PlayerStatePriority Priority => PlayerStatePriority.Ultimate;
+
     public override void Enter()
     {
         if (player.Ultimate != null)
@@ -14,18 +17,12 @@ public class PlayerUltimateState : PlayerState
             player.Ultimate.OnCastFinished += HandleCastFinished;
             player.Ultimate.UseUltimate();
         }
-
-        if (player.Movement != null)
-            player.Movement.CanMove = false;
     }
 
     public override void Exit()
     {
         if (player.Ultimate != null)
             player.Ultimate.OnCastFinished -= HandleCastFinished;
-
-        if (player.Movement != null)
-            player.Movement.CanMove = true;
     }
 
     public override void Update()
@@ -43,7 +40,7 @@ public class PlayerUltimateState : PlayerState
         fsm.ChangeState(fsm.IdleState);
     }
 
-    // Locked during cast — no input accepted
+    // Locked during cast — only move input forwarded
     public override void OnMoveInput(Vector2 input)
     {
         if (player.Movement != null)

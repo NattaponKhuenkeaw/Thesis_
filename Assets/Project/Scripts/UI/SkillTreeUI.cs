@@ -25,10 +25,10 @@ public class SkillTreeUI : MonoBehaviour
     void Awake()
     {
         if (playerCharacter == null)
-            playerCharacter = FindObjectOfType<PlayerCharacter>();
+            playerCharacter = Object.FindFirstObjectByType<PlayerCharacter>();
 
         if (skillTreeController == null)
-            skillTreeController = FindObjectOfType<SkillTreeController>();
+            skillTreeController = Object.FindFirstObjectByType<SkillTreeController>();
     }
 
     void OnEnable()

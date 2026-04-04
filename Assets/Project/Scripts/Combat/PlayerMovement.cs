@@ -10,7 +10,7 @@ public class PlayerMovement : MonoBehaviour
     // =========================================================
     [Header("Dependencies")]
     public SpriteRenderer spriteRenderer;
-    public PlayerBasicAttack basicAttack;
+    [SerializeField] private MonoBehaviour combatHandler;
 
     // =========================================================
     // Movement Stats
@@ -33,6 +33,15 @@ public class PlayerMovement : MonoBehaviour
     public float dashSpeed = 20f;
     public float dashDuration = 0.2f;
     public float dashCooldown = 1f;
+
+    // =========================================================
+    // Dash Visuals
+    // =========================================================
+    [Header("Dash Visuals")]
+    public bool enableDashAfterimage = true;
+    public Color dashAfterimageColor = new Color(0.1f, 0.5f, 1f, 0.8f);
+    public float dashAfterimageLifetime = 0.3f;
+    public float dashAfterimageSpawnInterval = 0.05f;
 
     // =========================================================
     // Fall Settings
@@ -82,9 +91,11 @@ public class PlayerMovement : MonoBehaviour
     // Private Runtime Data
     // =========================================================
     private Rigidbody2D rb;
+    private PlayerStateMachine fsm;
+    private ICharacterCombat combat;
+
     private bool isGrounded;
     private bool wasGrounded;
-    private bool canDash = true;
     private bool isHoldingDown;
     private bool jumpHeld;
     private float originalGravityScale;
@@ -93,37 +104,55 @@ public class PlayerMovement : MonoBehaviour
     private float coyoteUntil = -999f;
     private int jumpsUsed;
     private int airDashesUsed;
-    private Coroutine airDashRechargeCoroutine;
-    private bool isAttackMotionActive;
+
+    // GC-free ground check (Optimization 1)
+    private Collider2D[] groundHitBuffer = new Collider2D[5];
+    private ContactFilter2D groundContactFilter;
+
+    // Float timers replacing coroutines (Optimization 3)
+    private float landingEndTime;
+    private float airDashRechargeEndTime;
+    private bool isAirDashRecharging;
+    private float groundDashCooldownEndTime;
+    private float jumpStartupEndTime;
+    private float lastAfterimageTime;
+
+    // Attack motion
     private float attackMotionVelocityX;
     private Coroutine attackMotionCoroutine;
+    private bool isAttackMotionActive;
+
+    // Drop-down
     private Coroutine dropDownCoroutine;
     private Collider2D currentGroundCollider;
     private Collider2D ignoredGroundCollider;
     private Collider2D[] solidColliders;
+
+    // Post-attack gravity
     private float postAttackGraceTimer;
     private bool wasLockingAirCombo;
 
+    // Layer caches
     private int playerLayer;
     private int enemyLayer;
     private int oneWayPlatformLayer;
 
     // =========================================================
-    // States
+    // Computed State (derived from FSM + timers, NOT mutable flags)
     // =========================================================
-    public bool IsDashing { get; private set; }
-    public bool IsJumping { get; private set; }
-    public bool IsLanding { get; private set; }
-    public bool CanMove { get; set; } = true;
+    public bool IsDashing => fsm != null && fsm.CurrentStateId == PlayerStateId.Dashing;
+    public bool IsJumping => Time.time < jumpStartupEndTime;
+    public bool IsLanding => Time.time < landingEndTime;
     public float HorizontalInput => horizontalInput;
     public int FacingDirection => transform.eulerAngles.y > 90f ? -1 : 1;
 
     // =========================================================
-    // Events (only those with active subscribers)
+    // Events
     // =========================================================
     public event Action OnJumpStart;
     public event Action OnDoubleJump;
     public event Action OnDashStart;
+    public event Action OnDashComplete;
     public event Action OnLand;
 
     // =========================================================
@@ -131,10 +160,13 @@ public class PlayerMovement : MonoBehaviour
     // =========================================================
     void Awake()
     {
-        if (basicAttack == null)
-            basicAttack = GetComponent<PlayerBasicAttack>();
-
         rb = GetComponent<Rigidbody2D>();
+        fsm = GetComponent<PlayerStateMachine>();
+
+        // Resolve ICharacterCombat from serialized MonoBehaviour or GetComponent
+        combat = combatHandler as ICharacterCombat;
+        if (combat == null)
+            combat = GetComponent<ICharacterCombat>();
 
         if (spriteRenderer == null)
             spriteRenderer = GetComponent<SpriteRenderer>();
@@ -144,11 +176,25 @@ public class PlayerMovement : MonoBehaviour
         playerLayer = LayerMask.NameToLayer(playerLayerName);
         enemyLayer = LayerMask.NameToLayer(enemyLayerName);
         oneWayPlatformLayer = LayerMask.NameToLayer(oneWayPlatformLayerName);
-        solidColliders = Array.FindAll(GetComponentsInChildren<Collider2D>(), collider => collider != null && !collider.isTrigger);
+        solidColliders = Array.FindAll(GetComponentsInChildren<Collider2D>(), c => c != null && !c.isTrigger);
+
+        // Cache ground check mask and configure contact filter (Optimization 1)
+        int cachedGroundMask = GetGroundCheckMask();
+        groundContactFilter = new ContactFilter2D();
+        groundContactFilter.SetLayerMask(cachedGroundMask);
+        groundContactFilter.useLayerMask = true;
+        groundContactFilter.useTriggers = false;
     }
 
     void Update()
     {
+        // Air dash recharge float timer (Optimization 3)
+        if (isAirDashRecharging && Time.time >= airDashRechargeEndTime)
+        {
+            if (isGrounded)
+                airDashesUsed = 0;
+            isAirDashRecharging = false;
+        }
     }
 
     void FixedUpdate()
@@ -258,19 +304,21 @@ public class PlayerMovement : MonoBehaviour
     // =========================================================
     // Private Methods
     // =========================================================
+
+    /// <summary>
+    /// GC-free ground check using pre-allocated buffer and ContactFilter2D (Optimization 1).
+    /// </summary>
     private void CheckGround()
     {
         if (groundCheck == null)
             return;
 
-        Collider2D[] groundHits = Physics2D.OverlapCircleAll(groundCheck.position, 0.2f, GetGroundCheckMask());
-        currentGroundCollider = GetBestGroundCollider(groundHits);
+        int hitCount = Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundContactFilter, groundHitBuffer);
+        currentGroundCollider = GetBestGroundCollider(groundHitBuffer, hitCount);
         isGrounded = currentGroundCollider != null;
 
         if (isGrounded)
-        {
             coyoteUntil = Time.time + coyoteTime;
-        }
 
         if (isGrounded != wasGrounded)
         {
@@ -281,7 +329,7 @@ public class PlayerMovement : MonoBehaviour
                 OnLand?.Invoke();
 
                 if (!ShouldSuppressLandingFeedback())
-                    StartCoroutine(LandingCoroutine());
+                    landingEndTime = Time.time + landingLagTime;
             }
             else
             {
@@ -302,12 +350,9 @@ public class PlayerMovement : MonoBehaviour
         return mask;
     }
 
-    private Collider2D GetBestGroundCollider(Collider2D[] hits)
+    private Collider2D GetBestGroundCollider(Collider2D[] hits, int hitCount)
     {
-        if (hits == null)
-            return null;
-
-        for (int i = 0; i < hits.Length; i++)
+        for (int i = 0; i < hitCount; i++)
         {
             Collider2D hit = hits[i];
             if (hit == null || hit.isTrigger)
@@ -384,7 +429,7 @@ public class PlayerMovement : MonoBehaviour
         if (IsDashing)
             return;
 
-        bool isLocking = basicAttack != null && basicAttack.ShouldLockAirComboInPlace();
+        bool isLocking = combat != null && combat.ShouldLockAirComboInPlace();
 
         if (isLocking)
         {
@@ -417,7 +462,7 @@ public class PlayerMovement : MonoBehaviour
             float duration = Mathf.Max(0.001f, postAttackGravityGraceDuration);
             float t = 1f - (postAttackGraceTimer / duration);
             targetGravity *= t;
-            postAttackGraceTimer -= Time.deltaTime;
+            postAttackGraceTimer -= Time.fixedDeltaTime;
         }
 
         if (rb.linearVelocity.y > apexVelocityThreshold)
@@ -465,9 +510,14 @@ public class PlayerMovement : MonoBehaviour
         attackMotionVelocityX = 0f;
     }
 
+    public bool CanDash()
+    {
+        return CanStartGroundDash() || CanStartAirDash();
+    }
+
     private bool CanStartGroundDash()
     {
-        if (!canDash || IsDashing || IsJumping || IsLanding)
+        if (Time.time < groundDashCooldownEndTime || IsJumping || IsLanding)
             return false;
 
         return isGrounded || Time.time <= coyoteUntil;
@@ -475,7 +525,7 @@ public class PlayerMovement : MonoBehaviour
 
     private bool CanStartAirDash()
     {
-        if (IsDashing || IsJumping || IsLanding)
+        if (IsJumping || IsLanding)
             return false;
 
         if (isGrounded || Time.time <= coyoteUntil)
@@ -499,7 +549,7 @@ public class PlayerMovement : MonoBehaviour
 
     private bool ShouldSuppressLandingFeedback()
     {
-        return basicAttack != null && basicAttack.ShouldSuppressLandingFeedback();
+        return combat != null && combat.ShouldSuppressLandingFeedback();
     }
 
     private void StartAirDashRecharge()
@@ -507,30 +557,14 @@ public class PlayerMovement : MonoBehaviour
         if (airDashesUsed <= 0)
             return;
 
-        CancelAirDashRecharge();
-        airDashRechargeCoroutine = StartCoroutine(AirDashRechargeRoutine());
+        float rechargeDelay = Mathf.Max(0f, dashCooldown);
+        airDashRechargeEndTime = Time.time + rechargeDelay;
+        isAirDashRecharging = true;
     }
 
     private void CancelAirDashRecharge()
     {
-        if (airDashRechargeCoroutine == null)
-            return;
-
-        StopCoroutine(airDashRechargeCoroutine);
-        airDashRechargeCoroutine = null;
-    }
-
-    private IEnumerator AirDashRechargeRoutine()
-    {
-        float rechargeDelay = Mathf.Max(0f, dashCooldown);
-
-        if (rechargeDelay > 0f)
-            yield return new WaitForSeconds(rechargeDelay);
-
-        if (isGrounded)
-            airDashesUsed = 0;
-
-        airDashRechargeCoroutine = null;
+        isAirDashRecharging = false;
     }
 
     private float GetDashDirection(float inputX)
@@ -544,10 +578,34 @@ public class PlayerMovement : MonoBehaviour
         return FacingDirection;
     }
 
+    /// <summary>
+    /// Movement is locked when the FSM is in a non-movement state,
+    /// or during landing lag, or when combat locks movement.
+    /// </summary>
     private bool IsMovementLocked()
     {
-        bool attackLocksMovement = basicAttack != null && basicAttack.IsAttacking() && !basicAttack.CanMoveAfterAttack();
-        return !CanMove || IsDashing || IsLanding || IsJumping || attackLocksMovement;
+        if (fsm == null)
+            return false;
+
+        PlayerStateId state = fsm.CurrentStateId;
+
+        // These FSM states inherently lock movement
+        if (state == PlayerStateId.Dashing
+            || state == PlayerStateId.Skill
+            || state == PlayerStateId.Ultimate
+            || state == PlayerStateId.Hitstun
+            || state == PlayerStateId.Dead)
+            return true;
+
+        // Landing lag locks movement
+        if (IsLanding)
+            return true;
+
+        // Attack locks movement unless combat says otherwise
+        if (state == PlayerStateId.Attacking && combat != null && !combat.CanMoveAfterAttack())
+            return true;
+
+        return false;
     }
 
     private void ApplyHorizontalMovement()
@@ -598,7 +656,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void UpdateFacing()
     {
-        bool canUpdateFacing = !IsMovementLocked() || (basicAttack != null && basicAttack.CanSwitchDirection());
+        bool canUpdateFacing = !IsMovementLocked() || (combat != null && combat.CanSwitchDirection());
         if (!canUpdateFacing)
             return;
 
@@ -608,36 +666,26 @@ public class PlayerMovement : MonoBehaviour
             transform.eulerAngles = new Vector3(transform.eulerAngles.x, 180f, transform.eulerAngles.z);
     }
 
-
-
     // =========================================================
     // Coroutines
     // =========================================================
     private IEnumerator JumpCoroutine()
     {
-        IsJumping = true;
+        jumpStartupEndTime = Time.time + jumpStartupTime;
         OnJumpStart?.Invoke();
 
         yield return new WaitForSeconds(jumpStartupTime);
 
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
         rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-        IsJumping = false;
     }
 
-    private IEnumerator LandingCoroutine()
-    {
-        IsLanding = true;
-        yield return new WaitForSeconds(landingLagTime);
-        IsLanding = false;
-    }
-
+    /// <summary>
+    /// Dash physics aligned to FixedUpdate timestep (Optimization 2).
+    /// Fires OnDashComplete when physics finish so DashState can transition out.
+    /// </summary>
     private IEnumerator DashCoroutine(float inputX, bool useGroundCooldown)
     {
-        IsDashing = true;
-        if (useGroundCooldown)
-            canDash = false;
-        CanMove = false;
         OnDashStart?.Invoke();
 
         float savedGravity = rb.gravityScale;
@@ -648,6 +696,8 @@ public class PlayerMovement : MonoBehaviour
         float dir = GetDashDirection(inputX);
 
         float elapsed = 0f;
+        lastAfterimageTime = -dashAfterimageSpawnInterval; // Force immediate spawn on first frame
+
         while (elapsed < dashDuration)
         {
             float t = elapsed / dashDuration;
@@ -656,20 +706,66 @@ public class PlayerMovement : MonoBehaviour
 
             rb.linearVelocity = new Vector2(dir * currentDashSpeed, 0f);
 
+            if (enableDashAfterimage && (elapsed - lastAfterimageTime) >= dashAfterimageSpawnInterval)
+            {
+                SpawnDashAfterimage();
+                lastAfterimageTime = elapsed;
+            }
+
+            elapsed += Time.fixedDeltaTime;
+            yield return new WaitForFixedUpdate();
+        }
+
+        rb.gravityScale = savedGravity;
+
+        //SetDashEnemyCollision(true);
+
+        // Notify FSM that dash physics are complete
+        OnDashComplete?.Invoke();
+
+        // Ground dash cooldown (float timer, not coroutine)
+        if (useGroundCooldown)
+        {
+            groundDashCooldownEndTime = Time.time + dashCooldown;
+        }
+    }
+
+    private void SpawnDashAfterimage()
+    {
+        if (spriteRenderer == null) return;
+
+        GameObject ghost = new GameObject("DashGhost");
+        ghost.transform.position = transform.position;
+        // Important: Use Euler angles to match the player's facing direction, as Y-Rotation Character Flipping is used
+        ghost.transform.rotation = transform.rotation;
+        ghost.transform.localScale = transform.localScale;
+
+        SpriteRenderer ghostSr = ghost.AddComponent<SpriteRenderer>();
+        ghostSr.sprite = spriteRenderer.sprite;
+        ghostSr.color = dashAfterimageColor;
+        ghostSr.flipX = spriteRenderer.flipX;
+        ghostSr.flipY = spriteRenderer.flipY;
+        ghostSr.sortingLayerID = spriteRenderer.sortingLayerID;
+        ghostSr.sortingOrder = spriteRenderer.sortingOrder - 1;
+
+        StartCoroutine(FadeAndDestroyGhost(ghost, ghostSr, dashAfterimageColor, dashAfterimageLifetime));
+    }
+
+    private IEnumerator FadeAndDestroyGhost(GameObject ghost, SpriteRenderer ghostSr, Color startColor, float lifetime)
+    {
+        float elapsed = 0f;
+        while (elapsed < lifetime)
+        {
+            if (ghostSr == null) break;
+            float alpha = Mathf.Lerp(startColor.a, 0f, elapsed / lifetime);
+            ghostSr.color = new Color(startColor.r, startColor.g, startColor.b, alpha);
             elapsed += Time.deltaTime;
             yield return null;
         }
 
-        rb.gravityScale = savedGravity;
-        // Removed rb.linearVelocity = Vector2.zero; to prevent dash lag on airborne
-
-        IsDashing = false;
-        CanMove = true;
-
-        if (useGroundCooldown)
+        if (ghost != null)
         {
-            yield return new WaitForSeconds(dashCooldown);
-            canDash = true;
+            Destroy(ghost);
         }
     }
 

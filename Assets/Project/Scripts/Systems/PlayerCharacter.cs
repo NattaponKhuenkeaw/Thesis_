@@ -18,7 +18,7 @@ public class PlayerCharacter : MonoBehaviour
     [Header("Sub-systems")]
     public PlayerStateMachine StateMachine;
     public PlayerMovement Movement;
-    public PlayerBasicAttack BasicAttack;
+    public PlayerBasicAttack Combat;
     public PlayerAnimator Animator;
     public SkillController Skill;
     public UltimateController Ultimate;
@@ -154,8 +154,8 @@ public class PlayerCharacter : MonoBehaviour
         if (Movement == null)
             Movement = GetComponent<PlayerMovement>();
 
-        if (BasicAttack == null)
-            BasicAttack = GetComponent<PlayerBasicAttack>();
+        if (Combat == null)
+            Combat = GetComponent<PlayerBasicAttack>();
 
         if (Animator == null)
             Animator = GetComponentInChildren<PlayerAnimator>();

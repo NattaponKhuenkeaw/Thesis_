@@ -30,9 +30,7 @@ public class EnemyController : MonoBehaviour
     // =========================================================
     // Combat Camera
     // =========================================================
-    [Header("Combat Camera")]
-    [Tooltip("Distance at which the combat camera disengages this enemy. Should match detect/patrol radius.")]
-    public float combatDisengageRange = 8f;
+    // (Removed combatDisengageRange to use Blackboard PatrolRadius instead)
 
     // =========================================================
     // State
