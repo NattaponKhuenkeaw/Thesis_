@@ -43,10 +43,6 @@ public class PlayerAttackState : PlayerState
     {
         if (player.Movement != null && player.Movement.CanDash())
         {
-            // Dash cancels attack (Ability > AttackCombat)
-            if (player.Combat != null)
-                player.Combat.ResetCombo();
-
             fsm.ChangeState(fsm.DashState);
             fsm.CurrentState.OnDashInput(inputX);
         }
@@ -54,10 +50,6 @@ public class PlayerAttackState : PlayerState
 
     public override void OnJumpInput()
     {
-        // Jump cancels attack (Ability > AttackCombat)
-        if (player.Combat != null)
-            player.Combat.ResetCombo();
-
         fsm.ChangeState(fsm.JumpState);
         fsm.CurrentState.OnJumpInput();
     }

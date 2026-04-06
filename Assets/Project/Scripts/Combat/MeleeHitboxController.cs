@@ -46,9 +46,10 @@ public class MeleeHitboxController : MonoBehaviour
         else
             offset.x = Mathf.Abs(offset.x);
 
-        Vector3 origin = attackAnchor != null ? attackAnchor.position : transform.parent.position;
-        transform.position = origin + new Vector3(offset.x, offset.y, 0f);
+        Transform root = movement != null ? movement.transform : transform.parent;
+        transform.position = root.position + new Vector3(offset.x, offset.y, 0f);
 
+        hitboxCollider.offset = Vector2.zero; // Clean any residual offset from the prefab so sizing centers correctly
         hitboxCollider.size = size;
 
         currentDebugColor = hitFrame.debugColor;

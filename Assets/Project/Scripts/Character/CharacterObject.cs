@@ -1,4 +1,5 @@
 using UnityEngine;
+using EditorAttributes;
 
 // =========================================================
 // Enums
@@ -19,22 +20,6 @@ public enum CharacterType
     NPC
 }
 
-[System.Serializable]
-public class PlungeAttackData
-{
-    [Header("Settings")]
-    public bool isEnabled = true;
-    public float downwardSpeed = 18f;
-    public string fallAnimationStateName = "Plunge_Fall";
-    public string impactAnimationStateName = "Attack_1";
-
-    [Header("Impact Step")]
-    public AttackStepData impactStep = new AttackStepData
-    {
-        stepName = "Plunge Impact"
-    };
-}
-
 [CreateAssetMenu(fileName = "CharacterObject_", menuName = "Game/Character/Character Object")]
 public class CharacterObject : ScriptableObject
 {
@@ -45,6 +30,9 @@ public class CharacterObject : ScriptableObject
     public string characterId;
     public CharacterType characterType = CharacterType.Player;
     public ElementType elementType = ElementType.None;
+
+    [Header("Editor & Preview")]
+    public GameObject previewPrefab;
 
     // =========================================================
     // Data Blocks
@@ -58,6 +46,24 @@ public class CharacterObject : ScriptableObject
     // =========================================================
     [Header("Upgrade")]
     public CharacterUpgrade upgrade = new CharacterUpgrade();
+
+#if UNITY_EDITOR
+    [Button("Open Hit Box Editor")]
+    private void OpenHitBoxEditor()
+    {
+        // Reflection or direct call to open the custom window.
+        // We will define HitBoxEditorWindow.OpenWindow(this); in the Editor script.
+        var type = System.Type.GetType("HitBoxEditorWindow, Assembly-CSharp-Editor");
+        if (type != null)
+        {
+            var method = type.GetMethod("OpenWindowFromInspector", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+            if (method != null)
+            {
+                method.Invoke(null, new object[] { this });
+            }
+        }
+    }
+#endif
 
     // =========================================================
     // Basic Combo Data

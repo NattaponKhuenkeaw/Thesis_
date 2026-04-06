@@ -6,26 +6,34 @@ namespace Project.InventorySystem.Items
     public class CharacterItem : BaseItem
     {
         [Header("Character Specifics")]
-        public CharacterObject characterReference;
+        public CharacterObject characterObjectData;
+
+        private void OnValidate()
+        {
+            SyncFromCharacterObjectData();
+        }
 
         /// <summary>
-        /// Auto-sync BaseItem fields (itemName, icon, description) from the CharacterObject reference.
+        /// Auto-sync BaseItem fields (id, itemName, icon, description) from the CharacterObject reference.
         /// Call this when displaying the character to ensure data stays in sync.
         /// </summary>
-        public void SyncFromCharacterReference()
+        public void SyncFromCharacterObjectData()
         {
-            if (characterReference == null) return;
+            if (characterObjectData == null) return;
 
-            if (characterReference.metaData != null)
+            if (!string.IsNullOrEmpty(characterObjectData.characterId))
+                id = characterObjectData.characterId;
+
+            if (characterObjectData.metaData != null)
             {
-                if (!string.IsNullOrEmpty(characterReference.metaData.displayName))
-                    itemName = characterReference.metaData.displayName;
+                if (!string.IsNullOrEmpty(characterObjectData.metaData.displayName))
+                    itemName = characterObjectData.metaData.displayName;
 
-                if (characterReference.metaData.portrait != null)
-                    icon = characterReference.metaData.portrait;
+                if (characterObjectData.metaData.portrait != null)
+                    icon = characterObjectData.metaData.portrait;
 
-                if (!string.IsNullOrEmpty(characterReference.metaData.description))
-                    description = characterReference.metaData.description;
+                if (!string.IsNullOrEmpty(characterObjectData.metaData.description))
+                    description = characterObjectData.metaData.description;
             }
         }
     }

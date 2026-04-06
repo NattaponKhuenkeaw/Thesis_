@@ -90,9 +90,9 @@ namespace Project.TeamBuilder.UI
             }
 
             // Sync BaseItem fields from the CharacterObject reference
-            character.SyncFromCharacterReference();
+            character.SyncFromCharacterObjectData();
 
-            CharacterObject charObj = character.characterReference;
+            CharacterObject charObj = character.characterObjectData;
 
             // Portrait
             if (profileImage != null)
@@ -208,7 +208,7 @@ namespace Project.TeamBuilder.UI
         /// </summary>
         public void RecalculateStats()
         {
-            if (currentCharacter == null || currentCharacter.characterReference == null)
+            if (currentCharacter == null || currentCharacter.characterObjectData == null)
             {
                 if (atkText != null) atkText.text = "";
                 if (defText != null) defText.text = "";
@@ -216,7 +216,7 @@ namespace Project.TeamBuilder.UI
                 return;
             }
 
-            CharacterStats baseStats = currentCharacter.characterReference.stats;
+            CharacterStats baseStats = currentCharacter.characterObjectData.stats;
             float totalATK = baseStats.attack;
             float totalDEF = baseStats.defense;
             float totalHP = baseStats.maxHP;

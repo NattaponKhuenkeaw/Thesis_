@@ -38,21 +38,9 @@ public class AnimationEventRelay : MonoBehaviour
             combat.ResetCombo();
     }
 
-    public void OnImpactStart()
-    {
-        if (combat != null)
-            combat.OnImpactStart();
-    }
+    public void OnImpactStart() {}
 
-    public void OnRecoveryStart()
-    {
-        if (combat != null)
-            combat.OnRecoveryStart();
-    }
+    public void OnRecoveryStart() {}
 
-    public void OnAttackEnd()
-    {
-        if (combat != null)
-            combat.OnAttackEnd();
-    }
+    public void OnAttackEnd() {}
 }

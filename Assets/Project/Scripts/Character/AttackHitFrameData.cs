@@ -7,8 +7,10 @@ public class AttackHitFrameData
     // Timing
     // =========================================================
     [Header("Timing")]
-    public float hitTime = 0.1f;
-    public float activeDuration = 0.05f;
+    [Tooltip("Frame offset relative to the Step's active phase start")]
+    public int startFrameOffset = 0;
+    [Tooltip("How many frames this specific hitbox stays active")]
+    public int activeFrames = 3;
     public float cameraShakeStrength = 0f;
 
     // =========================================================
@@ -30,17 +32,15 @@ public class AttackHitFrameData
     // Enemy Reaction
     // =========================================================
     [Header("Enemy Reaction")]
-    [Tooltip("Number of frozen frames on impact (at 60fps: 6 frames ≈ 0.1s freeze). Only used if impactFreezeTime is 0.")]
+    [Tooltip("Number of frozen frames on impact (both attacker and victim).")]
     public int hitstunFrames = 4;
-    [Tooltip("Direct time-based impact freeze (seconds). If > 0 this overrides hitstunFrames.")]
-    public float impactFreezeTime = 0f;
 
     [Tooltip("Knockback force as (horizontal magnitude, vertical magnitude). " +
              "X is always applied AWAY from attacker, so set X as a positive value for push-away strength. " +
              "Y is launch height (positive = upward).")]
     public Vector2 reactionVelocity = new Vector2(3f, 1f);
-    [Tooltip("How long the enemy stays in knockback stun (seconds). Enemy cannot act during this.")]
-    public float knockbackDuration = 0.25f;
+    [Tooltip("How long the enemy stays in knockback stun (frames). Enemy cannot act during this.")]
+    public int knockbackFrames = 15;
     [Tooltip("If true, enemy enters Knockdown state (launched airborne, waits for landing).")]
     public bool isKnockdown = false;
 
@@ -51,8 +51,8 @@ public class AttackHitFrameData
 
     [Tooltip("Flash color applied to enemy sprite on impact.")]
     public Color flashColor = Color.red;
-    [Tooltip("Duration of the sprite flash effect (seconds).")]
-    public float flashDuration = 0.1f;
+    [Tooltip("Duration of the sprite flash effect (frames).")]
+    public int flashFrames = 6;
 
     // =========================================================
     // Damage Text Impact

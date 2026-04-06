@@ -35,6 +35,12 @@ public class PlayerMovement : MonoBehaviour
     public float dashCooldown = 1f;
 
     // =========================================================
+    // Combat Cooldowns
+    // =========================================================
+    [Header("Combat Cooldowns")]
+    public float airAttackComboResetCooldown = 0.5f;
+
+    // =========================================================
     // Dash Visuals
     // =========================================================
     [Header("Dash Visuals")]
@@ -111,15 +117,14 @@ public class PlayerMovement : MonoBehaviour
 
     // Float timers replacing coroutines (Optimization 3)
     private float landingEndTime;
-    private float airDashRechargeEndTime;
-    private bool isAirDashRecharging;
-    private float groundDashCooldownEndTime;
+    private float dashCooldownEndTime;
     private float jumpStartupEndTime;
     private float lastAfterimageTime;
 
     // Attack motion
     private float attackMotionVelocityX;
     private Coroutine attackMotionCoroutine;
+    private Coroutine plungeAfterimageCoroutine;
     private bool isAttackMotionActive;
 
     // Drop-down
@@ -136,6 +141,9 @@ public class PlayerMovement : MonoBehaviour
     private int playerLayer;
     private int enemyLayer;
     private int oneWayPlatformLayer;
+
+    // Combat cooldown tracking
+    private float airAttackComboCooldownEndTime;
 
     // =========================================================
     // Computed State (derived from FSM + timers, NOT mutable flags)
@@ -188,13 +196,6 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        // Air dash recharge float timer (Optimization 3)
-        if (isAirDashRecharging && Time.time >= airDashRechargeEndTime)
-        {
-            if (isGrounded)
-                airDashesUsed = 0;
-            isAirDashRecharging = false;
-        }
     }
 
     void FixedUpdate()
@@ -228,7 +229,7 @@ public class PlayerMovement : MonoBehaviour
         if (CanStartGroundDash())
         {
             StopAttackMotion();
-            StartCoroutine(DashCoroutine(inputX, true));
+            StartCoroutine(DashCoroutine(inputX));
             return;
         }
 
@@ -236,7 +237,8 @@ public class PlayerMovement : MonoBehaviour
         {
             StopAttackMotion();
             airDashesUsed++;
-            StartCoroutine(DashCoroutine(inputX, false));
+            ResetAirComboCooldown();
+            StartCoroutine(DashCoroutine(inputX));
         }
     }
 
@@ -279,11 +281,21 @@ public class PlayerMovement : MonoBehaviour
         if (rb == null)
             return;
 
+        if (plungeAfterimageCoroutine != null)
+        {
+            StopCoroutine(plungeAfterimageCoroutine);
+        }
+
         float finalDownwardSpeed = Mathf.Max(0f, downwardSpeed);
         if (finalDownwardSpeed <= 0f)
             finalDownwardSpeed = jumpForce;
 
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, -finalDownwardSpeed);
+
+        if (enableDashAfterimage)
+        {
+            plungeAfterimageCoroutine = StartCoroutine(PlungeAfterimageRoutine());
+        }
     }
 
     public void ApplyAttackMovement(float distance, float duration)
@@ -299,6 +311,21 @@ public class PlayerMovement : MonoBehaviour
     public void CancelAttackMotion()
     {
         StopAttackMotion();
+    }
+
+    public bool CanStartAirCombo()
+    {
+        return Time.time >= airAttackComboCooldownEndTime;
+    }
+
+    public void TriggerAirComboCooldown()
+    {
+        airAttackComboCooldownEndTime = Time.time + airAttackComboResetCooldown;
+    }
+
+    public void ResetAirComboCooldown()
+    {
+        airAttackComboCooldownEndTime = 0f;
     }
 
     // =========================================================
@@ -325,15 +352,12 @@ public class PlayerMovement : MonoBehaviour
             if (isGrounded)
             {
                 jumpsUsed = 0;
-                StartAirDashRecharge();
+                airDashesUsed = 0;
+                ResetAirComboCooldown();
                 OnLand?.Invoke();
 
                 if (!ShouldSuppressLandingFeedback())
                     landingEndTime = Time.time + landingLagTime;
-            }
-            else
-            {
-                CancelAirDashRecharge();
             }
         }
 
@@ -506,6 +530,12 @@ public class PlayerMovement : MonoBehaviour
             attackMotionCoroutine = null;
         }
 
+        if (plungeAfterimageCoroutine != null)
+        {
+            StopCoroutine(plungeAfterimageCoroutine);
+            plungeAfterimageCoroutine = null;
+        }
+
         isAttackMotionActive = false;
         attackMotionVelocityX = 0f;
     }
@@ -517,7 +547,7 @@ public class PlayerMovement : MonoBehaviour
 
     private bool CanStartGroundDash()
     {
-        if (Time.time < groundDashCooldownEndTime || IsJumping || IsLanding)
+        if (Time.time < dashCooldownEndTime || IsJumping || IsLanding)
             return false;
 
         return isGrounded || Time.time <= coyoteUntil;
@@ -525,7 +555,7 @@ public class PlayerMovement : MonoBehaviour
 
     private bool CanStartAirDash()
     {
-        if (IsJumping || IsLanding)
+        if (Time.time < dashCooldownEndTime || IsJumping || IsLanding)
             return false;
 
         if (isGrounded || Time.time <= coyoteUntil)
@@ -550,21 +580,6 @@ public class PlayerMovement : MonoBehaviour
     private bool ShouldSuppressLandingFeedback()
     {
         return combat != null && combat.ShouldSuppressLandingFeedback();
-    }
-
-    private void StartAirDashRecharge()
-    {
-        if (airDashesUsed <= 0)
-            return;
-
-        float rechargeDelay = Mathf.Max(0f, dashCooldown);
-        airDashRechargeEndTime = Time.time + rechargeDelay;
-        isAirDashRecharging = true;
-    }
-
-    private void CancelAirDashRecharge()
-    {
-        isAirDashRecharging = false;
     }
 
     private float GetDashDirection(float inputX)
@@ -684,7 +699,7 @@ public class PlayerMovement : MonoBehaviour
     /// Dash physics aligned to FixedUpdate timestep (Optimization 2).
     /// Fires OnDashComplete when physics finish so DashState can transition out.
     /// </summary>
-    private IEnumerator DashCoroutine(float inputX, bool useGroundCooldown)
+    private IEnumerator DashCoroutine(float inputX)
     {
         OnDashStart?.Invoke();
 
@@ -708,7 +723,7 @@ public class PlayerMovement : MonoBehaviour
 
             if (enableDashAfterimage && (elapsed - lastAfterimageTime) >= dashAfterimageSpawnInterval)
             {
-                SpawnDashAfterimage();
+                SpawnAfterimage();
                 lastAfterimageTime = elapsed;
             }
 
@@ -723,14 +738,30 @@ public class PlayerMovement : MonoBehaviour
         // Notify FSM that dash physics are complete
         OnDashComplete?.Invoke();
 
-        // Ground dash cooldown (float timer, not coroutine)
-        if (useGroundCooldown)
+        // Global dash cooldown
+        dashCooldownEndTime = Time.time + dashCooldown;    }
+
+    private IEnumerator PlungeAfterimageRoutine()
+    {
+        float lastTime = -dashAfterimageSpawnInterval;
+        float elapsed = 0f;
+
+        while (!isGrounded)
         {
-            groundDashCooldownEndTime = Time.time + dashCooldown;
+            if (elapsed - lastTime >= dashAfterimageSpawnInterval)
+            {
+                SpawnAfterimage();
+                lastTime = elapsed;
+            }
+
+            elapsed += Time.deltaTime;
+            yield return null;
         }
+
+        plungeAfterimageCoroutine = null;
     }
 
-    private void SpawnDashAfterimage()
+    private void SpawnAfterimage()
     {
         if (spriteRenderer == null) return;
 

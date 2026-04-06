@@ -50,13 +50,13 @@ namespace Project.TeamBuilder.UI
             canvasGroup = GetComponent<CanvasGroup>();
 
             // Set visuals from CharacterObject
-            if (item.characterReference != null)
+            if (item.characterObjectData != null)
             {
-                if (iconImage != null && item.characterReference.metaData.portrait != null)
-                    iconImage.sprite = item.characterReference.metaData.portrait;
-
+                if (iconImage != null && item.characterObjectData.metaData.portrait != null)
+                    iconImage.sprite = item.characterObjectData.metaData.portrait;
+ 
                 if (nameText != null)
-                    nameText.text = item.characterReference.metaData.displayName;
+                    nameText.text = item.characterObjectData.metaData.displayName;
             }
             else
             {

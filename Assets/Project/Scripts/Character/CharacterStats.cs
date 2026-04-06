@@ -20,8 +20,6 @@ public class CharacterStats
     public float jumpForce = 10f;
     public int maxJumpCount = 1;
     public int maxAirDashCount = 1;
-    public int maxAirComboSetsPerAirtime = 1;
-    public bool keepAirComboProgressUntilLanding = false;
     public float groundAcceleration = 80f;
     public float groundDeceleration = 90f;
     public float airAcceleration = 55f;

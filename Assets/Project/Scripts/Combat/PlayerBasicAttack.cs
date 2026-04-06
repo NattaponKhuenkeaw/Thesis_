@@ -18,9 +18,6 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
         AirNeutral
     }
 
-    // =========================================================
-    // Dependencies
-    // =========================================================
     [Header("Dependencies")]
     public PlayerCharacter playerCharacter;
     public PlayerAnimator animHandler;
@@ -29,58 +26,54 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
     public MeleeHitboxController meleeHitboxController;
     public MeleeHitboxDamage meleeHitboxDamage;
 
-    // =========================================================
-    // Runtime States
-    // =========================================================
+    // Runtime state
     private int comboStep = 0;
-    private bool isAttacking = false;
-    private bool comboQueued = false;
-    
-    // New Frame Data State
+    private int currentAttackFrame = 0;
+    private float logicTimeCounter = 0f;
+    private int hitstopFramesLeft = 0;
     private AttackFrameState currentFrameState = AttackFrameState.None;
 
     private float lastAttackInputTime = -999f;
     private AttackComboMode currentComboMode = AttackComboMode.Ground;
-    private AttackComboMode queuedComboMode = AttackComboMode.Ground;
-    private int currentHitFrameIndex = 0;
+    
+    // Cached Data for current step
+    private AttackStepData currentStepData;
+    private int cachedPhase1Frames;
+    private int cachedPhase2Frames;
+    private int cachedPhase3Frames;
+    
+    // Prevent 'Chain Skip' bug where new attack consumes remaining 'targetFrame' ticks 
+    // from the previous attack's while loop.
+    private bool shouldResetUpdateLoop = false;
+    
+    // Track Hitbox state
     private int hitboxActiveCount = 0;
-    private int lastImpactFrame = -1;
-    private bool inputConsumedInCurrentStep = false;
-    private bool isInputLocked = false;
+    
+    // Layer mask for enemy detection via OverlapBox
+    [Header("Detection")]
+    public LayerMask enemyLayerMask;
+    private HashSet<EnemyController> hitEnemiesThisStep = new HashSet<EnemyController>();
+
     private bool isPlungeAttacking = false;
     private bool plungeImpactTriggered = false;
-    private int airComboSetsUsedUntilLanding = 0;
 
-    // =========================================================
-    // Events
-    // =========================================================
     public event System.Action OnComboFinished;
 
-    // =========================================================
-    // Unity Methods
-    // =========================================================
     void Awake()
     {
-        if (playerCharacter == null)
-            playerCharacter = GetComponent<PlayerCharacter>();
-
-        if (animHandler == null)
-            animHandler = GetComponentInChildren<PlayerAnimator>();
-
-        if (movement == null)
-            movement = GetComponent<PlayerMovement>();
-
-        if (meleeHitboxController == null && meleeHitbox != null)
-            meleeHitboxController = meleeHitbox.GetComponent<MeleeHitboxController>();
-
-        if (meleeHitboxDamage == null && meleeHitbox != null)
-            meleeHitboxDamage = meleeHitbox.GetComponent<MeleeHitboxDamage>();
+        playerCharacter = playerCharacter ?? GetComponent<PlayerCharacter>();
+        animHandler = animHandler ?? GetComponentInChildren<PlayerAnimator>();
+        movement = movement ?? GetComponent<PlayerMovement>();
+        if (meleeHitbox != null)
+        {
+            meleeHitboxController = meleeHitboxController ?? meleeHitbox.GetComponent<MeleeHitboxController>();
+            meleeHitboxDamage = meleeHitboxDamage ?? meleeHitbox.GetComponent<MeleeHitboxDamage>();
+        }
     }
 
     void Start()
     {
-        if (meleeHitbox != null)
-            meleeHitbox.SetActive(false);
+        if (meleeHitbox != null) meleeHitbox.SetActive(false);
     }
 
     void OnEnable()
@@ -90,7 +83,7 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
             movement.OnDashStart += HandleDashStart;
             movement.OnJumpStart += HandleJumpStart;
             movement.OnLand += HandlePlungeLanding;
-            movement.OnLand += ResetAirComboUsage;
+            movement.OnLand += HandleLandingComboReset;
         }
     }
 
@@ -101,427 +94,279 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
             movement.OnDashStart -= HandleDashStart;
             movement.OnJumpStart -= HandleJumpStart;
             movement.OnLand -= HandlePlungeLanding;
-            movement.OnLand -= ResetAirComboUsage;
+            movement.OnLand -= HandleLandingComboReset;
         }
     }
 
     void Update()
     {
-        if (ShouldKeepAirComboProgressUntilLanding() && currentComboMode == AttackComboMode.AirNeutral && comboStep > 0)
+        if (movement != null && !movement.IsGrounded() && currentComboMode == AttackComboMode.AirNeutral && comboStep > 0)
             return;
 
-        float comboResetDelay = GetComboResetDelay();
-
-        if (!isAttacking && comboStep > 0)
+        if (!IsAttacking() && comboStep > 0)
         {
-            if (Time.time - lastAttackInputTime > comboResetDelay)
+            if (Time.time - lastAttackInputTime > GetComboResetDelay())
             {
                 ResetCombo();
             }
         }
     }
 
+    void FixedUpdate()
+    {
+        if (hitstopFramesLeft > 0)
+        {
+            hitstopFramesLeft--;
+            HandleAnimatorHitstop();
+            return;
+        }
+
+        if (IsAttacking())
+        {
+            ProcessAttackFrame();
+        }
+    }
+
     // =========================================================
-    // Public Methods
+    // Native Hitstop
+    // =========================================================
+    public void ApplyHitstop(int frames)
+    {
+        if (frames > hitstopFramesLeft)
+            hitstopFramesLeft = frames;
+    }
+
+    private void HandleAnimatorHitstop()
+    {
+        if (animHandler != null && animHandler.GetComponent<Animator>() != null)
+        {
+            Animator anim = animHandler.GetComponent<Animator>();
+            // Since we're here, hitstopFramesLeft might be 0 because it was just decremented.
+            if (hitstopFramesLeft > 0)
+            {
+                anim.speed = 0f;
+            }
+            else
+            {
+                anim.speed = 1f;
+            }
+        }
+    }
+
+    // =========================================================
+    // Public Logic Methods
     // =========================================================
     public bool OnAttackInput()
     {
         AttackComboMode requestedMode = GetRequestedComboMode();
         BasicAttackComboData comboData = GetComboData(requestedMode);
-        if (comboData == null || comboData.GetMaxCombo() <= 0)
-            return false;
-
-        if (!isAttacking && requestedMode == AttackComboMode.AirNeutral && !CanAcceptAirAttackRequest())
-            return false;
+        
+        if (comboData == null || comboData.GetMaxCombo() <= 0) return false;
+        if (!IsAttacking() && requestedMode == AttackComboMode.AirNeutral && !CanAcceptAirAttackRequest()) return false;
 
         lastAttackInputTime = Time.time;
 
-        if (!isAttacking)
+        if (!IsAttacking())
         {
-            if (comboStep > 0 && requestedMode != currentComboMode)
-                ResetCombo();
-
+            if (comboStep > 0 && requestedMode != currentComboMode) ResetCombo();
             StartNextAttack(requestedMode);
             return true;
         }
 
-        if (isInputLocked)
-            return false;
-
-        if (inputConsumedInCurrentStep)
-            return false;
-
-        // Buffer input during Impact — will be consumed when Recovery starts
-        if (currentFrameState == AttackFrameState.Windup || currentFrameState == AttackFrameState.Impact)
+        // Without input buffer window, input is ONLY accepted directly inside the cancel window
+        if (currentStepData != null)
         {
-            comboQueued = true;
-            queuedComboMode = requestedMode;
-            inputConsumedInCurrentStep = true;
-            return true;
-        }
-
-        // If in Recovery, immediately start next combo
-        if (currentFrameState == AttackFrameState.Recovery)
-        {
-            inputConsumedInCurrentStep = true;
-            StartNextAttack(requestedMode);
-            return true;
+            if (currentAttackFrame >= currentStepData.cancelWindowStartFrame)
+            {
+                int maxCombo = comboData.GetMaxCombo();
+                if (requestedMode == currentComboMode && comboStep < maxCombo)
+                {
+                    StartNextAttack(currentComboMode);
+                    return true;
+                }
+                else if (requestedMode != currentComboMode)
+                {
+                    comboStep = 0;
+                    StartNextAttack(requestedMode);
+                    return true;
+                }
+            }
         }
 
         return false;
     }
 
-    public void ResetCombo()
+    private void ProcessAttackFrame()
     {
-        StopAllCoroutines();
+        logicTimeCounter += Time.fixedDeltaTime;
+        // Use RoundToInt so the first frame fires on the first FixedUpdate
+        int targetFrame = Mathf.RoundToInt(logicTimeCounter * 24f);
 
-        comboStep = 0;
-        inputConsumedInCurrentStep = false;
-        isInputLocked = false;
-        isAttacking = false;
-        comboQueued = false;
-        currentFrameState = AttackFrameState.None;
-        currentComboMode = AttackComboMode.Ground;
-        queuedComboMode = AttackComboMode.Ground;
-        currentHitFrameIndex = 0;
-        hitboxActiveCount = 0;
-        lastImpactFrame = -1;
-        isPlungeAttacking = false;
-        plungeImpactTriggered = false;
-        DisableHitbox(true);
-
-        if (movement != null)
+        while (currentAttackFrame < targetFrame)
         {
-            movement.CancelAttackMotion();
-        }
-
-        if (animHandler != null)
-            animHandler.ResetCombo();
-
-        OnComboFinished?.Invoke();
-    }
-
-    public bool IsAttacking()
-    {
-        return isAttacking;
-    }
-
-    public bool TryStartPlungeAttack()
-    {
-        PlungeAttackData plungeData = GetPlungeAttackData();
-        if (plungeData == null || !plungeData.isEnabled)
-            return false;
-
-        if (movement == null || movement.IsGrounded() || movement.IsDashing || movement.IsLanding)
-            return false;
-
-        AttackStepData impactStep = plungeData.impactStep;
-        if (impactStep == null || impactStep.hitFrames == null || impactStep.hitFrames.Length == 0)
-            return false;
-
-
-
-        ResetCombo();
-
-        isAttacking = true;
-        isPlungeAttacking = true;
-        plungeImpactTriggered = false;
-        currentFrameState = AttackFrameState.Windup;
-        currentHitFrameIndex = 0;
-        hitboxActiveCount = 0;
-        lastImpactFrame = -1;
-        inputConsumedInCurrentStep = true;
-        isInputLocked = true;
-
-        if (movement != null)
-        {
-            movement.CancelAttackMotion();
-            movement.StartPlungeMotion(plungeData.downwardSpeed);
-        }
-
-        if (animHandler != null)
-            animHandler.TriggerPlungeFall(plungeData.fallAnimationStateName);
-
-        return true;
-    }
-
-    public bool ShouldSuppressLandingFeedback()
-    {
-        return isPlungeAttacking && !plungeImpactTriggered;
-    }
-
-    public bool IsPlungeInAirPhase()
-    {
-        return isPlungeAttacking && !plungeImpactTriggered;
-    }
-
-    public bool ShouldLockAirComboInPlace()
-    {
-        return isAttacking
-            && !isPlungeAttacking
-            && currentComboMode == AttackComboMode.AirNeutral
-            && movement != null
-            && !movement.IsGrounded();
-    }
-
-    public int GetComboStep()
-    {
-        return comboStep;
-    }
-
-    public AttackFrameState GetCurrentFrameState()
-    {
-        return currentFrameState;
-    }
-
-    public bool CanSwitchDirection()
-    {
-        return currentFrameState == AttackFrameState.Windup;
-    }
-
-    public bool CanMoveAfterAttack()
-    {
-        return !isAttacking;
-    }
-
-    // =========================================================
-    // Private Methods
-    // =========================================================
-    private void StartNextAttack(AttackComboMode attackMode)
-    {
-        BasicAttackComboData comboData = GetComboData(attackMode);
-
-        if (comboData == null)
-            return;
-
-        int maxCombo = comboData.GetMaxCombo();
-        if (maxCombo <= 0)
-            return;
-
-        if (comboStep >= maxCombo || attackMode != currentComboMode)
-            comboStep = 0;
-
-        if (attackMode == AttackComboMode.AirNeutral && comboStep == 0)
-            airComboSetsUsedUntilLanding++;
-
-        currentComboMode = attackMode;
-        comboStep++;
-        isAttacking = true;
-        comboQueued = false;
-        queuedComboMode = attackMode;
-        
-        currentFrameState = AttackFrameState.Windup;
-        currentHitFrameIndex = 0;
-        hitboxActiveCount = 0;
-        lastImpactFrame = -1;
-        inputConsumedInCurrentStep = false;
-        isInputLocked = true;
-
-        if (movement != null)
-        {
-            movement.CancelAttackMotion();
-        }
-
-        if (attackMode == AttackComboMode.AirNeutral)
-            animHandler.TriggerAirAttack(comboStep);
-        else
-            animHandler.TriggerAttackCombo(comboStep);
-
-        AttackStepData stepData = comboData.GetStep(comboStep);
-        if (stepData != null && stepData.useForwardMotion)
-        {
-            StartCoroutine(AttackMotionRoutine(stepData));
-        }
-    }
-
-    private void HandlePlungeLanding()
-    {
-        if (!isPlungeAttacking || plungeImpactTriggered)
-            return;
-
-        plungeImpactTriggered = true;
-        currentFrameState = AttackFrameState.Windup;
-        currentHitFrameIndex = 0;
-        lastImpactFrame = -1;
-
-        PlungeAttackData plungeData = GetPlungeAttackData();
-        AttackStepData impactStep = plungeData != null ? plungeData.impactStep : null;
-
-        if (impactStep != null && impactStep.useForwardMotion)
-            StartCoroutine(AttackMotionRoutine(impactStep));
-
-        if (animHandler != null)
-        {
-            string stateName = plungeData != null ? plungeData.impactAnimationStateName : null;
-            animHandler.TriggerPlungeImpact(stateName);
-        }
-    }
-
-    private void ResetAirComboUsage()
-    {
-        airComboSetsUsedUntilLanding = 0;
-
-        if (currentComboMode == AttackComboMode.AirNeutral && comboStep > 0)
-            ResetCombo();
-    }
-
-    private void HandleDashStart()
-    {
-        if (CanPreserveAirComboAcrossDash())
-        {
-            CancelCurrentAttackButKeepComboProgress();
-            return;
-        }
-
-        ResetCombo();
-    }
-
-    private void HandleJumpStart()
-    {
-        if (CanPreserveAirComboAcrossDash())
-        {
-            CancelCurrentAttackButKeepComboProgress();
-            return;
-        }
-
-        ResetCombo();
-    }
-
-    private bool CanStartNewAirComboSet()
-    {
-        int maxAirComboSets = GetMaxAirComboSetsPerAirtime();
-        if (maxAirComboSets <= 0)
-            return false;
-
-        return airComboSetsUsedUntilLanding < maxAirComboSets;
-    }
-
-    private bool CanAcceptAirAttackRequest()
-    {
-        if (currentComboMode == AttackComboMode.AirNeutral && comboStep > 0)
-        {
-            BasicAttackComboData airComboData = GetComboData(AttackComboMode.AirNeutral);
-            int maxCombo = airComboData != null ? airComboData.GetMaxCombo() : 0;
-
-            // Continue within the current set freely, but once the set is complete
-            // a new set must obey Max Air Combo Sets Per Airtime.
-            if (comboStep < maxCombo)
-                return true;
-        }
-
-        return CanStartNewAirComboSet();
-    }
-
-    private int GetMaxAirComboSetsPerAirtime()
-    {
-        if (playerCharacter == null || playerCharacter.characterObject == null || playerCharacter.characterObject.stats == null)
-            return 1;
-
-        return Mathf.Max(0, playerCharacter.characterObject.stats.maxAirComboSetsPerAirtime);
-    }
-
-    // =========================================================
-    // Animation Event Receivers
-    // =========================================================
-    public void OnImpactStart()
-    {
-        if (!isAttacking) return;
-
-        // Deduplicate calls in the same frame (caused by multiple relay components)
-        if (lastImpactFrame == Time.frameCount)
-            return;
-        
-        // Unlock input allowing the player to buffer the next attack sequence
-        isInputLocked = false;
-        
-        lastImpactFrame = Time.frameCount;
-        currentFrameState = AttackFrameState.Impact;
-        
-        AttackStepData stepData = GetCurrentStepData();
-
-        if (stepData == null)
-        {
-            Debug.LogWarning("[PlayerBasicAttack] OnImpactStart: No StepData found for current attack.");
-            return;
-        }
-
-        if (stepData.hitFrames == null || stepData.hitFrames.Length == 0)
-        {
-            Debug.LogWarning($"[PlayerBasicAttack] OnImpactStart: Step {comboStep} has no HitFrames defined!");
-            return;
-        }
-
-        // Trigger ONLY the current hit frame sequentially
-        if (currentHitFrameIndex < stepData.hitFrames.Length)
-        {
-            AttackHitFrameData hitFrame = stepData.hitFrames[currentHitFrameIndex];
-            if (hitFrame != null)
+            currentAttackFrame++;
+            ProcessSingleLogicFrame();
+            
+            if (shouldResetUpdateLoop || currentFrameState == AttackFrameState.None) 
             {
-                StartCoroutine(TriggerHitFrameRoutine(hitFrame));
+                shouldResetUpdateLoop = false;
+                break;
             }
-            currentHitFrameIndex++;
         }
-        else
+
+        // Perform physics overlap check while any hitbox is active
+        if (hitboxActiveCount > 0 && meleeHitbox != null && meleeHitbox.activeSelf)
         {
-            Debug.LogWarning($"[PlayerBasicAttack] OnImpactStart: All {stepData.hitFrames.Length} hit frames already triggered for Step {comboStep}. Check animation events!");
+            PerformHitboxOverlapCheck();
         }
     }
 
-    public void OnRecoveryStart()
+    private void ProcessSingleLogicFrame()
     {
-        if (!isAttacking) return;
-
-        currentFrameState = AttackFrameState.Recovery;
-
-        if (isPlungeAttacking)
-            return;
-        
-        // If attack was queued during Impact, immediately proceed
-        if (comboQueued)
+        if (currentStepData == null) 
         {
+            ResetCombo();
+            return;
+        }
+
+        // Ensure animator is not frozen after hitstop ends
+        if (animHandler != null && animHandler.GetComponent<Animator>() != null)
+        {
+            animHandler.GetComponent<Animator>().speed = 1f; 
+        }
+
+        // Force Sync Animator to the current logical frame to prevent visual desync
+        // especially during multi-frame logic processing (cancels)
+        if (animHandler != null && currentStepData != null)
+        {
+            int totalFrames = currentStepData.startupFrames + currentStepData.activeFrames + currentStepData.recoveryFrames;
+            bool isAir = currentComboMode == AttackComboMode.AirNeutral;
+            animHandler.SyncCombatAnimation(comboStep, currentAttackFrame, totalFrames, isAir);
+        }
+
+        // Contextual state update Based on Data
+        if (currentAttackFrame <= cachedPhase1Frames)
+        {
+            currentFrameState = AttackFrameState.Windup;
+        }
+        else if (currentAttackFrame <= cachedPhase2Frames)
+        {
+            if (currentFrameState != AttackFrameState.Impact)
+            {
+                currentFrameState = AttackFrameState.Impact;
+            }
+
+            int frameInActivePhase = currentAttackFrame - cachedPhase1Frames - 1;
+            if (currentStepData.hitFrames != null)
+            {
+                for (int i = 0; i < currentStepData.hitFrames.Length; i++)
+                {
+                    var h = currentStepData.hitFrames[i];
+                    if (frameInActivePhase == h.startFrameOffset) TriggerHitFrame(h); 
+                    if (frameInActivePhase == h.startFrameOffset + h.activeFrames) DisableHitbox(); 
+                }
+            }
+        }
+        else if (currentAttackFrame <= cachedPhase3Frames)
+        {
+            if (currentFrameState != AttackFrameState.Recovery)
+            {
+                currentFrameState = AttackFrameState.Recovery;
+                DisableHitbox(true); 
+            }
+        }
+        else
+        {
+            bool isAir = !isPlungeAttacking && currentComboMode == AttackComboMode.AirNeutral && movement != null && !movement.IsGrounded();
             BasicAttackComboData comboData = GetComboData(currentComboMode);
             int maxCombo = comboData != null ? comboData.GetMaxCombo() : 0;
 
-            if (queuedComboMode == currentComboMode && comboStep < maxCombo)
+            if (isAir && comboStep < maxCombo) CancelCurrentAttackButKeepComboProgress();
+            else ResetCombo();
+
+            if (isAir && animHandler != null) animHandler.RestoreAirborneState();
+            return;
+        }
+
+        // Process buffered input if cancel window is open
+        if (currentStepData != null && currentAttackFrame >= currentStepData.cancelWindowStartFrame)
+        {
+            if (Time.time - lastAttackInputTime <= 0.15f)
             {
-                StartNextAttack(currentComboMode);
+                AttackComboMode requestedMode = GetRequestedComboMode();
+                BasicAttackComboData comboData = GetComboData(requestedMode);
+                int maxCombo = comboData != null ? comboData.GetMaxCombo() : 0;
+
+                if (requestedMode == currentComboMode && comboStep < maxCombo)
+                {
+                    lastAttackInputTime = -999f;
+                    StartNextAttack(currentComboMode);
+                    return;
+                }
+                else if (requestedMode != currentComboMode)
+                {
+                    lastAttackInputTime = -999f;
+                    comboStep = 0;
+                    StartNextAttack(requestedMode);
+                    return;
+                }
             }
-            else if (queuedComboMode != currentComboMode)
+        }
+
+        // Motion Processing
+        if (currentStepData.useForwardMotion)
+        {
+            if (currentAttackFrame >= currentStepData.motionStartFrame && currentAttackFrame <= currentStepData.motionEndFrame)
             {
-                comboStep = 0;
-                StartNextAttack(queuedComboMode);
+                int durationFrames = currentStepData.motionEndFrame - currentStepData.motionStartFrame + 1;
+                if (movement != null && durationFrames > 0)
+                {
+                    movement.ApplyAttackMovement(currentStepData.forwardDistance / durationFrames, Time.fixedDeltaTime);
+                }
             }
         }
     }
 
-    public void OnAttackEnd()
+    private void StartNextAttack(AttackComboMode attackMode)
     {
-        if (!isAttacking) return;
+        BasicAttackComboData comboData = GetComboData(attackMode);
+        if (comboData == null) return;
         
-        // IMPORTANT: We only honor OnAttackEnd if the current attack state is Recovery.
-        // If we are in Windup or Impact, then this event is "stale" from a previous 
-        // animation that was interrupted/short-canceled by the next combo step.
-        if (currentFrameState != AttackFrameState.Recovery)
-            return;
+        int maxCombo = comboData.GetMaxCombo();
+        if (maxCombo <= 0) return;
 
-        bool shouldRestoreAirborneState = !isPlungeAttacking
-            && currentComboMode == AttackComboMode.AirNeutral
-            && movement != null
-            && !movement.IsGrounded();
+        if (comboStep >= maxCombo || attackMode != currentComboMode) comboStep = 0;
 
-        ResetCombo();
+        currentComboMode = attackMode;
+        comboStep++;
+        
+        // Setup Step Data Cache
+        currentStepData = comboData.GetStep(comboStep);
+        if (currentStepData != null)
+        {
+            cachedPhase1Frames = currentStepData.startupFrames;
+            cachedPhase2Frames = cachedPhase1Frames + currentStepData.activeFrames;
+            cachedPhase3Frames = cachedPhase2Frames + currentStepData.recoveryFrames;
+        }
 
-        if (shouldRestoreAirborneState && animHandler != null)
-            animHandler.RestoreAirborneState();
+        currentFrameState = AttackFrameState.Windup;
+        currentAttackFrame = 1; // Start at 1 because we are seeding the timer
+        logicTimeCounter = 1f / 24f; // Seed with 1 frame of time so RoundToInt(time * 24) = 1 immediately
+        hitstopFramesLeft = 0; 
+        hitboxActiveCount = 0;
+        shouldResetUpdateLoop = true;
+
+        if (movement != null) movement.CancelAttackMotion();
+
+        if (attackMode == AttackComboMode.AirNeutral) animHandler.TriggerAirAttack(comboStep);
+        else animHandler.TriggerAttackCombo(comboStep);
+        
+        // Process the first frame immediately so there is 0 latency
+        ProcessSingleLogicFrame();
     }
 
-    private IEnumerator TriggerHitFrameRoutine(AttackHitFrameData hitFrame)
+    private void TriggerHitFrame(AttackHitFrameData hitFrame)
     {
-        // Hit Time is now respected relative to ImpactStart, but usually you'd want hitTime = 0 
-        // if using Animation Events perfectly. We keep hitTime support if user still uses it.
-        if (hitFrame.hitTime > 0f)
-            yield return new WaitForSeconds(hitFrame.hitTime);
-
         float finalDamage = GetFinalAttackDamage(hitFrame.damageMultiplier);
         float finalKnockback = hitFrame.knockbackForce;
         float shakeStrength = Mathf.Max(0f, hitFrame.cameraShakeStrength);
@@ -530,192 +375,241 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
         int maxCombo = comboData != null ? comboData.GetMaxCombo() : 0;
         bool isLastStep = (comboStep >= maxCombo);
 
-        if (meleeHitboxController != null)
-            meleeHitboxController.ApplyHitFrame(hitFrame);
-
-        if (meleeHitboxDamage != null)
-            meleeHitboxDamage.SetHitData(finalDamage, finalKnockback, shakeStrength, isLastStep, hitFrameData: hitFrame);
+        if (meleeHitboxController != null) meleeHitboxController.ApplyHitFrame(hitFrame);
+        if (meleeHitboxDamage != null) meleeHitboxDamage.SetHitData(finalDamage, finalKnockback, shakeStrength, isLastStep, 0f, 0f, hitFrameData: hitFrame);
 
         EnableHitbox();
-
-        yield return new WaitForSeconds(hitFrame.activeDuration);
-
-        DisableHitbox();
-    }
-
-    private IEnumerator AttackMotionRoutine(AttackStepData stepData)
-    {
-        if (stepData == null)
-            yield break;
-
-        yield return new WaitForSeconds(stepData.motionStartTime);
-
-        if (movement != null)
-            movement.ApplyAttackMovement(stepData.forwardDistance, stepData.motionDuration);
+        
+        // Clear the per-step hit tracking when a new hitframe activates,
+        // so each distinct hitframe window can hit targets again
+        hitEnemiesThisStep.Clear();
     }
 
     public void EnableHitbox()
     {
         hitboxActiveCount++;
-        if (meleeHitbox != null)
-            meleeHitbox.SetActive(true);
+        if (meleeHitbox != null) meleeHitbox.SetActive(true);
     }
 
     public void DisableHitbox(bool force = false)
     {
-        if (force)
+        if (force) hitboxActiveCount = 0;
+        else hitboxActiveCount--;
+
+        if (hitboxActiveCount <= 0)
         {
             hitboxActiveCount = 0;
-            if (meleeHitbox != null)
-                meleeHitbox.SetActive(false);
-            return;
-        }
-
-        hitboxActiveCount--;
-        
-        if (hitboxActiveCount < 0)
-        {
-            // This happens if there are redundant 'DisableHitbox' animation events.
-            // We clamp it to 0 and log a tip for the user.
-            hitboxActiveCount = 0;
-            // Debug.LogTip("PlayerBasicAttack: Hitbox count went negative. Consider removing legacy 'DisableHitbox' events from your animation.");
-        }
-
-        if (hitboxActiveCount == 0)
-        {
-            if (meleeHitbox != null)
-                meleeHitbox.SetActive(false);
+            if (meleeHitbox != null) meleeHitbox.SetActive(false);
         }
     }
 
-    private float GetFinalAttackDamage(float hitFrameMultiplier)
+    public void ResetCombo()
     {
-        if (playerCharacter == null || playerCharacter.characterObject == null)
-            return hitFrameMultiplier;
+        bool wasAirCombo = (currentComboMode == AttackComboMode.AirNeutral && comboStep > 0 && !isPlungeAttacking);
 
-        return playerCharacter.characterObject.stats.attack * hitFrameMultiplier;
-    }
+        if (wasAirCombo && movement != null && !movement.IsGrounded())
+            movement.TriggerAirComboCooldown();
 
-    private float GetComboResetDelay()
-    {
-        if (isPlungeAttacking)
-            return 0.8f;
-
-        BasicAttackComboData comboData = GetComboData(currentComboMode);
-        if (comboData == null)
-            return 0.8f;
-
-        return comboData.comboResetDelay;
-    }
-
-    private AttackComboMode GetRequestedComboMode()
-    {
-        if (movement != null && !movement.IsGrounded())
-            return AttackComboMode.AirNeutral;
-
-        return AttackComboMode.Ground;
-    }
-
-    private BasicAttackComboData GetComboData(AttackComboMode comboMode)
-    {
-        if (playerCharacter == null || playerCharacter.characterObject == null)
-            return null;
-
-        if (comboMode == AttackComboMode.AirNeutral)
-            return playerCharacter.characterObject.neutralAirComboData;
-
-        return playerCharacter.characterObject.basicAttackComboData;
-    }
-
-    private PlungeAttackData GetPlungeAttackData()
-    {
-        if (playerCharacter == null || playerCharacter.characterObject == null)
-            return null;
-
-        return playerCharacter.characterObject.plungeAttackData;
-    }
-
-    private AttackStepData GetCurrentStepData()
-    {
-        if (isPlungeAttacking)
-        {
-            PlungeAttackData plungeData = GetPlungeAttackData();
-            return plungeData != null ? plungeData.impactStep : null;
-        }
-
-        BasicAttackComboData comboData = GetComboData(currentComboMode);
-        return comboData?.GetStep(comboStep);
-    }
-
-    private void FinishAirComboStep()
-    {
-        bool shouldRestoreAirborneState = movement != null && !movement.IsGrounded();
-
-        if (ShouldKeepAirComboProgressUntilLanding() && currentComboMode == AttackComboMode.AirNeutral && comboStep > 0)
-        {
-            CancelCurrentAttackButKeepComboProgress();
-
-            if (shouldRestoreAirborneState && animHandler != null)
-                animHandler.RestoreAirborneState();
-
-            return;
-        }
-
-        ResetCombo();
-
-        if (shouldRestoreAirborneState && animHandler != null)
-            animHandler.RestoreAirborneState();
-    }
-
-    private bool ShouldKeepAirComboProgressUntilLanding()
-    {
-        return movement != null
-            && !movement.IsGrounded()
-            && playerCharacter != null
-            && playerCharacter.characterObject != null
-            && playerCharacter.characterObject.stats != null
-            && playerCharacter.characterObject.stats.keepAirComboProgressUntilLanding;
-    }
-
-    private bool CanPreserveAirComboAcrossDash()
-    {
-        return movement != null
-            && !movement.IsGrounded()
-            && currentComboMode == AttackComboMode.AirNeutral
-            && comboStep > 0
-            && !isPlungeAttacking;
-    }
-
-    private void CancelCurrentAttackButKeepComboProgress()
-    {
-        StopAllCoroutines();
-
-        isAttacking = false;
-        comboQueued = false;
-        inputConsumedInCurrentStep = false;
-        isInputLocked = false;
+        comboStep = 0;
         currentFrameState = AttackFrameState.None;
-        currentHitFrameIndex = 0;
-        hitboxActiveCount = 0;
-        lastImpactFrame = -1;
-        lastAttackInputTime = Time.time;
+        currentComboMode = AttackComboMode.Ground;
+        currentStepData = null;
 
+        hitboxActiveCount = 0;
+        hitstopFramesLeft = 0;
+        currentAttackFrame = 0;
+        logicTimeCounter = 0f;
+        isPlungeAttacking = false;
+        plungeImpactTriggered = false;
         DisableHitbox(true);
 
-        if (movement != null)
+        if (movement != null) movement.CancelAttackMotion();
+        if (animHandler != null) animHandler.ResetCombo();
+
+        if (animHandler != null && animHandler.GetComponent<Animator>() != null)
         {
-            movement.CancelAttackMotion();
+            animHandler.GetComponent<Animator>().speed = 1f;
         }
 
         OnComboFinished?.Invoke();
     }
 
-    // =========================================================
-    // Routine removed in favor of Animation Events
-    // =========================================================
+    public bool TryStartPlungeAttack()
+    {
+        PlungeAttackData plungeData = GetPlungeAttackData();
+        if (plungeData == null || !plungeData.isEnabled) return false;
+        if (movement == null || movement.IsGrounded() || movement.IsDashing || movement.IsLanding) return false;
 
+        AttackStepData impactStep = plungeData.impactStep;
+        if (impactStep == null || impactStep.hitFrames == null || impactStep.hitFrames.Length == 0) return false;
 
-    // =========================================================
-    // Routine removed in favor of Animation Events
+        ResetCombo();
 
+        isPlungeAttacking = true;
+        plungeImpactTriggered = false;
+        currentFrameState = AttackFrameState.Windup;
+        currentAttackFrame = 1;
+        logicTimeCounter = 1f / 24f;
+        hitstopFramesLeft = 0;
+        hitboxActiveCount = 0;
+        shouldResetUpdateLoop = true;
+        
+        currentStepData = impactStep;
+        cachedPhase1Frames = currentStepData.startupFrames;
+        cachedPhase2Frames = cachedPhase1Frames + currentStepData.activeFrames;
+        cachedPhase3Frames = cachedPhase2Frames + currentStepData.recoveryFrames;
+
+        if (movement != null)
+        {
+            movement.CancelAttackMotion();
+            movement.StartPlungeMotion(plungeData.downwardSpeed);
+        }
+        if (animHandler != null) animHandler.TriggerPlungeFall(plungeData.fallAnimationStateName);
+
+        // Process first frame
+        ProcessSingleLogicFrame();
+        return true;
+    }
+
+    private void HandlePlungeLanding()
+    {
+        if (!isPlungeAttacking || plungeImpactTriggered) return;
+
+        plungeImpactTriggered = true;
+        currentFrameState = AttackFrameState.Windup;
+        currentAttackFrame = 0;
+        logicTimeCounter = 0f;
+        hitstopFramesLeft = 0;
+        
+        PlungeAttackData plungeData = GetPlungeAttackData();
+        if (animHandler != null)
+        {
+            string stateName = plungeData != null ? plungeData.impactAnimationStateName : null;
+            animHandler.TriggerPlungeImpact(stateName);
+        }
+    }
+
+    private void HandleLandingComboReset()
+    {
+        if (currentComboMode == AttackComboMode.AirNeutral && comboStep > 0) ResetCombo();
+    }
+
+    private void HandleDashStart()
+    {
+        if (CanPreserveAirComboProgress()) CancelCurrentAttackButKeepComboProgress();
+        else ResetCombo();
+    }
+
+    private void HandleJumpStart()
+    {
+        if (CanPreserveAirComboProgress()) CancelCurrentAttackButKeepComboProgress();
+        else ResetCombo();
+    }
+
+    private bool CanAcceptAirAttackRequest()
+    {
+        if (currentComboMode == AttackComboMode.AirNeutral && comboStep > 0)
+        {
+            BasicAttackComboData airComboData = GetComboData(AttackComboMode.AirNeutral);
+            int maxCombo = airComboData != null ? airComboData.GetMaxCombo() : 0;
+            if (comboStep < maxCombo) return true;
+        }
+        return movement != null && movement.CanStartAirCombo();
+    }
+
+    public bool IsAttacking() { return currentFrameState != AttackFrameState.None; }
+    public bool ShouldSuppressLandingFeedback() { return isPlungeAttacking && !plungeImpactTriggered; }
+    public bool IsPlungeInAirPhase() { return isPlungeAttacking && !plungeImpactTriggered; }
+    public bool ShouldLockAirComboInPlace() { return IsAttacking() && !isPlungeAttacking && currentComboMode == AttackComboMode.AirNeutral && movement != null && !movement.IsGrounded(); }
+    public int GetComboStep() { return comboStep; }
+    public AttackFrameState GetCurrentFrameState() { return currentFrameState; }
+    public bool CanSwitchDirection() { return currentFrameState == AttackFrameState.Windup; }
+    public bool CanMoveAfterAttack() { return !IsAttacking(); }
+
+    private float GetFinalAttackDamage(float hitFrameMultiplier)
+    {
+        if (playerCharacter == null || playerCharacter.characterObject == null) return hitFrameMultiplier;
+        return playerCharacter.characterObject.stats.attack * hitFrameMultiplier;
+    }
+
+    private float GetComboResetDelay()
+    {
+        if (isPlungeAttacking) return 0.8f;
+        BasicAttackComboData comboData = GetComboData(currentComboMode);
+        if (comboData == null) return 0.8f;
+        return comboData.comboResetDelay;
+    }
+
+    private AttackComboMode GetRequestedComboMode()
+    {
+        if (movement != null && !movement.IsGrounded()) return AttackComboMode.AirNeutral;
+        return AttackComboMode.Ground;
+    }
+
+    private BasicAttackComboData GetComboData(AttackComboMode comboMode)
+    {
+        if (playerCharacter == null || playerCharacter.characterObject == null) return null;
+        if (comboMode == AttackComboMode.AirNeutral) return playerCharacter.characterObject.neutralAirComboData;
+        return playerCharacter.characterObject.basicAttackComboData;
+    }
+
+    private PlungeAttackData GetPlungeAttackData()
+    {
+        if (playerCharacter == null || playerCharacter.characterObject == null) return null;
+        return playerCharacter.characterObject.plungeAttackData;
+    }
+
+    private bool CanPreserveAirComboProgress()
+    {
+        return movement != null && !movement.IsGrounded() && currentComboMode == AttackComboMode.AirNeutral && comboStep > 0 && !isPlungeAttacking;
+    }
+
+    private void CancelCurrentAttackButKeepComboProgress()
+    {
+        currentFrameState = AttackFrameState.None;
+        currentAttackFrame = 0;
+        logicTimeCounter = 0f;
+        hitstopFramesLeft = 0;
+        hitboxActiveCount = 0;
+        lastAttackInputTime = Time.time;
+        DisableHitbox(true);
+
+        if (animHandler != null && animHandler.GetComponent<Animator>() != null)
+        {
+            animHandler.GetComponent<Animator>().speed = 1f;
+        }
+
+        if (movement != null) movement.CancelAttackMotion();
+        OnComboFinished?.Invoke();
+    }
+
+    private void PerformHitboxOverlapCheck()
+    {
+        if (meleeHitbox == null || meleeHitboxController == null) return;
+
+        BoxCollider2D col = meleeHitboxController.hitboxCollider;
+        if (col == null) return;
+
+        // Get the world-space bounding box for the hitbox
+        Vector2 worldPos = col.transform.TransformPoint(col.offset);
+        Vector2 size = col.size;
+        float angle = col.transform.eulerAngles.z;
+
+        Collider2D[] results = Physics2D.OverlapBoxAll(worldPos, size, angle, enemyLayerMask);
+
+        foreach (var hit in results)
+        {
+            EnemyController enemy = hit.GetComponentInParent<EnemyController>();
+            if (enemy != null && !hitEnemiesThisStep.Contains(enemy))
+            {
+                hitEnemiesThisStep.Add(enemy);
+                
+                // Trigger the actual damage and hit effects on the damage component
+                if (meleeHitboxDamage != null)
+                {
+                    meleeHitboxDamage.ProcessHit(enemy);
+                }
+            }
+        }
+    }
 }

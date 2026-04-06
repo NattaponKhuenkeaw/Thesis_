@@ -29,18 +29,16 @@ public struct HitReactionData
     // =========================================================
     // Hitstun (Impact Freeze)
     // =========================================================
-    /// <summary>Number of frozen frames on impact (at 60 fps: 6 frames ≈ 0.1s).</summary>
+    /// <summary>Number of frozen frames on impact (at 60 fps).</summary>
     public int hitstunFrames;
-    /// <summary>Direct time-based freeze (seconds). If > 0 overrides hitstunFrames.</summary>
-    public float impactFreezeTime;
 
     // =========================================================
     // Knockback Motion
     // =========================================================
     /// <summary>(x,y) velocity applied to the enemy during knockback. X sign is flipped to face away from attacker.</summary>
     public Vector2 reactionVelocity;
-    /// <summary>How long the knockback phase lasts (seconds). Enemy cannot act during this time.</summary>
-    public float knockbackDuration;
+    /// <summary>How long the knockback phase lasts (frames). Enemy cannot act during this time.</summary>
+    public int knockbackFrames;
     /// <summary>If true the enemy enters Knockdown state (launched airborne, falls).</summary>
     public bool isKnockdown;
 
@@ -57,8 +55,8 @@ public struct HitReactionData
     // =========================================================
     /// <summary>Flash color applied to enemy sprites on impact.</summary>
     public Color flashColor;
-    /// <summary>Duration of the sprite flash effect (seconds).</summary>
-    public float flashDuration;
+    /// <summary>Duration of the sprite flash effect (frames).</summary>
+    public int flashFrames;
 
     // =========================================================
     // Damage Text Impact
@@ -77,15 +75,14 @@ public struct HitReactionData
             damage             = damage,
             knockbackDirection = direction,
             knockbackForce     = knockbackForce,
-            hitstunFrames      = 4,
-            impactFreezeTime   = 0f,
+            hitstunFrames      = 6,
             reactionVelocity   = new Vector2(knockbackForce * 0.5f, 1f),
-            knockbackDuration  = 0.2f,
+            knockbackFrames    = 15,
             isKnockdown        = false,
             snapToAttacker     = false,
             snapOffset         = Vector2.zero,
             flashColor         = Color.red,
-            flashDuration      = 0.1f,
+            flashFrames        = 6,
             impactTier         = DamageImpactTier.BasicCombo
         };
     }

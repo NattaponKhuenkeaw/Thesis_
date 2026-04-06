@@ -138,6 +138,11 @@ public class PlayerAnimator : MonoBehaviour
         anim.ResetTrigger(jumpHash);
         anim.SetInteger(airComboStepHash, 0);
         anim.SetInteger(comboStepHash, comboStep);
+
+        // Snap immediately without transition delay to align perfectly with Logic Frames
+        string[] candidates = new string[] { $"Attack_{comboStep}", $"Attack{comboStep}", $"_Attack{comboStep}" };
+        if (TryPlayFirstExistingState(candidates)) return;
+
         anim.SetTrigger(attackHash);
     }
 
@@ -264,21 +269,43 @@ public class PlayerAnimator : MonoBehaviour
     // =========================================================
     // Animation Events
     // =========================================================
-    public void OnImpactStart()
-    {
-        if (combat != null)
-            combat.OnImpactStart();
-    }
+    public void OnImpactStart() {}
 
-    public void OnRecoveryStart()
-    {
-        if (combat != null)
-            combat.OnRecoveryStart();
-    }
+    public void OnRecoveryStart() {}
+    public void OnAttackEnd() {}
 
-    public void OnAttackEnd()
+    // =========================================================
+    // Sync Logic
+    // =========================================================
+    public void SyncCombatAnimation(int comboStep, int currentFrame, int totalFrames, bool isAir)
     {
-        if (combat != null)
-            combat.OnAttackEnd();
+        if (anim == null || totalFrames <= 0) return;
+
+        // Calculate normalized time (0 to 1) based on frame
+        // currentFrame is 1-indexed in our logic
+        float normalizedTime = Mathf.Clamp01((currentFrame - 1) / (float)totalFrames);
+
+        string[] candidates;
+        if (isAir)
+        {
+            candidates = GetAirAttackStateCandidates(comboStep);
+        }
+        else
+        {
+            candidates = new string[] { $"Attack_{comboStep}", $"Attack{comboStep}", $"_Attack{comboStep}" };
+        }
+
+        foreach (string stateName in candidates)
+        {
+            string resolvedStateName = stateName.Contains(".") ? stateName : $"Base Layer.{stateName}";
+            int stateHash = Animator.StringToHash(resolvedStateName);
+            
+            if (anim.HasState(0, stateHash))
+            {
+                // Force play at the correct normalized time
+                anim.Play(stateHash, 0, normalizedTime);
+                return;
+            }
+        }
     }
 }

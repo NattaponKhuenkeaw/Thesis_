@@ -217,7 +217,7 @@ namespace Project.TeamBuilder.UI
             {
                 foreach (var item in playerInventory.ownedItems)
                 {
-                    if (item is CharacterItem charItem && charItem.characterReference == charObj)
+                    if (item is CharacterItem charItem && charItem.characterObjectData == charObj)
                     {
                         return charItem;
                     }
@@ -227,8 +227,8 @@ namespace Project.TeamBuilder.UI
             // No matching item in inventory — create a runtime wrapper
             // so the TeamBuilder UI can still display this character
             CharacterItem runtimeItem = ScriptableObject.CreateInstance<CharacterItem>();
-            runtimeItem.characterReference = charObj;
-            runtimeItem.SyncFromCharacterReference();
+            runtimeItem.characterObjectData = charObj;
+            runtimeItem.SyncFromCharacterObjectData();
             return runtimeItem;
         }
 
@@ -263,7 +263,7 @@ namespace Project.TeamBuilder.UI
             for (int i = 0; i < teamSlots.Length; i++)
             {
                 if (teamSlots[i] != null && teamSlots[i].CurrentCharacter != null)
-                    teamData[i] = teamSlots[i].CurrentCharacter.characterReference;
+                    teamData[i] = teamSlots[i].CurrentCharacter.characterObjectData;
                 else
                     teamData[i] = null;
             }

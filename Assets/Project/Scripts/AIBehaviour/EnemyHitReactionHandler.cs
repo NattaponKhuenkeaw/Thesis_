@@ -1,20 +1,9 @@
 using System;
-using System.Collections;
 using UnityEngine;
 
-/// <summary>
-/// Manages the enemy's hit reaction lifecycle:
-///   Impact Freeze → Knockback → (Knockdown) → Recovery → None.
-///
-/// Attach to the same GameObject as EnemyController.
-/// Multi-hit: calling StartReaction during an active reaction restarts the sequence.
-/// </summary>
 [RequireComponent(typeof(EnemyController))]
 public class EnemyHitReactionHandler : MonoBehaviour
 {
-    // =========================================================
-    // Sub-state enum
-    // =========================================================
     public enum HitReactionState
     {
         None,
@@ -24,51 +13,33 @@ public class EnemyHitReactionHandler : MonoBehaviour
         Recovering
     }
 
-    // =========================================================
-    // Inspector
-    // =========================================================
     [Header("Runtime (Read-Only)")]
     [SerializeField] private HitReactionState currentState = HitReactionState.None;
 
     [Header("Settings")]
-    [Tooltip("Duration of the brief recovery pause after knockback (seconds).")]
-    public float recoveryDuration = 0.15f;
+    public int recoveryFrames = 9;
 
-    // =========================================================
-    // Cached References
-    // =========================================================
     private EnemyController controller;
     private Rigidbody2D rb;
     private Animator animator;
     private SpriteRenderer[] spriteRenderers;
 
-    // =========================================================
-    // Reaction Runtime
-    // =========================================================
     private HitReactionData currentReaction;
     private Vector2 attackerPos;
+    
+    private int currentReactionFrame = 0;
+    private float logicTimeCounter = 0f;
+    private int knockdownAirborneWaitFrames = 0;
     private bool isFlashing;
     private Color[] originalColors;
     private float originalAnimatorSpeed = 1f;
 
-    // =========================================================
-    // Events & Properties
-    // =========================================================
-    /// <summary>Fired when the enemy regains control after a reaction.</summary>
     public event Action OnReactionComplete;
 
-    /// <summary>True if the enemy is in any reaction phase.</summary>
     public bool IsInReaction => currentState != HitReactionState.None;
-
-    /// <summary>True specifically during the impact-freeze phase.</summary>
     public bool IsInHitstun => currentState == HitReactionState.ImpactFreeze;
-
-    /// <summary>Current reaction sub-state.</summary>
     public HitReactionState CurrentState => currentState;
 
-    // =========================================================
-    // Unity Methods
-    // =========================================================
     void Awake()
     {
         controller       = GetComponent<EnemyController>();
@@ -93,149 +64,142 @@ public class EnemyHitReactionHandler : MonoBehaviour
         CleanupReaction();
     }
 
-    // =========================================================
-    // Public API
-    // =========================================================
-
-    /// <summary>
-    /// Start (or restart) the hit reaction sequence.
-    /// If a reaction is already active it is cancelled and restarted with the new data.
-    /// </summary>
     public void StartReaction(HitReactionData data, Vector2 attackerPosition)
     {
-        // Cancel any in-progress reaction (multi-hit restart)
         if (IsInReaction)
             CancelCurrentReaction();
 
         currentReaction = data;
         attackerPos     = attackerPosition;
 
-        // Snap to attacker if requested
         if (data.snapToAttacker)
         {
-            // Use the attacker's facing direction for placement (directional offset)
             float facingDir = data.knockbackDirection.x != 0 ? Mathf.Sign(data.knockbackDirection.x) : 1f;
             Vector2 snapPos = attackerPosition + new Vector2(data.snapOffset.x * facingDir, data.snapOffset.y);
             transform.position = new Vector3(snapPos.x, snapPos.y, transform.position.z);
         }
 
-        StartCoroutine(ReactionRoutine());
+        currentReactionFrame = 0;
+        logicTimeCounter = 0f;
+        knockdownAirborneWaitFrames = 0;
+        
+        EnterState(HitReactionState.ImpactFreeze);
+
+        if (animator != null)
+        {
+            originalAnimatorSpeed = animator.speed;
+            animator.speed = 0f;
+        }
+
+        if (data.flashFrames > 0)
+        {
+            SetFlashColors();
+            isFlashing = true;
+        }
     }
 
-    // =========================================================
-    // Reaction Coroutine
-    // =========================================================
-    private IEnumerator ReactionRoutine()
+    void FixedUpdate()
     {
-        // Compute direction: attacker → enemy (push AWAY from attacker)
-        float dirSign = GetDirectionSign();
+        if (currentState == HitReactionState.None) return;
 
-        // Apply knockback velocity immediately
-        if (rb != null)
+        logicTimeCounter += Time.fixedDeltaTime;
+        int targetFrame = Mathf.FloorToInt(logicTimeCounter * 24f);
+
+        while (currentReactionFrame < targetFrame)
         {
-            // reactionVelocity.x = magnitude of horizontal force
-            // reactionVelocity.y = magnitude of vertical force (launch height)
-            // Direction is computed from attacker → enemy
-            float vx = Mathf.Abs(currentReaction.reactionVelocity.x) * dirSign;
-            float vy = currentReaction.reactionVelocity.y;
+            currentReactionFrame++;
+            ProcessReactionFrame();
+            
+            if (currentState == HitReactionState.None) break;
+        }
+    }
 
-            rb.linearVelocity = new Vector2(vx, vy);
+    private void ProcessReactionFrame()
+    {
+        // 1. Flash removal check
+        if (isFlashing && currentReactionFrame >= currentReaction.flashFrames)
+        {
+            RestoreSpriteColors();
         }
 
-        // === Phase 1: Impact Freeze (animator speed = 0) ===
-        float freezeTime = currentReaction.impactFreezeTime > 0f
-            ? currentReaction.impactFreezeTime
-            : currentReaction.hitstunFrames / 60f;
-
-        if (freezeTime > 0f)
+        // 2. Impact Freeze Phase (Hitstop)
+        if (currentReactionFrame <= currentReaction.hitstunFrames)
         {
-            EnterState(HitReactionState.ImpactFreeze);
-
-            // Freeze ONLY the animator (physics/knockback continue naturally)
-            if (animator != null)
+            if (currentState != HitReactionState.ImpactFreeze)
             {
-                originalAnimatorSpeed = animator.speed;
-                animator.speed = 0f;
-            }
-
-            StartFlash();
-
-            yield return new WaitForSeconds(freezeTime);
-
-            // Unfreeze animator
-            if (animator != null)
-            {
-                animator.speed = originalAnimatorSpeed > 0f ? originalAnimatorSpeed : 1f;
+                EnterState(HitReactionState.ImpactFreeze);
             }
         }
+        // 3. Knockback / Knockdown Phase
+        else if (currentReaction.isKnockdown)
+        {
+            if (currentState != HitReactionState.Knockdown && currentState != HitReactionState.Recovering)
+            {
+                EnterState(HitReactionState.Knockdown);
+                if (animator != null) animator.speed = originalAnimatorSpeed > 0f ? originalAnimatorSpeed : 1f;
+                ApplyKnockbackVelocity();
+                knockdownAirborneWaitFrames = 0;
+            }
+
+            if (currentState == HitReactionState.Knockdown)
+            {
+                knockdownAirborneWaitFrames++;
+                // Check landing after a small launch grace period (e.g., 10 frames)
+                if (knockdownAirborneWaitFrames > 10 && rb != null && Mathf.Abs(rb.linearVelocity.y) < 0.1f)
+                {
+                    EnterState(HitReactionState.Recovering);
+                    // Fast forward frame counter so it knows it enters recovery
+                    currentReactionFrame = currentReaction.hitstunFrames + currentReaction.knockbackFrames;
+                }
+            }
+        }
+        else if (currentReactionFrame <= currentReaction.hitstunFrames + currentReaction.knockbackFrames)
+        {
+            if (currentState != HitReactionState.Knockback)
+            {
+                EnterState(HitReactionState.Knockback);
+                if (animator != null) animator.speed = originalAnimatorSpeed > 0f ? originalAnimatorSpeed : 1f;
+                ApplyKnockbackVelocity();
+            }
+        }
+        // 4. Recovery Phase
+        else if (currentReactionFrame <= currentReaction.hitstunFrames + currentReaction.knockbackFrames + recoveryFrames)
+        {
+             if (currentState != HitReactionState.Recovering)
+             {
+                 EnterState(HitReactionState.Recovering);
+                 if (animator != null && originalAnimatorSpeed > 0) animator.speed = originalAnimatorSpeed; // Ensure unfrozen if knocked down quickly
+             }
+        }
+        // 5. Complete
         else
         {
-            StartFlash();
+            CleanupReaction();
+            OnReactionComplete?.Invoke();
         }
-
-        // === Phase 2: Knockback (enemy stunned, cannot act) ===
-        EnterState(HitReactionState.Knockback);
-
-        float knockbackTime = currentReaction.knockbackDuration > 0f
-            ? currentReaction.knockbackDuration
-            : 0.25f;
-
-        yield return new WaitForSeconds(knockbackTime);
-
-        // === Phase 3: Knockdown (if applicable, wait for landing) ===
-        if (currentReaction.isKnockdown)
-        {
-            EnterState(HitReactionState.Knockdown);
-
-            float maxKnockdownWait = 2f;
-            float knockdownTimer   = 0f;
-
-            // Wait until the enemy lands (Y velocity near zero after the initial launch arc)
-            while (knockdownTimer < maxKnockdownWait)
-            {
-                knockdownTimer += Time.deltaTime;
-
-                if (knockdownTimer > 0.1f && rb != null && Mathf.Abs(rb.linearVelocity.y) < 0.1f)
-                    break;
-
-                yield return null;
-            }
-        }
-
-        // === Phase 4: Recovery ===
-        EnterState(HitReactionState.Recovering);
-        yield return new WaitForSeconds(recoveryDuration);
-
-        // === Done ===
-        EnterState(HitReactionState.None);
-        OnReactionComplete?.Invoke();
     }
 
-    // =========================================================
-    // Direction Helper
-    // =========================================================
-    /// <summary>
-    /// Returns +1 if enemy is to the RIGHT of the attacker (push right),
-    /// returns -1 if enemy is to the LEFT of the attacker (push left).
-    /// Falls back to knockbackDirection if positions overlap.
-    /// </summary>
+    private void ApplyKnockbackVelocity()
+    {
+        if (rb != null)
+        {
+            float dirSign = GetDirectionSign();
+            float vx = Mathf.Abs(currentReaction.reactionVelocity.x) * dirSign;
+            float vy = currentReaction.reactionVelocity.y;
+            rb.linearVelocity = new Vector2(vx, vy);
+        }
+    }
+
     private float GetDirectionSign()
     {
         float diff = transform.position.x - attackerPos.x;
-
         if (Mathf.Abs(diff) > 0.01f)
             return Mathf.Sign(diff);
-
-        // Fallback: use the knockback direction from frame data
         if (currentReaction.knockbackDirection.x != 0f)
             return Mathf.Sign(currentReaction.knockbackDirection.x);
-
         return 1f;
     }
 
-    // =========================================================
-    // State Helpers
-    // =========================================================
     private void EnterState(HitReactionState newState)
     {
         currentState = newState;
@@ -243,26 +207,20 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
     private void CancelCurrentReaction()
     {
-        StopAllCoroutines();
         RestoreSpriteColors();
-
-        // Restore animator speed if we were in freeze
         if (animator != null && currentState == HitReactionState.ImpactFreeze)
             animator.speed = originalAnimatorSpeed > 0f ? originalAnimatorSpeed : 1f;
-
         currentState = HitReactionState.None;
+        currentReactionFrame = 0;
+        logicTimeCounter = 0f;
     }
 
     private void CleanupReaction()
     {
-        StopAllCoroutines();
-
         if (isFlashing)
             RestoreSpriteColors();
-
         if (animator != null && currentState == HitReactionState.ImpactFreeze)
             animator.speed = 1f;
-
         currentState = HitReactionState.None;
     }
 
@@ -271,9 +229,6 @@ public class EnemyHitReactionHandler : MonoBehaviour
         CleanupReaction();
     }
 
-    // =========================================================
-    // Sprite Flash
-    // =========================================================
     private void CacheOriginalColors()
     {
         if (spriteRenderers == null) return;
@@ -285,33 +240,18 @@ public class EnemyHitReactionHandler : MonoBehaviour
         }
     }
 
-    private void StartFlash()
+    private void SetFlashColors()
     {
-        if (currentReaction.flashDuration <= 0f || spriteRenderers == null)
-            return;
-
-        StartCoroutine(FlashRoutine());
-    }
-
-    private IEnumerator FlashRoutine()
-    {
-        // Set flash color
         for (int i = 0; i < spriteRenderers.Length; i++)
         {
             if (spriteRenderers[i] != null)
                 spriteRenderers[i].color = currentReaction.flashColor;
         }
-        isFlashing = true;
-
-        yield return new WaitForSeconds(currentReaction.flashDuration);
-
-        RestoreSpriteColors();
     }
 
     private void RestoreSpriteColors()
     {
         if (spriteRenderers == null || originalColors == null) return;
-
         for (int i = 0; i < spriteRenderers.Length; i++)
         {
             if (i < originalColors.Length && spriteRenderers[i] != null)
