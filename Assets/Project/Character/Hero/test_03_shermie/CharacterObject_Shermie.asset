@@ -1,0 +1,290 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 255da7e6c6e2e0147ab812b7ed3943c0, type: 3}
+  m_Name: CharacterObject_Shermie
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterObject
+  characterId: char_3_shermie
+  characterType: 0
+  elementType: 2
+  previewPrefab: {fileID: 6921409426865988085, guid: 60b71052072438a4daa75e9c187905de, type: 3}
+  stats:
+    maxHP: 200
+    attack: 4
+    defense: 10
+    elementalMultiplier: 1
+    moveSpeed: 4.5
+    jumpForce: 22
+    maxJumpCount: 1
+    maxAirDashCount: 1
+    groundAcceleration: 80
+    groundDeceleration: 90
+    airAcceleration: 55
+    airDeceleration: 40
+    airSpeedMultiplier: 1
+  metaData:
+    displayName: Shermie
+    description: "\u0E2B\u0E19\u0E36\u0E48\u0E07\u0E43\u0E19\u0E2A\u0E35\u0E48\u0E08\u0E15\u0E38\u0E23\u0E40\u0E17\u0E1E\u0E41\u0E2B\u0E48\u0E07\u0E42\u0E2D\u0E42\u0E23\u0E08\u0E34\u0E17\u0E35\u0E48\u0E21\u0E32\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E2B\u0E19\u0E49\u0E32\u0E21\u0E49\u0E32\u0E1B\u0E34\u0E14\u0E15\u0E32
+      \u0E21\u0E35\u0E1A\u0E38\u0E04\u0E25\u0E34\u0E01\u0E02\u0E35\u0E49\u0E40\u0E25\u0E48\u0E19\u0E41\u0E25\u0E30\u0E14\u0E39\u0E40\u0E1B\u0E47\u0E19\u0E21\u0E34\u0E15\u0E23
+      \u0E41\u0E15\u0E48\u0E43\u0E19\u0E2A\u0E19\u0E32\u0E21\u0E23\u0E1A\u0E40\u0E18\u0E2D\u0E43\u0E0A\u0E49\u0E17\u0E31\u0E01\u0E29\u0E30\u0E01\u0E32\u0E23
+      \u0E17\u0E38\u0E48\u0E21 (Grappling) \u0E17\u0E35\u0E48\u0E17\u0E23\u0E07\u0E1E\u0E25\u0E31\u0E07\u0E41\u0E25\u0E30\u0E04\u0E27\u0E1A\u0E04\u0E38\u0E21\u0E2A\u0E32\u0E22\u0E1F\u0E49\u0E32\u0E2A\u0E35\u0E21\u0E48\u0E27\u0E07\u0E44\u0E14\u0E49\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E19\u0E48\u0E32\u0E01\u0E25\u0E31\u0E27"
+    portrait: {fileID: 21300000, guid: 6980df79b29645e4a9f7b01c22c621c5, type: 3}
+    animatorController: {fileID: 9100000, guid: b4f7f50e094f0f145a2251ad62172a8d, type: 2}
+    attackSfx: {fileID: 0}
+    skillSfx: {fileID: 0}
+    hurtSfx: {fileID: 0}
+  upgrade:
+    level: 1
+    skillTreePoints: 3
+  dashData:
+    animationClip: {fileID: 7400000, guid: a58bc557533fb294eb5db9217ac6de3d, type: 2}
+    startupFrames: 2
+    activeFrames: 18
+    recoveryFrames: 8
+    dashSpeed: 20
+    cooldownFrames: 24
+  basicAttackComboData:
+    comboResetDelay: 0.8
+    steps:
+    - stepName: Attack1
+      animationClip: {fileID: 7400000, guid: eacba2412b3c8e943aa47befd7e9954d, type: 2}
+      startupFrames: 5
+      activeFrames: 3
+      recoveryFrames: 9
+      cancelWindowStartFrame: 9
+      useForwardMotion: 1
+      forwardDistance: 0.7
+      motionStartFrame: 0
+      motionEndFrame: 2
+      hitFrames:
+      - startFrameOffset: 1
+        activeFrames: 2
+        cameraShakeStrength: 0
+        offset: {x: 1.5913355, y: 2.1647482}
+        size: {x: 1.5182198, y: 1.1641544}
+        damageMultiplier: 0.5
+        knockbackForce: 4
+        hitstunFrames: 4
+        reactionVelocity: {x: 2, y: 1}
+        knockbackFrames: 10
+        isKnockdown: 0
+        snapToAttacker: 0
+        snapOffset: {x: 0, y: 0}
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        impactTier: 0
+        debugColor: {r: 0.31243825, g: 1, b: 0, a: 1}
+    - stepName: Attack2
+      animationClip: {fileID: 7400000, guid: 77484a58fade3a74da68fe55b442c8ac, type: 2}
+      startupFrames: 7
+      activeFrames: 12
+      recoveryFrames: 11
+      cancelWindowStartFrame: 20
+      useForwardMotion: 1
+      forwardDistance: 0.7
+      motionStartFrame: 0
+      motionEndFrame: 2
+      hitFrames:
+      - startFrameOffset: 1
+        activeFrames: 2
+        cameraShakeStrength: 0
+        offset: {x: 1.2131752, y: 2.0737095}
+        size: {x: 2.2745407, y: 1.3462316}
+        damageMultiplier: 0.5
+        knockbackForce: 4
+        hitstunFrames: 4
+        reactionVelocity: {x: 0.5, y: 3}
+        knockbackFrames: 10
+        isKnockdown: 1
+        snapToAttacker: 0
+        snapOffset: {x: 0, y: 0}
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        impactTier: 0
+        debugColor: {r: 0.9384004, g: 1, b: 0, a: 1}
+      - startFrameOffset: 8
+        activeFrames: 4
+        cameraShakeStrength: 0
+        offset: {x: 1.0871218, y: 2.4238577}
+        size: {x: 2.134481, y: 1.7103865}
+        damageMultiplier: 1
+        knockbackForce: 4
+        hitstunFrames: 4
+        reactionVelocity: {x: 0.5, y: 5}
+        knockbackFrames: 15
+        isKnockdown: 1
+        snapToAttacker: 0
+        snapOffset: {x: 0, y: 0}
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        impactTier: 0
+        debugColor: {r: 0.9411765, g: 1, b: 0, a: 1}
+    - stepName: Attack2
+      animationClip: {fileID: 7400000, guid: ac651d9effa8e47489de2959d37c885f, type: 2}
+      startupFrames: 10
+      activeFrames: 7
+      recoveryFrames: 7
+      cancelWindowStartFrame: 18
+      useForwardMotion: 1
+      forwardDistance: 0.7
+      motionStartFrame: 0
+      motionEndFrame: 2
+      hitFrames:
+      - startFrameOffset: 1
+        activeFrames: 2
+        cameraShakeStrength: 0
+        offset: {x: 1.327536, y: 2.4739726}
+        size: {x: 2.2745407, y: 1.3462316}
+        damageMultiplier: 0.5
+        knockbackForce: 4
+        hitstunFrames: 4
+        reactionVelocity: {x: 1, y: 0}
+        knockbackFrames: 10
+        isKnockdown: 0
+        snapToAttacker: 1
+        snapOffset: {x: 0, y: 0}
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        impactTier: 0
+        debugColor: {r: 1, g: 0, b: 0, a: 1}
+      - startFrameOffset: 4
+        activeFrames: 2
+        cameraShakeStrength: 0
+        offset: {x: 0.76309925, y: 1.8615841}
+        size: {x: 2.134481, y: 2.5680926}
+        damageMultiplier: 1
+        knockbackForce: 4
+        hitstunFrames: 4
+        reactionVelocity: {x: 2, y: -0.2}
+        knockbackFrames: 15
+        isKnockdown: 0
+        snapToAttacker: 0
+        snapOffset: {x: 0, y: 0}
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        impactTier: 0
+        debugColor: {r: 1, g: 0, b: 0, a: 1}
+      - startFrameOffset: 6
+        activeFrames: 2
+        cameraShakeStrength: 0.3
+        offset: {x: 0.85718083, y: 2.3155456}
+        size: {x: 2.219849, y: 1.6958268}
+        damageMultiplier: 1
+        knockbackForce: 4
+        hitstunFrames: 4
+        reactionVelocity: {x: 1, y: -0.2}
+        knockbackFrames: 15
+        isKnockdown: 0
+        snapToAttacker: 0
+        snapOffset: {x: 0, y: 0}
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        impactTier: 1
+        debugColor: {r: 1, g: 0, b: 0, a: 1}
+    - stepName: Attack4
+      animationClip: {fileID: 7400000, guid: ef43e229b76df4d478a49d8526826be6, type: 2}
+      startupFrames: 3
+      activeFrames: 6
+      recoveryFrames: 16
+      cancelWindowStartFrame: 10
+      useForwardMotion: 1
+      forwardDistance: 0.7
+      motionStartFrame: 0
+      motionEndFrame: 3
+      hitFrames:
+      - startFrameOffset: 1
+        activeFrames: 5
+        cameraShakeStrength: 0.5
+        offset: {x: 0.048306227, y: 2.2071307}
+        size: {x: 4.670553, y: 1.3462316}
+        damageMultiplier: 1.5
+        knockbackForce: 4
+        hitstunFrames: 15
+        reactionVelocity: {x: 1, y: 0}
+        knockbackFrames: 10
+        isKnockdown: 0
+        snapToAttacker: 0
+        snapOffset: {x: 0, y: 0}
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        impactTier: 1
+        debugColor: {r: 1, g: 0, b: 0, a: 1}
+  neutralAirComboData:
+    comboResetDelay: 0.8
+    steps:
+    - stepName: 
+      animationClip: {fileID: 7400000, guid: fba2a4536e88369438257a92c4166acb, type: 2}
+      startupFrames: 5
+      activeFrames: 3
+      recoveryFrames: 12
+      cancelWindowStartFrame: 9
+      useForwardMotion: 0
+      forwardDistance: 0
+      motionStartFrame: 0
+      motionEndFrame: 0
+      hitFrames:
+      - startFrameOffset: 0
+        activeFrames: 2
+        cameraShakeStrength: 0.3
+        offset: {x: 1.1655159, y: 2.2902384}
+        size: {x: 2.1905377, y: 1.7398975}
+        damageMultiplier: 1.5
+        knockbackForce: 4
+        hitstunFrames: 4
+        reactionVelocity: {x: 3, y: 5}
+        knockbackFrames: 15
+        isKnockdown: 1
+        snapToAttacker: 1
+        snapOffset: {x: 1, y: 1}
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        impactTier: 0
+        debugColor: {r: 0.4403944, g: 1, b: 0, a: 1}
+  plungeAttackData:
+    isEnabled: 1
+    downwardSpeed: 18
+    fallAnimationStateName: Plunge_Fall
+    impactAnimationStateName: Attack_1
+    impactStep:
+      stepName: Plunge Impact
+      animationClip: {fileID: 0}
+      startupFrames: 6
+      activeFrames: 3
+      recoveryFrames: 15
+      cancelWindowStartFrame: 12
+      useForwardMotion: 0
+      forwardDistance: 0.5
+      motionStartFrame: 3
+      motionEndFrame: 8
+      hitFrames: []
+  skillData:
+    skillName: 
+    description: 
+    elementType: 0
+    cooldown: 4
+    castDuration: 0.1
+    damageMultiplier: 1.5
+    knockbackForce: 6
+    skillPrefab: {fileID: 0}
+    spawnOffset: {x: 1, y: 0}
+  ultimateData:
+    ultimateName: 
+    description: 
+    elementType: 0
+    cooldown: 12
+    castDuration: 0.25
+    activeDuration: 4
+    damageMultiplier: 0.5
+    hitInterval: 0.4
+    ultimatePrefab: {fileID: 0}
+    spawnOffset: {x: 1.5, y: 0}
+  skillTreeData:
+    nodes: []

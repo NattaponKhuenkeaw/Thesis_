@@ -11,6 +11,13 @@ public class PlayerDashState : PlayerState
     public override PlayerStateId StateId => PlayerStateId.Dashing;
     public override PlayerStatePriority Priority => PlayerStatePriority.Ability;
 
+    // =========================================================
+    // Capabilities — only move input during dash
+    // =========================================================
+    public override bool AcceptsMoveInput => true;
+    public override bool LocksMovement => true;
+    public override bool LocksFacing => true;
+
     private bool dashStarted;
 
     public override void Enter()
@@ -27,11 +34,10 @@ public class PlayerDashState : PlayerState
     }
 
     // =========================================================
-    // Input Hooks — only move input accepted during dash
+    // Custom Input — initiates dash physics (FSM defers here)
     // =========================================================
     public override void OnDashInput(float inputX)
     {
-        // We only initiate the dash once per state lifecycle
         if (!dashStarted && player.Movement != null)
         {
             dashStarted = true;
@@ -39,39 +45,11 @@ public class PlayerDashState : PlayerState
         }
     }
 
-    public override void OnMoveInput(Vector2 input)
-    {
-        if (player.Movement != null)
-            player.Movement.SetMoveInput(input);
-    }
-
-    public override void OnDownInput(bool held)
-    {
-        if (player.Movement != null)
-            player.Movement.SetDownInput(held);
-    }
-
     // =========================================================
     // Callbacks
     // =========================================================
     private void HandleDashComplete()
     {
-        if (player.Movement == null)
-        {
-            fsm.ChangeState(fsm.IdleState);
-            return;
-        }
-
-        if (player.Movement.IsGrounded())
-        {
-            if (Mathf.Abs(player.Movement.HorizontalInput) > 0.01f)
-                fsm.ChangeState(fsm.MoveState);
-            else
-                fsm.ChangeState(fsm.IdleState);
-        }
-        else
-        {
-            fsm.ChangeState(fsm.JumpState);
-        }
+        ExitToAppropriateMovementState();
     }
 }

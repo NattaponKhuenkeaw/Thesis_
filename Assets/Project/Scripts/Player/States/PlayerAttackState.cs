@@ -3,6 +3,7 @@ using UnityEngine;
 /// <summary>
 /// Attack state: handles ground combos, air combos, and plunge attacks.
 /// Delegates all attack logic to PlayerBasicAttack and listens for completion.
+/// Has custom dash input (cancel-window dash) and attack input (combo chaining).
 /// </summary>
 public class PlayerAttackState : PlayerState
 {
@@ -10,6 +11,16 @@ public class PlayerAttackState : PlayerState
 
     public override PlayerStateId StateId => PlayerStateId.Attacking;
     public override PlayerStatePriority Priority => PlayerStatePriority.AttackCombat;
+
+    // =========================================================
+    // Capabilities
+    // =========================================================
+    public override bool AcceptsMoveInput => true;
+    public override bool AcceptsDashInput => true;   // custom handler (cancel-window dash)
+    public override bool AcceptsJumpInput => true;
+    public override bool AcceptsAttackInput => true;  // custom handler (combo chain)
+    public override bool LocksMovement => true;
+    public override bool LocksFacing => true;
 
     public override void Enter()
     {
@@ -27,18 +38,26 @@ public class PlayerAttackState : PlayerState
     {
         // Safety: if Combat is no longer attacking (timeout / external reset)
         if (player.Combat != null && !player.Combat.IsAttacking())
-            ExitToAppropriateState();
+            ExitToAppropriateMovementState();
     }
 
     // =========================================================
-    // Input Hooks
+    // Custom Input — combo chaining and cancel-window dash
+    // FSM defers to these via HasCustomAttackHandler / HasCustomDashHandler
     // =========================================================
+
+    /// <summary>
+    /// Chain combo: forward to combat system.
+    /// </summary>
     public override void OnAttackInput()
     {
         if (player.Combat != null)
             player.Combat.OnAttackInput();
     }
 
+    /// <summary>
+    /// Cancel-window dash: check CanDash, then transition.
+    /// </summary>
     public override void OnDashInput(float inputX)
     {
         if (player.Movement != null && player.Movement.CanDash())
@@ -48,31 +67,15 @@ public class PlayerAttackState : PlayerState
         }
     }
 
-    public override void OnJumpInput()
-    {
-        fsm.ChangeState(fsm.JumpState);
-        fsm.CurrentState.OnJumpInput();
-    }
-
+    /// <summary>
+    /// Move input also forwards down-input for plunge detection.
+    /// </summary>
     public override void OnMoveInput(Vector2 input)
     {
+        base.OnMoveInput(input);
+
         if (player.Movement != null)
-        {
-            player.Movement.SetMoveInput(input);
             player.Movement.SetDownInput(input.y < -0.5f);
-        }
-    }
-
-    public override void OnDownInput(bool held)
-    {
-        if (player.Movement != null)
-            player.Movement.SetDownInput(held);
-    }
-
-    public override void OnJumpHeld(bool held)
-    {
-        if (player.Movement != null)
-            player.Movement.SetJumpHeld(held);
     }
 
     // =========================================================
@@ -80,25 +83,6 @@ public class PlayerAttackState : PlayerState
     // =========================================================
     private void HandleComboFinished()
     {
-        ExitToAppropriateState();
-    }
-
-    private void ExitToAppropriateState()
-    {
-        if (player.Movement != null && !player.Movement.IsGrounded())
-        {
-            if (player.Animator != null)
-                player.Animator.RestoreAirborneState();
-
-            fsm.ChangeState(fsm.JumpState);
-        }
-        else if (player.Movement != null && Mathf.Abs(player.Movement.HorizontalInput) > 0.01f)
-        {
-            fsm.ChangeState(fsm.MoveState);
-        }
-        else
-        {
-            fsm.ChangeState(fsm.IdleState);
-        }
+        ExitToAppropriateMovementState();
     }
 }

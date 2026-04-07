@@ -2,8 +2,9 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// Simplified input handler: forwards raw input events to the PlayerStateMachine.
-/// Input buffering for attacks and dashes is handled via frame-based queuing.
+/// Simplified input handler: forwards raw input events to the PlayerStateMachine's
+/// centralized routing methods. Input buffering for attacks and dashes is handled
+/// via time-based queuing.
 /// </summary>
 public class InputHandler_Player : MonoBehaviour
 {
@@ -41,21 +42,21 @@ public class InputHandler_Player : MonoBehaviour
         if (Project.UI.InputLockManager.IsLocked)
         {
             moveInput = Vector2.zero;
-            stateMachine?.CurrentState?.OnMoveInput(Vector2.zero);
-            stateMachine?.CurrentState?.OnJumpHeld(false);
+            stateMachine?.RouteMoveInput(Vector2.zero);
+            stateMachine?.RouteJumpHeld(false);
             return;
         }
 
-        // Forward continuous inputs
-        if (stateMachine != null && stateMachine.CurrentState != null)
+        // Forward continuous inputs via centralized routing
+        if (stateMachine != null)
         {
-            stateMachine.CurrentState.OnMoveInput(moveInput);
+            stateMachine.RouteMoveInput(moveInput);
 
             if (playerInput != null && playerInput.actions != null)
             {
                 InputAction jumpAction = playerInput.actions["Jump"];
                 if (jumpAction != null)
-                    stateMachine.CurrentState.OnJumpHeld(jumpAction.IsPressed());
+                    stateMachine.RouteJumpHeld(jumpAction.IsPressed());
             }
         }
 
@@ -95,7 +96,7 @@ public class InputHandler_Player : MonoBehaviour
         if (Project.UI.InputLockManager.IsLocked) return;
 
         moveInput = value.Get<Vector2>();
-        stateMachine?.CurrentState?.OnDownInput(moveInput.y < -0.5f);
+        stateMachine?.RouteDownInput(moveInput.y < -0.5f);
     }
 
     public void OnJump(InputValue value)
@@ -103,7 +104,7 @@ public class InputHandler_Player : MonoBehaviour
         if (Project.UI.InputLockManager.IsLocked) return;
         if (!value.isPressed) return;
 
-        stateMachine?.CurrentState?.OnJumpInput();
+        stateMachine?.RouteJumpInput();
     }
 
     public void OnDash(InputValue value)
@@ -127,14 +128,14 @@ public class InputHandler_Player : MonoBehaviour
     {
         if (Project.UI.InputLockManager.IsLocked) return;
         if (value.isPressed)
-            stateMachine?.CurrentState?.OnSkillInput();
+            stateMachine?.RouteSkillInput();
     }
 
     public void OnUltimate(InputValue value)
     {
         if (Project.UI.InputLockManager.IsLocked) return;
         if (value.isPressed)
-            stateMachine?.CurrentState?.OnUltimateInput();
+            stateMachine?.RouteUltimateInput();
     }
 
     // =========================================================
@@ -142,20 +143,20 @@ public class InputHandler_Player : MonoBehaviour
     // =========================================================
     private void ConsumeBufferedInputs()
     {
-        if (stateMachine == null || stateMachine.CurrentState == null)
+        if (stateMachine == null)
             return;
 
         // Try to consume dash buffer
         if (Time.time <= dashBufferedUntil)
         {
-            stateMachine.CurrentState.OnDashInput(moveInput.x);
+            stateMachine.RouteDashInput(moveInput.x);
             dashBufferedUntil = -999f;
         }
 
         // Try to consume attack buffer
         if (Time.time <= attackBufferedUntil)
         {
-            stateMachine.CurrentState.OnAttackInput();
+            stateMachine.RouteAttackInput();
             attackBufferedUntil = -999f;
         }
     }

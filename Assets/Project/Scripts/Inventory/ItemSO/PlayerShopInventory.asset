@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: PlayerShopInventory
   m_EditorClassIdentifier: Assembly-CSharp::Project.ShopSystem.PlayerShopInventory
   ownedItems:
-  - {fileID: 11400000, guid: 7067f23f35adada468f5f53a56908cbe, type: 2}
+  - {fileID: 11400000, guid: 6b2f112e2e15b20468e27601ac347a21, type: 2}
   currency: 12000

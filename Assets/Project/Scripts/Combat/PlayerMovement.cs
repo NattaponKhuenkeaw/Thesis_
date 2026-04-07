@@ -30,9 +30,7 @@ public class PlayerMovement : MonoBehaviour
     // Dash Settings
     // =========================================================
     [Header("Dash Settings")]
-    public float dashSpeed = 20f;
-    public float dashDuration = 0.2f;
-    public float dashCooldown = 1f;
+    public DashData dashData;
 
     // =========================================================
     // Combat Cooldowns
@@ -117,9 +115,16 @@ public class PlayerMovement : MonoBehaviour
 
     // Float timers replacing coroutines (Optimization 3)
     private float landingEndTime;
-    private float dashCooldownEndTime;
     private float jumpStartupEndTime;
     private float lastAfterimageTime;
+    private float lastFacingChangeTime = -999f;
+
+    // Frame-data driven dash
+    private int dashCooldownFramesRemaining;
+    private int currentDashFrame = 0;
+    private float dashLogicTimeCounter = 0f;
+    private float dashDir = 1f;
+    private bool isDashPhysicsActive = false;
 
     // Attack motion
     private float attackMotionVelocityX;
@@ -203,6 +208,17 @@ public class PlayerMovement : MonoBehaviour
         UpdateFacing();
         CheckGround();
         TryConsumeBufferedJump();
+
+        if (dashCooldownFramesRemaining > 0)
+        {
+            dashCooldownFramesRemaining--;
+        }
+
+        if (IsDashing)
+        {
+            ProcessDashFrame();
+        }
+
         HandleVerticalPhysics();
         ApplyHorizontalMovement();
     }
@@ -217,7 +233,9 @@ public class PlayerMovement : MonoBehaviour
 
     public void Jump()
     {
-        if (IsDashing || IsLanding)
+        if (IsDashing && !IsInDashRecovery())
+            return;
+        if (IsLanding)
             return;
 
         jumpBufferedUntil = Time.time + jumpBufferTime;
@@ -229,7 +247,7 @@ public class PlayerMovement : MonoBehaviour
         if (CanStartGroundDash())
         {
             StopAttackMotion();
-            StartCoroutine(DashCoroutine(inputX));
+            StartDash(inputX);
             return;
         }
 
@@ -238,8 +256,19 @@ public class PlayerMovement : MonoBehaviour
             StopAttackMotion();
             airDashesUsed++;
             ResetAirComboCooldown();
-            StartCoroutine(DashCoroutine(inputX));
+            StartDash(inputX);
         }
+    }
+
+    private void StartDash(float inputX)
+    {
+        OnDashStart?.Invoke();
+        SetDashEnemyCollision(false);
+        dashDir = GetDashDirection(inputX);
+        currentDashFrame = 0;
+        dashLogicTimeCounter = 0f;
+        lastAfterimageTime = -dashAfterimageSpawnInterval; // Force immediate spawn on first frame
+        isDashPhysicsActive = true;
     }
 
     public void SetDownInput(bool isPressed)
@@ -547,7 +576,12 @@ public class PlayerMovement : MonoBehaviour
 
     private bool CanStartGroundDash()
     {
-        if (Time.time < dashCooldownEndTime || IsJumping || IsLanding)
+        if (dashCooldownFramesRemaining > 0 || IsJumping || IsLanding)
+            return false;
+        // Note: IsDashing check removed — FSM transitions to DashState BEFORE calling
+        // Dash(), so IsDashing is always true here. The DashState.dashStarted flag
+        // already prevents double-initiation.
+        if (isDashPhysicsActive && !IsInDashRecovery())
             return false;
 
         return isGrounded || Time.time <= coyoteUntil;
@@ -555,7 +589,9 @@ public class PlayerMovement : MonoBehaviour
 
     private bool CanStartAirDash()
     {
-        if (Time.time < dashCooldownEndTime || IsJumping || IsLanding)
+        if (dashCooldownFramesRemaining > 0 || IsJumping || IsLanding)
+            return false;
+        if (isDashPhysicsActive && !IsInDashRecovery())
             return false;
 
         if (isGrounded || Time.time <= coyoteUntil)
@@ -594,30 +630,28 @@ public class PlayerMovement : MonoBehaviour
     }
 
     /// <summary>
-    /// Movement is locked when the FSM is in a non-movement state,
-    /// or during landing lag, or when combat locks movement.
+    /// Movement is locked when the current FSM state declares LocksMovement,
+    /// during landing lag, or when combat locks movement during attacks.
+    /// No hard-coded state IDs — states self-declare via their LocksMovement flag.
     /// </summary>
     private bool IsMovementLocked()
     {
         if (fsm == null)
             return false;
 
-        PlayerStateId state = fsm.CurrentStateId;
+        // State-declared movement lock (Dashing, Skill, Ultimate, Hitstun, Dead, Attacking)
+        if (fsm.CurrentState != null && fsm.CurrentState.LocksMovement)
+        {
+            // Attack state can unlock movement after recovery via combat system
+            if (fsm.CurrentStateId == PlayerStateId.Attacking
+                && combat != null && combat.CanMoveAfterAttack())
+                return false;
 
-        // These FSM states inherently lock movement
-        if (state == PlayerStateId.Dashing
-            || state == PlayerStateId.Skill
-            || state == PlayerStateId.Ultimate
-            || state == PlayerStateId.Hitstun
-            || state == PlayerStateId.Dead)
             return true;
+        }
 
         // Landing lag locks movement
         if (IsLanding)
-            return true;
-
-        // Attack locks movement unless combat says otherwise
-        if (state == PlayerStateId.Attacking && combat != null && !combat.CanMoveAfterAttack())
             return true;
 
         return false;
@@ -671,14 +705,26 @@ public class PlayerMovement : MonoBehaviour
 
     private void UpdateFacing()
     {
-        bool canUpdateFacing = !IsMovementLocked() || (combat != null && combat.CanSwitchDirection());
+        // Use FSM state's LocksFacing flag instead of hard-coded state checks
+        bool facingLocked = fsm != null && fsm.CurrentState != null && fsm.CurrentState.LocksFacing;
+        bool canUpdateFacing = !facingLocked || (combat != null && combat.CanSwitchDirection());
         if (!canUpdateFacing)
             return;
 
-        if (horizontalInput > 0.01f)
+        int currentDirection = FacingDirection;
+
+        if (horizontalInput > 0.01f && currentDirection != 1)
+        {
+            if (Time.time - lastFacingChangeTime < 0.2f) return;
             transform.eulerAngles = new Vector3(transform.eulerAngles.x, 0f, transform.eulerAngles.z);
-        else if (horizontalInput < -0.01f)
+            lastFacingChangeTime = Time.time;
+        }
+        else if (horizontalInput < -0.01f && currentDirection != -1)
+        {
+            if (Time.time - lastFacingChangeTime < 0.2f) return;
             transform.eulerAngles = new Vector3(transform.eulerAngles.x, 180f, transform.eulerAngles.z);
+            lastFacingChangeTime = Time.time;
+        }
     }
 
     // =========================================================
@@ -696,50 +742,94 @@ public class PlayerMovement : MonoBehaviour
     }
 
     /// <summary>
-    /// Dash physics aligned to FixedUpdate timestep (Optimization 2).
+    /// Dash physics aligned to FixedUpdate frame-data logic.
     /// Fires OnDashComplete when physics finish so DashState can transition out.
     /// </summary>
-    private IEnumerator DashCoroutine(float inputX)
+    private void ProcessDashFrame()
     {
-        OnDashStart?.Invoke();
+        if (!isDashPhysicsActive || dashData == null) return;
 
-        float savedGravity = rb.gravityScale;
-        rb.gravityScale = 0f;
+        dashLogicTimeCounter += Time.fixedDeltaTime;
+        int targetDashFrame = Mathf.RoundToInt(dashLogicTimeCounter * 24f);
 
-        SetDashEnemyCollision(false);
-
-        float dir = GetDashDirection(inputX);
-
-        float elapsed = 0f;
-        lastAfterimageTime = -dashAfterimageSpawnInterval; // Force immediate spawn on first frame
-
-        while (elapsed < dashDuration)
+        while (currentDashFrame < targetDashFrame)
         {
-            float t = elapsed / dashDuration;
-            float decelerationFactor = (1f - t) * (1f - t);
-            float currentDashSpeed = dashSpeed * decelerationFactor;
-
-            rb.linearVelocity = new Vector2(dir * currentDashSpeed, 0f);
-
-            if (enableDashAfterimage && (elapsed - lastAfterimageTime) >= dashAfterimageSpawnInterval)
+            currentDashFrame++;
+            
+            // "Recovery Frame = Window for Input Buffer and Cooldown timer start"
+            if (currentDashFrame == dashData.startupFrames + dashData.activeFrames + 1)
             {
-                SpawnAfterimage();
-                lastAfterimageTime = elapsed;
+                // Start cooldown timer at the beginning of recovery
+                dashCooldownFramesRemaining = dashData.cooldownFrames;
             }
 
-            elapsed += Time.fixedDeltaTime;
-            yield return new WaitForFixedUpdate();
+            int totalDuration = dashData.startupFrames + dashData.activeFrames + dashData.recoveryFrames;
+            if (currentDashFrame >= totalDuration)
+            {
+                EndDash();
+                return;
+            }
         }
 
-        rb.gravityScale = savedGravity;
+        rb.gravityScale = 0f; // Force gravity to 0 during dash
 
+        if (currentDashFrame <= dashData.startupFrames)
+        {
+            // Startup
+            rb.linearVelocity = Vector2.zero;
+        }
+        else if (currentDashFrame <= dashData.startupFrames + dashData.activeFrames)
+        {
+            // Active
+            int framesInActive = currentDashFrame - dashData.startupFrames;
+            float t = (float)framesInActive / Mathf.Max(1, dashData.activeFrames);
+            float decelerationFactor = (1f - t) * (1f - t);
+            float currentDashSpeed = dashData.dashSpeed * decelerationFactor;
+            
+            rb.linearVelocity = new Vector2(dashDir * currentDashSpeed, 0f);
+
+            if (enableDashAfterimage && (dashLogicTimeCounter - lastAfterimageTime) >= dashAfterimageSpawnInterval)
+            {
+                SpawnAfterimage();
+                lastAfterimageTime = dashLogicTimeCounter;
+            }
+        }
+        else
+        {
+            // Recovery
+            rb.linearVelocity = Vector2.zero;
+        }
+    }
+
+    private void EndDash()
+    {
+        isDashPhysicsActive = false;
+        
+        // Restore gravity and collision that were modified during dash
+        rb.gravityScale = originalGravityScale;
         //SetDashEnemyCollision(true);
-
+        
         // Notify FSM that dash physics are complete
         OnDashComplete?.Invoke();
+    }
 
-        // Global dash cooldown
-        dashCooldownEndTime = Time.time + dashCooldown;    }
+    public bool IsInvincible()
+    {
+        if (IsDashing && dashData != null)
+        {
+            return currentDashFrame <= (dashData.startupFrames + dashData.activeFrames);
+        }
+        return false;
+    }
+
+    public bool IsInDashRecovery()
+    {
+        if (IsDashing && dashData != null)
+        {
+            return currentDashFrame > (dashData.startupFrames + dashData.activeFrames);
+        }
+        return false;
+    }
 
     private IEnumerator PlungeAfterimageRoutine()
     {

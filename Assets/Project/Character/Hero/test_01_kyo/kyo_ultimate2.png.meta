@@ -1,0 +1,1716 @@
+fileFormatVersion: 2
+guid: 6d7638c35a131964baef4bcec68320bb
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -5768828886154274852
+    second: kyo_ultimate2_0
+  - first:
+      213: -3736495004251206183
+    second: kyo_ultimate2_1
+  - first:
+      213: 124706778851488766
+    second: kyo_ultimate2_2
+  - first:
+      213: -2678570688393858816
+    second: kyo_ultimate2_3
+  - first:
+      213: -2931192772416405665
+    second: kyo_ultimate2_4
+  - first:
+      213: 2928857862709502138
+    second: kyo_ultimate2_5
+  - first:
+      213: -7013171099388239623
+    second: kyo_ultimate2_6
+  - first:
+      213: 8382872639522966068
+    second: kyo_ultimate2_7
+  - first:
+      213: 1496323131808316736
+    second: kyo_ultimate2_8
+  - first:
+      213: 8501916627403785008
+    second: kyo_ultimate2_9
+  - first:
+      213: -8580388527696924979
+    second: kyo_ultimate2_10
+  - first:
+      213: -1729743317277915230
+    second: kyo_ultimate2_11
+  - first:
+      213: -8734796340818603545
+    second: kyo_ultimate2_12
+  - first:
+      213: -7673423062571861452
+    second: kyo_ultimate2_13
+  - first:
+      213: 8248634208817700548
+    second: kyo_ultimate2_14
+  - first:
+      213: -5261996493098549232
+    second: kyo_ultimate2_15
+  - first:
+      213: 4763199259047702175
+    second: kyo_ultimate2_16
+  - first:
+      213: 2058438106325805104
+    second: kyo_ultimate2_17
+  - first:
+      213: 3790065838857959404
+    second: kyo_ultimate2_18
+  - first:
+      213: 6121127082839964894
+    second: kyo_ultimate2_19
+  - first:
+      213: 2665681482708131474
+    second: kyo_ultimate2_20
+  - first:
+      213: 1171787358141398242
+    second: kyo_ultimate2_21
+  - first:
+      213: 312409922539035613
+    second: kyo_ultimate2_22
+  - first:
+      213: 243687135208513001
+    second: kyo_ultimate2_23
+  - first:
+      213: 3103224529977612930
+    second: kyo_ultimate2_24
+  - first:
+      213: -6193548514537647111
+    second: kyo_ultimate2_25
+  - first:
+      213: -1240118481640001443
+    second: kyo_ultimate2_26
+  - first:
+      213: 8408745495208352129
+    second: kyo_ultimate2_27
+  - first:
+      213: -4421122239378370319
+    second: kyo_ultimate2_28
+  - first:
+      213: -2238057038425256662
+    second: kyo_ultimate2_29
+  - first:
+      213: -2831844016438700436
+    second: kyo_ultimate2_30
+  - first:
+      213: -3545556107264558660
+    second: kyo_ultimate2_31
+  - first:
+      213: 1608929048836507979
+    second: kyo_ultimate2_32
+  - first:
+      213: 8020031560840206655
+    second: kyo_ultimate2_33
+  - first:
+      213: -1092031917324481545
+    second: kyo_ultimate2_34
+  - first:
+      213: -1759984805508583229
+    second: kyo_ultimate2_35
+  - first:
+      213: -6643360139035329569
+    second: kyo_ultimate2_36
+  - first:
+      213: -1525445434715896668
+    second: kyo_ultimate2_37
+  - first:
+      213: 6134813544612514520
+    second: kyo_ultimate2_38
+  - first:
+      213: -6535671325975723011
+    second: kyo_ultimate2_39
+  - first:
+      213: -3670257471871099838
+    second: kyo_ultimate2_40
+  - first:
+      213: 8924337084551767524
+    second: kyo_ultimate2_41
+  - first:
+      213: -2961485734033649209
+    second: kyo_ultimate2_42
+  - first:
+      213: 8070354418326467269
+    second: kyo_ultimate2_43
+  - first:
+      213: -2589341266386253819
+    second: kyo_ultimate2_44
+  - first:
+      213: 1541607008798347246
+    second: kyo_ultimate2_45
+  - first:
+      213: -8938265331898923054
+    second: kyo_ultimate2_46
+  - first:
+      213: -4171131523021977870
+    second: kyo_ultimate2_47
+  - first:
+      213: -8525717613802684908
+    second: kyo_ultimate2_48
+  - first:
+      213: -689895230267046080
+    second: kyo_ultimate2_49
+  - first:
+      213: 1887002197590619314
+    second: kyo_ultimate2_50
+  - first:
+      213: -2558046416228737000
+    second: kyo_ultimate2_51
+  - first:
+      213: -6067549758116820554
+    second: kyo_ultimate2_52
+  - first:
+      213: -439442597725890289
+    second: kyo_ultimate2_53
+  - first:
+      213: -1940949382599200806
+    second: kyo_ultimate2_54
+  - first:
+      213: -8300825935545716754
+    second: kyo_ultimate2_55
+  - first:
+      213: -2878191475279933207
+    second: kyo_ultimate2_56
+  - first:
+      213: -5469616822804136915
+    second: kyo_ultimate2_57
+  - first:
+      213: -4738278872953205009
+    second: kyo_ultimate2_58
+  - first:
+      213: -8628656147660662163
+    second: kyo_ultimate2_59
+  - first:
+      213: 4061552235800772077
+    second: kyo_ultimate2_60
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 40
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: kyo_ultimate2_0
+      rect:
+        serializedVersion: 2
+        x: 19
+        y: 489
+        width: 97
+        height: 90
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cd713ce41b001ffa0800000000000000
+      internalID: -5768828886154274852
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_1
+      rect:
+        serializedVersion: 2
+        x: 124
+        y: 497
+        width: 58
+        height: 91
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ddc596279d452cc0800000000000000
+      internalID: -3736495004251206183
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_2
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 497
+        width: 46
+        height: 97
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ef3b686972c0bb100800000000000000
+      internalID: 124706778851488766
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_3
+      rect:
+        serializedVersion: 2
+        x: 277
+        y: 498
+        width: 64
+        height: 102
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 001b28c862ec3dad0800000000000000
+      internalID: -2678570688393858816
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_4
+      rect:
+        serializedVersion: 2
+        x: 361
+        y: 499
+        width: 90
+        height: 92
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f5f7def14bf4257d0800000000000000
+      internalID: -2931192772416405665
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_5
+      rect:
+        serializedVersion: 2
+        x: 457
+        y: 498
+        width: 95
+        height: 89
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ab0e86855b465a820800000000000000
+      internalID: 2928857862709502138
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_6
+      rect:
+        serializedVersion: 2
+        x: 585
+        y: 498
+        width: 57
+        height: 87
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9f0adefda063cae90800000000000000
+      internalID: -7013171099388239623
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_7
+      rect:
+        serializedVersion: 2
+        x: 644
+        y: 498
+        width: 65
+        height: 87
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 43a8b145042f55470800000000000000
+      internalID: 8382872639522966068
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_8
+      rect:
+        serializedVersion: 2
+        x: 736
+        y: 498
+        width: 84
+        height: 85
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04d72a4e5f104c410800000000000000
+      internalID: 1496323131808316736
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_9
+      rect:
+        serializedVersion: 2
+        x: 826
+        y: 498
+        width: 70
+        height: 92
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 033c366a020ecf570800000000000000
+      internalID: 8501916627403785008
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_10
+      rect:
+        serializedVersion: 2
+        x: 903
+        y: 497
+        width: 64
+        height: 95
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dcea9cb48165ce880800000000000000
+      internalID: -8580388527696924979
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_11
+      rect:
+        serializedVersion: 2
+        x: 991
+        y: 497
+        width: 84
+        height: 91
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2a74b051e97bef7e0800000000000000
+      internalID: -1729743317277915230
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_12
+      rect:
+        serializedVersion: 2
+        x: 1089
+        y: 499
+        width: 84
+        height: 88
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e11028c105c7c680800000000000000
+      internalID: -8734796340818603545
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_13
+      rect:
+        serializedVersion: 2
+        x: 1175
+        y: 497
+        width: 93
+        height: 87
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 43a3d105166828590800000000000000
+      internalID: -7673423062571861452
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_14
+      rect:
+        serializedVersion: 2
+        x: 1271
+        y: 502
+        width: 111
+        height: 90
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4ced6ba1c19097270800000000000000
+      internalID: 8248634208817700548
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_15
+      rect:
+        serializedVersion: 2
+        x: 1396
+        y: 499
+        width: 68
+        height: 88
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 010828b9112a9f6b0800000000000000
+      internalID: -5261996493098549232
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_16
+      rect:
+        serializedVersion: 2
+        x: 1466
+        y: 499
+        width: 60
+        height: 86
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f9e21f55d784a1240800000000000000
+      internalID: 4763199259047702175
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_17
+      rect:
+        serializedVersion: 2
+        x: 1529
+        y: 497
+        width: 44
+        height: 94
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0386da73d8a019c10800000000000000
+      internalID: 2058438106325805104
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_18
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 354
+        width: 76
+        height: 95
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ce7b870ccc4099430800000000000000
+      internalID: 3790065838857959404
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_19
+      rect:
+        serializedVersion: 2
+        x: 87
+        y: 349
+        width: 79
+        height: 95
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: edcf2b596ac92f450800000000000000
+      internalID: 6121127082839964894
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_20
+      rect:
+        serializedVersion: 2
+        x: 169
+        y: 353
+        width: 81
+        height: 90
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 29e97256f276ef420800000000000000
+      internalID: 2665681482708131474
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_21
+      rect:
+        serializedVersion: 2
+        x: 253
+        y: 349
+        width: 76
+        height: 107
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2ecbf42d466034010800000000000000
+      internalID: 1171787358141398242
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_22
+      rect:
+        serializedVersion: 2
+        x: 331
+        y: 353
+        width: 75
+        height: 91
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ddb1f395b27e55400800000000000000
+      internalID: 312409922539035613
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_23
+      rect:
+        serializedVersion: 2
+        x: 412
+        y: 353
+        width: 75
+        height: 91
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ed9f6a8820c16300800000000000000
+      internalID: 243687135208513001
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_24
+      rect:
+        serializedVersion: 2
+        x: 493
+        y: 353
+        width: 81
+        height: 91
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 28a1897b44ed01b20800000000000000
+      internalID: 3103224529977612930
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_25
+      rect:
+        serializedVersion: 2
+        x: 574
+        y: 353
+        width: 97
+        height: 91
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9f3d5dbd0781c0aa0800000000000000
+      internalID: -6193548514537647111
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_26
+      rect:
+        serializedVersion: 2
+        x: 674
+        y: 366
+        width: 92
+        height: 89
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d507376bfc63acee0800000000000000
+      internalID: -1240118481640001443
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_27
+      rect:
+        serializedVersion: 2
+        x: 780
+        y: 353
+        width: 99
+        height: 90
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1895f88f97dd1b470800000000000000
+      internalID: 8408745495208352129
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_28
+      rect:
+        serializedVersion: 2
+        x: 935
+        y: 360
+        width: 72
+        height: 85
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1f0d5455fb405a2c0800000000000000
+      internalID: -4421122239378370319
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_29
+      rect:
+        serializedVersion: 2
+        x: 1011
+        y: 349
+        width: 66
+        height: 85
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a2d89953bf2d0f0e0800000000000000
+      internalID: -2238057038425256662
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_30
+      rect:
+        serializedVersion: 2
+        x: 1092
+        y: 349
+        width: 77
+        height: 77
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c661bdceed443b8d0800000000000000
+      internalID: -2831844016438700436
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_31
+      rect:
+        serializedVersion: 2
+        x: 1175
+        y: 353
+        width: 83
+        height: 74
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cb9774f6187abcec0800000000000000
+      internalID: -3545556107264558660
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_32
+      rect:
+        serializedVersion: 2
+        x: 1270
+        y: 349
+        width: 88
+        height: 79
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b4905b80270145610800000000000000
+      internalID: 1608929048836507979
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_33
+      rect:
+        serializedVersion: 2
+        x: 1367
+        y: 349
+        width: 88
+        height: 79
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f395d4f6630ec4f60800000000000000
+      internalID: 8020031560840206655
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_34
+      rect:
+        serializedVersion: 2
+        x: 1462
+        y: 361
+        width: 96
+        height: 80
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7fb4c7cc1c258d0f0800000000000000
+      internalID: -1092031917324481545
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_35
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 190
+        width: 91
+        height: 84
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3c07399e4274397e0800000000000000
+      internalID: -1759984805508583229
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_36
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 190
+        width: 74
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fdb3fcdc62b0ec3a0800000000000000
+      internalID: -6643360139035329569
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_37
+      rect:
+        serializedVersion: 2
+        x: 176
+        y: 190
+        width: 18
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4a48483957784dae0800000000000000
+      internalID: -1525445434715896668
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_38
+      rect:
+        serializedVersion: 2
+        x: 179
+        y: 190
+        width: 69
+        height: 95
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8da42e94a6c332550800000000000000
+      internalID: 6134813544612514520
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_39
+      rect:
+        serializedVersion: 2
+        x: 258
+        y: 194
+        width: 80
+        height: 126
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: df3c2867e81ac45a0800000000000000
+      internalID: -6535671325975723011
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_40
+      rect:
+        serializedVersion: 2
+        x: 339
+        y: 194
+        width: 80
+        height: 126
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 24c56e27640a01dc0800000000000000
+      internalID: -3670257471871099838
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_41
+      rect:
+        serializedVersion: 2
+        x: 420
+        y: 192
+        width: 81
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4e5ad849b4d99db70800000000000000
+      internalID: 8924337084551767524
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_42
+      rect:
+        serializedVersion: 2
+        x: 506
+        y: 190
+        width: 91
+        height: 100
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7c1998f5a60b6e6d0800000000000000
+      internalID: -2961485734033649209
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_43
+      rect:
+        serializedVersion: 2
+        x: 598
+        y: 196
+        width: 89
+        height: 85
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5c27adbb598afff60800000000000000
+      internalID: 8070354418326467269
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_44
+      rect:
+        serializedVersion: 2
+        x: 695
+        y: 190
+        width: 85
+        height: 75
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 50889ce46dfc01cd0800000000000000
+      internalID: -2589341266386253819
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_45
+      rect:
+        serializedVersion: 2
+        x: 802
+        y: 190
+        width: 71
+        height: 81
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eef8dae1863e46510800000000000000
+      internalID: 1541607008798347246
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_46
+      rect:
+        serializedVersion: 2
+        x: 872
+        y: 195
+        width: 50
+        height: 107
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2d7c9ff9907e4f380800000000000000
+      internalID: -8938265331898923054
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_47
+      rect:
+        serializedVersion: 2
+        x: 925
+        y: 199
+        width: 59
+        height: 109
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2f647dabaf92d16c0800000000000000
+      internalID: -4171131523021977870
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_48
+      rect:
+        serializedVersion: 2
+        x: 987
+        y: 190
+        width: 65
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 41efffd50019ea980800000000000000
+      internalID: -8525717613802684908
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_49
+      rect:
+        serializedVersion: 2
+        x: 1060
+        y: 190
+        width: 73
+        height: 105
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04742bb71fffc66f0800000000000000
+      internalID: -689895230267046080
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_50
+      rect:
+        serializedVersion: 2
+        x: 1152
+        y: 190
+        width: 67
+        height: 106
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2b435cd308aff2a10800000000000000
+      internalID: 1887002197590619314
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_51
+      rect:
+        serializedVersion: 2
+        x: 1249
+        y: 190
+        width: 68
+        height: 106
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 810a9b9665eff7cd0800000000000000
+      internalID: -2558046416228737000
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_52
+      rect:
+        serializedVersion: 2
+        x: 1372
+        y: 190
+        width: 85
+        height: 108
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6b9807a64abbbcba0800000000000000
+      internalID: -6067549758116820554
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_53
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1
+        width: 74
+        height: 125
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f099f5f1949c6e9f0800000000000000
+      internalID: -439442597725890289
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_54
+      rect:
+        serializedVersion: 2
+        x: 99
+        y: 4
+        width: 54
+        height: 126
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: adf2923f1dc5015e0800000000000000
+      internalID: -1940949382599200806
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_55
+      rect:
+        serializedVersion: 2
+        x: 168
+        y: 123
+        width: 9
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eefa2719aca8dcc80800000000000000
+      internalID: -8300825935545716754
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_56
+      rect:
+        serializedVersion: 2
+        x: 168
+        y: 3
+        width: 58
+        height: 126
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9e0d1604a1c9e08d0800000000000000
+      internalID: -2878191475279933207
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_57
+      rect:
+        serializedVersion: 2
+        x: 233
+        y: 0
+        width: 70
+        height: 125
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d2c324b9a740814b0800000000000000
+      internalID: -5469616822804136915
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_58
+      rect:
+        serializedVersion: 2
+        x: 328
+        y: 6
+        width: 45
+        height: 133
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: feec2e238704e3eb0800000000000000
+      internalID: -4738278872953205009
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_59
+      rect:
+        serializedVersion: 2
+        x: 390
+        y: 1
+        width: 88
+        height: 126
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d6a12b543fad04880800000000000000
+      internalID: -8628656147660662163
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: kyo_ultimate2_60
+      rect:
+        serializedVersion: 2
+        x: 498
+        y: 8
+        width: 54
+        height: 120
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ded399b4d388d5830800000000000000
+      internalID: 4061552235800772077
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      kyo_ultimate2_0: -5768828886154274852
+      kyo_ultimate2_1: -3736495004251206183
+      kyo_ultimate2_10: -8580388527696924979
+      kyo_ultimate2_11: -1729743317277915230
+      kyo_ultimate2_12: -8734796340818603545
+      kyo_ultimate2_13: -7673423062571861452
+      kyo_ultimate2_14: 8248634208817700548
+      kyo_ultimate2_15: -5261996493098549232
+      kyo_ultimate2_16: 4763199259047702175
+      kyo_ultimate2_17: 2058438106325805104
+      kyo_ultimate2_18: 3790065838857959404
+      kyo_ultimate2_19: 6121127082839964894
+      kyo_ultimate2_2: 124706778851488766
+      kyo_ultimate2_20: 2665681482708131474
+      kyo_ultimate2_21: 1171787358141398242
+      kyo_ultimate2_22: 312409922539035613
+      kyo_ultimate2_23: 243687135208513001
+      kyo_ultimate2_24: 3103224529977612930
+      kyo_ultimate2_25: -6193548514537647111
+      kyo_ultimate2_26: -1240118481640001443
+      kyo_ultimate2_27: 8408745495208352129
+      kyo_ultimate2_28: -4421122239378370319
+      kyo_ultimate2_29: -2238057038425256662
+      kyo_ultimate2_3: -2678570688393858816
+      kyo_ultimate2_30: -2831844016438700436
+      kyo_ultimate2_31: -3545556107264558660
+      kyo_ultimate2_32: 1608929048836507979
+      kyo_ultimate2_33: 8020031560840206655
+      kyo_ultimate2_34: -1092031917324481545
+      kyo_ultimate2_35: -1759984805508583229
+      kyo_ultimate2_36: -6643360139035329569
+      kyo_ultimate2_37: -1525445434715896668
+      kyo_ultimate2_38: 6134813544612514520
+      kyo_ultimate2_39: -6535671325975723011
+      kyo_ultimate2_4: -2931192772416405665
+      kyo_ultimate2_40: -3670257471871099838
+      kyo_ultimate2_41: 8924337084551767524
+      kyo_ultimate2_42: -2961485734033649209
+      kyo_ultimate2_43: 8070354418326467269
+      kyo_ultimate2_44: -2589341266386253819
+      kyo_ultimate2_45: 1541607008798347246
+      kyo_ultimate2_46: -8938265331898923054
+      kyo_ultimate2_47: -4171131523021977870
+      kyo_ultimate2_48: -8525717613802684908
+      kyo_ultimate2_49: -689895230267046080
+      kyo_ultimate2_5: 2928857862709502138
+      kyo_ultimate2_50: 1887002197590619314
+      kyo_ultimate2_51: -2558046416228737000
+      kyo_ultimate2_52: -6067549758116820554
+      kyo_ultimate2_53: -439442597725890289
+      kyo_ultimate2_54: -1940949382599200806
+      kyo_ultimate2_55: -8300825935545716754
+      kyo_ultimate2_56: -2878191475279933207
+      kyo_ultimate2_57: -5469616822804136915
+      kyo_ultimate2_58: -4738278872953205009
+      kyo_ultimate2_59: -8628656147660662163
+      kyo_ultimate2_6: -7013171099388239623
+      kyo_ultimate2_60: 4061552235800772077
+      kyo_ultimate2_7: 8382872639522966068
+      kyo_ultimate2_8: 1496323131808316736
+      kyo_ultimate2_9: 8501916627403785008
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

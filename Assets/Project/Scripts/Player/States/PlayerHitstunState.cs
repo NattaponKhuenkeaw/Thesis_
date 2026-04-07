@@ -14,6 +14,10 @@ public class PlayerHitstunState : PlayerState
     public override PlayerStateId StateId => PlayerStateId.Hitstun;
     public override PlayerStatePriority Priority => PlayerStatePriority.System;
 
+    // No capabilities — all input locked during hitstun
+    public override bool LocksMovement => true;
+    public override bool LocksFacing => true;
+
     public override void Enter()
     {
         hitstunTimer = hitstunDuration;
@@ -40,7 +44,7 @@ public class PlayerHitstunState : PlayerState
                 return;
             }
 
-            fsm.ChangeState(fsm.IdleState);
+            ExitToAppropriateMovementState();
         }
     }
 

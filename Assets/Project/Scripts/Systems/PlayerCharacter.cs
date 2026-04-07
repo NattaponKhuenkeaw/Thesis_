@@ -98,6 +98,9 @@ public class PlayerCharacter : MonoBehaviour
         if (value <= 0f || IsDead)
             return;
 
+        if (Movement != null && Movement.IsInvincible())
+            return;
+
         float previousHP = currentHP;
         currentHP -= value;
         currentHP = Mathf.Max(currentHP, 0f);
@@ -183,9 +186,8 @@ public class PlayerCharacter : MonoBehaviour
         Movement.airAcceleration = stats.airAcceleration;
         Movement.airDeceleration = stats.airDeceleration;
         Movement.airSpeedMultiplier = stats.airSpeedMultiplier;
-        Movement.dashSpeed = stats.dashSpeed;
-        Movement.dashDuration = stats.dashDuration;
-        Movement.dashCooldown = stats.dashCooldown;
+
+        Movement.dashData = characterObject.dashData;
     }
 
     private void ApplyAnimationData()

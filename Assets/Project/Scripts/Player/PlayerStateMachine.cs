@@ -5,6 +5,10 @@ using System;
 /// Centralized C# state machine for the player. Owns the canonical PlayerStateId,
 /// enforces cancel hierarchy via priority, and broadcasts state changes to all
 /// player action scripts via OnStateChanged event.
+/// 
+/// Input routing: The FSM provides centralized default routing for common transitions
+/// (dash, attack, jump, skill, ultimate). States declare what they accept via flags.
+/// States can still override input hooks for custom behavior.
 /// </summary>
 public class PlayerStateMachine : MonoBehaviour
 {
@@ -34,16 +38,14 @@ public class PlayerStateMachine : MonoBehaviour
 
     /// <summary>
     /// Cheap enum check — no boxing, no type comparison.
-    /// Subscribe-friendly for Inspector visualization across all player scripts.
     /// </summary>
     public PlayerStateId CurrentStateId => CurrentState != null ? CurrentState.StateId : PlayerStateId.None;
 
     // =========================================================
-    // Events (always available, not editor-only)
+    // Events
     // =========================================================
     /// <summary>
     /// Fired on every state transition. Subscribers receive (previousStateId, newStateId).
-    /// PlayerMovement, PlayerAnimator, UI, etc. can subscribe for reactive updates.
     /// </summary>
     public event Action<PlayerStateId, PlayerStateId> OnStateChanged;
 
@@ -73,7 +75,7 @@ public class PlayerStateMachine : MonoBehaviour
     }
 
     // =========================================================
-    // Public Methods
+    // State Transition Methods
     // =========================================================
 
     /// <summary>
@@ -103,8 +105,6 @@ public class PlayerStateMachine : MonoBehaviour
     /// <summary>
     /// Priority-gated transition. Only succeeds if the incoming state's
     /// priority is >= the current state's priority (cancel hierarchy).
-    /// Use for input-driven transitions where lower actions should not
-    /// interrupt higher ones.
     /// Returns true if transition occurred.
     /// </summary>
     public bool TryChangeState(PlayerState newState)
@@ -131,20 +131,170 @@ public class PlayerStateMachine : MonoBehaviour
         return (int)incomingPriority >= (int)CurrentState.Priority;
     }
 
+    public bool IsInState(PlayerStateId stateId) => CurrentStateId == stateId;
+    public bool IsInState<T>() where T : PlayerState => CurrentState is T;
+
+    // =========================================================
+    // Centralized Input Routing
+    // These methods atomically handle "check → transition → forward"
+    // so individual states don't need the fragile two-step pattern.
+    // =========================================================
+
     /// <summary>
-    /// Convenience: check if current state matches a specific StateId.
+    /// Route move input. Always forwarded to current state.
     /// </summary>
-    public bool IsInState(PlayerStateId stateId)
+    public void RouteMoveInput(Vector2 input)
     {
-        return CurrentStateId == stateId;
+        CurrentState?.OnMoveInput(input);
     }
 
     /// <summary>
-    /// Convenience: check if current state is of a specific type.
+    /// Route down input. Always forwarded to current state.
     /// </summary>
-    public bool IsInState<T>() where T : PlayerState
+    public void RouteDownInput(bool held)
     {
-        return CurrentState is T;
+        CurrentState?.OnDownInput(held);
+    }
+
+    /// <summary>
+    /// Route jump held. Always forwarded to current state.
+    /// </summary>
+    public void RouteJumpHeld(bool held)
+    {
+        CurrentState?.OnJumpHeld(held);
+    }
+
+    /// <summary>
+    /// Route jump pressed. If the current state has custom jump logic (override),
+    /// it handles it. Otherwise, if AcceptsJumpInput, transitions to JumpState.
+    /// </summary>
+    public void RouteJumpInput()
+    {
+        if (CurrentState == null) return;
+
+        // States with custom jump behavior (JumpState has drop-down/plunge/double-jump)
+        // override OnJumpInput — let them handle it first.
+        // For states that just declare AcceptsJumpInput, do the default transition.
+        if (HasCustomJumpHandler())
+        {
+            CurrentState.OnJumpInput();
+            return;
+        }
+
+        if (CurrentState.AcceptsJumpInput)
+        {
+            ChangeState(JumpState);
+            CurrentState.OnJumpInput();
+        }
+    }
+
+    /// <summary>
+    /// Route dash pressed. Atomically handles CanDash → ChangeState → forward.
+    /// States with custom dash behavior override OnDashInput (e.g., DashState triggers physics).
+    /// </summary>
+    public void RouteDashInput(float inputX)
+    {
+        if (CurrentState == null) return;
+
+        // DashState has custom OnDashInput (initiates physics) — let it handle directly
+        if (HasCustomDashHandler())
+        {
+            CurrentState.OnDashInput(inputX);
+            return;
+        }
+
+        // Default routing: check flag, check can-dash, transition atomically
+        if (CurrentState.AcceptsDashInput
+            && playerCharacter.Movement != null
+            && playerCharacter.Movement.CanDash())
+        {
+            ChangeState(DashState);
+            CurrentState.OnDashInput(inputX);
+        }
+    }
+
+    /// <summary>
+    /// Route attack pressed. Atomically handles transition to AttackState.
+    /// AttackState overrides OnAttackInput to chain combos.
+    /// </summary>
+    public void RouteAttackInput()
+    {
+        if (CurrentState == null) return;
+
+        // AttackState has custom OnAttackInput (chains combos)
+        if (HasCustomAttackHandler())
+        {
+            CurrentState.OnAttackInput();
+            return;
+        }
+
+        if (CurrentState.AcceptsAttackInput)
+        {
+            ChangeState(AttackState);
+            CurrentState.OnAttackInput();
+        }
+    }
+
+    /// <summary>
+    /// Route skill pressed.
+    /// </summary>
+    public void RouteSkillInput()
+    {
+        if (CurrentState == null) return;
+
+        if (CurrentState.AcceptsSkillInput
+            && playerCharacter.Skill != null
+            && playerCharacter.Skill.CanUseSkill())
+        {
+            ChangeState(SkillState);
+        }
+    }
+
+    /// <summary>
+    /// Route ultimate pressed.
+    /// </summary>
+    public void RouteUltimateInput()
+    {
+        if (CurrentState == null) return;
+
+        if (CurrentState.AcceptsUltimateInput
+            && playerCharacter.Ultimate != null
+            && playerCharacter.Ultimate.CanUseUltimate())
+        {
+            ChangeState(UltimateState);
+        }
+    }
+
+    // =========================================================
+    // Custom Handler Detection
+    // States that override input hooks beyond the base default
+    // are detected here so routing knows to defer to them.
+    // =========================================================
+
+    /// <summary>
+    /// Returns true if the current state has a custom OnJumpInput override
+    /// (not just the empty base default). Used to decide whether to use
+    /// centralized routing or let the state handle it.
+    /// </summary>
+    private bool HasCustomJumpHandler()
+    {
+        // States that override OnJumpInput for custom behavior:
+        // - JumpState (drop-down, plunge attack, double jump)
+        return CurrentState is PlayerJumpState;
+    }
+
+    private bool HasCustomDashHandler()
+    {
+        // DashState overrides OnDashInput to initiate dash physics
+        // AttackState overrides OnDashInput for cancel-window dash
+        return CurrentState is PlayerDashState || CurrentState is PlayerAttackState;
+    }
+
+    private bool HasCustomAttackHandler()
+    {
+        // AttackState overrides OnAttackInput to chain combos
+        // JumpState overrides OnAttackInput for air attacks
+        return CurrentState is PlayerAttackState || CurrentState is PlayerJumpState;
     }
 
     // =========================================================

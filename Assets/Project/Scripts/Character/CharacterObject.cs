@@ -48,12 +48,10 @@ public class CharacterObject : ScriptableObject
     public CharacterUpgrade upgrade = new CharacterUpgrade();
 
 #if UNITY_EDITOR
-    [Button("Open Hit Box Editor")]
-    private void OpenHitBoxEditor()
+    [Button("Open Animation Editor")]
+    private void OpenAnimationEditor()
     {
-        // Reflection or direct call to open the custom window.
-        // We will define HitBoxEditorWindow.OpenWindow(this); in the Editor script.
-        var type = System.Type.GetType("HitBoxEditorWindow, Assembly-CSharp-Editor");
+        var type = System.Type.GetType("AnimationEditorWindow, Assembly-CSharp-Editor");
         if (type != null)
         {
             var method = type.GetMethod("OpenWindowFromInspector", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
@@ -64,6 +62,12 @@ public class CharacterObject : ScriptableObject
         }
     }
 #endif
+
+    // =========================================================
+    // Dash Data
+    // =========================================================
+    [Header("Dash Data")]
+    public DashData dashData = new DashData();
 
     // =========================================================
     // Basic Combo Data

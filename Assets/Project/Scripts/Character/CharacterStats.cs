@@ -26,9 +26,7 @@ public class CharacterStats
     public float airDeceleration = 40f;
     public float airSpeedMultiplier = 1f;
 
-    public float dashSpeed = 20f;
-    public float dashDuration = 0.2f;
-    public float dashCooldown = 1f;
+
 
     // End of CharacterStats
 }

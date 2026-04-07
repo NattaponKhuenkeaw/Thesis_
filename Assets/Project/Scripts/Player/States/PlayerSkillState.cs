@@ -10,6 +10,11 @@ public class PlayerSkillState : PlayerState
     public override PlayerStateId StateId => PlayerStateId.Skill;
     public override PlayerStatePriority Priority => PlayerStatePriority.AttackCombat;
 
+    // Move input forwarded (for post-cast direction) but movement is locked
+    public override bool AcceptsMoveInput => true;
+    public override bool LocksMovement => true;
+    public override bool LocksFacing => true;
+
     public override void Enter()
     {
         if (player.Skill != null)
@@ -29,7 +34,7 @@ public class PlayerSkillState : PlayerState
     {
         // Safety: if skill finished but callback didn't fire
         if (player.Skill != null && !player.Skill.IsCasting())
-            fsm.ChangeState(fsm.IdleState);
+            ExitToAppropriateMovementState();
     }
 
     // =========================================================
@@ -37,13 +42,6 @@ public class PlayerSkillState : PlayerState
     // =========================================================
     private void HandleCastFinished()
     {
-        fsm.ChangeState(fsm.IdleState);
-    }
-
-    // Locked during cast — only move input forwarded
-    public override void OnMoveInput(Vector2 input)
-    {
-        if (player.Movement != null)
-            player.Movement.SetMoveInput(input);
+        ExitToAppropriateMovementState();
     }
 }

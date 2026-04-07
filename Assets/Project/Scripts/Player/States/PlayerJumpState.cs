@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// Jump/Airborne state: player is in the air (jump, fall, or walked off ledge).
-/// Handles drop-down, plunge attack, and air combos.
+/// Has custom jump logic (drop-down, plunge attack, double jump) and attack logic (air combos).
 /// </summary>
 public class PlayerJumpState : PlayerState
 {
@@ -12,6 +12,14 @@ public class PlayerJumpState : PlayerState
 
     public override PlayerStateId StateId => PlayerStateId.Jumping;
     public override PlayerStatePriority Priority => PlayerStatePriority.Ability;
+
+    // =========================================================
+    // Capabilities
+    // =========================================================
+    public override bool AcceptsMoveInput => true;
+    public override bool AcceptsDashInput => true;
+    public override bool AcceptsJumpInput => true;   // custom handler (drop-down, plunge, double jump)
+    public override bool AcceptsAttackInput => true;  // custom handler (air combos)
 
     public override void Update()
     {
@@ -29,19 +37,21 @@ public class PlayerJumpState : PlayerState
     }
 
     // =========================================================
-    // Input Hooks
+    // Custom Input — move also caches for drop-down/plunge checks
     // =========================================================
     public override void OnMoveInput(Vector2 input)
     {
         cachedMoveInput = input;
+        base.OnMoveInput(input);
 
         if (player.Movement != null)
-        {
-            player.Movement.SetMoveInput(input);
             player.Movement.SetDownInput(input.y < -0.5f);
-        }
     }
 
+    /// <summary>
+    /// Custom jump: drop-down → plunge → double jump priority chain.
+    /// FSM defers to this via HasCustomJumpHandler.
+    /// </summary>
     public override void OnJumpInput()
     {
         if (player.Movement == null)
@@ -62,33 +72,12 @@ public class PlayerJumpState : PlayerState
         player.Movement.Jump();
     }
 
-    public override void OnDashInput(float inputX)
-    {
-        if (player.Movement == null)
-            return;
-
-        if (player.Movement.CanDash())
-        {
-            fsm.ChangeState(fsm.DashState);
-            fsm.CurrentState.OnDashInput(inputX);
-        }
-    }
-
+    /// <summary>
+    /// Custom attack: air combos. FSM defers to this via HasCustomAttackHandler.
+    /// </summary>
     public override void OnAttackInput()
     {
         fsm.ChangeState(fsm.AttackState);
         fsm.CurrentState.OnAttackInput();
-    }
-
-    public override void OnDownInput(bool held)
-    {
-        if (player.Movement != null)
-            player.Movement.SetDownInput(held);
-    }
-
-    public override void OnJumpHeld(bool held)
-    {
-        if (player.Movement != null)
-            player.Movement.SetJumpHeld(held);
     }
 }

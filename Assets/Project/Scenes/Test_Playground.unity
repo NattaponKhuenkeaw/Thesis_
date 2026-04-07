@@ -394,11 +394,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1935851107303064062, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1935851107303064062, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1935851107303064062, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
       propertyPath: m_SizeDelta.x
@@ -664,6 +664,10 @@ PrefabInstance:
       propertyPath: targetCanvas
       value: 
       objectReference: {fileID: 2040178244}
+    - target: {fileID: 6090851060313224835, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: 815b33a35641994489dd122eacb4e98d, type: 2}
     - target: {fileID: 7851930121724842516, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: m_Name
       value: Player
@@ -2490,7 +2494,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &2040178242
 MonoBehaviour:
   m_ObjectHideFlags: 0

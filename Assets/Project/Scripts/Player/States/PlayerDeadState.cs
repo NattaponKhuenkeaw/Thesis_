@@ -10,6 +10,10 @@ public class PlayerDeadState : PlayerState
     public override PlayerStateId StateId => PlayerStateId.Dead;
     public override PlayerStatePriority Priority => PlayerStatePriority.System;
 
+    // Terminal state — no capabilities, everything locked
+    public override bool LocksMovement => true;
+    public override bool LocksFacing => true;
+
     public override void Enter()
     {
         if (player.Movement != null)

@@ -235,15 +235,6 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
             animHandler.GetComponent<Animator>().speed = 1f; 
         }
 
-        // Force Sync Animator to the current logical frame to prevent visual desync
-        // especially during multi-frame logic processing (cancels)
-        if (animHandler != null && currentStepData != null)
-        {
-            int totalFrames = currentStepData.startupFrames + currentStepData.activeFrames + currentStepData.recoveryFrames;
-            bool isAir = currentComboMode == AttackComboMode.AirNeutral;
-            animHandler.SyncCombatAnimation(comboStep, currentAttackFrame, totalFrames, isAir);
-        }
-
         // Contextual state update Based on Data
         if (currentAttackFrame <= cachedPhase1Frames)
         {
@@ -350,8 +341,8 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
         }
 
         currentFrameState = AttackFrameState.Windup;
-        currentAttackFrame = 1; // Start at 1 because we are seeding the timer
-        logicTimeCounter = 1f / 24f; // Seed with 1 frame of time so RoundToInt(time * 24) = 1 immediately
+        currentAttackFrame = 0; 
+        logicTimeCounter = 0f;
         hitstopFramesLeft = 0; 
         hitboxActiveCount = 0;
         shouldResetUpdateLoop = true;
@@ -360,9 +351,6 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
 
         if (attackMode == AttackComboMode.AirNeutral) animHandler.TriggerAirAttack(comboStep);
         else animHandler.TriggerAttackCombo(comboStep);
-        
-        // Process the first frame immediately so there is 0 latency
-        ProcessSingleLogicFrame();
     }
 
     private void TriggerHitFrame(AttackHitFrameData hitFrame)
@@ -448,8 +436,8 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
         isPlungeAttacking = true;
         plungeImpactTriggered = false;
         currentFrameState = AttackFrameState.Windup;
-        currentAttackFrame = 1;
-        logicTimeCounter = 1f / 24f;
+        currentAttackFrame = 0;
+        logicTimeCounter = 0f;
         hitstopFramesLeft = 0;
         hitboxActiveCount = 0;
         shouldResetUpdateLoop = true;
@@ -466,8 +454,6 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
         }
         if (animHandler != null) animHandler.TriggerPlungeFall(plungeData.fallAnimationStateName);
 
-        // Process first frame
-        ProcessSingleLogicFrame();
         return true;
     }
 
