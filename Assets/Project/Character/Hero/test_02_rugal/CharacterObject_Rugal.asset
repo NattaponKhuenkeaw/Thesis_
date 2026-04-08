@@ -225,7 +225,7 @@ MonoBehaviour:
       startupFrames: 2
       activeFrames: 1
       recoveryFrames: 5
-      cancelWindowStartFrame: 4
+      cancelWindowStartFrame: 2
       useForwardMotion: 1
       forwardDistance: 1
       motionStartFrame: 1
@@ -253,7 +253,7 @@ MonoBehaviour:
       startupFrames: 3
       activeFrames: 4
       recoveryFrames: 17
-      cancelWindowStartFrame: 12
+      cancelWindowStartFrame: 4
       useForwardMotion: 1
       forwardDistance: 1.5
       motionStartFrame: 3
@@ -281,7 +281,7 @@ MonoBehaviour:
       startupFrames: 5
       activeFrames: 4
       recoveryFrames: 13
-      cancelWindowStartFrame: 10
+      cancelWindowStartFrame: 5
       useForwardMotion: 1
       forwardDistance: 1
       motionStartFrame: 3

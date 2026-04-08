@@ -1,0 +1,513 @@
+/* =========================================================
+   Combat Animation Editor — USS Stylesheet
+   Premium SaaS-style dark theme
+   ========================================================= */
+
+/* ─── ROOT ─── */
+.root-container {
+    flex-grow: 1;
+    flex-direction: column;
+    background-color: #1a1a2e;
+}
+
+/* ─── HEADER BAR ─── */
+.header-bar {
+    flex-direction: row;
+    height: 44px;
+    min-height: 44px;
+    background-color: rgba(20, 20, 35, 0.92);
+    border-bottom-width: 1px;
+    border-bottom-color: #2a2a45;
+    padding-left: 12px;
+    padding-right: 12px;
+    align-items: center;
+}
+
+.header-character {
+    flex-direction: row;
+    align-items: center;
+    width: 200px;
+}
+
+.header-character__icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 13px;
+    background-color: #3a3a55;
+    margin-right: 8px;
+}
+
+.header-character__name {
+    font-size: 13px;
+    color: #E8E8F0;
+    -unity-font-style: bold;
+}
+
+.header-breadcrumb {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+}
+
+.header-breadcrumb__pill {
+    background-color: #242438;
+    border-radius: 14px;
+    padding: 4px 16px;
+    border-width: 1px;
+    border-color: #2a2a45;
+}
+
+.header-breadcrumb__text {
+    font-size: 11px;
+    color: #8888AA;
+}
+
+.header-frame-counter {
+    width: 160px;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.header-frame-counter__pill {
+    background-color: rgba(0, 212, 255, 0.12);
+    border-radius: 14px;
+    padding: 4px 14px;
+    border-width: 1px;
+    border-color: rgba(0, 212, 255, 0.3);
+}
+
+.header-frame-counter__text {
+    font-size: 12px;
+    color: #00D4FF;
+    -unity-font-style: bold;
+}
+
+/* ─── BODY (3-column) ─── */
+.body-container {
+    flex-grow: 1;
+    flex-direction: row;
+}
+
+/* ─── LEFT SIDEBAR ─── */
+.sidebar {
+    width: 220px;
+    min-width: 180px;
+    background-color: #1e1e30;
+    border-right-width: 1px;
+    border-right-color: #2a2a45;
+    padding-top: 8px;
+}
+
+.sidebar-scroll {
+    flex-grow: 1;
+}
+
+.sidebar-category {
+    margin-bottom: 4px;
+}
+
+.sidebar-category__header {
+    flex-direction: row;
+    align-items: center;
+    padding: 6px 12px;
+    cursor: link;
+}
+
+.sidebar-category__header:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.sidebar-category__arrow {
+    font-size: 9px;
+    color: #555570;
+    margin-right: 6px;
+    width: 12px;
+}
+
+.sidebar-category__label {
+    font-size: 12px;
+    color: #8888AA;
+    -unity-font-style: bold;
+}
+
+.sidebar-items {
+    margin-left: 20px;
+}
+
+.sidebar-item {
+    padding: 5px 12px;
+    padding-left: 14px;
+    border-left-width: 3px;
+    border-left-color: transparent;
+    cursor: link;
+}
+
+.sidebar-item:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.sidebar-item--active {
+    background-color: rgba(0, 212, 255, 0.08);
+    border-left-color: #00D4FF;
+}
+
+.sidebar-item__label {
+    font-size: 11px;
+    color: #8888AA;
+}
+
+.sidebar-item--active > .sidebar-item__label {
+    color: #E8E8F0;
+    -unity-font-style: bold;
+}
+
+/* ─── CENTER AREA ─── */
+.center-area {
+    flex-grow: 1;
+    flex-direction: column;
+    min-width: 300px;
+}
+
+/* Preview Viewport */
+.preview-viewport {
+    height: 160px;
+    min-height: 100px;
+    background-color: #0d0d1a;
+    border-radius: 8px;
+    margin: 8px;
+    border-width: 1px;
+    border-color: #2a2a40;
+    align-items: center;
+    justify-content: center;
+}
+
+.preview-viewport__status {
+    font-size: 11px;
+    color: #555570;
+    -unity-font-style: italic;
+}
+
+.preview-viewport__clip-name {
+    font-size: 12px;
+    color: #8888AA;
+    margin-top: 4px;
+}
+
+/* Clip Selector Row */
+.clip-selector-row {
+    flex-direction: row;
+    padding: 4px 12px;
+    align-items: center;
+}
+
+.clip-selector-row > Label {
+    width: 80px;
+    font-size: 11px;
+    color: #8888AA;
+}
+
+.clip-selector-row > ObjectField {
+    flex-grow: 1;
+}
+
+/* ─── TIMELINE DASHBOARD ─── */
+.timeline-dashboard {
+    flex-grow: 1;
+    margin: 0 8px 8px 8px;
+    background-color: #141420;
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: #2a2a40;
+    min-height: 160px;
+    overflow: hidden;
+}
+
+.timeline-canvas {
+    flex-grow: 1;
+    min-height: 100px;
+}
+
+/* Multi-Lane Labels */
+.timeline-lanes {
+    flex-direction: column;
+    padding: 0 8px;
+}
+
+.timeline-lane {
+    flex-direction: row;
+    height: 18px;
+    align-items: center;
+    margin-bottom: 1px;
+}
+
+.timeline-lane__label {
+    width: 60px;
+    font-size: 9px;
+    color: #555570;
+    -unity-font-style: bold;
+}
+
+/* Transport Bar */
+.transport-bar {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding: 6px 12px;
+    border-top-width: 1px;
+    border-top-color: #2a2a40;
+    background-color: #1a1a28;
+}
+
+.transport-btn {
+    width: 32px;
+    height: 26px;
+    border-radius: 6px;
+    background-color: #242438;
+    border-width: 1px;
+    border-color: #2a2a45;
+    margin: 0 2px;
+    -unity-text-align: middle-center;
+    font-size: 12px;
+    color: #8888AA;
+    cursor: link;
+}
+
+.transport-btn:hover {
+    background-color: #2e2e48;
+    color: #E8E8F0;
+}
+
+.transport-btn--play {
+    width: 36px;
+    background-color: rgba(0, 212, 255, 0.15);
+    border-color: rgba(0, 212, 255, 0.3);
+    color: #00D4FF;
+}
+
+.transport-btn--play:hover {
+    background-color: rgba(0, 212, 255, 0.25);
+}
+
+.transport-frame-label {
+    font-size: 13px;
+    color: #E8E8F0;
+    -unity-font-style: bold;
+    margin: 0 16px;
+    min-width: 120px;
+    -unity-text-align: middle-center;
+}
+
+.transport-slider {
+    flex-grow: 1;
+    max-width: 300px;
+    margin-left: 8px;
+}
+
+/* ─── RIGHT PANEL ─── */
+.property-panel {
+    width: 280px;
+    min-width: 240px;
+    background-color: #1a1a2a;
+    border-left-width: 1px;
+    border-left-color: #2a2a45;
+}
+
+.property-scroll {
+    flex-grow: 1;
+    padding: 8px;
+}
+
+/* Property Cards */
+.property-card {
+    background-color: #242438;
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: #2a2a45;
+    margin-bottom: 8px;
+    padding: 0;
+    overflow: hidden;
+}
+
+.property-card__header {
+    flex-direction: row;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom-width: 1px;
+    border-bottom-color: #2a2a45;
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.property-card__header-text {
+    font-size: 12px;
+    color: #00D4FF;
+    -unity-font-style: bold;
+}
+
+.property-card__body {
+    padding: 10px 12px;
+}
+
+.property-card__body > * {
+    margin-bottom: 4px;
+}
+
+/* Card field rows */
+.card-field-row {
+    flex-direction: row;
+    align-items: center;
+    min-height: 20px;
+    margin-bottom: 3px;
+}
+
+.card-field-row > Label {
+    width: 100px;
+    min-width: 80px;
+    font-size: 11px;
+    color: #8888AA;
+}
+
+.card-field-row > IntegerField,
+.card-field-row > FloatField,
+.card-field-row > TextField,
+.card-field-row > Toggle,
+.card-field-row > EnumField {
+    flex-grow: 1;
+}
+
+.card-separator {
+    height: 1px;
+    background-color: #2a2a45;
+    margin: 6px 0;
+}
+
+.card-sub-header {
+    font-size: 10px;
+    color: #555570;
+    -unity-font-style: bold;
+    margin-top: 4px;
+    margin-bottom: 2px;
+}
+
+/* Add Hit Frame Button */
+.add-hitframe-btn {
+    height: 32px;
+    border-radius: 8px;
+    background-color: rgba(68, 221, 102, 0.12);
+    border-width: 1px;
+    border-color: rgba(68, 221, 102, 0.3);
+    color: #44DD66;
+    font-size: 12px;
+    -unity-font-style: bold;
+    margin: 4px 8px 8px 8px;
+    cursor: link;
+}
+
+.add-hitframe-btn:hover {
+    background-color: rgba(68, 221, 102, 0.2);
+}
+
+/* Hit Frame Accordion Header */
+.hitframe-header {
+    flex-direction: row;
+    align-items: center;
+    height: 30px;
+    padding: 0 10px;
+    margin-bottom: 2px;
+    border-radius: 6px;
+    background-color: #242438;
+    cursor: link;
+}
+
+.hitframe-header:hover {
+    background-color: #2a2a42;
+}
+
+.hitframe-header__accent {
+    width: 4px;
+    height: 20px;
+    border-radius: 2px;
+    margin-right: 8px;
+}
+
+.hitframe-header__text {
+    flex-grow: 1;
+    font-size: 11px;
+    color: #CCCCDD;
+}
+
+.hitframe-header__delete {
+    font-size: 10px;
+    color: #FF4444;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background-color: rgba(255, 68, 68, 0.1);
+    border-width: 1px;
+    border-color: rgba(255, 68, 68, 0.2);
+}
+
+.hitframe-header__delete:hover {
+    background-color: rgba(255, 68, 68, 0.2);
+}
+
+/* Placeholder / Empty State */
+.empty-state {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+}
+
+.empty-state__text {
+    font-size: 13px;
+    color: #555570;
+    -unity-text-align: middle-center;
+}
+
+/* MinMax Slider readout */
+.phase-readout {
+    font-size: 11px;
+    color: #E8E8F0;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-bottom: 4px;
+}
+
+.phase-fields {
+    flex-direction: row;
+}
+
+.phase-fields > IntegerField {
+    flex-grow: 1;
+    margin: 0 2px;
+}
+
+/* AutoSync Warning */
+.autosync-box {
+    background-color: rgba(255, 200, 50, 0.08);
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: rgba(255, 200, 50, 0.2);
+    padding: 8px;
+    margin: 8px;
+}
+
+.autosync-box__text {
+    font-size: 11px;
+    color: #DDAA33;
+    margin-bottom: 6px;
+}
+
+.autosync-box__btn {
+    height: 28px;
+    border-radius: 6px;
+    background-color: rgba(255, 215, 0, 0.15);
+    border-width: 1px;
+    border-color: rgba(255, 215, 0, 0.3);
+    color: #FFD700;
+    font-size: 11px;
+    -unity-font-style: bold;
+}
+
+.autosync-box__btn:hover {
+    background-color: rgba(255, 215, 0, 0.25);
+}
