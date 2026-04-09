@@ -420,11 +420,9 @@ public class AnimationEditorWindow : EditorWindow
     {
         if (selectedCharacter != null)
             EditorUtility.SetDirty(selectedCharacter);
+        
+        // Refresh grid visuals (safe, does not destroy focus)
         RefreshTimeline();
-
-        // Rebuild cards to reflect changes
-        if (treeController?.SelectedNode != null)
-            cardBuilder?.Build(treeController.SelectedNode);
     }
 
     // =========================================================
@@ -466,9 +464,9 @@ public class AnimationEditorWindow : EditorWindow
             if (clip != null)
             {
                 float dt = (float)EditorApplication.timeSinceStartup - lastTime;
-                scrubberFrame += Mathf.RoundToInt(dt * clip.frameRate);
+                scrubberFrame += Mathf.RoundToInt(dt * LOGIC_FPS);
 
-                int total = GetTotalClipFrames(clip);
+                int total = GetCurrentTotalFrames();
                 if (scrubberFrame >= total)
                 {
                     scrubberFrame = 0;
@@ -483,13 +481,17 @@ public class AnimationEditorWindow : EditorWindow
     // =========================================================
     // TIMELINE REFRESH — Component-synced track system
     // =========================================================
+    private const float LOGIC_FPS = 24f;
+
     private void RefreshTimeline()
     {
         if (timelineGrid == null) return;
 
         var node = treeController?.SelectedNode;
+        AnimationClip clip = GetCurrentClip();
         int totalFrames = 0;
         int su = 0, act = 0, rec = 0;
+        int cancel = 0;
 
         // Clear tracks
         timelineGrid.Tracks.Clear();
@@ -499,11 +501,12 @@ public class AnimationEditorWindow : EditorWindow
             su = step.startupFrames;
             act = step.activeFrames;
             rec = step.recoveryFrames;
-            AnimationClip stepClip = step.animationClip;
-            totalFrames = stepClip != null ? GetTotalClipFrames(stepClip) : su + act + rec;
+            cancel = step.cancelWindowStartFrame;
+            int phaseTotal = su + act + rec;
+            int clipFrames = clip != null ? Mathf.CeilToInt(clip.length * LOGIC_FPS) : 0;
+            totalFrames = Mathf.Max(phaseTotal, clipFrames);
 
-            float fps = stepClip != null ? stepClip.frameRate : 24f;
-            timelineGrid.Setup(totalFrames, fps);
+            timelineGrid.Setup(totalFrames, LOGIC_FPS);
 
             // ── Build tracks from attached components ──
 
@@ -575,11 +578,22 @@ public class AnimationEditorWindow : EditorWindow
             su = dash.startupFrames;
             act = dash.activeFrames;
             rec = dash.recoveryFrames;
-            AnimationClip dashClip = dash.animationClip;
-            totalFrames = dashClip != null ? GetTotalClipFrames(dashClip) : su + act + rec;
+            cancel = dash.cancelWindowStartFrame;
+            int phaseTotal = su + act + rec;
+            int clipFrames = clip != null ? Mathf.CeilToInt(clip.length * LOGIC_FPS) : 0;
+            totalFrames = Mathf.Max(phaseTotal, clipFrames);
 
-            float fps = dashClip != null ? dashClip.frameRate : 24f;
-            timelineGrid.Setup(totalFrames, fps);
+            timelineGrid.Setup(totalFrames, LOGIC_FPS);
+
+            // Dash Motion Track (Visualization of Speed/Duration)
+            var dashMotionTrack = new TimelineGridElement.TimelineTrack
+            {
+                label = "Dash Physics",
+                color = new Color(0.1f, 0.6f, 1f) // Sky blue for dash
+            };
+            // Visualize the active dash physics range
+            dashMotionTrack.ranges.Add((su, act));
+            timelineGrid.Tracks.Add(dashMotionTrack);
         }
         else
         {
@@ -589,6 +603,7 @@ public class AnimationEditorWindow : EditorWindow
         timelineGrid.StartupFrames = su;
         timelineGrid.ActiveFrames = act;
         timelineGrid.RecoveryFrames = rec;
+        timelineGrid.CancelFrame = cancel;
         timelineGrid.PlayheadFrame = scrubberFrame;
         timelineGrid.Refresh();
 
@@ -599,7 +614,6 @@ public class AnimationEditorWindow : EditorWindow
             transportFrameLabel.text = $"Frame: {scrubberFrame} / {totalFrames}";
 
         // Update preview
-        AnimationClip clip = GetCurrentClip();
         if (previewStatusLabel != null)
         {
             previewStatusLabel.text = clip != null ? "Previewing in Scene View" : "No clip assigned";
@@ -640,9 +654,17 @@ public class AnimationEditorWindow : EditorWindow
     {
         var node = treeController?.SelectedNode;
         if (node?.DataType == "AttackStep" && node.DataRef is AttackStepData step)
-            return step.animationClip != null ? GetTotalClipFrames(step.animationClip) : step.startupFrames + step.activeFrames + step.recoveryFrames;
+        {
+            int phaseTotal = step.startupFrames + step.activeFrames + step.recoveryFrames;
+            int clipFrames = step.animationClip != null ? Mathf.CeilToInt(step.animationClip.length * LOGIC_FPS) : 0;
+            return Mathf.Max(phaseTotal, clipFrames);
+        }
         if (node?.DataType == "Dash" && node.DataRef is DashData dash)
-            return dash.animationClip != null ? GetTotalClipFrames(dash.animationClip) : dash.startupFrames + dash.activeFrames + dash.recoveryFrames;
+        {
+            int phaseTotal = dash.startupFrames + dash.activeFrames + dash.recoveryFrames;
+            int clipFrames = dash.animationClip != null ? Mathf.CeilToInt(dash.animationClip.length * LOGIC_FPS) : 0;
+            return Mathf.Max(phaseTotal, clipFrames);
+        }
         return 0;
     }
 
@@ -679,7 +701,7 @@ public class AnimationEditorWindow : EditorWindow
         if (!AnimationMode.InAnimationMode())
             AnimationMode.StartAnimationMode();
 
-        float time = frame / clip.frameRate;
+        float time = frame / LOGIC_FPS;
         AnimationMode.BeginSampling();
         AnimationMode.SampleAnimationClip(previewInstance, clip, time);
         AnimationMode.EndSampling();

@@ -126,15 +126,21 @@ public abstract class FrameDataPlayerState : PlayerState
             return;
 
         logicTimeCounter += Time.fixedDeltaTime;
-        int targetFrame = Mathf.RoundToInt(logicTimeCounter * LOGIC_FPS);
+        
+        // Revised math: bias +0.999 ensures frame 1 triggers on the very first 
+        // tick (0.02s * 24 = 0.48, 0.48 + 0.999 = 1.47 -> Floor = 1).
+        // This eliminates the 60ms "feel" lag.
+        int targetFrame = Mathf.FloorToInt(logicTimeCounter * LOGIC_FPS + 0.999f);
 
         while (currentFrame < targetFrame)
         {
             currentFrame++;
+            int frameCapture = currentFrame; // Check for external resets
+
             previousPhase = currentPhase;
             currentPhase = cachedFrameData.GetPhase(currentFrame);
 
-            // Phase transition hooks (only on first frame of each new phase)
+            // Phase transition hooks
             if (currentPhase != previousPhase)
             {
                 OnPhaseChanged(previousPhase, currentPhase);
@@ -146,8 +152,19 @@ public abstract class FrameDataPlayerState : PlayerState
             // Handle input mid-action
             InputHandleMidAction(currentPhase);
 
-            // If we transitioned out, stop processing
-            if (currentPhase == ActionPhase.Done || fsm.CurrentState != this)
+            // EXIT PROTECTION:
+            // 1. If we transitioned out of this state, stop immediately.
+            if (fsm.CurrentState != this)
+                return;
+
+            // 2. If 'RestartAction()' was called within InputHandleMidAction (combo chain),
+            // currentFrame will be reset to 0. We MUST break here so the new action's 
+            // Startup frames don't get consumed by the remaining targetFrame ticks.
+            if (currentFrame != frameCapture)
+                break;
+
+            // 3. Action naturally finished
+            if (currentPhase == ActionPhase.Done)
                 return;
         }
     }
@@ -165,6 +182,11 @@ public abstract class FrameDataPlayerState : PlayerState
     /// <summary>Called once when the phase changes (first frame of new phase).</summary>
     protected virtual void OnPhaseChanged(ActionPhase oldPhase, ActionPhase newPhase)
     {
+        if (fsm.showFrameDataLogs)
+        {
+            fsm.Log("FrameData", $"{StateId} Phase: {oldPhase} \u2192 {newPhase} (Frame {currentFrame})", new Color(1f, 0.84f, 0f));
+        }
+
         switch (newPhase)
         {
             case ActionPhase.Startup:  OnStartupBegin();  break;

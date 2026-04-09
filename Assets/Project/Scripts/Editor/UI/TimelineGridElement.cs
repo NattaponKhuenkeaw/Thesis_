@@ -43,6 +43,7 @@ namespace CombatEditor.UI
         public int   StartupFrames { get; set; }
         public int   ActiveFrames  { get; set; }
         public int   RecoveryFrames{ get; set; }
+        public int   CancelFrame   { get; set; }
         public int   PlayheadFrame { get; set; }
 
         // ── Dynamic tracks ──
@@ -246,7 +247,33 @@ namespace CombatEditor.UI
                 y += TRACK_H + ROW_GAP;
             }
 
-            // ── 4. Playhead ──
+            // ── 4. Cancel Window Marker ──
+            if (CancelFrame > 0 && CancelFrame < TotalFrames)
+            {
+                float cx = CancelFrame * BOX_W;
+                p.strokeColor = new Color(1f, 0.8f, 0f, 0.6f); // Yellowish
+                p.lineWidth = 1.5f;
+                // Draw dashed vertical line
+                for (float dashY = 0; dashY < y; dashY += 6)
+                {
+                    p.BeginPath();
+                    p.MoveTo(new Vector2(cx, dashY));
+                    p.LineTo(new Vector2(cx, Mathf.Min(dashY + 3, y)));
+                    p.Stroke();
+                }
+
+                // Small triangular marker at top of phase row
+                float markerY = RULER_H;
+                p.fillColor = new Color(1f, 0.8f, 0f);
+                p.BeginPath();
+                p.MoveTo(new Vector2(cx, markerY));
+                p.LineTo(new Vector2(cx - 4, markerY - 6));
+                p.LineTo(new Vector2(cx + 4, markerY - 6));
+                p.ClosePath();
+                p.Fill();
+            }
+
+            // ── 5. Playhead ──
             float phX = PlayheadFrame * BOX_W + BOX_W * 0.5f;
             DrawRect(p, phX - PLAYHEAD_W * 0.5f, 0, PLAYHEAD_W, y, ColPlayhead);
 

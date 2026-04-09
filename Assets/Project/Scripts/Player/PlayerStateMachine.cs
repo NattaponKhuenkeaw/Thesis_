@@ -32,6 +32,14 @@ public class PlayerStateMachine : MonoBehaviour
     public PlayerDeadState DeadState { get; private set; }
 
     // =========================================================
+    // Debug Configuration
+    // =========================================================
+    [Header("Debug Configuration")]
+    public bool showFsmLogs = true;
+    public bool showFrameDataLogs = true;
+    public bool showCombatLogs = true;
+
+    // =========================================================
     // Current State
     // =========================================================
     public PlayerState CurrentState { get; private set; }
@@ -115,11 +123,23 @@ public class PlayerStateMachine : MonoBehaviour
 
         PlayerStateId newId = CurrentStateId;
 
-#if UNITY_EDITOR
-        Debug.Log($"[PlayerFSM] {prevId} → {newId}");
-#endif
+        if (showFsmLogs)
+        {
+            Log("FSM", $"{prevId} \u2192 {newId}", Color.cyan);
+        }
 
         OnStateChanged?.Invoke(prevId, newId);
+    }
+
+    /// <summary>
+    /// Centralized color-coded logging for player systems.
+    /// </summary>
+    public void Log(string category, string message, Color color)
+    {
+#if UNITY_EDITOR
+        string hex = ColorUtility.ToHtmlStringRGB(color);
+        Debug.Log($"<color=#{hex}><b>[{category}]</b> {message}</color>");
+#endif
     }
 
     /// <summary>

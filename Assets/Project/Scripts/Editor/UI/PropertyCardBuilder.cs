@@ -73,7 +73,14 @@ namespace CombatEditor.UI
                 if (step.animationClip != null)
                 {
                     int total = Mathf.RoundToInt(step.animationClip.length * step.animationClip.frameRate);
-                    AddPhaseSlider(body, step, total);
+                    AddPhaseSlider(body, step.startupFrames, step.activeFrames, step.recoveryFrames, total, (s, a, r) =>
+                    {
+                        RecordUndo("Adjust Phases");
+                        step.startupFrames = s;
+                        step.activeFrames = a;
+                        step.recoveryFrames = r;
+                        MarkDirty();
+                    });
                 }
                 else
                 {
@@ -392,9 +399,14 @@ namespace CombatEditor.UI
                 if (dash.animationClip != null)
                 {
                     int total = Mathf.RoundToInt(dash.animationClip.length * dash.animationClip.frameRate);
-                    AddIntField(body, "Startup", dash.startupFrames, v => { RecordUndo("Edit Dash SU"); dash.startupFrames = v; MarkDirty(); });
-                    AddIntField(body, "Active", dash.activeFrames, v => { RecordUndo("Edit Dash ACT"); dash.activeFrames = v; MarkDirty(); });
-                    AddIntField(body, "Recovery", dash.recoveryFrames, v => { RecordUndo("Edit Dash REC"); dash.recoveryFrames = v; MarkDirty(); });
+                    AddPhaseSlider(body, dash.startupFrames, dash.activeFrames, dash.recoveryFrames, total, (s, a, r) =>
+                    {
+                        RecordUndo("Adjust Dash Phases");
+                        dash.startupFrames = s;
+                        dash.activeFrames = a;
+                        dash.recoveryFrames = r;
+                        MarkDirty();
+                    });
                 }
                 else
                 {
@@ -583,42 +595,63 @@ namespace CombatEditor.UI
             parent.Add(row);
         }
 
-        private void AddPhaseSlider(VisualElement parent, AttackStepData step, int total)
+        private void AddPhaseSlider(VisualElement parent, int su, int act, int rec, int total, System.Action<int, int, int> onChanges)
         {
-            float minVal = step.startupFrames;
-            float maxVal = step.startupFrames + step.activeFrames;
-
-            var readout = new Label($"SU:{step.startupFrames}  ACT:{step.activeFrames}  REC:{step.recoveryFrames}  Total:{total}");
+            var readout = new Label($"Total Animation Frames: {total}");
             readout.AddToClassList("phase-readout");
             parent.Add(readout);
 
-            var slider = new MinMaxSlider(minVal, maxVal, 0, total);
-            slider.RegisterValueChangedCallback(evt =>
-            {
-                RecordUndo("Adjust Phases");
-                int newSU = Mathf.RoundToInt(evt.newValue.x);
-                int newACT = Mathf.RoundToInt(evt.newValue.y) - newSU;
-                int newREC = total - newSU - newACT;
-                step.startupFrames = Mathf.Max(0, newSU);
-                step.activeFrames = Mathf.Max(0, newACT);
-                step.recoveryFrames = Mathf.Max(0, newREC);
-                MarkDirty();
-            });
-            parent.Add(slider);
-
+            var slider = new MinMaxSlider(su, su + act, 0, total);
+            
+            // Create fields first so we can reference them in the slider callback
             var fields = new VisualElement();
             fields.AddToClassList("phase-fields");
 
-            var suField = new IntegerField("SU") { value = step.startupFrames };
-            suField.RegisterValueChangedCallback(evt => { RecordUndo("Edit SU"); step.startupFrames = evt.newValue; MarkDirty(); });
+            var suField = new IntegerField("SU") { value = su };
+            var actField = new IntegerField("ACT") { value = act };
+            var recField = new IntegerField("REC") { value = rec };
+
+            // Slider callback: Updates the data AND the integer fields
+            slider.RegisterValueChangedCallback(evt =>
+            {
+                int newSU = Mathf.RoundToInt(evt.newValue.x);
+                int newACT = Mathf.RoundToInt(evt.newValue.y) - newSU;
+                int newREC = total - newSU - newACT;
+                
+                // Update integer fields without triggering their own change callbacks
+                suField.SetValueWithoutNotify(newSU);
+                actField.SetValueWithoutNotify(newACT);
+                recField.SetValueWithoutNotify(newREC);
+
+                onChanges?.Invoke(Mathf.Max(0, newSU), Mathf.Max(0, newACT), Mathf.Max(0, newREC));
+            });
+            parent.Add(slider);
+
+            // Integer field callbacks: Update the data AND the slider
+            suField.RegisterValueChangedCallback(evt => {
+                int nSU = evt.newValue;
+                slider.SetValueWithoutNotify(new Vector2(nSU, nSU + actField.value));
+                onChanges?.Invoke(nSU, actField.value, recField.value);
+            });
             fields.Add(suField);
 
-            var actField = new IntegerField("ACT") { value = step.activeFrames };
-            actField.RegisterValueChangedCallback(evt => { RecordUndo("Edit ACT"); step.activeFrames = evt.newValue; MarkDirty(); });
+            actField.RegisterValueChangedCallback(evt => {
+                int nACT = evt.newValue;
+                slider.SetValueWithoutNotify(new Vector2(suField.value, suField.value + nACT));
+                onChanges?.Invoke(suField.value, nACT, recField.value);
+            });
             fields.Add(actField);
 
-            var recField = new IntegerField("REC") { value = step.recoveryFrames };
-            recField.RegisterValueChangedCallback(evt => { RecordUndo("Edit REC"); step.recoveryFrames = evt.newValue; MarkDirty(); });
+            recField.RegisterValueChangedCallback(evt => {
+                int nREC = evt.newValue;
+                // REC is derived, but letting user edit it directly:
+                // We'll keep SU and ACT and let REC be what it is (total - su - act)
+                // Actually, let's make it intuitive: editing REC updates ACT
+                int nACT = total - suField.value - nREC;
+                actField.SetValueWithoutNotify(nACT);
+                slider.SetValueWithoutNotify(new Vector2(suField.value, suField.value + nACT));
+                onChanges?.Invoke(suField.value, nACT, nREC);
+            });
             fields.Add(recField);
 
             parent.Add(fields);

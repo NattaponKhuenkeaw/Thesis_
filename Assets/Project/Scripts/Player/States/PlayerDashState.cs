@@ -51,9 +51,11 @@ public class PlayerDashState : FrameDataPlayerState
     public override void Exit()
     {
         base.Exit();
-
         if (player.Movement != null)
+        {
+            player.Movement.StopDashPhysics();
             player.Movement.OnDashComplete -= HandleDashComplete;
+        }
     }
 
     // =========================================================
@@ -73,14 +75,13 @@ public class PlayerDashState : FrameDataPlayerState
 
     protected override void HandleInputDuringRecovery()
     {
-        // During recovery: consume buffered attack → dash-to-attack cancel
         ActionInputBuffer buffer = fsm.InputBuffer;
         if (buffer == null) return;
 
-        if (buffer.ConsumeAttack())
+        // Recovery: allow Jump cancel
+        if (buffer.ConsumeJump())
         {
-            fsm.ChangeState(fsm.AttackState);
-            fsm.CurrentState.OnAttackInput();
+            fsm.RouteJumpInput();
             return;
         }
     }
@@ -93,12 +94,11 @@ public class PlayerDashState : FrameDataPlayerState
         // Cancel window: attack has priority
         if (buffer.ConsumeAttack())
         {
-            fsm.ChangeState(fsm.AttackState);
-            fsm.CurrentState.OnAttackInput();
+            fsm.RouteAttackInput(); // Centralized routing handles transition
             return;
         }
 
-        // Jump cancel
+        // Jump cancel (if not already consumed in recovery)
         if (buffer.ConsumeJump())
         {
             fsm.RouteJumpInput();

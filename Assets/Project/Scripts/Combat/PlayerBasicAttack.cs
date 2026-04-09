@@ -142,6 +142,14 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
         }
     }
 
+    private void CombatLog(string message)
+    {
+        if (playerCharacter != null && playerCharacter.StateMachine != null && playerCharacter.StateMachine.showCombatLogs)
+        {
+            playerCharacter.StateMachine.Log("Combat", message, new Color(1f, 0.55f, 0f));
+        }
+    }
+
     // =========================================================
     // State-Driven Mode
     // When PlayerAttackState drives this engine, it calls these methods
@@ -272,16 +280,81 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
 
     private void ProcessHitFrames(int frame)
     {
-        if (currentStepData == null || currentStepData.hitFrames == null) return;
+        if (currentStepData == null) return;
 
         int frameInActivePhase = frame - cachedPhase1Frames - 1;
+
+        if (HasStructuredHitboxes(currentStepData))
+        {
+            ProcessStructuredHitboxes(frameInActivePhase);
+            return;
+        }
+
+        ProcessLegacyHitFrames(frameInActivePhase);
+    }
+
+    private void ProcessStructuredHitboxes(int frameInActivePhase)
+    {
+        List<HitboxBase> hitboxes = currentStepData.hitData.hitboxes;
+        for (int i = 0; i < hitboxes.Count; i++)
+        {
+            HitboxBase hitbox = hitboxes[i];
+            if (hitbox == null) continue;
+
+            if (frameInActivePhase == hitbox.startFrameOffset) TriggerHitbox(hitbox);
+            if (frameInActivePhase == hitbox.startFrameOffset + hitbox.activeFrames) DisableHitbox();
+        }
+    }
+
+    private void ProcessLegacyHitFrames(int frameInActivePhase)
+    {
+        if (currentStepData.hitFrames == null) return;
 
         for (int i = 0; i < currentStepData.hitFrames.Length; i++)
         {
             var h = currentStepData.hitFrames[i];
-            if (frameInActivePhase == h.startFrameOffset) TriggerHitFrame(h);
+            if (frameInActivePhase == h.startFrameOffset) TriggerHitFrame(legacyHitFrame: h);
             if (frameInActivePhase == h.startFrameOffset + h.activeFrames) DisableHitbox();
         }
+    }
+
+    private void TriggerHitbox(HitboxBase hitbox)
+    {
+        if (hitbox is NormalHitbox normalHitbox)
+        {
+            TriggerHitFrame(normalHitbox: normalHitbox);
+            return;
+        }
+
+        if (hitbox is GrabHitbox grabHitbox)
+        {
+            // Future implementation: Grab logic
+            CombatLog($"Hitbox '{hitbox.HitboxTypeName}' (Grab) triggered. Logic pending.");
+            return;
+        }
+
+        if (hitbox is ProjectileHitbox projectileHitbox)
+        {
+            // Future implementation: Projectile logic
+            CombatLog($"Hitbox '{hitbox.HitboxTypeName}' (Projectile) triggered. Logic pending.");
+            return;
+        }
+
+        CombatLog($"Hitbox '{hitbox.HitboxTypeName}' is not yet supported by the runtime attack processor.");
+    }
+
+    private bool HasStructuredHitboxes(AttackStepData step)
+    {
+        return step != null
+            && step.hitData != null
+            && step.hitData.hitboxes != null
+            && step.hitData.hitboxes.Count > 0;
+    }
+
+    private bool HasAnyHitboxData(AttackStepData step)
+    {
+        if (HasStructuredHitboxes(step)) return true;
+        return step != null && step.hitFrames != null && step.hitFrames.Length > 0;
     }
 
     private void ProcessMotion(int frame)
@@ -293,7 +366,7 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
         {
             if (frame == kf.frame && movement != null)
             {
-                movement.ApplyAttackMovement(kf.position.x, Time.fixedDeltaTime);
+                movement.ApplyAttackMovement(kf.position, Time.fixedDeltaTime);
             }
         }
     }
@@ -417,16 +490,7 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
                 currentFrameState = AttackFrameState.Impact;
             }
 
-            int frameInActivePhase = currentAttackFrame - cachedPhase1Frames - 1;
-            if (currentStepData.hitFrames != null)
-            {
-                for (int i = 0; i < currentStepData.hitFrames.Length; i++)
-                {
-                    var h = currentStepData.hitFrames[i];
-                    if (frameInActivePhase == h.startFrameOffset) TriggerHitFrame(h); 
-                    if (frameInActivePhase == h.startFrameOffset + h.activeFrames) DisableHitbox(); 
-                }
-            }
+            ProcessHitFrames(currentAttackFrame);
         }
         else if (currentAttackFrame <= cachedPhase3Frames)
         {
@@ -481,7 +545,7 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
             {
                 if (currentAttackFrame == kf.frame && movement != null)
                 {
-                    movement.ApplyAttackMovement(kf.position.x, Time.fixedDeltaTime);
+                    movement.ApplyAttackMovement(kf.position, Time.fixedDeltaTime);
                 }
             }
         }
@@ -518,23 +582,47 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
 
         if (movement != null) movement.CancelAttackMotion();
 
+        CombatLog($"Combo Step {comboStep} Start ({attackMode})");
+
         if (attackMode == AttackComboMode.AirNeutral) animHandler.TriggerAirAttack(comboStep);
         else animHandler.TriggerAttackCombo(comboStep);
     }
 
-    private void TriggerHitFrame(AttackHitFrameData hitFrame)
+    private void TriggerHitFrame(NormalHitbox normalHitbox = null, AttackHitFrameData legacyHitFrame = null)
     {
-        float finalDamage = GetFinalAttackDamage(hitFrame.damageMultiplier);
-        float finalKnockback = hitFrame.knockbackForce;
-        float shakeStrength = Mathf.Max(0f, hitFrame.cameraShakeStrength);
+        float damageMult = 1f;
+        float knockback = 4f;
+        float shake = 0f;
+
+        if (normalHitbox != null)
+        {
+            damageMult = normalHitbox.damageMultiplier;
+            knockback = normalHitbox.knockbackForce;
+            shake = normalHitbox.cameraShakeStrength;
+            
+            if (meleeHitboxController != null) meleeHitboxController.ApplyHitbox(normalHitbox);
+        }
+        else if (legacyHitFrame != null)
+        {
+            damageMult = legacyHitFrame.damageMultiplier;
+            knockback = legacyHitFrame.knockbackForce;
+            shake = legacyHitFrame.cameraShakeStrength;
+
+            if (meleeHitboxController != null) meleeHitboxController.ApplyHitFrame(legacyHitFrame);
+        }
+
+        float finalDamage = GetFinalAttackDamage(damageMult);
+        float finalKnockback = knockback;
+        float shakeStrength = Mathf.Max(0f, shake);
 
         BasicAttackComboData comboData = GetComboData(currentComboMode);
         int maxCombo = comboData != null ? comboData.GetMaxCombo() : 0;
         bool isLastStep = (comboStep >= maxCombo);
 
-        if (meleeHitboxController != null) meleeHitboxController.ApplyHitFrame(hitFrame);
-        if (meleeHitboxDamage != null) meleeHitboxDamage.SetHitData(finalDamage, finalKnockback, shakeStrength, isLastStep, 0f, 0f, hitFrameData: hitFrame);
+        if (meleeHitboxDamage != null) 
+            meleeHitboxDamage.SetHitData(finalDamage, finalKnockback, shakeStrength, isLastStep, 0f, 0f, hitbox: normalHitbox, hitFrameData: legacyHitFrame);
 
+        CombatLog($"Hitbox Active: {currentFrameState} (Frame {currentAttackFrame})");
         EnableHitbox();
         
         // Clear the per-step hit tracking when a new hitframe activates,
@@ -588,6 +676,7 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
             animHandler.GetComponent<Animator>().speed = 1f;
         }
 
+        CombatLog("Combo Reset");
         OnComboFinished?.Invoke();
     }
 
@@ -598,7 +687,7 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
         if (movement == null || movement.IsGrounded() || movement.IsDashing || movement.IsLanding) return false;
 
         AttackStepData impactStep = plungeData.impactStep;
-        if (impactStep == null || impactStep.hitFrames == null || impactStep.hitFrames.Length == 0) return false;
+        if (impactStep == null || !HasAnyHitboxData(impactStep)) return false;
 
         ResetCombo();
 
@@ -657,8 +746,7 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
 
     private void HandleJumpStart()
     {
-        if (CanPreserveAirComboProgress()) CancelCurrentAttackButKeepComboProgress();
-        else ResetCombo();
+        ResetCombo();
     }
 
     private bool CanAcceptAirAttackRequest()
@@ -673,6 +761,12 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
     }
 
     public bool IsAttacking() { return currentFrameState != AttackFrameState.None; }
+    public bool ShouldInterruptAttackOnGrounded()
+    {
+        if (!IsAttacking()) return false;
+        if (isPlungeAttacking) return IsPlungeInAirPhase();
+        return currentComboMode == AttackComboMode.AirNeutral && comboStep > 0;
+    }
     public bool ShouldSuppressLandingFeedback() { return isPlungeAttacking && !plungeImpactTriggered; }
     public bool IsPlungeInAirPhase() { return isPlungeAttacking && !plungeImpactTriggered; }
     public bool ShouldLockAirComboInPlace() { return IsAttacking() && !isPlungeAttacking && currentComboMode == AttackComboMode.AirNeutral && movement != null && !movement.IsGrounded(); }
@@ -758,6 +852,7 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
             if (enemy != null && !hitEnemiesThisStep.Contains(enemy))
             {
                 hitEnemiesThisStep.Add(enemy);
+                CombatLog($"HIT: {enemy.gameObject.name} (Damage: {meleeHitboxDamage.DamageValue})");
                 
                 // Trigger the actual damage and hit effects on the damage component
                 if (meleeHitboxDamage != null)

@@ -14,7 +14,9 @@ public class MeleeHitboxDamage : MonoBehaviour
     // =========================================================
     // Runtime
     // =========================================================
-    private AttackHitFrameData currentHitFrameData;
+    private AttackHitFrameData legacyHitFrameData;
+    private NormalHitbox currentNormalHitbox;
+
     private float currentDamage = 1f;
     private float currentKnockback = 4f;
     private float currentShakeStrength = 0.25f;
@@ -22,6 +24,8 @@ public class MeleeHitboxDamage : MonoBehaviour
     private bool isLastHit = false;
     private float hitStopDuration = 0.1f;
     private float hitStopScale = 0.05f;
+
+    public float DamageValue => currentDamage;
 
     private HashSet<EnemyController> hitEnemiesThisActivation = new HashSet<EnemyController>();
 
@@ -90,9 +94,13 @@ public class MeleeHitboxDamage : MonoBehaviour
             CameraManager.instance.EnterCombat(enemy);
 
         // Native hitstop call
-        if (!hasTriggeredHitStopThisActivation && currentHitFrameData != null && currentHitFrameData.hitstunFrames > 0)
+        int finalHitstun = 0;
+        if (currentNormalHitbox != null) finalHitstun = currentNormalHitbox.hitstunFrames;
+        else if (legacyHitFrameData != null) finalHitstun = legacyHitFrameData.hitstunFrames;
+
+        if (!hasTriggeredHitStopThisActivation && finalHitstun > 0)
         {
-            TriggerHitStop(currentHitFrameData.hitstunFrames);
+            TriggerHitStop(finalHitstun);
             hasTriggeredHitStopThisActivation = true;
         }
 
@@ -106,7 +114,7 @@ public class MeleeHitboxDamage : MonoBehaviour
     // =========================================================
     // Public Methods
     // =========================================================
-    public void SetHitData(float damage, float knockback, float shakeStrength, bool lastHit = false, float stopDuration = 0.12f, float stopScale = 0.02f, AttackHitFrameData hitFrameData = null)
+    public void SetHitData(float damage, float knockback, float shakeStrength, bool lastHit = false, float stopDuration = 0.12f, float stopScale = 0.02f, NormalHitbox hitbox = null, AttackHitFrameData hitFrameData = null)
     {
         currentDamage = damage;
         currentKnockback = knockback;
@@ -114,7 +122,8 @@ public class MeleeHitboxDamage : MonoBehaviour
         isLastHit = lastHit;
         hitStopDuration = stopDuration;
         hitStopScale = stopScale;
-        currentHitFrameData = hitFrameData;
+        currentNormalHitbox = hitbox;
+        legacyHitFrameData = hitFrameData;
     }
 
     // =========================================================
@@ -124,18 +133,30 @@ public class MeleeHitboxDamage : MonoBehaviour
     {
         HitReactionData data = HitReactionData.Default(currentDamage, direction, currentKnockback);
 
-        // Override with per-hit-frame data if available
-        if (currentHitFrameData != null)
+        // Preference order: New NormalHitbox > Legacy AttackHitFrameData
+        if (currentNormalHitbox != null)
         {
-            data.hitstunFrames    = currentHitFrameData.hitstunFrames;
-            data.reactionVelocity = currentHitFrameData.reactionVelocity;
-            data.knockbackFrames  = currentHitFrameData.knockbackFrames;
-            data.isKnockdown      = currentHitFrameData.isKnockdown;
-            data.snapToAttacker   = currentHitFrameData.snapToAttacker;
-            data.snapOffset       = currentHitFrameData.snapOffset;
-            data.flashColor       = currentHitFrameData.flashColor;
-            data.flashFrames      = currentHitFrameData.flashFrames;
-            data.impactTier       = currentHitFrameData.impactTier;
+            data.hitstunFrames    = currentNormalHitbox.hitstunFrames;
+            data.reactionVelocity = currentNormalHitbox.reactionVelocity;
+            data.knockbackFrames  = currentNormalHitbox.knockbackFrames;
+            data.isKnockdown      = currentNormalHitbox.isKnockdown;
+            data.snapToAttacker   = currentNormalHitbox.snapToAttacker;
+            data.snapOffset       = currentNormalHitbox.snapOffset;
+            data.flashColor       = currentNormalHitbox.flashColor;
+            data.flashFrames      = currentNormalHitbox.flashFrames;
+            data.impactTier       = currentNormalHitbox.impactTier;
+        }
+        else if (legacyHitFrameData != null)
+        {
+            data.hitstunFrames    = legacyHitFrameData.hitstunFrames;
+            data.reactionVelocity = legacyHitFrameData.reactionVelocity;
+            data.knockbackFrames  = legacyHitFrameData.knockbackFrames;
+            data.isKnockdown      = legacyHitFrameData.isKnockdown;
+            data.snapToAttacker   = legacyHitFrameData.snapToAttacker;
+            data.snapOffset       = legacyHitFrameData.snapOffset;
+            data.flashColor       = legacyHitFrameData.flashColor;
+            data.flashFrames      = legacyHitFrameData.flashFrames;
+            data.impactTier       = legacyHitFrameData.impactTier;
         }
 
         return data;
@@ -166,9 +187,9 @@ public class MeleeHitboxDamage : MonoBehaviour
         }
 
         // Fire shake matching impact tier
-        DamageImpactTier tier = currentHitFrameData != null
-            ? currentHitFrameData.impactTier
-            : DamageImpactTier.BasicCombo;
+        DamageImpactTier tier = DamageImpactTier.BasicCombo;
+        if (currentNormalHitbox != null) tier = currentNormalHitbox.impactTier;
+        else if (legacyHitFrameData != null) tier = legacyHitFrameData.impactTier;
 
         if (cameraShake != null)
             cameraShake.ShakeByImpact(tier);

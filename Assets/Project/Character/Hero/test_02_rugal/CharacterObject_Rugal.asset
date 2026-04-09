@@ -49,6 +49,7 @@ MonoBehaviour:
     startupFrames: 2
     activeFrames: 12
     recoveryFrames: 2
+    cancelWindowStartFrame: 10
     dashSpeed: 40
     cooldownFrames: 12
   basicAttackComboData:
@@ -60,10 +61,6 @@ MonoBehaviour:
       activeFrames: 5
       recoveryFrames: 18
       cancelWindowStartFrame: 10
-      useForwardMotion: 1
-      forwardDistance: 1.26
-      motionStartFrame: 3
-      motionEndFrame: 8
       hitFrames:
       - startFrameOffset: 1
         activeFrames: 3
@@ -82,16 +79,18 @@ MonoBehaviour:
         flashFrames: 6
         impactTier: 0
         debugColor: {r: 0.2040608, g: 1, b: 0, a: 0.39215687}
+      motionData:
+        rid: -2
+      vfxData:
+        rid: -2
+      hitData:
+        rid: 1588255759013249140
     - stepName: Attack 2
       animationClip: {fileID: 7400000, guid: 497ab9f274d956f429082d3e9fa2e890, type: 2}
       startupFrames: 4
       activeFrames: 9
       recoveryFrames: 15
       cancelWindowStartFrame: 14
-      useForwardMotion: 1
-      forwardDistance: 1.5
-      motionStartFrame: 3
-      motionEndFrame: 8
       hitFrames:
       - startFrameOffset: 1
         activeFrames: 4
@@ -127,16 +126,18 @@ MonoBehaviour:
         flashFrames: 6
         impactTier: 0
         debugColor: {r: 1, g: 0.8862745, b: 0, a: 0.39215687}
+      motionData:
+        rid: -2
+      vfxData:
+        rid: -2
+      hitData:
+        rid: -2
     - stepName: Attack 3
       animationClip: {fileID: 7400000, guid: 9443c87d6c977064d82958f823694341, type: 2}
       startupFrames: 4
       activeFrames: 27
       recoveryFrames: 18
       cancelWindowStartFrame: 32
-      useForwardMotion: 1
-      forwardDistance: 1
-      motionStartFrame: 3
-      motionEndFrame: 8
       hitFrames:
       - startFrameOffset: 1
         activeFrames: 3
@@ -189,16 +190,18 @@ MonoBehaviour:
         flashFrames: 6
         impactTier: 0
         debugColor: {r: 1, g: 0.05882353, b: 0, a: 0.39215687}
+      motionData:
+        rid: -2
+      vfxData:
+        rid: -2
+      hitData:
+        rid: -2
     - stepName: Attack 4
       animationClip: {fileID: 7400000, guid: 4affa92172a0e6949a6d14d2a1bd86f5, type: 2}
       startupFrames: 5
       activeFrames: 5
       recoveryFrames: 19
       cancelWindowStartFrame: 11
-      useForwardMotion: 1
-      forwardDistance: 3
-      motionStartFrame: 4
-      motionEndFrame: 10
       hitFrames:
       - startFrameOffset: 1
         activeFrames: 4
@@ -217,6 +220,12 @@ MonoBehaviour:
         flashFrames: 6
         impactTier: 2
         debugColor: {r: 1, g: 1, b: 1, a: 0.39215687}
+      motionData:
+        rid: -2
+      vfxData:
+        rid: -2
+      hitData:
+        rid: -2
   neutralAirComboData:
     comboResetDelay: 0.8
     steps:
@@ -226,10 +235,6 @@ MonoBehaviour:
       activeFrames: 1
       recoveryFrames: 5
       cancelWindowStartFrame: 2
-      useForwardMotion: 1
-      forwardDistance: 1
-      motionStartFrame: 1
-      motionEndFrame: 3
       hitFrames:
       - startFrameOffset: 0
         activeFrames: 1
@@ -248,16 +253,18 @@ MonoBehaviour:
         flashFrames: 6
         impactTier: 0
         debugColor: {r: 0.20392157, g: 1, b: 0, a: 1}
+      motionData:
+        rid: -2
+      vfxData:
+        rid: -2
+      hitData:
+        rid: -2
     - stepName: Attack 2
       animationClip: {fileID: 7400000, guid: 6b5bf7f2ed4abe04a82ec6175781c382, type: 2}
       startupFrames: 3
       activeFrames: 4
       recoveryFrames: 17
       cancelWindowStartFrame: 4
-      useForwardMotion: 1
-      forwardDistance: 1.5
-      motionStartFrame: 3
-      motionEndFrame: 8
       hitFrames:
       - startFrameOffset: 1
         activeFrames: 3
@@ -276,16 +283,18 @@ MonoBehaviour:
         flashFrames: 6
         impactTier: 0
         debugColor: {r: 1, g: 0.8862745, b: 0, a: 1}
+      motionData:
+        rid: -2
+      vfxData:
+        rid: -2
+      hitData:
+        rid: -2
     - stepName: Attack 3
       animationClip: {fileID: 7400000, guid: 88aec8358ee7c044d8f85903a87b8341, type: 2}
       startupFrames: 5
       activeFrames: 4
       recoveryFrames: 13
       cancelWindowStartFrame: 5
-      useForwardMotion: 1
-      forwardDistance: 1
-      motionStartFrame: 3
-      motionEndFrame: 7
       hitFrames:
       - startFrameOffset: 1
         activeFrames: 3
@@ -304,6 +313,12 @@ MonoBehaviour:
         flashFrames: 6
         impactTier: 2
         debugColor: {r: 1, g: 0.05490196, b: 0, a: 1}
+      motionData:
+        rid: -2
+      vfxData:
+        rid: -2
+      hitData:
+        rid: -2
   plungeAttackData:
     isEnabled: 1
     downwardSpeed: 18
@@ -316,10 +331,6 @@ MonoBehaviour:
       activeFrames: 6
       recoveryFrames: 16
       cancelWindowStartFrame: 7
-      useForwardMotion: 0
-      forwardDistance: 0.5
-      motionStartFrame: 3
-      motionEndFrame: 8
       hitFrames:
       - startFrameOffset: 1
         activeFrames: 5
@@ -338,13 +349,23 @@ MonoBehaviour:
         flashFrames: 6
         impactTier: 1
         debugColor: {r: 1, g: 0.4, b: 0, a: 1}
+      motionData:
+        rid: -2
+      vfxData:
+        rid: -2
+      hitData:
+        rid: -2
   skillData:
     skillName: Rapponken
     description: "\u0E1B\u0E25\u0E48\u0E2D\u0E22\u0E41\u0E23\u0E07\u0E25\u0E21\u0E01\u0E23\u0E30\u0E41\u0E17\u0E01\u0E14\u0E49\u0E32\u0E19\u0E2B\u0E19\u0E49\u0E32
       \u0E17\u0E33\u0E14\u0E32\u0E40\u0E21\u0E08\u0E41\u0E25\u0E30\u0E1C\u0E25\u0E31\u0E01\u0E28\u0E31\u0E15\u0E23\u0E39\u0E16\u0E2D\u0E22\u0E2B\u0E25\u0E31\u0E07"
     elementType: 4
+    frameData:
+      startupFrames: 2
+      activeFrames: 3
+      recoveryFrames: 8
+      cancelWindowStartFrame: 10
     cooldown: 4.5
-    castDuration: 0.3
     damageMultiplier: 1.6
     knockbackForce: 7
     skillPrefab: {fileID: 5307899325778561399, guid: 198f1c6a8d7e7444a9d5b2d9a709c05b, type: 3}
@@ -354,8 +375,12 @@ MonoBehaviour:
     description: "\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E17\u0E2D\u0E23\u0E4C\u0E19\u0E32\u0E42\u0E14\u0E14\u0E49\u0E32\u0E19\u0E2B\u0E19\u0E49\u0E32
       \u0E17\u0E33\u0E43\u0E2B\u0E49\u0E28\u0E31\u0E15\u0E23\u0E39\u0E25\u0E2D\u0E22\u0E02\u0E36\u0E49\u0E19\u0E41\u0E25\u0E30\u0E23\u0E31\u0E1A\u0E14\u0E32\u0E40\u0E21\u0E08\u0E15\u0E48\u0E2D\u0E40\u0E19\u0E37\u0E48\u0E2D\u0E07"
     elementType: 4
+    frameData:
+      startupFrames: 4
+      activeFrames: 6
+      recoveryFrames: 10
+      cancelWindowStartFrame: 0
     cooldown: 3
-    castDuration: 0.4
     activeDuration: 4
     damageMultiplier: 0.6
     hitInterval: 0.4
@@ -390,3 +415,33 @@ MonoBehaviour:
       unlocked: 0
       effectType: 5
       effectValue: 1.5
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 1588255759013249140
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 1588255759013249141
+    - rid: 1588255759013249141
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 1
+        activeFrames: 3
+        debugColor: {r: 0.26853323, g: 1, b: 0, a: 1}
+        offset: {x: 0.8, y: 0.4}
+        size: {x: 1, y: 0.8}
+        damageMultiplier: 1
+        knockbackForce: 4
+        cameraShakeStrength: 0
+        impactTier: 0
+        hitstunFrames: 4
+        reactionVelocity: {x: 3, y: 1}
+        knockbackFrames: 15
+        isKnockdown: 0
+        snapToAttacker: 0
+        snapOffset: {x: 0, y: 0}
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6

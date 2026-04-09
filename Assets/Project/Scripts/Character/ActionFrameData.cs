@@ -53,16 +53,15 @@ public class ActionFrameData
     public ActionPhase GetPhase(int frame)
     {
         if (frame <= 0) return ActionPhase.None;
+        if (frame > TotalFrames) return ActionPhase.Done;
         if (frame <= startupFrames) return ActionPhase.Startup;
         if (frame <= startupFrames + activeFrames) return ActionPhase.Active;
 
-        // Check cancel window within recovery
+        // Check cancel window only while the action is still inside recovery.
         if (HasCancelWindow && frame >= cancelWindowStartFrame)
             return ActionPhase.Cancel;
 
-        if (frame <= TotalFrames) return ActionPhase.Recovery;
-
-        return ActionPhase.Done;
+        return ActionPhase.Recovery;
     }
 }
 

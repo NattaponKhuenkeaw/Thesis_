@@ -33,13 +33,29 @@ public class MeleeHitboxController : MonoBehaviour
     // =========================================================
     // Public Methods
     // =========================================================
-    public void ApplyHitFrame(AttackHitFrameData hitFrame)
+    public void ApplyHitbox(HitboxBase hitbox)
     {
-        if (hitFrame == null)
+        if (hitbox == null)
             return;
 
-        Vector2 offset = hitFrame.offset;
-        Vector2 size = hitFrame.size;
+        Vector2 offset = Vector2.zero;
+        Vector2 size = Vector2.one;
+
+        if (hitbox is NormalHitbox normal)
+        {
+            offset = normal.offset;
+            size = normal.size;
+        }
+        else if (hitbox is GrabHitbox grab)
+        {
+            offset = grab.offset;
+            size = grab.size;
+        }
+        else
+        {
+            // Non-spatial hitboxes (like Projectiles) don't update the melee collider geometry
+            return;
+        }
 
         if (movement != null && movement.FacingDirection == -1)
             offset.x = -Mathf.Abs(offset.x);
@@ -52,7 +68,7 @@ public class MeleeHitboxController : MonoBehaviour
         hitboxCollider.offset = Vector2.zero; // Clean any residual offset from the prefab so sizing centers correctly
         hitboxCollider.size = size;
 
-        currentDebugColor = hitFrame.debugColor;
+        currentDebugColor = hitbox.debugColor;
 
         if (sr != null)
         {
@@ -66,6 +82,21 @@ public class MeleeHitboxController : MonoBehaviour
             lr.startColor = new Color(currentDebugColor.r, currentDebugColor.g, currentDebugColor.b, lr.startColor.a);
             lr.endColor = new Color(currentDebugColor.r, currentDebugColor.g, currentDebugColor.b, lr.endColor.a);
         }
+    }
+
+    /// <summary> Legacy support for old AttackHitFrameData structures. marks for removal. </summary>
+    public void ApplyHitFrame(AttackHitFrameData hitFrame)
+    {
+        if (hitFrame == null) return;
+        
+        // Convert to a temporary NormalHitbox for the logic
+        var temp = new NormalHitbox
+        {
+            offset = hitFrame.offset,
+            size = hitFrame.size,
+            debugColor = hitFrame.debugColor
+        };
+        ApplyHitbox(temp);
     }
    
     void Update()

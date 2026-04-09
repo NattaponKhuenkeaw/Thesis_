@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Animator))]
@@ -36,6 +37,7 @@ public class PlayerAnimator : MonoBehaviour
     // =========================================================
     private Rigidbody2D rb;
     private bool wasFalling;
+    private HashSet<int> animParamHashes;
 
     // =========================================================
     // Unity Methods
@@ -53,6 +55,15 @@ public class PlayerAnimator : MonoBehaviour
             
         if (combat == null)
             combat = GetComponentInParent<PlayerBasicAttack>();
+
+        animParamHashes = new HashSet<int>();
+        if (anim != null && anim.runtimeAnimatorController != null)
+        {
+            foreach (var param in anim.parameters)
+            {
+                animParamHashes.Add(param.nameHash);
+            }
+        }
     }
 
     void Update()
@@ -111,7 +122,8 @@ public class PlayerAnimator : MonoBehaviour
 
     public void TriggerDash()
     {
-        anim.SetTrigger(dashHash);
+        // Force immediate snap to Dash state to ensure responsiveness from Cancel frames
+        PlayStateByName("Dash", "Dash"); 
     }
 
     public void TriggerLanding()
@@ -119,12 +131,12 @@ public class PlayerAnimator : MonoBehaviour
         if (combat != null && combat.ShouldSuppressLandingFeedback())
             return;
 
-        anim.SetTrigger(landingHash);
+        SafeSetTrigger(landingHash);
     }
 
     public void TriggerTakeDamage()
     {
-        anim.SetTrigger(takeDamageHash);
+        SafeSetTrigger(takeDamageHash);
     }
 
     public void SetDie(bool isDead)
@@ -135,7 +147,7 @@ public class PlayerAnimator : MonoBehaviour
     public void TriggerAttackCombo(int comboStep)
     {
         // Prioritize attack animation over lingering jump transitions when attacking mid-air.
-        anim.ResetTrigger(jumpHash);
+        SafeResetTrigger(jumpHash);
         anim.SetInteger(airComboStepHash, 0);
         anim.SetInteger(comboStepHash, comboStep);
 
@@ -143,7 +155,7 @@ public class PlayerAnimator : MonoBehaviour
         string[] candidates = new string[] { $"Attack_{comboStep}", $"Attack{comboStep}", $"_Attack{comboStep}" };
         if (TryPlayFirstExistingState(candidates)) return;
 
-        anim.SetTrigger(attackHash);
+        SafeSetTrigger(attackHash);
     }
 
     public void TriggerAirAttack(int comboStep)
@@ -151,9 +163,9 @@ public class PlayerAnimator : MonoBehaviour
         if (anim == null)
             return;
 
-        anim.ResetTrigger(attackHash);
-        anim.ResetTrigger(jumpHash);
-        anim.ResetTrigger(landingHash);
+        SafeResetTrigger(attackHash);
+        SafeResetTrigger(jumpHash);
+        SafeResetTrigger(landingHash);
         anim.SetBool(isLandingHash, false);
         anim.SetInteger(comboStepHash, 0);
         int normalizedStep = Mathf.Max(1, comboStep);
@@ -162,7 +174,7 @@ public class PlayerAnimator : MonoBehaviour
         if (TryPlayFirstExistingState(GetAirAttackStateCandidates(normalizedStep)))
             return;
 
-        anim.SetTrigger(attackHash);
+        SafeSetTrigger(attackHash);
     }
 
     public void TriggerPlungeFall(string stateName)
@@ -170,8 +182,8 @@ public class PlayerAnimator : MonoBehaviour
         if (anim == null)
             return;
 
-        anim.ResetTrigger(jumpHash);
-        anim.ResetTrigger(landingHash);
+        SafeResetTrigger(jumpHash);
+        SafeResetTrigger(landingHash);
         anim.SetBool(isLandingHash, false);
         PlayStateByName(stateName, "Plunge_Fall");
     }
@@ -181,8 +193,8 @@ public class PlayerAnimator : MonoBehaviour
         if (anim == null)
             return;
 
-        anim.ResetTrigger(jumpHash);
-        anim.ResetTrigger(landingHash);
+        SafeResetTrigger(jumpHash);
+        SafeResetTrigger(landingHash);
         anim.SetBool(isLandingHash, false);
 
         PlayStateByName(stateName, "Attack_1");
@@ -213,12 +225,14 @@ public class PlayerAnimator : MonoBehaviour
 
     public void TriggerSkill()
     {
-        anim.SetTrigger(skillHash);
+        // Force immediate snap to Skill state
+        PlayStateByName("Skill", "Skill");
     }
 
     public void TriggerUltimate()
     {
-        anim.SetTrigger(ultimateHash);
+        // Force immediate snap to Ultimate state
+        PlayStateByName("Ultimate", "Ultimate");
     }
 
     private void PlayStateByName(string stateName, string fallbackStateName)
@@ -264,6 +278,18 @@ public class PlayerAnimator : MonoBehaviour
         }
 
         return false;
+    }
+
+    private void SafeSetTrigger(int triggerHash)
+    {
+        if (anim != null && animParamHashes != null && animParamHashes.Contains(triggerHash))
+            anim.SetTrigger(triggerHash);
+    }
+
+    private void SafeResetTrigger(int triggerHash)
+    {
+        if (anim != null && animParamHashes != null && animParamHashes.Contains(triggerHash))
+            anim.ResetTrigger(triggerHash);
     }
 
     // =========================================================

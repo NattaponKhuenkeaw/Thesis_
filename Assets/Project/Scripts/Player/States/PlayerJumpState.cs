@@ -10,6 +10,13 @@ public class PlayerJumpState : PlayerState
 
     public PlayerJumpState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
+    public override void Enter()
+    {
+        base.Enter();
+        if (player.Animator != null)
+            player.Animator.RestoreAirborneState();
+    }
+
     public override PlayerStateId StateId => PlayerStateId.Jumping;
     public override PlayerStatePriority Priority => PlayerStatePriority.Ability;
 

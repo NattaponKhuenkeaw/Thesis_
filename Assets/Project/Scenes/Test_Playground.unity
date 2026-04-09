@@ -668,6 +668,10 @@ PrefabInstance:
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 9100000, guid: 3436f3bf41714a54391f36d8cfdd4294, type: 2}
+    - target: {fileID: 6196953050443969776, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
+      propertyPath: showFsmLogs
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7851930121724842516, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: m_Name
       value: Player
@@ -3961,6 +3965,10 @@ PrefabInstance:
     - target: {fileID: 822730165316854140, guid: 4c94aec46ce6d47448decf0352d8445c, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7596383799552064283, guid: 4c94aec46ce6d47448decf0352d8445c, type: 3}
+      propertyPath: itemsToDisplay
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 8850677962514263319, guid: 4c94aec46ce6d47448decf0352d8445c, type: 3}
       propertyPath: m_LocalPosition.x

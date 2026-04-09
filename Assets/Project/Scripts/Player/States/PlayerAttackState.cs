@@ -17,7 +17,7 @@ public class PlayerAttackState : FrameDataPlayerState
     // =========================================================
     public override bool AcceptsMoveInput => true;
     public override bool AcceptsDashInput => true;   // custom handler (cancel-window dash)
-    public override bool AcceptsJumpInput => true;
+    public override bool AcceptsJumpInput => false;
     public override bool AcceptsAttackInput => true;  // custom handler (combo chain)
     public override bool LocksMovement => true;
     public override bool LocksFacing => true;
@@ -71,6 +71,17 @@ public class PlayerAttackState : FrameDataPlayerState
 
     public override void Update()
     {
+        // Mid-action grounding interruption for air attacks
+        if (player.Movement != null && player.Movement.IsGrounded() && !player.Movement.IsJumping)
+        {
+            if (player.Combat != null && player.Combat.ShouldInterruptAttackOnGrounded())
+            {
+                player.Combat.ResetCombo();
+                ExitToAppropriateMovementState();
+                return;
+            }
+        }
+
         // Safety: if Combat is no longer attacking and we have no frame data
         if (player.Combat != null && !player.Combat.IsAttacking() && currentPhase == ActionPhase.None)
         {
@@ -101,6 +112,9 @@ public class PlayerAttackState : FrameDataPlayerState
     {
         if (player.Combat != null)
         {
+            // If already handled by a landing/cancel exit, stop
+            if (!player.Combat.IsAttacking()) return;
+
             // Check if we're an air combo that should preserve progress
             if (player.Combat.ShouldPreserveAirComboOnComplete())
             {
@@ -114,7 +128,8 @@ public class PlayerAttackState : FrameDataPlayerState
             player.Combat.ResetCombo();
         }
 
-        ExitToAppropriateMovementState();
+        if (fsm.CurrentState == this)
+            ExitToAppropriateMovementState();
     }
 
     // =========================================================
@@ -172,7 +187,11 @@ public class PlayerAttackState : FrameDataPlayerState
         // Then check jump
         if (buffer.ConsumeJump())
         {
+            if (player.Combat != null)
+                player.Combat.CancelCurrentAttackButKeepComboProgress();
+
             fsm.ChangeState(fsm.JumpState);
+            fsm.CurrentState.OnJumpInput();
             return;
         }
 

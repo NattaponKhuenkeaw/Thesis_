@@ -48,9 +48,9 @@ MonoBehaviour:
   dashData:
     animationClip: {fileID: 7400000, guid: 1170a54f57116384b8506475803c25eb, type: 2}
     startupFrames: 2
-    activeFrames: 11
-    recoveryFrames: 5
-    cancelWindowStartFrame: 10
+    activeFrames: 12
+    recoveryFrames: 4
+    cancelWindowStartFrame: 15
     dashSpeed: 30
     cooldownFrames: 24
   basicAttackComboData:
@@ -61,7 +61,7 @@ MonoBehaviour:
       startupFrames: 10
       activeFrames: 6
       recoveryFrames: 9
-      cancelWindowStartFrame: 18
+      cancelWindowStartFrame: 22
       hitFrames:
       - startFrameOffset: 1
         activeFrames: 3
@@ -88,10 +88,10 @@ MonoBehaviour:
         rid: 1588255752457289824
     - stepName: Attack 2
       animationClip: {fileID: 7400000, guid: 993cb42f21d604449b07755ebe632207, type: 2}
-      startupFrames: 13
-      activeFrames: 8
-      recoveryFrames: 11
-      cancelWindowStartFrame: 22
+      startupFrames: 11
+      activeFrames: 9
+      recoveryFrames: 12
+      cancelWindowStartFrame: 28
       hitFrames:
       - startFrameOffset: 1
         activeFrames: 3
@@ -139,9 +139,9 @@ MonoBehaviour:
     - stepName: Air Attack 1
       animationClip: {fileID: 7400000, guid: 496571fbe78c06b4abc0191b992f40b2, type: 2}
       startupFrames: 6
-      activeFrames: 16
-      recoveryFrames: 13
-      cancelWindowStartFrame: 23
+      activeFrames: 17
+      recoveryFrames: 12
+      cancelWindowStartFrame: 29
       hitFrames:
       - startFrameOffset: 1
         activeFrames: 3
@@ -178,7 +178,7 @@ MonoBehaviour:
         impactTier: 0
         debugColor: {r: 0.14901961, g: 1, b: 0, a: 0.39215687}
       motionData:
-        rid: -2
+        rid: 1588255759013249115
       vfxData:
         rid: -2
       hitData:
@@ -276,7 +276,7 @@ MonoBehaviour:
       data:
         keyframes:
         - frame: 13
-          position: {x: 0.5, y: 0.1, z: 0}
+          position: {x: 0.5, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
         - frame: 17
@@ -293,7 +293,7 @@ MonoBehaviour:
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 1
-        activeFrames: 3
+        activeFrames: 2
         debugColor: {r: 1, g: 0.9882353, b: 0, a: 1}
         offset: {x: 0.5610732, y: 2.251992}
         size: {x: 1.572491, y: 1.977164}
@@ -312,7 +312,7 @@ MonoBehaviour:
     - rid: 1588255752457289832
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
-        startFrameOffset: 4
+        startFrameOffset: 3
         activeFrames: 3
         debugColor: {r: 0.8705883, g: 0.8588236, b: 0.027450982, a: 1}
         offset: {x: 0.9694632, y: 1.696284}
@@ -329,3 +329,15 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
+    - rid: 1588255759013249115
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - frame: 5
+          position: {x: 0.2, y: 1, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - frame: 16
+          position: {x: 0.2, y: 1.5, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
