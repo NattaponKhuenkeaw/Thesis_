@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using Unity.Behavior;
 
@@ -44,6 +45,9 @@ public class EnemyController : MonoBehaviour
     // =========================================================
     [Header("References")]
     public Rigidbody2D rb;
+    private SpriteRenderer[] spriteRenderers;
+    private Color[] originalColors;
+    private Coroutine flashCoroutine;
 
     /// <summary>Child hitbox collider used by AttackAction.</summary>
     public Collider2D attackHitbox;
@@ -67,6 +71,9 @@ public class EnemyController : MonoBehaviour
     {
         rb       = GetComponent<Rigidbody2D>();
         isAlive   = true;
+
+        spriteRenderers = GetComponentsInChildren<SpriteRenderer>();
+        CacheOriginalColors();
 
         if (hitReactionHandler == null)
             hitReactionHandler = GetComponent<EnemyHitReactionHandler>();
@@ -156,14 +163,12 @@ public class EnemyController : MonoBehaviour
         {
             hitReactionHandler.StartReaction(reactionData, attackerPosition);
         }
-        else
+
+        // Trigger sprite flash
+        if (reactionData.flashFrames > 0)
         {
-            // Fallback: simple knockback if no handler is attached
-            if (rb != null)
-            {
-                rb.linearVelocity = Vector2.zero;
-                rb.AddForce(reactionData.knockbackDirection.normalized * reactionData.knockbackForce, ForceMode2D.Impulse);
-            }
+            if (flashCoroutine != null) StopCoroutine(flashCoroutine);
+            flashCoroutine = StartCoroutine(FlashRoutine(reactionData.flashColor, reactionData.flashFrames));
         }
 
         if (currentHP <= 0f)
@@ -193,6 +198,44 @@ public class EnemyController : MonoBehaviour
         // Remove from combat camera when dead
         if (CameraManager.instance != null)
             CameraManager.instance.LeaveCombat(this);
+
+        Destroy(gameObject);
+    }
+
+    private void CacheOriginalColors()
+    {
+        if (spriteRenderers == null) return;
+        originalColors = new Color[spriteRenderers.Length];
+        for (int i = 0; i < spriteRenderers.Length; i++)
+        {
+            if (spriteRenderers[i] != null)
+                originalColors[i] = spriteRenderers[i].color;
+        }
+    }
+
+    private IEnumerator FlashRoutine(Color flashColor, int frames)
+    {
+        // Apply flash colors
+        for (int i = 0; i < spriteRenderers.Length; i++)
+        {
+            if (spriteRenderers[i] != null)
+                spriteRenderers[i].color = flashColor;
+        }
+
+        // Wait for frames
+        for (int i = 0; i < frames; i++)
+        {
+            yield return new WaitForFixedUpdate();
+        }
+
+        // Restore original colors
+        for (int i = 0; i < spriteRenderers.Length; i++)
+        {
+            if (spriteRenderers[i] != null && i < originalColors.Length)
+                spriteRenderers[i].color = originalColors[i];
+        }
+
+        flashCoroutine = null;
     }
 
     /// <summary>

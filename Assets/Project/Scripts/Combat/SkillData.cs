@@ -17,11 +17,26 @@ public class SkillData
     public ElementType elementType = ElementType.None;
 
     // =========================================================
-    // Timing
+    // Frame Data (24 fps — centralized with all actions)
+    // =========================================================
+    [Header("Frame Data (24 fps)")]
+    [Tooltip("Frame-based timing for Startup/Active/Recovery/Cancel phases.")]
+    public ActionFrameData frameData = new ActionFrameData
+    {
+        startupFrames = 2,
+        activeFrames = 3,
+        recoveryFrames = 8,
+        cancelWindowStartFrame = 10
+    };
+
+    // =========================================================
+    // Timing (legacy compat — derived from frameData)
     // =========================================================
     [Header("Timing")]
     public float cooldown = 4f;
-    public float castDuration = 0.1f;
+
+    /// <summary>Cast duration in seconds, computed from frameData for backwards compat.</summary>
+    public float CastDuration => frameData != null ? frameData.TotalFrames / 24f : 0.1f;
 
     // =========================================================
     // Damage / Force

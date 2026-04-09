@@ -1,10 +1,11 @@
 using UnityEngine;
 
 /// <summary>
-/// Dash state: player is dashing (ground or air). Locks out most inputs.
-/// Exits when PlayerMovement.OnDashComplete fires.
+/// Dash state: player is dashing (ground or air).
+/// Inherits FrameDataPlayerState for automatic phase tracking.
+/// During Recovery/Cancel phase, accepts buffered attack/jump inputs for cancel chains.
 /// </summary>
-public class PlayerDashState : PlayerState
+public class PlayerDashState : FrameDataPlayerState
 {
     public PlayerDashState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
@@ -19,18 +20,96 @@ public class PlayerDashState : PlayerState
     public override bool LocksFacing => true;
 
     private bool dashStarted;
+    private bool exitHandled;
 
-    public override void Enter()
+    // =========================================================
+    // FrameDataPlayerState — provide frame data from DashData
+    // =========================================================
+
+    protected override ActionFrameData GetFrameData()
+    {
+        if (player.Movement == null || player.Movement.dashData == null)
+            return null;
+
+        return player.Movement.dashData.ToActionFrameData();
+    }
+
+    // =========================================================
+    // Lifecycle
+    // =========================================================
+
+    public override void Enter(TransitionContext context)
     {
         dashStarted = false;
+        exitHandled = false;
+        base.Enter(context);
+
         if (player.Movement != null)
             player.Movement.OnDashComplete += HandleDashComplete;
     }
 
     public override void Exit()
     {
+        base.Exit();
+
         if (player.Movement != null)
             player.Movement.OnDashComplete -= HandleDashComplete;
+    }
+
+    // =========================================================
+    // Phase Hooks
+    // =========================================================
+
+    protected override void OnActionComplete()
+    {
+        if (exitHandled) return;
+        exitHandled = true;
+        ExitToAppropriateMovementState();
+    }
+
+    // =========================================================
+    // InputHandleMidAction — per-phase input routing
+    // =========================================================
+
+    protected override void HandleInputDuringRecovery()
+    {
+        // During recovery: consume buffered attack → dash-to-attack cancel
+        ActionInputBuffer buffer = fsm.InputBuffer;
+        if (buffer == null) return;
+
+        if (buffer.ConsumeAttack())
+        {
+            fsm.ChangeState(fsm.AttackState);
+            fsm.CurrentState.OnAttackInput();
+            return;
+        }
+    }
+
+    protected override void HandleInputDuringCancel()
+    {
+        ActionInputBuffer buffer = fsm.InputBuffer;
+        if (buffer == null) return;
+
+        // Cancel window: attack has priority
+        if (buffer.ConsumeAttack())
+        {
+            fsm.ChangeState(fsm.AttackState);
+            fsm.CurrentState.OnAttackInput();
+            return;
+        }
+
+        // Jump cancel
+        if (buffer.ConsumeJump())
+        {
+            fsm.RouteJumpInput();
+            return;
+        }
+
+        // Walk cancel (if holding direction and no other buffers)
+        if (Mathf.Abs(buffer.DirectionalInput.x) > 0.01f && !buffer.HasAnyBuffer)
+        {
+            ExitToAppropriateMovementState();
+        }
     }
 
     // =========================================================
@@ -50,6 +129,9 @@ public class PlayerDashState : PlayerState
     // =========================================================
     private void HandleDashComplete()
     {
-        ExitToAppropriateMovementState();
+        if (exitHandled) return;
+        exitHandled = true;
+        if (fsm.CurrentState == this)
+            ExitToAppropriateMovementState();
     }
 }

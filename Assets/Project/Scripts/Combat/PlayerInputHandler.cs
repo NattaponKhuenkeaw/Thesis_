@@ -2,9 +2,9 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// Simplified input handler: forwards raw input events to the PlayerStateMachine's
-/// centralized routing methods. Input buffering for attacks and dashes is handled
-/// via time-based queuing.
+/// Input handler: forwards raw input events to the PlayerStateMachine's
+/// centralized routing methods. Input buffering is now handled by the
+/// FSM's ActionInputBuffer — this handler simply writes to it.
 /// </summary>
 public class InputHandler_Player : MonoBehaviour
 {
@@ -19,8 +19,6 @@ public class InputHandler_Player : MonoBehaviour
     public float dashBufferTime = 0.12f;
 
     private Vector2 moveInput;
-    private float attackBufferedUntil = -999f;
-    private float dashBufferedUntil = -999f;
 
     void Awake()
     {
@@ -46,6 +44,10 @@ public class InputHandler_Player : MonoBehaviour
             stateMachine?.RouteJumpHeld(false);
             return;
         }
+
+        // Always update directional snapshot in the buffer
+        if (stateMachine != null && stateMachine.InputBuffer != null)
+            stateMachine.InputBuffer.SetDirectionalInput(moveInput);
 
         // Forward continuous inputs via centralized routing
         if (stateMachine != null)
@@ -83,9 +85,6 @@ public class InputHandler_Player : MonoBehaviour
             if (Keyboard.current.digit0Key.wasPressedThisFrame)
                 skillTreeController.ResetAllNodes();
         }
-
-        // Consume buffered inputs
-        ConsumeBufferedInputs();
     }
 
     // =========================================================
@@ -104,6 +103,10 @@ public class InputHandler_Player : MonoBehaviour
         if (Project.UI.InputLockManager.IsLocked) return;
         if (!value.isPressed) return;
 
+        // Buffer jump in the centralized buffer
+        if (stateMachine?.InputBuffer != null)
+            stateMachine.InputBuffer.BufferJump();
+
         stateMachine?.RouteJumpInput();
     }
 
@@ -112,8 +115,8 @@ public class InputHandler_Player : MonoBehaviour
         if (Project.UI.InputLockManager.IsLocked) return;
         if (!value.isPressed) return;
 
-        // Try immediately, otherwise buffer
-        dashBufferedUntil = Time.time + dashBufferTime;
+        // Route through FSM — it handles buffering internally
+        stateMachine?.RouteDashInput(moveInput.x);
     }
 
     public void OnAttack(InputValue value)
@@ -121,7 +124,8 @@ public class InputHandler_Player : MonoBehaviour
         if (Project.UI.InputLockManager.IsLocked) return;
         if (!value.isPressed) return;
 
-        attackBufferedUntil = Time.time + attackBufferTime;
+        // Route through FSM — it handles buffering internally
+        stateMachine?.RouteAttackInput();
     }
 
     public void OnSkill(InputValue value)
@@ -136,28 +140,5 @@ public class InputHandler_Player : MonoBehaviour
         if (Project.UI.InputLockManager.IsLocked) return;
         if (value.isPressed)
             stateMachine?.RouteUltimateInput();
-    }
-
-    // =========================================================
-    // Input Buffering
-    // =========================================================
-    private void ConsumeBufferedInputs()
-    {
-        if (stateMachine == null)
-            return;
-
-        // Try to consume dash buffer
-        if (Time.time <= dashBufferedUntil)
-        {
-            stateMachine.RouteDashInput(moveInput.x);
-            dashBufferedUntil = -999f;
-        }
-
-        // Try to consume attack buffer
-        if (Time.time <= attackBufferedUntil)
-        {
-            stateMachine.RouteAttackInput();
-            attackBufferedUntil = -999f;
-        }
     }
 }

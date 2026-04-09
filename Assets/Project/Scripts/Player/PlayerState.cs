@@ -60,6 +60,13 @@ public abstract class PlayerState
     }
 
     // =========================================================
+    // Convenience — centralized input buffer access
+    // =========================================================
+
+    /// <summary>Shortcut to the FSM's centralized input buffer.</summary>
+    protected ActionInputBuffer Buffer => fsm != null ? fsm.InputBuffer : null;
+
+    // =========================================================
     // Identity
     // =========================================================
     public abstract PlayerStateId StateId { get; }

@@ -36,6 +36,11 @@ public class PlayerStateMachine : MonoBehaviour
     // =========================================================
     public PlayerState CurrentState { get; private set; }
 
+    // =========================================================
+    // Centralized Input Buffer
+    // =========================================================
+    public ActionInputBuffer InputBuffer { get; private set; } = new ActionInputBuffer();
+
     /// <summary>
     /// Cheap enum check — no boxing, no type comparison.
     /// </summary>
@@ -85,13 +90,28 @@ public class PlayerStateMachine : MonoBehaviour
     /// </summary>
     public void ChangeState(PlayerState newState)
     {
+        ChangeState(newState, TransitionContext.Empty);
+    }
+
+    /// <summary>
+    /// Context-aware state transition. Passes continuation data to the new state.
+    /// </summary>
+    public void ChangeState(PlayerState newState, TransitionContext context)
+    {
         if (newState == null || newState == CurrentState)
             return;
 
         PlayerStateId prevId = CurrentStateId;
+        context.previousState = prevId;
+
         CurrentState?.Exit();
         CurrentState = newState;
-        CurrentState.Enter();
+
+        // If the new state is a FrameDataPlayerState, pass context
+        if (CurrentState is FrameDataPlayerState fdState)
+            fdState.Enter(context);
+        else
+            CurrentState.Enter();
 
         PlayerStateId newId = CurrentStateId;
 
@@ -196,6 +216,9 @@ public class PlayerStateMachine : MonoBehaviour
     {
         if (CurrentState == null) return;
 
+        // Always buffer the dash for mid-action consumption
+        InputBuffer.BufferDash(inputX);
+
         // DashState has custom OnDashInput (initiates physics) — let it handle directly
         if (HasCustomDashHandler())
         {
@@ -220,6 +243,9 @@ public class PlayerStateMachine : MonoBehaviour
     public void RouteAttackInput()
     {
         if (CurrentState == null) return;
+
+        // Always buffer the attack for mid-action consumption
+        InputBuffer.BufferAttack();
 
         // AttackState has custom OnAttackInput (chains combos)
         if (HasCustomAttackHandler())

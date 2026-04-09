@@ -50,6 +50,7 @@ MonoBehaviour:
     startupFrames: 2
     activeFrames: 11
     recoveryFrames: 5
+    cancelWindowStartFrame: 10
     dashSpeed: 30
     cooldownFrames: 24
   basicAttackComboData:
@@ -61,10 +62,6 @@ MonoBehaviour:
       activeFrames: 6
       recoveryFrames: 9
       cancelWindowStartFrame: 18
-      useForwardMotion: 1
-      forwardDistance: 1.7
-      motionStartFrame: 3
-      motionEndFrame: 8
       hitFrames:
       - startFrameOffset: 1
         activeFrames: 3
@@ -83,16 +80,18 @@ MonoBehaviour:
         flashFrames: 6
         impactTier: 0
         debugColor: {r: 0.28527856, g: 1, b: 0, a: 1}
+      motionData:
+        rid: 1588255752457289826
+      vfxData:
+        rid: -2
+      hitData:
+        rid: 1588255752457289824
     - stepName: Attack 2
       animationClip: {fileID: 7400000, guid: 993cb42f21d604449b07755ebe632207, type: 2}
       startupFrames: 13
       activeFrames: 8
       recoveryFrames: 11
       cancelWindowStartFrame: 22
-      useForwardMotion: 0
-      forwardDistance: 0.3
-      motionStartFrame: 3
-      motionEndFrame: 8
       hitFrames:
       - startFrameOffset: 1
         activeFrames: 3
@@ -128,6 +127,12 @@ MonoBehaviour:
         flashFrames: 6
         impactTier: 0
         debugColor: {r: 1, g: 0.9864793, b: 0, a: 0.39215687}
+      motionData:
+        rid: 1588255752457289828
+      vfxData:
+        rid: -2
+      hitData:
+        rid: 1588255752457289829
   neutralAirComboData:
     comboResetDelay: 1
     steps:
@@ -137,10 +142,6 @@ MonoBehaviour:
       activeFrames: 16
       recoveryFrames: 13
       cancelWindowStartFrame: 23
-      useForwardMotion: 1
-      forwardDistance: 2
-      motionStartFrame: 3
-      motionEndFrame: 8
       hitFrames:
       - startFrameOffset: 1
         activeFrames: 3
@@ -176,6 +177,12 @@ MonoBehaviour:
         flashFrames: 6
         impactTier: 0
         debugColor: {r: 0.14901961, g: 1, b: 0, a: 0.39215687}
+      motionData:
+        rid: -2
+      vfxData:
+        rid: -2
+      hitData:
+        rid: -2
   plungeAttackData:
     isEnabled: 1
     downwardSpeed: 18
@@ -188,17 +195,23 @@ MonoBehaviour:
       activeFrames: 3
       recoveryFrames: 15
       cancelWindowStartFrame: 12
-      useForwardMotion: 0
-      forwardDistance: 0.5
-      motionStartFrame: 3
-      motionEndFrame: 8
       hitFrames: []
+      motionData:
+        rid: -2
+      vfxData:
+        rid: -2
+      hitData:
+        rid: -2
   skillData:
     skillName: 
     description: 
     elementType: 0
+    frameData:
+      startupFrames: 2
+      activeFrames: 3
+      recoveryFrames: 8
+      cancelWindowStartFrame: 10
     cooldown: 4
-    castDuration: 0.1
     damageMultiplier: 1.5
     knockbackForce: 6
     skillPrefab: {fileID: 0}
@@ -207,8 +220,12 @@ MonoBehaviour:
     ultimateName: 
     description: 
     elementType: 0
+    frameData:
+      startupFrames: 4
+      activeFrames: 6
+      recoveryFrames: 10
+      cancelWindowStartFrame: 0
     cooldown: 12
-    castDuration: 0.25
     activeDuration: 4
     damageMultiplier: 0.5
     hitInterval: 0.4
@@ -216,3 +233,99 @@ MonoBehaviour:
     spawnOffset: {x: 1.5, y: 0}
   skillTreeData:
     nodes: []
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 1588255752457289824
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 1588255752457289825
+    - rid: 1588255752457289825
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 1
+        activeFrames: 3
+        debugColor: {r: 0.18039216, g: 0.72156864, b: 0.3803922, a: 1}
+        offset: {x: 1.347887, y: 1.495777}
+        size: {x: 1.927194, y: 1.755293}
+        damageMultiplier: 1.3
+        knockbackForce: 4
+        cameraShakeStrength: 0.1
+        impactTier: 0
+        hitstunFrames: 10
+        reactionVelocity: {x: 3, y: 1}
+        knockbackFrames: 15
+        isKnockdown: 0
+        snapToAttacker: 0
+        snapOffset: {x: 0, y: 0}
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+    - rid: 1588255752457289826
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - frame: 8
+          position: {x: 1, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 1588255752457289828
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - frame: 13
+          position: {x: 0.5, y: 0.1, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - frame: 17
+          position: {x: 0.5, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 1588255752457289829
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 1588255752457289830
+        - rid: 1588255752457289832
+    - rid: 1588255752457289830
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 1
+        activeFrames: 3
+        debugColor: {r: 1, g: 0.9882353, b: 0, a: 1}
+        offset: {x: 0.5610732, y: 2.251992}
+        size: {x: 1.572491, y: 1.977164}
+        damageMultiplier: 0.7
+        knockbackForce: 4
+        cameraShakeStrength: 0.3
+        impactTier: 0
+        hitstunFrames: 4
+        reactionVelocity: {x: 3, y: 1}
+        knockbackFrames: 15
+        isKnockdown: 1
+        snapToAttacker: 1
+        snapOffset: {x: 0, y: -0.8}
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+    - rid: 1588255752457289832
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 4
+        activeFrames: 3
+        debugColor: {r: 0.8705883, g: 0.8588236, b: 0.027450982, a: 1}
+        offset: {x: 0.9694632, y: 1.696284}
+        size: {x: 2.183219, y: 2.160384}
+        damageMultiplier: 0.7
+        knockbackForce: 4
+        cameraShakeStrength: 0.5
+        impactTier: 1
+        hitstunFrames: 10
+        reactionVelocity: {x: 3, y: 2}
+        knockbackFrames: 15
+        isKnockdown: 1
+        snapToAttacker: 0
+        snapOffset: {x: 0, y: 0}
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6

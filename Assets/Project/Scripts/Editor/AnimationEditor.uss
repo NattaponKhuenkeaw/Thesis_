@@ -1,6 +1,6 @@
 /* =========================================================
    Combat Animation Editor — USS Stylesheet
-   Premium SaaS-style dark theme
+   Premium NLE-style dark theme with TwoPaneSplitView
    ========================================================= */
 
 /* ─── ROOT ─── */
@@ -82,15 +82,13 @@
     -unity-font-style: bold;
 }
 
-/* ─── BODY (3-column) ─── */
+/* ─── BODY (TwoPaneSplitView) ─── */
 .body-container {
     flex-grow: 1;
-    flex-direction: row;
 }
 
 /* ─── LEFT SIDEBAR ─── */
 .sidebar {
-    width: 220px;
     min-width: 180px;
     background-color: #1e1e30;
     border-right-width: 1px;
@@ -170,8 +168,8 @@
 
 /* Preview Viewport */
 .preview-viewport {
-    height: 160px;
-    min-height: 100px;
+    height: 140px;
+    min-height: 80px;
     background-color: #0d0d1a;
     border-radius: 8px;
     margin: 8px;
@@ -218,33 +216,13 @@
     border-radius: 8px;
     border-width: 1px;
     border-color: #2a2a40;
-    min-height: 160px;
+    min-height: 120px;
     overflow: hidden;
 }
 
 .timeline-canvas {
     flex-grow: 1;
-    min-height: 100px;
-}
-
-/* Multi-Lane Labels */
-.timeline-lanes {
-    flex-direction: column;
-    padding: 0 8px;
-}
-
-.timeline-lane {
-    flex-direction: row;
-    height: 18px;
-    align-items: center;
-    margin-bottom: 1px;
-}
-
-.timeline-lane__label {
-    width: 60px;
-    font-size: 9px;
-    color: #555570;
-    -unity-font-style: bold;
+    min-height: 80px;
 }
 
 /* Transport Bar */
@@ -297,16 +275,9 @@
     -unity-text-align: middle-center;
 }
 
-.transport-slider {
-    flex-grow: 1;
-    max-width: 300px;
-    margin-left: 8px;
-}
-
 /* ─── RIGHT PANEL ─── */
 .property-panel {
-    width: 280px;
-    min-width: 240px;
+    min-width: 260px;
     background-color: #1a1a2a;
     border-left-width: 1px;
     border-left-color: #2a2a45;
@@ -317,13 +288,24 @@
     padding: 8px;
 }
 
-/* Property Cards */
+/* ─── PROPERTY CARDS (Foldout) ─── */
 .property-card {
     background-color: #242438;
     border-radius: 10px;
     border-width: 1px;
     border-color: #2a2a45;
     margin-bottom: 8px;
+    padding: 0;
+    overflow: hidden;
+}
+
+.property-subcard {
+    background-color: #20203a;
+    border-radius: 8px;
+    border-width: 1px;
+    border-color: #28284a;
+    margin-bottom: 6px;
+    margin-left: 4px;
     padding: 0;
     overflow: hidden;
 }
@@ -335,12 +317,49 @@
     border-bottom-width: 1px;
     border-bottom-color: #2a2a45;
     background-color: rgba(255, 255, 255, 0.02);
+    cursor: link;
+}
+
+.property-card__header:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.property-card__accent {
+    width: 4px;
+    height: 18px;
+    border-radius: 2px;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.property-card__arrow {
+    font-size: 10px;
+    color: #555570;
+    margin-right: 6px;
+    width: 12px;
+    -unity-text-align: middle-left;
 }
 
 .property-card__header-text {
     font-size: 12px;
-    color: #00D4FF;
+    color: #E8E8F0;
     -unity-font-style: bold;
+    flex-grow: 1;
+}
+
+.property-card__delete {
+    font-size: 10px;
+    color: #FF4444;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background-color: rgba(255, 68, 68, 0.1);
+    border-width: 1px;
+    border-color: rgba(255, 68, 68, 0.2);
+    flex-shrink: 0;
+}
+
+.property-card__delete:hover {
+    background-color: rgba(255, 68, 68, 0.25);
 }
 
 .property-card__body {
@@ -370,7 +389,10 @@
 .card-field-row > FloatField,
 .card-field-row > TextField,
 .card-field-row > Toggle,
-.card-field-row > EnumField {
+.card-field-row > EnumField,
+.card-field-row > ObjectField,
+.card-field-row > Vector2Field,
+.card-field-row > Vector3Field {
     flex-grow: 1;
 }
 
@@ -388,79 +410,43 @@
     margin-bottom: 2px;
 }
 
-/* Add Hit Frame Button */
-.add-hitframe-btn {
-    height: 32px;
+/* ─── ADD COMPONENT BUTTON ─── */
+.add-component-row {
+    margin: 4px 0 12px 0;
+}
+
+.add-component-btn {
+    height: 34px;
     border-radius: 8px;
-    background-color: rgba(68, 221, 102, 0.12);
+    background-color: rgba(0, 212, 255, 0.08);
     border-width: 1px;
-    border-color: rgba(68, 221, 102, 0.3);
-    color: #44DD66;
+    border-color: rgba(0, 212, 255, 0.25);
+    color: #00D4FF;
     font-size: 12px;
     -unity-font-style: bold;
-    margin: 4px 8px 8px 8px;
     cursor: link;
 }
 
-.add-hitframe-btn:hover {
-    background-color: rgba(68, 221, 102, 0.2);
+.add-component-btn:hover {
+    background-color: rgba(0, 212, 255, 0.18);
+    border-color: rgba(0, 212, 255, 0.5);
 }
 
-/* Hit Frame Accordion Header */
-.hitframe-header {
-    flex-direction: row;
-    align-items: center;
-    height: 30px;
-    padding: 0 10px;
-    margin-bottom: 2px;
+.component-add-entry-btn {
+    height: 26px;
     border-radius: 6px;
-    background-color: #242438;
+    background-color: rgba(68, 221, 102, 0.08);
+    border-width: 1px;
+    border-color: rgba(68, 221, 102, 0.2);
+    color: #44DD66;
+    font-size: 11px;
+    -unity-font-style: bold;
+    margin-top: 6px;
     cursor: link;
 }
 
-.hitframe-header:hover {
-    background-color: #2a2a42;
-}
-
-.hitframe-header__accent {
-    width: 4px;
-    height: 20px;
-    border-radius: 2px;
-    margin-right: 8px;
-}
-
-.hitframe-header__text {
-    flex-grow: 1;
-    font-size: 11px;
-    color: #CCCCDD;
-}
-
-.hitframe-header__delete {
-    font-size: 10px;
-    color: #FF4444;
-    padding: 2px 8px;
-    border-radius: 4px;
-    background-color: rgba(255, 68, 68, 0.1);
-    border-width: 1px;
-    border-color: rgba(255, 68, 68, 0.2);
-}
-
-.hitframe-header__delete:hover {
-    background-color: rgba(255, 68, 68, 0.2);
-}
-
-/* Placeholder / Empty State */
-.empty-state {
-    flex-grow: 1;
-    align-items: center;
-    justify-content: center;
-    padding: 40px;
-}
-
-.empty-state__text {
-    font-size: 13px;
-    color: #555570;
-    -unity-text-align: middle-center;
+.component-add-entry-btn:hover {
+    background-color: rgba(68, 221, 102, 0.18);
 }
 
 /* MinMax Slider readout */
@@ -481,33 +467,25 @@
     margin: 0 2px;
 }
 
-/* AutoSync Warning */
-.autosync-box {
-    background-color: rgba(255, 200, 50, 0.08);
-    border-radius: 8px;
-    border-width: 1px;
-    border-color: rgba(255, 200, 50, 0.2);
-    padding: 8px;
-    margin: 8px;
+/* Placeholder / Empty State */
+.empty-state {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
 }
 
-.autosync-box__text {
-    font-size: 11px;
-    color: #DDAA33;
-    margin-bottom: 6px;
+.empty-state__text {
+    font-size: 13px;
+    color: #555570;
+    -unity-text-align: middle-center;
 }
 
-.autosync-box__btn {
-    height: 28px;
-    border-radius: 6px;
-    background-color: rgba(255, 215, 0, 0.15);
-    border-width: 1px;
-    border-color: rgba(255, 215, 0, 0.3);
-    color: #FFD700;
-    font-size: 11px;
-    -unity-font-style: bold;
+/* ─── SPLIT VIEW DRAG HANDLE ─── */
+.unity-two-pane-split-view__dragline-anchor {
+    background-color: #2a2a45;
 }
 
-.autosync-box__btn:hover {
-    background-color: rgba(255, 215, 0, 0.25);
+.unity-two-pane-split-view__dragline-anchor:hover {
+    background-color: #00D4FF;
 }

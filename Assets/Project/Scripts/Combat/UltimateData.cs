@@ -17,13 +17,27 @@ public class UltimateData
     public ElementType elementType = ElementType.None;
 
     // =========================================================
-    // Timing
+    // Frame Data (24 fps — centralized with all actions)
+    // =========================================================
+    [Header("Frame Data (24 fps)")]
+    [Tooltip("Frame-based timing for Startup/Active/Recovery/Cancel phases.")]
+    public ActionFrameData frameData = new ActionFrameData
+    {
+        startupFrames = 4,
+        activeFrames = 6,
+        recoveryFrames = 10,
+        cancelWindowStartFrame = 0 // Ultimate typically has no cancel window
+    };
+
+    // =========================================================
+    // Timing (legacy compat)
     // =========================================================
     [Header("Timing")]
     public float cooldown = 12f;
-    public float castDuration = 0.25f;
     public float activeDuration = 4f;
 
+    /// <summary>Cast duration in seconds, computed from frameData for backwards compat.</summary>
+    public float CastDuration => frameData != null ? frameData.TotalFrames / 24f : 0.25f;
     // =========================================================
     // Damage
     // =========================================================

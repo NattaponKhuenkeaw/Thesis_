@@ -6,8 +6,9 @@ using System.Collections.Generic;
 using CombatEditor.UI;
 
 /// <summary>
-/// Premium SaaS-style Combat Animation Editor built on UI Toolkit.
-/// 5-panel layout: Header, Sidebar, Preview, Timeline, Property Cards.
+/// Premium NLE-style Combat Animation Editor built on UI Toolkit.
+/// 3-column resizable layout via nested TwoPaneSplitView:
+///   Header (free-sizing) → [Left Sidebar | Center Timeline | Right Property Cards]
 /// </summary>
 public class AnimationEditorWindow : EditorWindow
 {
@@ -21,7 +22,7 @@ public class AnimationEditorWindow : EditorWindow
     // ── UI Components ──
     private ActionTreeController treeController;
     private PropertyCardBuilder cardBuilder;
-    private TimelineElement timelineElement;
+    private TimelineGridElement timelineGrid;
 
     // ── Element References ──
     private Label breadcrumbLabel;
@@ -32,7 +33,6 @@ public class AnimationEditorWindow : EditorWindow
     private VisualElement propertyScrollContent;
     private VisualElement headerCharIcon;
     private Label headerCharName;
-    private Slider transportSlider;
     private Label transportFrameLabel;
     private ObjectField clipField;
     private ObjectField charField;
@@ -89,23 +89,28 @@ public class AnimationEditorWindow : EditorWindow
         root.AddToClassList("root-container");
         rootVisualElement.Add(root);
 
-        // ── 1. HEADER BAR ──
+        // ── 1. HEADER BAR (free-sizing, sits above split) ──
         root.Add(BuildHeaderBar());
 
-        // ── 2. BODY (3-column) ──
-        var body = new VisualElement();
-        body.AddToClassList("body-container");
+        // ── 2. BODY — Nested TwoPaneSplitView for 3 columns ──
+        // Outer split: Left Sidebar | (Center + Right)
+        var outerSplit = new TwoPaneSplitView(0, 220, TwoPaneSplitViewOrientation.Horizontal);
+        outerSplit.AddToClassList("body-container");
 
         // LEFT SIDEBAR
-        body.Add(BuildSidebar());
+        outerSplit.Add(BuildSidebar());
+
+        // Inner split: Center Area | Right Panel
+        var innerSplit = new TwoPaneSplitView(1, 300, TwoPaneSplitViewOrientation.Horizontal);
 
         // CENTER AREA
-        body.Add(BuildCenterArea());
+        innerSplit.Add(BuildCenterArea());
 
         // RIGHT PANEL
-        body.Add(BuildPropertyPanel());
+        innerSplit.Add(BuildPropertyPanel());
 
-        root.Add(body);
+        outerSplit.Add(innerSplit);
+        root.Add(outerSplit);
 
         // ── Keyboard Shortcuts ──
         rootVisualElement.RegisterCallback<KeyDownEvent>(OnKeyDown);
@@ -241,25 +246,15 @@ public class AnimationEditorWindow : EditorWindow
         var dashboard = new VisualElement();
         dashboard.AddToClassList("timeline-dashboard");
 
-        timelineElement = new TimelineElement();
-        timelineElement.AddToClassList("timeline-canvas");
-        timelineElement.RegisterCallback<PointerUpEvent>(evt =>
-        {
-            timelineElement.ReleasePointer(evt.pointerId);
-        });
-        timelineElement.OnSeek += OnTimelineSeek;
-        dashboard.Add(timelineElement);
+        timelineGrid = new TimelineGridElement();
+        timelineGrid.AddToClassList("timeline-canvas");
+        timelineGrid.OnSeek += OnTimelineSeek;
+        dashboard.Add(timelineGrid);
 
         // Transport Controls
         dashboard.Add(BuildTransportBar());
 
         center.Add(dashboard);
-
-        // ── Add Hit Frame Button ──
-        var addBtn = new Button(OnAddHitFrame);
-        addBtn.text = "＋  Mark Current Frame as Hit Trigger";
-        addBtn.AddToClassList("add-hitframe-btn");
-        center.Add(addBtn);
 
         return center;
     }
@@ -311,20 +306,6 @@ public class AnimationEditorWindow : EditorWindow
         transportFrameLabel = new Label("Frame: 0 / 0");
         transportFrameLabel.AddToClassList("transport-frame-label");
         bar.Add(transportFrameLabel);
-
-        // Slider
-        transportSlider = new Slider(0, 1);
-        transportSlider.AddToClassList("transport-slider");
-        transportSlider.RegisterValueChangedCallback(evt =>
-        {
-            if (!isPlaying)
-            {
-                int max = GetCurrentTotalFrames();
-                scrubberFrame = Mathf.RoundToInt(evt.newValue * max);
-                RefreshTimeline();
-            }
-        });
-        bar.Add(transportSlider);
 
         // Cleanup Preview Button
         var cleanBtn = new Button(CleanupPreview);
@@ -435,33 +416,6 @@ public class AnimationEditorWindow : EditorWindow
         RefreshTimeline();
     }
 
-    private void OnAddHitFrame()
-    {
-        var node = treeController?.SelectedNode;
-        if (node?.DataType != "AttackStep" || !(node.DataRef is AttackStepData step)) return;
-
-        Undo.RecordObject(selectedCharacter, "Add Hit Frame");
-
-        int offset = scrubberFrame - step.startupFrames;
-        if (offset < 0) offset = 0;
-
-        var newFrame = new AttackHitFrameData
-        {
-            startFrameOffset = offset,
-            activeFrames = 1
-        };
-
-        var list = step.hitFrames != null
-            ? new List<AttackHitFrameData>(step.hitFrames)
-            : new List<AttackHitFrameData>();
-        list.Add(newFrame);
-        step.hitFrames = list.ToArray();
-
-        EditorUtility.SetDirty(selectedCharacter);
-        cardBuilder?.Build(node);
-        RefreshTimeline();
-    }
-
     private void OnDataChanged()
     {
         if (selectedCharacter != null)
@@ -512,7 +466,7 @@ public class AnimationEditorWindow : EditorWindow
             if (clip != null)
             {
                 float dt = (float)EditorApplication.timeSinceStartup - lastTime;
-                scrubberFrame += Mathf.RoundToInt(dt * 24f);
+                scrubberFrame += Mathf.RoundToInt(dt * clip.frameRate);
 
                 int total = GetTotalClipFrames(clip);
                 if (scrubberFrame >= total)
@@ -527,75 +481,122 @@ public class AnimationEditorWindow : EditorWindow
     }
 
     // =========================================================
-    // TIMELINE REFRESH
+    // TIMELINE REFRESH — Component-synced track system
     // =========================================================
     private void RefreshTimeline()
     {
-        if (timelineElement == null) return;
+        if (timelineGrid == null) return;
 
         var node = treeController?.SelectedNode;
         int totalFrames = 0;
         int su = 0, act = 0, rec = 0;
+
+        // Clear tracks
+        timelineGrid.Tracks.Clear();
 
         if (node?.DataType == "AttackStep" && node.DataRef is AttackStepData step)
         {
             su = step.startupFrames;
             act = step.activeFrames;
             rec = step.recoveryFrames;
-            totalFrames = step.animationClip != null ? GetTotalClipFrames(step.animationClip) : su + act + rec;
+            AnimationClip stepClip = step.animationClip;
+            totalFrames = stepClip != null ? GetTotalClipFrames(stepClip) : su + act + rec;
 
-            timelineElement.HitMarkers.Clear();
-            if (step.hitFrames != null)
+            float fps = stepClip != null ? stepClip.frameRate : 24f;
+            timelineGrid.Setup(totalFrames, fps);
+
+            // ── Build tracks from attached components ──
+
+            // Motion track
+            if (step.motionData != null && step.motionData.keyframes != null && step.motionData.keyframes.Count > 0)
             {
-                foreach (var h in step.hitFrames)
+                var motionTrack = new TimelineGridElement.TimelineTrack
                 {
-                    timelineElement.HitMarkers.Add(new TimelineElement.HitMarker
+                    label = "Motion",
+                    color = step.motionData.TrackColor
+                };
+                foreach (var kf in step.motionData.keyframes)
+                {
+                    motionTrack.diamonds.Add(kf.frame);
+                    motionTrack.ranges.Add((kf.frame, 1));
+                }
+                timelineGrid.Tracks.Add(motionTrack);
+            }
+
+            // VFX tracks
+            if (step.vfxData != null && step.vfxData.entries != null)
+            {
+                foreach (var entry in step.vfxData.entries)
+                {
+                    var vfxTrack = new TimelineGridElement.TimelineTrack
                     {
-                        start = su + h.startFrameOffset,
-                        duration = h.activeFrames,
-                        color = h.debugColor
-                    });
+                        label = entry.label,
+                        color = entry.trackColor
+                    };
+                    vfxTrack.ranges.Add((entry.triggerFrame, entry.duration));
+                    timelineGrid.Tracks.Add(vfxTrack);
                 }
             }
 
-            timelineElement.HasCancel = true;
-            timelineElement.CancelStart = su + act + step.cancelWindowStartFrame;
-            timelineElement.HasMotion = step.useForwardMotion;
-            timelineElement.MotionStart = step.motionStartFrame;
-            timelineElement.MotionEnd = step.motionEndFrame;
+            // Hit tracks
+            if (step.hitData != null && step.hitData.hitboxes != null)
+            {
+                foreach (var hb in step.hitData.hitboxes)
+                {
+                    var hitTrack = new TimelineGridElement.TimelineTrack
+                    {
+                        label = hb.HitboxTypeName,
+                        color = hb.debugColor
+                    };
+                    int hitStart = su + hb.startFrameOffset;
+                    hitTrack.ranges.Add((hitStart, hb.activeFrames));
+                    timelineGrid.Tracks.Add(hitTrack);
+                }
+            }
+
+            // Legacy hitFrames fallback
+            if (step.hitData == null && step.hitFrames != null && step.hitFrames.Length > 0)
+            {
+                var legacyTrack = new TimelineGridElement.TimelineTrack
+                {
+                    label = "Hit (Legacy)",
+                    color = new Color(1f, 0.84f, 0f)
+                };
+                foreach (var h in step.hitFrames)
+                {
+                    int hitStart = su + h.startFrameOffset;
+                    legacyTrack.ranges.Add((hitStart, h.activeFrames));
+                }
+                timelineGrid.Tracks.Add(legacyTrack);
+            }
         }
         else if (node?.DataType == "Dash" && node.DataRef is DashData dash)
         {
             su = dash.startupFrames;
             act = dash.activeFrames;
             rec = dash.recoveryFrames;
-            totalFrames = dash.animationClip != null ? GetTotalClipFrames(dash.animationClip) : su + act + rec;
+            AnimationClip dashClip = dash.animationClip;
+            totalFrames = dashClip != null ? GetTotalClipFrames(dashClip) : su + act + rec;
 
-            timelineElement.HitMarkers.Clear();
-            timelineElement.HasCancel = false;
-            timelineElement.HasMotion = false;
+            float fps = dashClip != null ? dashClip.frameRate : 24f;
+            timelineGrid.Setup(totalFrames, fps);
         }
         else
         {
-            timelineElement.HitMarkers.Clear();
-            timelineElement.HasCancel = false;
-            timelineElement.HasMotion = false;
+            timelineGrid.Setup(1, 24f);
         }
 
-        timelineElement.TotalFrames = totalFrames;
-        timelineElement.StartupFrames = su;
-        timelineElement.ActiveFrames = act;
-        timelineElement.RecoveryFrames = rec;
-        timelineElement.PlayheadFrame = scrubberFrame;
-        timelineElement.Refresh();
+        timelineGrid.StartupFrames = su;
+        timelineGrid.ActiveFrames = act;
+        timelineGrid.RecoveryFrames = rec;
+        timelineGrid.PlayheadFrame = scrubberFrame;
+        timelineGrid.Refresh();
 
         // Update frame counter
         if (frameCounterLabel != null)
             frameCounterLabel.text = $"Frame: {scrubberFrame} / {totalFrames}";
         if (transportFrameLabel != null)
             transportFrameLabel.text = $"Frame: {scrubberFrame} / {totalFrames}";
-        if (transportSlider != null && totalFrames > 0)
-            transportSlider.SetValueWithoutNotify((float)scrubberFrame / totalFrames);
 
         // Update preview
         AnimationClip clip = GetCurrentClip();
@@ -655,7 +656,7 @@ public class AnimationEditorWindow : EditorWindow
 
     private int GetTotalClipFrames(AnimationClip clip)
     {
-        return Mathf.RoundToInt(clip.length * 24f);
+        return Mathf.RoundToInt(clip.length * clip.frameRate);
     }
 
     // =========================================================
@@ -678,7 +679,7 @@ public class AnimationEditorWindow : EditorWindow
         if (!AnimationMode.InAnimationMode())
             AnimationMode.StartAnimationMode();
 
-        float time = frame / 24f;
+        float time = frame / clip.frameRate;
         AnimationMode.BeginSampling();
         AnimationMode.SampleAnimationClip(previewInstance, clip, time);
         AnimationMode.EndSampling();
@@ -697,115 +698,60 @@ public class AnimationEditorWindow : EditorWindow
     }
 
     // =========================================================
-    // SCENE VIEW HANDLES (Preserved from IMGUI version)
+    // SCENE VIEW HANDLES — Hitbox gizmos for NormalHitbox
     // =========================================================
     private void OnSceneGUI(SceneView sceneView)
     {
         if (selectedCharacter == null || previewInstance == null) return;
 
         AttackStepData step = GetCurrentStep();
-        if (step == null || step.hitFrames == null) return;
+        if (step == null) return;
 
         bool changed = false;
 
-        for (int i = 0; i < step.hitFrames.Length; i++)
+        // New system: HitFrameData with NormalHitbox
+        if (step.hitData != null && step.hitData.hitboxes != null)
         {
-            AttackHitFrameData h = step.hitFrames[i];
-            int startAt = step.startupFrames + h.startFrameOffset;
-            int endAt = startAt + h.activeFrames;
-
-            if (scrubberFrame >= startAt && scrubberFrame < endAt)
+            for (int i = 0; i < step.hitData.hitboxes.Count; i++)
             {
-                Vector3 worldPos = previewInstance.transform.TransformPoint(new Vector3(h.offset.x, h.offset.y, 0));
-                Color fillColor = h.debugColor;
-                fillColor.a = 0.3f;
-                Handles.color = fillColor;
-
-                Vector3 halfSize = new Vector3(h.size.x * 0.5f, h.size.y * 0.5f, 0);
-                Quaternion rot = previewInstance.transform.rotation;
-
-                Vector3 p1 = worldPos + rot * new Vector3(-halfSize.x, -halfSize.y, 0);
-                Vector3 p2 = worldPos + rot * new Vector3(halfSize.x, -halfSize.y, 0);
-                Vector3 p3 = worldPos + rot * new Vector3(halfSize.x, halfSize.y, 0);
-                Vector3 p4 = worldPos + rot * new Vector3(-halfSize.x, halfSize.y, 0);
-
-                Handles.DrawSolidRectangleWithOutline(new Vector3[] { p1, p2, p3, p4 }, fillColor, h.debugColor);
-
-                // Positional handle
-                EditorGUI.BeginChangeCheck();
-                Handles.Label(worldPos + Vector3.up * (h.size.y * 0.6f), "Impact #" + (i + 1), EditorStyles.miniBoldLabel);
-                float handleSize = 0.05f * HandleUtility.GetHandleSize(worldPos);
-                Vector3 newWorldPos = Handles.FreeMoveHandle(worldPos, handleSize, Vector3.zero, Handles.DotHandleCap);
-                if (EditorGUI.EndChangeCheck())
+                if (step.hitData.hitboxes[i] is NormalHitbox h)
                 {
-                    Undo.RecordObject(selectedCharacter, "Move Hitbox");
-                    Vector3 localPos = previewInstance.transform.InverseTransformPoint(newWorldPos);
-                    h.offset = new Vector2(localPos.x, localPos.y);
-                    changed = true;
+                    int startAt = step.startupFrames + h.startFrameOffset;
+                    int endAt = startAt + h.activeFrames;
+
+                    if (scrubberFrame >= startAt && scrubberFrame < endAt)
+                    {
+                        changed |= DrawHitboxHandle(h, i);
+                    }
                 }
+            }
+        }
 
-                // Scaling handles
-                const float minSize = 0.1f;
-                Handles.color = Color.white;
+        // Legacy fallback
+        if (step.hitData == null && step.hitFrames != null)
+        {
+            for (int i = 0; i < step.hitFrames.Length; i++)
+            {
+                AttackHitFrameData h = step.hitFrames[i];
+                int startAt = step.startupFrames + h.startFrameOffset;
+                int endAt = startAt + h.activeFrames;
 
-                // Right
-                Vector3 rightWorld = worldPos + rot * new Vector3(halfSize.x, 0, 0);
-                EditorGUI.BeginChangeCheck();
-                Vector3 newRight = Handles.FreeMoveHandle(rightWorld, handleSize * 0.8f, Vector3.zero, Handles.DotHandleCap);
-                if (EditorGUI.EndChangeCheck())
+                if (scrubberFrame >= startAt && scrubberFrame < endAt)
                 {
-                    Undo.RecordObject(selectedCharacter, "Scale Hitbox");
-                    Vector3 lp = previewInstance.transform.InverseTransformPoint(newRight);
-                    float oldLeft = h.offset.x - (h.size.x * 0.5f);
-                    float nw = lp.x - oldLeft;
-                    if (nw < minSize) nw = minSize;
-                    h.size.x = nw; h.offset.x = oldLeft + (nw * 0.5f);
-                    changed = true;
-                }
+                    Vector3 worldPos = previewInstance.transform.TransformPoint(new Vector3(h.offset.x, h.offset.y, 0));
+                    Color fillColor = h.debugColor;
+                    fillColor.a = 0.3f;
+                    Handles.color = fillColor;
 
-                // Left
-                Vector3 leftWorld = worldPos + rot * new Vector3(-halfSize.x, 0, 0);
-                EditorGUI.BeginChangeCheck();
-                Vector3 newLeft = Handles.FreeMoveHandle(leftWorld, handleSize * 0.8f, Vector3.zero, Handles.DotHandleCap);
-                if (EditorGUI.EndChangeCheck())
-                {
-                    Undo.RecordObject(selectedCharacter, "Scale Hitbox");
-                    Vector3 lp = previewInstance.transform.InverseTransformPoint(newLeft);
-                    float oldRight = h.offset.x + (h.size.x * 0.5f);
-                    float nw = oldRight - lp.x;
-                    if (nw < minSize) nw = minSize;
-                    h.size.x = nw; h.offset.x = oldRight - (nw * 0.5f);
-                    changed = true;
-                }
+                    Vector3 halfSize = new Vector3(h.size.x * 0.5f, h.size.y * 0.5f, 0);
+                    Quaternion rot = previewInstance.transform.rotation;
 
-                // Top
-                Vector3 topWorld = worldPos + rot * new Vector3(0, halfSize.y, 0);
-                EditorGUI.BeginChangeCheck();
-                Vector3 newTop = Handles.FreeMoveHandle(topWorld, handleSize * 0.8f, Vector3.zero, Handles.DotHandleCap);
-                if (EditorGUI.EndChangeCheck())
-                {
-                    Undo.RecordObject(selectedCharacter, "Scale Hitbox");
-                    Vector3 lp = previewInstance.transform.InverseTransformPoint(newTop);
-                    float oldBot = h.offset.y - (h.size.y * 0.5f);
-                    float nh = lp.y - oldBot;
-                    if (nh < minSize) nh = minSize;
-                    h.size.y = nh; h.offset.y = oldBot + (nh * 0.5f);
-                    changed = true;
-                }
+                    Vector3 p1 = worldPos + rot * new Vector3(-halfSize.x, -halfSize.y, 0);
+                    Vector3 p2 = worldPos + rot * new Vector3(halfSize.x, -halfSize.y, 0);
+                    Vector3 p3 = worldPos + rot * new Vector3(halfSize.x, halfSize.y, 0);
+                    Vector3 p4 = worldPos + rot * new Vector3(-halfSize.x, halfSize.y, 0);
 
-                // Bottom
-                Vector3 botWorld = worldPos + rot * new Vector3(0, -halfSize.y, 0);
-                EditorGUI.BeginChangeCheck();
-                Vector3 newBot = Handles.FreeMoveHandle(botWorld, handleSize * 0.8f, Vector3.zero, Handles.DotHandleCap);
-                if (EditorGUI.EndChangeCheck())
-                {
-                    Undo.RecordObject(selectedCharacter, "Scale Hitbox");
-                    Vector3 lp = previewInstance.transform.InverseTransformPoint(newBot);
-                    float oldTop = h.offset.y + (h.size.y * 0.5f);
-                    float nh = oldTop - lp.y;
-                    if (nh < minSize) nh = minSize;
-                    h.size.y = nh; h.offset.y = oldTop - (nh * 0.5f);
-                    changed = true;
+                    Handles.DrawSolidRectangleWithOutline(new Vector3[] { p1, p2, p3, p4 }, fillColor, h.debugColor);
                 }
             }
         }
@@ -815,5 +761,103 @@ public class AnimationEditorWindow : EditorWindow
             EditorUtility.SetDirty(selectedCharacter);
             RefreshTimeline();
         }
+    }
+
+    private bool DrawHitboxHandle(NormalHitbox h, int index)
+    {
+        bool changed = false;
+        Vector3 worldPos = previewInstance.transform.TransformPoint(new Vector3(h.offset.x, h.offset.y, 0));
+        Color fillColor = h.debugColor;
+        fillColor.a = 0.3f;
+        Handles.color = fillColor;
+
+        Vector3 halfSize = new Vector3(h.size.x * 0.5f, h.size.y * 0.5f, 0);
+        Quaternion rot = previewInstance.transform.rotation;
+
+        Vector3 p1 = worldPos + rot * new Vector3(-halfSize.x, -halfSize.y, 0);
+        Vector3 p2 = worldPos + rot * new Vector3(halfSize.x, -halfSize.y, 0);
+        Vector3 p3 = worldPos + rot * new Vector3(halfSize.x, halfSize.y, 0);
+        Vector3 p4 = worldPos + rot * new Vector3(-halfSize.x, halfSize.y, 0);
+
+        Handles.DrawSolidRectangleWithOutline(new Vector3[] { p1, p2, p3, p4 }, fillColor, h.debugColor);
+
+        // Positional handle
+        EditorGUI.BeginChangeCheck();
+        Handles.Label(worldPos + Vector3.up * (h.size.y * 0.6f), $"{h.HitboxTypeName} #{index + 1}", EditorStyles.miniBoldLabel);
+        float handleSize = 0.05f * HandleUtility.GetHandleSize(worldPos);
+        Vector3 newWorldPos = Handles.FreeMoveHandle(worldPos, handleSize, Vector3.zero, Handles.DotHandleCap);
+        if (EditorGUI.EndChangeCheck())
+        {
+            Undo.RecordObject(selectedCharacter, "Move Hitbox");
+            Vector3 localPos = previewInstance.transform.InverseTransformPoint(newWorldPos);
+            h.offset = new Vector2(localPos.x, localPos.y);
+            changed = true;
+        }
+
+        // Scaling handles
+        const float minSize = 0.1f;
+        Handles.color = Color.white;
+
+        // Right
+        Vector3 rightWorld = worldPos + rot * new Vector3(halfSize.x, 0, 0);
+        EditorGUI.BeginChangeCheck();
+        Vector3 newRight = Handles.FreeMoveHandle(rightWorld, handleSize * 0.8f, Vector3.zero, Handles.DotHandleCap);
+        if (EditorGUI.EndChangeCheck())
+        {
+            Undo.RecordObject(selectedCharacter, "Scale Hitbox");
+            Vector3 lp = previewInstance.transform.InverseTransformPoint(newRight);
+            float oldLeft = h.offset.x - (h.size.x * 0.5f);
+            float nw = lp.x - oldLeft;
+            if (nw < minSize) nw = minSize;
+            h.size.x = nw; h.offset.x = oldLeft + (nw * 0.5f);
+            changed = true;
+        }
+
+        // Left
+        Vector3 leftWorld = worldPos + rot * new Vector3(-halfSize.x, 0, 0);
+        EditorGUI.BeginChangeCheck();
+        Vector3 newLeft = Handles.FreeMoveHandle(leftWorld, handleSize * 0.8f, Vector3.zero, Handles.DotHandleCap);
+        if (EditorGUI.EndChangeCheck())
+        {
+            Undo.RecordObject(selectedCharacter, "Scale Hitbox");
+            Vector3 lp = previewInstance.transform.InverseTransformPoint(newLeft);
+            float oldRight = h.offset.x + (h.size.x * 0.5f);
+            float nw = oldRight - lp.x;
+            if (nw < minSize) nw = minSize;
+            h.size.x = nw; h.offset.x = oldRight - (nw * 0.5f);
+            changed = true;
+        }
+
+        // Top
+        Vector3 topWorld = worldPos + rot * new Vector3(0, halfSize.y, 0);
+        EditorGUI.BeginChangeCheck();
+        Vector3 newTop = Handles.FreeMoveHandle(topWorld, handleSize * 0.8f, Vector3.zero, Handles.DotHandleCap);
+        if (EditorGUI.EndChangeCheck())
+        {
+            Undo.RecordObject(selectedCharacter, "Scale Hitbox");
+            Vector3 lp = previewInstance.transform.InverseTransformPoint(newTop);
+            float oldBot = h.offset.y - (h.size.y * 0.5f);
+            float nh = lp.y - oldBot;
+            if (nh < minSize) nh = minSize;
+            h.size.y = nh; h.offset.y = oldBot + (nh * 0.5f);
+            changed = true;
+        }
+
+        // Bottom
+        Vector3 botWorld = worldPos + rot * new Vector3(0, -halfSize.y, 0);
+        EditorGUI.BeginChangeCheck();
+        Vector3 newBot = Handles.FreeMoveHandle(botWorld, handleSize * 0.8f, Vector3.zero, Handles.DotHandleCap);
+        if (EditorGUI.EndChangeCheck())
+        {
+            Undo.RecordObject(selectedCharacter, "Scale Hitbox");
+            Vector3 lp = previewInstance.transform.InverseTransformPoint(newBot);
+            float oldTopY = h.offset.y + (h.size.y * 0.5f);
+            float nh = oldTopY - lp.y;
+            if (nh < minSize) nh = minSize;
+            h.size.y = nh; h.offset.y = oldTopY - (nh * 0.5f);
+            changed = true;
+        }
+
+        return changed;
     }
 }

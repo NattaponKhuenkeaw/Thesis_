@@ -15,12 +15,14 @@ public class AttackStepData
     [Tooltip("Frame relative to recovery start where move can be cancelled")]
     public int cancelWindowStartFrame = 12;
 
-    [Header("Forward Motion")]
-    public bool useForwardMotion = false;
-    public float forwardDistance = 0.5f;
-    public int motionStartFrame = 3;
-    public int motionEndFrame = 8;
-
-    [Header("Hit Frames")]
+    [Header("Hit Frames (Legacy — migrated to hitData)")]
     public AttackHitFrameData[] hitFrames;
+
+    // =========================================================
+    // Sub Components (New Architecture)
+    // =========================================================
+    [Header("Sub Components")]
+    [SerializeReference] public MotionFrameData motionData;
+    [SerializeReference] public VFXFrameData vfxData;
+    [SerializeReference] public HitFrameData hitData;
 }

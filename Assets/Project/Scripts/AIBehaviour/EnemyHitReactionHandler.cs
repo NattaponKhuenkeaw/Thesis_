@@ -30,8 +30,6 @@ public class EnemyHitReactionHandler : MonoBehaviour
     private int currentReactionFrame = 0;
     private float logicTimeCounter = 0f;
     private int knockdownAirborneWaitFrames = 0;
-    private bool isFlashing;
-    private Color[] originalColors;
     private float originalAnimatorSpeed = 1f;
 
     public event Action OnReactionComplete;
@@ -46,8 +44,6 @@ public class EnemyHitReactionHandler : MonoBehaviour
         rb               = GetComponent<Rigidbody2D>();
         animator         = GetComponentInChildren<Animator>();
         spriteRenderers  = GetComponentsInChildren<SpriteRenderer>();
-
-        CacheOriginalColors();
     }
 
     void OnEnable()
@@ -90,12 +86,6 @@ public class EnemyHitReactionHandler : MonoBehaviour
             originalAnimatorSpeed = animator.speed;
             animator.speed = 0f;
         }
-
-        if (data.flashFrames > 0)
-        {
-            SetFlashColors();
-            isFlashing = true;
-        }
     }
 
     void FixedUpdate()
@@ -116,12 +106,6 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
     private void ProcessReactionFrame()
     {
-        // 1. Flash removal check
-        if (isFlashing && currentReactionFrame >= currentReaction.flashFrames)
-        {
-            RestoreSpriteColors();
-        }
-
         // 2. Impact Freeze Phase (Hitstop)
         if (currentReactionFrame <= currentReaction.hitstunFrames)
         {
@@ -207,7 +191,6 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
     private void CancelCurrentReaction()
     {
-        RestoreSpriteColors();
         if (animator != null && currentState == HitReactionState.ImpactFreeze)
             animator.speed = originalAnimatorSpeed > 0f ? originalAnimatorSpeed : 1f;
         currentState = HitReactionState.None;
@@ -217,8 +200,6 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
     private void CleanupReaction()
     {
-        if (isFlashing)
-            RestoreSpriteColors();
         if (animator != null && currentState == HitReactionState.ImpactFreeze)
             animator.speed = 1f;
         currentState = HitReactionState.None;
@@ -227,36 +208,5 @@ public class EnemyHitReactionHandler : MonoBehaviour
     private void HandleDeath()
     {
         CleanupReaction();
-    }
-
-    private void CacheOriginalColors()
-    {
-        if (spriteRenderers == null) return;
-        originalColors = new Color[spriteRenderers.Length];
-        for (int i = 0; i < spriteRenderers.Length; i++)
-        {
-            if (spriteRenderers[i] != null)
-                originalColors[i] = spriteRenderers[i].color;
-        }
-    }
-
-    private void SetFlashColors()
-    {
-        for (int i = 0; i < spriteRenderers.Length; i++)
-        {
-            if (spriteRenderers[i] != null)
-                spriteRenderers[i].color = currentReaction.flashColor;
-        }
-    }
-
-    private void RestoreSpriteColors()
-    {
-        if (spriteRenderers == null || originalColors == null) return;
-        for (int i = 0; i < spriteRenderers.Length; i++)
-        {
-            if (i < originalColors.Length && spriteRenderers[i] != null)
-                spriteRenderers[i].color = originalColors[i];
-        }
-        isFlashing = false;
     }
 }

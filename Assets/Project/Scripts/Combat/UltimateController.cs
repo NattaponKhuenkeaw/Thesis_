@@ -101,7 +101,7 @@ public class UltimateController : MonoBehaviour
         if (animationHandler != null)
             animationHandler.TriggerUltimate();
 
-        yield return new WaitForSeconds(ultimateData.castDuration);
+        yield return new WaitForSeconds(ultimateData.CastDuration);
 
         if (ultimateData.ultimatePrefab != null)
         {

@@ -93,12 +93,8 @@ public class EnemyWorldUI : MonoBehaviour
     /// </summary>
     private void KeepCanvasFacingForward()
     {
-        Transform parentTransform = transform.parent;
-        if (parentTransform == null)
-            return;
-
-        float parentYRot = parentTransform.eulerAngles.y;
-        transform.localRotation = Quaternion.Euler(0f, -parentYRot, 0f);
+        // Force the UI to always stay upright and non-mirrored in world space
+        transform.rotation = Quaternion.identity;
     }
 
     private void SubscribeToEnemyEvents()

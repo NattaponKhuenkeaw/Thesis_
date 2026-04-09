@@ -110,7 +110,7 @@ public class SkillController : MonoBehaviour
         if (animationHandler != null)
             animationHandler.TriggerSkill();
 
-        yield return new WaitForSeconds(skillData.castDuration);
+        yield return new WaitForSeconds(skillData.CastDuration);
 
         if (skillData.skillPrefab != null)
         {

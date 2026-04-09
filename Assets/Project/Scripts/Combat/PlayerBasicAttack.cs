@@ -2,6 +2,18 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+/// <summary>
+/// Combat engine for basic attacks. Handles hitbox activation, motion processing,
+/// damage application, combo step management, and hit detection.
+///
+/// Phase tracking (Startup→Active→Recovery→Cancel→Done) is now driven by
+/// PlayerAttackState via FrameDataPlayerState. This class focuses on:
+///   - Hitbox activation/deactivation based on frame index
+///   - Motion curve processing
+///   - Combo step management (chain, reset, preserve)
+///   - Hit detection via OverlapBox
+///   - Hitstop handling
+/// </summary>
 public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
 {
     public enum AttackFrameState
@@ -123,7 +135,166 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
 
         if (IsAttacking())
         {
-            ProcessAttackFrame();
+            // Only run legacy processing if NOT being driven by PlayerAttackState
+            // (PlayerAttackState calls ProcessFrameFromState directly)
+            if (!isDrivenByState)
+                ProcessAttackFrame();
+        }
+    }
+
+    // =========================================================
+    // State-Driven Mode
+    // When PlayerAttackState drives this engine, it calls these methods
+    // instead of the engine running its own FixedUpdate frame loop.
+    // =========================================================
+
+    private bool isDrivenByState = false;
+
+    /// <summary>
+    /// Called by PlayerAttackState to signal that phase tracking is external.
+    /// </summary>
+    public void SetDrivenByState(bool driven)
+    {
+        isDrivenByState = driven;
+    }
+
+    /// <summary>
+    /// Returns the current AttackStepData (used by PlayerAttackState.GetFrameData).
+    /// </summary>
+    public AttackStepData GetCurrentStepData()
+    {
+        return currentStepData;
+    }
+
+    /// <summary>
+    /// Called by PlayerAttackState each logic frame to process hitbox/motion/VFX.
+    /// The phase is determined by the state's FrameDataPlayerState, not internally.
+    /// </summary>
+    public void ProcessFrameFromState(int frame, ActionPhase phase)
+    {
+        currentAttackFrame = frame;
+
+        // Ensure animator is not frozen after hitstop ends
+        if (animHandler != null && animHandler.GetComponent<Animator>() != null)
+        {
+            animHandler.GetComponent<Animator>().speed = 1f;
+        }
+
+        // Map ActionPhase to internal tracking
+        switch (phase)
+        {
+            case ActionPhase.Startup:
+                currentFrameState = AttackFrameState.Windup;
+                break;
+
+            case ActionPhase.Active:
+                if (currentFrameState != AttackFrameState.Impact)
+                    currentFrameState = AttackFrameState.Impact;
+
+                // Process hitframes within active phase
+                ProcessHitFrames(frame);
+                break;
+
+            case ActionPhase.Recovery:
+            case ActionPhase.Cancel:
+                if (currentFrameState != AttackFrameState.Recovery)
+                {
+                    currentFrameState = AttackFrameState.Recovery;
+                    DisableHitbox(true);
+                }
+                break;
+        }
+
+        // Motion Processing (MotionFrameData sub-component)
+        ProcessMotion(frame);
+
+        // Perform physics overlap check while any hitbox is active
+        if (hitboxActiveCount > 0 && meleeHitbox != null && meleeHitbox.activeSelf)
+        {
+            PerformHitboxOverlapCheck();
+        }
+    }
+
+    /// <summary>
+    /// Called by PlayerAttackState when entering Recovery phase.
+    /// </summary>
+    public void OnRecoveryPhaseFromState()
+    {
+        DisableHitbox(true);
+    }
+
+    /// <summary>
+    /// Attempts to chain to the next combo step. Returns true if successful.
+    /// Called by PlayerAttackState during Recovery/Cancel phases.
+    /// </summary>
+    public bool TryChainCombo()
+    {
+        AttackComboMode requestedMode = GetRequestedComboMode();
+        BasicAttackComboData comboData = GetComboData(requestedMode);
+        if (comboData == null) return false;
+
+        int maxCombo = comboData.GetMaxCombo();
+        if (maxCombo <= 0) return false;
+
+        if (requestedMode == currentComboMode && comboStep < maxCombo)
+        {
+            StartNextAttack(currentComboMode);
+            return true;
+        }
+        else if (requestedMode != currentComboMode)
+        {
+            comboStep = 0;
+            StartNextAttack(requestedMode);
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Whether air combo progress should be preserved when the action completes
+    /// (player still airborne with combo steps remaining).
+    /// </summary>
+    public bool ShouldPreserveAirComboOnComplete()
+    {
+        if (isPlungeAttacking) return false;
+        if (currentComboMode != AttackComboMode.AirNeutral) return false;
+        if (movement == null || movement.IsGrounded()) return false;
+
+        BasicAttackComboData comboData = GetComboData(AttackComboMode.AirNeutral);
+        int maxCombo = comboData != null ? comboData.GetMaxCombo() : 0;
+        return comboStep < maxCombo;
+    }
+
+    // =========================================================
+    // Hitframe Processing (extracted from ProcessSingleLogicFrame)
+    // =========================================================
+
+    private void ProcessHitFrames(int frame)
+    {
+        if (currentStepData == null || currentStepData.hitFrames == null) return;
+
+        int frameInActivePhase = frame - cachedPhase1Frames - 1;
+
+        for (int i = 0; i < currentStepData.hitFrames.Length; i++)
+        {
+            var h = currentStepData.hitFrames[i];
+            if (frameInActivePhase == h.startFrameOffset) TriggerHitFrame(h);
+            if (frameInActivePhase == h.startFrameOffset + h.activeFrames) DisableHitbox();
+        }
+    }
+
+    private void ProcessMotion(int frame)
+    {
+        if (currentStepData == null || currentStepData.motionData == null 
+            || currentStepData.motionData.keyframes == null) return;
+
+        foreach (var kf in currentStepData.motionData.keyframes)
+        {
+            if (frame == kf.frame && movement != null)
+            {
+                movement.ApplyAttackMovement(kf.position.x, Time.fixedDeltaTime);
+            }
         }
     }
 
@@ -141,7 +312,6 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
         if (animHandler != null && animHandler.GetComponent<Animator>() != null)
         {
             Animator anim = animHandler.GetComponent<Animator>();
-            // Since we're here, hitstopFramesLeft might be 0 because it was just decremented.
             if (hitstopFramesLeft > 0)
             {
                 anim.speed = 0f;
@@ -304,15 +474,14 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
             }
         }
 
-        // Motion Processing
-        if (currentStepData.useForwardMotion)
+        // Motion Processing (MotionFrameData sub-component)
+        if (currentStepData.motionData != null && currentStepData.motionData.keyframes != null)
         {
-            if (currentAttackFrame >= currentStepData.motionStartFrame && currentAttackFrame <= currentStepData.motionEndFrame)
+            foreach (var kf in currentStepData.motionData.keyframes)
             {
-                int durationFrames = currentStepData.motionEndFrame - currentStepData.motionStartFrame + 1;
-                if (movement != null && durationFrames > 0)
+                if (currentAttackFrame == kf.frame && movement != null)
                 {
-                    movement.ApplyAttackMovement(currentStepData.forwardDistance / durationFrames, Time.fixedDeltaTime);
+                    movement.ApplyAttackMovement(kf.position.x, Time.fixedDeltaTime);
                 }
             }
         }
@@ -550,7 +719,7 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
         return movement != null && !movement.IsGrounded() && currentComboMode == AttackComboMode.AirNeutral && comboStep > 0 && !isPlungeAttacking;
     }
 
-    private void CancelCurrentAttackButKeepComboProgress()
+    public void CancelCurrentAttackButKeepComboProgress()
     {
         currentFrameState = AttackFrameState.None;
         currentAttackFrame = 0;
