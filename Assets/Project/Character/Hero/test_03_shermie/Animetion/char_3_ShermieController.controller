@@ -732,7 +732,7 @@ AnimatorState:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Attack_5
+  m_Name: shermie_Attack_5_Grab 0
   m_Speed: 1
   m_CycleOffset: 0
   m_Transitions:
@@ -917,6 +917,32 @@ AnimatorController:
     m_IKPass: 0
     m_SyncedLayerAffectsTiming: 0
     m_Controller: {fileID: 9100000}
+--- !u!1102 &506758974315602376
+AnimatorState:
+  serializedVersion: 6
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: shermie_Attack_5
+  m_Speed: 1
+  m_CycleOffset: 0
+  m_Transitions: []
+  m_StateMachineBehaviours: []
+  m_Position: {x: 50, y: 50, z: 0}
+  m_IKOnFeet: 0
+  m_WriteDefaultValues: 1
+  m_Mirror: 0
+  m_SpeedParameterActive: 0
+  m_MirrorParameterActive: 0
+  m_CycleOffsetParameterActive: 0
+  m_TimeParameterActive: 0
+  m_Motion: {fileID: 7400000, guid: 8673861c524c23e43a75cf0d7d5dacc5, type: 2}
+  m_Tag: 
+  m_SpeedParameter: 
+  m_MirrorParameter: 
+  m_CycleOffsetParameter: 
+  m_TimeParameter: 
 --- !u!1102 &576523914941278235
 AnimatorState:
   serializedVersion: 6
@@ -1210,10 +1236,10 @@ AnimatorStateMachine:
     m_Position: {x: -160, y: 290, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 732145678901234561}
-    m_Position: {x: -270, y: 180, z: 0}
+    m_Position: {x: -270, y: 190, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 732145678901234562}
-    m_Position: {x: -20, y: 180, z: 0}
+    m_Position: {x: -20, y: 190, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -5467573165826163665}
     m_Position: {x: -160, y: 340, z: 0}
@@ -1232,6 +1258,12 @@ AnimatorStateMachine:
   - serializedVersion: 1
     m_State: {fileID: 576523914941278235}
     m_Position: {x: -160, y: 120, z: 0}
+  - serializedVersion: 1
+    m_State: {fileID: 3198481256962465023}
+    m_Position: {x: -540, y: 320, z: 0}
+  - serializedVersion: 1
+    m_State: {fileID: 506758974315602376}
+    m_Position: {x: -8090, y: -460, z: 0}
   m_ChildStateMachines: []
   m_AnyStateTransitions:
   - {fileID: -8997156103177364814}
@@ -1278,6 +1310,32 @@ AnimatorStateTransition:
   m_InterruptionSource: 0
   m_OrderedInterruption: 1
   m_CanTransitionToSelf: 1
+--- !u!1102 &3198481256962465023
+AnimatorState:
+  serializedVersion: 6
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: shermie_Attack_5 1
+  m_Speed: 1
+  m_CycleOffset: 0
+  m_Transitions: []
+  m_StateMachineBehaviours: []
+  m_Position: {x: 50, y: 50, z: 0}
+  m_IKOnFeet: 0
+  m_WriteDefaultValues: 1
+  m_Mirror: 0
+  m_SpeedParameterActive: 0
+  m_MirrorParameterActive: 0
+  m_CycleOffsetParameterActive: 0
+  m_TimeParameterActive: 0
+  m_Motion: {fileID: 7400000, guid: 8673861c524c23e43a75cf0d7d5dacc5, type: 2}
+  m_Tag: 
+  m_SpeedParameter: 
+  m_MirrorParameter: 
+  m_CycleOffsetParameter: 
+  m_TimeParameter: 
 --- !u!1102 &3423080811078467787
 AnimatorState:
   serializedVersion: 6

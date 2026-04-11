@@ -1042,7 +1042,6 @@ MonoBehaviour:
   maxHP: 100
   currentHP: 100
   attackDamage: 10
-  combatDisengageRange: 8
   isAlive: 1
   rb: {fileID: 6597299547389863175}
   attackHitbox: {fileID: 3145967654918923133}
@@ -1169,7 +1168,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHitReactionHandler
   currentState: 0
-  recoveryDuration: 0.15
+  currentJuggleCount: 0
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 8
+  groundCheckDistance: 0.08
+  groundNormalMinY: 0.25
 --- !u!1001 &1641500372536904862
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1456,7 +1460,7 @@ MonoBehaviour:
   damageTextRandomRangeX: {x: -40, y: 40}
   damageTextRandomRangeY: {x: -10, y: 30}
   damageTextFloatOffset: {x: 0, y: 36}
-  damageTextDuration: 0.5
+  damageTextDuration: 1
   hideCanvasOnDeath: 1
   basicComboScale: 1
   skillScale: 1.4

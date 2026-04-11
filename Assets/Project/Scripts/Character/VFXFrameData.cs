@@ -52,4 +52,17 @@ public class VFXFrameData : ActionStepComponent
     public override Color TrackColor => new Color(0.55f, 0.30f, 1f); // violet
 
     public List<VFXEntry> entries = new List<VFXEntry>();
+
+    public void Rescale(float ratio)
+    {
+        foreach (var entry in entries)
+        {
+            entry.triggerFrame = Mathf.RoundToInt(entry.triggerFrame * ratio);
+            entry.duration = Mathf.Max(1, Mathf.RoundToInt(entry.duration * ratio));
+            foreach (var key in entry.transformKeys)
+            {
+                key.frame = Mathf.RoundToInt(key.frame * ratio);
+            }
+        }
+    }
 }

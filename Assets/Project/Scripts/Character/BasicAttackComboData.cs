@@ -31,4 +31,13 @@ public class BasicAttackComboData
     {
         return steps != null ? steps.Length : 0;
     }
+
+    public void Rescale(float ratio)
+    {
+        if (steps == null) return;
+        foreach (var step in steps)
+        {
+            step?.Rescale(ratio);
+        }
+    }
 }

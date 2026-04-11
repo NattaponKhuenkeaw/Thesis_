@@ -8,17 +8,37 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -1236378588940687432, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -1236378588940687432, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_LocalBounds.m_Center.y
+      value: -0.00000011920929
+      objectReference: {fileID: 0}
+    - target: {fileID: -1236378588940687432, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_LocalBounds.m_Extent.x
+      value: 0.9985302
+      objectReference: {fileID: 0}
+    - target: {fileID: -1236378588940687432, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_LocalBounds.m_Extent.y
+      value: 0.99853027
+      objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: maxHP
-      value: 200
+      value: 1e+9
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: currentHP
-      value: 200
+      value: 1e+9
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Enabled
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: attackDamage
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 747579930720166297, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -74,7 +94,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4337216351384873233, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4337216351384873233, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: 'managedReferences[2092758189833191443]'
@@ -143,7 +163,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5934746496802764893, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.6299
+      value: 1.9
       objectReference: {fileID: 0}
     - target: {fileID: 5934746496802764893, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_LocalPosition.z
@@ -193,6 +213,10 @@ PrefabInstance:
       propertyPath: enemyController
       value: 
       objectReference: {fileID: 3682925780710360539}
+    - target: {fileID: 6597299547389863175, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_Constraints
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 6799058080861486406, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.82
@@ -206,12 +230,20 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_Size.x
+      value: 1.4182777
+      objectReference: {fileID: 0}
+    - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Size.y
-      value: 2.0531864
+      value: 2.2806673
+      objectReference: {fileID: 0}
+    - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_Offset.x
+      value: -0.017525047
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Offset.y
-      value: -0.01700586
+      value: 0.096734524
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_SpriteTilingProperty.oldSize.x
@@ -223,7 +255,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7675375483045177933, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_fontSize
-      value: 50.43
+      value: 39.9
       objectReference: {fileID: 0}
     - target: {fileID: 7675375483045177933, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_fontColor.b
@@ -240,6 +272,10 @@ PrefabInstance:
     - target: {fileID: 7675375483045177933, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_fontSizeBase
       value: 50.43
+      objectReference: {fileID: 0}
+    - target: {fileID: 7675375483045177933, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4278190335
       objectReference: {fileID: 0}
     - target: {fileID: 7675375483045177933, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_HorizontalAlignment

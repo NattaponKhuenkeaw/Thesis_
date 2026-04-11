@@ -1,27 +1,31 @@
+using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using System.Collections.Generic;
+using CombatCore;
 
 namespace CombatEditor.UI
 {
     /// <summary>
-    /// Builds Inspector-style foldout component cards for the Right Panel.
-    /// Phase Configuration always present; MotionFrameData / VFXFrameData /
-    /// HitFrameData are optional and toggled via "Add Component" dropdown.
+    /// Builds Inspector-style foldout component cards for the right panel.
     /// </summary>
     public class PropertyCardBuilder
     {
-        private VisualElement container;
-        private CharacterObject character;
-        private System.Action onDataChanged;
-        private Dictionary<string, bool> foldoutState = new Dictionary<string, bool>();
+        private readonly VisualElement container;
+        private readonly Action onDataChanged;
+        private readonly Action onStructureChanged;
+        private readonly Dictionary<string, bool> foldoutState = new Dictionary<string, bool>();
 
-        public PropertyCardBuilder(VisualElement panelContainer, System.Action onDataChanged)
+        private CharacterObject character;
+        private ActionNode currentNode;
+
+        public PropertyCardBuilder(VisualElement panelContainer, Action onDataChanged, Action onStructureChanged)
         {
             container = panelContainer;
             this.onDataChanged = onDataChanged;
+            this.onStructureChanged = onStructureChanged;
         }
 
         public void SetCharacter(CharacterObject character)
@@ -29,12 +33,15 @@ namespace CombatEditor.UI
             this.character = character;
         }
 
-        /// <summary>Clear and rebuild cards based on the selected action node.</summary>
         public void Build(ActionNode node)
         {
             container.Clear();
+            currentNode = node;
 
-            if (node == null || character == null) return;
+            if (node == null || character == null)
+            {
+                return;
+            }
 
             switch (node.DataType)
             {
@@ -45,645 +52,1717 @@ namespace CombatEditor.UI
                     BuildDashCards(node.DataRef as DashData);
                     break;
                 case "Skill":
-                    BuildPlaceholder("Skill data — edit in Inspector");
+                    BuildPlaceholder("Skill data - edit in Inspector");
                     break;
                 case "Ultimate":
-                    BuildPlaceholder("Ultimate data — edit in Inspector");
+                    BuildPlaceholder("Ultimate data - edit in Inspector");
                     break;
             }
         }
 
-        // =========================================================
-        // ATTACK STEP CARDS
-        // =========================================================
         private void BuildAttackStepCards(AttackStepData step)
         {
-            if (step == null) return;
-
-            // ── Phase Config (always present) ──
-            BuildFoldoutCard("🎬 Phase Configuration", "phase_config", new Color(0f, 0.83f, 1f), body =>
+            if (step == null)
             {
-                AddTextField(body, "Step Name", step.stepName, v =>
+                return;
+            }
+
+            BuildFoldoutCard("Phase Configuration", "phase_config", new Color(0f, 0.83f, 1f), body =>
+            {
+                AddTextField(body, "Step Name", step.stepName, value =>
                 {
                     RecordUndo("Edit Step Name");
-                    step.stepName = v;
+                    step.stepName = value;
                     MarkDirty();
                 });
 
                 if (step.animationClip != null)
                 {
-                    int total = Mathf.RoundToInt(step.animationClip.length * step.animationClip.frameRate);
-                    AddPhaseSlider(body, step.startupFrames, step.activeFrames, step.recoveryFrames, total, (s, a, r) =>
+                    int total = Mathf.RoundToInt(step.animationClip.length * FrameDataConstants.LOGIC_FPS);
+                    AddPhaseSlider(body, step.startupFrames, step.activeFrames, step.recoveryFrames, total, (startup, active, recovery) =>
                     {
                         RecordUndo("Adjust Phases");
-                        step.startupFrames = s;
-                        step.activeFrames = a;
-                        step.recoveryFrames = r;
+                        step.startupFrames = startup;
+                        step.activeFrames = active;
+                        step.recoveryFrames = recovery;
                         MarkDirty();
                     });
                 }
                 else
                 {
-                    var helpBox = new HelpBox("Assign an Animation Clip to enable sync slider.", HelpBoxMessageType.Warning);
-                    body.Add(helpBox);
-                    AddIntField(body, "Startup", step.startupFrames, v => { RecordUndo("Edit Startup"); step.startupFrames = v; MarkDirty(); });
-                    AddIntField(body, "Active", step.activeFrames, v => { RecordUndo("Edit Active"); step.activeFrames = v; MarkDirty(); });
-                    AddIntField(body, "Recovery", step.recoveryFrames, v => { RecordUndo("Edit Recovery"); step.recoveryFrames = v; MarkDirty(); });
+                    body.Add(new HelpBox("Assign an Animation Clip to enable sync slider.", HelpBoxMessageType.Warning));
+                    AddIntField(body, "Startup", step.startupFrames, value =>
+                    {
+                        RecordUndo("Edit Startup");
+                        step.startupFrames = value;
+                        MarkDirty();
+                    });
+                    AddIntField(body, "Active", step.activeFrames, value =>
+                    {
+                        RecordUndo("Edit Active");
+                        step.activeFrames = value;
+                        MarkDirty();
+                    });
+                    AddIntField(body, "Recovery", step.recoveryFrames, value =>
+                    {
+                        RecordUndo("Edit Recovery");
+                        step.recoveryFrames = value;
+                        MarkDirty();
+                    });
                 }
 
-                AddIntField(body, "Cancel Frame", step.cancelWindowStartFrame, v =>
+                AddIntField(body, "Cancel Frame", step.cancelWindowStartFrame, value =>
                 {
                     RecordUndo("Edit Cancel Frame");
-                    step.cancelWindowStartFrame = v;
+                    step.cancelWindowStartFrame = value;
                     MarkDirty();
                 });
             });
 
-            // ── Motion Frame Data (optional) ──
-            if (step.motionData != null)
+            VisualElement componentList = new VisualElement();
+            componentList.AddToClassList("component-card-list");
+            container.Add(componentList);
+
+            List<string> orderedComponents = step.GetOrderedComponentKeys();
+            for (int i = 0; i < orderedComponents.Count; i++)
             {
-                BuildFoldoutCard("🏃 Motion Frame Data", "motion_data", step.motionData.TrackColor, body =>
+                int reorderIndex = i;
+                string componentKey = orderedComponents[i];
+
+                switch (componentKey)
                 {
-                    BuildMotionCard(body, step.motionData);
-                }, () => { RecordUndo("Remove Motion"); step.motionData = null; MarkDirty(); });
+                    case AttackStepData.MotionComponentKey when step.motionData != null:
+                        BuildFoldoutCard("Motion Frame Data", "motion_data", step.motionData.TrackColor, body =>
+                        {
+                            BuildMotionCard(body, step.motionData);
+                        }, () =>
+                        {
+                            RecordUndo("Remove Motion");
+                            step.motionData = null;
+                            MarkDirtyAndRebuild();
+                        }, false, componentList, newIndex =>
+                        {
+                            if (newIndex == reorderIndex)
+                            {
+                                return;
+                            }
+
+                            RecordUndo("Reorder Components");
+                            step.MoveComponentKey(AttackStepData.MotionComponentKey, newIndex);
+                            MarkDirtyAndRebuild();
+                        }, reorderIndex, orderedComponents.Count);
+                        break;
+
+                    case AttackStepData.VfxComponentKey when step.vfxData != null:
+                        BuildFoldoutCard("VFX Frame Data", "vfx_data", step.vfxData.TrackColor, body =>
+                        {
+                            BuildVFXCard(body, step.vfxData);
+                        }, () =>
+                        {
+                            RecordUndo("Remove VFX");
+                            step.vfxData = null;
+                            MarkDirtyAndRebuild();
+                        }, false, componentList, newIndex =>
+                        {
+                            if (newIndex == reorderIndex)
+                            {
+                                return;
+                            }
+
+                            RecordUndo("Reorder Components");
+                            step.MoveComponentKey(AttackStepData.VfxComponentKey, newIndex);
+                            MarkDirtyAndRebuild();
+                        }, reorderIndex, orderedComponents.Count);
+                        break;
+
+                    case AttackStepData.HitboxComponentKey when step.hitData != null:
+                        BuildFoldoutCard("Hitbox Data", "hit_data", step.hitData.TrackColor, body =>
+                        {
+                            BuildHitDataCard(body, step.hitData);
+                        }, () =>
+                        {
+                            RecordUndo("Remove Hit Data");
+                            step.hitData = null;
+                            MarkDirtyAndRebuild();
+                        }, false, componentList, newIndex =>
+                        {
+                            if (newIndex == reorderIndex)
+                            {
+                                return;
+                            }
+
+                            RecordUndo("Reorder Components");
+                            step.MoveComponentKey(AttackStepData.HitboxComponentKey, newIndex);
+                            MarkDirtyAndRebuild();
+                        }, reorderIndex, orderedComponents.Count);
+                        break;
+                }
             }
 
-            // ── VFX Frame Data (optional) ──
-            if (step.vfxData != null)
-            {
-                BuildFoldoutCard("✨ VFX Frame Data", "vfx_data", step.vfxData.TrackColor, body =>
-                {
-                    BuildVFXCard(body, step.vfxData);
-                }, () => { RecordUndo("Remove VFX"); step.vfxData = null; MarkDirty(); });
-            }
-
-            // ── Hit Frame Data (optional) ──
-            if (step.hitData != null)
-            {
-                BuildFoldoutCard("⚔ Hit Frame Data", "hit_data", step.hitData.TrackColor, body =>
-                {
-                    BuildHitDataCard(body, step.hitData);
-                }, () => { RecordUndo("Remove HitData"); step.hitData = null; MarkDirty(); });
-            }
-
-            // ── Add Component Button ──
             BuildAddComponentButton(step);
         }
 
-        // =========================================================
-        // MOTION CARD
-        // =========================================================
         private void BuildMotionCard(VisualElement body, MotionFrameData motion)
         {
-            if (motion.keyframes == null) motion.keyframes = new List<MotionKeyframe>();
+            if (motion.keyframes == null)
+            {
+                motion.keyframes = new List<MotionKeyframe>();
+            }
+
+            VisualElement itemList = new VisualElement();
+            body.Add(itemList);
 
             for (int i = 0; i < motion.keyframes.Count; i++)
             {
                 int idx = i;
-                var kf = motion.keyframes[i];
+                MotionKeyframe keyframe = motion.keyframes[i];
 
-                BuildFoldoutCard($"Keyframe #{idx + 1} — Frame {kf.frame}", $"motion_kf_{idx}", new Color(0.18f, 0.72f, 0.38f, 0.5f), inner =>
+                BuildFoldoutCard($"Keyframe #{idx + 1} - Start Frame {keyframe.startFrame}", $"motion_kf_{idx}", new Color(0.18f, 0.72f, 0.38f, 0.5f), inner =>
                 {
-                    AddIntField(inner, "Frame", kf.frame, v => { RecordUndo("Edit Motion Frame"); kf.frame = v; MarkDirty(); });
-                    AddVector3Field(inner, "Position", kf.position, v => { RecordUndo("Edit Motion Pos"); kf.position = v; MarkDirty(); });
-                    AddVector3Field(inner, "Rotation", kf.rotation, v => { RecordUndo("Edit Motion Rot"); kf.rotation = v; MarkDirty(); });
-                    AddVector3Field(inner, "Scale", kf.scale, v => { RecordUndo("Edit Motion Scale"); kf.scale = v; MarkDirty(); });
+                    AddIntField(inner, "Start Frame", keyframe.startFrame, value =>
+                    {
+                        RecordUndo("Edit Motion Start Frame");
+                        keyframe.startFrame = value;
+                        MarkDirty();
+                    });
+                    AddIntField(inner, "End Frame", keyframe.endFrame, value =>
+                    {
+                        RecordUndo("Edit Motion End Frame");
+                        keyframe.endFrame = value;
+                        MarkDirty();
+                    });
+                    AddEnumField(inner, "Task Type", keyframe.taskType, value =>
+                    {
+                        RecordUndo("Edit Motion Task Type");
+                        keyframe.taskType = (MotionTaskType)value;
+                        MarkDirty();
+                    });
+                    AddEnumField(inner, "Easing", keyframe.easing, value =>
+                    {
+                        RecordUndo("Edit Motion Easing");
+                        keyframe.easing = (LeanTweenType)value;
+                        MarkDirty();
+                    });
+                    AddVector3Field(inner, "Position", keyframe.position, value =>
+                    {
+                        RecordUndo("Edit Motion Position");
+                        keyframe.position = value;
+                        MarkDirty();
+                    });
+                    AddVector3Field(inner, "Rotation", keyframe.rotation, value =>
+                    {
+                        RecordUndo("Edit Motion Rotation");
+                        keyframe.rotation = value;
+                        MarkDirty();
+                    });
+                    AddVector3Field(inner, "Scale", keyframe.scale, value =>
+                    {
+                        RecordUndo("Edit Motion Scale");
+                        keyframe.scale = value;
+                        MarkDirty();
+                    });
                 }, () =>
                 {
                     RecordUndo("Delete Motion Keyframe");
                     motion.keyframes.RemoveAt(idx);
-                    MarkDirty();
-                }, isSubCard: true);
+                    MarkDirtyAndRebuild();
+                }, isSubCard: true, parent: itemList, onReorder: newIndex =>
+                {
+                    ReorderListItem(motion.keyframes, idx, newIndex, "Reorder Motion Keyframe");
+                }, reorderIndex: idx, reorderCount: motion.keyframes.Count);
             }
 
-            var addBtn = new Button(() =>
+            Button addButton = new Button(() =>
             {
                 RecordUndo("Add Motion Keyframe");
                 motion.keyframes.Add(new MotionKeyframe());
-                MarkDirty();
-            });
-            addBtn.text = "＋ Add Keyframe";
-            addBtn.AddToClassList("component-add-entry-btn");
-            body.Add(addBtn);
+                MarkDirtyAndRebuild();
+            })
+            {
+                text = "Add Keyframe"
+            };
+            addButton.AddToClassList("component-add-entry-btn");
+            body.Add(addButton);
         }
 
-        // =========================================================
-        // VFX CARD
-        // =========================================================
         private void BuildVFXCard(VisualElement body, VFXFrameData vfx)
         {
-            if (vfx.entries == null) vfx.entries = new List<VFXEntry>();
+            if (vfx.entries == null)
+            {
+                vfx.entries = new List<VFXEntry>();
+            }
+
+            VisualElement itemList = new VisualElement();
+            body.Add(itemList);
 
             for (int i = 0; i < vfx.entries.Count; i++)
             {
                 int idx = i;
-                var entry = vfx.entries[i];
+                VFXEntry entry = vfx.entries[i];
 
                 BuildFoldoutCard($"VFX #{idx + 1}: {entry.label}", $"vfx_entry_{idx}", entry.trackColor, inner =>
                 {
-                    AddTextField(inner, "Label", entry.label, v => { RecordUndo("Edit VFX Label"); entry.label = v; MarkDirty(); });
-                    AddObjectField<GameObject>(inner, "VFX Prefab", entry.vfxPrefab, v => { RecordUndo("Edit VFX Prefab"); entry.vfxPrefab = v; MarkDirty(); });
-                    AddIntField(inner, "Trigger Frame", entry.triggerFrame, v => { RecordUndo("Edit VFX Frame"); entry.triggerFrame = v; MarkDirty(); });
-                    AddIntField(inner, "Duration", entry.duration, v => { RecordUndo("Edit VFX Duration"); entry.duration = v; MarkDirty(); });
-                    AddColorField(inner, "Track Color", entry.trackColor, v => { RecordUndo("Edit VFX Color"); entry.trackColor = v; MarkDirty(); });
-
-                    // Transform keys
-                    AddSeparator(inner, "Transform Keys");
-                    for (int k = 0; k < entry.transformKeys.Count; k++)
+                    AddTextField(inner, "Label", entry.label, value =>
                     {
-                        int ki = k;
-                        var tk = entry.transformKeys[k];
-                        AddIntField(inner, $"Key {ki + 1} Frame", tk.frame, v => { RecordUndo("Edit VFX TK Frame"); tk.frame = v; MarkDirty(); });
-                        AddVector3Field(inner, $"Key {ki + 1} Pos", tk.position, v => { RecordUndo("Edit VFX TK Pos"); tk.position = v; MarkDirty(); });
+                        RecordUndo("Edit VFX Label");
+                        entry.label = value;
+                        MarkDirty();
+                    });
+                    AddObjectField(inner, "VFX Prefab", entry.vfxPrefab, value =>
+                    {
+                        RecordUndo("Edit VFX Prefab");
+                        entry.vfxPrefab = value;
+                        MarkDirty();
+                    });
+                    AddIntField(inner, "Trigger Frame", entry.triggerFrame, value =>
+                    {
+                        RecordUndo("Edit VFX Frame");
+                        entry.triggerFrame = value;
+                        MarkDirty();
+                    });
+                    AddIntField(inner, "Duration", entry.duration, value =>
+                    {
+                        RecordUndo("Edit VFX Duration");
+                        entry.duration = value;
+                        MarkDirty();
+                    });
+                    AddColorField(inner, "Track Color", entry.trackColor, value =>
+                    {
+                        RecordUndo("Edit VFX Color");
+                        entry.trackColor = value;
+                        MarkDirty();
+                    });
+
+                    AddSeparator(inner, "Transform Keys");
+                    if (entry.transformKeys == null)
+                    {
+                        entry.transformKeys = new List<VFXTransformKey>();
                     }
 
-                    var addKeyBtn = new Button(() =>
+                    for (int keyIndex = 0; keyIndex < entry.transformKeys.Count; keyIndex++)
+                    {
+                        int transformKeyIndex = keyIndex;
+                        VFXTransformKey transformKey = entry.transformKeys[keyIndex];
+                        AddIntField(inner, $"Key {transformKeyIndex + 1} Frame", transformKey.frame, value =>
+                        {
+                            RecordUndo("Edit VFX Transform Key Frame");
+                            transformKey.frame = value;
+                            MarkDirty();
+                        });
+                        AddVector3Field(inner, $"Key {transformKeyIndex + 1} Position", transformKey.position, value =>
+                        {
+                            RecordUndo("Edit VFX Transform Key Position");
+                            transformKey.position = value;
+                            MarkDirty();
+                        });
+                    }
+
+                    Button addTransformKeyButton = new Button(() =>
                     {
                         RecordUndo("Add VFX Transform Key");
                         entry.transformKeys.Add(new VFXTransformKey());
-                        MarkDirty();
-                    });
-                    addKeyBtn.text = "＋ Add Transform Key";
-                    addKeyBtn.AddToClassList("component-add-entry-btn");
-                    inner.Add(addKeyBtn);
-
+                        MarkDirtyAndRebuild();
+                    })
+                    {
+                        text = "Add Transform Key"
+                    };
+                    addTransformKeyButton.AddToClassList("component-add-entry-btn");
+                    inner.Add(addTransformKeyButton);
                 }, () =>
                 {
                     RecordUndo("Delete VFX Entry");
                     vfx.entries.RemoveAt(idx);
-                    MarkDirty();
-                }, isSubCard: true);
+                    MarkDirtyAndRebuild();
+                }, isSubCard: true, parent: itemList, onReorder: newIndex =>
+                {
+                    ReorderListItem(vfx.entries, idx, newIndex, "Reorder VFX Entry");
+                }, reorderIndex: idx, reorderCount: vfx.entries.Count);
             }
 
-            var addBtn = new Button(() =>
+            Button addButton = new Button(() =>
             {
                 RecordUndo("Add VFX Entry");
                 vfx.entries.Add(new VFXEntry());
-                MarkDirty();
-            });
-            addBtn.text = "＋ Add VFX Entry";
-            addBtn.AddToClassList("component-add-entry-btn");
-            body.Add(addBtn);
+                MarkDirtyAndRebuild();
+            })
+            {
+                text = "Add VFX Entry"
+            };
+            addButton.AddToClassList("component-add-entry-btn");
+            body.Add(addButton);
         }
 
-        // =========================================================
-        // HIT DATA CARD
-        // =========================================================
         private void BuildHitDataCard(VisualElement body, HitFrameData hitData)
         {
-            if (hitData.hitboxes == null) hitData.hitboxes = new List<HitboxBase>();
+            if (hitData.hitboxes == null)
+            {
+                hitData.hitboxes = new List<HitboxBase>();
+            }
+
+            VisualElement itemList = new VisualElement();
+            body.Add(itemList);
+
+            Dictionary<string, int> hitboxTypeCounts = new Dictionary<string, int>();
 
             for (int i = 0; i < hitData.hitboxes.Count; i++)
             {
-                int idx = i;
-                var hb = hitData.hitboxes[i];
-
-                string typeLabel = hb.HitboxTypeName;
-                Color accent = hb.debugColor;
-                accent.a = 0.7f;
-
-                BuildFoldoutCard($"{typeLabel} Hitbox #{idx + 1}", $"hitbox_{idx}", accent, inner =>
+                HitboxBase hitbox = hitData.hitboxes[i];
+                if (hitbox == null)
                 {
-                    // Common timing
-                    AddIntField(inner, "Start Offset", hb.startFrameOffset, v => { RecordUndo("Edit HB Offset"); hb.startFrameOffset = v; MarkDirty(); });
-                    AddIntField(inner, "Duration", hb.activeFrames, v => { RecordUndo("Edit HB Duration"); hb.activeFrames = v; MarkDirty(); });
-                    AddColorField(inner, "Debug Color", hb.debugColor, v => { RecordUndo("Edit HB Color"); hb.debugColor = v; MarkDirty(); });
+                    continue;
+                }
 
-                    // Type-specific
-                    if (hb is NormalHitbox normal) BuildNormalHitboxFields(inner, normal);
-                    else if (hb is GrabHitbox grab) BuildGrabHitboxFields(inner, grab);
-                    else if (hb is ProjectileHitbox proj) BuildProjectileHitboxFields(inner, proj);
+                string typeName = hitbox.HitboxTypeName;
+                hitboxTypeCounts.TryGetValue(typeName, out int typeIndex);
+                typeIndex++;
+                hitboxTypeCounts[typeName] = typeIndex;
 
-                }, () =>
-                {
-                    RecordUndo("Delete Hitbox");
-                    hitData.hitboxes.RemoveAt(idx);
-                    MarkDirty();
-                }, isSubCard: true);
+                BuildHitboxEntryCard(itemList, hitData, i, typeIndex);
             }
 
-            // Add hitbox type dropdown
             BuildAddHitboxButton(body, hitData);
         }
 
-        private void BuildNormalHitboxFields(VisualElement body, NormalHitbox n)
+        private void BuildHitboxEntryCard(VisualElement parent, HitFrameData hitData, int idx, int typeIndex)
         {
-            AddSeparator(body, "Hitbox Geometry");
-            AddVector2Field(body, "Offset", n.offset, v => { RecordUndo("Edit Offset"); n.offset = v; MarkDirty(); });
-            AddVector2Field(body, "Size", n.size, v => { RecordUndo("Edit Size"); n.size = v; MarkDirty(); });
+            HitboxBase hitbox = hitData.hitboxes[idx];
+            if (hitbox == null)
+            {
+                return;
+            }
 
-            AddSeparator(body, "Damage & Knockback");
-            AddFloatField(body, "Damage Scale", n.damageMultiplier, v => { RecordUndo("Edit Damage"); n.damageMultiplier = v; MarkDirty(); });
-            AddFloatField(body, "Knockback", n.knockbackForce, v => { RecordUndo("Edit KB"); n.knockbackForce = v; MarkDirty(); });
-            AddFloatField(body, "Cam Shake", n.cameraShakeStrength, v => { RecordUndo("Edit Shake"); n.cameraShakeStrength = v; MarkDirty(); });
-            AddEnumField(body, "Impact Tier", n.impactTier, v => { RecordUndo("Edit Tier"); n.impactTier = (DamageImpactTier)v; MarkDirty(); });
+            Color accent = hitbox.debugColor;
+            accent.a = 0.7f;
 
-            AddSeparator(body, "Reaction & HitStop");
-            AddIntField(body, "Hitstop Freeze", n.hitstunFrames, v => { RecordUndo("Edit Hitstop"); n.hitstunFrames = v; MarkDirty(); });
-            AddVector2Field(body, "Reaction Vel", n.reactionVelocity, v => { RecordUndo("Edit Vel"); n.reactionVelocity = v; MarkDirty(); });
-            AddIntField(body, "KB Frames", n.knockbackFrames, v => { RecordUndo("Edit KB Frames"); n.knockbackFrames = v; MarkDirty(); });
-            AddToggle(body, "Is Knockdown", n.isKnockdown, v => { RecordUndo("Edit KD"); n.isKnockdown = v; MarkDirty(); });
-            AddToggle(body, "Snap to Attacker", n.snapToAttacker, v => { RecordUndo("Edit Snap"); n.snapToAttacker = v; MarkDirty(); });
-            if (n.snapToAttacker)
-                AddVector2Field(body, "Snap Offset", n.snapOffset, v => { RecordUndo("Edit Snap Offset"); n.snapOffset = v; MarkDirty(); });
-            AddColorField(body, "Flash Color", n.flashColor, v => { RecordUndo("Edit Flash"); n.flashColor = v; MarkDirty(); });
-            AddIntField(body, "Flash Frames", n.flashFrames, v => { RecordUndo("Edit Flash F"); n.flashFrames = v; MarkDirty(); });
+            BuildFoldoutCard($"{hitbox.HitboxTypeName} #{typeIndex}", $"hitbox_{idx}", accent, inner =>
+            {
+                AddIntField(inner, "Start Offset", hitbox.startFrameOffset, value =>
+                {
+                    RecordUndo("Edit Hitbox Start Offset");
+                    hitbox.startFrameOffset = value;
+                    MarkDirty();
+                });
+                AddIntField(inner, "Duration", hitbox.activeFrames, value =>
+                {
+                    RecordUndo("Edit Hitbox Duration");
+                    hitbox.activeFrames = value;
+                    MarkDirty();
+                });
+                AddColorField(inner, "Debug Color", hitbox.debugColor, value =>
+                {
+                    RecordUndo("Edit Hitbox Color");
+                    hitbox.debugColor = value;
+                    MarkDirty();
+                });
+
+                if (hitbox is NormalHitbox normalHitbox)
+                {
+                    BuildNormalHitboxFields(inner, normalHitbox);
+                }
+                else if (hitbox is GrabHitbox grabHitbox)
+                {
+                    BuildGrabHitboxFields(inner, grabHitbox);
+                }
+                else if (hitbox is ProjectileHitbox projectileHitbox)
+                {
+                    BuildProjectileHitboxFields(inner, projectileHitbox);
+                }
+            }, () =>
+            {
+                RecordUndo("Delete Hitbox");
+                hitData.hitboxes.RemoveAt(idx);
+                MarkDirtyAndRebuild();
+            }, isSubCard: true, parent: parent, onReorder: newIndex =>
+            {
+                ReorderListItem(hitData.hitboxes, idx, newIndex, "Reorder Hitbox");
+            }, reorderIndex: idx, reorderCount: hitData.hitboxes.Count);
         }
 
-        private void BuildGrabHitboxFields(VisualElement body, GrabHitbox g)
+        private void BuildNormalHitboxFields(VisualElement body, NormalHitbox hitbox)
         {
             AddSeparator(body, "Hitbox Geometry");
-            AddVector2Field(body, "Offset", g.offset, v => { RecordUndo("Edit Offset"); g.offset = v; MarkDirty(); });
-            AddVector2Field(body, "Size", g.size, v => { RecordUndo("Edit Size"); g.size = v; MarkDirty(); });
+            AddVector2Field(body, "Offset", hitbox.offset, value =>
+            {
+                RecordUndo("Edit Offset");
+                hitbox.offset = value;
+                MarkDirty();
+            });
+            AddVector2Field(body, "Size", hitbox.size, value =>
+            {
+                RecordUndo("Edit Size");
+                hitbox.size = value;
+                MarkDirty();
+            });
+
+            AddSeparator(body, "Damage and Impact");
+            AddFloatField(body, "Damage Scale", hitbox.damageMultiplier, value =>
+            {
+                RecordUndo("Edit Damage");
+                hitbox.damageMultiplier = value;
+                MarkDirty();
+            });
+            AddEnumField(body, "Impact Tier", hitbox.impactTier, value =>
+            {
+                RecordUndo("Edit Impact Tier");
+                hitbox.impactTier = (DamageImpactTier)value;
+                MarkDirty();
+            });
+
+            AddSeparator(body, "Reaction and Hitstop");
+            AddToggle(body, "Use Deterministic Reaction", hitbox.useDeterministicReaction, value =>
+            {
+                RecordUndo("Toggle Deterministic Reaction");
+                if (value && !hitbox.useDeterministicReaction)
+                {
+                    hitbox.reactionKind = HitReactionData.InferLegacyReactionKind(hitbox.reactionVelocity, hitbox.isKnockdown);
+                    hitbox.impactFreezeFrames = hitbox.hitstunFrames;
+                    hitbox.reactionFrames = hitbox.knockbackFrames;
+                    hitbox.recoveryFrames = Mathf.Max(1, hitbox.recoveryFrames);
+                    hitbox.horizontalSpeed = Mathf.Abs(hitbox.reactionVelocity.x);
+                    hitbox.launchSpeed = Mathf.Max(0f, hitbox.reactionVelocity.y);
+                    hitbox.landingBehavior = HitReactionData.InferLandingBehavior(hitbox.reactionVelocity, hitbox.isKnockdown);
+                    hitbox.canAirJuggle = hitbox.isKnockdown || hitbox.reactionVelocity.y > 0.01f;
+                    hitbox.maxJuggleCount = hitbox.canAirJuggle ? Mathf.Max(1, hitbox.maxJuggleCount) : 0;
+                }
+
+                hitbox.useDeterministicReaction = value;
+                MarkDirtyAndRebuild();
+            });
+
+            if (hitbox.useDeterministicReaction)
+            {
+                bool usesHorizontalSpeed = HitReactionData.UsesHorizontalSpeed(hitbox.reactionKind);
+                bool usesLaunchSpeed = HitReactionData.UsesLaunchSpeed(hitbox.reactionKind);
+                bool usesLandingBehavior = HitReactionData.UsesLandingBehavior(hitbox.reactionKind);
+                bool usesAirJuggle = HitReactionData.UsesAirJuggleSettings(hitbox.reactionKind);
+
+                AddEnumField(body, "Reaction Kind", hitbox.reactionKind, value =>
+                {
+                    RecordUndo("Edit Reaction Kind");
+                    hitbox.reactionKind = (EnemyReactionKind)value;
+                    MarkDirtyAndRebuild();
+                });
+                AddIntField(body, "HitStop / Impact Freeze", hitbox.impactFreezeFrames, value =>
+                {
+                    RecordUndo("Edit Impact Freeze");
+                    hitbox.impactFreezeFrames = value;
+                    MarkDirty();
+                });
+                AddIntField(body, "Reaction Frames", hitbox.reactionFrames, value =>
+                {
+                    RecordUndo("Edit Reaction Frames");
+                    hitbox.reactionFrames = value;
+                    MarkDirty();
+                });
+                AddIntField(body, "Recovery Frames", hitbox.recoveryFrames, value =>
+                {
+                    RecordUndo("Edit Recovery Frames");
+                    hitbox.recoveryFrames = value;
+                    MarkDirty();
+                });
+
+                if (usesHorizontalSpeed)
+                {
+                    AddFloatField(body, "Horizontal Speed", hitbox.horizontalSpeed, value =>
+                    {
+                        RecordUndo("Edit Horizontal Speed");
+                        hitbox.horizontalSpeed = value;
+                        MarkDirty();
+                    });
+                }
+
+                if (usesLaunchSpeed)
+                {
+                    AddFloatField(body, "Launch Up", hitbox.launchSpeed, value =>
+                    {
+                        RecordUndo("Edit Launch Speed");
+                        hitbox.launchSpeed = value;
+                        MarkDirty();
+                    });
+                }
+
+                if (usesLandingBehavior)
+                {
+                    AddEnumField(body, "Landing Behavior", hitbox.landingBehavior, value =>
+                    {
+                        RecordUndo("Edit Landing Behavior");
+                        hitbox.landingBehavior = (EnemyLandingBehavior)value;
+                        MarkDirty();
+                    });
+                }
+
+                if (usesAirJuggle)
+                {
+                    AddToggle(body, "Can Air Juggle", hitbox.canAirJuggle, value =>
+                    {
+                        RecordUndo("Edit Can Air Juggle");
+                        hitbox.canAirJuggle = value;
+                        MarkDirtyAndRebuild();
+                    });
+
+                    if (hitbox.canAirJuggle)
+                    {
+                        AddIntField(body, "Max Juggles", hitbox.maxJuggleCount, value =>
+                        {
+                            RecordUndo("Edit Max Juggles");
+                            hitbox.maxJuggleCount = value;
+                            MarkDirty();
+                        });
+                        AddFloatField(body, "Juggle Launch Scale", hitbox.juggleLaunchScale, value =>
+                        {
+                            RecordUndo("Edit Juggle Launch Scale");
+                            hitbox.juggleLaunchScale = value;
+                            MarkDirty();
+                        });
+                        AddFloatField(body, "Juggle Stun Scale", hitbox.juggleStunScale, value =>
+                        {
+                            RecordUndo("Edit Juggle Stun Scale");
+                            hitbox.juggleStunScale = value;
+                            MarkDirty();
+                        });
+                    }
+                }
+            }
+            else
+            {
+                body.Add(new HelpBox(
+                    "Legacy reaction velocity mode is active. Enable deterministic reaction to author knockback, knockup, landing, and juggle timing directly.",
+                    HelpBoxMessageType.Info));
+
+                AddIntField(body, "HitStop / Freeze", hitbox.hitstunFrames, value =>
+                {
+                    RecordUndo("Edit Hitstop");
+                    hitbox.hitstunFrames = value;
+                    MarkDirty();
+                });
+                AddVector2Field(body, "Reaction Velocity", hitbox.reactionVelocity, value =>
+                {
+                    RecordUndo("Edit Reaction Velocity");
+                    hitbox.reactionVelocity = value;
+                    MarkDirty();
+                });
+                AddIntField(body, "Knockback Frames", hitbox.knockbackFrames, value =>
+                {
+                    RecordUndo("Edit Knockback Frames");
+                    hitbox.knockbackFrames = value;
+                    MarkDirty();
+                });
+                AddToggle(body, "Is Knockdown", hitbox.isKnockdown, value =>
+                {
+                    RecordUndo("Edit Knockdown");
+                    hitbox.isKnockdown = value;
+                    MarkDirty();
+                });
+            }
+
+            AddToggle(body, "Legacy Snap To Attacker", hitbox.snapToAttacker, value =>
+            {
+                RecordUndo("Edit Snap To Attacker");
+                hitbox.snapToAttacker = value;
+                MarkDirtyAndRebuild();
+            });
+
+            if (hitbox.snapToAttacker)
+            {
+                AddVector2Field(body, "Snap Offset", hitbox.snapOffset, value =>
+                {
+                    RecordUndo("Edit Snap Offset");
+                    hitbox.snapOffset = value;
+                    MarkDirty();
+                });
+            }
+
+            AddColorField(body, "Flash Color", hitbox.flashColor, value =>
+            {
+                RecordUndo("Edit Flash Color");
+                hitbox.flashColor = value;
+                MarkDirty();
+            });
+            AddIntField(body, "Flash Frames", hitbox.flashFrames, value =>
+            {
+                RecordUndo("Edit Flash Frames");
+                hitbox.flashFrames = value;
+                MarkDirty();
+            });
+        }
+
+        private void BuildGrabHitboxFields(VisualElement body, GrabHitbox hitbox)
+        {
+            AddSeparator(body, "Hitbox Geometry");
+            AddVector2Field(body, "Offset", hitbox.offset, value =>
+            {
+                RecordUndo("Edit Offset");
+                hitbox.offset = value;
+                MarkDirty();
+            });
+            AddVector2Field(body, "Size", hitbox.size, value =>
+            {
+                RecordUndo("Edit Size");
+                hitbox.size = value;
+                MarkDirty();
+            });
 
             AddSeparator(body, "Grab Condition");
-            AddFloatField(body, "Grab Range", g.grabRange, v => { RecordUndo("Edit Range"); g.grabRange = v; MarkDirty(); });
-            AddFloatField(body, "Grab Angle", g.grabAngle, v => { RecordUndo("Edit Angle"); g.grabAngle = v; MarkDirty(); });
-            AddToggle(body, "Can Grab Air", g.canGrabAirborne, v => { RecordUndo("Edit Air Grab"); g.canGrabAirborne = v; MarkDirty(); });
+            AddFloatField(body, "Grab Range", hitbox.grabRange, value =>
+            {
+                RecordUndo("Edit Grab Range");
+                hitbox.grabRange = value;
+                MarkDirty();
+            });
+            AddFloatField(body, "Grab Angle", hitbox.grabAngle, value =>
+            {
+                RecordUndo("Edit Grab Angle");
+                hitbox.grabAngle = value;
+                MarkDirty();
+            });
+            AddToggle(body, "Can Grab Air", hitbox.canGrabAirborne, value =>
+            {
+                RecordUndo("Edit Can Grab Air");
+                hitbox.canGrabAirborne = value;
+                MarkDirty();
+            });
+
+            AddSeparator(body, "Grab Reaction");
+            AddIntField(body, "Impact Freeze", hitbox.impactFreezeFrames, value =>
+            {
+                RecordUndo("Edit Grab Impact Freeze");
+                hitbox.impactFreezeFrames = value;
+                MarkDirty();
+            });
+            AddIntField(body, "Hold Frames", hitbox.holdFrames, value =>
+            {
+                RecordUndo("Edit Grab Hold Frames");
+                hitbox.holdFrames = value;
+                MarkDirty();
+            });
+            AddIntField(body, "Recovery Frames", hitbox.recoveryFrames, value =>
+            {
+                RecordUndo("Edit Grab Recovery Frames");
+                hitbox.recoveryFrames = value;
+                MarkDirty();
+            });
+            AddVector2Field(body, "Snap Offset", hitbox.snapOffset, value =>
+            {
+                RecordUndo("Edit Grab Snap Offset");
+                hitbox.snapOffset = value;
+                MarkDirty();
+            });
+            AddEnumField(body, "Impact Tier", hitbox.impactTier, value =>
+            {
+                RecordUndo("Edit Grab Impact Tier");
+                hitbox.impactTier = (DamageImpactTier)value;
+                MarkDirty();
+            });
+            AddColorField(body, "Flash Color", hitbox.flashColor, value =>
+            {
+                RecordUndo("Edit Grab Flash Color");
+                hitbox.flashColor = value;
+                MarkDirty();
+            });
+            AddIntField(body, "Flash Frames", hitbox.flashFrames, value =>
+            {
+                RecordUndo("Edit Grab Flash Frames");
+                hitbox.flashFrames = value;
+                MarkDirty();
+            });
+
+            AddSeparator(body, "Branching (Nested Step)");
+            AddToggle(body, "Branch On Success", hitbox.branchOnSuccess, value =>
+            {
+                RecordUndo("Edit Branch On Success");
+                hitbox.branchOnSuccess = value;
+                MarkDirtyAndRebuild();
+            });
+
+            if (hitbox.branchOnSuccess)
+            {
+                if (hitbox.successSteps == null)
+                    hitbox.successSteps = new List<AttackStepData>();
+
+                VisualElement stepList = new VisualElement();
+                body.Add(stepList);
+
+                for (int i = 0; i < hitbox.successSteps.Count; i++)
+                {
+                    int stepIdx = i;
+                    AttackStepData step = hitbox.successSteps[i];
+                    string stepName = step != null && !string.IsNullOrEmpty(step.stepName) ? step.stepName : "Untitled";
+
+                    BuildFoldoutCard($"Success Step {stepIdx + 1}: {stepName}", $"grab_success_{hitbox.GetHashCode()}_{stepIdx}", new Color(1f, 0.45f, 0.15f), inner =>
+                    {
+                        inner.Add(new HelpBox("To edit this step completely, select it from the left action tree sidebar.", HelpBoxMessageType.Info));
+                        
+                        // We give them just the name field here so they can rename it from the parent card
+                        if (step != null)
+                        {
+                            AddTextField(inner, "Step Name", step.stepName, value => 
+                            {
+                                RecordUndo("Rename Success Step");
+                                step.stepName = value;
+                                // Need full rebuild to update sidebar and parent card titles
+                                onStructureChanged?.Invoke(); 
+                            });
+                        }
+                    }, () =>
+                    {
+                        RecordUndo("Delete Success Step");
+                        hitbox.successSteps.RemoveAt(stepIdx);
+                        MarkDirtyAndRebuild();
+                    }, isSubCard: true, parent: stepList, onReorder: newIndex =>
+                    {
+                        ReorderListItem(hitbox.successSteps, stepIdx, newIndex, "Reorder Success Step");
+                    }, reorderIndex: stepIdx, reorderCount: hitbox.successSteps.Count);
+                }
+
+                Button addStepBtn = new Button(() =>
+                {
+                    RecordUndo("Add Success Step");
+                    
+                    // Create a completely NEW instance! 
+                    // This avoids Unity's default inspector duplicate behavior which shallow copies [SerializeReference] fields.
+                    var newStep = new AttackStepData
+                    {
+                        stepName = "Grab Success",
+                        motionData = new MotionFrameData(),
+                        vfxData = new VFXFrameData(),
+                        hitData = new HitFrameData()
+                    };
+                    
+                    hitbox.successSteps.Add(newStep);
+                    MarkDirtyAndRebuild();
+                })
+                {
+                    text = "Add Success Step"
+                };
+                addStepBtn.AddToClassList("component-add-entry-btn");
+                body.Add(addStepBtn);
+            }
         }
 
-        private void BuildProjectileHitboxFields(VisualElement body, ProjectileHitbox proj)
+        private void BuildProjectileHitboxFields(VisualElement body, ProjectileHitbox hitbox)
         {
             AddSeparator(body, "Projectile");
-            AddObjectField<GameObject>(body, "Prefab", proj.projectilePrefab, v => { RecordUndo("Edit Proj Prefab"); proj.projectilePrefab = v; MarkDirty(); });
-            AddVector3Field(body, "Spawn Point", proj.spawnPoint, v => { RecordUndo("Edit Spawn"); proj.spawnPoint = v; MarkDirty(); });
+            AddObjectField(body, "Prefab", hitbox.projectilePrefab, value =>
+            {
+                RecordUndo("Edit Projectile Prefab");
+                hitbox.projectilePrefab = value;
+                MarkDirty();
+            });
+            AddVector3Field(body, "Spawn Point", hitbox.spawnPoint, value =>
+            {
+                RecordUndo("Edit Spawn Point");
+                hitbox.spawnPoint = value;
+                MarkDirty();
+            });
 
             AddSeparator(body, "Trajectory");
-            AddFloatField(body, "Speed", proj.trajectory.speed, v => { RecordUndo("Edit Proj Speed"); proj.trajectory.speed = v; MarkDirty(); });
-            AddFloatField(body, "Arc", proj.trajectory.arc, v => { RecordUndo("Edit Proj Arc"); proj.trajectory.arc = v; MarkDirty(); });
-            AddFloatField(body, "Gravity", proj.trajectory.gravity, v => { RecordUndo("Edit Proj Gravity"); proj.trajectory.gravity = v; MarkDirty(); });
+            AddFloatField(body, "Speed", hitbox.trajectory.speed, value =>
+            {
+                RecordUndo("Edit Projectile Speed");
+                hitbox.trajectory.speed = value;
+                MarkDirty();
+            });
+            AddFloatField(body, "Arc", hitbox.trajectory.arc, value =>
+            {
+                RecordUndo("Edit Projectile Arc");
+                hitbox.trajectory.arc = value;
+                MarkDirty();
+            });
+            AddFloatField(body, "Gravity", hitbox.trajectory.gravity, value =>
+            {
+                RecordUndo("Edit Projectile Gravity");
+                hitbox.trajectory.gravity = value;
+                MarkDirty();
+            });
 
             AddSeparator(body, "Projectile Stats");
-            AddFloatField(body, "Damage", proj.stats.damage, v => { RecordUndo("Edit Proj Dmg"); proj.stats.damage = v; MarkDirty(); });
-            AddIntField(body, "Hit Count", proj.stats.hitCount, v => { RecordUndo("Edit Proj Hits"); proj.stats.hitCount = v; MarkDirty(); });
-            AddFloatField(body, "Lifespan", proj.stats.lifespan, v => { RecordUndo("Edit Proj Life"); proj.stats.lifespan = v; MarkDirty(); });
-            AddIntField(body, "Hitstun", proj.stats.hitstunFrames, v => { RecordUndo("Edit Proj Hitstun"); proj.stats.hitstunFrames = v; MarkDirty(); });
-            AddVector2Field(body, "Reaction Vel", proj.stats.reactionVelocity, v => { RecordUndo("Edit Proj Vel"); proj.stats.reactionVelocity = v; MarkDirty(); });
-            AddIntField(body, "KB Frames", proj.stats.knockbackFrames, v => { RecordUndo("Edit Proj KB"); proj.stats.knockbackFrames = v; MarkDirty(); });
+            AddFloatField(body, "Damage", hitbox.stats.damage, value =>
+            {
+                RecordUndo("Edit Projectile Damage");
+                hitbox.stats.damage = value;
+                MarkDirty();
+            });
+            AddIntField(body, "Hit Count", hitbox.stats.hitCount, value =>
+            {
+                RecordUndo("Edit Projectile Hit Count");
+                hitbox.stats.hitCount = value;
+                MarkDirty();
+            });
+            AddFloatField(body, "Lifespan", hitbox.stats.lifespan, value =>
+            {
+                RecordUndo("Edit Projectile Lifespan");
+                hitbox.stats.lifespan = value;
+                MarkDirty();
+            });
+            AddEnumField(body, "Impact Tier", hitbox.stats.impactTier, value =>
+            {
+                RecordUndo("Edit Projectile Impact Tier");
+                hitbox.stats.impactTier = (DamageImpactTier)value;
+                MarkDirty();
+            });
+            AddToggle(body, "Use Deterministic Reaction", hitbox.stats.useDeterministicReaction, value =>
+            {
+                RecordUndo("Toggle Projectile Deterministic Reaction");
+                if (value && !hitbox.stats.useDeterministicReaction)
+                {
+                    hitbox.stats.reactionKind = HitReactionData.InferLegacyReactionKind(hitbox.stats.reactionVelocity, false);
+                    hitbox.stats.impactFreezeFrames = hitbox.stats.hitstunFrames;
+                    hitbox.stats.reactionFrames = hitbox.stats.knockbackFrames;
+                    hitbox.stats.recoveryFrames = Mathf.Max(1, hitbox.stats.recoveryFrames);
+                    hitbox.stats.horizontalSpeed = Mathf.Abs(hitbox.stats.reactionVelocity.x);
+                    hitbox.stats.launchSpeed = Mathf.Max(0f, hitbox.stats.reactionVelocity.y);
+                    hitbox.stats.landingBehavior = HitReactionData.InferLandingBehavior(hitbox.stats.reactionVelocity, false);
+                    hitbox.stats.canAirJuggle = hitbox.stats.reactionVelocity.y > 0.01f;
+                    hitbox.stats.maxJuggleCount = hitbox.stats.canAirJuggle ? Mathf.Max(1, hitbox.stats.maxJuggleCount) : 0;
+                }
+
+                hitbox.stats.useDeterministicReaction = value;
+                MarkDirtyAndRebuild();
+            });
+
+            if (hitbox.stats.useDeterministicReaction)
+            {
+                bool usesHorizontalSpeed = HitReactionData.UsesHorizontalSpeed(hitbox.stats.reactionKind);
+                bool usesLaunchSpeed = HitReactionData.UsesLaunchSpeed(hitbox.stats.reactionKind);
+                bool usesLandingBehavior = HitReactionData.UsesLandingBehavior(hitbox.stats.reactionKind);
+                bool usesAirJuggle = HitReactionData.UsesAirJuggleSettings(hitbox.stats.reactionKind);
+
+                AddEnumField(body, "Reaction Kind", hitbox.stats.reactionKind, value =>
+                {
+                    RecordUndo("Edit Projectile Reaction Kind");
+                    hitbox.stats.reactionKind = (EnemyReactionKind)value;
+                    MarkDirtyAndRebuild();
+                });
+                AddIntField(body, "HitStop / Impact Freeze", hitbox.stats.impactFreezeFrames, value =>
+                {
+                    RecordUndo("Edit Projectile Impact Freeze");
+                    hitbox.stats.impactFreezeFrames = value;
+                    MarkDirty();
+                });
+                AddIntField(body, "Reaction Frames", hitbox.stats.reactionFrames, value =>
+                {
+                    RecordUndo("Edit Projectile Reaction Frames");
+                    hitbox.stats.reactionFrames = value;
+                    MarkDirty();
+                });
+                AddIntField(body, "Recovery Frames", hitbox.stats.recoveryFrames, value =>
+                {
+                    RecordUndo("Edit Projectile Recovery Frames");
+                    hitbox.stats.recoveryFrames = value;
+                    MarkDirty();
+                });
+
+                if (usesHorizontalSpeed)
+                {
+                    AddFloatField(body, "Horizontal Speed", hitbox.stats.horizontalSpeed, value =>
+                    {
+                        RecordUndo("Edit Projectile Horizontal Speed");
+                        hitbox.stats.horizontalSpeed = value;
+                        MarkDirty();
+                    });
+                }
+
+                if (usesLaunchSpeed)
+                {
+                    AddFloatField(body, "Launch Up", hitbox.stats.launchSpeed, value =>
+                    {
+                        RecordUndo("Edit Projectile Launch Speed");
+                        hitbox.stats.launchSpeed = value;
+                        MarkDirty();
+                    });
+                }
+
+                if (usesLandingBehavior)
+                {
+                    AddEnumField(body, "Landing Behavior", hitbox.stats.landingBehavior, value =>
+                    {
+                        RecordUndo("Edit Projectile Landing Behavior");
+                        hitbox.stats.landingBehavior = (EnemyLandingBehavior)value;
+                        MarkDirty();
+                    });
+                }
+
+                if (usesAirJuggle)
+                {
+                    AddToggle(body, "Can Air Juggle", hitbox.stats.canAirJuggle, value =>
+                    {
+                        RecordUndo("Edit Projectile Can Air Juggle");
+                        hitbox.stats.canAirJuggle = value;
+                        MarkDirtyAndRebuild();
+                    });
+
+                    if (hitbox.stats.canAirJuggle)
+                    {
+                        AddIntField(body, "Max Juggles", hitbox.stats.maxJuggleCount, value =>
+                        {
+                            RecordUndo("Edit Projectile Max Juggles");
+                            hitbox.stats.maxJuggleCount = value;
+                            MarkDirty();
+                        });
+                        AddFloatField(body, "Juggle Launch Scale", hitbox.stats.juggleLaunchScale, value =>
+                        {
+                            RecordUndo("Edit Projectile Juggle Launch Scale");
+                            hitbox.stats.juggleLaunchScale = value;
+                            MarkDirty();
+                        });
+                        AddFloatField(body, "Juggle Stun Scale", hitbox.stats.juggleStunScale, value =>
+                        {
+                            RecordUndo("Edit Projectile Juggle Stun Scale");
+                            hitbox.stats.juggleStunScale = value;
+                            MarkDirty();
+                        });
+                    }
+                }
+            }
+            else
+            {
+                body.Add(new HelpBox(
+                    "Legacy projectile reaction velocity mode is active. Enable deterministic reaction to author projectile knockback and launch timing directly.",
+                    HelpBoxMessageType.Info));
+
+                AddIntField(body, "Hitstun", hitbox.stats.hitstunFrames, value =>
+                {
+                    RecordUndo("Edit Projectile Hitstun");
+                    hitbox.stats.hitstunFrames = value;
+                    MarkDirty();
+                });
+                AddVector2Field(body, "Reaction Velocity", hitbox.stats.reactionVelocity, value =>
+                {
+                    RecordUndo("Edit Projectile Reaction Velocity");
+                    hitbox.stats.reactionVelocity = value;
+                    MarkDirty();
+                });
+                AddIntField(body, "Knockback Frames", hitbox.stats.knockbackFrames, value =>
+                {
+                    RecordUndo("Edit Projectile Knockback Frames");
+                    hitbox.stats.knockbackFrames = value;
+                    MarkDirty();
+                });
+            }
+
+            AddColorField(body, "Flash Color", hitbox.stats.flashColor, value =>
+            {
+                RecordUndo("Edit Projectile Flash Color");
+                hitbox.stats.flashColor = value;
+                MarkDirty();
+            });
+            AddIntField(body, "Flash Frames", hitbox.stats.flashFrames, value =>
+            {
+                RecordUndo("Edit Projectile Flash Frames");
+                hitbox.stats.flashFrames = value;
+                MarkDirty();
+            });
         }
 
-        // =========================================================
-        // ADD COMPONENT BUTTON
-        // =========================================================
         private void BuildAddComponentButton(AttackStepData step)
         {
-            var addRow = new VisualElement();
+            VisualElement addRow = new VisualElement();
             addRow.AddToClassList("add-component-row");
 
-            var addBtn = new Button(() =>
+            Button addButton = new Button(() =>
             {
-                var menu = new GenericMenu();
+                GenericMenu menu = new GenericMenu();
+
                 if (step.motionData == null)
-                    menu.AddItem(new GUIContent("🏃 Motion Frame Data"), false, () => { RecordUndo("Add Motion"); step.motionData = new MotionFrameData(); MarkDirty(); });
+                {
+                    menu.AddItem(new GUIContent("Motion Frame Data"), false, () =>
+                    {
+                        RecordUndo("Add Motion");
+                        step.motionData = new MotionFrameData();
+                        MarkDirtyAndRebuild();
+                    });
+                }
                 else
-                    menu.AddDisabledItem(new GUIContent("🏃 Motion Frame Data (added)"));
+                {
+                    menu.AddDisabledItem(new GUIContent("Motion Frame Data (added)"));
+                }
 
                 if (step.vfxData == null)
-                    menu.AddItem(new GUIContent("✨ VFX Frame Data"), false, () => { RecordUndo("Add VFX"); step.vfxData = new VFXFrameData(); MarkDirty(); });
+                {
+                    menu.AddItem(new GUIContent("VFX Frame Data"), false, () =>
+                    {
+                        RecordUndo("Add VFX");
+                        step.vfxData = new VFXFrameData();
+                        MarkDirtyAndRebuild();
+                    });
+                }
                 else
-                    menu.AddDisabledItem(new GUIContent("✨ VFX Frame Data (added)"));
+                {
+                    menu.AddDisabledItem(new GUIContent("VFX Frame Data (added)"));
+                }
 
                 if (step.hitData == null)
-                    menu.AddItem(new GUIContent("⚔ Hit Frame Data"), false, () => { RecordUndo("Add HitData"); step.hitData = new HitFrameData(); MarkDirty(); });
+                {
+                    menu.AddItem(new GUIContent("Hitbox Data"), false, () =>
+                    {
+                        RecordUndo("Add Hit Data");
+                        step.hitData = new HitFrameData();
+                        MarkDirtyAndRebuild();
+                    });
+                }
                 else
-                    menu.AddDisabledItem(new GUIContent("⚔ Hit Frame Data (added)"));
+                {
+                    menu.AddDisabledItem(new GUIContent("Hitbox Data (added)"));
+                }
 
                 menu.ShowAsContext();
-            });
-            addBtn.text = "＋  Add Component";
-            addBtn.AddToClassList("add-component-btn");
-            addRow.Add(addBtn);
+            })
+            {
+                text = "Add Component"
+            };
+            addButton.AddToClassList("add-component-btn");
+            addRow.Add(addButton);
 
             container.Add(addRow);
         }
 
         private void BuildAddHitboxButton(VisualElement body, HitFrameData hitData)
         {
-            var addBtn = new Button(() =>
+            Button addButton = new Button(() =>
             {
-                var menu = new GenericMenu();
+                GenericMenu menu = new GenericMenu();
                 menu.AddItem(new GUIContent("Normal Hitbox"), false, () =>
                 {
                     RecordUndo("Add Normal Hitbox");
-                    hitData.hitboxes.Add(new NormalHitbox());
-                    MarkDirty();
+                    hitData.hitboxes.Add(new NormalHitbox { useDeterministicReaction = true });
+                    MarkDirtyAndRebuild();
                 });
                 menu.AddItem(new GUIContent("Grab Hitbox"), false, () =>
                 {
                     RecordUndo("Add Grab Hitbox");
                     hitData.hitboxes.Add(new GrabHitbox());
-                    MarkDirty();
+                    MarkDirtyAndRebuild();
                 });
                 menu.AddItem(new GUIContent("Projectile Hitbox"), false, () =>
                 {
                     RecordUndo("Add Projectile Hitbox");
-                    hitData.hitboxes.Add(new ProjectileHitbox());
-                    MarkDirty();
+                    hitData.hitboxes.Add(new ProjectileHitbox
+                    {
+                        stats = new ProjectileStats { useDeterministicReaction = true }
+                    });
+                    MarkDirtyAndRebuild();
                 });
                 menu.ShowAsContext();
-            });
-            addBtn.text = "＋ Add Hitbox";
-            addBtn.AddToClassList("component-add-entry-btn");
-            body.Add(addBtn);
+            })
+            {
+                text = "Add Hitbox"
+            };
+            addButton.AddToClassList("component-add-entry-btn");
+            body.Add(addButton);
         }
 
-        // =========================================================
-        // DASH CARDS
-        // =========================================================
         private void BuildDashCards(DashData dash)
         {
-            if (dash == null) return;
+            if (dash == null)
+            {
+                return;
+            }
 
-            BuildFoldoutCard("⚡ Dash Configuration", "dash_config", new Color(0f, 0.83f, 1f), body =>
+            BuildFoldoutCard("Dash Configuration", "dash_config", new Color(0f, 0.83f, 1f), body =>
             {
                 if (dash.animationClip != null)
                 {
-                    int total = Mathf.RoundToInt(dash.animationClip.length * dash.animationClip.frameRate);
-                    AddPhaseSlider(body, dash.startupFrames, dash.activeFrames, dash.recoveryFrames, total, (s, a, r) =>
+                    int total = Mathf.RoundToInt(dash.animationClip.length * FrameDataConstants.LOGIC_FPS);
+                    AddPhaseSlider(body, dash.startupFrames, dash.activeFrames, dash.recoveryFrames, total, (startup, active, recovery) =>
                     {
                         RecordUndo("Adjust Dash Phases");
-                        dash.startupFrames = s;
-                        dash.activeFrames = a;
-                        dash.recoveryFrames = r;
+                        dash.startupFrames = startup;
+                        dash.activeFrames = active;
+                        dash.recoveryFrames = recovery;
                         MarkDirty();
                     });
                 }
                 else
                 {
-                    AddIntField(body, "Startup", dash.startupFrames, v => { RecordUndo("Edit Dash SU"); dash.startupFrames = v; MarkDirty(); });
-                    AddIntField(body, "Active", dash.activeFrames, v => { RecordUndo("Edit Dash ACT"); dash.activeFrames = v; MarkDirty(); });
-                    AddIntField(body, "Recovery", dash.recoveryFrames, v => { RecordUndo("Edit Dash REC"); dash.recoveryFrames = v; MarkDirty(); });
+                    AddIntField(body, "Startup", dash.startupFrames, value =>
+                    {
+                        RecordUndo("Edit Dash Startup");
+                        dash.startupFrames = value;
+                        MarkDirty();
+                    });
+                    AddIntField(body, "Active", dash.activeFrames, value =>
+                    {
+                        RecordUndo("Edit Dash Active");
+                        dash.activeFrames = value;
+                        MarkDirty();
+                    });
+                    AddIntField(body, "Recovery", dash.recoveryFrames, value =>
+                    {
+                        RecordUndo("Edit Dash Recovery");
+                        dash.recoveryFrames = value;
+                        MarkDirty();
+                    });
                 }
 
-                AddSeparator(body, "Physics");
-                AddFloatField(body, "Dash Speed", dash.dashSpeed, v => { RecordUndo("Edit Dash Speed"); dash.dashSpeed = v; MarkDirty(); });
-                AddIntField(body, "Cooldown Frames", dash.cooldownFrames, v => { RecordUndo("Edit Cooldown"); dash.cooldownFrames = v; MarkDirty(); });
+                AddIntField(body, "Cancel Frame", dash.cancelWindowStartFrame, value =>
+                {
+                    RecordUndo("Edit Dash Cancel Frame");
+                    dash.cancelWindowStartFrame = value;
+                    MarkDirty();
+                });
+                AddIntField(body, "Cooldown Frames", dash.cooldownFrames, value =>
+                {
+                    RecordUndo("Edit Dash Cooldown");
+                    dash.cooldownFrames = value;
+                    MarkDirty();
+                });
             });
         }
 
-        // =========================================================
-        // PLACEHOLDER
-        // =========================================================
         private void BuildPlaceholder(string message)
         {
-            var empty = new VisualElement();
+            VisualElement empty = new VisualElement();
             empty.AddToClassList("empty-state");
 
-            var text = new Label(message);
+            Label text = new Label(message);
             text.AddToClassList("empty-state__text");
             empty.Add(text);
 
             container.Add(empty);
         }
 
-        // =========================================================
-        // FOLDOUT CARD BUILDER
-        // =========================================================
-        private void BuildFoldoutCard(string title, string foldoutKey, Color accentColor,
-            System.Action<VisualElement> buildBody, System.Action onDelete = null, bool isSubCard = false)
+        private void BuildFoldoutCard(string title, string foldoutKey, Color accentColor, Action<VisualElement> buildBody, Action onDelete = null, bool isSubCard = false)
         {
             if (!foldoutState.ContainsKey(foldoutKey))
+            {
                 foldoutState[foldoutKey] = true;
+            }
 
             bool expanded = foldoutState[foldoutKey];
 
-            var card = new VisualElement();
+            VisualElement card = new VisualElement();
             card.AddToClassList(isSubCard ? "property-subcard" : "property-card");
 
-            // Header
-            var header = new VisualElement();
+            VisualElement header = new VisualElement();
             header.AddToClassList("property-card__header");
 
-            // Accent bar
-            var accent = new VisualElement();
+            VisualElement accent = new VisualElement();
             accent.AddToClassList("property-card__accent");
             accent.style.backgroundColor = accentColor;
             header.Add(accent);
 
-            // Arrow
-            var arrow = new Label(expanded ? "▾" : "►");
+            Label arrow = new Label(expanded ? "▼" : "▶");
             arrow.AddToClassList("property-card__arrow");
             header.Add(arrow);
 
-            var headerText = new Label(title);
+            Label headerText = new Label(title);
             headerText.AddToClassList("property-card__header-text");
             header.Add(headerText);
 
-            // Delete button (if removable)
             if (onDelete != null)
             {
-                var deleteBtn = new Button(() => onDelete());
-                deleteBtn.text = "✕";
-                deleteBtn.AddToClassList("property-card__delete");
-                header.Add(deleteBtn);
+                Button deleteButton = new Button(onDelete)
+                {
+                    text = "X"
+                };
+                deleteButton.AddToClassList("property-card__delete");
+                header.Add(deleteButton);
             }
 
-            // Toggle foldout
+            VisualElement body = new VisualElement();
+            body.AddToClassList("property-card__body");
+            body.style.display = expanded ? DisplayStyle.Flex : DisplayStyle.None;
+            buildBody(body);
+
             string key = foldoutKey;
             header.RegisterCallback<ClickEvent>(evt =>
             {
-                // Don't toggle if delete button was clicked
-                if (evt.target is Button) return;
+                if (evt.target is Button)
+                {
+                    return;
+                }
+
                 foldoutState[key] = !foldoutState[key];
-                onDataChanged?.Invoke();
+                bool isExpanded = foldoutState[key];
+                arrow.text = isExpanded ? "▼" : "▶";
+                body.style.display = isExpanded ? DisplayStyle.Flex : DisplayStyle.None;
             });
 
             card.Add(header);
-
-            // Body (only if expanded)
-            if (expanded)
-            {
-                var body = new VisualElement();
-                body.AddToClassList("property-card__body");
-                buildBody(body);
-                card.Add(body);
-            }
-
+            card.Add(body);
             container.Add(card);
         }
 
-        // =========================================================
-        // FIELD HELPERS
-        // =========================================================
-        private void AddTextField(VisualElement parent, string label, string value, System.Action<string> onChange)
+        private VisualElement BuildFoldoutCard(string title, string foldoutKey, Color accentColor, Action<VisualElement> buildBody, Action onDelete, bool isSubCard, VisualElement parent, Action<int> onReorder, int reorderIndex, int reorderCount)
         {
-            var row = new VisualElement();
+            if (!foldoutState.ContainsKey(foldoutKey))
+            {
+                foldoutState[foldoutKey] = true;
+            }
+
+            bool expanded = foldoutState[foldoutKey];
+
+            VisualElement card = new VisualElement();
+            card.AddToClassList(isSubCard ? "property-subcard" : "property-card");
+
+            VisualElement header = new VisualElement();
+            header.AddToClassList("property-card__header");
+
+            VisualElement accent = new VisualElement();
+            accent.AddToClassList("property-card__accent");
+            accent.style.backgroundColor = accentColor;
+            header.Add(accent);
+
+            VisualElement dragHandle = null;
+            if (onReorder != null && reorderCount > 1)
+            {
+                dragHandle = new Label("|||");
+                dragHandle.AddToClassList("property-card__drag-handle");
+                header.Add(dragHandle);
+            }
+
+            Label arrow = new Label(expanded ? "▼" : "▶");
+            arrow.AddToClassList("property-card__arrow");
+            header.Add(arrow);
+
+            Label headerText = new Label(title);
+            headerText.AddToClassList("property-card__header-text");
+            header.Add(headerText);
+
+            if (onDelete != null)
+            {
+                Button deleteButton = new Button(onDelete)
+                {
+                    text = "X"
+                };
+                deleteButton.AddToClassList("property-card__delete");
+                header.Add(deleteButton);
+            }
+
+            VisualElement body = new VisualElement();
+            body.AddToClassList("property-card__body");
+            body.style.display = expanded ? DisplayStyle.Flex : DisplayStyle.None;
+            buildBody(body);
+
+            string key = foldoutKey;
+            header.RegisterCallback<ClickEvent>(evt =>
+            {
+                if (evt.target is Button)
+                {
+                    return;
+                }
+
+                foldoutState[key] = !foldoutState[key];
+                bool isExpanded = foldoutState[key];
+                arrow.text = isExpanded ? "▼" : "▶";
+                body.style.display = isExpanded ? DisplayStyle.Flex : DisplayStyle.None;
+            });
+
+            card.Add(header);
+            card.Add(body);
+
+            VisualElement targetParent = parent ?? container;
+            targetParent.Add(card);
+
+            if (dragHandle != null)
+            {
+                dragHandle.RegisterCallback<ClickEvent>(evt => evt.StopPropagation());
+                dragHandle.AddManipulator(new ReorderableCardDragManipulator(card, targetParent, reorderIndex, onReorder));
+            }
+
+            return card;
+        }
+
+        private void AddTextField(VisualElement parent, string label, string value, Action<string> onChange)
+        {
+            VisualElement row = new VisualElement();
             row.AddToClassList("card-field-row");
-            var field = new TextField(label) { value = value };
+            TextField field = new TextField(label) { value = value };
             field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
             row.Add(field);
             parent.Add(row);
         }
 
-        private void AddIntField(VisualElement parent, string label, int value, System.Action<int> onChange)
+        private void AddIntField(VisualElement parent, string label, int value, Action<int> onChange)
         {
-            var row = new VisualElement();
+            VisualElement row = new VisualElement();
             row.AddToClassList("card-field-row");
-            var field = new IntegerField(label) { value = value };
+            IntegerField field = new IntegerField(label) { value = value };
             field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
             row.Add(field);
             parent.Add(row);
         }
 
-        private void AddFloatField(VisualElement parent, string label, float value, System.Action<float> onChange)
+        private void AddFloatField(VisualElement parent, string label, float value, Action<float> onChange)
         {
-            var row = new VisualElement();
+            VisualElement row = new VisualElement();
             row.AddToClassList("card-field-row");
-            var field = new FloatField(label) { value = value };
+            FloatField field = new FloatField(label) { value = value };
             field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
             row.Add(field);
             parent.Add(row);
         }
 
-        private void AddToggle(VisualElement parent, string label, bool value, System.Action<bool> onChange)
+        private void AddToggle(VisualElement parent, string label, bool value, Action<bool> onChange)
         {
-            var row = new VisualElement();
+            VisualElement row = new VisualElement();
             row.AddToClassList("card-field-row");
-            var field = new Toggle(label) { value = value };
+            Toggle field = new Toggle(label) { value = value };
             field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
             row.Add(field);
             parent.Add(row);
         }
 
-        private void AddVector2Field(VisualElement parent, string label, Vector2 value, System.Action<Vector2> onChange)
+        private void AddVector2Field(VisualElement parent, string label, Vector2 value, Action<Vector2> onChange)
         {
-            var row = new VisualElement();
+            VisualElement row = new VisualElement();
             row.AddToClassList("card-field-row");
-            var field = new Vector2Field(label) { value = value };
+            Vector2Field field = new Vector2Field(label) { value = value };
             field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
             row.Add(field);
             parent.Add(row);
         }
 
-        private void AddVector3Field(VisualElement parent, string label, Vector3 value, System.Action<Vector3> onChange)
+        private void AddVector3Field(VisualElement parent, string label, Vector3 value, Action<Vector3> onChange)
         {
-            var row = new VisualElement();
+            VisualElement row = new VisualElement();
             row.AddToClassList("card-field-row");
-            var field = new Vector3Field(label) { value = value };
+            Vector3Field field = new Vector3Field(label) { value = value };
             field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
             row.Add(field);
             parent.Add(row);
         }
 
-        private void AddColorField(VisualElement parent, string label, Color value, System.Action<Color> onChange)
+        private void AddColorField(VisualElement parent, string label, Color value, Action<Color> onChange)
         {
-            var row = new VisualElement();
+            VisualElement row = new VisualElement();
             row.AddToClassList("card-field-row");
-            var field = new ColorField(label) { value = value };
+            ColorField field = new ColorField(label) { value = value };
             field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
             row.Add(field);
             parent.Add(row);
         }
 
-        private void AddEnumField(VisualElement parent, string label, System.Enum value, System.Action<System.Enum> onChange)
+        private void AddEnumField(VisualElement parent, string label, Enum value, Action<Enum> onChange)
         {
-            var row = new VisualElement();
+            VisualElement row = new VisualElement();
             row.AddToClassList("card-field-row");
-            var field = new EnumField(label, value);
+            EnumField field = new EnumField(label, value);
             field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
             row.Add(field);
             parent.Add(row);
         }
 
-        private void AddObjectField<T>(VisualElement parent, string label, T value, System.Action<T> onChange) where T : UnityEngine.Object
+        private void AddObjectField<T>(VisualElement parent, string label, T value, Action<T> onChange) where T : UnityEngine.Object
         {
-            var row = new VisualElement();
+            VisualElement row = new VisualElement();
             row.AddToClassList("card-field-row");
-            var field = new ObjectField(label) { objectType = typeof(T), value = value };
+            ObjectField field = new ObjectField(label)
+            {
+                objectType = typeof(T),
+                value = value
+            };
             field.RegisterValueChangedCallback(evt => onChange(evt.newValue as T));
             row.Add(field);
             parent.Add(row);
         }
 
-        private void AddPhaseSlider(VisualElement parent, int su, int act, int rec, int total, System.Action<int, int, int> onChanges)
+        private void AddPhaseSlider(VisualElement parent, int startup, int active, int recovery, int total, Action<int, int, int> onChanges)
         {
-            var readout = new Label($"Total Animation Frames: {total}");
+            Label readout = new Label($"Total Animation Frames: {total}");
             readout.AddToClassList("phase-readout");
             parent.Add(readout);
 
-            var slider = new MinMaxSlider(su, su + act, 0, total);
-            
-            // Create fields first so we can reference them in the slider callback
-            var fields = new VisualElement();
+            MinMaxSlider slider = new MinMaxSlider(startup, startup + active, 0, total);
+
+            VisualElement fields = new VisualElement();
             fields.AddToClassList("phase-fields");
 
-            var suField = new IntegerField("SU") { value = su };
-            var actField = new IntegerField("ACT") { value = act };
-            var recField = new IntegerField("REC") { value = rec };
+            IntegerField startupField = new IntegerField("SU") { value = startup };
+            IntegerField activeField = new IntegerField("ACT") { value = active };
+            IntegerField recoveryField = new IntegerField("REC") { value = recovery };
 
-            // Slider callback: Updates the data AND the integer fields
             slider.RegisterValueChangedCallback(evt =>
             {
-                int newSU = Mathf.RoundToInt(evt.newValue.x);
-                int newACT = Mathf.RoundToInt(evt.newValue.y) - newSU;
-                int newREC = total - newSU - newACT;
-                
-                // Update integer fields without triggering their own change callbacks
-                suField.SetValueWithoutNotify(newSU);
-                actField.SetValueWithoutNotify(newACT);
-                recField.SetValueWithoutNotify(newREC);
+                int newStartup = Mathf.RoundToInt(evt.newValue.x);
+                int newActive = Mathf.RoundToInt(evt.newValue.y) - newStartup;
+                int newRecovery = total - newStartup - newActive;
 
-                onChanges?.Invoke(Mathf.Max(0, newSU), Mathf.Max(0, newACT), Mathf.Max(0, newREC));
+                startupField.SetValueWithoutNotify(newStartup);
+                activeField.SetValueWithoutNotify(newActive);
+                recoveryField.SetValueWithoutNotify(newRecovery);
+
+                onChanges?.Invoke(Mathf.Max(0, newStartup), Mathf.Max(0, newActive), Mathf.Max(0, newRecovery));
             });
+
             parent.Add(slider);
 
-            // Integer field callbacks: Update the data AND the slider
-            suField.RegisterValueChangedCallback(evt => {
-                int nSU = evt.newValue;
-                slider.SetValueWithoutNotify(new Vector2(nSU, nSU + actField.value));
-                onChanges?.Invoke(nSU, actField.value, recField.value);
+            startupField.RegisterValueChangedCallback(evt =>
+            {
+                int value = evt.newValue;
+                slider.SetValueWithoutNotify(new Vector2(value, value + activeField.value));
+                onChanges?.Invoke(value, activeField.value, recoveryField.value);
             });
-            fields.Add(suField);
+            fields.Add(startupField);
 
-            actField.RegisterValueChangedCallback(evt => {
-                int nACT = evt.newValue;
-                slider.SetValueWithoutNotify(new Vector2(suField.value, suField.value + nACT));
-                onChanges?.Invoke(suField.value, nACT, recField.value);
+            activeField.RegisterValueChangedCallback(evt =>
+            {
+                int value = evt.newValue;
+                slider.SetValueWithoutNotify(new Vector2(startupField.value, startupField.value + value));
+                onChanges?.Invoke(startupField.value, value, recoveryField.value);
             });
-            fields.Add(actField);
+            fields.Add(activeField);
 
-            recField.RegisterValueChangedCallback(evt => {
-                int nREC = evt.newValue;
-                // REC is derived, but letting user edit it directly:
-                // We'll keep SU and ACT and let REC be what it is (total - su - act)
-                // Actually, let's make it intuitive: editing REC updates ACT
-                int nACT = total - suField.value - nREC;
-                actField.SetValueWithoutNotify(nACT);
-                slider.SetValueWithoutNotify(new Vector2(suField.value, suField.value + nACT));
-                onChanges?.Invoke(suField.value, nACT, nREC);
+            recoveryField.RegisterValueChangedCallback(evt =>
+            {
+                int value = evt.newValue;
+                int nextActive = total - startupField.value - value;
+                activeField.SetValueWithoutNotify(nextActive);
+                slider.SetValueWithoutNotify(new Vector2(startupField.value, startupField.value + nextActive));
+                onChanges?.Invoke(startupField.value, nextActive, value);
             });
-            fields.Add(recField);
+            fields.Add(recoveryField);
 
             parent.Add(fields);
         }
 
         private void AddSeparator(VisualElement parent, string label)
         {
-            var sep = new VisualElement();
-            sep.AddToClassList("card-separator");
-            parent.Add(sep);
+            VisualElement separator = new VisualElement();
+            separator.AddToClassList("card-separator");
+            parent.Add(separator);
 
             if (!string.IsNullOrEmpty(label))
             {
-                var lbl = new Label($"── {label} ──");
-                lbl.AddToClassList("card-sub-header");
-                parent.Add(lbl);
+                Label text = new Label(label);
+                text.AddToClassList("card-sub-header");
+                parent.Add(text);
             }
         }
 
-        // =========================================================
-        // UNDO HELPERS
-        // =========================================================
+        private void ReorderListItem<T>(List<T> list, int fromIndex, int toIndex, string action)
+        {
+            if (list == null || fromIndex < 0 || fromIndex >= list.Count)
+            {
+                return;
+            }
+
+            int clampedIndex = Mathf.Clamp(toIndex, 0, list.Count - 1);
+            if (fromIndex == clampedIndex)
+            {
+                return;
+            }
+
+            RecordUndo(action);
+            T movedItem = list[fromIndex];
+            list.RemoveAt(fromIndex);
+            list.Insert(Mathf.Clamp(clampedIndex, 0, list.Count), movedItem);
+            MarkDirtyAndRebuild();
+        }
+
+        private sealed class ReorderableCardDragManipulator : PointerManipulator
+        {
+            private const float DragThreshold = 4f;
+
+            private readonly VisualElement card;
+            private readonly VisualElement listContainer;
+            private readonly Action<int> onReorder;
+            private readonly int originalIndex;
+            private readonly VisualElement placeholder;
+
+            private int activePointerId = -1;
+            private float startPointerY;
+            private float startCardTop;
+            private bool isDragging;
+
+            public ReorderableCardDragManipulator(VisualElement card, VisualElement listContainer, int originalIndex, Action<int> onReorder)
+            {
+                this.card = card;
+                this.listContainer = listContainer;
+                this.originalIndex = originalIndex;
+                this.onReorder = onReorder;
+
+                placeholder = new VisualElement();
+                placeholder.AddToClassList("property-card__placeholder");
+            }
+
+            protected override void RegisterCallbacksOnTarget()
+            {
+                target.RegisterCallback<PointerDownEvent>(OnPointerDown);
+                target.RegisterCallback<PointerMoveEvent>(OnPointerMove);
+                target.RegisterCallback<PointerUpEvent>(OnPointerUp);
+                target.RegisterCallback<PointerCaptureOutEvent>(OnPointerCaptureOut);
+            }
+
+            protected override void UnregisterCallbacksFromTarget()
+            {
+                target.UnregisterCallback<PointerDownEvent>(OnPointerDown);
+                target.UnregisterCallback<PointerMoveEvent>(OnPointerMove);
+                target.UnregisterCallback<PointerUpEvent>(OnPointerUp);
+                target.UnregisterCallback<PointerCaptureOutEvent>(OnPointerCaptureOut);
+            }
+
+            private void OnPointerDown(PointerDownEvent evt)
+            {
+                if (evt.button != 0 || activePointerId != -1)
+                {
+                    return;
+                }
+
+                activePointerId = evt.pointerId;
+                startPointerY = evt.position.y;
+                startCardTop = card.layout.y;
+                target.CapturePointer(activePointerId);
+                evt.StopImmediatePropagation();
+            }
+
+            private void OnPointerMove(PointerMoveEvent evt)
+            {
+                if (evt.pointerId != activePointerId)
+                {
+                    return;
+                }
+
+                float deltaY = evt.position.y - startPointerY;
+                if (!isDragging)
+                {
+                    if (Mathf.Abs(deltaY) < DragThreshold)
+                    {
+                        return;
+                    }
+
+                    BeginDrag();
+                }
+
+                card.style.top = startCardTop + deltaY;
+                int newIndex = GetInsertionIndex(evt.position.y);
+                if (listContainer.Contains(placeholder) && listContainer.IndexOf(placeholder) != newIndex)
+                {
+                    placeholder.RemoveFromHierarchy();
+                    listContainer.Insert(newIndex, placeholder);
+                }
+
+                evt.StopPropagation();
+            }
+
+            private void OnPointerUp(PointerUpEvent evt)
+            {
+                if (evt.pointerId != activePointerId)
+                {
+                    return;
+                }
+
+                FinishDrag();
+                evt.StopPropagation();
+            }
+
+            private void OnPointerCaptureOut(PointerCaptureOutEvent evt)
+            {
+                if (activePointerId == -1)
+                {
+                    return;
+                }
+
+                FinishDrag();
+            }
+
+            private void BeginDrag()
+            {
+                isDragging = true;
+                placeholder.style.height = card.resolvedStyle.height;
+                placeholder.style.marginTop = card.resolvedStyle.marginTop;
+                placeholder.style.marginBottom = card.resolvedStyle.marginBottom;
+                placeholder.style.marginLeft = card.resolvedStyle.marginLeft;
+                placeholder.style.marginRight = card.resolvedStyle.marginRight;
+
+                card.RemoveFromHierarchy();
+                listContainer.Insert(originalIndex, placeholder);
+                listContainer.Add(card);
+
+                card.AddToClassList("property-card--dragging");
+                card.style.position = Position.Absolute;
+                card.style.left = 0f;
+                card.style.right = 0f;
+                card.style.top = startCardTop;
+                card.BringToFront();
+            }
+
+            private void FinishDrag()
+            {
+                int pointerId = activePointerId;
+                activePointerId = -1;
+
+                if (pointerId != -1 && target.HasPointerCapture(pointerId))
+                {
+                    target.ReleasePointer(pointerId);
+                }
+
+                if (isDragging)
+                {
+                    int finalIndex = listContainer.IndexOf(placeholder);
+                    placeholder.RemoveFromHierarchy();
+
+                    if (listContainer.Contains(card))
+                    {
+                        card.RemoveFromHierarchy();
+                    }
+
+                    card.RemoveFromClassList("property-card--dragging");
+                    card.style.position = Position.Relative;
+                    card.style.left = new StyleLength(StyleKeyword.Null);
+                    card.style.right = new StyleLength(StyleKeyword.Null);
+                    card.style.top = new StyleLength(StyleKeyword.Null);
+
+                    listContainer.Insert(Mathf.Clamp(finalIndex, 0, listContainer.childCount), card);
+                    if (finalIndex != originalIndex)
+                    {
+                        onReorder?.Invoke(finalIndex);
+                    }
+                }
+                isDragging = false;
+            }
+
+            private int GetInsertionIndex(float pointerY)
+            {
+                int index = 0;
+                foreach (VisualElement child in listContainer.Children())
+                {
+                    if (child == card || child == placeholder)
+                    {
+                        continue;
+                    }
+
+                    if (pointerY > child.worldBound.center.y)
+                    {
+                        index++;
+                    }
+                }
+
+                return index;
+            }
+        }
+
         private void RecordUndo(string action)
         {
             if (character != null)
+            {
                 Undo.RecordObject(character, action);
+            }
         }
 
         private void MarkDirty()
         {
             if (character != null)
+            {
                 EditorUtility.SetDirty(character);
+            }
+
+            onDataChanged?.Invoke();
+        }
+
+        private void MarkDirtyAndRebuild()
+        {
+            if (character != null)
+            {
+                EditorUtility.SetDirty(character);
+            }
+
+            if (onStructureChanged != null && currentNode != null)
+            {
+                onStructureChanged.Invoke();
+                return;
+            }
+
             onDataChanged?.Invoke();
         }
     }

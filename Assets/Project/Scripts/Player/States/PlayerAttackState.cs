@@ -43,6 +43,12 @@ public class PlayerAttackState : FrameDataPlayerState
         };
     }
 
+    /// <summary>
+    /// Attacks can be interrupted by Dash/Jump during Active and Recovery phases.
+    /// Only the Startup phase blocks transitions.
+    /// </summary>
+    public override bool CanBeInterrupted => currentPhase != ActionPhase.Startup && currentPhase != ActionPhase.None;
+
     // =========================================================
     // Lifecycle
     // =========================================================
@@ -55,6 +61,7 @@ public class PlayerAttackState : FrameDataPlayerState
         {
             player.Combat.SetDrivenByState(true);
             player.Combat.OnComboFinished += HandleComboFinished;
+            player.Combat.OnBranchToSubStep += HandleBranchToSubStep;
         }
     }
 
@@ -66,6 +73,7 @@ public class PlayerAttackState : FrameDataPlayerState
         {
             player.Combat.SetDrivenByState(false);
             player.Combat.OnComboFinished -= HandleComboFinished;
+            player.Combat.OnBranchToSubStep -= HandleBranchToSubStep;
         }
     }
 
@@ -99,6 +107,11 @@ public class PlayerAttackState : FrameDataPlayerState
         // Delegate per-frame combat processing (hitbox, motion, VFX) to the combat engine
         if (player.Combat != null)
             player.Combat.ProcessFrameFromState(frame, phase);
+    }
+
+    protected override bool ShouldAdvanceLogicFrames()
+    {
+        return player.Combat == null || !player.Combat.HasActiveHitstop;
     }
 
     protected override void OnRecoveryBegin()
@@ -139,11 +152,36 @@ public class PlayerAttackState : FrameDataPlayerState
     protected override void HandleInputDuringStartup()
     {
         // During startup: allow direction changes for attack aiming
-        // Attack buffer is already handled by FSM routing
+        // No interrupts during startup frames
+    }
+
+    protected override void HandleInputDuringActive()
+    {
+        // New: allow Dash/Jump interrupts during active frame
+        CheckForInterrupts();
     }
 
     protected override void HandleInputDuringRecovery()
     {
+        // New: allow Dash/Jump interrupts during recovery
+        if (CheckForInterrupts()) return;
+
+        bool tryAutoChain = false;
+        if (player.Combat != null)
+        {
+            var step = player.Combat.GetCurrentStepData();
+            if (step != null && step.autoChainToNext) tryAutoChain = true;
+        }
+
+        if (tryAutoChain)
+        {
+            if (player.Combat.TryChainCombo())
+            {
+                RestartAction();
+                return;
+            }
+        }
+
         // During recovery: consume buffered attack for combo chaining
         ActionInputBuffer buffer = fsm.InputBuffer;
         if (buffer == null || player.Combat == null) return;
@@ -160,10 +198,16 @@ public class PlayerAttackState : FrameDataPlayerState
     protected override void HandleInputDuringCancel()
     {
         ActionInputBuffer buffer = fsm.InputBuffer;
-        if (buffer == null) return;
+
+        bool tryAutoChain = false;
+        if (player.Combat != null)
+        {
+            var step = player.Combat.GetCurrentStepData();
+            if (step != null && step.autoChainToNext) tryAutoChain = true;
+        }
 
         // Cancel window: combo continuation has priority
-        if (buffer.ConsumeAttack())
+        if (tryAutoChain || (buffer != null && buffer.ConsumeAttack()))
         {
             if (player.Combat != null && player.Combat.TryChainCombo())
             {
@@ -172,35 +216,58 @@ public class PlayerAttackState : FrameDataPlayerState
             }
         }
 
-        // Then check dash cancel
+        if (CheckForInterrupts()) return;
+
+        // If no buffer consumed and player is holding a direction, allow walk exit
+        if (buffer != null && buffer.DirectionalInput.x != 0f && !buffer.HasAnyBuffer)
+        {
+            HandleInterruptExit();
+            ExitToAppropriateMovementState();
+        }
+    }
+
+    private bool CheckForInterrupts()
+    {
+        ActionInputBuffer buffer = fsm.InputBuffer;
+        if (buffer == null) return false;
+
+        // Dash Interrupt
         float dashX;
         if (buffer.ConsumeDash(out dashX))
         {
             if (player.Movement != null && player.Movement.CanDash())
             {
+                HandleInterruptExit();
                 fsm.ChangeState(fsm.DashState);
                 fsm.CurrentState.OnDashInput(dashX);
-                return;
+                return true;
             }
         }
 
-        // Then check jump
+        // Jump Interrupt
         if (buffer.ConsumeJump())
         {
-            if (player.Combat != null)
-                player.Combat.CancelCurrentAttackButKeepComboProgress();
-
+            HandleInterruptExit();
             fsm.ChangeState(fsm.JumpState);
             fsm.CurrentState.OnJumpInput();
-            return;
+            return true;
         }
 
-        // If no buffer consumed and player is holding a direction, allow walk exit
-        if (buffer.DirectionalInput.x != 0f && !buffer.HasAnyBuffer)
+        return false;
+    }
+
+    private void HandleInterruptExit()
+    {
+        if (player.Combat == null) return;
+
+        // Centralized Guard System: If it's the last combo step, any interrupt resets the combo.
+        if (player.Combat.IsLastComboStep())
         {
-            if (player.Combat != null)
-                player.Combat.CancelCurrentAttackButKeepComboProgress();
-            ExitToAppropriateMovementState();
+            player.Combat.ResetCombo();
+        }
+        else
+        {
+            player.Combat.CancelCurrentAttackButKeepComboProgress();
         }
     }
 
@@ -238,21 +305,6 @@ public class PlayerAttackState : FrameDataPlayerState
     }
 
     /// <summary>
-    /// Cancel-window dash: check CanDash, then transition.
-    /// </summary>
-    public override void OnDashInput(float inputX)
-    {
-        if (currentPhase == ActionPhase.Cancel || currentPhase == ActionPhase.Recovery)
-        {
-            if (player.Movement != null && player.Movement.CanDash())
-            {
-                fsm.ChangeState(fsm.DashState);
-                fsm.CurrentState.OnDashInput(inputX);
-            }
-        }
-    }
-
-    /// <summary>
     /// Move input also forwards down-input for plunge detection.
     /// </summary>
     public override void OnMoveInput(Vector2 input)
@@ -269,5 +321,12 @@ public class PlayerAttackState : FrameDataPlayerState
     private void HandleComboFinished()
     {
         ExitToAppropriateMovementState();
+    }
+
+    private void HandleBranchToSubStep(AttackStepData newStepData)
+    {
+        // FrameDataPlayerState will fetch new data and reset the frame counter internally. 
+        // This ensures phase hooks like OnActiveBegin fire correctly on the new branch.
+        RestartAction();
     }
 }

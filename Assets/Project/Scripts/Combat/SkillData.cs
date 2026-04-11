@@ -1,4 +1,5 @@
 using UnityEngine;
+using CombatCore;
 
 [System.Serializable]
 public class SkillData
@@ -17,26 +18,31 @@ public class SkillData
     public ElementType elementType = ElementType.None;
 
     // =========================================================
-    // Frame Data (24 fps — centralized with all actions)
+    // Frame Data (60 fps standard)
     // =========================================================
-    [Header("Frame Data (24 fps)")]
+    [Header("Frame Data (60 fps)")]
     [Tooltip("Frame-based timing for Startup/Active/Recovery/Cancel phases.")]
     public ActionFrameData frameData = new ActionFrameData
     {
-        startupFrames = 2,
-        activeFrames = 3,
-        recoveryFrames = 8,
-        cancelWindowStartFrame = 10
+        startupFrames = 5,
+        activeFrames = 8,
+        recoveryFrames = 20,
+        cancelWindowStartFrame = 25
     };
 
     // =========================================================
-    // Timing (legacy compat — derived from frameData)
+    // Timing (logic standard)
     // =========================================================
     [Header("Timing")]
     public float cooldown = 4f;
 
-    /// <summary>Cast duration in seconds, computed from frameData for backwards compat.</summary>
-    public float CastDuration => frameData != null ? frameData.TotalFrames / 24f : 0.1f;
+    /// <summary>Cast duration in seconds, computed from frameData.</summary>
+    public float CastDuration => frameData != null ? frameData.TotalFrames / FrameDataConstants.LOGIC_FPS : 0.1f;
+
+    public void Rescale(float ratio)
+    {
+        frameData?.Rescale(ratio);
+    }
 
     // =========================================================
     // Damage / Force

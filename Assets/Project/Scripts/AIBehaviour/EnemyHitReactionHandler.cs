@@ -1,85 +1,714 @@
 using System;
+using CombatCore;
 using UnityEngine;
 
 [RequireComponent(typeof(EnemyController))]
 public class EnemyHitReactionHandler : MonoBehaviour
 {
-    public enum HitReactionState
-    {
-        None,
-        ImpactFreeze,
-        Knockback,
-        Knockdown,
-        Recovering
-    }
-
     [Header("Runtime (Read-Only)")]
-    [SerializeField] private HitReactionState currentState = HitReactionState.None;
+    [SerializeField] private EnemyReactionState currentState = EnemyReactionState.None;
+    [SerializeField] private int currentJuggleCount = 0;
 
-    [Header("Settings")]
-    public int recoveryFrames = 9;
+    [Header("Ground Detection")]
+    public LayerMask groundLayers = default;
+    public float groundCheckDistance = 0.08f;
+    public float groundNormalMinY = 0.25f;
 
     private EnemyController controller;
     private Rigidbody2D rb;
     private Animator animator;
-    private SpriteRenderer[] spriteRenderers;
+    private AnimationHandler_Enemy animationHandler;
+    private Collider2D bodyCollider;
 
     private HitReactionData currentReaction;
     private Vector2 attackerPos;
-    
-    private int currentReactionFrame = 0;
-    private float logicTimeCounter = 0f;
-    private int knockdownAirborneWaitFrames = 0;
+    private int currentReactionFrame;
+    private float logicTimeCounter;
     private float originalAnimatorSpeed = 1f;
+    private float originalGravityScale = 1f;
+    private RigidbodyType2D originalBodyType = RigidbodyType2D.Dynamic;
+    private bool launchVelocityApplied;
+    private int landingStateEnteredFrame = -1;
+    private Vector3 impactFreezeAnchorPosition;
+
+    private readonly RaycastHit2D[] groundHits = new RaycastHit2D[4];
+
+    private const float ImpactFreezeShakeMagnitude = 0.035f;
 
     public event Action OnReactionComplete;
 
-    public bool IsInReaction => currentState != HitReactionState.None;
-    public bool IsInHitstun => currentState == HitReactionState.ImpactFreeze;
-    public HitReactionState CurrentState => currentState;
+    public bool IsInReaction => currentState != EnemyReactionState.None;
+    public bool IsInHitstun => currentState == EnemyReactionState.ImpactFreeze;
+    public EnemyReactionState CurrentState => currentState;
+    public int CurrentReactionOwnerId => currentReaction.reactionOwnerId;
 
     void Awake()
     {
-        controller       = GetComponent<EnemyController>();
-        rb               = GetComponent<Rigidbody2D>();
-        animator         = GetComponentInChildren<Animator>();
-        spriteRenderers  = GetComponentsInChildren<SpriteRenderer>();
+        controller = GetComponent<EnemyController>();
+        rb = GetComponent<Rigidbody2D>();
+        animator = GetComponentInChildren<Animator>();
+        animationHandler = GetComponentInChildren<AnimationHandler_Enemy>();
+        bodyCollider = controller != null ? controller.bodyCollider : GetComponent<Collider2D>();
+
+        if (rb != null)
+        {
+            originalBodyType = rb.bodyType;
+            originalGravityScale = rb.gravityScale;
+        }
+
+        if (groundLayers.value == 0)
+        {
+            groundLayers = Physics2D.DefaultRaycastLayers;
+        }
     }
 
     void OnEnable()
     {
         if (controller != null)
+        {
             controller.OnDied += HandleDeath;
+        }
     }
 
     void OnDisable()
     {
         if (controller != null)
+        {
             controller.OnDied -= HandleDeath;
+        }
 
         CleanupReaction();
     }
 
     public void StartReaction(HitReactionData data, Vector2 attackerPosition)
     {
-        if (IsInReaction)
-            CancelCurrentReaction();
+        NormalizeReactionData(ref data);
 
-        currentReaction = data;
-        attackerPos     = attackerPosition;
+        bool isGrabbedByAnotherOwner =
+            currentState == EnemyReactionState.Grabbed &&
+            currentReaction.reactionOwnerId != 0 &&
+            currentReaction.reactionOwnerId != data.reactionOwnerId;
 
-        if (data.snapToAttacker)
+        if (isGrabbedByAnotherOwner)
         {
-            float facingDir = data.knockbackDirection.x != 0 ? Mathf.Sign(data.knockbackDirection.x) : 1f;
-            Vector2 snapPos = attackerPosition + new Vector2(data.snapOffset.x * facingDir, data.snapOffset.y);
-            transform.position = new Vector3(snapPos.x, snapPos.y, transform.position.z);
+            return;
         }
 
+        bool airborneJuggle = IsAirborneReactionState(currentState) && data.reactionKind != EnemyReactionKind.Grab;
+        if (airborneJuggle)
+        {
+            PrepareAirJuggle(ref data);
+        }
+        else if (data.reactionKind != EnemyReactionKind.Grab)
+        {
+            currentJuggleCount = 0;
+        }
+
+        if (IsInReaction)
+        {
+            CancelCurrentReaction();
+        }
+
+        currentReaction = data;
+        attackerPos = attackerPosition;
         currentReactionFrame = 0;
         logicTimeCounter = 0f;
-        knockdownAirborneWaitFrames = 0;
-        
-        EnterState(HitReactionState.ImpactFreeze);
+        launchVelocityApplied = false;
+        landingStateEnteredFrame = -1;
+        impactFreezeAnchorPosition = transform.position;
+
+        if (currentReaction.snapToAttacker && currentReaction.reactionKind != EnemyReactionKind.Grab)
+        {
+            ApplyLegacySnap(attackerPosition);
+        }
+
+        EnterState(EnemyReactionState.ImpactFreeze);
+    }
+
+    public bool ReleaseGrab(int ownerId)
+    {
+        if (currentState != EnemyReactionState.Grabbed)
+        {
+            return false;
+        }
+
+        if (currentReaction.reactionOwnerId != 0 && currentReaction.reactionOwnerId != ownerId)
+        {
+            return false;
+        }
+
+        if (currentReaction.RecoveryFrames > 0)
+        {
+            currentReactionFrame = currentReaction.ImpactFreezeFrames + currentReaction.ActiveReactionFrames + 1;
+            EnterState(EnemyReactionState.Recovering);
+        }
+        else
+        {
+            CompleteReaction();
+        }
+
+        return true;
+    }
+
+    void FixedUpdate()
+    {
+        if (currentState == EnemyReactionState.None)
+        {
+            return;
+        }
+
+        logicTimeCounter += Time.fixedDeltaTime;
+        int targetFrame = Mathf.FloorToInt(logicTimeCounter * FrameDataConstants.LOGIC_FPS);
+
+        while (currentReactionFrame < targetFrame)
+        {
+            currentReactionFrame++;
+            ProcessReactionFrame();
+
+            if (currentState == EnemyReactionState.None)
+            {
+                break;
+            }
+        }
+
+        if (currentState == EnemyReactionState.None)
+        {
+            return;
+        }
+
+        MaintainCurrentStateMotion();
+
+        if (currentState == EnemyReactionState.ImpactFreeze)
+        {
+            UpdateImpactFreezeShake();
+        }
+    }
+
+    private void ProcessReactionFrame()
+    {
+        int impactEndFrame = currentReaction.ImpactFreezeFrames;
+        int activeEndFrame = impactEndFrame + currentReaction.ActiveReactionFrames;
+        int totalEndFrame = activeEndFrame + currentReaction.RecoveryFrames;
+
+        if (currentReactionFrame <= impactEndFrame)
+        {
+            if (currentState != EnemyReactionState.ImpactFreeze)
+            {
+                EnterState(EnemyReactionState.ImpactFreeze);
+            }
+
+            return;
+        }
+
+        switch (currentReaction.reactionKind)
+        {
+            case EnemyReactionKind.Grab:
+                ProcessGrabFrames(activeEndFrame, totalEndFrame);
+                return;
+
+            case EnemyReactionKind.Knockup:
+                ProcessKnockupFrames(activeEndFrame, totalEndFrame);
+                return;
+
+            case EnemyReactionKind.Knockback:
+                ProcessKnockbackFrames(activeEndFrame, totalEndFrame);
+                return;
+
+            case EnemyReactionKind.Flinch:
+            default:
+                ProcessFlinchFrames(totalEndFrame);
+                return;
+        }
+    }
+
+    private void ProcessFlinchFrames(int totalEndFrame)
+    {
+        if (currentState != EnemyReactionState.Recovering)
+        {
+            EnterState(EnemyReactionState.Recovering);
+            return;
+        }
+
+        if (currentReactionFrame > totalEndFrame)
+        {
+            CompleteReaction();
+        }
+    }
+
+    private void ProcessKnockbackFrames(int activeEndFrame, int totalEndFrame)
+    {
+        if (currentReactionFrame <= activeEndFrame)
+        {
+            if (currentState != EnemyReactionState.Knockback)
+            {
+                EnterState(EnemyReactionState.Knockback);
+            }
+
+            return;
+        }
+
+        if (currentState != EnemyReactionState.Recovering)
+        {
+            EnterState(EnemyReactionState.Recovering);
+            return;
+        }
+
+        if (currentReactionFrame > totalEndFrame)
+        {
+            CompleteReaction();
+        }
+    }
+
+    private void ProcessKnockupFrames(int activeEndFrame, int totalEndFrame)
+    {
+        if (currentState != EnemyReactionState.Knockup &&
+            currentState != EnemyReactionState.Knockfall &&
+            currentState != EnemyReactionState.Knockdown &&
+            currentState != EnemyReactionState.Recovering)
+        {
+            EnterState(EnemyReactionState.Knockup);
+            return;
+        }
+
+        if (currentState == EnemyReactionState.Knockup && rb != null && rb.linearVelocity.y <= 0f)
+        {
+            EnterState(EnemyReactionState.Knockfall);
+        }
+
+        bool grounded = IsGrounded();
+        if (grounded && (currentState == EnemyReactionState.Knockup || currentState == EnemyReactionState.Knockfall))
+        {
+            if (currentReaction.landingBehavior == EnemyLandingBehavior.Knockdown)
+            {
+                EnterState(EnemyReactionState.Knockdown);
+            }
+            else
+            {
+                EnterState(EnemyReactionState.Recovering);
+            }
+
+            return;
+        }
+
+        if (currentState == EnemyReactionState.Knockdown && currentReactionFrame > Mathf.Max(activeEndFrame, landingStateEnteredFrame))
+        {
+            EnterState(EnemyReactionState.Recovering);
+            return;
+        }
+
+        if (currentState == EnemyReactionState.Recovering && currentReactionFrame > totalEndFrame)
+        {
+            CompleteReaction();
+            return;
+        }
+
+        if (currentReactionFrame > activeEndFrame && grounded && currentState != EnemyReactionState.Recovering)
+        {
+            EnterState(EnemyReactionState.Recovering);
+        }
+    }
+
+    private void ProcessGrabFrames(int activeEndFrame, int totalEndFrame)
+    {
+        if (!HasValidGrabTarget())
+        {
+            EnterState(EnemyReactionState.Recovering);
+            return;
+        }
+
+        if (currentReactionFrame <= activeEndFrame)
+        {
+            if (currentState != EnemyReactionState.Grabbed)
+            {
+                EnterState(EnemyReactionState.Grabbed);
+            }
+
+            return;
+        }
+
+        if (currentState != EnemyReactionState.Recovering)
+        {
+            EnterState(EnemyReactionState.Recovering);
+            return;
+        }
+
+        if (currentReactionFrame > totalEndFrame)
+        {
+            CompleteReaction();
+        }
+    }
+
+    private void MaintainCurrentStateMotion()
+    {
+        switch (currentState)
+        {
+            case EnemyReactionState.ImpactFreeze:
+                if (rb != null)
+                {
+                    rb.linearVelocity = Vector2.zero;
+                }
+                break;
+
+            case EnemyReactionState.Knockback:
+                ApplyGroundKnockbackVelocity();
+                break;
+
+            case EnemyReactionState.Knockup:
+            case EnemyReactionState.Knockfall:
+                MaintainAirborneDrift();
+                break;
+
+            case EnemyReactionState.Knockdown:
+                if (rb != null && IsGrounded())
+                {
+                    rb.linearVelocity = Vector2.zero;
+                }
+                break;
+
+            case EnemyReactionState.Grabbed:
+                UpdateGrabbedBinding();
+                break;
+
+            case EnemyReactionState.Recovering:
+                if (rb != null && IsGrounded())
+                {
+                    rb.linearVelocity = Vector2.zero;
+                }
+                break;
+        }
+    }
+
+    private void NormalizeReactionData(ref HitReactionData data)
+    {
+        if (data.reactionTiming == null)
+        {
+            int recoveryFrames = data.reactionKind == EnemyReactionKind.Grab ? 6 : 9;
+            data.reactionTiming = HitReactionData.CreateTiming(data.hitstunFrames, data.knockbackFrames, recoveryFrames);
+        }
+
+        if (data.reactionKind == EnemyReactionKind.Flinch &&
+            (data.isKnockdown || data.reactionVelocity != Vector2.zero || data.horizontalSpeed > 0f || data.launchSpeed > 0f))
+        {
+            data.reactionKind = HitReactionData.InferLegacyReactionKind(data.reactionVelocity, data.isKnockdown);
+        }
+
+        if (data.reactionKind != EnemyReactionKind.Grab)
+        {
+            data.landingBehavior = data.landingBehavior == EnemyLandingBehavior.Recover && data.isKnockdown
+                ? EnemyLandingBehavior.Knockdown
+                : data.landingBehavior;
+        }
+
+        if (data.reactionKind == EnemyReactionKind.Grab)
+        {
+            if (data.grabSocket == null && data.attackerTransform != null)
+            {
+                data.grabSocket = data.attackerTransform;
+            }
+
+            if (data.reactionTiming == null || data.reactionTiming.TotalFrames <= 0)
+            {
+                data.reactionTiming = HitReactionData.CreateTiming(4, 24, 6);
+            }
+        }
+
+        if (data.reactionOwnerId == 0 && data.attackerTransform != null)
+        {
+            data.reactionOwnerId = data.attackerTransform.root.GetInstanceID();
+        }
+
+        if (data.juggleLaunchScale <= 0f)
+        {
+            data.juggleLaunchScale = 1f;
+        }
+
+        if (data.juggleStunScale <= 0f)
+        {
+            data.juggleStunScale = 1f;
+        }
+    }
+
+    private void PrepareAirJuggle(ref HitReactionData data)
+    {
+        int nextJuggleCount = currentJuggleCount + 1;
+        data.reactionKind = EnemyReactionKind.Knockup;
+
+        if (!data.canAirJuggle || nextJuggleCount > data.maxJuggleCount)
+        {
+            data.launchSpeed = 0f;
+            data.horizontalSpeed *= 0.5f;
+            data.landingBehavior = EnemyLandingBehavior.Knockdown;
+            data.canAirJuggle = false;
+            currentJuggleCount = nextJuggleCount;
+            return;
+        }
+
+        float launchScale = Mathf.Pow(data.juggleLaunchScale, nextJuggleCount);
+        float stunScale = Mathf.Pow(data.juggleStunScale, nextJuggleCount);
+
+        data.launchSpeed = Mathf.Max(0f, data.LaunchSpeed * launchScale);
+        data.horizontalSpeed = Mathf.Max(0f, data.HorizontalSpeed * Mathf.Lerp(1f, launchScale, 0.5f));
+        data.reactionTiming = HitReactionData.CreateTiming(
+            data.ImpactFreezeFrames,
+            Mathf.Max(1, Mathf.RoundToInt(data.ActiveReactionFrames * stunScale)),
+            data.RecoveryFrames);
+
+        currentJuggleCount = nextJuggleCount;
+    }
+
+    private void ApplyLegacySnap(Vector2 attackerPosition)
+    {
+        float facingDir = GetAttackerFacingSign();
+        Vector2 offset = currentReaction.snapOffset;
+        Vector2 snapPos = attackerPosition + new Vector2(offset.x * facingDir, offset.y);
+        transform.position = new Vector3(snapPos.x, snapPos.y, transform.position.z);
+    }
+
+    private void ApplyGroundKnockbackVelocity()
+    {
+        if (rb == null)
+        {
+            return;
+        }
+
+        float velocityX = currentReaction.HorizontalSpeed * GetDirectionSign();
+        rb.linearVelocity = new Vector2(velocityX, 0f);
+    }
+
+    private void ApplyLaunchVelocity()
+    {
+        if (rb == null || launchVelocityApplied)
+        {
+            return;
+        }
+
+        float velocityX = currentReaction.HorizontalSpeed * GetDirectionSign();
+        rb.linearVelocity = new Vector2(velocityX, currentReaction.LaunchSpeed);
+        launchVelocityApplied = true;
+    }
+
+    private void MaintainAirborneDrift()
+    {
+        if (rb == null)
+        {
+            return;
+        }
+
+        if (!launchVelocityApplied)
+        {
+            ApplyLaunchVelocity();
+            return;
+        }
+
+        float velocityX = currentReaction.HorizontalSpeed * GetDirectionSign();
+        rb.linearVelocity = new Vector2(velocityX, rb.linearVelocity.y);
+    }
+
+    private float GetDirectionSign()
+    {
+        if (currentReaction.knockbackDirection.x != 0f)
+        {
+            return Mathf.Sign(currentReaction.knockbackDirection.x);
+        }
+
+        float diff = transform.position.x - attackerPos.x;
+        if (Mathf.Abs(diff) > 0.01f)
+        {
+            return Mathf.Sign(diff);
+        }
+
+        return 1f;
+    }
+
+    private float GetAttackerFacingSign()
+    {
+        if (currentReaction.knockbackDirection.x != 0f)
+        {
+            return Mathf.Sign(currentReaction.knockbackDirection.x);
+        }
+
+        if (currentReaction.attackerTransform != null)
+        {
+            float yRotation = currentReaction.attackerTransform.eulerAngles.y;
+            return (yRotation > 90f && yRotation < 270f) ? -1f : 1f;
+        }
+
+        return GetDirectionSign();
+    }
+
+    private bool HasValidGrabTarget()
+    {
+        return currentReaction.grabSocket != null || currentReaction.attackerTransform != null;
+    }
+
+    private void UpdateGrabbedBinding()
+    {
+        Transform bindTarget = currentReaction.grabSocket != null
+            ? currentReaction.grabSocket
+            : currentReaction.attackerTransform;
+
+        if (bindTarget == null)
+        {
+            return;
+        }
+
+        Vector2 offset = currentReaction.grabOffset != Vector2.zero
+            ? currentReaction.grabOffset
+            : currentReaction.snapOffset;
+
+        float facing = GetAttackerFacingSign();
+        Vector2 targetPosition = (Vector2)bindTarget.position + new Vector2(offset.x * facing, offset.y);
+
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+            rb.MovePosition(targetPosition);
+        }
+        else
+        {
+            transform.position = new Vector3(targetPosition.x, targetPosition.y, transform.position.z);
+        }
+    }
+
+    private bool IsGrounded()
+    {
+        if (bodyCollider == null)
+        {
+            return false;
+        }
+
+        ContactFilter2D filter = new ContactFilter2D();
+        filter.useLayerMask = groundLayers.value != 0;
+        if (filter.useLayerMask)
+        {
+            filter.SetLayerMask(groundLayers);
+        }
+        filter.useTriggers = false;
+
+        int hitCount = bodyCollider.Cast(Vector2.down, filter, groundHits, groundCheckDistance);
+        for (int i = 0; i < hitCount; i++)
+        {
+            if (groundHits[i].collider != null && groundHits[i].normal.y >= groundNormalMinY)
+            {
+                return true;
+            }
+        }
+
+        return filter.useLayerMask && bodyCollider.IsTouchingLayers(groundLayers);
+    }
+
+    private bool IsAirborneReactionState(EnemyReactionState state)
+    {
+        return state == EnemyReactionState.Knockup || state == EnemyReactionState.Knockfall;
+    }
+
+    private void EnterState(EnemyReactionState newState)
+    {
+        if (currentState == newState)
+        {
+            return;
+        }
+
+        if (currentState == EnemyReactionState.ImpactFreeze && newState != EnemyReactionState.ImpactFreeze)
+        {
+            ExitImpactFreeze();
+        }
+
+        if (currentState == EnemyReactionState.Grabbed && newState != EnemyReactionState.Grabbed)
+        {
+            ExitGrabbedState();
+        }
+
+        currentState = newState;
+        animationHandler?.SetReactionState(newState);
+
+        switch (newState)
+        {
+            case EnemyReactionState.ImpactFreeze:
+                EnterImpactFreeze();
+                break;
+
+            case EnemyReactionState.Knockback:
+                EnsureDynamicBody();
+                ApplyGroundKnockbackVelocity();
+                break;
+
+            case EnemyReactionState.Knockup:
+                EnsureDynamicBody();
+                ApplyLaunchVelocity();
+                break;
+
+            case EnemyReactionState.Knockfall:
+                EnsureDynamicBody();
+                break;
+
+            case EnemyReactionState.Knockdown:
+                EnsureDynamicBody();
+                landingStateEnteredFrame = currentReactionFrame;
+                if (rb != null)
+                {
+                    rb.linearVelocity = Vector2.zero;
+                }
+                break;
+
+            case EnemyReactionState.Grabbed:
+                EnterGrabbedState();
+                break;
+
+            case EnemyReactionState.Recovering:
+                EnsureDynamicBody();
+                if (rb != null && IsGrounded())
+                {
+                    rb.linearVelocity = Vector2.zero;
+                }
+                break;
+        }
+    }
+
+    private void CancelCurrentReaction()
+    {
+        ExitImpactFreeze();
+        ExitGrabbedState();
+        currentState = EnemyReactionState.None;
+        animationHandler?.SetReactionState(EnemyReactionState.None);
+        currentReactionFrame = 0;
+        logicTimeCounter = 0f;
+        launchVelocityApplied = false;
+        landingStateEnteredFrame = -1;
+    }
+
+    private void CleanupReaction()
+    {
+        ExitImpactFreeze();
+        ExitGrabbedState();
+        currentState = EnemyReactionState.None;
+        animationHandler?.SetReactionState(EnemyReactionState.None);
+        currentReactionFrame = 0;
+        logicTimeCounter = 0f;
+        launchVelocityApplied = false;
+        landingStateEnteredFrame = -1;
+        currentJuggleCount = 0;
+    }
+
+    private void CompleteReaction()
+    {
+        CleanupReaction();
+        OnReactionComplete?.Invoke();
+    }
+
+    private void HandleDeath()
+    {
+        CleanupReaction();
+    }
+
+    private void EnterImpactFreeze()
+    {
+        impactFreezeAnchorPosition = transform.position;
+
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+        }
 
         if (animator != null)
         {
@@ -88,125 +717,73 @@ public class EnemyHitReactionHandler : MonoBehaviour
         }
     }
 
-    void FixedUpdate()
+    private void ExitImpactFreeze()
     {
-        if (currentState == HitReactionState.None) return;
-
-        logicTimeCounter += Time.fixedDeltaTime;
-        int targetFrame = Mathf.FloorToInt(logicTimeCounter * 24f);
-
-        while (currentReactionFrame < targetFrame)
+        if (currentState != EnemyReactionState.ImpactFreeze)
         {
-            currentReactionFrame++;
-            ProcessReactionFrame();
-            
-            if (currentState == HitReactionState.None) break;
+            return;
+        }
+
+        transform.position = impactFreezeAnchorPosition;
+
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+        }
+
+        if (animator != null)
+        {
+            animator.speed = originalAnimatorSpeed > 0f ? originalAnimatorSpeed : 1f;
         }
     }
 
-    private void ProcessReactionFrame()
-    {
-        // 2. Impact Freeze Phase (Hitstop)
-        if (currentReactionFrame <= currentReaction.hitstunFrames)
-        {
-            if (currentState != HitReactionState.ImpactFreeze)
-            {
-                EnterState(HitReactionState.ImpactFreeze);
-            }
-        }
-        // 3. Knockback / Knockdown Phase
-        else if (currentReaction.isKnockdown)
-        {
-            if (currentState != HitReactionState.Knockdown && currentState != HitReactionState.Recovering)
-            {
-                EnterState(HitReactionState.Knockdown);
-                if (animator != null) animator.speed = originalAnimatorSpeed > 0f ? originalAnimatorSpeed : 1f;
-                ApplyKnockbackVelocity();
-                knockdownAirborneWaitFrames = 0;
-            }
-
-            if (currentState == HitReactionState.Knockdown)
-            {
-                knockdownAirborneWaitFrames++;
-                // Check landing after a small launch grace period (e.g., 10 frames)
-                if (knockdownAirborneWaitFrames > 10 && rb != null && Mathf.Abs(rb.linearVelocity.y) < 0.1f)
-                {
-                    EnterState(HitReactionState.Recovering);
-                    // Fast forward frame counter so it knows it enters recovery
-                    currentReactionFrame = currentReaction.hitstunFrames + currentReaction.knockbackFrames;
-                }
-            }
-        }
-        else if (currentReactionFrame <= currentReaction.hitstunFrames + currentReaction.knockbackFrames)
-        {
-            if (currentState != HitReactionState.Knockback)
-            {
-                EnterState(HitReactionState.Knockback);
-                if (animator != null) animator.speed = originalAnimatorSpeed > 0f ? originalAnimatorSpeed : 1f;
-                ApplyKnockbackVelocity();
-            }
-        }
-        // 4. Recovery Phase
-        else if (currentReactionFrame <= currentReaction.hitstunFrames + currentReaction.knockbackFrames + recoveryFrames)
-        {
-             if (currentState != HitReactionState.Recovering)
-             {
-                 EnterState(HitReactionState.Recovering);
-                 if (animator != null && originalAnimatorSpeed > 0) animator.speed = originalAnimatorSpeed; // Ensure unfrozen if knocked down quickly
-             }
-        }
-        // 5. Complete
-        else
-        {
-            CleanupReaction();
-            OnReactionComplete?.Invoke();
-        }
-    }
-
-    private void ApplyKnockbackVelocity()
+    private void EnterGrabbedState()
     {
         if (rb != null)
         {
-            float dirSign = GetDirectionSign();
-            float vx = Mathf.Abs(currentReaction.reactionVelocity.x) * dirSign;
-            float vy = currentReaction.reactionVelocity.y;
-            rb.linearVelocity = new Vector2(vx, vy);
+            originalBodyType = rb.bodyType;
+            originalGravityScale = rb.gravityScale;
+            rb.bodyType = RigidbodyType2D.Kinematic;
+            rb.gravityScale = 0f;
+            rb.linearVelocity = Vector2.zero;
         }
+
+        UpdateGrabbedBinding();
     }
 
-    private float GetDirectionSign()
+    private void ExitGrabbedState()
     {
-        float diff = transform.position.x - attackerPos.x;
-        if (Mathf.Abs(diff) > 0.01f)
-            return Mathf.Sign(diff);
-        if (currentReaction.knockbackDirection.x != 0f)
-            return Mathf.Sign(currentReaction.knockbackDirection.x);
-        return 1f;
+        if (currentState != EnemyReactionState.Grabbed)
+        {
+            return;
+        }
+
+        EnsureDynamicBody();
     }
 
-    private void EnterState(HitReactionState newState)
+    private void EnsureDynamicBody()
     {
-        currentState = newState;
+        if (rb == null)
+        {
+            return;
+        }
+
+        rb.bodyType = originalBodyType;
+        rb.gravityScale = originalGravityScale;
     }
 
-    private void CancelCurrentReaction()
+    private void UpdateImpactFreezeShake()
     {
-        if (animator != null && currentState == HitReactionState.ImpactFreeze)
-            animator.speed = originalAnimatorSpeed > 0f ? originalAnimatorSpeed : 1f;
-        currentState = HitReactionState.None;
-        currentReactionFrame = 0;
-        logicTimeCounter = 0f;
-    }
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+        }
 
-    private void CleanupReaction()
-    {
-        if (animator != null && currentState == HitReactionState.ImpactFreeze)
-            animator.speed = 1f;
-        currentState = HitReactionState.None;
-    }
-
-    private void HandleDeath()
-    {
-        CleanupReaction();
+        float horizontal = (currentReactionFrame & 1) == 0 ? 1f : -1f;
+        float vertical = (currentReactionFrame % 3 == 0) ? 0.5f : -0.25f;
+        transform.position = impactFreezeAnchorPosition + new Vector3(
+            horizontal * ImpactFreezeShakeMagnitude,
+            vertical * ImpactFreezeShakeMagnitude,
+            0f);
     }
 }

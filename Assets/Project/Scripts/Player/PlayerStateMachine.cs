@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using CombatCore;
 
 /// <summary>
 /// Centralized C# state machine for the player. Owns the canonical PlayerStateId,
@@ -221,6 +222,13 @@ public class PlayerStateMachine : MonoBehaviour
             return;
         }
 
+        // Centralized check for FrameData states: ignore interrupts if state says so
+        if (CurrentState is FrameDataPlayerState fdState && !fdState.CanBeInterrupted)
+        {
+            // Do not allow jump interrupt if state is not in a cancellable phase
+            return;
+        }
+
         if (CurrentState.AcceptsJumpInput)
         {
             ChangeState(JumpState);
@@ -246,6 +254,13 @@ public class PlayerStateMachine : MonoBehaviour
             return;
         }
 
+        // Centralized check for FrameData states: ignore interrupts if state says so
+        if (CurrentState is FrameDataPlayerState fdState && !fdState.CanBeInterrupted)
+        {
+            // Dash is already buffered at the start of this method
+            return;
+        }
+
         // Default routing: check flag, check can-dash, transition atomically
         if (CurrentState.AcceptsDashInput
             && playerCharacter.Movement != null
@@ -267,10 +282,18 @@ public class PlayerStateMachine : MonoBehaviour
         // Always buffer the attack for mid-action consumption
         InputBuffer.BufferAttack();
 
-        // AttackState has custom OnAttackInput (chains combos)
+        // Custom handlers (like AttackState chaining combos) take precedence
+        // They handle their own internal phase logic.
         if (HasCustomAttackHandler())
         {
             CurrentState.OnAttackInput();
+            return;
+        }
+
+        // Centralized check for FrameData states: ignore interrupts if state says so
+        if (CurrentState is FrameDataPlayerState fdState && !fdState.CanBeInterrupted)
+        {
+            // Attack is already buffered at the start of this method
             return;
         }
 
@@ -288,6 +311,10 @@ public class PlayerStateMachine : MonoBehaviour
     {
         if (CurrentState == null) return;
 
+        // Centralized check for FrameData states: ignore interrupts if state says so
+        if (CurrentState is FrameDataPlayerState fdState && !fdState.CanBeInterrupted)
+            return;
+
         if (CurrentState.AcceptsSkillInput
             && playerCharacter.Skill != null
             && playerCharacter.Skill.CanUseSkill())
@@ -302,6 +329,10 @@ public class PlayerStateMachine : MonoBehaviour
     public void RouteUltimateInput()
     {
         if (CurrentState == null) return;
+
+        // Centralized check for FrameData states: ignore interrupts if state says so
+        if (CurrentState is FrameDataPlayerState fdState && !fdState.CanBeInterrupted)
+            return;
 
         if (CurrentState.AcceptsUltimateInput
             && playerCharacter.Ultimate != null
@@ -332,8 +363,7 @@ public class PlayerStateMachine : MonoBehaviour
     private bool HasCustomDashHandler()
     {
         // DashState overrides OnDashInput to initiate dash physics
-        // AttackState overrides OnDashInput for cancel-window dash
-        return CurrentState is PlayerDashState || CurrentState is PlayerAttackState;
+        return CurrentState is PlayerDashState;
     }
 
     private bool HasCustomAttackHandler()

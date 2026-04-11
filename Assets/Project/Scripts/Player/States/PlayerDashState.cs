@@ -16,6 +16,9 @@ public class PlayerDashState : FrameDataPlayerState
     // Capabilities — only move input during dash
     // =========================================================
     public override bool AcceptsMoveInput => true;
+    public override bool AcceptsDashInput => true;
+    public override bool AcceptsJumpInput => true;
+    public override bool AcceptsAttackInput => true;
     public override bool LocksMovement => true;
     public override bool LocksFacing => true;
 

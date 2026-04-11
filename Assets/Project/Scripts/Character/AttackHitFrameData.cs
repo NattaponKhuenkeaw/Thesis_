@@ -11,7 +11,6 @@ public class AttackHitFrameData
     public int startFrameOffset = 0;
     [Tooltip("How many frames this specific hitbox stays active")]
     public int activeFrames = 3;
-    public float cameraShakeStrength = 0f;
 
     // =========================================================
     // Hitbox
@@ -25,13 +24,25 @@ public class AttackHitFrameData
     // =========================================================
     [Header("Damage / Knockback")]
     public float damageMultiplier = 1f;
-    [Tooltip("Legacy knockback impulse force. Only used as fallback when no EnemyHitReactionHandler exists.")]
-    public float knockbackForce = 4f;
 
     // =========================================================
     // Enemy Reaction
     // =========================================================
     [Header("Enemy Reaction")]
+    public bool useDeterministicReaction = false;
+    public EnemyReactionKind reactionKind = EnemyReactionKind.Knockback;
+    public int impactFreezeFrames = 4;
+    public int reactionFrames = 15;
+    public int recoveryFrames = 9;
+    public float horizontalSpeed = 3f;
+    public float launchSpeed = 1f;
+    public EnemyLandingBehavior landingBehavior = EnemyLandingBehavior.Knockdown;
+    public bool canAirJuggle = true;
+    public int maxJuggleCount = 2;
+    public float juggleLaunchScale = 0.85f;
+    public float juggleStunScale = 0.9f;
+
+    [Header("Legacy Enemy Reaction")]
     [Tooltip("Number of frozen frames on impact (both attacker and victim).")]
     public int hitstunFrames = 4;
 

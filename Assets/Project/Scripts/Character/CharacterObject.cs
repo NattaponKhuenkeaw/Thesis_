@@ -41,6 +41,9 @@ public class CharacterObject : ScriptableObject
     public CharacterStats stats = new CharacterStats();
     public CharacterMetaData metaData = new CharacterMetaData();
 
+    [Tooltip("The frame rate this character's data was authored for. Used by migration utilities.")]
+    public float authoredFPS = 24f;
+
     // =========================================================
     // Upgrade
     // =========================================================
@@ -80,6 +83,7 @@ public class CharacterObject : ScriptableObject
     // =========================================================
     [Header("Neutral Air Combo Data")]
     public BasicAttackComboData neutralAirComboData = new BasicAttackComboData();
+    public float maxAirComboTime = 1f;
 
     // =========================================================
     // Plunge Attack

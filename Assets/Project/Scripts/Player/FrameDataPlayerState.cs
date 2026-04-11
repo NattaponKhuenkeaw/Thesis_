@@ -1,4 +1,5 @@
 using UnityEngine;
+using CombatCore;
 
 // =========================================================
 // TransitionContext — Data passed between states on transition.
@@ -65,7 +66,7 @@ public abstract class FrameDataPlayerState : PlayerState
     protected TransitionContext transitionContext;
 
     // Constants
-    protected const float LOGIC_FPS = 24f;
+    protected const float LOGIC_FPS = FrameDataConstants.LOGIC_FPS;
 
     public FrameDataPlayerState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
@@ -88,6 +89,12 @@ public abstract class FrameDataPlayerState : PlayerState
     // =========================================================
     public int CurrentFrame => currentFrame;
     public ActionPhase CurrentPhase => currentPhase;
+
+    /// <summary>
+    /// Centralized interrupt logic: Defines if the current action phase 
+    /// allows immediate state transitions. Default is only during the Cancel window.
+    /// </summary>
+    public virtual bool CanBeInterrupted => currentPhase == ActionPhase.Cancel;
 
     // =========================================================
     // Lifecycle
@@ -124,6 +131,12 @@ public abstract class FrameDataPlayerState : PlayerState
     {
         if (cachedFrameData == null)
             return;
+
+        if (!ShouldAdvanceLogicFrames())
+        {
+            OnLogicFrameAdvanceBlocked();
+            return;
+        }
 
         logicTimeCounter += Time.fixedDeltaTime;
         
@@ -225,6 +238,20 @@ public abstract class FrameDataPlayerState : PlayerState
     /// (hitbox activation, motion curves, VFX spawning, etc.).
     /// </summary>
     protected virtual void ProcessLogicFrame(int frame, ActionPhase phase) { }
+
+    /// <summary>
+    /// Allows derived states to pause frame advancement without losing their
+    /// cached phase data. Used for gameplay freeze/hitstop style behavior.
+    /// </summary>
+    protected virtual bool ShouldAdvanceLogicFrames()
+    {
+        return true;
+    }
+
+    /// <summary>
+    /// Called when frame advancement is blocked by <see cref="ShouldAdvanceLogicFrames"/>.
+    /// </summary>
+    protected virtual void OnLogicFrameAdvanceBlocked() { }
 
     // =========================================================
     // InputHandleMidAction — Per-phase input routing

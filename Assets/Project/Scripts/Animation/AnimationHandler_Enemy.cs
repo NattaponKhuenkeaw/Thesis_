@@ -18,6 +18,9 @@ public class AnimationHandler_Enemy : MonoBehaviour
     private readonly int takeDamageHash = Animator.StringToHash("TakeDamage");
     private readonly int dieHash = Animator.StringToHash("Die");
     private readonly int attackHash = Animator.StringToHash("Attack");
+    private readonly int reactionStateHash = Animator.StringToHash("ReactionState");
+    private readonly int airborneHash = Animator.StringToHash("IsAirborne");
+    private readonly int grabbedHash = Animator.StringToHash("IsGrabbed");
 
     private HashSet<int> animParamHashes;
 
@@ -105,5 +108,20 @@ public class AnimationHandler_Enemy : MonoBehaviour
     {
         if (anim != null)
             anim.speed = speed;
+    }
+
+    public void SetReactionState(EnemyReactionState state)
+    {
+        if (anim == null || animParamHashes == null)
+            return;
+
+        if (animParamHashes.Contains(reactionStateHash))
+            anim.SetInteger(reactionStateHash, (int)state);
+
+        if (animParamHashes.Contains(airborneHash))
+            anim.SetBool(airborneHash, state == EnemyReactionState.Knockup || state == EnemyReactionState.Knockfall);
+
+        if (animParamHashes.Contains(grabbedHash))
+            anim.SetBool(grabbedHash, state == EnemyReactionState.Grabbed);
     }
 }

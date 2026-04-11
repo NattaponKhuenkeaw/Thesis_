@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 [System.Serializable]
 public class DashData
@@ -6,14 +7,14 @@ public class DashData
     [Header("Editor & Preview")]
     public AnimationClip animationClip;
 
-    [Header("Frame Data (24 fps base)")]
-    public int startupFrames = 2;
-    public int activeFrames = 5;
-    public int recoveryFrames = 5;
+    [Header("Frame Data (60 fps base)")]
+    public int startupFrames = 5;
+    public int activeFrames = 12;
+    public int recoveryFrames = 12;
 
     [Tooltip("Absolute frame where the cancel window opens during recovery. " +
              "Set to 0 to disable cancel window.")]
-    public int cancelWindowStartFrame = 10;
+    public int cancelWindowStartFrame = 25;
 
     [Header("Dash Settings")]
     public float dashSpeed = 20f;
@@ -31,10 +32,22 @@ public class DashData
     {
         return new ActionFrameData
         {
-            startupFrames = this.startupFrames,
-            activeFrames = this.activeFrames,
-            recoveryFrames = this.recoveryFrames,
-            cancelWindowStartFrame = this.cancelWindowStartFrame
+            startupFrames = startupFrames,
+            activeFrames = activeFrames,
+            recoveryFrames = recoveryFrames,
+            cancelWindowStartFrame = cancelWindowStartFrame
         };
+    }
+
+    /// <summary>
+    /// Rescales all frame indices by the given ratio.
+    /// </summary>
+    public void Rescale(float ratio)
+    {
+        startupFrames = Mathf.RoundToInt(startupFrames * ratio);
+        activeFrames = Mathf.RoundToInt(activeFrames * ratio);
+        recoveryFrames = Mathf.RoundToInt(recoveryFrames * ratio);
+        cancelWindowStartFrame = Mathf.RoundToInt(cancelWindowStartFrame * ratio);
+        cooldownFrames = Mathf.RoundToInt(cooldownFrames * ratio);
     }
 }

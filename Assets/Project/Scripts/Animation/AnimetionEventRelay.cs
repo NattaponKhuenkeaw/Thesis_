@@ -43,4 +43,10 @@ public class AnimationEventRelay : MonoBehaviour
     public void OnRecoveryStart() {}
 
     public void OnAttackEnd() {}
+
+    public void ReleaseGrabbedEnemy()
+    {
+        if (combat != null)
+            combat.ReleaseGrabbedEnemy();
+    }
 }

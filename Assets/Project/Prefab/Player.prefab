@@ -65,6 +65,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7441811751699273072}
+  - {fileID: 8039369968335461904}
   m_Father: {fileID: 2100287461037987408}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &5710717605876365618
@@ -136,7 +137,7 @@ Animator:
   m_GameObject: {fileID: 340767069818909638}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 3436f3bf41714a54391f36d8cfdd4294, type: 2}
+  m_Controller: {fileID: 9100000, guid: b4f7f50e094f0f145a2251ad62172a8d, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -218,6 +219,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7441811751699273072}
+  - component: {fileID: 8103238619310623879}
   - component: {fileID: 3431049620896760595}
   - component: {fileID: 6695322041483109874}
   - component: {fileID: 5505262384484254289}
@@ -225,7 +227,7 @@ GameObject:
   - component: {fileID: 5386631849888295344}
   m_Layer: 7
   m_Name: HitBox
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -245,6 +247,33 @@ Transform:
   m_Children: []
   m_Father: {fileID: 3331651315320733737}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!50 &8103238619310623879
+Rigidbody2D:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1096389015017390992}
+  m_BodyType: 0
+  m_Simulated: 0
+  m_UseFullKinematicContacts: 0
+  m_UseAutoMass: 0
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_GravityScale: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: 1
+  m_SleepingMode: 1
+  m_CollisionDetection: 0
+  m_Constraints: 0
 --- !u!61 &3431049620896760595
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -611,7 +640,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3725453944956529812}
-  - {fileID: 8039369968335461904}
   - {fileID: 3331651315320733737}
   - {fileID: 4860859214657599119}
   - {fileID: 8770699854844979728}
@@ -698,14 +726,19 @@ MonoBehaviour:
   airAcceleration: 55
   airDeceleration: 40
   airSpeedMultiplier: 1
-  dashSpeed: 20
-  dashDuration: 0.5
-  dashCooldown: 1
+  dashData:
+    animationClip: {fileID: 0}
+    startupFrames: 5
+    activeFrames: 12
+    recoveryFrames: 12
+    cancelWindowStartFrame: 25
+    dashSpeed: 20
+    cooldownFrames: 24
   airAttackComboResetCooldown: 5
   enableDashAfterimage: 1
   dashAfterimageColor: {r: 0.6179246, g: 0.94856673, b: 1, a: 1}
   dashAfterimageLifetime: 0.2
-  dashAfterimageSpawnInterval: 0.075
+  dashAfterimageSpawnInterval: 0.085
   fastFallMultiplier: 3
   riseGravityMultiplier: 2
   apexGravityMultiplier: 2.5
@@ -727,6 +760,8 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 8
+  enableAttackFacingLockOn: 1
+  attackFacingCancelInputThreshold: 0.2
 --- !u!114 &5371397137189720922
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -763,6 +798,9 @@ MonoBehaviour:
   meleeHitbox: {fileID: 1096389015017390992}
   meleeHitboxController: {fileID: 5386631849888295344}
   meleeHitboxDamage: {fileID: 8528783629480161128}
+  enemyLayerMask:
+    serializedVersion: 2
+    m_Bits: 256
 --- !u!114 &729008942358398209
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -859,6 +897,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerStateMachine
   playerCharacter: {fileID: 729008942358398209}
+  showFsmLogs: 1
+  showFrameDataLogs: 1
+  showCombatLogs: 1
 --- !u!1 &8299839864095689376
 GameObject:
   m_ObjectHideFlags: 0
@@ -884,11 +925,11 @@ Transform:
   m_GameObject: {fileID: 8299839864095689376}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.24, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 2100287461037987408}
+  m_Father: {fileID: 3331651315320733737}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &9160392634024913972
 GameObject:

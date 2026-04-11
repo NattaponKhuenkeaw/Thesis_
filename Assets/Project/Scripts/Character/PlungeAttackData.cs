@@ -14,4 +14,9 @@ public class PlungeAttackData
     {
         stepName = "Plunge Impact"
     };
+
+    public void Rescale(float ratio)
+    {
+        impactStep?.Rescale(ratio);
+    }
 }

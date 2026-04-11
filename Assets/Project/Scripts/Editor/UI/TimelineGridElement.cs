@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using CombatCore;
 
 namespace CombatEditor.UI
 {
@@ -39,7 +40,7 @@ namespace CombatEditor.UI
 
         // ── Public data ──
         public int   TotalFrames   { get; private set; }
-        public float FrameRate     { get; private set; } = 24f;
+        public float FrameRate     { get; private set; } = FrameDataConstants.LOGIC_FPS;
         public int   StartupFrames { get; set; }
         public int   ActiveFrames  { get; set; }
         public int   RecoveryFrames{ get; set; }
@@ -54,6 +55,9 @@ namespace CombatEditor.UI
         {
             public string label;
             public Color  color;
+            public bool drawRanges = true;
+            public Color diamondColor = Color.white;
+            public float diamondSize = 4f;
             /// <summary>List of (startFrame, duration) ranges drawn as filled boxes.</summary>
             public List<(int start, int duration)> ranges = new List<(int, int)>();
             /// <summary>Optional diamond markers at specific frames.</summary>
@@ -116,7 +120,7 @@ namespace CombatEditor.UI
         public void Setup(int totalFrames, float fps)
         {
             TotalFrames = Mathf.Max(1, totalFrames);
-            FrameRate   = fps > 0 ? fps : 24f;
+            FrameRate   = fps > 0 ? fps : FrameDataConstants.LOGIC_FPS;
             SyncSize();
         }
 
@@ -221,15 +225,17 @@ namespace CombatEditor.UI
                 // Background
                 DrawRect(p, 0, y, TotalFrames * BOX_W, TRACK_H, ColEmpty);
 
-                // Filled ranges
-                foreach (var (start, duration) in track.ranges)
+                if (track.drawRanges)
                 {
-                    for (int f = start; f < start + duration && f < TotalFrames; f++)
+                    foreach (var (start, duration) in track.ranges)
                     {
-                        float fx = f * BOX_W;
-                        Color c = track.color;
-                        c.a = 0.85f;
-                        DrawBox(p, fx, y, BOX_W, TRACK_H, c);
+                        for (int f = start; f < start + duration && f < TotalFrames; f++)
+                        {
+                            float fx = f * BOX_W;
+                            Color c = track.color;
+                            c.a = 0.85f;
+                            DrawBox(p, fx, y, BOX_W, TRACK_H, c);
+                        }
                     }
                 }
 
@@ -240,7 +246,7 @@ namespace CombatEditor.UI
                     {
                         float dx = df * BOX_W + BOX_W * 0.5f;
                         float dy = y + TRACK_H * 0.5f;
-                        DrawDiamond(p, dx, dy, 4f, Color.white);
+                        DrawDiamond(p, dx, dy, track.diamondSize, track.diamondColor);
                     }
                 }
 

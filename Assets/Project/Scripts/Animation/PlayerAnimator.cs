@@ -144,7 +144,7 @@ public class PlayerAnimator : MonoBehaviour
         anim.SetBool(isDieHash, isDead);
     }
 
-    public void TriggerAttackCombo(int comboStep)
+    public void TriggerAttackCombo(int comboStep, string explicitClipName = null)
     {
         // Prioritize attack animation over lingering jump transitions when attacking mid-air.
         SafeResetTrigger(jumpHash);
@@ -152,13 +152,18 @@ public class PlayerAnimator : MonoBehaviour
         anim.SetInteger(comboStepHash, comboStep);
 
         // Snap immediately without transition delay to align perfectly with Logic Frames
-        string[] candidates = new string[] { $"Attack_{comboStep}", $"Attack{comboStep}", $"_Attack{comboStep}" };
-        if (TryPlayFirstExistingState(candidates)) return;
+        List<string> candidates = new List<string>();
+        if (!string.IsNullOrEmpty(explicitClipName)) candidates.Add(explicitClipName);
+        candidates.Add($"Attack_{comboStep}");
+        candidates.Add($"Attack{comboStep}");
+        candidates.Add($"_Attack{comboStep}");
+
+        if (TryPlayFirstExistingState(candidates.ToArray())) return;
 
         SafeSetTrigger(attackHash);
     }
 
-    public void TriggerAirAttack(int comboStep)
+    public void TriggerAirAttack(int comboStep, string explicitClipName = null)
     {
         if (anim == null)
             return;
@@ -171,7 +176,11 @@ public class PlayerAnimator : MonoBehaviour
         int normalizedStep = Mathf.Max(1, comboStep);
         anim.SetInteger(airComboStepHash, normalizedStep);
 
-        if (TryPlayFirstExistingState(GetAirAttackStateCandidates(normalizedStep)))
+        List<string> candidates = new List<string>();
+        if (!string.IsNullOrEmpty(explicitClipName)) candidates.Add(explicitClipName);
+        candidates.AddRange(GetAirAttackStateCandidates(normalizedStep));
+
+        if (TryPlayFirstExistingState(candidates.ToArray()))
             return;
 
         SafeSetTrigger(attackHash);
@@ -233,6 +242,17 @@ public class PlayerAnimator : MonoBehaviour
     {
         // Force immediate snap to Ultimate state
         PlayStateByName("Ultimate", "Ultimate");
+    }
+
+    public void TriggerSubStepAnimation(AnimationClip clip)
+    {
+        if (clip == null || anim == null) return;
+        
+        // Attempt to play the exact clip name as the State name
+        if (!TryPlayFirstExistingState(new string[] { clip.name }))
+        {
+            Debug.LogWarning($"[Combat Engine] Animator State '{clip.name}' could not be found! Please make sure the State Node inside the Animator is named EXACTLY like the Animation Clip.");
+        }
     }
 
     private void PlayStateByName(string stateName, string fallbackStateName)

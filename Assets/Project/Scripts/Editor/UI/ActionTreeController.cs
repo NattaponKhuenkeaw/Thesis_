@@ -135,6 +135,70 @@ namespace CombatEditor.UI
 
                     var item = CreateLeafItem(node);
                     itemsContainer.Add(item);
+
+                    // --- Nested Branch Visualization ---
+                    if (steps[i].hitData != null && steps[i].hitData.hitboxes != null)
+                    {
+                        foreach (var hb in steps[i].hitData.hitboxes)
+                        {
+                            if (hb is GrabHitbox grab && grab.branchOnSuccess && grab.successSteps != null)
+                            {
+                                for (int subIdx = 0; subIdx < grab.successSteps.Count; subIdx++)
+                                {
+                                    var subStep = grab.successSteps[subIdx];
+                                    if (subStep == null) continue;
+
+                                    string subName = subStep.stepName ?? "Success Branch";
+                                    string subLabel = grab.successSteps.Count > 1 
+                                        ? $" ↳ {subName} ({subIdx + 1})" 
+                                        : $" ↳ {subName}";
+                                        
+                                    var subNode = new ActionNode(subLabel, category, i, "AttackStep", subStep);
+                                    var subItem = CreateLeafItem(subNode);
+                                    subItem.AddToClassList("sidebar-subitem");
+                                    itemsContainer.Add(subItem);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (category == "Ground" || category == "Air")
+                {
+                    var addStepBtn = new Button(() =>
+                    {
+                        UnityEditor.Undo.RecordObject(character, $"Add {category} Step");
+                        
+                        var newStep = new AttackStepData
+                        {
+                            stepName = "New Step",
+                            motionData = new MotionFrameData(),
+                            vfxData = new VFXFrameData(),
+                            hitData = new HitFrameData()
+                        };
+
+                        if (category == "Ground")
+                        {
+                            var list = new List<AttackStepData>(character.basicAttackComboData.steps);
+                            list.Add(newStep);
+                            character.basicAttackComboData.steps = list.ToArray();
+                        }
+                        else
+                        {
+                            var list = new List<AttackStepData>(character.neutralAirComboData.steps);
+                            list.Add(newStep);
+                            character.neutralAirComboData.steps = list.ToArray();
+                        }
+
+                        UnityEditor.EditorUtility.SetDirty(character);
+                        Build(character);
+                    })
+                    {
+                        text = $"+ Add {category} Step"
+                    };
+                    addStepBtn.AddToClassList("component-add-entry-btn");
+                    addStepBtn.style.marginTop = 10;
+                    itemsContainer.Add(addStepBtn);
                 }
 
                 catRoot.Add(itemsContainer);

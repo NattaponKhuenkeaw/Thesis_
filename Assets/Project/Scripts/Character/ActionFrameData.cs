@@ -3,26 +3,34 @@ using UnityEngine;
 // =========================================================
 // ActionFrameData — Universal frame-phase timing for ANY action.
 // Shared by Attack, Dash, Skill, Ultimate, Hitstun, etc.
-// All frame counts are in 24fps logic ticks.
+// All frame counts are in 60fps logic ticks.
 // =========================================================
 
 [System.Serializable]
 public class ActionFrameData
 {
-    [Header("Phase Timing (24 fps)")]
+    [Header("Phase Timing (60 fps)")]
     [Tooltip("Frames before the action becomes active. Direction changes and attack buffering allowed.")]
-    public int startupFrames = 4;
+    public int startupFrames = 10;
 
     [Tooltip("Frames where the action is active (hitbox, invincibility, cast effect, etc.).")]
-    public int activeFrames = 6;
+    public int activeFrames = 15;
 
     [Tooltip("Frames after active phase ends. Buffered inputs may be consumed.")]
-    public int recoveryFrames = 8;
+    public int recoveryFrames = 20;
 
     [Header("Cancel Window")]
     [Tooltip("Absolute frame where the cancel window opens. All inputs become available. " +
              "Set to 0 or >= TotalFrames to disable cancel window.")]
-    public int cancelWindowStartFrame = 14;
+    public int cancelWindowStartFrame = 35;
+
+    public void Rescale(float ratio)
+    {
+        startupFrames = Mathf.RoundToInt(startupFrames * ratio);
+        activeFrames = Mathf.RoundToInt(activeFrames * ratio);
+        recoveryFrames = Mathf.RoundToInt(recoveryFrames * ratio);
+        cancelWindowStartFrame = Mathf.RoundToInt(cancelWindowStartFrame * ratio);
+    }
 
     // =========================================================
     // Computed

@@ -46,29 +46,40 @@ MonoBehaviour:
     skillTreePoints: 3
   dashData:
     animationClip: {fileID: 7400000, guid: 3e950a7b365be294c97ddb9271fb0efe, type: 2}
-    startupFrames: 2
-    activeFrames: 12
-    recoveryFrames: 2
-    cancelWindowStartFrame: 10
+    startupFrames: 5
+    activeFrames: 30
+    recoveryFrames: 5
+    cancelWindowStartFrame: 25
     dashSpeed: 40
-    cooldownFrames: 12
+    cooldownFrames: 30
   basicAttackComboData:
     comboResetDelay: 0.8
     steps:
     - stepName: Attack 1
       animationClip: {fileID: 7400000, guid: 6cf09ac4cb4d35845a60e317a2b07166, type: 2}
-      startupFrames: 4
-      activeFrames: 5
-      recoveryFrames: 18
-      cancelWindowStartFrame: 10
+      startupFrames: 10
+      activeFrames: 12
+      recoveryFrames: 45
+      cancelWindowStartFrame: 25
+      autoChainToNext: 0
       hitFrames:
       - startFrameOffset: 1
         activeFrames: 3
-        cameraShakeStrength: 0.01
         offset: {x: 1.7030401, y: 1.3148091}
         size: {x: 2.2, y: 2.3}
         damageMultiplier: 1
-        knockbackForce: 2
+        useDeterministicReaction: 0
+        reactionKind: 1
+        impactFreezeFrames: 4
+        reactionFrames: 15
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 1
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
         hitstunFrames: 0
         reactionVelocity: {x: 3, y: 0}
         knockbackFrames: 15
@@ -85,20 +96,35 @@ MonoBehaviour:
         rid: -2
       hitData:
         rid: 1588255759013249140
+      componentOrder:
+      - motion
+      - vfx
+      - hitbox
     - stepName: Attack 2
       animationClip: {fileID: 7400000, guid: 497ab9f274d956f429082d3e9fa2e890, type: 2}
-      startupFrames: 4
-      activeFrames: 9
-      recoveryFrames: 15
-      cancelWindowStartFrame: 14
+      startupFrames: 10
+      activeFrames: 22
+      recoveryFrames: 38
+      cancelWindowStartFrame: 35
+      autoChainToNext: 0
       hitFrames:
       - startFrameOffset: 1
         activeFrames: 4
-        cameraShakeStrength: 0.5
         offset: {x: 1.796397, y: 1.395777}
         size: {x: 2.5867114, y: 1.5}
         damageMultiplier: 1.15
-        knockbackForce: 2
+        useDeterministicReaction: 0
+        reactionKind: 1
+        impactFreezeFrames: 4
+        reactionFrames: 15
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 1
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
         hitstunFrames: 4
         reactionVelocity: {x: 0, y: 1}
         knockbackFrames: 15
@@ -111,11 +137,21 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.8873908, b: 0, a: 0.39215687}
       - startFrameOffset: 5
         activeFrames: 5
-        cameraShakeStrength: 0.5
         offset: {x: 1.796397, y: 1.395777}
         size: {x: 2.586711, y: 1.5}
         damageMultiplier: 1
-        knockbackForce: 4
+        useDeterministicReaction: 0
+        reactionKind: 1
+        impactFreezeFrames: 4
+        reactionFrames: 15
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 1
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
         hitstunFrames: 8
         reactionVelocity: {x: 3, y: 1}
         knockbackFrames: 15
@@ -132,20 +168,35 @@ MonoBehaviour:
         rid: -2
       hitData:
         rid: -2
+      componentOrder:
+      - motion
+      - vfx
+      - hitbox
     - stepName: Attack 3
       animationClip: {fileID: 7400000, guid: 9443c87d6c977064d82958f823694341, type: 2}
-      startupFrames: 4
-      activeFrames: 27
-      recoveryFrames: 18
-      cancelWindowStartFrame: 32
+      startupFrames: 10
+      activeFrames: 68
+      recoveryFrames: 45
+      cancelWindowStartFrame: 80
+      autoChainToNext: 0
       hitFrames:
       - startFrameOffset: 1
         activeFrames: 3
-        cameraShakeStrength: 0.1
         offset: {x: 1.028096, y: 1.2490994}
         size: {x: 2, y: 1.3}
         damageMultiplier: 0.45
-        knockbackForce: 2
+        useDeterministicReaction: 0
+        reactionKind: 1
+        impactFreezeFrames: 4
+        reactionFrames: 15
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 1
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
         hitstunFrames: 1
         reactionVelocity: {x: 1, y: 7}
         knockbackFrames: 15
@@ -158,11 +209,21 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.0563832, b: 0, a: 0.39215687}
       - startFrameOffset: 14
         activeFrames: 3
-        cameraShakeStrength: 0.1
         offset: {x: 1.1685796, y: 2.0986495}
         size: {x: 2.33, y: 1.51}
         damageMultiplier: 0.45
-        knockbackForce: 2
+        useDeterministicReaction: 0
+        reactionKind: 1
+        impactFreezeFrames: 4
+        reactionFrames: 15
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 1
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
         hitstunFrames: 4
         reactionVelocity: {x: 1, y: 5}
         knockbackFrames: 15
@@ -175,11 +236,21 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.05882353, b: 0, a: 0.39215687}
       - startFrameOffset: 24
         activeFrames: 3
-        cameraShakeStrength: 0.1
         offset: {x: 1.1628387, y: 2.7038732}
         size: {x: 2.41, y: 1.93}
         damageMultiplier: 1.2
-        knockbackForce: 3
+        useDeterministicReaction: 0
+        reactionKind: 1
+        impactFreezeFrames: 4
+        reactionFrames: 15
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 1
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
         hitstunFrames: 4
         reactionVelocity: {x: 4, y: 3}
         knockbackFrames: 15
@@ -196,20 +267,35 @@ MonoBehaviour:
         rid: -2
       hitData:
         rid: -2
+      componentOrder:
+      - motion
+      - vfx
+      - hitbox
     - stepName: Attack 4
       animationClip: {fileID: 7400000, guid: 4affa92172a0e6949a6d14d2a1bd86f5, type: 2}
-      startupFrames: 5
-      activeFrames: 5
-      recoveryFrames: 19
-      cancelWindowStartFrame: 11
+      startupFrames: 12
+      activeFrames: 12
+      recoveryFrames: 48
+      cancelWindowStartFrame: 28
+      autoChainToNext: 0
       hitFrames:
       - startFrameOffset: 1
         activeFrames: 4
-        cameraShakeStrength: 1
         offset: {x: 1.4925976, y: 2.6800685}
         size: {x: 2.7586148, y: 2.2809672}
         damageMultiplier: 0.45
-        knockbackForce: 2
+        useDeterministicReaction: 0
+        reactionKind: 1
+        impactFreezeFrames: 4
+        reactionFrames: 15
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 1
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
         hitstunFrames: 6
         reactionVelocity: {x: 5, y: 7}
         knockbackFrames: 15
@@ -226,23 +312,38 @@ MonoBehaviour:
         rid: -2
       hitData:
         rid: -2
+      componentOrder:
+      - motion
+      - vfx
+      - hitbox
   neutralAirComboData:
     comboResetDelay: 0.8
     steps:
     - stepName: Attack 1
       animationClip: {fileID: 7400000, guid: 7fc06f4365a13974fbc711d6151b4d38, type: 2}
-      startupFrames: 2
-      activeFrames: 1
-      recoveryFrames: 5
-      cancelWindowStartFrame: 2
+      startupFrames: 5
+      activeFrames: 2
+      recoveryFrames: 12
+      cancelWindowStartFrame: 5
+      autoChainToNext: 0
       hitFrames:
       - startFrameOffset: 0
         activeFrames: 1
-        cameraShakeStrength: 0.01
         offset: {x: 1.1047599, y: 0.7353463}
         size: {x: 1.96, y: 2.38}
         damageMultiplier: 1.15
-        knockbackForce: 2
+        useDeterministicReaction: 0
+        reactionKind: 1
+        impactFreezeFrames: 4
+        reactionFrames: 15
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 1
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
         hitstunFrames: 12
         reactionVelocity: {x: 3, y: 1}
         knockbackFrames: 15
@@ -259,20 +360,35 @@ MonoBehaviour:
         rid: -2
       hitData:
         rid: -2
+      componentOrder:
+      - motion
+      - vfx
+      - hitbox
     - stepName: Attack 2
       animationClip: {fileID: 7400000, guid: 6b5bf7f2ed4abe04a82ec6175781c382, type: 2}
-      startupFrames: 3
-      activeFrames: 4
-      recoveryFrames: 17
-      cancelWindowStartFrame: 4
+      startupFrames: 8
+      activeFrames: 10
+      recoveryFrames: 42
+      cancelWindowStartFrame: 10
+      autoChainToNext: 0
       hitFrames:
       - startFrameOffset: 1
         activeFrames: 3
-        cameraShakeStrength: 0.01
         offset: {x: 1.1981609, y: 0.34963107}
         size: {x: 2.66, y: 2.25}
         damageMultiplier: 1.15
-        knockbackForce: 2
+        useDeterministicReaction: 0
+        reactionKind: 1
+        impactFreezeFrames: 4
+        reactionFrames: 15
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 1
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
         hitstunFrames: 12
         reactionVelocity: {x: 3, y: 1}
         knockbackFrames: 15
@@ -289,20 +405,35 @@ MonoBehaviour:
         rid: -2
       hitData:
         rid: -2
+      componentOrder:
+      - motion
+      - vfx
+      - hitbox
     - stepName: Attack 3
       animationClip: {fileID: 7400000, guid: 88aec8358ee7c044d8f85903a87b8341, type: 2}
-      startupFrames: 5
-      activeFrames: 4
-      recoveryFrames: 13
-      cancelWindowStartFrame: 5
+      startupFrames: 12
+      activeFrames: 10
+      recoveryFrames: 32
+      cancelWindowStartFrame: 12
+      autoChainToNext: 0
       hitFrames:
       - startFrameOffset: 1
         activeFrames: 3
-        cameraShakeStrength: 1
         offset: {x: 1.0205874, y: -0.1316185}
         size: {x: 2.03, y: 3.49}
         damageMultiplier: 1.15
-        knockbackForce: 2
+        useDeterministicReaction: 0
+        reactionKind: 1
+        impactFreezeFrames: 4
+        reactionFrames: 15
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 1
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
         hitstunFrames: 12
         reactionVelocity: {x: 3, y: 1}
         knockbackFrames: 15
@@ -319,6 +450,11 @@ MonoBehaviour:
         rid: -2
       hitData:
         rid: -2
+      componentOrder:
+      - motion
+      - vfx
+      - hitbox
+  maxAirComboTime: 1
   plungeAttackData:
     isEnabled: 1
     downwardSpeed: 18
@@ -328,17 +464,28 @@ MonoBehaviour:
       stepName: Plunge Impact
       animationClip: {fileID: 7400000, guid: 26ad7303e1deab444bf13f218d02b1e5, type: 2}
       startupFrames: 0
-      activeFrames: 6
-      recoveryFrames: 16
-      cancelWindowStartFrame: 7
+      activeFrames: 15
+      recoveryFrames: 40
+      cancelWindowStartFrame: 18
+      autoChainToNext: 0
       hitFrames:
       - startFrameOffset: 1
         activeFrames: 5
-        cameraShakeStrength: 1
         offset: {x: 0, y: -0.8}
         size: {x: 4, y: 1.5}
         damageMultiplier: 1.8
-        knockbackForce: 10
+        useDeterministicReaction: 0
+        reactionKind: 1
+        impactFreezeFrames: 4
+        reactionFrames: 15
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 1
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
         hitstunFrames: 0
         reactionVelocity: {x: 5, y: 4}
         knockbackFrames: 15
@@ -355,16 +502,20 @@ MonoBehaviour:
         rid: -2
       hitData:
         rid: -2
+      componentOrder:
+      - motion
+      - vfx
+      - hitbox
   skillData:
     skillName: Rapponken
     description: "\u0E1B\u0E25\u0E48\u0E2D\u0E22\u0E41\u0E23\u0E07\u0E25\u0E21\u0E01\u0E23\u0E30\u0E41\u0E17\u0E01\u0E14\u0E49\u0E32\u0E19\u0E2B\u0E19\u0E49\u0E32
       \u0E17\u0E33\u0E14\u0E32\u0E40\u0E21\u0E08\u0E41\u0E25\u0E30\u0E1C\u0E25\u0E31\u0E01\u0E28\u0E31\u0E15\u0E23\u0E39\u0E16\u0E2D\u0E22\u0E2B\u0E25\u0E31\u0E07"
     elementType: 4
     frameData:
-      startupFrames: 2
-      activeFrames: 3
-      recoveryFrames: 8
-      cancelWindowStartFrame: 10
+      startupFrames: 5
+      activeFrames: 8
+      recoveryFrames: 20
+      cancelWindowStartFrame: 25
     cooldown: 4.5
     damageMultiplier: 1.6
     knockbackForce: 7
@@ -376,9 +527,9 @@ MonoBehaviour:
       \u0E17\u0E33\u0E43\u0E2B\u0E49\u0E28\u0E31\u0E15\u0E23\u0E39\u0E25\u0E2D\u0E22\u0E02\u0E36\u0E49\u0E19\u0E41\u0E25\u0E30\u0E23\u0E31\u0E1A\u0E14\u0E32\u0E40\u0E21\u0E08\u0E15\u0E48\u0E2D\u0E40\u0E19\u0E37\u0E48\u0E2D\u0E07"
     elementType: 4
     frameData:
-      startupFrames: 4
-      activeFrames: 6
-      recoveryFrames: 10
+      startupFrames: 10
+      activeFrames: 15
+      recoveryFrames: 25
       cancelWindowStartFrame: 0
     cooldown: 3
     activeDuration: 4
@@ -428,20 +579,30 @@ MonoBehaviour:
     - rid: 1588255759013249141
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
-        startFrameOffset: 1
-        activeFrames: 3
+        startFrameOffset: 2
+        activeFrames: 8
         debugColor: {r: 0.26853323, g: 1, b: 0, a: 1}
         offset: {x: 0.8, y: 0.4}
         size: {x: 1, y: 0.8}
         damageMultiplier: 1
-        knockbackForce: 4
-        cameraShakeStrength: 0
         impactTier: 0
-        hitstunFrames: 4
+        useDeterministicReaction: 0
+        reactionKind: 1
+        impactFreezeFrames: 4
+        reactionFrames: 15
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 1
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        hitstunFrames: 10
         reactionVelocity: {x: 3, y: 1}
-        knockbackFrames: 15
+        knockbackFrames: 38
         isKnockdown: 0
         snapToAttacker: 0
         snapOffset: {x: 0, y: 0}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
+        flashFrames: 15

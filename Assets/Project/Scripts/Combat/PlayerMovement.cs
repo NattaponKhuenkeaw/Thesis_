@@ -1,4 +1,5 @@
 using UnityEngine;
+using CombatCore;
 using System.Collections;
 using System;
 
@@ -91,6 +92,10 @@ public class PlayerMovement : MonoBehaviour
     public Transform groundCheck;
     public LayerMask groundLayer;
 
+    [Header("Attack Lock-On")]
+    public bool enableAttackFacingLockOn = true;
+    public float attackFacingCancelInputThreshold = 0.2f;
+
     // =========================================================
     // Private Runtime Data
     // =========================================================
@@ -149,6 +154,8 @@ public class PlayerMovement : MonoBehaviour
 
     // Combat cooldown tracking
     private float airAttackComboCooldownEndTime;
+    private bool attackFacingLockOnCancelledForCurrentAttack;
+    private bool wasAttackLockOnActive;
     // =========================================================
     // Computed State (derived from FSM + timers, NOT mutable flags)
     // =========================================================
@@ -330,14 +337,14 @@ public class PlayerMovement : MonoBehaviour
             dashCooldownFramesRemaining = dashData.cooldownFrames;
     }
 
-    public void ApplyAttackMovement(Vector2 displacement, float duration)
+    public void ApplyAttackMovement(MotionKeyframe keyframe)
     {
         StopAttackMotion();
 
-        if (duration <= 0f)
+        if (keyframe == null)
             return;
 
-        attackMotionCoroutine = StartCoroutine(AttackMovementCoroutine(displacement, duration));
+        attackMotionCoroutine = StartCoroutine(AttackMovementCoroutine(keyframe));
     }
 
     public void CancelAttackMotion()
@@ -702,6 +709,10 @@ public class PlayerMovement : MonoBehaviour
 
     private void UpdateFacing()
     {
+        UpdateAttackFacingLockOnState();
+        if (TryHandleAttackFacingLockOn())
+            return;
+
         // Use FSM state's LocksFacing flag instead of hard-coded state checks
         bool facingLocked = fsm != null && fsm.CurrentState != null && fsm.CurrentState.LocksFacing;
         bool canUpdateFacing = !facingLocked || (combat != null && combat.CanSwitchDirection());
@@ -712,16 +723,73 @@ public class PlayerMovement : MonoBehaviour
 
         if (horizontalInput > 0.01f && currentDirection != 1)
         {
-            if (Time.time - lastFacingChangeTime < 0.2f) return;
-            transform.eulerAngles = new Vector3(transform.eulerAngles.x, 0f, transform.eulerAngles.z);
-            lastFacingChangeTime = Time.time;
+            SetFacingDirection(1, true);
         }
         else if (horizontalInput < -0.01f && currentDirection != -1)
         {
-            if (Time.time - lastFacingChangeTime < 0.2f) return;
-            transform.eulerAngles = new Vector3(transform.eulerAngles.x, 180f, transform.eulerAngles.z);
-            lastFacingChangeTime = Time.time;
+            SetFacingDirection(-1, true);
         }
+    }
+
+    private void UpdateAttackFacingLockOnState()
+    {
+        bool isAttacking = combat != null && combat.IsAttacking();
+        if (!isAttacking)
+        {
+            attackFacingLockOnCancelledForCurrentAttack = false;
+            wasAttackLockOnActive = false;
+            return;
+        }
+
+        if (!wasAttackLockOnActive)
+        {
+            attackFacingLockOnCancelledForCurrentAttack = false;
+        }
+
+        if (Mathf.Abs(horizontalInput) >= attackFacingCancelInputThreshold)
+        {
+            attackFacingLockOnCancelledForCurrentAttack = true;
+        }
+
+        wasAttackLockOnActive = true;
+    }
+
+    private bool TryHandleAttackFacingLockOn()
+    {
+        if (!enableAttackFacingLockOn || attackFacingLockOnCancelledForCurrentAttack)
+            return false;
+
+        if (combat == null || !combat.IsAttacking() || CameraManager.instance == null)
+            return false;
+
+        if (Mathf.Abs(horizontalInput) >= attackFacingCancelInputThreshold)
+            return false;
+
+        EnemyController targetEnemy = CameraManager.instance.GetNearestEngagedEnemy(transform.position);
+        if (targetEnemy == null)
+            return false;
+
+        float deltaX = targetEnemy.transform.position.x - transform.position.x;
+        if (Mathf.Abs(deltaX) <= 0.05f)
+            return false;
+
+        SetFacingDirection(deltaX >= 0f ? 1 : -1, false);
+        return true;
+    }
+
+    private void SetFacingDirection(int direction, bool respectCooldown)
+    {
+        if (direction != 1 && direction != -1)
+            return;
+
+        if (FacingDirection == direction)
+            return;
+
+        if (respectCooldown && Time.time - lastFacingChangeTime < 0.2f)
+            return;
+
+        transform.eulerAngles = new Vector3(transform.eulerAngles.x, direction == 1 ? 0f : 180f, transform.eulerAngles.z);
+        lastFacingChangeTime = Time.time;
     }
 
     // =========================================================
@@ -747,7 +815,7 @@ public class PlayerMovement : MonoBehaviour
         if (dashData == null) return;
 
         dashLogicTimeCounter += Time.fixedDeltaTime;
-        int targetDashFrame = Mathf.RoundToInt(dashLogicTimeCounter * 24f);
+        int targetDashFrame = Mathf.RoundToInt(dashLogicTimeCounter * FrameDataConstants.LOGIC_FPS);
 
         while (currentDashFrame < targetDashFrame)
         {
@@ -888,31 +956,143 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    private IEnumerator AttackMovementCoroutine(Vector2 displacement, float duration)
+    private IEnumerator AttackMovementCoroutine(MotionKeyframe keyframe)
     {
         isAttackMotionActive = true;
-        float startTime = Time.time;
         float dir = FacingDirection;
-        
-        // Calculate constant velocity needed to cover 'displacement' in 'duration'
-        // Displacement.x is relative to facing, so we multiply by dir.
-        float velX = (displacement.x * dir) / duration;
-        float velY = displacement.y / duration;
+        Vector2 startPos = rb.position;
+        Vector2 targetPos = startPos;
 
-        attackMotionVelocityX = velX;
-        attackMotionVelocityY = velY;
-
-        float elapsed = 0f;
-        while (elapsed < duration)
+        // Calculate Target Position based on Task Type
+        switch (keyframe.taskType)
         {
-            elapsed += Time.fixedDeltaTime;
-            
-            // Motion is now handled by ApplyHorizontalMovement (which sets both X and Y)
-            
-            yield return new WaitForFixedUpdate();
+            case MotionTaskType.Relative:
+                targetPos = startPos + new Vector2(keyframe.position.x * dir, keyframe.position.y);
+                break;
+
+            case MotionTaskType.Absolute:
+                // Relative to "Anchor" (usually the start of the attack step)
+                // For now, treating Absolute as relative to current position but without direction-flip if needed
+                // Actually, Absolute in combat usually means "Snap to this coordinate relative to parent"
+                // Let's implement it as relative to current but without multiplying by FacingDirection if desired?
+                // Standard: Absolute position in a local space.
+                targetPos = startPos + (Vector2)keyframe.position; 
+                break;
+
+            case MotionTaskType.SnapToEnemy:
+                Transform snapTarget = GetSnapTarget(8f); // 8f is a good default search radius
+                if (snapTarget != null)
+                {
+                    // Snap to a distance offset from enemy (e.g. 1 unit away)
+                    Vector2 toEnemy = (Vector2)snapTarget.position - startPos;
+                    float dist = toEnemy.magnitude;
+                    float offset = 1.2f; // Attack distance offset
+                    targetPos = (Vector2)snapTarget.position - (toEnemy.normalized * offset);
+                }
+                else
+                {
+                    // Fallback to relative if no enemy
+                    targetPos = startPos + new Vector2(keyframe.position.x * dir, keyframe.position.y);
+                }
+                break;
+        }
+
+        int durationFrames = Mathf.Max(0, keyframe.endFrame - keyframe.startFrame);
+        float durationSeconds = durationFrames / (float)FrameDataConstants.LOGIC_FPS;
+
+        if (durationSeconds <= 0)
+        {
+            rb.position = targetPos;
+        }
+        else
+        {
+            float elapsed = 0f;
+            while (elapsed < durationSeconds)
+            {
+                elapsed += Time.fixedDeltaTime;
+                float t = Mathf.Clamp01(elapsed / durationSeconds);
+                
+                // Use LeanTween's easing evaluation
+                float easedT = TweenEase(0f, 1f, t, keyframe.easing);
+
+                Vector2 currentTarget = Vector2.Lerp(startPos, targetPos, easedT);
+                
+                // Set velocity to reach the next interpolated point
+                Vector2 diff = currentTarget - rb.position;
+                attackMotionVelocityX = diff.x / Time.fixedDeltaTime;
+                attackMotionVelocityY = diff.y / Time.fixedDeltaTime;
+
+                yield return new WaitForFixedUpdate();
+            }
         }
 
         StopAttackMotion();
+    }
+
+    private float TweenEase(float from, float to, float t, LeanTweenType easeType)
+    {
+        // LeanTween has an internal method for this or we can use a temporary descr
+        // For simplicity and to avoid garbage, we use the standard manual evaluation
+        // If LeanTween isn't accessible this way, we'd need a different approach.
+        // Let's assume the user has the LeanTween standard easing accessible.
+        // Actually, LeanTween.move uses internal methods. 
+        // We can use LeanTween.descr().setEase(type).ease(0,1,t); 
+        // but that might be complex. Let's use a simpler approach:
+        
+        switch (easeType)
+        {
+            case LeanTweenType.linear: return LeanTween.linear(from, to, t);
+            case LeanTweenType.easeInQuad: return LeanTween.easeInQuad(from, to, t);
+            case LeanTweenType.easeOutQuad: return LeanTween.easeOutQuad(from, to, t);
+            case LeanTweenType.easeInOutQuad: return LeanTween.easeInOutQuad(from, to, t);
+            case LeanTweenType.easeInCubic: return LeanTween.easeInCubic(from, to, t);
+            case LeanTweenType.easeOutCubic: return LeanTween.easeOutCubic(from, to, t);
+            case LeanTweenType.easeInOutCubic: return LeanTween.easeInOutCubic(from, to, t);
+            case LeanTweenType.easeInSine: return LeanTween.easeInSine(from, to, t);
+            case LeanTweenType.easeOutSine: return LeanTween.easeOutSine(from, to, t);
+            case LeanTweenType.easeInOutSine: return LeanTween.easeInOutSine(from, to, t);
+            default:
+                return Mathf.Lerp(from, to, t);
+        }
+    }
+
+    private Transform GetSnapTarget(float radius)
+    {
+        // 1. Check CameraManager's engaged enemies
+        if (CameraManager.instance != null)
+        {
+            EnemyController bestEnemy = CameraManager.instance.GetNearestEngagedEnemy(transform.position);
+            if (bestEnemy != null)
+            {
+                float bestDistance = Vector2.Distance(transform.position, bestEnemy.transform.position);
+                if (bestDistance <= radius)
+                    return bestEnemy.transform;
+            }
+
+        }
+
+        // 2. Proximity search if no camera targets
+        Collider2D[] results = new Collider2D[10];
+        int count = Physics2D.OverlapCircleNonAlloc(transform.position, radius, results, 1 << enemyLayer);
+        
+        Transform nearest = null;
+        float closestDist = float.MaxValue;
+
+        for (int i = 0; i < count; i++)
+        {
+            EnemyController ec = results[i].GetComponentInParent<EnemyController>();
+            if (ec != null && ec.IsAlive)
+            {
+                float d = Vector2.Distance(transform.position, results[i].transform.position);
+                if (d < closestDist)
+                {
+                    closestDist = d;
+                    nearest = results[i].transform;
+                }
+            }
+        }
+
+        return nearest;
     }
 
     private IEnumerator DropDownRoutine(Collider2D targetCollider)

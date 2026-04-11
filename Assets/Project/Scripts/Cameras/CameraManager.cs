@@ -60,11 +60,15 @@ public class CameraManager : MonoBehaviour
     [Tooltip("How fast the camera weight transitions when entering/leaving combat.")]
     [SerializeField] private float _weightLerpSpeed = 2.0f;
 
-    [Tooltip("At what percentage of the disengage range should the camera start reducing the enemy's weight? (0.0 to 1.0)")]
-    [SerializeField] private float _distanceFalloffStartRatio = 0.5f;
+    [Header("Combat Range Bands")]
+    [Tooltip("Extra distance added after DetectRadius before an enemy leaves the combat target group.")]
+    [SerializeField] private float _secondRangeExtension = 3f;
 
-    [Tooltip("Grace period in seconds before completely removing enemy after leaving PatrolRadius.")]
-    [SerializeField] private float _outOfRangeGracePeriod = 1.5f;
+    [Tooltip("Minimum weight factor while the enemy is still inside DetectRadius.")]
+    [SerializeField] [Range(0f, 1f)] private float _firstRangeMinWeightFactor = 0.5f;
+
+    [Tooltip("Minimum weight factor while the enemy is inside the second range band.")]
+    [SerializeField] [Range(0f, 1f)] private float _secondRangeMinWeightFactor = 0.1f;
 
     [Header("Combat TargetGroup Settings")]
     [Tooltip("Weight of the player in the combat TargetGroup.")]
@@ -107,7 +111,6 @@ public class CameraManager : MonoBehaviour
         public float targetMaxWeight;
         public float currentWeight;
         public bool isLeaving;
-        public float outOfRangeTimer;
     }
 
     private bool _isInCombat;
@@ -121,6 +124,12 @@ public class CameraManager : MonoBehaviour
     public bool IsLerpingYDamping { get; private set; }
     public bool LerpedFromPlayerFalling { get; set; }
 
+    /// <summary>
+    /// Returns the collection of enemies currently being tracked by the camera group.
+    /// Used for targeting and snapping logic.
+    /// </summary>
+    public IEnumerable<EnemyController> EngagedEnemies => _engagedEnemies.Keys;
+
     // =========================================================
     // Unity Methods
     // =========================================================
@@ -132,6 +141,11 @@ public class CameraManager : MonoBehaviour
         }
         else
         {
+#if UNITY_EDITOR
+            // Guard against MissingReferenceException in Inspector
+            if (UnityEditor.Selection.activeGameObject == gameObject)
+                UnityEditor.Selection.activeGameObject = null;
+#endif
             Destroy(gameObject);
             return;
         }
@@ -175,73 +189,45 @@ public class CameraManager : MonoBehaviour
             EnemyController enemy = kvp.Key;
             EngagedEnemyContext ctx = kvp.Value;
 
-            if (enemy == null || !enemy.IsAlive)
+            // Handle destroyed or dead enemies
+            bool isDestroyed = enemy == null;
+            if (isDestroyed || !enemy.IsAlive)
             {
                 ctx.isLeaving = true;
+            }
+            else if (ShouldKeepEnemyInCombatGroup(enemy))
+            {
+                ctx.isLeaving = false;
             }
 
             float desiredWeight = 0f;
 
-            if (!ctx.isLeaving)
+            // Only calculate range-based weights if the enemy still exists
+            if (!ctx.isLeaving && !isDestroyed)
             {
-                float dist = Vector2.Distance(_playerTransform.position, enemy.transform.position);
-
-                float disengageRange = 8f; // fallback
-                var behaviorAgent = enemy.GetComponent<BehaviorGraphAgent>();
-                if (behaviorAgent != null && behaviorAgent.GetVariable("DetectRadius", out BlackboardVariable<float> radiusVar))
+                desiredWeight = EvaluateDesiredEnemyWeight(enemy, ctx, out bool shouldLeaveByRange);
+                if (shouldLeaveByRange)
                 {
-                    if (radiusVar != null)
-                    {
-                        disengageRange = radiusVar.Value;
-                    }
-                }
-
-                if (dist > disengageRange)
-                {
-                    // Player has walked too far away.
-                    // Start grace period timer. During this time, they stay at the capped minimum weight.
-                    ctx.outOfRangeTimer += Time.deltaTime;
-                    if (ctx.outOfRangeTimer >= _outOfRangeGracePeriod)
-                    {
-                        // Grace period over, exit combat for this enemy
-                        ctx.isLeaving = true;
-                    }
-                    else
-                    {
-                        // Cap at -90% max weight (10% max weight)
-                        desiredWeight = ctx.targetMaxWeight * 0.1f;
-                    }
-                }
-                else
-                {
-                    // Inside range. Reset grace timer.
-                    ctx.outOfRangeTimer = 0f;
-
-                    // Calculate weight based on distance.
-                    // Weight scales linearly from 1 to 0.1 after passing the _distanceFalloffStartRatio threshold
-                    float startFalloff = disengageRange * Mathf.Clamp01(_distanceFalloffStartRatio);
-                    
-                    float t = 1.0f; // Default full weight
-                    if (dist > startFalloff && disengageRange > startFalloff)
-                    {
-                        t = 1.0f - Mathf.Clamp01((dist - startFalloff) / (disengageRange - startFalloff));
-                    }
-                    
-                    // Cap the minimum weight to -90% (0.1) as long as they are still inside the group
-                    t = Mathf.Max(t, 0.1f);
-
-                    desiredWeight = ctx.targetMaxWeight * t;
+                    ctx.isLeaving = true;
                 }
             }
 
-            // Smoothly move the current weight towards the desired weight
+            // Smoothly move the current weight towards the desired weight (0 if leaving)
             ctx.currentWeight = Mathf.MoveTowards(ctx.currentWeight, desiredWeight, _weightLerpSpeed * Time.deltaTime);
 
-            // Apply to TargetGroup
-            UpdateTargetWeight(enemy.transform, ctx.currentWeight);
+            // Apply to TargetGroup with null-safety
+            if (!isDestroyed)
+            {
+                UpdateTargetWeight(enemy.transform, ctx.currentWeight);
+            }
+            else
+            {
+                // If the key is null, we can't update it, but we'll remove it below
+                ctx.currentWeight = 0f; 
+            }
 
-            // If completely faded out, we can remove them safely
-            if (ctx.isLeaving && ctx.currentWeight <= 0.01f)
+            // Removal criteria: if destroyed OR completely faded out while leaving
+            if (isDestroyed || (ctx.isLeaving && ctx.currentWeight <= 0.01f))
             {
                 toRemove ??= new List<EnemyController>();
                 toRemove.Add(enemy);
@@ -253,7 +239,16 @@ public class CameraManager : MonoBehaviour
         {
             foreach (var enemy in toRemove)
             {
-                RemoveFromTargetGroup(enemy.transform);
+                if (enemy != null)
+                {
+                    RemoveFromTargetGroup(enemy.transform);
+                }
+                else
+                {
+                    // Full sweep for null transforms if the enemy object itself was lost
+                    CleanupNullTargets();
+                }
+
                 _engagedEnemies.Remove(enemy);
             }
         }
@@ -288,8 +283,7 @@ public class CameraManager : MonoBehaviour
             {
                 targetMaxWeight = targetWeight,
                 currentWeight = 0f,
-                isLeaving = false,
-                outOfRangeTimer = 0f
+                isLeaving = false
             };
 
             Debug.Log($"[CameraManager] EnterCombat: added {enemy.name} (weight={targetWeight:F2})");
@@ -299,7 +293,6 @@ public class CameraManager : MonoBehaviour
             // Update weight if already engaged, and cancel any "leaving" state
             ctx.targetMaxWeight = targetWeight;
             ctx.isLeaving = false;
-            ctx.outOfRangeTimer = 0f;
         }
 
         if (!_isInCombat)
@@ -336,6 +329,36 @@ public class CameraManager : MonoBehaviour
         {
             ctx.targetMaxWeight = weight;
         }
+    }
+
+    public EnemyController GetNearestEngagedEnemy(Vector2 fromPosition, bool includeLeavingTargets = false)
+    {
+        EnemyController nearestEnemy = null;
+        float nearestDistanceSqr = float.MaxValue;
+
+        foreach (var kvp in _engagedEnemies)
+        {
+            EnemyController enemy = kvp.Key;
+            EngagedEnemyContext ctx = kvp.Value;
+            if (enemy == null || !enemy.IsAlive)
+            {
+                continue;
+            }
+
+            if (!includeLeavingTargets && ctx.isLeaving)
+            {
+                continue;
+            }
+
+            float distanceSqr = ((Vector2)enemy.transform.position - fromPosition).sqrMagnitude;
+            if (distanceSqr < nearestDistanceSqr)
+            {
+                nearestDistanceSqr = distanceSqr;
+                nearestEnemy = enemy;
+            }
+        }
+
+        return nearestEnemy;
     }
 
     // =========================================================
@@ -451,7 +474,7 @@ public class CameraManager : MonoBehaviour
 
     private void RemoveFromTargetGroup(Transform target)
     {
-        if (_combatTargetGroup == null) return;
+        if (_combatTargetGroup == null || target == null) return;
 
         for (int i = _combatTargetGroup.Targets.Count - 1; i >= 0; i--)
         {
@@ -465,7 +488,7 @@ public class CameraManager : MonoBehaviour
 
     private void UpdateTargetWeight(Transform target, float weight)
     {
-        if (_combatTargetGroup == null) return;
+        if (_combatTargetGroup == null || target == null) return;
 
         for (int i = 0; i < _combatTargetGroup.Targets.Count; i++)
         {
@@ -477,6 +500,83 @@ public class CameraManager : MonoBehaviour
                 break;
             }
         }
+    }
+
+    private void CleanupNullTargets()
+    {
+        if (_combatTargetGroup == null) return;
+        
+        for (int i = _combatTargetGroup.Targets.Count - 1; i >= 0; i--)
+        {
+            if (_combatTargetGroup.Targets[i].Object == null)
+            {
+                _combatTargetGroup.Targets.RemoveAt(i);
+            }
+        }
+    }
+
+    private float EvaluateDesiredEnemyWeight(EnemyController enemy, EngagedEnemyContext ctx, out bool shouldLeaveByRange)
+    {
+        shouldLeaveByRange = false;
+
+        float detectionRadius = Mathf.Max(0.01f, GetEnemyDetectionRadius(enemy));
+        float secondRangeLimit = detectionRadius + Mathf.Max(0f, _secondRangeExtension);
+        float distanceToPlayer = Vector2.Distance(_playerTransform.position, enemy.transform.position);
+        bool keepBeyondRange = ShouldKeepEnemyInCombatGroup(enemy);
+
+        if (distanceToPlayer <= detectionRadius)
+        {
+            float firstBandT = Mathf.Clamp01(distanceToPlayer / detectionRadius);
+            float weightFactor = Mathf.Lerp(1f, _firstRangeMinWeightFactor, firstBandT);
+            return ctx.targetMaxWeight * weightFactor;
+        }
+
+        if (distanceToPlayer <= secondRangeLimit || keepBeyondRange)
+        {
+            if (secondRangeLimit <= detectionRadius)
+            {
+                return ctx.targetMaxWeight * _secondRangeMinWeightFactor;
+            }
+
+            float clampedDistance = keepBeyondRange
+                ? Mathf.Min(distanceToPlayer, secondRangeLimit)
+                : distanceToPlayer;
+            float secondBandT = Mathf.InverseLerp(detectionRadius, secondRangeLimit, clampedDistance);
+            float weightFactor = Mathf.Lerp(_firstRangeMinWeightFactor, _secondRangeMinWeightFactor, secondBandT);
+            return ctx.targetMaxWeight * weightFactor;
+        }
+
+        shouldLeaveByRange = true;
+        return 0f;
+    }
+
+    private float GetEnemyDetectionRadius(EnemyController enemy)
+    {
+        float detectionRadius = 8f;
+        if (enemy == null)
+        {
+            return detectionRadius;
+        }
+
+        var behaviorAgent = enemy.GetComponent<BehaviorGraphAgent>();
+        if (behaviorAgent != null && behaviorAgent.GetVariable("DetectRadius", out BlackboardVariable<float> radiusVar) && radiusVar != null)
+        {
+            detectionRadius = radiusVar.Value;
+        }
+
+        return detectionRadius;
+    }
+
+    private static bool ShouldKeepEnemyInCombatGroup(EnemyController enemy)
+    {
+        if (enemy == null)
+        {
+            return false;
+        }
+
+        EnemyReactionState reactionState = enemy.CurrentReactionState;
+        return reactionState == EnemyReactionState.Knockup
+            || reactionState == EnemyReactionState.Knockfall;
     }
 
     // =========================================================

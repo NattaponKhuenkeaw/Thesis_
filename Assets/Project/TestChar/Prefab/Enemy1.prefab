@@ -8,6 +8,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -1236378588940687432, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -1236378588940687432, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_LocalBounds.m_Center.y
+      value: -0.00000011920929
+      objectReference: {fileID: 0}
+    - target: {fileID: -1236378588940687432, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_LocalBounds.m_Extent.x
+      value: 0.9985302
+      objectReference: {fileID: 0}
+    - target: {fileID: -1236378588940687432, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_LocalBounds.m_Extent.y
+      value: 0.99853027
+      objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: maxHP
       value: 200
@@ -22,7 +38,7 @@ PrefabInstance:
       objectReference: {fileID: 2992548729297104892}
     - target: {fileID: 747579930720166297, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -79
+      value: -27
       objectReference: {fileID: 0}
     - target: {fileID: 2328031192748680711, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_IsActive
@@ -73,9 +89,27 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 3682925780710360539}
     - target: {fileID: 4337216351384873233, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: 'managedReferences[1588255640948047997]'
+      value: 'Unity.Behavior Unity.Behavior.BlackboardVariable`1[[System.Single,
+        mscorlib]]'
+      objectReference: {fileID: 0}
+    - target: {fileID: 4337216351384873233, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: 'managedReferences[1588255640948047998]'
+      value: 'Unity.Behavior Unity.Behavior.BlackboardVariable`1[[System.Single,
+        mscorlib]]'
+      objectReference: {fileID: 0}
+    - target: {fileID: 4337216351384873233, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: 'managedReferences[2092758189833191443]'
       value: 'Unity.Behavior Unity.Behavior.BlackboardVariable`1[[UnityEngine.GameObject,
         UnityEngine.CoreModule]]'
+      objectReference: {fileID: 0}
+    - target: {fileID: 4337216351384873233, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: managedReferences[1588255640948047997].Name
+      value: PatrolRadius
+      objectReference: {fileID: 0}
+    - target: {fileID: 4337216351384873233, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: managedReferences[1588255640948047998].Name
+      value: DetectRadius
       objectReference: {fileID: 0}
     - target: {fileID: 4337216351384873233, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: managedReferences[2092758189833191443].Name
@@ -83,7 +117,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4337216351384873233, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_BlackboardVariableOverridesList.Array.size
-      value: 3
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4337216351384873233, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: managedReferences[1588255640948047997].m_Value
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 4337216351384873233, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: managedReferences[1588255640948047998].m_Value
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 4337216351384873233, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: managedReferences[2092758189833191443].m_Value
@@ -92,6 +134,30 @@ PrefabInstance:
     - target: {fileID: 4337216351384873233, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: 'm_BlackboardVariableOverridesList.Array.data[2]'
       value: 2092758189833191443
+      objectReference: {fileID: 0}
+    - target: {fileID: 4337216351384873233, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: 'm_BlackboardVariableOverridesList.Array.data[3]'
+      value: 1588255640948047997
+      objectReference: {fileID: 0}
+    - target: {fileID: 4337216351384873233, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: 'm_BlackboardVariableOverridesList.Array.data[4]'
+      value: 1588255640948047998
+      objectReference: {fileID: 0}
+    - target: {fileID: 4337216351384873233, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: managedReferences[1588255640948047997].GUID.m_Value0
+      value: 11033994412385877374
+      objectReference: {fileID: 0}
+    - target: {fileID: 4337216351384873233, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: managedReferences[1588255640948047997].GUID.m_Value1
+      value: 13941804943244319101
+      objectReference: {fileID: 0}
+    - target: {fileID: 4337216351384873233, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: managedReferences[1588255640948047998].GUID.m_Value0
+      value: 9670815775511397416
+      objectReference: {fileID: 0}
+    - target: {fileID: 4337216351384873233, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: managedReferences[1588255640948047998].GUID.m_Value1
+      value: 16500894820096155330
       objectReference: {fileID: 0}
     - target: {fileID: 4337216351384873233, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: managedReferences[2092758189833191443].GUID.m_Value0
@@ -135,7 +201,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5934746496802764893, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 1.2701
       objectReference: {fileID: 0}
     - target: {fileID: 5934746496802764893, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_LocalPosition.z
@@ -241,6 +307,10 @@ PrefabInstance:
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: 8293782056677331817, guid: 7752f6644e1ebd6459cda217bd3b8f89, type: 2}
+    - target: {fileID: 7675375483045177933, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4278190335
+      objectReference: {fileID: 0}
     - target: {fileID: 7675375483045177933, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_VerticalAlignment
       value: 512
@@ -355,7 +425,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHitReactionHandler
   currentState: 0
-  recoveryDuration: 1
+  currentJuggleCount: 0
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 8
+  groundCheckDistance: 0.08
+  groundNormalMinY: 0.25
 --- !u!114 &5801027921471458532 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7675375483045177933, guid: c135c5413a913c346868205d4f41acfe, type: 3}

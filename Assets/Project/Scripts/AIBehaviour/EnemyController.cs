@@ -39,6 +39,8 @@ public class EnemyController : MonoBehaviour
     [Header("Runtime State (read-only)")]
     [SerializeField] private bool isAlive = true;
     public bool IsAlive => isAlive;
+    public EnemyReactionState CurrentReactionState =>
+        hitReactionHandler != null ? hitReactionHandler.CurrentState : EnemyReactionState.None;
 
     // =========================================================
     // References
@@ -223,9 +225,18 @@ public class EnemyController : MonoBehaviour
         }
 
         // Wait for frames
-        for (int i = 0; i < frames; i++)
+        int remainingFrames = frames;
+        while (remainingFrames > 0)
         {
             yield return new WaitForFixedUpdate();
+
+            if (hitReactionHandler != null
+                && hitReactionHandler.CurrentState == EnemyReactionState.ImpactFreeze)
+            {
+                continue;
+            }
+
+            remainingFrames--;
         }
 
         // Restore original colors
@@ -236,6 +247,11 @@ public class EnemyController : MonoBehaviour
         }
 
         flashCoroutine = null;
+    }
+
+    public bool ReleaseGrab(int ownerId)
+    {
+        return hitReactionHandler != null && hitReactionHandler.ReleaseGrab(ownerId);
     }
 
     /// <summary>

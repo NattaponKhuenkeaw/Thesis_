@@ -11,6 +11,32 @@ public enum DamageImpactTier
     Ultimate
 }
 
+public enum EnemyReactionKind
+{
+    Flinch,
+    Knockback,
+    Knockup,
+    Grab
+}
+
+public enum EnemyReactionState
+{
+    None,
+    ImpactFreeze,
+    Knockback,
+    Knockup,
+    Knockfall,
+    Knockdown,
+    Grabbed,
+    Recovering
+}
+
+public enum EnemyLandingBehavior
+{
+    Recover,
+    Knockdown
+}
+
 /// <summary>
 /// Payload struct that travels from the player's hitbox to the enemy,
 /// carrying everything the enemy needs to play its hit reaction.
@@ -24,66 +50,149 @@ public struct HitReactionData
     // =========================================================
     public float damage;
     public Vector2 knockbackDirection;
-    public float knockbackForce;
 
     // =========================================================
-    // Hitstun (Impact Freeze)
+    // Deterministic Reaction Payload
+    // =========================================================
+    public EnemyReactionKind reactionKind;
+    public ActionFrameData reactionTiming;
+    public float horizontalSpeed;
+    public float launchSpeed;
+    public EnemyLandingBehavior landingBehavior;
+    public bool canAirJuggle;
+    public int maxJuggleCount;
+    public float juggleLaunchScale;
+    public float juggleStunScale;
+
+    // =========================================================
+    // Grab Binding
+    // =========================================================
+    public Transform attackerTransform;
+    public Transform grabSocket;
+    public Vector2 grabOffset;
+    public int reactionOwnerId;
+
+    // =========================================================
+    // Legacy Compatibility
     // =========================================================
     /// <summary>Number of frozen frames on impact (at 60 fps).</summary>
     public int hitstunFrames;
-
-    // =========================================================
-    // Knockback Motion
-    // =========================================================
-    /// <summary>(x,y) velocity applied to the enemy during knockback. X sign is flipped to face away from attacker.</summary>
+    /// <summary>Legacy velocity payload kept for additive compatibility.</summary>
     public Vector2 reactionVelocity;
-    /// <summary>How long the knockback phase lasts (frames). Enemy cannot act during this time.</summary>
+    /// <summary>Legacy motion duration kept for additive compatibility.</summary>
     public int knockbackFrames;
-    /// <summary>If true the enemy enters Knockdown state (launched airborne, falls).</summary>
+    /// <summary>Legacy knockdown flag kept for additive compatibility.</summary>
     public bool isKnockdown;
-
-    // =========================================================
-    // Snap Position
-    // =========================================================
-    /// <summary>If true, enemy is teleported to attacker position + snapOffset before starting reaction.</summary>
+    /// <summary>Legacy snap flag kept for additive compatibility.</summary>
     public bool snapToAttacker;
-    /// <summary>Offset from attacker when snapToAttacker is true.</summary>
+    /// <summary>Legacy snap offset kept for additive compatibility.</summary>
     public Vector2 snapOffset;
 
     // =========================================================
     // Visual Feedback
     // =========================================================
-    /// <summary>Flash color applied to enemy sprites on impact.</summary>
     public Color flashColor;
-    /// <summary>Duration of the sprite flash effect (frames).</summary>
     public int flashFrames;
 
     // =========================================================
     // Damage Text Impact
     // =========================================================
-    /// <summary>Controls how large the damage text pops on hit. Ultimate = biggest.</summary>
     public DamageImpactTier impactTier;
 
-    // =========================================================
-    // Factory
-    // =========================================================
-    /// <summary>Creates a default HitReactionData with sensible fighting-game defaults.</summary>
-    public static HitReactionData Default(float damage, Vector2 direction, float knockbackForce)
+    public int ImpactFreezeFrames => reactionTiming != null ? Mathf.Max(0, reactionTiming.startupFrames) : Mathf.Max(0, hitstunFrames);
+    public int ActiveReactionFrames => reactionTiming != null ? Mathf.Max(0, reactionTiming.activeFrames) : Mathf.Max(0, knockbackFrames);
+    public int RecoveryFrames => reactionTiming != null ? Mathf.Max(0, reactionTiming.recoveryFrames) : 0;
+    public int TotalReactionFrames => ImpactFreezeFrames + ActiveReactionFrames + RecoveryFrames;
+    public float HorizontalSpeed => horizontalSpeed > 0f ? horizontalSpeed : Mathf.Abs(reactionVelocity.x);
+    public float LaunchSpeed => launchSpeed > 0f ? launchSpeed : Mathf.Max(0f, reactionVelocity.y);
+
+    public static ActionFrameData CreateTiming(int impactFreezeFrames, int reactionFrames, int recoveryFrames)
     {
+        return new ActionFrameData
+        {
+            startupFrames = Mathf.Max(0, impactFreezeFrames),
+            activeFrames = Mathf.Max(0, reactionFrames),
+            recoveryFrames = Mathf.Max(0, recoveryFrames),
+            cancelWindowStartFrame = 0
+        };
+    }
+
+    public static EnemyReactionKind InferLegacyReactionKind(Vector2 legacyVelocity, bool legacyKnockdown)
+    {
+        if (legacyKnockdown || legacyVelocity.y > 0.01f)
+        {
+            return EnemyReactionKind.Knockup;
+        }
+
+        if (Mathf.Abs(legacyVelocity.x) > 0.01f)
+        {
+            return EnemyReactionKind.Knockback;
+        }
+
+        return EnemyReactionKind.Flinch;
+    }
+
+    public static EnemyLandingBehavior InferLandingBehavior(Vector2 legacyVelocity, bool legacyKnockdown)
+    {
+        if (legacyKnockdown || legacyVelocity.y > 0.01f)
+        {
+            return EnemyLandingBehavior.Knockdown;
+        }
+
+        return EnemyLandingBehavior.Recover;
+    }
+
+    public static bool UsesHorizontalSpeed(EnemyReactionKind reactionKind)
+    {
+        return reactionKind == EnemyReactionKind.Knockback
+            || reactionKind == EnemyReactionKind.Knockup;
+    }
+
+    public static bool UsesLaunchSpeed(EnemyReactionKind reactionKind)
+    {
+        return reactionKind == EnemyReactionKind.Knockup;
+    }
+
+    public static bool UsesLandingBehavior(EnemyReactionKind reactionKind)
+    {
+        return reactionKind == EnemyReactionKind.Knockup;
+    }
+
+    public static bool UsesAirJuggleSettings(EnemyReactionKind reactionKind)
+    {
+        return reactionKind == EnemyReactionKind.Knockup;
+    }
+
+    public static HitReactionData Default(float damage, Vector2 direction, float knockbackStrength)
+    {
+        float horizontal = Mathf.Max(0f, knockbackStrength * 0.5f);
+
         return new HitReactionData
         {
-            damage             = damage,
+            damage = damage,
             knockbackDirection = direction,
-            knockbackForce     = knockbackForce,
-            hitstunFrames      = 6,
-            reactionVelocity   = new Vector2(knockbackForce * 0.5f, 1f),
-            knockbackFrames    = 15,
-            isKnockdown        = false,
-            snapToAttacker     = false,
-            snapOffset         = Vector2.zero,
-            flashColor         = Color.red,
-            flashFrames        = 6,
-            impactTier         = DamageImpactTier.BasicCombo
+            reactionKind = horizontal > 0f ? EnemyReactionKind.Knockback : EnemyReactionKind.Flinch,
+            reactionTiming = CreateTiming(6, 15, 9),
+            horizontalSpeed = horizontal,
+            launchSpeed = 0f,
+            landingBehavior = EnemyLandingBehavior.Recover,
+            canAirJuggle = true,
+            maxJuggleCount = 2,
+            juggleLaunchScale = 0.85f,
+            juggleStunScale = 0.9f,
+            attackerTransform = null,
+            grabSocket = null,
+            grabOffset = Vector2.zero,
+            reactionOwnerId = 0,
+            hitstunFrames = 6,
+            reactionVelocity = new Vector2(horizontal, 0f),
+            knockbackFrames = 15,
+            isKnockdown = false,
+            snapToAttacker = false,
+            snapOffset = Vector2.zero,
+            flashColor = Color.red,
+            flashFrames = 6,
+            impactTier = DamageImpactTier.BasicCombo
         };
     }
 }

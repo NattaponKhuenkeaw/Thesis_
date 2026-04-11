@@ -1,4 +1,5 @@
 using UnityEngine;
+using CombatCore;
 
 [System.Serializable]
 public class UltimateData
@@ -17,27 +18,32 @@ public class UltimateData
     public ElementType elementType = ElementType.None;
 
     // =========================================================
-    // Frame Data (24 fps — centralized with all actions)
+    // Frame Data (60 fps standard)
     // =========================================================
-    [Header("Frame Data (24 fps)")]
+    [Header("Frame Data (60 fps)")]
     [Tooltip("Frame-based timing for Startup/Active/Recovery/Cancel phases.")]
     public ActionFrameData frameData = new ActionFrameData
     {
-        startupFrames = 4,
-        activeFrames = 6,
-        recoveryFrames = 10,
+        startupFrames = 10,
+        activeFrames = 15,
+        recoveryFrames = 25,
         cancelWindowStartFrame = 0 // Ultimate typically has no cancel window
     };
 
     // =========================================================
-    // Timing (legacy compat)
+    // Timing (logic standard)
     // =========================================================
     [Header("Timing")]
     public float cooldown = 12f;
     public float activeDuration = 4f;
 
-    /// <summary>Cast duration in seconds, computed from frameData for backwards compat.</summary>
-    public float CastDuration => frameData != null ? frameData.TotalFrames / 24f : 0.25f;
+    /// <summary>Cast duration in seconds, computed from frameData.</summary>
+    public float CastDuration => frameData != null ? frameData.TotalFrames / FrameDataConstants.LOGIC_FPS : 0.25f;
+
+    public void Rescale(float ratio)
+    {
+        frameData?.Rescale(ratio);
+    }
     // =========================================================
     // Damage
     // =========================================================

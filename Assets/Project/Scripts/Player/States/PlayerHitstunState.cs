@@ -1,4 +1,5 @@
 using UnityEngine;
+using CombatCore;
 
 /// <summary>
 /// Hitstun state: player was hit and is briefly stunned.
@@ -139,11 +140,11 @@ public class PlayerHitstunState : FrameDataPlayerState
 
     /// <summary>
     /// Allow external code to set a custom hitstun duration (legacy compat).
-    /// Converts seconds to frame counts at 24 fps.
+    /// Converts seconds to frame counts at FrameDataConstants.LOGIC_FPS.
     /// </summary>
     public void SetDuration(float duration)
     {
-        float totalFrames = Mathf.Max(2, Mathf.RoundToInt(duration * 24f));
+        float totalFrames = Mathf.Max(2, Mathf.RoundToInt(duration * FrameDataConstants.LOGIC_FPS));
         int startup = Mathf.RoundToInt(totalFrames * 0.3f);
         int active = Mathf.RoundToInt(totalFrames * 0.3f);
         int recovery = Mathf.RoundToInt(totalFrames * 0.4f);
