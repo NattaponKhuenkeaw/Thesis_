@@ -57,10 +57,10 @@ public class MeleeHitboxController : MonoBehaviour
             return;
         }
 
-        if (movement != null && movement.FacingDirection == -1)
-            offset.x = -Mathf.Abs(offset.x);
-        else
-            offset.x = Mathf.Abs(offset.x);
+        if (movement != null)
+        {
+            offset.x *= movement.FacingDirection;
+        }
 
         Transform root = movement != null ? movement.transform : transform.parent;
         transform.position = root.position + new Vector3(offset.x, offset.y, 0f);

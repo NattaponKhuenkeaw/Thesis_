@@ -31,4 +31,5 @@ public interface ICharacterCombat
     event System.Action<AttackStepData> OnBranchToSubStep;
     
     bool IsExecutingSubStep();
+    bool HasGrabbedEnemy();
 }

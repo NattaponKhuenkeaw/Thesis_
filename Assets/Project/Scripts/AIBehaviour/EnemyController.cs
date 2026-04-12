@@ -41,6 +41,8 @@ public class EnemyController : MonoBehaviour
     public bool IsAlive => isAlive;
     public EnemyReactionState CurrentReactionState =>
         hitReactionHandler != null ? hitReactionHandler.CurrentState : EnemyReactionState.None;
+    public int CurrentReactionOwnerId =>
+        hitReactionHandler != null ? hitReactionHandler.CurrentReactionOwnerId : 0;
 
     // =========================================================
     // References
@@ -248,10 +250,25 @@ public class EnemyController : MonoBehaviour
 
         flashCoroutine = null;
     }
+    public void SetBehaviorAgentActive(bool active)
+    {
+        var behaviorAgent = GetComponent<BehaviorGraphAgent>();
+        if (behaviorAgent != null)
+        {
+            behaviorAgent.enabled = active;
+        }
+    }
+
 
     public bool ReleaseGrab(int ownerId)
     {
         return hitReactionHandler != null && hitReactionHandler.ReleaseGrab(ownerId);
+    }
+
+    public bool MaintainGrab(int ownerId, Transform grabSocket, Vector2 grabOffset, int holdFrames, int recoveryFrames = 0)
+    {
+        return hitReactionHandler != null
+            && hitReactionHandler.MaintainGrab(ownerId, grabSocket, grabOffset, holdFrames, recoveryFrames);
     }
 
     /// <summary>

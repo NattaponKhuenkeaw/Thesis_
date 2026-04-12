@@ -47,7 +47,18 @@ public class PlayerAttackState : FrameDataPlayerState
     /// Attacks can be interrupted by Dash/Jump during Active and Recovery phases.
     /// Only the Startup phase blocks transitions.
     /// </summary>
-    public override bool CanBeInterrupted => currentPhase != ActionPhase.Startup && currentPhase != ActionPhase.None;
+    public override bool CanBeInterrupted
+    {
+        get
+        {
+            if (player.Combat != null && player.Combat.IsExecutingSubStep() && player.Combat.HasGrabbedEnemy())
+            {
+                return false;
+            }
+
+            return currentPhase != ActionPhase.Startup && currentPhase != ActionPhase.None;
+        }
+    }
 
     // =========================================================
     // Lifecycle
@@ -228,6 +239,11 @@ public class PlayerAttackState : FrameDataPlayerState
 
     private bool CheckForInterrupts()
     {
+        if (player.Combat != null && player.Combat.IsExecutingSubStep() && player.Combat.HasGrabbedEnemy())
+        {
+            return false;
+        }
+
         ActionInputBuffer buffer = fsm.InputBuffer;
         if (buffer == null) return false;
 
@@ -325,6 +341,8 @@ public class PlayerAttackState : FrameDataPlayerState
 
     private void HandleBranchToSubStep(AttackStepData newStepData)
     {
+        fsm.InputBuffer?.ClearAll();
+
         // FrameDataPlayerState will fetch new data and reset the frame counter internally. 
         // This ensures phase hooks like OnActiveBegin fire correctly on the new branch.
         RestartAction();

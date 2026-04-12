@@ -103,8 +103,8 @@ public struct HitReactionData
     public int ActiveReactionFrames => reactionTiming != null ? Mathf.Max(0, reactionTiming.activeFrames) : Mathf.Max(0, knockbackFrames);
     public int RecoveryFrames => reactionTiming != null ? Mathf.Max(0, reactionTiming.recoveryFrames) : 0;
     public int TotalReactionFrames => ImpactFreezeFrames + ActiveReactionFrames + RecoveryFrames;
-    public float HorizontalSpeed => horizontalSpeed > 0f ? horizontalSpeed : Mathf.Abs(reactionVelocity.x);
-    public float LaunchSpeed => launchSpeed > 0f ? launchSpeed : Mathf.Max(0f, reactionVelocity.y);
+    public float HorizontalSpeed => horizontalSpeed != 0f ? horizontalSpeed : Mathf.Abs(reactionVelocity.x);
+    public float LaunchSpeed => launchSpeed != 0f ? launchSpeed : reactionVelocity.y;
 
     public static ActionFrameData CreateTiming(int impactFreezeFrames, int reactionFrames, int recoveryFrames)
     {

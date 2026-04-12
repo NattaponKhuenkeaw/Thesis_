@@ -173,6 +173,24 @@ MonoBehaviour:
       - motion
       - vfx
       - hitbox
+    - stepName: Attack6
+      animationClip: {fileID: 7400000, guid: 93e0e7c622cf5d74b8dcbc8fa5f8a5a9, type: 2}
+      startupFrames: 13
+      activeFrames: 17
+      recoveryFrames: 32
+      cancelWindowStartFrame: 56
+      autoChainToNext: 0
+      hitFrames: []
+      motionData:
+        rid: 1588255822761689209
+      vfxData:
+        rid: 1588255822761689210
+      hitData:
+        rid: 1588255822761689211
+      componentOrder:
+      - motion
+      - vfx
+      - hitbox
   neutralAirComboData:
     comboResetDelay: 0.8
     steps:
@@ -395,7 +413,7 @@ MonoBehaviour:
         useDeterministicReaction: 1
         reactionKind: 2
         impactFreezeFrames: 4
-        reactionFrames: 15
+        reactionFrames: 30
         recoveryFrames: 9
         horizontalSpeed: 5
         launchSpeed: 10
@@ -443,7 +461,7 @@ MonoBehaviour:
         useDeterministicReaction: 1
         reactionKind: 1
         impactFreezeFrames: 4
-        reactionFrames: 15
+        reactionFrames: 30
         recoveryFrames: 9
         horizontalSpeed: 3
         launchSpeed: 1
@@ -473,7 +491,7 @@ MonoBehaviour:
         useDeterministicReaction: 1
         reactionKind: 1
         impactFreezeFrames: 4
-        reactionFrames: 15
+        reactionFrames: 30
         recoveryFrames: 9
         horizontalSpeed: 3
         launchSpeed: 1
@@ -503,7 +521,7 @@ MonoBehaviour:
         useDeterministicReaction: 1
         reactionKind: 1
         impactFreezeFrames: 8
-        reactionFrames: 15
+        reactionFrames: 30
         recoveryFrames: 9
         horizontalSpeed: 3
         launchSpeed: 1
@@ -531,14 +549,14 @@ MonoBehaviour:
         startFrameOffset: 2
         activeFrames: 8
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: -0.012261599, y: 2.141757}
-        size: {x: 2.9594774, y: 1.0009725}
+        offset: {x: -0.02003479, y: 2.095117}
+        size: {x: 3.970014, y: 1.374094}
         damageMultiplier: 2
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
         impactFreezeFrames: 10
-        reactionFrames: 15
+        reactionFrames: 50
         recoveryFrames: 9
         horizontalSpeed: 0
         launchSpeed: 1
@@ -581,14 +599,14 @@ MonoBehaviour:
         startFrameOffset: 3
         activeFrames: 11
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
-        offset: {x: 1.1275516, y: 1.73}
-        size: {x: 1.4866551, y: 1.5703921}
-        grabRange: 1.2
+        offset: {x: 1.0109513, y: 1.6289464}
+        size: {x: 2.2795386, y: 2.394368}
+        grabRange: 2
         grabAngle: 45
         canGrabAirborne: 1
         impactFreezeFrames: 3
-        holdFrames: 24
-        recoveryFrames: 6
+        holdFrames: 50
+        recoveryFrames: 40
         snapOffset: {x: 0.6, y: 0}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
@@ -626,23 +644,87 @@ MonoBehaviour:
       data:
         hitboxes:
         - rid: 1588255776791330989
+        - rid: 1588255822761689183
     - rid: 1588255776791330989
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 72
         activeFrames: 8
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: -1.3355249, y: 0.30808604}
-        size: {x: 1.5526729, y: 1.0654004}
+        offset: {x: -1.7, y: 0.48585796}
+        size: {x: 2.6023731, y: 1.4209442}
         damageMultiplier: 3
         impactTier: 1
         useDeterministicReaction: 1
         reactionKind: 2
-        impactFreezeFrames: 4
-        reactionFrames: 15
+        impactFreezeFrames: 8
+        reactionFrames: 30
         recoveryFrames: 9
         horizontalSpeed: 0
         launchSpeed: 5
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        hitstunFrames: 4
+        reactionVelocity: {x: 3, y: 1}
+        knockbackFrames: 15
+        isKnockdown: 0
+        snapToAttacker: 0
+        snapOffset: {x: 0, y: 0}
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+    - rid: 1588255822761689183
+      type: {class: GrabHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: -12
+        activeFrames: 75
+        debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
+        offset: {x: -0.058511674, y: 0.51218724}
+        size: {x: 1.2390076, y: 1.1365727}
+        grabRange: 1.2
+        grabAngle: 45
+        canGrabAirborne: 0
+        impactFreezeFrames: 4
+        holdFrames: 100
+        recoveryFrames: 40
+        snapOffset: {x: 1, y: 0}
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        impactTier: 0
+        branchOnSuccess: 0
+        successSteps: []
+    - rid: 1588255822761689209
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes: []
+    - rid: 1588255822761689210
+      type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries: []
+    - rid: 1588255822761689211
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 1588255822761689212
+    - rid: 1588255822761689212
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 11
+        activeFrames: 6
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.7925497, y: 1.3835374}
+        size: {x: 2.4118733, y: 1.6499448}
+        damageMultiplier: 3.5
+        impactTier: 2
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 10
+        reactionFrames: 30
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 10
         landingBehavior: 1
         canAirJuggle: 1
         maxJuggleCount: 2

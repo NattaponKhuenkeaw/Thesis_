@@ -656,10 +656,6 @@ PrefabInstance:
       propertyPath: targetCanvas
       value: 
       objectReference: {fileID: 2040178244}
-    - target: {fileID: 6090851060313224835, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
-      propertyPath: m_Controller
-      value: 
-      objectReference: {fileID: 9100000, guid: b4f7f50e094f0f145a2251ad62172a8d, type: 2}
     - target: {fileID: 7851930121724842516, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: m_Name
       value: Player
@@ -1737,6 +1733,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 447525645325701048, guid: fe04a9cf17d368a4cbf256db61cc07e0, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1212244669968072252, guid: fe04a9cf17d368a4cbf256db61cc07e0, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -2182,6 +2182,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 447525645325701048, guid: d32935fed99d9a043b76c4b5c1b4e68b, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1212244669968072252, guid: d32935fed99d9a043b76c4b5c1b4e68b, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0

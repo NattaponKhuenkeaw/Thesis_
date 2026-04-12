@@ -89,7 +89,13 @@ public class MeleeHitboxDamage : MonoBehaviour
 
         if (currentGrabHitbox != null)
         {
-            if (enemy.CurrentReactionState == EnemyReactionState.Grabbed)
+            int ownerId = playerAttack != null ? playerAttack.transform.root.GetInstanceID() : transform.root.GetInstanceID();
+            bool isOwnedGrabReaction =
+                (enemy.CurrentReactionState == EnemyReactionState.ImpactFreeze
+                 || enemy.CurrentReactionState == EnemyReactionState.Grabbed)
+                && enemy.CurrentReactionOwnerId == ownerId;
+
+            if (isOwnedGrabReaction)
                 playerAttack?.RegisterGrabbedEnemy(enemy);
             else
                 playerAttack?.ClearGrabbedEnemy(enemy);
@@ -151,6 +157,15 @@ public class MeleeHitboxDamage : MonoBehaviour
 
             if (currentNormalHitbox.useDeterministicReaction)
             {
+                float finalLaunchSpeed = currentNormalHitbox.launchSpeed;
+                if (currentNormalHitbox.offset.x < 0)
+                {
+                    direction.x *= -1;
+                    finalLaunchSpeed *= -1;
+                }
+
+                data.knockbackDirection = direction;
+
                 ApplyDeterministicReaction(
                     ref data,
                     currentNormalHitbox.reactionKind,
@@ -158,7 +173,7 @@ public class MeleeHitboxDamage : MonoBehaviour
                     currentNormalHitbox.reactionFrames,
                     currentNormalHitbox.recoveryFrames,
                     currentNormalHitbox.horizontalSpeed,
-                    currentNormalHitbox.launchSpeed,
+                    finalLaunchSpeed,
                     currentNormalHitbox.landingBehavior,
                     currentNormalHitbox.canAirJuggle,
                     currentNormalHitbox.maxJuggleCount,
@@ -167,6 +182,13 @@ public class MeleeHitboxDamage : MonoBehaviour
 
                 data.hitstunFrames = currentNormalHitbox.hitstunFrames;
                 data.reactionVelocity = currentNormalHitbox.reactionVelocity;
+
+                if (currentNormalHitbox.offset.x < 0)
+                {
+                    data.reactionVelocity.x *= -1;
+                    data.reactionVelocity.y *= -1;
+                }
+
                 data.knockbackFrames = currentNormalHitbox.knockbackFrames;
                 data.isKnockdown = currentNormalHitbox.isKnockdown;
                 data.snapToAttacker = currentNormalHitbox.snapToAttacker;
@@ -174,6 +196,13 @@ public class MeleeHitboxDamage : MonoBehaviour
             }
             else
             {
+                if (currentNormalHitbox.offset.x < 0)
+                {
+                    direction.x *= -1;
+                }
+
+                data.knockbackDirection = direction;
+
                 ApplyLegacyReaction(
                     ref data,
                     currentNormalHitbox.hitstunFrames,
@@ -182,6 +211,13 @@ public class MeleeHitboxDamage : MonoBehaviour
                     currentNormalHitbox.isKnockdown,
                     currentNormalHitbox.snapToAttacker,
                     currentNormalHitbox.snapOffset);
+                
+                if (currentNormalHitbox.offset.x < 0)
+                {
+                    data.launchSpeed *= -1;
+                    data.reactionVelocity.x *= -1;
+                    data.reactionVelocity.y *= -1;
+                }
             }
         }
         else if (legacyHitFrameData != null)
@@ -192,6 +228,15 @@ public class MeleeHitboxDamage : MonoBehaviour
 
             if (legacyHitFrameData.useDeterministicReaction)
             {
+                float finalLaunchSpeed = legacyHitFrameData.launchSpeed;
+                if (legacyHitFrameData.offset.x < 0)
+                {
+                    direction.x *= -1;
+                    finalLaunchSpeed *= -1;
+                }
+
+                data.knockbackDirection = direction;
+
                 ApplyDeterministicReaction(
                     ref data,
                     legacyHitFrameData.reactionKind,
@@ -199,7 +244,7 @@ public class MeleeHitboxDamage : MonoBehaviour
                     legacyHitFrameData.reactionFrames,
                     legacyHitFrameData.recoveryFrames,
                     legacyHitFrameData.horizontalSpeed,
-                    legacyHitFrameData.launchSpeed,
+                    finalLaunchSpeed,
                     legacyHitFrameData.landingBehavior,
                     legacyHitFrameData.canAirJuggle,
                     legacyHitFrameData.maxJuggleCount,
@@ -208,6 +253,13 @@ public class MeleeHitboxDamage : MonoBehaviour
 
                 data.hitstunFrames = legacyHitFrameData.hitstunFrames;
                 data.reactionVelocity = legacyHitFrameData.reactionVelocity;
+
+                if (legacyHitFrameData.offset.x < 0)
+                {
+                    data.reactionVelocity.x *= -1;
+                    data.reactionVelocity.y *= -1;
+                }
+
                 data.knockbackFrames = legacyHitFrameData.knockbackFrames;
                 data.isKnockdown = legacyHitFrameData.isKnockdown;
                 data.snapToAttacker = legacyHitFrameData.snapToAttacker;
@@ -215,6 +267,13 @@ public class MeleeHitboxDamage : MonoBehaviour
             }
             else
             {
+                if (legacyHitFrameData.offset.x < 0)
+                {
+                    direction.x *= -1;
+                }
+
+                data.knockbackDirection = direction;
+
                 ApplyLegacyReaction(
                     ref data,
                     legacyHitFrameData.hitstunFrames,
@@ -223,6 +282,13 @@ public class MeleeHitboxDamage : MonoBehaviour
                     legacyHitFrameData.isKnockdown,
                     legacyHitFrameData.snapToAttacker,
                     legacyHitFrameData.snapOffset);
+
+                if (legacyHitFrameData.offset.x < 0)
+                {
+                    data.launchSpeed *= -1;
+                    data.reactionVelocity.x *= -1;
+                    data.reactionVelocity.y *= -1;
+                }
             }
         }
 
@@ -237,6 +303,12 @@ public class MeleeHitboxDamage : MonoBehaviour
         if (currentGrabHitbox == null)
         {
             return data;
+        }
+
+        if (currentGrabHitbox.offset.x < 0)
+        {
+            direction.x *= -1;
+            data.knockbackDirection = direction;
         }
 
         data.reactionKind = EnemyReactionKind.Grab;
@@ -293,7 +365,7 @@ public class MeleeHitboxDamage : MonoBehaviour
         data.reactionKind = reactionKind;
         data.reactionTiming = HitReactionData.CreateTiming(impactFreezeFrames, reactionFrames, recoveryFrames);
         data.horizontalSpeed = Mathf.Max(0f, horizontalSpeed);
-        data.launchSpeed = Mathf.Max(0f, launchSpeed);
+        data.launchSpeed = launchSpeed; // Removed Mathf.Max to allow negative launch
         data.landingBehavior = landingBehavior;
         data.canAirJuggle = canAirJuggle;
         data.maxJuggleCount = Mathf.Max(0, maxJuggleCount);
@@ -320,7 +392,7 @@ public class MeleeHitboxDamage : MonoBehaviour
         data.reactionKind = HitReactionData.InferLegacyReactionKind(legacyVelocity, isKnockdown);
         data.reactionTiming = HitReactionData.CreateTiming(hitstunFrames, knockbackFrames, 9);
         data.horizontalSpeed = Mathf.Abs(legacyVelocity.x);
-        data.launchSpeed = Mathf.Max(0f, legacyVelocity.y);
+        data.launchSpeed = legacyVelocity.y; // Removed Mathf.Max to allow negative launch
         data.landingBehavior = HitReactionData.InferLandingBehavior(legacyVelocity, isKnockdown);
         data.canAirJuggle = data.reactionKind == EnemyReactionKind.Knockup;
         data.maxJuggleCount = data.canAirJuggle ? 2 : 0;
@@ -374,6 +446,11 @@ public class MeleeHitboxDamage : MonoBehaviour
     private bool ValidateGrab(EnemyController enemy)
     {
         if (enemy == null || currentGrabHitbox == null) return false;
+
+        if (playerAttack != null)
+        {
+            return playerAttack.ValidateGrabTarget(enemy, currentGrabHitbox);
+        }
 
         Vector2 attackerPos = movement != null ? (Vector2)movement.transform.position : (Vector2)transform.root.position;
         Vector2 victimPos = (Vector2)enemy.transform.position;

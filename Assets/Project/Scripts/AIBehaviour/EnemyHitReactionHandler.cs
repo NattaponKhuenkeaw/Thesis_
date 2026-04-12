@@ -27,6 +27,10 @@ public class EnemyHitReactionHandler : MonoBehaviour
     private float originalAnimatorSpeed = 1f;
     private float originalGravityScale = 1f;
     private RigidbodyType2D originalBodyType = RigidbodyType2D.Dynamic;
+
+
+
+    private RigidbodyConstraints2D originalConstraints = RigidbodyConstraints2D.None;
     private bool launchVelocityApplied;
     private int landingStateEnteredFrame = -1;
     private Vector3 impactFreezeAnchorPosition;
@@ -53,7 +57,12 @@ public class EnemyHitReactionHandler : MonoBehaviour
         if (rb != null)
         {
             originalBodyType = rb.bodyType;
+        if (rb != null)
+        {
+            originalBodyType = rb.bodyType;
             originalGravityScale = rb.gravityScale;
+            originalConstraints = rb.constraints;
+        }
         }
 
         if (groundLayers.value == 0)
@@ -127,7 +136,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
     public bool ReleaseGrab(int ownerId)
     {
-        if (currentState != EnemyReactionState.Grabbed)
+        if (currentState == EnemyReactionState.None || currentReaction.reactionKind != EnemyReactionKind.Grab)
         {
             return false;
         }
@@ -145,6 +154,48 @@ public class EnemyHitReactionHandler : MonoBehaviour
         else
         {
             CompleteReaction();
+        }
+
+        return true;
+    }
+
+    public bool MaintainGrab(int ownerId, Transform grabSocket, Vector2 grabOffset, int holdFrames, int recoveryFrames = 0)
+    {
+        if (currentState == EnemyReactionState.None || holdFrames <= 0 || currentReaction.reactionKind != EnemyReactionKind.Grab)
+        {
+            return false;
+        }
+
+        if (currentReaction.reactionOwnerId != 0 && currentReaction.reactionOwnerId != ownerId)
+        {
+            return false;
+        }
+
+        if (grabSocket != null)
+        {
+            currentReaction.grabSocket = grabSocket;
+            currentReaction.attackerTransform = grabSocket.root;
+        }
+
+        currentReaction.grabOffset = grabOffset;
+
+        int impactFrames = currentReaction.ImpactFreezeFrames;
+        int requiredActiveFrames = Mathf.Max(
+            currentReaction.ActiveReactionFrames,
+            currentReactionFrame + holdFrames - impactFrames);
+        int finalRecoveryFrames = recoveryFrames > 0 ? recoveryFrames : currentReaction.RecoveryFrames;
+
+        currentReaction.reactionTiming = HitReactionData.CreateTiming(
+            impactFrames,
+            requiredActiveFrames,
+            finalRecoveryFrames);
+
+        int activeEndFrame = impactFrames + requiredActiveFrames;
+        if (currentReactionFrame <= activeEndFrame && currentState == EnemyReactionState.Recovering)
+        {
+            EnterState(currentReactionFrame <= impactFrames
+                ? EnemyReactionState.ImpactFreeze
+                : EnemyReactionState.Grabbed);
         }
 
         return true;
@@ -563,10 +614,14 @@ public class EnemyHitReactionHandler : MonoBehaviour
         {
             rb.linearVelocity = Vector2.zero;
             rb.MovePosition(targetPosition);
+            rb.MoveRotation(bindTarget.rotation);
         }
         else
         {
-            transform.position = new Vector3(targetPosition.x, targetPosition.y, transform.position.z);
+            transform.SetPositionAndRotation(
+                new Vector3(targetPosition.x, targetPosition.y, transform.position.z),
+                bindTarget.rotation
+            );
         }
     }
 
@@ -739,6 +794,11 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
     private void EnterGrabbedState()
     {
+        if (controller != null)
+        {
+            controller.SetBehaviorAgentActive(false);
+        }
+
         if (rb != null)
         {
             originalBodyType = rb.bodyType;
@@ -746,6 +806,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
             rb.bodyType = RigidbodyType2D.Kinematic;
             rb.gravityScale = 0f;
             rb.linearVelocity = Vector2.zero;
+            rb.constraints = RigidbodyConstraints2D.None;
         }
 
         UpdateGrabbedBinding();
@@ -758,7 +819,21 @@ public class EnemyHitReactionHandler : MonoBehaviour
             return;
         }
 
+        if (controller != null)
+        {
+            controller.SetBehaviorAgentActive(true);
+        }
+
         EnsureDynamicBody();
+
+        if (rb != null)
+        {
+            rb.MoveRotation(0f);
+        }
+        else
+        {
+            transform.rotation = Quaternion.identity;
+        }
     }
 
     private void EnsureDynamicBody()
@@ -770,6 +845,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
         rb.bodyType = originalBodyType;
         rb.gravityScale = originalGravityScale;
+        rb.constraints = originalConstraints;
     }
 
     private void UpdateImpactFreezeShake()

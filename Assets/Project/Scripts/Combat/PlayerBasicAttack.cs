@@ -80,6 +80,7 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
     private int currentSubStepIndex = 0;
 
     public bool IsExecutingSubStep() { return isExecutingSubStep; }
+    public bool HasGrabbedEnemy() { return currentGrabbedEnemy != null; }
 
     void Awake()
     {
@@ -973,26 +974,40 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
         return enemy.rb != null && Mathf.Abs(enemy.rb.linearVelocity.y) > 0.05f;
     }
 
-    private bool CanGrabEnemy(EnemyController enemy)
+    public bool ValidateGrabTarget(EnemyController enemy, GrabHitbox grabHitbox = null)
     {
-        if (enemy == null || currentGrabHitbox == null || !enemy.IsAlive)
+        if (grabHitbox == null)
+        {
+            grabHitbox = currentGrabHitbox;
+        }
+
+        if (enemy == null || grabHitbox == null || !enemy.IsAlive)
             return false;
 
-        if (!currentGrabHitbox.canGrabAirborne && IsEnemyAirborneForGrab(enemy))
+        if (!grabHitbox.canGrabAirborne && IsEnemyAirborneForGrab(enemy))
+        {
+            // Debug.Log($"[Grab] Refused {enemy.name}: Target is Airborne (Vel Y: {enemy.rb?.linearVelocity.y})");
             return false;
+        }
 
         Vector2 origin = GetGrabOrigin();
         Vector2 toEnemy = (Vector2)enemy.transform.position - origin;
 
-        if (currentGrabHitbox.grabRange > 0f && toEnemy.magnitude > currentGrabHitbox.grabRange)
+        if (grabHitbox.grabRange > 0f && toEnemy.magnitude > grabHitbox.grabRange)
+        {
+            // Debug.Log($"[Grab] Refused {enemy.name}: Out of Range (Dist: {toEnemy.magnitude}, Range: {grabHitbox.grabRange})");
             return false;
+        }
 
         if (toEnemy.sqrMagnitude <= Mathf.Epsilon)
             return true;
 
+        if (grabHitbox.grabAngle <= 0f || grabHitbox.grabAngle >= 360f)
+            return true;
+
         Vector2 forward = new Vector2(GetFacingDirectionForGrab(), 0f);
         float angleToEnemy = Vector2.Angle(forward, toEnemy.normalized);
-        return angleToEnemy <= currentGrabHitbox.grabAngle;
+        return angleToEnemy <= grabHitbox.grabAngle * 0.5f;
     }
 
     private bool CanProcessHitboxTarget(EnemyController enemy)
@@ -1006,7 +1021,7 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
         if (currentGrabbedEnemy != null && currentGrabbedEnemy != enemy)
             return false;
 
-        return CanGrabEnemy(enemy);
+        return ValidateGrabTarget(enemy);
     }
 
     private void PerformHitboxOverlapCheck()
@@ -1037,10 +1052,16 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
                     meleeHitboxDamage.ProcessHit(enemy);
                 }
 
+                bool hasOwnedGrabTarget = currentGrabHitbox != null && currentGrabbedEnemy == enemy;
+
                 // NEW LOGIC: Conditional Branching
-                if (currentGrabHitbox != null && currentGrabHitbox.branchOnSuccess && currentGrabHitbox.successSteps != null && currentGrabHitbox.successSteps.Count > 0)
+                if (currentGrabHitbox != null
+                    && currentGrabHitbox.branchOnSuccess
+                    && hasOwnedGrabTarget
+                    && currentGrabHitbox.successSteps != null
+                    && currentGrabHitbox.successSteps.Count > 0)
                 {
-                    TriggerGrabSuccessBranch(currentGrabHitbox.successSteps);
+                    TriggerGrabSuccessBranch(currentGrabHitbox.successSteps, enemy);
                     break;
                 }
 
@@ -1052,8 +1073,14 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
         }
     }
 
-    private void TriggerGrabSuccessBranch(List<AttackStepData> successSteps)
+    private void TriggerGrabSuccessBranch(List<AttackStepData> successSteps, EnemyController grabbedEnemy = null)
     {
+        if (successSteps == null || successSteps.Count == 0)
+        {
+            return;
+        }
+
+        MaintainGrabbedEnemyThroughSubSteps(successSteps, grabbedEnemy);
         isExecutingSubStep = true;
         activeSubSteps = successSteps;
         currentSubStepIndex = 0;
@@ -1063,6 +1090,9 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
 
     private void TriggerSubStep(AttackStepData subStep)
     {
+        DisableHitbox(true);
+        hitEnemiesThisStep.Clear();
+
         currentStepData = subStep;
         
         cachedPhase1Frames = currentStepData.startupFrames;
@@ -1073,6 +1103,7 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
         logicTimeCounter = 0f;
         hitboxActiveCount = 0;
         currentFrameState = AttackFrameState.Windup;
+        shouldResetUpdateLoop = true;
 
         if (animHandler != null && currentStepData.animationClip != null)
         {
@@ -1080,5 +1111,108 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
         }
 
         OnBranchToSubStep?.Invoke(currentStepData);
+    }
+
+    private void MaintainGrabbedEnemyThroughSubSteps(List<AttackStepData> successSteps, EnemyController grabbedEnemy)
+    {
+        EnemyController enemyToMaintain = grabbedEnemy != null ? grabbedEnemy : currentGrabbedEnemy;
+        if (enemyToMaintain == null || currentGrabHitbox == null)
+        {
+            return;
+        }
+
+        RegisterGrabbedEnemy(enemyToMaintain);
+
+        int framesUntilRelease = CalculateFramesUntilGrabRelease(successSteps);
+        if (framesUntilRelease <= 0)
+        {
+            return;
+        }
+
+        Transform grabSocket = meleeHitboxController != null && meleeHitboxController.attackAnchor != null
+            ? meleeHitboxController.attackAnchor
+            : transform.root;
+
+        enemyToMaintain.MaintainGrab(
+            transform.root.GetInstanceID(),
+            grabSocket,
+            currentGrabHitbox.snapOffset,
+            framesUntilRelease,
+            currentGrabHitbox.recoveryFrames);
+    }
+
+    private int CalculateFramesUntilGrabRelease(List<AttackStepData> successSteps)
+    {
+        int accumulatedFrames = 0;
+
+        for (int i = 0; i < successSteps.Count; i++)
+        {
+            AttackStepData step = successSteps[i];
+            if (step == null)
+            {
+                continue;
+            }
+
+            int firstReleaseFrame = GetFirstReleaseFrame(step);
+            if (firstReleaseFrame >= 0)
+            {
+                return accumulatedFrames + firstReleaseFrame;
+            }
+
+            accumulatedFrames += GetTotalFrames(step);
+        }
+
+        return accumulatedFrames;
+    }
+
+    private int GetFirstReleaseFrame(AttackStepData step)
+    {
+        int earliestFrame = int.MaxValue;
+
+        if (step.hitData != null && step.hitData.hitboxes != null)
+        {
+            for (int i = 0; i < step.hitData.hitboxes.Count; i++)
+            {
+                HitboxBase hitbox = step.hitData.hitboxes[i];
+                if (hitbox == null || hitbox is GrabHitbox)
+                {
+                    continue;
+                }
+
+                earliestFrame = Mathf.Min(
+                    earliestFrame,
+                    step.startupFrames + 1 + Mathf.Max(0, hitbox.startFrameOffset));
+            }
+        }
+
+        if (step.hitFrames != null)
+        {
+            for (int i = 0; i < step.hitFrames.Length; i++)
+            {
+                AttackHitFrameData hitFrame = step.hitFrames[i];
+                if (hitFrame == null)
+                {
+                    continue;
+                }
+
+                earliestFrame = Mathf.Min(
+                    earliestFrame,
+                    step.startupFrames + 1 + Mathf.Max(0, hitFrame.startFrameOffset));
+            }
+        }
+
+        return earliestFrame == int.MaxValue ? -1 : earliestFrame;
+    }
+
+    private int GetTotalFrames(AttackStepData step)
+    {
+        if (step == null)
+        {
+            return 0;
+        }
+
+        return Mathf.Max(0, step.startupFrames)
+             + Mathf.Max(0, step.activeFrames)
+             + Mathf.Max(0, step.recoveryFrames);
     }
 }

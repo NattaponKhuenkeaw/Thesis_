@@ -156,6 +156,8 @@ public class PlayerMovement : MonoBehaviour
     private float airAttackComboCooldownEndTime;
     private bool attackFacingLockOnCancelledForCurrentAttack;
     private bool wasAttackLockOnActive;
+    private bool hasPerformedInitialLockOnForCurrentStep;
+    private int lastObservedComboStep = -1;
     // =========================================================
     // Computed State (derived from FSM + timers, NOT mutable flags)
     // =========================================================
@@ -734,16 +736,22 @@ public class PlayerMovement : MonoBehaviour
     private void UpdateAttackFacingLockOnState()
     {
         bool isAttacking = combat != null && combat.IsAttacking();
+        int currentComboStep = (combat != null) ? combat.GetComboStep() : -1;
+
         if (!isAttacking)
         {
             attackFacingLockOnCancelledForCurrentAttack = false;
             wasAttackLockOnActive = false;
+            hasPerformedInitialLockOnForCurrentStep = false;
+            lastObservedComboStep = -1;
             return;
         }
 
-        if (!wasAttackLockOnActive)
+        // Detect new attack session or new combo step to reset lock-on
+        if (!wasAttackLockOnActive || currentComboStep != lastObservedComboStep)
         {
             attackFacingLockOnCancelledForCurrentAttack = false;
+            hasPerformedInitialLockOnForCurrentStep = false;
         }
 
         if (Mathf.Abs(horizontalInput) >= attackFacingCancelInputThreshold)
@@ -752,10 +760,14 @@ public class PlayerMovement : MonoBehaviour
         }
 
         wasAttackLockOnActive = true;
+        lastObservedComboStep = currentComboStep;
     }
 
     private bool TryHandleAttackFacingLockOn()
     {
+        if (hasPerformedInitialLockOnForCurrentStep)
+            return false;
+
         if (!enableAttackFacingLockOn || attackFacingLockOnCancelledForCurrentAttack)
             return false;
 
@@ -774,6 +786,7 @@ public class PlayerMovement : MonoBehaviour
             return false;
 
         SetFacingDirection(deltaX >= 0f ? 1 : -1, false);
+        hasPerformedInitialLockOnForCurrentStep = true;
         return true;
     }
 
