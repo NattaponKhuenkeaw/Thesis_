@@ -2,7 +2,9 @@ using UnityEngine;
 
 /// <summary>
 /// Jump/Airborne state: player is in the air (jump, fall, or walked off ledge).
-/// Has custom jump logic (drop-down, plunge attack, double jump) and attack logic (air combos).
+/// Has custom jump logic (drop-down, double jump) and attack logic (air combos + plunge).
+/// Plunge attack is now triggered via Down+Attack through the ActionResolver,
+/// not through a hard-coded Jump+Down check.
 /// </summary>
 public class PlayerJumpState : PlayerState
 {
@@ -25,8 +27,8 @@ public class PlayerJumpState : PlayerState
     // =========================================================
     public override bool AcceptsMoveInput => true;
     public override bool AcceptsDashInput => true;
-    public override bool AcceptsJumpInput => true;   // custom handler (drop-down, plunge, double jump)
-    public override bool AcceptsAttackInput => true;  // custom handler (air combos)
+    public override bool AcceptsJumpInput => true;   // custom handler (drop-down, double jump)
+    public override bool AcceptsAttackInput => true;  // custom handler (air combos + plunge via resolver)
 
     public override void Update()
     {
@@ -44,7 +46,7 @@ public class PlayerJumpState : PlayerState
     }
 
     // =========================================================
-    // Custom Input — move also caches for drop-down/plunge checks
+    // Custom Input — move also caches for drop-down checks
     // =========================================================
     public override void OnMoveInput(Vector2 input)
     {
@@ -56,8 +58,8 @@ public class PlayerJumpState : PlayerState
     }
 
     /// <summary>
-    /// Custom jump: drop-down → plunge → double jump priority chain.
-    /// FSM defers to this via HasCustomJumpHandler.
+    /// Custom jump: drop-down → double jump priority chain.
+    /// Plunge attack has been moved to OnAttackInput (Down+Attack via ActionResolver).
     /// </summary>
     public override void OnJumpInput()
     {
@@ -68,19 +70,12 @@ public class PlayerJumpState : PlayerState
         if (cachedMoveInput.y < -0.5f && player.Movement.TryDropDown())
             return;
 
-        // Try plunge attack
-        if (cachedMoveInput.y < -0.5f && !player.Movement.IsGrounded()
-            && player.Combat != null && player.Combat.TryStartPlungeAttack())
-        {
-            fsm.ChangeState(fsm.AttackState);
-            return;
-        }
-
         player.Movement.Jump();
     }
 
     /// <summary>
-    /// Custom attack: air combos. FSM defers to this via HasCustomAttackHandler.
+    /// Custom attack: air combos and plunge (via ActionResolver).
+    /// The resolver handles Down+Attack → Plunge as a StandaloneAction.
     /// </summary>
     public override void OnAttackInput()
     {

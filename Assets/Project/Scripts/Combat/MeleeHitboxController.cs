@@ -84,20 +84,7 @@ public class MeleeHitboxController : MonoBehaviour
         }
     }
 
-    /// <summary> Legacy support for old AttackHitFrameData structures. marks for removal. </summary>
-    public void ApplyHitFrame(AttackHitFrameData hitFrame)
-    {
-        if (hitFrame == null) return;
-        
-        // Convert to a temporary NormalHitbox for the logic
-        var temp = new NormalHitbox
-        {
-            offset = hitFrame.offset,
-            size = hitFrame.size,
-            debugColor = hitFrame.debugColor
-        };
-        ApplyHitbox(temp);
-    }
+
    
     void Update()
     {

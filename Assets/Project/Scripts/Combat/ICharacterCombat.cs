@@ -4,32 +4,40 @@
 /// </summary>
 public interface ICharacterCombat
 {
+    // =========================================================
+    // Movement Queries (used by PlayerMovement)
+    // =========================================================
     bool IsAttacking();
     bool CanMoveAfterAttack();
     bool CanSwitchDirection();
     bool ShouldSuppressLandingFeedback();
     bool ShouldLockAirComboInPlace();
-    
-    // State-driven control hooks
-    void SetDrivenByState(bool driven);
+
+    // =========================================================
+    // Combat Engine (used by PlayerAttackState)
+    // =========================================================
     void ProcessFrameFromState(int frame, ActionPhase phase);
     void OnRecoveryPhaseFromState();
-    
-    // Combo management
+
+    // Step execution
+    void ExecuteStep(AttackStepData step, int comboDepth, bool isAirCombo, AttackCategory category);
+
+    // Step queries
     AttackStepData GetCurrentStepData();
-    bool TryChainCombo();
-    bool ShouldPreserveAirComboOnComplete();
-    void CancelCurrentAttackButKeepComboProgress();
-    void ResetCombo();
-    bool IsLastComboStep();
     int GetComboStep();
     bool ShouldInterruptAttackOnGrounded();
-    bool OnAttackInput();
-    
+    bool HasActiveHitstop { get; }
+    bool HasGrabbedEnemy();
+
+    // Combo management
+    void CancelCurrentAttackButKeepComboProgress();
+    void ResetCombo();
+
+    // Plunge state (set by PlayerAttackState)
+    void SetPlungeFalling(bool falling);
+    void SetAirCombo(bool airCombo);
+
     // Events
     event System.Action OnComboFinished;
-    event System.Action<AttackStepData> OnBranchToSubStep;
-    
-    bool IsExecutingSubStep();
-    bool HasGrabbedEnemy();
+    event System.Action OnGrabConnected;
 }

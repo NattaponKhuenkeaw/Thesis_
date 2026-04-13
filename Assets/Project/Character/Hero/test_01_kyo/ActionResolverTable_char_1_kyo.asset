@@ -1,0 +1,455 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec7b0a95c3b898f4080db07d37c47941, type: 3}
+  m_Name: ActionResolverTable_char_1_kyo
+  m_EditorClassIdentifier: Assembly-CSharp::ActionResolverTable
+  comboActions:
+  - actionName: 
+    context: 0
+    priority: 0
+    comboTree:
+      treeName: Combo
+      comboResetDelay: 0.8
+      rootNode:
+        rid: 3251577252092051566
+  skillActions: []
+  ultimateActions: []
+  standaloneActions: []
+  groundComboTree:
+    treeName: Ground Combo
+    comboResetDelay: 1
+    rootNode:
+      rid: 3251577240928125086
+  airComboTree:
+    treeName: Air Combo
+    comboResetDelay: 1
+    rootNode:
+      rid: 3251577240928125087
+  groundSkillTree:
+    treeName: Combo
+    comboResetDelay: 0.8
+    rootNode:
+      rid: -2
+  airSkillTree:
+    treeName: Combo
+    comboResetDelay: 0.8
+    rootNode:
+      rid: -2
+  groundUltimateTree:
+    treeName: Combo
+    comboResetDelay: 0.8
+    rootNode:
+      rid: -2
+  airUltimateTree:
+    treeName: Combo
+    comboResetDelay: 0.8
+    rootNode:
+      rid: -2
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 3251577240928125086
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 25
+          activeFrames: 15
+          recoveryFrames: 22
+          cancelWindowStartFrame: 55
+          stepName: Attack 1
+          animationClip: {fileID: 7400000, guid: e66884ccd7abf004d9e3a01f50fdaeea, type: 2}
+          stallUntilGrounded: 0
+          lockAirPosition: 1
+          autoChainToNext: 0
+          motionData:
+            rid: 3251577240928125088
+          vfxData:
+            rid: -2
+          hitData:
+            rid: 3251577240928125089
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+        routes: []
+        defaultNext:
+          rid: 3251577240928125090
+    - rid: 3251577240928125087
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 15
+          activeFrames: 42
+          recoveryFrames: 30
+          cancelWindowStartFrame: 72
+          stepName: Air Attack 1
+          animationClip: {fileID: 7400000, guid: 496571fbe78c06b4abc0191b992f40b2, type: 2}
+          stallUntilGrounded: 0
+          lockAirPosition: 1
+          autoChainToNext: 0
+          motionData:
+            rid: 3251577240928125091
+          vfxData:
+            rid: -2
+          hitData:
+            rid: 3251577240928125092
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+        routes: []
+        defaultNext:
+          rid: -2
+    - rid: 3251577240928125088
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - startFrame: 15
+          endFrame: 45
+          taskType: 0
+          easing: 0
+          position: {x: 1, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 3251577240928125089
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 3251577240928125093
+    - rid: 3251577240928125090
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 28
+          activeFrames: 26
+          recoveryFrames: 10
+          cancelWindowStartFrame: 59
+          stepName: Attack 2
+          animationClip: {fileID: 7400000, guid: 993cb42f21d604449b07755ebe632207, type: 2}
+          stallUntilGrounded: 0
+          lockAirPosition: 1
+          autoChainToNext: 0
+          motionData:
+            rid: 3251577240928125094
+          vfxData:
+            rid: -2
+          hitData:
+            rid: 3251577240928125095
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+        routes: []
+        defaultNext:
+          rid: -2
+    - rid: 3251577240928125091
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - startFrame: 0
+          endFrame: 26
+          taskType: 1
+          easing: 34
+          position: {x: 0.2, y: 1.5, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 33
+          endFrame: 60
+          taskType: 0
+          easing: 34
+          position: {x: 0.2, y: 2, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 3251577240928125092
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 3251577240928125096
+        - rid: 3251577240928125097
+    - rid: 3251577240928125093
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 3
+        activeFrames: 8
+        debugColor: {r: 0.18609823, g: 0.7735849, b: 0.4032129, a: 1}
+        offset: {x: 1.5, y: 1.7}
+        size: {x: 1.927194, y: 1.25}
+        damageMultiplier: 1.3
+        impactTier: 0
+        reactionKind: 2
+        impactFreezeFrames: 10
+        reactionFrames: 5
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 3
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 15
+    - rid: 3251577240928125094
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - startFrame: 25
+          endFrame: 30
+          taskType: 0
+          easing: 15
+          position: {x: 0.5, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 35
+          endFrame: 45
+          taskType: 0
+          easing: 15
+          position: {x: 0.5, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 3251577240928125095
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 3251577240928125098
+        - rid: 3251577240928125099
+    - rid: 3251577240928125096
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 3
+        activeFrames: 8
+        debugColor: {r: 0.14901961, g: 1, b: 0, a: 1}
+        offset: {x: 1, y: 2.842905}
+        size: {x: 2, y: 2}
+        damageMultiplier: 1
+        impactTier: 0
+        reactionKind: 2
+        impactFreezeFrames: 5
+        reactionFrames: 38
+        recoveryFrames: 9
+        horizontalSpeed: 1
+        launchSpeed: 8
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 15
+    - rid: 3251577240928125097
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 35
+        activeFrames: 7
+        debugColor: {r: 0.14901961, g: 1, b: 0, a: 1}
+        offset: {x: 0.9438059, y: 3.06768}
+        size: {x: 2, y: 2}
+        damageMultiplier: 1.5
+        impactTier: 1
+        reactionKind: 2
+        impactFreezeFrames: 15
+        reactionFrames: 38
+        recoveryFrames: 9
+        horizontalSpeed: 0
+        launchSpeed: 10
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 15
+    - rid: 3251577240928125098
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 1
+        activeFrames: 5
+        debugColor: {r: 1, g: 0.9882353, b: 0, a: 1}
+        offset: {x: 0.5610732, y: 2.251992}
+        size: {x: 1.572491, y: 1.977164}
+        damageMultiplier: 0.7
+        impactTier: 0
+        reactionKind: 2
+        impactFreezeFrames: 10
+        reactionFrames: 10
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 3
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 15
+    - rid: 3251577240928125099
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 7
+        activeFrames: 8
+        debugColor: {r: 0.8705883, g: 0.8588236, b: 0.027450982, a: 1}
+        offset: {x: 0.9694632, y: 1.696284}
+        size: {x: 2.183219, y: 2.160384}
+        damageMultiplier: 0.7
+        impactTier: 1
+        reactionKind: 2
+        impactFreezeFrames: 5
+        reactionFrames: 15
+        recoveryFrames: 9
+        horizontalSpeed: 5
+        launchSpeed: 10
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 15
+    - rid: 3251577252092051566
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 16
+          activeFrames: 15
+          recoveryFrames: 16
+          cancelWindowStartFrame: 41
+          stepName: Attack1
+          animationClip: {fileID: 7400000, guid: e66884ccd7abf004d9e3a01f50fdaeea, type: 2}
+          stallUntilGrounded: 0
+          lockAirPosition: 1
+          autoChainToNext: 0
+          motionData:
+            rid: 3251577252092051575
+          vfxData:
+            rid: -2
+          hitData:
+            rid: 3251577252092051569
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+        routes: []
+        defaultNext:
+          rid: 3251577252092051567
+    - rid: 3251577252092051567
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 21
+          activeFrames: 17
+          recoveryFrames: 17
+          cancelWindowStartFrame: 48
+          stepName: Attack2
+          animationClip: {fileID: 7400000, guid: 993cb42f21d604449b07755ebe632207, type: 2}
+          stallUntilGrounded: 0
+          lockAirPosition: 1
+          autoChainToNext: 0
+          motionData:
+            rid: 3251577252092051573
+          vfxData:
+            rid: -2
+          hitData:
+            rid: 3251577252092051576
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+        routes: []
+        defaultNext:
+          rid: -2
+    - rid: 3251577252092051569
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 3251577252092051570
+    - rid: 3251577252092051570
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 5
+        activeFrames: 5
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 1.0782303, y: 1.7232901}
+        size: {x: 1.7736158, y: 1.1393049}
+        damageMultiplier: 1
+        impactTier: 0
+        reactionKind: 0
+        impactFreezeFrames: 4
+        reactionFrames: 30
+        recoveryFrames: 15
+        horizontalSpeed: 3
+        launchSpeed: 1
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+    - rid: 3251577252092051573
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - startFrame: 18
+          endFrame: 28
+          taskType: 0
+          easing: 16
+          position: {x: 0.5, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 29
+          endFrame: 39
+          taskType: 0
+          easing: 16
+          position: {x: 0.5, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 3251577252092051575
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - startFrame: 0
+          endFrame: 36
+          taskType: 0
+          easing: 16
+          position: {x: 1, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 3251577252092051576
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 3251577252092051578
+    - rid: 3251577252092051578
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 1
+        activeFrames: 5
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.8135812, y: 0.47460142}
+        size: {x: 1.027126, y: 0.813554}
+        damageMultiplier: 1
+        impactTier: 0
+        reactionKind: 1
+        impactFreezeFrames: 4
+        reactionFrames: 15
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 1
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6

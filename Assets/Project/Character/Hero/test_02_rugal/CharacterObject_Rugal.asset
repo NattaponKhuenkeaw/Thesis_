@@ -41,6 +41,7 @@ MonoBehaviour:
     attackSfx: {fileID: 0}
     skillSfx: {fileID: 0}
     hurtSfx: {fileID: 0}
+  authoredFPS: 24
   upgrade:
     level: 1
     skillTreePoints: 3
@@ -61,35 +62,9 @@ MonoBehaviour:
       activeFrames: 12
       recoveryFrames: 45
       cancelWindowStartFrame: 25
+      stallUntilGrounded: 0
+      lockAirPosition: 1
       autoChainToNext: 0
-      hitFrames:
-      - startFrameOffset: 1
-        activeFrames: 3
-        offset: {x: 1.7030401, y: 1.3148091}
-        size: {x: 2.2, y: 2.3}
-        damageMultiplier: 1
-        useDeterministicReaction: 0
-        reactionKind: 1
-        impactFreezeFrames: 4
-        reactionFrames: 15
-        recoveryFrames: 9
-        horizontalSpeed: 3
-        launchSpeed: 1
-        landingBehavior: 1
-        canAirJuggle: 1
-        maxJuggleCount: 2
-        juggleLaunchScale: 0.85
-        juggleStunScale: 0.9
-        hitstunFrames: 0
-        reactionVelocity: {x: 3, y: 0}
-        knockbackFrames: 15
-        isKnockdown: 0
-        snapToAttacker: 0
-        snapOffset: {x: 1, y: -0.5}
-        flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
-        impactTier: 0
-        debugColor: {r: 0.2040608, g: 1, b: 0, a: 0.39215687}
       motionData:
         rid: -2
       vfxData:
@@ -106,62 +81,9 @@ MonoBehaviour:
       activeFrames: 22
       recoveryFrames: 38
       cancelWindowStartFrame: 35
+      stallUntilGrounded: 0
+      lockAirPosition: 1
       autoChainToNext: 0
-      hitFrames:
-      - startFrameOffset: 1
-        activeFrames: 4
-        offset: {x: 1.796397, y: 1.395777}
-        size: {x: 2.5867114, y: 1.5}
-        damageMultiplier: 1.15
-        useDeterministicReaction: 0
-        reactionKind: 1
-        impactFreezeFrames: 4
-        reactionFrames: 15
-        recoveryFrames: 9
-        horizontalSpeed: 3
-        launchSpeed: 1
-        landingBehavior: 1
-        canAirJuggle: 1
-        maxJuggleCount: 2
-        juggleLaunchScale: 0.85
-        juggleStunScale: 0.9
-        hitstunFrames: 4
-        reactionVelocity: {x: 0, y: 1}
-        knockbackFrames: 15
-        isKnockdown: 1
-        snapToAttacker: 1
-        snapOffset: {x: 0.5, y: -0.2}
-        flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
-        impactTier: 0
-        debugColor: {r: 1, g: 0.8873908, b: 0, a: 0.39215687}
-      - startFrameOffset: 5
-        activeFrames: 5
-        offset: {x: 1.796397, y: 1.395777}
-        size: {x: 2.586711, y: 1.5}
-        damageMultiplier: 1
-        useDeterministicReaction: 0
-        reactionKind: 1
-        impactFreezeFrames: 4
-        reactionFrames: 15
-        recoveryFrames: 9
-        horizontalSpeed: 3
-        launchSpeed: 1
-        landingBehavior: 1
-        canAirJuggle: 1
-        maxJuggleCount: 2
-        juggleLaunchScale: 0.85
-        juggleStunScale: 0.9
-        hitstunFrames: 8
-        reactionVelocity: {x: 3, y: 1}
-        knockbackFrames: 15
-        isKnockdown: 0
-        snapToAttacker: 1
-        snapOffset: {x: 0.5, y: -0.2}
-        flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
-        impactTier: 0
-        debugColor: {r: 1, g: 0.8862745, b: 0, a: 0.39215687}
       motionData:
         rid: -2
       vfxData:
@@ -178,89 +100,9 @@ MonoBehaviour:
       activeFrames: 68
       recoveryFrames: 45
       cancelWindowStartFrame: 80
+      stallUntilGrounded: 0
+      lockAirPosition: 1
       autoChainToNext: 0
-      hitFrames:
-      - startFrameOffset: 1
-        activeFrames: 3
-        offset: {x: 1.028096, y: 1.2490994}
-        size: {x: 2, y: 1.3}
-        damageMultiplier: 0.45
-        useDeterministicReaction: 0
-        reactionKind: 1
-        impactFreezeFrames: 4
-        reactionFrames: 15
-        recoveryFrames: 9
-        horizontalSpeed: 3
-        launchSpeed: 1
-        landingBehavior: 1
-        canAirJuggle: 1
-        maxJuggleCount: 2
-        juggleLaunchScale: 0.85
-        juggleStunScale: 0.9
-        hitstunFrames: 1
-        reactionVelocity: {x: 1, y: 7}
-        knockbackFrames: 15
-        isKnockdown: 1
-        snapToAttacker: 0
-        snapOffset: {x: 0.5, y: 2}
-        flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
-        impactTier: 0
-        debugColor: {r: 1, g: 0.0563832, b: 0, a: 0.39215687}
-      - startFrameOffset: 14
-        activeFrames: 3
-        offset: {x: 1.1685796, y: 2.0986495}
-        size: {x: 2.33, y: 1.51}
-        damageMultiplier: 0.45
-        useDeterministicReaction: 0
-        reactionKind: 1
-        impactFreezeFrames: 4
-        reactionFrames: 15
-        recoveryFrames: 9
-        horizontalSpeed: 3
-        launchSpeed: 1
-        landingBehavior: 1
-        canAirJuggle: 1
-        maxJuggleCount: 2
-        juggleLaunchScale: 0.85
-        juggleStunScale: 0.9
-        hitstunFrames: 4
-        reactionVelocity: {x: 1, y: 5}
-        knockbackFrames: 15
-        isKnockdown: 1
-        snapToAttacker: 0
-        snapOffset: {x: 0, y: 0}
-        flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
-        impactTier: 0
-        debugColor: {r: 1, g: 0.05882353, b: 0, a: 0.39215687}
-      - startFrameOffset: 24
-        activeFrames: 3
-        offset: {x: 1.1628387, y: 2.7038732}
-        size: {x: 2.41, y: 1.93}
-        damageMultiplier: 1.2
-        useDeterministicReaction: 0
-        reactionKind: 1
-        impactFreezeFrames: 4
-        reactionFrames: 15
-        recoveryFrames: 9
-        horizontalSpeed: 3
-        launchSpeed: 1
-        landingBehavior: 1
-        canAirJuggle: 1
-        maxJuggleCount: 2
-        juggleLaunchScale: 0.85
-        juggleStunScale: 0.9
-        hitstunFrames: 4
-        reactionVelocity: {x: 4, y: 3}
-        knockbackFrames: 15
-        isKnockdown: 1
-        snapToAttacker: 0
-        snapOffset: {x: 0, y: 0}
-        flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
-        impactTier: 0
-        debugColor: {r: 1, g: 0.05882353, b: 0, a: 0.39215687}
       motionData:
         rid: -2
       vfxData:
@@ -277,35 +119,9 @@ MonoBehaviour:
       activeFrames: 12
       recoveryFrames: 48
       cancelWindowStartFrame: 28
+      stallUntilGrounded: 0
+      lockAirPosition: 1
       autoChainToNext: 0
-      hitFrames:
-      - startFrameOffset: 1
-        activeFrames: 4
-        offset: {x: 1.4925976, y: 2.6800685}
-        size: {x: 2.7586148, y: 2.2809672}
-        damageMultiplier: 0.45
-        useDeterministicReaction: 0
-        reactionKind: 1
-        impactFreezeFrames: 4
-        reactionFrames: 15
-        recoveryFrames: 9
-        horizontalSpeed: 3
-        launchSpeed: 1
-        landingBehavior: 1
-        canAirJuggle: 1
-        maxJuggleCount: 2
-        juggleLaunchScale: 0.85
-        juggleStunScale: 0.9
-        hitstunFrames: 6
-        reactionVelocity: {x: 5, y: 7}
-        knockbackFrames: 15
-        isKnockdown: 1
-        snapToAttacker: 1
-        snapOffset: {x: 0, y: 0}
-        flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
-        impactTier: 2
-        debugColor: {r: 1, g: 1, b: 1, a: 0.39215687}
       motionData:
         rid: -2
       vfxData:
@@ -325,35 +141,9 @@ MonoBehaviour:
       activeFrames: 2
       recoveryFrames: 12
       cancelWindowStartFrame: 5
+      stallUntilGrounded: 0
+      lockAirPosition: 1
       autoChainToNext: 0
-      hitFrames:
-      - startFrameOffset: 0
-        activeFrames: 1
-        offset: {x: 1.1047599, y: 0.7353463}
-        size: {x: 1.96, y: 2.38}
-        damageMultiplier: 1.15
-        useDeterministicReaction: 0
-        reactionKind: 1
-        impactFreezeFrames: 4
-        reactionFrames: 15
-        recoveryFrames: 9
-        horizontalSpeed: 3
-        launchSpeed: 1
-        landingBehavior: 1
-        canAirJuggle: 1
-        maxJuggleCount: 2
-        juggleLaunchScale: 0.85
-        juggleStunScale: 0.9
-        hitstunFrames: 12
-        reactionVelocity: {x: 3, y: 1}
-        knockbackFrames: 15
-        isKnockdown: 1
-        snapToAttacker: 1
-        snapOffset: {x: 1, y: 0.5}
-        flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
-        impactTier: 0
-        debugColor: {r: 0.20392157, g: 1, b: 0, a: 1}
       motionData:
         rid: -2
       vfxData:
@@ -370,35 +160,9 @@ MonoBehaviour:
       activeFrames: 10
       recoveryFrames: 42
       cancelWindowStartFrame: 10
+      stallUntilGrounded: 0
+      lockAirPosition: 1
       autoChainToNext: 0
-      hitFrames:
-      - startFrameOffset: 1
-        activeFrames: 3
-        offset: {x: 1.1981609, y: 0.34963107}
-        size: {x: 2.66, y: 2.25}
-        damageMultiplier: 1.15
-        useDeterministicReaction: 0
-        reactionKind: 1
-        impactFreezeFrames: 4
-        reactionFrames: 15
-        recoveryFrames: 9
-        horizontalSpeed: 3
-        launchSpeed: 1
-        landingBehavior: 1
-        canAirJuggle: 1
-        maxJuggleCount: 2
-        juggleLaunchScale: 0.85
-        juggleStunScale: 0.9
-        hitstunFrames: 12
-        reactionVelocity: {x: 3, y: 1}
-        knockbackFrames: 15
-        isKnockdown: 1
-        snapToAttacker: 1
-        snapOffset: {x: 1, y: 0.5}
-        flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
-        impactTier: 0
-        debugColor: {r: 1, g: 0.8862745, b: 0, a: 1}
       motionData:
         rid: -2
       vfxData:
@@ -415,35 +179,9 @@ MonoBehaviour:
       activeFrames: 10
       recoveryFrames: 32
       cancelWindowStartFrame: 12
+      stallUntilGrounded: 0
+      lockAirPosition: 1
       autoChainToNext: 0
-      hitFrames:
-      - startFrameOffset: 1
-        activeFrames: 3
-        offset: {x: 1.0205874, y: -0.1316185}
-        size: {x: 2.03, y: 3.49}
-        damageMultiplier: 1.15
-        useDeterministicReaction: 0
-        reactionKind: 1
-        impactFreezeFrames: 4
-        reactionFrames: 15
-        recoveryFrames: 9
-        horizontalSpeed: 3
-        launchSpeed: 1
-        landingBehavior: 1
-        canAirJuggle: 1
-        maxJuggleCount: 2
-        juggleLaunchScale: 0.85
-        juggleStunScale: 0.9
-        hitstunFrames: 12
-        reactionVelocity: {x: 3, y: 1}
-        knockbackFrames: 15
-        isKnockdown: 1
-        snapToAttacker: 1
-        snapOffset: {x: 1, y: -0.3}
-        flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
-        impactTier: 2
-        debugColor: {r: 1, g: 0.05490196, b: 0, a: 1}
       motionData:
         rid: -2
       vfxData:
@@ -467,35 +205,9 @@ MonoBehaviour:
       activeFrames: 15
       recoveryFrames: 40
       cancelWindowStartFrame: 18
+      stallUntilGrounded: 0
+      lockAirPosition: 1
       autoChainToNext: 0
-      hitFrames:
-      - startFrameOffset: 1
-        activeFrames: 5
-        offset: {x: 0, y: -0.8}
-        size: {x: 4, y: 1.5}
-        damageMultiplier: 1.8
-        useDeterministicReaction: 0
-        reactionKind: 1
-        impactFreezeFrames: 4
-        reactionFrames: 15
-        recoveryFrames: 9
-        horizontalSpeed: 3
-        launchSpeed: 1
-        landingBehavior: 1
-        canAirJuggle: 1
-        maxJuggleCount: 2
-        juggleLaunchScale: 0.85
-        juggleStunScale: 0.9
-        hitstunFrames: 0
-        reactionVelocity: {x: 5, y: 4}
-        knockbackFrames: 15
-        isKnockdown: 1
-        snapToAttacker: 0
-        snapOffset: {x: 0, y: 0}
-        flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
-        impactTier: 1
-        debugColor: {r: 1, g: 0.4, b: 0, a: 1}
       motionData:
         rid: -2
       vfxData:
@@ -566,6 +278,7 @@ MonoBehaviour:
       unlocked: 0
       effectType: 5
       effectValue: 1.5
+  actionResolverTable: {fileID: 11400000, guid: 24c1f4b36af412b4ebbeeb757fac41ef, type: 2}
   references:
     version: 2
     RefIds:
@@ -586,7 +299,6 @@ MonoBehaviour:
         size: {x: 1, y: 0.8}
         damageMultiplier: 1
         impactTier: 0
-        useDeterministicReaction: 0
         reactionKind: 1
         impactFreezeFrames: 4
         reactionFrames: 15
@@ -598,11 +310,5 @@ MonoBehaviour:
         maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
-        hitstunFrames: 10
-        reactionVelocity: {x: 3, y: 1}
-        knockbackFrames: 38
-        isKnockdown: 0
-        snapToAttacker: 0
-        snapOffset: {x: 0, y: 0}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 15

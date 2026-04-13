@@ -40,18 +40,26 @@ namespace CombatEditor
                     // Rescale Dash
                     character.dashData?.Rescale(ratio);
                     
-                    // Rescale Combos
-                    character.basicAttackComboData?.Rescale(ratio);
-                    character.neutralAirComboData?.Rescale(ratio);
-                    
-                    // Rescale Plunge
-                    character.plungeAttackData?.Rescale(ratio);
-                    
-                    // Rescale Skill
-                    character.skillData?.Rescale(ratio);
-                    
-                    // Rescale Ultimate
-                    character.ultimateData?.Rescale(ratio);
+                    // Rescale Action Resolver Table
+                    if (character.actionResolverTable != null)
+                    {
+                        character.actionResolverTable.groundComboTree?.Rescale(ratio);
+                        character.actionResolverTable.airComboTree?.Rescale(ratio);
+                        character.actionResolverTable.groundSkillTree?.Rescale(ratio);
+                        character.actionResolverTable.airSkillTree?.Rescale(ratio);
+                        character.actionResolverTable.groundUltimateTree?.Rescale(ratio);
+                        character.actionResolverTable.airUltimateTree?.Rescale(ratio);
+
+                        if (character.actionResolverTable.standaloneActions != null)
+                        {
+                            foreach (var sa in character.actionResolverTable.standaloneActions)
+                            {
+                                sa.stepData?.Rescale(ratio);
+                                sa.followUpNode?.stepData?.Rescale(ratio);
+                            }
+                        }
+                        EditorUtility.SetDirty(character.actionResolverTable);
+                    }
                     
                     // Mark as migrated
                     character.authoredFPS = 60f;

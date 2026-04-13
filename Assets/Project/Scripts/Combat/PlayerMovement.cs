@@ -1086,7 +1086,8 @@ public class PlayerMovement : MonoBehaviour
 
         // 2. Proximity search if no camera targets
         Collider2D[] results = new Collider2D[10];
-        int count = Physics2D.OverlapCircleNonAlloc(transform.position, radius, results, 1 << enemyLayer);
+        ContactFilter2D filter = new ContactFilter2D { useTriggers = true, useLayerMask = true, layerMask = 1 << enemyLayer };
+        int count = Physics2D.OverlapCircle(transform.position, radius, filter, results);
         
         Transform nearest = null;
         float closestDist = float.MaxValue;

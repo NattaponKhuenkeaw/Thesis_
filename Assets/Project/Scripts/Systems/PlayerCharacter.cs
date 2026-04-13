@@ -20,8 +20,6 @@ public class PlayerCharacter : MonoBehaviour
     public PlayerMovement Movement;
     public PlayerBasicAttack Combat;
     public PlayerAnimator Animator;
-    public SkillController Skill;
-    public UltimateController Ultimate;
 
     // =========================================================
     // Runtime HP (absorbed from CharacterRuntime)
@@ -112,6 +110,11 @@ public class PlayerCharacter : MonoBehaviour
         OnDamaged?.Invoke(actualDamage);
         NotifyHealthChanged();
 
+        if (Combat != null && Combat.activeThrowContext != null)
+        {
+            Combat.activeThrowContext.BreakGrab();
+        }
+
         if (currentHP <= 0f && !deathEventRaised)
         {
             deathEventRaised = true;
@@ -162,12 +165,6 @@ public class PlayerCharacter : MonoBehaviour
 
         if (Animator == null)
             Animator = GetComponentInChildren<PlayerAnimator>();
-
-        if (Skill == null)
-            Skill = GetComponent<SkillController>();
-
-        if (Ultimate == null)
-            Ultimate = GetComponent<UltimateController>();
     }
 
     private void ApplyMovementData()

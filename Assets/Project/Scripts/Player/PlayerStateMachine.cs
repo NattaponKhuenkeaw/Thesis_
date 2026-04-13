@@ -315,9 +315,7 @@ public class PlayerStateMachine : MonoBehaviour
         if (CurrentState is FrameDataPlayerState fdState && !fdState.CanBeInterrupted)
             return;
 
-        if (CurrentState.AcceptsSkillInput
-            && playerCharacter.Skill != null
-            && playerCharacter.Skill.CanUseSkill())
+        if (CurrentState.AcceptsSkillInput)
         {
             ChangeState(SkillState);
         }
@@ -334,9 +332,7 @@ public class PlayerStateMachine : MonoBehaviour
         if (CurrentState is FrameDataPlayerState fdState && !fdState.CanBeInterrupted)
             return;
 
-        if (CurrentState.AcceptsUltimateInput
-            && playerCharacter.Ultimate != null
-            && playerCharacter.Ultimate.CanUseUltimate())
+        if (CurrentState.AcceptsUltimateInput)
         {
             ChangeState(UltimateState);
         }

@@ -1,0 +1,270 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec7b0a95c3b898f4080db07d37c47941, type: 3}
+  m_Name: ActionResolverTable_Char_2_Rugal
+  m_EditorClassIdentifier: Assembly-CSharp::ActionResolverTable
+  groundComboTree:
+    treeName: Ground Combo
+    comboResetDelay: 0.8
+    rootNode:
+      rid: 3251577240928125076
+  airComboTree:
+    treeName: Air Combo
+    comboResetDelay: 0.8
+    rootNode:
+      rid: 3251577240928125077
+  standaloneActions:
+  - direction: 5
+    requireGrounded: 0
+    requireAirborne: 1
+    requiredPreviousState: 0
+    priority: 10
+    stepData:
+      stepName: Plunge Impact
+      animationClip: {fileID: 7400000, guid: 26ad7303e1deab444bf13f218d02b1e5, type: 2}
+      startupFrames: 0
+      activeFrames: 15
+      recoveryFrames: 40
+      cancelWindowStartFrame: 18
+      stallUntilGrounded: 0
+      lockAirPosition: 1
+      autoChainToNext: 0
+      motionData:
+        rid: -2
+      vfxData:
+        rid: -2
+      hitData:
+        rid: -2
+      componentOrder:
+      - motion
+      - vfx
+      - hitbox
+    followUpNode:
+      rid: -2
+    isPlungeAction: 1
+    plungeDownwardSpeed: 18
+    plungeFallAnimState: Plunge_Fall
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 3251577240928125076
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          stepName: Attack 1
+          animationClip: {fileID: 7400000, guid: 6cf09ac4cb4d35845a60e317a2b07166, type: 2}
+          startupFrames: 10
+          activeFrames: 12
+          recoveryFrames: 45
+          cancelWindowStartFrame: 25
+          stallUntilGrounded: 0
+          lockAirPosition: 1
+          autoChainToNext: 0
+          motionData:
+            rid: -2
+          vfxData:
+            rid: -2
+          hitData:
+            rid: 3251577240928125078
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+        routes: []
+        defaultNext:
+          rid: 3251577240928125079
+    - rid: 3251577240928125077
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          stepName: Attack 1
+          animationClip: {fileID: 7400000, guid: 7fc06f4365a13974fbc711d6151b4d38, type: 2}
+          startupFrames: 5
+          activeFrames: 2
+          recoveryFrames: 12
+          cancelWindowStartFrame: 5
+          stallUntilGrounded: 0
+          lockAirPosition: 1
+          autoChainToNext: 0
+          motionData:
+            rid: -2
+          vfxData:
+            rid: -2
+          hitData:
+            rid: -2
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+        routes: []
+        defaultNext:
+          rid: 3251577240928125080
+    - rid: 3251577240928125078
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 3251577240928125081
+    - rid: 3251577240928125079
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          stepName: Attack 2
+          animationClip: {fileID: 7400000, guid: 497ab9f274d956f429082d3e9fa2e890, type: 2}
+          startupFrames: 10
+          activeFrames: 22
+          recoveryFrames: 38
+          cancelWindowStartFrame: 35
+          stallUntilGrounded: 0
+          lockAirPosition: 1
+          autoChainToNext: 0
+          motionData:
+            rid: -2
+          vfxData:
+            rid: -2
+          hitData:
+            rid: -2
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+        routes: []
+        defaultNext:
+          rid: 3251577240928125082
+    - rid: 3251577240928125080
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          stepName: Attack 2
+          animationClip: {fileID: 7400000, guid: 6b5bf7f2ed4abe04a82ec6175781c382, type: 2}
+          startupFrames: 8
+          activeFrames: 10
+          recoveryFrames: 42
+          cancelWindowStartFrame: 10
+          stallUntilGrounded: 0
+          lockAirPosition: 1
+          autoChainToNext: 0
+          motionData:
+            rid: -2
+          vfxData:
+            rid: -2
+          hitData:
+            rid: -2
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+        routes: []
+        defaultNext:
+          rid: 3251577240928125083
+    - rid: 3251577240928125081
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 2
+        activeFrames: 8
+        debugColor: {r: 0.26853323, g: 1, b: 0, a: 1}
+        offset: {x: 0.8, y: 0.4}
+        size: {x: 1, y: 0.8}
+        damageMultiplier: 1
+        impactTier: 0
+        reactionKind: 1
+        impactFreezeFrames: 4
+        reactionFrames: 15
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 1
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 15
+    - rid: 3251577240928125082
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          stepName: Attack 3
+          animationClip: {fileID: 7400000, guid: 9443c87d6c977064d82958f823694341, type: 2}
+          startupFrames: 10
+          activeFrames: 68
+          recoveryFrames: 45
+          cancelWindowStartFrame: 80
+          stallUntilGrounded: 0
+          lockAirPosition: 1
+          autoChainToNext: 0
+          motionData:
+            rid: -2
+          vfxData:
+            rid: -2
+          hitData:
+            rid: -2
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+        routes: []
+        defaultNext:
+          rid: 3251577240928125084
+    - rid: 3251577240928125083
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          stepName: Attack 3
+          animationClip: {fileID: 7400000, guid: 88aec8358ee7c044d8f85903a87b8341, type: 2}
+          startupFrames: 12
+          activeFrames: 10
+          recoveryFrames: 32
+          cancelWindowStartFrame: 12
+          stallUntilGrounded: 0
+          lockAirPosition: 1
+          autoChainToNext: 0
+          motionData:
+            rid: -2
+          vfxData:
+            rid: -2
+          hitData:
+            rid: -2
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+        routes: []
+        defaultNext:
+          rid: -2
+    - rid: 3251577240928125084
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          stepName: Attack 4
+          animationClip: {fileID: 7400000, guid: 4affa92172a0e6949a6d14d2a1bd86f5, type: 2}
+          startupFrames: 12
+          activeFrames: 12
+          recoveryFrames: 48
+          cancelWindowStartFrame: 28
+          stallUntilGrounded: 0
+          lockAirPosition: 1
+          autoChainToNext: 0
+          motionData:
+            rid: -2
+          vfxData:
+            rid: -2
+          hitData:
+            rid: -2
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+        routes: []
+        defaultNext:
+          rid: -2

@@ -99,9 +99,10 @@ public class CameraManager : MonoBehaviour
     [SerializeField] private CinemachineImpulseSource _impulseSource;
 
     [Header("Shake Intensity by Impact Tier")]
-    [SerializeField] private float _basicComboShake = 0.15f;
-    [SerializeField] private float _skillShake = 0.4f;
-    [SerializeField] private float _ultimateShake = 0.8f;
+    [SerializeField] private float _lowShake = 0.15f;
+    [SerializeField] private float _mediumShake = 0.4f;
+    [SerializeField] private float _heavyShake = 0.65f;
+    [SerializeField] private float _ultimateShake = 1.0f;
 
     // =========================================================
     // Runtime State
@@ -383,10 +384,11 @@ public class CameraManager : MonoBehaviour
     {
         float strength = tier switch
         {
-            DamageImpactTier.BasicCombo => _basicComboShake,
-            DamageImpactTier.Skill     => _skillShake,
-            DamageImpactTier.Ultimate  => _ultimateShake,
-            _                          => _basicComboShake
+            DamageImpactTier.Low      => _lowShake,
+            DamageImpactTier.Medium   => _mediumShake,
+            DamageImpactTier.Heavy    => _heavyShake,
+            DamageImpactTier.Ultimate => _ultimateShake,
+            _                         => _lowShake
         };
         Shake(strength);
     }

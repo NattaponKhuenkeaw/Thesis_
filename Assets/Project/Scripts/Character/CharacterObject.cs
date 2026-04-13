@@ -73,39 +73,16 @@ public class CharacterObject : ScriptableObject
     public DashData dashData = new DashData();
 
     // =========================================================
-    // Basic Combo Data
-    // =========================================================
-    [Header("Basic Combo Data")]
-    public BasicAttackComboData basicAttackComboData = new BasicAttackComboData();
-
-    // =========================================================
-    // Neutral Air Combo Data
-    // =========================================================
-    [Header("Neutral Air Combo Data")]
-    public BasicAttackComboData neutralAirComboData = new BasicAttackComboData();
-    public float maxAirComboTime = 1f;
-
-    // =========================================================
-    // Plunge Attack
-    // =========================================================
-    [Header("Plunge Attack")]
-    public PlungeAttackData plungeAttackData = new PlungeAttackData();
-
-    // =========================================================
-    // Skill
-    // =========================================================
-    [Header("Skill")]
-    public SkillData skillData = new SkillData();
-
-    // =========================================================
-    // Ultimate
-    // =========================================================
-    [Header("Ultimate")]
-    public UltimateData ultimateData = new UltimateData();
-
-    // =========================================================
     // Skill Tree
     // =========================================================
     [Header("Skill Tree")]
     public SkillTreeData skillTreeData = new SkillTreeData();
+
+
+    // =========================================================
+    // Action Resolver (New Combo Tree System)
+    // =========================================================
+    [Header("Action Resolver")]
+    [Tooltip("Data-driven combo tree table. If null, legacy combo data is used as fallback.")]
+    public ActionResolverTable actionResolverTable;
 }

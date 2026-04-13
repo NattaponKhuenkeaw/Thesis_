@@ -44,6 +44,10 @@ public class EnemyController : MonoBehaviour
     public int CurrentReactionOwnerId =>
         hitReactionHandler != null ? hitReactionHandler.CurrentReactionOwnerId : 0;
 
+    [Header("Combo State")]
+    [SerializeField] private int currentComboHits = 0;
+    public int CurrentComboHits => currentComboHits;
+
     // =========================================================
     // References
     // =========================================================
@@ -149,6 +153,16 @@ public class EnemyController : MonoBehaviour
     {
         if (!isAlive) return;
 
+        // --- Dynamic Combo Scaling ---
+        currentComboHits++;
+
+        // Upgrade Impact Tier based on combo progression
+        // Logic: every 3 hits upgrades to next tier if not already higher
+        if (currentComboHits >= 6 && reactionData.impactTier < DamageImpactTier.Heavy)
+            reactionData.impactTier = DamageImpactTier.Heavy;
+        else if (currentComboHits >= 3 && reactionData.impactTier < DamageImpactTier.Medium)
+            reactionData.impactTier = DamageImpactTier.Medium;
+
         currentHP -= reactionData.damage;
         currentHP  = Mathf.Max(currentHP, 0f);
 
@@ -177,6 +191,11 @@ public class EnemyController : MonoBehaviour
 
         if (currentHP <= 0f)
             Die();
+    }
+
+    public void ResetComboCount()
+    {
+        currentComboHits = 0;
     }
 
     /// <summary>

@@ -7,7 +7,7 @@ public class MeleeHitboxDamage : MonoBehaviour
     public PlayerMovement movement;
     public CameraShakeController cameraShake;
 
-    private AttackHitFrameData legacyHitFrameData;
+
     private NormalHitbox currentNormalHitbox;
     private GrabHitbox currentGrabHitbox;
 
@@ -123,15 +123,13 @@ public class MeleeHitboxDamage : MonoBehaviour
         bool lastHit = false,
         float stopDuration = 0.12f,
         float stopScale = 0.02f,
-        NormalHitbox hitbox = null,
-        AttackHitFrameData hitFrameData = null)
+        NormalHitbox hitbox = null)
     {
         currentDamage = damage;
         isLastHit = lastHit;
         hitStopDuration = stopDuration;
         hitStopScale = stopScale;
         currentNormalHitbox = hitbox;
-        legacyHitFrameData = hitFrameData;
         currentGrabHitbox = null;
     }
 
@@ -141,7 +139,6 @@ public class MeleeHitboxDamage : MonoBehaviour
         isLastHit = lastHit;
         currentGrabHitbox = hitbox;
         currentNormalHitbox = null;
-        legacyHitFrameData = null;
     }
 
     private HitReactionData BuildReactionData(Vector2 direction)
@@ -155,141 +152,28 @@ public class MeleeHitboxDamage : MonoBehaviour
             data.flashFrames = currentNormalHitbox.flashFrames;
             data.impactTier = currentNormalHitbox.impactTier;
 
-            if (currentNormalHitbox.useDeterministicReaction)
+            float finalLaunchSpeed = currentNormalHitbox.launchSpeed;
+            if (currentNormalHitbox.offset.x < 0)
             {
-                float finalLaunchSpeed = currentNormalHitbox.launchSpeed;
-                if (currentNormalHitbox.offset.x < 0)
-                {
-                    direction.x *= -1;
-                    finalLaunchSpeed *= -1;
-                }
-
-                data.knockbackDirection = direction;
-
-                ApplyDeterministicReaction(
-                    ref data,
-                    currentNormalHitbox.reactionKind,
-                    currentNormalHitbox.impactFreezeFrames,
-                    currentNormalHitbox.reactionFrames,
-                    currentNormalHitbox.recoveryFrames,
-                    currentNormalHitbox.horizontalSpeed,
-                    finalLaunchSpeed,
-                    currentNormalHitbox.landingBehavior,
-                    currentNormalHitbox.canAirJuggle,
-                    currentNormalHitbox.maxJuggleCount,
-                    currentNormalHitbox.juggleLaunchScale,
-                    currentNormalHitbox.juggleStunScale);
-
-                data.hitstunFrames = currentNormalHitbox.hitstunFrames;
-                data.reactionVelocity = currentNormalHitbox.reactionVelocity;
-
-                if (currentNormalHitbox.offset.x < 0)
-                {
-                    data.reactionVelocity.x *= -1;
-                    data.reactionVelocity.y *= -1;
-                }
-
-                data.knockbackFrames = currentNormalHitbox.knockbackFrames;
-                data.isKnockdown = currentNormalHitbox.isKnockdown;
-                data.snapToAttacker = currentNormalHitbox.snapToAttacker;
-                data.snapOffset = currentNormalHitbox.snapOffset;
+                direction.x *= -1;
+                finalLaunchSpeed *= -1;
             }
-            else
-            {
-                if (currentNormalHitbox.offset.x < 0)
-                {
-                    direction.x *= -1;
-                }
 
-                data.knockbackDirection = direction;
+            data.knockbackDirection = direction;
 
-                ApplyLegacyReaction(
-                    ref data,
-                    currentNormalHitbox.hitstunFrames,
-                    currentNormalHitbox.reactionVelocity,
-                    currentNormalHitbox.knockbackFrames,
-                    currentNormalHitbox.isKnockdown,
-                    currentNormalHitbox.snapToAttacker,
-                    currentNormalHitbox.snapOffset);
-                
-                if (currentNormalHitbox.offset.x < 0)
-                {
-                    data.launchSpeed *= -1;
-                    data.reactionVelocity.x *= -1;
-                    data.reactionVelocity.y *= -1;
-                }
-            }
-        }
-        else if (legacyHitFrameData != null)
-        {
-            data.flashColor = legacyHitFrameData.flashColor;
-            data.flashFrames = legacyHitFrameData.flashFrames;
-            data.impactTier = legacyHitFrameData.impactTier;
-
-            if (legacyHitFrameData.useDeterministicReaction)
-            {
-                float finalLaunchSpeed = legacyHitFrameData.launchSpeed;
-                if (legacyHitFrameData.offset.x < 0)
-                {
-                    direction.x *= -1;
-                    finalLaunchSpeed *= -1;
-                }
-
-                data.knockbackDirection = direction;
-
-                ApplyDeterministicReaction(
-                    ref data,
-                    legacyHitFrameData.reactionKind,
-                    legacyHitFrameData.impactFreezeFrames,
-                    legacyHitFrameData.reactionFrames,
-                    legacyHitFrameData.recoveryFrames,
-                    legacyHitFrameData.horizontalSpeed,
-                    finalLaunchSpeed,
-                    legacyHitFrameData.landingBehavior,
-                    legacyHitFrameData.canAirJuggle,
-                    legacyHitFrameData.maxJuggleCount,
-                    legacyHitFrameData.juggleLaunchScale,
-                    legacyHitFrameData.juggleStunScale);
-
-                data.hitstunFrames = legacyHitFrameData.hitstunFrames;
-                data.reactionVelocity = legacyHitFrameData.reactionVelocity;
-
-                if (legacyHitFrameData.offset.x < 0)
-                {
-                    data.reactionVelocity.x *= -1;
-                    data.reactionVelocity.y *= -1;
-                }
-
-                data.knockbackFrames = legacyHitFrameData.knockbackFrames;
-                data.isKnockdown = legacyHitFrameData.isKnockdown;
-                data.snapToAttacker = legacyHitFrameData.snapToAttacker;
-                data.snapOffset = legacyHitFrameData.snapOffset;
-            }
-            else
-            {
-                if (legacyHitFrameData.offset.x < 0)
-                {
-                    direction.x *= -1;
-                }
-
-                data.knockbackDirection = direction;
-
-                ApplyLegacyReaction(
-                    ref data,
-                    legacyHitFrameData.hitstunFrames,
-                    legacyHitFrameData.reactionVelocity,
-                    legacyHitFrameData.knockbackFrames,
-                    legacyHitFrameData.isKnockdown,
-                    legacyHitFrameData.snapToAttacker,
-                    legacyHitFrameData.snapOffset);
-
-                if (legacyHitFrameData.offset.x < 0)
-                {
-                    data.launchSpeed *= -1;
-                    data.reactionVelocity.x *= -1;
-                    data.reactionVelocity.y *= -1;
-                }
-            }
+            ApplyDeterministicReaction(
+                ref data,
+                currentNormalHitbox.reactionKind,
+                currentNormalHitbox.impactFreezeFrames,
+                currentNormalHitbox.reactionFrames,
+                currentNormalHitbox.recoveryFrames,
+                currentNormalHitbox.horizontalSpeed,
+                finalLaunchSpeed,
+                currentNormalHitbox.landingBehavior,
+                currentNormalHitbox.canAirJuggle,
+                currentNormalHitbox.maxJuggleCount,
+                currentNormalHitbox.juggleLaunchScale,
+                currentNormalHitbox.juggleStunScale);
         }
 
         return data;
@@ -373,32 +257,7 @@ public class MeleeHitboxDamage : MonoBehaviour
         data.juggleStunScale = juggleStunScale;
     }
 
-    private void ApplyLegacyReaction(
-        ref HitReactionData data,
-        int hitstunFrames,
-        Vector2 legacyVelocity,
-        int knockbackFrames,
-        bool isKnockdown,
-        bool snapToAttacker,
-        Vector2 snapOffset)
-    {
-        data.hitstunFrames = hitstunFrames;
-        data.reactionVelocity = legacyVelocity;
-        data.knockbackFrames = knockbackFrames;
-        data.isKnockdown = isKnockdown;
-        data.snapToAttacker = snapToAttacker;
-        data.snapOffset = snapOffset;
 
-        data.reactionKind = HitReactionData.InferLegacyReactionKind(legacyVelocity, isKnockdown);
-        data.reactionTiming = HitReactionData.CreateTiming(hitstunFrames, knockbackFrames, 9);
-        data.horizontalSpeed = Mathf.Abs(legacyVelocity.x);
-        data.launchSpeed = legacyVelocity.y; // Removed Mathf.Max to allow negative launch
-        data.landingBehavior = HitReactionData.InferLandingBehavior(legacyVelocity, isKnockdown);
-        data.canAirJuggle = data.reactionKind == EnemyReactionKind.Knockup;
-        data.maxJuggleCount = data.canAirJuggle ? 2 : 0;
-        data.juggleLaunchScale = 0.85f;
-        data.juggleStunScale = 0.9f;
-    }
 
     private int GetConfiguredHitstopFrames()
     {
@@ -406,10 +265,7 @@ public class MeleeHitboxDamage : MonoBehaviour
             return currentGrabHitbox.impactFreezeFrames;
 
         if (currentNormalHitbox != null)
-            return currentNormalHitbox.useDeterministicReaction ? currentNormalHitbox.impactFreezeFrames : currentNormalHitbox.hitstunFrames;
-
-        if (legacyHitFrameData != null)
-            return legacyHitFrameData.useDeterministicReaction ? legacyHitFrameData.impactFreezeFrames : legacyHitFrameData.hitstunFrames;
+            return currentNormalHitbox.impactFreezeFrames;
 
         return 0;
     }
@@ -432,10 +288,9 @@ public class MeleeHitboxDamage : MonoBehaviour
             playerAttack.ApplyHitstop(frames);
         }
 
-        DamageImpactTier tier = DamageImpactTier.BasicCombo;
+        DamageImpactTier tier = DamageImpactTier.Low;
         if (currentGrabHitbox != null) tier = currentGrabHitbox.impactTier;
         else if (currentNormalHitbox != null) tier = currentNormalHitbox.impactTier;
-        else if (legacyHitFrameData != null) tier = legacyHitFrameData.impactTier;
 
         if (cameraShake != null)
             cameraShake.ShakeByImpact(tier);
@@ -452,31 +307,22 @@ public class MeleeHitboxDamage : MonoBehaviour
             return playerAttack.ValidateGrabTarget(enemy, currentGrabHitbox);
         }
 
-        Vector2 attackerPos = movement != null ? (Vector2)movement.transform.position : (Vector2)transform.root.position;
-        Vector2 victimPos = (Vector2)enemy.transform.position;
-        Vector2 toVictim = victimPos - attackerPos;
-
-        // 1. Distance Check (Radial)
-        float distance = toVictim.magnitude;
-        if (distance > currentGrabHitbox.grabRange)
+        // Fallback if playerAttack is missing: Only check airborne status
+        if (!currentGrabHitbox.canGrabAirborne && IsEnemyAirborneForGrab(enemy))
         {
             return false;
         }
 
-        // 2. Cone Check (Angle)
-        // If angle is 0, we treat it as no angle check required (though usually defined as 360)
-        if (currentGrabHitbox.grabAngle > 0 && currentGrabHitbox.grabAngle < 360)
-        {
-            Vector2 forward = movement != null ? (movement.FacingDirection == 1 ? Vector2.right : Vector2.left) : Vector2.right;
-            float angle = Vector2.Angle(forward, toVictim);
-            
-            // grabAngle is the total cone, so we check against half of it
-            if (angle > currentGrabHitbox.grabAngle * 0.5f)
-            {
-                return false;
-            }
-        }
-
         return true;
+    }
+
+    private bool IsEnemyAirborneForGrab(EnemyController enemy)
+    {
+        if (enemy == null) return false;
+        EnemyReactionState reactionState = enemy.CurrentReactionState;
+        if (reactionState == EnemyReactionState.Knockup || reactionState == EnemyReactionState.Knockfall)
+            return true;
+
+        return enemy.rb != null && Mathf.Abs(enemy.rb.linearVelocity.y) > 0.05f;
     }
 }

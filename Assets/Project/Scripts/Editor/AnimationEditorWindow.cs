@@ -337,7 +337,7 @@ public class AnimationEditorWindow : EditorWindow
         scroll.Add(propertyScrollContent);
         panel.Add(scroll);
 
-        cardBuilder = new PropertyCardBuilder(propertyScrollContent, OnDataChanged, RebuildSelectedNode);
+        cardBuilder = new PropertyCardBuilder(propertyScrollContent, treeController, OnDataChanged, RebuildSelectedNode);
 
         return panel;
     }
@@ -413,11 +413,13 @@ public class AnimationEditorWindow : EditorWindow
 
         if (node.DataType == "AttackStep" && node.DataRef is AttackStepData step)
             step.animationClip = evt.newValue as AnimationClip;
+        else if (node.DataType == "ComboNode" && node.DataRef is ComboNode cnode)
+            cnode.stepData.animationClip = evt.newValue as AnimationClip;
         else if (node.DataType == "Dash" && node.DataRef is DashData dash)
             dash.animationClip = evt.newValue as AnimationClip;
 
         EditorUtility.SetDirty(selectedCharacter);
-        RefreshTimeline();
+        RebuildSelectedNode();
     }
 
     private void OnTimelineSeek(int frame)
@@ -438,10 +440,22 @@ public class AnimationEditorWindow : EditorWindow
 
     private void RebuildSelectedNode()
     {
+        var node = treeController?.SelectedNode;
+
+        if (treeController != null && selectedCharacter != null)
+        {
+            treeController.Build(selectedCharacter);
+            
+            // Re-select to restore object references if they changed
+            if (node != null) treeController.SelectNodeByData(node.DataRef);
+        }
+
+        node = treeController?.SelectedNode; // Get updated node reference
+
         if (cardBuilder != null)
         {
             cardBuilder.SetCharacter(selectedCharacter);
-            cardBuilder.Build(treeController?.SelectedNode);
+            cardBuilder.Build(node);
         }
 
         RefreshTimeline();
@@ -519,7 +533,15 @@ public class AnimationEditorWindow : EditorWindow
         // Clear tracks
         timelineGrid.Tracks.Clear();
 
-        if (node?.DataType == "AttackStep" && node.DataRef is AttackStepData step)
+        var step = node?.GetStepData();
+
+        // Update header/breadcrumb to reflect any name changes (Fast path)
+        if (breadcrumbLabel != null && node != null)
+        {
+            string label = step != null ? step.stepName : node.Label;
+            breadcrumbLabel.text = $"Moveset > {node.Category} > {label}";
+        }
+        if (step != null)
         {
             su = step.startupFrames;
             act = step.activeFrames;
@@ -681,8 +703,9 @@ public class AnimationEditorWindow : EditorWindow
     private AnimationClip GetClipFromNode(ActionNode node)
     {
         if (node == null) return null;
-        if (node.DataType == "AttackStep" && node.DataRef is AttackStepData step)
-            return step.animationClip;
+        var step = node.GetStepData();
+        if (step != null) return step.animationClip;
+        
         if (node.DataType == "Dash" && node.DataRef is DashData dash)
             return dash.animationClip;
         return null;
@@ -708,10 +731,7 @@ public class AnimationEditorWindow : EditorWindow
 
     private AttackStepData GetCurrentStep()
     {
-        var node = treeController?.SelectedNode;
-        if (node?.DataType == "AttackStep")
-            return node.DataRef as AttackStepData;
-        return null;
+        return treeController?.SelectedNode?.GetStepData();
     }
 
     private int GetTotalClipFrames(AnimationClip clip)

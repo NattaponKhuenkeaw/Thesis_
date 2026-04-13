@@ -1,8 +1,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum AttackCategory
+{
+    Normal,
+    Skill,
+    Ultimate
+}
+
 [System.Serializable]
-public class AttackStepData
+public class AttackStepData : ActionFrameData
 {
     public const string MotionComponentKey = "motion";
     public const string VfxComponentKey = "vfx";
@@ -17,22 +24,21 @@ public class AttackStepData
 
     [Header("Step Info")]
     public string stepName = "Attack";
+
     [Header("Editor & Preview")]
     public AnimationClip animationClip;
 
-    [Header("Frame Data (60 fps base)")]
-    public int startupFrames = 6;
-    public int activeFrames = 3;
-    public int recoveryFrames = 15;
-    [Tooltip("Frame relative to recovery start where move can be cancelled")]
-    public int cancelWindowStartFrame = 12;
+
+    [Header("Phase State overrides")]
+    [Tooltip("If true, the attack frame progression will stall until the character is grounded (useful for Air Grabs).")]
+    public bool stallUntilGrounded = false;
+    [Tooltip("If true, the character's vertical position and velocity is locked during the air combo.")]
+    public bool lockAirPosition = true;
 
     [Header("Auto Chain")]
     [Tooltip("If true, automatically chains to the next input or sub-step when recovery/active phase ends, without requiring player input.")]
     public bool autoChainToNext = false;
 
-    [Header("Hit Frames (Legacy — migrated to hitData)")]
-    public AttackHitFrameData[] hitFrames;
 
     // =========================================================
     // Sub Components (New Architecture)
@@ -43,12 +49,9 @@ public class AttackStepData
     [SerializeReference] public HitFrameData hitData;
     [HideInInspector] public List<string> componentOrder = new List<string>(DefaultComponentOrder);
 
-    public void Rescale(float ratio)
+    public override void Rescale(float ratio)
     {
-        startupFrames = Mathf.RoundToInt(startupFrames * ratio);
-        activeFrames = Mathf.RoundToInt(activeFrames * ratio);
-        recoveryFrames = Mathf.RoundToInt(recoveryFrames * ratio);
-        cancelWindowStartFrame = Mathf.RoundToInt(cancelWindowStartFrame * ratio);
+        base.Rescale(ratio);
 
         motionData?.Rescale(ratio);
         vfxData?.Rescale(ratio);

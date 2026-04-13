@@ -743,6 +743,9 @@ public class EnemyHitReactionHandler : MonoBehaviour
         launchVelocityApplied = false;
         landingStateEnteredFrame = -1;
         currentJuggleCount = 0;
+        
+        if (controller != null)
+            controller.ResetComboCount();
     }
 
     private void CompleteReaction()

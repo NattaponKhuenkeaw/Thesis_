@@ -24,53 +24,28 @@ public class PlayerSkillState : FrameDataPlayerState
 
     protected override ActionFrameData GetFrameData()
     {
-        if (player.Skill == null || player.characterObject == null)
-            return null;
+        if (player.Combat == null) return null;
 
-        SkillData skillData = player.characterObject.skillData;
-        return skillData?.frameData;
+        var stepData = player.Combat.GetCurrentStepData();
+        return (ActionFrameData)stepData; 
     }
 
     // =========================================================
     // Lifecycle
     // =========================================================
 
-    public override void Enter(TransitionContext context)
-    {
-        base.Enter(context);
-
-        if (player.Skill != null)
-        {
-            player.Skill.OnCastFinished += HandleCastFinished;
-        }
-    }
-
     protected override void StartAction()
     {
         base.StartAction();
 
-        // Trigger the skill cast (spawn prefab etc.) — now driven by frame data
-        if (player.Skill != null)
-            player.Skill.UseSkill();
-    }
-
-    public override void Exit()
-    {
-        base.Exit();
-
-        if (player.Skill != null)
-            player.Skill.OnCastFinished -= HandleCastFinished;
+        // The step execution (animation, etc.) is now handled by OnAttackInput or initial transition
     }
 
     public override void Update()
     {
-        // Safety: if skill finished but callback didn't fire
-        if (player.Skill != null && !player.Skill.IsCasting())
-        {
-            // Only exit if frame data also says we're done
-            if (currentPhase == ActionPhase.Done || currentPhase == ActionPhase.None)
-                ExitToAppropriateMovementState();
-        }
+        base.Update();
+        
+        // State exit is now driven by FrameDataPlayerState (OnActionComplete)
     }
 
     // =========================================================
@@ -102,6 +77,48 @@ public class PlayerSkillState : FrameDataPlayerState
     {
         // During recovery: buffer attack for post-skill combo routing
         // Don't consume yet — wait for cancel window
+    }
+
+    public override void OnSkillInput()
+    {
+        if (currentPhase != ActionPhase.None) return;
+
+        if (player.Combat is PlayerBasicAttack pba && player.characterObject != null)
+        {
+            var table = player.characterObject.actionResolverTable;
+            if (table == null) return;
+
+            // Build context
+            ActionInputBuffer buffer = fsm.InputBuffer;
+            InputContext ctx = new InputContext
+            {
+                isGrounded = player.Movement != null && player.Movement.IsGrounded(),
+                directionalInput = buffer != null ? buffer.DirectionalInput : Vector2.zero,
+                facingDirection = player.Movement != null ? player.Movement.FacingDirection : 1,
+            };
+
+            // Resolve
+            ActionResolver resolver = new ActionResolver(); // Temporary resolver for initial find
+            AttackStepData step = resolver.ResolveInitial(ctx, table, AttackCategory.Skill);
+
+            if (step != null)
+            {
+                // Check cooldown
+                if (resolver.ActiveCombatAction is SkillAction skill && pba.IsOnCooldown(AttackCategory.Skill, skill.cooldown))
+                {
+                    fsm.Log("Skill", "Skill is on cooldown", Color.yellow);
+                    ExitToAppropriateMovementState();
+                    return;
+                }
+
+                pba.ExecuteStep(step, 1, !ctx.isGrounded, AttackCategory.Skill);
+                RestartAction();
+            }
+            else
+            {
+                ExitToAppropriateMovementState();
+            }
+        }
     }
 
     protected override void HandleInputDuringCancel()

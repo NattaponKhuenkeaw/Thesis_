@@ -6,8 +6,9 @@ using UnityEngine;
 /// </summary>
 public enum DamageImpactTier
 {
-    BasicCombo,
-    Skill,
+    Low,
+    Medium,
+    Heavy,
     Ultimate
 }
 
@@ -40,7 +41,7 @@ public enum EnemyLandingBehavior
 /// <summary>
 /// Payload struct that travels from the player's hitbox to the enemy,
 /// carrying everything the enemy needs to play its hit reaction.
-/// Built by MeleeHitboxDamage from AttackHitFrameData on collision.
+/// Built by MeleeHitboxDamage from HitboxBase on collision.
 /// </summary>
 [System.Serializable]
 public struct HitReactionData
@@ -192,7 +193,7 @@ public struct HitReactionData
             snapOffset = Vector2.zero,
             flashColor = Color.red,
             flashFrames = 6,
-            impactTier = DamageImpactTier.BasicCombo
+            impactTier = DamageImpactTier.Low
         };
     }
 }

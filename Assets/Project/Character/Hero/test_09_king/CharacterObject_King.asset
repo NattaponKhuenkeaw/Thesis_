@@ -41,6 +41,7 @@ MonoBehaviour:
     attackSfx: {fileID: 0}
     skillSfx: {fileID: 0}
     hurtSfx: {fileID: 0}
+  authoredFPS: 24
   upgrade:
     level: 1
     skillTreePoints: 3
@@ -71,8 +72,9 @@ MonoBehaviour:
       activeFrames: 8
       recoveryFrames: 38
       cancelWindowStartFrame: 30
+      stallUntilGrounded: 0
+      lockAirPosition: 1
       autoChainToNext: 0
-      hitFrames: []
       motionData:
         rid: -2
       vfxData:
@@ -114,6 +116,7 @@ MonoBehaviour:
     spawnOffset: {x: 1.5, y: 0}
   skillTreeData:
     nodes: []
+  actionResolverTable: {fileID: 11400000, guid: c467d543290fb0b4d92af009c9f08736, type: 2}
   references:
     version: 2
     RefIds:

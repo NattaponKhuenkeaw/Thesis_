@@ -53,11 +53,10 @@ public class NormalHitbox : HitboxBase
     // ── Damage & Knockback ──
     [Header("Damage & Knockback")]
     public float damageMultiplier = 1f;
-    public DamageImpactTier impactTier = DamageImpactTier.BasicCombo;
+    public DamageImpactTier impactTier = DamageImpactTier.Low;
 
     // ── Reaction & HitStop ──
     [Header("Reaction & HitStop")]
-    public bool useDeterministicReaction = false;
     public EnemyReactionKind reactionKind = EnemyReactionKind.Knockback;
     [Tooltip("Frozen frames on impact (both attacker and victim).")]
     public int impactFreezeFrames = 4;
@@ -74,20 +73,6 @@ public class NormalHitbox : HitboxBase
     public int maxJuggleCount = 2;
     public float juggleLaunchScale = 0.85f;
     public float juggleStunScale = 0.9f;
-
-    [Header("Legacy Compatibility")]
-    [Tooltip("Frozen frames on impact (both attacker and victim).")]
-    public int hitstunFrames = 4;
-
-    [Tooltip("Knockback velocity (X away from attacker, Y upward).")]
-    public Vector2 reactionVelocity = new Vector2(3f, 1f);
-
-    [Tooltip("Frames the enemy stays in knockback stun.")]
-    public int knockbackFrames = 15;
-
-    public bool isKnockdown = false;
-    public bool snapToAttacker = false;
-    public Vector2 snapOffset = Vector2.zero;
 
     public Color flashColor = Color.red;
     public int flashFrames = 6;
@@ -113,12 +98,6 @@ public class GrabHitbox : HitboxBase
 
     // ── Grab Condition ──
     [Header("Grab Condition")]
-    [Tooltip("Maximum range to initiate grab.")]
-    public float grabRange = 1.2f;
-
-    [Tooltip("Angle cone (degrees) within which grab is valid.")]
-    public float grabAngle = 45f;
-
     [Tooltip("If true, grab can affect airborne targets.")]
     public bool canGrabAirborne = false;
 
@@ -129,81 +108,11 @@ public class GrabHitbox : HitboxBase
     public Vector2 snapOffset = new Vector2(0.6f, 0f);
     public Color flashColor = Color.red;
     public int flashFrames = 6;
-    public DamageImpactTier impactTier = DamageImpactTier.BasicCombo;
+    public DamageImpactTier impactTier = DamageImpactTier.Low;
 
-    [Header("Branching (Nested Step)")]
-    [Tooltip("If true, the player will instantly transition to a unique AttackStep upon successful grab.")]
-    public bool branchOnSuccess = false;
-    
-    [Tooltip("The sequence of inline StepDatas that execute when the grab connects.")]
-    public List<AttackStepData> successSteps = new List<AttackStepData>();
 }
 
-// ─── Projectile Hitbox ───────────────────────────────────
 
-/// <summary>
-/// Trajectory control for a spawned projectile.
-/// </summary>
-[System.Serializable]
-public class ProjectileTrajectory
-{
-    public float speed    = 10f;
-    public float arc      = 0f;
-    public float gravity  = 0f;
-}
-
-/// <summary>
-/// Data the projectile prefab reads at runtime.
-/// </summary>
-[System.Serializable]
-public class ProjectileStats
-{
-    public float damage    = 1f;
-    public int   hitCount  = 1;
-    public float lifespan  = 3f;
-
-    [Header("Reaction")]
-    public bool useDeterministicReaction = false;
-    public EnemyReactionKind reactionKind = EnemyReactionKind.Knockback;
-    public int impactFreezeFrames = 2;
-    public int reactionFrames = 10;
-    public int recoveryFrames = 6;
-    public float horizontalSpeed = 2f;
-    public float launchSpeed = 0f;
-    public EnemyLandingBehavior landingBehavior = EnemyLandingBehavior.Recover;
-    public bool canAirJuggle = true;
-    public int maxJuggleCount = 1;
-    public float juggleLaunchScale = 0.9f;
-    public float juggleStunScale = 0.9f;
-    public int hitstunFrames     = 2;
-    public Vector2 reactionVelocity = new Vector2(2f, 0f);
-    public int knockbackFrames   = 10;
-    public Color flashColor = Color.red;
-    public int flashFrames = 4;
-    public DamageImpactTier impactTier = DamageImpactTier.BasicCombo;
-}
-
-[System.Serializable]
-public class ProjectileHitbox : HitboxBase
-{
-    public override string HitboxTypeName => "Projectile";
-    public override Color TimelineTrackColor => new Color(0.60f, 0.84f, 1f);
-
-    public ProjectileHitbox()
-    {
-        debugColor = TimelineTrackColor;
-    }
-
-    [Header("Projectile")]
-    public GameObject projectilePrefab;
-    public Vector3 spawnPoint = new Vector3(0.5f, 0.5f, 0f);
-
-    [Header("Trajectory")]
-    public ProjectileTrajectory trajectory = new ProjectileTrajectory();
-
-    [Header("Projectile Stats")]
-    public ProjectileStats stats = new ProjectileStats();
-}
 
 // ─── Container ───────────────────────────────────────────
 
@@ -232,8 +141,6 @@ public class HitFrameData : ActionStepComponent
                 normal.impactFreezeFrames = Mathf.RoundToInt(normal.impactFreezeFrames * ratio);
                 normal.reactionFrames = Mathf.RoundToInt(normal.reactionFrames * ratio);
                 normal.recoveryFrames = Mathf.RoundToInt(normal.recoveryFrames * ratio);
-                normal.hitstunFrames = Mathf.RoundToInt(normal.hitstunFrames * ratio);
-                normal.knockbackFrames = Mathf.RoundToInt(normal.knockbackFrames * ratio);
                 normal.flashFrames = Mathf.RoundToInt(normal.flashFrames * ratio);
             }
             else if (hb is GrabHitbox grab)
@@ -242,15 +149,6 @@ public class HitFrameData : ActionStepComponent
                 grab.holdFrames = Mathf.RoundToInt(grab.holdFrames * ratio);
                 grab.recoveryFrames = Mathf.RoundToInt(grab.recoveryFrames * ratio);
                 grab.flashFrames = Mathf.RoundToInt(grab.flashFrames * ratio);
-            }
-            else if (hb is ProjectileHitbox proj)
-            {
-                proj.stats.impactFreezeFrames = Mathf.RoundToInt(proj.stats.impactFreezeFrames * ratio);
-                proj.stats.reactionFrames = Mathf.RoundToInt(proj.stats.reactionFrames * ratio);
-                proj.stats.recoveryFrames = Mathf.RoundToInt(proj.stats.recoveryFrames * ratio);
-                proj.stats.hitstunFrames = Mathf.RoundToInt(proj.stats.hitstunFrames * ratio);
-                proj.stats.knockbackFrames = Mathf.RoundToInt(proj.stats.knockbackFrames * ratio);
-                proj.stats.flashFrames = Mathf.RoundToInt(proj.stats.flashFrames * ratio);
             }
         }
     }

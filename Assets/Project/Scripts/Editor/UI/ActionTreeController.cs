@@ -1,32 +1,45 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 using System.Collections.Generic;
+using UnityEditor;
 
 namespace CombatEditor.UI
 {
     /// <summary>
     /// Represents a selectable action item in the sidebar tree.
+    /// Supports hierarchical nesting for combo trees.
     /// </summary>
     public class ActionNode
     {
         public string Label;
-        public string Category;      // e.g., "Ground Combo"
-        public int StepIndex;        // -1 for non-step items
-        public string DataType;      // "AttackStep", "Dash", "Skill", "Ultimate"
-        public object DataRef;       // Direct reference to data object
+        public string Category;      // e.g., "Ground", "Air", "Dash"
+        public string DataType;      // "AttackStep", "Dash", "Skill", "Ultimate", "ComboNode"
+        public object DataRef;       // Direct reference to data object (AttackStepData, DashData, or ComboNode)
+        public int Depth;            // For visual indentation
+        public System.Action DeleteCallback; // Callback to remove this node from its parent
 
-        public ActionNode(string label, string category, int stepIndex, string dataType, object dataRef)
+        public ActionNode(string label, string category, string dataType, object dataRef, int depth = 0, System.Action deleteCallback = null)
         {
             Label = label;
             Category = category;
-            StepIndex = stepIndex;
             DataType = dataType;
             DataRef = dataRef;
+            Depth = depth;
+            DeleteCallback = deleteCallback;
+        }
+
+        // Helper to get step data regardless of wrapper
+        public AttackStepData GetStepData()
+        {
+            if (DataRef is AttackStepData step) return step;
+            if (DataRef is ComboNode node) return node.stepData;
+            return null;
         }
     }
 
     /// <summary>
     /// Builds and manages the sidebar action tree from a CharacterObject.
+    /// Prioritizes ActionResolverTable if assigned.
     /// </summary>
     public class ActionTreeController
     {
@@ -57,71 +70,219 @@ namespace CombatEditor.UI
 
             if (character == null) return;
 
-            // ── Ground Combo ──
-            if (character.basicAttackComboData?.steps != null && character.basicAttackComboData.steps.Length > 0)
+            // 0. Resolver Table Settings
+            if (character.actionResolverTable != null)
             {
-                BuildCategory("⚔ Ground Combo", "Ground", character.basicAttackComboData.steps);
+                BuildSingleCategory("⚙ Resolver Settings", "Settings", "Global Settings", "ResolverTable", character.actionResolverTable);
+                BuildResolverTableCategories(character.actionResolverTable);
             }
 
-            // ── Air Combo ──
-            if (character.neutralAirComboData?.steps != null && character.neutralAirComboData.steps.Length > 0)
-            {
-                BuildCategory("✈ Air Combo", "Air", character.neutralAirComboData.steps);
-            }
-
-            // ── Plunge ──
-            if (character.plungeAttackData?.impactStep != null)
-            {
-                BuildSingleCategory("💫 Plunge Impact", "Plunge", 
-                    character.plungeAttackData.impactStep.stepName ?? "Impact",
-                    "AttackStep", character.plungeAttackData.impactStep);
-            }
-
-            // ── Dash ──
             BuildSingleCategory("🎯 Dash", "Dash", "Dash Move", "Dash", character.dashData);
 
-            // ── Skill ──
-            string skillLabel = !string.IsNullOrEmpty(character.skillData?.skillName) ? character.skillData.skillName : "Elemental Skill";
-            BuildSingleCategory("🌀 Skill", "Skill", skillLabel, "Skill", character.skillData);
-
-            // ── Ultimate ──
-            string ultLabel = !string.IsNullOrEmpty(character.ultimateData?.ultimateName) ? character.ultimateData.ultimateName : "Elemental Burst";
-            BuildSingleCategory("⚡ Ultimate", "Ultimate", ultLabel, "Ultimate", character.ultimateData);
-
-            // Auto-select first item
+            // Auto-select first item if current selection is lost
             if (selectedNode == null && leafElements.Count > 0)
                 SelectNode(leafElements[0].node);
         }
 
-        private void BuildCategory(string title, string category, AttackStepData[] steps)
+        private void BuildResolverTableCategories(ActionResolverTable table)
+        {
+            BuildActionsForList("⚔ Combo", "Combo", table.comboActions, table, AttackCategory.Normal);
+            BuildActionsForList("🌀 Skill", "Skill", table.skillActions, table, AttackCategory.Skill);
+            BuildActionsForList("⚡ Ultimate", "Ultimate", table.ultimateActions, table, AttackCategory.Ultimate);
+
+            // Standalone Actions (Plunge, etc)
+            if (table.standaloneActions != null && table.standaloneActions.Length > 0)
+            {
+                string cat = "Standalone";
+                if (!expandedState.ContainsKey(cat)) expandedState[cat] = true;
+
+                var catRoot = BuildCategoryHeader("💫 Contextual Actions", cat, () => Build(character));
+                if (expandedState[cat])
+                {
+                    var itemsContainer = new VisualElement();
+                    itemsContainer.AddToClassList("sidebar-items");
+
+                    for (int i = 0; i < table.standaloneActions.Length; i++)
+                    {
+                        var sa = table.standaloneActions[i];
+                        string label = sa.isPlungeAction ? "Plunge Attack" : (sa.stepData?.stepName ?? $"Action {i+1}");
+                        var node = new ActionNode(label, cat, "AttackStep", sa.stepData);
+                        itemsContainer.Add(CreateLeafItem(node));
+
+                        if (sa.followUpNode != null)
+                        {
+                            BuildTreeNodeRecursive(itemsContainer, sa.followUpNode, cat, 1, null, null, new HashSet<ComboNode>());
+                        }
+                    }
+                    catRoot.Add(itemsContainer);
+                }
+                container.Add(catRoot);
+            }
+        }
+
+        private void BuildActionsForList<T>(string titlePrefix, string categoryPrefix, List<T> actions, ActionResolverTable table, AttackCategory cat) where T : CombatAction, new()
+        {
+            if (actions != null)
+            {
+                for (int i = 0; i < actions.Count; i++)
+                {
+                    var action = actions[i];
+                    string title = $"{titlePrefix} {action.actionName} ({action.context})";
+                    string category = $"{categoryPrefix}_{i}";
+
+                    System.Action deleteAction = () => {
+                        Undo.RecordObject(table, $"Delete {categoryPrefix} Action");
+                        actions.Remove(action);
+                        EditorUtility.SetDirty(table);
+                        if (selectedNode != null && (selectedNode.DataRef == action || selectedNode.Category == category))
+                            selectedNode = null;
+                        Build(character);
+                    };
+
+                    BuildTreeCategory(title, category, action.comboTree?.rootNode, table, action, deleteAction);
+                }
+            }
+
+            var addBtn = new Button(() => 
+            {
+                Undo.RecordObject(table, $"Add {categoryPrefix} Action");
+                var newAction = new T {
+                    actionName = $"New {categoryPrefix}",
+                    context = CombatActionContext.Ground
+                };
+                actions.Add(newAction);
+                EditorUtility.SetDirty(table);
+                Build(character);
+            }) { text = $"+ Add {categoryPrefix} Action" };
+            addBtn.AddToClassList("component-add-entry-btn");
+            addBtn.style.marginTop = 5;
+            addBtn.style.marginBottom = 10;
+            container.Add(addBtn);
+        }
+
+
+        private void BuildTreeCategory(string title, string category, ComboNode root, ActionResolverTable table, CombatAction action, System.Action deleteAction)
         {
             if (!expandedState.ContainsKey(category)) expandedState[category] = true;
 
-            var catRoot = new VisualElement();
-            catRoot.AddToClassList("sidebar-category");
-
-            // Header
-            var header = new VisualElement();
-            header.AddToClassList("sidebar-category__header");
-
-            var arrow = new Label(expandedState[category] ? "▾" : "►");
-            arrow.AddToClassList("sidebar-category__arrow");
-            header.Add(arrow);
-
-            var label = new Label(title);
-            label.AddToClassList("sidebar-category__label");
-            header.Add(label);
-
-            string cat = category; // capture for closure
-            header.RegisterCallback<ClickEvent>(evt =>
+            var catRoot = BuildCategoryHeader(title, category, () => Build(character));
+            
+            if (expandedState[category])
             {
-                expandedState[cat] = !expandedState[cat];
-                Build(character); // rebuild
-            });
+                var itemsContainer = new VisualElement();
+                itemsContainer.AddToClassList("sidebar-items");
 
-            catRoot.Add(header);
+                System.Action deleteRoot = () => {
+                    Undo.RecordObject(table, $"Delete Root Step from {category}");
+                    if (action.comboTree != null) action.comboTree.rootNode = null;
+                    EditorUtility.SetDirty(table);
+                    Build(character);
+                };
+                
+                /* Removed internal deleteAction declaration */
 
-            // Items container
+                var settingsNode = new ActionNode($"⚙ {action.actionName} setup", category, "CombatAction", action, 0, deleteAction);
+                itemsContainer.Add(CreateLeafItem(settingsNode));
+
+                if (root != null)
+                {
+                    BuildTreeNodeRecursive(itemsContainer, root, category, 0, null, deleteRoot, new HashSet<ComboNode>());
+                }
+                else
+                {
+                    var emptyLabel = new Label("Empty Tree");
+                    emptyLabel.style.unityFontStyleAndWeight = FontStyle.Italic;
+                    emptyLabel.style.opacity = 0.5f;
+                    emptyLabel.style.marginLeft = 20;
+                    itemsContainer.Add(emptyLabel);
+
+                    // Add Node Button
+                    var addBtn = new Button(() => 
+                    {
+                        Undo.RecordObject(table, $"Add Root Step to {category}");
+                        var newNode = new ComboNode { stepData = new AttackStepData { stepName = "New Entry" } };
+                        
+                        if (action.comboTree == null) action.comboTree = new ComboTree();
+                        action.comboTree.rootNode = newNode;
+                        
+                        EditorUtility.SetDirty(table);
+                        Build(character);
+                    }) { text = "+ Set Root Step" };
+                    addBtn.AddToClassList("component-add-entry-btn");
+                    addBtn.style.marginTop = 10;
+                    itemsContainer.Add(addBtn);
+                }
+
+                catRoot.Add(itemsContainer);
+            }
+            container.Add(catRoot);
+        }
+
+        private void BuildTreeNodeRecursive(VisualElement parent, ComboNode node, string category, int depth, string prefix, System.Action deleteCallback, HashSet<ComboNode> visited)
+        {
+            if (node == null) return;
+
+            bool isVisited = visited.Contains(node);
+            visited.Add(node);
+
+            string label;
+            if (prefix != null)
+                label = $"↳ {prefix} {node.stepData?.stepName ?? "Step"}";
+            else
+                label = depth == 0 ? (node.stepData?.stepName ?? "Root") : $"↳ {node.stepData?.stepName ?? "Step"}";
+
+            if (isVisited) label += " (Link)";
+
+            var actionNode = new ActionNode(label, category, "ComboNode", node, depth, deleteCallback);
+            
+            var item = CreateLeafItem(actionNode);
+            if (depth > 0) item.AddToClassList("sidebar-subitem");
+            if (isVisited) item.style.opacity = 0.5f;
+
+            parent.Add(item);
+
+            if (isVisited) return;
+
+            // 1. Follow linear path (defaultNext)
+            if (node.defaultNext != null)
+            {
+                System.Action delDefaultNext = () => {
+                    Undo.RecordObject(character.actionResolverTable, "Delete Default Next");
+                    node.defaultNext = null;
+                    EditorUtility.SetDirty(character.actionResolverTable);
+                    Build(character);
+                };
+                BuildTreeNodeRecursive(parent, node.defaultNext, category, depth + 1, null, delDefaultNext, visited);
+            }
+
+            // 2. Follow branches (routes)
+            if (node.routes != null)
+            {
+                for (int i = 0; i < node.routes.Count; i++)
+                {
+                    var route = node.routes[i];
+                    if (route?.targetNode != null)
+                    {
+                        var capturedRoute = route;
+                        System.Action delRouteTarget = () => {
+                            Undo.RecordObject(character.actionResolverTable, "Delete Route Target");
+                            capturedRoute.targetNode = null;
+                            EditorUtility.SetDirty(character.actionResolverTable);
+                            Build(character);
+                        };
+                        string routePrefix = route.requireGrabbedEnemy ? "(Grab Hit)" : "(Branch)";
+                        BuildTreeNodeRecursive(parent, route.targetNode, category, depth + 1, routePrefix, delRouteTarget, visited);
+                    }
+                }
+            }
+        }
+
+        private void BuildLegacyCategory(string title, string category, AttackStepData[] steps)
+        {
+            if (!expandedState.ContainsKey(category)) expandedState[category] = true;
+
+            var catRoot = BuildCategoryHeader(title, category, () => Build(character));
+            
             if (expandedState[category])
             {
                 var itemsContainer = new VisualElement();
@@ -131,79 +292,11 @@ namespace CombatEditor.UI
                 {
                     string stepName = steps[i].stepName ?? "Untitled";
                     string itemLabel = $"Step {i + 1}: {stepName}";
-                    var node = new ActionNode(itemLabel, category, i, "AttackStep", steps[i]);
-
-                    var item = CreateLeafItem(node);
-                    itemsContainer.Add(item);
-
-                    // --- Nested Branch Visualization ---
-                    if (steps[i].hitData != null && steps[i].hitData.hitboxes != null)
-                    {
-                        foreach (var hb in steps[i].hitData.hitboxes)
-                        {
-                            if (hb is GrabHitbox grab && grab.branchOnSuccess && grab.successSteps != null)
-                            {
-                                for (int subIdx = 0; subIdx < grab.successSteps.Count; subIdx++)
-                                {
-                                    var subStep = grab.successSteps[subIdx];
-                                    if (subStep == null) continue;
-
-                                    string subName = subStep.stepName ?? "Success Branch";
-                                    string subLabel = grab.successSteps.Count > 1 
-                                        ? $" ↳ {subName} ({subIdx + 1})" 
-                                        : $" ↳ {subName}";
-                                        
-                                    var subNode = new ActionNode(subLabel, category, i, "AttackStep", subStep);
-                                    var subItem = CreateLeafItem(subNode);
-                                    subItem.AddToClassList("sidebar-subitem");
-                                    itemsContainer.Add(subItem);
-                                }
-                            }
-                        }
-                    }
+                    var node = new ActionNode(itemLabel, category, "AttackStep", steps[i]);
+                    itemsContainer.Add(CreateLeafItem(node));
                 }
-
-                if (category == "Ground" || category == "Air")
-                {
-                    var addStepBtn = new Button(() =>
-                    {
-                        UnityEditor.Undo.RecordObject(character, $"Add {category} Step");
-                        
-                        var newStep = new AttackStepData
-                        {
-                            stepName = "New Step",
-                            motionData = new MotionFrameData(),
-                            vfxData = new VFXFrameData(),
-                            hitData = new HitFrameData()
-                        };
-
-                        if (category == "Ground")
-                        {
-                            var list = new List<AttackStepData>(character.basicAttackComboData.steps);
-                            list.Add(newStep);
-                            character.basicAttackComboData.steps = list.ToArray();
-                        }
-                        else
-                        {
-                            var list = new List<AttackStepData>(character.neutralAirComboData.steps);
-                            list.Add(newStep);
-                            character.neutralAirComboData.steps = list.ToArray();
-                        }
-
-                        UnityEditor.EditorUtility.SetDirty(character);
-                        Build(character);
-                    })
-                    {
-                        text = $"+ Add {category} Step"
-                    };
-                    addStepBtn.AddToClassList("component-add-entry-btn");
-                    addStepBtn.style.marginTop = 10;
-                    itemsContainer.Add(addStepBtn);
-                }
-
                 catRoot.Add(itemsContainer);
             }
-
             container.Add(catRoot);
         }
 
@@ -211,6 +304,23 @@ namespace CombatEditor.UI
         {
             if (!expandedState.ContainsKey(category)) expandedState[category] = true;
 
+            var catRoot = BuildCategoryHeader(title, category, () => Build(character));
+
+            if (expandedState[category])
+            {
+                var itemsContainer = new VisualElement();
+                itemsContainer.AddToClassList("sidebar-items");
+
+                var node = new ActionNode(itemLabel, category, dataType, data);
+                itemsContainer.Add(CreateLeafItem(node));
+
+                catRoot.Add(itemsContainer);
+            }
+            container.Add(catRoot);
+        }
+
+        private VisualElement BuildCategoryHeader(string title, string category, System.Action onToggle)
+        {
             var catRoot = new VisualElement();
             catRoot.AddToClassList("sidebar-category");
 
@@ -225,28 +335,14 @@ namespace CombatEditor.UI
             label.AddToClassList("sidebar-category__label");
             header.Add(label);
 
-            string cat = category;
             header.RegisterCallback<ClickEvent>(evt =>
             {
-                expandedState[cat] = !expandedState[cat];
-                Build(character);
+                expandedState[category] = !expandedState[category];
+                onToggle?.Invoke();
             });
 
             catRoot.Add(header);
-
-            if (expandedState[category])
-            {
-                var itemsContainer = new VisualElement();
-                itemsContainer.AddToClassList("sidebar-items");
-
-                var node = new ActionNode(itemLabel, category, 0, dataType, data);
-                var item = CreateLeafItem(node);
-                itemsContainer.Add(item);
-
-                catRoot.Add(itemsContainer);
-            }
-
-            container.Add(catRoot);
+            return catRoot;
         }
 
         private VisualElement CreateLeafItem(ActionNode node)
@@ -254,21 +350,44 @@ namespace CombatEditor.UI
             var item = new VisualElement();
             item.AddToClassList("sidebar-item");
 
-            if (selectedNode != null && selectedNode.Label == node.Label && selectedNode.Category == node.Category)
+            // Indentation
+            if (node.Depth > 0)
+                item.style.paddingLeft = 16 + (node.Depth * 12);
+
+            bool isActive = selectedNode != null && selectedNode.DataRef == node.DataRef && selectedNode.Category == node.Category;
+            if (isActive)
                 item.AddToClassList("sidebar-item--active");
 
-            var lbl = new Label(node.Label);
-            lbl.AddToClassList("sidebar-item__label");
-            item.Add(lbl);
+            var label = new Label(node.Label);
+            label.AddToClassList("sidebar-item__label");
+            item.Add(label);
 
-            var capturedNode = node;
-            item.RegisterCallback<ClickEvent>(evt =>
+            item.RegisterCallback<ClickEvent>(evt => SelectNode(node));
+
+            if (node.DeleteCallback != null)
             {
-                SelectNode(capturedNode);
-            });
+                item.AddManipulator(new ContextualMenuManipulator(evt =>
+                {
+                    string menuLabel = node.DataType == "CombatAction" ? "Delete Action" :
+                                       (node.Depth == 0 ? "Delete Root Node" : "Remove Link");
+                    evt.menu.AppendAction(menuLabel, _ => node.DeleteCallback());
+                }));
+            }
 
             leafElements.Add((item, node));
             return item;
+        }
+
+        public void SelectNodeByData(object data)
+        {
+            foreach (var pair in leafElements)
+            {
+                if (pair.node.DataRef == data)
+                {
+                    SelectNode(pair.node);
+                    return;
+                }
+            }
         }
 
         public void SelectNode(ActionNode node)
@@ -278,7 +397,7 @@ namespace CombatEditor.UI
             // Update visual selection
             foreach (var (el, n) in leafElements)
             {
-                if (n == node)
+                if (n.DataRef == node.DataRef && n.Category == node.Category)
                     el.AddToClassList("sidebar-item--active");
                 else
                     el.RemoveFromClassList("sidebar-item--active");

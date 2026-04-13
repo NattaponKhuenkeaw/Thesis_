@@ -8,6 +8,7 @@ public class EnemyWorldUI : MonoBehaviour
     [Header("References")]
     [SerializeField] private EnemyController enemyController;
     [SerializeField] private Slider healthSlider;
+    [SerializeField] private Slider damageLerpSlider;
     [SerializeField] private TMP_Text damageText;
 
     [Header("Damage Text — Random Position")]
@@ -17,7 +18,13 @@ public class EnemyWorldUI : MonoBehaviour
     [SerializeField] private Vector2 damageTextRandomRangeY = new Vector2(-10f, 30f);
     [Tooltip("Float direction applied on top of the random start position.")]
     [SerializeField] private Vector2 damageTextFloatOffset = new Vector2(0f, 50f);
-    [SerializeField] private float damageTextDuration = 0.5f;
+    
+    [Header("Damage Text Flow Timing")]
+    [SerializeField] private float damagePopDuration = 0.1f;
+    [SerializeField] private float damageScaleDownDuration = 0.15f;
+    [SerializeField] private float damageFreezeDuration = 0.4f;
+    [SerializeField] private float damageFadeDuration = 0.3f;
+    
     [SerializeField] private bool hideCanvasOnDeath = true;
 
     [Header("Impact Scaling")]
@@ -32,6 +39,7 @@ public class EnemyWorldUI : MonoBehaviour
 
     private RectTransform damageTextRect;
     private Coroutine damageTextCoroutine;
+    private Coroutine healthLerpCoroutine;
     private Color damageTextBaseColor = Color.white;
 
     private void Reset()
@@ -76,6 +84,13 @@ public class EnemyWorldUI : MonoBehaviour
 
         if (healthSlider == null)
             healthSlider = GetComponentInChildren<Slider>(true);
+
+        if (damageLerpSlider == null)
+        {
+            // Try to find the second slider in children if not assigned
+            Slider[] sliders = GetComponentsInChildren<Slider>(true);
+            if (sliders.Length > 1) damageLerpSlider = sliders[1];
+        }
 
         if (damageText == null)
         {
@@ -143,7 +158,38 @@ public class EnemyWorldUI : MonoBehaviour
             ? Mathf.Clamp01(enemyController.currentHP / enemyController.maxHP)
             : 0f;
 
+        // Instant update for the main green bar
         healthSlider.value = normalizedHp;
+
+        // Smooth lerp for the back red bar
+        if (damageLerpSlider != null)
+        {
+            damageLerpSlider.minValue = 0f;
+            damageLerpSlider.maxValue = 1f;
+
+            if (healthLerpCoroutine != null) StopCoroutine(healthLerpCoroutine);
+            healthLerpCoroutine = StartCoroutine(HealthLerpRoutine(normalizedHp));
+        }
+    }
+
+    private IEnumerator HealthLerpRoutine(float targetValue)
+    {
+        // Short pause before the ghost bar starts following
+        yield return new WaitForSeconds(0.25f);
+
+        float elapsed = 0f;
+        float duration = 0.5f;
+        float startValue = damageLerpSlider.value;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            damageLerpSlider.value = Mathf.Lerp(startValue, targetValue, elapsed / duration);
+            yield return null;
+        }
+
+        damageLerpSlider.value = targetValue;
+        healthLerpCoroutine = null;
     }
 
     private void ShowDamageText(float damage, DamageImpactTier impactTier)
@@ -165,7 +211,8 @@ public class EnemyWorldUI : MonoBehaviour
         // --- Impact tier scale ---
         float targetScale = impactTier switch
         {
-            DamageImpactTier.Skill    => skillScale,
+            DamageImpactTier.Medium   => skillScale,
+            DamageImpactTier.Heavy    => skillScale * 1.3f, // Medium -> Heavy boost
             DamageImpactTier.Ultimate => ultimateScale,
             _                         => basicComboScale
         };
@@ -180,33 +227,52 @@ public class EnemyWorldUI : MonoBehaviour
 
     private IEnumerator DamageTextRoutine(Vector2 startPos, float targetScale)
     {
-        float elapsed = 0f;
-        Vector2 endPos = startPos + damageTextFloatOffset;
-
-        // Start with punch overshoot and ease down to target scale
         float punchStart = targetScale * punchScaleOvershoot;
-
-        while (elapsed < damageTextDuration)
+        Color color = damageTextBaseColor;
+        
+        // --- STAGE 1: Impact Pop ---
+        float elapsed = 0f;
+        while (elapsed < damagePopDuration)
         {
             elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / damageTextDuration);
+            float t = Mathf.Clamp01(elapsed / damagePopDuration);
+            damageTextRect.localScale = Vector3.one * Mathf.Lerp(1f, punchStart, t);
+            damageTextRect.anchoredPosition = startPos;
+            yield return null;
+        }
 
-            // Position: lerp from random start to float end
-            if (damageTextRect != null)
-                damageTextRect.anchoredPosition = Vector2.Lerp(startPos, endPos, t);
+        // --- STAGE 2: Scale Down ---
+        elapsed = 0f;
+        while (elapsed < damageScaleDownDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / damageScaleDownDuration);
+            damageTextRect.localScale = Vector3.one * Mathf.Lerp(punchStart, targetScale, EaseOutBack(t));
+            damageTextRect.anchoredPosition = startPos;
+            yield return null;
+        }
 
-            // Scale: punch pop ease-out (overshoot → target → shrink away)
-            float scaleT = Mathf.Clamp01(t * 3f); // fast punch in first third
-            float currentScale = Mathf.Lerp(punchStart, targetScale, EaseOutBack(scaleT));
-            // Shrink slightly toward end
-            float shrink = Mathf.Lerp(1f, 0.6f, Mathf.Clamp01((t - 0.5f) * 2f));
-            damageTextRect.localScale = Vector3.one * currentScale * shrink;
+        // --- STAGE 3: Freeze ---
+        damageTextRect.localScale = Vector3.one * targetScale;
+        damageTextRect.anchoredPosition = startPos;
+        yield return new WaitForSeconds(damageFreezeDuration);
 
-            // Alpha: fade out
-            Color color = damageTextBaseColor;
+        // --- STAGE 4: Fade Away Upward ---
+        elapsed = 0f;
+        Vector2 endPos = startPos + damageTextFloatOffset;
+        while (elapsed < damageFadeDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / damageFadeDuration);
+            
+            damageTextRect.anchoredPosition = Vector2.Lerp(startPos, endPos, t);
+            
             color.a = 1f - t;
             damageText.color = color;
-
+            
+            // Subtle shrink during fade
+            damageTextRect.localScale = Vector3.one * targetScale * Mathf.Lerp(1f, 0.8f, t);
+            
             yield return null;
         }
 

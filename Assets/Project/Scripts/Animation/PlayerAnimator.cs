@@ -77,7 +77,7 @@ public class PlayerAnimator : MonoBehaviour
         anim.SetBool(isLandingHash, movement.IsLanding);
 
         // Detect falling state (airborne and moving downwards)
-        bool suppressFallAnimation = combat != null && combat.IsPlungeInAirPhase();
+        bool suppressFallAnimation = combat != null && combat.ShouldSuppressLandingFeedback();
         bool isFalling = !suppressFallAnimation && !movement.IsGrounded() && rb.linearVelocity.y < -0.1f && !movement.IsLanding;
         
         if (isFalling && !wasFalling)

@@ -68,10 +68,11 @@ public class CameraShakeController : MonoBehaviour
         // Fallback: use default strengths
         float strength = tier switch
         {
-            DamageImpactTier.BasicCombo => 0.15f,
-            DamageImpactTier.Skill     => 0.4f,
-            DamageImpactTier.Ultimate  => 0.8f,
-            _                          => 0.15f
+            DamageImpactTier.Low      => 0.15f,
+            DamageImpactTier.Medium   => 0.4f,
+            DamageImpactTier.Heavy    => 0.65f,
+            DamageImpactTier.Ultimate => 1.0f,
+            _                         => 0.15f
         };
         Shake(strength);
     }

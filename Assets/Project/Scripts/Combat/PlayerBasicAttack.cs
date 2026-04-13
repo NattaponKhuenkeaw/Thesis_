@@ -1,36 +1,23 @@
 using UnityEngine;
 using CombatCore;
-using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
 /// Combat engine for basic attacks. Handles hitbox activation, motion processing,
-/// damage application, combo step management, and hit detection.
+/// damage application, and hit detection.
 ///
-/// Phase tracking (Startup→Active→Recovery→Cancel→Done) is now driven by
-/// PlayerAttackState via FrameDataPlayerState. This class focuses on:
+/// Phase tracking (Startup→Active→Recovery→Cancel→Done) is driven by
+/// PlayerAttackState via FrameDataPlayerState. Combo resolution is driven by
+/// ActionResolver. This class focuses ONLY on:
+///   - Executing a resolved AttackStepData (animation, hitbox setup)
 ///   - Hitbox activation/deactivation based on frame index
 ///   - Motion curve processing
-///   - Combo step management (chain, reset, preserve)
 ///   - Hit detection via OverlapBox
 ///   - Hitstop handling
+///   - Grab management
 /// </summary>
 public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
 {
-    public enum AttackFrameState
-    {
-        None,
-        Windup,
-        Impact,
-        Recovery
-    }
-
-    private enum AttackComboMode
-    {
-        Ground,
-        AirNeutral
-    }
-
     [Header("Dependencies")]
     public PlayerCharacter playerCharacter;
     public PlayerAnimator animHandler;
@@ -40,47 +27,40 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
     public MeleeHitboxDamage meleeHitboxDamage;
 
     // Runtime state
-    private int comboStep = 0;
+    private int comboDepth = 0;
     private int currentAttackFrame = 0;
-    private float logicTimeCounter = 0f;
     private int hitstopFramesLeft = 0;
-    private AttackFrameState currentFrameState = AttackFrameState.None;
+    private ActionPhase currentPhase = ActionPhase.None;
+    private Dictionary<AttackCategory, float> lastCategoryUseTime = new Dictionary<AttackCategory, float>();
 
-    private float lastAttackInputTime = -999f;
-    private AttackComboMode currentComboMode = AttackComboMode.Ground;
-    
-    // Cached Data for current step
+    // Cached step data
     private AttackStepData currentStepData;
-    private int cachedPhase1Frames;
-    private int cachedPhase2Frames;
-    private int cachedPhase3Frames;
-    
-    // Prevent 'Chain Skip' bug where new attack consumes remaining 'targetFrame' ticks 
-    // from the previous attack's while loop.
-    private bool shouldResetUpdateLoop = false;
-    
+    private int cachedStartupFrames;
+
     // Track Hitbox state
     private int hitboxActiveCount = 0;
-    
+
     // Layer mask for enemy detection via OverlapBox
     [Header("Detection")]
     public LayerMask enemyLayerMask;
     private HashSet<EnemyController> hitEnemiesThisStep = new HashSet<EnemyController>();
 
-    private bool isPlungeAttacking = false;
-    private bool plungeImpactTriggered = false;
+    // State flags (set by PlayerAttackState)
+    private bool isPlungeFalling = false;
+    private bool isAirCombo = false;
     private GrabHitbox currentGrabHitbox;
-    private EnemyController currentGrabbedEnemy;
+    public ThrowContext activeThrowContext;
 
+    // Cached Animator reference
+    private Animator cachedAnimator;
+
+    // Events
     public event System.Action OnComboFinished;
-    public event System.Action<AttackStepData> OnBranchToSubStep;
+    public event System.Action OnGrabConnected;
 
-    private bool isExecutingSubStep = false;
-    private List<AttackStepData> activeSubSteps;
-    private int currentSubStepIndex = 0;
-
-    public bool IsExecutingSubStep() { return isExecutingSubStep; }
-    public bool HasGrabbedEnemy() { return currentGrabbedEnemy != null; }
+    // =========================================================
+    // Unity Lifecycle
+    // =========================================================
 
     void Awake()
     {
@@ -92,6 +72,11 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
             meleeHitboxController = meleeHitboxController ?? meleeHitbox.GetComponent<MeleeHitboxController>();
             meleeHitboxDamage = meleeHitboxDamage ?? meleeHitbox.GetComponent<MeleeHitboxDamage>();
         }
+        activeThrowContext = new ThrowContext(transform.root.GetInstanceID());
+
+        // Cache Animator reference
+        if (animHandler != null)
+            cachedAnimator = animHandler.GetComponent<Animator>();
     }
 
     void Start()
@@ -105,7 +90,6 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
         {
             movement.OnDashStart += HandleDashStart;
             movement.OnJumpStart += HandleJumpStart;
-            movement.OnLand += HandlePlungeLanding;
             movement.OnLand += HandleLandingComboReset;
         }
     }
@@ -116,50 +100,19 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
         {
             movement.OnDashStart -= HandleDashStart;
             movement.OnJumpStart -= HandleJumpStart;
-            movement.OnLand -= HandlePlungeLanding;
             movement.OnLand -= HandleLandingComboReset;
         }
 
         ReleaseGrabbedEnemy();
     }
 
-    void Update()
-    {
-        if (IsAttacking()) return;
-
-        if (comboStep > 0)
-        {
-            float delay = GetComboResetDelay();
-
-            // Guard: Air combo uses a specific character-defined timeout when cancelled/finished
-            if (currentComboMode == AttackComboMode.AirNeutral && !isPlungeAttacking)
-            {
-                if (playerCharacter != null && playerCharacter.characterObject != null)
-                    delay = playerCharacter.characterObject.maxAirComboTime;
-            }
-
-            if (Time.time - lastAttackInputTime > delay)
-            {
-                ResetCombo();
-            }
-        }
-    }
-
     void FixedUpdate()
     {
+        // Hitstop tick-down (still needed for non-state-driven hitstop countdown)
         if (hitstopFramesLeft > 0)
         {
             hitstopFramesLeft--;
             HandleAnimatorHitstop();
-            return;
-        }
-
-        if (IsAttacking())
-        {
-            // Only run legacy processing if NOT being driven by PlayerAttackState
-            // (PlayerAttackState calls ProcessFrameFromState directly)
-            if (!isDrivenByState)
-                ProcessAttackFrame();
         }
     }
 
@@ -172,32 +125,60 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
     }
 
     // =========================================================
-    // State-Driven Mode
-    // When PlayerAttackState drives this engine, it calls these methods
-    // instead of the engine running its own FixedUpdate frame loop.
+    // ICharacterCombat — Step Execution (called by PlayerAttackState)
     // =========================================================
 
-    private bool isDrivenByState = false;
-
     /// <summary>
-    /// Called by PlayerAttackState to signal that phase tracking is external.
+    /// Executes a resolved AttackStepData. Sets up animation, hitbox caches,
+    /// and resets frame tracking. The ActionResolver determines WHAT to execute;
+    /// this method handles HOW to execute it.
     /// </summary>
-    public void SetDrivenByState(bool driven)
+    public void ExecuteStep(AttackStepData step, int depth, bool airCombo, AttackCategory category)
     {
-        isDrivenByState = driven;
+        if (step == null) return;
+
+        // Cancel any previous motion
+        if (movement != null) movement.CancelAttackMotion();
+
+        // Set state
+        currentStepData = step;
+        comboDepth = depth;
+        isAirCombo = airCombo;
+        currentPhase = ActionPhase.Startup;
+        currentAttackFrame = 0;
+        hitstopFramesLeft = 0;
+        hitboxActiveCount = 0;
+
+        // Cache phase boundaries
+        cachedStartupFrames = step.startupFrames;
+
+        // Clear hit tracking
+        hitEnemiesThisStep.Clear();
+        DisableHitbox(true);
+
+        CombatLog($"Execute: '{step.stepName}' (Depth {depth}, Air={airCombo}, Category={category})");
+
+        // Trigger animation
+        string clipName = step.animationClip != null ? step.animationClip.name : null;
+        if (animHandler != null)
+        {
+            if (airCombo)
+                animHandler.TriggerAirAttack(depth, clipName);
+            else
+                animHandler.TriggerAttackCombo(depth, clipName);
+        }
+
+        // Record use time for cooldowns
+        lastCategoryUseTime[category] = Time.time;
     }
 
-    /// <summary>
-    /// Returns the current AttackStepData (used by PlayerAttackState.GetFrameData).
-    /// </summary>
-    public AttackStepData GetCurrentStepData()
-    {
-        return currentStepData;
-    }
+    // =========================================================
+    // ICharacterCombat — Frame Processing (called by PlayerAttackState)
+    // =========================================================
 
     /// <summary>
     /// Called by PlayerAttackState each logic frame to process hitbox/motion/VFX.
-    /// The phase is determined by the state's FrameDataPlayerState, not internally.
+    /// The phase is determined by FrameDataPlayerState, not internally.
     /// </summary>
     public void ProcessFrameFromState(int frame, ActionPhase phase)
     {
@@ -208,29 +189,21 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
         }
 
         currentAttackFrame = frame;
+        currentPhase = phase;
 
         RestoreAnimatorSpeedIfNeeded();
 
-        // Map ActionPhase to internal tracking
         switch (phase)
         {
-            case ActionPhase.Startup:
-                currentFrameState = AttackFrameState.Windup;
-                break;
-
             case ActionPhase.Active:
-                if (currentFrameState != AttackFrameState.Impact)
-                    currentFrameState = AttackFrameState.Impact;
-
                 // Process hitframes within active phase
                 ProcessHitFrames(frame);
                 break;
 
             case ActionPhase.Recovery:
             case ActionPhase.Cancel:
-                if (currentFrameState != AttackFrameState.Recovery)
+                if (hitboxActiveCount > 0)
                 {
-                    currentFrameState = AttackFrameState.Recovery;
                     DisableHitbox(true);
                 }
                 break;
@@ -254,78 +227,115 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
         DisableHitbox(true);
     }
 
-    /// <summary>
-    /// Attempts to chain to the next combo step. Returns true if successful.
-    /// Called by PlayerAttackState during Recovery/Cancel phases.
-    /// </summary>
-    public bool TryChainCombo()
+    // =========================================================
+    // ICharacterCombat — Queries (used by PlayerMovement + PlayerAttackState)
+    // =========================================================
+
+    public bool IsAttacking() { return currentPhase != ActionPhase.None && currentStepData != null; }
+    public bool HasActiveHitstop => hitstopFramesLeft > 0;
+
+    public bool ShouldInterruptAttackOnGrounded()
     {
-        if (isExecutingSubStep && activeSubSteps != null)
-        {
-            if (currentSubStepIndex + 1 < activeSubSteps.Count)
-            {
-                currentSubStepIndex++;
-                TriggerSubStep(activeSubSteps[currentSubStepIndex]);
-                return true;
-            }
-        }
-
-        AttackComboMode requestedMode = GetRequestedComboMode();
-        BasicAttackComboData comboData = GetComboData(requestedMode);
-        if (comboData == null) return false;
-
-        int maxCombo = comboData.GetMaxCombo();
-        if (maxCombo <= 0) return false;
-
-        if (requestedMode == currentComboMode && comboStep < maxCombo)
-        {
-            isExecutingSubStep = false;
-            StartNextAttack(currentComboMode);
-            return true;
-        }
-        else if (requestedMode != currentComboMode)
-        {
-            isExecutingSubStep = false;
-            comboStep = 0;
-            StartNextAttack(requestedMode);
-            return true;
-        }
-
-        return false;
+        if (!IsAttacking()) return false;
+        if (isPlungeFalling) return false; // Plunge fall should land, not interrupt
+        return isAirCombo;
     }
 
-    /// <summary>
-    /// Whether air combo progress should be preserved when the action completes
-    /// (player still airborne with combo steps remaining).
-    /// </summary>
-    public bool ShouldPreserveAirComboOnComplete()
-    {
-        if (isPlungeAttacking) return false;
-        if (currentComboMode != AttackComboMode.AirNeutral) return false;
-        if (movement == null || movement.IsGrounded()) return false;
+    public bool ShouldSuppressLandingFeedback() { return isPlungeFalling; }
+    public bool ShouldLockAirComboInPlace() { return IsAttacking() && !isPlungeFalling && isAirCombo && movement != null && !movement.IsGrounded(); }
+    public int GetComboStep() { return comboDepth; }
+    public bool CanSwitchDirection() { return currentPhase == ActionPhase.None || currentPhase == ActionPhase.Startup; }
+    public bool CanMoveAfterAttack() { return !IsAttacking(); }
+    public bool HasGrabbedEnemy() { return activeThrowContext != null && activeThrowContext.HasAnyTargets(); }
 
-        BasicAttackComboData comboData = GetComboData(AttackComboMode.AirNeutral);
-        int maxCombo = comboData != null ? comboData.GetMaxCombo() : 0;
-        return comboStep < maxCombo;
+    public bool IsOnCooldown(AttackCategory category, float cooldown)
+    {
+        if (cooldown <= 0) return false;
+        if (!lastCategoryUseTime.ContainsKey(category)) return false;
+
+        float finalCooldown = GetFinalSkillCooldown(category, cooldown);
+        return Time.time < lastCategoryUseTime[category] + finalCooldown;
+    }
+
+    public float GetRemainingCooldown(AttackCategory category, float cooldown)
+    {
+        if (!lastCategoryUseTime.ContainsKey(category)) return 0f;
+        float finalCooldown = GetFinalSkillCooldown(category, cooldown);
+        float remain = (lastCategoryUseTime[category] + finalCooldown) - Time.time;
+        return Mathf.Max(remain, 0f);
+    }
+
+    public AttackStepData GetCurrentStepData() { return currentStepData; }
+
+    // =========================================================
+    // ICharacterCombat — State Flags (set by PlayerAttackState)
+    // =========================================================
+
+    public void SetPlungeFalling(bool falling) { isPlungeFalling = falling; }
+    public void SetAirCombo(bool airCombo) { this.isAirCombo = airCombo; }
+
+    // =========================================================
+    // ICharacterCombat — Combo Management
+    // =========================================================
+
+    public void ResetCombo()
+    {
+        bool wasAirCombo = isAirCombo && comboDepth > 0 && !isPlungeFalling;
+
+        if (wasAirCombo && movement != null && !movement.IsGrounded())
+            movement.TriggerAirComboCooldown();
+
+        comboDepth = 0;
+        currentPhase = ActionPhase.None;
+        currentStepData = null;
+
+        hitboxActiveCount = 0;
+        hitstopFramesLeft = 0;
+        currentAttackFrame = 0;
+        isPlungeFalling = false;
+        isAirCombo = false;
+        DisableHitbox(true);
+
+        if (movement != null) movement.CancelAttackMotion();
+        if (animHandler != null) animHandler.ResetCombo();
+
+        if (cachedAnimator != null)
+            cachedAnimator.speed = 1f;
+
+        CombatLog("Combo: Reset");
+        OnComboFinished?.Invoke();
+    }
+
+    public void CancelCurrentAttackButKeepComboProgress()
+    {
+        currentPhase = ActionPhase.None;
+        currentAttackFrame = 0;
+        hitstopFramesLeft = 0;
+        hitboxActiveCount = 0;
+        DisableHitbox(true);
+
+        if (cachedAnimator != null)
+            cachedAnimator.speed = 1f;
+
+        if (movement != null) movement.CancelAttackMotion();
+        OnComboFinished?.Invoke();
     }
 
     // =========================================================
-    // Hitframe Processing (extracted from ProcessSingleLogicFrame)
+    // Hitframe Processing
     // =========================================================
 
     private void ProcessHitFrames(int frame)
     {
         if (currentStepData == null) return;
 
-        int frameInActivePhase = frame - cachedPhase1Frames - 1;
+        int frameInActivePhase = frame - cachedStartupFrames - 1;
 
         if (HasStructuredHitboxes(currentStepData))
         {
             ProcessStructuredHitboxes(frameInActivePhase);
             return;
         }
-
-        ProcessLegacyHitFrames(frameInActivePhase);
     }
 
     private void ProcessStructuredHitboxes(int frameInActivePhase)
@@ -338,18 +348,6 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
 
             if (frameInActivePhase == hitbox.startFrameOffset) TriggerHitbox(hitbox);
             if (frameInActivePhase == hitbox.startFrameOffset + hitbox.activeFrames) DisableHitbox();
-        }
-    }
-
-    private void ProcessLegacyHitFrames(int frameInActivePhase)
-    {
-        if (currentStepData.hitFrames == null) return;
-
-        for (int i = 0; i < currentStepData.hitFrames.Length; i++)
-        {
-            var h = currentStepData.hitFrames[i];
-            if (frameInActivePhase == h.startFrameOffset) TriggerHitFrame(legacyHitFrame: h);
-            if (frameInActivePhase == h.startFrameOffset + h.activeFrames) DisableHitbox();
         }
     }
 
@@ -367,13 +365,6 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
             return;
         }
 
-        if (hitbox is ProjectileHitbox projectileHitbox)
-        {
-            // Future implementation: Projectile logic
-            CombatLog($"Hitbox '{hitbox.HitboxTypeName}' (Projectile) triggered. Logic pending.");
-            return;
-        }
-
         CombatLog($"Hitbox '{hitbox.HitboxTypeName}' is not yet supported by the runtime attack processor.");
     }
 
@@ -385,15 +376,13 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
             && step.hitData.hitboxes.Count > 0;
     }
 
-    private bool HasAnyHitboxData(AttackStepData step)
-    {
-        if (HasStructuredHitboxes(step)) return true;
-        return step != null && step.hitFrames != null && step.hitFrames.Length > 0;
-    }
+    // =========================================================
+    // Motion Processing
+    // =========================================================
 
     private void ProcessMotion(int frame)
     {
-        if (currentStepData == null || currentStepData.motionData == null 
+        if (currentStepData == null || currentStepData.motionData == null
             || currentStepData.motionData.keyframes == null) return;
 
         foreach (var kf in currentStepData.motionData.keyframes)
@@ -406,8 +395,9 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
     }
 
     // =========================================================
-    // Native Hitstop
+    // Hitstop
     // =========================================================
+
     public void ApplyHitstop(int frames)
     {
         if (frames > hitstopFramesLeft)
@@ -419,274 +409,23 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
 
     private void HandleAnimatorHitstop()
     {
-        if (animHandler != null && animHandler.GetComponent<Animator>() != null)
+        if (cachedAnimator != null)
         {
-            Animator anim = animHandler.GetComponent<Animator>();
-            if (hitstopFramesLeft > 0)
-            {
-                anim.speed = 0f;
-            }
-            else
-            {
-                anim.speed = 1f;
-            }
+            cachedAnimator.speed = hitstopFramesLeft > 0 ? 0f : 1f;
         }
     }
 
     private void RestoreAnimatorSpeedIfNeeded()
     {
-        if (HasActiveHitstop)
-        {
-            return;
-        }
+        if (HasActiveHitstop) return;
 
-        if (animHandler != null && animHandler.GetComponent<Animator>() != null)
-        {
-            animHandler.GetComponent<Animator>().speed = 1f;
-        }
+        if (cachedAnimator != null)
+            cachedAnimator.speed = 1f;
     }
 
     // =========================================================
-    // Public Logic Methods
+    // Hitbox Enable/Disable
     // =========================================================
-    public bool OnAttackInput()
-    {
-        AttackComboMode requestedMode = GetRequestedComboMode();
-        BasicAttackComboData comboData = GetComboData(requestedMode);
-        
-        if (comboData == null || comboData.GetMaxCombo() <= 0) return false;
-        if (!IsAttacking() && requestedMode == AttackComboMode.AirNeutral && !CanAcceptAirAttackRequest()) return false;
-
-        lastAttackInputTime = Time.time;
-
-        if (!IsAttacking())
-        {
-            if (comboStep > 0 && requestedMode != currentComboMode) ResetCombo();
-            StartNextAttack(requestedMode);
-            return true;
-        }
-
-        // Without input buffer window, input is ONLY accepted directly inside the cancel window
-        if (currentStepData != null)
-        {
-            if (currentAttackFrame >= currentStepData.cancelWindowStartFrame)
-            {
-                int maxCombo = comboData.GetMaxCombo();
-                if (requestedMode == currentComboMode && comboStep < maxCombo)
-                {
-                    StartNextAttack(currentComboMode);
-                    return true;
-                }
-                else if (requestedMode != currentComboMode)
-                {
-                    comboStep = 0;
-                    StartNextAttack(requestedMode);
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private void ProcessAttackFrame()
-    {
-        logicTimeCounter += Time.fixedDeltaTime;
-        // Use RoundToInt so the first frame fires on the first FixedUpdate
-        int targetFrame = Mathf.RoundToInt(logicTimeCounter * FrameDataConstants.LOGIC_FPS);
-
-        while (currentAttackFrame < targetFrame)
-        {
-            currentAttackFrame++;
-            ProcessSingleLogicFrame();
-            
-            if (shouldResetUpdateLoop || currentFrameState == AttackFrameState.None) 
-            {
-                shouldResetUpdateLoop = false;
-                break;
-            }
-        }
-
-        // Perform physics overlap check while any hitbox is active
-        if (hitboxActiveCount > 0 && meleeHitbox != null && meleeHitbox.activeSelf)
-        {
-            PerformHitboxOverlapCheck();
-        }
-    }
-
-    private void ProcessSingleLogicFrame()
-    {
-        if (currentStepData == null) 
-        {
-            ResetCombo();
-            return;
-        }
-
-        RestoreAnimatorSpeedIfNeeded();
-
-        // Contextual state update Based on Data
-        if (currentAttackFrame <= cachedPhase1Frames)
-        {
-            currentFrameState = AttackFrameState.Windup;
-        }
-        else if (currentAttackFrame <= cachedPhase2Frames)
-        {
-            if (currentFrameState != AttackFrameState.Impact)
-            {
-                currentFrameState = AttackFrameState.Impact;
-            }
-
-            ProcessHitFrames(currentAttackFrame);
-        }
-        else if (currentAttackFrame <= cachedPhase3Frames)
-        {
-            if (currentFrameState != AttackFrameState.Recovery)
-            {
-                currentFrameState = AttackFrameState.Recovery;
-                DisableHitbox(true); 
-            }
-        }
-        else
-        {
-            bool isAir = !isPlungeAttacking && currentComboMode == AttackComboMode.AirNeutral && movement != null && !movement.IsGrounded();
-            BasicAttackComboData comboData = GetComboData(currentComboMode);
-            int maxCombo = comboData != null ? comboData.GetMaxCombo() : 0;
-
-            if (isAir && comboStep < maxCombo) CancelCurrentAttackButKeepComboProgress();
-            else ResetCombo();
-
-            if (isAir && animHandler != null) animHandler.RestoreAirborneState();
-            return;
-        }
-
-        // Process buffered input if cancel window is open
-        if (currentStepData != null && currentAttackFrame >= currentStepData.cancelWindowStartFrame)
-        {
-            if (Time.time - lastAttackInputTime <= 0.15f)
-            {
-                AttackComboMode requestedMode = GetRequestedComboMode();
-                BasicAttackComboData comboData = GetComboData(requestedMode);
-                int maxCombo = comboData != null ? comboData.GetMaxCombo() : 0;
-
-                if (requestedMode == currentComboMode && comboStep < maxCombo)
-                {
-                    lastAttackInputTime = -999f;
-                    StartNextAttack(currentComboMode);
-                    return;
-                }
-                else if (requestedMode != currentComboMode)
-                {
-                    lastAttackInputTime = -999f;
-                    comboStep = 0;
-                    StartNextAttack(requestedMode);
-                    return;
-                }
-            }
-        }
-
-        // Motion Processing (MotionFrameData sub-component)
-        ProcessMotion(currentAttackFrame);
-    }
-
-    private void StartNextAttack(AttackComboMode attackMode)
-    {
-        BasicAttackComboData comboData = GetComboData(attackMode);
-        if (comboData == null) return;
-        
-        int maxCombo = comboData.GetMaxCombo();
-        if (maxCombo <= 0) return;
-
-        if (comboStep >= maxCombo || attackMode != currentComboMode) comboStep = 0;
-
-        currentComboMode = attackMode;
-        comboStep++;
-        
-        // Setup Step Data Cache
-        currentStepData = comboData.GetStep(comboStep);
-        if (currentStepData != null)
-        {
-            cachedPhase1Frames = currentStepData.startupFrames;
-            cachedPhase2Frames = cachedPhase1Frames + currentStepData.activeFrames;
-            cachedPhase3Frames = cachedPhase2Frames + currentStepData.recoveryFrames;
-        }
-
-        currentFrameState = AttackFrameState.Windup;
-        currentAttackFrame = 0; 
-        logicTimeCounter = 0f;
-        hitstopFramesLeft = 0; 
-        hitboxActiveCount = 0;
-        shouldResetUpdateLoop = true;
-
-        if (movement != null) movement.CancelAttackMotion();
-
-        CombatLog($"Combo Step {comboStep} Start ({attackMode})");
-
-        string clipName = currentStepData?.animationClip != null ? currentStepData.animationClip.name : null;
-        if (attackMode == AttackComboMode.AirNeutral) animHandler.TriggerAirAttack(comboStep, clipName);
-        else animHandler.TriggerAttackCombo(comboStep, clipName);
-    }
-
-    private void TriggerHitFrame(NormalHitbox normalHitbox = null, AttackHitFrameData legacyHitFrame = null)
-    {
-        float damageMult = 1f;
-        currentGrabHitbox = null;
-
-        if (normalHitbox != null)
-        {
-            damageMult = normalHitbox.damageMultiplier;
-            if (meleeHitboxController != null) meleeHitboxController.ApplyHitbox(normalHitbox);
-        }
-        else if (legacyHitFrame != null)
-        {
-            damageMult = legacyHitFrame.damageMultiplier;
-            if (meleeHitboxController != null) meleeHitboxController.ApplyHitFrame(legacyHitFrame);
-        }
-
-        float finalDamage = GetFinalAttackDamage(damageMult);
-
-        BasicAttackComboData comboData = GetComboData(currentComboMode);
-        int maxCombo = comboData != null ? comboData.GetMaxCombo() : 0;
-        bool isLastStep = (comboStep >= maxCombo);
-
-        if (meleeHitboxDamage != null) 
-            meleeHitboxDamage.SetHitData(finalDamage, isLastStep, 0f, 0f, hitbox: normalHitbox, hitFrameData: legacyHitFrame);
-
-        CombatLog($"Hitbox Active: {currentFrameState} (Frame {currentAttackFrame})");
-        EnableHitbox();
-        
-        // Clear the per-step hit tracking when a new hitframe activates,
-        // so each distinct hitframe window can hit targets again
-        hitEnemiesThisStep.Clear();
-    }
-
-    private void TriggerGrabFrame(GrabHitbox grabHitbox)
-    {
-        if (grabHitbox == null)
-        {
-            return;
-        }
-
-        currentGrabHitbox = grabHitbox;
-
-        if (meleeHitboxController != null)
-        {
-            meleeHitboxController.ApplyHitbox(grabHitbox);
-        }
-
-        float finalDamage = GetFinalAttackDamage(1f);
-        BasicAttackComboData comboData = GetComboData(currentComboMode);
-        int maxCombo = comboData != null ? comboData.GetMaxCombo() : 0;
-        bool isLastStep = comboStep >= maxCombo;
-
-        if (meleeHitboxDamage != null)
-        {
-            meleeHitboxDamage.SetGrabData(finalDamage, grabHitbox, isLastStep);
-        }
-
-        CombatLog($"Grab Hitbox Active: {currentFrameState} (Frame {currentAttackFrame})");
-        EnableHitbox();
-        hitEnemiesThisStep.Clear();
-    }
 
     public void EnableHitbox()
     {
@@ -707,144 +446,187 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
         }
     }
 
-    public void ResetCombo()
+    // =========================================================
+    // Hit Frame Triggering
+    // =========================================================
+
+    private void TriggerHitFrame(NormalHitbox normalHitbox)
     {
-        bool wasAirCombo = (currentComboMode == AttackComboMode.AirNeutral && comboStep > 0 && !isPlungeAttacking);
+        float damageMult = 1f;
+        currentGrabHitbox = null;
 
-        if (wasAirCombo && movement != null && !movement.IsGrounded())
-            movement.TriggerAirComboCooldown();
-
-        comboStep = 0;
-        currentFrameState = AttackFrameState.None;
-        currentComboMode = AttackComboMode.Ground;
-        currentStepData = null;
-
-        hitboxActiveCount = 0;
-        hitstopFramesLeft = 0;
-        currentAttackFrame = 0;
-        logicTimeCounter = 0f;
-        isPlungeAttacking = false;
-        plungeImpactTriggered = false;
-        isExecutingSubStep = false;
-        activeSubSteps = null;
-        currentSubStepIndex = 0;
-        DisableHitbox(true);
-
-        if (movement != null) movement.CancelAttackMotion();
-        if (animHandler != null) animHandler.ResetCombo();
-
-        if (animHandler != null && animHandler.GetComponent<Animator>() != null)
+        if (normalHitbox != null)
         {
-            animHandler.GetComponent<Animator>().speed = 1f;
+            damageMult = normalHitbox.damageMultiplier;
+            if (meleeHitboxController != null) meleeHitboxController.ApplyHitbox(normalHitbox);
         }
 
-        CombatLog("Combo Reset");
-        OnComboFinished?.Invoke();
+        float finalDamage = GetFinalAttackDamage(damageMult);
+
+        if (meleeHitboxDamage != null)
+            meleeHitboxDamage.SetHitData(finalDamage, false, 0f, 0f, hitbox: normalHitbox);
+
+        CombatLog($"Active: (Frame {currentAttackFrame})");
+        EnableHitbox();
+
+        // Clear per-step hit tracking so each distinct hitframe window can hit targets
+        hitEnemiesThisStep.Clear();
     }
+
+    private void TriggerGrabFrame(GrabHitbox grabHitbox)
+    {
+        if (grabHitbox == null) return;
+
+        currentGrabHitbox = grabHitbox;
+
+        if (meleeHitboxController != null)
+            meleeHitboxController.ApplyHitbox(grabHitbox);
+
+        float finalDamage = GetFinalAttackDamage(1f);
+
+        if (meleeHitboxDamage != null)
+            meleeHitboxDamage.SetGrabData(finalDamage, grabHitbox, false);
+
+        CombatLog($"Grab Active: (Frame {currentAttackFrame})");
+        EnableHitbox();
+        hitEnemiesThisStep.Clear();
+    }
+
+    // =========================================================
+    // Hit Detection (OverlapBox)
+    // =========================================================
+
+    private void PerformHitboxOverlapCheck()
+    {
+        if (meleeHitbox == null || meleeHitboxController == null) return;
+
+        BoxCollider2D col = meleeHitboxController.hitboxCollider;
+        if (col == null) return;
+
+        Vector2 worldPos = col.transform.TransformPoint(col.offset);
+        Vector2 size = col.size;
+        float angle = col.transform.eulerAngles.z;
+
+        Collider2D[] results = Physics2D.OverlapBoxAll(worldPos, size, angle, enemyLayerMask);
+
+        // Sort by distance for grabs
+        if (currentGrabHitbox != null && results.Length > 1)
+        {
+            Vector2 origin = GetGrabOrigin();
+            System.Array.Sort(results, (a, b) =>
+            {
+                float distA = Vector2.SqrMagnitude((Vector2)a.transform.position - origin);
+                float distB = Vector2.SqrMagnitude((Vector2)b.transform.position - origin);
+                return distA.CompareTo(distB);
+            });
+        }
+
+        bool didGrabAny = false;
+
+        foreach (var hit in results)
+        {
+            EnemyController enemy = hit.GetComponentInParent<EnemyController>();
+            if (enemy != null && !hitEnemiesThisStep.Contains(enemy) && CanProcessHitboxTarget(enemy))
+            {
+                hitEnemiesThisStep.Add(enemy);
+                CombatLog($"HIT: {enemy.gameObject.name} (Damage: {meleeHitboxDamage.DamageValue:F1})");
+
+                if (meleeHitboxDamage != null)
+                    meleeHitboxDamage.ProcessHit(enemy);
+
+                if (currentGrabHitbox != null)
+                    didGrabAny = true;
+            }
+        }
+
+        // Notify PlayerAttackState that a grab connected (for tree branching)
+        if (didGrabAny && HasGrabbedEnemy())
+        {
+            OnGrabConnected?.Invoke();
+        }
+    }
+
+    // =========================================================
+    // Grab Management
+    // =========================================================
 
     public void RegisterGrabbedEnemy(EnemyController enemy)
     {
-        if (enemy == null)
-        {
-            return;
-        }
+        if (enemy == null) return;
+        if (activeThrowContext == null)
+            activeThrowContext = new ThrowContext(transform.root.GetInstanceID());
 
-        if (currentGrabbedEnemy != null && currentGrabbedEnemy != enemy)
-        {
-            ReleaseGrabbedEnemy();
-        }
-
-        currentGrabbedEnemy = enemy;
+        activeThrowContext.AddGrabbedTarget(enemy);
     }
 
     public void ClearGrabbedEnemy(EnemyController enemy = null)
     {
-        if (enemy != null && currentGrabbedEnemy != enemy)
-        {
-            return;
-        }
-
-        currentGrabbedEnemy = null;
+        if (activeThrowContext != null)
+            activeThrowContext.ClearTargets();
     }
 
     public bool IsHoldingEnemy(EnemyController enemy)
     {
-        return enemy != null && currentGrabbedEnemy == enemy;
+        return activeThrowContext != null && activeThrowContext.HasTarget(enemy);
     }
 
     public void ReleaseGrabbedEnemy()
     {
-        if (currentGrabbedEnemy == null)
-        {
-            return;
-        }
-
-        currentGrabbedEnemy.ReleaseGrab(transform.root.GetInstanceID());
-        currentGrabbedEnemy = null;
+        if (activeThrowContext != null)
+            activeThrowContext.BreakGrab();
     }
 
-    public bool TryStartPlungeAttack()
+    public bool ValidateGrabTarget(EnemyController enemy, GrabHitbox grabHitbox = null)
     {
-        PlungeAttackData plungeData = GetPlungeAttackData();
-        if (plungeData == null || !plungeData.isEnabled) return false;
-        if (movement == null || movement.IsGrounded() || movement.IsDashing || movement.IsLanding) return false;
+        if (grabHitbox == null) grabHitbox = currentGrabHitbox;
+        if (enemy == null || grabHitbox == null || !enemy.IsAlive) return false;
 
-        AttackStepData impactStep = plungeData.impactStep;
-        if (impactStep == null || !HasAnyHitboxData(impactStep)) return false;
-
-        ResetCombo();
-
-        isPlungeAttacking = true;
-        plungeImpactTriggered = false;
-        currentFrameState = AttackFrameState.Windup;
-        currentAttackFrame = 0;
-        logicTimeCounter = 0f;
-        hitstopFramesLeft = 0;
-        hitboxActiveCount = 0;
-        shouldResetUpdateLoop = true;
-        
-        currentStepData = impactStep;
-        cachedPhase1Frames = currentStepData.startupFrames;
-        cachedPhase2Frames = cachedPhase1Frames + currentStepData.activeFrames;
-        cachedPhase3Frames = cachedPhase2Frames + currentStepData.recoveryFrames;
-
-        if (movement != null)
-        {
-            movement.CancelAttackMotion();
-            movement.StartPlungeMotion(plungeData.downwardSpeed);
-        }
-        if (animHandler != null) animHandler.TriggerPlungeFall(plungeData.fallAnimationStateName);
+        if (!grabHitbox.canGrabAirborne && IsEnemyAirborneForGrab(enemy))
+            return false;
 
         return true;
     }
 
-    private void HandlePlungeLanding()
+    /// <summary>
+    /// Maintain grabbed enemies through a tree-based grab follow-up chain.
+    /// Called by PlayerAttackState when branching into grab follow-up nodes.
+    /// </summary>
+    public void MaintainGrabThroughFollowUp(int framesUntilRelease)
     {
-        if (!isPlungeAttacking || plungeImpactTriggered) return;
+        if (activeThrowContext == null || !activeThrowContext.HasAnyTargets() || currentGrabHitbox == null)
+            return;
 
-        plungeImpactTriggered = true;
-        currentFrameState = AttackFrameState.Windup;
-        currentAttackFrame = 0;
-        logicTimeCounter = 0f;
-        hitstopFramesLeft = 0;
-        
-        PlungeAttackData plungeData = GetPlungeAttackData();
-        if (animHandler != null)
+        if (framesUntilRelease <= 0) return;
+
+        Transform grabSocket = meleeHitboxController != null && meleeHitboxController.attackAnchor != null
+            ? meleeHitboxController.attackAnchor
+            : transform.root;
+
+        foreach (var enemyToMaintain in activeThrowContext.GetGrabbedEnemies())
         {
-            string stateName = plungeData != null ? plungeData.impactAnimationStateName : null;
-            animHandler.TriggerPlungeImpact(stateName);
+            if (enemyToMaintain != null)
+            {
+                enemyToMaintain.MaintainGrab(
+                    transform.root.GetInstanceID(),
+                    grabSocket,
+                    currentGrabHitbox.snapOffset,
+                    framesUntilRelease,
+                    currentGrabHitbox.recoveryFrames
+                );
+            }
         }
     }
 
-    private void HandleLandingComboReset()
-    {
-        if (currentComboMode == AttackComboMode.AirNeutral && comboStep > 0) ResetCombo();
-    }
+    // =========================================================
+    // Internal Event Handlers
+    // =========================================================
 
     private void HandleDashStart()
     {
-        if (CanPreserveAirComboProgress()) CancelCurrentAttackButKeepComboProgress();
-        else ResetCombo();
+        if (isAirCombo && comboDepth > 0 && !isPlungeFalling && movement != null && !movement.IsGrounded())
+            CancelCurrentAttackButKeepComboProgress();
+        else
+            ResetCombo();
     }
 
     private void HandleJumpStart()
@@ -852,94 +634,107 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
         ResetCombo();
     }
 
-    private bool CanAcceptAirAttackRequest()
+    private void HandleLandingComboReset()
     {
-        if (currentComboMode == AttackComboMode.AirNeutral && comboStep > 0)
-        {
-            BasicAttackComboData airComboData = GetComboData(AttackComboMode.AirNeutral);
-            int maxCombo = airComboData != null ? airComboData.GetMaxCombo() : 0;
-            if (comboStep < maxCombo) return true;
-        }
-        return movement != null && movement.CanStartAirCombo();
+        if (isAirCombo && comboDepth > 0) ResetCombo();
     }
 
-    public bool IsAttacking() { return currentFrameState != AttackFrameState.None; }
-    public bool HasActiveHitstop => hitstopFramesLeft > 0;
-    public bool ShouldInterruptAttackOnGrounded()
-    {
-        if (!IsAttacking()) return false;
-        if (isPlungeAttacking) return IsPlungeInAirPhase();
-        return currentComboMode == AttackComboMode.AirNeutral && comboStep > 0;
-    }
-    public bool ShouldSuppressLandingFeedback() { return isPlungeAttacking && !plungeImpactTriggered; }
-    public bool IsPlungeInAirPhase() { return isPlungeAttacking && !plungeImpactTriggered; }
-    public bool ShouldLockAirComboInPlace() { return IsAttacking() && !isPlungeAttacking && currentComboMode == AttackComboMode.AirNeutral && movement != null && !movement.IsGrounded(); }
-    public int GetComboStep() { return comboStep; }
-    public AttackFrameState GetCurrentFrameState() { return currentFrameState; }
-    public bool CanSwitchDirection() { return currentFrameState == AttackFrameState.None || currentFrameState == AttackFrameState.Windup; }
-    public bool CanMoveAfterAttack() { return !IsAttacking(); }
-
-    public bool IsLastComboStep()
-    {
-        BasicAttackComboData comboData = GetComboData(currentComboMode);
-        return comboData != null && comboStep >= comboData.GetMaxCombo();
-    }
+    // =========================================================
+    // Utility
+    // =========================================================
 
     private float GetFinalAttackDamage(float hitFrameMultiplier)
     {
         if (playerCharacter == null || playerCharacter.characterObject == null) return hitFrameMultiplier;
-        return playerCharacter.characterObject.stats.attack * hitFrameMultiplier;
+        
+        float baseDamage = playerCharacter.characterObject.stats.attack * hitFrameMultiplier;
+        return baseDamage;
     }
 
-    private float GetComboResetDelay()
+    private Vector3 GetSpawnPosition(Vector2 offset)
     {
-        if (isPlungeAttacking) return 0.8f;
-        BasicAttackComboData comboData = GetComboData(currentComboMode);
-        if (comboData == null) return 0.8f;
-        return comboData.comboResetDelay;
+        Transform origin = transform; // Default to character root
+        Vector3 finalOffset = new Vector3(offset.x, offset.y, 0f);
+
+        if (movement != null && movement.FacingDirection == -1)
+            finalOffset.x = -Mathf.Abs(finalOffset.x);
+        else
+            finalOffset.x = Mathf.Abs(finalOffset.x);
+
+        return origin.position + finalOffset;
     }
 
-    private AttackComboMode GetRequestedComboMode()
+    private Vector2 GetFacingDirection()
     {
-        if (movement != null && !movement.IsGrounded()) return AttackComboMode.AirNeutral;
-        return AttackComboMode.Ground;
+        if (movement != null && movement.FacingDirection == -1)
+            return Vector2.left;
+        return Vector2.right;
     }
 
-    private BasicAttackComboData GetComboData(AttackComboMode comboMode)
-    {
-        if (playerCharacter == null || playerCharacter.characterObject == null) return null;
-        if (comboMode == AttackComboMode.AirNeutral) return playerCharacter.characterObject.neutralAirComboData;
-        return playerCharacter.characterObject.basicAttackComboData;
-    }
+    // =========================================================
+    // Skill Tree Buff Logic (Moved from Controllers)
+    // =========================================================
 
-    private PlungeAttackData GetPlungeAttackData()
+    private float GetFinalSkillDamage(float baseValue)
     {
-        if (playerCharacter == null || playerCharacter.characterObject == null) return null;
-        return playerCharacter.characterObject.plungeAttackData;
-    }
+        float result = baseValue;
+        SkillTreeData tree = playerCharacter.characterObject.skillTreeData;
+        if (tree == null || tree.nodes == null) return result;
 
-    private bool CanPreserveAirComboProgress()
-    {
-        return movement != null && !movement.IsGrounded() && currentComboMode == AttackComboMode.AirNeutral && comboStep > 0 && !isPlungeAttacking;
-    }
-
-    public void CancelCurrentAttackButKeepComboProgress()
-    {
-        currentFrameState = AttackFrameState.None;
-        currentAttackFrame = 0;
-        logicTimeCounter = 0f;
-        hitstopFramesLeft = 0;
-        hitboxActiveCount = 0;
-        lastAttackInputTime = Time.time;
-        DisableHitbox(true);
-
-        if (animHandler != null && animHandler.GetComponent<Animator>() != null)
+        for (int i = 0; i < tree.nodes.Length; i++)
         {
-            animHandler.GetComponent<Animator>().speed = 1f;
+            var node = tree.nodes[i];
+            if (node != null && node.unlocked && node.effectType == SkillTreeEffectType.SkillDamageBonus)
+                result += node.effectValue;
         }
+        return result;
+    }
 
-        if (movement != null) movement.CancelAttackMotion();
-        OnComboFinished?.Invoke();
+    private float GetFinalUltimateDamage(float baseValue)
+    {
+        float result = baseValue;
+        SkillTreeData tree = playerCharacter.characterObject.skillTreeData;
+        if (tree == null || tree.nodes == null) return result;
+
+        for (int i = 0; i < tree.nodes.Length; i++)
+        {
+            var node = tree.nodes[i];
+            if (node != null && node.unlocked && node.effectType == SkillTreeEffectType.UltimateDamageBonus)
+                result += node.effectValue;
+        }
+        return result;
+    }
+
+    public float GetFinalSkillCooldown(AttackCategory category, float baseValue)
+    {
+        if (category != AttackCategory.Skill) return baseValue;
+
+        float result = baseValue;
+        SkillTreeData tree = playerCharacter.characterObject.skillTreeData;
+        if (tree == null || tree.nodes == null) return result;
+
+        for (int i = 0; i < tree.nodes.Length; i++)
+        {
+            var node = tree.nodes[i];
+            if (node != null && node.unlocked && node.effectType == SkillTreeEffectType.SkillCooldownReduction)
+                result -= node.effectValue;
+        }
+        return Mathf.Max(result, 0.1f);
+    }
+
+    public float GetFinalUltimateDuration(float baseValue)
+    {
+        float result = baseValue;
+        SkillTreeData tree = playerCharacter.characterObject.skillTreeData;
+        if (tree == null || tree.nodes == null) return result;
+
+        for (int i = 0; i < tree.nodes.Length; i++)
+        {
+            var node = tree.nodes[i];
+            if (node != null && node.unlocked && node.effectType == SkillTreeEffectType.UltimateDurationBonus)
+                result += node.effectValue;
+        }
+        return result;
     }
 
     private Vector2 GetGrabOrigin()
@@ -964,8 +759,7 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
 
     private bool IsEnemyAirborneForGrab(EnemyController enemy)
     {
-        if (enemy == null)
-            return false;
+        if (enemy == null) return false;
 
         EnemyReactionState reactionState = enemy.CurrentReactionState;
         if (reactionState == EnemyReactionState.Knockup || reactionState == EnemyReactionState.Knockfall)
@@ -974,198 +768,41 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
         return enemy.rb != null && Mathf.Abs(enemy.rb.linearVelocity.y) > 0.05f;
     }
 
-    public bool ValidateGrabTarget(EnemyController enemy, GrabHitbox grabHitbox = null)
-    {
-        if (grabHitbox == null)
-        {
-            grabHitbox = currentGrabHitbox;
-        }
-
-        if (enemy == null || grabHitbox == null || !enemy.IsAlive)
-            return false;
-
-        if (!grabHitbox.canGrabAirborne && IsEnemyAirborneForGrab(enemy))
-        {
-            // Debug.Log($"[Grab] Refused {enemy.name}: Target is Airborne (Vel Y: {enemy.rb?.linearVelocity.y})");
-            return false;
-        }
-
-        Vector2 origin = GetGrabOrigin();
-        Vector2 toEnemy = (Vector2)enemy.transform.position - origin;
-
-        if (grabHitbox.grabRange > 0f && toEnemy.magnitude > grabHitbox.grabRange)
-        {
-            // Debug.Log($"[Grab] Refused {enemy.name}: Out of Range (Dist: {toEnemy.magnitude}, Range: {grabHitbox.grabRange})");
-            return false;
-        }
-
-        if (toEnemy.sqrMagnitude <= Mathf.Epsilon)
-            return true;
-
-        if (grabHitbox.grabAngle <= 0f || grabHitbox.grabAngle >= 360f)
-            return true;
-
-        Vector2 forward = new Vector2(GetFacingDirectionForGrab(), 0f);
-        float angleToEnemy = Vector2.Angle(forward, toEnemy.normalized);
-        return angleToEnemy <= grabHitbox.grabAngle * 0.5f;
-    }
-
     private bool CanProcessHitboxTarget(EnemyController enemy)
     {
-        if (enemy == null || !enemy.IsAlive)
-            return false;
+        if (enemy == null || !enemy.IsAlive) return false;
+        if (currentGrabHitbox == null) return true;
 
-        if (currentGrabHitbox == null)
-            return true;
-
-        if (currentGrabbedEnemy != null && currentGrabbedEnemy != enemy)
+        if (activeThrowContext != null && activeThrowContext.HasTarget(enemy))
             return false;
 
         return ValidateGrabTarget(enemy);
     }
 
-    private void PerformHitboxOverlapCheck()
-    {
-        if (meleeHitbox == null || meleeHitboxController == null) return;
-
-        BoxCollider2D col = meleeHitboxController.hitboxCollider;
-        if (col == null) return;
-
-        // Get the world-space bounding box for the hitbox
-        Vector2 worldPos = col.transform.TransformPoint(col.offset);
-        Vector2 size = col.size;
-        float angle = col.transform.eulerAngles.z;
-
-        Collider2D[] results = Physics2D.OverlapBoxAll(worldPos, size, angle, enemyLayerMask);
-
-        foreach (var hit in results)
-        {
-            EnemyController enemy = hit.GetComponentInParent<EnemyController>();
-            if (enemy != null && !hitEnemiesThisStep.Contains(enemy) && CanProcessHitboxTarget(enemy))
-            {
-                hitEnemiesThisStep.Add(enemy);
-                CombatLog($"HIT: {enemy.gameObject.name} (Damage: {meleeHitboxDamage.DamageValue})");
-                
-                // Trigger the actual damage and hit effects on the damage component
-                if (meleeHitboxDamage != null)
-                {
-                    meleeHitboxDamage.ProcessHit(enemy);
-                }
-
-                bool hasOwnedGrabTarget = currentGrabHitbox != null && currentGrabbedEnemy == enemy;
-
-                // NEW LOGIC: Conditional Branching
-                if (currentGrabHitbox != null
-                    && currentGrabHitbox.branchOnSuccess
-                    && hasOwnedGrabTarget
-                    && currentGrabHitbox.successSteps != null
-                    && currentGrabHitbox.successSteps.Count > 0)
-                {
-                    TriggerGrabSuccessBranch(currentGrabHitbox.successSteps, enemy);
-                    break;
-                }
-
-                if (currentGrabHitbox != null && currentGrabbedEnemy != null)
-                {
-                    break;
-                }
-            }
-        }
-    }
-
-    private void TriggerGrabSuccessBranch(List<AttackStepData> successSteps, EnemyController grabbedEnemy = null)
-    {
-        if (successSteps == null || successSteps.Count == 0)
-        {
-            return;
-        }
-
-        MaintainGrabbedEnemyThroughSubSteps(successSteps, grabbedEnemy);
-        isExecutingSubStep = true;
-        activeSubSteps = successSteps;
-        currentSubStepIndex = 0;
-        
-        TriggerSubStep(activeSubSteps[currentSubStepIndex]);
-    }
-
-    private void TriggerSubStep(AttackStepData subStep)
-    {
-        DisableHitbox(true);
-        hitEnemiesThisStep.Clear();
-
-        currentStepData = subStep;
-        
-        cachedPhase1Frames = currentStepData.startupFrames;
-        cachedPhase2Frames = cachedPhase1Frames + currentStepData.activeFrames;
-        cachedPhase3Frames = cachedPhase2Frames + currentStepData.recoveryFrames;
-        
-        currentAttackFrame = 0;
-        logicTimeCounter = 0f;
-        hitboxActiveCount = 0;
-        currentFrameState = AttackFrameState.Windup;
-        shouldResetUpdateLoop = true;
-
-        if (animHandler != null && currentStepData.animationClip != null)
-        {
-            animHandler.TriggerSubStepAnimation(currentStepData.animationClip);
-        }
-
-        OnBranchToSubStep?.Invoke(currentStepData);
-    }
-
-    private void MaintainGrabbedEnemyThroughSubSteps(List<AttackStepData> successSteps, EnemyController grabbedEnemy)
-    {
-        EnemyController enemyToMaintain = grabbedEnemy != null ? grabbedEnemy : currentGrabbedEnemy;
-        if (enemyToMaintain == null || currentGrabHitbox == null)
-        {
-            return;
-        }
-
-        RegisterGrabbedEnemy(enemyToMaintain);
-
-        int framesUntilRelease = CalculateFramesUntilGrabRelease(successSteps);
-        if (framesUntilRelease <= 0)
-        {
-            return;
-        }
-
-        Transform grabSocket = meleeHitboxController != null && meleeHitboxController.attackAnchor != null
-            ? meleeHitboxController.attackAnchor
-            : transform.root;
-
-        enemyToMaintain.MaintainGrab(
-            transform.root.GetInstanceID(),
-            grabSocket,
-            currentGrabHitbox.snapOffset,
-            framesUntilRelease,
-            currentGrabHitbox.recoveryFrames);
-    }
-
-    private int CalculateFramesUntilGrabRelease(List<AttackStepData> successSteps)
+    /// <summary>
+    /// Calculate how many frames until the first non-grab hitbox across a chain of steps.
+    /// Used for grab maintenance timing when walking the combo tree.
+    /// </summary>
+    public static int CalculateFramesUntilRelease(ComboNode node)
     {
         int accumulatedFrames = 0;
+        ComboNode current = node;
 
-        for (int i = 0; i < successSteps.Count; i++)
+        while (current != null && current.stepData != null)
         {
-            AttackStepData step = successSteps[i];
-            if (step == null)
-            {
-                continue;
-            }
+            AttackStepData step = current.stepData;
+            int releaseFrame = GetFirstReleaseFrame(step);
+            if (releaseFrame >= 0)
+                return accumulatedFrames + releaseFrame;
 
-            int firstReleaseFrame = GetFirstReleaseFrame(step);
-            if (firstReleaseFrame >= 0)
-            {
-                return accumulatedFrames + firstReleaseFrame;
-            }
-
-            accumulatedFrames += GetTotalFrames(step);
+            accumulatedFrames += Mathf.Max(0, step.startupFrames) + Mathf.Max(0, step.activeFrames) + Mathf.Max(0, step.recoveryFrames);
+            current = current.defaultNext;
         }
 
         return accumulatedFrames;
     }
 
-    private int GetFirstReleaseFrame(AttackStepData step)
+    private static int GetFirstReleaseFrame(AttackStepData step)
     {
         int earliestFrame = int.MaxValue;
 
@@ -1174,10 +811,7 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
             for (int i = 0; i < step.hitData.hitboxes.Count; i++)
             {
                 HitboxBase hitbox = step.hitData.hitboxes[i];
-                if (hitbox == null || hitbox is GrabHitbox)
-                {
-                    continue;
-                }
+                if (hitbox == null || hitbox is GrabHitbox) continue;
 
                 earliestFrame = Mathf.Min(
                     earliestFrame,
@@ -1185,34 +819,6 @@ public class PlayerBasicAttack : MonoBehaviour, ICharacterCombat
             }
         }
 
-        if (step.hitFrames != null)
-        {
-            for (int i = 0; i < step.hitFrames.Length; i++)
-            {
-                AttackHitFrameData hitFrame = step.hitFrames[i];
-                if (hitFrame == null)
-                {
-                    continue;
-                }
-
-                earliestFrame = Mathf.Min(
-                    earliestFrame,
-                    step.startupFrames + 1 + Mathf.Max(0, hitFrame.startFrameOffset));
-            }
-        }
-
         return earliestFrame == int.MaxValue ? -1 : earliestFrame;
-    }
-
-    private int GetTotalFrames(AttackStepData step)
-    {
-        if (step == null)
-        {
-            return 0;
-        }
-
-        return Mathf.Max(0, step.startupFrames)
-             + Mathf.Max(0, step.activeFrames)
-             + Mathf.Max(0, step.recoveryFrames);
     }
 }

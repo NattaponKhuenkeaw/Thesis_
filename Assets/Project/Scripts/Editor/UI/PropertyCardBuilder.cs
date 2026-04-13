@@ -20,10 +20,12 @@ namespace CombatEditor.UI
 
         private CharacterObject character;
         private ActionNode currentNode;
+        private readonly ActionTreeController treeController;
 
-        public PropertyCardBuilder(VisualElement panelContainer, Action onDataChanged, Action onStructureChanged)
+        public PropertyCardBuilder(VisualElement panelContainer, ActionTreeController treeController, Action onDataChanged, Action onStructureChanged)
         {
             container = panelContainer;
+            this.treeController = treeController;
             this.onDataChanged = onDataChanged;
             this.onStructureChanged = onStructureChanged;
         }
@@ -48,14 +50,23 @@ namespace CombatEditor.UI
                 case "AttackStep":
                     BuildAttackStepCards(node.DataRef as AttackStepData);
                     break;
+                case "ComboNode":
+                    BuildComboNodeCards(node.DataRef as ComboNode);
+                    break;
                 case "Dash":
                     BuildDashCards(node.DataRef as DashData);
                     break;
                 case "Skill":
-                    BuildPlaceholder("Skill data - edit in Inspector");
-                    break;
                 case "Ultimate":
-                    BuildPlaceholder("Ultimate data - edit in Inspector");
+                    // Skill and Ultimate are now handled as standard AttackStepData via the ResolveTree.
+                    // This case is kept for category identification but expects AttackStepData in DataRef if any.
+                    if (node.DataRef is AttackStepData step) BuildAttackStepCards(step);
+                    break;
+                case "CombatAction":
+                    BuildCombatActionCards(node.DataRef as CombatAction);
+                    break;
+                case "ResolverTable":
+                    BuildResolveTableCards(node.DataRef as ActionResolverTable);
                     break;
             }
         }
@@ -73,8 +84,9 @@ namespace CombatEditor.UI
                 {
                     RecordUndo("Edit Step Name");
                     step.stepName = value;
-                    MarkDirty();
+                    MarkDirtyAndRebuild();
                 });
+
 
                 if (step.animationClip != null)
                 {
@@ -199,7 +211,261 @@ namespace CombatEditor.UI
                 }
             }
 
+
             BuildAddComponentButton(step);
+        }
+
+        private void BuildCombatActionCards(CombatAction action)
+        {
+            if (action == null) return;
+
+            BuildFoldoutCard($"{action.Category} Setup", "action_setup", new Color(0.8f, 0.2f, 0.8f), body =>
+            {
+                AddTextField(body, "Action Name", action.actionName, value => {
+                    RecordUndo("Edit Action Name");
+                    action.actionName = value;
+                    MarkDirtyAndRebuild();
+                });
+
+                AddEnumField(body, "Context", action.context, value => {
+                    RecordUndo("Edit Context");
+                    action.context = (CombatActionContext)value;
+                    MarkDirtyAndRebuild();
+                });
+
+                AddIntField(body, "Priority", action.priority, value => {
+                    RecordUndo("Edit Priority");
+                    action.priority = value;
+                    MarkDirty();
+                });
+
+                if (action is SkillAction skill)
+                {
+                    AddSeparator(body, "Resource Cost");
+                    
+                    AddFloatField(body, "Cooldown", skill.cooldown, value => {
+                        RecordUndo("Edit Cooldown");
+                        skill.cooldown = value;
+                        MarkDirty();
+                    });
+
+                    AddFloatField(body, "Energy Cost", skill.energyCost, value => {
+                        RecordUndo("Edit Energy Cost");
+                        skill.energyCost = value;
+                        MarkDirty();
+                    });
+                }
+            });
+        }
+
+        private CombatAction GetCurrentAction()
+        {
+            if (character == null || character.actionResolverTable == null || currentNode == null) return null;
+            string cat = currentNode.Category;
+            if (string.IsNullOrEmpty(cat)) return null;
+
+            int idx = -1;
+            if (cat.StartsWith("Combo_") && int.TryParse(cat.Substring(6), out idx) && idx < character.actionResolverTable.comboActions.Count)
+                return character.actionResolverTable.comboActions[idx];
+            if (cat.StartsWith("Skill_") && int.TryParse(cat.Substring(6), out idx) && idx < character.actionResolverTable.skillActions.Count)
+                return character.actionResolverTable.skillActions[idx];
+            if (cat.StartsWith("Ultimate_") && int.TryParse(cat.Substring(9), out idx) && idx < character.actionResolverTable.ultimateActions.Count)
+                return character.actionResolverTable.ultimateActions[idx];
+            return null;
+        }
+
+        private List<ComboNode> GetAllNodesInAction(CombatAction action)
+        {
+            var list = new List<ComboNode>();
+            if (action == null || action.comboTree == null || action.comboTree.rootNode == null) return list;
+
+            var visited = new HashSet<ComboNode>();
+            void Walk(ComboNode n) {
+                if (n == null || visited.Contains(n)) return;
+                visited.Add(n);
+                list.Add(n);
+                Walk(n.defaultNext);
+                if (n.routes != null) {
+                    foreach(var r in n.routes) Walk(r.targetNode);
+                }
+            }
+            Walk(action.comboTree.rootNode);
+            return list;
+        }
+
+        private void BuildComboNodeCards(ComboNode node)
+        {
+            if (node == null) return;
+
+            // 1. Attack Step Card (Main Properties)
+            BuildAttackStepCards(node.stepData);
+
+            // 2. Routing Card (New system)
+            BuildFoldoutCard("Combo Routing", "combo_routing", new Color(0.9f, 0.4f, 1f), body =>
+            {
+                CombatAction currentAction = GetCurrentAction();
+                List<ComboNode> allNodes = GetAllNodesInAction(currentAction);
+                List<string> nodeNames = new List<string> { "NONE (End)" };
+                foreach (var n in allNodes) nodeNames.Add(n.stepData?.stepName ?? "Unnamed");
+
+                // Default Next
+                AddSeparator(body, "Default Transition (Linear Phase)");
+                
+                VisualElement defaultNextRow = new VisualElement();
+                defaultNextRow.AddToClassList("card-field-row");
+                
+                int defaultNextIndex = node.defaultNext == null ? 0 : allNodes.IndexOf(node.defaultNext) + 1;
+                if (defaultNextIndex == 0 && node.defaultNext != null) {
+                    nodeNames.Add(node.defaultNext.stepData?.stepName ?? "Unknown");
+                    defaultNextIndex = nodeNames.Count - 1;
+                }
+
+                DropdownField defaultNextDropdown = new DropdownField("Next Node", nodeNames, defaultNextIndex);
+                defaultNextDropdown.RegisterValueChangedCallback(evt => {
+                    RecordUndo("Change Default Next");
+                    int newIdx = defaultNextDropdown.index;
+                    if (newIdx == 0) {
+                        node.defaultNext = null;
+                    } else if (newIdx - 1 < allNodes.Count) {
+                        node.defaultNext = allNodes[newIdx - 1];
+                    }
+                    MarkDirtyAndRebuild();
+                });
+                defaultNextRow.Add(defaultNextDropdown);
+
+                if (node.defaultNext != null)
+                {
+                    var goBtn = new Button(() => {
+                        treeController.SelectNodeByData(node.defaultNext);
+                    }) { text = "→" };
+                    defaultNextRow.Add(goBtn);
+                }
+                else
+                {
+                    var createNextBtn = new Button(() => {
+                        RecordUndo("Create Default Next");
+                        node.defaultNext = new ComboNode { stepData = new AttackStepData { stepName = "New Linear Step" } };
+                        MarkDirtyAndRebuild();
+                    }) { text = "+ Create Target" };
+                    defaultNextRow.Add(createNextBtn);
+                }
+                body.Add(defaultNextRow);
+
+                // Routes List
+                AddSeparator(body, "Conditional Routes");
+                if (node.routes == null) node.routes = new List<ComboRoute>();
+
+                for (int i = 0; i < node.routes.Count; i++)
+                {
+                    int index = i;
+                    var route = node.routes[i];
+                    
+                    VisualElement routeBox = new VisualElement();
+                    routeBox.AddToClassList("route-box");
+                    routeBox.style.backgroundColor = new Color(0, 0, 0, 0.2f);
+                    routeBox.style.paddingLeft = 5;
+                    routeBox.style.marginBottom = 5;
+
+                    AddEnumField(routeBox, "Input", route.direction, val => {
+                        RecordUndo("Change Route Input");
+                        route.direction = (DirectionRequirement)val;
+                        MarkDirty();
+                    });
+
+                    AddToggleField(routeBox, "Grounded Only", route.requireGrounded, val => {
+                        RecordUndo("Change Route Grounded");
+                        route.requireGrounded = val;
+                        MarkDirty();
+                    });
+
+                    AddToggleField(routeBox, "Airborne Only", route.requireAirborne, val => {
+                        RecordUndo("Change Route Airborne");
+                        route.requireAirborne = val;
+                        MarkDirty();
+                    });
+
+                    AddToggleField(routeBox, "Require Grabbed", route.requireGrabbedEnemy, val => {
+                        RecordUndo("Change Route Grabbed");
+                        route.requireGrabbedEnemy = val;
+                        MarkDirty();
+                    });
+
+                    AddIntField(routeBox, "Priority", route.priority, val => {
+                        RecordUndo("Change Route Priority");
+                        route.priority = val;
+                        MarkDirty();
+                    });
+
+                    VisualElement targetRow = new VisualElement();
+                    targetRow.AddToClassList("card-field-row");
+                    
+                    int currentIndex = route.targetNode == null ? 0 : allNodes.IndexOf(route.targetNode) + 1;
+                    if (currentIndex == 0 && route.targetNode != null) {
+                        nodeNames.Add(route.targetNode.stepData?.stepName ?? "Unknown");
+                        currentIndex = nodeNames.Count - 1;
+                    }
+
+                    DropdownField targetDropdown = new DropdownField("Target Node", nodeNames, currentIndex);
+                    targetDropdown.RegisterValueChangedCallback(evt => {
+                        RecordUndo("Change Route Target");
+                        int newIdx = targetDropdown.index;
+                        if (newIdx == 0) {
+                            route.targetNode = null;
+                        } else if (newIdx - 1 < allNodes.Count) {
+                            route.targetNode = allNodes[newIdx - 1];
+                        }
+                        MarkDirtyAndRebuild();
+                    });
+                    
+                    targetRow.Add(targetDropdown);
+
+                    if (route.targetNode != null)
+                    {
+                        var goBtn = new Button(() => {
+                            treeController.SelectNodeByData(route.targetNode);
+                        }) { text = "→" };
+                        targetRow.Add(goBtn);
+                    }
+                    else
+                    {
+                        var createTargetBtn = new Button(() => {
+                            RecordUndo("Create Branch Target");
+                            route.targetNode = new ComboNode { stepData = new AttackStepData { stepName = "New Branch Step" } };
+                            MarkDirtyAndRebuild();
+                        }) { text = "+ Create Target" };
+                        targetRow.Add(createTargetBtn);
+                    }
+                    
+                    routeBox.Add(targetRow);
+
+                    var removeBtn = new Button(() => {
+                        RecordUndo("Remove Route");
+                        node.routes.RemoveAt(index);
+                        MarkDirtyAndRebuild();
+                    }) { text = "Remove Route" };
+                    routeBox.Add(removeBtn);
+
+                    body.Add(routeBox);
+                }
+
+
+                var addRouteBtn = new Button(() => {
+                    RecordUndo("Add Route");
+                    node.routes.Add(new ComboRoute());
+                    MarkDirtyAndRebuild();
+                }) { text = "+ Add Branching Route" };
+                body.Add(addRouteBtn);
+            });
+        }
+
+        private void BuildResolveTableCards(ActionResolverTable table)
+        {
+            if (table == null) return;
+
+            BuildFoldoutCard("Global Resolver Tools", "resolver_tools", new Color(0.2f, 0.7f, 0.4f), body =>
+            {
+                body.Add(new HelpBox("Data migration tools are no longer available for this table. All combat actions must be authored directly in the combo trees.", HelpBoxMessageType.Info));
+            });
         }
 
         private void BuildMotionCard(VisualElement body, MotionFrameData motion)
@@ -463,10 +729,6 @@ namespace CombatEditor.UI
                 {
                     BuildGrabHitboxFields(inner, grabHitbox);
                 }
-                else if (hitbox is ProjectileHitbox projectileHitbox)
-                {
-                    BuildProjectileHitboxFields(inner, projectileHitbox);
-                }
             }, () =>
             {
                 RecordUndo("Delete Hitbox");
@@ -509,167 +771,97 @@ namespace CombatEditor.UI
             });
 
             AddSeparator(body, "Reaction and Hitstop");
-            AddToggle(body, "Use Deterministic Reaction", hitbox.useDeterministicReaction, value =>
-            {
-                RecordUndo("Toggle Deterministic Reaction");
-                if (value && !hitbox.useDeterministicReaction)
-                {
-                    hitbox.reactionKind = HitReactionData.InferLegacyReactionKind(hitbox.reactionVelocity, hitbox.isKnockdown);
-                    hitbox.impactFreezeFrames = hitbox.hitstunFrames;
-                    hitbox.reactionFrames = hitbox.knockbackFrames;
-                    hitbox.recoveryFrames = Mathf.Max(1, hitbox.recoveryFrames);
-                    hitbox.horizontalSpeed = Mathf.Abs(hitbox.reactionVelocity.x);
-                    hitbox.launchSpeed = Mathf.Max(0f, hitbox.reactionVelocity.y);
-                    hitbox.landingBehavior = HitReactionData.InferLandingBehavior(hitbox.reactionVelocity, hitbox.isKnockdown);
-                    hitbox.canAirJuggle = hitbox.isKnockdown || hitbox.reactionVelocity.y > 0.01f;
-                    hitbox.maxJuggleCount = hitbox.canAirJuggle ? Mathf.Max(1, hitbox.maxJuggleCount) : 0;
-                }
 
-                hitbox.useDeterministicReaction = value;
+            bool usesHorizontalSpeed = HitReactionData.UsesHorizontalSpeed(hitbox.reactionKind);
+            bool usesLaunchSpeed = HitReactionData.UsesLaunchSpeed(hitbox.reactionKind);
+            bool usesLandingBehavior = HitReactionData.UsesLandingBehavior(hitbox.reactionKind);
+            bool usesAirJuggle = HitReactionData.UsesAirJuggleSettings(hitbox.reactionKind);
+
+            AddEnumField(body, "Reaction Kind", hitbox.reactionKind, value =>
+            {
+                RecordUndo("Edit Reaction Kind");
+                hitbox.reactionKind = (EnemyReactionKind)value;
                 MarkDirtyAndRebuild();
             });
-
-            if (hitbox.useDeterministicReaction)
+            AddIntField(body, "HitStop / Impact Freeze", hitbox.impactFreezeFrames, value =>
             {
-                bool usesHorizontalSpeed = HitReactionData.UsesHorizontalSpeed(hitbox.reactionKind);
-                bool usesLaunchSpeed = HitReactionData.UsesLaunchSpeed(hitbox.reactionKind);
-                bool usesLandingBehavior = HitReactionData.UsesLandingBehavior(hitbox.reactionKind);
-                bool usesAirJuggle = HitReactionData.UsesAirJuggleSettings(hitbox.reactionKind);
+                RecordUndo("Edit Impact Freeze");
+                hitbox.impactFreezeFrames = value;
+                MarkDirty();
+            });
+            AddIntField(body, "Reaction Frames", hitbox.reactionFrames, value =>
+            {
+                RecordUndo("Edit Reaction Frames");
+                hitbox.reactionFrames = value;
+                MarkDirty();
+            });
+            AddIntField(body, "Recovery Frames", hitbox.recoveryFrames, value =>
+            {
+                RecordUndo("Edit Recovery Frames");
+                hitbox.recoveryFrames = value;
+                MarkDirty();
+            });
 
-                AddEnumField(body, "Reaction Kind", hitbox.reactionKind, value =>
+            if (usesHorizontalSpeed)
+            {
+                AddFloatField(body, "Horizontal Speed", hitbox.horizontalSpeed, value =>
                 {
-                    RecordUndo("Edit Reaction Kind");
-                    hitbox.reactionKind = (EnemyReactionKind)value;
+                    RecordUndo("Edit Horizontal Speed");
+                    hitbox.horizontalSpeed = value;
+                    MarkDirty();
+                });
+            }
+
+            if (usesLaunchSpeed)
+            {
+                AddFloatField(body, "Launch Up", hitbox.launchSpeed, value =>
+                {
+                    RecordUndo("Edit Launch Speed");
+                    hitbox.launchSpeed = value;
+                    MarkDirty();
+                });
+            }
+
+            if (usesLandingBehavior)
+            {
+                AddEnumField(body, "Landing Behavior", hitbox.landingBehavior, value =>
+                {
+                    RecordUndo("Edit Landing Behavior");
+                    hitbox.landingBehavior = (EnemyLandingBehavior)value;
+                    MarkDirty();
+                });
+            }
+
+            if (usesAirJuggle)
+            {
+                AddToggle(body, "Can Air Juggle", hitbox.canAirJuggle, value =>
+                {
+                    RecordUndo("Edit Can Air Juggle");
+                    hitbox.canAirJuggle = value;
                     MarkDirtyAndRebuild();
                 });
-                AddIntField(body, "HitStop / Impact Freeze", hitbox.impactFreezeFrames, value =>
-                {
-                    RecordUndo("Edit Impact Freeze");
-                    hitbox.impactFreezeFrames = value;
-                    MarkDirty();
-                });
-                AddIntField(body, "Reaction Frames", hitbox.reactionFrames, value =>
-                {
-                    RecordUndo("Edit Reaction Frames");
-                    hitbox.reactionFrames = value;
-                    MarkDirty();
-                });
-                AddIntField(body, "Recovery Frames", hitbox.recoveryFrames, value =>
-                {
-                    RecordUndo("Edit Recovery Frames");
-                    hitbox.recoveryFrames = value;
-                    MarkDirty();
-                });
 
-                if (usesHorizontalSpeed)
+                if (hitbox.canAirJuggle)
                 {
-                    AddFloatField(body, "Horizontal Speed", hitbox.horizontalSpeed, value =>
+                    AddIntField(body, "Max Juggles", hitbox.maxJuggleCount, value =>
                     {
-                        RecordUndo("Edit Horizontal Speed");
-                        hitbox.horizontalSpeed = value;
+                        RecordUndo("Edit Max Juggles");
+                        hitbox.maxJuggleCount = value;
+                        MarkDirty();
+                    });
+                    AddFloatField(body, "Juggle Launch Scale", hitbox.juggleLaunchScale, value =>
+                    {
+                        RecordUndo("Edit Juggle Launch Scale");
+                        hitbox.juggleLaunchScale = value;
+                        MarkDirty();
+                    });
+                    AddFloatField(body, "Juggle Stun Scale", hitbox.juggleStunScale, value =>
+                    {
+                        RecordUndo("Edit Juggle Stun Scale");
+                        hitbox.juggleStunScale = value;
                         MarkDirty();
                     });
                 }
-
-                if (usesLaunchSpeed)
-                {
-                    AddFloatField(body, "Launch Up", hitbox.launchSpeed, value =>
-                    {
-                        RecordUndo("Edit Launch Speed");
-                        hitbox.launchSpeed = value;
-                        MarkDirty();
-                    });
-                }
-
-                if (usesLandingBehavior)
-                {
-                    AddEnumField(body, "Landing Behavior", hitbox.landingBehavior, value =>
-                    {
-                        RecordUndo("Edit Landing Behavior");
-                        hitbox.landingBehavior = (EnemyLandingBehavior)value;
-                        MarkDirty();
-                    });
-                }
-
-                if (usesAirJuggle)
-                {
-                    AddToggle(body, "Can Air Juggle", hitbox.canAirJuggle, value =>
-                    {
-                        RecordUndo("Edit Can Air Juggle");
-                        hitbox.canAirJuggle = value;
-                        MarkDirtyAndRebuild();
-                    });
-
-                    if (hitbox.canAirJuggle)
-                    {
-                        AddIntField(body, "Max Juggles", hitbox.maxJuggleCount, value =>
-                        {
-                            RecordUndo("Edit Max Juggles");
-                            hitbox.maxJuggleCount = value;
-                            MarkDirty();
-                        });
-                        AddFloatField(body, "Juggle Launch Scale", hitbox.juggleLaunchScale, value =>
-                        {
-                            RecordUndo("Edit Juggle Launch Scale");
-                            hitbox.juggleLaunchScale = value;
-                            MarkDirty();
-                        });
-                        AddFloatField(body, "Juggle Stun Scale", hitbox.juggleStunScale, value =>
-                        {
-                            RecordUndo("Edit Juggle Stun Scale");
-                            hitbox.juggleStunScale = value;
-                            MarkDirty();
-                        });
-                    }
-                }
-            }
-            else
-            {
-                body.Add(new HelpBox(
-                    "Legacy reaction velocity mode is active. Enable deterministic reaction to author knockback, knockup, landing, and juggle timing directly.",
-                    HelpBoxMessageType.Info));
-
-                AddIntField(body, "HitStop / Freeze", hitbox.hitstunFrames, value =>
-                {
-                    RecordUndo("Edit Hitstop");
-                    hitbox.hitstunFrames = value;
-                    MarkDirty();
-                });
-                AddVector2Field(body, "Reaction Velocity", hitbox.reactionVelocity, value =>
-                {
-                    RecordUndo("Edit Reaction Velocity");
-                    hitbox.reactionVelocity = value;
-                    MarkDirty();
-                });
-                AddIntField(body, "Knockback Frames", hitbox.knockbackFrames, value =>
-                {
-                    RecordUndo("Edit Knockback Frames");
-                    hitbox.knockbackFrames = value;
-                    MarkDirty();
-                });
-                AddToggle(body, "Is Knockdown", hitbox.isKnockdown, value =>
-                {
-                    RecordUndo("Edit Knockdown");
-                    hitbox.isKnockdown = value;
-                    MarkDirty();
-                });
-            }
-
-            AddToggle(body, "Legacy Snap To Attacker", hitbox.snapToAttacker, value =>
-            {
-                RecordUndo("Edit Snap To Attacker");
-                hitbox.snapToAttacker = value;
-                MarkDirtyAndRebuild();
-            });
-
-            if (hitbox.snapToAttacker)
-            {
-                AddVector2Field(body, "Snap Offset", hitbox.snapOffset, value =>
-                {
-                    RecordUndo("Edit Snap Offset");
-                    hitbox.snapOffset = value;
-                    MarkDirty();
-                });
             }
 
             AddColorField(body, "Flash Color", hitbox.flashColor, value =>
@@ -703,18 +895,6 @@ namespace CombatEditor.UI
             });
 
             AddSeparator(body, "Grab Condition");
-            AddFloatField(body, "Grab Range", hitbox.grabRange, value =>
-            {
-                RecordUndo("Edit Grab Range");
-                hitbox.grabRange = value;
-                MarkDirty();
-            });
-            AddFloatField(body, "Grab Angle", hitbox.grabAngle, value =>
-            {
-                RecordUndo("Edit Grab Angle");
-                hitbox.grabAngle = value;
-                MarkDirty();
-            });
             AddToggle(body, "Can Grab Air", hitbox.canGrabAirborne, value =>
             {
                 RecordUndo("Edit Can Grab Air");
@@ -763,293 +943,6 @@ namespace CombatEditor.UI
             {
                 RecordUndo("Edit Grab Flash Frames");
                 hitbox.flashFrames = value;
-                MarkDirty();
-            });
-
-            AddSeparator(body, "Branching (Nested Step)");
-            AddToggle(body, "Branch On Success", hitbox.branchOnSuccess, value =>
-            {
-                RecordUndo("Edit Branch On Success");
-                hitbox.branchOnSuccess = value;
-                MarkDirtyAndRebuild();
-            });
-
-            if (hitbox.branchOnSuccess)
-            {
-                if (hitbox.successSteps == null)
-                    hitbox.successSteps = new List<AttackStepData>();
-
-                VisualElement stepList = new VisualElement();
-                body.Add(stepList);
-
-                for (int i = 0; i < hitbox.successSteps.Count; i++)
-                {
-                    int stepIdx = i;
-                    AttackStepData step = hitbox.successSteps[i];
-                    string stepName = step != null && !string.IsNullOrEmpty(step.stepName) ? step.stepName : "Untitled";
-
-                    BuildFoldoutCard($"Success Step {stepIdx + 1}: {stepName}", $"grab_success_{hitbox.GetHashCode()}_{stepIdx}", new Color(1f, 0.45f, 0.15f), inner =>
-                    {
-                        inner.Add(new HelpBox("To edit this step completely, select it from the left action tree sidebar.", HelpBoxMessageType.Info));
-                        
-                        // We give them just the name field here so they can rename it from the parent card
-                        if (step != null)
-                        {
-                            AddTextField(inner, "Step Name", step.stepName, value => 
-                            {
-                                RecordUndo("Rename Success Step");
-                                step.stepName = value;
-                                // Need full rebuild to update sidebar and parent card titles
-                                onStructureChanged?.Invoke(); 
-                            });
-                        }
-                    }, () =>
-                    {
-                        RecordUndo("Delete Success Step");
-                        hitbox.successSteps.RemoveAt(stepIdx);
-                        MarkDirtyAndRebuild();
-                    }, isSubCard: true, parent: stepList, onReorder: newIndex =>
-                    {
-                        ReorderListItem(hitbox.successSteps, stepIdx, newIndex, "Reorder Success Step");
-                    }, reorderIndex: stepIdx, reorderCount: hitbox.successSteps.Count);
-                }
-
-                Button addStepBtn = new Button(() =>
-                {
-                    RecordUndo("Add Success Step");
-                    
-                    // Create a completely NEW instance! 
-                    // This avoids Unity's default inspector duplicate behavior which shallow copies [SerializeReference] fields.
-                    var newStep = new AttackStepData
-                    {
-                        stepName = "Grab Success",
-                        motionData = new MotionFrameData(),
-                        vfxData = new VFXFrameData(),
-                        hitData = new HitFrameData()
-                    };
-                    
-                    hitbox.successSteps.Add(newStep);
-                    MarkDirtyAndRebuild();
-                })
-                {
-                    text = "Add Success Step"
-                };
-                addStepBtn.AddToClassList("component-add-entry-btn");
-                body.Add(addStepBtn);
-            }
-        }
-
-        private void BuildProjectileHitboxFields(VisualElement body, ProjectileHitbox hitbox)
-        {
-            AddSeparator(body, "Projectile");
-            AddObjectField(body, "Prefab", hitbox.projectilePrefab, value =>
-            {
-                RecordUndo("Edit Projectile Prefab");
-                hitbox.projectilePrefab = value;
-                MarkDirty();
-            });
-            AddVector3Field(body, "Spawn Point", hitbox.spawnPoint, value =>
-            {
-                RecordUndo("Edit Spawn Point");
-                hitbox.spawnPoint = value;
-                MarkDirty();
-            });
-
-            AddSeparator(body, "Trajectory");
-            AddFloatField(body, "Speed", hitbox.trajectory.speed, value =>
-            {
-                RecordUndo("Edit Projectile Speed");
-                hitbox.trajectory.speed = value;
-                MarkDirty();
-            });
-            AddFloatField(body, "Arc", hitbox.trajectory.arc, value =>
-            {
-                RecordUndo("Edit Projectile Arc");
-                hitbox.trajectory.arc = value;
-                MarkDirty();
-            });
-            AddFloatField(body, "Gravity", hitbox.trajectory.gravity, value =>
-            {
-                RecordUndo("Edit Projectile Gravity");
-                hitbox.trajectory.gravity = value;
-                MarkDirty();
-            });
-
-            AddSeparator(body, "Projectile Stats");
-            AddFloatField(body, "Damage", hitbox.stats.damage, value =>
-            {
-                RecordUndo("Edit Projectile Damage");
-                hitbox.stats.damage = value;
-                MarkDirty();
-            });
-            AddIntField(body, "Hit Count", hitbox.stats.hitCount, value =>
-            {
-                RecordUndo("Edit Projectile Hit Count");
-                hitbox.stats.hitCount = value;
-                MarkDirty();
-            });
-            AddFloatField(body, "Lifespan", hitbox.stats.lifespan, value =>
-            {
-                RecordUndo("Edit Projectile Lifespan");
-                hitbox.stats.lifespan = value;
-                MarkDirty();
-            });
-            AddEnumField(body, "Impact Tier", hitbox.stats.impactTier, value =>
-            {
-                RecordUndo("Edit Projectile Impact Tier");
-                hitbox.stats.impactTier = (DamageImpactTier)value;
-                MarkDirty();
-            });
-            AddToggle(body, "Use Deterministic Reaction", hitbox.stats.useDeterministicReaction, value =>
-            {
-                RecordUndo("Toggle Projectile Deterministic Reaction");
-                if (value && !hitbox.stats.useDeterministicReaction)
-                {
-                    hitbox.stats.reactionKind = HitReactionData.InferLegacyReactionKind(hitbox.stats.reactionVelocity, false);
-                    hitbox.stats.impactFreezeFrames = hitbox.stats.hitstunFrames;
-                    hitbox.stats.reactionFrames = hitbox.stats.knockbackFrames;
-                    hitbox.stats.recoveryFrames = Mathf.Max(1, hitbox.stats.recoveryFrames);
-                    hitbox.stats.horizontalSpeed = Mathf.Abs(hitbox.stats.reactionVelocity.x);
-                    hitbox.stats.launchSpeed = Mathf.Max(0f, hitbox.stats.reactionVelocity.y);
-                    hitbox.stats.landingBehavior = HitReactionData.InferLandingBehavior(hitbox.stats.reactionVelocity, false);
-                    hitbox.stats.canAirJuggle = hitbox.stats.reactionVelocity.y > 0.01f;
-                    hitbox.stats.maxJuggleCount = hitbox.stats.canAirJuggle ? Mathf.Max(1, hitbox.stats.maxJuggleCount) : 0;
-                }
-
-                hitbox.stats.useDeterministicReaction = value;
-                MarkDirtyAndRebuild();
-            });
-
-            if (hitbox.stats.useDeterministicReaction)
-            {
-                bool usesHorizontalSpeed = HitReactionData.UsesHorizontalSpeed(hitbox.stats.reactionKind);
-                bool usesLaunchSpeed = HitReactionData.UsesLaunchSpeed(hitbox.stats.reactionKind);
-                bool usesLandingBehavior = HitReactionData.UsesLandingBehavior(hitbox.stats.reactionKind);
-                bool usesAirJuggle = HitReactionData.UsesAirJuggleSettings(hitbox.stats.reactionKind);
-
-                AddEnumField(body, "Reaction Kind", hitbox.stats.reactionKind, value =>
-                {
-                    RecordUndo("Edit Projectile Reaction Kind");
-                    hitbox.stats.reactionKind = (EnemyReactionKind)value;
-                    MarkDirtyAndRebuild();
-                });
-                AddIntField(body, "HitStop / Impact Freeze", hitbox.stats.impactFreezeFrames, value =>
-                {
-                    RecordUndo("Edit Projectile Impact Freeze");
-                    hitbox.stats.impactFreezeFrames = value;
-                    MarkDirty();
-                });
-                AddIntField(body, "Reaction Frames", hitbox.stats.reactionFrames, value =>
-                {
-                    RecordUndo("Edit Projectile Reaction Frames");
-                    hitbox.stats.reactionFrames = value;
-                    MarkDirty();
-                });
-                AddIntField(body, "Recovery Frames", hitbox.stats.recoveryFrames, value =>
-                {
-                    RecordUndo("Edit Projectile Recovery Frames");
-                    hitbox.stats.recoveryFrames = value;
-                    MarkDirty();
-                });
-
-                if (usesHorizontalSpeed)
-                {
-                    AddFloatField(body, "Horizontal Speed", hitbox.stats.horizontalSpeed, value =>
-                    {
-                        RecordUndo("Edit Projectile Horizontal Speed");
-                        hitbox.stats.horizontalSpeed = value;
-                        MarkDirty();
-                    });
-                }
-
-                if (usesLaunchSpeed)
-                {
-                    AddFloatField(body, "Launch Up", hitbox.stats.launchSpeed, value =>
-                    {
-                        RecordUndo("Edit Projectile Launch Speed");
-                        hitbox.stats.launchSpeed = value;
-                        MarkDirty();
-                    });
-                }
-
-                if (usesLandingBehavior)
-                {
-                    AddEnumField(body, "Landing Behavior", hitbox.stats.landingBehavior, value =>
-                    {
-                        RecordUndo("Edit Projectile Landing Behavior");
-                        hitbox.stats.landingBehavior = (EnemyLandingBehavior)value;
-                        MarkDirty();
-                    });
-                }
-
-                if (usesAirJuggle)
-                {
-                    AddToggle(body, "Can Air Juggle", hitbox.stats.canAirJuggle, value =>
-                    {
-                        RecordUndo("Edit Projectile Can Air Juggle");
-                        hitbox.stats.canAirJuggle = value;
-                        MarkDirtyAndRebuild();
-                    });
-
-                    if (hitbox.stats.canAirJuggle)
-                    {
-                        AddIntField(body, "Max Juggles", hitbox.stats.maxJuggleCount, value =>
-                        {
-                            RecordUndo("Edit Projectile Max Juggles");
-                            hitbox.stats.maxJuggleCount = value;
-                            MarkDirty();
-                        });
-                        AddFloatField(body, "Juggle Launch Scale", hitbox.stats.juggleLaunchScale, value =>
-                        {
-                            RecordUndo("Edit Projectile Juggle Launch Scale");
-                            hitbox.stats.juggleLaunchScale = value;
-                            MarkDirty();
-                        });
-                        AddFloatField(body, "Juggle Stun Scale", hitbox.stats.juggleStunScale, value =>
-                        {
-                            RecordUndo("Edit Projectile Juggle Stun Scale");
-                            hitbox.stats.juggleStunScale = value;
-                            MarkDirty();
-                        });
-                    }
-                }
-            }
-            else
-            {
-                body.Add(new HelpBox(
-                    "Legacy projectile reaction velocity mode is active. Enable deterministic reaction to author projectile knockback and launch timing directly.",
-                    HelpBoxMessageType.Info));
-
-                AddIntField(body, "Hitstun", hitbox.stats.hitstunFrames, value =>
-                {
-                    RecordUndo("Edit Projectile Hitstun");
-                    hitbox.stats.hitstunFrames = value;
-                    MarkDirty();
-                });
-                AddVector2Field(body, "Reaction Velocity", hitbox.stats.reactionVelocity, value =>
-                {
-                    RecordUndo("Edit Projectile Reaction Velocity");
-                    hitbox.stats.reactionVelocity = value;
-                    MarkDirty();
-                });
-                AddIntField(body, "Knockback Frames", hitbox.stats.knockbackFrames, value =>
-                {
-                    RecordUndo("Edit Projectile Knockback Frames");
-                    hitbox.stats.knockbackFrames = value;
-                    MarkDirty();
-                });
-            }
-
-            AddColorField(body, "Flash Color", hitbox.stats.flashColor, value =>
-            {
-                RecordUndo("Edit Projectile Flash Color");
-                hitbox.stats.flashColor = value;
-                MarkDirty();
-            });
-            AddIntField(body, "Flash Frames", hitbox.stats.flashFrames, value =>
-            {
-                RecordUndo("Edit Projectile Flash Frames");
-                hitbox.stats.flashFrames = value;
                 MarkDirty();
             });
         }
@@ -1124,22 +1017,13 @@ namespace CombatEditor.UI
                 menu.AddItem(new GUIContent("Normal Hitbox"), false, () =>
                 {
                     RecordUndo("Add Normal Hitbox");
-                    hitData.hitboxes.Add(new NormalHitbox { useDeterministicReaction = true });
+                    hitData.hitboxes.Add(new NormalHitbox());
                     MarkDirtyAndRebuild();
                 });
                 menu.AddItem(new GUIContent("Grab Hitbox"), false, () =>
                 {
                     RecordUndo("Add Grab Hitbox");
                     hitData.hitboxes.Add(new GrabHitbox());
-                    MarkDirtyAndRebuild();
-                });
-                menu.AddItem(new GUIContent("Projectile Hitbox"), false, () =>
-                {
-                    RecordUndo("Add Projectile Hitbox");
-                    hitData.hitboxes.Add(new ProjectileHitbox
-                    {
-                        stats = new ProjectileStats { useDeterministicReaction = true }
-                    });
                     MarkDirtyAndRebuild();
                 });
                 menu.ShowAsContext();
@@ -1367,7 +1251,7 @@ namespace CombatEditor.UI
         {
             VisualElement row = new VisualElement();
             row.AddToClassList("card-field-row");
-            TextField field = new TextField(label) { value = value };
+            TextField field = new TextField(label) { value = value, isDelayed = true };
             field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
             row.Add(field);
             parent.Add(row);
@@ -1377,7 +1261,7 @@ namespace CombatEditor.UI
         {
             VisualElement row = new VisualElement();
             row.AddToClassList("card-field-row");
-            IntegerField field = new IntegerField(label) { value = value };
+            IntegerField field = new IntegerField(label) { value = value, isDelayed = false };
             field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
             row.Add(field);
             parent.Add(row);
@@ -1387,7 +1271,7 @@ namespace CombatEditor.UI
         {
             VisualElement row = new VisualElement();
             row.AddToClassList("card-field-row");
-            FloatField field = new FloatField(label) { value = value };
+            FloatField field = new FloatField(label) { value = value, isDelayed = false };
             field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
             row.Add(field);
             parent.Add(row);
@@ -1514,6 +1398,16 @@ namespace CombatEditor.UI
             fields.Add(recoveryField);
 
             parent.Add(fields);
+        }
+
+        private void AddToggleField(VisualElement parent, string label, bool value, Action<bool> onChange)
+        {
+            VisualElement row = new VisualElement();
+            row.AddToClassList("card-field-row");
+            Toggle field = new Toggle(label) { value = value };
+            field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
+            row.Add(field);
+            parent.Add(row);
         }
 
         private void AddSeparator(VisualElement parent, string label)
@@ -1737,6 +1631,8 @@ namespace CombatEditor.UI
             if (character != null)
             {
                 Undo.RecordObject(character, action);
+                if (character.actionResolverTable != null)
+                    Undo.RecordObject(character.actionResolverTable, action);
             }
         }
 
@@ -1745,6 +1641,8 @@ namespace CombatEditor.UI
             if (character != null)
             {
                 EditorUtility.SetDirty(character);
+                if (character.actionResolverTable != null)
+                    EditorUtility.SetDirty(character.actionResolverTable);
             }
 
             onDataChanged?.Invoke();
@@ -1755,6 +1653,8 @@ namespace CombatEditor.UI
             if (character != null)
             {
                 EditorUtility.SetDirty(character);
+                if (character.actionResolverTable != null)
+                    EditorUtility.SetDirty(character.actionResolverTable);
             }
 
             if (onStructureChanged != null && currentNode != null)

@@ -25,11 +25,10 @@ public class PlayerUltimateState : FrameDataPlayerState
 
     protected override ActionFrameData GetFrameData()
     {
-        if (player.Ultimate == null || player.characterObject == null)
-            return null;
+        if (player.Combat == null) return null;
 
-        UltimateData ultData = player.characterObject.ultimateData;
-        return ultData?.frameData;
+        var stepData = player.Combat.GetCurrentStepData();
+        return (ActionFrameData)stepData;
     }
 
     // =========================================================
@@ -39,38 +38,21 @@ public class PlayerUltimateState : FrameDataPlayerState
     public override void Enter(TransitionContext context)
     {
         base.Enter(context);
-
-        if (player.Ultimate != null)
-        {
-            player.Ultimate.OnCastFinished += HandleCastFinished;
-        }
     }
 
     protected override void StartAction()
     {
         base.StartAction();
-
-        // Trigger the ultimate cast
-        if (player.Ultimate != null)
-            player.Ultimate.UseUltimate();
     }
 
     public override void Exit()
     {
         base.Exit();
-
-        if (player.Ultimate != null)
-            player.Ultimate.OnCastFinished -= HandleCastFinished;
     }
 
     public override void Update()
     {
-        // Safety: if ultimate finished but callback didn't fire
-        if (player.Ultimate != null && !player.Ultimate.IsCasting())
-        {
-            if (currentPhase == ActionPhase.Done || currentPhase == ActionPhase.None)
-                ExitToAppropriateMovementState();
-        }
+        base.Update();
     }
 
     // =========================================================
@@ -127,15 +109,45 @@ public class PlayerUltimateState : FrameDataPlayerState
         }
     }
 
-    // =========================================================
-    // Callbacks
-    // =========================================================
-    private void HandleCastFinished()
+    public override void OnUltimateInput()
     {
-        if (currentPhase == ActionPhase.Done || currentPhase == ActionPhase.None)
+        if (currentPhase != ActionPhase.None) return;
+
+        if (player.Combat is PlayerBasicAttack pba && player.characterObject != null)
         {
-            if (fsm.CurrentState == this)
+            var table = player.characterObject.actionResolverTable;
+            if (table == null) return;
+
+            // Build context
+            ActionInputBuffer buffer = fsm.InputBuffer;
+            InputContext ctx = new InputContext
+            {
+                isGrounded = player.Movement != null && player.Movement.IsGrounded(),
+                directionalInput = buffer != null ? buffer.DirectionalInput : Vector2.zero,
+                facingDirection = player.Movement != null ? player.Movement.FacingDirection : 1,
+            };
+
+            // Resolve
+            ActionResolver resolver = new ActionResolver();
+            AttackStepData step = resolver.ResolveInitial(ctx, table, AttackCategory.Ultimate);
+
+            if (step != null)
+            {
+                // Check cooldown
+                if (resolver.ActiveCombatAction is SkillAction skill && pba.IsOnCooldown(AttackCategory.Ultimate, skill.cooldown))
+                {
+                    fsm.Log("Ultimate", "Ultimate is on cooldown", Color.yellow);
+                    ExitToAppropriateMovementState();
+                    return;
+                }
+
+                pba.ExecuteStep(step, 1, !ctx.isGrounded, AttackCategory.Ultimate);
+                RestartAction();
+            }
+            else
+            {
                 ExitToAppropriateMovementState();
+            }
         }
     }
 }

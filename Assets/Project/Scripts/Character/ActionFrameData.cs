@@ -24,7 +24,7 @@ public class ActionFrameData
              "Set to 0 or >= TotalFrames to disable cancel window.")]
     public int cancelWindowStartFrame = 35;
 
-    public void Rescale(float ratio)
+    public virtual void Rescale(float ratio)
     {
         startupFrames = Mathf.RoundToInt(startupFrames * ratio);
         activeFrames = Mathf.RoundToInt(activeFrames * ratio);
