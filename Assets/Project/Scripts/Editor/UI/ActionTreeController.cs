@@ -213,6 +213,24 @@ namespace CombatEditor.UI
                     itemsContainer.Add(addBtn);
                 }
 
+                // Add Sub Step button for extending the combo chain
+                var addSubBtn = new Button(() => {
+                    Undo.RecordObject(table, "Add Sub Step");
+                    var newSubNode = new ComboNode { stepData = new AttackStepData { stepName = "New Sub Step" } };
+                    // Find the last node in the defaultNext chain and append
+                    ComboNode lastNode = root;
+                    if (lastNode != null)
+                    {
+                        while (lastNode.defaultNext != null) lastNode = lastNode.defaultNext;
+                        lastNode.defaultNext = newSubNode;
+                    }
+                    EditorUtility.SetDirty(table);
+                    Build(character);
+                }) { text = "+ New Sub Step" };
+                addSubBtn.AddToClassList("component-add-entry-btn");
+                addSubBtn.style.marginTop = 5;
+                if (root != null) itemsContainer.Add(addSubBtn);
+
                 catRoot.Add(itemsContainer);
             }
             container.Add(catRoot);
@@ -255,7 +273,19 @@ namespace CombatEditor.UI
                 BuildTreeNodeRecursive(parent, node.defaultNext, category, depth + 1, null, delDefaultNext, visited);
             }
 
-            // 2. Follow branches (routes)
+            // 2. Follow grab success node
+            if (node.onGrabSuccessNode != null && node.onGrabSuccessNode != node.defaultNext)
+            {
+                System.Action delGrabNext = () => {
+                    Undo.RecordObject(character.actionResolverTable, "Delete Grab Success Link");
+                    node.onGrabSuccessNode = null;
+                    EditorUtility.SetDirty(character.actionResolverTable);
+                    Build(character);
+                };
+                BuildTreeNodeRecursive(parent, node.onGrabSuccessNode, category, depth + 1, "(Grab)", delGrabNext, visited);
+            }
+
+            // 3. Follow branches (routes)
             if (node.routes != null)
             {
                 for (int i = 0; i < node.routes.Count; i++)

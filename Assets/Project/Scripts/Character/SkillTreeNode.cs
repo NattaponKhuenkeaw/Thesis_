@@ -41,4 +41,21 @@ public class SkillTreeNode
     [Header("Effect")]
     public SkillTreeEffectType effectType = SkillTreeEffectType.None;
     public float effectValue = 0f;
+
+    public SkillTreeNode() { }
+
+    public SkillTreeNode(ProgressionNodeDefinition definition, bool unlocked)
+    {
+        if (definition == null)
+        {
+            return;
+        }
+
+        nodeId = definition.nodeId;
+        nodeName = definition.nodeName;
+        description = definition.description;
+        requiredNodeId = definition.requiredNodeId;
+        pointCost = definition.pointCost;
+        this.unlocked = unlocked;
+    }
 }

@@ -282,18 +282,19 @@ public class PlayerStateMachine : MonoBehaviour
         // Always buffer the attack for mid-action consumption
         InputBuffer.BufferAttack();
 
+        // Centralized check for FrameData states: ignore interrupts if state says so
+        if (CurrentState is FrameDataPlayerState fdState
+            && !fdState.CanAcceptCombatInput(CombatInputType.Attack))
+        {
+            // Attack is already buffered at the start of this method
+            return;
+        }
+
         // Custom handlers (like AttackState chaining combos) take precedence
         // They handle their own internal phase logic.
         if (HasCustomAttackHandler())
         {
             CurrentState.OnAttackInput();
-            return;
-        }
-
-        // Centralized check for FrameData states: ignore interrupts if state says so
-        if (CurrentState is FrameDataPlayerState fdState && !fdState.CanBeInterrupted)
-        {
-            // Attack is already buffered at the start of this method
             return;
         }
 
@@ -311,13 +312,23 @@ public class PlayerStateMachine : MonoBehaviour
     {
         if (CurrentState == null) return;
 
+        InputBuffer.BufferSkill();
+
         // Centralized check for FrameData states: ignore interrupts if state says so
-        if (CurrentState is FrameDataPlayerState fdState && !fdState.CanBeInterrupted)
+        if (CurrentState is FrameDataPlayerState fdState
+            && !fdState.CanAcceptCombatInput(CombatInputType.Skill))
             return;
+
+        if (HasCustomSkillHandler())
+        {
+            CurrentState.OnSkillInput();
+            return;
+        }
 
         if (CurrentState.AcceptsSkillInput)
         {
             ChangeState(SkillState);
+            CurrentState.OnSkillInput();
         }
     }
 
@@ -328,13 +339,23 @@ public class PlayerStateMachine : MonoBehaviour
     {
         if (CurrentState == null) return;
 
+        InputBuffer.BufferUltimate();
+
         // Centralized check for FrameData states: ignore interrupts if state says so
-        if (CurrentState is FrameDataPlayerState fdState && !fdState.CanBeInterrupted)
+        if (CurrentState is FrameDataPlayerState fdState
+            && !fdState.CanAcceptCombatInput(CombatInputType.Ultimate))
             return;
+
+        if (HasCustomUltimateHandler())
+        {
+            CurrentState.OnUltimateInput();
+            return;
+        }
 
         if (CurrentState.AcceptsUltimateInput)
         {
             ChangeState(UltimateState);
+            CurrentState.OnUltimateInput();
         }
     }
 
@@ -367,6 +388,20 @@ public class PlayerStateMachine : MonoBehaviour
         // AttackState overrides OnAttackInput to chain combos
         // JumpState overrides OnAttackInput for air attacks
         return CurrentState is PlayerAttackState || CurrentState is PlayerJumpState;
+    }
+
+    private bool HasCustomSkillHandler()
+    {
+        // AttackState handles attack-to-skill interruption cleanup.
+        // SkillState handles skill startup and same-state follow-up chaining.
+        return CurrentState is PlayerAttackState || CurrentState is PlayerSkillState;
+    }
+
+    private bool HasCustomUltimateHandler()
+    {
+        // AttackState handles attack-to-ultimate interruption cleanup.
+        // UltimateState handles ultimate startup and same-state follow-up chaining.
+        return CurrentState is PlayerAttackState || CurrentState is PlayerUltimateState;
     }
 
     // =========================================================

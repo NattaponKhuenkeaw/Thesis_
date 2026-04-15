@@ -15,6 +15,7 @@ public class ActionInputBuffer
     private float dashBufferedUntil   = -999f;
     private float jumpBufferedUntil   = -999f;
     private float skillBufferedUntil  = -999f;
+    private float ultimateBufferedUntil = -999f;
 
     // Directional input snapshot at time of buffer
     private float dashInputX;
@@ -32,6 +33,7 @@ public class ActionInputBuffer
     public bool HasDashBuffer   => Time.time <= dashBufferedUntil;
     public bool HasJumpBuffer   => Time.time <= jumpBufferedUntil;
     public bool HasSkillBuffer  => Time.time <= skillBufferedUntil;
+    public bool HasUltimateBuffer => Time.time <= ultimateBufferedUntil;
 
     /// <summary>Directional input at time the buffer was written.</summary>
     public Vector2 DirectionalInput => directionalSnapshot;
@@ -58,6 +60,11 @@ public class ActionInputBuffer
     public void BufferSkill(float duration = DEFAULT_BUFFER_DURATION)
     {
         skillBufferedUntil = Time.time + duration;
+    }
+
+    public void BufferUltimate(float duration = DEFAULT_BUFFER_DURATION)
+    {
+        ultimateBufferedUntil = Time.time + duration;
     }
 
     /// <summary>
@@ -105,6 +112,13 @@ public class ActionInputBuffer
         return true;
     }
 
+    public bool ConsumeUltimate()
+    {
+        if (!HasUltimateBuffer) return false;
+        ultimateBufferedUntil = -999f;
+        return true;
+    }
+
     // =========================================================
     // Utility
     // =========================================================
@@ -114,9 +128,10 @@ public class ActionInputBuffer
         dashBufferedUntil   = -999f;
         jumpBufferedUntil   = -999f;
         skillBufferedUntil  = -999f;
+        ultimateBufferedUntil = -999f;
         dashInputX = 0f;
     }
 
     /// <summary>Returns true if ANY buffer is active.</summary>
-    public bool HasAnyBuffer => HasAttackBuffer || HasDashBuffer || HasJumpBuffer || HasSkillBuffer;
+    public bool HasAnyBuffer => HasAttackBuffer || HasDashBuffer || HasJumpBuffer || HasSkillBuffer || HasUltimateBuffer;
 }

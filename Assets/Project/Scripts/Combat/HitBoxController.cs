@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(BoxCollider2D))]
-public class MeleeHitboxController : MonoBehaviour
+public class HitBoxController : MonoBehaviour
 {
     // =========================================================
     // Dependencies
@@ -10,6 +10,7 @@ public class MeleeHitboxController : MonoBehaviour
     public PlayerMovement movement;
     public BoxCollider2D hitboxCollider;
     public Transform attackAnchor;
+    public Transform worldAnchor;
 
     private SpriteRenderer sr;
     private LineRenderer lr;
@@ -28,6 +29,7 @@ public class MeleeHitboxController : MonoBehaviour
 
         sr = GetComponent<SpriteRenderer>();
         lr = GetComponent<LineRenderer>();
+        worldAnchor = worldAnchor != null ? worldAnchor : transform;
     }
 
     // =========================================================
@@ -53,7 +55,7 @@ public class MeleeHitboxController : MonoBehaviour
         }
         else
         {
-            // Non-spatial hitboxes (like Projectiles) don't update the melee collider geometry
+            // Non-spatial hitboxes (like projectile spawn markers) don't update collider geometry
             return;
         }
 
@@ -62,7 +64,9 @@ public class MeleeHitboxController : MonoBehaviour
             offset.x *= movement.FacingDirection;
         }
 
-        Transform root = movement != null ? movement.transform : transform.parent;
+        Transform root = movement != null
+            ? movement.transform
+            : worldAnchor != null ? worldAnchor : transform.parent != null ? transform.parent : transform;
         transform.position = root.position + new Vector3(offset.x, offset.y, 0f);
 
         hitboxCollider.offset = Vector2.zero; // Clean any residual offset from the prefab so sizing centers correctly
@@ -82,6 +86,11 @@ public class MeleeHitboxController : MonoBehaviour
             lr.startColor = new Color(currentDebugColor.r, currentDebugColor.g, currentDebugColor.b, lr.startColor.a);
             lr.endColor = new Color(currentDebugColor.r, currentDebugColor.g, currentDebugColor.b, lr.endColor.a);
         }
+    }
+
+    public void SetWorldAnchor(Transform anchor)
+    {
+        worldAnchor = anchor;
     }
 
 

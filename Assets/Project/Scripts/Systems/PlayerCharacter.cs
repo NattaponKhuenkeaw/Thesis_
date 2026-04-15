@@ -18,18 +18,21 @@ public class PlayerCharacter : MonoBehaviour
     [Header("Sub-systems")]
     public PlayerStateMachine StateMachine;
     public PlayerMovement Movement;
-    public PlayerBasicAttack Combat;
+    public PlayerCombat Combat;
     public PlayerAnimator Animator;
+    public CharacterPassiveController PassiveController;
 
     // =========================================================
     // Runtime HP (absorbed from CharacterRuntime)
     // =========================================================
     [Header("Runtime Stats")]
     [SerializeField] private float currentHP;
+    [SerializeField] private CharacterStatus status = new CharacterStatus();
 
     public float CurrentHP => currentHP;
     public float MaxHP => characterObject != null && characterObject.stats != null ? characterObject.stats.maxHP : currentHP;
     public bool IsDead => currentHP <= 0f;
+    public CharacterStatus Status => status;
 
     private bool deathEventRaised;
 
@@ -70,12 +73,14 @@ public class PlayerCharacter : MonoBehaviour
         ApplyMovementData();
         ApplyAnimationData();
         InitializeHP();
+        PassiveController?.InitializeFromCharacterData();
     }
 
     public void SetCharacter(CharacterObject newCharacter)
     {
         characterObject = newCharacter;
         ApplyCharacterData();
+        PassiveController?.InitializeFromCharacterData();
     }
 
     // =========================================================
@@ -149,6 +154,11 @@ public class PlayerCharacter : MonoBehaviour
         NotifyHealthChanged();
     }
 
+    public void ApplyStatus(StatusEffectType statusEffect, bool enabled = true)
+    {
+        status.ApplyStatus(statusEffect, enabled);
+    }
+
     // =========================================================
     // Private Methods
     // =========================================================
@@ -161,10 +171,13 @@ public class PlayerCharacter : MonoBehaviour
             Movement = GetComponent<PlayerMovement>();
 
         if (Combat == null)
-            Combat = GetComponent<PlayerBasicAttack>();
+            Combat = GetComponent<PlayerCombat>();
 
         if (Animator == null)
             Animator = GetComponentInChildren<PlayerAnimator>();
+
+        if (PassiveController == null)
+            PassiveController = GetComponent<CharacterPassiveController>();
     }
 
     private void ApplyMovementData()

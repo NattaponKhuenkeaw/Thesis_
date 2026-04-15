@@ -1,177 +1,257 @@
 using UnityEngine;
 
 /// <summary>
-/// Skill state: player is casting a skill ability.
-/// Inherits FrameDataPlayerState for frame-data-driven phase tracking.
-/// Skill has high cancel hierarchy — cannot be interrupted by normal attack or movement.
-/// During Cancel phase: accepts attack input with directional combo routing context.
+/// Frame-data-driven skill state with buffered follow-up support.
 /// </summary>
 public class PlayerSkillState : FrameDataPlayerState
 {
+    private readonly ActionResolver resolver = new ActionResolver();
+    private ActionResolverTable resolverTable;
+    private SkillAction activeSkillAction;
+    private bool hasStartedCooldown;
+
     public PlayerSkillState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
     public override PlayerStateId StateId => PlayerStateId.Skill;
     public override PlayerStatePriority Priority => PlayerStatePriority.AttackCombat;
 
-    // Skill locks nearly everything — high hierarchy
     public override bool AcceptsMoveInput => true;
+    public override bool AcceptsAttackInput => true;
+    public override bool AcceptsSkillInput => true;
+    public override bool AcceptsUltimateInput => true;
     public override bool LocksMovement => true;
     public override bool LocksFacing => true;
 
-    // =========================================================
-    // FrameDataPlayerState — provide frame data from SkillData
-    // =========================================================
-
     protected override ActionFrameData GetFrameData()
     {
-        if (player.Combat == null) return null;
-
-        var stepData = player.Combat.GetCurrentStepData();
-        return (ActionFrameData)stepData; 
+        return player.Combat != null ? player.Combat.GetCurrentStepData() : null;
     }
 
-    // =========================================================
-    // Lifecycle
-    // =========================================================
-
-    protected override void StartAction()
+    public override void Enter(TransitionContext context)
     {
-        base.StartAction();
-
-        // The step execution (animation, etc.) is now handled by OnAttackInput or initial transition
+        base.Enter(context);
+        resolverTable = player.characterObject != null ? player.characterObject.actionResolverTable : null;
+        resolver.SetLogger(fsm);
+        activeSkillAction = null;
+        hasStartedCooldown = false;
     }
 
-    public override void Update()
+    public override void Exit()
     {
-        base.Update();
-        
-        // State exit is now driven by FrameDataPlayerState (OnActionComplete)
-    }
+        TryStartCooldown();
+        base.Exit();
+        resolver.Reset();
+        activeSkillAction = null;
+        hasStartedCooldown = false;
 
-    // =========================================================
-    // Phase Hooks
-    // =========================================================
+        if (player.Combat != null)
+        {
+            player.Combat.ResetCombo();
+        }
+    }
 
     protected override void OnActionComplete()
     {
+        TryStartCooldown();
+        resolver.Reset();
+        player.Combat?.ResetCombo();
         ExitToAppropriateMovementState();
     }
 
-    // =========================================================
-    // InputHandleMidAction — per-phase input routing
-    // Skill has highest hierarchy so most inputs are blocked.
-    // Only Cancel phase opens transition options.
-    // =========================================================
-
-    protected override void HandleInputDuringStartup()
+    protected override void OnCancelBegin()
     {
-        // During startup: no input accepted (skill is winding up)
+        TryStartCooldown();
     }
 
-    protected override void HandleInputDuringActive()
+    protected override void ProcessLogicFrame(int frame, ActionPhase phase)
     {
-        // During active: no input accepted (skill effect is playing)
+        player.Combat?.ProcessFrameFromState(frame, phase);
+    }
+
+    protected override bool ShouldAdvanceLogicFrames()
+    {
+        return player.Combat == null || !player.Combat.HasActiveHitstop;
+    }
+
+    protected override void OnRecoveryBegin()
+    {
+        player.Combat?.OnRecoveryPhaseFromState();
     }
 
     protected override void HandleInputDuringRecovery()
     {
-        // During recovery: buffer attack for post-skill combo routing
-        // Don't consume yet — wait for cancel window
-    }
-
-    public override void OnSkillInput()
-    {
-        if (currentPhase != ActionPhase.None) return;
-
-        if (player.Combat is PlayerBasicAttack pba && player.characterObject != null)
+        ActionInputBuffer buffer = fsm.InputBuffer;
+        if (buffer == null)
         {
-            var table = player.characterObject.actionResolverTable;
-            if (table == null) return;
+            return;
+        }
 
-            // Build context
-            ActionInputBuffer buffer = fsm.InputBuffer;
-            InputContext ctx = new InputContext
-            {
-                isGrounded = player.Movement != null && player.Movement.IsGrounded(),
-                directionalInput = buffer != null ? buffer.DirectionalInput : Vector2.zero,
-                facingDirection = player.Movement != null ? player.Movement.FacingDirection : 1,
-            };
+        if (buffer.ConsumeUltimate())
+        {
+            fsm.ChangeState(fsm.UltimateState);
+            fsm.CurrentState.OnUltimateInput();
+            return;
+        }
 
-            // Resolve
-            ActionResolver resolver = new ActionResolver(); // Temporary resolver for initial find
-            AttackStepData step = resolver.ResolveInitial(ctx, table, AttackCategory.Skill);
+        if (buffer.ConsumeSkill() && TryResolveNextSkillStep())
+        {
+            return;
+        }
 
-            if (step != null)
-            {
-                // Check cooldown
-                if (resolver.ActiveCombatAction is SkillAction skill && pba.IsOnCooldown(AttackCategory.Skill, skill.cooldown))
-                {
-                    fsm.Log("Skill", "Skill is on cooldown", Color.yellow);
-                    ExitToAppropriateMovementState();
-                    return;
-                }
-
-                pba.ExecuteStep(step, 1, !ctx.isGrounded, AttackCategory.Skill);
-                RestartAction();
-            }
-            else
-            {
-                ExitToAppropriateMovementState();
-            }
+        if (buffer.ConsumeAttack())
+        {
+            fsm.ChangeState(fsm.AttackState);
+            fsm.CurrentState.OnAttackInput();
+            return;
         }
     }
 
     protected override void HandleInputDuringCancel()
     {
         ActionInputBuffer buffer = fsm.InputBuffer;
-        if (buffer == null) return;
+        if (buffer == null)
+        {
+            return;
+        }
 
-        // Cancel window: attack input → transition to AttackState with post-skill context
+        if (buffer.ConsumeUltimate())
+        {
+            fsm.ChangeState(fsm.UltimateState);
+            fsm.CurrentState.OnUltimateInput();
+            return;
+        }
+
+        if (buffer.ConsumeSkill() && TryResolveNextSkillStep())
+        {
+            return;
+        }
+
         if (buffer.ConsumeAttack())
         {
-            TransitionContext ctx = new TransitionContext
-            {
-                previousState = PlayerStateId.Skill,
-                directionalInput = buffer.DirectionalInput,
-                wasAirborne = player.Movement != null && !player.Movement.IsGrounded()
-            };
-
-            fsm.ChangeState(fsm.AttackState, ctx);
+            resolver.Reset();
+            fsm.ChangeState(fsm.AttackState);
             fsm.CurrentState.OnAttackInput();
             return;
         }
 
-        // Dash cancel
         float dashX;
         if (buffer.ConsumeDash(out dashX))
         {
             if (player.Movement != null && player.Movement.CanDash())
             {
+                resolver.Reset();
                 fsm.ChangeState(fsm.DashState);
                 fsm.CurrentState.OnDashInput(dashX);
                 return;
             }
         }
 
-        // Jump cancel
         if (buffer.ConsumeJump())
         {
+            resolver.Reset();
             fsm.RouteJumpInput();
+        }
+    }
+
+    public override bool CanAcceptCombatInput(CombatInputType inputType)
+    {
+        return inputType switch
+        {
+            CombatInputType.Attack => currentPhase == ActionPhase.Recovery || currentPhase == ActionPhase.Cancel,
+            CombatInputType.Skill => currentPhase == ActionPhase.Recovery || currentPhase == ActionPhase.Cancel,
+            CombatInputType.Ultimate => currentPhase == ActionPhase.Recovery || currentPhase == ActionPhase.Cancel,
+            _ => false
+        };
+    }
+
+    public override void OnSkillInput()
+    {
+        Buffer?.ConsumeSkill();
+
+        if (player.Combat == null || resolverTable == null)
+        {
+            ExitToAppropriateMovementState();
+            return;
+        }
+
+        if (currentPhase == ActionPhase.None)
+        {
+            InputContext ctx = BuildInputContext();
+            AttackStepData step = resolver.ResolveInitial(ctx, resolverTable, AttackCategory.Skill);
+            if (step == null)
+            {
+                ExitToAppropriateMovementState();
+                return;
+            }
+
+            if (resolver.ActiveCombatAction is SkillAction skillAction
+                && player.Combat.IsOnCooldown(AttackCategory.Skill, skillAction.cooldown, skillAction.actionName))
+            {
+                fsm.Log("Skill", "Skill is on cooldown", Color.yellow);
+                resolver.Reset();
+                ExitToAppropriateMovementState();
+                return;
+            }
+
+            activeSkillAction = resolver.ActiveCombatAction as SkillAction;
+            hasStartedCooldown = false;
+            player.Combat.ExecuteStep(step, resolver.TreeDepth, !ctx.isGrounded, AttackCategory.Skill, resolver.ActiveCombatAction?.actionName);
+            RestartAction();
+            return;
+        }
+
+        if ((currentPhase == ActionPhase.Recovery || currentPhase == ActionPhase.Cancel) && TryResolveNextSkillStep())
+        {
             return;
         }
     }
 
-    // =========================================================
-    // Callbacks
-    // =========================================================
-    private void HandleCastFinished()
+    private bool TryResolveNextSkillStep()
     {
-        // Skill controller finished — if we're past Done phase, exit
-        // Otherwise let frame data drive the transition
-        if (currentPhase == ActionPhase.Done || currentPhase == ActionPhase.None)
+        if (!resolver.IsActive)
         {
-            if (fsm.CurrentState == this)
-                ExitToAppropriateMovementState();
+            return false;
         }
+
+        InputContext ctx = BuildInputContext();
+        AttackStepData nextStep = resolver.ResolveNext(ctx);
+        if (nextStep == null)
+        {
+            return false;
+        }
+
+        player.Combat.ExecuteStep(nextStep, resolver.TreeDepth, !ctx.isGrounded, AttackCategory.Skill, resolver.ActiveCombatAction?.actionName);
+        RestartAction();
+        return true;
+    }
+
+    private void TryStartCooldown()
+    {
+        if (hasStartedCooldown || activeSkillAction == null || player.Combat == null)
+        {
+            return;
+        }
+
+        if (activeSkillAction.cooldown > 0f)
+        {
+            player.Combat.StartActionCooldown(AttackCategory.Skill, activeSkillAction.actionName);
+        }
+
+        hasStartedCooldown = true;
+    }
+
+    private InputContext BuildInputContext()
+    {
+        ActionInputBuffer buffer = fsm.InputBuffer;
+        return new InputContext
+        {
+            isGrounded = player.Movement != null && player.Movement.IsGrounded(),
+            directionalInput = buffer != null ? buffer.DirectionalInput : Vector2.zero,
+            facingDirection = player.Movement != null ? player.Movement.FacingDirection : 1,
+            previousState = transitionContext.previousState,
+            hasGrabbedEnemy = player.Combat != null && player.Combat.HasGrabbedEnemy(),
+            passiveController = player.PassiveController,
+            runtimeState = player.PassiveController != null ? player.PassiveController.RuntimeState : null
+        };
     }
 }

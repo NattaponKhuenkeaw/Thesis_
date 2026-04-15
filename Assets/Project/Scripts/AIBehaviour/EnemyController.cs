@@ -38,7 +38,9 @@ public class EnemyController : MonoBehaviour
     // =========================================================
     [Header("Runtime State (read-only)")]
     [SerializeField] private bool isAlive = true;
+    [SerializeField] private CharacterStatus status = new CharacterStatus();
     public bool IsAlive => isAlive;
+    public CharacterStatus Status => status;
     public EnemyReactionState CurrentReactionState =>
         hitReactionHandler != null ? hitReactionHandler.CurrentState : EnemyReactionState.None;
     public int CurrentReactionOwnerId =>
@@ -147,7 +149,7 @@ public class EnemyController : MonoBehaviour
     // =========================================================
 
     /// <summary>
-    /// Full hit-reaction variant. Called by MeleeHitboxDamage with frame-data-driven reaction.
+    /// Full hit-reaction variant. Called by HitBoxDamage with frame-data-driven reaction.
     /// </summary>
     public void TakeHit(HitReactionData reactionData, Vector2 attackerPosition)
     {
@@ -196,6 +198,11 @@ public class EnemyController : MonoBehaviour
     public void ResetComboCount()
     {
         currentComboHits = 0;
+    }
+
+    public void ApplyStatus(StatusEffectType statusEffect, bool enabled = true)
+    {
+        status.ApplyStatus(statusEffect, enabled);
     }
 
     /// <summary>

@@ -19,6 +19,7 @@ public abstract class CombatAction
     [Header("Activation Conditions")]
     public CombatActionContext context = CombatActionContext.Ground;
     public int priority = 0;
+    [SerializeReference] public List<ActionConditionBase> conditions = new List<ActionConditionBase>();
     
     [Header("Combo Tree")]
     public ComboTree comboTree;
@@ -70,6 +71,10 @@ public class ComboNode
     [Tooltip("The next node if no route matches. Null = combo ends.")]
     [SerializeReference] public ComboNode defaultNext;
 
+    [Header("On Grab Success Follow-Up")]
+    [Tooltip("Immediately interrupts and transitions to this node if a Grab Hitbox connects.")]
+    [SerializeReference] public ComboNode onGrabSuccessNode;
+
     public void Rescale(float ratio, HashSet<ComboNode> visited = null)
     {
         visited ??= new HashSet<ComboNode>();
@@ -86,6 +91,7 @@ public class ComboNode
         }
 
         defaultNext?.Rescale(ratio, visited);
+        onGrabSuccessNode?.Rescale(ratio, visited);
     }
 }
 
@@ -104,6 +110,7 @@ public class ComboRoute
     public bool requireAirborne = false;
     public bool requireGrabbedEnemy = false;
     public PlayerStateId requiredPreviousState = PlayerStateId.None;
+    [SerializeReference] public List<ActionConditionBase> conditions = new List<ActionConditionBase>();
 
     [Header("Target")]
     [Tooltip("The node to branch into if conditions match.")]
@@ -149,6 +156,7 @@ public class StandaloneAction
     public bool requireAirborne = true;
     public PlayerStateId requiredPreviousState = PlayerStateId.None;
     public int priority = 10;
+    [SerializeReference] public List<ActionConditionBase> conditions = new List<ActionConditionBase>();
 
     [Header("Action")]
     public AttackStepData stepData;

@@ -98,9 +98,11 @@ public class ActionResolver
 
         foreach (var action in searchList)
         {
-            if (action.context == expectedContext)
+            if (action.context == expectedContext
+                && ActionMatches(action, ctx))
             {
-                if (bestAction == null || action.priority > bestAction.priority)
+                if (bestAction == null
+                    || GetEffectivePriority(action, ctx) > GetEffectivePriority(bestAction, ctx))
                 {
                     bestAction = action;
                 }
@@ -182,6 +184,51 @@ public class ActionResolver
 
         treeDepth++;
         return currentNode.stepData;
+    }
+
+    // =========================================================
+    // Grab Success — Dedicated route for successful grabs
+    // =========================================================
+
+    public AttackStepData ResolveGrabSuccess()
+    {
+        if (currentNode == null) return null;
+
+        // 1. Dedicated grab success node (highest priority)
+        if (currentNode.onGrabSuccessNode != null)
+        {
+            string prevNodeName = currentNode.stepData?.stepName ?? "Unknown";
+            Log($"Grab Success Match! [{prevNodeName}] -> '{currentNode.onGrabSuccessNode.stepData?.stepName}'", Color.green);
+            currentNode = currentNode.onGrabSuccessNode;
+            treeDepth++;
+            return currentNode.stepData;
+        }
+
+        // 2. Check routes that specifically require a grabbed enemy (never fall to defaultNext)
+        if (currentNode.routes != null)
+        {
+            ComboRoute bestGrabRoute = null;
+            for (int i = 0; i < currentNode.routes.Count; i++)
+            {
+                ComboRoute route = currentNode.routes[i];
+                if (route?.targetNode == null) continue;
+                if (!route.requireGrabbedEnemy) continue; // ONLY grab-specific routes
+
+                if (bestGrabRoute == null || route.priority > bestGrabRoute.priority)
+                    bestGrabRoute = route;
+            }
+
+            if (bestGrabRoute != null)
+            {
+                string prevNodeName = currentNode.stepData?.stepName ?? "Unknown";
+                Log($"Grab Route Match! [{prevNodeName}] -> '{bestGrabRoute.targetNode.stepData?.stepName}'", Color.green);
+                currentNode = bestGrabRoute.targetNode;
+                treeDepth++;
+                return currentNode.stepData;
+            }
+        }
+
+        return null;
     }
 
     // =========================================================
@@ -333,7 +380,7 @@ public class ActionResolver
             && route.requiredPreviousState != ctx.previousState)
             return false;
 
-        return true;
+        return ActionConditionUtility.AllMet(route.conditions, ctx);
     }
 
     private StandaloneAction FindMatchingStandalone(InputContext ctx, ActionResolverTable table)
@@ -372,6 +419,52 @@ public class ActionResolver
             && sa.requiredPreviousState != ctx.previousState)
             return false;
 
+        return ActionConditionUtility.AllMet(sa.conditions, ctx);
+    }
+
+    private static bool ActionMatches(CombatAction action, InputContext ctx)
+    {
+        if (action == null)
+        {
+            return false;
+        }
+
+        if (!ActionConditionUtility.AllMet(action.conditions, ctx))
+        {
+            return false;
+        }
+
+        if (ctx.passiveController == null)
+        {
+            return true;
+        }
+
+        if (!ctx.passiveController.IsActionUnlocked(action.actionName))
+        {
+            return false;
+        }
+
+        if (ctx.passiveController.TryGetReplacementActionName(action.actionName, out string replacementActionName)
+            && !string.IsNullOrEmpty(replacementActionName)
+            && !string.Equals(replacementActionName, action.actionName))
+        {
+            return false;
+        }
+
         return true;
+    }
+
+    private static int GetEffectivePriority(CombatAction action, InputContext ctx)
+    {
+        if (action == null)
+        {
+            return int.MinValue;
+        }
+
+        int bonus = ctx.passiveController != null
+            ? ctx.passiveController.GetActionPriorityModifier(action.actionName)
+            : 0;
+
+        return action.priority + bonus;
     }
 }

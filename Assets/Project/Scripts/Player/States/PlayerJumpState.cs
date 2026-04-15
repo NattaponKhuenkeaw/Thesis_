@@ -29,6 +29,8 @@ public class PlayerJumpState : PlayerState
     public override bool AcceptsDashInput => true;
     public override bool AcceptsJumpInput => true;   // custom handler (drop-down, double jump)
     public override bool AcceptsAttackInput => true;  // custom handler (air combos + plunge via resolver)
+    public override bool AcceptsSkillInput => true;
+    public override bool AcceptsUltimateInput => true;
 
     public override void Update()
     {

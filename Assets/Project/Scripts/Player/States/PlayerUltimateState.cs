@@ -1,101 +1,127 @@
 using UnityEngine;
 
 /// <summary>
-/// Ultimate state: player is casting an ultimate ability.
-/// Inherits FrameDataPlayerState for frame-data-driven phase tracking.
-/// Ultimate has the HIGHEST cancel hierarchy — cannot be interrupted by
-/// normal attacks, movement, or even skill. Only System priority (hitstun/death) can interrupt.
-/// Cancel window may be disabled (cancelWindowStartFrame = 0) for full-lock ultimates.
+/// Frame-data-driven ultimate state with buffered follow-up support.
 /// </summary>
 public class PlayerUltimateState : FrameDataPlayerState
 {
+    private readonly ActionResolver resolver = new ActionResolver();
+    private ActionResolverTable resolverTable;
+    private SkillAction activeUltimateAction;
+    private bool hasStartedCooldown;
+
     public PlayerUltimateState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
     public override PlayerStateId StateId => PlayerStateId.Ultimate;
     public override PlayerStatePriority Priority => PlayerStatePriority.Ultimate;
 
-    // Ultimate locks everything
     public override bool AcceptsMoveInput => true;
+    public override bool AcceptsAttackInput => true;
+    public override bool AcceptsSkillInput => true;
+    public override bool AcceptsUltimateInput => true;
     public override bool LocksMovement => true;
     public override bool LocksFacing => true;
 
-    // =========================================================
-    // FrameDataPlayerState — provide frame data from UltimateData
-    // =========================================================
-
     protected override ActionFrameData GetFrameData()
     {
-        if (player.Combat == null) return null;
-
-        var stepData = player.Combat.GetCurrentStepData();
-        return (ActionFrameData)stepData;
+        return player.Combat != null ? player.Combat.GetCurrentStepData() : null;
     }
-
-    // =========================================================
-    // Lifecycle
-    // =========================================================
 
     public override void Enter(TransitionContext context)
     {
         base.Enter(context);
-    }
+        resolverTable = player.characterObject != null ? player.characterObject.actionResolverTable : null;
+        resolver.SetLogger(fsm);
+        activeUltimateAction = null;
+        hasStartedCooldown = false;
 
-    protected override void StartAction()
-    {
-        base.StartAction();
+        if (player.Combat != null)
+        {
+            player.Combat.OnGrabConnected += HandleGrabConnected;
+        }
     }
 
     public override void Exit()
     {
+        TryStartCooldown();
         base.Exit();
+        resolver.Reset();
+        activeUltimateAction = null;
+        hasStartedCooldown = false;
+
+        if (player.Combat != null)
+        {
+            player.Combat.ResetCombo();
+            player.Combat.OnGrabConnected -= HandleGrabConnected;
+        }
     }
 
-    public override void Update()
+    protected override void ProcessLogicFrame(int frame, ActionPhase phase)
     {
-        base.Update();
+        player.Combat?.ProcessFrameFromState(frame, phase);
     }
 
-    // =========================================================
-    // Phase Hooks
-    // =========================================================
+    protected override bool ShouldAdvanceLogicFrames()
+    {
+        return player.Combat == null || !player.Combat.HasActiveHitstop;
+    }
+
+    protected override void OnRecoveryBegin()
+    {
+        player.Combat?.OnRecoveryPhaseFromState();
+    }
 
     protected override void OnActionComplete()
     {
+        TryStartCooldown();
+        resolver.Reset();
+        player.Combat?.ResetCombo();
         ExitToAppropriateMovementState();
     }
 
-    // =========================================================
-    // InputHandleMidAction — Ultimate has highest hierarchy
-    // Almost all inputs are blocked. Only cancel window (if enabled) allows transitions.
-    // =========================================================
-
-    protected override void HandleInputDuringStartup()
+    protected override void OnCancelBegin()
     {
-        // Locked — ultimate is winding up
-    }
-
-    protected override void HandleInputDuringActive()
-    {
-        // Locked — ultimate effect is active
+        TryStartCooldown();
     }
 
     protected override void HandleInputDuringRecovery()
     {
-        // Locked — ultimate is recovering
+        // Ultimate recovery is intentionally uninterruptible.
     }
 
     protected override void HandleInputDuringCancel()
     {
-        // Ultimate cancel window (if enabled via cancelWindowStartFrame > 0):
-        // Only allow dash and jump — no attack cancel
         ActionInputBuffer buffer = fsm.InputBuffer;
-        if (buffer == null) return;
+        if (buffer == null)
+        {
+            return;
+        }
+
+        if (buffer.ConsumeUltimate() && TryResolveNextUltimateStep())
+        {
+            return;
+        }
+
+        if (buffer.ConsumeSkill())
+        {
+            fsm.ChangeState(fsm.SkillState);
+            fsm.CurrentState.OnSkillInput();
+            return;
+        }
+
+        if (buffer.ConsumeAttack())
+        {
+            fsm.ChangeState(fsm.AttackState);
+            fsm.CurrentState.OnAttackInput();
+            return;
+        }
 
         float dashX;
         if (buffer.ConsumeDash(out dashX))
         {
             if (player.Movement != null && player.Movement.CanDash())
             {
+                resolver.Reset();
                 fsm.ChangeState(fsm.DashState);
                 fsm.CurrentState.OnDashInput(dashX);
                 return;
@@ -104,50 +130,140 @@ public class PlayerUltimateState : FrameDataPlayerState
 
         if (buffer.ConsumeJump())
         {
+            resolver.Reset();
             fsm.RouteJumpInput();
-            return;
         }
+    }
+
+    public override bool CanAcceptCombatInput(CombatInputType inputType)
+    {
+        return inputType switch
+        {
+            CombatInputType.Attack => currentPhase == ActionPhase.Cancel,
+            CombatInputType.Skill => currentPhase == ActionPhase.Cancel,
+            CombatInputType.Ultimate => currentPhase == ActionPhase.Cancel,
+            _ => false
+        };
     }
 
     public override void OnUltimateInput()
     {
-        if (currentPhase != ActionPhase.None) return;
+        Buffer?.ConsumeUltimate();
 
-        if (player.Combat is PlayerBasicAttack pba && player.characterObject != null)
+        if (player.Combat == null || resolverTable == null)
         {
-            var table = player.characterObject.actionResolverTable;
-            if (table == null) return;
+            ExitToAppropriateMovementState();
+            return;
+        }
 
-            // Build context
-            ActionInputBuffer buffer = fsm.InputBuffer;
-            InputContext ctx = new InputContext
-            {
-                isGrounded = player.Movement != null && player.Movement.IsGrounded(),
-                directionalInput = buffer != null ? buffer.DirectionalInput : Vector2.zero,
-                facingDirection = player.Movement != null ? player.Movement.FacingDirection : 1,
-            };
-
-            // Resolve
-            ActionResolver resolver = new ActionResolver();
-            AttackStepData step = resolver.ResolveInitial(ctx, table, AttackCategory.Ultimate);
-
-            if (step != null)
-            {
-                // Check cooldown
-                if (resolver.ActiveCombatAction is SkillAction skill && pba.IsOnCooldown(AttackCategory.Ultimate, skill.cooldown))
-                {
-                    fsm.Log("Ultimate", "Ultimate is on cooldown", Color.yellow);
-                    ExitToAppropriateMovementState();
-                    return;
-                }
-
-                pba.ExecuteStep(step, 1, !ctx.isGrounded, AttackCategory.Ultimate);
-                RestartAction();
-            }
-            else
+        if (currentPhase == ActionPhase.None)
+        {
+            InputContext ctx = BuildInputContext();
+            AttackStepData step = resolver.ResolveInitial(ctx, resolverTable, AttackCategory.Ultimate);
+            if (step == null)
             {
                 ExitToAppropriateMovementState();
+                return;
             }
+
+            if (resolver.ActiveCombatAction is SkillAction skillAction
+                && player.Combat.IsOnCooldown(AttackCategory.Ultimate, skillAction.cooldown, skillAction.actionName))
+            {
+                fsm.Log("Ultimate", "Ultimate is on cooldown", Color.yellow);
+                resolver.Reset();
+                ExitToAppropriateMovementState();
+                return;
+            }
+
+            activeUltimateAction = resolver.ActiveCombatAction as SkillAction;
+            hasStartedCooldown = false;
+            player.Combat.ExecuteStep(step, resolver.TreeDepth, !ctx.isGrounded, AttackCategory.Ultimate, resolver.ActiveCombatAction?.actionName);
+            RestartAction();
+            return;
+        }
+
+        if (currentPhase == ActionPhase.Cancel && TryResolveNextUltimateStep())
+        {
+            return;
+        }
+    }
+
+    private bool TryResolveNextUltimateStep()
+    {
+        if (!resolver.IsActive)
+        {
+            return false;
+        }
+
+        InputContext ctx = BuildInputContext();
+        AttackStepData nextStep = resolver.ResolveNext(ctx);
+        if (nextStep == null)
+        {
+            return false;
+        }
+
+        player.Combat.ExecuteStep(nextStep, resolver.TreeDepth, !ctx.isGrounded, AttackCategory.Ultimate, resolver.ActiveCombatAction?.actionName);
+        RestartAction();
+        return true;
+    }
+
+    private void TryStartCooldown()
+    {
+        if (hasStartedCooldown || activeUltimateAction == null || player.Combat == null)
+        {
+            return;
+        }
+
+        if (activeUltimateAction.cooldown > 0f)
+        {
+            player.Combat.StartActionCooldown(AttackCategory.Ultimate, activeUltimateAction.actionName);
+        }
+
+        hasStartedCooldown = true;
+    }
+
+    private InputContext BuildInputContext()
+    {
+        ActionInputBuffer buffer = fsm.InputBuffer;
+        return new InputContext
+        {
+            isGrounded = player.Movement != null && player.Movement.IsGrounded(),
+            directionalInput = buffer != null ? buffer.DirectionalInput : Vector2.zero,
+            facingDirection = player.Movement != null ? player.Movement.FacingDirection : 1,
+            previousState = transitionContext.previousState,
+            hasGrabbedEnemy = player.Combat != null && player.Combat.HasGrabbedEnemy(),
+            passiveController = player.PassiveController,
+            runtimeState = player.PassiveController != null ? player.PassiveController.RuntimeState : null
+        };
+    }
+    // =========================================================
+    // Grab Connected — Tree Branching
+    // =========================================================
+
+    private void HandleGrabConnected()
+    {
+        AttackStepData grabFollowUp = resolver.ResolveGrabSuccess();
+        if (grabFollowUp != null)
+        {
+            fsm.InputBuffer?.ClearAll();
+
+            int maintainFrames = PlayerCombat.CalculateFramesUntilRelease(
+                new ComboNode { stepData = grabFollowUp, defaultNext = null });
+
+            if (maintainFrames > 0)
+            {
+                player.Combat.MaintainGrabThroughFollowUp(maintainFrames);
+            }
+
+            InputContext ctx = BuildInputContext();
+            player.Combat.ExecuteStep(
+                grabFollowUp, 
+                resolver.TreeDepth, 
+                !ctx.isGrounded, 
+                AttackCategory.Ultimate, 
+                resolver.ActiveCombatAction?.actionName);
+                
+            RestartAction();
         }
     }
 }

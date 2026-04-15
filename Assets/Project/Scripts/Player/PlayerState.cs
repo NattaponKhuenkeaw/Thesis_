@@ -41,6 +41,16 @@ public enum PlayerStatePriority
 }
 
 /// <summary>
+/// Combat inputs that can be buffered and resolved by frame-data states.
+/// </summary>
+public enum CombatInputType
+{
+    Attack,
+    Skill,
+    Ultimate
+}
+
+/// <summary>
 /// Abstract base class for all player states in the C# state machine.
 /// Each state receives input hooks and lifecycle calls from the PlayerStateMachine.
 /// 
@@ -182,6 +192,10 @@ public abstract class PlayerState
     {
         if (player.Movement != null && !player.Movement.IsGrounded())
         {
+            // Defensive: ensure gravity is restored and velocity is not locked
+            // especially if combat logic didn't clean up correctly.
+            player.Movement.CancelAttackMotion();
+
             if (player.Animator != null)
                 player.Animator.RestoreAirborneState();
 

@@ -1,68 +1,115 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MeleeHitboxDamage : MonoBehaviour
+public class HitBoxDamage : MonoBehaviour
 {
     [Header("Dependencies")]
     public PlayerMovement movement;
     public CameraShakeController cameraShake;
 
+    private readonly HashSet<EnemyController> hitEnemiesThisActivation = new HashSet<EnemyController>();
 
     private NormalHitbox currentNormalHitbox;
     private GrabHitbox currentGrabHitbox;
-
     private float currentDamage = 1f;
-    private bool isLastHit = false;
-    private float hitStopDuration = 0.1f;
-    private float hitStopScale = 0.05f;
+    private bool hasTriggeredShakeThisActivation;
+    private bool hasTriggeredHitStopThisActivation;
+    private PlayerCombat playerCombat;
+    private ProjectileRuntime projectileOwner;
+    private CharacterPassiveController passiveController;
+    private AttackCategory sourceCategory = AttackCategory.Normal;
+    private string sourceActionName;
+    private AttackStepData sourceStepData;
 
     public float DamageValue => currentDamage;
 
-    private readonly HashSet<EnemyController> hitEnemiesThisActivation = new HashSet<EnemyController>();
-
-    private bool hasTriggeredShakeThisActivation = false;
-    private bool hasTriggeredHitStopThisActivation = false;
-    private PlayerBasicAttack playerAttack;
-
     void Awake()
     {
-        MeleeHitboxDamage[] damageComponents = GetComponents<MeleeHitboxDamage>();
+        HitBoxDamage[] damageComponents = GetComponents<HitBoxDamage>();
         if (damageComponents.Length > 1 && damageComponents[0] != this)
         {
-            Debug.LogWarning("MeleeHitboxDamage: duplicate component detected, disabling extra instance", this);
+            Debug.LogWarning("HitBoxDamage: duplicate component detected, disabling extra instance", this);
             enabled = false;
             return;
         }
 
-        if (movement == null)
-            movement = GetComponentInParent<PlayerMovement>();
-
-        if (cameraShake == null)
-            cameraShake = GetComponentInParent<CameraShakeController>();
-
-        playerAttack = GetComponentInParent<PlayerBasicAttack>();
+        movement = movement ?? GetComponentInParent<PlayerMovement>();
+        cameraShake = cameraShake ?? GetComponentInParent<CameraShakeController>();
+        playerCombat = GetComponentInParent<PlayerCombat>();
+        passiveController = passiveController ?? GetComponentInParent<CharacterPassiveController>();
     }
 
     void OnEnable()
+    {
+        ResetActivationState();
+    }
+
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        EnemyController enemy = other.GetComponentInParent<EnemyController>();
+        if (enemy != null)
+        {
+            ProcessHit(enemy);
+        }
+    }
+
+    public void SetHitData(
+        float damage,
+        bool lastHit,
+        float stopDuration,
+        float stopScale,
+        NormalHitbox hitbox,
+        AttackCategory category,
+        string actionName,
+        AttackStepData stepData,
+        CharacterPassiveController sourcePassiveController)
+    {
+        currentDamage = damage;
+        currentNormalHitbox = hitbox;
+        currentGrabHitbox = null;
+        sourceCategory = category;
+        sourceActionName = actionName;
+        sourceStepData = stepData;
+        passiveController = sourcePassiveController ?? passiveController;
+    }
+
+    public void SetGrabData(
+        float damage,
+        GrabHitbox hitbox,
+        bool lastHit,
+        AttackCategory category,
+        string actionName,
+        AttackStepData stepData,
+        CharacterPassiveController sourcePassiveController)
+    {
+        currentDamage = damage;
+        currentGrabHitbox = hitbox;
+        currentNormalHitbox = null;
+        sourceCategory = category;
+        sourceActionName = actionName;
+        sourceStepData = stepData;
+        passiveController = sourcePassiveController ?? passiveController;
+    }
+
+    public void SetProjectileOwner(ProjectileRuntime owner)
+    {
+        projectileOwner = owner;
+    }
+
+    public void ResetActivationState()
     {
         hasTriggeredShakeThisActivation = false;
         hasTriggeredHitStopThisActivation = false;
         hitEnemiesThisActivation.Clear();
     }
 
-    void OnTriggerEnter2D(Collider2D other)
-    {
-        EnemyController enemy = other.GetComponentInParent<EnemyController>();
-        if (enemy == null) return;
-        ProcessHit(enemy);
-    }
-
     public void ProcessHit(EnemyController enemy)
     {
-        if (enemy == null) return;
-        if (hitEnemiesThisActivation.Contains(enemy)) return;
+        if (enemy == null || hitEnemiesThisActivation.Contains(enemy))
+        {
+            return;
+        }
 
-        // Validation for Grabs (Range and Angle Cone)
         if (currentGrabHitbox != null && !ValidateGrab(enemy))
         {
             return;
@@ -70,39 +117,38 @@ public class MeleeHitboxDamage : MonoBehaviour
 
         hitEnemiesThisActivation.Add(enemy);
 
-        Vector2 direction = Vector2.right;
-        if (movement != null && movement.FacingDirection == -1)
-            direction = Vector2.left;
-
+        Vector2 direction = GetHitDirection();
         HitReactionData reactionData = currentGrabHitbox != null
             ? BuildGrabReactionData(direction)
-            : BuildReactionData(direction);
+            : BuildReactionData(enemy, direction);
 
-        Vector2 attackerPosition = movement != null
-            ? (Vector2)movement.transform.position
-            : (Vector2)transform.root.position;
+        Vector2 attackerPosition = projectileOwner != null
+            ? projectileOwner.AttackerPosition
+            : movement != null ? (Vector2)movement.transform.position : (Vector2)transform.root.position;
 
         enemy.TakeHit(reactionData, attackerPosition);
 
         if (CameraManager.instance != null)
+        {
             CameraManager.instance.EnterCombat(enemy);
+        }
 
         if (currentGrabHitbox != null)
         {
-            int ownerId = playerAttack != null ? playerAttack.transform.root.GetInstanceID() : transform.root.GetInstanceID();
+            int ownerId = playerCombat != null ? playerCombat.transform.root.GetInstanceID() : transform.root.GetInstanceID();
             bool isOwnedGrabReaction =
                 (enemy.CurrentReactionState == EnemyReactionState.ImpactFreeze
                  || enemy.CurrentReactionState == EnemyReactionState.Grabbed)
                 && enemy.CurrentReactionOwnerId == ownerId;
 
             if (isOwnedGrabReaction)
-                playerAttack?.RegisterGrabbedEnemy(enemy);
+                playerCombat?.RegisterGrabbedEnemy(enemy);
             else
-                playerAttack?.ClearGrabbedEnemy(enemy);
+                playerCombat?.ClearGrabbedEnemy(enemy);
         }
-        else if (playerAttack != null && playerAttack.IsHoldingEnemy(enemy) && enemy.CurrentReactionState != EnemyReactionState.Grabbed)
+        else if (playerCombat != null && playerCombat.IsHoldingEnemy(enemy) && enemy.CurrentReactionState != EnemyReactionState.Grabbed)
         {
-            playerAttack.ClearGrabbedEnemy(enemy);
+            playerCombat.ClearGrabbedEnemy(enemy);
         }
 
         int finalHitstun = GetConfiguredHitstopFrames();
@@ -116,32 +162,20 @@ public class MeleeHitboxDamage : MonoBehaviour
         {
             hasTriggeredShakeThisActivation = true;
         }
+
+        if (playerCombat != null)
+        {
+            playerCombat.NotifyEnemyHit(enemy);
+        }
+        else
+        {
+            passiveController?.NotifyHitDealt(sourceCategory, sourceActionName, sourceStepData, enemy);
+        }
+
+        projectileOwner?.RegisterSuccessfulHit(enemy);
     }
 
-    public void SetHitData(
-        float damage,
-        bool lastHit = false,
-        float stopDuration = 0.12f,
-        float stopScale = 0.02f,
-        NormalHitbox hitbox = null)
-    {
-        currentDamage = damage;
-        isLastHit = lastHit;
-        hitStopDuration = stopDuration;
-        hitStopScale = stopScale;
-        currentNormalHitbox = hitbox;
-        currentGrabHitbox = null;
-    }
-
-    public void SetGrabData(float damage, GrabHitbox hitbox, bool lastHit = false)
-    {
-        currentDamage = damage;
-        isLastHit = lastHit;
-        currentGrabHitbox = hitbox;
-        currentNormalHitbox = null;
-    }
-
-    private HitReactionData BuildReactionData(Vector2 direction)
+    private HitReactionData BuildReactionData(EnemyController enemy, Vector2 direction)
     {
         HitReactionData data = HitReactionData.Default(currentDamage, direction, 0f);
         PopulateRuntimeContext(ref data);
@@ -152,30 +186,25 @@ public class MeleeHitboxDamage : MonoBehaviour
             data.flashFrames = currentNormalHitbox.flashFrames;
             data.impactTier = currentNormalHitbox.impactTier;
 
-            float finalLaunchSpeed = currentNormalHitbox.launchSpeed;
-            if (currentNormalHitbox.offset.x < 0)
+            if (currentNormalHitbox.useDeterministicReaction)
             {
-                direction.x *= -1;
-                finalLaunchSpeed *= -1;
+                ApplyDeterministicReaction(
+                    ref data,
+                    currentNormalHitbox.reactionKind,
+                    currentNormalHitbox.impactFreezeFrames,
+                    currentNormalHitbox.reactionFrames,
+                    currentNormalHitbox.recoveryFrames,
+                    currentNormalHitbox.horizontalSpeed,
+                    currentNormalHitbox.launchSpeed,
+                    currentNormalHitbox.landingBehavior,
+                    currentNormalHitbox.canAirJuggle,
+                    currentNormalHitbox.maxJuggleCount,
+                    currentNormalHitbox.juggleLaunchScale,
+                    currentNormalHitbox.juggleStunScale);
             }
-
-            data.knockbackDirection = direction;
-
-            ApplyDeterministicReaction(
-                ref data,
-                currentNormalHitbox.reactionKind,
-                currentNormalHitbox.impactFreezeFrames,
-                currentNormalHitbox.reactionFrames,
-                currentNormalHitbox.recoveryFrames,
-                currentNormalHitbox.horizontalSpeed,
-                finalLaunchSpeed,
-                currentNormalHitbox.landingBehavior,
-                currentNormalHitbox.canAirJuggle,
-                currentNormalHitbox.maxJuggleCount,
-                currentNormalHitbox.juggleLaunchScale,
-                currentNormalHitbox.juggleStunScale);
         }
 
+        ReactionResolver.ResolveAgainstTarget(enemy, ref data);
         return data;
     }
 
@@ -187,12 +216,6 @@ public class MeleeHitboxDamage : MonoBehaviour
         if (currentGrabHitbox == null)
         {
             return data;
-        }
-
-        if (currentGrabHitbox.offset.x < 0)
-        {
-            direction.x *= -1;
-            data.knockbackDirection = direction;
         }
 
         data.reactionKind = EnemyReactionKind.Grab;
@@ -209,7 +232,6 @@ public class MeleeHitboxDamage : MonoBehaviour
         data.juggleStunScale = 1f;
         data.grabSocket = GetGrabSocket();
         data.grabOffset = currentGrabHitbox.snapOffset;
-
         data.hitstunFrames = currentGrabHitbox.impactFreezeFrames;
         data.knockbackFrames = currentGrabHitbox.holdFrames;
         data.reactionVelocity = Vector2.zero;
@@ -225,7 +247,10 @@ public class MeleeHitboxDamage : MonoBehaviour
 
     private void PopulateRuntimeContext(ref HitReactionData data)
     {
-        Transform attackerTransform = movement != null ? movement.transform : transform.root;
+        Transform attackerTransform = projectileOwner != null
+            ? projectileOwner.AttackerTransform
+            : movement != null ? movement.transform : transform.root;
+
         data.attackerTransform = attackerTransform;
         data.reactionOwnerId = attackerTransform != null ? attackerTransform.root.GetInstanceID() : 0;
         data.grabSocket = null;
@@ -249,15 +274,13 @@ public class MeleeHitboxDamage : MonoBehaviour
         data.reactionKind = reactionKind;
         data.reactionTiming = HitReactionData.CreateTiming(impactFreezeFrames, reactionFrames, recoveryFrames);
         data.horizontalSpeed = Mathf.Max(0f, horizontalSpeed);
-        data.launchSpeed = launchSpeed; // Removed Mathf.Max to allow negative launch
+        data.launchSpeed = Mathf.Max(0f, launchSpeed);
         data.landingBehavior = landingBehavior;
         data.canAirJuggle = canAirJuggle;
         data.maxJuggleCount = Mathf.Max(0, maxJuggleCount);
         data.juggleLaunchScale = juggleLaunchScale;
         data.juggleStunScale = juggleStunScale;
     }
-
-
 
     private int GetConfiguredHitstopFrames()
     {
@@ -272,8 +295,8 @@ public class MeleeHitboxDamage : MonoBehaviour
 
     private Transform GetGrabSocket()
     {
-        if (playerAttack != null && playerAttack.meleeHitboxController != null && playerAttack.meleeHitboxController.attackAnchor != null)
-            return playerAttack.meleeHitboxController.attackAnchor;
+        if (playerCombat != null && playerCombat.hitBoxController != null && playerCombat.hitBoxController.attackAnchor != null)
+            return playerCombat.hitBoxController.attackAnchor;
 
         if (movement != null)
             return movement.transform;
@@ -283,10 +306,7 @@ public class MeleeHitboxDamage : MonoBehaviour
 
     private void TriggerHitStop(int frames)
     {
-        if (playerAttack != null)
-        {
-            playerAttack.ApplyHitstop(frames);
-        }
+        playerCombat?.ApplyHitstop(frames);
 
         DamageImpactTier tier = DamageImpactTier.Low;
         if (currentGrabHitbox != null) tier = currentGrabHitbox.impactTier;
@@ -300,14 +320,16 @@ public class MeleeHitboxDamage : MonoBehaviour
 
     private bool ValidateGrab(EnemyController enemy)
     {
-        if (enemy == null || currentGrabHitbox == null) return false;
-
-        if (playerAttack != null)
+        if (enemy == null || currentGrabHitbox == null)
         {
-            return playerAttack.ValidateGrabTarget(enemy, currentGrabHitbox);
+            return false;
         }
 
-        // Fallback if playerAttack is missing: Only check airborne status
+        if (playerCombat != null)
+        {
+            return playerCombat.ValidateGrabTarget(enemy, currentGrabHitbox);
+        }
+
         if (!currentGrabHitbox.canGrabAirborne && IsEnemyAirborneForGrab(enemy))
         {
             return false;
@@ -318,11 +340,32 @@ public class MeleeHitboxDamage : MonoBehaviour
 
     private bool IsEnemyAirborneForGrab(EnemyController enemy)
     {
-        if (enemy == null) return false;
+        if (enemy == null)
+        {
+            return false;
+        }
+
         EnemyReactionState reactionState = enemy.CurrentReactionState;
         if (reactionState == EnemyReactionState.Knockup || reactionState == EnemyReactionState.Knockfall)
+        {
             return true;
+        }
 
         return enemy.rb != null && Mathf.Abs(enemy.rb.linearVelocity.y) > 0.05f;
+    }
+
+    private Vector2 GetHitDirection()
+    {
+        if (projectileOwner != null)
+        {
+            return projectileOwner.CurrentDirection;
+        }
+
+        if (movement != null && movement.FacingDirection == -1)
+        {
+            return Vector2.left;
+        }
+
+        return Vector2.right;
     }
 }

@@ -57,6 +57,7 @@ public class NormalHitbox : HitboxBase
 
     // ── Reaction & HitStop ──
     [Header("Reaction & HitStop")]
+    public bool useDeterministicReaction = true;
     public EnemyReactionKind reactionKind = EnemyReactionKind.Knockback;
     [Tooltip("Frozen frames on impact (both attacker and victim).")]
     public int impactFreezeFrames = 4;
@@ -110,6 +111,23 @@ public class GrabHitbox : HitboxBase
     public int flashFrames = 6;
     public DamageImpactTier impactTier = DamageImpactTier.Low;
 
+}
+
+[System.Serializable]
+public class ProjectileSpawnHitbox : HitboxBase
+{
+    public override string HitboxTypeName => "Projectile";
+    public override Color TimelineTrackColor => new Color(0.42f, 0.81f, 1f);
+
+    public ProjectileSpawnHitbox()
+    {
+        debugColor = TimelineTrackColor;
+    }
+
+    [Header("Projectile")]
+    public ProjectileData projectileData;
+    public bool overrideSpawnOffset = false;
+    public Vector2 spawnOffset = Vector2.zero;
 }
 
 

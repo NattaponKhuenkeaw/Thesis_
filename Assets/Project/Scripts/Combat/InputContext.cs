@@ -13,6 +13,8 @@ public struct InputContext
     public int facingDirection;         // 1 or -1
     public PlayerStateId previousState;
     public bool hasGrabbedEnemy;
+    public CharacterPassiveController passiveController;
+    public CombatRuntimeState runtimeState;
 
     // =========================================================
     // Computed — resolve directional input to a cardinal direction

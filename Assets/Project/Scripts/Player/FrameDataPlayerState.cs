@@ -96,6 +96,15 @@ public abstract class FrameDataPlayerState : PlayerState
     /// </summary>
     public virtual bool CanBeInterrupted => currentPhase == ActionPhase.Cancel;
 
+    /// <summary>
+    /// Per-input interrupt rules for combat actions. Subclasses can open
+    /// specific phase windows for attack, skill, and ultimate separately.
+    /// </summary>
+    public virtual bool CanAcceptCombatInput(CombatInputType inputType)
+    {
+        return currentPhase == ActionPhase.Cancel;
+    }
+
     // =========================================================
     // Lifecycle
     // =========================================================
@@ -324,7 +333,18 @@ public abstract class FrameDataPlayerState : PlayerState
         ActionInputBuffer buffer = fsm.InputBuffer;
         if (buffer == null) return;
 
-        // Default cancel behavior: consume any buffered action
+        if (buffer.ConsumeUltimate())
+        {
+            fsm.RouteUltimateInput();
+            return;
+        }
+
+        if (buffer.ConsumeSkill())
+        {
+            fsm.RouteSkillInput();
+            return;
+        }
+
         if (buffer.ConsumeAttack())
         {
             fsm.RouteAttackInput();

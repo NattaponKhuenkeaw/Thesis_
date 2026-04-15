@@ -45,7 +45,8 @@ MonoBehaviour:
   authoredFPS: 24
   upgrade:
     level: 1
-    skillTreePoints: 3
+    constellationRank: 0
+    progressionPoints: 3
   dashData:
     animationClip: {fileID: 7400000, guid: 1170a54f57116384b8506475803c25eb, type: 2}
     startupFrames: 8
@@ -56,4 +57,154 @@ MonoBehaviour:
     cooldownFrames: 60
   skillTreeData:
     nodes: []
+  progressionDefinition:
+    maxConstellationRank: 6
+    constellationNodes:
+    - nodeId: KYO_C0_PASSIVE
+      nodeName: Burning Bloodline
+      description: Boost Kyo elemental burn power for self by 50%.
+      group: 0
+      constellationRank: 0
+      requiredNodeId: 
+      pointCost: 0
+      requiredConstellationRank: 0
+      unlockedByDefault: 1
+      statModifiers:
+      - target: 6
+        operation: 0
+        value: 50
+        scope: 0
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      passiveHookTypeName: 
+    - nodeId: KYO_C2_BURNING_CHAIN
+      nodeName: Burning Chain
+      description: Ultimate grants Burning State and enables chained follow-ups.
+        Hits also have a chance to burn enemies.
+      group: 0
+      constellationRank: 2
+      requiredNodeId: 
+      pointCost: 0
+      requiredConstellationRank: 0
+      unlockedByDefault: 0
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionName: 0
+          actionName: 
+          requireRuntimeTag: 0
+          runtimeTag: 
+        tag: BurningState
+        addTag: 1
+        duration: 8
+      counterEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionName: 0
+          actionName: 
+          requireRuntimeTag: 0
+          runtimeTag: 
+        counterId: UltimateFollowUpsRemaining
+        operation: 0
+        value: 3
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionName: 0
+          actionName: 
+          requireRuntimeTag: 0
+          runtimeTag: 
+        counterId: BurningBasicHitCount
+        operation: 3
+        value: 0
+      conditionalStateEffects: []
+      onHitStatusEffects:
+      - filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionName: 0
+          actionName: 
+          requireRuntimeTag: 0
+          runtimeTag: 
+        status: 0
+        chance: 0.5
+        scope: 3
+      passiveHookTypeName: 
+    - nodeId: KYO_C6_FINISHER
+      nodeName: Crimson Finisher
+      description: Track Burning State basic hits to unlock a finishing ultimate
+        and boost ally burn power.
+      group: 0
+      constellationRank: 6
+      requiredNodeId: 
+      pointCost: 0
+      requiredConstellationRank: 0
+      unlockedByDefault: 0
+      statModifiers:
+      - target: 7
+        operation: 0
+        value: 30
+        scope: 2
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      counterEffects:
+      - trigger: 2
+        filter:
+          filterByCategory: 1
+          category: 0
+          filterByActionName: 0
+          actionName: 
+          requireRuntimeTag: 1
+          runtimeTag: BurningState
+        counterId: BurningBasicHitCount
+        operation: 1
+        value: 1
+      conditionalStateEffects:
+      - trigger: 2
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionName: 0
+          actionName: 
+          requireRuntimeTag: 1
+          runtimeTag: BurningState
+        requiredTags:
+        - tag: BurningState
+          expectedValue: 1
+        requiredCounters:
+        - counterId: BurningBasicHitCount
+          comparison: 3
+          value: 5
+        - counterId: UltimateFollowUpsRemaining
+          comparison: 5
+          value: 0
+        runtimeTagEffects:
+        - trigger: 1
+          filter:
+            filterByCategory: 0
+            category: 0
+            filterByActionName: 0
+            actionName: 
+            requireRuntimeTag: 0
+            runtimeTag: 
+          tag: FinisherReady
+          addTag: 1
+          duration: 0
+        counterEffects: []
+      onHitStatusEffects: []
+      passiveHookTypeName: 
+    passiveNodes: []
   actionResolverTable: {fileID: 11400000, guid: 93ffc437bab6ea2449e90ba52b119527, type: 2}

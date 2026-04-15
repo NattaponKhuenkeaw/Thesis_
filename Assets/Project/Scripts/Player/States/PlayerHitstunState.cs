@@ -51,7 +51,10 @@ public class PlayerHitstunState : FrameDataPlayerState
             player.Movement.CancelAttackMotion();
 
         if (player.Combat != null)
+        {
+            player.Combat.ReleaseGrabbedEnemy();
             player.Combat.ResetCombo();
+        }
 
         if (player.Animator != null)
             player.Animator.TriggerTakeDamage();

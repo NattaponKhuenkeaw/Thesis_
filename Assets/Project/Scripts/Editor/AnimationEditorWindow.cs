@@ -763,7 +763,68 @@ public class AnimationEditorWindow : EditorWindow
         AnimationMode.BeginSampling();
         AnimationMode.SampleAnimationClip(previewInstance, clip, time);
         AnimationMode.EndSampling();
+
+        // Evaluate and visualize Runtime MotionData Offset
+        AttackStepData step = GetCurrentStep();
+        if (step != null && step.motionData != null)
+        {
+            Vector3 offset = EvaluateMotionOffset(step.motionData, frame);
+            previewInstance.transform.position = Vector3.zero + offset;
+        }
+
         SceneView.RepaintAll();
+    }
+
+    private Vector3 EvaluateMotionOffset(MotionFrameData motion, int currentFrame)
+    {
+        if (motion == null || motion.keyframes == null || motion.keyframes.Count == 0)
+            return Vector3.zero;
+
+        Vector3 totalOffset = Vector3.zero;
+        foreach (var kf in motion.keyframes)
+        {
+            if (currentFrame < kf.startFrame) continue;
+
+            float t = 1f;
+            if (kf.endFrame > kf.startFrame)
+            {
+                t = Mathf.Clamp01((float)(currentFrame - kf.startFrame) / (kf.endFrame - kf.startFrame));
+            }
+
+            if (kf.taskType == MotionTaskType.Relative || kf.taskType == MotionTaskType.SnapToEnemy)
+            {
+                totalOffset += Vector3.Lerp(Vector3.zero, kf.position, t);
+            }
+            else if (kf.taskType == MotionTaskType.Absolute)
+            {
+                totalOffset = Vector3.Lerp(Vector3.zero, kf.position, t);
+            }
+        }
+        return totalOffset;
+    }
+
+    private void DrawMotionTrajectory(MotionFrameData motion)
+    {
+        if (motion == null || motion.keyframes == null || motion.keyframes.Count == 0) return;
+        
+        Handles.color = Color.cyan;
+        int maxFrames = GetCurrentTotalFrames();
+        
+        Vector3 anchor = Vector3.zero;
+        List<Vector3> points = new List<Vector3>();
+
+        for (int i = 0; i <= maxFrames; i++)
+        {
+            Vector3 offset = EvaluateMotionOffset(motion, i);
+            points.Add(anchor + offset);
+        }
+        
+        Handles.DrawAAPolyLine(4f, points.ToArray());
+        
+        // Emphasize the current frame position
+        Vector3 currentOffset = EvaluateMotionOffset(motion, scrubberFrame);
+        Handles.color = Color.yellow;
+        Handles.DrawSolidDisc(anchor + currentOffset, Vector3.back, 0.04f * HandleUtility.GetHandleSize(anchor + currentOffset));
     }
 
     private void CleanupPreview()
@@ -792,8 +853,9 @@ public class AnimationEditorWindow : EditorWindow
         if (selectedCharacter == null || previewInstance == null) return;
 
         AttackStepData step = GetCurrentStep();
-        if (step == null || step.hitData == null || step.hitData.hitboxes == null || step.hitData.hitboxes.Count == 0) return;
-        if (selectedSceneHitboxIndex >= step.hitData.hitboxes.Count)
+        if (step == null) return;
+        
+        if (step.hitData != null && step.hitData.hitboxes != null && selectedSceneHitboxIndex >= step.hitData.hitboxes.Count)
             selectedSceneHitboxIndex = -1;
 
         bool changed = false;
@@ -803,6 +865,12 @@ public class AnimationEditorWindow : EditorWindow
         try
         {
             DrawSceneHitboxOverlay();
+            
+            // Draw Motion Simulation path
+            if (step.motionData != null)
+                DrawMotionTrajectory(step.motionData);
+
+            if (step.hitData == null || step.hitData.hitboxes == null || step.hitData.hitboxes.Count == 0) return;
 
             Dictionary<string, int> hitboxTypeCounts = new Dictionary<string, int>();
             for (int i = 0; i < step.hitData.hitboxes.Count; i++)
@@ -817,6 +885,8 @@ public class AnimationEditorWindow : EditorWindow
                 int startAt = step.startupFrames + hitbox.startFrameOffset;
                 int endAt = startAt + Mathf.Max(1, hitbox.activeFrames) - 1;
                 bool isActive = scrubberFrame >= startAt && scrubberFrame <= endAt;
+                if (!isActive) continue;
+
                 bool isSelected = selectedSceneHitboxIndex == i || (selectedSceneHitboxIndex < 0 && isActive);
                 string hitboxLabel = $"{hitbox.HitboxTypeName} #{typeIndex}";
 
@@ -837,8 +907,7 @@ public class AnimationEditorWindow : EditorWindow
 
         if (changed)
         {
-            EditorUtility.SetDirty(selectedCharacter);
-            RebuildSelectedNode();
+            OnDataChanged();
         }
     }
 

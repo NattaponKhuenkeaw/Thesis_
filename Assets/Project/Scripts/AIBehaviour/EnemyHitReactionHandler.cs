@@ -327,7 +327,9 @@ public class EnemyHitReactionHandler : MonoBehaviour
         }
 
         bool grounded = IsGrounded();
-        if (grounded && (currentState == EnemyReactionState.Knockup || currentState == EnemyReactionState.Knockfall))
+        bool effectivelyGrounded = grounded && rb != null && rb.linearVelocity.y <= 0.1f;
+
+        if (effectivelyGrounded && (currentState == EnemyReactionState.Knockup || currentState == EnemyReactionState.Knockfall))
         {
             if (currentReaction.landingBehavior == EnemyLandingBehavior.Knockdown)
             {

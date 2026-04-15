@@ -16,13 +16,56 @@ MonoBehaviour:
   - actionName: 
     context: 0
     priority: 0
+    conditions: []
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
       rootNode:
         rid: 3251577252092051566
-  skillActions: []
-  ultimateActions: []
+  - actionName: 
+    context: 1
+    priority: 0
+    conditions: []
+    comboTree:
+      treeName: Combo
+      comboResetDelay: 0.8
+      rootNode:
+        rid: 1588255892939997271
+  skillActions:
+  - actionName: 
+    context: 1
+    priority: 1
+    conditions: []
+    comboTree:
+      treeName: Combo
+      comboResetDelay: 0.8
+      rootNode:
+        rid: 1588255892939997282
+    cooldown: 7
+    energyCost: 0
+  - actionName: 
+    context: 0
+    priority: 1
+    conditions: []
+    comboTree:
+      treeName: Combo
+      comboResetDelay: 0.8
+      rootNode:
+        rid: 1588255892939997283
+    cooldown: 7
+    energyCost: 0
+  ultimateActions:
+  - actionName: 
+    context: 0
+    priority: 1
+    conditions: []
+    comboTree:
+      treeName: Combo
+      comboResetDelay: 0.8
+      rootNode:
+        rid: 1588255892939997284
+    cooldown: 0
+    energyCost: 0
   standaloneActions: []
   groundComboTree:
     treeName: Ground Combo
@@ -59,6 +102,391 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
+    - rid: 1588255892939997270
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 9
+        activeFrames: 5
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.7623353, y: 1.7257655}
+        size: {x: 2.1600444, y: 1.2820966}
+        damageMultiplier: 1
+        impactTier: 1
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 10
+        reactionFrames: 40
+        recoveryFrames: 20
+        horizontalSpeed: 3
+        launchSpeed: 10
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+    - rid: 1588255892939997271
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 12
+          activeFrames: 36
+          recoveryFrames: 22
+          cancelWindowStartFrame: 61
+          stepName: Air_Attack1
+          animationClip: {fileID: 7400000, guid: 496571fbe78c06b4abc0191b992f40b2, type: 2}
+          stallUntilGrounded: 0
+          lockAirPosition: 1
+          autoChainToNext: 0
+          motionData:
+            rid: 1588255892939997272
+          vfxData:
+            rid: -2
+          hitData:
+            rid: 1588255892939997273
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+        routes: []
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 1588255892939997272
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - startFrame: 1
+          endFrame: 18
+          taskType: 0
+          easing: 16
+          position: {x: 0, y: 1, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 24
+          endFrame: 49
+          taskType: 0
+          easing: 16
+          position: {x: 0, y: 1.5, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 1588255892939997273
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 1588255892939997274
+        - rid: 1588255892939997275
+    - rid: 1588255892939997274
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 2
+        activeFrames: 4
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.86026186, y: 2.7276223}
+        size: {x: 1.9641931, y: 1.6888655}
+        damageMultiplier: 1.3
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 4
+        reactionFrames: 30
+        recoveryFrames: 15
+        horizontalSpeed: 3
+        launchSpeed: 7
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+    - rid: 1588255892939997275
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 28
+        activeFrames: 6
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.92805606, y: 3.0138671}
+        size: {x: 1.9189966, y: 1.5984726}
+        damageMultiplier: 1.5
+        impactTier: 2
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 4
+        reactionFrames: 40
+        recoveryFrames: 20
+        horizontalSpeed: 3
+        launchSpeed: 10
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 4
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+    - rid: 1588255892939997282
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 31
+          activeFrames: 30
+          recoveryFrames: 11
+          cancelWindowStartFrame: 68
+          stepName: "100 Shiki \u2022 Oniyaki"
+          animationClip: {fileID: 7400000, guid: cc96492e2a2ca1e44914f47b77cbd5da, type: 2}
+          stallUntilGrounded: 0
+          lockAirPosition: 1
+          autoChainToNext: 0
+          motionData:
+            rid: -2
+          vfxData:
+            rid: -2
+          hitData:
+            rid: -2
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+        routes: []
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 1588255892939997283
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 18
+          activeFrames: 12
+          recoveryFrames: 30
+          cancelWindowStartFrame: 49
+          stepName: "108 Shiki \u2022 Yami Barai"
+          animationClip: {fileID: 7400000, guid: 148508b662c0300409110df76e4f810f, type: 2}
+          stallUntilGrounded: 0
+          lockAirPosition: 1
+          autoChainToNext: 1
+          motionData:
+            rid: -2
+          vfxData:
+            rid: -2
+          hitData:
+            rid: -2
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+        routes: []
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 1588255892939997284
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 13
+          activeFrames: 16
+          recoveryFrames: 17
+          cancelWindowStartFrame: 40
+          stepName: Grab Dash
+          animationClip: {fileID: 7400000, guid: 538b5a7cc2829ae408c4418d6cd3f861, type: 2}
+          stallUntilGrounded: 0
+          lockAirPosition: 1
+          autoChainToNext: 1
+          motionData:
+            rid: 1588255892939997295
+          vfxData:
+            rid: -2
+          hitData:
+            rid: 1588255892939997285
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+        routes: []
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: 1588255892939997338
+    - rid: 1588255892939997285
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 1588255892939997286
+    - rid: 1588255892939997286
+      type: {class: GrabHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 1
+        activeFrames: 16
+        debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
+        offset: {x: 0.9520402, y: 0.7560394}
+        size: {x: 1.7284608, y: 1.5838614}
+        canGrabAirborne: 1
+        impactFreezeFrames: 4
+        holdFrames: 24
+        recoveryFrames: 6
+        snapOffset: {x: 0.6, y: 0}
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        impactTier: 0
+    - rid: 1588255892939997295
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - startFrame: 7
+          endFrame: 17
+          taskType: 0
+          easing: 15
+          position: {x: 2, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 17
+          endFrame: 26
+          taskType: 0
+          easing: 34
+          position: {x: 10, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 26
+          endFrame: 37
+          taskType: 0
+          easing: 16
+          position: {x: 1, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 1588255892939997338
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 1
+          activeFrames: 75
+          recoveryFrames: 6
+          cancelWindowStartFrame: 100
+          stepName: 212 Shiki Kototsuki You
+          animationClip: {fileID: 7400000, guid: e4dbe8ad2e4eb1841865032d4f89eff1, type: 2}
+          stallUntilGrounded: 0
+          lockAirPosition: 1
+          autoChainToNext: 1
+          motionData:
+            rid: -2
+          vfxData:
+            rid: -2
+          hitData:
+            rid: 1588255892939997353
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+        routes: []
+        defaultNext:
+          rid: 1588255892939997339
+        onGrabSuccessNode:
+          rid: 1588255892939997339
+    - rid: 1588255892939997339
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 41
+          activeFrames: 17
+          recoveryFrames: 18
+          cancelWindowStartFrame: 62
+          stepName: R.E.D Kick
+          animationClip: {fileID: 7400000, guid: a36de9711e8cd9a46a70df996e055f29, type: 2}
+          stallUntilGrounded: 1
+          lockAirPosition: 1
+          autoChainToNext: 0
+          motionData:
+            rid: -2
+          vfxData:
+            rid: -2
+          hitData:
+            rid: 1588255892939997369
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+        routes: []
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 1588255892939997353
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 1588255892939997354
+        - rid: 1588255892939997355
+    - rid: 1588255892939997354
+      type: {class: GrabHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 0
+        activeFrames: 75
+        debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
+        offset: {x: -0.26735228, y: -0.06478153}
+        size: {x: 0, y: 0}
+        canGrabAirborne: 1
+        impactFreezeFrames: 0
+        holdFrames: 100
+        recoveryFrames: 6
+        snapOffset: {x: 0, y: 0}
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        impactTier: 0
+    - rid: 1588255892939997355
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 68
+        activeFrames: 7
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 1.0291088, y: 2.9201977}
+        size: {x: 1.933407, y: 1.360044}
+        damageMultiplier: 5
+        impactTier: 3
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 20
+        reactionFrames: 50
+        recoveryFrames: 20
+        horizontalSpeed: 3
+        launchSpeed: 7
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 10
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+    - rid: 1588255892939997369
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 1588255892939997370
+    - rid: 1588255892939997370
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 1
+        activeFrames: 8
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 1.0630516, y: 1.1976384}
+        size: {x: 3.2232058, y: 1.5806677}
+        damageMultiplier: 3
+        impactTier: 2
+        useDeterministicReaction: 1
+        reactionKind: 1
+        impactFreezeFrames: 4
+        reactionFrames: 15
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 1
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
     - rid: 3251577240928125086
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -85,6 +513,8 @@ MonoBehaviour:
         routes: []
         defaultNext:
           rid: 3251577240928125090
+        onGrabSuccessNode:
+          rid: -2
     - rid: 3251577240928125087
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -110,6 +540,8 @@ MonoBehaviour:
           - hitbox
         routes: []
         defaultNext:
+          rid: -2
+        onGrabSuccessNode:
           rid: -2
     - rid: 3251577240928125088
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
@@ -153,6 +585,8 @@ MonoBehaviour:
         routes: []
         defaultNext:
           rid: -2
+        onGrabSuccessNode:
+          rid: -2
     - rid: 3251577240928125091
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -187,6 +621,7 @@ MonoBehaviour:
         size: {x: 1.927194, y: 1.25}
         damageMultiplier: 1.3
         impactTier: 0
+        useDeterministicReaction: 1
         reactionKind: 2
         impactFreezeFrames: 10
         reactionFrames: 5
@@ -234,6 +669,7 @@ MonoBehaviour:
         size: {x: 2, y: 2}
         damageMultiplier: 1
         impactTier: 0
+        useDeterministicReaction: 1
         reactionKind: 2
         impactFreezeFrames: 5
         reactionFrames: 38
@@ -257,6 +693,7 @@ MonoBehaviour:
         size: {x: 2, y: 2}
         damageMultiplier: 1.5
         impactTier: 1
+        useDeterministicReaction: 1
         reactionKind: 2
         impactFreezeFrames: 15
         reactionFrames: 38
@@ -280,6 +717,7 @@ MonoBehaviour:
         size: {x: 1.572491, y: 1.977164}
         damageMultiplier: 0.7
         impactTier: 0
+        useDeterministicReaction: 1
         reactionKind: 2
         impactFreezeFrames: 10
         reactionFrames: 10
@@ -303,6 +741,7 @@ MonoBehaviour:
         size: {x: 2.183219, y: 2.160384}
         damageMultiplier: 0.7
         impactTier: 1
+        useDeterministicReaction: 1
         reactionKind: 2
         impactFreezeFrames: 5
         reactionFrames: 15
@@ -342,6 +781,8 @@ MonoBehaviour:
         routes: []
         defaultNext:
           rid: 3251577252092051567
+        onGrabSuccessNode:
+          rid: -2
     - rid: 3251577252092051567
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -368,6 +809,8 @@ MonoBehaviour:
         routes: []
         defaultNext:
           rid: -2
+        onGrabSuccessNode:
+          rid: -2
     - rid: 3251577252092051569
       type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -379,10 +822,11 @@ MonoBehaviour:
         startFrameOffset: 5
         activeFrames: 5
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 1.0782303, y: 1.7232901}
-        size: {x: 1.7736158, y: 1.1393049}
-        damageMultiplier: 1
+        offset: {x: 1.0330337, y: 1.8890107}
+        size: {x: 1.7736158, y: 1.3200908}
+        damageMultiplier: 1.3
         impactTier: 0
+        useDeterministicReaction: 1
         reactionKind: 0
         impactFreezeFrames: 4
         reactionFrames: 30
@@ -418,7 +862,7 @@ MonoBehaviour:
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
         keyframes:
-        - startFrame: 0
+        - startFrame: 1
           endFrame: 36
           taskType: 0
           easing: 16
@@ -430,20 +874,22 @@ MonoBehaviour:
       data:
         hitboxes:
         - rid: 3251577252092051578
+        - rid: 1588255892939997270
     - rid: 3251577252092051578
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
-        startFrameOffset: 1
+        startFrameOffset: 3
         activeFrames: 5
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 0.8135812, y: 0.47460142}
-        size: {x: 1.027126, y: 0.813554}
+        offset: {x: 0.28628784, y: 2.3803887}
+        size: {x: 1.3284358, y: 2.0338614}
         damageMultiplier: 1
         impactTier: 0
-        reactionKind: 1
+        useDeterministicReaction: 1
+        reactionKind: 0
         impactFreezeFrames: 4
-        reactionFrames: 15
-        recoveryFrames: 9
+        reactionFrames: 30
+        recoveryFrames: 15
         horizontalSpeed: 3
         launchSpeed: 1
         landingBehavior: 1

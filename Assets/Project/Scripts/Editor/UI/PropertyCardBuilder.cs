@@ -58,8 +58,6 @@ namespace CombatEditor.UI
                     break;
                 case "Skill":
                 case "Ultimate":
-                    // Skill and Ultimate are now handled as standard AttackStepData via the ResolveTree.
-                    // This case is kept for category identification but expects AttackStepData in DataRef if any.
                     if (node.DataRef is AttackStepData step) BuildAttackStepCards(step);
                     break;
                 case "CombatAction":
@@ -86,7 +84,6 @@ namespace CombatEditor.UI
                     step.stepName = value;
                     MarkDirtyAndRebuild();
                 });
-
 
                 if (step.animationClip != null)
                 {
@@ -129,6 +126,26 @@ namespace CombatEditor.UI
                     step.cancelWindowStartFrame = value;
                     MarkDirty();
                 });
+
+                AddSeparator(body, "Behavior Flags");
+                AddToggleField(body, "Auto Chain to Next", step.autoChainToNext, value =>
+                {
+                    RecordUndo("Edit Auto Chain");
+                    step.autoChainToNext = value;
+                    MarkDirty();
+                });
+                AddToggleField(body, "Stall Until Grounded", step.stallUntilGrounded, value =>
+                {
+                    RecordUndo("Edit Stall Until Grounded");
+                    step.stallUntilGrounded = value;
+                    MarkDirty();
+                });
+                AddToggleField(body, "Lock Air Position", step.lockAirPosition, value =>
+                {
+                    RecordUndo("Edit Lock Air Position");
+                    step.lockAirPosition = value;
+                    MarkDirty();
+                });
             });
 
             VisualElement componentList = new VisualElement();
@@ -154,11 +171,7 @@ namespace CombatEditor.UI
                             MarkDirtyAndRebuild();
                         }, false, componentList, newIndex =>
                         {
-                            if (newIndex == reorderIndex)
-                            {
-                                return;
-                            }
-
+                            if (newIndex == reorderIndex) return;
                             RecordUndo("Reorder Components");
                             step.MoveComponentKey(AttackStepData.MotionComponentKey, newIndex);
                             MarkDirtyAndRebuild();
@@ -176,11 +189,7 @@ namespace CombatEditor.UI
                             MarkDirtyAndRebuild();
                         }, false, componentList, newIndex =>
                         {
-                            if (newIndex == reorderIndex)
-                            {
-                                return;
-                            }
-
+                            if (newIndex == reorderIndex) return;
                             RecordUndo("Reorder Components");
                             step.MoveComponentKey(AttackStepData.VfxComponentKey, newIndex);
                             MarkDirtyAndRebuild();
@@ -198,11 +207,7 @@ namespace CombatEditor.UI
                             MarkDirtyAndRebuild();
                         }, false, componentList, newIndex =>
                         {
-                            if (newIndex == reorderIndex)
-                            {
-                                return;
-                            }
-
+                            if (newIndex == reorderIndex) return;
                             RecordUndo("Reorder Components");
                             step.MoveComponentKey(AttackStepData.HitboxComponentKey, newIndex);
                             MarkDirtyAndRebuild();
@@ -210,7 +215,6 @@ namespace CombatEditor.UI
                         break;
                 }
             }
-
 
             BuildAddComponentButton(step);
         }
@@ -239,16 +243,17 @@ namespace CombatEditor.UI
                     MarkDirty();
                 });
 
+                AddSeparator(body, "Advanced Conditions");
+                BuildConditionList(body, action.conditions, $"action_conditions_{action.actionName}", "Action");
+
                 if (action is SkillAction skill)
                 {
                     AddSeparator(body, "Resource Cost");
-                    
                     AddFloatField(body, "Cooldown", skill.cooldown, value => {
                         RecordUndo("Edit Cooldown");
                         skill.cooldown = value;
                         MarkDirty();
                     });
-
                     AddFloatField(body, "Energy Cost", skill.energyCost, value => {
                         RecordUndo("Edit Energy Cost");
                         skill.energyCost = value;
@@ -285,6 +290,7 @@ namespace CombatEditor.UI
                 visited.Add(n);
                 list.Add(n);
                 Walk(n.defaultNext);
+                Walk(n.onGrabSuccessNode);
                 if (n.routes != null) {
                     foreach(var r in n.routes) Walk(r.targetNode);
                 }
@@ -351,6 +357,55 @@ namespace CombatEditor.UI
                 }
                 body.Add(defaultNextRow);
 
+                // --- On Grab Success Next ---
+                bool hasGrab = false;
+                if (node.stepData?.hitData?.hitboxes != null) {
+                    foreach (var hb in node.stepData.hitData.hitboxes) {
+                        if (hb is GrabHitbox) { hasGrab = true; break; }
+                    }
+                }
+
+                if (hasGrab)
+                {
+                    AddSeparator(body, "Grab Routing");
+                    VisualElement grabNextRow = new VisualElement();
+                    grabNextRow.AddToClassList("card-field-row");
+
+                    int currentGrabIdx = node.onGrabSuccessNode == null ? 0 : allNodes.IndexOf(node.onGrabSuccessNode) + 1;
+                    DropdownField grabNextDropdown = new DropdownField("On Grab Success Target", nodeNames, currentGrabIdx);
+                    grabNextDropdown.RegisterValueChangedCallback(evt => {
+                        RecordUndo("Change Grab Success Next");
+                        int newIdx = grabNextDropdown.index;
+                        if (newIdx == 0) {
+                            node.onGrabSuccessNode = null;
+                        } else if (newIdx - 1 < allNodes.Count) {
+                            node.onGrabSuccessNode = allNodes[newIdx - 1];
+                        }
+                        MarkDirtyAndRebuild();
+                    });
+                    grabNextRow.Add(grabNextDropdown);
+
+                    if (node.onGrabSuccessNode != null)
+                    {
+                        var goBtn = new Button(() => {
+                            treeController.SelectNodeByData(node.onGrabSuccessNode);
+                        }) { text = "→" };
+                        grabNextRow.Add(goBtn);
+                    }
+                    else
+                    {
+                        var createNextBtn = new Button(() => {
+                            RecordUndo("Create Grab Success Next");
+                            node.onGrabSuccessNode = new ComboNode { stepData = new AttackStepData { stepName = "Grab Followup" } };
+                            MarkDirtyAndRebuild();
+                        }) { text = "+ Create Target" };
+                        grabNextRow.Add(createNextBtn);
+                    }
+                    body.Add(grabNextRow);
+                }
+
+
+
                 // Routes List
                 AddSeparator(body, "Conditional Routes");
                 if (node.routes == null) node.routes = new List<ComboRoute>();
@@ -384,9 +439,18 @@ namespace CombatEditor.UI
                         MarkDirty();
                     });
 
-                    AddToggleField(routeBox, "Require Grabbed", route.requireGrabbedEnemy, val => {
-                        RecordUndo("Change Route Grabbed");
-                        route.requireGrabbedEnemy = val;
+                    if (hasGrab)
+                    {
+                        AddToggleField(routeBox, "Require Grabbed", route.requireGrabbedEnemy, val => {
+                            RecordUndo("Change Route Grabbed");
+                            route.requireGrabbedEnemy = val;
+                            MarkDirty();
+                        });
+                    }
+
+                    AddEnumField(routeBox, "Previous State", route.requiredPreviousState, val => {
+                        RecordUndo("Change Route Previous State");
+                        route.requiredPreviousState = (PlayerStateId)val;
                         MarkDirty();
                     });
 
@@ -395,6 +459,9 @@ namespace CombatEditor.UI
                         route.priority = val;
                         MarkDirty();
                     });
+
+                    AddSeparator(routeBox, "Advanced Conditions");
+                    BuildConditionList(routeBox, route.conditions, $"route_conditions_{index}", "Route");
 
                     VisualElement targetRow = new VisualElement();
                     targetRow.AddToClassList("card-field-row");
@@ -448,7 +515,6 @@ namespace CombatEditor.UI
                     body.Add(routeBox);
                 }
 
-
                 var addRouteBtn = new Button(() => {
                     RecordUndo("Add Route");
                     node.routes.Add(new ComboRoute());
@@ -470,10 +536,7 @@ namespace CombatEditor.UI
 
         private void BuildMotionCard(VisualElement body, MotionFrameData motion)
         {
-            if (motion.keyframes == null)
-            {
-                motion.keyframes = new List<MotionKeyframe>();
-            }
+            if (motion.keyframes == null) motion.keyframes = new List<MotionKeyframe>();
 
             VisualElement itemList = new VisualElement();
             body.Add(itemList);
@@ -553,10 +616,7 @@ namespace CombatEditor.UI
 
         private void BuildVFXCard(VisualElement body, VFXFrameData vfx)
         {
-            if (vfx.entries == null)
-            {
-                vfx.entries = new List<VFXEntry>();
-            }
+            if (vfx.entries == null) vfx.entries = new List<VFXEntry>();
 
             VisualElement itemList = new VisualElement();
             body.Add(itemList);
@@ -600,10 +660,7 @@ namespace CombatEditor.UI
                     });
 
                     AddSeparator(inner, "Transform Keys");
-                    if (entry.transformKeys == null)
-                    {
-                        entry.transformKeys = new List<VFXTransformKey>();
-                    }
+                    if (entry.transformKeys == null) entry.transformKeys = new List<VFXTransformKey>();
 
                     for (int keyIndex = 0; keyIndex < entry.transformKeys.Count; keyIndex++)
                     {
@@ -660,10 +717,7 @@ namespace CombatEditor.UI
 
         private void BuildHitDataCard(VisualElement body, HitFrameData hitData)
         {
-            if (hitData.hitboxes == null)
-            {
-                hitData.hitboxes = new List<HitboxBase>();
-            }
+            if (hitData.hitboxes == null) hitData.hitboxes = new List<HitboxBase>();
 
             VisualElement itemList = new VisualElement();
             body.Add(itemList);
@@ -673,10 +727,7 @@ namespace CombatEditor.UI
             for (int i = 0; i < hitData.hitboxes.Count; i++)
             {
                 HitboxBase hitbox = hitData.hitboxes[i];
-                if (hitbox == null)
-                {
-                    continue;
-                }
+                if (hitbox == null) continue;
 
                 string typeName = hitbox.HitboxTypeName;
                 hitboxTypeCounts.TryGetValue(typeName, out int typeIndex);
@@ -692,10 +743,7 @@ namespace CombatEditor.UI
         private void BuildHitboxEntryCard(VisualElement parent, HitFrameData hitData, int idx, int typeIndex)
         {
             HitboxBase hitbox = hitData.hitboxes[idx];
-            if (hitbox == null)
-            {
-                return;
-            }
+            if (hitbox == null) return;
 
             Color accent = hitbox.debugColor;
             accent.a = 0.7f;
@@ -728,6 +776,10 @@ namespace CombatEditor.UI
                 else if (hitbox is GrabHitbox grabHitbox)
                 {
                     BuildGrabHitboxFields(inner, grabHitbox);
+                }
+                else if (hitbox is ProjectileSpawnHitbox projectileHitbox)
+                {
+                    BuildProjectileHitboxFields(inner, projectileHitbox);
                 }
             }, () =>
             {
@@ -771,6 +823,12 @@ namespace CombatEditor.UI
             });
 
             AddSeparator(body, "Reaction and Hitstop");
+            AddToggle(body, "Deterministic Reaction", hitbox.useDeterministicReaction, value =>
+            {
+                RecordUndo("Edit Deterministic Reaction");
+                hitbox.useDeterministicReaction = value;
+                MarkDirty();
+            });
 
             bool usesHorizontalSpeed = HitReactionData.UsesHorizontalSpeed(hitbox.reactionKind);
             bool usesLaunchSpeed = HitReactionData.UsesLaunchSpeed(hitbox.reactionKind);
@@ -947,6 +1005,32 @@ namespace CombatEditor.UI
             });
         }
 
+        private void BuildProjectileHitboxFields(VisualElement body, ProjectileSpawnHitbox hitbox)
+        {
+            AddObjectField(body, "Projectile Data", hitbox.projectileData, value =>
+            {
+                RecordUndo("Edit Projectile Data");
+                hitbox.projectileData = value;
+                MarkDirty();
+            });
+            AddToggle(body, "Override Spawn Offset", hitbox.overrideSpawnOffset, value =>
+            {
+                RecordUndo("Edit Projectile Override Spawn");
+                hitbox.overrideSpawnOffset = value;
+                MarkDirtyAndRebuild();
+            });
+
+            if (hitbox.overrideSpawnOffset)
+            {
+                AddVector2Field(body, "Spawn Offset", hitbox.spawnOffset, value =>
+                {
+                    RecordUndo("Edit Projectile Spawn Offset");
+                    hitbox.spawnOffset = value;
+                    MarkDirty();
+                });
+            }
+        }
+
         private void BuildAddComponentButton(AttackStepData step)
         {
             VisualElement addRow = new VisualElement();
@@ -965,10 +1049,7 @@ namespace CombatEditor.UI
                         MarkDirtyAndRebuild();
                     });
                 }
-                else
-                {
-                    menu.AddDisabledItem(new GUIContent("Motion Frame Data (added)"));
-                }
+                else menu.AddDisabledItem(new GUIContent("Motion Frame Data (added)"));
 
                 if (step.vfxData == null)
                 {
@@ -979,10 +1060,7 @@ namespace CombatEditor.UI
                         MarkDirtyAndRebuild();
                     });
                 }
-                else
-                {
-                    menu.AddDisabledItem(new GUIContent("VFX Frame Data (added)"));
-                }
+                else menu.AddDisabledItem(new GUIContent("VFX Frame Data (added)"));
 
                 if (step.hitData == null)
                 {
@@ -993,16 +1071,11 @@ namespace CombatEditor.UI
                         MarkDirtyAndRebuild();
                     });
                 }
-                else
-                {
-                    menu.AddDisabledItem(new GUIContent("Hitbox Data (added)"));
-                }
+                else menu.AddDisabledItem(new GUIContent("Hitbox Data (added)"));
 
                 menu.ShowAsContext();
             })
-            {
-                text = "Add Component"
-            };
+            { text = "Add Component" };
             addButton.AddToClassList("add-component-btn");
             addRow.Add(addButton);
 
@@ -1026,22 +1099,22 @@ namespace CombatEditor.UI
                     hitData.hitboxes.Add(new GrabHitbox());
                     MarkDirtyAndRebuild();
                 });
+                menu.AddItem(new GUIContent("Projectile Spawn Hitbox"), false, () =>
+                {
+                    RecordUndo("Add Projectile Spawn Hitbox");
+                    hitData.hitboxes.Add(new ProjectileSpawnHitbox());
+                    MarkDirtyAndRebuild();
+                });
                 menu.ShowAsContext();
             })
-            {
-                text = "Add Hitbox"
-            };
+            { text = "Add Hitbox" };
             addButton.AddToClassList("component-add-entry-btn");
             body.Add(addButton);
         }
 
         private void BuildDashCards(DashData dash)
         {
-            if (dash == null)
-            {
-                return;
-            }
-
+            if (dash == null) return;
             BuildFoldoutCard("Dash Configuration", "dash_config", new Color(0f, 0.83f, 1f), body =>
             {
                 if (dash.animationClip != null)
@@ -1097,21 +1170,15 @@ namespace CombatEditor.UI
         {
             VisualElement empty = new VisualElement();
             empty.AddToClassList("empty-state");
-
             Label text = new Label(message);
             text.AddToClassList("empty-state__text");
             empty.Add(text);
-
             container.Add(empty);
         }
 
         private void BuildFoldoutCard(string title, string foldoutKey, Color accentColor, Action<VisualElement> buildBody, Action onDelete = null, bool isSubCard = false)
         {
-            if (!foldoutState.ContainsKey(foldoutKey))
-            {
-                foldoutState[foldoutKey] = true;
-            }
-
+            if (!foldoutState.ContainsKey(foldoutKey)) foldoutState[foldoutKey] = true;
             bool expanded = foldoutState[foldoutKey];
 
             VisualElement card = new VisualElement();
@@ -1135,10 +1202,7 @@ namespace CombatEditor.UI
 
             if (onDelete != null)
             {
-                Button deleteButton = new Button(onDelete)
-                {
-                    text = "X"
-                };
+                Button deleteButton = new Button(onDelete) { text = "X" };
                 deleteButton.AddToClassList("property-card__delete");
                 header.Add(deleteButton);
             }
@@ -1151,11 +1215,7 @@ namespace CombatEditor.UI
             string key = foldoutKey;
             header.RegisterCallback<ClickEvent>(evt =>
             {
-                if (evt.target is Button)
-                {
-                    return;
-                }
-
+                if (evt.target is Button) return;
                 foldoutState[key] = !foldoutState[key];
                 bool isExpanded = foldoutState[key];
                 arrow.text = isExpanded ? "▼" : "▶";
@@ -1169,11 +1229,7 @@ namespace CombatEditor.UI
 
         private VisualElement BuildFoldoutCard(string title, string foldoutKey, Color accentColor, Action<VisualElement> buildBody, Action onDelete, bool isSubCard, VisualElement parent, Action<int> onReorder, int reorderIndex, int reorderCount)
         {
-            if (!foldoutState.ContainsKey(foldoutKey))
-            {
-                foldoutState[foldoutKey] = true;
-            }
-
+            if (!foldoutState.ContainsKey(foldoutKey)) foldoutState[foldoutKey] = true;
             bool expanded = foldoutState[foldoutKey];
 
             VisualElement card = new VisualElement();
@@ -1205,10 +1261,7 @@ namespace CombatEditor.UI
 
             if (onDelete != null)
             {
-                Button deleteButton = new Button(onDelete)
-                {
-                    text = "X"
-                };
+                Button deleteButton = new Button(onDelete) { text = "X" };
                 deleteButton.AddToClassList("property-card__delete");
                 header.Add(deleteButton);
             }
@@ -1221,11 +1274,7 @@ namespace CombatEditor.UI
             string key = foldoutKey;
             header.RegisterCallback<ClickEvent>(evt =>
             {
-                if (evt.target is Button)
-                {
-                    return;
-                }
-
+                if (evt.target is Button) return;
                 foldoutState[key] = !foldoutState[key];
                 bool isExpanded = foldoutState[key];
                 arrow.text = isExpanded ? "▼" : "▶";
@@ -1272,6 +1321,16 @@ namespace CombatEditor.UI
             VisualElement row = new VisualElement();
             row.AddToClassList("card-field-row");
             FloatField field = new FloatField(label) { value = value, isDelayed = false };
+            field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
+            row.Add(field);
+            parent.Add(row);
+        }
+
+        private void AddToggleField(VisualElement parent, string label, bool value, Action<bool> onChange)
+        {
+            VisualElement row = new VisualElement();
+            row.AddToClassList("card-field-row");
+            Toggle field = new Toggle(label) { value = value };
             field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
             row.Add(field);
             parent.Add(row);
@@ -1331,14 +1390,167 @@ namespace CombatEditor.UI
         {
             VisualElement row = new VisualElement();
             row.AddToClassList("card-field-row");
-            ObjectField field = new ObjectField(label)
-            {
-                objectType = typeof(T),
-                value = value
-            };
+            ObjectField field = new ObjectField(label) { objectType = typeof(T), value = value };
             field.RegisterValueChangedCallback(evt => onChange(evt.newValue as T));
             row.Add(field);
             parent.Add(row);
+        }
+
+        private void BuildConditionList(VisualElement parent, List<ActionConditionBase> conditions, string foldoutKey, string undoLabelPrefix)
+        {
+            if (conditions == null) return;
+            VisualElement list = new VisualElement();
+            parent.Add(list);
+
+            for (int i = 0; i < conditions.Count; i++)
+            {
+                int index = i;
+                ActionConditionBase condition = conditions[i];
+                if (condition == null) continue;
+
+                BuildFoldoutCard(GetConditionTitle(condition), $"{foldoutKey}_{i}", new Color(0.3f, 0.72f, 0.92f, 0.7f),
+                    body => BuildConditionFields(body, condition),
+                    () => {
+                        RecordUndo($"Remove {undoLabelPrefix} Condition");
+                        conditions.RemoveAt(index);
+                        MarkDirtyAndRebuild();
+                    }, true, list, null, 0, 0);
+            }
+
+            Button addButton = new Button(() =>
+            {
+                GenericMenu menu = new GenericMenu();
+                menu.AddItem(new GUIContent("Grounded / Airborne"), false, () => {
+                    RecordUndo($"Add {undoLabelPrefix} Condition");
+                    conditions.Add(new GroundedActionCondition());
+                    MarkDirtyAndRebuild();
+                });
+                menu.AddItem(new GUIContent("Direction"), false, () => {
+                    RecordUndo($"Add {undoLabelPrefix} Condition");
+                    conditions.Add(new DirectionActionCondition());
+                    MarkDirtyAndRebuild();
+                });
+                menu.AddItem(new GUIContent("Previous State"), false, () => {
+                    RecordUndo($"Add {undoLabelPrefix} Condition");
+                    conditions.Add(new PreviousStateActionCondition());
+                    MarkDirtyAndRebuild();
+                });
+                menu.AddItem(new GUIContent("Grabbed Target"), false, () => {
+                    RecordUndo($"Add {undoLabelPrefix} Condition");
+                    conditions.Add(new GrabbedEnemyActionCondition());
+                    MarkDirtyAndRebuild();
+                });
+                menu.AddItem(new GUIContent("Progression Rank"), false, () => {
+                    RecordUndo($"Add {undoLabelPrefix} Condition");
+                    conditions.Add(new ProgressionRankActionCondition());
+                    MarkDirtyAndRebuild();
+                });
+                menu.AddItem(new GUIContent("Runtime Tag"), false, () => {
+                    RecordUndo($"Add {undoLabelPrefix} Condition");
+                    conditions.Add(new RuntimeTagActionCondition());
+                    MarkDirtyAndRebuild();
+                });
+                menu.AddItem(new GUIContent("Runtime Counter"), false, () => {
+                    RecordUndo($"Add {undoLabelPrefix} Condition");
+                    conditions.Add(new RuntimeCounterActionCondition());
+                    MarkDirtyAndRebuild();
+                });
+                menu.ShowAsContext();
+            })
+            { text = $"+ Add {undoLabelPrefix} Condition" };
+            addButton.AddToClassList("component-add-entry-btn");
+            parent.Add(addButton);
+        }
+
+        private void BuildConditionFields(VisualElement parent, ActionConditionBase condition)
+        {
+            switch (condition)
+            {
+                case GroundedActionCondition groundedCondition:
+                    AddToggleField(parent, "Require Grounded", groundedCondition.requireGrounded, value => {
+                        RecordUndo("Edit Condition Grounded");
+                        groundedCondition.requireGrounded = value;
+                        MarkDirty();
+                    });
+                    break;
+                case DirectionActionCondition directionCondition:
+                    AddEnumField(parent, "Direction", directionCondition.direction, value => {
+                        RecordUndo("Edit Condition Direction");
+                        directionCondition.direction = (DirectionRequirement)value;
+                        MarkDirty();
+                    });
+                    break;
+                case PreviousStateActionCondition previousStateCondition:
+                    AddEnumField(parent, "Previous State", previousStateCondition.previousState, value => {
+                        RecordUndo("Edit Condition Previous State");
+                        previousStateCondition.previousState = (PlayerStateId)value;
+                        MarkDirty();
+                    });
+                    break;
+                case GrabbedEnemyActionCondition grabbedCondition:
+                    AddToggleField(parent, "Require Grabbed Enemy", grabbedCondition.requireGrabbedEnemy, value => {
+                        RecordUndo("Edit Condition Grabbed");
+                        grabbedCondition.requireGrabbedEnemy = value;
+                        MarkDirty();
+                    });
+                    break;
+                case ProgressionRankActionCondition progressionCondition:
+                    AddEnumField(parent, "Comparison", progressionCondition.comparison, value => {
+                        RecordUndo("Edit Condition Rank Compare");
+                        progressionCondition.comparison = (CounterComparison)value;
+                        MarkDirty();
+                    });
+                    AddIntField(parent, "Rank", progressionCondition.rank, value => {
+                        RecordUndo("Edit Condition Rank");
+                        progressionCondition.rank = value;
+                        MarkDirty();
+                    });
+                    break;
+                case RuntimeTagActionCondition tagCondition:
+                    AddTextField(parent, "Tag", tagCondition.tag, value => {
+                        RecordUndo("Edit Condition Tag");
+                        tagCondition.tag = value;
+                        MarkDirty();
+                    });
+                    AddToggleField(parent, "Should Exist", tagCondition.shouldExist, value => {
+                        RecordUndo("Edit Condition Tag Exists");
+                        tagCondition.shouldExist = value;
+                        MarkDirty();
+                    });
+                    break;
+                case RuntimeCounterActionCondition counterCondition:
+                    AddTextField(parent, "Counter", counterCondition.counterId, value => {
+                        RecordUndo("Edit Condition Counter");
+                        counterCondition.counterId = value;
+                        MarkDirty();
+                    });
+                    AddEnumField(parent, "Comparison", counterCondition.comparison, value => {
+                        RecordUndo("Edit Condition Counter Compare");
+                        counterCondition.comparison = (CounterComparison)value;
+                        MarkDirty();
+                    });
+                    AddIntField(parent, "Value", counterCondition.value, value => {
+                        RecordUndo("Edit Condition Counter Value");
+                        counterCondition.value = value;
+                        MarkDirty();
+                    });
+                    break;
+            }
+        }
+
+        private static string GetConditionTitle(ActionConditionBase condition)
+        {
+            return condition switch
+            {
+                GroundedActionCondition => "Grounded Condition",
+                DirectionActionCondition => "Direction Condition",
+                PreviousStateActionCondition => "Previous State Condition",
+                GrabbedEnemyActionCondition => "Grabbed Target Condition",
+                ProgressionRankActionCondition => "Progression Rank Condition",
+                RuntimeTagActionCondition => "Runtime Tag Condition",
+                RuntimeCounterActionCondition => "Runtime Counter Condition",
+                _ => "Condition"
+            };
         }
 
         private void AddPhaseSlider(VisualElement parent, int startup, int active, int recovery, int total, Action<int, int, int> onChanges)
@@ -1346,49 +1558,36 @@ namespace CombatEditor.UI
             Label readout = new Label($"Total Animation Frames: {total}");
             readout.AddToClassList("phase-readout");
             parent.Add(readout);
-
             MinMaxSlider slider = new MinMaxSlider(startup, startup + active, 0, total);
-
             VisualElement fields = new VisualElement();
             fields.AddToClassList("phase-fields");
-
             IntegerField startupField = new IntegerField("SU") { value = startup };
             IntegerField activeField = new IntegerField("ACT") { value = active };
             IntegerField recoveryField = new IntegerField("REC") { value = recovery };
 
-            slider.RegisterValueChangedCallback(evt =>
-            {
+            slider.RegisterValueChangedCallback(evt => {
                 int newStartup = Mathf.RoundToInt(evt.newValue.x);
                 int newActive = Mathf.RoundToInt(evt.newValue.y) - newStartup;
                 int newRecovery = total - newStartup - newActive;
-
                 startupField.SetValueWithoutNotify(newStartup);
                 activeField.SetValueWithoutNotify(newActive);
                 recoveryField.SetValueWithoutNotify(newRecovery);
-
                 onChanges?.Invoke(Mathf.Max(0, newStartup), Mathf.Max(0, newActive), Mathf.Max(0, newRecovery));
             });
-
             parent.Add(slider);
-
-            startupField.RegisterValueChangedCallback(evt =>
-            {
+            startupField.RegisterValueChangedCallback(evt => {
                 int value = evt.newValue;
                 slider.SetValueWithoutNotify(new Vector2(value, value + activeField.value));
                 onChanges?.Invoke(value, activeField.value, recoveryField.value);
             });
             fields.Add(startupField);
-
-            activeField.RegisterValueChangedCallback(evt =>
-            {
+            activeField.RegisterValueChangedCallback(evt => {
                 int value = evt.newValue;
                 slider.SetValueWithoutNotify(new Vector2(startupField.value, startupField.value + value));
                 onChanges?.Invoke(startupField.value, value, recoveryField.value);
             });
             fields.Add(activeField);
-
-            recoveryField.RegisterValueChangedCallback(evt =>
-            {
+            recoveryField.RegisterValueChangedCallback(evt => {
                 int value = evt.newValue;
                 int nextActive = total - startupField.value - value;
                 activeField.SetValueWithoutNotify(nextActive);
@@ -1396,18 +1595,7 @@ namespace CombatEditor.UI
                 onChanges?.Invoke(startupField.value, nextActive, value);
             });
             fields.Add(recoveryField);
-
             parent.Add(fields);
-        }
-
-        private void AddToggleField(VisualElement parent, string label, bool value, Action<bool> onChange)
-        {
-            VisualElement row = new VisualElement();
-            row.AddToClassList("card-field-row");
-            Toggle field = new Toggle(label) { value = value };
-            field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
-            row.Add(field);
-            parent.Add(row);
         }
 
         private void AddSeparator(VisualElement parent, string label)
@@ -1415,7 +1603,6 @@ namespace CombatEditor.UI
             VisualElement separator = new VisualElement();
             separator.AddToClassList("card-separator");
             parent.Add(separator);
-
             if (!string.IsNullOrEmpty(label))
             {
                 Label text = new Label(label);
@@ -1426,17 +1613,9 @@ namespace CombatEditor.UI
 
         private void ReorderListItem<T>(List<T> list, int fromIndex, int toIndex, string action)
         {
-            if (list == null || fromIndex < 0 || fromIndex >= list.Count)
-            {
-                return;
-            }
-
+            if (list == null || fromIndex < 0 || fromIndex >= list.Count) return;
             int clampedIndex = Mathf.Clamp(toIndex, 0, list.Count - 1);
-            if (fromIndex == clampedIndex)
-            {
-                return;
-            }
-
+            if (fromIndex == clampedIndex) return;
             RecordUndo(action);
             T movedItem = list[fromIndex];
             list.RemoveAt(fromIndex);
@@ -1447,13 +1626,11 @@ namespace CombatEditor.UI
         private sealed class ReorderableCardDragManipulator : PointerManipulator
         {
             private const float DragThreshold = 4f;
-
             private readonly VisualElement card;
             private readonly VisualElement listContainer;
             private readonly Action<int> onReorder;
             private readonly int originalIndex;
             private readonly VisualElement placeholder;
-
             private int activePointerId = -1;
             private float startPointerY;
             private float startCardTop;
@@ -1465,34 +1642,26 @@ namespace CombatEditor.UI
                 this.listContainer = listContainer;
                 this.originalIndex = originalIndex;
                 this.onReorder = onReorder;
-
                 placeholder = new VisualElement();
                 placeholder.AddToClassList("property-card__placeholder");
             }
 
-            protected override void RegisterCallbacksOnTarget()
-            {
+            protected override void RegisterCallbacksOnTarget() {
                 target.RegisterCallback<PointerDownEvent>(OnPointerDown);
                 target.RegisterCallback<PointerMoveEvent>(OnPointerMove);
                 target.RegisterCallback<PointerUpEvent>(OnPointerUp);
                 target.RegisterCallback<PointerCaptureOutEvent>(OnPointerCaptureOut);
             }
 
-            protected override void UnregisterCallbacksFromTarget()
-            {
+            protected override void UnregisterCallbacksFromTarget() {
                 target.UnregisterCallback<PointerDownEvent>(OnPointerDown);
                 target.UnregisterCallback<PointerMoveEvent>(OnPointerMove);
                 target.UnregisterCallback<PointerUpEvent>(OnPointerUp);
                 target.UnregisterCallback<PointerCaptureOutEvent>(OnPointerCaptureOut);
             }
 
-            private void OnPointerDown(PointerDownEvent evt)
-            {
-                if (evt.button != 0 || activePointerId != -1)
-                {
-                    return;
-                }
-
+            private void OnPointerDown(PointerDownEvent evt) {
+                if (evt.button != 0 || activePointerId != -1) return;
                 activePointerId = evt.pointerId;
                 startPointerY = evt.position.y;
                 startCardTop = card.layout.y;
@@ -1500,69 +1669,43 @@ namespace CombatEditor.UI
                 evt.StopImmediatePropagation();
             }
 
-            private void OnPointerMove(PointerMoveEvent evt)
-            {
-                if (evt.pointerId != activePointerId)
-                {
-                    return;
-                }
-
+            private void OnPointerMove(PointerMoveEvent evt) {
+                if (evt.pointerId != activePointerId) return;
                 float deltaY = evt.position.y - startPointerY;
-                if (!isDragging)
-                {
-                    if (Mathf.Abs(deltaY) < DragThreshold)
-                    {
-                        return;
-                    }
-
+                if (!isDragging) {
+                    if (Mathf.Abs(deltaY) < DragThreshold) return;
                     BeginDrag();
                 }
-
                 card.style.top = startCardTop + deltaY;
                 int newIndex = GetInsertionIndex(evt.position.y);
-                if (listContainer.Contains(placeholder) && listContainer.IndexOf(placeholder) != newIndex)
-                {
+                if (listContainer.Contains(placeholder) && listContainer.IndexOf(placeholder) != newIndex) {
                     placeholder.RemoveFromHierarchy();
                     listContainer.Insert(newIndex, placeholder);
                 }
-
                 evt.StopPropagation();
             }
 
-            private void OnPointerUp(PointerUpEvent evt)
-            {
-                if (evt.pointerId != activePointerId)
-                {
-                    return;
-                }
-
+            private void OnPointerUp(PointerUpEvent evt) {
+                if (evt.pointerId != activePointerId) return;
                 FinishDrag();
                 evt.StopPropagation();
             }
 
-            private void OnPointerCaptureOut(PointerCaptureOutEvent evt)
-            {
-                if (activePointerId == -1)
-                {
-                    return;
-                }
-
+            private void OnPointerCaptureOut(PointerCaptureOutEvent evt) {
+                if (activePointerId == -1) return;
                 FinishDrag();
             }
 
-            private void BeginDrag()
-            {
+            private void BeginDrag() {
                 isDragging = true;
                 placeholder.style.height = card.resolvedStyle.height;
                 placeholder.style.marginTop = card.resolvedStyle.marginTop;
                 placeholder.style.marginBottom = card.resolvedStyle.marginBottom;
                 placeholder.style.marginLeft = card.resolvedStyle.marginLeft;
                 placeholder.style.marginRight = card.resolvedStyle.marginRight;
-
                 card.RemoveFromHierarchy();
                 listContainer.Insert(originalIndex, placeholder);
                 listContainer.Add(card);
-
                 card.AddToClassList("property-card--dragging");
                 card.style.position = Position.Absolute;
                 card.style.left = 0f;
@@ -1571,98 +1714,62 @@ namespace CombatEditor.UI
                 card.BringToFront();
             }
 
-            private void FinishDrag()
-            {
+            private void FinishDrag() {
                 int pointerId = activePointerId;
                 activePointerId = -1;
-
-                if (pointerId != -1 && target.HasPointerCapture(pointerId))
-                {
-                    target.ReleasePointer(pointerId);
-                }
-
-                if (isDragging)
-                {
+                if (pointerId != -1 && target.HasPointerCapture(pointerId)) target.ReleasePointer(pointerId);
+                if (isDragging) {
                     int finalIndex = listContainer.IndexOf(placeholder);
                     placeholder.RemoveFromHierarchy();
-
-                    if (listContainer.Contains(card))
-                    {
-                        card.RemoveFromHierarchy();
-                    }
-
+                    if (listContainer.Contains(card)) card.RemoveFromHierarchy();
                     card.RemoveFromClassList("property-card--dragging");
                     card.style.position = Position.Relative;
                     card.style.left = new StyleLength(StyleKeyword.Null);
                     card.style.right = new StyleLength(StyleKeyword.Null);
                     card.style.top = new StyleLength(StyleKeyword.Null);
-
                     listContainer.Insert(Mathf.Clamp(finalIndex, 0, listContainer.childCount), card);
-                    if (finalIndex != originalIndex)
-                    {
-                        onReorder?.Invoke(finalIndex);
-                    }
+                    if (finalIndex != originalIndex) onReorder?.Invoke(finalIndex);
                 }
                 isDragging = false;
             }
 
-            private int GetInsertionIndex(float pointerY)
-            {
+            private int GetInsertionIndex(float pointerY) {
                 int index = 0;
-                foreach (VisualElement child in listContainer.Children())
-                {
-                    if (child == card || child == placeholder)
-                    {
-                        continue;
-                    }
-
-                    if (pointerY > child.worldBound.center.y)
-                    {
-                        index++;
-                    }
+                foreach (VisualElement child in listContainer.Children()) {
+                    if (child == card || child == placeholder) continue;
+                    if (pointerY > child.worldBound.center.y) index++;
                 }
-
                 return index;
             }
         }
 
         private void RecordUndo(string action)
         {
-            if (character != null)
-            {
+            if (character != null) {
                 Undo.RecordObject(character, action);
-                if (character.actionResolverTable != null)
-                    Undo.RecordObject(character.actionResolverTable, action);
+                if (character.actionResolverTable != null) Undo.RecordObject(character.actionResolverTable, action);
             }
         }
 
         private void MarkDirty()
         {
-            if (character != null)
-            {
+            if (character != null) {
                 EditorUtility.SetDirty(character);
-                if (character.actionResolverTable != null)
-                    EditorUtility.SetDirty(character.actionResolverTable);
+                if (character.actionResolverTable != null) EditorUtility.SetDirty(character.actionResolverTable);
             }
-
             onDataChanged?.Invoke();
         }
 
         private void MarkDirtyAndRebuild()
         {
-            if (character != null)
-            {
+            if (character != null) {
                 EditorUtility.SetDirty(character);
-                if (character.actionResolverTable != null)
-                    EditorUtility.SetDirty(character.actionResolverTable);
+                if (character.actionResolverTable != null) EditorUtility.SetDirty(character.actionResolverTable);
             }
-
-            if (onStructureChanged != null && currentNode != null)
-            {
+            if (onStructureChanged != null && currentNode != null) {
                 onStructureChanged.Invoke();
                 return;
             }
-
             onDataChanged?.Invoke();
         }
     }

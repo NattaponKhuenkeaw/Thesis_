@@ -5,7 +5,7 @@ using UnityEngine;
 /// contextual directional attacks via the ActionResolver combo tree system.
 ///
 /// Inherits FrameDataPlayerState for automatic phase tracking and InputHandleMidAction.
-/// Delegates hitbox/motion/damage to PlayerBasicAttack (combat engine).
+/// Delegates hitbox/motion/damage to PlayerCombat (combat engine).
 /// Uses ActionResolver to walk the combo tree and resolve input-context attacks.
 /// </summary>
 public class PlayerAttackState : FrameDataPlayerState
@@ -22,6 +22,8 @@ public class PlayerAttackState : FrameDataPlayerState
     public override bool AcceptsDashInput => true;
     public override bool AcceptsJumpInput => false;
     public override bool AcceptsAttackInput => true;
+    public override bool AcceptsSkillInput => true;
+    public override bool AcceptsUltimateInput => true;
     public override bool LocksMovement => true;
     public override bool LocksFacing => true;
 
@@ -60,6 +62,20 @@ public class PlayerAttackState : FrameDataPlayerState
         }
     }
 
+    public override bool CanAcceptCombatInput(CombatInputType inputType)
+    {
+        if (isPlungeFalling) return false;
+        if (player.Combat != null && player.Combat.HasGrabbedEnemy()) return false;
+
+        return inputType switch
+        {
+            CombatInputType.Attack => currentPhase == ActionPhase.Recovery || currentPhase == ActionPhase.Cancel,
+            CombatInputType.Skill => currentPhase == ActionPhase.Active || currentPhase == ActionPhase.Recovery || currentPhase == ActionPhase.Cancel,
+            CombatInputType.Ultimate => currentPhase == ActionPhase.Active || currentPhase == ActionPhase.Recovery || currentPhase == ActionPhase.Cancel,
+            _ => false
+        };
+    }
+
     // =========================================================
     // Lifecycle
     // =========================================================
@@ -95,6 +111,8 @@ public class PlayerAttackState : FrameDataPlayerState
 
         if (player.Combat != null)
         {
+            player.Combat.ResetCombo();
+            
             player.Combat.SetPlungeFalling(false);
             player.Combat.OnComboFinished -= HandleComboFinished;
             player.Combat.OnGrabConnected -= HandleGrabConnected;
@@ -190,11 +208,16 @@ public class PlayerAttackState : FrameDataPlayerState
 
     protected override void HandleInputDuringActive()
     {
+        if (TryConsumeUltimateInterrupt()) return;
+        if (TryConsumeSkillInterrupt()) return;
+
         CheckForInterrupts();
     }
 
     protected override void HandleInputDuringRecovery()
     {
+        if (TryConsumeUltimateInterrupt()) return;
+        if (TryConsumeSkillInterrupt()) return;
         if (CheckForInterrupts()) return;
 
         // Auto-chain check
@@ -215,7 +238,11 @@ public class PlayerAttackState : FrameDataPlayerState
     {
         ActionInputBuffer buffer = fsm.InputBuffer;
 
-        // Auto-chain or buffered attack has priority
+        if (TryConsumeUltimateInterrupt()) return;
+        if (TryConsumeSkillInterrupt()) return;
+
+        // Auto-chain or buffered attack has priority once higher-priority combat
+        // interrupts have had a chance to consume their buffers.
         if (TryAutoChain()) return;
 
         if (buffer != null && buffer.ConsumeAttack())
@@ -250,7 +277,9 @@ public class PlayerAttackState : FrameDataPlayerState
             directionalInput = buffer != null ? buffer.DirectionalInput : Vector2.zero,
             facingDirection = player.Movement != null ? player.Movement.FacingDirection : 1,
             previousState = transitionContext.previousState,
-            hasGrabbedEnemy = player.Combat != null && player.Combat.HasGrabbedEnemy()
+            hasGrabbedEnemy = player.Combat != null && player.Combat.HasGrabbedEnemy(),
+            passiveController = player.PassiveController,
+            runtimeState = player.PassiveController != null ? player.PassiveController.RuntimeState : null
         };
     }
 
@@ -264,7 +293,7 @@ public class PlayerAttackState : FrameDataPlayerState
 
         if (nextStep == null) return false;
 
-        player.Combat.ExecuteStep(nextStep, resolver.TreeDepth, resolver.IsAirCombo, AttackCategory.Normal);
+        player.Combat.ExecuteStep(nextStep, resolver.TreeDepth, resolver.IsAirCombo, AttackCategory.Normal, resolver.ActiveCombatAction?.actionName);
         RestartAction();
         return true;
     }
@@ -319,6 +348,40 @@ public class PlayerAttackState : FrameDataPlayerState
         return false;
     }
 
+    private bool TryConsumeSkillInterrupt()
+    {
+        ActionInputBuffer buffer = fsm.InputBuffer;
+        if (buffer == null || !CanAcceptCombatInput(CombatInputType.Skill))
+        {
+            return false;
+        }
+
+        if (!buffer.ConsumeSkill())
+        {
+            return false;
+        }
+
+        OnSkillInput();
+        return fsm.CurrentState != this;
+    }
+
+    private bool TryConsumeUltimateInterrupt()
+    {
+        ActionInputBuffer buffer = fsm.InputBuffer;
+        if (buffer == null || !CanAcceptCombatInput(CombatInputType.Ultimate))
+        {
+            return false;
+        }
+
+        if (!buffer.ConsumeUltimate())
+        {
+            return false;
+        }
+
+        OnUltimateInput();
+        return fsm.CurrentState != this;
+    }
+
     private void HandleInterruptExit()
     {
         if (player.Combat == null) return;
@@ -340,6 +403,8 @@ public class PlayerAttackState : FrameDataPlayerState
     /// </summary>
     public override void OnAttackInput()
     {
+        Buffer?.ConsumeAttack();
+
         // First attack — resolve initial step from combo tree
         if (currentPhase == ActionPhase.None && !isPlungeFalling)
         {
@@ -357,7 +422,7 @@ public class PlayerAttackState : FrameDataPlayerState
 
                 if (step != null)
                 {
-                    player.Combat.ExecuteStep(step, resolver.TreeDepth, resolver.IsAirCombo, AttackCategory.Normal);
+                    player.Combat.ExecuteStep(step, resolver.TreeDepth, resolver.IsAirCombo, AttackCategory.Normal, resolver.ActiveCombatAction?.actionName);
                     player.Combat.SetAirCombo(resolver.IsAirCombo);
                     RestartAction();
                 }
@@ -371,6 +436,38 @@ public class PlayerAttackState : FrameDataPlayerState
             TryResolveNextStep();
         }
         // Otherwise the FSM already buffered it — InputHandleMidAction will consume later
+    }
+
+    /// <summary>
+    /// Transitions from a basic attack into the skill state when the current
+    /// phase allows the interruption.
+    /// </summary>
+    public override void OnSkillInput()
+    {
+        if (!CanAcceptCombatInput(CombatInputType.Skill))
+        {
+            return;
+        }
+
+        Buffer?.ConsumeSkill();
+
+        HandleInterruptExit();
+        fsm.ChangeState(fsm.SkillState);
+        fsm.CurrentState.OnSkillInput();
+    }
+
+    public override void OnUltimateInput()
+    {
+        if (!CanAcceptCombatInput(CombatInputType.Ultimate))
+        {
+            return;
+        }
+
+        Buffer?.ConsumeUltimate();
+
+        HandleInterruptExit();
+        fsm.ChangeState(fsm.UltimateState);
+        fsm.CurrentState.OnUltimateInput();
     }
 
     /// <summary>
@@ -421,7 +518,7 @@ public class PlayerAttackState : FrameDataPlayerState
         AttackStepData impactStep = resolver.ResolvePlungeLanding();
         if (impactStep != null && player.Combat != null)
         {
-            player.Combat.ExecuteStep(impactStep, resolver.TreeDepth, false, AttackCategory.Normal);
+            player.Combat.ExecuteStep(impactStep, resolver.TreeDepth, false, AttackCategory.Normal, resolver.ActiveCombatAction?.actionName);
             RestartAction();
 
             // Trigger plunge impact animation
@@ -450,22 +547,22 @@ public class PlayerAttackState : FrameDataPlayerState
 
     private void HandleGrabConnected()
     {
-        // When a grab connects, check if the current tree node has a grab route
-        InputContext ctx = BuildInputContext(); // hasGrabbedEnemy will be true now
-        AttackStepData grabFollowUp = resolver.ResolveNext(ctx);
+        // Resolve grab-specific routing (dedicated node + requireGrabbedEnemy routes)
+        // Never falls back to defaultNext — a grab miss should NOT advance the combo
+        AttackStepData grabFollowUp = resolver.ResolveGrabSuccess();
 
         if (grabFollowUp != null)
         {
             fsm.InputBuffer?.ClearAll();
 
             // Calculate grab maintenance frames from the follow-up chain
-            int maintainFrames = PlayerBasicAttack.CalculateFramesUntilRelease(
+            int maintainFrames = PlayerCombat.CalculateFramesUntilRelease(
                 new ComboNode { stepData = grabFollowUp, defaultNext = null });
 
             if (maintainFrames > 0)
                 player.Combat.MaintainGrabThroughFollowUp(maintainFrames);
 
-            player.Combat.ExecuteStep(grabFollowUp, resolver.TreeDepth, resolver.IsAirCombo, AttackCategory.Normal);
+            player.Combat.ExecuteStep(grabFollowUp, resolver.TreeDepth, resolver.IsAirCombo, AttackCategory.Normal, resolver.ActiveCombatAction?.actionName);
             RestartAction();
         }
     }

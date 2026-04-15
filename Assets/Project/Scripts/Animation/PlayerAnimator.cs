@@ -10,7 +10,7 @@ public class PlayerAnimator : MonoBehaviour
     [Header("Dependencies")]
     public Animator anim;
     public PlayerMovement movement;
-    public PlayerBasicAttack combat;
+    public PlayerCombat combat;
 
     // =========================================================
     // Animator Hashes
@@ -21,13 +21,8 @@ public class PlayerAnimator : MonoBehaviour
 
     private readonly int jumpHash = Animator.StringToHash("Jump");
     private readonly int dashHash = Animator.StringToHash("Dash");
-    private readonly int attackHash = Animator.StringToHash("Attack");
-    private readonly int comboStepHash = Animator.StringToHash("ComboStep");
-    private readonly int airComboStepHash = Animator.StringToHash("AirComboStep");
     private readonly int isDieHash = Animator.StringToHash("IsDie");
     private readonly int takeDamageHash = Animator.StringToHash("TakeDamage");
-    private readonly int skillHash = Animator.StringToHash("Skill");
-    private readonly int ultimateHash = Animator.StringToHash("Ultimate");
     private readonly int landingHash = Animator.StringToHash("Landing");
     private readonly int isLandingHash = Animator.StringToHash("IsLanding");
     private readonly int fallHash = Animator.StringToHash("Fall");
@@ -54,7 +49,7 @@ public class PlayerAnimator : MonoBehaviour
             rb = movement.GetComponent<Rigidbody2D>();
             
         if (combat == null)
-            combat = GetComponentInParent<PlayerBasicAttack>();
+            combat = GetComponentInParent<PlayerCombat>();
 
         animParamHashes = new HashSet<int>();
         if (anim != null && anim.runtimeAnimatorController != null)
@@ -77,7 +72,23 @@ public class PlayerAnimator : MonoBehaviour
         anim.SetBool(isLandingHash, movement.IsLanding);
 
         // Detect falling state (airborne and moving downwards)
-        bool suppressFallAnimation = combat != null && combat.ShouldSuppressLandingFeedback();
+        // Suppress falling animation during ANY combat action (Attack, Skill, Ultimate) 
+        // to prevent locomotion from overriding the custom action animation.
+        bool isAttacking = combat != null && combat.IsAttacking();
+        
+        // CRITICAL: Strict suppression. If attacking, we skip ALL locomotion updates.
+        // We also force IsGrounded to false in the Animator to prevent "Any State -> Idle" 
+        // transitions from triggering while we are playing combat animations.
+        if (isAttacking)
+        {
+            anim.SetBool(isGroundedHash, false);
+            anim.SetFloat(speedHash, 0f);
+            anim.SetFloat(verticalVelocityHash, 0f);
+            wasFalling = false;
+            return;
+        }
+
+        bool suppressFallAnimation = (combat != null && combat.ShouldSuppressLandingFeedback());
         bool isFalling = !suppressFallAnimation && !movement.IsGrounded() && rb.linearVelocity.y < -0.1f && !movement.IsLanding;
         
         if (isFalling && !wasFalling)
@@ -148,19 +159,24 @@ public class PlayerAnimator : MonoBehaviour
     {
         // Prioritize attack animation over lingering jump transitions when attacking mid-air.
         SafeResetTrigger(jumpHash);
-        anim.SetInteger(airComboStepHash, 0);
-        anim.SetInteger(comboStepHash, comboStep);
 
         // Snap immediately without transition delay to align perfectly with Logic Frames
         List<string> candidates = new List<string>();
-        if (!string.IsNullOrEmpty(explicitClipName)) candidates.Add(explicitClipName);
-        candidates.Add($"Attack_{comboStep}");
-        candidates.Add($"Attack{comboStep}");
-        candidates.Add($"_Attack{comboStep}");
+        if (!string.IsNullOrEmpty(explicitClipName))
+        {
+            candidates.Add(explicitClipName);
+        }
+        else
+        {
+            candidates.Add($"Attack_{comboStep}");
+            candidates.Add($"Attack{comboStep}");
+            candidates.Add($"_Attack{comboStep}");
+        }
 
-        if (TryPlayFirstExistingState(candidates.ToArray())) return;
-
-        SafeSetTrigger(attackHash);
+        if (!TryPlayFirstExistingState(candidates.ToArray()))
+        {
+            Debug.LogWarning($"[PlayerAnimator] Missing State in Animator! Could not find state for Attack Step {comboStep} or Explicit Clip '{explicitClipName}'.");
+        }
     }
 
     public void TriggerAirAttack(int comboStep, string explicitClipName = null)
@@ -168,22 +184,26 @@ public class PlayerAnimator : MonoBehaviour
         if (anim == null)
             return;
 
-        SafeResetTrigger(attackHash);
         SafeResetTrigger(jumpHash);
         SafeResetTrigger(landingHash);
         anim.SetBool(isLandingHash, false);
-        anim.SetInteger(comboStepHash, 0);
+
         int normalizedStep = Mathf.Max(1, comboStep);
-        anim.SetInteger(airComboStepHash, normalizedStep);
 
         List<string> candidates = new List<string>();
-        if (!string.IsNullOrEmpty(explicitClipName)) candidates.Add(explicitClipName);
-        candidates.AddRange(GetAirAttackStateCandidates(normalizedStep));
+        if (!string.IsNullOrEmpty(explicitClipName))
+        {
+            candidates.Add(explicitClipName);
+        }
+        else
+        {
+            candidates.AddRange(GetAirAttackStateCandidates(normalizedStep));
+        }
 
-        if (TryPlayFirstExistingState(candidates.ToArray()))
-            return;
-
-        SafeSetTrigger(attackHash);
+        if (!TryPlayFirstExistingState(candidates.ToArray()))
+        {
+            Debug.LogWarning($"[PlayerAnimator] Missing State in Animator! Could not find state for Air Attack Step {comboStep} or Explicit Clip '{explicitClipName}'.");
+        }
     }
 
     public void TriggerPlungeFall(string stateName)
@@ -228,20 +248,57 @@ public class PlayerAnimator : MonoBehaviour
 
     public void ResetCombo()
     {
-        anim.SetInteger(comboStepHash, 0);
-        anim.SetInteger(airComboStepHash, 0);
+        // Deprecated: Combat states are now entirely Code-Driven through State Names
     }
 
-    public void TriggerSkill()
+    public void TriggerSkill(string explicitClipName = null, bool airborne = false)
     {
-        // Force immediate snap to Skill state
-        PlayStateByName("Skill", "Skill");
+        if (anim == null)
+            return;
+
+        SafeResetTrigger(jumpHash);
+        SafeResetTrigger(landingHash);
+        anim.SetBool(isLandingHash, false);
+
+        List<string> candidates = new List<string>();
+        if (!string.IsNullOrEmpty(explicitClipName))
+        {
+            candidates.Add(explicitClipName);
+        }
+        else
+        {
+            candidates.AddRange(GetSkillStateCandidates(airborne));
+        }
+
+        if (TryPlayFirstExistingState(candidates.ToArray()))
+            return;
+
+        PlayStateByName(airborne ? "Air_Skill" : "Skill", "Skill");
     }
 
-    public void TriggerUltimate()
+    public void TriggerUltimate(string explicitClipName = null, bool airborne = false)
     {
-        // Force immediate snap to Ultimate state
-        PlayStateByName("Ultimate", "Ultimate");
+        if (anim == null)
+            return;
+
+        SafeResetTrigger(jumpHash);
+        SafeResetTrigger(landingHash);
+        anim.SetBool(isLandingHash, false);
+
+        List<string> candidates = new List<string>();
+        if (!string.IsNullOrEmpty(explicitClipName))
+        {
+            candidates.Add(explicitClipName);
+        }
+        else
+        {
+            candidates.AddRange(GetUltimateStateCandidates(airborne));
+        }
+
+        if (TryPlayFirstExistingState(candidates.ToArray()))
+            return;
+
+        PlayStateByName(airborne ? "Air_Ultimate" : "Ultimate", "Ultimate");
     }
 
     public void TriggerSubStepAnimation(AnimationClip clip)
@@ -257,12 +314,19 @@ public class PlayerAnimator : MonoBehaviour
 
     private void PlayStateByName(string stateName, string fallbackStateName)
     {
-        string resolvedStateName = stateName;
-        if (string.IsNullOrWhiteSpace(resolvedStateName))
-            resolvedStateName = fallbackStateName;
+        List<string> candidates = new List<string>();
+        if (!string.IsNullOrWhiteSpace(stateName)) candidates.Add(stateName);
+        if (!string.IsNullOrWhiteSpace(fallbackStateName) && fallbackStateName != stateName) candidates.Add(fallbackStateName);
 
-        if (!resolvedStateName.Contains("."))
-            resolvedStateName = $"Base Layer.{resolvedStateName}";
+        if (TryPlayFirstExistingState(candidates.ToArray()))
+            return;
+
+        string resolvedStateName = !string.IsNullOrWhiteSpace(stateName)
+            ? stateName
+            : fallbackStateName;
+
+        if (string.IsNullOrWhiteSpace(resolvedStateName))
+            return;
 
         anim.Play(resolvedStateName, 0, 0f);
     }
@@ -279,22 +343,75 @@ public class PlayerAnimator : MonoBehaviour
         };
     }
 
+    private string[] GetSkillStateCandidates(bool airborne)
+    {
+        return airborne
+            ? new[] { "Air_Skill", "_AirSkill", "AirSkill", "Skill_Air", "SkillAir", "Skill" }
+            : new[] { "Skill" };
+    }
+
+    private string[] GetUltimateStateCandidates(bool airborne)
+    {
+        return airborne
+            ? new[] { "Air_Ultimate", "_AirUltimate", "AirUltimate", "Ultimate_Air", "UltimateAir", "Ultimate" }
+            : new[] { "Ultimate" };
+    }
+
     private bool TryPlayFirstExistingState(string[] stateNames)
     {
-        if (stateNames == null || stateNames.Length == 0)
+        if (stateNames == null || stateNames.Length == 0 || anim == null)
             return false;
+
+        int layerCount = anim.layerCount;
 
         foreach (string stateName in stateNames)
         {
-            string resolvedStateName = stateName.Contains(".")
-                ? stateName
-                : $"Base Layer.{stateName}";
+            if (string.IsNullOrEmpty(stateName)) continue;
 
-            if (!anim.HasState(0, Animator.StringToHash(resolvedStateName)))
-                continue;
+            int shortHash = Animator.StringToHash(stateName);
+            string legacyPath = $"Base Layer.{stateName}";
+            int legacyHash = Animator.StringToHash(legacyPath);
 
-            anim.Play(resolvedStateName, 0, 0f);
-            return true;
+            // Check all layers for this state
+            for (int i = 0; i < layerCount; i++)
+            {
+                // Try short name
+                if (anim.HasState(i, shortHash))
+                {
+                    var stateInfo = anim.GetCurrentAnimatorStateInfo(i);
+                    var nextStateInfo = anim.GetNextAnimatorStateInfo(i);
+                    
+                    // Guard: If we are already in this state OR transitioning to it, 
+                    // and we just started it (normalizedTime < 0.01), don't play again to avoid frame-0 lock.
+                    if ((stateInfo.shortNameHash == shortHash && stateInfo.normalizedTime < 0.05f) || 
+                        (nextStateInfo.shortNameHash == shortHash))
+                    {
+                        return true; 
+                    }
+
+                    Debug.Log($"[PlayerAnimator] Playing State: '{stateName}' on Layer {i}. (Prev: {stateInfo.shortNameHash})");
+                    anim.Play(shortHash, i, 0f);
+                    return true;
+                }
+
+                // Try legacy path (only on layer 0)
+                if (i == 0 && anim.HasState(i, legacyHash))
+                {
+                    if (anim.GetCurrentAnimatorStateInfo(i).shortNameHash == legacyHash) return true;
+
+                    Debug.Log($"[PlayerAnimator] Playing Legacy State: '{legacyPath}' on Layer 0.");
+                    anim.Play(legacyHash, i, 0f);
+                    return true;
+                }
+            }
+        }
+
+        // If we reached here, NONE of the candidates were found in any layer.
+        if (stateNames.Length > 0 && !string.IsNullOrEmpty(stateNames[0]))
+        {
+            string tried = string.Join(", ", stateNames);
+            Debug.LogError($"[PlayerAnimator] STATE NOT FOUND! Tried candidates: [{tried}] across {layerCount} layers. " +
+                           "Please ensure the Animator State Name exactly matches one of these strings.");
         }
 
         return false;

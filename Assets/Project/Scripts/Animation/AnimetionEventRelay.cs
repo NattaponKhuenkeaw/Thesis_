@@ -6,7 +6,7 @@ public class AnimationEventRelay : MonoBehaviour
     // Dependencies
     // =========================================================
     [Header("Dependencies")]
-    public PlayerBasicAttack combat;
+    public PlayerCombat combat;
 
     // =========================================================
     // Unity Methods
@@ -14,7 +14,7 @@ public class AnimationEventRelay : MonoBehaviour
     void Awake()
     {
         if (combat == null)
-            combat = GetComponentInParent<PlayerBasicAttack>();
+            combat = GetComponentInParent<PlayerCombat>();
     }
 
     // =========================================================

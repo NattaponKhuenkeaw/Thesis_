@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [System.Serializable]
 public class CharacterUpgrade
@@ -8,5 +9,8 @@ public class CharacterUpgrade
     // =========================================================
     [Header("Upgrade Info")]
     public int level = 1;
-    public int skillTreePoints = 3;
+    public int constellationRank = 0;
+
+    [FormerlySerializedAs("skillTreePoints")]
+    public int progressionPoints = 3;
 }

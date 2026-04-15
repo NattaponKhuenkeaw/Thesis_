@@ -75,8 +75,12 @@ public class CharacterObject : ScriptableObject
     // =========================================================
     // Skill Tree
     // =========================================================
-    [Header("Skill Tree")]
+    [Header("Legacy Skill Tree")]
+    [Tooltip("Legacy authoring data kept for backward compatibility and migration.")]
     public SkillTreeData skillTreeData = new SkillTreeData();
+
+    [Header("Progression")]
+    public CharacterProgressionDefinition progressionDefinition = new CharacterProgressionDefinition();
 
 
     // =========================================================
