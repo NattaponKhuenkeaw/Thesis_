@@ -597,6 +597,26 @@ public class AnimationEditorWindow : EditorWindow
                         break;
                     }
 
+                    case AttackStepData.AudioComponentKey when step.audioData != null && step.audioData.entries != null:
+                    {
+                        foreach (var audioEntry in step.audioData.entries)
+                        {
+                            var audioTrack = new TimelineGridElement.TimelineTrack
+                            {
+                                label = audioEntry.label,
+                                color = audioEntry.trackColor,
+                                drawRanges = true,
+                                diamondColor = audioEntry.trackColor,
+                                diamondSize = 4f
+                            };
+                            // Show a diamond at the trigger frame and a range for duration
+                            audioTrack.diamonds.Add(audioEntry.triggerFrame);
+                            audioTrack.ranges.Add((audioEntry.triggerFrame, audioEntry.duration));
+                            timelineGrid.Tracks.Add(audioTrack);
+                        }
+                        break;
+                    }
+
                     case AttackStepData.HitboxComponentKey when step.hitData != null && step.hitData.hitboxes != null:
                     {
                         Dictionary<string, int> hitboxTypeCounts = new Dictionary<string, int>();

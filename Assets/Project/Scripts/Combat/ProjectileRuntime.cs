@@ -98,6 +98,13 @@ public class ProjectileRuntime : MonoBehaviour
 
         hitBoxDamage.enabled = false;
         hitBoxDamage.SetProjectileOwner(this);
+
+        // Auto-attach hurtbox drawer for debug visualization
+        if (triggerCollider != null && GetComponent<ColliderDebugDrawer>() == null)
+        {
+            var drawer = gameObject.AddComponent<ColliderDebugDrawer>();
+            drawer.debugColor = Color.cyan; // Cyan for projectiles
+        }
     }
 
     void Update()

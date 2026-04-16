@@ -34,12 +34,6 @@ public class PlayerMovement : MonoBehaviour
     public DashData dashData;
 
     // =========================================================
-    // Combat Cooldowns
-    // =========================================================
-    [Header("Combat Cooldowns")]
-    public float airAttackComboResetCooldown = 0.5f;
-
-    // =========================================================
     // Dash Visuals
     // =========================================================
     [Header("Dash Visuals")]
@@ -153,7 +147,6 @@ public class PlayerMovement : MonoBehaviour
     private int oneWayPlatformLayer;
 
     // Combat cooldown tracking
-    private float airAttackComboCooldownEndTime;
     private bool attackFacingLockOnCancelledForCurrentAttack;
     private bool wasAttackLockOnActive;
     private bool hasPerformedInitialLockOnForCurrentStep;
@@ -263,7 +256,7 @@ public class PlayerMovement : MonoBehaviour
         {
             StopAttackMotion();
             airDashesUsed++;
-            ResetAirComboCooldown();
+            combat?.ResetAirComboCooldown();
             StartDash(inputX);
         }
     }
@@ -354,21 +347,6 @@ public class PlayerMovement : MonoBehaviour
         StopAttackMotion();
     }
 
-    public bool CanStartAirCombo()
-    {
-        return Time.time >= airAttackComboCooldownEndTime;
-    }
-
-    public void TriggerAirComboCooldown()
-    {
-        airAttackComboCooldownEndTime = Time.time + airAttackComboResetCooldown;
-    }
-
-    public void ResetAirComboCooldown()
-    {
-        airAttackComboCooldownEndTime = 0f;
-    }
-
     // =========================================================
     // Private Methods
     // =========================================================
@@ -394,7 +372,7 @@ public class PlayerMovement : MonoBehaviour
             {
                 jumpsUsed = 0;
                 airDashesUsed = 0;
-                ResetAirComboCooldown();
+                combat?.ResetAirComboCooldown();
                 OnLand?.Invoke();
 
                 if (!ShouldSuppressLandingFeedback())

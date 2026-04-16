@@ -29,11 +29,6 @@ public class EnemyController : MonoBehaviour
     public float attackDamage = 10f;
 
     // =========================================================
-    // Combat Camera
-    // =========================================================
-    // (Removed combatDisengageRange to use Blackboard PatrolRadius instead)
-
-    // =========================================================
     // State
     // =========================================================
     [Header("Runtime State (read-only)")]
@@ -68,8 +63,6 @@ public class EnemyController : MonoBehaviour
     [Header("Hit Reaction")]
     public EnemyHitReactionHandler hitReactionHandler;
 
-    // Removed animation hashes
-
     // =========================================================
     // Unity Methods
     // =========================================================
@@ -77,6 +70,7 @@ public class EnemyController : MonoBehaviour
     {
         currentHP = maxHP;
     }
+
     void Awake()
     {
         rb       = GetComponent<Rigidbody2D>();
@@ -97,49 +91,53 @@ public class EnemyController : MonoBehaviour
 
             damageHitbox.SetHitboxWindowActive(false);
             attackHitbox.enabled = false;
-            var sr = attackHitbox.GetComponent<SpriteRenderer>();
-            if (sr != null) sr.enabled = false;
+        }
 
-            var lr = attackHitbox.GetComponent<LineRenderer>();
-            if (lr != null) lr.enabled = false;
+        // Auto-attach hurtbox drawer to main body
+        if (bodyCollider != null && bodyCollider.GetComponent<ColliderDebugDrawer>() == null)
+        {
+            var drawer = bodyCollider.gameObject.AddComponent<ColliderDebugDrawer>();
+            drawer.debugColor = Color.yellow; // Yellow for enemies
         }
     }
 
     void Update()
     {
+        bool isDebugActive = CombatCore.TrainingDebugManager.IsActive;
+
         // Runtime visualization for Game View
         if (attackHitbox != null && attackHitbox.enabled)
         {
-            // 1. Auto-scale SpriteRenderer to match Collider size
             var sr = attackHitbox.GetComponent<SpriteRenderer>();
-            if (sr != null)
-            {
-                if (attackHitbox is BoxCollider2D box)
-                {
-                    sr.drawMode = SpriteDrawMode.Sliced;
-                    // Match the SpriteRenderer size to the Collider size without moving the transform
-                    sr.size = box.size;
-                }
-                else if (attackHitbox is CircleCollider2D circle)
-                {
-                    // For circles, we can't use .size on Simple sprites without scaling the transform.
-                    // If the user wants to keep the transform the same, we skip auto-scaling for circles
-                    // or assume the user has set up the scale manually.
-                }
-            }
-
-            // 2. Beautiful outline using LineRenderer
             var lr = attackHitbox.GetComponent<LineRenderer>();
-            if (lr != null)
+
+            // Toggle visibility based on debug mode
+            if (sr != null) sr.enabled = isDebugActive;
+            if (lr != null) lr.enabled = isDebugActive;
+
+            if (isDebugActive)
             {
-                DrawLineRenderer(lr);
-            }
-            else
-            {
+                // 1. Auto-scale SpriteRenderer to match Collider size
+                if (sr != null)
+                {
+                    if (attackHitbox is BoxCollider2D box)
+                    {
+                        sr.drawMode = SpriteDrawMode.Sliced;
+                        sr.size = box.size;
+                    }
+                }
+
+                // 2. Beautiful outline using LineRenderer
+                if (lr != null)
+                {
+                    DrawLineRenderer(lr);
+                }
+                else
+                {
 #if UNITY_EDITOR
-                // Fallback to debug lines if no LineRenderer
-                DrawHitboxRuntime();
+                    DrawHitboxRuntime();
 #endif
+                }
             }
         }
     }
@@ -276,6 +274,7 @@ public class EnemyController : MonoBehaviour
 
         flashCoroutine = null;
     }
+
     public void SetBehaviorAgentActive(bool active)
     {
         var behaviorAgent = GetComponent<BehaviorGraphAgent>();
@@ -284,7 +283,6 @@ public class EnemyController : MonoBehaviour
             behaviorAgent.enabled = active;
         }
     }
-
 
     public bool ReleaseGrab(int ownerId)
     {
@@ -323,11 +321,11 @@ public class EnemyController : MonoBehaviour
 
             // Toggle SpriteRenderer if it exists for runtime visualization
             var sr = attackHitbox.GetComponent<SpriteRenderer>();
-            if (sr != null) sr.enabled = active;
-
-            // Toggle LineRenderer if it exists
             var lr = attackHitbox.GetComponent<LineRenderer>();
-            if (lr != null) lr.enabled = active;
+            
+            bool isDebugActive = CombatCore.TrainingDebugManager.IsActive;
+            if (sr != null) sr.enabled = active && isDebugActive;
+            if (lr != null) lr.enabled = active && isDebugActive;
         }
     }
 

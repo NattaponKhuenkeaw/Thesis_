@@ -25,6 +25,10 @@ public class EnemyWorldUI : MonoBehaviour
     [SerializeField] private float damageFreezeDuration = 0.4f;
     [SerializeField] private float damageFadeDuration = 0.3f;
     
+    [Header("HP Lerp Settings")]
+    [SerializeField] private float healthLerpDelay = 0.25f;
+    [SerializeField] private float healthLerpDuration = 0.5f;
+
     [SerializeField] private bool hideCanvasOnDeath = true;
 
     [Header("Impact Scaling")]
@@ -87,9 +91,21 @@ public class EnemyWorldUI : MonoBehaviour
 
         if (damageLerpSlider == null)
         {
-            // Try to find the second slider in children if not assigned
+            // Try to find by name "HPLerp" or "Ghost" first
             Slider[] sliders = GetComponentsInChildren<Slider>(true);
-            if (sliders.Length > 1) damageLerpSlider = sliders[1];
+            foreach (var s in sliders)
+            {
+                if (s == healthSlider) continue;
+                if (s.name.Contains("Lerp") || s.name.Contains("Ghost"))
+                {
+                    damageLerpSlider = s;
+                    break;
+                }
+            }
+
+            // Fallback to second slider
+            if (damageLerpSlider == null && sliders.Length > 1) 
+                damageLerpSlider = sliders[1];
         }
 
         if (damageText == null)
@@ -108,7 +124,8 @@ public class EnemyWorldUI : MonoBehaviour
     /// </summary>
     private void KeepCanvasFacingForward()
     {
-        // Force the UI to always stay upright and non-mirrored in world space
+        // Force the UI to always stay upright in world space.
+        // This handles both parent rotation and parent scale-flipping without jitter.
         transform.rotation = Quaternion.identity;
     }
 
@@ -175,16 +192,15 @@ public class EnemyWorldUI : MonoBehaviour
     private IEnumerator HealthLerpRoutine(float targetValue)
     {
         // Short pause before the ghost bar starts following
-        yield return new WaitForSeconds(0.25f);
+        yield return new WaitForSeconds(healthLerpDelay);
 
         float elapsed = 0f;
-        float duration = 0.5f;
         float startValue = damageLerpSlider.value;
 
-        while (elapsed < duration)
+        while (elapsed < healthLerpDuration)
         {
             elapsed += Time.deltaTime;
-            damageLerpSlider.value = Mathf.Lerp(startValue, targetValue, elapsed / duration);
+            damageLerpSlider.value = Mathf.Lerp(startValue, targetValue, elapsed / healthLerpDuration);
             yield return null;
         }
 

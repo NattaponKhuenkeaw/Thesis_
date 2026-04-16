@@ -10,6 +10,13 @@ public class PlayerUltimateState : FrameDataPlayerState
     private SkillAction activeUltimateAction;
     private bool hasStartedCooldown;
 
+    // Delayed Execution
+    private AttackStepData pendingStep;
+    private int pendingTreeDepth;
+    private bool pendingAirCombo;
+    private string pendingActionName;
+    private bool isWaitingForActivation;
+
     public PlayerUltimateState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
     public override PlayerStateId StateId => PlayerStateId.Ultimate;
@@ -39,6 +46,12 @@ public class PlayerUltimateState : FrameDataPlayerState
         {
             player.Combat.OnGrabConnected += HandleGrabConnected;
         }
+
+        if (UltimateFlashOverlay.Instance != null)
+        {
+            UltimateFlashOverlay.Instance.OnBlackScreenStarted += HandleBlackScreenStarted;
+            UltimateFlashOverlay.Instance.OnSequenceEnded += HandleSequenceEnded;
+        }
     }
 
     public override void Exit()
@@ -54,6 +67,15 @@ public class PlayerUltimateState : FrameDataPlayerState
             player.Combat.ResetCombo();
             player.Combat.OnGrabConnected -= HandleGrabConnected;
         }
+
+        if (UltimateFlashOverlay.Instance != null)
+        {
+            UltimateFlashOverlay.Instance.OnBlackScreenStarted -= HandleBlackScreenStarted;
+            UltimateFlashOverlay.Instance.OnSequenceEnded -= HandleSequenceEnded;
+        }
+
+        isWaitingForActivation = false;
+        pendingStep = null;
     }
 
     protected override void ProcessLogicFrame(int frame, ActionPhase phase)
@@ -84,9 +106,64 @@ public class PlayerUltimateState : FrameDataPlayerState
         TryStartCooldown();
     }
 
+    private void HandleBlackScreenStarted()
+    {
+        if (activeUltimateAction is UltimateAction ultimate && ultimate.activationVFXPrefab != null)
+        {
+            Transform playerTransform = player.transform;
+            Vector3 offset = ultimate.activationVFXOffset;
+
+            // Flip X offset based on facing direction (using localScale.x as indicator)
+            float facingDirection = playerTransform.localScale.x > 0 ? 1f : -1f;
+            offset.x *= facingDirection;
+
+            Vector3 spawnPosition = playerTransform.position + offset;
+            
+            GameObject vfxInstance = Object.Instantiate(ultimate.activationVFXPrefab, spawnPosition, playerTransform.rotation);
+
+            // FORCE UNSCALED TIME so VFX plays during freeze
+            // 1. Particle Systems
+            var pss = vfxInstance.GetComponentsInChildren<ParticleSystem>();
+            foreach (var ps in pss)
+            {
+                var main = ps.main;
+                main.useUnscaledTime = true;
+            }
+
+            // 2. Animators
+            var anims = vfxInstance.GetComponentsInChildren<Animator>();
+            foreach (var a in anims)
+            {
+                a.updateMode = AnimatorUpdateMode.UnscaledTime;
+            }
+        }
+
+        // Ultimate Activation Audio (plays through freeze via unscaled channel)
+        if (activeUltimateAction is UltimateAction ultimateAudio && GameAudioManager.Instance != null)
+        {
+            GameAudioManager.Instance.PlayUltimateActivation(ultimateAudio);
+        }
+    }
+
+    private void HandleSequenceEnded()
+    {
+        if (!isWaitingForActivation) return;
+
+        // Unfreeze perfectly as the flash ends
+        if (GameFreezeManager.Instance != null)
+        {
+            GameFreezeManager.Instance.RestoreTime();
+        }
+
+        isWaitingForActivation = false;
+        pendingStep = null;
+    }
+
     protected override void HandleInputDuringRecovery()
     {
-        // Ultimate recovery is intentionally uninterruptible.
+        // Auto-chain check. This allows multi-part ultimates (like grab follow-ups)
+        // to advance automatically without extra user input.
+        if (TryAutoChain()) return;
     }
 
     protected override void HandleInputDuringCancel()
@@ -101,6 +178,9 @@ public class PlayerUltimateState : FrameDataPlayerState
         {
             return;
         }
+
+        // Auto-chain check (after manual Ultimate trigger but before Skill/Attack interrupts)
+        if (TryAutoChain()) return;
 
         if (buffer.ConsumeSkill())
         {
@@ -177,9 +257,26 @@ public class PlayerUltimateState : FrameDataPlayerState
 
             activeUltimateAction = resolver.ActiveCombatAction as SkillAction;
             hasStartedCooldown = false;
+            
+            // Immediately execute step to snap to the Ultimate "Pose" (Frame 1)
             player.Combat.ExecuteStep(step, resolver.TreeDepth, !ctx.isGrounded, AttackCategory.Ultimate, resolver.ActiveCombatAction?.actionName);
             RestartAction();
-            return;
+
+            // Set waiting flag
+            isWaitingForActivation = true;
+
+            // Trigger activation effects
+            if (GameFreezeManager.Instance != null)
+            {
+                // Stays frozen until RestoreTime() in HandleSequenceEnded
+                GameFreezeManager.Instance.UltimateFreezeManual(); 
+            }
+            if (UltimateFlashOverlay.Instance != null)
+            {
+                UltimateFlashOverlay.Instance.PlayActivationFlash();
+            }
+
+            return; 
         }
 
         if (currentPhase == ActionPhase.Cancel && TryResolveNextUltimateStep())
@@ -205,6 +302,16 @@ public class PlayerUltimateState : FrameDataPlayerState
         player.Combat.ExecuteStep(nextStep, resolver.TreeDepth, !ctx.isGrounded, AttackCategory.Ultimate, resolver.ActiveCombatAction?.actionName);
         RestartAction();
         return true;
+    }
+
+    private bool TryAutoChain()
+    {
+        if (player.Combat == null) return false;
+
+        var step = player.Combat.GetCurrentStepData();
+        if (step == null || !step.autoChainToNext) return false;
+
+        return TryResolveNextUltimateStep();
     }
 
     private void TryStartCooldown()

@@ -1,0 +1,598 @@
+fileFormatVersion: 2
+guid: 128170933f5e50642b832855c8e326a2
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 166549819405433135
+    second: rugal_ultimate2_vfx_2_0
+  - first:
+      213: 3531466219502072191
+    second: rugal_ultimate2_vfx_2_1
+  - first:
+      213: -2649404503491330891
+    second: rugal_ultimate2_vfx_2_2
+  - first:
+      213: 5200032535189264106
+    second: rugal_ultimate2_vfx_2_3
+  - first:
+      213: 1077831361096258616
+    second: rugal_ultimate2_vfx_2_4
+  - first:
+      213: 7291589021212384161
+    second: rugal_ultimate2_vfx_2_5
+  - first:
+      213: -5532782617527132969
+    second: rugal_ultimate2_vfx_2_6
+  - first:
+      213: -561199344999076017
+    second: rugal_ultimate2_vfx_2_7
+  - first:
+      213: -3823387627038566935
+    second: rugal_ultimate2_vfx_2_8
+  - first:
+      213: -4191381288136287851
+    second: rugal_ultimate2_vfx_2_9
+  - first:
+      213: -7968355309716057090
+    second: rugal_ultimate2_vfx_2_10
+  - first:
+      213: -4389286122217249125
+    second: rugal_ultimate2_vfx_2_11
+  - first:
+      213: -2719453405142338645
+    second: rugal_ultimate2_vfx_2_12
+  - first:
+      213: 6646282632591974066
+    second: rugal_ultimate2_vfx_2_13
+  - first:
+      213: -1848235246173849283
+    second: rugal_ultimate2_vfx_2_14
+  - first:
+      213: -6113451834893478426
+    second: rugal_ultimate2_vfx_2_15
+  - first:
+      213: -1522923479137488661
+    second: rugal_ultimate2_vfx_2_16
+  - first:
+      213: -8463860698228610839
+    second: rugal_ultimate2_vfx_2_17
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: rugal_ultimate2_vfx_2_0
+      rect:
+        serializedVersion: 2
+        x: 42
+        y: 122
+        width: 16
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f29f017ad24bf4200800000000000000
+      internalID: 166549819405433135
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rugal_ultimate2_vfx_2_1
+      rect:
+        serializedVersion: 2
+        x: 57
+        y: 134
+        width: 11
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f7176bde0d9420130800000000000000
+      internalID: 3531466219502072191
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rugal_ultimate2_vfx_2_2
+      rect:
+        serializedVersion: 2
+        x: 67
+        y: 125
+        width: 7
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5bc341724ac6b3bd0800000000000000
+      internalID: -2649404503491330891
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rugal_ultimate2_vfx_2_3
+      rect:
+        serializedVersion: 2
+        x: 69
+        y: 121
+        width: 7
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae61e603a0a3a2840800000000000000
+      internalID: 5200032535189264106
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rugal_ultimate2_vfx_2_4
+      rect:
+        serializedVersion: 2
+        x: 30
+        y: 121
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8341bed89e935fe00800000000000000
+      internalID: 1077831361096258616
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rugal_ultimate2_vfx_2_5
+      rect:
+        serializedVersion: 2
+        x: 37
+        y: 111
+        width: 13
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1ab9081159de03560800000000000000
+      internalID: 7291589021212384161
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rugal_ultimate2_vfx_2_6
+      rect:
+        serializedVersion: 2
+        x: 58
+        y: 115
+        width: 7
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7dcd6d6f58b9733b0800000000000000
+      internalID: -5532782617527132969
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rugal_ultimate2_vfx_2_7
+      rect:
+        serializedVersion: 2
+        x: 68
+        y: 110
+        width: 11
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f4fe5294b283638f0800000000000000
+      internalID: -561199344999076017
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rugal_ultimate2_vfx_2_8
+      rect:
+        serializedVersion: 2
+        x: 70
+        y: 114
+        width: 9
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9e51ebbd53990fac0800000000000000
+      internalID: -3823387627038566935
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rugal_ultimate2_vfx_2_9
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 70
+        width: 6
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 599da62ece835d5c0800000000000000
+      internalID: -4191381288136287851
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rugal_ultimate2_vfx_2_10
+      rect:
+        serializedVersion: 2
+        x: 6
+        y: 64
+        width: 19
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ef3d6406017ba6190800000000000000
+      internalID: -7968355309716057090
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rugal_ultimate2_vfx_2_11
+      rect:
+        serializedVersion: 2
+        x: 14
+        y: 4
+        width: 73
+        height: 115
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b9660bbf68f1613c0800000000000000
+      internalID: -4389286122217249125
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rugal_ultimate2_vfx_2_12
+      rect:
+        serializedVersion: 2
+        x: 15
+        y: 77
+        width: 7
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ba3b34b498f824ad0800000000000000
+      internalID: -2719453405142338645
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rugal_ultimate2_vfx_2_13
+      rect:
+        serializedVersion: 2
+        x: 5
+        y: 59
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2be1e7047d65c3c50800000000000000
+      internalID: 6646282632591974066
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rugal_ultimate2_vfx_2_14
+      rect:
+        serializedVersion: 2
+        x: 28
+        y: 16
+        width: 9
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d39737206dfb956e0800000000000000
+      internalID: -1848235246173849283
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rugal_ultimate2_vfx_2_15
+      rect:
+        serializedVersion: 2
+        x: 31
+        y: 9
+        width: 7
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6e5d6b552f7a82ba0800000000000000
+      internalID: -6113451834893478426
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rugal_ultimate2_vfx_2_16
+      rect:
+        serializedVersion: 2
+        x: 31
+        y: 1
+        width: 12
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: be078ed1a2d7ddae0800000000000000
+      internalID: -1522923479137488661
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: rugal_ultimate2_vfx_2_17
+      rect:
+        serializedVersion: 2
+        x: 42
+        y: 0
+        width: 9
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9e8a1b5d9835a8a80800000000000000
+      internalID: -8463860698228610839
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      rugal_ultimate2_vfx_2_0: 166549819405433135
+      rugal_ultimate2_vfx_2_1: 3531466219502072191
+      rugal_ultimate2_vfx_2_10: -7968355309716057090
+      rugal_ultimate2_vfx_2_11: -4389286122217249125
+      rugal_ultimate2_vfx_2_12: -2719453405142338645
+      rugal_ultimate2_vfx_2_13: 6646282632591974066
+      rugal_ultimate2_vfx_2_14: -1848235246173849283
+      rugal_ultimate2_vfx_2_15: -6113451834893478426
+      rugal_ultimate2_vfx_2_16: -1522923479137488661
+      rugal_ultimate2_vfx_2_17: -8463860698228610839
+      rugal_ultimate2_vfx_2_2: -2649404503491330891
+      rugal_ultimate2_vfx_2_3: 5200032535189264106
+      rugal_ultimate2_vfx_2_4: 1077831361096258616
+      rugal_ultimate2_vfx_2_5: 7291589021212384161
+      rugal_ultimate2_vfx_2_6: -5532782617527132969
+      rugal_ultimate2_vfx_2_7: -561199344999076017
+      rugal_ultimate2_vfx_2_8: -3823387627038566935
+      rugal_ultimate2_vfx_2_9: -4191381288136287851
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

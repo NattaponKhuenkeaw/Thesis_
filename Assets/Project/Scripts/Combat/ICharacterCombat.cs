@@ -33,6 +33,11 @@ public interface ICharacterCombat
     void CancelCurrentAttackButKeepComboProgress();
     void ResetCombo();
 
+    // Air Combo Cooldown (Refactored from PlayerMovement)
+    bool CanStartAirCombo();
+    void TriggerAirComboCooldown();
+    void ResetAirComboCooldown();
+
     // Plunge state (set by PlayerAttackState)
     void SetPlungeFalling(bool falling);
     void SetAirCombo(bool airCombo);

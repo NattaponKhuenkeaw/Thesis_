@@ -196,6 +196,24 @@ namespace CombatEditor.UI
                         }, reorderIndex, orderedComponents.Count);
                         break;
 
+                    case AttackStepData.AudioComponentKey when step.audioData != null:
+                        BuildFoldoutCard("Audio Frame Data", "audio_data", step.audioData.TrackColor, body =>
+                        {
+                            BuildAudioCard(body, step.audioData);
+                        }, () =>
+                        {
+                            RecordUndo("Remove Audio");
+                            step.audioData = null;
+                            MarkDirtyAndRebuild();
+                        }, false, componentList, newIndex =>
+                        {
+                            if (newIndex == reorderIndex) return;
+                            RecordUndo("Reorder Components");
+                            step.MoveComponentKey(AttackStepData.AudioComponentKey, newIndex);
+                            MarkDirtyAndRebuild();
+                        }, reorderIndex, orderedComponents.Count);
+                        break;
+
                     case AttackStepData.HitboxComponentKey when step.hitData != null:
                         BuildFoldoutCard("Hitbox Data", "hit_data", step.hitData.TrackColor, body =>
                         {
@@ -715,6 +733,92 @@ namespace CombatEditor.UI
             body.Add(addButton);
         }
 
+        private void BuildAudioCard(VisualElement body, AudioFrameData audio)
+        {
+            if (audio.entries == null) audio.entries = new List<AudioEntry>();
+
+            VisualElement itemList = new VisualElement();
+            body.Add(itemList);
+
+            for (int i = 0; i < audio.entries.Count; i++)
+            {
+                int idx = i;
+                AudioEntry entry = audio.entries[i];
+
+                BuildFoldoutCard($"Audio #{idx + 1}: {entry.label}", $"audio_entry_{idx}", entry.trackColor, inner =>
+                {
+                    AddTextField(inner, "Label", entry.label, value =>
+                    {
+                        RecordUndo("Edit Audio Label");
+                        entry.label = value;
+                        MarkDirty();
+                    });
+                    AddObjectField(inner, "Audio Clip", entry.clip, value =>
+                    {
+                        RecordUndo("Edit Audio Clip");
+                        entry.clip = value;
+                        MarkDirty();
+                    });
+                    AddIntField(inner, "Trigger Frame", entry.triggerFrame, value =>
+                    {
+                        RecordUndo("Edit Audio Frame");
+                        entry.triggerFrame = value;
+                        MarkDirty();
+                    });
+                    AddIntField(inner, "Duration", entry.duration, value =>
+                    {
+                        RecordUndo("Edit Audio Duration");
+                        entry.duration = value;
+                        MarkDirty();
+                    });
+                    AddEnumField(inner, "Channel", entry.channel, value =>
+                    {
+                        RecordUndo("Edit Audio Channel");
+                        entry.channel = (AudioChannel)value;
+                        MarkDirty();
+                    });
+                    AddFloatSlider(inner, "Volume", entry.volume, 0f, 1f, value =>
+                    {
+                        RecordUndo("Edit Audio Volume");
+                        entry.volume = value;
+                        MarkDirty();
+                    });
+                    AddFloatSlider(inner, "Pitch", entry.pitchVariation, 0.1f, 3f, value =>
+                    {
+                        RecordUndo("Edit Audio Pitch");
+                        entry.pitchVariation = value;
+                        MarkDirty();
+                    });
+                    AddColorField(inner, "Track Color", entry.trackColor, value =>
+                    {
+                        RecordUndo("Edit Audio Color");
+                        entry.trackColor = value;
+                        MarkDirty();
+                    });
+                }, () =>
+                {
+                    RecordUndo("Delete Audio Entry");
+                    audio.entries.RemoveAt(idx);
+                    MarkDirtyAndRebuild();
+                }, isSubCard: true, parent: itemList, onReorder: newIndex =>
+                {
+                    ReorderListItem(audio.entries, idx, newIndex, "Reorder Audio Entry");
+                }, reorderIndex: idx, reorderCount: audio.entries.Count);
+            }
+
+            Button addButton = new Button(() =>
+            {
+                RecordUndo("Add Audio Entry");
+                audio.entries.Add(new AudioEntry());
+                MarkDirtyAndRebuild();
+            })
+            {
+                text = "Add Audio Entry"
+            };
+            addButton.AddToClassList("component-add-entry-btn");
+            body.Add(addButton);
+        }
+
         private void BuildHitDataCard(VisualElement body, HitFrameData hitData)
         {
             if (hitData.hitboxes == null) hitData.hitboxes = new List<HitboxBase>();
@@ -934,6 +1038,26 @@ namespace CombatEditor.UI
                 hitbox.flashFrames = value;
                 MarkDirty();
             });
+
+            AddSeparator(body, "Hit Feedback (Override)");
+            AddObjectField(body, "Hit SFX", hitbox.hitSFX, value =>
+            {
+                RecordUndo("Edit Hit SFX");
+                hitbox.hitSFX = value;
+                MarkDirty();
+            });
+            AddObjectField(body, "Hit VFX Prefab", hitbox.hitVFXPrefab, value =>
+            {
+                RecordUndo("Edit Hit VFX Prefab");
+                hitbox.hitVFXPrefab = value;
+                MarkDirty();
+            });
+            AddVector2Field(body, "Hit VFX Offset", hitbox.hitVFXOffset, value =>
+            {
+                RecordUndo("Edit Hit VFX Offset");
+                hitbox.hitVFXOffset = value;
+                MarkDirty();
+            });
         }
 
         private void BuildGrabHitboxFields(VisualElement body, GrabHitbox hitbox)
@@ -1003,6 +1127,26 @@ namespace CombatEditor.UI
                 hitbox.flashFrames = value;
                 MarkDirty();
             });
+
+            AddSeparator(body, "Hit Feedback (Override)");
+            AddObjectField(body, "Hit SFX", hitbox.hitSFX, value =>
+            {
+                RecordUndo("Edit Grab Hit SFX");
+                hitbox.hitSFX = value;
+                MarkDirty();
+            });
+            AddObjectField(body, "Hit VFX Prefab", hitbox.hitVFXPrefab, value =>
+            {
+                RecordUndo("Edit Grab Hit VFX Prefab");
+                hitbox.hitVFXPrefab = value;
+                MarkDirty();
+            });
+            AddVector2Field(body, "Hit VFX Offset", hitbox.hitVFXOffset, value =>
+            {
+                RecordUndo("Edit Grab Hit VFX Offset");
+                hitbox.hitVFXOffset = value;
+                MarkDirty();
+            });
         }
 
         private void BuildProjectileHitboxFields(VisualElement body, ProjectileSpawnHitbox hitbox)
@@ -1061,6 +1205,17 @@ namespace CombatEditor.UI
                     });
                 }
                 else menu.AddDisabledItem(new GUIContent("VFX Frame Data (added)"));
+
+                if (step.audioData == null)
+                {
+                    menu.AddItem(new GUIContent("Audio Frame Data"), false, () =>
+                    {
+                        RecordUndo("Add Audio");
+                        step.audioData = new AudioFrameData();
+                        MarkDirtyAndRebuild();
+                    });
+                }
+                else menu.AddDisabledItem(new GUIContent("Audio Frame Data (added)"));
 
                 if (step.hitData == null)
                 {
@@ -1323,6 +1478,16 @@ namespace CombatEditor.UI
             FloatField field = new FloatField(label) { value = value, isDelayed = false };
             field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
             row.Add(field);
+            parent.Add(row);
+        }
+
+        private void AddFloatSlider(VisualElement parent, string label, float value, float min, float max, Action<float> onChange)
+        {
+            VisualElement row = new VisualElement();
+            row.AddToClassList("card-field-row");
+            Slider slider = new Slider(label, min, max) { value = value, showInputField = true };
+            slider.RegisterValueChangedCallback(evt => onChange(evt.newValue));
+            row.Add(slider);
             parent.Add(row);
         }
 

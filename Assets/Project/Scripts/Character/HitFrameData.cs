@@ -77,6 +77,12 @@ public class NormalHitbox : HitboxBase
 
     public Color flashColor = Color.red;
     public int flashFrames = 6;
+
+    // ── Hit Feedback ──
+    [Header("Hit Feedback")]
+    public AudioClip hitSFX;
+    public GameObject hitVFXPrefab;
+    public Vector2 hitVFXOffset;
 }
 
 // ─── Grab Hitbox ─────────────────────────────────────────
@@ -109,6 +115,12 @@ public class GrabHitbox : HitboxBase
     public Vector2 snapOffset = new Vector2(0.6f, 0f);
     public Color flashColor = Color.red;
     public int flashFrames = 6;
+
+    // ── Hit Feedback ──
+    [Header("Hit Feedback")]
+    public AudioClip hitSFX;
+    public GameObject hitVFXPrefab;
+    public Vector2 hitVFXOffset;
     public DamageImpactTier impactTier = DamageImpactTier.Low;
 
 }

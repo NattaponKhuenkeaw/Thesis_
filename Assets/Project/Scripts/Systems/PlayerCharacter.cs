@@ -55,6 +55,14 @@ public class PlayerCharacter : MonoBehaviour
     void Awake()
     {
         CacheSubSystems();
+
+        // Auto-attach hurtbox drawer to player body
+        var bodyCollider = GetComponent<Collider2D>();
+        if (bodyCollider != null && GetComponent<ColliderDebugDrawer>() == null)
+        {
+            var drawer = gameObject.AddComponent<ColliderDebugDrawer>();
+            drawer.debugColor = Color.green; // Green for player
+        }
     }
 
     void Start()
@@ -219,6 +227,7 @@ public class PlayerCharacter : MonoBehaviour
 
     private void NotifyHealthChanged()
     {
-        OnHealthChanged?.Invoke(currentHP, MaxHP);
+        if (OnHealthChanged != null)
+            OnHealthChanged(currentHP, MaxHP);
     }
 }

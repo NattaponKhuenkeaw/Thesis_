@@ -93,31 +93,35 @@ public class HitBoxController : MonoBehaviour
         worldAnchor = anchor;
     }
 
-
-   
     void Update()
     {
-        // Runtime visualization for Game View
-        if (hitboxCollider != null && hitboxCollider.enabled)
-        {
-            // 1. Auto-scale SpriteRenderer to match Collider size
-            if (sr != null)
-            {
-                sr.drawMode = SpriteDrawMode.Sliced;
-                sr.size = hitboxCollider.size;
-            }
+        bool isActive = CombatCore.TrainingDebugManager.IsActive;
+        bool hasCollider = hitboxCollider != null && hitboxCollider.enabled;
 
-            // 2. Beautiful outline using LineRenderer
-            if (lr != null)
-            {
-                DrawLineRenderer(lr);
-            }
-            else
-            {
+        // Toggle visibility based on debug mode and attack state
+        if (sr != null) sr.enabled = isActive && hasCollider;
+        if (lr != null) lr.enabled = isActive && hasCollider;
+
+        if (!isActive || !hasCollider) return;
+
+        // Runtime visualization for Game View
+        // 1. Auto-scale SpriteRenderer to match Collider size
+        if (sr != null)
+        {
+            sr.drawMode = SpriteDrawMode.Sliced;
+            sr.size = hitboxCollider.size;
+        }
+
+        // 2. Beautiful outline using LineRenderer
+        if (lr != null)
+        {
+            DrawLineRenderer(lr);
+        }
+        else
+        {
 #if UNITY_EDITOR
-                DrawHitboxRuntime();
+            DrawHitboxRuntime();
 #endif
-            }
         }
     }
 

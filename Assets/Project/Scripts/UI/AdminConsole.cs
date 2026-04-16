@@ -32,4 +32,12 @@ public class AdminConsole : MonoBehaviour
     {
         
     }
+
+    public void ToggleTrainingDebug()
+    {
+        if (CombatCore.TrainingDebugManager.Instance != null)
+        {
+            CombatCore.TrainingDebugManager.Instance.ToggleDebugMode();
+        }
+    }
 }

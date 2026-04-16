@@ -1,0 +1,780 @@
+fileFormatVersion: 2
+guid: 2b1bc383ffe0fa74a81687fa08794926
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -6603850193018989723
+    second: UltimateActivate1_5_0
+  - first:
+      213: 8901709104350575449
+    second: UltimateActivate1_5_1
+  - first:
+      213: -3103827085530728505
+    second: UltimateActivate1_5_2
+  - first:
+      213: 6181378786951494180
+    second: UltimateActivate1_5_3
+  - first:
+      213: -8217125417476834448
+    second: UltimateActivate1_5_4
+  - first:
+      213: -6181447137397970191
+    second: UltimateActivate1_5_5
+  - first:
+      213: -3921571200801337510
+    second: UltimateActivate1_5_6
+  - first:
+      213: 629590079092774403
+    second: UltimateActivate1_5_7
+  - first:
+      213: -3273417645492527324
+    second: UltimateActivate1_5_8
+  - first:
+      213: 1227494194626952146
+    second: UltimateActivate1_5_9
+  - first:
+      213: 6079642338119047398
+    second: UltimateActivate1_5_10
+  - first:
+      213: 36248795294103438
+    second: UltimateActivate1_5_11
+  - first:
+      213: 7315899841595767904
+    second: UltimateActivate1_5_12
+  - first:
+      213: 1758027153796808970
+    second: UltimateActivate1_5_13
+  - first:
+      213: 5010711257285707556
+    second: UltimateActivate1_5_14
+  - first:
+      213: -3300862089141650966
+    second: UltimateActivate1_5_15
+  - first:
+      213: 6890501703659949401
+    second: UltimateActivate1_5_16
+  - first:
+      213: -2738676119544347311
+    second: UltimateActivate1_5_17
+  - first:
+      213: -2234539777423722186
+    second: UltimateActivate1_5_18
+  - first:
+      213: -8380439760933279642
+    second: UltimateActivate1_5_19
+  - first:
+      213: -1079334080604941526
+    second: UltimateActivate1_5_20
+  - first:
+      213: 553008623085725583
+    second: UltimateActivate1_5_21
+  - first:
+      213: -7546251001229696120
+    second: UltimateActivate1_5_22
+  - first:
+      213: 5854098516941080638
+    second: UltimateActivate1_5_23
+  - first:
+      213: 3992693103607603952
+    second: UltimateActivate1_5_24
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 45
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: UltimateActivate1_5_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 151
+        width: 187
+        height: 89
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5635537fc396a54a0800000000000000
+      internalID: -6603850193018989723
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_1
+      rect:
+        serializedVersion: 2
+        x: 158
+        y: 198
+        width: 12
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 95b3da26449398b70800000000000000
+      internalID: 8901709104350575449
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_2
+      rect:
+        serializedVersion: 2
+        x: 170
+        y: 169
+        width: 35
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7c774b2e5bdfce4d0800000000000000
+      internalID: -3103827085530728505
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_3
+      rect:
+        serializedVersion: 2
+        x: 188
+        y: 206
+        width: 19
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 42af062a14ba8c550800000000000000
+      internalID: 6181378786951494180
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_4
+      rect:
+        serializedVersion: 2
+        x: 205
+        y: 172
+        width: 48
+        height: 68
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 07bb57018f7e6fd80800000000000000
+      internalID: -8217125417476834448
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_5
+      rect:
+        serializedVersion: 2
+        x: 205
+        y: 193
+        width: 9
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1fae9894496173aa0800000000000000
+      internalID: -6181447137397970191
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_6
+      rect:
+        serializedVersion: 2
+        x: 186
+        y: 156
+        width: 33
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a5f85de25c7c399c0800000000000000
+      internalID: -3921571200801337510
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_7
+      rect:
+        serializedVersion: 2
+        x: 204
+        y: 163
+        width: 24
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3065f6a57d0ccb800800000000000000
+      internalID: 629590079092774403
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_8
+      rect:
+        serializedVersion: 2
+        x: 231
+        y: 157
+        width: 14
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 42f1ce6aefb7292d0800000000000000
+      internalID: -3273417645492527324
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_9
+      rect:
+        serializedVersion: 2
+        x: 243
+        y: 171
+        width: 7
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2dbf79a677fe80110800000000000000
+      internalID: 1227494194626952146
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_10
+      rect:
+        serializedVersion: 2
+        x: 245
+        y: 165
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6e8d205ce7a3f5450800000000000000
+      internalID: 6079642338119047398
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_11
+      rect:
+        serializedVersion: 2
+        x: 89
+        y: 141
+        width: 25
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e877a075618c08000800000000000000
+      internalID: 36248795294103438
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_12
+      rect:
+        serializedVersion: 2
+        x: 109
+        y: 124
+        width: 104
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 06cf6a6052c478560800000000000000
+      internalID: 7315899841595767904
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_13
+      rect:
+        serializedVersion: 2
+        x: 115
+        y: 140
+        width: 98
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a01cc87c164c56810800000000000000
+      internalID: 1758027153796808970
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_14
+      rect:
+        serializedVersion: 2
+        x: 156
+        y: 129
+        width: 57
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 427c092375f998540800000000000000
+      internalID: 5010711257285707556
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_15
+      rect:
+        serializedVersion: 2
+        x: 158
+        y: 121
+        width: 56
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae9782c2b6bf032d0800000000000000
+      internalID: -3300862089141650966
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_16
+      rect:
+        serializedVersion: 2
+        x: 177
+        y: 157
+        width: 14
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 95d00e2cacaff9f50800000000000000
+      internalID: 6890501703659949401
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_17
+      rect:
+        serializedVersion: 2
+        x: 214
+        y: 137
+        width: 15
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 155c6b354944ef9d0800000000000000
+      internalID: -2738676119544347311
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_18
+      rect:
+        serializedVersion: 2
+        x: 243
+        y: 148
+        width: 11
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 639bd2a59e15df0e0800000000000000
+      internalID: -2234539777423722186
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_19
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 17
+        width: 186
+        height: 110
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 668230c5072b2bb80800000000000000
+      internalID: -8380439760933279642
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_20
+      rect:
+        serializedVersion: 2
+        x: 145
+        y: 107
+        width: 71
+        height: 39
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a23d19b4f5f6501f0800000000000000
+      internalID: -1079334080604941526
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_21
+      rect:
+        serializedVersion: 2
+        x: 184
+        y: 80
+        width: 41
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f87a0c8a96eaca700800000000000000
+      internalID: 553008623085725583
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_22
+      rect:
+        serializedVersion: 2
+        x: 215
+        y: 0
+        width: 40
+        height: 145
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 883a4c532b4564790800000000000000
+      internalID: -7546251001229696120
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_23
+      rect:
+        serializedVersion: 2
+        x: 188
+        y: 0
+        width: 25
+        height: 74
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e380a66b59fed3150800000000000000
+      internalID: 5854098516941080638
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: UltimateActivate1_5_24
+      rect:
+        serializedVersion: 2
+        x: 225
+        y: 51
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0f2eea93935e86730800000000000000
+      internalID: 3992693103607603952
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      UltimateActivate1_5_0: -6603850193018989723
+      UltimateActivate1_5_1: 8901709104350575449
+      UltimateActivate1_5_10: 6079642338119047398
+      UltimateActivate1_5_11: 36248795294103438
+      UltimateActivate1_5_12: 7315899841595767904
+      UltimateActivate1_5_13: 1758027153796808970
+      UltimateActivate1_5_14: 5010711257285707556
+      UltimateActivate1_5_15: -3300862089141650966
+      UltimateActivate1_5_16: 6890501703659949401
+      UltimateActivate1_5_17: -2738676119544347311
+      UltimateActivate1_5_18: -2234539777423722186
+      UltimateActivate1_5_19: -8380439760933279642
+      UltimateActivate1_5_2: -3103827085530728505
+      UltimateActivate1_5_20: -1079334080604941526
+      UltimateActivate1_5_21: 553008623085725583
+      UltimateActivate1_5_22: -7546251001229696120
+      UltimateActivate1_5_23: 5854098516941080638
+      UltimateActivate1_5_24: 3992693103607603952
+      UltimateActivate1_5_3: 6181378786951494180
+      UltimateActivate1_5_4: -8217125417476834448
+      UltimateActivate1_5_5: -6181447137397970191
+      UltimateActivate1_5_6: -3921571200801337510
+      UltimateActivate1_5_7: 629590079092774403
+      UltimateActivate1_5_8: -3273417645492527324
+      UltimateActivate1_5_9: 1227494194626952146
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

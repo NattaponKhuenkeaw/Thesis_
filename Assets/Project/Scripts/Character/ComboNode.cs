@@ -49,6 +49,17 @@ public class SkillAction : CombatAction
 public class UltimateAction : SkillAction
 {
     public override AttackCategory Category => AttackCategory.Ultimate;
+
+    [Header("Activation VFX")]
+    [Tooltip("VFX spawned when the background turns black during activation.")]
+    public GameObject activationVFXPrefab;
+    [Tooltip("Offset relative to the player's position (X is adjusted by facing).")]
+    public Vector3 activationVFXOffset;
+
+    [Header("Activation Audio")]
+    public AudioClip activationVoice;
+    public AudioClip activationSFX;
+    public float voiceDelay = 0.1f;
 }
 
 // =========================================================

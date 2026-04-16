@@ -27,8 +27,16 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     public CharacterPassiveController passiveController;
 
+    [Header("Audio & VFX")]
+    public VFXSpawner vfxSpawner;
+    public HitFeedbackResolver hitFeedbackResolver;
+
     [Header("Detection")]
     public LayerMask enemyLayerMask;
+
+    [Header("Air Combo")]
+    public float airAttackComboResetCooldown = 0.5f;
+    private float airAttackComboCooldownEndTime;
 
     private readonly Dictionary<AttackCategory, float> lastCategoryUseTime = new Dictionary<AttackCategory, float>();
     private readonly Dictionary<string, float> lastActionUseTime = new Dictionary<string, float>();
@@ -40,7 +48,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     private int comboDepth;
     private int currentAttackFrame;
     private int cachedStartupFrames;
-    private int hitstopFramesLeft;
+    // Removed hitstopFramesLeft as it is now handled by GameFreezeManager
     private int hitboxActiveCount;
     private ActionPhase currentPhase = ActionPhase.None;
     private bool isPlungeFalling;
@@ -53,7 +61,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public event System.Action OnComboFinished;
     public event System.Action OnGrabConnected;
 
-    public bool HasActiveHitstop => hitstopFramesLeft > 0;
+    public bool HasActiveHitstop => GameFreezeManager.Instance != null && GameFreezeManager.Instance.IsTimeFrozen;
     public CombatRuntimeState RuntimeState => passiveController != null ? passiveController.RuntimeState : null;
     public string CurrentActionName => currentActionName;
     public AttackCategory CurrentAttackCategory => currentAttackCategory;
@@ -111,11 +119,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     void FixedUpdate()
     {
-        if (hitstopFramesLeft > 0)
-        {
-            hitstopFramesLeft--;
-            HandleAnimatorHitstop();
-        }
+        // Physics logic handled here. 
+        // Hitstop is now handled globally via Time.timeScale in GameFreezeManager.
     }
 
     public void ExecuteStep(
@@ -139,11 +144,12 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         currentActionName = resolvedActionName ?? step.stepName;
         currentPhase = ActionPhase.Startup;
         currentAttackFrame = 0;
-        hitstopFramesLeft = 0;
         hitboxActiveCount = 0;
         cachedStartupFrames = step.startupFrames;
 
         hitEnemiesThisStep.Clear();
+        triggeredAudioFrames.Clear();
+        triggeredVFXFrames.Clear();
         currentGrabHitbox = null; // Clear stale grab state from previous step
         DisableHitbox(true);
 
@@ -181,9 +187,11 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     public void ProcessFrameFromState(int frame, ActionPhase phase)
     {
+        // No-op for animator hitstop as it's handled by TimeScale
+        // if (HasActiveHitstop)
+        //     HandleAnimatorHitstop();
         if (HasActiveHitstop)
         {
-            HandleAnimatorHitstop();
             return;
         }
 
@@ -209,6 +217,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         }
 
         ProcessMotion(frame);
+        ProcessAudio(frame);
+        ProcessVFX(frame);
 
         if (hitboxActiveCount > 0 && hitboxObject != null && hitboxObject.activeSelf)
         {
@@ -287,12 +297,16 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public void SetPlungeFalling(bool falling) => isPlungeFalling = falling;
     public void SetAirCombo(bool airCombo) => isAirCombo = airCombo;
 
+    public bool CanStartAirCombo() => Time.time >= airAttackComboCooldownEndTime;
+    public void TriggerAirComboCooldown() => airAttackComboCooldownEndTime = Time.time + airAttackComboResetCooldown;
+    public void ResetAirComboCooldown() => airAttackComboCooldownEndTime = 0f;
+
     public void ResetCombo()
     {
         bool wasAirCombo = isAirCombo && comboDepth > 0 && !isPlungeFalling;
         if (wasAirCombo && movement != null && !movement.IsGrounded())
         {
-            movement.TriggerAirComboCooldown();
+            TriggerAirComboCooldown();
         }
 
         comboDepth = 0;
@@ -300,7 +314,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         currentStepData = null;
         currentActionName = null;
         hitboxActiveCount = 0;
-        hitstopFramesLeft = 0;
+        // hitstop is now global
         currentAttackFrame = 0;
         isPlungeFalling = false;
         isAirCombo = false;
@@ -323,7 +337,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     {
         currentPhase = ActionPhase.None;
         currentAttackFrame = 0;
-        hitstopFramesLeft = 0;
+        // hitstop is now global
         hitboxActiveCount = 0;
         currentGrabHitbox = null;
         DisableHitbox(true);
@@ -339,10 +353,9 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     public void ApplyHitstop(int frames)
     {
-        if (frames > hitstopFramesLeft)
+        if (GameFreezeManager.Instance != null)
         {
-            hitstopFramesLeft = frames;
-            HandleAnimatorHitstop();
+            GameFreezeManager.Instance.FreezeFrame(frames);
         }
     }
 
@@ -651,20 +664,51 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         }
     }
 
+    // =========================================================
+    // Audio & VFX Frame Processing
+    // =========================================================
+
+    private HashSet<int> triggeredAudioFrames = new HashSet<int>();
+    private HashSet<int> triggeredVFXFrames = new HashSet<int>();
+
+    private void ProcessAudio(int frame)
+    {
+        if (currentStepData == null || currentStepData.audioData?.entries == null) return;
+        if (GameAudioManager.Instance == null) return;
+
+        foreach (var entry in currentStepData.audioData.entries)
+        {
+            if (frame == entry.triggerFrame && !triggeredAudioFrames.Contains(entry.triggerFrame))
+            {
+                triggeredAudioFrames.Add(entry.triggerFrame);
+                GameAudioManager.Instance.PlayTimelineAudio(entry);
+            }
+        }
+    }
+
+    private void ProcessVFX(int frame)
+    {
+        if (currentStepData == null || currentStepData.vfxData?.entries == null) return;
+        if (vfxSpawner == null) return;
+
+        foreach (var entry in currentStepData.vfxData.entries)
+        {
+            if (frame == entry.triggerFrame && !triggeredVFXFrames.Contains(entry.triggerFrame))
+            {
+                triggeredVFXFrames.Add(entry.triggerFrame);
+                vfxSpawner.SpawnVFX(entry);
+            }
+        }
+    }
+
     private void HandleAnimatorHitstop()
     {
-        if (cachedAnimator != null)
-        {
-            cachedAnimator.speed = hitstopFramesLeft > 0 ? 0f : 1f;
-        }
+        // No longer needed as Time.timeScale = 0 pauses all animators.
     }
 
     private void RestoreAnimatorSpeedIfNeeded()
     {
-        if (!HasActiveHitstop && cachedAnimator != null)
-        {
-            cachedAnimator.speed = 1f;
-        }
+        // No longer needed as Time.timeScale = 1 restores speed.
     }
 
     private void PerformHitboxOverlapCheck()

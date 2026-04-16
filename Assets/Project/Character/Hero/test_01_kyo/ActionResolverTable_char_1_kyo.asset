@@ -66,6 +66,8 @@ MonoBehaviour:
         rid: 1588255892939997284
     cooldown: 0
     energyCost: 0
+    activationVFXPrefab: {fileID: 4544568089247521385, guid: 3ca984f55ab8de6438bef6dea5e23621, type: 3}
+    activationVFXOffset: {x: 0, y: 2, z: 0}
   standaloneActions: []
   groundComboTree:
     treeName: Ground Combo
@@ -110,7 +112,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.7623353, y: 1.7257655}
         size: {x: 2.1600444, y: 1.2820966}
-        damageMultiplier: 1
+        damageMultiplier: 0.7
         impactTier: 1
         useDeterministicReaction: 1
         reactionKind: 2
@@ -230,21 +232,21 @@ MonoBehaviour:
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
         stepData:
-          startupFrames: 31
-          activeFrames: 30
-          recoveryFrames: 11
-          cancelWindowStartFrame: 68
+          startupFrames: 11
+          activeFrames: 32
+          recoveryFrames: 7
+          cancelWindowStartFrame: 47
           stepName: "100 Shiki \u2022 Oniyaki"
           animationClip: {fileID: 7400000, guid: cc96492e2a2ca1e44914f47b77cbd5da, type: 2}
           stallUntilGrounded: 0
           lockAirPosition: 1
           autoChainToNext: 0
           motionData:
-            rid: -2
+            rid: 1588255910640222318
           vfxData:
             rid: -2
           hitData:
-            rid: -2
+            rid: 1588255910640222319
           componentOrder:
           - motion
           - vfx
@@ -327,7 +329,7 @@ MonoBehaviour:
         impactFreezeFrames: 4
         holdFrames: 24
         recoveryFrames: 6
-        snapOffset: {x: 0.6, y: 0}
+        snapOffset: {x: 0.6, y: 0.5}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         impactTier: 0
@@ -339,14 +341,14 @@ MonoBehaviour:
           endFrame: 17
           taskType: 0
           easing: 15
-          position: {x: 2, y: 0, z: 0}
+          position: {x: 0.5, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
         - startFrame: 17
           endFrame: 26
           taskType: 0
           easing: 34
-          position: {x: 10, y: 0, z: 0}
+          position: {x: 7, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
         - startFrame: 26
@@ -398,7 +400,7 @@ MonoBehaviour:
           lockAirPosition: 1
           autoChainToNext: 0
           motionData:
-            rid: -2
+            rid: 1588255910640222299
           vfxData:
             rid: -2
           hitData:
@@ -430,7 +432,7 @@ MonoBehaviour:
         impactFreezeFrames: 0
         holdFrames: 100
         recoveryFrames: 6
-        snapOffset: {x: 0, y: 0}
+        snapOffset: {x: -0.5, y: -0.2}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         impactTier: 0
@@ -450,7 +452,7 @@ MonoBehaviour:
         reactionFrames: 50
         recoveryFrames: 20
         horizontalSpeed: 3
-        launchSpeed: 7
+        launchSpeed: 5
         landingBehavior: 1
         canAirJuggle: 1
         maxJuggleCount: 10
@@ -469,15 +471,219 @@ MonoBehaviour:
         startFrameOffset: 1
         activeFrames: 8
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 1.0630516, y: 1.1976384}
-        size: {x: 3.2232058, y: 1.5806677}
+        offset: {x: 1.662411, y: 1.3666884}
+        size: {x: 4.4219246, y: 2.4720218}
         damageMultiplier: 3
         impactTier: 2
         useDeterministicReaction: 1
         reactionKind: 1
-        impactFreezeFrames: 4
+        impactFreezeFrames: 20
+        reactionFrames: 40
+        recoveryFrames: 20
+        horizontalSpeed: 8
+        launchSpeed: 1
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+    - rid: 1588255910640222299
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - startFrame: 1
+          endFrame: 28
+          taskType: 0
+          easing: 34
+          position: {x: 1.5, y: 1.5, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 28
+          endFrame: 51
+          taskType: 0
+          easing: 34
+          position: {x: 2.5, y: 0.5, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 50
+          endFrame: 77
+          taskType: 0
+          easing: 34
+          position: {x: 3, y: -2, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 1588255910640222318
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - startFrame: 0
+          endFrame: 12
+          taskType: 0
+          easing: 34
+          position: {x: 0.5, y: 0.2, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 12
+          endFrame: 42
+          taskType: 0
+          easing: 1
+          position: {x: 0, y: 1.5, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 42
+          endFrame: 50
+          taskType: 0
+          easing: 1
+          position: {x: 0, y: -0.2, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 1588255910640222319
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 1588255910640222320
+        - rid: 1588255910640222321
+        - rid: 1588255910640222322
+        - rid: 1588255910640222323
+        - rid: 1588255910640222324
+        - rid: 1588255910640222325
+    - rid: 1588255910640222320
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 0
+        activeFrames: 5
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.9195292, y: 1.5627012}
+        size: {x: 1.4781201, y: 1.5171803}
+        damageMultiplier: 0.7
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 10
         reactionFrames: 15
         recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 3
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+    - rid: 1588255910640222321
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 5
+        activeFrames: 6
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 1.066226, y: 1.7311296}
+        size: {x: 1.8149769, y: 1.4845805}
+        damageMultiplier: 0.5
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 0
+        reactionFrames: 15
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 1
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+    - rid: 1588255910640222322
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 11
+        activeFrames: 7
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.41556025, y: 2.4943933}
+        size: {x: 1.6991863, y: 1.4373637}
+        damageMultiplier: 1.1
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 0
+        reactionFrames: 15
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 7
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 10
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+    - rid: 1588255910640222323
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 18
+        activeFrames: 6
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.116349936, y: 2.5917017}
+        size: {x: 2.8498783, y: 1.3496011}
+        damageMultiplier: 0.7
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 0
+        reactionFrames: 15
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 3
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+    - rid: 1588255910640222324
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 24
+        activeFrames: 6
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.21688676, y: 2.6520238}
+        size: {x: 2.3002768, y: 1.4702454}
+        damageMultiplier: 1
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 0
+        reactionFrames: 15
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 1
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+    - rid: 1588255910640222325
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 28
+        activeFrames: 4
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.0776701, y: 2.7475772}
+        size: {x: 4.3227234, y: 1.6667986}
+        damageMultiplier: 1.5
+        impactTier: 2
+        useDeterministicReaction: 1
+        reactionKind: 1
+        impactFreezeFrames: 30
+        reactionFrames: 50
+        recoveryFrames: 20
         horizontalSpeed: 3
         launchSpeed: 1
         landingBehavior: 1
@@ -883,7 +1089,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.28628784, y: 2.3803887}
         size: {x: 1.3284358, y: 2.0338614}
-        damageMultiplier: 1
+        damageMultiplier: 0.5
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0

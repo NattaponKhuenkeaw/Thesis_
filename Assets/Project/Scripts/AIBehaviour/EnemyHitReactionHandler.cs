@@ -45,6 +45,9 @@ public class EnemyHitReactionHandler : MonoBehaviour
     public bool IsInHitstun => currentState == EnemyReactionState.ImpactFreeze;
     public EnemyReactionState CurrentState => currentState;
     public int CurrentReactionOwnerId => currentReaction.reactionOwnerId;
+    public int CurrentReactionTotalFrames => currentReaction.TotalReactionFrames;
+    public int CurrentReactionProgressFrame => currentReactionFrame;
+    public bool IsGrabbed => currentReaction.reactionKind == EnemyReactionKind.Grab;
 
     void Awake()
     {

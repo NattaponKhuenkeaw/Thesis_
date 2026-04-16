@@ -128,6 +128,17 @@ public class HitBoxDamage : MonoBehaviour
 
         enemy.TakeHit(reactionData, attackerPosition);
 
+        // Hit Feedback (SFX + VFX)
+        if (playerCombat != null && playerCombat.hitFeedbackResolver != null)
+        {
+            HitboxBase activeHitbox = (HitboxBase)currentGrabHitbox ?? currentNormalHitbox;
+            DamageImpactTier tier = currentGrabHitbox != null
+                ? currentGrabHitbox.impactTier
+                : (currentNormalHitbox != null ? currentNormalHitbox.impactTier : DamageImpactTier.Low);
+            Vector2 hitPoint = enemy.transform.position;
+            playerCombat.hitFeedbackResolver.PlayHitFeedback(activeHitbox, tier, hitPoint, direction);
+        }
+
         if (CameraManager.instance != null)
         {
             CameraManager.instance.EnterCombat(enemy);
@@ -163,13 +174,27 @@ public class HitBoxDamage : MonoBehaviour
             hasTriggeredShakeThisActivation = true;
         }
 
+        // KOF-style: flash the background white on every Ultimate hit
+        if (sourceCategory == AttackCategory.Ultimate && UltimateFlashOverlay.Instance != null)
+        {
+            UltimateFlashOverlay.Instance.PlayHitFlash();
+        }
+
         if (playerCombat != null)
         {
             playerCombat.NotifyEnemyHit(enemy);
+            
+            // Log to Training Debug Stats
+            if (CombatCore.TrainingDebugStats.Instance != null)
+                CombatCore.TrainingDebugStats.Instance.RecordHit(enemy, currentDamage);
         }
         else
         {
             passiveController?.NotifyHitDealt(sourceCategory, sourceActionName, sourceStepData, enemy);
+            
+            // Log to Training Debug Stats even if from passive/AI hit
+            if (CombatCore.TrainingDebugStats.Instance != null)
+                CombatCore.TrainingDebugStats.Instance.RecordHit(enemy, currentDamage);
         }
 
         projectileOwner?.RegisterSuccessfulHit(enemy);
@@ -306,7 +331,10 @@ public class HitBoxDamage : MonoBehaviour
 
     private void TriggerHitStop(int frames)
     {
-        playerCombat?.ApplyHitstop(frames);
+        if (GameFreezeManager.Instance != null)
+        {
+            GameFreezeManager.Instance.FreezeFrame(frames);
+        }
 
         DamageImpactTier tier = DamageImpactTier.Low;
         if (currentGrabHitbox != null) tier = currentGrabHitbox.impactTier;

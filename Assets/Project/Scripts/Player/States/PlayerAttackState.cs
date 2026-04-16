@@ -411,6 +411,13 @@ public class PlayerAttackState : FrameDataPlayerState
             if (player.Combat != null && resolverTable != null)
             {
                 InputContext ctx = BuildInputContext();
+
+                // Air Combo Cooldown Check: Prevent starting a new air combo if cooldown is active
+                if (!ctx.isGrounded && player.Combat != null && !player.Combat.CanStartAirCombo())
+                {
+                    return;
+                }
+
                 AttackStepData step = resolver.ResolveInitial(ctx, resolverTable);
 
                 if (step == null && resolver.IsPlungeFalling)

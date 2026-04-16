@@ -98,6 +98,9 @@ public class PlayerSkillState : FrameDataPlayerState
             return;
         }
 
+        // Auto-chain check
+        if (TryAutoChain()) return;
+
         if (buffer.ConsumeAttack())
         {
             fsm.ChangeState(fsm.AttackState);
@@ -125,6 +128,10 @@ public class PlayerSkillState : FrameDataPlayerState
         {
             return;
         }
+
+        // Auto-chain has priority once higher-priority combat
+        // interrupts (Ultimate/Skill manual triggers) have had a chance.
+        if (TryAutoChain()) return;
 
         if (buffer.ConsumeAttack())
         {
@@ -223,6 +230,16 @@ public class PlayerSkillState : FrameDataPlayerState
         player.Combat.ExecuteStep(nextStep, resolver.TreeDepth, !ctx.isGrounded, AttackCategory.Skill, resolver.ActiveCombatAction?.actionName);
         RestartAction();
         return true;
+    }
+
+    private bool TryAutoChain()
+    {
+        if (player.Combat == null) return false;
+
+        var step = player.Combat.GetCurrentStepData();
+        if (step == null || !step.autoChainToNext) return false;
+
+        return TryResolveNextSkillStep();
     }
 
     private void TryStartCooldown()
