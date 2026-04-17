@@ -1,5 +1,11 @@
 using UnityEngine;
 
+public enum HitboxAnchorMode
+{
+    PlayerAttached,
+    Self
+}
+
 [RequireComponent(typeof(BoxCollider2D))]
 public class HitBoxController : MonoBehaviour
 {
@@ -11,6 +17,9 @@ public class HitBoxController : MonoBehaviour
     public BoxCollider2D hitboxCollider;
     public Transform attackAnchor;
     public Transform worldAnchor;
+
+    [Header("Anchoring")]
+    [SerializeField] private HitboxAnchorMode anchorMode = HitboxAnchorMode.PlayerAttached;
 
     private SpriteRenderer sr;
     private LineRenderer lr;
@@ -29,13 +38,13 @@ public class HitBoxController : MonoBehaviour
 
         sr = GetComponent<SpriteRenderer>();
         lr = GetComponent<LineRenderer>();
-        worldAnchor = worldAnchor != null ? worldAnchor : transform;
+        worldAnchor = worldAnchor != null ? worldAnchor : ResolveDefaultAnchor();
     }
 
     // =========================================================
     // Public Methods
     // =========================================================
-    public void ApplyHitbox(HitboxBase hitbox)
+    public void ApplyHitbox(HitboxBase hitbox, float overrideFacing = 0f)
     {
         if (hitbox == null)
             return;
@@ -59,18 +68,23 @@ public class HitBoxController : MonoBehaviour
             return;
         }
 
-        if (movement != null)
+        if (anchorMode == HitboxAnchorMode.Self)
         {
-            offset.x *= movement.FacingDirection;
+            float facingSign = Mathf.Approximately(overrideFacing, 0f) ? 1f : Mathf.Sign(overrideFacing);
+            Vector2 colliderOffset = offset;
+            colliderOffset.x *= facingSign;
+            hitboxCollider.offset = colliderOffset;
+            hitboxCollider.size = size;
         }
-
-        Transform root = movement != null
-            ? movement.transform
-            : worldAnchor != null ? worldAnchor : transform.parent != null ? transform.parent : transform;
-        transform.position = root.position + new Vector3(offset.x, offset.y, 0f);
-
-        hitboxCollider.offset = Vector2.zero; // Clean any residual offset from the prefab so sizing centers correctly
-        hitboxCollider.size = size;
+        else
+        {
+            // Player melee/grab hitboxes are authored as child-local geometry.
+            transform.localPosition = new Vector3(offset.x, offset.y, 0f);
+            transform.localRotation = Quaternion.identity;
+            hitboxCollider.offset = Vector2.zero;
+            hitboxCollider.size = size;
+            transform.localScale = Vector3.one;
+        }
 
         currentDebugColor = hitbox.debugColor;
 
@@ -91,22 +105,40 @@ public class HitBoxController : MonoBehaviour
     public void SetWorldAnchor(Transform anchor)
     {
         worldAnchor = anchor;
+        anchorMode = anchor == transform ? HitboxAnchorMode.Self : HitboxAnchorMode.PlayerAttached;
+    }
+
+    public void ConfigureAnchoring(HitboxAnchorMode mode, Transform anchor = null)
+    {
+        anchorMode = mode;
+        worldAnchor = anchor != null ? anchor : ResolveDefaultAnchor();
+
+        if (anchorMode == HitboxAnchorMode.PlayerAttached)
+        {
+            hitboxCollider.offset = Vector2.zero;
+        }
+        else
+        {
+            transform.localPosition = Vector3.zero;
+            transform.localRotation = Quaternion.identity;
+            transform.localScale = Vector3.one;
+        }
     }
 
     void Update()
     {
         bool isActive = CombatCore.TrainingDebugManager.IsActive;
         bool hasCollider = hitboxCollider != null && hitboxCollider.enabled;
+        bool showFill = isActive && hasCollider && anchorMode == HitboxAnchorMode.PlayerAttached;
 
         // Toggle visibility based on debug mode and attack state
-        if (sr != null) sr.enabled = isActive && hasCollider;
+        if (sr != null) sr.enabled = showFill;
         if (lr != null) lr.enabled = isActive && hasCollider;
 
         if (!isActive || !hasCollider) return;
 
         // Runtime visualization for Game View
-        // 1. Auto-scale SpriteRenderer to match Collider size
-        if (sr != null)
+        if (sr != null && sr.enabled)
         {
             sr.drawMode = SpriteDrawMode.Sliced;
             sr.size = hitboxCollider.size;
@@ -194,4 +226,29 @@ public class HitBoxController : MonoBehaviour
         Debug.DrawLine(p4, p1, color);
     }
 #endif
+
+    private Transform ResolveDefaultAnchor()
+    {
+        if (anchorMode == HitboxAnchorMode.Self)
+        {
+            return transform;
+        }
+
+        if (worldAnchor != null)
+        {
+            return worldAnchor;
+        }
+
+        if (transform.parent != null)
+        {
+            return transform.parent;
+        }
+
+        if (movement != null)
+        {
+            return movement.transform;
+        }
+
+        return transform;
+    }
 }

@@ -41,7 +41,7 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588255892939997282
-    cooldown: 7
+    cooldown: 0
     energyCost: 0
   - actionName: 
     context: 0
@@ -52,7 +52,7 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588255892939997283
-    cooldown: 7
+    cooldown: 0
     energyCost: 0
   ultimateActions:
   - actionName: 
@@ -66,8 +66,12 @@ MonoBehaviour:
         rid: 1588255892939997284
     cooldown: 0
     energyCost: 0
-    activationVFXPrefab: {fileID: 4544568089247521385, guid: 3ca984f55ab8de6438bef6dea5e23621, type: 3}
+    activationVFXType: 40
+    activationVFXPrefab: {fileID: 784361931337648594, guid: 4c0e5d975c6ec9341ac97977330a4775, type: 3}
     activationVFXOffset: {x: 0, y: 2, z: 0}
+    activationVoice: {fileID: 0}
+    activationSFX: {fileID: 8300000, guid: a17ff62340838794aa61bcc8b4602cb1, type: 3}
+    voiceDelay: 0.1
   standaloneActions: []
   groundComboTree:
     treeName: Ground Combo
@@ -115,11 +119,11 @@ MonoBehaviour:
         damageMultiplier: 0.7
         impactTier: 1
         useDeterministicReaction: 1
-        reactionKind: 2
+        reactionKind: 1
         impactFreezeFrames: 10
         reactionFrames: 40
         recoveryFrames: 20
-        horizontalSpeed: 3
+        horizontalSpeed: 4
         launchSpeed: 10
         landingBehavior: 1
         canAirJuggle: 1
@@ -128,6 +132,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
+        hitSFX: {fileID: 0}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
     - rid: 1588255892939997271
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -145,12 +153,15 @@ MonoBehaviour:
             rid: 1588255892939997272
           vfxData:
             rid: -2
+          audioData:
+            rid: 1588255929706479731
           hitData:
             rid: 1588255892939997273
           componentOrder:
           - motion
           - vfx
           - hitbox
+          - audio
         routes: []
         defaultNext:
           rid: -2
@@ -172,6 +183,13 @@ MonoBehaviour:
           taskType: 0
           easing: 16
           position: {x: 0, y: 1.5, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 49
+          endFrame: 81
+          taskType: 0
+          easing: 1
+          position: {x: 0, y: -1, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
     - rid: 1588255892939997273
@@ -204,6 +222,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
+        hitSFX: {fileID: 0}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
     - rid: 1588255892939997275
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -228,6 +250,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
+        hitSFX: {fileID: 0}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
     - rid: 1588255892939997282
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -244,13 +270,16 @@ MonoBehaviour:
           motionData:
             rid: 1588255910640222318
           vfxData:
-            rid: -2
+            rid: 1588255929706479781
+          audioData:
+            rid: 1588255929706479730
           hitData:
             rid: 1588255910640222319
           componentOrder:
           - motion
           - vfx
           - hitbox
+          - audio
         routes: []
         defaultNext:
           rid: -2
@@ -270,15 +299,18 @@ MonoBehaviour:
           lockAirPosition: 1
           autoChainToNext: 1
           motionData:
-            rid: -2
+            rid: 1588255929706479747
           vfxData:
             rid: -2
+          audioData:
+            rid: 1588255929706479744
           hitData:
-            rid: -2
+            rid: 1588255929706479745
           componentOrder:
           - motion
           - vfx
           - hitbox
+          - audio
         routes: []
         defaultNext:
           rid: -2
@@ -300,13 +332,16 @@ MonoBehaviour:
           motionData:
             rid: 1588255892939997295
           vfxData:
-            rid: -2
+            rid: 1588255929706479806
+          audioData:
+            rid: 1588255929706479712
           hitData:
             rid: 1588255892939997285
           componentOrder:
           - motion
           - vfx
           - hitbox
+          - audio
         routes: []
         defaultNext:
           rid: -2
@@ -332,6 +367,10 @@ MonoBehaviour:
         snapOffset: {x: 0.6, y: 0.5}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
+        hitSFX: {fileID: 0}
+        hitVFXType: 100
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
         impactTier: 0
     - rid: 1588255892939997295
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
@@ -374,13 +413,16 @@ MonoBehaviour:
           motionData:
             rid: -2
           vfxData:
-            rid: -2
+            rid: 1588255929706479795
+          audioData:
+            rid: 1588255929706479721
           hitData:
             rid: 1588255892939997353
           componentOrder:
           - motion
           - vfx
           - hitbox
+          - audio
         routes: []
         defaultNext:
           rid: 1588255892939997339
@@ -396,19 +438,22 @@ MonoBehaviour:
           cancelWindowStartFrame: 62
           stepName: R.E.D Kick
           animationClip: {fileID: 7400000, guid: a36de9711e8cd9a46a70df996e055f29, type: 2}
-          stallUntilGrounded: 1
+          stallUntilGrounded: 0
           lockAirPosition: 1
           autoChainToNext: 0
           motionData:
             rid: 1588255910640222299
           vfxData:
             rid: -2
+          audioData:
+            rid: 1588255929706479775
           hitData:
             rid: 1588255892939997369
           componentOrder:
           - motion
           - vfx
           - hitbox
+          - audio
         routes: []
         defaultNext:
           rid: -2
@@ -435,6 +480,10 @@ MonoBehaviour:
         snapOffset: {x: -0.5, y: -0.2}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
+        hitSFX: {fileID: 0}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
         impactTier: 0
     - rid: 1588255892939997355
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
@@ -451,8 +500,8 @@ MonoBehaviour:
         impactFreezeFrames: 20
         reactionFrames: 50
         recoveryFrames: 20
-        horizontalSpeed: 3
-        launchSpeed: 5
+        horizontalSpeed: 7
+        launchSpeed: 4
         landingBehavior: 1
         canAirJuggle: 1
         maxJuggleCount: 10
@@ -460,6 +509,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
+        hitSFX: {fileID: 8300000, guid: bad3b04a9eb798c418e84527dfd6b260, type: 3}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
     - rid: 1588255892939997369
       type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -474,7 +527,7 @@ MonoBehaviour:
         offset: {x: 1.662411, y: 1.3666884}
         size: {x: 4.4219246, y: 2.4720218}
         damageMultiplier: 3
-        impactTier: 2
+        impactTier: 3
         useDeterministicReaction: 1
         reactionKind: 1
         impactFreezeFrames: 20
@@ -489,6 +542,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
+        hitSFX: {fileID: 0}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
     - rid: 1588255910640222299
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -561,7 +618,7 @@ MonoBehaviour:
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 2
-        impactFreezeFrames: 10
+        impactFreezeFrames: 4
         reactionFrames: 15
         recoveryFrames: 9
         horizontalSpeed: 3
@@ -573,6 +630,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
+        hitSFX: {fileID: 0}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
     - rid: 1588255910640222321
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -585,7 +646,7 @@ MonoBehaviour:
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 2
-        impactFreezeFrames: 0
+        impactFreezeFrames: 4
         reactionFrames: 15
         recoveryFrames: 9
         horizontalSpeed: 3
@@ -597,6 +658,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
+        hitSFX: {fileID: 8300000, guid: bad3b04a9eb798c418e84527dfd6b260, type: 3}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
     - rid: 1588255910640222322
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -621,6 +686,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
+        hitSFX: {fileID: 8300000, guid: bad3b04a9eb798c418e84527dfd6b260, type: 3}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
     - rid: 1588255910640222323
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -645,6 +714,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
+        hitSFX: {fileID: 8300000, guid: bad3b04a9eb798c418e84527dfd6b260, type: 3}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
     - rid: 1588255910640222324
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -669,6 +742,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
+        hitSFX: {fileID: 8300000, guid: bad3b04a9eb798c418e84527dfd6b260, type: 3}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
     - rid: 1588255910640222325
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -681,7 +758,7 @@ MonoBehaviour:
         impactTier: 2
         useDeterministicReaction: 1
         reactionKind: 1
-        impactFreezeFrames: 30
+        impactFreezeFrames: 10
         reactionFrames: 50
         recoveryFrames: 20
         horizontalSpeed: 3
@@ -693,6 +770,242 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
+        hitSFX: {fileID: 8300000, guid: bad3b04a9eb798c418e84527dfd6b260, type: 3}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+    - rid: 1588255929706479712
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: Dashing
+          clip: {fileID: 8300000, guid: 593a0d385b8e842458eec6a9c0b82630, type: 3}
+          triggerFrame: 3
+          duration: 10
+          channel: 1
+          volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: c447de956826bf749985ff02ed393875, type: 3}
+          triggerFrame: 1
+          duration: 5
+          channel: 3
+          volume: 0.8
+          pitchVariation: 1.025
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 1588255929706479721
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: e674087b6c6473046800e12f19dbc2c3, type: 3}
+          triggerFrame: 68
+          duration: 8
+          channel: 3
+          volume: 1
+          pitchVariation: 0.95
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: 909e361ac0b0fae4daa80f9db36948df, type: 3}
+          triggerFrame: 1
+          duration: 14
+          channel: 3
+          volume: 0.5
+          pitchVariation: 0.85
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 1588255929706479730
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: e2db392aec607704d841a17fd9d613bb, type: 3}
+          triggerFrame: 6
+          duration: 37
+          channel: 1
+          volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 1588255929706479731
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: a9fb943645ae73145b18a47e03c048ea, type: 3}
+          triggerFrame: 14
+          duration: 4
+          channel: 1
+          volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: a9fb943645ae73145b18a47e03c048ea, type: 3}
+          triggerFrame: 39
+          duration: 4
+          channel: 1
+          volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 1588255929706479738
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: 593a0d385b8e842458eec6a9c0b82630, type: 3}
+          triggerFrame: 1
+          duration: 4
+          channel: 1
+          volume: 0.35
+          pitchVariation: 1.5
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 1588255929706479739
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: 593a0d385b8e842458eec6a9c0b82630, type: 3}
+          triggerFrame: 5
+          duration: 4
+          channel: 1
+          volume: 0.35
+          pitchVariation: 1.35
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: 593a0d385b8e842458eec6a9c0b82630, type: 3}
+          triggerFrame: 16
+          duration: 4
+          channel: 1
+          volume: 0.35
+          pitchVariation: 1.1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 1588255929706479744
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: 11ffd8b0e2c923c4981911da30c11c84, type: 3}
+          triggerFrame: 1
+          duration: 15
+          channel: 1
+          volume: 0.7
+          pitchVariation: 0.95
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 1588255929706479745
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 1588255929706479746
+    - rid: 1588255929706479746
+      type: {class: ProjectileSpawnHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 1
+        activeFrames: 3
+        debugColor: {r: 0.42, g: 0.81, b: 1, a: 1}
+        projectileData: {fileID: 11400000, guid: 6b1d6a7d20195c940a7249e106a8cc1e, type: 2}
+        overrideSpawnOffset: 0
+        spawnOffset: {x: 0, y: 0}
+    - rid: 1588255929706479747
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - startFrame: 1
+          endFrame: 15
+          taskType: 0
+          easing: 34
+          position: {x: 0.7, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 1588255929706479775
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: 593a0d385b8e842458eec6a9c0b82630, type: 3}
+          triggerFrame: 1
+          duration: 15
+          channel: 1
+          volume: 1
+          pitchVariation: 1.5
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 1588255929706479781
+      type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: VFX
+          vfxType: 61
+          vfxPrefab: {fileID: 784361931337648594, guid: 4c0e5d975c6ec9341ac97977330a4775, type: 3}
+          triggerFrame: 10
+          duration: 33
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 10
+            position: {x: 0.5, y: -0.2, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          - frame: 22
+            position: {x: 0.69, y: 1.56, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+        - label: VFX
+          vfxType: 60
+          vfxPrefab: {fileID: 784361931337648594, guid: 4c0e5d975c6ec9341ac97977330a4775, type: 3}
+          triggerFrame: 29
+          duration: 17
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 29
+            position: {x: 0, y: 1.91, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          - frame: 41
+            position: {x: 0, y: 2.89, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+    - rid: 1588255929706479795
+      type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: VFX
+          vfxType: 41
+          vfxPrefab: {fileID: 784361931337648594, guid: 4c0e5d975c6ec9341ac97977330a4775, type: 3}
+          triggerFrame: 59
+          duration: 25
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 51
+            position: {x: 1, y: 1.5, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          - frame: 0
+            position: {x: 0, y: 0, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+        - label: Dust Land
+          vfxType: 31
+          vfxPrefab: {fileID: 784361931337648594, guid: 4c0e5d975c6ec9341ac97977330a4775, type: 3}
+          triggerFrame: 1
+          duration: 10
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 1
+            position: {x: 1, y: -1.5, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+    - rid: 1588255929706479806
+      type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: Dust Dash
+          vfxType: 30
+          vfxPrefab: {fileID: 0}
+          triggerFrame: 9
+          duration: 4
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 9
+            position: {x: 0.5, y: -1.5, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
     - rid: 3251577240928125086
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -709,6 +1022,8 @@ MonoBehaviour:
           motionData:
             rid: 3251577240928125088
           vfxData:
+            rid: -2
+          audioData:
             rid: -2
           hitData:
             rid: 3251577240928125089
@@ -737,6 +1052,8 @@ MonoBehaviour:
           motionData:
             rid: 3251577240928125091
           vfxData:
+            rid: -2
+          audioData:
             rid: -2
           hitData:
             rid: 3251577240928125092
@@ -781,6 +1098,8 @@ MonoBehaviour:
           motionData:
             rid: 3251577240928125094
           vfxData:
+            rid: -2
+          audioData:
             rid: -2
           hitData:
             rid: 3251577240928125095
@@ -841,6 +1160,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 15
+        hitSFX: {fileID: 0}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
     - rid: 3251577240928125094
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -889,6 +1212,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 15
+        hitSFX: {fileID: 0}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
     - rid: 3251577240928125097
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -913,6 +1240,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 15
+        hitSFX: {fileID: 0}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
     - rid: 3251577240928125098
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -937,6 +1268,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 15
+        hitSFX: {fileID: 0}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
     - rid: 3251577240928125099
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -961,6 +1296,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 15
+        hitSFX: {fileID: 0}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
     - rid: 3251577252092051566
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -978,12 +1317,15 @@ MonoBehaviour:
             rid: 3251577252092051575
           vfxData:
             rid: -2
+          audioData:
+            rid: 1588255929706479738
           hitData:
             rid: 3251577252092051569
           componentOrder:
           - motion
           - vfx
           - hitbox
+          - audio
         routes: []
         defaultNext:
           rid: 3251577252092051567
@@ -1006,12 +1348,15 @@ MonoBehaviour:
             rid: 3251577252092051573
           vfxData:
             rid: -2
+          audioData:
+            rid: 1588255929706479739
           hitData:
             rid: 3251577252092051576
           componentOrder:
           - motion
           - vfx
           - hitbox
+          - audio
         routes: []
         defaultNext:
           rid: -2
@@ -1046,6 +1391,10 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
+        hitSFX: {fileID: 0}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
     - rid: 3251577252092051573
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -1105,3 +1454,7 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
+        hitSFX: {fileID: 0}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}

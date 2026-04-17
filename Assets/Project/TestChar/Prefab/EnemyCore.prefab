@@ -775,7 +775,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: -829059909
-  m_SortingOrder: 0
+  m_SortingOrder: 9999
   m_TargetDisplay: 0
 --- !u!114 &2279487257066643014
 MonoBehaviour:
@@ -1695,6 +1695,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6741666485858511415, guid: 45817df1e6e49404d9b40ca929b09242, type: 3}
+      propertyPath: m_SortingOrder
+      value: 9999
+      objectReference: {fileID: 0}
+    - target: {fileID: 6741666485858511415, guid: 45817df1e6e49404d9b40ca929b09242, type: 3}
       propertyPath: m_SortingLayerID
       value: -829059909
       objectReference: {fileID: 0}
@@ -1752,5 +1756,5 @@ MonoBehaviour:
   hideCanvasOnDeath: 1
   basicComboScale: 1
   skillScale: 1.4
-  ultimateScale: 2
+  ultimateScale: 2.3
   punchScaleOvershoot: 1.3

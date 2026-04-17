@@ -1,8 +1,19 @@
 using UnityEngine;
 using CombatCore;
+using Project.Combat;
 
 public class ProjectileRuntime : MonoBehaviour
 {
+    private enum ProjectileRuntimeState
+    {
+        Spawning,
+        Traveling,
+        ContactFreeze,
+        BetweenHits,
+        Expired
+    }
+
+    private ProjectileManager manager;
     private ProjectileSpawnContext spawnContext;
     private ProjectileData projectileData;
     private HitBoxController hitBoxController;
@@ -10,57 +21,116 @@ public class ProjectileRuntime : MonoBehaviour
     private BoxCollider2D triggerCollider;
     private Rigidbody2D rb;
 
+    private ProjectileRuntimeState runtimeState = ProjectileRuntimeState.Spawning;
     private Vector2 currentDirection = Vector2.right;
     private float lifeTimer;
     private float logicTimeCounter;
     private int currentImpactFrame;
     private int activeHitboxCount;
-    private bool isImpacting;
+    private int betweenHitsFramesRemaining;
     private EnemyController pendingEnemy;
+    private EnemyController trackedEnemy;
     private bool destroyQueued;
 
+    public ProjectileData ProjectileData => projectileData;
     public Vector2 CurrentDirection => currentDirection.sqrMagnitude > 0.001f ? currentDirection.normalized : Vector2.right;
     public Transform AttackerTransform => spawnContext.casterTransform;
-    public Vector2 AttackerPosition => AttackerTransform != null ? AttackerTransform.position : transform.position;
+    public Vector2 AttackerPosition => transform.position;
 
-    public static ProjectileRuntime Spawn(ProjectileSpawnContext context)
+    public void Initialize(ProjectileManager manager, ProjectileSpawnContext context)
     {
-        GameObject projectileObject;
-        if (context.projectileData != null && context.projectileData.projectilePrefab != null)
-        {
-            projectileObject = Instantiate(
-                context.projectileData.projectilePrefab,
-                context.origin,
-                Quaternion.identity,
-                context.projectileParent);
-        }
-        else
-        {
-            projectileObject = new GameObject(context.projectileData != null ? context.projectileData.name : "Projectile");
-            projectileObject.transform.position = context.origin;
-            if (context.projectileParent != null)
-            {
-                projectileObject.transform.SetParent(context.projectileParent);
-            }
-        }
-
-        ProjectileRuntime runtime = projectileObject.GetComponent<ProjectileRuntime>();
-        if (runtime == null)
-        {
-            runtime = projectileObject.AddComponent<ProjectileRuntime>();
-        }
-
-        runtime.Initialize(context);
-        return runtime;
-    }
-
-    public void Initialize(ProjectileSpawnContext context)
-    {
+        this.manager = manager;
         spawnContext = context;
         projectileData = context.projectileData;
+        runtimeState = ProjectileRuntimeState.Spawning;
+        destroyQueued = false;
+        trackedEnemy = null;
+        pendingEnemy = null;
+        activeHitboxCount = 0;
+        betweenHitsFramesRemaining = 0;
+        currentImpactFrame = 0;
+        logicTimeCounter = 0f;
         lifeTimer = projectileData != null ? projectileData.lifetime : 0f;
         currentDirection = context.direction.sqrMagnitude > 0.001f ? context.direction.normalized : Vector2.right;
 
+        EnsurePhysicsComponents();
+        EnsureCombatComponents();
+        EnsureDebugDrawer();
+
+        transform.position = context.origin;
+        ApplyFacingVisual();
+        ConfigureTravelCollider();
+        EnterState(ProjectileRuntimeState.Traveling);
+    }
+
+    void Update()
+    {
+        if (destroyQueued)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        if (runtimeState == ProjectileRuntimeState.Expired)
+        {
+            return;
+        }
+
+        UpdateLifetime();
+
+        if (ShouldTravel())
+        {
+            UpdateTravel();
+        }
+    }
+
+    void FixedUpdate()
+    {
+        if (runtimeState == ProjectileRuntimeState.Expired)
+        {
+            return;
+        }
+
+        switch (runtimeState)
+        {
+            case ProjectileRuntimeState.ContactFreeze:
+                ProcessImpactFrames();
+                break;
+
+            case ProjectileRuntimeState.BetweenHits:
+                ProcessBetweenHits();
+                break;
+        }
+    }
+
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        TryStartContact(other);
+    }
+
+    void OnTriggerStay2D(Collider2D other)
+    {
+        TryStartContact(other);
+    }
+
+    void OnDestroy()
+    {
+        manager?.UnregisterProjectile(this);
+    }
+
+    public void RegisterSuccessfulHit(EnemyController enemy)
+    {
+        if (spawnContext.remainingHits <= 0)
+        {
+            return;
+        }
+
+        trackedEnemy = enemy != null ? enemy : trackedEnemy;
+        spawnContext.remainingHits--;
+    }
+
+    private void EnsurePhysicsComponents()
+    {
         rb = GetComponent<Rigidbody2D>();
         if (rb == null)
         {
@@ -78,9 +148,11 @@ public class ProjectileRuntime : MonoBehaviour
         }
 
         triggerCollider.isTrigger = true;
-        triggerCollider.size = projectileData != null ? projectileData.travelColliderSize : Vector2.one * 0.5f;
-        triggerCollider.offset = Vector2.zero;
+        triggerCollider.enabled = true;
+    }
 
+    private void EnsureCombatComponents()
+    {
         hitBoxController = GetComponent<HitBoxController>();
         if (hitBoxController == null)
         {
@@ -88,7 +160,7 @@ public class ProjectileRuntime : MonoBehaviour
         }
 
         hitBoxController.hitboxCollider = triggerCollider;
-        hitBoxController.SetWorldAnchor(transform);
+        hitBoxController.ConfigureAnchoring(HitboxAnchorMode.Self, transform);
 
         hitBoxDamage = GetComponent<HitBoxDamage>();
         if (hitBoxDamage == null)
@@ -98,78 +170,56 @@ public class ProjectileRuntime : MonoBehaviour
 
         hitBoxDamage.enabled = false;
         hitBoxDamage.SetProjectileOwner(this);
+    }
 
-        // Auto-attach hurtbox drawer for debug visualization
+    private void EnsureDebugDrawer()
+    {
         if (triggerCollider != null && GetComponent<ColliderDebugDrawer>() == null)
         {
-            var drawer = gameObject.AddComponent<ColliderDebugDrawer>();
-            drawer.debugColor = Color.cyan; // Cyan for projectiles
+            ColliderDebugDrawer drawer = gameObject.AddComponent<ColliderDebugDrawer>();
+            drawer.debugColor = Color.cyan;
         }
     }
 
-    void Update()
+    private void UpdateLifetime()
     {
-        if (destroyQueued)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        if (!isImpacting)
-        {
-            UpdateTravel();
-        }
-
-        if (projectileData != null && projectileData.lifetime > 0f)
-        {
-            lifeTimer -= Time.deltaTime;
-            if (lifeTimer <= 0f && projectileData.destroyOnLifetimeExpire)
-            {
-                destroyQueued = true;
-            }
-        }
-    }
-
-    void FixedUpdate()
-    {
-        if (isImpacting)
-        {
-            ProcessImpactFrames();
-        }
-    }
-
-    void OnTriggerEnter2D(Collider2D other)
-    {
-        if (isImpacting)
+        if (projectileData == null || projectileData.lifetime <= 0f)
         {
             return;
         }
 
-        EnemyController enemy = other.GetComponentInParent<EnemyController>();
-        if (enemy != null && enemy.IsAlive)
+        lifeTimer -= Time.deltaTime;
+        if (lifeTimer <= 0f && projectileData.destroyOnLifetimeExpire)
         {
-            StartImpact(enemy);
+            EnterState(ProjectileRuntimeState.Expired);
         }
     }
 
-    public void RegisterSuccessfulHit(EnemyController enemy)
+    private bool ShouldTravel()
     {
-        if (spawnContext.remainingHits <= 0)
+        if (runtimeState == ProjectileRuntimeState.Traveling)
         {
-            return;
+            return true;
         }
 
-        spawnContext.remainingHits--;
-        if (spawnContext.remainingHits <= 0 && projectileData != null && projectileData.destroyWhenHitsExhausted)
-        {
-            destroyQueued = true;
-        }
+        return runtimeState == ProjectileRuntimeState.BetweenHits
+            && projectileData != null
+            && !projectileData.stopOnImpact;
     }
 
     private void UpdateTravel()
     {
         if (projectileData == null)
         {
+            return;
+        }
+
+        if (projectileData.anchorToCaster && spawnContext.casterTransform != null)
+        {
+            Vector2 resolvedOffset = spawnContext.resolvedSpawnOffset;
+            resolvedOffset.x *= GetFacingSign();
+            transform.position = (Vector2)spawnContext.casterTransform.position + resolvedOffset;
+            ApplyFacingVisual();
             return;
         }
 
@@ -187,28 +237,50 @@ public class ProjectileRuntime : MonoBehaviour
         }
 
         transform.position += (Vector3)(CurrentDirection * projectileData.speed * Time.deltaTime);
+        ApplyFacingVisual();
     }
 
-    private void StartImpact(EnemyController enemy)
+    private void TryStartContact(Collider2D other)
     {
+        if (runtimeState != ProjectileRuntimeState.Traveling || spawnContext.remainingHits <= 0)
+        {
+            return;
+        }
+
+        EnemyController enemy = other.GetComponentInParent<EnemyController>();
+        if (enemy == null || !enemy.IsAlive)
+        {
+            return;
+        }
+
+        BeginContact(enemy);
+    }
+
+    private void BeginContact(EnemyController enemy)
+    {
+        if (projectileData == null
+            || projectileData.impactHitData == null
+            || projectileData.impactHitData.hitboxes == null
+            || projectileData.impactHitData.hitboxes.Count == 0)
+        {
+            EnterState(ProjectileRuntimeState.Expired);
+            return;
+        }
+
+        trackedEnemy = enemy;
         pendingEnemy = enemy;
-        isImpacting = true;
         logicTimeCounter = 0f;
         currentImpactFrame = 0;
         activeHitboxCount = 0;
-        hitBoxDamage.enabled = true;
-
-        if (projectileData == null || projectileData.impactHitData == null || projectileData.impactHitData.hitboxes.Count == 0)
-        {
-            destroyQueued = true;
-        }
+        hitBoxDamage.ResetActivationState();
+        EnterState(ProjectileRuntimeState.ContactFreeze);
     }
 
     private void ProcessImpactFrames()
     {
         if (projectileData == null || projectileData.impactHitData == null)
         {
-            destroyQueued = true;
+            FinalizeContactFreeze();
             return;
         }
 
@@ -243,22 +315,49 @@ public class ProjectileRuntime : MonoBehaviour
 
         if (activeHitboxCount > 0)
         {
-            PerformOverlapCheck();
+            PerformImpactOverlapCheck();
         }
 
-        int maxFrame = GetImpactMaxFrame();
-        if (currentImpactFrame > maxFrame && activeHitboxCount <= 0)
+        if (currentImpactFrame > GetImpactMaxFrame() && activeHitboxCount <= 0)
         {
-            destroyQueued = true;
+            FinalizeContactFreeze();
         }
+    }
+
+    private void ProcessBetweenHits()
+    {
+        if (betweenHitsFramesRemaining > 0)
+        {
+            betweenHitsFramesRemaining--;
+            return;
+        }
+
+        if (spawnContext.remainingHits <= 0)
+        {
+            EnterState(projectileData != null && projectileData.destroyWhenHitsExhausted
+                ? ProjectileRuntimeState.Expired
+                : ProjectileRuntimeState.Traveling);
+            return;
+        }
+
+        EnemyController nextEnemy = TryFindEnemyInTravelCollider(trackedEnemy);
+        if (nextEnemy != null)
+        {
+            BeginContact(nextEnemy);
+            return;
+        }
+
+        EnterState(ProjectileRuntimeState.Traveling);
     }
 
     private void ActivateImpactHitbox(HitboxBase hitbox)
     {
+        float facing = GetFacingSign();
+
         switch (hitbox)
         {
             case NormalHitbox normalHitbox:
-                hitBoxController.ApplyHitbox(normalHitbox);
+                hitBoxController.ApplyHitbox(normalHitbox, facing);
                 hitBoxDamage.SetHitData(
                     spawnContext.damage * normalHitbox.damageMultiplier,
                     false,
@@ -274,7 +373,7 @@ public class ProjectileRuntime : MonoBehaviour
                 break;
 
             case GrabHitbox grabHitbox:
-                hitBoxController.ApplyHitbox(grabHitbox);
+                hitBoxController.ApplyHitbox(grabHitbox, facing);
                 hitBoxDamage.SetGrabData(
                     spawnContext.damage,
                     grabHitbox,
@@ -298,6 +397,7 @@ public class ProjectileRuntime : MonoBehaviour
     private void EnableImpactHitbox()
     {
         activeHitboxCount++;
+        hitBoxDamage.enabled = true;
         triggerCollider.enabled = true;
     }
 
@@ -306,26 +406,86 @@ public class ProjectileRuntime : MonoBehaviour
         activeHitboxCount = Mathf.Max(0, activeHitboxCount - 1);
         if (activeHitboxCount == 0)
         {
-            triggerCollider.enabled = true;
+            hitBoxDamage.enabled = false;
         }
     }
 
-    private void PerformOverlapCheck()
+    private void FinalizeContactFreeze()
+    {
+        activeHitboxCount = 0;
+        pendingEnemy = null;
+        hitBoxDamage.enabled = false;
+
+        if (spawnContext.remainingHits <= 0 && projectileData != null && projectileData.destroyWhenHitsExhausted)
+        {
+            EnterState(ProjectileRuntimeState.Expired);
+            return;
+        }
+
+        EnterState(ProjectileRuntimeState.BetweenHits);
+    }
+
+    private void PerformImpactOverlapCheck()
+    {
+        Collider2D[] results = GetOverlapResults();
+        for (int i = 0; i < results.Length; i++)
+        {
+            EnemyController enemy = results[i].GetComponentInParent<EnemyController>();
+            if (enemy != null && enemy.IsAlive)
+            {
+                trackedEnemy = enemy;
+                hitBoxDamage.ProcessHit(enemy);
+            }
+        }
+    }
+
+    private Collider2D[] GetOverlapResults()
     {
         Vector2 worldPos = triggerCollider.transform.TransformPoint(triggerCollider.offset);
-        Vector2 size = triggerCollider.size;
         float angle = triggerCollider.transform.eulerAngles.z;
         LayerMask enemyLayers = projectileData != null ? projectileData.enemyLayerMask : Physics2D.DefaultRaycastLayers;
-        Collider2D[] results = Physics2D.OverlapBoxAll(worldPos, size, angle, enemyLayers);
+        return Physics2D.OverlapBoxAll(worldPos, triggerCollider.size, angle, enemyLayers);
+    }
+
+    private EnemyController TryFindEnemyInTravelCollider(EnemyController preferredEnemy = null)
+    {
+        Collider2D[] results = GetOverlapResults();
+
+        if (preferredEnemy != null)
+        {
+            for (int i = 0; i < results.Length; i++)
+            {
+                EnemyController enemy = results[i].GetComponentInParent<EnemyController>();
+                if (enemy == preferredEnemy && enemy.IsAlive)
+                {
+                    return enemy;
+                }
+            }
+        }
 
         for (int i = 0; i < results.Length; i++)
         {
             EnemyController enemy = results[i].GetComponentInParent<EnemyController>();
             if (enemy != null && enemy.IsAlive)
             {
-                hitBoxDamage.ProcessHit(enemy);
+                return enemy;
             }
         }
+
+        return null;
+    }
+
+    private void ConfigureTravelCollider()
+    {
+        if (triggerCollider == null)
+        {
+            return;
+        }
+
+        Vector2 travelSize = projectileData != null ? projectileData.travelColliderSize : Vector2.one * 0.5f;
+        triggerCollider.size = travelSize;
+        triggerCollider.offset = Vector2.zero;
+        triggerCollider.enabled = true;
     }
 
     private int GetImpactMaxFrame()
@@ -346,5 +506,54 @@ public class ProjectileRuntime : MonoBehaviour
         }
 
         return maxFrame;
+    }
+
+    private void EnterState(ProjectileRuntimeState newState)
+    {
+        runtimeState = newState;
+
+        switch (runtimeState)
+        {
+            case ProjectileRuntimeState.Traveling:
+                trackedEnemy = null;
+                pendingEnemy = null;
+                betweenHitsFramesRemaining = 0;
+                hitBoxDamage.enabled = false;
+                ConfigureTravelCollider();
+                break;
+
+            case ProjectileRuntimeState.ContactFreeze:
+                hitBoxDamage.enabled = true;
+                break;
+
+            case ProjectileRuntimeState.BetweenHits:
+                betweenHitsFramesRemaining = projectileData != null ? Mathf.Max(0, projectileData.hitIntervalFrames) : 0;
+                hitBoxDamage.enabled = false;
+                ConfigureTravelCollider();
+                break;
+
+            case ProjectileRuntimeState.Expired:
+                hitBoxDamage.enabled = false;
+                if (triggerCollider != null)
+                {
+                    triggerCollider.enabled = false;
+                }
+                destroyQueued = true;
+                break;
+        }
+    }
+
+    private void ApplyFacingVisual()
+    {
+        if (projectileData != null && projectileData.inheritFacingDirection)
+        {
+            float angle = GetFacingSign() < 0f ? 180f : 0f;
+            transform.rotation = Quaternion.Euler(0f, angle, 0f);
+        }
+    }
+
+    private float GetFacingSign()
+    {
+        return currentDirection.x < 0f ? -1f : 1f;
     }
 }

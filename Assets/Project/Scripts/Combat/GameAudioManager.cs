@@ -64,7 +64,11 @@ public class GameAudioManager : MonoBehaviour
 
     public void PlayTimelineAudio(AudioEntry entry)
     {
-        if (entry.clip == null) return;
+        if (entry.clip == null)
+        {
+            Debug.LogWarning($"GameAudioManager: AudioEntry '{entry.label}' has no AudioClip assigned!", this);
+            return;
+        }
 
         if (entry.channel == AudioChannel.Voice)
         {

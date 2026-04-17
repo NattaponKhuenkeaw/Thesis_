@@ -108,7 +108,7 @@ public class PlayerUltimateState : FrameDataPlayerState
 
     private void HandleBlackScreenStarted()
     {
-        if (activeUltimateAction is UltimateAction ultimate && ultimate.activationVFXPrefab != null)
+        if (activeUltimateAction is UltimateAction ultimate)
         {
             Transform playerTransform = player.transform;
             Vector3 offset = ultimate.activationVFXOffset;
@@ -118,23 +118,34 @@ public class PlayerUltimateState : FrameDataPlayerState
             offset.x *= facingDirection;
 
             Vector3 spawnPosition = playerTransform.position + offset;
-            
-            GameObject vfxInstance = Object.Instantiate(ultimate.activationVFXPrefab, spawnPosition, playerTransform.rotation);
 
-            // FORCE UNSCALED TIME so VFX plays during freeze
-            // 1. Particle Systems
-            var pss = vfxInstance.GetComponentsInChildren<ParticleSystem>();
-            foreach (var ps in pss)
+            // 1. Try Library-driven VFX (Optimized)
+            if (ultimate.activationVFXType != Project.Combat.VFXType.None && Project.Combat.VFXManager.Instance != null)
             {
-                var main = ps.main;
-                main.useUnscaledTime = true;
+                // Note: For ultimate activations, the VFXDefinition in the library 
+                // should have obeyHitstop = false to play during the freeze.
+                Project.Combat.VFXManager.Instance.Spawn(ultimate.activationVFXType, spawnPosition, facingDirection < 0);
             }
-
-            // 2. Animators
-            var anims = vfxInstance.GetComponentsInChildren<Animator>();
-            foreach (var a in anims)
+            // 2. Fallback to Prefab (Legacy)
+            else if (ultimate.activationVFXPrefab != null)
             {
-                a.updateMode = AnimatorUpdateMode.UnscaledTime;
+                GameObject vfxInstance = Object.Instantiate(ultimate.activationVFXPrefab, spawnPosition, playerTransform.rotation);
+
+                // FORCE UNSCALED TIME so VFX plays during freeze
+                // 1. Particle Systems
+                var pss = vfxInstance.GetComponentsInChildren<ParticleSystem>();
+                foreach (var ps in pss)
+                {
+                    var main = ps.main;
+                    main.useUnscaledTime = true;
+                }
+
+                // 2. Animators
+                var anims = vfxInstance.GetComponentsInChildren<Animator>();
+                foreach (var a in anims)
+                {
+                    a.updateMode = AnimatorUpdateMode.UnscaledTime;
+                }
             }
         }
 
@@ -157,6 +168,30 @@ public class PlayerUltimateState : FrameDataPlayerState
 
         isWaitingForActivation = false;
         pendingStep = null;
+    }
+
+    public override void Update()
+    {
+        base.Update();
+
+        // --- NEW: Immediate Environmental Interruption (Wall Hit, etc.) ---
+        // Added grace period check (currentFrame > 2) to ensure the startup animation plays
+        // even if the character is already touching a wall.
+        if (player.Combat != null && player.Combat.IsAttacking() && !isWaitingForActivation && currentFrame > 2)
+        {
+            InputContext ctx = BuildInputContext();
+            
+            // --- DIAGNOSTIC LOG ---
+            if (currentFrame % 10 == 0) // Log every 10 frames to avoid spam
+                Debug.Log($"[Ultimate] Update Polling: Frame {currentFrame}, AgainstWall in Context: {ctx.isAgainstWall}");
+
+            AttackStepData immediateStep = resolver.ResolveImmediateRoute(ctx);
+            if (immediateStep != null)
+            {
+                player.Combat.ExecuteStep(immediateStep, resolver.TreeDepth, !ctx.isGrounded, AttackCategory.Ultimate, resolver.ActiveCombatAction?.actionName, true);
+                RestartAction();
+            }
+        }
     }
 
     protected override void HandleInputDuringRecovery()
@@ -285,7 +320,7 @@ public class PlayerUltimateState : FrameDataPlayerState
         }
     }
 
-    private bool TryResolveNextUltimateStep()
+    private bool TryResolveNextUltimateStep(bool isAutoChain = false)
     {
         if (!resolver.IsActive)
         {
@@ -299,7 +334,7 @@ public class PlayerUltimateState : FrameDataPlayerState
             return false;
         }
 
-        player.Combat.ExecuteStep(nextStep, resolver.TreeDepth, !ctx.isGrounded, AttackCategory.Ultimate, resolver.ActiveCombatAction?.actionName);
+        player.Combat.ExecuteStep(nextStep, resolver.TreeDepth, !ctx.isGrounded, AttackCategory.Ultimate, resolver.ActiveCombatAction?.actionName, isAutoChain);
         RestartAction();
         return true;
     }
@@ -311,7 +346,7 @@ public class PlayerUltimateState : FrameDataPlayerState
         var step = player.Combat.GetCurrentStepData();
         if (step == null || !step.autoChainToNext) return false;
 
-        return TryResolveNextUltimateStep();
+        return TryResolveNextUltimateStep(true);
     }
 
     private void TryStartCooldown()
@@ -339,6 +374,7 @@ public class PlayerUltimateState : FrameDataPlayerState
             facingDirection = player.Movement != null ? player.Movement.FacingDirection : 1,
             previousState = transitionContext.previousState,
             hasGrabbedEnemy = player.Combat != null && player.Combat.HasGrabbedEnemy(),
+            isAgainstWall = player.Movement != null && player.Movement.IsAgainstWall(),
             passiveController = player.PassiveController,
             runtimeState = player.PassiveController != null ? player.PassiveController.RuntimeState : null
         };
@@ -368,7 +404,8 @@ public class PlayerUltimateState : FrameDataPlayerState
                 resolver.TreeDepth, 
                 !ctx.isGrounded, 
                 AttackCategory.Ultimate, 
-                resolver.ActiveCombatAction?.actionName);
+                resolver.ActiveCombatAction?.actionName,
+                true);
                 
             RestartAction();
         }

@@ -10,7 +10,7 @@ using UnityEngine;
 //   HitboxBase (abstract)
 //   ├── NormalHitbox   — standard melee hitbox
 //   ├── GrabHitbox     — grab/throw hitbox
-//   └── ProjectileHitbox — spawns a projectile prefab
+//   └── ProjectileSpawnHitbox — spawns a projectile prefab
 // =========================================================
 
 // ─── Abstract Base ───────────────────────────────────────
@@ -61,14 +61,25 @@ public class NormalHitbox : HitboxBase
     public EnemyReactionKind reactionKind = EnemyReactionKind.Knockback;
     [Tooltip("Frozen frames on impact (both attacker and victim).")]
     public int impactFreezeFrames = 4;
-    [Tooltip("Frames the enemy remains in the core reaction state before recovery opens.")]
-    public int reactionFrames = 15;
+    
+    [Tooltip("Frames spent in the horizontal knockback state.")]
+    public int knockbackFrames = 15;
+    [Tooltip("Frames spent knocking up and staying airborne.")]
+    public int knockupFrames = 12;
+    [Tooltip("Frames spent falling before landing/recovery.")]
+    public int knockfallFrames = 10;
     [Tooltip("Frames spent recovering after the core reaction state.")]
     public int recoveryFrames = 9;
+    
     [Tooltip("Horizontal speed applied away from the attacker.")]
     public float horizontalSpeed = 3f;
-    [Tooltip("Vertical launch speed applied on knockup reactions.")]
     public float launchSpeed = 1f;
+    
+    [Header("Snapping")]
+    [Tooltip("If true, snaps the enemy to the attacker's anchor on hit.")]
+    public bool useSnapToAnchor = false;
+    public Vector2 snapOffset = Vector2.zero;
+    
     public EnemyLandingBehavior landingBehavior = EnemyLandingBehavior.Knockdown;
     public bool canAirJuggle = true;
     public int maxJuggleCount = 2;
@@ -81,6 +92,7 @@ public class NormalHitbox : HitboxBase
     // ── Hit Feedback ──
     [Header("Hit Feedback")]
     public AudioClip hitSFX;
+    public Project.Combat.VFXType hitVFXType = Project.Combat.VFXType.None;
     public GameObject hitVFXPrefab;
     public Vector2 hitVFXOffset;
 }
@@ -119,11 +131,13 @@ public class GrabHitbox : HitboxBase
     // ── Hit Feedback ──
     [Header("Hit Feedback")]
     public AudioClip hitSFX;
+    public Project.Combat.VFXType hitVFXType = Project.Combat.VFXType.None;
     public GameObject hitVFXPrefab;
     public Vector2 hitVFXOffset;
     public DamageImpactTier impactTier = DamageImpactTier.Low;
-
 }
+
+// ─── Projectile Hitbox ───────────────────────────────────
 
 [System.Serializable]
 public class ProjectileSpawnHitbox : HitboxBase
@@ -140,9 +154,19 @@ public class ProjectileSpawnHitbox : HitboxBase
     public ProjectileData projectileData;
     public bool overrideSpawnOffset = false;
     public Vector2 spawnOffset = Vector2.zero;
+
+    public bool HasAuthoredSpawnOffset => overrideSpawnOffset || spawnOffset != Vector2.zero;
+
+    public Vector2 ResolveSpawnOffset()
+    {
+        if (overrideSpawnOffset || spawnOffset != Vector2.zero)
+        {
+            return spawnOffset;
+        }
+
+        return projectileData != null ? projectileData.spawnOffset : Vector2.zero;
+    }
 }
-
-
 
 // ─── Container ───────────────────────────────────────────
 
@@ -169,7 +193,9 @@ public class HitFrameData : ActionStepComponent
             if (hb is NormalHitbox normal)
             {
                 normal.impactFreezeFrames = Mathf.RoundToInt(normal.impactFreezeFrames * ratio);
-                normal.reactionFrames = Mathf.RoundToInt(normal.reactionFrames * ratio);
+                normal.knockbackFrames = Mathf.RoundToInt(normal.knockbackFrames * ratio);
+                normal.knockupFrames = Mathf.RoundToInt(normal.knockupFrames * ratio);
+                normal.knockfallFrames = Mathf.RoundToInt(normal.knockfallFrames * ratio);
                 normal.recoveryFrames = Mathf.RoundToInt(normal.recoveryFrames * ratio);
                 normal.flashFrames = Mathf.RoundToInt(normal.flashFrames * ratio);
             }

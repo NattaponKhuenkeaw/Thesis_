@@ -129,14 +129,17 @@ public class HitBoxDamage : MonoBehaviour
         enemy.TakeHit(reactionData, attackerPosition);
 
         // Hit Feedback (SFX + VFX)
-        if (playerCombat != null && playerCombat.hitFeedbackResolver != null)
+        HitFeedbackResolver resolver = (playerCombat != null ? playerCombat.hitFeedbackResolver : null) ?? HitFeedbackResolver.Instance;
+        if (resolver != null)
         {
             HitboxBase activeHitbox = (HitboxBase)currentGrabHitbox ?? currentNormalHitbox;
             DamageImpactTier tier = currentGrabHitbox != null
                 ? currentGrabHitbox.impactTier
                 : (currentNormalHitbox != null ? currentNormalHitbox.impactTier : DamageImpactTier.Low);
-            Vector2 hitPoint = enemy.transform.position;
-            playerCombat.hitFeedbackResolver.PlayHitFeedback(activeHitbox, tier, hitPoint, direction);
+            Vector2 hitPoint = CalculateHitPoint(enemy);
+
+            ProjectileData projData = projectileOwner != null ? projectileOwner.ProjectileData : null;
+            resolver.PlayHitFeedback(activeHitbox, tier, hitPoint, direction, projData);
         }
 
         if (CameraManager.instance != null)
@@ -217,7 +220,9 @@ public class HitBoxDamage : MonoBehaviour
                     ref data,
                     currentNormalHitbox.reactionKind,
                     currentNormalHitbox.impactFreezeFrames,
-                    currentNormalHitbox.reactionFrames,
+                    currentNormalHitbox.knockbackFrames,
+                    currentNormalHitbox.knockupFrames,
+                    currentNormalHitbox.knockfallFrames,
                     currentNormalHitbox.recoveryFrames,
                     currentNormalHitbox.horizontalSpeed,
                     currentNormalHitbox.launchSpeed,
@@ -225,7 +230,15 @@ public class HitBoxDamage : MonoBehaviour
                     currentNormalHitbox.canAirJuggle,
                     currentNormalHitbox.maxJuggleCount,
                     currentNormalHitbox.juggleLaunchScale,
-                    currentNormalHitbox.juggleStunScale);
+                    currentNormalHitbox.juggleStunScale,
+                    currentNormalHitbox.useSnapToAnchor,
+                    currentNormalHitbox.snapOffset);
+
+                if (currentNormalHitbox.useSnapToAnchor)
+                {
+                    data.hasSnapWorldPosition = true;
+                    data.snapWorldPosition = GetActiveHitboxCenter();
+                }
             }
         }
 
@@ -280,13 +293,18 @@ public class HitBoxDamage : MonoBehaviour
         data.reactionOwnerId = attackerTransform != null ? attackerTransform.root.GetInstanceID() : 0;
         data.grabSocket = null;
         data.grabOffset = Vector2.zero;
+        data.hasSnapWorldPosition = false;
+        data.snapWorldPosition = Vector2.zero;
+        data.forceFaceAttacker = projectileOwner == null;
     }
 
     private void ApplyDeterministicReaction(
         ref HitReactionData data,
         EnemyReactionKind reactionKind,
         int impactFreezeFrames,
-        int reactionFrames,
+        int knockbackFrames,
+        int knockupFrames,
+        int knockfallFrames,
         int recoveryFrames,
         float horizontalSpeed,
         float launchSpeed,
@@ -294,10 +312,16 @@ public class HitBoxDamage : MonoBehaviour
         bool canAirJuggle,
         int maxJuggleCount,
         float juggleLaunchScale,
-        float juggleStunScale)
+        float juggleStunScale,
+        bool useSnapToAnchor = false,
+        Vector2 snapOffset = default)
     {
         data.reactionKind = reactionKind;
-        data.reactionTiming = HitReactionData.CreateTiming(impactFreezeFrames, reactionFrames, recoveryFrames);
+
+        // Use appropriate frame count for the active phase based on reaction kind.
+        int activeFrames = (reactionKind == EnemyReactionKind.Knockup) ? knockupFrames : knockbackFrames;
+
+        data.reactionTiming = HitReactionData.CreateTiming(impactFreezeFrames, activeFrames, recoveryFrames);
         data.horizontalSpeed = Mathf.Max(0f, horizontalSpeed);
         data.launchSpeed = Mathf.Max(0f, launchSpeed);
         data.landingBehavior = landingBehavior;
@@ -305,6 +329,11 @@ public class HitBoxDamage : MonoBehaviour
         data.maxJuggleCount = Mathf.Max(0, maxJuggleCount);
         data.juggleLaunchScale = juggleLaunchScale;
         data.juggleStunScale = juggleStunScale;
+
+        data.knockupFrames = knockupFrames;
+        data.knockfallFrames = knockfallFrames;
+        data.useSnapToAnchor = useSnapToAnchor;
+        data.snapOffset = snapOffset;
     }
 
     private int GetConfiguredHitstopFrames()
@@ -329,9 +358,25 @@ public class HitBoxDamage : MonoBehaviour
         return transform.root;
     }
 
+    private Collider2D GetActiveHitboxCollider()
+    {
+        if (playerCombat != null && playerCombat.hitBoxController != null && playerCombat.hitBoxController.hitboxCollider != null)
+        {
+            return playerCombat.hitBoxController.hitboxCollider;
+        }
+
+        return GetComponent<Collider2D>();
+    }
+
+    private Vector2 GetActiveHitboxCenter()
+    {
+        Collider2D attackerCollider = GetActiveHitboxCollider();
+        return attackerCollider != null ? attackerCollider.bounds.center : (Vector2)transform.position;
+    }
+
     private void TriggerHitStop(int frames)
     {
-        if (GameFreezeManager.Instance != null)
+        if (projectileOwner == null && GameFreezeManager.Instance != null)
         {
             GameFreezeManager.Instance.FreezeFrame(frames);
         }
@@ -395,5 +440,44 @@ public class HitBoxDamage : MonoBehaviour
         }
 
         return Vector2.right;
+    }
+
+    private Vector2 CalculateHitPoint(EnemyController enemy)
+    {
+        if (enemy == null) return transform.position;
+
+        Collider2D attackerCollider = GetActiveHitboxCollider();
+
+        Collider2D victimCollider = enemy.bodyCollider;
+
+        if (attackerCollider == null || victimCollider == null)
+        {
+            return enemy.transform.position;
+        }
+
+        // Get the closest points between the two colliders to approximate the hit point
+        Vector2 attackerPoint = attackerCollider.bounds.center;
+        Vector2 victimPoint = victimCollider.bounds.center;
+
+        // If it's a BoxCollider, we can get a bit more precise
+        if (attackerCollider is BoxCollider2D attackerBox && victimCollider is BoxCollider2D victimBox)
+        {
+            Bounds b1 = attackerBox.bounds;
+            Bounds b2 = victimBox.bounds;
+
+            if (b1.Intersects(b2))
+            {
+                // Calculate the intersection AABB
+                float xMin = Mathf.Max(b1.min.x, b2.min.x);
+                float xMax = Mathf.Min(b1.max.x, b2.max.x);
+                float yMin = Mathf.Max(b1.min.y, b2.min.y);
+                float yMax = Mathf.Min(b1.max.y, b2.max.y);
+
+                return new Vector2((xMin + xMax) * 0.5f, (yMin + yMax) * 0.5f);
+            }
+        }
+
+        // Fallback: Use the point on the victim collider closest to the attacker's center
+        return victimCollider.ClosestPoint(attackerPoint);
     }
 }

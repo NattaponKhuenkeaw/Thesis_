@@ -190,23 +190,32 @@ public abstract class PlayerState
     /// </summary>
     protected void ExitToAppropriateMovementState()
     {
-        if (player.Movement != null && !player.Movement.IsGrounded())
+        if (player.Movement == null)
         {
-            // Defensive: ensure gravity is restored and velocity is not locked
-            // especially if combat logic didn't clean up correctly.
-            player.Movement.CancelAttackMotion();
+            fsm.Log("FSM", "[Exit] No movement component, defaulting to Idle", Color.yellow);
+            fsm.ChangeState(fsm.IdleState);
+            return;
+        }
 
+        // Always ensure gravity/motion control is returned to movement unit
+        player.Movement.CancelAttackMotion();
+
+        if (!player.Movement.IsGrounded())
+        {
+            fsm.Log("FSM", "[Exit] Determined: Airborne \u2192 Jumping", Color.cyan);
             if (player.Animator != null)
                 player.Animator.RestoreAirborneState();
 
             fsm.ChangeState(fsm.JumpState);
         }
-        else if (player.Movement != null && Mathf.Abs(player.Movement.HorizontalInput) > 0.01f)
+        else if (Mathf.Abs(player.Movement.HorizontalInput) > 0.01f)
         {
+            fsm.Log("FSM", "[Exit] Determined: Grounded + Input \u2192 Moving", Color.cyan);
             fsm.ChangeState(fsm.MoveState);
         }
         else
         {
+            fsm.Log("FSM", "[Exit] Determined: Grounded + Static \u2192 Idle", Color.cyan);
             fsm.ChangeState(fsm.IdleState);
         }
     }

@@ -44,7 +44,8 @@ MonoBehaviour:
   authoredFPS: 24
   upgrade:
     level: 1
-    skillTreePoints: 3
+    constellationRank: 0
+    progressionPoints: 3
   dashData:
     animationClip: {fileID: 7400000, guid: a58bc557533fb294eb5db9217ac6de3d, type: 2}
     startupFrames: 5
@@ -55,4 +56,8 @@ MonoBehaviour:
     cooldownFrames: 60
   skillTreeData:
     nodes: []
+  progressionDefinition:
+    maxConstellationRank: 6
+    constellationNodes: []
+    passiveNodes: []
   actionResolverTable: {fileID: 11400000, guid: 8b31e6f175b0958468f7ada8b8e14098, type: 2}

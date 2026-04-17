@@ -64,6 +64,12 @@ public struct HitReactionData
     public int maxJuggleCount;
     public float juggleLaunchScale;
     public float juggleStunScale;
+    public int knockupFrames;
+    public int knockfallFrames;
+    public bool useSnapToAnchor;
+    public bool hasSnapWorldPosition;
+    public Vector2 snapWorldPosition;
+    public bool forceFaceAttacker;
 
     // =========================================================
     // Grab Binding
@@ -103,7 +109,7 @@ public struct HitReactionData
     public int ImpactFreezeFrames => reactionTiming != null ? Mathf.Max(0, reactionTiming.startupFrames) : Mathf.Max(0, hitstunFrames);
     public int ActiveReactionFrames => reactionTiming != null ? Mathf.Max(0, reactionTiming.activeFrames) : Mathf.Max(0, knockbackFrames);
     public int RecoveryFrames => reactionTiming != null ? Mathf.Max(0, reactionTiming.recoveryFrames) : 0;
-    public int TotalReactionFrames => ImpactFreezeFrames + ActiveReactionFrames + RecoveryFrames;
+    public int TotalReactionFrames => ImpactFreezeFrames + ActiveReactionFrames + knockfallFrames + RecoveryFrames;
     public float HorizontalSpeed => horizontalSpeed > 0f ? horizontalSpeed : Mathf.Abs(reactionVelocity.x);
     public float LaunchSpeed => launchSpeed > 0f ? launchSpeed : Mathf.Max(0f, reactionVelocity.y);
 
@@ -181,6 +187,9 @@ public struct HitReactionData
             maxJuggleCount = 2,
             juggleLaunchScale = 0.85f,
             juggleStunScale = 0.9f,
+            hasSnapWorldPosition = false,
+            snapWorldPosition = Vector2.zero,
+            forceFaceAttacker = false,
             attackerTransform = null,
             grabSocket = null,
             grabOffset = Vector2.zero,

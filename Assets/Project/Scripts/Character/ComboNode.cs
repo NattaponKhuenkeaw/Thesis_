@@ -52,6 +52,7 @@ public class UltimateAction : SkillAction
 
     [Header("Activation VFX")]
     [Tooltip("VFX spawned when the background turns black during activation.")]
+    public Project.Combat.VFXType activationVFXType = Project.Combat.VFXType.None;
     public GameObject activationVFXPrefab;
     [Tooltip("Offset relative to the player's position (X is adjusted by facing).")]
     public Vector3 activationVFXOffset;
@@ -129,6 +130,10 @@ public class ComboRoute
 
     [Header("Priority (higher wins on tie)")]
     public int priority = 0;
+
+    [Header("Environmental Trigger")]
+    [Tooltip("If true, this route can be triggered immediately during the action's active phase (e.g. hitting a wall), interrupting the current step.")]
+    public bool allowImmediateInterrupt = false;
 }
 
 // =========================================================

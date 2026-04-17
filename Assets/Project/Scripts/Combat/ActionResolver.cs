@@ -232,6 +232,45 @@ public class ActionResolver
     }
 
     // =========================================================
+    // Immediate Routes — Environment-driven interruptions (e.g. Wall Hit)
+    // =========================================================
+
+    public AttackStepData ResolveImmediateRoute(InputContext ctx)
+    {
+        if (currentNode == null || currentNode.routes == null) return null;
+
+        ComboRoute bestMatch = null;
+        for (int i = 0; i < currentNode.routes.Count; i++)
+        {
+            ComboRoute route = currentNode.routes[i];
+            if (route == null || !route.allowImmediateInterrupt || route.targetNode == null)
+                continue;
+
+            if (RouteMatches(route, ctx))
+            {
+                if (bestMatch == null || route.priority > bestMatch.priority)
+                    bestMatch = route;
+            }
+        }
+
+        if (bestMatch != null)
+        {
+            // Safety: Do not interrupt if the target step is already the one we are playing.
+            // This prevents infinite reset loops (frame-1 restarts) when against a wall.
+            if (bestMatch.targetNode.stepData == GetCurrentStepData())
+                return null;
+
+            string prevNodeName = currentNode.stepData?.stepName ?? "Unknown";
+            Log($"Immediate Interrupt! [{prevNodeName}] -> '{bestMatch.targetNode.stepData?.stepName}'", Color.cyan);
+            currentNode = bestMatch.targetNode;
+            treeDepth++;
+            return currentNode.stepData;
+        }
+
+        return null;
+    }
+
+    // =========================================================
     // Plunge Landing — Execute the plunge impact step
     // =========================================================
 
@@ -380,7 +419,16 @@ public class ActionResolver
             && route.requiredPreviousState != ctx.previousState)
             return false;
 
-        return ActionConditionUtility.AllMet(route.conditions, ctx);
+        bool conditionsMet = ActionConditionUtility.AllMet(route.conditions, ctx);
+        
+        // --- DIAGNOSTIC LOG ---
+        if (conditionsMet && route.targetNode != null && route.targetNode.stepData != null 
+            && route.targetNode.stepData.stepName == "Wall Slam")
+        {
+            Debug.Log($"[Resolver] MATCH FOUND for 'Wall Slam'. Context Wall={ctx.isAgainstWall}");
+        }
+
+        return conditionsMet;
     }
 
     private StandaloneAction FindMatchingStandalone(InputContext ctx, ActionResolverTable table)

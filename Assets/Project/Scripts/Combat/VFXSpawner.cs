@@ -11,10 +11,11 @@ public class VFXSpawner : MonoBehaviour
 
     public void SpawnVFX(VFXEntry entry)
     {
-        if (entry == null || entry.vfxPrefab == null) return;
+        if (entry == null) return;
 
         // Apply facing direction
         float facingDirection = movement != null ? movement.FacingDirection : 1f;
+        bool isFlipped = facingDirection < 0;
 
         // Find initial spawn position from the first transform key if available
         Vector3 localOffset = Vector3.zero;
@@ -29,41 +30,65 @@ public class VFXSpawner : MonoBehaviour
             localScale = firstKey.scale;
         }
 
-        // Flip X offset based on facing
-        localOffset.x *= facingDirection;
-
-        // Calculate world spawn
-        Vector3 spawnPosition = transform.position + localOffset;
-
-        // Calculate rotation
-        // For 2D fighting games, typically we just flip the Y axis 180 degrees.
-        Quaternion rotation = Quaternion.Euler(localRotation);
-        if (facingDirection < 0)
+        // 1. Try Library-driven VFX first (Optimized path)
+        if (entry.vfxType != Project.Combat.VFXType.None && Project.Combat.VFXManager.Instance != null)
         {
-            // Simple flip
-            Vector3 euler = rotation.eulerAngles;
-            euler.y += 180f;
-            rotation = Quaternion.Euler(euler);
+            var def = Project.Combat.VFXManager.Instance?.InstanceLibrary?.GetDefinition(entry.vfxType);
+            Vector3 spawnPos = localOffset;
+            bool flipXForVFX = isFlipped;
+
+            // Logic Fix: For Local Space (parented), the parent's transformation (which is already rotated 180 by Player)
+            // handles both the mirroring of the offset and the visual orientation.
+            // We only manually flip and spawn in world space if NOT local space.
+            if (def == null || !def.isLocalSpace)
+            {
+                spawnPos.x *= facingDirection;
+                spawnPos = transform.position + spawnPos;
+            }
+            else
+            {
+                // Parent handles rotation, so we don't double-flip the child
+                flipXForVFX = false;
+            }
+
+            // Calculate lifespan in seconds
+            float lifespan = entry.duration / CombatCore.FrameDataConstants.LOGIC_FPS;
+
+            Project.Combat.VFXManager.Instance.Spawn(entry.vfxType, spawnPos, flipXForVFX, localRotation.z, entry.transformKeys, transform, lifespan);
+            return;
         }
 
-        GameObject vfxInstance = Instantiate(entry.vfxPrefab, spawnPosition, rotation);
-        
-        // Scale
-        vfxInstance.transform.localScale = localScale;
+        // 2. Fallback to Prefab instantiation (Legacy path)
+        if (entry.vfxPrefab != null)
+        {
+            // Manual flip for standalone prefabs
+            localOffset.x *= facingDirection;
+            Vector3 spawnPosition = transform.position + localOffset;
 
-        // Ensure it cleans itself up
-        var ps = vfxInstance.GetComponentInChildren<ParticleSystem>();
-        if (ps != null)
-        {
-            var main = ps.main;
-            main.stopAction = ParticleSystemStopAction.Destroy;
-            // Action VFX obeys scaled time by default, so it freezes during hitstop.
-            main.useUnscaledTime = false;
-        }
-        else
-        {
-            // Fallback destruction
-            Destroy(vfxInstance, 5f);
+            // Calculate rotation
+            Quaternion rotation = Quaternion.Euler(localRotation);
+            if (isFlipped)
+            {
+                Vector3 euler = rotation.eulerAngles;
+                euler.y += 180f;
+                rotation = Quaternion.Euler(euler);
+            }
+
+            GameObject vfxInstance = Instantiate(entry.vfxPrefab, spawnPosition, rotation);
+            vfxInstance.transform.localScale = localScale;
+
+            // Ensure it cleans itself up
+            var ps = vfxInstance.GetComponentInChildren<ParticleSystem>();
+            if (ps != null)
+            {
+                var main = ps.main;
+                main.stopAction = ParticleSystemStopAction.Destroy;
+                main.useUnscaledTime = false;
+            }
+            else
+            {
+                Destroy(vfxInstance, 5f);
+            }
         }
     }
 }

@@ -18,7 +18,7 @@ namespace CombatEditor.UI
         private readonly Action onStructureChanged;
         private readonly Dictionary<string, bool> foldoutState = new Dictionary<string, bool>();
 
-        private CharacterObject character;
+        private UnityEngine.Object targetObject;
         private ActionNode currentNode;
         private readonly ActionTreeController treeController;
 
@@ -30,9 +30,22 @@ namespace CombatEditor.UI
             this.onStructureChanged = onStructureChanged;
         }
 
+        public void SetTarget(UnityEngine.Object target)
+        {
+            this.targetObject = target;
+        }
+
         public void SetCharacter(CharacterObject character)
         {
-            this.character = character;
+            this.targetObject = character;
+        }
+
+        public void Build(ProjectileData data)
+        {
+            container.Clear();
+            targetObject = data;
+            if (data == null) return;
+            BuildProjectileDataCards(data);
         }
 
         public void Build(ActionNode node)
@@ -40,7 +53,7 @@ namespace CombatEditor.UI
             container.Clear();
             currentNode = node;
 
-            if (node == null || character == null)
+            if (node == null || targetObject == null)
             {
                 return;
             }
@@ -67,6 +80,119 @@ namespace CombatEditor.UI
                     BuildResolveTableCards(node.DataRef as ActionResolverTable);
                     break;
             }
+        }
+
+        private void BuildProjectileDataCards(ProjectileData data)
+        {
+            BuildFoldoutCard("General Configuration", "proj_general", new Color(0.9f, 0.4f, 0.1f), body =>
+            {
+                AddObjectField(body, "Projectile Prefab", data.projectilePrefab, value =>
+                {
+                    RecordUndo("Unpack Prefab");
+                    data.projectilePrefab = value as GameObject;
+                    MarkDirty();
+                });
+                AddVector2Field(body, "Spawn Offset", data.spawnOffset, value =>
+                {
+                    RecordUndo("Edit Offset");
+                    data.spawnOffset = value;
+                    MarkDirty();
+                });
+            });
+
+            BuildFoldoutCard("Movement & Travel", "proj_travel", new Color(0.1f, 0.7f, 0.4f), body =>
+            {
+                AddEnumField(body, "Spawn Mode", data.spawnMode, value =>
+                {
+                    RecordUndo("Edit Spawn Mode");
+                    data.spawnMode = (ProjectileSpawnMode)value;
+                    MarkDirty();
+                });
+                AddFloatField(body, "Travel Speed", data.speed, value =>
+                {
+                    RecordUndo("Edit Speed");
+                    data.speed = value;
+                    MarkDirty();
+                });
+                AddFloatField(body, "Lifetime", data.lifetime, value =>
+                {
+                    RecordUndo("Edit Lifetime");
+                    data.lifetime = value;
+                    MarkDirty();
+                });
+                AddToggle(body, "Homing", data.homeToTarget, value =>
+                {
+                    RecordUndo("Toggle Homing");
+                    data.homeToTarget = value;
+                    MarkDirtyAndRebuild();
+                });
+                if (data.homeToTarget)
+                {
+                    AddFloatField(body, "Homing Turn Rate", data.homingTurnRate, value =>
+                    {
+                        RecordUndo("Edit Turn Rate");
+                        data.homingTurnRate = value;
+                        MarkDirty();
+                    });
+                }
+            });
+
+            BuildFoldoutCard("Hit Detection", "proj_detection", new Color(0.8f, 0.2f, 0.2f), body =>
+            {
+                AddIntField(body, "Max Hits", data.maxHits, value =>
+                {
+                    RecordUndo("Edit Max Hits");
+                    data.maxHits = value;
+                    MarkDirty();
+                });
+                AddVector2Field(body, "Detection Size", data.travelColliderSize, value =>
+                {
+                    RecordUndo("Edit Detection Size");
+                    data.travelColliderSize = value;
+                    MarkDirty();
+                });
+                AddLayerField(body, "Target Layers", data.enemyLayerMask, value =>
+                {
+                    RecordUndo("Edit Layers");
+                    data.enemyLayerMask = value;
+                    MarkDirty();
+                });
+            });
+
+            BuildFoldoutCard("Impact Routine", "proj_impact", new Color(1f, 0.8f, 0f), body =>
+            {
+                AddIntField(body, "Hit Interval (Frames)", data.hitIntervalFrames, value =>
+                {
+                    RecordUndo("Edit Hit Interval");
+                    data.hitIntervalFrames = value;
+                    MarkDirty();
+                });
+                AddToggle(body, "Destroy on Exhausted", data.destroyWhenHitsExhausted, value =>
+                {
+                    RecordUndo("Toggle Destroy Exhausted");
+                    data.destroyWhenHitsExhausted = value;
+                    MarkDirty();
+                });
+                
+                AddSeparator(body, "Impact Hitboxes");
+                BuildHitDataCard(body, data.impactHitData);
+            });
+
+            BuildFoldoutCard("Audio & Visual Feedback", "proj_feedback", new Color(0.6f, 0.1f, 0.9f), body =>
+            {
+                 AddEnumField(body, "Default Impact VFX", data.impactVFXType, value =>
+                {
+                    RecordUndo("Edit Impact VFX");
+                    data.impactVFXType = (Project.Combat.VFXType)value;
+                    MarkDirty();
+                });
+                AddObjectField(body, "Default Impact Audio", data.impactAudio, value =>
+                {
+                    RecordUndo("Edit Impact Audio");
+                    data.impactAudio = value as AudioClip;
+                    MarkDirty();
+                });
+            });
         }
 
         private void BuildAttackStepCards(AttackStepData step)
@@ -278,12 +404,49 @@ namespace CombatEditor.UI
                         MarkDirty();
                     });
                 }
+
+                if (action is UltimateAction ultimate)
+                {
+                    AddSeparator(body, "Activation FX (Plays during black screen)");
+                    AddEnumField(body, "VFX Type", ultimate.activationVFXType, value => {
+                        RecordUndo("Edit Ultimate VFX Type");
+                        ultimate.activationVFXType = (Project.Combat.VFXType)value;
+                        MarkDirty();
+                    });
+                    AddObjectField(body, "VFX Prefab (Override)", ultimate.activationVFXPrefab, value => {
+                        RecordUndo("Edit Ultimate VFX Prefab");
+                        ultimate.activationVFXPrefab = value;
+                        MarkDirty();
+                    });
+                    AddVector3Field(body, "VFX Offset", ultimate.activationVFXOffset, value => {
+                        RecordUndo("Edit Ultimate VFX Offset");
+                        ultimate.activationVFXOffset = value;
+                        MarkDirty();
+                    });
+
+                    AddSeparator(body, "Activation Audio");
+                    AddObjectField(body, "Activation Voice", ultimate.activationVoice, value => {
+                        RecordUndo("Edit Voice");
+                        ultimate.activationVoice = value;
+                        MarkDirty();
+                    });
+                    AddObjectField(body, "Activation SFX", ultimate.activationSFX, value => {
+                        RecordUndo("Edit SFX");
+                        ultimate.activationSFX = value;
+                        MarkDirty();
+                    });
+                    AddFloatField(body, "Voice Delay", ultimate.voiceDelay, value => {
+                        RecordUndo("Edit Delay");
+                        ultimate.voiceDelay = value;
+                        MarkDirty();
+                    });
+                }
             });
         }
 
         private CombatAction GetCurrentAction()
         {
-            if (character == null || character.actionResolverTable == null || currentNode == null) return null;
+            if (!(targetObject is CharacterObject character) || character.actionResolverTable == null || currentNode == null) return null;
             string cat = currentNode.Category;
             if (string.IsNullOrEmpty(cat)) return null;
 
@@ -652,7 +815,13 @@ namespace CombatEditor.UI
                         entry.label = value;
                         MarkDirty();
                     });
-                    AddObjectField(inner, "VFX Prefab", entry.vfxPrefab, value =>
+                    AddEnumField(inner, "VFX Type", entry.vfxType, value =>
+                    {
+                        RecordUndo("Edit VFX Type");
+                        entry.vfxType = (Project.Combat.VFXType)value;
+                        MarkDirty();
+                    });
+                    AddObjectField(inner, "VFX Prefab (Override)", entry.vfxPrefab, value =>
                     {
                         RecordUndo("Edit VFX Prefab");
                         entry.vfxPrefab = value;
@@ -951,12 +1120,33 @@ namespace CombatEditor.UI
                 hitbox.impactFreezeFrames = value;
                 MarkDirty();
             });
-            AddIntField(body, "Reaction Frames", hitbox.reactionFrames, value =>
+
+            if (hitbox.reactionKind == EnemyReactionKind.Knockback || hitbox.reactionKind == EnemyReactionKind.Flinch)
             {
-                RecordUndo("Edit Reaction Frames");
-                hitbox.reactionFrames = value;
-                MarkDirty();
-            });
+                AddIntField(body, "Knockback Frames", hitbox.knockbackFrames, value =>
+                {
+                    RecordUndo("Edit Knockback Frames");
+                    hitbox.knockbackFrames = value;
+                    MarkDirty();
+                });
+            }
+
+            if (hitbox.reactionKind == EnemyReactionKind.Knockup)
+            {
+                AddIntField(body, "Knockup Frames", hitbox.knockupFrames, value =>
+                {
+                    RecordUndo("Edit Knockup Frames");
+                    hitbox.knockupFrames = value;
+                    MarkDirty();
+                });
+                AddIntField(body, "Knockfall Frames", hitbox.knockfallFrames, value =>
+                {
+                    RecordUndo("Edit Knockfall Frames");
+                    hitbox.knockfallFrames = value;
+                    MarkDirty();
+                });
+            }
+
             AddIntField(body, "Recovery Frames", hitbox.recoveryFrames, value =>
             {
                 RecordUndo("Edit Recovery Frames");
@@ -1026,6 +1216,23 @@ namespace CombatEditor.UI
                 }
             }
 
+            AddSeparator(body, "Snapping");
+            AddToggle(body, "Use Snap to Anchor", hitbox.useSnapToAnchor, value =>
+            {
+                RecordUndo("Toggle Snap to Anchor");
+                hitbox.useSnapToAnchor = value;
+                MarkDirtyAndRebuild();
+            });
+            if (hitbox.useSnapToAnchor)
+            {
+                AddVector2Field(body, "Snap Offset", hitbox.snapOffset, value =>
+                {
+                    RecordUndo("Edit Snap Offset");
+                    hitbox.snapOffset = value;
+                    MarkDirty();
+                });
+            }
+
             AddColorField(body, "Flash Color", hitbox.flashColor, value =>
             {
                 RecordUndo("Edit Flash Color");
@@ -1046,7 +1253,13 @@ namespace CombatEditor.UI
                 hitbox.hitSFX = value;
                 MarkDirty();
             });
-            AddObjectField(body, "Hit VFX Prefab", hitbox.hitVFXPrefab, value =>
+            AddEnumField(body, "Hit VFX Type", hitbox.hitVFXType, value =>
+            {
+                RecordUndo("Edit Hit VFX Type");
+                hitbox.hitVFXType = (Project.Combat.VFXType)value;
+                MarkDirty();
+            });
+            AddObjectField(body, "Hit VFX Prefab (Override)", hitbox.hitVFXPrefab, value =>
             {
                 RecordUndo("Edit Hit VFX Prefab");
                 hitbox.hitVFXPrefab = value;
@@ -1135,9 +1348,15 @@ namespace CombatEditor.UI
                 hitbox.hitSFX = value;
                 MarkDirty();
             });
-            AddObjectField(body, "Hit VFX Prefab", hitbox.hitVFXPrefab, value =>
+            AddEnumField(body, "Hit VFX Type", hitbox.hitVFXType, value =>
             {
-                RecordUndo("Edit Grab Hit VFX Prefab");
+                RecordUndo("Edit Hit VFX Type");
+                hitbox.hitVFXType = (Project.Combat.VFXType)value;
+                MarkDirty();
+            });
+            AddObjectField(body, "Hit VFX Prefab (Override)", hitbox.hitVFXPrefab, value =>
+            {
+                RecordUndo("Edit Hit VFX Prefab");
                 hitbox.hitVFXPrefab = value;
                 MarkDirty();
             });
@@ -1157,6 +1376,17 @@ namespace CombatEditor.UI
                 hitbox.projectileData = value;
                 MarkDirty();
             });
+
+            if (hitbox.projectileData != null)
+            {
+                Button editBtn = new Button(() => ProjectileEditorWindow.OpenWindow(hitbox.projectileData)) 
+                { 
+                    text = "✎ Edit Projectile Hitboxes",
+                    style = { marginTop = 5, marginBottom = 5 }
+                };
+                editBtn.AddToClassList("component-add-entry-btn");
+                body.Add(editBtn);
+            }
             AddToggle(body, "Override Spawn Offset", hitbox.overrideSpawnOffset, value =>
             {
                 RecordUndo("Edit Projectile Override Spawn");
@@ -1561,6 +1791,16 @@ namespace CombatEditor.UI
             parent.Add(row);
         }
 
+        private void AddLayerField(VisualElement parent, string label, LayerMask value, Action<LayerMask> onChange)
+        {
+            VisualElement row = new VisualElement();
+            row.AddToClassList("card-field-row");
+            LayerMaskField field = new LayerMaskField(label) { value = value };
+            field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
+            row.Add(field);
+            parent.Add(row);
+        }
+
         private void BuildConditionList(VisualElement parent, List<ActionConditionBase> conditions, string foldoutKey, string undoLabelPrefix)
         {
             if (conditions == null) return;
@@ -1603,6 +1843,11 @@ namespace CombatEditor.UI
                 menu.AddItem(new GUIContent("Grabbed Target"), false, () => {
                     RecordUndo($"Add {undoLabelPrefix} Condition");
                     conditions.Add(new GrabbedEnemyActionCondition());
+                    MarkDirtyAndRebuild();
+                });
+                menu.AddItem(new GUIContent("Against Wall"), false, () => {
+                    RecordUndo($"Add {undoLabelPrefix} Condition");
+                    conditions.Add(new WallActionCondition());
                     MarkDirtyAndRebuild();
                 });
                 menu.AddItem(new GUIContent("Progression Rank"), false, () => {
@@ -1659,6 +1904,13 @@ namespace CombatEditor.UI
                         MarkDirty();
                     });
                     break;
+                case WallActionCondition wallCondition:
+                    AddToggleField(parent, "Require Hit Wall", wallCondition.requireAgainstWall, value => {
+                        RecordUndo("Edit Condition Wall");
+                        wallCondition.requireAgainstWall = value;
+                        MarkDirty();
+                    });
+                    break;
                 case ProgressionRankActionCondition progressionCondition:
                     AddEnumField(parent, "Comparison", progressionCondition.comparison, value => {
                         RecordUndo("Edit Condition Rank Compare");
@@ -1711,6 +1963,7 @@ namespace CombatEditor.UI
                 DirectionActionCondition => "Direction Condition",
                 PreviousStateActionCondition => "Previous State Condition",
                 GrabbedEnemyActionCondition => "Grabbed Target Condition",
+                WallActionCondition => "Wall Condition",
                 ProgressionRankActionCondition => "Progression Rank Condition",
                 RuntimeTagActionCondition => "Runtime Tag Condition",
                 RuntimeCounterActionCondition => "Runtime Counter Condition",
@@ -1910,26 +2163,29 @@ namespace CombatEditor.UI
 
         private void RecordUndo(string action)
         {
-            if (character != null) {
-                Undo.RecordObject(character, action);
-                if (character.actionResolverTable != null) Undo.RecordObject(character.actionResolverTable, action);
+            if (targetObject != null) {
+                Undo.RecordObject(targetObject, action);
+                if (targetObject is CharacterObject character && character.actionResolverTable != null) 
+                    Undo.RecordObject(character.actionResolverTable, action);
             }
         }
 
         private void MarkDirty()
         {
-            if (character != null) {
-                EditorUtility.SetDirty(character);
-                if (character.actionResolverTable != null) EditorUtility.SetDirty(character.actionResolverTable);
+            if (targetObject != null) {
+                EditorUtility.SetDirty(targetObject);
+                if (targetObject is CharacterObject character && character.actionResolverTable != null) 
+                    EditorUtility.SetDirty(character.actionResolverTable);
             }
             onDataChanged?.Invoke();
         }
 
         private void MarkDirtyAndRebuild()
         {
-            if (character != null) {
-                EditorUtility.SetDirty(character);
-                if (character.actionResolverTable != null) EditorUtility.SetDirty(character.actionResolverTable);
+            if (targetObject != null) {
+                EditorUtility.SetDirty(targetObject);
+                if (targetObject is CharacterObject character && character.actionResolverTable != null) 
+                    EditorUtility.SetDirty(character.actionResolverTable);
             }
             if (onStructureChanged != null && currentNode != null) {
                 onStructureChanged.Invoke();

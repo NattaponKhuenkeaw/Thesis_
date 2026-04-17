@@ -51,6 +51,17 @@ public class GrabbedEnemyActionCondition : ActionConditionBase
 }
 
 [Serializable]
+public class WallActionCondition : ActionConditionBase
+{
+    public bool requireAgainstWall = true;
+
+    public override bool IsMet(InputContext context)
+    {
+        return context.isAgainstWall == requireAgainstWall;
+    }
+}
+
+[Serializable]
 public class ProgressionRankActionCondition : ActionConditionBase
 {
     public CounterComparison comparison = CounterComparison.GreaterThanOrEqual;

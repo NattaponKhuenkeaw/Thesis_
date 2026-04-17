@@ -141,6 +141,21 @@ public class PlayerAttackState : FrameDataPlayerState
             }
         }
 
+        // --- NEW: Immediate Environmental Interruption (Wall Hit, etc.) ---
+        // Added grace period check (currentFrame > 2) to ensure the startup animation plays
+        // even if the character is already touching a wall.
+        if (player.Combat != null && player.Combat.IsAttacking() && currentFrame > 2)
+        {
+            InputContext ctx = BuildInputContext();
+            AttackStepData immediateStep = resolver.ResolveImmediateRoute(ctx);
+            if (immediateStep != null)
+            {
+                player.Combat.ExecuteStep(immediateStep, resolver.TreeDepth, resolver.IsAirCombo, AttackCategory.Normal, resolver.ActiveCombatAction?.actionName, true);
+                RestartAction();
+                return;
+            }
+        }
+
         // Safety: if Combat is no longer attacking and we have no frame data
         if (player.Combat != null && !player.Combat.IsAttacking() && currentPhase == ActionPhase.None && !isPlungeFalling)
         {
@@ -278,6 +293,7 @@ public class PlayerAttackState : FrameDataPlayerState
             facingDirection = player.Movement != null ? player.Movement.FacingDirection : 1,
             previousState = transitionContext.previousState,
             hasGrabbedEnemy = player.Combat != null && player.Combat.HasGrabbedEnemy(),
+            isAgainstWall = player.Movement != null && player.Movement.IsAgainstWall(),
             passiveController = player.PassiveController,
             runtimeState = player.PassiveController != null ? player.PassiveController.RuntimeState : null
         };
@@ -286,14 +302,14 @@ public class PlayerAttackState : FrameDataPlayerState
     /// <summary>
     /// Resolve the next combo step and execute it.
     /// </summary>
-    private bool TryResolveNextStep()
+    private bool TryResolveNextStep(bool isAutoChain = false)
     {
         InputContext ctx = BuildInputContext();
         AttackStepData nextStep = resolver.ResolveNext(ctx);
 
         if (nextStep == null) return false;
 
-        player.Combat.ExecuteStep(nextStep, resolver.TreeDepth, resolver.IsAirCombo, AttackCategory.Normal, resolver.ActiveCombatAction?.actionName);
+        player.Combat.ExecuteStep(nextStep, resolver.TreeDepth, resolver.IsAirCombo, AttackCategory.Normal, resolver.ActiveCombatAction?.actionName, isAutoChain);
         RestartAction();
         return true;
     }
@@ -308,7 +324,7 @@ public class PlayerAttackState : FrameDataPlayerState
         var step = player.Combat.GetCurrentStepData();
         if (step == null || !step.autoChainToNext) return false;
 
-        return TryResolveNextStep();
+        return TryResolveNextStep(true);
     }
 
     // =========================================================
@@ -525,7 +541,7 @@ public class PlayerAttackState : FrameDataPlayerState
         AttackStepData impactStep = resolver.ResolvePlungeLanding();
         if (impactStep != null && player.Combat != null)
         {
-            player.Combat.ExecuteStep(impactStep, resolver.TreeDepth, false, AttackCategory.Normal, resolver.ActiveCombatAction?.actionName);
+            player.Combat.ExecuteStep(impactStep, resolver.TreeDepth, false, AttackCategory.Normal, resolver.ActiveCombatAction?.actionName, true);
             RestartAction();
 
             // Trigger plunge impact animation
@@ -569,7 +585,7 @@ public class PlayerAttackState : FrameDataPlayerState
             if (maintainFrames > 0)
                 player.Combat.MaintainGrabThroughFollowUp(maintainFrames);
 
-            player.Combat.ExecuteStep(grabFollowUp, resolver.TreeDepth, resolver.IsAirCombo, AttackCategory.Normal, resolver.ActiveCombatAction?.actionName);
+            player.Combat.ExecuteStep(grabFollowUp, resolver.TreeDepth, resolver.IsAirCombo, AttackCategory.Normal, resolver.ActiveCombatAction?.actionName, true);
             RestartAction();
         }
     }

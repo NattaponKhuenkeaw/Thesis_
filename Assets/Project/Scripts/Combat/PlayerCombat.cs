@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using CombatCore;
 using UnityEngine;
 using UnityEngine.Serialization;
+using Project.Combat;
 
 /// <summary>
 /// Central combat executor for player-authored actions.
@@ -53,6 +54,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     private ActionPhase currentPhase = ActionPhase.None;
     private bool isPlungeFalling;
     private bool isAirCombo;
+    private bool isExecutingAutoChainStep;
     private GrabHitbox currentGrabHitbox;
     private Animator cachedAnimator;
 
@@ -65,6 +67,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public CombatRuntimeState RuntimeState => passiveController != null ? passiveController.RuntimeState : null;
     public string CurrentActionName => currentActionName;
     public AttackCategory CurrentAttackCategory => currentAttackCategory;
+    public bool IsExecutingAutoChainStep => isExecutingAutoChainStep;
 
     void Awake()
     {
@@ -128,7 +131,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         int depth,
         bool airCombo,
         AttackCategory category,
-        string resolvedActionName = null)
+        string resolvedActionName = null,
+        bool isAutoChain = false)
     {
         if (step == null)
         {
@@ -140,6 +144,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         currentStepData = step;
         comboDepth = depth;
         isAirCombo = airCombo;
+        isExecutingAutoChainStep = isAutoChain;
         currentAttackCategory = category;
         currentActionName = resolvedActionName ?? step.stepName;
         currentPhase = ActionPhase.Startup;
@@ -147,9 +152,14 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         hitboxActiveCount = 0;
         cachedStartupFrames = step.startupFrames;
 
+        if (playerCharacter != null && playerCharacter.StateMachine != null && playerCharacter.StateMachine.showCombatLogs)
+        {
+            Debug.Log($"[Combat] ExecuteStep: {step.stepName}, isAutoChain={isAutoChain}");
+        }
+
         hitEnemiesThisStep.Clear();
-        triggeredAudioFrames.Clear();
-        triggeredVFXFrames.Clear();
+        triggeredEntriesSet.Clear();
+        triggeredVFXEntriesSet.Clear();
         currentGrabHitbox = null; // Clear stale grab state from previous step
         DisableHitbox(true);
 
@@ -187,12 +197,54 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     public void ProcessFrameFromState(int frame, ActionPhase phase)
     {
-        // No-op for animator hitstop as it's handled by TimeScale
-        // if (HasActiveHitstop)
-        //     HandleAnimatorHitstop();
         if (HasActiveHitstop)
         {
             return;
+        }
+
+        // --- NEW: Wrap-around detection for Looping Active Phase ---
+        // If the current step is looping and we are in the active phase,
+        // detect if the frame index has jumped backwards (the wrap).
+        if (currentStepData != null && currentStepData.loopActivePhase && phase == ActionPhase.Active)
+        {
+            if (frame < currentAttackFrame)
+            {
+                // Reset all "already triggered" states so they re-trigger on the new loop
+                triggeredEntriesSet.Clear();
+                triggeredVFXEntriesSet.Clear();
+                hitEnemiesThisStep.Clear();
+                
+                // Explicitly reset the HitBoxDamage component so it can hit the same targets again
+                hitBoxDamage?.ResetActivationState();
+
+                // Maintain grab for the duration of the next loop cycle to prevent premature drop
+                if (HasGrabbedEnemy())
+                {
+                    MaintainGrabThroughFollowUp(currentStepData.activeFrames + 1);
+                }
+
+                // --- NEW: Re-trigger Motion on Wrap ---
+                // Since the logical frame index has jumped backwards (e.g. from 20 to 11),
+                // we need to find the "active" motion keyframe for this logical frame and restart it.
+                if (currentStepData.motionData != null && currentStepData.motionData.keyframes != null)
+                {
+                    MotionKeyframe currentMotion = null;
+                    foreach (var kf in currentStepData.motionData.keyframes)
+                    {
+                        // Find the keyframe that started closest to (or at) the current wrapped frame
+                        if (kf.startFrame <= frame)
+                        {
+                            if (currentMotion == null || kf.startFrame > currentMotion.startFrame)
+                                currentMotion = kf;
+                        }
+                    }
+                    
+                    if (currentMotion != null)
+                    {
+                        movement?.ApplyAttackMovement(currentMotion);
+                    }
+                }
+            }
         }
 
         currentAttackFrame = frame;
@@ -219,6 +271,12 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         ProcessMotion(frame);
         ProcessAudio(frame);
         ProcessVFX(frame);
+
+        // Sync visual animation with logic frame (handles visual looping)
+        if (currentStepData != null && animHandler != null)
+        {
+            animHandler.UpdateActionNormalizedTime(frame, currentStepData.TotalFrames);
+        }
 
         if (hitboxActiveCount > 0 && hitboxObject != null && hitboxObject.activeSelf)
         {
@@ -318,6 +376,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         currentAttackFrame = 0;
         isPlungeFalling = false;
         isAirCombo = false;
+        isExecutingAutoChainStep = false;
         currentGrabHitbox = null;
 
         DisableHitbox(true);
@@ -477,14 +536,11 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     public ProjectileSpawnContext BuildProjectileSpawnContext(ProjectileSpawnHitbox projectileHitbox)
     {
-        Vector2 offset = projectileHitbox != null && projectileHitbox.overrideSpawnOffset && projectileHitbox.projectileData != null
-            ? projectileHitbox.spawnOffset
-            : projectileHitbox != null && projectileHitbox.projectileData != null
-                ? projectileHitbox.projectileData.spawnOffset
-                : Vector2.zero;
-
         ProjectileData data = projectileHitbox != null ? projectileHitbox.projectileData : null;
-        Vector2 origin = GetSpawnPosition(offset);
+        Vector2 resolvedSpawnOffset = projectileHitbox != null
+            ? projectileHitbox.ResolveSpawnOffset()
+            : data != null ? data.spawnOffset : Vector2.zero;
+        Vector2 origin = GetSpawnPosition(resolvedSpawnOffset);
         Vector2 direction = GetFacingDirection();
         int remainingHits = data != null ? Mathf.Max(1, data.maxHits) : 1;
 
@@ -500,6 +556,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             category = currentAttackCategory,
             origin = origin,
             direction = direction,
+            resolvedSpawnOffset = resolvedSpawnOffset,
             damage = GetFinalAttackDamage(1f),
             remainingHits = remainingHits
         };
@@ -607,7 +664,14 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             return;
         }
 
-        ProjectileRuntime.Spawn(BuildProjectileSpawnContext(projectileHitbox));
+        if (ProjectileManager.Instance != null)
+        {
+            ProjectileManager.Instance.SpawnProjectile(BuildProjectileSpawnContext(projectileHitbox));
+        }
+        else
+        {
+            Debug.LogError("ProjectileManager instance not found in scene!");
+        }
         CombatLog($"Projectile Spawned: {projectileHitbox.projectileData.name}");
     }
 
@@ -668,19 +732,26 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     // Audio & VFX Frame Processing
     // =========================================================
 
-    private HashSet<int> triggeredAudioFrames = new HashSet<int>();
-    private HashSet<int> triggeredVFXFrames = new HashSet<int>();
+    private HashSet<AudioEntry> triggeredEntriesSet = new HashSet<AudioEntry>();
+    private HashSet<VFXEntry> triggeredVFXEntriesSet = new HashSet<VFXEntry>();
 
     private void ProcessAudio(int frame)
     {
         if (currentStepData == null || currentStepData.audioData?.entries == null) return;
-        if (GameAudioManager.Instance == null) return;
+
+        if (GameAudioManager.Instance == null)
+        {
+            // Only log once to avoid spamming
+            if (Time.frameCount % 60 == 0)
+                Debug.LogWarning("PlayerCombat: GameAudioManager.Instance is null! Audio will not play. Please ensure a GameAudioManager component is in your scene.", this);
+            return;
+        }
 
         foreach (var entry in currentStepData.audioData.entries)
         {
-            if (frame == entry.triggerFrame && !triggeredAudioFrames.Contains(entry.triggerFrame))
+            if (frame == entry.triggerFrame && !triggeredEntriesSet.Contains(entry))
             {
-                triggeredAudioFrames.Add(entry.triggerFrame);
+                triggeredEntriesSet.Add(entry);
                 GameAudioManager.Instance.PlayTimelineAudio(entry);
             }
         }
@@ -693,9 +764,9 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
         foreach (var entry in currentStepData.vfxData.entries)
         {
-            if (frame == entry.triggerFrame && !triggeredVFXFrames.Contains(entry.triggerFrame))
+            if (frame == entry.triggerFrame && !triggeredVFXEntriesSet.Contains(entry))
             {
-                triggeredVFXFrames.Add(entry.triggerFrame);
+                triggeredVFXEntriesSet.Add(entry);
                 vfxSpawner.SpawnVFX(entry);
             }
         }

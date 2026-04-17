@@ -34,6 +34,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
     private bool launchVelocityApplied;
     private int landingStateEnteredFrame = -1;
     private Vector3 impactFreezeAnchorPosition;
+    private bool hasResolvedAirborneLanding;
 
     private readonly RaycastHit2D[] groundHits = new RaycastHit2D[4];
 
@@ -127,12 +128,9 @@ public class EnemyHitReactionHandler : MonoBehaviour
         logicTimeCounter = 0f;
         launchVelocityApplied = false;
         landingStateEnteredFrame = -1;
+        hasResolvedAirborneLanding = false;
         impactFreezeAnchorPosition = transform.position;
-
-        if (currentReaction.snapToAttacker && currentReaction.reactionKind != EnemyReactionKind.Grab)
-        {
-            ApplyLegacySnap(attackerPosition);
-        }
+        ApplyForcedFacing();
 
         EnterState(EnemyReactionState.ImpactFreeze);
     }
@@ -230,11 +228,20 @@ public class EnemyHitReactionHandler : MonoBehaviour
             return;
         }
 
+        ApplyForcedFacing();
         MaintainCurrentStateMotion();
 
         if (currentState == EnemyReactionState.ImpactFreeze)
         {
-            UpdateImpactFreezeShake();
+            if (currentReaction.useSnapToAnchor && currentReaction.reactionKind != EnemyReactionKind.Grab)
+            {
+                ApplySnapBinding();
+                impactFreezeAnchorPosition = transform.position;
+            }
+            else
+            {
+                UpdateImpactFreezeShake();
+            }
         }
     }
 
@@ -261,7 +268,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
                 return;
 
             case EnemyReactionKind.Knockup:
-                ProcessKnockupFrames(activeEndFrame, totalEndFrame);
+                ProcessKnockupFrames();
                 return;
 
             case EnemyReactionKind.Knockback:
@@ -291,6 +298,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
     private void ProcessKnockbackFrames(int activeEndFrame, int totalEndFrame)
     {
+        // For knockback, activeEndFrame is impactEndFrame + currentReaction.knockbackFrames
         if (currentReactionFrame <= activeEndFrame)
         {
             if (currentState != EnemyReactionState.Knockback)
@@ -313,40 +321,68 @@ public class EnemyHitReactionHandler : MonoBehaviour
         }
     }
 
-    private void ProcessKnockupFrames(int activeEndFrame, int totalEndFrame)
+    private void ProcessKnockupFrames()
     {
-        if (currentState != EnemyReactionState.Knockup &&
-            currentState != EnemyReactionState.Knockfall &&
-            currentState != EnemyReactionState.Knockdown &&
-            currentState != EnemyReactionState.Recovering)
-        {
-            EnterState(EnemyReactionState.Knockup);
-            return;
-        }
+        int impactEnd = currentReaction.ImpactFreezeFrames;
+        int knockupEnd = impactEnd + currentReaction.knockupFrames;
+        int knockfallEnd = knockupEnd + currentReaction.knockfallFrames;
+        int totalEndFrame = knockfallEnd + currentReaction.RecoveryFrames;
 
-        if (currentState == EnemyReactionState.Knockup && rb != null && rb.linearVelocity.y <= 0f)
+        if (currentReactionFrame <= knockupEnd)
         {
-            EnterState(EnemyReactionState.Knockfall);
-        }
+            hasResolvedAirborneLanding = false;
 
-        bool grounded = IsGrounded();
-        bool effectivelyGrounded = grounded && rb != null && rb.linearVelocity.y <= 0.1f;
-
-        if (effectivelyGrounded && (currentState == EnemyReactionState.Knockup || currentState == EnemyReactionState.Knockfall))
-        {
-            if (currentReaction.landingBehavior == EnemyLandingBehavior.Knockdown)
+            if (currentState != EnemyReactionState.Knockup)
             {
-                EnterState(EnemyReactionState.Knockdown);
-            }
-            else
-            {
-                EnterState(EnemyReactionState.Recovering);
+                EnterState(EnemyReactionState.Knockup);
             }
 
             return;
         }
 
-        if (currentState == EnemyReactionState.Knockdown && currentReactionFrame > Mathf.Max(activeEndFrame, landingStateEnteredFrame))
+        if (currentReactionFrame <= knockfallEnd)
+        {
+            if (currentState != EnemyReactionState.Knockfall)
+            {
+                EnterState(EnemyReactionState.Knockfall);
+            }
+
+            return;
+        }
+
+        if (!hasResolvedAirborneLanding)
+        {
+            bool grounded = IsEffectivelyGrounded();
+            if (grounded)
+            {
+                hasResolvedAirborneLanding = true;
+
+                if (rb != null)
+                {
+                    rb.linearVelocity = new Vector2(rb.linearVelocity.x, Mathf.Min(0f, rb.linearVelocity.y));
+                }
+
+                if (currentReaction.landingBehavior == EnemyLandingBehavior.Knockdown)
+                {
+                    if (currentState != EnemyReactionState.Knockdown)
+                    {
+                        EnterState(EnemyReactionState.Knockdown);
+                    }
+                }
+                else if (currentState != EnemyReactionState.Recovering)
+                {
+                    EnterState(EnemyReactionState.Recovering);
+                }
+            }
+            else if (currentState != EnemyReactionState.Knockfall)
+            {
+                EnterState(EnemyReactionState.Knockfall);
+            }
+
+            return;
+        }
+
+        if (currentState == EnemyReactionState.Knockdown && currentReactionFrame > Mathf.Max(knockfallEnd, landingStateEnteredFrame))
         {
             EnterState(EnemyReactionState.Recovering);
             return;
@@ -356,11 +392,6 @@ public class EnemyHitReactionHandler : MonoBehaviour
         {
             CompleteReaction();
             return;
-        }
-
-        if (currentReactionFrame > activeEndFrame && grounded && currentState != EnemyReactionState.Recovering)
-        {
-            EnterState(EnemyReactionState.Recovering);
         }
     }
 
@@ -517,7 +548,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
         float facingDir = GetAttackerFacingSign();
         Vector2 offset = currentReaction.snapOffset;
         Vector2 snapPos = attackerPosition + new Vector2(offset.x * facingDir, offset.y);
-        transform.position = new Vector3(snapPos.x, snapPos.y, transform.position.z);
+        MoveToReactionPosition(snapPos);
     }
 
     private void ApplyGroundKnockbackVelocity()
@@ -557,7 +588,14 @@ public class EnemyHitReactionHandler : MonoBehaviour
         }
 
         float velocityX = currentReaction.HorizontalSpeed * GetDirectionSign();
-        rb.linearVelocity = new Vector2(velocityX, rb.linearVelocity.y);
+        float velocityY = rb.linearVelocity.y;
+
+        if (currentState == EnemyReactionState.Knockup && currentReaction.knockupFrames > 0)
+        {
+            velocityY = Mathf.Max(velocityY, currentReaction.LaunchSpeed);
+        }
+
+        rb.linearVelocity = new Vector2(velocityX, velocityY);
     }
 
     private float GetDirectionSign()
@@ -597,6 +635,55 @@ public class EnemyHitReactionHandler : MonoBehaviour
         return currentReaction.grabSocket != null || currentReaction.attackerTransform != null;
     }
 
+    private void ApplySnapBinding()
+    {
+        if (!currentReaction.useSnapToAnchor || currentReaction.reactionKind == EnemyReactionKind.Grab)
+        {
+            return;
+        }
+
+        Vector2 targetPosition;
+        if (currentReaction.hasSnapWorldPosition)
+        {
+            float facing = GetAttackerFacingSign();
+            Vector2 offset = currentReaction.snapOffset;
+            targetPosition = currentReaction.snapWorldPosition + new Vector2(offset.x * facing, offset.y);
+        }
+        else
+        {
+            float facing = GetAttackerFacingSign();
+            Vector2 offset = currentReaction.snapOffset;
+            targetPosition = attackerPos + new Vector2(offset.x * facing, offset.y);
+        }
+
+        MoveToReactionPosition(targetPosition);
+    }
+
+    private void ApplyForcedFacing()
+    {
+        if (!currentReaction.forceFaceAttacker || currentReaction.reactionKind == EnemyReactionKind.Grab)
+        {
+            return;
+        }
+
+        Vector2 targetPosition = currentReaction.attackerTransform != null
+            ? (Vector2)currentReaction.attackerTransform.position
+            : attackerPos;
+
+        float deltaX = targetPosition.x - transform.position.x;
+        if (Mathf.Abs(deltaX) <= 0.01f)
+        {
+            return;
+        }
+
+        float targetY = deltaX >= 0f ? 0f : 180f;
+        Vector3 euler = transform.eulerAngles;
+        if (!Mathf.Approximately(euler.y, targetY))
+        {
+            transform.eulerAngles = new Vector3(euler.x, targetY, euler.z);
+        }
+    }
+
     private void UpdateGrabbedBinding()
     {
         Transform bindTarget = currentReaction.grabSocket != null
@@ -615,19 +702,39 @@ public class EnemyHitReactionHandler : MonoBehaviour
         float facing = GetAttackerFacingSign();
         Vector2 targetPosition = (Vector2)bindTarget.position + new Vector2(offset.x * facing, offset.y);
 
+        MoveToReactionPosition(targetPosition);
+
         if (rb != null)
         {
-            rb.linearVelocity = Vector2.zero;
-            rb.MovePosition(targetPosition);
             rb.MoveRotation(bindTarget.rotation);
         }
         else
         {
-            transform.SetPositionAndRotation(
-                new Vector3(targetPosition.x, targetPosition.y, transform.position.z),
-                bindTarget.rotation
-            );
+            transform.rotation = bindTarget.rotation;
         }
+    }
+
+    private void MoveToReactionPosition(Vector2 targetPosition)
+    {
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+            rb.MovePosition(targetPosition);
+        }
+        else
+        {
+            transform.position = new Vector3(targetPosition.x, targetPosition.y, transform.position.z);
+        }
+    }
+
+    private bool IsEffectivelyGrounded()
+    {
+        if (!IsGrounded())
+        {
+            return false;
+        }
+
+        return rb == null || rb.linearVelocity.y <= 0.1f;
     }
 
     private bool IsGrounded()
@@ -696,10 +803,18 @@ public class EnemyHitReactionHandler : MonoBehaviour
             case EnemyReactionState.Knockup:
                 EnsureDynamicBody();
                 ApplyLaunchVelocity();
+                if (rb != null && currentReaction.knockupFrames > 0)
+                {
+                    rb.gravityScale = 0f; // Stay airborne as requested
+                }
                 break;
 
             case EnemyReactionState.Knockfall:
                 EnsureDynamicBody();
+                if (rb != null)
+                {
+                    rb.gravityScale = originalGravityScale; // Start falling
+                }
                 break;
 
             case EnemyReactionState.Knockdown:
@@ -735,6 +850,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
         logicTimeCounter = 0f;
         launchVelocityApplied = false;
         landingStateEnteredFrame = -1;
+        hasResolvedAirborneLanding = false;
     }
 
     private void CleanupReaction()
@@ -747,6 +863,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
         logicTimeCounter = 0f;
         launchVelocityApplied = false;
         landingStateEnteredFrame = -1;
+        hasResolvedAirborneLanding = false;
         currentJuggleCount = 0;
         
         if (controller != null)
@@ -766,6 +883,15 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
     private void EnterImpactFreeze()
     {
+        if (currentReaction.useSnapToAnchor && currentReaction.reactionKind != EnemyReactionKind.Grab)
+        {
+            ApplySnapBinding();
+        }
+        else if (currentReaction.snapToAttacker && currentReaction.reactionKind != EnemyReactionKind.Grab)
+        {
+            ApplyLegacySnap(attackerPos);
+        }
+
         impactFreezeAnchorPosition = transform.position;
 
         if (rb != null)

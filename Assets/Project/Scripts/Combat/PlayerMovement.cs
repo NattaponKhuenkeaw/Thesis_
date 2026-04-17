@@ -290,6 +290,47 @@ public class PlayerMovement : MonoBehaviour
         return isGrounded;
     }
 
+    public bool IsAgainstWall()
+    {
+        if (rb == null) return false;
+
+        float dir = FacingDirection;
+        // Check from slightly above ground level to avoid floor-snagging, and at head level
+        Vector2 originLower = rb.position + Vector2.up * 0.5f;
+        Vector2 originUpper = rb.position + Vector2.up * 1.5f;
+        Vector2 direction = Vector2.right * dir;
+        float distance = 1.2f; // Increased for better reliability
+
+        // NEW: Filter out Player and Enemy layers to avoid self-hits or hitting the grabbed target
+        int playerLayer = LayerMask.NameToLayer(playerLayerName);
+        int enemyLayer = LayerMask.NameToLayer(enemyLayerName);
+        
+        LayerMask wallMask = groundLayer;
+        if (playerLayer != -1) wallMask &= ~(1 << playerLayer);
+        if (enemyLayer != -1) wallMask &= ~(1 << enemyLayer);
+
+        RaycastHit2D hitLower = Physics2D.Raycast(originLower, direction, distance, wallMask);
+        RaycastHit2D hitUpper = Physics2D.Raycast(originUpper, direction, distance, wallMask);
+
+        // Visual Debug for the user to see exactly where the rays are checking
+        Debug.DrawRay(originLower, direction * distance, hitLower.collider != null ? Color.green : Color.red);
+        Debug.DrawRay(originUpper, direction * distance, hitUpper.collider != null ? Color.green : Color.red);
+
+        if (hitLower.collider != null)
+        {
+            Debug.Log($"[WallCheck] Hit Lower: {hitLower.collider.name} on Layer: {LayerMask.LayerToName(hitLower.collider.gameObject.layer)}");
+            return true;
+        }
+
+        if (hitUpper.collider != null)
+        {
+            Debug.Log($"[WallCheck] Hit Upper: {hitUpper.collider.name} on Layer: {LayerMask.LayerToName(hitUpper.collider.gameObject.layer)}");
+            return true;
+        }
+
+        return false;
+    }
+
     public bool TryDropDown()
     {
         if (!CanDropDown())
@@ -729,7 +770,14 @@ public class PlayerMovement : MonoBehaviour
         if (!wasAttackLockOnActive || currentComboStep != lastObservedComboStep)
         {
             attackFacingLockOnCancelledForCurrentAttack = false;
-            hasPerformedInitialLockOnForCurrentStep = false;
+            // Skip initial lock-on if this is an auto-chained step
+            bool isAutoChain = (combat != null) && combat.IsExecutingAutoChainStep;
+            hasPerformedInitialLockOnForCurrentStep = isAutoChain;
+            
+            if (fsm != null && fsm.showCombatLogs)
+            {
+                Debug.Log($"[Movement] Step Changed: {lastObservedComboStep} -> {currentComboStep}. isAutoChain={isAutoChain}, hasPerformedLockOn={hasPerformedInitialLockOnForCurrentStep}");
+            }
         }
 
         if (Mathf.Abs(horizontalInput) >= attackFacingCancelInputThreshold)
@@ -743,8 +791,12 @@ public class PlayerMovement : MonoBehaviour
 
     private bool TryHandleAttackFacingLockOn()
     {
-        if (hasPerformedInitialLockOnForCurrentStep)
+        // Skip lock-on if already performed THIS step, OR if this step is an auto-chain
+        bool isAutoChain = (combat != null) && combat.IsExecutingAutoChainStep;
+        if (hasPerformedInitialLockOnForCurrentStep || isAutoChain)
+        {
             return false;
+        }
 
         if (!enableAttackFacingLockOn || attackFacingLockOnCancelledForCurrentAttack)
             return false;

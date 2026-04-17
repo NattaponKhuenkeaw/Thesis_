@@ -15,7 +15,7 @@ MonoBehaviour:
   characterId: Char_2_Rugal
   characterType: 0
   elementType: 1
-  previewPrefab: {fileID: 6921409426865988085, guid: 60b71052072438a4daa75e9c187905de, type: 3}
+  previewPrefab: {fileID: 6597880524197938003, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
   stats:
     maxHP: 130
     attack: 13
@@ -44,7 +44,8 @@ MonoBehaviour:
   authoredFPS: 24
   upgrade:
     level: 1
-    skillTreePoints: 3
+    constellationRank: 0
+    progressionPoints: 3
   dashData:
     animationClip: {fileID: 7400000, guid: 3e950a7b365be294c97ddb9271fb0efe, type: 2}
     startupFrames: 5
@@ -53,202 +54,6 @@ MonoBehaviour:
     cancelWindowStartFrame: 25
     dashSpeed: 40
     cooldownFrames: 30
-  basicAttackComboData:
-    comboResetDelay: 0.8
-    steps:
-    - stepName: Attack 1
-      animationClip: {fileID: 7400000, guid: 6cf09ac4cb4d35845a60e317a2b07166, type: 2}
-      startupFrames: 10
-      activeFrames: 12
-      recoveryFrames: 45
-      cancelWindowStartFrame: 25
-      stallUntilGrounded: 0
-      lockAirPosition: 1
-      autoChainToNext: 0
-      motionData:
-        rid: -2
-      vfxData:
-        rid: -2
-      hitData:
-        rid: 1588255759013249140
-      componentOrder:
-      - motion
-      - vfx
-      - hitbox
-    - stepName: Attack 2
-      animationClip: {fileID: 7400000, guid: 497ab9f274d956f429082d3e9fa2e890, type: 2}
-      startupFrames: 10
-      activeFrames: 22
-      recoveryFrames: 38
-      cancelWindowStartFrame: 35
-      stallUntilGrounded: 0
-      lockAirPosition: 1
-      autoChainToNext: 0
-      motionData:
-        rid: -2
-      vfxData:
-        rid: -2
-      hitData:
-        rid: -2
-      componentOrder:
-      - motion
-      - vfx
-      - hitbox
-    - stepName: Attack 3
-      animationClip: {fileID: 7400000, guid: 9443c87d6c977064d82958f823694341, type: 2}
-      startupFrames: 10
-      activeFrames: 68
-      recoveryFrames: 45
-      cancelWindowStartFrame: 80
-      stallUntilGrounded: 0
-      lockAirPosition: 1
-      autoChainToNext: 0
-      motionData:
-        rid: -2
-      vfxData:
-        rid: -2
-      hitData:
-        rid: -2
-      componentOrder:
-      - motion
-      - vfx
-      - hitbox
-    - stepName: Attack 4
-      animationClip: {fileID: 7400000, guid: 4affa92172a0e6949a6d14d2a1bd86f5, type: 2}
-      startupFrames: 12
-      activeFrames: 12
-      recoveryFrames: 48
-      cancelWindowStartFrame: 28
-      stallUntilGrounded: 0
-      lockAirPosition: 1
-      autoChainToNext: 0
-      motionData:
-        rid: -2
-      vfxData:
-        rid: -2
-      hitData:
-        rid: -2
-      componentOrder:
-      - motion
-      - vfx
-      - hitbox
-  neutralAirComboData:
-    comboResetDelay: 0.8
-    steps:
-    - stepName: Attack 1
-      animationClip: {fileID: 7400000, guid: 7fc06f4365a13974fbc711d6151b4d38, type: 2}
-      startupFrames: 5
-      activeFrames: 2
-      recoveryFrames: 12
-      cancelWindowStartFrame: 5
-      stallUntilGrounded: 0
-      lockAirPosition: 1
-      autoChainToNext: 0
-      motionData:
-        rid: -2
-      vfxData:
-        rid: -2
-      hitData:
-        rid: -2
-      componentOrder:
-      - motion
-      - vfx
-      - hitbox
-    - stepName: Attack 2
-      animationClip: {fileID: 7400000, guid: 6b5bf7f2ed4abe04a82ec6175781c382, type: 2}
-      startupFrames: 8
-      activeFrames: 10
-      recoveryFrames: 42
-      cancelWindowStartFrame: 10
-      stallUntilGrounded: 0
-      lockAirPosition: 1
-      autoChainToNext: 0
-      motionData:
-        rid: -2
-      vfxData:
-        rid: -2
-      hitData:
-        rid: -2
-      componentOrder:
-      - motion
-      - vfx
-      - hitbox
-    - stepName: Attack 3
-      animationClip: {fileID: 7400000, guid: 88aec8358ee7c044d8f85903a87b8341, type: 2}
-      startupFrames: 12
-      activeFrames: 10
-      recoveryFrames: 32
-      cancelWindowStartFrame: 12
-      stallUntilGrounded: 0
-      lockAirPosition: 1
-      autoChainToNext: 0
-      motionData:
-        rid: -2
-      vfxData:
-        rid: -2
-      hitData:
-        rid: -2
-      componentOrder:
-      - motion
-      - vfx
-      - hitbox
-  maxAirComboTime: 1
-  plungeAttackData:
-    isEnabled: 1
-    downwardSpeed: 18
-    fallAnimationStateName: Plunge_Fall
-    impactAnimationStateName: Plunge_Impact
-    impactStep:
-      stepName: Plunge Impact
-      animationClip: {fileID: 7400000, guid: 26ad7303e1deab444bf13f218d02b1e5, type: 2}
-      startupFrames: 0
-      activeFrames: 15
-      recoveryFrames: 40
-      cancelWindowStartFrame: 18
-      stallUntilGrounded: 0
-      lockAirPosition: 1
-      autoChainToNext: 0
-      motionData:
-        rid: -2
-      vfxData:
-        rid: -2
-      hitData:
-        rid: -2
-      componentOrder:
-      - motion
-      - vfx
-      - hitbox
-  skillData:
-    skillName: Rapponken
-    description: "\u0E1B\u0E25\u0E48\u0E2D\u0E22\u0E41\u0E23\u0E07\u0E25\u0E21\u0E01\u0E23\u0E30\u0E41\u0E17\u0E01\u0E14\u0E49\u0E32\u0E19\u0E2B\u0E19\u0E49\u0E32
-      \u0E17\u0E33\u0E14\u0E32\u0E40\u0E21\u0E08\u0E41\u0E25\u0E30\u0E1C\u0E25\u0E31\u0E01\u0E28\u0E31\u0E15\u0E23\u0E39\u0E16\u0E2D\u0E22\u0E2B\u0E25\u0E31\u0E07"
-    elementType: 4
-    frameData:
-      startupFrames: 5
-      activeFrames: 8
-      recoveryFrames: 20
-      cancelWindowStartFrame: 25
-    cooldown: 4.5
-    damageMultiplier: 1.6
-    knockbackForce: 7
-    skillPrefab: {fileID: 5307899325778561399, guid: 198f1c6a8d7e7444a9d5b2d9a709c05b, type: 3}
-    spawnOffset: {x: 0, y: 0}
-  ultimateData:
-    ultimateName: Skyfall Tornado
-    description: "\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E17\u0E2D\u0E23\u0E4C\u0E19\u0E32\u0E42\u0E14\u0E14\u0E49\u0E32\u0E19\u0E2B\u0E19\u0E49\u0E32
-      \u0E17\u0E33\u0E43\u0E2B\u0E49\u0E28\u0E31\u0E15\u0E23\u0E39\u0E25\u0E2D\u0E22\u0E02\u0E36\u0E49\u0E19\u0E41\u0E25\u0E30\u0E23\u0E31\u0E1A\u0E14\u0E32\u0E40\u0E21\u0E08\u0E15\u0E48\u0E2D\u0E40\u0E19\u0E37\u0E48\u0E2D\u0E07"
-    elementType: 4
-    frameData:
-      startupFrames: 10
-      activeFrames: 15
-      recoveryFrames: 25
-      cancelWindowStartFrame: 0
-    cooldown: 3
-    activeDuration: 4
-    damageMultiplier: 0.6
-    hitInterval: 0.4
-    ultimatePrefab: {fileID: 5638362975519396571, guid: dc31dc6f951488e4f8feb39cef0755f8, type: 3}
-    spawnOffset: {x: 3, y: 0}
   skillTreeData:
     nodes:
     - nodeId: AERO_SKILL_01
@@ -278,37 +83,8 @@ MonoBehaviour:
       unlocked: 0
       effectType: 5
       effectValue: 1.5
+  progressionDefinition:
+    maxConstellationRank: 6
+    constellationNodes: []
+    passiveNodes: []
   actionResolverTable: {fileID: 11400000, guid: 24c1f4b36af412b4ebbeeb757fac41ef, type: 2}
-  references:
-    version: 2
-    RefIds:
-    - rid: -2
-      type: {class: , ns: , asm: }
-    - rid: 1588255759013249140
-      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
-      data:
-        hitboxes:
-        - rid: 1588255759013249141
-    - rid: 1588255759013249141
-      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
-      data:
-        startFrameOffset: 2
-        activeFrames: 8
-        debugColor: {r: 0.26853323, g: 1, b: 0, a: 1}
-        offset: {x: 0.8, y: 0.4}
-        size: {x: 1, y: 0.8}
-        damageMultiplier: 1
-        impactTier: 0
-        reactionKind: 1
-        impactFreezeFrames: 4
-        reactionFrames: 15
-        recoveryFrames: 9
-        horizontalSpeed: 3
-        launchSpeed: 1
-        landingBehavior: 1
-        canAirJuggle: 1
-        maxJuggleCount: 2
-        juggleLaunchScale: 0.85
-        juggleStunScale: 0.9
-        flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 15

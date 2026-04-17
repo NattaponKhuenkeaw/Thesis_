@@ -30,8 +30,16 @@ public class ProjectileData : ScriptableObject
 
     [Header("Impact Routine")]
     public HitFrameData impactHitData = new HitFrameData();
+    [Tooltip("Frames to wait between hits in a multi-hit routine.")]
+    public int hitIntervalFrames = 5;
+    public bool stopOnImpact = true;
+    public bool anchorToCaster = false;
     public bool destroyWhenHitsExhausted = true;
     public bool destroyOnLifetimeExpire = true;
+
+    [Header("Default Feedback")]
+    public Project.Combat.VFXType impactVFXType = Project.Combat.VFXType.HitSpark_Medium;
+    public AudioClip impactAudio;
 }
 
 public struct ProjectileSpawnContext
@@ -46,6 +54,7 @@ public struct ProjectileSpawnContext
     public AttackCategory category;
     public Vector2 origin;
     public Vector2 direction;
+    public Vector2 resolvedSpawnOffset;
     public float damage;
     public int remainingHits;
 }

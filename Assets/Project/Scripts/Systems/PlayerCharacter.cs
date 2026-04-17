@@ -219,7 +219,8 @@ public class PlayerCharacter : MonoBehaviour
         if (characterObject.metaData == null)
             return;
 
-        if (characterObject.metaData.animatorController == null)
+        if (characterObject.metaData.animatorController == null || 
+            Animator.anim.runtimeAnimatorController == characterObject.metaData.animatorController)
             return;
 
         Animator.anim.runtimeAnimatorController = characterObject.metaData.animatorController;

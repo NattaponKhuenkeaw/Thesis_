@@ -109,6 +109,25 @@ public class PlayerSkillState : FrameDataPlayerState
         }
     }
 
+    public override void Update()
+    {
+        base.Update();
+
+        // --- NEW: Immediate Environmental Interruption (Wall Hit, etc.) ---
+        // Added grace period check (currentFrame > 2) to ensure the startup animation plays
+        // even if the character is already touching a wall.
+        if (player.Combat != null && player.Combat.IsAttacking() && currentFrame > 2)
+        {
+            InputContext ctx = BuildInputContext();
+            AttackStepData immediateStep = resolver.ResolveImmediateRoute(ctx);
+            if (immediateStep != null)
+            {
+                player.Combat.ExecuteStep(immediateStep, resolver.TreeDepth, !ctx.isGrounded, AttackCategory.Skill, resolver.ActiveCombatAction?.actionName, true);
+                RestartAction();
+            }
+        }
+    }
+
     protected override void HandleInputDuringCancel()
     {
         ActionInputBuffer buffer = fsm.InputBuffer;
@@ -213,7 +232,7 @@ public class PlayerSkillState : FrameDataPlayerState
         }
     }
 
-    private bool TryResolveNextSkillStep()
+    private bool TryResolveNextSkillStep(bool isAutoChain = false)
     {
         if (!resolver.IsActive)
         {
@@ -227,7 +246,7 @@ public class PlayerSkillState : FrameDataPlayerState
             return false;
         }
 
-        player.Combat.ExecuteStep(nextStep, resolver.TreeDepth, !ctx.isGrounded, AttackCategory.Skill, resolver.ActiveCombatAction?.actionName);
+        player.Combat.ExecuteStep(nextStep, resolver.TreeDepth, !ctx.isGrounded, AttackCategory.Skill, resolver.ActiveCombatAction?.actionName, isAutoChain);
         RestartAction();
         return true;
     }
@@ -239,7 +258,7 @@ public class PlayerSkillState : FrameDataPlayerState
         var step = player.Combat.GetCurrentStepData();
         if (step == null || !step.autoChainToNext) return false;
 
-        return TryResolveNextSkillStep();
+        return TryResolveNextSkillStep(true);
     }
 
     private void TryStartCooldown()
@@ -267,6 +286,7 @@ public class PlayerSkillState : FrameDataPlayerState
             facingDirection = player.Movement != null ? player.Movement.FacingDirection : 1,
             previousState = transitionContext.previousState,
             hasGrabbedEnemy = player.Combat != null && player.Combat.HasGrabbedEnemy(),
+            isAgainstWall = player.Movement != null && player.Movement.IsAgainstWall(),
             passiveController = player.PassiveController,
             runtimeState = player.PassiveController != null ? player.PassiveController.RuntimeState : null
         };

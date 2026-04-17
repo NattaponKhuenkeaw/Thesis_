@@ -20,11 +20,12 @@ public interface ICharacterCombat
     void OnRecoveryPhaseFromState();
 
     // Step execution
-    void ExecuteStep(AttackStepData step, int comboDepth, bool isAirCombo, AttackCategory category, string resolvedActionName = null);
+    void ExecuteStep(AttackStepData step, int comboDepth, bool isAirCombo, AttackCategory category, string resolvedActionName = null, bool isAutoChain = false);
 
     // Step queries
     AttackStepData GetCurrentStepData();
     int GetComboStep();
+    bool IsExecutingAutoChainStep { get; }
     bool ShouldInterruptAttackOnGrounded();
     bool HasActiveHitstop { get; }
     bool HasGrabbedEnemy();

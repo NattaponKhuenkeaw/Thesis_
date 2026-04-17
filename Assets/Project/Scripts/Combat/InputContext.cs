@@ -13,6 +13,7 @@ public struct InputContext
     public int facingDirection;         // 1 or -1
     public PlayerStateId previousState;
     public bool hasGrabbedEnemy;
+    public bool isAgainstWall;
     public CharacterPassiveController passiveController;
     public CombatRuntimeState runtimeState;
 

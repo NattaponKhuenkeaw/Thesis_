@@ -847,6 +847,82 @@ public class AnimationEditorWindow : EditorWindow
         Handles.DrawSolidDisc(anchor + currentOffset, Vector3.back, 0.04f * HandleUtility.GetHandleSize(anchor + currentOffset));
     }
 
+    private void DrawVFXGizmos(VFXFrameData vfxData)
+    {
+        if (vfxData == null || vfxData.entries == null) return;
+
+        foreach (var entry in vfxData.entries)
+        {
+            if (entry == null) continue;
+
+            // 1. Determine spawn position (relative to player position at trigger frame)
+            Vector3 playerOffsetAtTrigger = EvaluateMotionOffset(GetCurrentStep()?.motionData, entry.triggerFrame);
+            Vector3 spawnBasePos = playerOffsetAtTrigger;
+            
+            Vector3 vfxLocalOffset = entry.transformKeys.Count > 0 ? entry.transformKeys[0].position : Vector3.zero;
+            Vector3 spawnWorldPos = spawnBasePos + vfxLocalOffset;
+
+            // 2. Draw Trajectory if multiple keys exist
+            if (entry.transformKeys.Count > 1)
+            {
+                DrawVFXTrajectory(entry, spawnBasePos);
+            }
+
+            // 3. Draw Marker
+            bool isTriggerFrame = scrubberFrame == entry.triggerFrame;
+            bool isVisible = scrubberFrame >= entry.triggerFrame && scrubberFrame < entry.triggerFrame + entry.duration;
+            
+            Handles.color = entry.trackColor;
+            float size = HandleUtility.GetHandleSize(spawnWorldPos) * 0.15f;
+            
+            if (isTriggerFrame)
+            {
+                Handles.DrawSolidDisc(spawnWorldPos, Vector3.back, size * 1.2f);
+                Handles.color = Color.white;
+                Handles.DrawWireDisc(spawnWorldPos, Vector3.back, size * 1.3f);
+                Handles.Label(spawnWorldPos + Vector3.up * size * 2f, $"SPAWN: {entry.label}", GetSceneHitboxLabelStyle(true));
+            }
+            else
+            {
+                // Non-trigger frames: draw a small disc to show it's active
+                float markerSize = size * 0.6f;
+                if (isVisible)
+                {
+                    Handles.color = new Color(entry.trackColor.r, entry.trackColor.g, entry.trackColor.b, 0.4f);
+                    Handles.DrawSolidDisc(spawnWorldPos, Vector3.back, markerSize);
+                }
+                
+                Handles.color = entry.trackColor;
+                Handles.DrawWireDisc(spawnWorldPos, Vector3.back, markerSize);
+            }
+        }
+    }
+
+    private void DrawVFXTrajectory(VFXEntry entry, Vector3 basePos)
+    {
+        if (entry.transformKeys == null || entry.transformKeys.Count < 2) return;
+
+        Handles.color = new Color(entry.trackColor.r, entry.trackColor.g, entry.trackColor.b, 0.5f);
+        List<Vector3> points = new List<Vector3>();
+
+        // Sort keys by frame just in case
+        var sortedKeys = new List<VFXTransformKey>(entry.transformKeys);
+        sortedKeys.Sort((a, b) => a.frame.CompareTo(b.frame));
+
+        for (int i = 0; i < sortedKeys.Count; i++)
+        {
+            points.Add(basePos + sortedKeys[i].position);
+        }
+
+        Handles.DrawAAPolyLine(2f, points.ToArray());
+        
+        // Draw dots at keys
+        foreach (var key in sortedKeys)
+        {
+            Handles.DrawSolidDisc(basePos + key.position, Vector3.back, HandleUtility.GetHandleSize(basePos + key.position) * 0.03f);
+        }
+    }
+
     private void CleanupPreview()
     {
         if (AnimationMode.InAnimationMode())
@@ -889,6 +965,10 @@ public class AnimationEditorWindow : EditorWindow
             // Draw Motion Simulation path
             if (step.motionData != null)
                 DrawMotionTrajectory(step.motionData);
+
+            // Draw VFX Simulation points
+            if (step.vfxData != null)
+                DrawVFXGizmos(step.vfxData);
 
             if (step.hitData == null || step.hitData.hitboxes == null || step.hitData.hitboxes.Count == 0) return;
 

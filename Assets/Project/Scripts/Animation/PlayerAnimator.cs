@@ -389,7 +389,7 @@ public class PlayerAnimator : MonoBehaviour
                         return true; 
                     }
 
-                    Debug.Log($"[PlayerAnimator] Playing State: '{stateName}' on Layer {i}. (Prev: {stateInfo.shortNameHash})");
+                    //Debug.Log($"[PlayerAnimator] Playing State: '{stateName}' on Layer {i}. (Prev: {stateInfo.shortNameHash})");
                     anim.Play(shortHash, i, 0f);
                     return true;
                 }
@@ -399,7 +399,7 @@ public class PlayerAnimator : MonoBehaviour
                 {
                     if (anim.GetCurrentAnimatorStateInfo(i).shortNameHash == legacyHash) return true;
 
-                    Debug.Log($"[PlayerAnimator] Playing Legacy State: '{legacyPath}' on Layer 0.");
+                    //Debug.Log($"[PlayerAnimator] Playing Legacy State: '{legacyPath}' on Layer 0.");
                     anim.Play(legacyHash, i, 0f);
                     return true;
                 }
@@ -427,6 +427,32 @@ public class PlayerAnimator : MonoBehaviour
     {
         if (anim != null && animParamHashes != null && animParamHashes.Contains(triggerHash))
             anim.ResetTrigger(triggerHash);
+    }
+
+    /// <summary>
+    /// Manually syncs the animator's playback time to a specific logical frame.
+    /// Used for Looping Active Phases to ensure visual and data sync.
+    /// </summary>
+    public void UpdateActionNormalizedTime(int logicFrame, int totalFrames)
+    {
+        if (anim == null || totalFrames <= 0) return;
+
+        // Calculate normalized time (0 to 1)
+        // logicFrame is 1-indexed, so we subtract 1 for the timeline position.
+        float normalizedTime = Mathf.Clamp01((float)(logicFrame - 1) / totalFrames);
+
+        // We apply this to all layers to ensure any active combat animation is synced.
+        for (int i = 0; i < anim.layerCount; i++)
+        {
+            var state = anim.GetCurrentAnimatorStateInfo(i);
+            
+            // Optimization: Only play if the normalized time difference is significant enough to notice
+            // (prevents micro-stuttering from float precision)
+            if (Mathf.Abs(state.normalizedTime - normalizedTime) > 0.001f)
+            {
+                anim.Play(state.fullPathHash, i, normalizedTime);
+            }
+        }
     }
 
     // =========================================================

@@ -61,16 +61,40 @@ public class ActionFrameData
     public ActionPhase GetPhase(int frame)
     {
         if (frame <= 0) return ActionPhase.None;
-        if (frame > TotalFrames) return ActionPhase.Done;
+
+        // Completion check (Prioritize Done so it's not masked by Cancel/Loop)
+        if (frame > TotalFrames && !loopActivePhase)
+            return ActionPhase.Done;
+
+        // Looping logic (Stays in Active indefinitely)
+        if (loopActivePhase && frame > ActivePhaseEnd)
+            return ActionPhase.Active;
+
+        // Cancel window check 
+        if (HasCancelWindow && frame >= cancelWindowStartFrame)
+            return ActionPhase.Cancel;
         if (frame <= startupFrames) return ActionPhase.Startup;
         if (frame <= startupFrames + activeFrames) return ActionPhase.Active;
 
-        // Check cancel window only while the action is still inside recovery.
-        if (HasCancelWindow && frame >= cancelWindowStartFrame)
-            return ActionPhase.Cancel;
-
         return ActionPhase.Recovery;
     }
+
+    /// <summary>
+    /// Returns the logical frame index for processing visuals/motion.
+    /// Wraps within the Active phase if loopActivePhase is enabled.
+    /// </summary>
+    public int GetLogicFrame(int absoluteFrame)
+    {
+        if (!loopActivePhase || absoluteFrame <= ActivePhaseEnd || activeFrames <= 0)
+            return absoluteFrame;
+
+        int activeStart = ActivePhaseStart;
+        int relativeFrame = absoluteFrame - activeStart;
+        return activeStart + (relativeFrame % activeFrames);
+    }
+
+    [Header("Behavior")]
+    public bool loopActivePhase = false;
 }
 
 /// <summary>

@@ -28,12 +28,13 @@ public class VFXTransformKey
 public class VFXEntry
 {
     public string label = "VFX";
+    public Project.Combat.VFXType vfxType = Project.Combat.VFXType.None;
     public GameObject vfxPrefab;
 
     [Tooltip("Absolute frame on the ActionStep timeline where this VFX spawns.")]
     public int triggerFrame;
 
-    [Tooltip("Duration in frames the VFX is active (for timeline visualisation).")]
+    [Tooltip("Visual duration on timeline (in frames). Also controls how long the VFX gizmo remains visible during editor preview.")]
     public int duration = 4;
 
     public Color trackColor = new Color(0.55f, 0.30f, 1f); // violet

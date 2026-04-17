@@ -169,7 +169,8 @@ public abstract class FrameDataPlayerState : PlayerState
             }
 
             // Per-frame processing
-            ProcessLogicFrame(currentFrame, currentPhase);
+            // Use logical frame (wraps if looping) for motion/VFX
+            ProcessLogicFrame(cachedFrameData.GetLogicFrame(currentFrame), currentPhase);
 
             // Handle input mid-action
             InputHandleMidAction(currentPhase);
@@ -234,6 +235,7 @@ public abstract class FrameDataPlayerState : PlayerState
     /// <summary>Called when all phases complete (frame > TotalFrames).</summary>
     protected virtual void OnActionComplete()
     {
+        fsm.Log("FrameData", $"[ActionComplete] {StateId} reached Done. Transitioning to locomotion...", Color.green);
         ExitToAppropriateMovementState();
     }
 
@@ -386,16 +388,18 @@ public abstract class FrameDataPlayerState : PlayerState
     {
         if (cachedFrameData == null) return 0;
 
+        int logicFrame = cachedFrameData.GetLogicFrame(currentFrame);
+
         switch (currentPhase)
         {
             case ActionPhase.Startup:
-                return currentFrame;
+                return logicFrame;
             case ActionPhase.Active:
-                return currentFrame - cachedFrameData.startupFrames;
+                return logicFrame - cachedFrameData.startupFrames;
             case ActionPhase.Recovery:
-                return currentFrame - cachedFrameData.startupFrames - cachedFrameData.activeFrames;
+                return logicFrame - cachedFrameData.startupFrames - cachedFrameData.activeFrames;
             case ActionPhase.Cancel:
-                return currentFrame - cachedFrameData.cancelWindowStartFrame + 1;
+                return logicFrame - cachedFrameData.cancelWindowStartFrame + 1;
             default:
                 return 0;
         }
