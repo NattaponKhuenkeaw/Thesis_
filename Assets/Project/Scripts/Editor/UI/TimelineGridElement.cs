@@ -77,6 +77,8 @@ namespace CombatEditor.UI
 
         // =========================================================
         // CONSTRUCTOR
+        public ScrollView Scroller { get; private set; }
+
         // =========================================================
         public TimelineGridElement()
         {
@@ -84,35 +86,36 @@ namespace CombatEditor.UI
             style.flexGrow      = 1;
             style.overflow      = Overflow.Hidden;
 
-            // Fixed left label column
-            var labelCol = new VisualElement();
-            labelCol.style.width          = LABEL_W;
-            labelCol.style.minWidth       = LABEL_W;
-            labelCol.style.flexShrink     = 0;
-            labelCol.style.backgroundColor = new StyleColor(ColBg);
-            labelCol.name = "label-col";
-            Add(labelCol);
+        // Fixed left label column
+        var labelCol = new VisualElement();
+        labelCol.style.width          = LABEL_W;
+        labelCol.style.minWidth       = LABEL_W;
+        labelCol.style.flexShrink     = 0;
+        labelCol.style.backgroundColor = new StyleColor(ColBg);
+        labelCol.name = "label-col";
+        Add(labelCol);
 
-            // Horizontally scrollable grid
-            var scroller = new ScrollView(ScrollViewMode.Horizontal);
-            scroller.style.flexGrow = 1;
-            scroller.horizontalScrollerVisibility = ScrollerVisibility.Auto;
-            scroller.verticalScrollerVisibility   = ScrollerVisibility.Hidden;
+        // Horizontally scrollable grid
+        Scroller = new ScrollView(ScrollViewMode.Horizontal);
+        Scroller.style.flexGrow = 1;
+        Scroller.horizontalScrollerVisibility = ScrollerVisibility.Auto;
+        Scroller.verticalScrollerVisibility   = ScrollerVisibility.Hidden;
 
-            _scrollContent = new VisualElement();
-            _scrollContent.style.flexDirection = FlexDirection.Column;
-            _scrollContent.generateVisualContent += DrawGrid;
-            _scrollContent.RegisterCallback<PointerDownEvent>(OnPointerDown);
-            _scrollContent.RegisterCallback<PointerMoveEvent>(OnPointerMove);
-            _scrollContent.RegisterCallback<PointerUpEvent>(OnPointerUp);
+        _scrollContent = new VisualElement();
+        _scrollContent.style.flexDirection = FlexDirection.Column;
+        _scrollContent.generateVisualContent += DrawGrid;
+        _scrollContent.RegisterCallback<PointerDownEvent>(OnPointerDown);
+        _scrollContent.RegisterCallback<PointerMoveEvent>(OnPointerMove);
+        _scrollContent.RegisterCallback<PointerUpEvent>(OnPointerUp);
 
-            // Drag-and-drop for VFX / Enemy prefabs
-            _scrollContent.RegisterCallback<DragUpdatedEvent>(OnDragUpdated);
-            _scrollContent.RegisterCallback<DragPerformEvent>(OnDragPerform);
+        // Drag-and-drop for VFX / Enemy prefabs
+        _scrollContent.RegisterCallback<DragUpdatedEvent>(OnDragUpdated);
+        _scrollContent.RegisterCallback<DragPerformEvent>(OnDragPerform);
 
-            scroller.Add(_scrollContent);
-            Add(scroller);
-        }
+        Scroller.Add(_scrollContent);
+        Add(Scroller);
+    }
+
 
         // =========================================================
         // SETUP — called by the window whenever clip/data changes

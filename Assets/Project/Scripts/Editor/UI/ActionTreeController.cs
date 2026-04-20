@@ -77,7 +77,7 @@ namespace CombatEditor.UI
                 BuildResolverTableCategories(character.actionResolverTable);
             }
 
-            BuildSingleCategory("🎯 Dash", "Dash", "Dash Move", "Dash", character.dashData);
+            BuildSingleCategory("🎯 Dash", "Dash", "Dash Move", "Dash", character.DashData);
 
             // Auto-select first item if current selection is lost
             if (selectedNode == null && leafElements.Count > 0)
@@ -105,13 +105,22 @@ namespace CombatEditor.UI
                     for (int i = 0; i < table.standaloneActions.Length; i++)
                     {
                         var sa = table.standaloneActions[i];
-                        string label = sa.isPlungeAction ? "Plunge Attack" : (sa.stepData?.stepName ?? $"Action {i+1}");
-                        var node = new ActionNode(label, cat, "AttackStep", sa.stepData);
-                        itemsContainer.Add(CreateLeafItem(node));
-
+                        string category = $"Standalone_{i}";
+                        string label = sa.isPlungeAction ? "Plunge Attack" : $"⚒ Contextual Action {i+1}";
+                        
+                        // Treat as CombatAction so users can edit its advanced conditions natively.
+                        var settingsNode = new ActionNode($"⚙ Setup {label}", category, "CombatAction", sa);
+                        itemsContainer.Add(CreateLeafItem(settingsNode));
+                        
+                        // Root Step configuration for the contextual action
+                        if (sa.stepData != null)
+                        {
+                            var stepNode = new ActionNode($"↳ {sa.stepData.stepName}", category, "AttackStep", sa.stepData);
+                            itemsContainer.Add(CreateLeafItem(stepNode));
+                        }
                         if (sa.followUpNode != null)
                         {
-                            BuildTreeNodeRecursive(itemsContainer, sa.followUpNode, cat, 1, null, null, new HashSet<ComboNode>());
+                            BuildTreeNodeRecursive(itemsContainer, sa.followUpNode, category, 1, null, null, new HashSet<ComboNode>());
                         }
                     }
                     catRoot.Add(itemsContainer);
@@ -302,6 +311,26 @@ namespace CombatEditor.UI
                         };
                         string routePrefix = route.requireGrabbedEnemy ? "(Grab Hit)" : "(Branch)";
                         BuildTreeNodeRecursive(parent, route.targetNode, category, depth + 1, routePrefix, delRouteTarget, visited);
+                    }
+                }
+            }
+
+            // 4. Follow automatic triggers (triggerWindows)
+            if (node.stepData != null && node.stepData.triggerWindows != null)
+            {
+                for (int i = 0; i < node.stepData.triggerWindows.Count; i++)
+                {
+                    var trigger = node.stepData.triggerWindows[i];
+                    if (trigger?.targetNode != null)
+                    {
+                        var capturedTrigger = trigger;
+                        System.Action delTriggerTarget = () => {
+                            Undo.RecordObject(character.actionResolverTable, "Delete Trigger Target");
+                            capturedTrigger.targetNode = null;
+                            EditorUtility.SetDirty(character.actionResolverTable);
+                            Build(character);
+                        };
+                        BuildTreeNodeRecursive(parent, trigger.targetNode, category, depth + 1, "(Auto)", delTriggerTarget, visited);
                     }
                 }
             }

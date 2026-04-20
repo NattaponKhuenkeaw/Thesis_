@@ -31,7 +31,7 @@ public class PlayerMovement : MonoBehaviour
     // Dash Settings
     // =========================================================
     [Header("Dash Settings")]
-    public DashData dashData;
+    [HideInInspector] public DashData dashData;
 
     // =========================================================
     // Dash Visuals
@@ -341,6 +341,16 @@ public class PlayerMovement : MonoBehaviour
 
         dropDownCoroutine = StartCoroutine(DropDownRoutine(currentGroundCollider));
         return true;
+    }
+
+    /// <summary>
+    /// Instantly forces the character to face based on horizontal input.
+    /// Used by CombatState to ensure facing and motion-data are synchronized.
+    /// </summary>
+    public void ForceFaceDirectionFromInput(Vector2 input)
+    {
+        if (Mathf.Abs(input.x) < 0.1f) return;
+        SetFacingDirection(input.x > 0 ? 1 : -1, false);
     }
 
     public void StartPlungeMotion(float downwardSpeed)
@@ -960,7 +970,21 @@ public class PlayerMovement : MonoBehaviour
         plungeAfterimageCoroutine = null;
     }
 
-    private void SpawnAfterimage()
+    public void SpawnUltimateBurst(int count, float interval)
+    {
+        StartCoroutine(UltimateBurstRoutine(count, interval));
+    }
+
+    private IEnumerator UltimateBurstRoutine(int count, float interval)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            SpawnAfterimage();
+            yield return new WaitForSeconds(interval);
+        }
+    }
+
+    public void SpawnAfterimage()
     {
         if (spriteRenderer == null) return;
 

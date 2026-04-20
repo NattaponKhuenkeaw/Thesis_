@@ -1,14 +1,34 @@
 using System;
 
-[Serializable]
-public abstract class ActionConditionBase
+public enum ConditionCategory
 {
-    public abstract bool IsMet(InputContext context);
+    Input,
+    Environmental,
+    Status,
+    Resource
 }
 
 [Serializable]
+public abstract class ActionConditionBase
+{
+    public virtual ConditionCategory Category => ConditionCategory.Input;
+
+    public virtual bool IsMet(InputContext context) => true;
+    
+    public virtual bool IsMet(StateContext context)
+    {
+        return IsMet(context.input);
+    }
+
+    public virtual void OnActiveStart(StateContext context) { }
+    public virtual void OnActiveEnd(StateContext context) { }
+}
+
+[Serializable]
+[Obsolete("Use AirborneCondition instead")]
 public class GroundedActionCondition : ActionConditionBase
 {
+    public override ConditionCategory Category => ConditionCategory.Environmental;
     public bool requireGrounded = true;
 
     public override bool IsMet(InputContext context)
@@ -18,8 +38,21 @@ public class GroundedActionCondition : ActionConditionBase
 }
 
 [Serializable]
+public class AirborneCondition : ActionConditionBase
+{
+    public override ConditionCategory Category => ConditionCategory.Environmental;
+    public bool requireAirborne = true;
+
+    public override bool IsMet(InputContext context)
+    {
+        return requireAirborne ? !context.isGrounded : context.isGrounded;
+    }
+}
+
+[Serializable]
 public class DirectionActionCondition : ActionConditionBase
 {
+    public override ConditionCategory Category => ConditionCategory.Input;
     public DirectionRequirement direction = DirectionRequirement.Any;
 
     public override bool IsMet(InputContext context)
@@ -31,6 +64,7 @@ public class DirectionActionCondition : ActionConditionBase
 [Serializable]
 public class PreviousStateActionCondition : ActionConditionBase
 {
+    public override ConditionCategory Category => ConditionCategory.Status;
     public PlayerStateId previousState = PlayerStateId.None;
 
     public override bool IsMet(InputContext context)
@@ -42,17 +76,20 @@ public class PreviousStateActionCondition : ActionConditionBase
 [Serializable]
 public class GrabbedEnemyActionCondition : ActionConditionBase
 {
+    public override ConditionCategory Category => ConditionCategory.Environmental;
     public bool requireGrabbedEnemy = true;
 
     public override bool IsMet(InputContext context)
     {
-        return requireGrabbedEnemy ? context.hasGrabbedEnemy : !context.hasGrabbedEnemy;
+        bool hasAnyGrab = context.hasGrabbedEnemy || context.hasPreviouslyGrabbedEnemy;
+        return requireGrabbedEnemy ? hasAnyGrab : !hasAnyGrab;
     }
 }
 
 [Serializable]
 public class WallActionCondition : ActionConditionBase
 {
+    public override ConditionCategory Category => ConditionCategory.Environmental;
     public bool requireAgainstWall = true;
 
     public override bool IsMet(InputContext context)
@@ -64,6 +101,7 @@ public class WallActionCondition : ActionConditionBase
 [Serializable]
 public class ProgressionRankActionCondition : ActionConditionBase
 {
+    public override ConditionCategory Category => ConditionCategory.Status;
     public CounterComparison comparison = CounterComparison.GreaterThanOrEqual;
     public int rank = 0;
 
@@ -80,6 +118,7 @@ public class ProgressionRankActionCondition : ActionConditionBase
 [Serializable]
 public class RuntimeTagActionCondition : ActionConditionBase
 {
+    public override ConditionCategory Category => ConditionCategory.Status;
     public string tag;
     public bool shouldExist = true;
 
@@ -93,6 +132,7 @@ public class RuntimeTagActionCondition : ActionConditionBase
 [Serializable]
 public class RuntimeCounterActionCondition : ActionConditionBase
 {
+    public override ConditionCategory Category => ConditionCategory.Status;
     public string counterId;
     public CounterComparison comparison = CounterComparison.GreaterThanOrEqual;
     public int value = 0;
@@ -104,8 +144,39 @@ public class RuntimeCounterActionCondition : ActionConditionBase
     }
 }
 
+[Serializable]
+public class AirborneLandingActionCondition : ActionConditionBase
+{
+    public override ConditionCategory Category => ConditionCategory.Environmental;
+    public bool requireJustLanded = true;
+
+    public override bool IsMet(InputContext context)
+    {
+        bool justLanded = context.wasAirborne && context.isGrounded;
+        return requireJustLanded ? justLanded : !justLanded;
+    }
+}
+
 public static class ActionConditionUtility
 {
+    public static bool AllMet(System.Collections.Generic.IEnumerable<ActionConditionBase> conditions, StateContext context)
+    {
+        if (conditions == null)
+        {
+            return true;
+        }
+
+        foreach (ActionConditionBase condition in conditions)
+        {
+            if (condition != null && !condition.IsMet(context))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public static bool AllMet(System.Collections.Generic.IEnumerable<ActionConditionBase> conditions, InputContext context)
     {
         if (conditions == null)

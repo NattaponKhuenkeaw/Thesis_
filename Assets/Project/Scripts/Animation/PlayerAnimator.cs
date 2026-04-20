@@ -66,20 +66,18 @@ public class PlayerAnimator : MonoBehaviour
         if (movement == null || anim == null || rb == null)
             return;
 
+        // Standard locomotion parameters
         anim.SetFloat(speedHash, Mathf.Abs(rb.linearVelocity.x));
         anim.SetFloat(verticalVelocityHash, rb.linearVelocity.y);
         anim.SetBool(isGroundedHash, movement.IsGrounded());
         anim.SetBool(isLandingHash, movement.IsLanding);
 
-        // Detect falling state (airborne and moving downwards)
-        // Suppress falling animation during ANY combat action (Attack, Skill, Ultimate) 
-        // to prevent locomotion from overriding the custom action animation.
-        bool isAttacking = combat != null && combat.IsAttacking();
+        // Check if we are in an "Active" combat action (Startup, Active, Recovery, Cancel).
+        // If we are in the 'Done' phase, we allow locomotion parameters to update 
+        // to ensure a smooth transition back to Idle/Move.
+        bool isActivelyAttacking = combat != null && combat.IsActiveCombat();
         
-        // CRITICAL: Strict suppression. If attacking, we skip ALL locomotion updates.
-        // We also force IsGrounded to false in the Animator to prevent "Any State -> Idle" 
-        // transitions from triggering while we are playing combat animations.
-        if (isAttacking)
+        if (isActivelyAttacking)
         {
             anim.SetBool(isGroundedHash, false);
             anim.SetFloat(speedHash, 0f);
@@ -234,10 +232,15 @@ public class PlayerAnimator : MonoBehaviour
         if (anim == null || movement == null || rb == null)
             return;
 
-        if (movement.IsGrounded())
+        // If we are already in jump/fall states and not significantly into the animation,
+        // don't restart it to avoid the "stuck at start frame" visual.
+        var state = anim.GetCurrentAnimatorStateInfo(0);
+        bool isAlreadyAirborne = state.IsName("Jump_Start") || state.IsName("Plunge_Fall") || state.IsName("Jump_Fall");
+        
+        if (isAlreadyAirborne && state.normalizedTime < 0.9f)
             return;
 
-        if (rb.linearVelocity.y > 0.1f)
+        if (movement.IsGrounded())
         {
             anim.Play(jumpHash, 0, 0f);
             return;
@@ -248,7 +251,8 @@ public class PlayerAnimator : MonoBehaviour
 
     public void ResetCombo()
     {
-        // Deprecated: Combat states are now entirely Code-Driven through State Names
+        // Force-clear any combat specific booleans if added in the future
+        anim.SetBool(isGroundedHash, movement != null ? movement.IsGrounded() : true);
     }
 
     public void TriggerSkill(string explicitClipName = null, bool airborne = false)
@@ -441,13 +445,16 @@ public class PlayerAnimator : MonoBehaviour
         // logicFrame is 1-indexed, so we subtract 1 for the timeline position.
         float normalizedTime = Mathf.Clamp01((float)(logicFrame - 1) / totalFrames);
 
+        // CRITICAL GUARD: If we are near the end of the action (normalizedTime ~1.0),
+        // we STOP forcing the frame to allow the Animator to blend into the next state.
+        if (normalizedTime > 0.99f) return;
+
         // We apply this to all layers to ensure any active combat animation is synced.
         for (int i = 0; i < anim.layerCount; i++)
         {
             var state = anim.GetCurrentAnimatorStateInfo(i);
             
             // Optimization: Only play if the normalized time difference is significant enough to notice
-            // (prevents micro-stuttering from float precision)
             if (Mathf.Abs(state.normalizedTime - normalizedTime) > 0.001f)
             {
                 anim.Play(state.fullPathHash, i, normalizedTime);

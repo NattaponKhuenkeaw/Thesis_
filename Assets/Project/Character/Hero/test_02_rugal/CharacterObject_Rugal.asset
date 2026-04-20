@@ -41,48 +41,19 @@ MonoBehaviour:
     attackSfx: {fileID: 0}
     skillSfx: {fileID: 0}
     hurtSfx: {fileID: 0}
-  authoredFPS: 24
+  _authoredFPS: 24
   upgrade:
     level: 1
     constellationRank: 0
     progressionPoints: 3
-  dashData:
+  _dashData:
     animationClip: {fileID: 7400000, guid: 3e950a7b365be294c97ddb9271fb0efe, type: 2}
-    startupFrames: 5
-    activeFrames: 30
-    recoveryFrames: 5
-    cancelWindowStartFrame: 25
-    dashSpeed: 40
-    cooldownFrames: 30
-  skillTreeData:
-    nodes:
-    - nodeId: AERO_SKILL_01
-      nodeName: Heavy Gust
-      description: "\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E41\u0E23\u0E07\u0E1C\u0E25\u0E31\u0E01\u0E02\u0E2D\u0E07
-        Gust Break"
-      requiredNodeId: 
-      pointCost: 1
-      unlocked: 0
-      effectType: 3
-      effectValue: 2
-    - nodeId: AERO_SKILL_02
-      nodeName: Sharp Wind
-      description: "\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E14\u0E32\u0E40\u0E21\u0E08\u0E02\u0E2D\u0E07
-        Gust Break"
-      requiredNodeId: 
-      pointCost: 1
-      unlocked: 1
-      effectType: 1
-      effectValue: 0.25
-    - nodeId: AERO_ULT_01
-      nodeName: Lasting Storm
-      description: "\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E23\u0E30\u0E22\u0E30\u0E40\u0E27\u0E25\u0E32\u0E02\u0E2D\u0E07
-        Skyfall Tornado"
-      requiredNodeId: 
-      pointCost: 1
-      unlocked: 0
-      effectType: 5
-      effectValue: 1.5
+    startupFrames: 8
+    activeFrames: 22
+    recoveryFrames: 10
+    cancelWindowStartFrame: 37
+    dashSpeed: 45
+    cooldownFrames: 24
   progressionDefinition:
     maxConstellationRank: 6
     constellationNodes: []

@@ -56,7 +56,17 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     private bool isAirCombo;
     private bool isExecutingAutoChainStep;
     private GrabHitbox currentGrabHitbox;
+    private bool hadGrabAtStepStart;
     private Animator cachedAnimator;
+    private Coroutine priorityResetCoroutine;
+
+    [System.Serializable]
+    public struct GrabParams
+    {
+        public Vector2 snapOffset;
+        public int recoveryFrames;
+    }
+    private GrabParams lastGrabParams;
 
     public ThrowContext activeThrowContext;
 
@@ -68,6 +78,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public string CurrentActionName => currentActionName;
     public AttackCategory CurrentAttackCategory => currentAttackCategory;
     public bool IsExecutingAutoChainStep => isExecutingAutoChainStep;
+    public bool HadGrabAtStepStart => hadGrabAtStepStart;
 
     void Awake()
     {
@@ -141,6 +152,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
         movement?.CancelAttackMotion();
 
+        hadGrabAtStepStart = HasGrabbedEnemy();
         currentStepData = step;
         comboDepth = depth;
         isAirCombo = airCombo;
@@ -160,8 +172,18 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         hitEnemiesThisStep.Clear();
         triggeredEntriesSet.Clear();
         triggeredVFXEntriesSet.Clear();
+        CleanupStepVFX(); // --- NEW: Cleanup VFX from previous step ---
         currentGrabHitbox = null; // Clear stale grab state from previous step
         DisableHitbox(true);
+
+        // --- NEW: Priority Rendering ---
+        SetPriority(true);
+
+        // --- NEW: Auto-Maintain Grab at Frame 0 ---
+        if (HasGrabbedEnemy() && lastGrabParams.recoveryFrames > 0)
+        {
+            MaintainGrabThroughFollowUp(step.startupFrames + step.activeFrames + 1);
+        }
 
         CombatLog($"Execute: '{step.stepName}' (Depth {depth}, Air={airCombo}, Category={category}, Action={currentActionName})");
 
@@ -207,11 +229,15 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         // detect if the frame index has jumped backwards (the wrap).
         if (currentStepData != null && currentStepData.loopActivePhase && phase == ActionPhase.Active)
         {
-            if (frame < currentAttackFrame)
+            bool isWrap = frame < currentAttackFrame;
+            bool isSingleFrameLoop = currentStepData.activeFrames == 1;
+
+            if (isWrap || isSingleFrameLoop)
             {
                 // Reset all "already triggered" states so they re-trigger on the new loop
                 triggeredEntriesSet.Clear();
-                triggeredVFXEntriesSet.Clear();
+                // Only clear VFX entries that are marked to loop during active phase
+                triggeredVFXEntriesSet.RemoveWhere(entry => entry.loopDuringActive);
                 hitEnemiesThisStep.Clear();
                 
                 // Explicitly reset the HitBoxDamage component so it can hit the same targets again
@@ -272,8 +298,10 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         ProcessAudio(frame);
         ProcessVFX(frame);
 
-        // Sync visual animation with logic frame (handles visual looping)
-        if (currentStepData != null && animHandler != null)
+        // Sync visual animation with logic frame (handles visual looping).
+        // CRITICAL: We skip this in the 'Done' phase to allow the Animator to 
+        // begin its natural exit transitions without logic conflict.
+        if (currentStepData != null && animHandler != null && phase != ActionPhase.Done)
         {
             animHandler.UpdateActionNormalizedTime(frame, currentStepData.TotalFrames);
         }
@@ -291,6 +319,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     }
 
     public bool IsAttacking() => currentPhase != ActionPhase.None && currentStepData != null;
+    public bool IsActiveCombat() => IsAttacking() && currentPhase != ActionPhase.Done;
 
     public bool ShouldInterruptAttackOnGrounded()
     {
@@ -361,6 +390,9 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     public void ResetCombo()
     {
+        CleanupStepVFX(); // --- NEW: Cleanup VFX on combo reset ---
+        if (currentPhase == ActionPhase.None && comboDepth == 0) return;
+
         bool wasAirCombo = isAirCombo && comboDepth > 0 && !isPlungeFalling;
         if (wasAirCombo && movement != null && !movement.IsGrounded())
         {
@@ -378,10 +410,14 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         isAirCombo = false;
         isExecutingAutoChainStep = false;
         currentGrabHitbox = null;
+        lastGrabParams = default;
 
         DisableHitbox(true);
         movement?.CancelAttackMotion();
         animHandler?.ResetCombo();
+
+        // --- NEW: Priority Reset ---
+        SetPriority(false, 0.3f);
 
         if (cachedAnimator != null)
         {
@@ -394,6 +430,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     public void CancelCurrentAttackButKeepComboProgress()
     {
+        CleanupStepVFX(); // --- NEW: Cleanup VFX on attack cancel ---
         currentPhase = ActionPhase.None;
         currentAttackFrame = 0;
         // hitstop is now global
@@ -501,7 +538,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     public void MaintainGrabThroughFollowUp(int framesUntilRelease)
     {
-        if (activeThrowContext == null || !activeThrowContext.HasAnyTargets() || currentGrabHitbox == null)
+        if (activeThrowContext == null || !activeThrowContext.HasAnyTargets())
         {
             return;
         }
@@ -522,9 +559,9 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
                 enemyToMaintain.MaintainGrab(
                     transform.root.GetInstanceID(),
                     grabSocket,
-                    currentGrabHitbox.snapOffset,
+                    lastGrabParams.snapOffset,
                     framesUntilRelease,
-                    currentGrabHitbox.recoveryFrames);
+                    lastGrabParams.recoveryFrames);
             }
         }
     }
@@ -646,9 +683,14 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         }
 
         currentGrabHitbox = grabHitbox;
+        lastGrabParams = new GrabParams 
+        { 
+            snapOffset = grabHitbox.snapOffset, 
+            recoveryFrames = grabHitbox.recoveryFrames 
+        };
         hitBoxController?.ApplyHitbox(grabHitbox);
 
-        float finalDamage = GetFinalAttackDamage(1f);
+        float finalDamage = GetFinalAttackDamage(grabHitbox.damageMultiplier);
         hitBoxDamage?.SetGrabData(finalDamage, grabHitbox, false, currentAttackCategory, currentActionName, currentStepData, passiveController);
         hitBoxDamage?.ResetActivationState();
 
@@ -734,6 +776,19 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     private HashSet<AudioEntry> triggeredEntriesSet = new HashSet<AudioEntry>();
     private HashSet<VFXEntry> triggeredVFXEntriesSet = new HashSet<VFXEntry>();
+    private Dictionary<VFXEntry, Project.Combat.GenericVFXPlayer> activeStepVFX = new Dictionary<VFXEntry, Project.Combat.GenericVFXPlayer>();
+
+    private void CleanupStepVFX()
+    {
+        foreach (var vfx in activeStepVFX.Values)
+        {
+            if (vfx != null)
+            {
+                vfx.Stop();
+            }
+        }
+        activeStepVFX.Clear();
+    }
 
     private void ProcessAudio(int frame)
     {
@@ -767,7 +822,19 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             if (frame == entry.triggerFrame && !triggeredVFXEntriesSet.Contains(entry))
             {
                 triggeredVFXEntriesSet.Add(entry);
-                vfxSpawner.SpawnVFX(entry);
+                
+                // --- NEW: Selective Stop for Looping VFX ---
+                // If we are re-triggering this entry (e.g. during a loop), stop the previous instance first.
+                if (activeStepVFX.TryGetValue(entry, out var oldVfx) && oldVfx != null)
+                {
+                    oldVfx.Stop();
+                }
+
+                var vfx = vfxSpawner.SpawnVFX(entry);
+                if (vfx != null)
+                {
+                    activeStepVFX[entry] = vfx;
+                }
             }
         }
     }
@@ -834,6 +901,9 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
         if (didGrabAny && HasGrabbedEnemy())
         {
+            if (playerCharacter != null && playerCharacter.StateMachine != null && playerCharacter.StateMachine.showCombatLogs)
+                Debug.Log($"[Combat] ON_GRAB_SUCCESS Detected on frame {currentAttackFrame}. Invoking success transition.");
+
             OnGrabConnected?.Invoke();
         }
     }
@@ -1065,5 +1135,40 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         }
 
         return earliestFrame == int.MaxValue ? -1 : earliestFrame;
+    }
+
+    public void SetPriority(bool isPriority, float delay = 0f)
+    {
+        if (priorityResetCoroutine != null)
+        {
+            StopCoroutine(priorityResetCoroutine);
+            priorityResetCoroutine = null;
+        }
+
+        if (delay > 0 && !isPriority)
+        {
+            priorityResetCoroutine = StartCoroutine(PriorityResetRoutine(delay));
+        }
+        else
+        {
+            ApplyPriority(isPriority);
+        }
+    }
+
+    private void ApplyPriority(bool isPriority)
+    {
+        if (movement == null || movement.spriteRenderer == null) return;
+        
+        // Using a simpler approach for player since it's usually one renderer
+        // but let's be safe and use current order + offset
+        int baseOrder = 0; // Default player order is usually 0
+        movement.spriteRenderer.sortingOrder = baseOrder + (isPriority ? Project.Systems.EntitySortingManager.PRIORITY_SORTING_OFFSET : 0);
+    }
+
+    private System.Collections.IEnumerator PriorityResetRoutine(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        ApplyPriority(false);
+        priorityResetCoroutine = null;
     }
 }

@@ -112,6 +112,7 @@ public class PlayerStateMachine : MonoBehaviour
 
         PlayerStateId prevId = CurrentStateId;
         context.previousState = prevId;
+        context.wasAirborne = playerCharacter.Movement != null && !playerCharacter.Movement.IsGrounded();
 
         CurrentState?.Exit();
         CurrentState = newState;
@@ -173,7 +174,6 @@ public class PlayerStateMachine : MonoBehaviour
     }
 
     public bool IsInState(PlayerStateId stateId) => CurrentStateId == stateId;
-    public bool IsInState<T>() where T : PlayerState => CurrentState is T;
 
     // =========================================================
     // Centralized Input Routing
@@ -206,21 +206,15 @@ public class PlayerStateMachine : MonoBehaviour
     }
 
     /// <summary>
-    /// Route jump pressed. If the current state has custom jump logic (override),
-    /// it handles it. Otherwise, if AcceptsJumpInput, transitions to JumpState.
+    /// Route jump pressed. If the current state handles it (returns true),
+    /// no further routing is done. Otherwise, it uses the default Accept Jump logic.
     /// </summary>
     public void RouteJumpInput()
     {
         if (CurrentState == null) return;
 
-        // States with custom jump behavior (JumpState has drop-down/plunge/double-jump)
-        // override OnJumpInput — let them handle it first.
-        // For states that just declare AcceptsJumpInput, do the default transition.
-        if (HasCustomJumpHandler())
-        {
-            CurrentState.OnJumpInput();
-            return;
-        }
+        // State-first: let the current state try to consume the input
+        if (CurrentState.HandleJumpInput()) return;
 
         // Centralized check for FrameData states: ignore interrupts if state says so
         if (CurrentState is FrameDataPlayerState fdState && !fdState.CanBeInterrupted)
@@ -237,8 +231,7 @@ public class PlayerStateMachine : MonoBehaviour
     }
 
     /// <summary>
-    /// Route dash pressed. Atomically handles CanDash → ChangeState → forward.
-    /// States with custom dash behavior override OnDashInput (e.g., DashState triggers physics).
+    /// Route dash pressed. Atomically handles buffers and default routing.
     /// </summary>
     public void RouteDashInput(float inputX)
     {
@@ -247,12 +240,8 @@ public class PlayerStateMachine : MonoBehaviour
         // Always buffer the dash for mid-action consumption
         InputBuffer.BufferDash(inputX);
 
-        // DashState has custom OnDashInput (initiates physics) — let it handle directly
-        if (HasCustomDashHandler())
-        {
-            CurrentState.OnDashInput(inputX);
-            return;
-        }
+        // State-first: let the current state try to consume the input
+        if (CurrentState.HandleDashInput(inputX)) return;
 
         // Centralized check for FrameData states: ignore interrupts if state says so
         if (CurrentState is FrameDataPlayerState fdState && !fdState.CanBeInterrupted)
@@ -272,8 +261,7 @@ public class PlayerStateMachine : MonoBehaviour
     }
 
     /// <summary>
-    /// Route attack pressed. Atomically handles transition to AttackState.
-    /// AttackState overrides OnAttackInput to chain combos.
+    /// Route attack pressed. State-first routing for combo chaining.
     /// </summary>
     public void RouteAttackInput()
     {
@@ -290,13 +278,8 @@ public class PlayerStateMachine : MonoBehaviour
             return;
         }
 
-        // Custom handlers (like AttackState chaining combos) take precedence
-        // They handle their own internal phase logic.
-        if (HasCustomAttackHandler())
-        {
-            CurrentState.OnAttackInput();
-            return;
-        }
+        // State-first: let the current state try to consume the input
+        if (CurrentState.HandleAttackInput()) return;
 
         if (CurrentState.AcceptsAttackInput)
         {
@@ -306,7 +289,7 @@ public class PlayerStateMachine : MonoBehaviour
     }
 
     /// <summary>
-    /// Route skill pressed.
+    /// Route skill pressed. State-first routing.
     /// </summary>
     public void RouteSkillInput()
     {
@@ -319,11 +302,8 @@ public class PlayerStateMachine : MonoBehaviour
             && !fdState.CanAcceptCombatInput(CombatInputType.Skill))
             return;
 
-        if (HasCustomSkillHandler())
-        {
-            CurrentState.OnSkillInput();
-            return;
-        }
+        // State-first: let the current state try to consume the input
+        if (CurrentState.HandleSkillInput()) return;
 
         if (CurrentState.AcceptsSkillInput)
         {
@@ -333,7 +313,7 @@ public class PlayerStateMachine : MonoBehaviour
     }
 
     /// <summary>
-    /// Route ultimate pressed.
+    /// Route ultimate pressed. State-first routing.
     /// </summary>
     public void RouteUltimateInput()
     {
@@ -346,62 +326,14 @@ public class PlayerStateMachine : MonoBehaviour
             && !fdState.CanAcceptCombatInput(CombatInputType.Ultimate))
             return;
 
-        if (HasCustomUltimateHandler())
-        {
-            CurrentState.OnUltimateInput();
-            return;
-        }
+        // State-first: let the current state try to consume the input
+        if (CurrentState.HandleUltimateInput()) return;
 
         if (CurrentState.AcceptsUltimateInput)
         {
             ChangeState(UltimateState);
             CurrentState.OnUltimateInput();
         }
-    }
-
-    // =========================================================
-    // Custom Handler Detection
-    // States that override input hooks beyond the base default
-    // are detected here so routing knows to defer to them.
-    // =========================================================
-
-    /// <summary>
-    /// Returns true if the current state has a custom OnJumpInput override
-    /// (not just the empty base default). Used to decide whether to use
-    /// centralized routing or let the state handle it.
-    /// </summary>
-    private bool HasCustomJumpHandler()
-    {
-        // States that override OnJumpInput for custom behavior:
-        // - JumpState (drop-down, plunge attack, double jump)
-        return CurrentState is PlayerJumpState;
-    }
-
-    private bool HasCustomDashHandler()
-    {
-        // DashState overrides OnDashInput to initiate dash physics
-        return CurrentState is PlayerDashState;
-    }
-
-    private bool HasCustomAttackHandler()
-    {
-        // AttackState overrides OnAttackInput to chain combos
-        // JumpState overrides OnAttackInput for air attacks
-        return CurrentState is PlayerAttackState || CurrentState is PlayerJumpState;
-    }
-
-    private bool HasCustomSkillHandler()
-    {
-        // AttackState handles attack-to-skill interruption cleanup.
-        // SkillState handles skill startup and same-state follow-up chaining.
-        return CurrentState is PlayerAttackState || CurrentState is PlayerSkillState;
-    }
-
-    private bool HasCustomUltimateHandler()
-    {
-        // AttackState handles attack-to-ultimate interruption cleanup.
-        // UltimateState handles ultimate startup and same-state follow-up chaining.
-        return CurrentState is PlayerAttackState || CurrentState is PlayerUltimateState;
     }
 
     // =========================================================

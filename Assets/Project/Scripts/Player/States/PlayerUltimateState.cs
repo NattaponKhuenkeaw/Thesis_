@@ -2,25 +2,18 @@ using UnityEngine;
 
 /// <summary>
 /// Frame-data-driven ultimate state with buffered follow-up support.
+/// Inherits CombatPlayerState for shared resolution and interrupt logic.
+/// Handles ultimate activation effects like flashes and time freezes.
 /// </summary>
-public class PlayerUltimateState : FrameDataPlayerState
+public class PlayerUltimateState : CombatPlayerState
 {
-    private readonly ActionResolver resolver = new ActionResolver();
-    private ActionResolverTable resolverTable;
-    private SkillAction activeUltimateAction;
-    private bool hasStartedCooldown;
-
-    // Delayed Execution
-    private AttackStepData pendingStep;
-    private int pendingTreeDepth;
-    private bool pendingAirCombo;
-    private string pendingActionName;
+    private UltimateAction activeUltimateAction;
     private bool isWaitingForActivation;
 
     public PlayerUltimateState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
     public override PlayerStateId StateId => PlayerStateId.Ultimate;
-    public override PlayerStatePriority Priority => PlayerStatePriority.Ultimate;
+    public override PlayerStatePriority Priority => PlayerStatePriority.SkillUltimate;
 
     public override bool AcceptsMoveInput => true;
     public override bool AcceptsAttackInput => true;
@@ -29,23 +22,12 @@ public class PlayerUltimateState : FrameDataPlayerState
     public override bool LocksMovement => true;
     public override bool LocksFacing => true;
 
-    protected override ActionFrameData GetFrameData()
-    {
-        return player.Combat != null ? player.Combat.GetCurrentStepData() : null;
-    }
+    protected override AttackCategory GetAttackCategory() => AttackCategory.Ultimate;
 
     public override void Enter(TransitionContext context)
     {
         base.Enter(context);
-        resolverTable = player.characterObject != null ? player.characterObject.actionResolverTable : null;
-        resolver.SetLogger(fsm);
         activeUltimateAction = null;
-        hasStartedCooldown = false;
-
-        if (player.Combat != null)
-        {
-            player.Combat.OnGrabConnected += HandleGrabConnected;
-        }
 
         if (UltimateFlashOverlay.Instance != null)
         {
@@ -56,17 +38,8 @@ public class PlayerUltimateState : FrameDataPlayerState
 
     public override void Exit()
     {
-        TryStartCooldown();
         base.Exit();
-        resolver.Reset();
         activeUltimateAction = null;
-        hasStartedCooldown = false;
-
-        if (player.Combat != null)
-        {
-            player.Combat.ResetCombo();
-            player.Combat.OnGrabConnected -= HandleGrabConnected;
-        }
 
         if (UltimateFlashOverlay.Instance != null)
         {
@@ -75,84 +48,50 @@ public class PlayerUltimateState : FrameDataPlayerState
         }
 
         isWaitingForActivation = false;
-        pendingStep = null;
-    }
-
-    protected override void ProcessLogicFrame(int frame, ActionPhase phase)
-    {
-        player.Combat?.ProcessFrameFromState(frame, phase);
-    }
-
-    protected override bool ShouldAdvanceLogicFrames()
-    {
-        return player.Combat == null || !player.Combat.HasActiveHitstop;
-    }
-
-    protected override void OnRecoveryBegin()
-    {
-        player.Combat?.OnRecoveryPhaseFromState();
-    }
-
-    protected override void OnActionComplete()
-    {
-        TryStartCooldown();
-        resolver.Reset();
-        player.Combat?.ResetCombo();
-        ExitToAppropriateMovementState();
-    }
-
-    protected override void OnCancelBegin()
-    {
-        TryStartCooldown();
     }
 
     private void HandleBlackScreenStarted()
     {
-        if (activeUltimateAction is UltimateAction ultimate)
+        if (activeUltimateAction == null) return;
+
+        Transform playerTransform = player.transform;
+        Vector3 offset = activeUltimateAction.activationVFXOffset;
+
+        // Flip X offset based on facing direction
+        float facingDirection = playerTransform.localScale.x > 0 ? 1f : -1f;
+        offset.x *= facingDirection;
+
+        Vector3 spawnPosition = playerTransform.position + offset;
+
+        // 1. Try Library-driven VFX (Optimized)
+        if (activeUltimateAction.activationVFXType != Project.Combat.VFXType.None && Project.Combat.VFXManager.Instance != null)
         {
-            Transform playerTransform = player.transform;
-            Vector3 offset = ultimate.activationVFXOffset;
+            Project.Combat.VFXManager.Instance.Spawn(activeUltimateAction.activationVFXType, spawnPosition, facingDirection < 0);
+        }
+        // 2. Fallback to Prefab (Legacy)
+        else if (activeUltimateAction.activationVFXPrefab != null)
+        {
+            GameObject vfxInstance = Object.Instantiate(activeUltimateAction.activationVFXPrefab, spawnPosition, playerTransform.rotation);
 
-            // Flip X offset based on facing direction (using localScale.x as indicator)
-            float facingDirection = playerTransform.localScale.x > 0 ? 1f : -1f;
-            offset.x *= facingDirection;
-
-            Vector3 spawnPosition = playerTransform.position + offset;
-
-            // 1. Try Library-driven VFX (Optimized)
-            if (ultimate.activationVFXType != Project.Combat.VFXType.None && Project.Combat.VFXManager.Instance != null)
+            // FORCE UNSCALED TIME
+            var pss = vfxInstance.GetComponentsInChildren<ParticleSystem>();
+            foreach (var ps in pss)
             {
-                // Note: For ultimate activations, the VFXDefinition in the library 
-                // should have obeyHitstop = false to play during the freeze.
-                Project.Combat.VFXManager.Instance.Spawn(ultimate.activationVFXType, spawnPosition, facingDirection < 0);
+                var main = ps.main;
+                main.useUnscaledTime = true;
             }
-            // 2. Fallback to Prefab (Legacy)
-            else if (ultimate.activationVFXPrefab != null)
+
+            var anims = vfxInstance.GetComponentsInChildren<Animator>();
+            foreach (var a in anims)
             {
-                GameObject vfxInstance = Object.Instantiate(ultimate.activationVFXPrefab, spawnPosition, playerTransform.rotation);
-
-                // FORCE UNSCALED TIME so VFX plays during freeze
-                // 1. Particle Systems
-                var pss = vfxInstance.GetComponentsInChildren<ParticleSystem>();
-                foreach (var ps in pss)
-                {
-                    var main = ps.main;
-                    main.useUnscaledTime = true;
-                }
-
-                // 2. Animators
-                var anims = vfxInstance.GetComponentsInChildren<Animator>();
-                foreach (var a in anims)
-                {
-                    a.updateMode = AnimatorUpdateMode.UnscaledTime;
-                }
+                a.updateMode = AnimatorUpdateMode.UnscaledTime;
             }
         }
 
-        // Ultimate Activation Audio (plays through freeze via unscaled channel)
-        if (activeUltimateAction is UltimateAction ultimateAudio && GameAudioManager.Instance != null)
+        // Audio
+        if (GameAudioManager.Instance != null)
         {
-            GameAudioManager.Instance.PlayUltimateActivation(ultimateAudio);
+            GameAudioManager.Instance.PlayUltimateActivation(activeUltimateAction);
         }
     }
 
@@ -160,71 +99,42 @@ public class PlayerUltimateState : FrameDataPlayerState
     {
         if (!isWaitingForActivation) return;
 
-        // Unfreeze perfectly as the flash ends
         if (GameFreezeManager.Instance != null)
         {
             GameFreezeManager.Instance.RestoreTime();
         }
 
         isWaitingForActivation = false;
-        pendingStep = null;
     }
 
     public override void Update()
     {
+        if (isWaitingForActivation) return;
         base.Update();
-
-        // --- NEW: Immediate Environmental Interruption (Wall Hit, etc.) ---
-        // Added grace period check (currentFrame > 2) to ensure the startup animation plays
-        // even if the character is already touching a wall.
-        if (player.Combat != null && player.Combat.IsAttacking() && !isWaitingForActivation && currentFrame > 2)
-        {
-            InputContext ctx = BuildInputContext();
-            
-            // --- DIAGNOSTIC LOG ---
-            if (currentFrame % 10 == 0) // Log every 10 frames to avoid spam
-                Debug.Log($"[Ultimate] Update Polling: Frame {currentFrame}, AgainstWall in Context: {ctx.isAgainstWall}");
-
-            AttackStepData immediateStep = resolver.ResolveImmediateRoute(ctx);
-            if (immediateStep != null)
-            {
-                player.Combat.ExecuteStep(immediateStep, resolver.TreeDepth, !ctx.isGrounded, AttackCategory.Ultimate, resolver.ActiveCombatAction?.actionName, true);
-                RestartAction();
-            }
-        }
     }
 
     protected override void HandleInputDuringRecovery()
     {
-        // Auto-chain check. This allows multi-part ultimates (like grab follow-ups)
-        // to advance automatically without extra user input.
         if (TryAutoChain()) return;
     }
 
     protected override void HandleInputDuringCancel()
     {
-        ActionInputBuffer buffer = fsm.InputBuffer;
-        if (buffer == null)
-        {
-            return;
-        }
+        if (Buffer == null) return;
 
-        if (buffer.ConsumeUltimate() && TryResolveNextUltimateStep())
-        {
+        if (Buffer.ConsumeUltimate() && TryResolveNextUltimateStep())
             return;
-        }
 
-        // Auto-chain check (after manual Ultimate trigger but before Skill/Attack interrupts)
         if (TryAutoChain()) return;
 
-        if (buffer.ConsumeSkill())
+        if (Buffer.ConsumeSkill())
         {
             fsm.ChangeState(fsm.SkillState);
             fsm.CurrentState.OnSkillInput();
             return;
         }
 
-        if (buffer.ConsumeAttack())
+        if (Buffer.ConsumeAttack())
         {
             fsm.ChangeState(fsm.AttackState);
             fsm.CurrentState.OnAttackInput();
@@ -232,7 +142,7 @@ public class PlayerUltimateState : FrameDataPlayerState
         }
 
         float dashX;
-        if (buffer.ConsumeDash(out dashX))
+        if (Buffer.ConsumeDash(out dashX))
         {
             if (player.Movement != null && player.Movement.CanDash())
             {
@@ -243,22 +153,17 @@ public class PlayerUltimateState : FrameDataPlayerState
             }
         }
 
-        if (buffer.ConsumeJump())
+        if (Buffer.ConsumeJump())
         {
             resolver.Reset();
             fsm.RouteJumpInput();
         }
     }
 
-    public override bool CanAcceptCombatInput(CombatInputType inputType)
+    public override bool HandleUltimateInput()
     {
-        return inputType switch
-        {
-            CombatInputType.Attack => currentPhase == ActionPhase.Cancel,
-            CombatInputType.Skill => currentPhase == ActionPhase.Cancel,
-            CombatInputType.Ultimate => currentPhase == ActionPhase.Cancel,
-            _ => false
-        };
+        OnUltimateInput();
+        return true;
     }
 
     public override void OnUltimateInput()
@@ -275,6 +180,7 @@ public class PlayerUltimateState : FrameDataPlayerState
         {
             InputContext ctx = BuildInputContext();
             AttackStepData step = resolver.ResolveInitial(ctx, resolverTable, AttackCategory.Ultimate);
+            
             if (step == null)
             {
                 ExitToAppropriateMovementState();
@@ -290,20 +196,21 @@ public class PlayerUltimateState : FrameDataPlayerState
                 return;
             }
 
-            activeUltimateAction = resolver.ActiveCombatAction as SkillAction;
-            hasStartedCooldown = false;
+            activeUltimateAction = resolver.ActiveCombatAction as UltimateAction;
             
-            // Immediately execute step to snap to the Ultimate "Pose" (Frame 1)
-            player.Combat.ExecuteStep(step, resolver.TreeDepth, !ctx.isGrounded, AttackCategory.Ultimate, resolver.ActiveCombatAction?.actionName);
-            RestartAction();
+            ExecuteCombatStep(step, ctx, false);
 
-            // Set waiting flag
+            // Burst Visuals
+            if (activeUltimateAction != null && activeUltimateAction.useDashAfterImage && player.Movement != null)
+            {
+                player.Movement.SpawnUltimateBurst(3, 0.08f);
+            }
+
             isWaitingForActivation = true;
 
-            // Trigger activation effects
+            // Activation Effects
             if (GameFreezeManager.Instance != null)
             {
-                // Stays frozen until RestoreTime() in HandleSequenceEnded
                 GameFreezeManager.Instance.UltimateFreezeManual(); 
             }
             if (UltimateFlashOverlay.Instance != null)
@@ -322,92 +229,13 @@ public class PlayerUltimateState : FrameDataPlayerState
 
     private bool TryResolveNextUltimateStep(bool isAutoChain = false)
     {
-        if (!resolver.IsActive)
+        bool success = TryResolveNextStep(isAutoChain);
+        
+        if (success && activeUltimateAction != null && activeUltimateAction.useDashAfterImage && player.Movement != null)
         {
-            return false;
+            player.Movement.SpawnUltimateBurst(3, 0.08f);
         }
 
-        InputContext ctx = BuildInputContext();
-        AttackStepData nextStep = resolver.ResolveNext(ctx);
-        if (nextStep == null)
-        {
-            return false;
-        }
-
-        player.Combat.ExecuteStep(nextStep, resolver.TreeDepth, !ctx.isGrounded, AttackCategory.Ultimate, resolver.ActiveCombatAction?.actionName, isAutoChain);
-        RestartAction();
-        return true;
-    }
-
-    private bool TryAutoChain()
-    {
-        if (player.Combat == null) return false;
-
-        var step = player.Combat.GetCurrentStepData();
-        if (step == null || !step.autoChainToNext) return false;
-
-        return TryResolveNextUltimateStep(true);
-    }
-
-    private void TryStartCooldown()
-    {
-        if (hasStartedCooldown || activeUltimateAction == null || player.Combat == null)
-        {
-            return;
-        }
-
-        if (activeUltimateAction.cooldown > 0f)
-        {
-            player.Combat.StartActionCooldown(AttackCategory.Ultimate, activeUltimateAction.actionName);
-        }
-
-        hasStartedCooldown = true;
-    }
-
-    private InputContext BuildInputContext()
-    {
-        ActionInputBuffer buffer = fsm.InputBuffer;
-        return new InputContext
-        {
-            isGrounded = player.Movement != null && player.Movement.IsGrounded(),
-            directionalInput = buffer != null ? buffer.DirectionalInput : Vector2.zero,
-            facingDirection = player.Movement != null ? player.Movement.FacingDirection : 1,
-            previousState = transitionContext.previousState,
-            hasGrabbedEnemy = player.Combat != null && player.Combat.HasGrabbedEnemy(),
-            isAgainstWall = player.Movement != null && player.Movement.IsAgainstWall(),
-            passiveController = player.PassiveController,
-            runtimeState = player.PassiveController != null ? player.PassiveController.RuntimeState : null
-        };
-    }
-    // =========================================================
-    // Grab Connected — Tree Branching
-    // =========================================================
-
-    private void HandleGrabConnected()
-    {
-        AttackStepData grabFollowUp = resolver.ResolveGrabSuccess();
-        if (grabFollowUp != null)
-        {
-            fsm.InputBuffer?.ClearAll();
-
-            int maintainFrames = PlayerCombat.CalculateFramesUntilRelease(
-                new ComboNode { stepData = grabFollowUp, defaultNext = null });
-
-            if (maintainFrames > 0)
-            {
-                player.Combat.MaintainGrabThroughFollowUp(maintainFrames);
-            }
-
-            InputContext ctx = BuildInputContext();
-            player.Combat.ExecuteStep(
-                grabFollowUp, 
-                resolver.TreeDepth, 
-                !ctx.isGrounded, 
-                AttackCategory.Ultimate, 
-                resolver.ActiveCombatAction?.actionName,
-                true);
-                
-            RestartAction();
-        }
+        return success;
     }
 }

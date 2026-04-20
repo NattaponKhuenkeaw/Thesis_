@@ -222,6 +222,39 @@ namespace CombatEditor.UI
                         step.recoveryFrames = recovery;
                         MarkDirty();
                     });
+
+                    // Synchronize Clip length ratio
+                    var syncBtn = new Button(() => 
+                    {
+                        RecordUndo("Sync Logic frames to Clip length");
+                        int newTotal = Mathf.RoundToInt(step.animationClip.length * FrameDataConstants.LOGIC_FPS);
+                        int oldTotal = Mathf.Max(1, step.startupFrames + step.activeFrames + step.recoveryFrames); // avoid divide by zero
+                        
+                        float scale = (float)newTotal / oldTotal;
+                        
+                        // Perform deep rescale on all sub-data (Hitboxes, VFX, Motion, etc.)
+                        step.Rescale(scale);
+
+                        // Final adjustment to ensure absolute match with clip length
+                        // Rounding errors might leave a small gap; we dump it into recovery.
+                        int currentTotal = step.startupFrames + step.activeFrames + step.recoveryFrames;
+                        if (currentTotal != newTotal)
+                        {
+                            step.recoveryFrames = Mathf.Max(0, step.recoveryFrames + (newTotal - currentTotal));
+                        }
+                        
+                        MarkDirtyAndRebuild();
+                    });
+                    syncBtn.text = $"Sync Logic frames to Game Logic ({FrameDataConstants.LOGIC_FPS}fps)";
+                    syncBtn.style.marginTop = 4;
+                    body.Add(syncBtn);
+
+                    AddToggleField(body, "Loop Active Phase", step.loopActivePhase, value =>
+                    {
+                        RecordUndo("Edit Loop Active Phase");
+                        step.loopActivePhase = value;
+                        MarkDirty();
+                    });
                 }
                 else
                 {
@@ -258,12 +291,6 @@ namespace CombatEditor.UI
                 {
                     RecordUndo("Edit Auto Chain");
                     step.autoChainToNext = value;
-                    MarkDirty();
-                });
-                AddToggleField(body, "Stall Until Grounded", step.stallUntilGrounded, value =>
-                {
-                    RecordUndo("Edit Stall Until Grounded");
-                    step.stallUntilGrounded = value;
                     MarkDirty();
                 });
                 AddToggleField(body, "Lock Air Position", step.lockAirPosition, value =>
@@ -360,6 +387,8 @@ namespace CombatEditor.UI
                 }
             }
 
+
+
             BuildAddComponentButton(step);
         }
 
@@ -441,6 +470,85 @@ namespace CombatEditor.UI
                         MarkDirty();
                     });
                 }
+
+                if (action is StandaloneAction sa && sa.stepData != null)
+                {
+                    AddSeparator(body, "Automatic Transitions (Interrupts)");
+                    if (sa.stepData.triggerWindows == null) sa.stepData.triggerWindows = new List<TriggerWindow>();
+
+                    CombatAction currentAction = GetCurrentAction();
+                    List<ComboNode> allNodes = GetAllNodesInAction(currentAction);
+                    List<string> nodeNames = new List<string> { "NONE (End)" };
+                    foreach (var n in allNodes) nodeNames.Add(n.stepData?.stepName ?? "Unnamed");
+
+                    for (int i = 0; i < sa.stepData.triggerWindows.Count; i++)
+                    {
+                        int index = i;
+                        var trigger = sa.stepData.triggerWindows[i];
+
+                        VisualElement triggerBox = new VisualElement();
+                        triggerBox.AddToClassList("route-box");
+                        triggerBox.style.backgroundColor = new Color(0.2f, 0.2f, 0.1f, 0.3f);
+                        triggerBox.style.paddingLeft = 5;
+                        triggerBox.style.paddingBottom = 5;
+                        triggerBox.style.marginBottom = 10;
+
+                        AddIntField(triggerBox, "Priority", trigger.priority, val => {
+                            RecordUndo("Change Trigger Priority");
+                            trigger.priority = val;
+                            MarkDirty();
+                        });
+
+                        AddSeparator(triggerBox, "Conditions (Checked every active frame)");
+                        BuildConditionList(triggerBox, trigger.triggerConditions, $"sa_trigger_conditions_{index}", "Trigger");
+
+                        VisualElement targetRow = new VisualElement();
+                        targetRow.AddToClassList("card-field-row");
+                        
+                        int currentIndex = trigger.targetNode == null ? 0 : allNodes.IndexOf(trigger.targetNode) + 1;
+                        DropdownField targetDropdown = new DropdownField("Target", nodeNames, currentIndex);
+                        targetDropdown.RegisterValueChangedCallback(evt => {
+                            RecordUndo("Change Trigger Target");
+                            int newIdx = targetDropdown.index;
+                            if (newIdx == 0) trigger.targetNode = null;
+                            else if (newIdx - 1 < allNodes.Count) trigger.targetNode = allNodes[newIdx - 1];
+                            MarkDirtyAndRebuild();
+                        });
+                        targetRow.Add(targetDropdown);
+                        
+                        if (trigger.targetNode != null)
+                        {
+                            var goBtn = new Button(() => treeController.SelectNodeByData(trigger.targetNode)) { text = "→" };
+                            targetRow.Add(goBtn);
+                        }
+                        else
+                        {
+                            var createTargetBtn = new Button(() => {
+                                RecordUndo("Create Trigger Target");
+                                trigger.targetNode = new ComboNode { stepData = new AttackStepData { stepName = "New Trigger Step" } };
+                                MarkDirtyAndRebuild();
+                            }) { text = "+ Create Target" };
+                            targetRow.Add(createTargetBtn);
+                        }
+                        triggerBox.Add(targetRow);
+
+                        var removeBtn = new Button(() => {
+                            RecordUndo("Remove Trigger");
+                            sa.stepData.triggerWindows.RemoveAt(index);
+                            MarkDirtyAndRebuild();
+                        }) { text = "Remove Automatic Transition" };
+                        triggerBox.Add(removeBtn);
+
+                        body.Add(triggerBox);
+                    }
+
+                    var addAutoBtn = new Button(() => {
+                        RecordUndo("Add Automatic Transition");
+                        sa.stepData.triggerWindows.Add(new TriggerWindow { startFrame = 0, endFrame = -1 });
+                        MarkDirtyAndRebuild();
+                    }) { text = "+ Add Automatic Transition" };
+                    body.Add(addAutoBtn);
+                }
             });
         }
 
@@ -457,6 +565,8 @@ namespace CombatEditor.UI
                 return character.actionResolverTable.skillActions[idx];
             if (cat.StartsWith("Ultimate_") && int.TryParse(cat.Substring(9), out idx) && idx < character.actionResolverTable.ultimateActions.Count)
                 return character.actionResolverTable.ultimateActions[idx];
+            if (cat.StartsWith("Standalone_") && int.TryParse(cat.Substring(11), out idx) && idx < character.actionResolverTable.standaloneActions.Length)
+                return character.actionResolverTable.standaloneActions[idx];
             return null;
         }
 
@@ -474,6 +584,9 @@ namespace CombatEditor.UI
                 Walk(n.onGrabSuccessNode);
                 if (n.routes != null) {
                     foreach(var r in n.routes) Walk(r.targetNode);
+                }
+                if (n.stepData != null && n.stepData.triggerWindows != null) {
+                    foreach(var trigger in n.stepData.triggerWindows) Walk(trigger.targetNode);
                 }
             }
             Walk(action.comboTree.rootNode);
@@ -589,6 +702,9 @@ namespace CombatEditor.UI
 
                 // Routes List
                 AddSeparator(body, "Conditional Routes");
+                var routeHelp = new Label("Determined at the moment of next input (standard transitions).") { style = { opacity = 0.6f, fontSize = 10, unityFontStyleAndWeight = FontStyle.Italic, marginBottom = 5 } };
+                body.Add(routeHelp);
+
                 if (node.routes == null) node.routes = new List<ComboRoute>();
 
                 for (int i = 0; i < node.routes.Count; i++)
@@ -601,39 +717,6 @@ namespace CombatEditor.UI
                     routeBox.style.backgroundColor = new Color(0, 0, 0, 0.2f);
                     routeBox.style.paddingLeft = 5;
                     routeBox.style.marginBottom = 5;
-
-                    AddEnumField(routeBox, "Input", route.direction, val => {
-                        RecordUndo("Change Route Input");
-                        route.direction = (DirectionRequirement)val;
-                        MarkDirty();
-                    });
-
-                    AddToggleField(routeBox, "Grounded Only", route.requireGrounded, val => {
-                        RecordUndo("Change Route Grounded");
-                        route.requireGrounded = val;
-                        MarkDirty();
-                    });
-
-                    AddToggleField(routeBox, "Airborne Only", route.requireAirborne, val => {
-                        RecordUndo("Change Route Airborne");
-                        route.requireAirborne = val;
-                        MarkDirty();
-                    });
-
-                    if (hasGrab)
-                    {
-                        AddToggleField(routeBox, "Require Grabbed", route.requireGrabbedEnemy, val => {
-                            RecordUndo("Change Route Grabbed");
-                            route.requireGrabbedEnemy = val;
-                            MarkDirty();
-                        });
-                    }
-
-                    AddEnumField(routeBox, "Previous State", route.requiredPreviousState, val => {
-                        RecordUndo("Change Route Previous State");
-                        route.requiredPreviousState = (PlayerStateId)val;
-                        MarkDirty();
-                    });
 
                     AddIntField(routeBox, "Priority", route.priority, val => {
                         RecordUndo("Change Route Priority");
@@ -702,6 +785,83 @@ namespace CombatEditor.UI
                     MarkDirtyAndRebuild();
                 }) { text = "+ Add Branching Route" };
                 body.Add(addRouteBtn);
+
+                // --- Automatic Transitions (Implicit Triggers) ---
+                AddSeparator(body, "Automatic Transitions (Interrupts)");
+                var triggerHelp = new Label("Triggered immediately during active phase if conditions are met.") { style = { opacity = 0.6f, fontSize = 10, unityFontStyleAndWeight = FontStyle.Italic, marginBottom = 5 } };
+                body.Add(triggerHelp);
+
+                if (node.stepData.triggerWindows == null) node.stepData.triggerWindows = new List<TriggerWindow>();
+
+                for (int i = 0; i < node.stepData.triggerWindows.Count; i++)
+                {
+                    int index = i;
+                    var trigger = node.stepData.triggerWindows[i];
+
+                    VisualElement triggerBox = new VisualElement();
+                    triggerBox.AddToClassList("route-box");
+                    triggerBox.style.backgroundColor = new Color(0.2f, 0.2f, 0.1f, 0.3f); // Slightly different tint
+                    triggerBox.style.paddingLeft = 5;
+                    triggerBox.style.paddingBottom = 5;
+                    triggerBox.style.marginBottom = 10;
+
+                    AddIntField(triggerBox, "Priority", trigger.priority, val => {
+                        RecordUndo("Change Trigger Priority");
+                        trigger.priority = val;
+                        MarkDirty();
+                    });
+
+                    AddSeparator(triggerBox, "Conditions (Checked every active frame)");
+                    BuildConditionList(triggerBox, trigger.triggerConditions, $"trigger_conditions_{index}", "Trigger");
+
+                    VisualElement targetRow = new VisualElement();
+                    targetRow.AddToClassList("card-field-row");
+                    
+                    int currentIndex = trigger.targetNode == null ? 0 : allNodes.IndexOf(trigger.targetNode) + 1;
+                    DropdownField targetDropdown = new DropdownField("Target", nodeNames, currentIndex);
+                    targetDropdown.RegisterValueChangedCallback(evt => {
+                        RecordUndo("Change Trigger Target");
+                        int newIdx = targetDropdown.index;
+                        if (newIdx == 0) trigger.targetNode = null;
+                        else if (newIdx - 1 < allNodes.Count) trigger.targetNode = allNodes[newIdx - 1];
+                        MarkDirtyAndRebuild();
+                    });
+                    targetRow.Add(targetDropdown);
+                    
+                    if (trigger.targetNode != null)
+                    {
+                        var goBtn = new Button(() => treeController.SelectNodeByData(trigger.targetNode)) { text = "→" };
+                        targetRow.Add(goBtn);
+                    }
+                    else
+                    {
+                        var createTargetBtn = new Button(() => {
+                            RecordUndo("Create Trigger Target");
+                            trigger.targetNode = new ComboNode { stepData = new AttackStepData { stepName = "New Trigger Step" } };
+                            MarkDirtyAndRebuild();
+                        }) { text = "+ Create Target" };
+                        targetRow.Add(createTargetBtn);
+                    }
+                    triggerBox.Add(targetRow);
+
+                    var removeBtn = new Button(() => {
+                        RecordUndo("Remove Trigger");
+                        node.stepData.triggerWindows.RemoveAt(index);
+                        MarkDirtyAndRebuild();
+                    }) { text = "Remove Automatic Transition" };
+                    triggerBox.Add(removeBtn);
+
+                    body.Add(triggerBox);
+                }
+
+                var addAutoBtn = new Button(() => {
+                    RecordUndo("Add Automatic Transition");
+                    // Hardcode window to full active phase implicitly via logic, 
+                    // but data-wise we can just set it to 0 / -1 for now.
+                    node.stepData.triggerWindows.Add(new TriggerWindow { startFrame = 0, endFrame = -1 });
+                    MarkDirtyAndRebuild();
+                }) { text = "+ Add Automatic Transition" };
+                body.Add(addAutoBtn);
             });
         }
 
@@ -711,7 +871,59 @@ namespace CombatEditor.UI
 
             BuildFoldoutCard("Global Resolver Tools", "resolver_tools", new Color(0.2f, 0.7f, 0.4f), body =>
             {
-                body.Add(new HelpBox("Data migration tools are no longer available for this table. All combat actions must be authored directly in the combo trees.", HelpBoxMessageType.Info));
+                body.Add(new HelpBox("Data migration tools are no longer available. Combat actions must be authored using advanced Condition lists inside the combo trees natively.", HelpBoxMessageType.Info));
+                
+                AddSeparator(body, "Fallback Behavior");
+
+                var defaultStepBox = new Box();
+                defaultStepBox.style.marginTop = 5;
+                defaultStepBox.style.marginBottom = 10;
+                defaultStepBox.style.paddingTop = 5;
+                defaultStepBox.style.paddingBottom = 5;
+                defaultStepBox.style.paddingLeft = 5;
+                defaultStepBox.style.paddingRight = 5;
+                body.Add(defaultStepBox);
+
+                if (table.defaultLinearStep == null)
+                {
+                    Button createBtn = new Button(() => {
+                        RecordUndo("Create Default Step");
+                        table.defaultLinearStep = new AttackStepData { stepName = "Global Fallback" };
+                        MarkDirtyAndRebuild();
+                    }) { text = "+ Create Default Fallback Step" };
+                    defaultStepBox.Add(createBtn);
+                }
+                else
+                {
+                    VisualElement row = new VisualElement();
+                    row.style.flexDirection = FlexDirection.Row;
+                    row.style.justifyContent = Justify.SpaceBetween;
+
+                    Label label = new Label($"Fallback: {table.defaultLinearStep.stepName}");
+                    label.style.unityFontStyleAndWeight = FontStyle.Bold;
+                    row.Add(label);
+
+                    VisualElement btnRow = new VisualElement();
+                    btnRow.style.flexDirection = FlexDirection.Row;
+
+                    Button editBtn = new Button(() => {
+                        // We can't use SelectNodeByData directly because it's not in the tree,
+                        // but we can just call the builder method.
+                        container.Clear();
+                        BuildAttackStepCards(table.defaultLinearStep);
+                    }) { text = "⚙ Edit" };
+                    btnRow.Add(editBtn);
+
+                    Button clearBtn = new Button(() => {
+                        RecordUndo("Clear Default Step");
+                        table.defaultLinearStep = null;
+                        MarkDirtyAndRebuild();
+                    }) { text = "X" };
+                    btnRow.Add(clearBtn);
+
+                    row.Add(btnRow);
+                    defaultStepBox.Add(row);
+                }
             });
         }
 
@@ -843,6 +1055,12 @@ namespace CombatEditor.UI
                     {
                         RecordUndo("Edit VFX Color");
                         entry.trackColor = value;
+                        MarkDirty();
+                    });
+                    AddToggleField(inner, "Loop During Active", entry.loopDuringActive, value =>
+                    {
+                        RecordUndo("Toggle VFX Looping");
+                        entry.loopDuringActive = value;
                         MarkDirty();
                     });
 
@@ -1039,6 +1257,12 @@ namespace CombatEditor.UI
                 {
                     RecordUndo("Edit Hitbox Color");
                     hitbox.debugColor = value;
+                    MarkDirty();
+                });
+                AddEnumField(inner, "Damage Type", hitbox.damageType, value =>
+                {
+                    RecordUndo("Edit Damage Type");
+                    hitbox.damageType = (DamageType)value;
                     MarkDirty();
                 });
 
@@ -1289,7 +1513,7 @@ namespace CombatEditor.UI
                 MarkDirty();
             });
 
-            AddSeparator(body, "Grab Condition");
+            AddSeparator(body, "Grab Context");
             AddToggle(body, "Can Grab Air", hitbox.canGrabAirborne, value =>
             {
                 RecordUndo("Edit Can Grab Air");
@@ -1297,8 +1521,22 @@ namespace CombatEditor.UI
                 MarkDirty();
             });
 
-            AddSeparator(body, "Grab Reaction");
-            AddIntField(body, "Impact Freeze", hitbox.impactFreezeFrames, value =>
+            AddSeparator(body, "Damage and Impact");
+            AddFloatField(body, "Damage Scale", hitbox.damageMultiplier, value =>
+            {
+                RecordUndo("Edit Damage Scale");
+                hitbox.damageMultiplier = value;
+                MarkDirty();
+            });
+            AddEnumField(body, "Impact Tier", hitbox.impactTier, value =>
+            {
+                RecordUndo("Edit Grab Impact Tier");
+                hitbox.impactTier = (DamageImpactTier)value;
+                MarkDirty();
+            });
+
+            AddSeparator(body, "Reaction and Hitstop");
+            AddIntField(body, "HitStop / Impact Freeze", hitbox.impactFreezeFrames, value =>
             {
                 RecordUndo("Edit Grab Impact Freeze");
                 hitbox.impactFreezeFrames = value;
@@ -1316,18 +1554,16 @@ namespace CombatEditor.UI
                 hitbox.recoveryFrames = value;
                 MarkDirty();
             });
+
+            AddSeparator(body, "Snapping");
             AddVector2Field(body, "Snap Offset", hitbox.snapOffset, value =>
             {
                 RecordUndo("Edit Grab Snap Offset");
                 hitbox.snapOffset = value;
                 MarkDirty();
             });
-            AddEnumField(body, "Impact Tier", hitbox.impactTier, value =>
-            {
-                RecordUndo("Edit Grab Impact Tier");
-                hitbox.impactTier = (DamageImpactTier)value;
-                MarkDirty();
-            });
+
+            AddSeparator(body, "Flash");
             AddColorField(body, "Flash Color", hitbox.flashColor, value =>
             {
                 RecordUndo("Edit Grab Flash Color");
@@ -1830,6 +2066,11 @@ namespace CombatEditor.UI
                     conditions.Add(new GroundedActionCondition());
                     MarkDirtyAndRebuild();
                 });
+                menu.AddItem(new GUIContent("Airborne Landing"), false, () => {
+                    RecordUndo($"Add {undoLabelPrefix} Condition");
+                    conditions.Add(new AirborneLandingActionCondition());
+                    MarkDirtyAndRebuild();
+                });
                 menu.AddItem(new GUIContent("Direction"), false, () => {
                     RecordUndo($"Add {undoLabelPrefix} Condition");
                     conditions.Add(new DirectionActionCondition());
@@ -1880,6 +2121,13 @@ namespace CombatEditor.UI
                     AddToggleField(parent, "Require Grounded", groundedCondition.requireGrounded, value => {
                         RecordUndo("Edit Condition Grounded");
                         groundedCondition.requireGrounded = value;
+                        MarkDirty();
+                    });
+                    break;
+                case AirborneLandingActionCondition landingCondition:
+                    AddToggleField(parent, "Require Just Landed", landingCondition.requireJustLanded, value => {
+                        RecordUndo("Edit Condition Airborne Landing");
+                        landingCondition.requireJustLanded = value;
                         MarkDirty();
                     });
                     break;
@@ -1960,6 +2208,7 @@ namespace CombatEditor.UI
             return condition switch
             {
                 GroundedActionCondition => "Grounded Condition",
+                AirborneLandingActionCondition => "Airborne Landing Condition",
                 DirectionActionCondition => "Direction Condition",
                 PreviousStateActionCondition => "Previous State Condition",
                 GrabbedEnemyActionCondition => "Grabbed Target Condition",
@@ -2052,6 +2301,7 @@ namespace CombatEditor.UI
             private int activePointerId = -1;
             private float startPointerY;
             private float startCardTop;
+            private bool isSwapping;
             private bool isDragging;
 
             public ReorderableCardDragManipulator(VisualElement card, VisualElement listContainer, int originalIndex, Action<int> onReorder)
@@ -2110,21 +2360,50 @@ namespace CombatEditor.UI
             }
 
             private void OnPointerCaptureOut(PointerCaptureOutEvent evt) {
+                if (isSwapping) return;
                 if (activePointerId == -1) return;
                 FinishDrag();
             }
 
             private void BeginDrag() {
                 isDragging = true;
+                isSwapping = true;
+                
                 placeholder.style.height = card.resolvedStyle.height;
                 placeholder.style.marginTop = card.resolvedStyle.marginTop;
                 placeholder.style.marginBottom = card.resolvedStyle.marginBottom;
                 placeholder.style.marginLeft = card.resolvedStyle.marginLeft;
                 placeholder.style.marginRight = card.resolvedStyle.marginRight;
+                
+                // UX Styling for placeholder
+                placeholder.style.borderTopWidth = 2f;
+                placeholder.style.borderBottomWidth = 2f;
+                placeholder.style.borderLeftWidth = 2f;
+                placeholder.style.borderRightWidth = 2f;
+                placeholder.style.borderTopColor = new StyleColor(new Color(0.3f, 0.6f, 1f, 0.8f));
+                placeholder.style.borderBottomColor = new StyleColor(new Color(0.3f, 0.6f, 1f, 0.8f));
+                placeholder.style.borderLeftColor = new StyleColor(new Color(0.3f, 0.6f, 1f, 0.8f));
+                placeholder.style.borderRightColor = new StyleColor(new Color(0.3f, 0.6f, 1f, 0.8f));
+                placeholder.style.backgroundColor = new StyleColor(new Color(0.1f, 0.2f, 0.3f, 0.3f));
+                placeholder.style.borderTopLeftRadius = 6f;
+                placeholder.style.borderTopRightRadius = 6f;
+                placeholder.style.borderBottomLeftRadius = 6f;
+                placeholder.style.borderBottomRightRadius = 6f;
+
                 card.RemoveFromHierarchy();
                 listContainer.Insert(originalIndex, placeholder);
                 listContainer.Add(card);
+                
+                // CRITICAL: Re-capture because hierarchy change releases it
+                target.CapturePointer(activePointerId);
+                isSwapping = false;
+
                 card.AddToClassList("property-card--dragging");
+                
+                // UX Styling for dragged card
+                card.style.opacity = 0.85f;
+                card.style.scale = new StyleScale(new Scale(new Vector3(0.98f, 0.98f, 1f)));
+
                 card.style.position = Position.Absolute;
                 card.style.left = 0f;
                 card.style.right = 0f;
@@ -2145,6 +2424,10 @@ namespace CombatEditor.UI
                     card.style.left = new StyleLength(StyleKeyword.Null);
                     card.style.right = new StyleLength(StyleKeyword.Null);
                     card.style.top = new StyleLength(StyleKeyword.Null);
+                    
+                    card.style.opacity = new StyleFloat(StyleKeyword.Null);
+                    card.style.scale = new StyleScale(StyleKeyword.Null);
+
                     listContainer.Insert(Mathf.Clamp(finalIndex, 0, listContainer.childCount), card);
                     if (finalIndex != originalIndex) onReorder?.Invoke(finalIndex);
                 }

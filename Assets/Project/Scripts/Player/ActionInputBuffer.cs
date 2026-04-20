@@ -41,27 +41,33 @@ public class ActionInputBuffer
     // =========================================================
     // Buffer Write (called from InputHandler / FSM routing)
     // =========================================================
+    
+    /// <summary>Buffers an attack input for the specified duration.</summary>
     public void BufferAttack(float duration = DEFAULT_BUFFER_DURATION)
     {
         attackBufferedUntil = Time.time + duration;
     }
 
+    /// <summary>Buffers a dash input and the specific horizontal direction pressed.</summary>
     public void BufferDash(float inputX, float duration = DEFAULT_BUFFER_DURATION)
     {
         dashBufferedUntil = Time.time + duration;
         dashInputX = inputX;
     }
 
+    /// <summary>Buffers a jump input for the specified duration.</summary>
     public void BufferJump(float duration = DEFAULT_BUFFER_DURATION)
     {
         jumpBufferedUntil = Time.time + duration;
     }
 
+    /// <summary>Buffers a skill input for the specified duration.</summary>
     public void BufferSkill(float duration = DEFAULT_BUFFER_DURATION)
     {
         skillBufferedUntil = Time.time + duration;
     }
 
+    /// <summary>Buffers an ultimate input for the specified duration.</summary>
     public void BufferUltimate(float duration = DEFAULT_BUFFER_DURATION)
     {
         ultimateBufferedUntil = Time.time + duration;
@@ -69,7 +75,7 @@ public class ActionInputBuffer
 
     /// <summary>
     /// Snapshot directional input for combo routing.
-    /// Called every frame by InputHandler so states can read it anytime.
+    /// Called every frame by InputHandler and aggressively on active presses.
     /// </summary>
     public void SetDirectionalInput(Vector2 input)
     {

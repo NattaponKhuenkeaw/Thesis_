@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3851197621864630896}
   - component: {fileID: 7526631213419890147}
   - component: {fileID: 6019883634649480654}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: VFXGenericPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}

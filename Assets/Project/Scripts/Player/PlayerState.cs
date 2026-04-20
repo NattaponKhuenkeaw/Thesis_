@@ -26,17 +26,17 @@ public enum PlayerStateId
 /// Cancel hierarchy for state transitions.
 /// Higher priority states cannot be interrupted by lower priority actions.
 ///   Movement (0)     — Idle, Running (can be cancelled by anything)
-///   AttackCombat (1) — Attacking, Skill (cancelled by Ability+)
-///   Ability (2)      — Jumping, Dashing (cancelled by Ultimate+)
-///   Ultimate (3)     — Ultimate (cancelled by System only)
+///   NormalAttack (1) — Basic ground/air combo attacks
+///   SkillUltimate (2)— Specialized combat actions (Skills and Ultimates)
+///   Ability (3)      — High-priority movement (Dashing, Jumping)
 ///   System (4)       — Hitstun, Dead (cannot be cancelled normally)
 /// </summary>
 public enum PlayerStatePriority
 {
     Movement = 0,
-    AttackCombat = 1,
-    Ability = 2,
-    Ultimate = 3,
+    NormalAttack = 1,
+    SkillUltimate = 2,
+    Ability = 3,
     System = 4
 }
 
@@ -123,6 +123,16 @@ public abstract class PlayerState
     // Input Hooks — override ONLY for custom behavior.
     // Default implementations handle common forwarding via flags.
     // =========================================================
+
+    /// <summary>
+    /// Attempt to handle jump input. Returns true if this state consumed the input
+    /// (custom behavior), false to let the FSM apply default routing.
+    /// </summary>
+    public virtual bool HandleJumpInput() => false;
+    public virtual bool HandleDashInput(float inputX) => false;
+    public virtual bool HandleAttackInput() => false;
+    public virtual bool HandleSkillInput() => false;
+    public virtual bool HandleUltimateInput() => false;
 
     /// <summary>
     /// Movement input. Default: forwards to PlayerMovement if AcceptsMoveInput is true.

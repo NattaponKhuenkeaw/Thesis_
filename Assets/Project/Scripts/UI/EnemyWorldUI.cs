@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -42,9 +43,19 @@ public class EnemyWorldUI : MonoBehaviour
     [SerializeField] private float punchScaleOvershoot = 1.3f;
 
     private RectTransform damageTextRect;
-    private Coroutine damageTextCoroutine;
+    private List<TMP_Text> damageTextPool = new List<TMP_Text>();
     private Coroutine healthLerpCoroutine;
     private Color damageTextBaseColor = Color.white;
+
+    [Header("Elemental Colors")]
+    [SerializeField] private Color physicalColor = Color.white;
+    [SerializeField] private Color fireColor = new Color(1f, 0.27f, 0f);      // OrangeRed
+    [SerializeField] private Color waterColor = new Color(0f, 0.75f, 1f);     // DeepSkyBlue
+    [SerializeField] private Color iceColor = new Color(0.88f, 1f, 1f);       // Cyan-ish
+    [SerializeField] private Color electroColor = new Color(0.85f, 0.44f, 0.84f); // Orchid/Purple
+    [SerializeField] private Color windColor = new Color(0.94f, 1f, 0.94f);   // Mint/Teal
+    [SerializeField] private Color rockColor = new Color(0.96f, 0.64f, 0.38f); // SandyBrown
+    [SerializeField] private Color natureColor = new Color(0.2f, 0.8f, 0.2f);   // LimeGreen
 
     private void Reset()
     {
@@ -60,6 +71,7 @@ public class EnemyWorldUI : MonoBehaviour
             damageTextRect = damageText.rectTransform;
             damageTextBaseColor = damageText.color;
             damageText.gameObject.SetActive(false);
+            damageTextPool.Add(damageText);
         }
 
         UpdateHealthBar();
@@ -152,7 +164,7 @@ public class EnemyWorldUI : MonoBehaviour
     private void HandleDamaged(HitReactionData data)
     {
         UpdateHealthBar();
-        ShowDamageText(data.damage, data.impactTier);
+        ShowDamageText(data.damage, data.impactTier, data.damageType);
     }
 
     private void HandleDied()
@@ -208,16 +220,17 @@ public class EnemyWorldUI : MonoBehaviour
         healthLerpCoroutine = null;
     }
 
-    private void ShowDamageText(float damage, DamageImpactTier impactTier)
+    private void ShowDamageText(float damage, DamageImpactTier impactTier, DamageType damageType)
     {
-        if (damageText == null)
-            return;
+        if (Mathf.RoundToInt(damage) <= 0) return;
 
-        if (damageTextCoroutine != null)
-            StopCoroutine(damageTextCoroutine);
+        TMP_Text t = GetPooledText();
+        if (t == null) return;
 
-        if (damageTextRect == null)
-            damageTextRect = damageText.rectTransform;
+        RectTransform r = t.rectTransform;
+        
+        // Ensure new text is rendered on top
+        r.SetAsLastSibling();
 
         // --- Random start position ---
         Vector2 randomStart = new Vector2(
@@ -228,23 +241,56 @@ public class EnemyWorldUI : MonoBehaviour
         float targetScale = impactTier switch
         {
             DamageImpactTier.Medium   => skillScale,
-            DamageImpactTier.Heavy    => skillScale * 1.3f, // Medium -> Heavy boost
+            DamageImpactTier.Heavy    => skillScale * 1.3f, 
             DamageImpactTier.Ultimate => ultimateScale,
             _                         => basicComboScale
         };
 
-        damageText.text = Mathf.RoundToInt(damage).ToString();
-        damageText.color = damageTextBaseColor;
-        damageTextRect.anchoredPosition = randomStart;
-        damageText.gameObject.SetActive(true);
+        // --- Elemental Color ---
+        Color elementColor = damageType switch
+        {
+            DamageType.Fire    => fireColor,
+            DamageType.Water   => waterColor,
+            DamageType.Ice     => iceColor,
+            DamageType.Electro => electroColor,
+            DamageType.Wind    => windColor,
+            DamageType.Rock    => rockColor,
+            DamageType.Nature  => natureColor,
+            _                  => physicalColor
+        };
 
-        damageTextCoroutine = StartCoroutine(DamageTextRoutine(randomStart, targetScale));
+        t.text = Mathf.RoundToInt(damage).ToString();
+        t.color = elementColor;
+        r.anchoredPosition = randomStart;
+        t.gameObject.SetActive(true);
+
+        StartCoroutine(DamageTextRoutine(t, randomStart, targetScale, elementColor));
     }
 
-    private IEnumerator DamageTextRoutine(Vector2 startPos, float targetScale)
+    private TMP_Text GetPooledText()
     {
+        for (int i = 0; i < damageTextPool.Count; i++)
+        {
+            if (!damageTextPool[i].gameObject.activeSelf)
+                return damageTextPool[i];
+        }
+
+        // Expand pool if needed (cap at 15 for safety)
+        if (damageTextPool.Count < 15 && damageText != null)
+        {
+            TMP_Text newText = Instantiate(damageText, damageText.transform.parent);
+            damageTextPool.Add(newText);
+            return newText;
+        }
+
+        return null;
+    }
+
+    private IEnumerator DamageTextRoutine(TMP_Text textInstance, Vector2 startPos, float targetScale, Color baseColor)
+    {
+        RectTransform rect = textInstance.rectTransform;
         float punchStart = targetScale * punchScaleOvershoot;
-        Color color = damageTextBaseColor;
+        Color color = baseColor;
         
         // --- STAGE 1: Impact Pop ---
         float elapsed = 0f;
@@ -252,8 +298,8 @@ public class EnemyWorldUI : MonoBehaviour
         {
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / damagePopDuration);
-            damageTextRect.localScale = Vector3.one * Mathf.Lerp(1f, punchStart, t);
-            damageTextRect.anchoredPosition = startPos;
+            rect.localScale = Vector3.one * Mathf.Lerp(1f, punchStart, t);
+            rect.anchoredPosition = startPos;
             yield return null;
         }
 
@@ -263,14 +309,14 @@ public class EnemyWorldUI : MonoBehaviour
         {
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / damageScaleDownDuration);
-            damageTextRect.localScale = Vector3.one * Mathf.Lerp(punchStart, targetScale, EaseOutBack(t));
-            damageTextRect.anchoredPosition = startPos;
+            rect.localScale = Vector3.one * Mathf.Lerp(punchStart, targetScale, EaseOutBack(t));
+            rect.anchoredPosition = startPos;
             yield return null;
         }
 
         // --- STAGE 3: Freeze ---
-        damageTextRect.localScale = Vector3.one * targetScale;
-        damageTextRect.anchoredPosition = startPos;
+        rect.localScale = Vector3.one * targetScale;
+        rect.anchoredPosition = startPos;
         yield return new WaitForSeconds(damageFreezeDuration);
 
         // --- STAGE 4: Fade Away Upward ---
@@ -281,21 +327,18 @@ public class EnemyWorldUI : MonoBehaviour
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / damageFadeDuration);
             
-            damageTextRect.anchoredPosition = Vector2.Lerp(startPos, endPos, t);
+            rect.anchoredPosition = Vector2.Lerp(startPos, endPos, t);
             
             color.a = 1f - t;
-            damageText.color = color;
+            textInstance.color = color;
             
             // Subtle shrink during fade
-            damageTextRect.localScale = Vector3.one * targetScale * Mathf.Lerp(1f, 0.8f, t);
+            rect.localScale = Vector3.one * targetScale * Mathf.Lerp(1f, 0.8f, t);
             
             yield return null;
         }
 
-        damageText.color = damageTextBaseColor;
-        damageTextRect.localScale = Vector3.one;
-        damageText.gameObject.SetActive(false);
-        damageTextCoroutine = null;
+        textInstance.gameObject.SetActive(false);
     }
 
     /// <summary>

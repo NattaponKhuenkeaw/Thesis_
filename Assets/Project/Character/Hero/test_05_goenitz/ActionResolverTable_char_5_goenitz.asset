@@ -12,35 +12,39 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ec7b0a95c3b898f4080db07d37c47941, type: 3}
   m_Name: ActionResolverTable_char_5_goenitz
   m_EditorClassIdentifier: Assembly-CSharp::ActionResolverTable
-  groundComboTree:
-    treeName: Combo
-    comboResetDelay: 0.8
-    rootNode:
-      rid: -2
-  airComboTree:
-    treeName: Combo
-    comboResetDelay: 0.8
-    rootNode:
-      rid: -2
+  comboActions: []
+  skillActions: []
+  ultimateActions: []
   standaloneActions:
-  - direction: 5
+  - actionName: New Action
+    context: 0
+    priority: 10
+    conditions: []
+    comboTree:
+      treeName: Combo
+      comboResetDelay: 0.8
+      rootNode:
+        rid: -2
+    direction: 5
     requireGrounded: 0
     requireAirborne: 1
     requiredPreviousState: 0
-    priority: 10
     stepData:
-      stepName: Plunge Impact
-      animationClip: {fileID: 0}
       startupFrames: 15
       activeFrames: 8
       recoveryFrames: 38
       cancelWindowStartFrame: 30
-      stallUntilGrounded: 0
+      loopActivePhase: 0
+      stepName: Plunge Impact
+      animationClip: {fileID: 0}
       lockAirPosition: 1
       autoChainToNext: 0
+      triggerWindows: []
       motionData:
         rid: -2
       vfxData:
+        rid: -2
+      audioData:
         rid: -2
       hitData:
         rid: -2
@@ -53,6 +57,30 @@ MonoBehaviour:
     isPlungeAction: 1
     plungeDownwardSpeed: 18
     plungeFallAnimState: Plunge_Fall
+  defaultLinearStep:
+    startupFrames: 10
+    activeFrames: 15
+    recoveryFrames: 20
+    cancelWindowStartFrame: 35
+    loopActivePhase: 0
+    stepName: Attack
+    animationClip: {fileID: 0}
+    lockAirPosition: 1
+    autoChainToNext: 0
+    triggerWindows: []
+    motionData:
+      rid: -2
+    vfxData:
+      rid: -2
+    audioData:
+      rid: -2
+    hitData:
+      rid: -2
+    componentOrder:
+    - motion
+    - vfx
+    - audio
+    - hitbox
   references:
     version: 2
     RefIds:

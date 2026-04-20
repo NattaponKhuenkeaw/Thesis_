@@ -98,8 +98,8 @@ public class ActionResolver
 
         foreach (var action in searchList)
         {
-            if (action.context == expectedContext
-                && ActionMatches(action, ctx))
+            bool contextMatches = action.context == CombatActionContext.Both || action.context == expectedContext;
+            if (contextMatches && ActionMatches(action, ctx))
             {
                 if (bestAction == null
                     || GetEffectivePriority(action, ctx) > GetEffectivePriority(bestAction, ctx))
@@ -118,6 +118,15 @@ public class ActionResolver
         else
         {
             Log($"Resolution Failed: No matching {category} action for context {expectedContext}.", Color.red);
+            if (table.defaultLinearStep != null)
+            {
+                Log($"Using Default Linear Step fallback.", Color.yellow);
+                activeTree = new ComboTree { rootNode = new ComboNode { stepData = table.defaultLinearStep } };
+            }
+            else
+            {
+                return null;
+            }
         }
 
         if (activeTree?.rootNode == null)
@@ -129,7 +138,7 @@ public class ActionResolver
         // 3. Check if the ROOT node itself has a matching route for the initial input
         currentNode = activeTree.rootNode;
         // Don't follow defaultNext on first resolve (allowDefault = false)
-        ComboNode resolved = TryResolveRouteAtNode(currentNode, ctx, false);
+        ComboNode resolved = ComboRouter.ResolveRoute(currentNode, ctx, false);
         
         if (resolved != null && resolved != currentNode)
         {
@@ -158,7 +167,7 @@ public class ActionResolver
         string prevNodeName = currentNode.stepData?.stepName ?? "Unknown";
 
         // Check conditional routes on current node (top-to-bottom, priority-sorted)
-        ComboNode nextNode = TryResolveRouteAtNode(currentNode, ctx, allowDefault: false);
+        ComboNode nextNode = ComboRouter.ResolveRoute(currentNode, ctx, allowDefault: false);
 
         if (nextNode != null)
         {
@@ -190,7 +199,7 @@ public class ActionResolver
     // Grab Success — Dedicated route for successful grabs
     // =========================================================
 
-    public AttackStepData ResolveGrabSuccess()
+    public AttackStepData ResolveGrabSuccess(InputContext ctx)
     {
         if (currentNode == null) return null;
 
@@ -198,7 +207,7 @@ public class ActionResolver
         if (currentNode.onGrabSuccessNode != null)
         {
             string prevNodeName = currentNode.stepData?.stepName ?? "Unknown";
-            Log($"Grab Success Match! [{prevNodeName}] -> '{currentNode.onGrabSuccessNode.stepData?.stepName}'", Color.green);
+            Log($"Grab Success (Legacy) Match! [{prevNodeName}] -> '{currentNode.onGrabSuccessNode.stepData?.stepName}'", Color.green);
             currentNode = currentNode.onGrabSuccessNode;
             treeDepth++;
             return currentNode.stepData;
@@ -207,22 +216,45 @@ public class ActionResolver
         // 2. Check routes that specifically require a grabbed enemy (never fall to defaultNext)
         if (currentNode.routes != null)
         {
-            ComboRoute bestGrabRoute = null;
+            ComboRoute autoSuccessRoute = null;
+            ComboRoute directionalMatchRoute = null;
+            ComboRoute fallbackGrabRoute = null;
+
             for (int i = 0; i < currentNode.routes.Count; i++)
             {
                 ComboRoute route = currentNode.routes[i];
-                if (route?.targetNode == null) continue;
-                if (!route.requireGrabbedEnemy) continue; // ONLY grab-specific routes
+                if (route?.targetNode == null || !route.requireGrabbedEnemy) continue;
 
-                if (bestGrabRoute == null || route.priority > bestGrabRoute.priority)
-                    bestGrabRoute = route;
+                // Priority A: Explicit Auto-Execute (NONE)
+                if (route.direction == DirectionRequirement.None)
+                {
+                    if (autoSuccessRoute == null || route.priority > autoSuccessRoute.priority)
+                        autoSuccessRoute = route;
+                }
+
+                // Priority B: Matching Direction (Choice)
+                if (ComboRouter.RouteMatches(route, ctx))
+                {
+                    if (directionalMatchRoute == null || route.priority > directionalMatchRoute.priority)
+                        directionalMatchRoute = route;
+                }
+
+                // Priority C: Any Grab Route (Fallback)
+                if (fallbackGrabRoute == null || route.priority > fallbackGrabRoute.priority)
+                    fallbackGrabRoute = route;
             }
 
-            if (bestGrabRoute != null)
+            // Execute in priority order: None > Directional > Fallback
+            ComboRoute bestMatch = autoSuccessRoute ?? directionalMatchRoute ?? fallbackGrabRoute;
+
+            if (bestMatch != null)
             {
                 string prevNodeName = currentNode.stepData?.stepName ?? "Unknown";
-                Log($"Grab Route Match! [{prevNodeName}] -> '{bestGrabRoute.targetNode.stepData?.stepName}'", Color.green);
-                currentNode = bestGrabRoute.targetNode;
+                string matchType = bestMatch == autoSuccessRoute ? "AUTO-NONE" : 
+                                 bestMatch == directionalMatchRoute ? "DIRECTIONAL" : "FALLBACK";
+
+                Log($"Grab Route Match ({matchType})! [{prevNodeName}] -> '{bestMatch.targetNode.stepData?.stepName}'", Color.green);
+                currentNode = bestMatch.targetNode;
                 treeDepth++;
                 return currentNode.stepData;
             }
@@ -235,33 +267,34 @@ public class ActionResolver
     // Immediate Routes — Environment-driven interruptions (e.g. Wall Hit)
     // =========================================================
 
-    public AttackStepData ResolveImmediateRoute(InputContext ctx)
+    public AttackStepData ResolveTriggers(StateContext ctx, int activeFrame)
     {
-        if (currentNode == null || currentNode.routes == null) return null;
+        AttackStepData currentStep = GetCurrentStepData();
+        if (currentStep == null || currentStep.triggerWindows == null)
+            return null;
 
-        ComboRoute bestMatch = null;
-        for (int i = 0; i < currentNode.routes.Count; i++)
+        TriggerWindow bestMatch = null;
+        for (int i = 0; i < currentStep.triggerWindows.Count; i++)
         {
-            ComboRoute route = currentNode.routes[i];
-            if (route == null || !route.allowImmediateInterrupt || route.targetNode == null)
-                continue;
+            var trigger = currentStep.triggerWindows[i];
+            if (trigger == null || trigger.targetNode == null) continue;
 
-            if (RouteMatches(route, ctx))
+            if (!trigger.IsInWindow(activeFrame)) continue;
+
+            if (ActionConditionUtility.AllMet(trigger.triggerConditions, ctx))
             {
-                if (bestMatch == null || route.priority > bestMatch.priority)
-                    bestMatch = route;
+                if (bestMatch == null || trigger.priority > bestMatch.priority)
+                    bestMatch = trigger;
             }
         }
 
         if (bestMatch != null)
         {
-            // Safety: Do not interrupt if the target step is already the one we are playing.
-            // This prevents infinite reset loops (frame-1 restarts) when against a wall.
             if (bestMatch.targetNode.stepData == GetCurrentStepData())
                 return null;
-
-            string prevNodeName = currentNode.stepData?.stepName ?? "Unknown";
-            Log($"Immediate Interrupt! [{prevNodeName}] -> '{bestMatch.targetNode.stepData?.stepName}'", Color.cyan);
+                
+            string prevNodeName = currentNode?.stepData?.stepName ?? "Unknown";
+            Log($"Trigger Window Matched! [{prevNodeName}] -> '{bestMatch.targetNode.stepData?.stepName}'", Color.cyan);
             currentNode = bestMatch.targetNode;
             treeDepth++;
             return currentNode.stepData;
@@ -269,6 +302,15 @@ public class ActionResolver
 
         return null;
     }
+
+    public AttackStepData ResolveImmediateRoute(StateContext ctx)
+    {
+        // Standard conditional routes no longer immediately interrupt.
+        // User must use triggerWindows for interruptions.
+        return null;
+    }
+
+
 
     // =========================================================
     // Plunge Landing — Execute the plunge impact step
@@ -372,66 +414,9 @@ public class ActionResolver
     // Internal — Route Matching
     // =========================================================
 
-    private ComboNode TryResolveRouteAtNode(ComboNode node, InputContext ctx, bool allowDefault = true)
-    {
-        if (node.routes == null || node.routes.Count == 0)
-            return allowDefault ? node.defaultNext : null;
 
-        // Sort by priority (highest first) — use simple insertion since lists are small
-        ComboRoute bestMatch = null;
 
-        for (int i = 0; i < node.routes.Count; i++)
-        {
-            ComboRoute route = node.routes[i];
-            if (route?.targetNode == null) continue;
-
-            if (RouteMatches(route, ctx))
-            {
-                if (bestMatch == null || route.priority > bestMatch.priority)
-                {
-                    bestMatch = route;
-                }
-            }
-        }
-
-        if (bestMatch != null)
-            return bestMatch.targetNode;
-
-        return allowDefault ? node.defaultNext : null;
-    }
-
-    private static bool RouteMatches(ComboRoute route, InputContext ctx)
-    {
-        // Direction check
-        if (route.direction != DirectionRequirement.Any
-            && route.direction != ctx.ResolvedDirection)
-            return false;
-
-        // Grounding checks
-        if (route.requireGrounded && !ctx.isGrounded) return false;
-        if (route.requireAirborne && ctx.isGrounded) return false;
-
-        // Grabbed enemy check
-        if (route.requireGrabbedEnemy && !ctx.hasGrabbedEnemy) return false;
-
-        // Previous state check
-        if (route.requiredPreviousState != PlayerStateId.None
-            && route.requiredPreviousState != ctx.previousState)
-            return false;
-
-        bool conditionsMet = ActionConditionUtility.AllMet(route.conditions, ctx);
-        
-        // --- DIAGNOSTIC LOG ---
-        if (conditionsMet && route.targetNode != null && route.targetNode.stepData != null 
-            && route.targetNode.stepData.stepName == "Wall Slam")
-        {
-            Debug.Log($"[Resolver] MATCH FOUND for 'Wall Slam'. Context Wall={ctx.isAgainstWall}");
-        }
-
-        return conditionsMet;
-    }
-
-    private StandaloneAction FindMatchingStandalone(InputContext ctx, ActionResolverTable table)
+    private StandaloneAction FindMatchingStandalone(StateContext ctx, ActionResolverTable table)
     {
         if (table.standaloneActions == null) return null;
 
@@ -440,9 +425,11 @@ public class ActionResolver
         for (int i = 0; i < table.standaloneActions.Length; i++)
         {
             StandaloneAction sa = table.standaloneActions[i];
-            if (sa?.stepData == null && !sa.isPlungeAction) continue;
+            
+            // Allow checking if there's comboTree or stepData
+            if (sa?.comboTree == null && sa?.stepData == null && !sa.isPlungeAction) continue;
 
-            if (StandaloneMatches(sa, ctx))
+            if (ActionMatches(sa, ctx))
             {
                 if (bestMatch == null || sa.priority > bestMatch.priority)
                 {
@@ -452,22 +439,6 @@ public class ActionResolver
         }
 
         return bestMatch;
-    }
-
-    private static bool StandaloneMatches(StandaloneAction sa, InputContext ctx)
-    {
-        if (sa.direction != DirectionRequirement.Any
-            && sa.direction != ctx.ResolvedDirection)
-            return false;
-
-        if (sa.requireGrounded && !ctx.isGrounded) return false;
-        if (sa.requireAirborne && ctx.isGrounded) return false;
-
-        if (sa.requiredPreviousState != PlayerStateId.None
-            && sa.requiredPreviousState != ctx.previousState)
-            return false;
-
-        return ActionConditionUtility.AllMet(sa.conditions, ctx);
     }
 
     private static bool ActionMatches(CombatAction action, InputContext ctx)

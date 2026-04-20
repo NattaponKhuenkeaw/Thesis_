@@ -42,7 +42,8 @@ public class CharacterObject : ScriptableObject
     public CharacterMetaData metaData = new CharacterMetaData();
 
     [Tooltip("The frame rate this character's data was authored for. Used by migration utilities.")]
-    public float authoredFPS = 24f;
+    [SerializeField] private float _authoredFPS = 24f;
+    public float AuthoredFPS => _authoredFPS;
 
     // =========================================================
     // Upgrade
@@ -70,14 +71,8 @@ public class CharacterObject : ScriptableObject
     // Dash Data
     // =========================================================
     [Header("Dash Data")]
-    public DashData dashData = new DashData();
-
-    // =========================================================
-    // Skill Tree
-    // =========================================================
-    [Header("Legacy Skill Tree")]
-    [Tooltip("Legacy authoring data kept for backward compatibility and migration.")]
-    public SkillTreeData skillTreeData = new SkillTreeData();
+    [SerializeField] private DashData _dashData = new DashData();
+    public DashData DashData => _dashData;
 
     [Header("Progression")]
     public CharacterProgressionDefinition progressionDefinition = new CharacterProgressionDefinition();

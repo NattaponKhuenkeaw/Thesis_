@@ -15,7 +15,7 @@ MonoBehaviour:
   characterId: char_3_shermie
   characterType: 0
   elementType: 2
-  previewPrefab: {fileID: 6921409426865988085, guid: 60b71052072438a4daa75e9c187905de, type: 3}
+  previewPrefab: {fileID: 6597880524197938003, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
   stats:
     maxHP: 200
     attack: 4
@@ -41,21 +41,19 @@ MonoBehaviour:
     attackSfx: {fileID: 0}
     skillSfx: {fileID: 0}
     hurtSfx: {fileID: 0}
-  authoredFPS: 24
+  _authoredFPS: 24
   upgrade:
     level: 1
     constellationRank: 0
     progressionPoints: 3
-  dashData:
+  _dashData:
     animationClip: {fileID: 7400000, guid: a58bc557533fb294eb5db9217ac6de3d, type: 2}
-    startupFrames: 5
-    activeFrames: 45
+    startupFrames: 7
+    activeFrames: 43
     recoveryFrames: 20
-    cancelWindowStartFrame: 25
+    cancelWindowStartFrame: 60
     dashSpeed: 20
-    cooldownFrames: 60
-  skillTreeData:
-    nodes: []
+    cooldownFrames: 24
   progressionDefinition:
     maxConstellationRank: 6
     constellationNodes: []

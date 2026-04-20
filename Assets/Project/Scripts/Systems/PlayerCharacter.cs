@@ -205,7 +205,7 @@ public class PlayerCharacter : MonoBehaviour
         Movement.airDeceleration = stats.airDeceleration;
         Movement.airSpeedMultiplier = stats.airSpeedMultiplier;
 
-        Movement.dashData = characterObject.dashData;
+        Movement.dashData = characterObject.DashData;
     }
 
     private void ApplyAnimationData()

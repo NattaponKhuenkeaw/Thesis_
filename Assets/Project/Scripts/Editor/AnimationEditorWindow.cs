@@ -22,6 +22,10 @@ public class AnimationEditorWindow : EditorWindow
     private float lastTime = 0f;
     private GameObject previewInstance;
     private int selectedSceneHitboxIndex = -1;
+    private Dictionary<VFXEntry, GameObject> vfxPreviewInstances = new Dictionary<VFXEntry, GameObject>();
+    
+    // Persistent State
+    private object lastSelectedDataRef;
 
     // ── UI Components ──
     private ActionTreeController treeController;
@@ -68,12 +72,14 @@ public class AnimationEditorWindow : EditorWindow
     {
         EditorApplication.update += EditorUpdate;
         SceneView.duringSceneGui += OnSceneGUI;
+        Undo.undoRedoPerformed += OnUndoRedo;
     }
 
     void OnDisable()
     {
         EditorApplication.update -= EditorUpdate;
         SceneView.duringSceneGui -= OnSceneGUI;
+        Undo.undoRedoPerformed -= OnUndoRedo;
         CleanupPreview();
     }
 
@@ -222,7 +228,15 @@ public class AnimationEditorWindow : EditorWindow
         var center = new VisualElement();
         center.AddToClassList("center-area");
 
-        // ── Preview Viewport ──
+        center.Add(BuildViewport());
+        center.Add(BuildClipSelector());
+        center.Add(BuildTimelineArea());
+
+        return center;
+    }
+
+    private VisualElement BuildViewport()
+    {
         var viewport = new VisualElement();
         viewport.AddToClassList("preview-viewport");
 
@@ -234,9 +248,11 @@ public class AnimationEditorWindow : EditorWindow
         previewClipLabel.AddToClassList("preview-viewport__clip-name");
         viewport.Add(previewClipLabel);
 
-        center.Add(viewport);
+        return viewport;
+    }
 
-        // ── Clip Selector ──
+    private VisualElement BuildClipSelector()
+    {
         var clipRow = new VisualElement();
         clipRow.AddToClassList("clip-selector-row");
 
@@ -245,9 +261,12 @@ public class AnimationEditorWindow : EditorWindow
         clipField.style.flexGrow = 1;
         clipField.RegisterValueChangedCallback(OnClipChanged);
         clipRow.Add(clipField);
-        center.Add(clipRow);
 
-        // ── Timeline Dashboard ──
+        return clipRow;
+    }
+
+    private VisualElement BuildTimelineArea()
+    {
         var dashboard = new VisualElement();
         dashboard.AddToClassList("timeline-dashboard");
 
@@ -256,12 +275,8 @@ public class AnimationEditorWindow : EditorWindow
         timelineGrid.OnSeek += OnTimelineSeek;
         dashboard.Add(timelineGrid);
 
-        // Transport Controls
         dashboard.Add(BuildTransportBar());
-
-        center.Add(dashboard);
-
-        return center;
+        return dashboard;
     }
 
     // =========================================================
@@ -378,9 +393,16 @@ public class AnimationEditorWindow : EditorWindow
     // =========================================================
     private void OnSidebarSelectionChanged(ActionNode node)
     {
-        scrubberFrame = 0;
-        isPlaying = false;
-        selectedSceneHitboxIndex = -1;
+        bool isSameData = node != null && lastSelectedDataRef == node.DataRef;
+        
+        if (!isSameData)
+        {
+            scrubberFrame = 0;
+            isPlaying = false;
+            selectedSceneHitboxIndex = -1;
+        }
+        
+        lastSelectedDataRef = node?.DataRef;
 
         // Update clip field
         AnimationClip clip = GetClipFromNode(node);
@@ -441,13 +463,14 @@ public class AnimationEditorWindow : EditorWindow
     private void RebuildSelectedNode()
     {
         var node = treeController?.SelectedNode;
+        object dataRef = node?.DataRef;
 
         if (treeController != null && selectedCharacter != null)
         {
             treeController.Build(selectedCharacter);
             
             // Re-select to restore object references if they changed
-            if (node != null) treeController.SelectNodeByData(node.DataRef);
+            if (dataRef != null) treeController.SelectNodeByData(dataRef);
         }
 
         node = treeController?.SelectedNode; // Get updated node reference
@@ -487,6 +510,27 @@ public class AnimationEditorWindow : EditorWindow
             isPlaying = !isPlaying;
             evt.StopPropagation();
         }
+        else if (evt.ctrlKey && evt.keyCode == KeyCode.Z)
+        {
+            Undo.PerformUndo();
+            evt.StopPropagation();
+        }
+        else if (evt.ctrlKey && evt.shiftKey && evt.keyCode == KeyCode.Z)
+        {
+            Undo.PerformRedo();
+            evt.StopPropagation();
+        }
+        else if (evt.ctrlKey && evt.keyCode == KeyCode.Y)
+        {
+            Undo.PerformRedo();
+            evt.StopPropagation();
+        }
+    }
+
+    private void OnUndoRedo()
+    {
+        RebuildAll();
+        Repaint();
     }
 
     // =========================================================
@@ -676,6 +720,7 @@ public class AnimationEditorWindow : EditorWindow
         timelineGrid.RecoveryFrames = rec;
         timelineGrid.CancelFrame = cancel;
         timelineGrid.PlayheadFrame = scrubberFrame;
+
         timelineGrid.Refresh();
 
         // Update frame counter
@@ -696,18 +741,34 @@ public class AnimationEditorWindow : EditorWindow
             previewClipLabel.text = clip != null ? $"{clip.name} — {GetTotalClipFrames(clip)}f @ {Mathf.RoundToInt(clip.frameRate)}fps" : "";
         }
 
-        // Sample animation
+        // Sample animation and update VFX
         if (!Application.isPlaying && selectedCharacter?.previewPrefab != null)
         {
             InstantiatePreviewIfNeeded(selectedCharacter.previewPrefab);
+            
+            // Logic Frame wrapping for looping
+            int logicFrame = scrubberFrame;
+            if (step != null)
+                logicFrame = step.GetLogicFrame(scrubberFrame);
+
             if (clip != null)
             {
-                SampleAnimation(clip, scrubberFrame);
+                SampleAnimation(clip, logicFrame);
             }
             else
             {
                 SceneView.RepaintAll();
             }
+
+            // Update VFX even if no clip is assigned (they have their own trigger frames)
+            if (step != null && step.vfxData != null)
+                UpdateVFXPreviews(step, scrubberFrame);
+            else
+                CleanupVfxPreviews();
+        }
+        else
+        {
+            CleanupVfxPreviews();
         }
     }
 
@@ -793,6 +854,251 @@ public class AnimationEditorWindow : EditorWindow
         }
 
         SceneView.RepaintAll();
+    }
+
+    // =========================================================
+    // VFX PREVIEW LOGIC
+    // =========================================================
+    private void UpdateVFXPreviews(AttackStepData step, int absoluteFrame)
+    {
+        if (step?.vfxData == null)
+        {
+            CleanupVfxPreviews();
+            return;
+        }
+
+        int logicFrame = step.GetLogicFrame(absoluteFrame);
+
+        HashSet<VFXEntry> currentEntries = new HashSet<VFXEntry>();
+
+        foreach (var entry in step.vfxData.entries)
+        {
+            if (entry == null || (entry.vfxPrefab == null && entry.vfxType == Project.Combat.VFXType.None)) continue;
+
+            // Determine if VFX should be active
+            bool shouldBeActive = false;
+            int relativeFrame = -1;
+
+            if (step.loopActivePhase && entry.loopDuringActive && absoluteFrame >= step.ActivePhaseStart)
+            {
+                // If it's a looping VFX, it follows the logic frame if it was triggered during the active phase
+                if (entry.triggerFrame >= step.ActivePhaseStart && entry.triggerFrame <= step.ActivePhaseEnd)
+                {
+                    shouldBeActive = true;
+                    relativeFrame = logicFrame - entry.triggerFrame;
+                    // Handle case where trigger is late in the loop: if relative is negative, it means it hasn't 
+                    // reached the trigger frame in the current iteration yet.
+                    if (relativeFrame < 0) shouldBeActive = false;
+                    else if (relativeFrame >= entry.duration) shouldBeActive = false;
+                }
+            }
+            
+            // Fallback to absolute check if not looping or not in active phase
+            if (!shouldBeActive)
+            {
+                if (absoluteFrame >= entry.triggerFrame && absoluteFrame < entry.triggerFrame + entry.duration)
+                {
+                    shouldBeActive = true;
+                    relativeFrame = absoluteFrame - entry.triggerFrame;
+                }
+            }
+
+            if (shouldBeActive)
+            {
+                currentEntries.Add(entry);
+                GameObject instance = GetOrCreateVfxInstance(entry);
+                if (instance != null)
+                {
+                    UpdateVfxTransform(instance, entry, relativeFrame);
+                    SampleVfxState(instance, entry, relativeFrame);
+                }
+            }
+        }
+
+        // Cleanup stale instances
+        List<VFXEntry> toRemove = new List<VFXEntry>();
+        foreach (var kvp in vfxPreviewInstances)
+        {
+            if (!currentEntries.Contains(kvp.Key))
+            {
+                if (kvp.Value != null) DestroyImmediate(kvp.Value);
+                toRemove.Add(kvp.Key);
+            }
+        }
+        foreach (var key in toRemove) vfxPreviewInstances.Remove(key);
+    }
+
+    private GameObject GetOrCreateVfxInstance(VFXEntry entry)
+    {
+        if (vfxPreviewInstances.TryGetValue(entry, out GameObject instance) && instance != null)
+            return instance;
+
+        GameObject prefab = entry.vfxPrefab;
+        // Fallback to library generic prefab if direct prefab is null
+        if (prefab == null && entry.vfxType != Project.Combat.VFXType.None && Project.Combat.VFXManager.Instance != null)
+        {
+            var generic = Project.Combat.VFXManager.Instance.VFXPrefab;
+            if (generic != null) prefab = generic.gameObject;
+        }
+
+        if (prefab == null) return null;
+
+        instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+        if (instance == null) instance = Instantiate(prefab);
+        
+        instance.hideFlags = HideFlags.HideAndDontSave;
+        
+        // Parent to preview instance if it exists for relative positioning
+        if (previewInstance != null)
+            instance.transform.SetParent(previewInstance.transform, false);
+
+        vfxPreviewInstances[entry] = instance;
+        return instance;
+    }
+
+    private void UpdateVfxTransform(GameObject instance, VFXEntry entry, int relativeFrame)
+    {
+        if (instance == null || entry == null) return;
+
+        (Vector3 pos, Vector3 rot, Vector3 scl) = SampleVFXTransform(entry, relativeFrame);
+        
+        // If library-based, multiply scale by definition's localScale
+        if (entry.vfxPrefab == null && entry.vfxType != Project.Combat.VFXType.None && Project.Combat.VFXManager.Instance?.InstanceLibrary != null)
+        {
+            var def = Project.Combat.VFXManager.Instance.InstanceLibrary.GetDefinition(entry.vfxType);
+            if (def != null)
+            {
+                scl = Vector3.Scale(scl, def.localScale == Vector3.zero ? Vector3.one : def.localScale);
+            }
+        }
+
+        instance.transform.localPosition = pos;
+        instance.transform.localEulerAngles = rot;
+        instance.transform.localScale = scl;
+    }
+
+    private (Vector3 pos, Vector3 rot, Vector3 scl) SampleVFXTransform(VFXEntry entry, int relativeFrame)
+    {
+        if (entry.transformKeys == null || entry.transformKeys.Count == 0)
+            return (Vector3.zero, Vector3.zero, Vector3.one);
+
+        VFXTransformKey prev = null;
+        VFXTransformKey next = null;
+
+        foreach (var key in entry.transformKeys)
+        {
+            if (key.frame <= relativeFrame)
+            {
+                if (prev == null || key.frame > prev.frame) prev = key;
+            }
+            else
+            {
+                if (next == null || key.frame < next.frame) next = key;
+            }
+        }
+
+        if (prev != null && next != null)
+        {
+            float t = (float)(relativeFrame - prev.frame) / (next.frame - prev.frame);
+            return (
+                Vector3.Lerp(prev.position, next.position, t),
+                Vector3.Lerp(prev.rotation, next.rotation, t),
+                Vector3.Lerp(prev.scale, next.scale, t)
+            );
+        }
+        else if (prev != null)
+        {
+            return (prev.position, prev.rotation, prev.scale);
+        }
+
+        return (Vector3.zero, Vector3.zero, Vector3.one);
+    }
+
+    private void SampleVfxState(GameObject instance, VFXEntry entry, int relativeFrame)
+    {
+        float time = relativeFrame / FrameDataConstants.LOGIC_FPS;
+
+        // 1. Process Animator if present
+        var anim = instance.GetComponent<Animator>();
+        if (anim == null) anim = instance.GetComponentInChildren<Animator>();
+        
+        if (anim != null)
+        {
+            // If it's a library-based VFX, we need to apply the clip from the definition
+            if (entry.vfxPrefab == null && entry.vfxType != Project.Combat.VFXType.None && Project.Combat.VFXManager.Instance?.InstanceLibrary != null)
+            {
+                var def = Project.Combat.VFXManager.Instance.InstanceLibrary.GetDefinition(entry.vfxType);
+                if (def != null)
+                {
+                    if (def.clip != null)
+                    {
+                        // Ensure AnimatorOverrideController is set up
+                        var overrideController = anim.runtimeAnimatorController as AnimatorOverrideController;
+                        if (overrideController == null || overrideController.name != "VFX_Editor_Override")
+                        {
+                            overrideController = new AnimatorOverrideController(anim.runtimeAnimatorController);
+                            overrideController.name = "VFX_Editor_Override";
+                            anim.runtimeAnimatorController = overrideController;
+                        }
+                        
+                        if (overrideController["VFX_Default"] != def.clip)
+                        {
+                            overrideController["VFX_Default"] = def.clip;
+                        }
+                    }
+
+                    // Apply Tint to SpriteRenderer
+                    var renderer = instance.GetComponent<SpriteRenderer>();
+                    if (renderer == null) renderer = instance.GetComponentInChildren<SpriteRenderer>();
+                    if (renderer != null)
+                    {
+                        renderer.color = (def.tint.a <= 0f) ? Color.white : def.tint;
+                    }
+                }
+            }
+
+            if (anim.runtimeAnimatorController != null)
+            {
+                if (!AnimationMode.InAnimationMode())
+                    AnimationMode.StartAnimationMode();
+
+                // If we have a clip from the library, sample it directly
+                if (entry.vfxPrefab == null && entry.vfxType != Project.Combat.VFXType.None)
+                {
+                    var def = Project.Combat.VFXManager.Instance?.InstanceLibrary?.GetDefinition(entry.vfxType);
+                    if (def != null && def.clip != null)
+                    {
+                        AnimationMode.BeginSampling();
+                        AnimationMode.SampleAnimationClip(instance, def.clip, time);
+                        AnimationMode.EndSampling();
+                    }
+                }
+                else
+                {
+                    // Fallback: Just update the animator (might not work perfectly in scrubber but better than nothing)
+                    AnimationMode.BeginSampling();
+                    anim.Update(0f);
+                    AnimationMode.EndSampling();
+                }
+            }
+        }
+
+        // 2. Process ParticleSystems if present
+        var particleSystems = instance.GetComponentsInChildren<ParticleSystem>();
+        foreach (var ps in particleSystems)
+        {
+            // Reset and simulate forward to evaluate properly
+            ps.Simulate(time, true, true, false);
+        }
+    }
+
+    private void CleanupVfxPreviews()
+    {
+        foreach (var kvp in vfxPreviewInstances)
+        {
+            if (kvp.Value != null) DestroyImmediate(kvp.Value);
+        }
+        vfxPreviewInstances.Clear();
     }
 
     private Vector3 EvaluateMotionOffset(MotionFrameData motion, int currentFrame)
@@ -925,6 +1231,8 @@ public class AnimationEditorWindow : EditorWindow
 
     private void CleanupPreview()
     {
+        CleanupVfxPreviews();
+
         if (AnimationMode.InAnimationMode())
             AnimationMode.StopAnimationMode();
         selectedSceneHitboxIndex = -1;

@@ -32,8 +32,6 @@ public class AttackStepData : ActionFrameData
 
 
     [Header("Phase State overrides")]
-    [Tooltip("If true, the attack frame progression will stall until the character is grounded (useful for Air Grabs).")]
-    public bool stallUntilGrounded = false;
     [Tooltip("If true, the character's vertical position and velocity is locked during the air combo.")]
     public bool lockAirPosition = true;
 
@@ -41,6 +39,9 @@ public class AttackStepData : ActionFrameData
     [Tooltip("If true, automatically chains to the next input or sub-step when recovery/active phase ends, without requiring player input.")]
     public bool autoChainToNext = false;
 
+    [Header("Interrupt Triggers (Active Phase)")]
+    [Tooltip("Dynamic conditions checked during the active phase that can immediately interrupt the action (e.g. hitting a wall).")]
+    [SerializeReference] public List<TriggerWindow> triggerWindows = new List<TriggerWindow>();
 
     // =========================================================
     // Sub Components (New Architecture)

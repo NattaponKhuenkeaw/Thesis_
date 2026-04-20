@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,7 +9,8 @@ using UnityEngine;
 public enum CombatActionContext
 {
     Ground,
-    Air
+    Air,
+    Both
 }
 
 [System.Serializable]
@@ -61,6 +63,9 @@ public class UltimateAction : SkillAction
     public AudioClip activationVoice;
     public AudioClip activationSFX;
     public float voiceDelay = 0.1f;
+
+    [Header("Visual Effects")]
+    public bool useDashAfterImage;
 }
 
 // =========================================================
@@ -83,8 +88,8 @@ public class ComboNode
     [Tooltip("The next node if no route matches. Null = combo ends.")]
     [SerializeReference] public ComboNode defaultNext;
 
-    [Header("On Grab Success Follow-Up")]
-    [Tooltip("Immediately interrupts and transitions to this node if a Grab Hitbox connects.")]
+    [Header("On Grab Success Follow-Up (Legacy)")]
+    [Tooltip("LEGACY: Immediately interrupts and transitions to this node if a Grab Hitbox connects. Prefer using ComboRoute with 'Require Grabbed Enemy' condition for newer logic.")]
     [SerializeReference] public ComboNode onGrabSuccessNode;
 
     public void Rescale(float ratio, HashSet<ComboNode> visited = null)
@@ -116,12 +121,14 @@ public class ComboNode
 [System.Serializable]
 public class ComboRoute
 {
+    [Header("Legacy Match Conditions (Obsolete)")]
+    [Obsolete("Use conditions list and DirectionActionCondition instead")] public DirectionRequirement direction = DirectionRequirement.Any;
+    [Obsolete("Use conditions list and GroundedActionCondition instead")] public bool requireGrounded = false;
+    [Obsolete("Use conditions list and GroundedActionCondition instead")] public bool requireAirborne = false;
+    [Obsolete("Use conditions list and GrabbedEnemyActionCondition instead")] public bool requireGrabbedEnemy = false;
+    [Obsolete("Use conditions list and PreviousStateActionCondition instead")] public PlayerStateId requiredPreviousState = PlayerStateId.None;
+    
     [Header("Match Conditions")]
-    public DirectionRequirement direction = DirectionRequirement.Any;
-    public bool requireGrounded = false;
-    public bool requireAirborne = false;
-    public bool requireGrabbedEnemy = false;
-    public PlayerStateId requiredPreviousState = PlayerStateId.None;
     [SerializeReference] public List<ActionConditionBase> conditions = new List<ActionConditionBase>();
 
     [Header("Target")]
@@ -134,12 +141,55 @@ public class ComboRoute
     [Header("Environmental Trigger")]
     [Tooltip("If true, this route can be triggered immediately during the action's active phase (e.g. hitting a wall), interrupting the current step.")]
     public bool allowImmediateInterrupt = false;
+
+    public bool IsEnvironmental
+    {
+        get
+        {
+            if (conditions == null) return false;
+            foreach (var cond in conditions)
+            {
+                if (cond is AirborneLandingActionCondition || cond is WallActionCondition || cond is GrabbedEnemyActionCondition)
+                    return true;
+            }
+            return false;
+        }
+    }
+
+    public void MigrateToConditions()
+    {
+        if (conditions == null) conditions = new List<ActionConditionBase>();
+
+        if (direction != DirectionRequirement.Any)
+        {
+            conditions.Add(new DirectionActionCondition { direction = direction });
+            direction = DirectionRequirement.Any;
+        }
+        if (requireGrounded)
+        {
+            conditions.Add(new GroundedActionCondition { requireGrounded = true });
+            requireGrounded = false;
+        }
+        if (requireAirborne)
+        {
+            conditions.Add(new GroundedActionCondition { requireGrounded = false });
+            requireAirborne = false;
+        }
+        if (requireGrabbedEnemy)
+        {
+            conditions.Add(new GrabbedEnemyActionCondition { requireGrabbedEnemy = true });
+            requireGrabbedEnemy = false;
+        }
+        if (requiredPreviousState != PlayerStateId.None)
+        {
+            conditions.Add(new PreviousStateActionCondition { previousState = requiredPreviousState });
+            requiredPreviousState = PlayerStateId.None;
+        }
+    }
 }
 
 // =========================================================
 // ComboTree — The root container for a combo sequence.
-// One per attack context (ground, air, etc.).
-// Replaces BasicAttackComboData entirely.
 // =========================================================
 
 [System.Serializable]
@@ -161,29 +211,68 @@ public class ComboTree
 // StandaloneAction — A one-shot contextual action checked
 // BEFORE combo trees. Used for: Plunge, counter-attacks,
 // post-skill specials, etc.
+// Fully merged into CombatAction structure.
 // =========================================================
 
 [System.Serializable]
-public class StandaloneAction
+public class StandaloneAction : CombatAction
 {
-    [Header("Match Conditions")]
-    public DirectionRequirement direction = DirectionRequirement.Down;
-    public bool requireGrounded = false;
-    public bool requireAirborne = true;
-    public PlayerStateId requiredPreviousState = PlayerStateId.None;
-    public int priority = 10;
-    [SerializeReference] public List<ActionConditionBase> conditions = new List<ActionConditionBase>();
+    public override AttackCategory Category => AttackCategory.Normal;
 
-    [Header("Action")]
-    public AttackStepData stepData;
+    [Header("Legacy Match Conditions (Obsolete)")]
+    [Obsolete("Use CombatAction.conditions instead")] public DirectionRequirement direction = DirectionRequirement.Down;
+    [Obsolete("Use CombatAction.conditions instead")] public bool requireGrounded = false;
+    [Obsolete("Use CombatAction.conditions instead")] public bool requireAirborne = true;
+    [Obsolete("Use CombatAction.conditions instead")] public PlayerStateId requiredPreviousState = PlayerStateId.None;
 
-    [Header("Follow-Up (optional)")]
-    [Tooltip("If set, this action starts a mini combo tree after the first step.")]
-    [SerializeReference] public ComboNode followUpNode;
+    [Header("Legacy Action (Obsolete)")]
+    [Obsolete("Use comboTree instead")] public AttackStepData stepData;
 
-    [Header("Plunge Behavior (optional)")]
+    [Header("Legacy Follow-Up (Obsolete)")]
+    [Obsolete("Use comboTree instead")] [SerializeReference] public ComboNode followUpNode;
+
+    [Header("Plunge Behavior")]
     [Tooltip("If true, this action enters plunge-fall mode before executing the step on landing.")]
     public bool isPlungeAction = false;
     public float plungeDownwardSpeed = 18f;
     public string plungeFallAnimState = "Plunge_Fall";
+
+    public void MigrateToConditions()
+    {
+        if (conditions == null) conditions = new List<ActionConditionBase>();
+
+        if (direction != DirectionRequirement.Any)
+        {
+            conditions.Add(new DirectionActionCondition { direction = direction });
+            direction = DirectionRequirement.Any;
+        }
+        if (requireGrounded)
+        {
+            conditions.Add(new GroundedActionCondition { requireGrounded = true });
+            requireGrounded = false;
+        }
+        if (requireAirborne)
+        {
+            conditions.Add(new GroundedActionCondition { requireGrounded = false });
+            requireAirborne = false;
+        }
+        if (requiredPreviousState != PlayerStateId.None)
+        {
+            conditions.Add(new PreviousStateActionCondition { previousState = requiredPreviousState });
+            requiredPreviousState = PlayerStateId.None;
+        }
+
+        if (stepData != null && comboTree == null)
+        {
+            comboTree = new ComboTree
+            {
+                treeName = actionName,
+                rootNode = new ComboNode
+                {
+                    stepData = stepData,
+                    defaultNext = followUpNode
+                }
+            };
+        }
+    }
 }

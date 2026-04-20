@@ -124,6 +124,8 @@ public class InputHandler_Player : MonoBehaviour
         if (Project.UI.InputLockManager.IsLocked) return;
         if (!value.isPressed) return;
 
+        stateMachine?.InputBuffer?.SetDirectionalInput(moveInput);
+        
         // Route through FSM — it handles buffering internally
         stateMachine?.RouteAttackInput();
     }
@@ -132,13 +134,19 @@ public class InputHandler_Player : MonoBehaviour
     {
         if (Project.UI.InputLockManager.IsLocked) return;
         if (value.isPressed)
+        {
+            stateMachine?.InputBuffer?.SetDirectionalInput(moveInput);
             stateMachine?.RouteSkillInput();
+        }
     }
 
     public void OnUltimate(InputValue value)
     {
         if (Project.UI.InputLockManager.IsLocked) return;
         if (value.isPressed)
+        {
+            stateMachine?.InputBuffer?.SetDirectionalInput(moveInput);
             stateMachine?.RouteUltimateInput();
+        }
     }
 }

@@ -60,7 +60,7 @@ public class ActionFrameData
     /// </summary>
     public ActionPhase GetPhase(int frame)
     {
-        if (frame <= 0) return ActionPhase.None;
+        if (frame < 0) return ActionPhase.None;
 
         // Completion check (Prioritize Done so it's not masked by Cancel/Loop)
         if (frame > TotalFrames && !loopActivePhase)
@@ -73,7 +73,8 @@ public class ActionFrameData
         // Cancel window check 
         if (HasCancelWindow && frame >= cancelWindowStartFrame)
             return ActionPhase.Cancel;
-        if (frame <= startupFrames) return ActionPhase.Startup;
+            
+        if (startupFrames > 0 && frame <= startupFrames) return ActionPhase.Startup;
         if (frame <= startupFrames + activeFrames) return ActionPhase.Active;
 
         return ActionPhase.Recovery;

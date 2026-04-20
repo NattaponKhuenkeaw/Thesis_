@@ -129,7 +129,7 @@ public abstract class FrameDataPlayerState : PlayerState
     /// </summary>
     protected virtual void StartAction()
     {
-        currentFrame = 0;
+        currentFrame = -1;
         logicTimeCounter = 0f;
         cachedFrameData = GetFrameData();
         previousPhase = ActionPhase.None;
@@ -149,10 +149,9 @@ public abstract class FrameDataPlayerState : PlayerState
 
         logicTimeCounter += Time.fixedDeltaTime;
         
-        // Revised math: bias +0.999 ensures frame 1 triggers on the very first 
-        // tick (0.02s * 24 = 0.48, 0.48 + 0.999 = 1.47 -> Floor = 1).
-        // This eliminates the 60ms "feel" lag.
-        int targetFrame = Mathf.FloorToInt(logicTimeCounter * LOGIC_FPS + 0.999f);
+        // Stabilized math: using small epsilon (+0.001f) ensures frame 1 triggers on the very first
+        // tick (e.g. 0.02s * 60 = 1.2, 1.2 + 0.001 = 1.201 -> Floor = 1) without skipping frames.
+        int targetFrame = Mathf.FloorToInt(logicTimeCounter * LOGIC_FPS + 0.001f);
 
         while (currentFrame < targetFrame)
         {

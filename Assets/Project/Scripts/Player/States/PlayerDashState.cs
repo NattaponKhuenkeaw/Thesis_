@@ -118,6 +118,12 @@ public class PlayerDashState : FrameDataPlayerState
     // =========================================================
     // Custom Input — initiates dash physics (FSM defers here)
     // =========================================================
+    public override bool HandleDashInput(float inputX)
+    {
+        OnDashInput(inputX);
+        return true;
+    }
+
     public override void OnDashInput(float inputX)
     {
         if (!dashStarted && player.Movement != null)

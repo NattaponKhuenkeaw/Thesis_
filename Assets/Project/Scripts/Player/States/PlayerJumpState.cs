@@ -59,6 +59,12 @@ public class PlayerJumpState : PlayerState
             player.Movement.SetDownInput(input.y < -0.5f);
     }
 
+    public override bool HandleJumpInput()
+    {
+        OnJumpInput();
+        return true;
+    }
+
     /// <summary>
     /// Custom jump: drop-down → double jump priority chain.
     /// Plunge attack has been moved to OnAttackInput (Down+Attack via ActionResolver).
@@ -73,6 +79,12 @@ public class PlayerJumpState : PlayerState
             return;
 
         player.Movement.Jump();
+    }
+
+    public override bool HandleAttackInput()
+    {
+        OnAttackInput();
+        return true;
     }
 
     /// <summary>

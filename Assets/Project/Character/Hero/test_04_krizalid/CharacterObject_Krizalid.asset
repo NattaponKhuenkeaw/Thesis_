@@ -15,15 +15,15 @@ MonoBehaviour:
   characterId: char_4_krizalid
   characterType: 0
   elementType: 3
-  previewPrefab: {fileID: 0}
+  previewPrefab: {fileID: 6597880524197938003, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
   stats:
     maxHP: 100
     attack: 10
-    defense: 5
+    defense: 10
     elementalMultiplier: 1
-    moveSpeed: 5
-    jumpForce: 10
-    maxJumpCount: 1
+    moveSpeed: 10
+    jumpForce: 22
+    maxJumpCount: 2
     maxAirDashCount: 1
     groundAcceleration: 80
     groundDeceleration: 90
@@ -38,88 +38,25 @@ MonoBehaviour:
       \u0E1E\u0E25\u0E31\u0E07\u0E42\u0E08\u0E21\u0E15\u0E35\u0E23\u0E38\u0E19\u0E41\u0E23\u0E07\u0E41\u0E25\u0E30\u0E23\u0E27\u0E14\u0E40\u0E23\u0E47\u0E27
       \u0E42\u0E14\u0E22\u0E40\u0E09\u0E1E\u0E32\u0E30\u0E17\u0E48\u0E32\u0E44\u0E21\u0E49\u0E15\u0E32\u0E22\u0E17\u0E35\u0E48\u0E40\u0E1B\u0E25\u0E35\u0E48\u0E22\u0E19\u0E17\u0E31\u0E49\u0E07\u0E2A\u0E19\u0E32\u0E21\u0E43\u0E2B\u0E49\u0E40\u0E1B\u0E47\u0E19\u0E17\u0E30\u0E40\u0E25\u0E40\u0E1E\u0E25\u0E34\u0E07"
     portrait: {fileID: 21300000, guid: 5fb82e61374e40c48a8a4b81cb817179, type: 3}
-    animatorController: {fileID: 0}
+    animatorController: {fileID: 9100000, guid: 97d167184e2d1af4bb9dd70bb6abf455, type: 2}
     attackSfx: {fileID: 0}
     skillSfx: {fileID: 0}
     hurtSfx: {fileID: 0}
-  authoredFPS: 24
+  _authoredFPS: 24
   upgrade:
     level: 1
-    skillTreePoints: 3
-  dashData:
-    animationClip: {fileID: 0}
-    startupFrames: 5
-    activeFrames: 12
-    recoveryFrames: 12
-    cancelWindowStartFrame: 25
-    dashSpeed: 20
-    cooldownFrames: 60
-  basicAttackComboData:
-    comboResetDelay: 0.8
-    steps: []
-  neutralAirComboData:
-    comboResetDelay: 0.8
-    steps: []
-  maxAirComboTime: 1
-  plungeAttackData:
-    isEnabled: 1
-    downwardSpeed: 18
-    fallAnimationStateName: Plunge_Fall
-    impactAnimationStateName: Attack_1
-    impactStep:
-      stepName: Plunge Impact
-      animationClip: {fileID: 0}
-      startupFrames: 15
-      activeFrames: 8
-      recoveryFrames: 38
-      cancelWindowStartFrame: 30
-      stallUntilGrounded: 0
-      lockAirPosition: 1
-      autoChainToNext: 0
-      motionData:
-        rid: -2
-      vfxData:
-        rid: -2
-      hitData:
-        rid: -2
-      componentOrder:
-      - motion
-      - vfx
-      - hitbox
-  skillData:
-    skillName: 
-    description: 
-    elementType: 0
-    frameData:
-      startupFrames: 5
-      activeFrames: 8
-      recoveryFrames: 20
-      cancelWindowStartFrame: 25
-    cooldown: 4
-    damageMultiplier: 1.5
-    knockbackForce: 6
-    skillPrefab: {fileID: 0}
-    spawnOffset: {x: 1, y: 0}
-  ultimateData:
-    ultimateName: 
-    description: 
-    elementType: 0
-    frameData:
-      startupFrames: 10
-      activeFrames: 15
-      recoveryFrames: 25
-      cancelWindowStartFrame: 0
-    cooldown: 12
-    activeDuration: 4
-    damageMultiplier: 0.5
-    hitInterval: 0.4
-    ultimatePrefab: {fileID: 0}
-    spawnOffset: {x: 1.5, y: 0}
-  skillTreeData:
-    nodes: []
+    constellationRank: 0
+    progressionPoints: 3
+  _dashData:
+    animationClip: {fileID: 7400000, guid: b4e91660a55d73945bae810564ac86d4, type: 2}
+    startupFrames: 10
+    activeFrames: 18
+    recoveryFrames: 17
+    cancelWindowStartFrame: 38
+    dashSpeed: 70
+    cooldownFrames: 24
+  progressionDefinition:
+    maxConstellationRank: 6
+    constellationNodes: []
+    passiveNodes: []
   actionResolverTable: {fileID: 11400000, guid: 1a1ccf62b755bc348ba7931731eb1713, type: 2}
-  references:
-    version: 2
-    RefIds:
-    - rid: -2
-      type: {class: , ns: , asm: }

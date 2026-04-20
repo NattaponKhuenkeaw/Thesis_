@@ -12,6 +12,18 @@ public enum DamageImpactTier
     Ultimate
 }
 
+public enum DamageType
+{
+    Physical,
+    Fire,
+    Water,
+    Ice,
+    Electro,
+    Wind,
+    Rock,
+    Nature
+}
+
 public enum EnemyReactionKind
 {
     Flinch,
@@ -105,6 +117,7 @@ public struct HitReactionData
     // Damage Text Impact
     // =========================================================
     public DamageImpactTier impactTier;
+    public DamageType damageType;
 
     public int ImpactFreezeFrames => reactionTiming != null ? Mathf.Max(0, reactionTiming.startupFrames) : Mathf.Max(0, hitstunFrames);
     public int ActiveReactionFrames => reactionTiming != null ? Mathf.Max(0, reactionTiming.activeFrames) : Mathf.Max(0, knockbackFrames);
@@ -202,7 +215,8 @@ public struct HitReactionData
             snapOffset = Vector2.zero,
             flashColor = Color.red,
             flashFrames = 6,
-            impactTier = DamageImpactTier.Low
+            impactTier = DamageImpactTier.Low,
+            damageType = DamageType.Physical
         };
     }
 }

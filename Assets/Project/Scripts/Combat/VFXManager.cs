@@ -12,6 +12,7 @@ namespace Project.Combat
         [SerializeField] private VFXLibrary library;
         public VFXLibrary InstanceLibrary => library;
         [SerializeField] private GenericVFXPlayer vfxPrefab;
+        public GenericVFXPlayer VFXPrefab => vfxPrefab;
         
         [Header("Settings")]
         [SerializeField] private int initialPoolSize = 10;
@@ -52,19 +53,24 @@ namespace Project.Combat
         /// </summary>
         public void Spawn(VFXType type, Vector3 position, bool flipX = false, float rotationZ = 0f, List<VFXTransformKey> keys = null, Transform parent = null, float lifespan = -1f)
         {
-            if (type == VFXType.None) return;
+            SpawnResult(type, position, flipX, rotationZ, keys, parent, lifespan);
+        }
+
+        public GenericVFXPlayer SpawnResult(VFXType type, Vector3 position, bool flipX = false, float rotationZ = 0f, List<VFXTransformKey> keys = null, Transform parent = null, float lifespan = -1f)
+        {
+            if (type == VFXType.None) return null;
             
             if (library == null)
             {
                 Debug.LogWarning("VFXManager: Library is not assigned! Cannot spawn VFX.");
-                return;
+                return null;
             }
 
             VFXDefinition def = library.GetDefinition(type);
             if (def == null)
             {
                 Debug.LogWarning($"VFXManager: No definition found in library for type {type}");
-                return;
+                return null;
             }
 
             GenericVFXPlayer player = GetFromPool();
@@ -86,6 +92,7 @@ namespace Project.Combat
             
             player.gameObject.SetActive(true);
             player.Play(def, flipX, keys, lifespan);
+            return player;
         }
 
         private GenericVFXPlayer GetFromPool()

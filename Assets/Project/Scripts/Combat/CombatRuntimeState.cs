@@ -25,6 +25,51 @@ public class CombatRuntimeState
 
     public event Action OnStateChanged;
 
+    // =========================================================
+    // Blackboard Accessors (Well-known keys)
+    // =========================================================
+    public bool HasHitTarget
+    {
+        get => HasTag("hit_target");
+        set
+        {
+            if (value) SetTag("hit_target");
+            else RemoveTag("hit_target");
+        }
+    }
+
+    public int SkillUsageCount
+    {
+        get => GetCounter("skill_usage");
+        set => SetCounter("skill_usage", value);
+    }
+
+    public string CurrentStance
+    {
+        get
+        {
+            // For now, stance can be inferred from a specific tag or we could add string storage.
+            // Using a simple convention: any tag starting with "stance_" is the current stance.
+            PruneExpiredTags();
+            foreach (var entry in runtimeTags)
+            {
+                if (entry != null && entry.tag.StartsWith("stance_"))
+                    return entry.tag.Substring("stance_".Length);
+            }
+            return "Default";
+        }
+        set
+        {
+            // Remove previous stance
+            for (int i = runtimeTags.Count - 1; i >= 0; i--)
+            {
+                if (runtimeTags[i] != null && runtimeTags[i].tag.StartsWith("stance_"))
+                    runtimeTags.RemoveAt(i);
+            }
+            SetTag("stance_" + value);
+        }
+    }
+
     public bool HasTag(string tag)
     {
         if (string.IsNullOrEmpty(tag))

@@ -213,6 +213,7 @@ public class HitBoxDamage : MonoBehaviour
             data.flashColor = currentNormalHitbox.flashColor;
             data.flashFrames = currentNormalHitbox.flashFrames;
             data.impactTier = currentNormalHitbox.impactTier;
+            data.damageType = currentNormalHitbox.damageType;
 
             if (currentNormalHitbox.useDeterministicReaction)
             {
@@ -279,6 +280,7 @@ public class HitBoxDamage : MonoBehaviour
         data.flashColor = currentGrabHitbox.flashColor;
         data.flashFrames = currentGrabHitbox.flashFrames;
         data.impactTier = currentGrabHitbox.impactTier;
+        data.damageType = currentGrabHitbox.damageType;
 
         return data;
     }

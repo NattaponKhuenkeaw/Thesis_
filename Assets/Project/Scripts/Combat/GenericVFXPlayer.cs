@@ -14,6 +14,8 @@ namespace Project.Combat
         private List<VFXTransformKey> activeKeys;
         private Vector3 spawnScale = Vector3.one;
         private Vector3 spawnOrigin; // Absolute world or local origin
+        private bool isFlipped;
+        private bool flipTrajectoryX;
 
         private static readonly int PlayStateHash = Animator.StringToHash("Play");
 
@@ -60,9 +62,15 @@ namespace Project.Combat
 
             // Apply direction via Rotation Y (180 deg) as requested
             // This mirrors both visuals and any internal X-offsets in the Keyframes!
-            transform.localRotation = Quaternion.Euler(0, (flipX && def.flipWithCharacter) ? 180f : 0f, 0f);
+            isFlipped = flipX && def.flipWithCharacter;
+            flipTrajectoryX = flipX && !def.isLocalSpace; // If world space and flipped, we must manually negate X trajectory
+            
+            transform.localRotation = Quaternion.Euler(0, isFlipped ? 180f : 0f, 0f);
             
             transform.localScale = spawnScale;
+
+            spriteRenderer.flipX = false;
+            spriteRenderer.flipY = false;
 
             if (def.tint.a <= 0f)
             {
@@ -151,11 +159,14 @@ namespace Project.Combat
 
         private void ApplyKey(VFXTransformKey key)
         {
+            Vector3 posOffset = key.position;
+            if (flipTrajectoryX) posOffset.x = -posOffset.x;
+
             // Position is an OFFSET relative to spawn origin
-            transform.localPosition = spawnOrigin + key.position;
+            transform.localPosition = spawnOrigin + posOffset;
             
             // Apply flip-aware rotation
-            Quaternion flipRot = Quaternion.Euler(0, transform.localRotation.eulerAngles.y, 0f);
+            Quaternion flipRot = Quaternion.Euler(0, isFlipped ? 180f : 0f, 0f);
             transform.localRotation = flipRot * Quaternion.Euler(key.rotation);
             
             transform.localScale = Vector3.Scale(spawnScale, key.scale);
@@ -163,15 +174,28 @@ namespace Project.Combat
 
         private void ApplyKeyInterpolation(VFXTransformKey a, VFXTransformKey b, float t)
         {
+            Vector3 posA = a.position;
+            Vector3 posB = b.position;
+            if (flipTrajectoryX)
+            {
+                posA.x = -posA.x;
+                posB.x = -posB.x;
+            }
+
             // Position is an OFFSET relative to spawn origin
-            transform.localPosition = spawnOrigin + Vector3.Lerp(a.position, b.position, t);
+            transform.localPosition = spawnOrigin + Vector3.Lerp(posA, posB, t);
             
             // Combine flipping with local rotation key
-            Quaternion flipRot = Quaternion.Euler(0, transform.localRotation.eulerAngles.y, 0f);
+            Quaternion flipRot = Quaternion.Euler(0, isFlipped ? 180f : 0f, 0f);
             Quaternion keyRot = Quaternion.Euler(Vector3.Lerp(a.rotation, b.rotation, t));
             transform.localRotation = flipRot * keyRot;
             
             transform.localScale = Vector3.Scale(spawnScale, Vector3.Lerp(a.scale, b.scale, t));
+        }
+
+        public void Stop()
+        {
+            OnAnimationComplete();
         }
 
         public void OnAnimationComplete()
@@ -180,6 +204,8 @@ namespace Project.Combat
             
             // Clear keys
             activeKeys = null;
+            spriteRenderer.flipX = false;
+            spriteRenderer.flipY = false;
 
             // Reset parenting before returning to pool
             if (VFXManager.Instance != null)

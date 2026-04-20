@@ -13,7 +13,9 @@ public struct InputContext
     public int facingDirection;         // 1 or -1
     public PlayerStateId previousState;
     public bool hasGrabbedEnemy;
+    public bool hasPreviouslyGrabbedEnemy;
     public bool isAgainstWall;
+    public bool wasAirborne;
     public CharacterPassiveController passiveController;
     public CombatRuntimeState runtimeState;
 
@@ -55,6 +57,7 @@ public struct InputContext
 
 public enum DirectionRequirement
 {
+    None,       // Automatic trigger (skips input waiting, used for auto-success/environmental)
     Any,        // No direction check (always matches for this field)
     Neutral,    // No directional hold (stick at center)
     Forward,    // Holding toward facing direction

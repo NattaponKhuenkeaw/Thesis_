@@ -40,6 +40,9 @@ public class VFXEntry
     public Color trackColor = new Color(0.55f, 0.30f, 1f); // violet
 
     public List<VFXTransformKey> transformKeys = new List<VFXTransformKey>();
+    
+    [Tooltip("If true, the VFX will restart its animation when the parent ActionStep loops its Active Phase.")]
+    public bool loopDuringActive = false;
 }
 
 /// <summary>

@@ -34,11 +34,13 @@ namespace CombatEditor
         private void OnEnable()
         {
             SceneView.duringSceneGui += OnSceneGUI;
+            Undo.undoRedoPerformed += OnUndoRedo;
         }
 
         private void OnDisable()
         {
             SceneView.duringSceneGui -= OnSceneGUI;
+            Undo.undoRedoPerformed -= OnUndoRedo;
         }
 
         public void CreateGUI()
@@ -98,12 +100,46 @@ namespace CombatEditor
 
             cardBuilder = new PropertyCardBuilder(propertyScrollContent, null, RefreshUI, RefreshUI);
             
+            rootVisualElement.RegisterCallback<KeyDownEvent>(OnKeyDown);
+            rootVisualElement.focusable = true;
+
             RefreshUI();
+        }
+
+        private void OnKeyDown(KeyDownEvent evt)
+        {
+            if (evt.ctrlKey && evt.keyCode == KeyCode.Z)
+            {
+                Undo.PerformUndo();
+                evt.StopPropagation();
+            }
+            else if (evt.ctrlKey && evt.shiftKey && evt.keyCode == KeyCode.Z)
+            {
+                Undo.PerformRedo();
+                evt.StopPropagation();
+            }
+            else if (evt.ctrlKey && evt.keyCode == KeyCode.Y)
+            {
+                Undo.PerformRedo();
+                evt.StopPropagation();
+            }
+        }
+
+        private void OnUndoRedo()
+        {
+            RefreshUI();
+            Repaint();
         }
 
         private void RefreshUI()
         {
             if (propertyScrollContent == null) return;
+
+            // Save scroll if possible
+            Vector2 savedScroll = Vector2.zero;
+            var oldTimelineBody = timelineContainer.Q<ScrollView>("timeline-body");
+            if (oldTimelineBody != null) savedScroll = oldTimelineBody.scrollOffset;
+
             propertyScrollContent.Clear();
 
             if (selectedProjectile == null)
@@ -117,10 +153,10 @@ namespace CombatEditor
             cardBuilder.SetTarget(selectedProjectile);
             cardBuilder.Build(selectedProjectile);
             
-            BuildTimeline();
+            BuildTimeline(savedScroll);
         }
 
-        private void BuildTimeline()
+        private void BuildTimeline(Vector2 savedScroll)
         {
             timelineContainer.Clear();
             if (selectedProjectile.impactHitData == null) return;
@@ -134,6 +170,12 @@ namespace CombatEditor
             timelineBody.style.flexDirection = FlexDirection.Row;
             timelineBody.style.height = 80;
             timelineContainer.Add(timelineBody);
+
+            // Restore scroll
+            timelineBody.schedule.Execute(() => {
+                timelineBody.scrollOffset = savedScroll;
+            });
+
 
             int maxFrame = 0;
             foreach(var hb in selectedProjectile.impactHitData.hitboxes) {

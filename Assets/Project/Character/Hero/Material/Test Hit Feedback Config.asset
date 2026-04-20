@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 608be943df1392b409bfc7660c7a9011, type: 3}
+  m_Name: Test Hit Feedback Config
+  m_EditorClassIdentifier: Assembly-CSharp::HitFeedbackConfig
+  lowImpactSFX:
+  - {fileID: 8300000, guid: 596699b64a6156d449c2889dd1ab13a2, type: 3}
+  mediumImpactSFX:
+  - {fileID: 8300000, guid: bb0a9ac2e5a03764daaef42e6736cccc, type: 3}
+  - {fileID: 8300000, guid: dc3aaa85ccf2bda468d3597484218719, type: 3}
+  heavyImpactSFX:
+  - {fileID: 8300000, guid: 8b53895fd7379e24ea509fca8b1db7da, type: 3}
+  ultimateImpactSFX:
+  - {fileID: 8300000, guid: 7fc9c0415d146b3488268581b80b5e3d, type: 3}
+  - {fileID: 8300000, guid: e7b6b8f4f9ae704469c01ad9810f8d9f, type: 3}
+  lowImpactVFXType: 10
+  mediumImpactVFXType: 11
+  heavyImpactVFXType: 12
+  ultimateImpactVFXType: 13
+  lowImpactVFX: {fileID: 0}
+  mediumImpactVFX: {fileID: 0}
+  heavyImpactVFX: {fileID: 0}
+  ultimateImpactVFX: {fileID: 0}
+  guardSFX: []
+  whiffSFX: []
+  guardVFXType: 20
+  guardVFX: {fileID: 0}

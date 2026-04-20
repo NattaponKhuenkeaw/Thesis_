@@ -28,6 +28,9 @@ public abstract class HitboxBase
     [Tooltip("How many frames this hitbox stays active.")]
     public int activeFrames = 3;
 
+    [Header("Damage")]
+    public DamageType damageType = DamageType.Physical;
+
     [Header("Debug")]
     public Color debugColor = Color.red;
 }
@@ -120,7 +123,8 @@ public class GrabHitbox : HitboxBase
     [Tooltip("If true, grab can affect airborne targets.")]
     public bool canGrabAirborne = false;
 
-    [Header("Grab Reaction")]
+    [Header("Damage")]
+    public float damageMultiplier = 0f;
     public int impactFreezeFrames = 4;
     public int holdFrames = 24;
     public int recoveryFrames = 6;

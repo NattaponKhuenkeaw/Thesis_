@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class SkillTreeController : MonoBehaviour
 {
+    
     // =========================================================
     // Dependencies
     // =========================================================
@@ -80,10 +81,10 @@ public class SkillTreeController : MonoBehaviour
         return node != null ? new SkillTreeNode(node, IsNodeUnlocked(node.nodeId)) : null;
     }
 
-    public SkillTreeData GetSkillTreeData()
+    [System.Obsolete("SkillTreeData has been removed. Use ActionResolverTable instead.", false)]
+    public object GetSkillTreeData()
     {
-        CharacterObject characterObject = GetCharacterObject();
-        return characterObject != null ? characterObject.skillTreeData : null;
+        return null;
     }
 
     public int GetCurrentPoints()

@@ -52,7 +52,9 @@ public class EnemyController : MonoBehaviour
     public Rigidbody2D rb;
     private SpriteRenderer[] spriteRenderers;
     private Color[] originalColors;
+    private int[] originalSortingOrders;
     private Coroutine flashCoroutine;
+    private Coroutine priorityResetCoroutine;
 
     /// <summary>Child hitbox collider used by AttackAction.</summary>
     public Collider2D attackHitbox;
@@ -78,6 +80,7 @@ public class EnemyController : MonoBehaviour
 
         spriteRenderers = GetComponentsInChildren<SpriteRenderer>();
         CacheOriginalColors();
+        CacheOriginalSortingOrders();
 
         if (hitReactionHandler == null)
             hitReactionHandler = GetComponent<EnemyHitReactionHandler>();
@@ -182,6 +185,9 @@ public class EnemyController : MonoBehaviour
             hitReactionHandler.StartReaction(reactionData, attackerPosition);
         }
 
+        // --- NEW: Priority Rendering ---
+        SetPriority(true);
+
         // Trigger sprite flash
         if (reactionData.flashFrames > 0)
         {
@@ -196,6 +202,7 @@ public class EnemyController : MonoBehaviour
     public void ResetComboCount()
     {
         currentComboHits = 0;
+        SetPriority(false, 0.5f); // 0.5s delay requested by user
     }
 
     public void ApplyStatus(StatusEffectType statusEffect, bool enabled = true)
@@ -239,6 +246,42 @@ public class EnemyController : MonoBehaviour
             if (spriteRenderers[i] != null)
                 originalColors[i] = spriteRenderers[i].color;
         }
+    }
+
+    private void CacheOriginalSortingOrders()
+    {
+        if (spriteRenderers == null) return;
+        originalSortingOrders = new int[spriteRenderers.Length];
+        for (int i = 0; i < spriteRenderers.Length; i++)
+        {
+            if (spriteRenderers[i] != null)
+                originalSortingOrders[i] = spriteRenderers[i].sortingOrder;
+        }
+    }
+
+    public void SetPriority(bool isPriority, float delay = 0f)
+    {
+        if (priorityResetCoroutine != null)
+        {
+            StopCoroutine(priorityResetCoroutine);
+            priorityResetCoroutine = null;
+        }
+
+        if (delay > 0 && !isPriority)
+        {
+            priorityResetCoroutine = StartCoroutine(PriorityResetRoutine(delay));
+        }
+        else
+        {
+            Project.Systems.EntitySortingManager.SetCharacterPriority(spriteRenderers, originalSortingOrders, isPriority);
+        }
+    }
+
+    private IEnumerator PriorityResetRoutine(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        Project.Systems.EntitySortingManager.SetCharacterPriority(spriteRenderers, originalSortingOrders, false);
+        priorityResetCoroutine = null;
     }
 
     private IEnumerator FlashRoutine(Color flashColor, int frames)

@@ -199,6 +199,9 @@ public class EnemyHitReactionHandler : MonoBehaviour
                 : EnemyReactionState.Grabbed);
         }
 
+        // --- NEW: Instant Snap ---
+        UpdateGrabbedBinding();
+
         return true;
     }
 

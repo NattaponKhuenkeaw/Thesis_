@@ -9,9 +9,9 @@ public class VFXSpawner : MonoBehaviour
         movement = GetComponentInParent<PlayerMovement>();
     }
 
-    public void SpawnVFX(VFXEntry entry)
+    public Project.Combat.GenericVFXPlayer SpawnVFX(VFXEntry entry)
     {
-        if (entry == null) return;
+        if (entry == null) return null;
 
         // Apply facing direction
         float facingDirection = movement != null ? movement.FacingDirection : 1f;
@@ -54,18 +54,17 @@ public class VFXSpawner : MonoBehaviour
             // Calculate lifespan in seconds
             float lifespan = entry.duration / CombatCore.FrameDataConstants.LOGIC_FPS;
 
-            Project.Combat.VFXManager.Instance.Spawn(entry.vfxType, spawnPos, flipXForVFX, localRotation.z, entry.transformKeys, transform, lifespan);
-            return;
+            return Project.Combat.VFXManager.Instance.SpawnResult(entry.vfxType, spawnPos, flipXForVFX, localRotation.z, entry.transformKeys, transform, lifespan);
         }
 
         // 2. Fallback to Prefab instantiation (Legacy path)
         if (entry.vfxPrefab != null)
         {
-            // Manual flip for standalone prefabs
+            // ... legacy code stays same except it returns null since we don't track legacy instantiated objects yet ...
+            // (Standardization: library VFX is preferred for pooling and tracking)
             localOffset.x *= facingDirection;
             Vector3 spawnPosition = transform.position + localOffset;
 
-            // Calculate rotation
             Quaternion rotation = Quaternion.Euler(localRotation);
             if (isFlipped)
             {
@@ -77,7 +76,6 @@ public class VFXSpawner : MonoBehaviour
             GameObject vfxInstance = Instantiate(entry.vfxPrefab, spawnPosition, rotation);
             vfxInstance.transform.localScale = localScale;
 
-            // Ensure it cleans itself up
             var ps = vfxInstance.GetComponentInChildren<ParticleSystem>();
             if (ps != null)
             {
@@ -90,5 +88,7 @@ public class VFXSpawner : MonoBehaviour
                 Destroy(vfxInstance, 5f);
             }
         }
+
+        return null;
     }
 }
