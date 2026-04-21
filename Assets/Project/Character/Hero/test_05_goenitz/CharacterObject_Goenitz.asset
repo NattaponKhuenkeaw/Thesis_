@@ -23,7 +23,7 @@ MonoBehaviour:
     elementalMultiplier: 1
     moveSpeed: 4.5
     jumpForce: 22
-    maxJumpCount: 1
+    maxJumpCount: 2
     maxAirDashCount: 2
     groundAcceleration: 110
     groundDeceleration: 120
@@ -54,7 +54,7 @@ MonoBehaviour:
     recoveryFrames: 15
     cancelWindowStartFrame: 34
     dashSpeed: 125
-    cooldownFrames: 24
+    cooldownFrames: 18
   progressionDefinition:
     maxConstellationRank: 6
     constellationNodes: []

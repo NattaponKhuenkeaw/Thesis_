@@ -68,7 +68,15 @@ public class PlayerAnimator : MonoBehaviour
 
         // Standard locomotion parameters
         anim.SetFloat(speedHash, Mathf.Abs(rb.linearVelocity.x));
-        anim.SetFloat(verticalVelocityHash, rb.linearVelocity.y);
+
+        float verticalVelocity = rb.linearVelocity.y;
+        // Suppress negative vertical velocity in the animator during jump startup to prevent premature "Fall" transitions.
+        if (movement.IsJumping && verticalVelocity < 0.1f)
+        {
+            verticalVelocity = 0.1f;
+        }
+        anim.SetFloat(verticalVelocityHash, verticalVelocity);
+
         anim.SetBool(isGroundedHash, movement.IsGrounded());
         anim.SetBool(isLandingHash, movement.IsLanding);
 
@@ -87,7 +95,7 @@ public class PlayerAnimator : MonoBehaviour
         }
 
         bool suppressFallAnimation = (combat != null && combat.ShouldSuppressLandingFeedback());
-        bool isFalling = !suppressFallAnimation && !movement.IsGrounded() && rb.linearVelocity.y < -0.1f && !movement.IsLanding;
+        bool isFalling = !suppressFallAnimation && !movement.IsGrounded() && rb.linearVelocity.y < -0.1f && !movement.IsLanding && !movement.IsJumping;
         
         if (isFalling && !wasFalling)
         {

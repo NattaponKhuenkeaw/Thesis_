@@ -39,7 +39,7 @@ MonoBehaviour:
   destroyWhenHitsExhausted: 1
   destroyOnLifetimeExpire: 1
   impactVFXType: 107
-  impactAudio: {fileID: 0}
+  impactAudio: {fileID: 8300000, guid: 6dbe3ecbb7bf0fd47b365d1dd9ff2b49, type: 3}
   references:
     version: 2
     RefIds:

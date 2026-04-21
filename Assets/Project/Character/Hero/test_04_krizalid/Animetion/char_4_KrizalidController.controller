@@ -452,7 +452,7 @@ AnimatorController:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: char-4-KrizalidController
+  m_Name: char_4_KrizalidController
   serializedVersion: 5
   m_AnimatorParameters:
   - m_Name: Speed
