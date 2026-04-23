@@ -574,19 +574,25 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public ProjectileSpawnContext BuildProjectileSpawnContext(ProjectileSpawnHitbox projectileHitbox)
     {
         ProjectileData data = projectileHitbox != null ? projectileHitbox.projectileData : null;
+        ProjectileType projectileType = projectileHitbox != null ? projectileHitbox.ResolveProjectileType() : ProjectileType.None;
         Vector2 resolvedSpawnOffset = projectileHitbox != null
             ? projectileHitbox.ResolveSpawnOffset()
             : data != null ? data.spawnOffset : Vector2.zero;
         Vector2 origin = GetSpawnPosition(resolvedSpawnOffset);
         Vector2 direction = GetFacingDirection();
         int remainingHits = data != null ? Mathf.Max(1, data.maxHits) : 1;
+        bool needsTarget = data != null
+            && (data.homeToTarget
+                || data.spawnPositionMode == SpawnPositionMode.Target
+                || data.spawnMode == ProjectileSpawnMode.TrackTarget);
 
         return new ProjectileSpawnContext
         {
+            projectileType = projectileType,
             projectileData = data,
             casterTransform = transform,
             projectileParent = null,
-            targetTransform = data != null && data.spawnMode == ProjectileSpawnMode.TrackTarget ? FindProjectileTarget() : null,
+            targetTransform = needsTarget ? FindProjectileTarget() : null,
             passiveController = passiveController,
             sourceStep = currentStepData,
             sourceActionName = currentActionName,

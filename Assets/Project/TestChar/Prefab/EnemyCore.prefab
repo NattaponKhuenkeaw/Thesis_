@@ -1763,6 +1763,6 @@ MonoBehaviour:
   waterColor: {r: 0, g: 0.75, b: 1, a: 1}
   iceColor: {r: 0.88, g: 1, b: 1, a: 1}
   electroColor: {r: 0.8318407, g: 0.19424175, b: 0.9150943, a: 1}
-  windColor: {r: 0.94, g: 1, b: 0.94, a: 1}
+  windColor: {r: 0.75, g: 1, b: 0.75, a: 1}
   rockColor: {r: 0.9433962, g: 0.80982745, b: 0.22694907, a: 1}
   natureColor: {r: 0.2, g: 0.8, b: 0.2, a: 1}

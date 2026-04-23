@@ -15,6 +15,21 @@ public class HitFeedbackResolver : MonoBehaviour
         Instance = this;
     }
 
+    private void OnEnable()
+    {
+        HitFeedbackEvents.FeedbackRequested += HandleFeedbackRequest;
+    }
+
+    private void OnDisable()
+    {
+        HitFeedbackEvents.FeedbackRequested -= HandleFeedbackRequest;
+    }
+
+    private void HandleFeedbackRequest(HitFeedbackRequest request)
+    {
+        PlayHitFeedback(request.Hitbox, request.Tier, request.HitPoint, request.HitDirection, request.ProjectileData);
+    }
+
     public void PlayHitFeedback(HitboxBase hitbox, DamageImpactTier tier, Vector2 hitPoint, Vector2 hitDirection, ProjectileData projectileData = null)
     {
         // 1. Resolve Audio

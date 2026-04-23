@@ -217,7 +217,7 @@ public class PlayerStateMachine : MonoBehaviour
         if (CurrentState.HandleJumpInput()) return;
 
         // Centralized check for FrameData states: ignore interrupts if state says so
-        if (CurrentState is FrameDataPlayerState fdState && !fdState.CanBeInterrupted)
+        if (CurrentState is FrameDataPlayerState fdState && !fdState.CanBeInterruptedBy(ActionCategory.Jump))
         {
             // Do not allow jump interrupt if state is not in a cancellable phase
             return;
@@ -244,7 +244,7 @@ public class PlayerStateMachine : MonoBehaviour
         if (CurrentState.HandleDashInput(inputX)) return;
 
         // Centralized check for FrameData states: ignore interrupts if state says so
-        if (CurrentState is FrameDataPlayerState fdState && !fdState.CanBeInterrupted)
+        if (CurrentState is FrameDataPlayerState fdState && !fdState.CanBeInterruptedBy(ActionCategory.Dash))
         {
             // Dash is already buffered at the start of this method
             return;
@@ -272,7 +272,7 @@ public class PlayerStateMachine : MonoBehaviour
 
         // Centralized check for FrameData states: ignore interrupts if state says so
         if (CurrentState is FrameDataPlayerState fdState
-            && !fdState.CanAcceptCombatInput(CombatInputType.Attack))
+            && !fdState.CanBeInterruptedBy(ActionCategory.BasicAttack))
         {
             // Attack is already buffered at the start of this method
             return;
@@ -299,7 +299,7 @@ public class PlayerStateMachine : MonoBehaviour
 
         // Centralized check for FrameData states: ignore interrupts if state says so
         if (CurrentState is FrameDataPlayerState fdState
-            && !fdState.CanAcceptCombatInput(CombatInputType.Skill))
+            && !fdState.CanBeInterruptedBy(ActionCategory.Skill))
             return;
 
         // State-first: let the current state try to consume the input
@@ -323,7 +323,7 @@ public class PlayerStateMachine : MonoBehaviour
 
         // Centralized check for FrameData states: ignore interrupts if state says so
         if (CurrentState is FrameDataPlayerState fdState
-            && !fdState.CanAcceptCombatInput(CombatInputType.Ultimate))
+            && !fdState.CanBeInterruptedBy(ActionCategory.Ultimate))
             return;
 
         // State-first: let the current state try to consume the input

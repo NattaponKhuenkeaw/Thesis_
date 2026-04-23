@@ -19,6 +19,8 @@ public class PlayerDashState : FrameDataPlayerState
     public override bool AcceptsDashInput => true;
     public override bool AcceptsJumpInput => true;
     public override bool AcceptsAttackInput => true;
+    public override bool AcceptsSkillInput => true;
+    public override bool AcceptsUltimateInput => true;
     public override bool LocksMovement => true;
     public override bool LocksFacing => true;
 
@@ -28,6 +30,8 @@ public class PlayerDashState : FrameDataPlayerState
     // =========================================================
     // FrameDataPlayerState — provide frame data from DashData
     // =========================================================
+
+    protected override InterruptPolicy GetInterruptPolicy() => InterruptPolicy.Dash;
 
     protected override ActionFrameData GetFrameData()
     {
@@ -78,41 +82,12 @@ public class PlayerDashState : FrameDataPlayerState
 
     protected override void HandleInputDuringRecovery()
     {
-        ActionInputBuffer buffer = fsm.InputBuffer;
-        if (buffer == null) return;
-
-        // Recovery: allow Jump cancel
-        if (buffer.ConsumeJump())
-        {
-            fsm.RouteJumpInput();
-            return;
-        }
+        TryConsumeAllowedBuffers();
     }
 
     protected override void HandleInputDuringCancel()
     {
-        ActionInputBuffer buffer = fsm.InputBuffer;
-        if (buffer == null) return;
-
-        // Cancel window: attack has priority
-        if (buffer.ConsumeAttack())
-        {
-            fsm.RouteAttackInput(); // Centralized routing handles transition
-            return;
-        }
-
-        // Jump cancel (if not already consumed in recovery)
-        if (buffer.ConsumeJump())
-        {
-            fsm.RouteJumpInput();
-            return;
-        }
-
-        // Walk cancel (if holding direction and no other buffers)
-        if (Mathf.Abs(buffer.DirectionalInput.x) > 0.01f && !buffer.HasAnyBuffer)
-        {
-            ExitToAppropriateMovementState();
-        }
+        TryConsumeAllowedBuffers();
     }
 
     // =========================================================

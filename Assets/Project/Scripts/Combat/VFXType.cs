@@ -14,9 +14,6 @@ namespace Project.Combat
         HitSpark_Heavy = 12,
         HitSpark_Ultimate = 13,
         
-        // --- Defense ---
-        GuardSpark = 20,
-        ParrySpark = 21,
         
         // --- Movement ---
         Dust_Dash = 30,

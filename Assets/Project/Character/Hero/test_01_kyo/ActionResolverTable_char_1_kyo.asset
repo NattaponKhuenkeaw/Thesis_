@@ -361,7 +361,7 @@ MonoBehaviour:
         defaultNext:
           rid: -2
         onGrabSuccessNode:
-          rid: 1588255892939997338
+          rid: -2
     - rid: 1588255892939997285
       type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -948,6 +948,7 @@ MonoBehaviour:
         activeFrames: 3
         damageType: 1
         debugColor: {r: 0.42, g: 0.81, b: 1, a: 1}
+        projectileType: 0
         projectileData: {fileID: 11400000, guid: 6b1d6a7d20195c940a7249e106a8cc1e, type: 2}
         overrideSpawnOffset: 0
         spawnOffset: {x: 0, y: 0}
@@ -988,6 +989,7 @@ MonoBehaviour:
         entries:
         - label: VFX
           vfxType: 61
+          vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 784361931337648594, guid: 4c0e5d975c6ec9341ac97977330a4775, type: 3}
           triggerFrame: 10
           duration: 33
@@ -1004,6 +1006,7 @@ MonoBehaviour:
           loopDuringActive: 0
         - label: VFX
           vfxType: 60
+          vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 784361931337648594, guid: 4c0e5d975c6ec9341ac97977330a4775, type: 3}
           triggerFrame: 29
           duration: 17
@@ -1024,6 +1027,7 @@ MonoBehaviour:
         entries:
         - label: VFX
           vfxType: 41
+          vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 784361931337648594, guid: 4c0e5d975c6ec9341ac97977330a4775, type: 3}
           triggerFrame: 59
           duration: 25
@@ -1040,6 +1044,7 @@ MonoBehaviour:
           loopDuringActive: 0
         - label: Dust Land
           vfxType: 31
+          vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 784361931337648594, guid: 4c0e5d975c6ec9341ac97977330a4775, type: 3}
           triggerFrame: 1
           duration: 25
@@ -1056,6 +1061,7 @@ MonoBehaviour:
         entries:
         - label: Dust Dash
           vfxType: 30
+          vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 9
           duration: 13
@@ -1276,6 +1282,7 @@ MonoBehaviour:
         entries:
         - label: VFX
           vfxType: 0
+          vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 8
           duration: 30
@@ -1284,6 +1291,7 @@ MonoBehaviour:
           loopDuringActive: 0
         - label: VFX
           vfxType: 0
+          vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 26
           duration: 28
@@ -1292,6 +1300,7 @@ MonoBehaviour:
           loopDuringActive: 0
         - label: VFX
           vfxType: 0
+          vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 26
           duration: 28

@@ -10,7 +10,8 @@ namespace Project.Combat
 
         [Header("Refs")]
         [SerializeField] private VFXLibrary library;
-        public VFXLibrary InstanceLibrary => library;
+        public IVFXLibrary InstanceLibrary => library;
+        public VFXLibrary LibraryAsset => library;
         [SerializeField] private GenericVFXPlayer vfxPrefab;
         public GenericVFXPlayer VFXPrefab => vfxPrefab;
         
@@ -56,20 +57,38 @@ namespace Project.Combat
             SpawnResult(type, position, flipX, rotationZ, keys, parent, lifespan);
         }
 
-        public GenericVFXPlayer SpawnResult(VFXType type, Vector3 position, bool flipX = false, float rotationZ = 0f, List<VFXTransformKey> keys = null, Transform parent = null, float lifespan = -1f)
+        /// <summary>
+        /// Spawn a VFX using a direct AnimationClip override.
+        /// </summary>
+        public void Spawn(AnimationClip clip, Vector3 position, bool flipX = false, float rotationZ = 0f, List<VFXTransformKey> keys = null, Transform parent = null, float lifespan = -1f)
         {
-            if (type == VFXType.None) return null;
+            SpawnResult(VFXType.None, position, flipX, rotationZ, keys, parent, lifespan, clip);
+        }
+
+        public GenericVFXPlayer SpawnResult(VFXType type, Vector3 position, bool flipX = false, float rotationZ = 0f, List<VFXTransformKey> keys = null, Transform parent = null, float lifespan = -1f, AnimationClip clipOverride = null)
+        {
+            if (type == VFXType.None && clipOverride == null) return null;
             
-            if (library == null)
+            if (library == null && clipOverride == null)
             {
                 Debug.LogWarning("VFXManager: Library is not assigned! Cannot spawn VFX.");
                 return null;
             }
 
-            VFXDefinition def = library.GetDefinition(type);
+            IVFXLibrary lookup = library;
+            VFXDefinition def = lookup != null ? lookup.GetDefinition(type) : null;
+            
+            if (def == null && clipOverride != null)
+            {
+                def = new VFXDefinition { clip = clipOverride };
+            }
+
             if (def == null)
             {
-                Debug.LogWarning($"VFXManager: No definition found in library for type {type}");
+                if (type != VFXType.None)
+                {
+                    Debug.LogWarning($"VFXManager: No definition found in library for type {type}");
+                }
                 return null;
             }
 

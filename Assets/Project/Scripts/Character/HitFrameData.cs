@@ -155,6 +155,7 @@ public class ProjectileSpawnHitbox : HitboxBase
     }
 
     [Header("Projectile")]
+    public ProjectileType projectileType = ProjectileType.None;
     public ProjectileData projectileData;
     public bool overrideSpawnOffset = false;
     public Vector2 spawnOffset = Vector2.zero;
@@ -169,6 +170,16 @@ public class ProjectileSpawnHitbox : HitboxBase
         }
 
         return projectileData != null ? projectileData.spawnOffset : Vector2.zero;
+    }
+
+    public ProjectileType ResolveProjectileType()
+    {
+        if (projectileType != ProjectileType.None)
+        {
+            return projectileType;
+        }
+
+        return projectileData != null ? projectileData.projectileType : ProjectileType.None;
     }
 }
 

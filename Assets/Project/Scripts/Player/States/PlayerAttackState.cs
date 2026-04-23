@@ -21,7 +21,7 @@ public class PlayerAttackState : CombatPlayerState
     // =========================================================
     public override bool AcceptsMoveInput => true;
     public override bool AcceptsDashInput => true;
-    public override bool AcceptsJumpInput => false;
+    public override bool AcceptsJumpInput => true;
     public override bool AcceptsAttackInput => true;
     public override bool AcceptsSkillInput => true;
     public override bool AcceptsUltimateInput => true;
@@ -30,19 +30,10 @@ public class PlayerAttackState : CombatPlayerState
 
     protected override AttackCategory GetAttackCategory() => AttackCategory.Normal;
 
-    public override bool CanBeInterrupted
+    protected override InterruptPolicy GetInterruptPolicy()
     {
-        get
-        {
-            if (isPlungeFalling) return false;
-            return base.CanBeInterrupted;
-        }
-    }
-
-    public override bool CanAcceptCombatInput(CombatInputType inputType)
-    {
-        if (isPlungeFalling) return false;
-        return base.CanAcceptCombatInput(inputType);
+        if (isPlungeFalling) return InterruptPolicy.Ultimate; // lock during plunge
+        return InterruptPolicy.BasicAttack;
     }
 
     // =========================================================
@@ -122,109 +113,22 @@ public class PlayerAttackState : CombatPlayerState
 
     protected override void HandleInputDuringActive()
     {
-        if (TryConsumeUltimateInterrupt()) return;
-        if (TryConsumeSkillInterrupt()) return;
-
-        CheckForInterrupts();
+        TryConsumeAllowedBuffers();
     }
 
     protected override void HandleInputDuringRecovery()
     {
-        if (TryConsumeUltimateInterrupt()) return;
-        if (TryConsumeSkillInterrupt()) return;
-        if (CheckForInterrupts()) return;
-
+        if (TryConsumeAllowedBuffers()) return;
         if (TryAutoChain()) return;
-
-        if (Buffer != null && Buffer.ConsumeAttack())
-        {
-            if (TryResolveNextStep())
-                return;
-        }
     }
 
     protected override void HandleInputDuringCancel()
     {
-        if (TryConsumeUltimateInterrupt()) return;
-        if (TryConsumeSkillInterrupt()) return;
-
+        if (TryConsumeAllowedBuffers()) return;
         if (TryAutoChain()) return;
-
-        if (Buffer != null && Buffer.ConsumeAttack())
-        {
-            if (TryResolveNextStep())
-                return;
-        }
-
-        if (CheckForInterrupts()) return;
-
-        // Walk cancel
-        if (Buffer != null && Buffer.DirectionalInput.x != 0f && !Buffer.HasAnyBuffer)
-        {
-            HandleInterruptExit();
-            ExitToAppropriateMovementState();
-        }
     }
 
-    private bool CheckForInterrupts()
-    {
-        if (player.Combat != null && player.Combat.HasGrabbedEnemy()) return false;
 
-        // Dash/Jump are allowed because base.CanBeInterrupted checks phases.
-        // FSM handles the actual transition check.
-        
-        float dashX;
-        if (Buffer != null && Buffer.ConsumeDash(out dashX))
-        {
-            if (player.Movement != null && player.Movement.CanDash())
-            {
-                HandleInterruptExit();
-                fsm.ChangeState(fsm.DashState);
-                fsm.CurrentState.OnDashInput(dashX);
-                return true;
-            }
-        }
-
-        if (Buffer != null && Buffer.ConsumeJump())
-        {
-            HandleInterruptExit();
-            fsm.ChangeState(fsm.JumpState);
-            fsm.CurrentState.OnJumpInput();
-            return true;
-        }
-
-        return false;
-    }
-
-    private bool TryConsumeSkillInterrupt()
-    {
-        if (Buffer == null || !CanAcceptCombatInput(CombatInputType.Skill)) return false;
-        if (!Buffer.ConsumeSkill()) return false;
-
-        OnSkillInput();
-        return fsm.CurrentState != this;
-    }
-
-    private bool TryConsumeUltimateInterrupt()
-    {
-        if (Buffer == null || !CanAcceptCombatInput(CombatInputType.Ultimate)) return false;
-        if (!Buffer.ConsumeUltimate()) return false;
-
-        OnUltimateInput();
-        return fsm.CurrentState != this;
-    }
-
-    private void HandleInterruptExit()
-    {
-        if (player.Combat == null) return;
-
-        if (resolver.IsLastStep())
-            player.Combat.ResetCombo();
-        else
-            player.Combat.CancelCurrentAttackButKeepComboProgress();
-
-        resolver.Reset();
-    }
 
     public override bool HandleAttackInput()
     {
@@ -275,10 +179,9 @@ public class PlayerAttackState : CombatPlayerState
 
     public override void OnSkillInput()
     {
-        if (!CanAcceptCombatInput(CombatInputType.Skill)) return;
+        if (!CanBeInterruptedBy(ActionCategory.Skill)) return;
 
         Buffer?.ConsumeSkill();
-        HandleInterruptExit();
         fsm.ChangeState(fsm.SkillState);
         fsm.CurrentState.OnSkillInput();
     }
@@ -291,10 +194,9 @@ public class PlayerAttackState : CombatPlayerState
 
     public override void OnUltimateInput()
     {
-        if (!CanAcceptCombatInput(CombatInputType.Ultimate)) return;
+        if (!CanBeInterruptedBy(ActionCategory.Ultimate)) return;
 
         Buffer?.ConsumeUltimate();
-        HandleInterruptExit();
         fsm.ChangeState(fsm.UltimateState);
         fsm.CurrentState.OnUltimateInput();
     }

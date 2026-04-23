@@ -31,9 +31,11 @@ public class VFXSpawner : MonoBehaviour
         }
 
         // 1. Try Library-driven VFX first (Optimized path)
-        if (entry.vfxType != Project.Combat.VFXType.None && Project.Combat.VFXManager.Instance != null)
+        if ((entry.vfxType != Project.Combat.VFXType.None || entry.vfxClip != null) && Project.Combat.VFXManager.Instance != null)
         {
-            var def = Project.Combat.VFXManager.Instance?.InstanceLibrary?.GetDefinition(entry.vfxType);
+            var def = entry.vfxType != Project.Combat.VFXType.None 
+                ? Project.Combat.VFXManager.Instance?.InstanceLibrary?.GetDefinition(entry.vfxType)
+                : null;
             Vector3 spawnPos = localOffset;
             bool flipXForVFX = isFlipped;
 
@@ -53,8 +55,9 @@ public class VFXSpawner : MonoBehaviour
 
             // Calculate lifespan in seconds
             float lifespan = entry.duration / CombatCore.FrameDataConstants.LOGIC_FPS;
+            AnimationClip clipToPlay = entry.vfxClip;
 
-            return Project.Combat.VFXManager.Instance.SpawnResult(entry.vfxType, spawnPos, flipXForVFX, localRotation.z, entry.transformKeys, transform, lifespan);
+            return Project.Combat.VFXManager.Instance.SpawnResult(entry.vfxType, spawnPos, flipXForVFX, localRotation.z, entry.transformKeys, transform, lifespan, clipToPlay);
         }
 
         // 2. Fallback to Prefab instantiation (Legacy path)

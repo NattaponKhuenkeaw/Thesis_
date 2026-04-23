@@ -91,18 +91,25 @@ public abstract class FrameDataPlayerState : PlayerState
     public ActionPhase CurrentPhase => currentPhase;
 
     /// <summary>
-    /// Centralized interrupt logic: Defines if the current action phase 
-    /// allows immediate state transitions. Default is only during the Cancel window.
+    /// Subclasses return their interrupt policy. The base class uses this
+    /// for ALL interrupt/cancel checks.
     /// </summary>
-    public virtual bool CanBeInterrupted => currentPhase == ActionPhase.Cancel;
+    protected virtual InterruptPolicy GetInterruptPolicy() => new InterruptPolicy
+    {
+        startup  = ActionCategory.None,
+        active   = ActionCategory.None,
+        recovery = ActionCategory.None,
+        cancel   = ActionCategory.All
+    };
 
     /// <summary>
-    /// Per-input interrupt rules for combat actions. Subclasses can open
-    /// specific phase windows for attack, skill, and ultimate separately.
+    /// Can the given action category interrupt this state right now?
+    /// Single source of truth.
     /// </summary>
-    public virtual bool CanAcceptCombatInput(CombatInputType inputType)
+    public bool CanBeInterruptedBy(ActionCategory incoming)
     {
-        return currentPhase == ActionPhase.Cancel;
+        ActionCategory allowed = GetInterruptPolicy().GetAllowedFor(currentPhase);
+        return (allowed & incoming) != 0;
     }
 
     // =========================================================
@@ -325,45 +332,61 @@ public abstract class FrameDataPlayerState : PlayerState
     }
 
     /// <summary>
+    /// Attempts to consume buffered inputs allowed by the current interrupt policy.
+    /// Checks in priority order: Ultimate > Skill > Dash > Jump > Attack.
+    /// Returns true if an input was consumed and a transition occurred.
+    /// </summary>
+    protected bool TryConsumeAllowedBuffers()
+    {
+        ActionCategory allowed = GetInterruptPolicy().GetAllowedFor(currentPhase);
+        ActionInputBuffer buffer = fsm.InputBuffer;
+        if (buffer == null) return false;
+
+        if ((allowed & ActionCategory.Ultimate) != 0 && buffer.ConsumeUltimate())
+        {
+            fsm.RouteUltimateInput();
+            return fsm.CurrentState != this;
+        }
+        if ((allowed & ActionCategory.Skill) != 0 && buffer.ConsumeSkill())
+        {
+            fsm.RouteSkillInput();
+            return fsm.CurrentState != this;
+        }
+        if ((allowed & ActionCategory.Dash) != 0)
+        {
+            float dashX;
+            if (buffer.ConsumeDash(out dashX))
+            {
+                fsm.RouteDashInput(dashX);
+                return fsm.CurrentState != this;
+            }
+        }
+        if ((allowed & ActionCategory.Jump) != 0 && buffer.ConsumeJump())
+        {
+            fsm.RouteJumpInput();
+            return fsm.CurrentState != this;
+        }
+        if ((allowed & ActionCategory.BasicAttack) != 0 && buffer.ConsumeAttack())
+        {
+            fsm.RouteAttackInput();
+            return fsm.CurrentState != this;
+        }
+        if ((allowed & ActionCategory.Movement) != 0 && Mathf.Abs(buffer.DirectionalInput.x) > 0.01f && !buffer.HasAnyBuffer)
+        {
+            ExitToAppropriateMovementState();
+            return fsm.CurrentState != this;
+        }
+        return false;
+    }
+
+    /// <summary>
     /// Cancel phase: All inputs open. Player can walk, jump, dash, or continue combo.
     /// Rigidbody movement should be unlocked.
     /// Override to define what "all inputs open" means for this state.
     /// </summary>
     protected virtual void HandleInputDuringCancel()
     {
-        ActionInputBuffer buffer = fsm.InputBuffer;
-        if (buffer == null) return;
-
-        if (buffer.ConsumeUltimate())
-        {
-            fsm.RouteUltimateInput();
-            return;
-        }
-
-        if (buffer.ConsumeSkill())
-        {
-            fsm.RouteSkillInput();
-            return;
-        }
-
-        if (buffer.ConsumeAttack())
-        {
-            fsm.RouteAttackInput();
-            return;
-        }
-
-        float dashX;
-        if (buffer.ConsumeDash(out dashX))
-        {
-            fsm.RouteDashInput(dashX);
-            return;
-        }
-
-        if (buffer.ConsumeJump())
-        {
-            fsm.RouteJumpInput();
-            return;
-        }
+        TryConsumeAllowedBuffers();
     }
 
     // =========================================================

@@ -262,6 +262,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5364557721935254789}
   - component: {fileID: 7870558481416961649}
+  - component: {fileID: 4684201945926670777}
   m_Layer: 0
   m_Name: ProjectileManager
   m_TagString: Untagged
@@ -296,7 +297,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2e4c06578c99104481c5eccfe392543, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Combat.ProjectileManager
-  initialPoolSize: 10
+  runtimeManager: {fileID: 4684201945926670777}
+--- !u!114 &4684201945926670777
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7588547787764624034}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bef468b5ee1a45dba5647a1c1ff8cfed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Combat.ProjectileVFXManager
+  projectileLibrary: {fileID: 11400000, guid: 63993c7bc27f5e444b5d2e4308b9fc8e, type: 2}
+  defaultProjectilePrefab: {fileID: -5072513830114651353, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
+  initialPoolSize: 6
+  maxPoolSize: 32
 --- !u!1 &8295746963088055792
 GameObject:
   m_ObjectHideFlags: 0

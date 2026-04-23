@@ -29,6 +29,7 @@ public class VFXEntry
 {
     public string label = "VFX";
     public Project.Combat.VFXType vfxType = Project.Combat.VFXType.None;
+    public AnimationClip vfxClip;
     public GameObject vfxPrefab;
 
     [Tooltip("Absolute frame on the ActionStep timeline where this VFX spawns.")]

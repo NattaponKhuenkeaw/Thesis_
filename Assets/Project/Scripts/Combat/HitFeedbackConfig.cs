@@ -23,7 +23,6 @@ public class HitFeedbackConfig : ScriptableObject
     [Header("Guard / Whiff")]
     public AudioClip[] guardSFX;
     public AudioClip[] whiffSFX;
-    public Project.Combat.VFXType guardVFXType = Project.Combat.VFXType.GuardSpark;
     public GameObject guardVFX;
 
     // Helpers to get random clip

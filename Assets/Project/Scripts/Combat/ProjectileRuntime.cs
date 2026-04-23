@@ -1,132 +1,299 @@
 using UnityEngine;
-using CombatCore;
 using Project.Combat;
 
 public class ProjectileRuntime : MonoBehaviour
 {
-    private enum ProjectileRuntimeState
+    private interface IProjectileRuntimeState
     {
-        Spawning,
-        Traveling,
-        ContactFreeze,
-        BetweenHits,
-        Expired
+        void Enter();
+        void Exit();
+        void Tick(float deltaTime);
+        void HandleTrigger(Collider2D other);
     }
 
-    private ProjectileManager manager;
-    private ProjectileSpawnContext spawnContext;
-    private ProjectileData projectileData;
+    private sealed class SpawningState : IProjectileRuntimeState
+    {
+        private readonly ProjectileRuntime runtime;
+        private bool waitingForAnimation;
+        private float elapsed;
+
+        public SpawningState(ProjectileRuntime runtime)
+        {
+            this.runtime = runtime;
+        }
+
+        public void Enter()
+        {
+            elapsed = 0f;
+            runtime.SetWorldPosition(runtime.ProjectileData.ResolveSpawnPosition(runtime.spawnContext));
+            runtime.ApplyFacingVisual();
+            runtime.ConfigureSpawnHitbox();
+
+            ProjectileFeedbackEvents.Raise(
+                ProjectileFeedbackPhase.Spawn,
+                runtime.ProjectileData.spawnFeedback,
+                runtime.transform.position,
+                runtime.GetFacingSign() < 0f);
+
+            waitingForAnimation = runtime.ProjectileData.playSpawnAnimation && runtime.owner.TryPlaySpawnAnimation();
+        }
+
+        public void Exit()
+        {
+            runtime.DisableHitbox();
+        }
+
+        public void Tick(float deltaTime)
+        {
+            elapsed += deltaTime;
+
+            bool timerComplete = runtime.ProjectileData.spawnDuration <= 0f || elapsed >= runtime.ProjectileData.spawnDuration;
+            bool animationComplete = !waitingForAnimation || runtime.owner.IsSpawnAnimationComplete();
+
+            if (timerComplete && animationComplete)
+            {
+                runtime.EnterState(new UpdatingState(runtime));
+            }
+        }
+
+        public void HandleTrigger(Collider2D other)
+        {
+            runtime.TryProcessTrigger(other);
+        }
+    }
+
+    private sealed class UpdatingState : IProjectileRuntimeState
+    {
+        private readonly ProjectileRuntime runtime;
+
+        public UpdatingState(ProjectileRuntime runtime)
+        {
+            this.runtime = runtime;
+        }
+
+        public void Enter()
+        {
+            runtime.ConfigureRoutineHitbox();
+            runtime.owner.PlayLoopAnimation();
+        }
+
+        public void Exit()
+        {
+        }
+
+        public void Tick(float deltaTime)
+        {
+            runtime.UpdateLifetime(deltaTime);
+            if (runtime.isExpired)
+            {
+                return;
+            }
+
+            runtime.UpdateHitCooldown();
+
+            if (runtime.hitCooldownFramesRemaining > 0 && runtime.ProjectileData.stopOnImpact)
+            {
+                runtime.ApplyFacingVisual();
+                return;
+            }
+
+            runtime.traversalStrategy.Tick(runtime, runtime.ProjectileData, runtime.spawnContext, deltaTime);
+            runtime.ApplyFacingVisual();
+        }
+
+        public void HandleTrigger(Collider2D other)
+        {
+            runtime.TryProcessTrigger(other);
+        }
+    }
+
+    private sealed class ExpiredState : IProjectileRuntimeState
+    {
+        private readonly ProjectileRuntime runtime;
+
+        public ExpiredState(ProjectileRuntime runtime)
+        {
+            this.runtime = runtime;
+        }
+
+        public void Enter()
+        {
+            runtime.DisableHitbox();
+            runtime.isExpired = true;
+
+            ProjectileFeedbackEvents.Raise(
+                ProjectileFeedbackPhase.Expire,
+                runtime.ProjectileData != null ? runtime.ProjectileData.expireFeedback : null,
+                runtime.transform.position,
+                runtime.GetFacingSign() < 0f);
+
+            runtime.releaseQueued = true;
+        }
+
+        public void Exit()
+        {
+        }
+
+        public void Tick(float deltaTime)
+        {
+        }
+
+        public void HandleTrigger(Collider2D other)
+        {
+        }
+    }
+
+    private Project.Combat.GenericProjectilePlayer owner;
+    private ProjectileVFXManager manager;
+    internal ProjectileSpawnContext spawnContext;
+    private ProjectileType projectileType;
     private HitBoxController hitBoxController;
     private HitBoxDamage hitBoxDamage;
     private BoxCollider2D triggerCollider;
     private Rigidbody2D rb;
+    private ProjectileHitboxModule hitboxModule;
+    private IProjectileTraversalStrategy traversalStrategy;
+    private IProjectileRuntimeState currentState;
 
-    private ProjectileRuntimeState runtimeState = ProjectileRuntimeState.Spawning;
     private Vector2 currentDirection = Vector2.right;
     private float lifeTimer;
-    private float logicTimeCounter;
-    private int currentImpactFrame;
-    private int activeHitboxCount;
-    private int betweenHitsFramesRemaining;
-    private EnemyController pendingEnemy;
-    private EnemyController trackedEnemy;
-    private bool destroyQueued;
+    private bool currentHitConsumesMaxHits = true;
+    private bool releaseQueued;
+    private bool isExpired;
+    internal int hitCooldownFramesRemaining;
 
-    public ProjectileData ProjectileData => projectileData;
+    public ProjectileData ProjectileData { get; private set; }
     public Vector2 CurrentDirection => currentDirection.sqrMagnitude > 0.001f ? currentDirection.normalized : Vector2.right;
     public Transform AttackerTransform => spawnContext.casterTransform;
     public Vector2 AttackerPosition => transform.position;
 
-    public void Initialize(ProjectileManager manager, ProjectileSpawnContext context)
+    public void Initialize(
+        Project.Combat.GenericProjectilePlayer owner,
+        ProjectileVFXManager manager,
+        ProjectileType projectileType,
+        ProjectileData projectileData,
+        ProjectileSpawnContext context)
     {
+        this.owner = owner;
         this.manager = manager;
+        this.projectileType = projectileType;
+        ProjectileData = projectileData;
         spawnContext = context;
-        projectileData = context.projectileData;
-        runtimeState = ProjectileRuntimeState.Spawning;
-        destroyQueued = false;
-        trackedEnemy = null;
-        pendingEnemy = null;
-        activeHitboxCount = 0;
-        betweenHitsFramesRemaining = 0;
-        currentImpactFrame = 0;
-        logicTimeCounter = 0f;
-        lifeTimer = projectileData != null ? projectileData.lifetime : 0f;
         currentDirection = context.direction.sqrMagnitude > 0.001f ? context.direction.normalized : Vector2.right;
+        lifeTimer = projectileData != null ? projectileData.lifetime : 0f;
+        hitCooldownFramesRemaining = 0;
+        currentHitConsumesMaxHits = true;
+        releaseQueued = false;
+        isExpired = false;
 
         EnsurePhysicsComponents();
         EnsureCombatComponents();
         EnsureDebugDrawer();
 
-        transform.position = context.origin;
-        ApplyFacingVisual();
-        ConfigureTravelCollider();
-        EnterState(ProjectileRuntimeState.Traveling);
+        rb.linearVelocity = Vector2.zero;
+        traversalStrategy = ProjectileTraversalStrategyFactory.Create(projectileData != null
+            ? projectileData.ResolveTraversalMode()
+            : ProjectileTraversalMode.Linear);
+
+        if (projectileData != null && projectileData.HasSpawningState())
+        {
+            EnterState(new SpawningState(this));
+        }
+        else
+        {
+            SetWorldPosition(projectileData != null ? projectileData.ResolveSpawnPosition(context) : context.origin);
+            EnterState(new UpdatingState(this));
+        }
     }
 
-    void Update()
+    public void ResetRuntime()
     {
-        if (destroyQueued)
+        currentState?.Exit();
+        currentState = null;
+        isExpired = false;
+        releaseQueued = false;
+        hitCooldownFramesRemaining = 0;
+        currentHitConsumesMaxHits = true;
+        ProjectileData = null;
+
+        if (rb != null)
         {
-            Destroy(gameObject);
+            rb.linearVelocity = Vector2.zero;
+        }
+
+        DisableHitbox();
+    }
+
+    private void Update()
+    {
+        if (releaseQueued)
+        {
+            releaseQueued = false;
+            owner.ReleaseToPool();
             return;
         }
 
-        if (runtimeState == ProjectileRuntimeState.Expired)
-        {
-            return;
-        }
-
-        UpdateLifetime();
-
-        if (ShouldTravel())
-        {
-            UpdateTravel();
-        }
+        currentState?.Tick(Time.deltaTime);
     }
 
-    void FixedUpdate()
+    private void OnTriggerEnter2D(Collider2D other)
     {
-        if (runtimeState == ProjectileRuntimeState.Expired)
-        {
-            return;
-        }
-
-        switch (runtimeState)
-        {
-            case ProjectileRuntimeState.ContactFreeze:
-                ProcessImpactFrames();
-                break;
-
-            case ProjectileRuntimeState.BetweenHits:
-                ProcessBetweenHits();
-                break;
-        }
+        currentState?.HandleTrigger(other);
     }
 
-    void OnTriggerEnter2D(Collider2D other)
+    private void OnTriggerStay2D(Collider2D other)
     {
-        TryStartContact(other);
-    }
-
-    void OnTriggerStay2D(Collider2D other)
-    {
-        TryStartContact(other);
-    }
-
-    void OnDestroy()
-    {
-        manager?.UnregisterProjectile(this);
+        currentState?.HandleTrigger(other);
     }
 
     public void RegisterSuccessfulHit(EnemyController enemy)
     {
-        if (spawnContext.remainingHits <= 0)
+        if (ProjectileData == null)
         {
             return;
         }
 
-        trackedEnemy = enemy != null ? enemy : trackedEnemy;
-        spawnContext.remainingHits--;
+        hitCooldownFramesRemaining = Mathf.Max(hitCooldownFramesRemaining, Mathf.Max(0, ProjectileData.hitIntervalFrames));
+
+        if (currentHitConsumesMaxHits)
+        {
+            spawnContext.remainingHits = Mathf.Max(0, spawnContext.remainingHits - 1);
+        }
+
+        if (spawnContext.remainingHits <= 0 && ProjectileData.destroyWhenHitsExhausted)
+        {
+            Expire();
+        }
+    }
+
+    public void Translate(Vector2 delta)
+    {
+        transform.position += (Vector3)delta;
+    }
+
+    public void SetWorldPosition(Vector2 worldPosition)
+    {
+        transform.position = worldPosition;
+    }
+
+    public void SetCurrentDirection(Vector2 direction)
+    {
+        if (direction.sqrMagnitude <= 0.001f)
+        {
+            return;
+        }
+
+        currentDirection = direction.normalized;
+    }
+
+    public float GetFacingSign()
+    {
+        return CurrentDirection.x < 0f ? -1f : 1f;
+    }
+
+    public void SetCurrentHitConsumesMaxHits(bool value)
+    {
+        currentHitConsumesMaxHits = value;
     }
 
     private void EnsurePhysicsComponents()
@@ -139,7 +306,6 @@ public class ProjectileRuntime : MonoBehaviour
 
         rb.bodyType = RigidbodyType2D.Kinematic;
         rb.gravityScale = 0f;
-        rb.linearVelocity = Vector2.zero;
 
         triggerCollider = GetComponent<BoxCollider2D>();
         if (triggerCollider == null)
@@ -168,8 +334,8 @@ public class ProjectileRuntime : MonoBehaviour
             hitBoxDamage = gameObject.AddComponent<HitBoxDamage>();
         }
 
-        hitBoxDamage.enabled = false;
         hitBoxDamage.SetProjectileOwner(this);
+        hitboxModule = new ProjectileHitboxModule(this, hitBoxController, hitBoxDamage, triggerCollider);
     }
 
     private void EnsureDebugDrawer()
@@ -181,379 +347,129 @@ public class ProjectileRuntime : MonoBehaviour
         }
     }
 
-    private void UpdateLifetime()
+    private void EnterState(IProjectileRuntimeState newState)
     {
-        if (projectileData == null || projectileData.lifetime <= 0f)
+        currentState?.Exit();
+        currentState = newState;
+        currentState?.Enter();
+    }
+
+    private void UpdateLifetime(float deltaTime)
+    {
+        if (ProjectileData == null || ProjectileData.lifetime <= 0f)
         {
             return;
         }
 
-        lifeTimer -= Time.deltaTime;
-        if (lifeTimer <= 0f && projectileData.destroyOnLifetimeExpire)
+        lifeTimer -= deltaTime;
+        if (lifeTimer <= 0f && ProjectileData.destroyOnLifetimeExpire)
         {
-            EnterState(ProjectileRuntimeState.Expired);
+            Expire();
         }
     }
 
-    private bool ShouldTravel()
+    private void UpdateHitCooldown()
     {
-        if (runtimeState == ProjectileRuntimeState.Traveling)
+        if (hitCooldownFramesRemaining > 0)
         {
-            return true;
+            hitCooldownFramesRemaining--;
         }
-
-        return runtimeState == ProjectileRuntimeState.BetweenHits
-            && projectileData != null
-            && !projectileData.stopOnImpact;
     }
 
-    private void UpdateTravel()
+    private void ConfigureSpawnHitbox()
     {
-        if (projectileData == null)
+        if (ProjectileData == null)
+        {
+            DisableHitbox();
+            return;
+        }
+
+        HitboxBase spawnHitbox = ProjectileData.ResolveSpawningHitbox();
+        if (spawnHitbox == null)
+        {
+            hitboxModule.Disable();
+            return;
+        }
+
+        hitboxModule.Reset();
+        hitboxModule.Activate(
+            spawnHitbox,
+            spawnContext,
+            GetFacingSign(),
+            ProjectileData.SpawningHitboxConsumesMaxHits());
+    }
+
+    private void ConfigureRoutineHitbox()
+    {
+        if (ProjectileData == null)
+        {
+            DisableHitbox();
+            return;
+        }
+
+        HitboxBase routineHitbox = ProjectileData.ResolveRoutineHitbox();
+        hitboxModule.Reset();
+
+        if (routineHitbox == null)
+        {
+            hitboxModule.Disable();
+            return;
+        }
+
+        hitboxModule.Activate(
+            routineHitbox,
+            spawnContext,
+            GetFacingSign(),
+            ProjectileData.RoutineHitboxConsumesMaxHits());
+    }
+
+    private void DisableHitbox()
+    {
+        hitboxModule?.Disable();
+    }
+
+    private void TryProcessTrigger(Collider2D other)
+    {
+        if (ProjectileData == null || isExpired)
         {
             return;
         }
 
-        if (projectileData.anchorToCaster && spawnContext.casterTransform != null)
-        {
-            Vector2 resolvedOffset = spawnContext.resolvedSpawnOffset;
-            resolvedOffset.x *= GetFacingSign();
-            transform.position = (Vector2)spawnContext.casterTransform.position + resolvedOffset;
-            ApplyFacingVisual();
-            return;
-        }
-
-        if (projectileData.homeToTarget && spawnContext.targetTransform != null)
-        {
-            Vector2 toTarget = (Vector2)(spawnContext.targetTransform.position - transform.position);
-            if (toTarget.sqrMagnitude > 0.001f)
-            {
-                Vector2 desiredDirection = toTarget.normalized;
-                currentDirection = Vector2.Lerp(
-                    currentDirection,
-                    desiredDirection,
-                    projectileData.homingTurnRate * Time.deltaTime).normalized;
-            }
-        }
-
-        transform.position += (Vector3)(CurrentDirection * projectileData.speed * Time.deltaTime);
-        ApplyFacingVisual();
-    }
-
-    private void TryStartContact(Collider2D other)
-    {
-        if (runtimeState != ProjectileRuntimeState.Traveling || spawnContext.remainingHits <= 0)
+        if (hitCooldownFramesRemaining > 0)
         {
             return;
         }
 
-        EnemyController enemy = other.GetComponentInParent<EnemyController>();
-        if (enemy == null || !enemy.IsAlive)
+        if (currentHitConsumesMaxHits && spawnContext.remainingHits <= 0)
         {
             return;
         }
 
-        BeginContact(enemy);
-    }
-
-    private void BeginContact(EnemyController enemy)
-    {
-        if (projectileData == null
-            || projectileData.impactHitData == null
-            || projectileData.impactHitData.hitboxes == null
-            || projectileData.impactHitData.hitboxes.Count == 0)
-        {
-            EnterState(ProjectileRuntimeState.Expired);
-            return;
-        }
-
-        trackedEnemy = enemy;
-        pendingEnemy = enemy;
-        logicTimeCounter = 0f;
-        currentImpactFrame = 0;
-        activeHitboxCount = 0;
-        hitBoxDamage.ResetActivationState();
-        EnterState(ProjectileRuntimeState.ContactFreeze);
-    }
-
-    private void ProcessImpactFrames()
-    {
-        if (projectileData == null || projectileData.impactHitData == null)
-        {
-            FinalizeContactFreeze();
-            return;
-        }
-
-        logicTimeCounter += Time.fixedDeltaTime;
-        int targetFrame = Mathf.FloorToInt(logicTimeCounter * FrameDataConstants.LOGIC_FPS + 0.999f);
-        while (currentImpactFrame < targetFrame)
-        {
-            currentImpactFrame++;
-
-            for (int i = 0; i < projectileData.impactHitData.hitboxes.Count; i++)
-            {
-                HitboxBase hitbox = projectileData.impactHitData.hitboxes[i];
-                if (hitbox == null)
-                {
-                    continue;
-                }
-
-                if (currentImpactFrame - 1 == hitbox.startFrameOffset)
-                {
-                    ActivateImpactHitbox(hitbox);
-                }
-
-                if (hitbox is NormalHitbox or GrabHitbox)
-                {
-                    if (currentImpactFrame - 1 == hitbox.startFrameOffset + hitbox.activeFrames)
-                    {
-                        DisableImpactHitbox();
-                    }
-                }
-            }
-        }
-
-        if (activeHitboxCount > 0)
-        {
-            PerformImpactOverlapCheck();
-        }
-
-        if (currentImpactFrame > GetImpactMaxFrame() && activeHitboxCount <= 0)
-        {
-            FinalizeContactFreeze();
-        }
-    }
-
-    private void ProcessBetweenHits()
-    {
-        if (betweenHitsFramesRemaining > 0)
-        {
-            betweenHitsFramesRemaining--;
-            return;
-        }
-
-        if (spawnContext.remainingHits <= 0)
-        {
-            EnterState(projectileData != null && projectileData.destroyWhenHitsExhausted
-                ? ProjectileRuntimeState.Expired
-                : ProjectileRuntimeState.Traveling);
-            return;
-        }
-
-        EnemyController nextEnemy = TryFindEnemyInTravelCollider(trackedEnemy);
-        if (nextEnemy != null)
-        {
-            BeginContact(nextEnemy);
-            return;
-        }
-
-        EnterState(ProjectileRuntimeState.Traveling);
-    }
-
-    private void ActivateImpactHitbox(HitboxBase hitbox)
-    {
-        float facing = GetFacingSign();
-
-        switch (hitbox)
-        {
-            case NormalHitbox normalHitbox:
-                hitBoxController.ApplyHitbox(normalHitbox, facing);
-                hitBoxDamage.SetHitData(
-                    spawnContext.damage * normalHitbox.damageMultiplier,
-                    false,
-                    0f,
-                    0f,
-                    normalHitbox,
-                    spawnContext.category,
-                    spawnContext.sourceActionName,
-                    spawnContext.sourceStep,
-                    spawnContext.passiveController);
-                hitBoxDamage.ResetActivationState();
-                EnableImpactHitbox();
-                break;
-
-            case GrabHitbox grabHitbox:
-                hitBoxController.ApplyHitbox(grabHitbox, facing);
-                hitBoxDamage.SetGrabData(
-                    spawnContext.damage,
-                    grabHitbox,
-                    false,
-                    spawnContext.category,
-                    spawnContext.sourceActionName,
-                    spawnContext.sourceStep,
-                    spawnContext.passiveController);
-                hitBoxDamage.ResetActivationState();
-                EnableImpactHitbox();
-                break;
-        }
-
-        if (pendingEnemy != null)
-        {
-            hitBoxDamage.ProcessHit(pendingEnemy);
-            pendingEnemy = null;
-        }
-    }
-
-    private void EnableImpactHitbox()
-    {
-        activeHitboxCount++;
-        hitBoxDamage.enabled = true;
-        triggerCollider.enabled = true;
-    }
-
-    private void DisableImpactHitbox()
-    {
-        activeHitboxCount = Mathf.Max(0, activeHitboxCount - 1);
-        if (activeHitboxCount == 0)
-        {
-            hitBoxDamage.enabled = false;
-        }
-    }
-
-    private void FinalizeContactFreeze()
-    {
-        activeHitboxCount = 0;
-        pendingEnemy = null;
-        hitBoxDamage.enabled = false;
-
-        if (spawnContext.remainingHits <= 0 && projectileData != null && projectileData.destroyWhenHitsExhausted)
-        {
-            EnterState(ProjectileRuntimeState.Expired);
-            return;
-        }
-
-        EnterState(ProjectileRuntimeState.BetweenHits);
-    }
-
-    private void PerformImpactOverlapCheck()
-    {
-        Collider2D[] results = GetOverlapResults();
-        for (int i = 0; i < results.Length; i++)
-        {
-            EnemyController enemy = results[i].GetComponentInParent<EnemyController>();
-            if (enemy != null && enemy.IsAlive)
-            {
-                trackedEnemy = enemy;
-                hitBoxDamage.ProcessHit(enemy);
-            }
-        }
-    }
-
-    private Collider2D[] GetOverlapResults()
-    {
-        Vector2 worldPos = triggerCollider.transform.TransformPoint(triggerCollider.offset);
-        float angle = triggerCollider.transform.eulerAngles.z;
-        LayerMask enemyLayers = projectileData != null ? projectileData.enemyLayerMask : Physics2D.DefaultRaycastLayers;
-        return Physics2D.OverlapBoxAll(worldPos, triggerCollider.size, angle, enemyLayers);
-    }
-
-    private EnemyController TryFindEnemyInTravelCollider(EnemyController preferredEnemy = null)
-    {
-        Collider2D[] results = GetOverlapResults();
-
-        if (preferredEnemy != null)
-        {
-            for (int i = 0; i < results.Length; i++)
-            {
-                EnemyController enemy = results[i].GetComponentInParent<EnemyController>();
-                if (enemy == preferredEnemy && enemy.IsAlive)
-                {
-                    return enemy;
-                }
-            }
-        }
-
-        for (int i = 0; i < results.Length; i++)
-        {
-            EnemyController enemy = results[i].GetComponentInParent<EnemyController>();
-            if (enemy != null && enemy.IsAlive)
-            {
-                return enemy;
-            }
-        }
-
-        return null;
-    }
-
-    private void ConfigureTravelCollider()
-    {
-        if (triggerCollider == null)
+        int layerMask = ProjectileData.enemyLayerMask.value;
+        if ((layerMask & (1 << other.gameObject.layer)) == 0)
         {
             return;
         }
 
-        Vector2 travelSize = projectileData != null ? projectileData.travelColliderSize : Vector2.one * 0.5f;
-        triggerCollider.size = travelSize;
-        triggerCollider.offset = Vector2.zero;
-        triggerCollider.enabled = true;
+        hitboxModule.TryProcessHit(other);
     }
 
-    private int GetImpactMaxFrame()
+    private void Expire()
     {
-        if (projectileData == null || projectileData.impactHitData == null || projectileData.impactHitData.hitboxes == null)
+        if (isExpired)
         {
-            return 0;
+            return;
         }
 
-        int maxFrame = 0;
-        for (int i = 0; i < projectileData.impactHitData.hitboxes.Count; i++)
-        {
-            HitboxBase hitbox = projectileData.impactHitData.hitboxes[i];
-            if (hitbox != null)
-            {
-                maxFrame = Mathf.Max(maxFrame, hitbox.startFrameOffset + hitbox.activeFrames + 1);
-            }
-        }
-
-        return maxFrame;
-    }
-
-    private void EnterState(ProjectileRuntimeState newState)
-    {
-        runtimeState = newState;
-
-        switch (runtimeState)
-        {
-            case ProjectileRuntimeState.Traveling:
-                trackedEnemy = null;
-                pendingEnemy = null;
-                betweenHitsFramesRemaining = 0;
-                hitBoxDamage.enabled = false;
-                ConfigureTravelCollider();
-                break;
-
-            case ProjectileRuntimeState.ContactFreeze:
-                hitBoxDamage.enabled = true;
-                break;
-
-            case ProjectileRuntimeState.BetweenHits:
-                betweenHitsFramesRemaining = projectileData != null ? Mathf.Max(0, projectileData.hitIntervalFrames) : 0;
-                hitBoxDamage.enabled = false;
-                ConfigureTravelCollider();
-                break;
-
-            case ProjectileRuntimeState.Expired:
-                hitBoxDamage.enabled = false;
-                if (triggerCollider != null)
-                {
-                    triggerCollider.enabled = false;
-                }
-                destroyQueued = true;
-                break;
-        }
+        EnterState(new ExpiredState(this));
     }
 
     private void ApplyFacingVisual()
     {
-        if (projectileData != null && projectileData.inheritFacingDirection)
+        if (ProjectileData != null && ProjectileData.inheritFacingDirection)
         {
             float angle = GetFacingSign() < 0f ? 180f : 0f;
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
         }
-    }
-
-    private float GetFacingSign()
-    {
-        return currentDirection.x < 0f ? -1f : 1f;
     }
 }

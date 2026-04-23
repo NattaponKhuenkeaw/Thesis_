@@ -47,7 +47,13 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
         if (player.Combat != null && player.Combat.IsAttacking())
         {
-            player.Combat.ResetCombo();
+            // If we exit while still attacking, it means we were interrupted.
+            // Keep combo progress unless we were on the last step.
+            if (resolver.IsActive && !resolver.IsLastStep())
+                player.Combat.CancelCurrentAttackButKeepComboProgress();
+            else
+                player.Combat.ResetCombo();
+
             player.Combat.SetPlungeFalling(false);
         }
 
@@ -88,52 +94,11 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     // Interrupt Rules (User Systemic Logic)
     // =========================================================
 
-    /// <summary>
-    /// User Rule: Dash/Jump can interrupt everything EXCEPT Ultimate/Skill during Startup/Active.
-    /// Priority 3 (Ability) calls this.
-    /// </summary>
-    public override bool CanBeInterrupted
+    // Grab safety: if we've grabbed an enemy, block all interrupts
+    public new bool CanBeInterruptedBy(ActionCategory incoming)
     {
-        get
-        {
-            // If we are Skill or Ultimate, block interrupts during Startup and Active
-            if (StateId == PlayerStateId.Skill || StateId == PlayerStateId.Ultimate)
-            {
-                if (currentPhase == ActionPhase.Startup || currentPhase == ActionPhase.Active)
-                    return false;
-            }
-
-            // Normal attacks block interrupts during Startup
-            if (StateId == PlayerStateId.Attacking && currentPhase == ActionPhase.Startup)
-                return false;
-
-            // Safety guards
-            if (player.Combat != null && player.Combat.HasGrabbedEnemy()) return false;
-
-            return currentPhase != ActionPhase.None;
-        }
-    }
-
-    /// <summary>
-    /// User Rule: Ultimate/Skill can interrupt everything except their own Starting Frame.
-    /// Basic attacks only buffer in Recovery/Cancel.
-    /// </summary>
-    public override bool CanAcceptCombatInput(CombatInputType inputType)
-    {
-        // Safety guards
         if (player.Combat != null && player.Combat.HasGrabbedEnemy()) return false;
-
-        return inputType switch
-        {
-            // Basic attacks: Recovery or Cancel only
-            CombatInputType.Attack => currentPhase == ActionPhase.Recovery || currentPhase == ActionPhase.Cancel,
-
-            // Skills & Ultimates: Can interrupt as long as we aren't in our own Startup (if same state)
-            // or if we are in a combat phase.
-            CombatInputType.Skill => currentPhase != ActionPhase.Startup && currentPhase != ActionPhase.None,
-            CombatInputType.Ultimate => currentPhase != ActionPhase.Startup && currentPhase != ActionPhase.None,
-            _ => false
-        };
+        return base.CanBeInterruptedBy(incoming);
     }
 
     // =========================================================

@@ -38,7 +38,10 @@ public class PlayerJumpState : PlayerState
             return;
 
         // Landed: go to Idle or Move
-        if (player.Movement.IsGrounded() && !player.Movement.IsJumping)
+        // We only land if we are grounded, not in jump startup, and NOT moving upwards significantly.
+        // This prevents the "grounded" overlap from snapping us back to Idle in the first frame of a jump.
+        bool isMovingUp = player.Movement.VerticalVelocity > 0.1f;
+        if (player.Movement.IsGrounded() && !player.Movement.IsJumping && !isMovingUp)
         {
             if (Mathf.Abs(player.Movement.HorizontalInput) > 0.01f)
                 fsm.ChangeState(fsm.MoveState);

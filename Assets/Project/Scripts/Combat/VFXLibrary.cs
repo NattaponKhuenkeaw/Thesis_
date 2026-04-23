@@ -18,22 +18,43 @@ namespace Project.Combat
         public bool obeyHitstop = true;
     }
 
-    [CreateAssetMenu(fileName = "VFXLibrary", menuName = "Combat/VFX/VFX Library")]
-    public class VFXLibrary : ScriptableObject
+    [Serializable]
+    public class VFXCategory : CategorizedLibrarySection<VFXDefinition>
     {
-        public VFXDefinition[] entries;
+    }
 
-        public VFXDefinition GetDefinition(VFXType type)
+    [CreateAssetMenu(fileName = "VFXLibrary", menuName = "Combat/VFX/VFX Library")]
+    public class VFXLibrary : CategorizedLibraryAsset<VFXType, VFXCategory, VFXDefinition, VFXDefinition>, IVFXLibrary
+    {
+        protected override bool IsValidKey(VFXType key)
         {
-            if (type == VFXType.None) return null;
-            
-            for (int i = 0; i < entries.Length; i++)
+            return key != VFXType.None;
+        }
+
+        protected override VFXType GetEntryKey(VFXDefinition entry)
+        {
+            return entry != null ? entry.type : VFXType.None;
+        }
+
+        protected override VFXDefinition GetEntryValue(VFXDefinition entry)
+        {
+            return entry;
+        }
+
+        protected override bool EntryMatchesSearch(VFXDefinition entry, string normalizedSearch)
+        {
+            if (entry == null)
             {
-                if (entries[i].type == type)
-                    return entries[i];
+                return false;
             }
-            
-            return null;
+
+            if (entry.type.ToString().ToLowerInvariant().Contains(normalizedSearch))
+            {
+                return true;
+            }
+
+            return entry.clip != null
+                && entry.clip.name.ToLowerInvariant().Contains(normalizedSearch);
         }
     }
 }

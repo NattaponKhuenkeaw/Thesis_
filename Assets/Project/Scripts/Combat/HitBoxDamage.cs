@@ -128,19 +128,14 @@ public class HitBoxDamage : MonoBehaviour
 
         enemy.TakeHit(reactionData, attackerPosition);
 
-        // Hit Feedback (SFX + VFX)
-        HitFeedbackResolver resolver = (playerCombat != null ? playerCombat.hitFeedbackResolver : null) ?? HitFeedbackResolver.Instance;
-        if (resolver != null)
-        {
-            HitboxBase activeHitbox = (HitboxBase)currentGrabHitbox ?? currentNormalHitbox;
-            DamageImpactTier tier = currentGrabHitbox != null
-                ? currentGrabHitbox.impactTier
-                : (currentNormalHitbox != null ? currentNormalHitbox.impactTier : DamageImpactTier.Low);
-            Vector2 hitPoint = CalculateHitPoint(enemy);
+        HitboxBase activeHitbox = (HitboxBase)currentGrabHitbox ?? currentNormalHitbox;
+        DamageImpactTier resolvedTier = currentGrabHitbox != null
+            ? currentGrabHitbox.impactTier
+            : (currentNormalHitbox != null ? currentNormalHitbox.impactTier : DamageImpactTier.Low);
+        Vector2 hitPoint = CalculateHitPoint(enemy);
+        ProjectileData projectileData = projectileOwner != null ? projectileOwner.ProjectileData : null;
 
-            ProjectileData projData = projectileOwner != null ? projectileOwner.ProjectileData : null;
-            resolver.PlayHitFeedback(activeHitbox, tier, hitPoint, direction, projData);
-        }
+        HitFeedbackEvents.Raise(activeHitbox, resolvedTier, hitPoint, direction, projectileData);
 
         if (CameraManager.instance != null)
         {

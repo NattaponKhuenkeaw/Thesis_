@@ -254,7 +254,16 @@ public class PlayerAnimator : MonoBehaviour
             return;
         }
 
-        anim.Play(fallHash, 0, 0f);
+        // Only play Fall if we are actually moving downwards.
+        // If we have positive velocity (e.g. state was entered while rising), play Jump or stay as-is.
+        if (rb.linearVelocity.y < -0.1f)
+        {
+            anim.Play(fallHash, 0, 0f);
+        }
+        else
+        {
+            anim.Play(jumpHash, 0, 0f);
+        }
     }
 
     public void ResetCombo()

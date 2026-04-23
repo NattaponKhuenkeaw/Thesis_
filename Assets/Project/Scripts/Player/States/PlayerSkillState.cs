@@ -14,6 +14,8 @@ public class PlayerSkillState : CombatPlayerState
     public override PlayerStatePriority Priority => PlayerStatePriority.SkillUltimate;
 
     public override bool AcceptsMoveInput => true;
+    public override bool AcceptsDashInput => true;
+    public override bool AcceptsJumpInput => true;
     public override bool AcceptsAttackInput => true;
     public override bool AcceptsSkillInput => true;
     public override bool AcceptsUltimateInput => true;
@@ -21,6 +23,8 @@ public class PlayerSkillState : CombatPlayerState
     public override bool LocksFacing => true;
 
     protected override AttackCategory GetAttackCategory() => AttackCategory.Skill;
+
+    protected override InterruptPolicy GetInterruptPolicy() => InterruptPolicy.Skill;
 
     public override void Enter(TransitionContext context)
     {
@@ -36,69 +40,14 @@ public class PlayerSkillState : CombatPlayerState
 
     protected override void HandleInputDuringRecovery()
     {
-        if (Buffer == null) return;
-
-        if (Buffer.ConsumeUltimate())
-        {
-            fsm.ChangeState(fsm.UltimateState);
-            fsm.CurrentState.OnUltimateInput();
-            return;
-        }
-
-        if (Buffer.ConsumeSkill() && TryResolveNextSkillStep())
-            return;
-
+        if (TryConsumeAllowedBuffers()) return;
         if (TryAutoChain()) return;
-
-        if (Buffer.ConsumeAttack())
-        {
-            fsm.ChangeState(fsm.AttackState);
-            fsm.CurrentState.OnAttackInput();
-            return;
-        }
     }
 
     protected override void HandleInputDuringCancel()
     {
-        if (Buffer == null) return;
-
-        if (Buffer.ConsumeUltimate())
-        {
-            fsm.ChangeState(fsm.UltimateState);
-            fsm.CurrentState.OnUltimateInput();
-            return;
-        }
-
-        if (Buffer.ConsumeSkill() && TryResolveNextSkillStep())
-            return;
-
+        if (TryConsumeAllowedBuffers()) return;
         if (TryAutoChain()) return;
-
-        if (Buffer.ConsumeAttack())
-        {
-            resolver.Reset();
-            fsm.ChangeState(fsm.AttackState);
-            fsm.CurrentState.OnAttackInput();
-            return;
-        }
-
-        float dashX;
-        if (Buffer.ConsumeDash(out dashX))
-        {
-            if (player.Movement != null && player.Movement.CanDash())
-            {
-                resolver.Reset();
-                fsm.ChangeState(fsm.DashState);
-                fsm.CurrentState.OnDashInput(dashX);
-                return;
-            }
-        }
-
-        if (Buffer.ConsumeJump())
-        {
-            resolver.Reset();
-            fsm.RouteJumpInput();
-        }
     }
 
     public override bool HandleSkillInput()

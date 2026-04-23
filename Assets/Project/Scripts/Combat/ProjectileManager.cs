@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using UnityEngine;
-using CombatCore;
 
 namespace Project.Combat
 {
@@ -8,11 +6,7 @@ namespace Project.Combat
     {
         public static ProjectileManager Instance { get; private set; }
 
-        [Header("Settings")]
-        [SerializeField] private int initialPoolSize = 10;
-        
-        private List<ProjectileRuntime> activeProjectiles = new List<ProjectileRuntime>();
-        // Future: Add pooling if needed, for now focus on centralization.
+        [SerializeField] private ProjectileVFXManager runtimeManager;
 
         private void Awake()
         {
@@ -21,51 +15,37 @@ namespace Project.Combat
                 Destroy(gameObject);
                 return;
             }
+
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+
+            if (runtimeManager == null)
+            {
+                runtimeManager = GetComponent<ProjectileVFXManager>();
+            }
+
+            if (runtimeManager == null)
+            {
+                runtimeManager = ProjectileVFXManager.Instance;
+            }
         }
 
         public ProjectileRuntime SpawnProjectile(ProjectileSpawnContext context)
         {
-            GameObject projectileObject;
-            ProjectileData data = context.projectileData;
-
-            if (data != null && data.projectilePrefab != null)
+            if (runtimeManager == null)
             {
-                projectileObject = Instantiate(
-                    data.projectilePrefab,
-                    context.origin,
-                    Quaternion.identity,
-                    context.projectileParent);
-            }
-            else
-            {
-                projectileObject = new GameObject(data != null ? data.name : "Projectile");
-                projectileObject.transform.position = context.origin;
-                if (context.projectileParent != null)
-                {
-                    projectileObject.transform.SetParent(context.projectileParent);
-                }
+                Debug.LogError("ProjectileManager: ProjectileVFXManager is not assigned or present in the scene.");
+                return null;
             }
 
-            ProjectileRuntime runtime = projectileObject.GetComponent<ProjectileRuntime>();
-            if (runtime == null)
-            {
-                runtime = projectileObject.AddComponent<ProjectileRuntime>();
-            }
+            ProjectileType resolvedType = context.projectileType != ProjectileType.None
+                ? context.projectileType
+                : context.projectileData != null ? context.projectileData.projectileType : ProjectileType.None;
 
-            runtime.Initialize(this, context);
-            activeProjectiles.Add(runtime);
-            
-            return runtime;
+            return runtimeManager.SpawnProjectile(resolvedType, context);
         }
 
         public void UnregisterProjectile(ProjectileRuntime projectile)
         {
-            if (activeProjectiles.Contains(projectile))
-            {
-                activeProjectiles.Remove(projectile);
-            }
         }
     }
 }
