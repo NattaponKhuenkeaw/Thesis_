@@ -1,5 +1,5 @@
 {
-	"version": "26.2.9000",
+	"version": "26.2.9008",
 	"workloads": {
 		"macos": {
 			"description": ".NET SDK Workload for building macOS applications.",
@@ -22,7 +22,7 @@
 	"packs": {
 		"Microsoft.macOS.Sdk.net9.0_26.2": {
 			"kind": "sdk",
-			"version": "26.2.9000",
+			"version": "26.2.9008",
 		},
 		"Microsoft.macOS.Sdk.net8.0_14.0": {
 			"kind": "sdk",
@@ -38,19 +38,19 @@
 		},
 		"Microsoft.macOS.Ref.net9.0_26.2": {
 			"kind": "framework",
-			"version": "26.2.9000"
+			"version": "26.2.9008"
 		},
 		"Microsoft.macOS.Runtime.osx-x64.net9.0_26.2": {
 			"kind": "framework",
-			"version": "26.2.9000"
+			"version": "26.2.9008"
 		},
 		"Microsoft.macOS.Runtime.osx-arm64.net9.0_26.2": {
 			"kind": "framework",
-			"version": "26.2.9000"
+			"version": "26.2.9008"
 		},
 		"Microsoft.macOS.Templates.net9": {
 			"kind": "template",
-			"version": "26.2.9000",
+			"version": "26.2.9008",
 			"alias-to": {
 				"any": "Microsoft.macOS.Templates",
 			}

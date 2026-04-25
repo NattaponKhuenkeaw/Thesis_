@@ -32,7 +32,7 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588255929706479995
-    cooldown: 0
+    cooldown: 5
     energyCost: 0
   ultimateActions:
   - actionName: Gigantic Pressure
@@ -44,7 +44,7 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588255929706480004
-    cooldown: 0
+    cooldown: 5
     energyCost: 0
     activationVFXType: 40
     activationVFXPrefab: {fileID: 0}
@@ -922,6 +922,7 @@ MonoBehaviour:
         entries:
         - label: VFX
           vfxType: 101
+          vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 13
           duration: 42
@@ -1222,6 +1223,7 @@ MonoBehaviour:
         entries:
         - label: VFX
           vfxType: 105
+          vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 1
           duration: 51
@@ -1234,6 +1236,7 @@ MonoBehaviour:
           loopDuringActive: 0
         - label: Dust
           vfxType: 30
+          vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 4
           duration: 17
@@ -1250,6 +1253,7 @@ MonoBehaviour:
         entries:
         - label: VFX
           vfxType: 105
+          vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 0
           duration: 5000

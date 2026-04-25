@@ -52,7 +52,7 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588255892939997283
-    cooldown: 0
+    cooldown: 2
     energyCost: 0
   ultimateActions:
   - actionName: 
@@ -64,7 +64,7 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588255892939997284
-    cooldown: 0
+    cooldown: 5
     energyCost: 0
     activationVFXType: 40
     activationVFXPrefab: {fileID: 784361931337648594, guid: 4c0e5d975c6ec9341ac97977330a4775, type: 3}

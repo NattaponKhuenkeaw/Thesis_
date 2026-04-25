@@ -169,8 +169,16 @@ public class PlayerUltimateState : CombatPlayerState
             
             ExecuteCombatStep(step, ctx, false);
 
-            // Burst Visuals
+            if (AbilityUIManager.Instance != null && activeUltimateAction != null)
+            {
+                AbilityUIManager.Instance.TriggerCooldown(AbilityUIManager.AbilityType.Ultimate, activeUltimateAction.cooldown);
+            }
+            // --------------------------
+
             if (activeUltimateAction != null && activeUltimateAction.useDashAfterImage && player.Movement != null)
+
+                // Burst Visuals
+                if (activeUltimateAction != null && activeUltimateAction.useDashAfterImage && player.Movement != null)
             {
                 player.Movement.SpawnUltimateBurst(3, 0.08f);
             }

@@ -86,6 +86,12 @@ public class PlayerMovement : MonoBehaviour
     public Transform groundCheck;
     public LayerMask groundLayer;
 
+    [Header("Action Context")]
+    [Tooltip("Descending within this distance from the ground counts as grounded for action selection.")]
+    [SerializeField] private float groundedActionProbeDistance = 0.35f;
+    [Tooltip("Upward movement above this value always counts as airborne for action selection.")]
+    [SerializeField] private float airborneActionVelocityThreshold = 0.05f;
+
     [Header("Attack Lock-On")]
     public bool enableAttackFacingLockOn = true;
     public float attackFacingCancelInputThreshold = 0.2f;
@@ -140,6 +146,8 @@ public class PlayerMovement : MonoBehaviour
     // Post-attack gravity
     private float postAttackGraceTimer;
     private bool wasLockingAirCombo;
+    private bool pendingGroundJumpTakeoff;
+    private float pendingGroundJumpRefundAt;
 
     // Layer caches
     private int playerLayer;
@@ -210,6 +218,7 @@ public class PlayerMovement : MonoBehaviour
     {
         UpdateFacing();
         CheckGround();
+        ResolvePendingGroundJumpTakeoff();
         TryConsumeBufferedJump();
 
         if (dashCooldownFramesRemaining > 0)
@@ -237,8 +246,12 @@ public class PlayerMovement : MonoBehaviour
     {
         if (IsDashing && !IsInDashRecovery())
             return;
-        if (IsLanding)
-            return;
+
+        // Explicit jump input should cancel landing lock immediately.
+        // This prevents "ground attack wins over jump" when jump+attack happen
+        // right after touching the ground.
+        if (isGrounded || Time.time <= coyoteUntil)
+            landingEndTime = -999f;
 
         jumpBufferedUntil = Time.time + jumpBufferTime;
         TryConsumeBufferedJump();
@@ -289,6 +302,20 @@ public class PlayerMovement : MonoBehaviour
     public bool IsGrounded()
     {
         return isGrounded;
+    }
+
+    public bool IsGroundedForActionSelection()
+    {
+        if (rb == null)
+            return isGrounded;
+
+        if (IsJumping || rb.linearVelocity.y > airborneActionVelocityThreshold)
+            return false;
+
+        if (isGrounded)
+            return true;
+
+        return rb.linearVelocity.y <= 0f && IsNearGroundForActionSelection();
     }
 
     public bool IsAgainstWall()
@@ -467,12 +494,13 @@ public class PlayerMovement : MonoBehaviour
         if (Time.time > jumpBufferedUntil)
             return;
 
-        if (IsDashing || IsLanding || IsJumping)
+        if (IsDashing || IsJumping)
             return;
 
         if (!CanStartBufferedJump())
             return;
 
+        StopAttackMotion();
         ConsumeJump();
         jumpBufferedUntil = -999f;
         StartCoroutine(JumpCoroutine());
@@ -509,14 +537,41 @@ public class PlayerMovement : MonoBehaviour
         if (IsGroundJumpAvailable())
         {
             jumpsUsed = 1;
+            pendingGroundJumpTakeoff = true;
+            pendingGroundJumpRefundAt = Time.time + Mathf.Max(0.05f, jumpStartupTime + (Time.fixedDeltaTime * 2f));
         }
         else
         {
             jumpsUsed++;
+            pendingGroundJumpTakeoff = false;
             OnDoubleJump?.Invoke();
         }
 
         coyoteUntil = -999f;
+    }
+
+    private void ResolvePendingGroundJumpTakeoff()
+    {
+        if (!pendingGroundJumpTakeoff || rb == null)
+            return;
+
+        // Successful takeoff: only stop monitoring once we have actually left the ground.
+        // Upward velocity alone is not enough, because a ground attack motion or overlap with
+        // the floor can briefly set Y velocity without producing a real jump.
+        if (!isGrounded)
+        {
+            pendingGroundJumpTakeoff = false;
+            return;
+        }
+
+        if (Time.time < pendingGroundJumpRefundAt)
+            return;
+
+        // The jump was consumed, but the character never actually left the ground.
+        // Refund the grounded jump so the player cannot get stuck unable to jump.
+        jumpsUsed = 0;
+        pendingGroundJumpTakeoff = false;
+        coyoteUntil = Time.time + coyoteTime;
     }
 
     private void HandleVerticalPhysics()
@@ -652,6 +707,26 @@ public class PlayerMovement : MonoBehaviour
     private bool ShouldSuppressLandingFeedback()
     {
         return combat != null && combat.ShouldSuppressLandingFeedback();
+    }
+
+    private bool IsNearGroundForActionSelection()
+    {
+        if (groundCheck == null || groundedActionProbeDistance <= 0f)
+            return false;
+
+        RaycastHit2D hit = Physics2D.Raycast(
+            groundCheck.position,
+            Vector2.down,
+            groundedActionProbeDistance,
+            GetGroundCheckMask());
+
+        if (hit.collider == null || hit.collider.isTrigger)
+            return false;
+
+        if (ignoredGroundCollider != null && hit.collider == ignoredGroundCollider)
+            return false;
+
+        return true;
     }
 
     private float GetDashDirection(float inputX)

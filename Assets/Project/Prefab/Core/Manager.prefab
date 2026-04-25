@@ -82,6 +82,7 @@ Transform:
   - {fileID: 8940406991929132171}
   - {fileID: 1179765405635780010}
   - {fileID: 5364557721935254789}
+  - {fileID: 5498684333869800147}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1574394734015390253
@@ -314,6 +315,71 @@ MonoBehaviour:
   defaultProjectilePrefab: {fileID: -5072513830114651353, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
   initialPoolSize: 6
   maxPoolSize: 32
+--- !u!1 &7620310492362470517
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5498684333869800147}
+  - component: {fileID: 6575225447288332923}
+  - component: {fileID: 4125805956912602449}
+  m_Layer: 0
+  m_Name: HUD_Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5498684333869800147
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7620310492362470517}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8850677962514263319}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6575225447288332923
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7620310492362470517}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95ef5052dea0cd54f8324f4746f13e3f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TeamSwitchHUD
+  teamLoader: {fileID: 0}
+  stateMachine: {fileID: 0}
+  slotContainer: {fileID: 0}
+  slotPrefab: {fileID: 451429812501022720, guid: ffa1711f80043cd43bf1e34fdeb517ec, type: 3}
+--- !u!114 &4125805956912602449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7620310492362470517}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e13cf36db8811d846922ee5dfd001e8a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AbilityUIManager
+  skillCooldownFill: {fileID: 0}
+  skillCooldownText: {fileID: 0}
+  ultCooldownFill: {fileID: 0}
+  ultCooldownText: {fileID: 0}
 --- !u!1 &8295746963088055792
 GameObject:
   m_ObjectHideFlags: 0

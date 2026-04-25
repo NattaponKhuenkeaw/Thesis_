@@ -43,6 +43,7 @@ public class PlayerCharacter : MonoBehaviour
     public event System.Action<float> OnDamaged;
     public event System.Action<float> OnHealed;
     public event System.Action OnDied;
+    public event System.Action<CharacterObject> OnCharacterChanged;
 
     // =========================================================
     // Convenience (read by animation/movement)
@@ -89,6 +90,7 @@ public class PlayerCharacter : MonoBehaviour
         characterObject = newCharacter;
         ApplyCharacterData();
         PassiveController?.InitializeFromCharacterData();
+        OnCharacterChanged?.Invoke(characterObject);
     }
 
     // =========================================================

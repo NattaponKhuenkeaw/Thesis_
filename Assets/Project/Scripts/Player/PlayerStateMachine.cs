@@ -214,7 +214,37 @@ public class PlayerStateMachine : MonoBehaviour
         if (CurrentState == null) return;
 
         // State-first: let the current state try to consume the input
-        if (CurrentState.HandleJumpInput()) return;
+        if (CurrentState.HandleJumpInput())
+        {
+            InputBuffer?.ConsumeJump();
+            return;
+        }
+
+        if (CurrentState is FrameDataPlayerState currentFrameState)
+        {
+            bool shouldConvertFreshGroundActionToAirborne =
+                ShouldConvertEarlyGroundCombatToAirborne(currentFrameState);
+
+            if (shouldConvertFreshGroundActionToAirborne)
+            {
+                PlayerStateId interruptedState = CurrentStateId;
+                InputBuffer?.ConsumeJump();
+
+                ChangeState(JumpState);
+                CurrentState.OnJumpInput();
+
+                if (interruptedState == PlayerStateId.Attacking)
+                {
+                    RouteAttackInput();
+                }
+                else if (interruptedState == PlayerStateId.Skill)
+                {
+                    RouteSkillInput();
+                }
+
+                return;
+            }
+        }
 
         // Centralized check for FrameData states: ignore interrupts if state says so
         if (CurrentState is FrameDataPlayerState fdState && !fdState.CanBeInterruptedBy(ActionCategory.Jump))
@@ -225,6 +255,7 @@ public class PlayerStateMachine : MonoBehaviour
 
         if (CurrentState.AcceptsJumpInput)
         {
+            InputBuffer?.ConsumeJump();
             ChangeState(JumpState);
             CurrentState.OnJumpInput();
         }
@@ -267,6 +298,18 @@ public class PlayerStateMachine : MonoBehaviour
     {
         if (CurrentState == null) return;
 
+        if (ShouldPrioritizeBufferedJumpBeforeCombat())
+        {
+            RouteJumpInput();
+
+            if (CurrentStateId == PlayerStateId.Jumping)
+            {
+                RouteAttackInput();
+            }
+
+            return;
+        }
+
         // Always buffer the attack for mid-action consumption
         InputBuffer.BufferAttack();
 
@@ -294,6 +337,18 @@ public class PlayerStateMachine : MonoBehaviour
     public void RouteSkillInput()
     {
         if (CurrentState == null) return;
+
+        if (ShouldPrioritizeBufferedJumpBeforeCombat())
+        {
+            RouteJumpInput();
+
+            if (CurrentStateId == PlayerStateId.Jumping)
+            {
+                RouteSkillInput();
+            }
+
+            return;
+        }
 
         InputBuffer.BufferSkill();
 
@@ -350,5 +405,70 @@ public class PlayerStateMachine : MonoBehaviour
         UltimateState = new PlayerUltimateState(playerCharacter, this);
         HitstunState = new PlayerHitstunState(playerCharacter, this);
         DeadState = new PlayerDeadState(playerCharacter, this);
+    }
+
+    private bool ShouldPrioritizeBufferedJumpBeforeCombat()
+    {
+        if (InputBuffer == null || !InputBuffer.HasJumpBuffer)
+            return false;
+
+        if (playerCharacter == null || playerCharacter.Movement == null)
+            return false;
+
+        if (CurrentStateId != PlayerStateId.Idle && CurrentStateId != PlayerStateId.Running)
+            return false;
+
+        if (!playerCharacter.Movement.IsGrounded())
+            return false;
+
+        return true;
+    }
+
+    private bool ShouldConvertEarlyGroundCombatToAirborne(FrameDataPlayerState currentFrameState)
+    {
+        if (currentFrameState == null)
+            return false;
+
+        if (CurrentStateId != PlayerStateId.Attacking && CurrentStateId != PlayerStateId.Skill)
+            return false;
+
+        if (playerCharacter == null || playerCharacter.Movement == null)
+            return false;
+
+        // We only want this safeguard for actions that are still effectively
+        // ground-started and have not committed yet.
+        if (!playerCharacter.Movement.IsGrounded())
+            return false;
+
+        if (currentFrameState.CurrentPhase == ActionPhase.None || currentFrameState.CurrentPhase == ActionPhase.Startup)
+            return true;
+
+        // Some actions enter Active on the first logic frame (startup = 0).
+        // Give them a tiny grace window so near-simultaneous Jump+Attack/Skill
+        // still resolves into an airborne action instead of locking into ground attack.
+        return currentFrameState.CurrentPhase == ActionPhase.Active
+            && currentFrameState.CurrentFrame <= 2;
+    }
+
+
+    public bool CanSwitchCharacter()
+    {
+        if (CurrentState == null) return false;
+
+        // 1. ถ้าตัวละครกำลังออกท่า (Dash, Attack, Skill, Ultimate)
+        // ให้เช็คกฎจังหวะเฟรมจาก InterruptPolicy ที่เราตั้งไว้
+        if (CurrentState is FrameDataPlayerState fdState)
+        {
+            return fdState.CanBeInterruptedBy(ActionCategory.Switch);
+        }
+
+        // 2. ถ้าเป็น State เคลื่อนไหวปกติ อนุญาตให้เปลี่ยนตัวได้ทันที (Idle, Move, Jump)
+        if (CurrentState == IdleState || CurrentState == MoveState || CurrentState == JumpState)
+        {
+            return true;
+        }
+
+        // 3. State อื่นๆ เช่น Hitstun หรือ Dead จะตกลงมาที่นี่ และไม่อนุญาตให้เปลี่ยนตัว
+        return false;
     }
 }
