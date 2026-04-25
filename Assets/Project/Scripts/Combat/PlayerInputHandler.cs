@@ -65,12 +65,16 @@ public class InputHandler_Player : MonoBehaviour
         // Team switching
         if (teamLoader != null && Keyboard.current != null)
         {
-            if (Keyboard.current.digit1Key.wasPressedThisFrame)
-                teamLoader.SwitchToIndex(0);
-            if (Keyboard.current.digit2Key.wasPressedThisFrame)
-                teamLoader.SwitchToIndex(1);
-            if (Keyboard.current.digit3Key.wasPressedThisFrame)
-                teamLoader.SwitchToIndex(2);
+            
+            if (stateMachine != null && stateMachine.CanSwitchCharacter())
+            {
+                if (Keyboard.current.digit1Key.wasPressedThisFrame)
+                    teamLoader.SwitchToIndex(0);
+                if (Keyboard.current.digit2Key.wasPressedThisFrame)
+                    teamLoader.SwitchToIndex(1);
+                if (Keyboard.current.digit3Key.wasPressedThisFrame)
+                    teamLoader.SwitchToIndex(2);
+            }
         }
 
         // Skill tree debug shortcuts
@@ -124,6 +128,9 @@ public class InputHandler_Player : MonoBehaviour
         if (Project.UI.InputLockManager.IsLocked) return;
         if (!value.isPressed) return;
 
+        if (!TryPrioritizeJumpBeforeCombatInput())
+            return;
+
         stateMachine?.InputBuffer?.SetDirectionalInput(moveInput);
         
         // Route through FSM — it handles buffering internally
@@ -135,6 +142,9 @@ public class InputHandler_Player : MonoBehaviour
         if (Project.UI.InputLockManager.IsLocked) return;
         if (value.isPressed)
         {
+            if (!TryPrioritizeJumpBeforeCombatInput())
+                return;
+
             stateMachine?.InputBuffer?.SetDirectionalInput(moveInput);
             stateMachine?.RouteSkillInput();
         }
@@ -148,5 +158,33 @@ public class InputHandler_Player : MonoBehaviour
             stateMachine?.InputBuffer?.SetDirectionalInput(moveInput);
             stateMachine?.RouteUltimateInput();
         }
+    }
+
+    private bool TryPrioritizeJumpBeforeCombatInput()
+    {
+        if (playerInput == null || playerInput.actions == null || stateMachine == null)
+            return true;
+
+        InputAction jumpAction = playerInput.actions["Jump"];
+        if (jumpAction == null || !jumpAction.IsPressed())
+            return true;
+
+        PlayerMovement movement = stateMachine.playerCharacter != null
+            ? stateMachine.playerCharacter.Movement
+            : null;
+
+        if (movement == null)
+            return true;
+
+        bool isGroundedLike = movement.IsGrounded() || movement.IsGroundedForActionSelection();
+        if (!isGroundedLike)
+            return true;
+
+        stateMachine.InputBuffer?.BufferJump();
+        stateMachine.RouteJumpInput();
+
+        // If jump is being prioritized from the ground, do not allow the same
+        // callback to start a ground combat action before the state fully flips airborne.
+        return stateMachine.CurrentStateId == PlayerStateId.Jumping;
     }
 }

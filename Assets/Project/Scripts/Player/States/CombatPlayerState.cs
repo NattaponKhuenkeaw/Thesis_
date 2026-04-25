@@ -214,16 +214,19 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     protected virtual InputContext BuildInputContext()
     {
         ActionInputBuffer buffer = fsm.InputBuffer;
+        bool physicallyGrounded = player.Movement != null && player.Movement.IsGrounded();
+        bool actionGrounded = player.Movement != null && player.Movement.IsGroundedForActionSelection();
+
         return new InputContext
         {
-            isGrounded = player.Movement != null && player.Movement.IsGrounded(),
+            isGrounded = actionGrounded,
             directionalInput = buffer != null ? buffer.DirectionalInput : Vector2.zero,
             facingDirection = player.Movement != null ? player.Movement.FacingDirection : 1,
             previousState = transitionContext.previousState,
             hasGrabbedEnemy = player.Combat != null && player.Combat.HasGrabbedEnemy(),
             hasPreviouslyGrabbedEnemy = player.Combat != null && player.Combat.HadGrabAtStepStart,
             isAgainstWall = player.Movement != null && player.Movement.IsAgainstWall(),
-            wasAirborne = !prevFrameGrounded,
+            wasAirborne = !prevFrameGrounded && physicallyGrounded,
             passiveController = player.PassiveController,
             runtimeState = player.PassiveController != null ? player.PassiveController.RuntimeState : null
         };

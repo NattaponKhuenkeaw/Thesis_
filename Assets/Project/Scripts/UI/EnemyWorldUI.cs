@@ -46,6 +46,7 @@ public class EnemyWorldUI : MonoBehaviour
     private List<TMP_Text> damageTextPool = new List<TMP_Text>();
     private Coroutine healthLerpCoroutine;
     private Color damageTextBaseColor = Color.white;
+    private Vector3 baseLocalScale = Vector3.one;
 
     [Header("Elemental Colors")]
     [SerializeField] private Color physicalColor = Color.white;
@@ -65,6 +66,10 @@ public class EnemyWorldUI : MonoBehaviour
     private void Awake()
     {
         CacheReferences();
+        baseLocalScale = new Vector3(
+            Mathf.Abs(transform.localScale.x),
+            Mathf.Abs(transform.localScale.y),
+            Mathf.Abs(transform.localScale.z));
 
         if (damageText != null)
         {
@@ -139,6 +144,19 @@ public class EnemyWorldUI : MonoBehaviour
         // Force the UI to always stay upright in world space.
         // This handles both parent rotation and parent scale-flipping without jitter.
         transform.rotation = Quaternion.identity;
+
+        Transform parent = transform.parent;
+        if (parent == null)
+        {
+            transform.localScale = baseLocalScale;
+            return;
+        }
+
+        Vector3 parentLossyScale = parent.lossyScale;
+        transform.localScale = new Vector3(
+            baseLocalScale.x * (parentLossyScale.x < 0f ? -1f : 1f),
+            baseLocalScale.y * (parentLossyScale.y < 0f ? -1f : 1f),
+            baseLocalScale.z);
     }
 
     private void SubscribeToEnemyEvents()

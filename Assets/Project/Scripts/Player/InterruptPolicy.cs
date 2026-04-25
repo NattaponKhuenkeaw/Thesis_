@@ -10,6 +10,7 @@ public enum ActionCategory
     Jump        = 1 << 3,  // 8
     Ultimate    = 1 << 4,  // 16
     Movement    = 1 << 5,  // 32
+    Switch      = 1 << 6,  // 64
     All         = ~0
 }
 
@@ -48,7 +49,7 @@ public struct InterruptPolicy
         startup  = ActionCategory.None,
         active   = ActionCategory.None,
         recovery = ActionCategory.None,
-        cancel   = ActionCategory.All
+        cancel = ActionCategory.All & ~ActionCategory.Switch
     };
 
     /// <summary>
@@ -82,12 +83,12 @@ public struct InterruptPolicy
     /// </summary>
     public static readonly InterruptPolicy BasicAttack = new InterruptPolicy
     {
-        startup  = ActionCategory.None,
-        active   = ActionCategory.Ultimate | ActionCategory.Skill 
-                 | ActionCategory.Jump     | ActionCategory.Dash,
-        recovery = ActionCategory.Ultimate | ActionCategory.Skill 
-                 | ActionCategory.Jump     | ActionCategory.Dash 
-                 | ActionCategory.BasicAttack,
-        cancel   = ActionCategory.All
+        startup = ActionCategory.None,
+        active = ActionCategory.Ultimate | ActionCategory.Skill
+                 | ActionCategory.Jump | ActionCategory.Dash,
+        recovery = ActionCategory.Ultimate | ActionCategory.Skill
+                 | ActionCategory.Jump | ActionCategory.Dash
+                 | ActionCategory.BasicAttack | ActionCategory.Switch, 
+        cancel = ActionCategory.All
     };
 }

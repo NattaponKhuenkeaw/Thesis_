@@ -1,5 +1,5 @@
 {
-	"version": "26.2.9000",
+	"version": "26.2.9008",
 	"workloads": {
 		"maccatalyst": {
 			"description": ".NET SDK Workload for building MacCatalyst applications.",
@@ -22,7 +22,7 @@
 	"packs": {
 		"Microsoft.MacCatalyst.Sdk.net9.0_26.2": {
 			"kind": "sdk",
-			"version": "26.2.9000",
+			"version": "26.2.9008",
 		},
 		"Microsoft.MacCatalyst.Sdk.net8.0_17.0": {
 			"kind": "sdk",
@@ -38,19 +38,19 @@
 		},
 		"Microsoft.MacCatalyst.Ref.net9.0_26.2": {
 			"kind": "framework",
-			"version": "26.2.9000"
+			"version": "26.2.9008"
 		},
 		"Microsoft.MacCatalyst.Runtime.maccatalyst-x64.net9.0_26.2": {
 			"kind": "framework",
-			"version": "26.2.9000"
+			"version": "26.2.9008"
 		},
 		"Microsoft.MacCatalyst.Runtime.maccatalyst-arm64.net9.0_26.2": {
 			"kind": "framework",
-			"version": "26.2.9000"
+			"version": "26.2.9008"
 		},
 		"Microsoft.MacCatalyst.Templates.net9": {
 			"kind": "template",
-			"version": "26.2.9000",
+			"version": "26.2.9008",
 			"alias-to": {
 				"any": "Microsoft.MacCatalyst.Templates",
 			}
