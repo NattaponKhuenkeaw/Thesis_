@@ -16,13 +16,13 @@ MonoBehaviour:
   projectilePrefab: {fileID: 7731053110207872557, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
   spawnClip: {fileID: 7400000, guid: 386ad011fe89f7e429c07d2c4ed5d40e, type: 2}
   loopClip: {fileID: 7400000, guid: 386ad011fe89f7e429c07d2c4ed5d40e, type: 2}
-  spawnOffset: {x: 1.2, y: 0.3}
+  spawnOffset: {x: 1.2, y: 0.4}
   spawnPositionMode: 2
-  playSpawnAnimation: 1
-  spawnDuration: 0.5
+  playSpawnAnimation: 0
+  spawnDuration: 0.0025
   inheritFacingDirection: 1
   spawningHitbox:
-    enabled: 1
+    enabled: 0
     decrementsMaxHits: 0
     hitbox:
       rid: 1588256093655269584
@@ -32,7 +32,7 @@ MonoBehaviour:
   homingTurnRate: 8
   anchorToCaster: 0
   speed: 10
-  lifetime: 3
+  lifetime: 2
   maxHits: 3
   routineHitbox:
     enabled: 1
@@ -71,7 +71,7 @@ MonoBehaviour:
         activeFrames: 3
         damageType: 1
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 0.8, y: 0.4}
+        offset: {x: 0, y: 0.32}
         size: {x: 1, y: 0.8}
         damageMultiplier: 0.3
         impactTier: 0
@@ -104,7 +104,7 @@ MonoBehaviour:
         activeFrames: 3
         damageType: 1
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 0.8, y: 0.4}
+        offset: {x: 0, y: 0.32}
         size: {x: 1, y: 0.8}
         damageMultiplier: 1
         impactTier: 0

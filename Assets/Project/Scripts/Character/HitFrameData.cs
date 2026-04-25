@@ -164,7 +164,7 @@ public class ProjectileSpawnHitbox : HitboxBase
 
     public Vector2 ResolveSpawnOffset()
     {
-        if (overrideSpawnOffset || spawnOffset != Vector2.zero)
+        if (overrideSpawnOffset)
         {
             return spawnOffset;
         }

@@ -52,7 +52,7 @@ MonoBehaviour:
     startupFrames: 7
     activeFrames: 13
     recoveryFrames: 30
-    cancelWindowStartFrame: 34
+    cancelWindowStartFrame: 42
     dashSpeed: 110
     cooldownFrames: 18
   progressionDefinition:

@@ -60,8 +60,10 @@ namespace Project.Combat
 
         // --- Goenitz ---
         Goenitz_Basic = 109,
-        Goenitz_Tornado = 110,
-        Goenitz_Light = 111,
-        Goenitz_Ultimate_Tornado = 111,
+        Goenitz_Basic2 = 110,
+        Goenitz_Basic3 = 111,
+        Goenitz_Tornado = 112,
+        Goenitz_Light = 113,
+        Goenitz_Ultimate_Tornado = 114,
     }
 }

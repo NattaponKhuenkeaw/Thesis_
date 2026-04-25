@@ -14,15 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ProjectileData
   projectileType: 20
   projectilePrefab: {fileID: 7731053110207872557, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
-  spawnClip: {fileID: 0}
+  spawnClip: {fileID: 7400000, guid: 8cb2bedcc70d41e4aae6fc3efaa80d7f, type: 2}
   loopClip: {fileID: 7400000, guid: 8cb2bedcc70d41e4aae6fc3efaa80d7f, type: 2}
-  spawnOffset: {x: 1.2, y: 0.6}
+  spawnOffset: {x: 1.2, y: -1}
   spawnPositionMode: 2
-  playSpawnAnimation: 1
+  playSpawnAnimation: 0
   spawnDuration: 0
   inheritFacingDirection: 1
   spawningHitbox:
-    enabled: 0
+    enabled: 1
     decrementsMaxHits: 0
     hitbox:
       rid: -2
@@ -38,19 +38,13 @@ MonoBehaviour:
     enabled: 1
     decrementsMaxHits: 1
     hitbox:
-      rid: -2
+      rid: 1588256115435503716
   travelColliderSize: {x: 0.5, y: 0.5}
   enemyLayerMask:
     serializedVersion: 2
     m_Bits: 256
   impactHitData:
-    hitboxes:
-    - rid: 3251577402691944730
-    - rid: 3251577402691944731
-    - rid: 3251577402691944732
-    - rid: 3251577402691944733
-    - rid: 3251577402691944734
-    - rid: 3251577402691944735
+    hitboxes: []
   hitIntervalFrames: 10
   stopOnImpact: 0
   destroyWhenHitsExhausted: 1
@@ -72,172 +66,7 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 3251577402691944730
-      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
-      data:
-        startFrameOffset: 0
-        activeFrames: 3
-        damageType: 1
-        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 0.8, y: 0.4}
-        size: {x: 1, y: 0.8}
-        damageMultiplier: 0.2
-        impactTier: 0
-        useDeterministicReaction: 1
-        reactionKind: 2
-        impactFreezeFrames: 4
-        knockbackFrames: 15
-        knockupFrames: 12
-        knockfallFrames: 10
-        recoveryFrames: 9
-        horizontalSpeed: 3
-        launchSpeed: 1
-        useSnapToAnchor: 0
-        snapOffset: {x: 0, y: 0}
-        landingBehavior: 1
-        canAirJuggle: 1
-        maxJuggleCount: 2
-        juggleLaunchScale: 0.85
-        juggleStunScale: 0.9
-        flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
-        hitSFX: {fileID: 0}
-        hitVFXType: 0
-        hitVFXPrefab: {fileID: 0}
-        hitVFXOffset: {x: 0, y: 0}
-    - rid: 3251577402691944731
-      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
-      data:
-        startFrameOffset: 0
-        activeFrames: 3
-        damageType: 1
-        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 0.8, y: 0.4}
-        size: {x: 1, y: 0.8}
-        damageMultiplier: 0.2
-        impactTier: 0
-        useDeterministicReaction: 1
-        reactionKind: 2
-        impactFreezeFrames: 4
-        knockbackFrames: 15
-        knockupFrames: 12
-        knockfallFrames: 10
-        recoveryFrames: 9
-        horizontalSpeed: 3
-        launchSpeed: 1
-        useSnapToAnchor: 0
-        snapOffset: {x: 0, y: 0}
-        landingBehavior: 1
-        canAirJuggle: 1
-        maxJuggleCount: 2
-        juggleLaunchScale: 0.85
-        juggleStunScale: 0.9
-        flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
-        hitSFX: {fileID: 0}
-        hitVFXType: 0
-        hitVFXPrefab: {fileID: 0}
-        hitVFXOffset: {x: 0, y: 0}
-    - rid: 3251577402691944732
-      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
-      data:
-        startFrameOffset: 0
-        activeFrames: 3
-        damageType: 1
-        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 0.8, y: 0.4}
-        size: {x: 1, y: 0.8}
-        damageMultiplier: 0.2
-        impactTier: 0
-        useDeterministicReaction: 1
-        reactionKind: 2
-        impactFreezeFrames: 4
-        knockbackFrames: 15
-        knockupFrames: 12
-        knockfallFrames: 10
-        recoveryFrames: 9
-        horizontalSpeed: 3
-        launchSpeed: 1
-        useSnapToAnchor: 0
-        snapOffset: {x: 0, y: 0}
-        landingBehavior: 1
-        canAirJuggle: 1
-        maxJuggleCount: 2
-        juggleLaunchScale: 0.85
-        juggleStunScale: 0.9
-        flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
-        hitSFX: {fileID: 0}
-        hitVFXType: 0
-        hitVFXPrefab: {fileID: 0}
-        hitVFXOffset: {x: 0, y: 0}
-    - rid: 3251577402691944733
-      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
-      data:
-        startFrameOffset: 0
-        activeFrames: 3
-        damageType: 1
-        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 0.8, y: 0.4}
-        size: {x: 1, y: 0.8}
-        damageMultiplier: 0.2
-        impactTier: 0
-        useDeterministicReaction: 1
-        reactionKind: 2
-        impactFreezeFrames: 4
-        knockbackFrames: 15
-        knockupFrames: 12
-        knockfallFrames: 10
-        recoveryFrames: 9
-        horizontalSpeed: 3
-        launchSpeed: 1
-        useSnapToAnchor: 0
-        snapOffset: {x: 0, y: 0}
-        landingBehavior: 1
-        canAirJuggle: 1
-        maxJuggleCount: 2
-        juggleLaunchScale: 0.85
-        juggleStunScale: 0.9
-        flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
-        hitSFX: {fileID: 0}
-        hitVFXType: 0
-        hitVFXPrefab: {fileID: 0}
-        hitVFXOffset: {x: 0, y: 0}
-    - rid: 3251577402691944734
-      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
-      data:
-        startFrameOffset: 0
-        activeFrames: 3
-        damageType: 1
-        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 0.8, y: 0.4}
-        size: {x: 1, y: 0.8}
-        damageMultiplier: 0.2
-        impactTier: 0
-        useDeterministicReaction: 1
-        reactionKind: 2
-        impactFreezeFrames: 4
-        knockbackFrames: 15
-        knockupFrames: 12
-        knockfallFrames: 10
-        recoveryFrames: 9
-        horizontalSpeed: 3
-        launchSpeed: 1
-        useSnapToAnchor: 0
-        snapOffset: {x: 0, y: 0}
-        landingBehavior: 1
-        canAirJuggle: 1
-        maxJuggleCount: 2
-        juggleLaunchScale: 0.85
-        juggleStunScale: 0.9
-        flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
-        hitSFX: {fileID: 0}
-        hitVFXType: 0
-        hitVFXPrefab: {fileID: 0}
-        hitVFXOffset: {x: 0, y: 0}
-    - rid: 3251577402691944735
+    - rid: 1588256115435503716
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 0
@@ -247,16 +76,16 @@ MonoBehaviour:
         offset: {x: 0.8, y: 0.4}
         size: {x: 1, y: 0.8}
         damageMultiplier: 1
-        impactTier: 2
+        impactTier: 0
         useDeterministicReaction: 1
-        reactionKind: 2
+        reactionKind: 1
         impactFreezeFrames: 4
-        knockbackFrames: 30
-        knockupFrames: 20
-        knockfallFrames: 15
+        knockbackFrames: 15
+        knockupFrames: 12
+        knockfallFrames: 10
         recoveryFrames: 9
-        horizontalSpeed: 1
-        launchSpeed: 4
+        horizontalSpeed: 3
+        launchSpeed: 1
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1

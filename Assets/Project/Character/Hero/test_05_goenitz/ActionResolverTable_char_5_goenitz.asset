@@ -58,10 +58,10 @@ MonoBehaviour:
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
         stepData:
-          startupFrames: 10
-          activeFrames: 31
-          recoveryFrames: 17
-          cancelWindowStartFrame: 53
+          startupFrames: 7
+          activeFrames: 21
+          recoveryFrames: 11
+          cancelWindowStartFrame: 36
           loopActivePhase: 0
           stepName: Attack1
           animationClip: {fileID: 7400000, guid: 7eaf83962973e0e4faf93bf94628f133, type: 2}
@@ -96,15 +96,15 @@ MonoBehaviour:
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
         keyframes:
-        - startFrame: 5
-          endFrame: 12
+        - startFrame: 3
+          endFrame: 8
           taskType: 0
           easing: 1
           position: {x: 0.5, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
-        - startFrame: 25
-          endFrame: 31
+        - startFrame: 17
+          endFrame: 21
           taskType: 0
           easing: 1
           position: {x: 0.5, y: 0, z: 0}
@@ -116,16 +116,16 @@ MonoBehaviour:
         entries:
         - label: SFX
           clip: {fileID: 8300000, guid: 932137a20c8e2824c9c5a94ccd7ebb37, type: 3}
-          triggerFrame: 7
-          duration: 14
+          triggerFrame: 5
+          duration: 9
           channel: 0
           volume: 1
           pitchVariation: 1
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
         - label: SFX
           clip: {fileID: 8300000, guid: cc60b0af98e523f4fae94fd132d7fb75, type: 3}
-          triggerFrame: 27
-          duration: 13
+          triggerFrame: 18
+          duration: 9
           channel: 0
           volume: 1
           pitchVariation: 1
@@ -134,7 +134,7 @@ MonoBehaviour:
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 0
-        activeFrames: 5
+        activeFrames: 3
         damageType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.55962616, y: 2.224654}
@@ -143,11 +143,11 @@ MonoBehaviour:
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
-        impactFreezeFrames: 4
-        knockbackFrames: 15
-        knockupFrames: 12
-        knockfallFrames: 10
-        recoveryFrames: 9
+        impactFreezeFrames: 3
+        knockbackFrames: 10
+        knockupFrames: 8
+        knockfallFrames: 7
+        recoveryFrames: 6
         horizontalSpeed: 3
         launchSpeed: 1
         useSnapToAnchor: 0
@@ -158,7 +158,7 @@ MonoBehaviour:
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
+        flashFrames: 4
         hitSFX: {fileID: 0}
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
@@ -166,8 +166,8 @@ MonoBehaviour:
     - rid: 1588256048081535106
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
-        startFrameOffset: 20
-        activeFrames: 5
+        startFrameOffset: 14
+        activeFrames: 3
         damageType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.54870015, y: 1.7111288}
@@ -176,11 +176,11 @@ MonoBehaviour:
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
-        impactFreezeFrames: 4
-        knockbackFrames: 15
-        knockupFrames: 12
-        knockfallFrames: 10
-        recoveryFrames: 9
+        impactFreezeFrames: 3
+        knockbackFrames: 10
+        knockupFrames: 8
+        knockfallFrames: 7
+        recoveryFrames: 6
         horizontalSpeed: 3
         launchSpeed: 1
         useSnapToAnchor: 0
@@ -191,7 +191,7 @@ MonoBehaviour:
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
+        flashFrames: 4
         hitSFX: {fileID: 0}
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
@@ -200,10 +200,10 @@ MonoBehaviour:
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
         stepData:
-          startupFrames: 25
-          activeFrames: 19
-          recoveryFrames: 12
-          cancelWindowStartFrame: 48
+          startupFrames: 24
+          activeFrames: 18
+          recoveryFrames: 11
+          cancelWindowStartFrame: 50
           loopActivePhase: 0
           stepName: Attack2
           animationClip: {fileID: 7400000, guid: 694f8e50d53d3ca47b241fd5f0664c4c, type: 2}
@@ -232,8 +232,8 @@ MonoBehaviour:
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
         keyframes:
-        - startFrame: 20
-          endFrame: 33
+        - startFrame: 19
+          endFrame: 31
           taskType: 0
           easing: 1
           position: {x: 1, y: 0, z: 0}
@@ -259,9 +259,9 @@ MonoBehaviour:
         useDeterministicReaction: 1
         reactionKind: 1
         impactFreezeFrames: 4
-        knockbackFrames: 15
-        knockupFrames: 12
-        knockfallFrames: 10
+        knockbackFrames: 14
+        knockupFrames: 11
+        knockfallFrames: 9
         recoveryFrames: 9
         horizontalSpeed: 3
         launchSpeed: 1
@@ -292,9 +292,9 @@ MonoBehaviour:
         useDeterministicReaction: 1
         reactionKind: 1
         impactFreezeFrames: 4
-        knockbackFrames: 15
-        knockupFrames: 12
-        knockfallFrames: 10
+        knockbackFrames: 14
+        knockupFrames: 11
+        knockfallFrames: 9
         recoveryFrames: 9
         horizontalSpeed: 3
         launchSpeed: 1
@@ -315,9 +315,9 @@ MonoBehaviour:
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
         stepData:
-          startupFrames: 11
-          activeFrames: 17
-          recoveryFrames: 22
+          startupFrames: 9
+          activeFrames: 16
+          recoveryFrames: 23
           cancelWindowStartFrame: 44
           loopActivePhase: 0
           stepName: Attack3
@@ -348,7 +348,7 @@ MonoBehaviour:
       data:
         keyframes:
         - startFrame: 7
-          endFrame: 15
+          endFrame: 14
           taskType: 0
           easing: 1
           position: {x: 2.5, y: 0, z: 0}
@@ -362,8 +362,8 @@ MonoBehaviour:
     - rid: 1588256048081535115
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
-        startFrameOffset: 1
-        activeFrames: 5
+        startFrameOffset: 0
+        activeFrames: 4
         damageType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.6363741, y: 2.4763553}
@@ -373,8 +373,8 @@ MonoBehaviour:
         useDeterministicReaction: 1
         reactionKind: 2
         impactFreezeFrames: 10
-        knockbackFrames: 15
-        knockupFrames: 12
+        knockbackFrames: 14
+        knockupFrames: 11
         knockfallFrames: 10
         recoveryFrames: 9
         horizontalSpeed: 5
@@ -399,7 +399,7 @@ MonoBehaviour:
         - label: SFX
           clip: {fileID: 8300000, guid: 64d439f8c19ca694d9e3ad44ea74b3ac, type: 3}
           triggerFrame: 8
-          duration: 15
+          duration: 14
           channel: 0
           volume: 1
           pitchVariation: 1
@@ -411,7 +411,7 @@ MonoBehaviour:
           startupFrames: 5
           activeFrames: 54
           recoveryFrames: 16
-          cancelWindowStartFrame: 72
+          cancelWindowStartFrame: 69
           loopActivePhase: 0
           stepName: Attack4
           animationClip: {fileID: 7400000, guid: b7c69215ba51ba54992e51326492199f, type: 2}
@@ -421,7 +421,7 @@ MonoBehaviour:
           motionData:
             rid: 1588256048081535133
           vfxData:
-            rid: -2
+            rid: 1588256115435503722
           audioData:
             rid: -2
           hitData:
@@ -735,9 +735,9 @@ MonoBehaviour:
       data:
         stepData:
           startupFrames: 14
-          activeFrames: 21
-          recoveryFrames: 27
-          cancelWindowStartFrame: 48
+          activeFrames: 34
+          recoveryFrames: 14
+          cancelWindowStartFrame: 58
           loopActivePhase: 0
           stepName: Attack5
           animationClip: {fileID: 7400000, guid: 77d412f45290155448db2f15da644676, type: 2}
@@ -747,7 +747,7 @@ MonoBehaviour:
           motionData:
             rid: -2
           vfxData:
-            rid: -2
+            rid: 1588256115435503723
           audioData:
             rid: -2
           hitData:
@@ -906,15 +906,15 @@ MonoBehaviour:
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
         stepData:
-          startupFrames: 14
+          startupFrames: 13
           activeFrames: 6
-          recoveryFrames: 1
+          recoveryFrames: 2
           cancelWindowStartFrame: 23
           loopActivePhase: 0
           stepName: Attack6
           animationClip: {fileID: 7400000, guid: 0135963a5a85efc4bb64d158695020d1, type: 2}
           lockAirPosition: 1
-          autoChainToNext: 0
+          autoChainToNext: 1
           triggerWindows: []
           motionData:
             rid: -2
@@ -931,7 +931,7 @@ MonoBehaviour:
           - hitbox
         routes: []
         defaultNext:
-          rid: -2
+          rid: 1588256115435503773
         onGrabSuccessNode:
           rid: -2
     - rid: 1588256093655269461
@@ -948,5 +948,132 @@ MonoBehaviour:
         debugColor: {r: 0.42, g: 0.81, b: 1, a: 1}
         projectileType: 0
         projectileData: {fileID: 11400000, guid: 4c561112b8238eb4cb30c0b81d7bf72e, type: 2}
-        overrideSpawnOffset: 0
-        spawnOffset: {x: 0, y: 0}
+        overrideSpawnOffset: 1
+        spawnOffset: {x: 1.0011766, y: 1.9999999}
+    - rid: 1588256115435503722
+      type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: VFX
+          vfxType: 109
+          vfxClip: {fileID: 0}
+          vfxPrefab: {fileID: 0}
+          triggerFrame: 10
+          duration: 20
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 0
+            position: {x: 0, y: 0, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          loopDuringActive: 0
+        - label: VFX
+          vfxType: 110
+          vfxClip: {fileID: 0}
+          vfxPrefab: {fileID: 0}
+          triggerFrame: 45
+          duration: 22
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 0
+            position: {x: 0.3, y: -0.5, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          loopDuringActive: 0
+    - rid: 1588256115435503723
+      type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: VFX
+          vfxType: 111
+          vfxClip: {fileID: 0}
+          vfxPrefab: {fileID: 0}
+          triggerFrame: 14
+          duration: 52
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 0
+            position: {x: -0.2, y: 0, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          loopDuringActive: 0
+    - rid: 1588256115435503773
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 2
+          activeFrames: 3
+          recoveryFrames: 4
+          cancelWindowStartFrame: 7
+          loopActivePhase: 1
+          stepName: Attack7
+          animationClip: {fileID: 7400000, guid: aab3cdb52154db54b86a0acd86dc1a2b, type: 2}
+          lockAirPosition: 1
+          autoChainToNext: 0
+          triggerWindows:
+          - rid: 1588256115435503774
+          motionData:
+            rid: -2
+          vfxData:
+            rid: -2
+          audioData:
+            rid: -2
+          hitData:
+            rid: -2
+          componentOrder:
+          - motion
+          - vfx
+          - audio
+          - hitbox
+        routes: []
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 1588256115435503774
+      type: {class: TriggerWindow, ns: , asm: Assembly-CSharp}
+      data:
+        startFrame: 0
+        endFrame: -1
+        triggerConditions:
+        - rid: 1588256115435503775
+        targetNode:
+          rid: 1588256115435503776
+        priority: 0
+    - rid: 1588256115435503775
+      type: {class: WaitActionCondition, ns: , asm: Assembly-CSharp}
+      data:
+        waitUnit: 1
+        waitValue: 1.7
+    - rid: 1588256115435503776
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 10
+          activeFrames: 15
+          recoveryFrames: 20
+          cancelWindowStartFrame: 40
+          loopActivePhase: 0
+          stepName: Attack8
+          animationClip: {fileID: 7400000, guid: 0106abd9d8bdbc94985a0afa230a1f2f, type: 2}
+          lockAirPosition: 1
+          autoChainToNext: 0
+          triggerWindows: []
+          motionData:
+            rid: -2
+          vfxData:
+            rid: -2
+          audioData:
+            rid: -2
+          hitData:
+            rid: -2
+          componentOrder:
+          - motion
+          - vfx
+          - audio
+          - hitbox
+        routes: []
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: -2

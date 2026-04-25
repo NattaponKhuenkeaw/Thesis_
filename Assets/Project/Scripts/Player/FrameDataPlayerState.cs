@@ -345,12 +345,12 @@ public abstract class FrameDataPlayerState : PlayerState
         if ((allowed & ActionCategory.Ultimate) != 0 && buffer.ConsumeUltimate())
         {
             fsm.RouteUltimateInput();
-            return fsm.CurrentState != this;
+            return fsm.CurrentState != this || currentFrame == -1;
         }
         if ((allowed & ActionCategory.Skill) != 0 && buffer.ConsumeSkill())
         {
             fsm.RouteSkillInput();
-            return fsm.CurrentState != this;
+            return fsm.CurrentState != this || currentFrame == -1;
         }
         if ((allowed & ActionCategory.Dash) != 0)
         {
@@ -358,23 +358,23 @@ public abstract class FrameDataPlayerState : PlayerState
             if (buffer.ConsumeDash(out dashX))
             {
                 fsm.RouteDashInput(dashX);
-                return fsm.CurrentState != this;
+                return fsm.CurrentState != this || currentFrame == -1;
             }
         }
         if ((allowed & ActionCategory.Jump) != 0 && buffer.ConsumeJump())
         {
             fsm.RouteJumpInput();
-            return fsm.CurrentState != this;
+            return fsm.CurrentState != this || currentFrame == -1;
         }
         if ((allowed & ActionCategory.BasicAttack) != 0 && buffer.ConsumeAttack())
         {
             fsm.RouteAttackInput();
-            return fsm.CurrentState != this;
+            return fsm.CurrentState != this || currentFrame == -1;
         }
         if ((allowed & ActionCategory.Movement) != 0 && Mathf.Abs(buffer.DirectionalInput.x) > 0.01f && !buffer.HasAnyBuffer)
         {
             ExitToAppropriateMovementState();
-            return fsm.CurrentState != this;
+            return fsm.CurrentState != this || currentFrame == -1;
         }
         return false;
     }

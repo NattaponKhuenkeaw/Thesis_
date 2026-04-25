@@ -36,7 +36,13 @@ public class HitBoxController : MonoBehaviour
         if (hitboxCollider == null)
             hitboxCollider = GetComponent<BoxCollider2D>();
 
-        sr = GetComponent<SpriteRenderer>();
+        // Do not hijack the SpriteRenderer if this is a projectile!
+        // Projectiles use the SpriteRenderer for their actual visual, not for debug hitboxes.
+        if (GetComponent<ProjectileRuntime>() == null)
+        {
+            sr = GetComponent<SpriteRenderer>();
+        }
+        
         lr = GetComponent<LineRenderer>();
         worldAnchor = worldAnchor != null ? worldAnchor : ResolveDefaultAnchor();
     }
@@ -71,9 +77,12 @@ public class HitBoxController : MonoBehaviour
         if (anchorMode == HitboxAnchorMode.Self)
         {
             float facingSign = Mathf.Approximately(overrideFacing, 0f) ? 1f : Mathf.Sign(overrideFacing);
-            Vector2 colliderOffset = offset;
-            colliderOffset.x *= facingSign;
-            hitboxCollider.offset = colliderOffset;
+            Vector2 newOffset = offset;
+            newOffset.x *= facingSign;
+
+            // Apply the offset directly to the collider, do NOT shift the transform.
+            // This prevents the projectile from jumping when switching states.
+            hitboxCollider.offset = newOffset;
             hitboxCollider.size = size;
         }
         else
@@ -100,12 +109,6 @@ public class HitBoxController : MonoBehaviour
             lr.startColor = new Color(currentDebugColor.r, currentDebugColor.g, currentDebugColor.b, lr.startColor.a);
             lr.endColor = new Color(currentDebugColor.r, currentDebugColor.g, currentDebugColor.b, lr.endColor.a);
         }
-    }
-
-    public void SetWorldAnchor(Transform anchor)
-    {
-        worldAnchor = anchor;
-        anchorMode = anchor == transform ? HitboxAnchorMode.Self : HitboxAnchorMode.PlayerAttached;
     }
 
     public void ConfigureAnchoring(HitboxAnchorMode mode, Transform anchor = null)

@@ -172,23 +172,25 @@ MonoBehaviour:
       flipWithCharacter: 1
       isLocalSpace: 0
       obeyHitstop: 1
-    - type: 106
-      clip: {fileID: 7400000, guid: dc755c05f34c0364697e8434fcdbd3e7, type: 2}
+  - categoryName: char-Goenitz
+    entries:
+    - type: 109
+      clip: {fileID: 7400000, guid: 386f3045b20817f4bbf4a5c3cedfaa22, type: 2}
       localScale: {x: 1, y: 1, z: 1}
       tint: {r: 1, g: 1, b: 1, a: 1}
       flipWithCharacter: 1
       isLocalSpace: 1
       obeyHitstop: 1
-    - type: 107
-      clip: {fileID: 7400000, guid: 58eb934156de57843a43258d889d5cdf, type: 2}
-      localScale: {x: 2, y: 2, z: 2}
+    - type: 110
+      clip: {fileID: 7400000, guid: b470c927c40dce141a8a5e7889843213, type: 2}
+      localScale: {x: 1, y: 1, z: 1}
       tint: {r: 1, g: 1, b: 1, a: 1}
       flipWithCharacter: 1
-      isLocalSpace: 0
-      obeyHitstop: 0
-    - type: 103
-      clip: {fileID: 7400000, guid: d9c4375675a42334890b5d17edfe17a7, type: 2}
-      localScale: {x: 2, y: 2, z: 2}
+      isLocalSpace: 1
+      obeyHitstop: 1
+    - type: 111
+      clip: {fileID: 7400000, guid: 922e6cac0e22d264baa36e893def7f81, type: 2}
+      localScale: {x: 1.25, y: 1.25, z: 1.25}
       tint: {r: 1, g: 1, b: 1, a: 1}
       flipWithCharacter: 1
       isLocalSpace: 1

@@ -202,6 +202,10 @@ public class ProjectileData : ScriptableObject
     private Vector2 ResolveFacingAwareOffset(ProjectileSpawnContext context)
     {
         Vector2 offset = context.resolvedSpawnOffset;
+        if (offset == Vector2.zero)
+        {
+            offset = spawnOffset;
+        }
 
         if (context.direction.x < 0f)
         {

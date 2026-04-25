@@ -1306,6 +1306,18 @@ public class AnimationEditorWindow : EditorWindow
                 {
                     changed |= DrawRectHitboxHandle(i, hitboxLabel, startAt, endAt, isActive, isSelected, grabHitbox.debugColor, () => grabHitbox.offset, value => grabHitbox.offset = value, () => grabHitbox.size, value => grabHitbox.size = value);
                 }
+                else if (hitbox is ProjectileSpawnHitbox projHitbox)
+                {
+                    changed |= DrawRectHitboxHandle(i, hitboxLabel, startAt, endAt, isActive, isSelected, projHitbox.debugColor, 
+                        () => projHitbox.ResolveSpawnOffset(), 
+                        value => { 
+                            projHitbox.overrideSpawnOffset = true; 
+                            projHitbox.spawnOffset = value; 
+                        }, 
+                        () => new Vector2(0.5f, 0.5f), 
+                        value => { } // Ignore resize
+                    );
+                }
             }
         }
         finally

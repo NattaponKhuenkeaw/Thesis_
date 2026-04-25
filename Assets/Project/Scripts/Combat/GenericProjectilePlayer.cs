@@ -8,6 +8,10 @@ namespace Project.Combat
         private static readonly int SpawnStateHash = Animator.StringToHash("Spawn");
         private static readonly int LoopStateHash = Animator.StringToHash("Loop");
         private static readonly int PlayStateHash = Animator.StringToHash("Play");
+        
+        // Add support for "Projectile_Spawn" and "Projectile_Loop" names
+        private static readonly int ProjectileSpawnStateHash = Animator.StringToHash("Projectile_Spawn");
+        private static readonly int ProjectileLoopStateHash = Animator.StringToHash("Projectile_Loop");
 
         private ProjectileVFXManager owningManager;
         private Animator cachedAnimator;
@@ -105,6 +109,11 @@ namespace Project.Combat
                 cachedAnimator.Play(SpawnStateHash, 0, 0f);
                 return true;
             }
+            else if (cachedAnimator.HasState(0, ProjectileSpawnStateHash))
+            {
+                cachedAnimator.Play(ProjectileSpawnStateHash, 0, 0f);
+                return true;
+            }
 
             return false;
         }
@@ -120,6 +129,10 @@ namespace Project.Combat
             {
                 cachedAnimator.Play(LoopStateHash, 0, 0f);
             }
+            else if (cachedAnimator.HasState(0, ProjectileLoopStateHash))
+            {
+                cachedAnimator.Play(ProjectileLoopStateHash, 0, 0f);
+            }
             else if (cachedAnimator.HasState(0, PlayStateHash))
             {
                 cachedAnimator.Play(PlayStateHash, 0, 0f);
@@ -133,13 +146,16 @@ namespace Project.Combat
                 return true;
             }
 
-            if (!cachedAnimator.HasState(0, SpawnStateHash))
+            bool hasSpawn = cachedAnimator.HasState(0, SpawnStateHash);
+            bool hasProjSpawn = cachedAnimator.HasState(0, ProjectileSpawnStateHash);
+            
+            if (!hasSpawn && !hasProjSpawn)
             {
                 return true;
             }
 
             AnimatorStateInfo state = cachedAnimator.GetCurrentAnimatorStateInfo(0);
-            if (state.shortNameHash != SpawnStateHash)
+            if (state.shortNameHash != SpawnStateHash && state.shortNameHash != ProjectileSpawnStateHash)
             {
                 return true;
             }
