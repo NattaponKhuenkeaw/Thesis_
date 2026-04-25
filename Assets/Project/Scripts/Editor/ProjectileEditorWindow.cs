@@ -153,15 +153,14 @@ namespace CombatEditor
             cardBuilder.SetTarget(selectedProjectile);
             cardBuilder.Build(selectedProjectile);
             
-            BuildTimeline(savedScroll);
+            BuildPhaseTimeline(savedScroll);
         }
 
-        private void BuildTimeline(Vector2 savedScroll)
+        private void BuildPhaseTimeline(Vector2 savedScroll)
         {
             timelineContainer.Clear();
-            if (selectedProjectile.impactHitData == null) return;
 
-            var title = new Label("Impact Timeline (Logic Frames)") {
+            var title = new Label("Projectile Phase Timeline") {
                  style = { unityFontStyleAndWeight = FontStyle.Bold, marginBottom = 5, marginTop = 5 }
             };
             timelineContainer.Add(title);
@@ -176,11 +175,13 @@ namespace CombatEditor
                 timelineBody.scrollOffset = savedScroll;
             });
 
+            // Determine max frame extent from both hitboxes
+            int maxFrame = 10;
+            HitboxBase spawnHb = selectedProjectile.ResolveSpawningHitbox();
+            HitboxBase routineHb = selectedProjectile.ResolveRoutineHitbox();
 
-            int maxFrame = 0;
-            foreach(var hb in selectedProjectile.impactHitData.hitboxes) {
-                if (hb != null) maxFrame = Mathf.Max(maxFrame, hb.startFrameOffset + hb.activeFrames);
-            }
+            if (spawnHb != null) maxFrame = Mathf.Max(maxFrame, spawnHb.startFrameOffset + spawnHb.activeFrames);
+            if (routineHb != null) maxFrame = Mathf.Max(maxFrame, routineHb.startFrameOffset + routineHb.activeFrames);
             maxFrame = Mathf.Max(30, maxFrame + 5);
 
             float frameWidth = 10f;
@@ -195,10 +196,9 @@ namespace CombatEditor
             }
             timelineBody.Add(frameNumbers);
 
-            // Tracks
-            foreach(var hitbox in selectedProjectile.impactHitData.hitboxes) {
-                if (hitbox == null) continue;
-                
+            // Track: Spawning Hitbox
+            if (spawnHb != null)
+            {
                 var track = new VisualElement { name = "track" };
                 track.style.height = 15;
                 track.style.marginTop = 2;
@@ -206,10 +206,10 @@ namespace CombatEditor
                 
                 var bar = new VisualElement();
                 bar.style.position = Position.Absolute;
-                bar.style.left = hitbox.startFrameOffset * frameWidth;
-                bar.style.width = hitbox.activeFrames * frameWidth;
+                bar.style.left = spawnHb.startFrameOffset * frameWidth;
+                bar.style.width = spawnHb.activeFrames * frameWidth;
                 bar.style.height = 12;
-                bar.style.backgroundColor = hitbox.TimelineTrackColor;
+                bar.style.backgroundColor = new Color(0.18f, 0.72f, 0.38f);
                 bar.style.borderLeftWidth = 1;
                 bar.style.borderRightWidth = 1;
                 bar.style.borderLeftColor = Color.black;
@@ -217,53 +217,93 @@ namespace CombatEditor
                 bar.style.borderTopColor = Color.black;
                 bar.style.borderBottomColor = Color.black;
                 
-                var label = new Label(hitbox.HitboxTypeName) { style = { fontSize = 8, color = Color.black, unityTextAlign = TextAnchor.MiddleCenter } };
+                var label = new Label($"Spawn ({spawnHb.HitboxTypeName})") { style = { fontSize = 8, color = Color.black, unityTextAlign = TextAnchor.MiddleCenter } };
                 bar.Add(label);
                 
                 track.Add(bar);
                 timelineBody.Add(track);
             }
+
+            // Track: Routine Hitbox
+            if (routineHb != null)
+            {
+                var track = new VisualElement { name = "track" };
+                track.style.height = 15;
+                track.style.marginTop = 2;
+                track.style.flexDirection = FlexDirection.Row;
+                
+                var bar = new VisualElement();
+                bar.style.position = Position.Absolute;
+                bar.style.left = routineHb.startFrameOffset * frameWidth;
+                bar.style.width = routineHb.activeFrames * frameWidth;
+                bar.style.height = 12;
+                bar.style.backgroundColor = new Color(0.2f, 0.6f, 1f);
+                bar.style.borderLeftWidth = 1;
+                bar.style.borderRightWidth = 1;
+                bar.style.borderLeftColor = Color.black;
+                bar.style.borderRightColor = Color.black;
+                bar.style.borderTopColor = Color.black;
+                bar.style.borderBottomColor = Color.black;
+                
+                var label = new Label($"Routine ({routineHb.HitboxTypeName})") { style = { fontSize = 8, color = Color.black, unityTextAlign = TextAnchor.MiddleCenter } };
+                bar.Add(label);
+                
+                track.Add(bar);
+                timelineBody.Add(track);
+            }
+
+            // Show "no hitboxes" message if neither phase has one
+            if (spawnHb == null && routineHb == null)
+            {
+                timelineBody.Add(new Label("No phase hitboxes configured.") {
+                    style = { color = Color.gray, unityFontStyleAndWeight = FontStyle.Italic, marginTop = 10 }
+                });
+            }
         }
 
         private void OnSceneGUI(SceneView sceneView)
         {
-            if (selectedProjectile == null || selectedProjectile.impactHitData == null) return;
+            if (selectedProjectile == null) return;
 
             Handles.color = Color.cyan;
-            Vector2 spawnPos = Vector2.zero; // Local origin for preview
+            Vector2 spawnPos = Vector2.zero;
             
             // Draw Travel Path (simplified)
             Handles.DrawDottedLine(spawnPos, spawnPos + Vector2.right * (selectedProjectile.speed * selectedProjectile.lifetime), 4f);
             Handles.Label(spawnPos, "Spawn Point (Projectile Path Preview)");
 
-            // Draw Hitboxes in sequence
-            foreach (var hitbox in selectedProjectile.impactHitData.hitboxes)
-            {
-                if (hitbox == null) continue;
-                
-                Vector2 offset = Vector2.zero;
-                Vector2 size = Vector2.one;
+            // Draw Spawning Phase Hitbox
+            DrawPhaseHitboxGizmo(selectedProjectile.ResolveSpawningHitbox(), "Spawn", new Color(0.18f, 0.72f, 0.38f));
 
-                if (hitbox is NormalHitbox n) { offset = n.offset; size = n.size; }
-                else if (hitbox is GrabHitbox g) { offset = g.offset; size = g.size; }
-                else continue;
+            // Draw Routine Phase Hitbox
+            DrawPhaseHitboxGizmo(selectedProjectile.ResolveRoutineHitbox(), "Routine", new Color(0.2f, 0.6f, 1f));
+        }
 
-                Handles.color = hitbox.debugColor;
-                Vector3 center = (Vector3)offset;
-                
-                // Draw wireframe box
-                Vector3 p1 = center + new Vector3(-size.x, -size.y, 0) * 0.5f;
-                Vector3 p2 = center + new Vector3(size.x, -size.y, 0) * 0.5f;
-                Vector3 p3 = center + new Vector3(size.x, size.y, 0) * 0.5f;
-                Vector3 p4 = center + new Vector3(-size.x, size.y, 0) * 0.5f;
-                
-                Handles.DrawPolyLine(p1, p2, p3, p4, p1);
-                Handles.Label(center, $"{hitbox.HitboxTypeName} [F:{hitbox.startFrameOffset}-{hitbox.startFrameOffset + hitbox.activeFrames}]");
+        private void DrawPhaseHitboxGizmo(HitboxBase hitbox, string phaseLabel, Color fallbackColor)
+        {
+            if (hitbox == null) return;
 
-                // Draw solid cap for start frame
-                Handles.color = new Color(hitbox.debugColor.r, hitbox.debugColor.g, hitbox.debugColor.b, 0.2f);
-                Handles.DrawSolidRectangleWithOutline(new[] { p1, p2, p3, p4 }, hitbox.debugColor, Color.clear);
-            }
+            Vector2 offset = Vector2.zero;
+            Vector2 size = Vector2.one;
+
+            if (hitbox is NormalHitbox n) { offset = n.offset; size = n.size; }
+            else if (hitbox is GrabHitbox g) { offset = g.offset; size = g.size; }
+            else return;
+
+            Color color = hitbox.debugColor != default ? hitbox.debugColor : fallbackColor;
+            Handles.color = color;
+            Vector3 center = (Vector3)offset;
+            
+            Vector3 p1 = center + new Vector3(-size.x, -size.y, 0) * 0.5f;
+            Vector3 p2 = center + new Vector3(size.x, -size.y, 0) * 0.5f;
+            Vector3 p3 = center + new Vector3(size.x, size.y, 0) * 0.5f;
+            Vector3 p4 = center + new Vector3(-size.x, size.y, 0) * 0.5f;
+            
+            Handles.DrawPolyLine(p1, p2, p3, p4, p1);
+            Handles.Label(center, $"{phaseLabel}: {hitbox.HitboxTypeName} [F:{hitbox.startFrameOffset}-{hitbox.startFrameOffset + hitbox.activeFrames}]");
+
+            Handles.color = new Color(color.r, color.g, color.b, 0.15f);
+            Handles.DrawSolidRectangleWithOutline(new[] { p1, p2, p3, p4 }, Handles.color, Color.clear);
         }
     }
 }

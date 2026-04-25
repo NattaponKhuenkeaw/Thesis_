@@ -449,7 +449,7 @@ PrefabInstance:
     - target: {fileID: 841549147893548566, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 9100000, guid: efb84dc297f28b2448da06b6d95f9b3b, type: 2}
+      objectReference: {fileID: 9100000, guid: b4f7f50e094f0f145a2251ad62172a8d, type: 2}
     - target: {fileID: 1228648587804198703, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
       propertyPath: m_IsActive
       value: 1
@@ -458,6 +458,10 @@ PrefabInstance:
       propertyPath: movement
       value: 
       objectReference: {fileID: 6805025547357927974}
+    - target: {fileID: 1579617338873354533, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
+      propertyPath: worldAnchor
+      value: 
+      objectReference: {fileID: 8039369968335461904}
     - target: {fileID: 2987741699807731709, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
       propertyPath: movement
       value: 
@@ -518,13 +522,29 @@ PrefabInstance:
     m_RemovedGameObjects:
     - {fileID: 4624394934341444398, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5773030576927617797, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8726388190221409822}
   m_SourcePrefab: {fileID: 100100000, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
 --- !u!1 &1096389015017390992 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5773030576927617797, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
   m_PrefabInstance: {fileID: 6857509681489621141}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &8726388190221409822
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1096389015017390992}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2e4c06578c99104481c5eccfe392543, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Combat.ProjectileManager
+  runtimeManager: {fileID: 0}
 --- !u!114 &1350851839684900769 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5590642992204760884, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
@@ -568,6 +588,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7030fb74efbe93644887045fc024bd11, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimator
+--- !u!4 &8039369968335461904 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3511489245865422469, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
+  m_PrefabInstance: {fileID: 6857509681489621141}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &8528783629480161128 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2987741699807731709, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}

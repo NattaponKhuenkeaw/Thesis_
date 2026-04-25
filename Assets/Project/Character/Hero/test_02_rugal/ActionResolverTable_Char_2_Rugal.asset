@@ -880,7 +880,7 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 8300000, guid: 9c7433f026bbb6d42886e2c785629571, type: 3}
-        hitVFXType: 100
+        hitVFXType: 15
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
     - rid: 1588255929706480000
@@ -913,7 +913,7 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 8300000, guid: 8f6ab12021ff39d4c869a546e444aa27, type: 3}
-        hitVFXType: 100
+        hitVFXType: 15
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
     - rid: 1588255929706480001
@@ -921,7 +921,8 @@ MonoBehaviour:
       data:
         entries:
         - label: VFX
-          vfxType: 101
+          vfxType: 105
+          vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 13
           duration: 42
@@ -1140,7 +1141,7 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 8300000, guid: 4bd6b8731ae78744395b02a901c49b23, type: 3}
-        hitVFXType: 102
+        hitVFXType: 107
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
     - rid: 3251577360560685155
@@ -1221,26 +1222,28 @@ MonoBehaviour:
       data:
         entries:
         - label: VFX
-          vfxType: 105
+          vfxType: 106
+          vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 1
           duration: 51
           trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
           transformKeys:
-          - frame: 9
-            position: {x: -0.78, y: 0.12, z: 0}
+          - frame: 0
+            position: {x: -0.78, y: 0.16, z: 0}
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
         - label: Dust
           vfxType: 30
+          vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 4
           duration: 17
           trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
           transformKeys:
           - frame: 0
-            position: {x: -1, y: -1, z: 0}
+            position: {x: -1, y: -0.85, z: 0}
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
@@ -1249,7 +1252,8 @@ MonoBehaviour:
       data:
         entries:
         - label: VFX
-          vfxType: 105
+          vfxType: 106
+          vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 0
           duration: 5000

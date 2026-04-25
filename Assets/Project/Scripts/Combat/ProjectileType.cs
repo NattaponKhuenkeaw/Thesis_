@@ -1,11 +1,22 @@
 public enum ProjectileType
 {
     None = 0,
-    Fire = 10,
-    Ice = 20,
-    Physical = 30,
-    Wind = 40,
-    Electric = 50,
+
+    // --- kyo ---
+    kyo_skill1 = 10,
+
+    // --- krizalid ---
+    krizalid_basic = 20,
+
+    // --- goenitz ---
+
+    goenitz_basic = 30,
+    goenitz_tornado = 31,
+    goenitz_light = 32,
+    
+    
+    
+    // --- custom ---
     Custom_01 = 100,
     Custom_02 = 101,
     Custom_03 = 102,

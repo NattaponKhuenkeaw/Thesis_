@@ -71,6 +71,13 @@ public class EnemyAttackHitbox : MonoBehaviour
         if (damage <= 0f)
             return;
 
+        // --- NEW: Check for Player Counter ---
+        if (playerCharacter.TryCounter(enemyController.gameObject))
+        {
+            // Hit was countered: immunity to damage, stun handled by condition
+            return;
+        }
+
         playerCharacter.TakeDamage(damage);
 
         // Camera shake: player got hit

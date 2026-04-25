@@ -129,9 +129,18 @@ public class ProjectileData : ScriptableObject
                     : context.origin;
 
             case SpawnPositionMode.Target:
-                return context.targetTransform != null
-                    ? (Vector2)context.targetTransform.position + facingOffset
-                    : context.origin;
+                // Fallback sequence: Target Transform -> Caster Transform (relative to target) -> Context Origin
+                if (context.targetTransform != null)
+                {
+                    return (Vector2)context.targetTransform.position + facingOffset;
+                }
+                
+                if (context.casterTransform != null)
+                {
+                    return (Vector2)context.casterTransform.position + facingOffset;
+                }
+
+                return context.origin;
 
             case SpawnPositionMode.Offset:
             default:
@@ -193,10 +202,6 @@ public class ProjectileData : ScriptableObject
     private Vector2 ResolveFacingAwareOffset(ProjectileSpawnContext context)
     {
         Vector2 offset = context.resolvedSpawnOffset;
-        if (offset == Vector2.zero)
-        {
-            offset = spawnOffset;
-        }
 
         if (context.direction.x < 0f)
         {

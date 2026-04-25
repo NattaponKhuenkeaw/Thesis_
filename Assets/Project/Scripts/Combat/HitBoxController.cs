@@ -117,11 +117,11 @@ public class HitBoxController : MonoBehaviour
         {
             hitboxCollider.offset = Vector2.zero;
         }
-        else
+        else if (anchorMode == HitboxAnchorMode.Self)
         {
-            transform.localPosition = Vector3.zero;
-            transform.localRotation = Quaternion.identity;
-            transform.localScale = Vector3.one;
+            // Do not reset local transform here!
+            // When attached to a Projectile, this is the root object and resetting
+            // localPosition would snap the projectile to its Manager's origin.
         }
     }
 

@@ -13,18 +13,26 @@ namespace Project.Combat
         HitSpark_Medium = 11,
         HitSpark_Heavy = 12,
         HitSpark_Ultimate = 13,
-        
+        HitSpark_Grab = 14,
+        HitSpark_Grab_Slash = 15,
+        HitSpark_Burn = 16,
+        HitSpark_Explosion = 17,
+        HitSpark_Slam = 18,
+
         
         // --- Movement ---
-        Dust_Dash = 30,
-        Dust_Land = 31,
-        Jump_Cloud = 32,
+        Dash_Dust = 30,
+        Dash_Fire = 31,
+        Land_Dust = 32,
+        Jump_Cloud = 33,
         
+
         // --- Character Status ---
         Ultimate_Flash = 40,
         Buff_Aura = 41,
         Stun_Stars = 42,
         
+
         // --- Environmental / Common ---
         Blood_Splash = 50,
         Explosion_Small = 60,
@@ -32,15 +40,28 @@ namespace Project.Combat
 
         // --- Custom / Designer Slots (100+) ---
         // Use these for quick prototype or character-specific VFX
-        Custom_01 = 100,
-        Custom_02 = 101,
-        Custom_03 = 102,
-        Custom_04 = 103,
-        Custom_05 = 104,
-        Custom_06 = 105,
-        Custom_07 = 106,
-        Custom_08 = 107,
-        Custom_09 = 108,
-        Custom_10 = 109
+        
+
+        // --- Kyo ---
+        Kyo_Skill1 = 100,
+        Kyo_Skill1_Slash = 101,
+        Kyo_Skill2 = 102,
+        Kyo_Skill2_Fire = 103,
+        Kyo_Skill3 = 104,
+
+
+        // --- Rugal ---
+        Rugal_Skill = 105,
+        Rugal_Ultimate_Aura = 106,
+        Rugal_Ultimate_Explosion = 107,
+
+        // --- Krizalid ---
+        Krizalid_Projectile_Hit = 108,
+
+        // --- Goenitz ---
+        Goenitz_Basic = 109,
+        Goenitz_Tornado = 110,
+        Goenitz_Light = 111,
+        Goenitz_Ultimate_Tornado = 111,
     }
 }

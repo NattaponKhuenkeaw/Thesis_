@@ -57,17 +57,20 @@ namespace Project.Combat
 
             if (context.projectileParent != null)
             {
-                player.transform.SetParent(context.projectileParent, false);
+                player.transform.SetParent(context.projectileParent, true);
             }
             else
             {
-                player.transform.SetParent(transform, false);
+                player.transform.SetParent(transform, true);
             }
 
             ProjectileType resolvedType = type != ProjectileType.None ? type : data.projectileType;
             ProjectileSpawnContext resolvedContext = context;
             resolvedContext.projectileData = data;
             resolvedContext.projectileType = resolvedType;
+
+            // Set position before play/activation
+            player.transform.position = data.ResolveSpawnPosition(resolvedContext);
 
             player.Play(this, resolvedType, data, resolvedContext);
             return player;

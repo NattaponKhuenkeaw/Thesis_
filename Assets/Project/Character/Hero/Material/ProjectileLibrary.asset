@@ -13,11 +13,15 @@ MonoBehaviour:
   m_Name: ProjectileLibrary
   m_EditorClassIdentifier: Assembly-CSharp::ProjectileLibrary
   categories:
-  - categoryName: Kyo
+  - categoryName: char-Kyo
     entries:
     - type: 10
       data: {fileID: 11400000, guid: 6b1d6a7d20195c940a7249e106a8cc1e, type: 2}
-  - categoryName: New Category
+  - categoryName: char-Krizalid
     entries:
-    - type: 0
-      data: {fileID: 11400000, guid: 6b1d6a7d20195c940a7249e106a8cc1e, type: 2}
+    - type: 20
+      data: {fileID: 11400000, guid: 59a15c91716f1fd40865da0b0945529e, type: 2}
+  - categoryName: char-Goenitz
+    entries:
+    - type: 30
+      data: {fileID: 11400000, guid: 4c561112b8238eb4cb30c0b81d7bf72e, type: 2}

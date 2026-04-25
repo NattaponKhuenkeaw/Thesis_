@@ -906,13 +906,13 @@ MonoBehaviour:
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
         stepData:
-          startupFrames: 10
-          activeFrames: 15
-          recoveryFrames: 20
-          cancelWindowStartFrame: 35
+          startupFrames: 14
+          activeFrames: 6
+          recoveryFrames: 1
+          cancelWindowStartFrame: 23
           loopActivePhase: 0
           stepName: Attack6
-          animationClip: {fileID: 0}
+          animationClip: {fileID: 7400000, guid: 0135963a5a85efc4bb64d158695020d1, type: 2}
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows: []
@@ -923,7 +923,7 @@ MonoBehaviour:
           audioData:
             rid: -2
           hitData:
-            rid: -2
+            rid: 1588256093655269461
           componentOrder:
           - motion
           - vfx
@@ -934,3 +934,19 @@ MonoBehaviour:
           rid: -2
         onGrabSuccessNode:
           rid: -2
+    - rid: 1588256093655269461
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 1588256093655269462
+    - rid: 1588256093655269462
+      type: {class: ProjectileSpawnHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 0
+        activeFrames: 3
+        damageType: 5
+        debugColor: {r: 0.42, g: 0.81, b: 1, a: 1}
+        projectileType: 0
+        projectileData: {fileID: 11400000, guid: 4c561112b8238eb4cb30c0b81d7bf72e, type: 2}
+        overrideSpawnOffset: 0
+        spawnOffset: {x: 0, y: 0}

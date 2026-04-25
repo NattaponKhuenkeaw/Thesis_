@@ -229,7 +229,7 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 0}
-        hitVFXType: 0
+        hitVFXType: 16
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
     - rid: 1588255892939997275
@@ -262,7 +262,7 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 0}
-        hitVFXType: 0
+        hitVFXType: 16
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
     - rid: 1588255892939997282
@@ -551,7 +551,7 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 0}
-        hitVFXType: 104
+        hitVFXType: 16
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
     - rid: 1588255910640222299
@@ -951,7 +951,7 @@ MonoBehaviour:
         projectileType: 0
         projectileData: {fileID: 11400000, guid: 6b1d6a7d20195c940a7249e106a8cc1e, type: 2}
         overrideSpawnOffset: 0
-        spawnOffset: {x: 0, y: 0}
+        spawnOffset: {x: 1, y: 0}
     - rid: 1588255929706479747
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -988,7 +988,7 @@ MonoBehaviour:
       data:
         entries:
         - label: VFX
-          vfxType: 61
+          vfxType: 102
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 784361931337648594, guid: 4c0e5d975c6ec9341ac97977330a4775, type: 3}
           triggerFrame: 10
@@ -1005,19 +1005,19 @@ MonoBehaviour:
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
         - label: VFX
-          vfxType: 60
+          vfxType: 103
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 784361931337648594, guid: 4c0e5d975c6ec9341ac97977330a4775, type: 3}
           triggerFrame: 29
           duration: 17
           trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
           transformKeys:
-          - frame: 29
-            position: {x: 0, y: 1.91, z: 0}
+          - frame: 0
+            position: {x: -0.1, y: 0.7, z: 0}
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
-          - frame: 41
-            position: {x: 0, y: 2.89, z: 0}
+          - frame: 0
+            position: {x: 0, y: 0, z: 0}
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
@@ -1026,7 +1026,7 @@ MonoBehaviour:
       data:
         entries:
         - label: VFX
-          vfxType: 41
+          vfxType: 17
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 784361931337648594, guid: 4c0e5d975c6ec9341ac97977330a4775, type: 3}
           triggerFrame: 59
@@ -1043,7 +1043,7 @@ MonoBehaviour:
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
         - label: Dust Land
-          vfxType: 31
+          vfxType: 32
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 784361931337648594, guid: 4c0e5d975c6ec9341ac97977330a4775, type: 3}
           triggerFrame: 1
@@ -1060,15 +1060,15 @@ MonoBehaviour:
       data:
         entries:
         - label: Dust Dash
-          vfxType: 30
+          vfxType: 31
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 9
           duration: 13
           trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
           transformKeys:
-          - frame: 9
-            position: {x: -1, y: -2, z: 0}
+          - frame: 0
+            position: {x: -1, y: -0.7, z: 0}
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
@@ -1076,8 +1076,8 @@ MonoBehaviour:
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
         stepData:
-          startupFrames: 16
-          activeFrames: 15
+          startupFrames: 20
+          activeFrames: 11
           recoveryFrames: 16
           cancelWindowStartFrame: 41
           loopActivePhase: 0
@@ -1144,12 +1144,12 @@ MonoBehaviour:
     - rid: 3251577252092051570
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
-        startFrameOffset: 5
+        startFrameOffset: 1
         activeFrames: 5
         damageType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 1.0330337, y: 1.8890107}
-        size: {x: 1.7736158, y: 1.3200908}
+        offset: {x: 1.0527048, y: 1.9185172}
+        size: {x: 1.7736158, y: 0.9069997}
         damageMultiplier: 1.3
         impactTier: 0
         useDeterministicReaction: 1
@@ -1281,31 +1281,30 @@ MonoBehaviour:
       data:
         entries:
         - label: VFX
-          vfxType: 0
+          vfxType: 101
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
-          triggerFrame: 8
+          triggerFrame: 21
           duration: 30
           trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
-          transformKeys: []
+          transformKeys:
+          - frame: 0
+            position: {x: 0.2, y: 0, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
         - label: VFX
-          vfxType: 0
+          vfxType: 100
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 26
           duration: 28
           trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
-          transformKeys: []
-          loopDuringActive: 0
-        - label: VFX
-          vfxType: 0
-          vfxClip: {fileID: 0}
-          vfxPrefab: {fileID: 0}
-          triggerFrame: 26
-          duration: 28
-          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
-          transformKeys: []
+          transformKeys:
+          - frame: 0
+            position: {x: 0.7, y: -0.85, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
     - rid: 3251577402691944747
       type: {class: TriggerWindow, ns: , asm: Assembly-CSharp}

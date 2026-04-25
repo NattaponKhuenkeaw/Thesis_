@@ -12,15 +12,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79c1523f29053b247a7c908054ed396c, type: 3}
   m_Name: ProjectileData_kri-basic
   m_EditorClassIdentifier: Assembly-CSharp::ProjectileData
+  projectileType: 20
   projectilePrefab: {fileID: 7731053110207872557, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
+  spawnClip: {fileID: 0}
+  loopClip: {fileID: 7400000, guid: 8cb2bedcc70d41e4aae6fc3efaa80d7f, type: 2}
   spawnOffset: {x: 1.2, y: 0.6}
-  spawnMode: 0
+  spawnPositionMode: 2
+  playSpawnAnimation: 1
+  spawnDuration: 0
   inheritFacingDirection: 1
+  spawningHitbox:
+    enabled: 0
+    decrementsMaxHits: 0
+    hitbox:
+      rid: -2
+  spawnMode: 0
+  traversalMode: 0
   homeToTarget: 0
   homingTurnRate: 8
+  anchorToCaster: 0
   speed: 3
   lifetime: 1
   maxHits: 6
+  routineHitbox:
+    enabled: 1
+    decrementsMaxHits: 1
+    hitbox:
+      rid: -2
   travelColliderSize: {x: 0.5, y: 0.5}
   enemyLayerMask:
     serializedVersion: 2
@@ -35,14 +53,25 @@ MonoBehaviour:
     - rid: 3251577402691944735
   hitIntervalFrames: 10
   stopOnImpact: 0
-  anchorToCaster: 0
   destroyWhenHitsExhausted: 1
   destroyOnLifetimeExpire: 1
-  impactVFXType: 107
+  spawnFeedback:
+    vfxType: 0
+    vfxClip: {fileID: 0}
+    audio: {fileID: 0}
+    offset: {x: 0, y: 0}
+  expireFeedback:
+    vfxType: 0
+    vfxClip: {fileID: 0}
+    audio: {fileID: 0}
+    offset: {x: 0, y: 0}
+  impactVFXType: 108
   impactAudio: {fileID: 8300000, guid: 6dbe3ecbb7bf0fd47b365d1dd9ff2b49, type: 3}
   references:
     version: 2
     RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
     - rid: 3251577402691944730
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:

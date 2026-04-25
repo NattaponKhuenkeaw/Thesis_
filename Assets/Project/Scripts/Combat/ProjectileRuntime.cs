@@ -165,7 +165,7 @@ public class ProjectileRuntime : MonoBehaviour
     public ProjectileData ProjectileData { get; private set; }
     public Vector2 CurrentDirection => currentDirection.sqrMagnitude > 0.001f ? currentDirection.normalized : Vector2.right;
     public Transform AttackerTransform => spawnContext.casterTransform;
-    public Vector2 AttackerPosition => transform.position;
+    public Vector2 AttackerPosition => spawnContext.casterTransform != null ? (Vector2)spawnContext.casterTransform.position : (Vector2)transform.position;
 
     public void Initialize(
         Project.Combat.GenericProjectilePlayer owner,

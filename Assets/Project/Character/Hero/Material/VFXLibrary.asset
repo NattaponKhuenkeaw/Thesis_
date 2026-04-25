@@ -15,19 +15,181 @@ MonoBehaviour:
   categories:
   - categoryName: Hit Reaction
     entries:
-    - type: 0
-      clip: {fileID: 0}
-      localScale: {x: 0, y: 0, z: 0}
+    - type: 10
+      clip: {fileID: 7400000, guid: be8ed378a7736954fa0b613f8a01299d, type: 2}
+      localScale: {x: 1.5, y: 1.5, z: 1.5}
       tint: {r: 1, g: 1, b: 1, a: 1}
-      flipWithCharacter: 0
+      flipWithCharacter: 1
       isLocalSpace: 0
-      obeyHitstop: 0
-  - categoryName: Hit Reaction
+      obeyHitstop: 1
+    - type: 11
+      clip: {fileID: 7400000, guid: 822ad224f43fef34ea907ac9ef56935e, type: 2}
+      localScale: {x: 1.5, y: 1.5, z: 1.5}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 0
+      obeyHitstop: 1
+    - type: 12
+      clip: {fileID: 7400000, guid: 1733d783d68995b4bb4d6e6635f78cce, type: 2}
+      localScale: {x: 2, y: 2, z: 2}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 0
+      obeyHitstop: 1
+    - type: 13
+      clip: {fileID: 7400000, guid: 022170db4fb68a54a891488b0503c73b, type: 2}
+      localScale: {x: 3, y: 3, z: 3}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 0
+      obeyHitstop: 1
+    - type: 15
+      clip: {fileID: 7400000, guid: 2aa74bf3f7f1f184eb621ea6435522a3, type: 2}
+      localScale: {x: 1.5, y: 1.5, z: 1.5}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 0
+      obeyHitstop: 1
+    - type: 16
+      clip: {fileID: 7400000, guid: fde8849cdd9ca3d4992d6979ceb90bbd, type: 2}
+      localScale: {x: 2.5, y: 2.5, z: 2.5}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 0
+      obeyHitstop: 1
+    - type: 17
+      clip: {fileID: 7400000, guid: c289650fd69cbf843ad9de201055d28b, type: 2}
+      localScale: {x: 3, y: 3, z: 3}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 0
+      obeyHitstop: 1
+    - type: 18
+      clip: {fileID: 7400000, guid: 50c9a54b4d935114db428da9a4c35e0a, type: 2}
+      localScale: {x: 1.5, y: 1.5, z: 1.5}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 1
+  - categoryName: Ultimate
     entries:
-    - type: 0
-      clip: {fileID: 0}
-      localScale: {x: 0, y: 0, z: 0}
+    - type: 40
+      clip: {fileID: 7400000, guid: b53fc5f11238cda4b9c6c3a50cbae232, type: 2}
+      localScale: {x: 1, y: 1, z: 1}
       tint: {r: 1, g: 1, b: 1, a: 1}
-      flipWithCharacter: 0
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 0
+  - categoryName: Dash&Dust Effect
+    entries:
+    - type: 30
+      clip: {fileID: 7400000, guid: 62586b6ff91325a4b8fd62d25d352e33, type: 2}
+      localScale: {x: 1.5, y: 1.5, z: 1.5}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 0
+      obeyHitstop: 1
+    - type: 31
+      clip: {fileID: 7400000, guid: 2142f4bda3293db438a7a44bc927925e, type: 2}
+      localScale: {x: 1.5, y: 1.5, z: 1.5}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 0
+      obeyHitstop: 1
+    - type: 32
+      clip: {fileID: 7400000, guid: 345422d193c739a438279803e57f299e, type: 2}
+      localScale: {x: 2, y: 2, z: 2}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 0
+      obeyHitstop: 1
+  - categoryName: char-Kyo
+    entries:
+    - type: 100
+      clip: {fileID: 7400000, guid: f5c1f658582300d49afacb40484232b3, type: 2}
+      localScale: {x: 1.5, y: 1.5, z: 1.5}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 1
+    - type: 101
+      clip: {fileID: 7400000, guid: 76da169196ae6594fae848de7f33c808, type: 2}
+      localScale: {x: 1.5, y: 1.5, z: 1.5}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 1
+    - type: 102
+      clip: {fileID: 7400000, guid: 5b044e2ef34c4f14ca2e47e8f1a447b8, type: 2}
+      localScale: {x: 2, y: 2, z: 2}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 1
+    - type: 103
+      clip: {fileID: 7400000, guid: d9c4375675a42334890b5d17edfe17a7, type: 2}
+      localScale: {x: 2, y: 2, z: 2}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 1
+  - categoryName: char-Rugal
+    entries:
+    - type: 105
+      clip: {fileID: 7400000, guid: abfdfda6d414b1a4ea87ed13507a44e1, type: 2}
+      localScale: {x: 2.2, y: 2.2, z: 2.2}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 1
+    - type: 106
+      clip: {fileID: 7400000, guid: dc755c05f34c0364697e8434fcdbd3e7, type: 2}
+      localScale: {x: 1, y: 1, z: 1}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 1
+    - type: 107
+      clip: {fileID: 7400000, guid: 58eb934156de57843a43258d889d5cdf, type: 2}
+      localScale: {x: 2, y: 2, z: 2}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
       isLocalSpace: 0
       obeyHitstop: 0
+    - type: 103
+      clip: {fileID: 7400000, guid: d9c4375675a42334890b5d17edfe17a7, type: 2}
+      localScale: {x: 2, y: 2, z: 2}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 1
+  - categoryName: char-Krizalid
+    entries:
+    - type: 108
+      clip: {fileID: 7400000, guid: 5eb7e8d5094d66b4bae9d215acdeff7d, type: 2}
+      localScale: {x: 1, y: 1, z: 1}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 0
+      obeyHitstop: 1
+    - type: 106
+      clip: {fileID: 7400000, guid: dc755c05f34c0364697e8434fcdbd3e7, type: 2}
+      localScale: {x: 1, y: 1, z: 1}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 1
+    - type: 107
+      clip: {fileID: 7400000, guid: 58eb934156de57843a43258d889d5cdf, type: 2}
+      localScale: {x: 2, y: 2, z: 2}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 0
+      obeyHitstop: 0
+    - type: 103
+      clip: {fileID: 7400000, guid: d9c4375675a42334890b5d17edfe17a7, type: 2}
+      localScale: {x: 2, y: 2, z: 2}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 1

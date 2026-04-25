@@ -8,6 +8,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
     [Header("Runtime (Read-Only)")]
     [SerializeField] private EnemyReactionState currentState = EnemyReactionState.None;
     [SerializeField] private int currentJuggleCount = 0;
+    [SerializeField] private bool airJuggleSessionActive = false;
 
     [Header("Ground Detection")]
     public LayerMask groundLayers = default;
@@ -61,12 +62,8 @@ public class EnemyHitReactionHandler : MonoBehaviour
         if (rb != null)
         {
             originalBodyType = rb.bodyType;
-        if (rb != null)
-        {
-            originalBodyType = rb.bodyType;
             originalGravityScale = rb.gravityScale;
             originalConstraints = rb.constraints;
-        }
         }
 
         if (groundLayers.value == 0)
@@ -107,14 +104,14 @@ public class EnemyHitReactionHandler : MonoBehaviour
             return;
         }
 
-        bool airborneJuggle = IsAirborneReactionState(currentState) && data.reactionKind != EnemyReactionKind.Grab;
+        bool airborneJuggle = data.reactionKind == EnemyReactionKind.Knockup && IsAirJuggleContext();
         if (airborneJuggle)
         {
             PrepareAirJuggle(ref data);
         }
-        else if (data.reactionKind != EnemyReactionKind.Grab)
+        else if (data.reactionKind != EnemyReactionKind.Grab && !IsAirJuggleContext())
         {
-            currentJuggleCount = 0;
+            ResetAirJuggleSession();
         }
 
         if (IsInReaction)
@@ -130,6 +127,10 @@ public class EnemyHitReactionHandler : MonoBehaviour
         landingStateEnteredFrame = -1;
         hasResolvedAirborneLanding = false;
         impactFreezeAnchorPosition = transform.position;
+        if (data.reactionKind == EnemyReactionKind.Knockup)
+        {
+            airJuggleSessionActive = true;
+        }
         ApplyForcedFacing();
 
         EnterState(EnemyReactionState.ImpactFreeze);
@@ -520,21 +521,24 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
     private void PrepareAirJuggle(ref HitReactionData data)
     {
-        int nextJuggleCount = currentJuggleCount + 1;
-        data.reactionKind = EnemyReactionKind.Knockup;
+        int maxJuggleCount = Mathf.Max(0, data.maxJuggleCount);
 
-        if (!data.canAirJuggle || nextJuggleCount > data.maxJuggleCount)
+        if (!data.canAirJuggle || currentJuggleCount >= maxJuggleCount)
         {
             data.launchSpeed = 0f;
             data.horizontalSpeed *= 0.5f;
             data.landingBehavior = EnemyLandingBehavior.Knockdown;
             data.canAirJuggle = false;
-            currentJuggleCount = nextJuggleCount;
+            data.knockupFrames = 0;
+            data.reactionTiming = HitReactionData.CreateTiming(
+                data.ImpactFreezeFrames,
+                0,
+                data.RecoveryFrames);
             return;
         }
 
-        float launchScale = Mathf.Pow(data.juggleLaunchScale, nextJuggleCount);
-        float stunScale = Mathf.Pow(data.juggleStunScale, nextJuggleCount);
+        float launchScale = Mathf.Pow(data.juggleLaunchScale, currentJuggleCount);
+        float stunScale = Mathf.Pow(data.juggleStunScale, currentJuggleCount);
 
         data.launchSpeed = Mathf.Max(0f, data.LaunchSpeed * launchScale);
         data.horizontalSpeed = Mathf.Max(0f, data.HorizontalSpeed * Mathf.Lerp(1f, launchScale, 0.5f));
@@ -543,7 +547,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
             Mathf.Max(1, Mathf.RoundToInt(data.ActiveReactionFrames * stunScale)),
             data.RecoveryFrames);
 
-        currentJuggleCount = nextJuggleCount;
+        currentJuggleCount = Mathf.Min(maxJuggleCount, currentJuggleCount + 1);
     }
 
     private void ApplyLegacySnap(Vector2 attackerPosition)
@@ -591,14 +595,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
         }
 
         float velocityX = currentReaction.HorizontalSpeed * GetDirectionSign();
-        float velocityY = rb.linearVelocity.y;
-
-        if (currentState == EnemyReactionState.Knockup && currentReaction.knockupFrames > 0)
-        {
-            velocityY = Mathf.Max(velocityY, currentReaction.LaunchSpeed);
-        }
-
-        rb.linearVelocity = new Vector2(velocityX, velocityY);
+        rb.linearVelocity = new Vector2(velocityX, rb.linearVelocity.y);
     }
 
     private float GetDirectionSign()
@@ -772,6 +769,37 @@ public class EnemyHitReactionHandler : MonoBehaviour
         return state == EnemyReactionState.Knockup || state == EnemyReactionState.Knockfall;
     }
 
+    private bool IsAirJuggleContext()
+    {
+        if (IsAirborneReactionState(currentState))
+        {
+            return true;
+        }
+
+        if (currentState == EnemyReactionState.ImpactFreeze && currentReaction.reactionKind == EnemyReactionKind.Knockup)
+        {
+            return true;
+        }
+
+        return airJuggleSessionActive && IsPhysicallyAirborne();
+    }
+
+    private bool IsPhysicallyAirborne()
+    {
+        if (rb != null && Mathf.Abs(rb.linearVelocity.y) > 0.05f)
+        {
+            return true;
+        }
+
+        return bodyCollider != null && !IsGrounded();
+    }
+
+    private void ResetAirJuggleSession()
+    {
+        currentJuggleCount = 0;
+        airJuggleSessionActive = false;
+    }
+
     private void EnterState(EnemyReactionState newState)
     {
         if (currentState == newState)
@@ -806,9 +834,9 @@ public class EnemyHitReactionHandler : MonoBehaviour
             case EnemyReactionState.Knockup:
                 EnsureDynamicBody();
                 ApplyLaunchVelocity();
-                if (rb != null && currentReaction.knockupFrames > 0)
+                if (rb != null)
                 {
-                    rb.gravityScale = 0f; // Stay airborne as requested
+                    rb.gravityScale = originalGravityScale;
                 }
                 break;
 
@@ -867,7 +895,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
         launchVelocityApplied = false;
         landingStateEnteredFrame = -1;
         hasResolvedAirborneLanding = false;
-        currentJuggleCount = 0;
+        ResetAirJuggleSession();
         
         if (controller != null)
             controller.ResetComboCount();

@@ -145,6 +145,22 @@ public class PlayerCharacter : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Attempts to trigger a counter-attack if the current state supports it.
+    /// Returns true if the hit was successfully countered (and damage should be negated).
+    /// </summary>
+    public bool TryCounter(GameObject attacker)
+    {
+        if (IsDead) return false;
+
+        if (StateMachine != null && StateMachine.CurrentState is CombatPlayerState combatState)
+        {
+            return combatState.TryTriggerCounter(attacker);
+        }
+
+        return false;
+    }
+
     public void Heal(float value)
     {
         if (characterObject == null || value <= 0f || IsDead)

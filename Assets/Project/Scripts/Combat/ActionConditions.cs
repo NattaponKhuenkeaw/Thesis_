@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 public enum ConditionCategory
 {
@@ -22,6 +23,7 @@ public abstract class ActionConditionBase
 
     public virtual void OnActiveStart(StateContext context) { }
     public virtual void OnActiveEnd(StateContext context) { }
+    public virtual void OnTriggered(StateContext context) { }
 }
 
 [Serializable]
@@ -207,5 +209,68 @@ public static class ActionConditionUtility
             CounterComparison.LessThanOrEqual => currentValue <= expectedValue,
             _ => false
         };
+    }
+}
+
+public enum WaitUnit
+{
+    Frames,
+    Seconds
+}
+
+[Serializable]
+public class WaitActionCondition : ActionConditionBase
+{
+    public override ConditionCategory Category => ConditionCategory.Environmental;
+    
+    [Tooltip("The unit of time to wait.")]
+    public WaitUnit waitUnit = WaitUnit.Frames;
+    
+    [Tooltip("The amount of time/frames to wait before automatically triggering.")]
+    public float waitValue = 10f;
+
+    public override bool IsMet(StateContext context)
+    {
+        float framesToWait = waitUnit == WaitUnit.Frames ? waitValue : waitValue * CombatCore.FrameDataConstants.LOGIC_FPS;
+        return context.activeFrame >= framesToWait;
+    }
+}
+
+[Serializable]
+public class PlayerGotHitCondition : ActionConditionBase
+{
+    public override ConditionCategory Category => ConditionCategory.Environmental;
+
+    [Header("Counter Response")]
+    [Tooltip("If set, the attacker will immediately receive this hit reaction when countered.")]
+    public HitReactionData counterReaction;
+
+    public PlayerGotHitCondition()
+    {
+        // Initialize with default stun reaction
+        counterReaction = HitReactionData.Default(0, Vector2.zero, 0);
+        counterReaction.reactionKind = EnemyReactionKind.Flinch;
+    }
+
+    public override bool IsMet(StateContext context)
+    {
+        return context.attacker != null;
+    }
+
+    public override void OnTriggered(StateContext context)
+    {
+        if (context.attacker != null)
+        {
+            EnemyHitReactionHandler reactionHandler = context.attacker.GetComponentInChildren<EnemyHitReactionHandler>();
+            if (reactionHandler != null)
+            {
+                // Stun the enemy by applying the configured counter hit reaction
+                Vector2 attackerPos = context.passiveController != null && context.passiveController.playerCharacter != null 
+                    ? (Vector2)context.passiveController.playerCharacter.transform.position 
+                    : Vector2.zero;
+                    
+                reactionHandler.StartReaction(counterReaction, attackerPos);
+            }
+        }
     }
 }

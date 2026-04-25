@@ -84,11 +84,18 @@ namespace CombatEditor.UI
 
         private void BuildProjectileDataCards(ProjectileData data)
         {
-            BuildFoldoutCard("General Configuration", "proj_general", new Color(0.9f, 0.4f, 0.1f), body =>
+            // ── 1. Identity & Prefab ──
+            BuildFoldoutCard("Identity & Prefab", "proj_identity", new Color(0.9f, 0.4f, 0.1f), body =>
             {
+                AddEnumField(body, "Projectile Type", data.projectileType, value =>
+                {
+                    RecordUndo("Edit Projectile Type");
+                    data.projectileType = (ProjectileType)value;
+                    MarkDirty();
+                });
                 AddObjectField(body, "Projectile Prefab", data.projectilePrefab, value =>
                 {
-                    RecordUndo("Unpack Prefab");
+                    RecordUndo("Edit Prefab");
                     data.projectilePrefab = value as GameObject;
                     MarkDirty();
                 });
@@ -98,16 +105,90 @@ namespace CombatEditor.UI
                     data.spawnOffset = value;
                     MarkDirty();
                 });
-            });
 
-            BuildFoldoutCard("Movement & Travel", "proj_travel", new Color(0.1f, 0.7f, 0.4f), body =>
-            {
-                AddEnumField(body, "Spawn Mode", data.spawnMode, value =>
+                AddSeparator(body, "Animation Clips (Override Controller)");
+                AddObjectField(body, "Spawn Clip", data.spawnClip, value =>
                 {
-                    RecordUndo("Edit Spawn Mode");
-                    data.spawnMode = (ProjectileSpawnMode)value;
+                    RecordUndo("Edit Spawn Clip");
+                    data.spawnClip = value as AnimationClip;
                     MarkDirty();
                 });
+                AddObjectField(body, "Loop Clip", data.loopClip, value =>
+                {
+                    RecordUndo("Edit Loop Clip");
+                    data.loopClip = value as AnimationClip;
+                    MarkDirty();
+                });
+            });
+
+            // ── 2. Spawning State ──
+            BuildFoldoutCard("Spawning State", "proj_spawn_state", new Color(0.18f, 0.72f, 0.38f), body =>
+            {
+                AddEnumField(body, "Spawn Position", data.spawnPositionMode, value =>
+                {
+                    RecordUndo("Edit Spawn Position Mode");
+                    data.spawnPositionMode = (SpawnPositionMode)value;
+                    MarkDirty();
+                });
+                AddToggle(body, "Play Spawn Animation", data.playSpawnAnimation, value =>
+                {
+                    RecordUndo("Toggle Spawn Animation");
+                    data.playSpawnAnimation = value;
+                    MarkDirty();
+                });
+                AddFloatField(body, "Spawn Duration", data.spawnDuration, value =>
+                {
+                    RecordUndo("Edit Spawn Duration");
+                    data.spawnDuration = value;
+                    MarkDirty();
+                });
+                AddToggle(body, "Inherit Facing Direction", data.inheritFacingDirection, value =>
+                {
+                    RecordUndo("Toggle Inherit Facing");
+                    data.inheritFacingDirection = value;
+                    MarkDirty();
+                });
+
+                AddSeparator(body, "Spawning Phase Hitbox");
+                BuildPhaseHitboxCard(body, data.spawningHitbox, "spawn_hitbox", "Spawning");
+            });
+
+            // ── 3. Updating State ──
+            BuildFoldoutCard("Updating State", "proj_update_state", new Color(0.2f, 0.6f, 1f), body =>
+            {
+                AddEnumField(body, "Traversal Mode", data.traversalMode, value =>
+                {
+                    RecordUndo("Edit Traversal Mode");
+                    data.traversalMode = (ProjectileTraversalMode)value;
+                    MarkDirtyAndRebuild();
+                });
+
+                if (data.traversalMode == ProjectileTraversalMode.Homing || data.homeToTarget)
+                {
+                    AddToggle(body, "Home to Target", data.homeToTarget, value =>
+                    {
+                        RecordUndo("Toggle Homing");
+                        data.homeToTarget = value;
+                        MarkDirtyAndRebuild();
+                    });
+                    AddFloatField(body, "Homing Turn Rate", data.homingTurnRate, value =>
+                    {
+                        RecordUndo("Edit Turn Rate");
+                        data.homingTurnRate = value;
+                        MarkDirty();
+                    });
+                }
+
+                if (data.traversalMode == ProjectileTraversalMode.Anchored || data.anchorToCaster)
+                {
+                    AddToggle(body, "Anchor to Caster", data.anchorToCaster, value =>
+                    {
+                        RecordUndo("Toggle Anchor");
+                        data.anchorToCaster = value;
+                        MarkDirtyAndRebuild();
+                    });
+                }
+
                 AddFloatField(body, "Travel Speed", data.speed, value =>
                 {
                     RecordUndo("Edit Speed");
@@ -120,46 +201,19 @@ namespace CombatEditor.UI
                     data.lifetime = value;
                     MarkDirty();
                 });
-                AddToggle(body, "Homing", data.homeToTarget, value =>
-                {
-                    RecordUndo("Toggle Homing");
-                    data.homeToTarget = value;
-                    MarkDirtyAndRebuild();
-                });
-                if (data.homeToTarget)
-                {
-                    AddFloatField(body, "Homing Turn Rate", data.homingTurnRate, value =>
-                    {
-                        RecordUndo("Edit Turn Rate");
-                        data.homingTurnRate = value;
-                        MarkDirty();
-                    });
-                }
-            });
-
-            BuildFoldoutCard("Hit Detection", "proj_detection", new Color(0.8f, 0.2f, 0.2f), body =>
-            {
                 AddIntField(body, "Max Hits", data.maxHits, value =>
                 {
                     RecordUndo("Edit Max Hits");
                     data.maxHits = value;
                     MarkDirty();
                 });
-                AddVector2Field(body, "Detection Size", data.travelColliderSize, value =>
-                {
-                    RecordUndo("Edit Detection Size");
-                    data.travelColliderSize = value;
-                    MarkDirty();
-                });
-                AddLayerField(body, "Target Layers", data.enemyLayerMask, value =>
-                {
-                    RecordUndo("Edit Layers");
-                    data.enemyLayerMask = value;
-                    MarkDirty();
-                });
+
+                AddSeparator(body, "Routine Phase Hitbox");
+                BuildPhaseHitboxCard(body, data.routineHitbox, "routine_hitbox", "Routine");
             });
 
-            BuildFoldoutCard("Impact Routine", "proj_impact", new Color(1f, 0.8f, 0f), body =>
+            // ── 4. Behavior ──
+            BuildFoldoutCard("Behavior", "proj_behavior", new Color(0.5f, 0.5f, 0.55f), body =>
             {
                 AddIntField(body, "Hit Interval (Frames)", data.hitIntervalFrames, value =>
                 {
@@ -167,31 +221,183 @@ namespace CombatEditor.UI
                     data.hitIntervalFrames = value;
                     MarkDirty();
                 });
-                AddToggle(body, "Destroy on Exhausted", data.destroyWhenHitsExhausted, value =>
+                AddToggle(body, "Stop on Impact", data.stopOnImpact, value =>
+                {
+                    RecordUndo("Toggle Stop on Impact");
+                    data.stopOnImpact = value;
+                    MarkDirty();
+                });
+                AddToggle(body, "Destroy when Hits Exhausted", data.destroyWhenHitsExhausted, value =>
                 {
                     RecordUndo("Toggle Destroy Exhausted");
                     data.destroyWhenHitsExhausted = value;
                     MarkDirty();
                 });
-                
-                AddSeparator(body, "Impact Hitboxes");
-                BuildHitDataCard(body, data.impactHitData);
+                AddToggle(body, "Destroy on Lifetime Expire", data.destroyOnLifetimeExpire, value =>
+                {
+                    RecordUndo("Toggle Destroy on Expire");
+                    data.destroyOnLifetimeExpire = value;
+                    MarkDirty();
+                });
             });
 
-            BuildFoldoutCard("Audio & Visual Feedback", "proj_feedback", new Color(0.6f, 0.1f, 0.9f), body =>
+            // ── 5. Detection ──
+            BuildFoldoutCard("Detection", "proj_detection", new Color(0.8f, 0.2f, 0.2f), body =>
             {
-                 AddEnumField(body, "Default Impact VFX", data.impactVFXType, value =>
+                AddVector2Field(body, "Travel Collider Size", data.travelColliderSize, value =>
+                {
+                    RecordUndo("Edit Detection Size");
+                    data.travelColliderSize = value;
+                    MarkDirty();
+                });
+                AddLayerField(body, "Enemy Layer Mask", data.enemyLayerMask, value =>
+                {
+                    RecordUndo("Edit Layers");
+                    data.enemyLayerMask = value;
+                    MarkDirty();
+                });
+            });
+
+            // ── 6. Spawn Feedback ──
+            BuildFoldoutCard("Spawn Feedback", "proj_spawn_fb", new Color(0.6f, 0.1f, 0.9f), body =>
+            {
+                BuildFeedbackDefinitionCard(body, data.spawnFeedback, "Spawn");
+            });
+
+            // ── 7. Expire Feedback ──
+            BuildFoldoutCard("Expire Feedback", "proj_expire_fb", new Color(0.7f, 0.2f, 0.8f), body =>
+            {
+                BuildFeedbackDefinitionCard(body, data.expireFeedback, "Expire");
+            });
+
+            // ── 8. Default Impact Feedback ──
+            BuildFoldoutCard("Default Impact Feedback", "proj_impact_fb", new Color(1f, 0.8f, 0f), body =>
+            {
+                AddEnumField(body, "Impact VFX Type", data.impactVFXType, value =>
                 {
                     RecordUndo("Edit Impact VFX");
                     data.impactVFXType = (Project.Combat.VFXType)value;
                     MarkDirty();
                 });
-                AddObjectField(body, "Default Impact Audio", data.impactAudio, value =>
+                AddObjectField(body, "Impact Audio", data.impactAudio, value =>
                 {
                     RecordUndo("Edit Impact Audio");
                     data.impactAudio = value as AudioClip;
                     MarkDirty();
                 });
+            });
+        }
+
+        private void BuildPhaseHitboxCard(VisualElement parent, ProjectilePhaseHitboxData phaseData, string foldoutKey, string undoPrefix)
+        {
+            if (phaseData == null) return;
+
+            AddToggle(parent, "Enabled", phaseData.enabled, value =>
+            {
+                RecordUndo($"Toggle {undoPrefix} Hitbox Enabled");
+                phaseData.enabled = value;
+                MarkDirtyAndRebuild();
+            });
+
+            if (!phaseData.enabled) return;
+
+            AddToggle(parent, "Decrements Max Hits", phaseData.decrementsMaxHits, value =>
+            {
+                RecordUndo($"Toggle {undoPrefix} Decrements Hits");
+                phaseData.decrementsMaxHits = value;
+                MarkDirty();
+            });
+
+            // Hitbox type selector
+            string currentTypeName = phaseData.hitbox == null ? "None" : phaseData.hitbox.HitboxTypeName;
+            var typeChoices = new System.Collections.Generic.List<string> { "None", "Normal", "Grab" };
+            int currentIndex = phaseData.hitbox == null ? 0 : (phaseData.hitbox is NormalHitbox ? 1 : (phaseData.hitbox is GrabHitbox ? 2 : 0));
+
+            VisualElement typeRow = new VisualElement();
+            typeRow.AddToClassList("card-field-row");
+            DropdownField typeDropdown = new DropdownField("Hitbox Type", typeChoices, currentIndex);
+            typeDropdown.RegisterValueChangedCallback(evt =>
+            {
+                RecordUndo($"Change {undoPrefix} Hitbox Type");
+                switch (typeDropdown.index)
+                {
+                    case 0: phaseData.hitbox = null; break;
+                    case 1: phaseData.hitbox = new NormalHitbox(); break;
+                    case 2: phaseData.hitbox = new GrabHitbox(); break;
+                }
+                MarkDirtyAndRebuild();
+            });
+            typeRow.Add(typeDropdown);
+            parent.Add(typeRow);
+
+            // Render fields for the active hitbox type
+            if (phaseData.hitbox != null)
+            {
+                AddSeparator(parent, $"{phaseData.hitbox.HitboxTypeName} Hitbox Properties");
+
+                AddIntField(parent, "Start Offset", phaseData.hitbox.startFrameOffset, value =>
+                {
+                    RecordUndo($"Edit {undoPrefix} Start Offset");
+                    phaseData.hitbox.startFrameOffset = value;
+                    MarkDirty();
+                });
+                AddIntField(parent, "Duration", phaseData.hitbox.activeFrames, value =>
+                {
+                    RecordUndo($"Edit {undoPrefix} Duration");
+                    phaseData.hitbox.activeFrames = value;
+                    MarkDirty();
+                });
+                AddEnumField(parent, "Damage Type", phaseData.hitbox.damageType, value =>
+                {
+                    RecordUndo($"Edit {undoPrefix} Damage Type");
+                    phaseData.hitbox.damageType = (DamageType)value;
+                    MarkDirty();
+                });
+                AddColorField(parent, "Debug Color", phaseData.hitbox.debugColor, value =>
+                {
+                    RecordUndo($"Edit {undoPrefix} Debug Color");
+                    phaseData.hitbox.debugColor = value;
+                    MarkDirty();
+                });
+
+                if (phaseData.hitbox is NormalHitbox normalHitbox)
+                {
+                    BuildNormalHitboxFields(parent, normalHitbox);
+                }
+                else if (phaseData.hitbox is GrabHitbox grabHitbox)
+                {
+                    BuildGrabHitboxFields(parent, grabHitbox);
+                }
+            }
+        }
+
+        private void BuildFeedbackDefinitionCard(VisualElement parent, ProjectileFeedbackDefinition feedback, string undoPrefix)
+        {
+            if (feedback == null) return;
+
+            AddEnumField(parent, "VFX Type", feedback.vfxType, value =>
+            {
+                RecordUndo($"Edit {undoPrefix} VFX Type");
+                feedback.vfxType = (Project.Combat.VFXType)value;
+                MarkDirty();
+            });
+            AddObjectField(parent, "VFX Clip (Override)", feedback.vfxClip, value =>
+            {
+                RecordUndo($"Edit {undoPrefix} VFX Clip");
+                feedback.vfxClip = value as AnimationClip;
+                MarkDirty();
+            });
+            AddObjectField(parent, "Audio", feedback.audio, value =>
+            {
+                RecordUndo($"Edit {undoPrefix} Audio");
+                feedback.audio = value as AudioClip;
+                MarkDirty();
+            });
+            AddVector2Field(parent, "Offset", feedback.offset, value =>
+            {
+                RecordUndo($"Edit {undoPrefix} Offset");
+                feedback.offset = value;
+                MarkDirty();
             });
         }
 
@@ -2106,6 +2312,17 @@ namespace CombatEditor.UI
                     conditions.Add(new RuntimeCounterActionCondition());
                     MarkDirtyAndRebuild();
                 });
+                menu.AddSeparator("");
+                menu.AddItem(new GUIContent("Wait for Frame / Sec"), false, () => {
+                    RecordUndo($"Add {undoLabelPrefix} Condition");
+                    conditions.Add(new WaitActionCondition());
+                    MarkDirtyAndRebuild();
+                });
+                menu.AddItem(new GUIContent("Player Got Hit (Counter)"), false, () => {
+                    RecordUndo($"Add {undoLabelPrefix} Condition");
+                    conditions.Add(new PlayerGotHitCondition());
+                    MarkDirtyAndRebuild();
+                });
                 menu.ShowAsContext();
             })
             { text = $"+ Add {undoLabelPrefix} Condition" };
@@ -2200,6 +2417,41 @@ namespace CombatEditor.UI
                         MarkDirty();
                     });
                     break;
+                case WaitActionCondition waitCondition:
+                    AddEnumField(parent, "Wait Unit", waitCondition.waitUnit, value => {
+                        RecordUndo("Edit Wait Unit");
+                        waitCondition.waitUnit = (WaitUnit)value;
+                        MarkDirty();
+                    });
+                    AddFloatField(parent, "Wait Value", waitCondition.waitValue, value => {
+                        RecordUndo("Edit Wait Value");
+                        waitCondition.waitValue = value;
+                        MarkDirty();
+                    });
+                    break;
+                case PlayerGotHitCondition hitCondition:
+                    AddSeparator(parent, "Counter Reaction (On Attacker)");
+                    AddEnumField(parent, "Reaction Kind", hitCondition.counterReaction.reactionKind, value => {
+                        RecordUndo("Edit Counter Reaction Kind");
+                        hitCondition.counterReaction.reactionKind = (EnemyReactionKind)value;
+                        MarkDirty();
+                    });
+                    AddIntField(parent, "Hitstun Frames", hitCondition.counterReaction.hitstunFrames, value => {
+                        RecordUndo("Edit Counter Hitstun");
+                        hitCondition.counterReaction.hitstunFrames = value;
+                        MarkDirty();
+                    });
+                    AddFloatField(parent, "Horizontal Speed", hitCondition.counterReaction.horizontalSpeed, value => {
+                        RecordUndo("Edit Counter H-Speed");
+                        hitCondition.counterReaction.horizontalSpeed = value;
+                        MarkDirty();
+                    });
+                    AddFloatField(parent, "Launch Speed", hitCondition.counterReaction.launchSpeed, value => {
+                        RecordUndo("Edit Counter Launch");
+                        hitCondition.counterReaction.launchSpeed = value;
+                        MarkDirty();
+                    });
+                    break;
             }
         }
 
@@ -2216,6 +2468,8 @@ namespace CombatEditor.UI
                 ProgressionRankActionCondition => "Progression Rank Condition",
                 RuntimeTagActionCondition => "Runtime Tag Condition",
                 RuntimeCounterActionCondition => "Runtime Counter Condition",
+                WaitActionCondition => "Wait Timer Condition",
+                PlayerGotHitCondition => "Counter Trigger Condition",
                 _ => "Condition"
             };
         }

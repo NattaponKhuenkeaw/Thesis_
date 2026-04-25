@@ -1,0 +1,494 @@
+fileFormatVersion: 2
+guid: 25792b68c0112af4b8ae1f4852241ffa
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -3264831813618899130
+    second: vfx-ex-kri-ult-fire_8_0
+  - first:
+      213: -2207005331825548857
+    second: vfx-ex-kri-ult-fire_8_1
+  - first:
+      213: -7502141599454700545
+    second: vfx-ex-kri-ult-fire_8_2
+  - first:
+      213: -2105443450745439460
+    second: vfx-ex-kri-ult-fire_8_3
+  - first:
+      213: 4346092491392777866
+    second: vfx-ex-kri-ult-fire_8_4
+  - first:
+      213: -8931375888333604744
+    second: vfx-ex-kri-ult-fire_8_5
+  - first:
+      213: -5299217754541827190
+    second: vfx-ex-kri-ult-fire_8_6
+  - first:
+      213: 3609687958863530679
+    second: vfx-ex-kri-ult-fire_8_7
+  - first:
+      213: -6948745778376267747
+    second: vfx-ex-kri-ult-fire_8_8
+  - first:
+      213: -7884542052466692619
+    second: vfx-ex-kri-ult-fire_8_9
+  - first:
+      213: 6235719799938851584
+    second: vfx-ex-kri-ult-fire_8_10
+  - first:
+      213: 4428331737550473764
+    second: vfx-ex-kri-ult-fire_8_11
+  - first:
+      213: 8976450722074785269
+    second: vfx-ex-kri-ult-fire_8_12
+  - first:
+      213: -3868853598374822981
+    second: vfx-ex-kri-ult-fire_8_13
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 7
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 40
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: vfx-ex-kri-ult-fire_8_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 78
+        width: 32
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 647e9d963ccf0b2d0800000000000000
+      internalID: -3264831813618899130
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx-ex-kri-ult-fire_8_1
+      rect:
+        serializedVersion: 2
+        x: 31
+        y: 67
+        width: 27
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7c1252b08542f51e0800000000000000
+      internalID: -2207005331825548857
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx-ex-kri-ult-fire_8_2
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 55
+        width: 28
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ffb52dd96f903e790800000000000000
+      internalID: -7502141599454700545
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx-ex-kri-ult-fire_8_3
+      rect:
+        serializedVersion: 2
+        x: 27
+        y: 64
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c1b35af2656f7c2e0800000000000000
+      internalID: -2105443450745439460
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx-ex-kri-ult-fire_8_4
+      rect:
+        serializedVersion: 2
+        x: 28
+        y: 53
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a8e7576281c605c30800000000000000
+      internalID: 4346092491392777866
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx-ex-kri-ult-fire_8_5
+      rect:
+        serializedVersion: 2
+        x: 34
+        y: 45
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 878f26433f06d0480800000000000000
+      internalID: -8931375888333604744
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx-ex-kri-ult-fire_8_6
+      rect:
+        serializedVersion: 2
+        x: 37
+        y: 8
+        width: 31
+        height: 60
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a8b571957856576b0800000000000000
+      internalID: -5299217754541827190
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx-ex-kri-ult-fire_8_7
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 40
+        height: 45
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7bac01ad210381230800000000000000
+      internalID: 3609687958863530679
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx-ex-kri-ult-fire_8_8
+      rect:
+        serializedVersion: 2
+        x: 59
+        y: 40
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d182365d788119f90800000000000000
+      internalID: -6948745778376267747
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx-ex-kri-ult-fire_8_9
+      rect:
+        serializedVersion: 2
+        x: 62
+        y: 44
+        width: 14
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5fde71207ca749290800000000000000
+      internalID: -7884542052466692619
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx-ex-kri-ult-fire_8_10
+      rect:
+        serializedVersion: 2
+        x: 51
+        y: 27
+        width: 6
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 003a93aae1ab98650800000000000000
+      internalID: 6235719799938851584
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx-ex-kri-ult-fire_8_11
+      rect:
+        serializedVersion: 2
+        x: 58
+        y: 28
+        width: 7
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 42ac844c048947d30800000000000000
+      internalID: 4428331737550473764
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx-ex-kri-ult-fire_8_12
+      rect:
+        serializedVersion: 2
+        x: 62
+        y: 34
+        width: 6
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5f5f0195f52c29c70800000000000000
+      internalID: 8976450722074785269
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: vfx-ex-kri-ult-fire_8_13
+      rect:
+        serializedVersion: 2
+        x: 21
+        y: 17
+        width: 17
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bbb70ec76221f4ac0800000000000000
+      internalID: -3868853598374822981
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      vfx-ex-kri-ult-fire_8_0: -3264831813618899130
+      vfx-ex-kri-ult-fire_8_1: -2207005331825548857
+      vfx-ex-kri-ult-fire_8_10: 6235719799938851584
+      vfx-ex-kri-ult-fire_8_11: 4428331737550473764
+      vfx-ex-kri-ult-fire_8_12: 8976450722074785269
+      vfx-ex-kri-ult-fire_8_13: -3868853598374822981
+      vfx-ex-kri-ult-fire_8_2: -7502141599454700545
+      vfx-ex-kri-ult-fire_8_3: -2105443450745439460
+      vfx-ex-kri-ult-fire_8_4: 4346092491392777866
+      vfx-ex-kri-ult-fire_8_5: -8931375888333604744
+      vfx-ex-kri-ult-fire_8_6: -5299217754541827190
+      vfx-ex-kri-ult-fire_8_7: 3609687958863530679
+      vfx-ex-kri-ult-fire_8_8: -6948745778376267747
+      vfx-ex-kri-ult-fire_8_9: -7884542052466692619
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

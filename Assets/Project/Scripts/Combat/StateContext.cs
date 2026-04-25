@@ -11,13 +11,19 @@ public struct StateContext
     // The previous generation input context (retained for backward compatibility)
     public InputContext input;
 
+    // Transient runtime data for condition evaluation
+    public int activeFrame;
+    public GameObject attacker;
+
     // Optional cached references to common components for conditions to query
     public CharacterPassiveController passiveController => input.passiveController;
     public CombatRuntimeState runtimeState => input.runtimeState;
 
-    public StateContext(InputContext input)
+    public StateContext(InputContext input, int activeFrame = 0, GameObject attacker = null)
     {
         this.input = input;
+        this.activeFrame = activeFrame;
+        this.attacker = attacker;
     }
 
     // Implicit conversion allows passing InputContext where StateContext is expected

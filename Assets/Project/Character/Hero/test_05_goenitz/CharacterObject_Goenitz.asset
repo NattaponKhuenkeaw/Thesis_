@@ -51,7 +51,7 @@ MonoBehaviour:
     animationClip: {fileID: 7400000, guid: a84ff45c3f3eb5047be611bbaa8bb3e9, type: 2}
     startupFrames: 7
     activeFrames: 13
-    recoveryFrames: 15
+    recoveryFrames: 30
     cancelWindowStartFrame: 34
     dashSpeed: 110
     cooldownFrames: 18

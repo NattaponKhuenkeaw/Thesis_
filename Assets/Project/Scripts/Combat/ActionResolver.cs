@@ -176,17 +176,22 @@ public class ActionResolver
         }
         else
         {
-            // No route matched → follow default chain
+            // No route matched -> follow default chain
             ComboNode defaultNext = currentNode.defaultNext;
             if (defaultNext != null)
             {
                 Log($"Default Chain: [{prevNodeName}] -> '{defaultNext.stepData?.stepName}'");
+                currentNode = defaultNext;
             }
             else
             {
-                Log($"Combo End: [{prevNodeName}] has no follow-up.", Color.gray);
+                // IMPORTANT: If no automatic follow-up exists, DO NOT wipe currentNode.
+                // Wiping currentNode prevents ResolveTriggers (active phase interruptions)
+                // from working for the remainder of the animation.
+                if (fsm != null && fsm.showCombatLogs)
+                    Log($"Combo End: [{prevNodeName}] has no automatic follow-up.", Color.gray);
+                return null;
             }
-            currentNode = defaultNext;
         }
 
         if (currentNode == null) return null;
@@ -279,22 +284,35 @@ public class ActionResolver
             var trigger = currentStep.triggerWindows[i];
             if (trigger == null || trigger.targetNode == null) continue;
 
-            if (!trigger.IsInWindow(activeFrame)) continue;
+            bool inWindow = trigger.IsInWindow(activeFrame);
+            bool conditionsMet = ActionConditionUtility.AllMet(trigger.triggerConditions, ctx);
 
-            if (ActionConditionUtility.AllMet(trigger.triggerConditions, ctx))
+            if (!inWindow) continue;
+
+            if (conditionsMet)
             {
                 if (bestMatch == null || trigger.priority > bestMatch.priority)
+                {
                     bestMatch = trigger;
+                }
             }
         }
 
         if (bestMatch != null)
         {
+            // Trigger callbacks for matching conditions
+            foreach (var condition in bestMatch.triggerConditions)
+            {
+                if (condition != null) condition.OnTriggered(ctx);
+            }
+
+            // Reject if we are trying to transition to ourselves
             if (bestMatch.targetNode.stepData == GetCurrentStepData())
+            {
                 return null;
-                
-            string prevNodeName = currentNode?.stepData?.stepName ?? "Unknown";
-            Log($"Trigger Window Matched! [{prevNodeName}] -> '{bestMatch.targetNode.stepData?.stepName}'", Color.cyan);
+            }
+
+            Log($"Trigger Window Matched! [{currentStep.stepName}] → '{(bestMatch.targetNode.stepData != null ? bestMatch.targetNode.stepData.stepName : "???")}'", Color.green);
             currentNode = bestMatch.targetNode;
             treeDepth++;
             return currentNode.stepData;
@@ -308,6 +326,18 @@ public class ActionResolver
         // Standard conditional routes no longer immediately interrupt.
         // User must use triggerWindows for interruptions.
         return null;
+    }
+
+    // =========================================================
+    // Force Transitions
+    // =========================================================
+
+    public AttackStepData ForceTransitionToNode(ComboNode node)
+    {
+        if (node == null || node.stepData == GetCurrentStepData()) return null;
+        currentNode = node;
+        treeDepth++;
+        return currentNode.stepData;
     }
 
 

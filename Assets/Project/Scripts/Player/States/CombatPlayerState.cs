@@ -79,6 +79,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             {
                 int activeFrame = currentFrame - currentFrameData.ActivePhaseStart + 1;
                 StateContext ctx = BuildInputContext();
+                ctx.activeFrame = activeFrame;
                 
                 AttackStepData triggeredStep = resolver.ResolveTriggers(ctx, activeFrame);
                 if (triggeredStep != null)
@@ -99,6 +100,61 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     {
         if (player.Combat != null && player.Combat.HasGrabbedEnemy()) return false;
         return base.CanBeInterruptedBy(incoming);
+    }
+
+    public bool TryTriggerCounter(GameObject attacker)
+    {
+        if (player.Combat != null && player.Combat.IsAttacking() && currentPhase == ActionPhase.Active)
+        {
+            ActionFrameData currentFrameData = GetFrameData();
+            if (currentFrameData != null)
+            {
+                int activeFrame = currentFrame - currentFrameData.ActivePhaseStart + 1;
+                StateContext ctx = BuildInputContext();
+                ctx.activeFrame = activeFrame;
+                ctx.attacker = attacker;
+
+                // Only check for counter triggers
+                var currentStep = resolver.GetCurrentStepData();
+                if (currentStep == null || currentStep.triggerWindows == null) return false;
+
+                TriggerWindow bestMatch = null;
+                foreach (var trigger in currentStep.triggerWindows)
+                {
+                    if (trigger == null || trigger.targetNode == null) continue;
+                    if (!trigger.IsInWindow(activeFrame)) continue;
+                    
+                    // MUST contain a PlayerGotHitCondition to be considered a counter trigger
+                    bool isCounterTrigger = false;
+                    foreach (var cond in trigger.triggerConditions)
+                    {
+                        if (cond is PlayerGotHitCondition) { isCounterTrigger = true; break; }
+                    }
+
+                    if (!isCounterTrigger) continue;
+
+                    if (ActionConditionUtility.AllMet(trigger.triggerConditions, ctx))
+                    {
+                        if (bestMatch == null || trigger.priority > bestMatch.priority)
+                            bestMatch = trigger;
+                    }
+                }
+
+                if (bestMatch != null)
+                {
+                    // Trigger it!
+                    foreach (var cond in bestMatch.triggerConditions) cond?.OnTriggered(ctx);
+
+                    AttackStepData triggeredStep = resolver.ForceTransitionToNode(bestMatch.targetNode);
+                    if (triggeredStep != null)
+                    {
+                        ExecuteCombatStep(triggeredStep, ctx, true);
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     // =========================================================

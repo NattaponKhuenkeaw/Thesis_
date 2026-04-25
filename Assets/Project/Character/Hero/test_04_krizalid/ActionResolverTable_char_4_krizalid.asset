@@ -63,6 +63,35 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
+    - rid: 1588256093655269507
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: 6c3502fbff0715446bb69a6b2f72d9de, type: 3}
+          triggerFrame: 8
+          duration: 29
+          channel: 1
+          volume: 0.5
+          pitchVariation: 1.3
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 1588256093655269554
+      type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: Slam
+          vfxType: 18
+          vfxClip: {fileID: 0}
+          vfxPrefab: {fileID: 0}
+          triggerFrame: 15
+          duration: 35
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 0
+            position: {x: 0.3, y: -1.1, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          loopDuringActive: 0
     - rid: 3251577402691944653
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -177,7 +206,7 @@ MonoBehaviour:
           vfxData:
             rid: -2
           audioData:
-            rid: -2
+            rid: 1588256093655269507
           hitData:
             rid: 3251577402691944683
           componentOrder:
@@ -218,7 +247,7 @@ MonoBehaviour:
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 0.27252558, y: 0.41965416}
         size: {x: 1.5305202, y: 1.0141178}
-        canGrabAirborne: 0
+        canGrabAirborne: 1
         damageMultiplier: 0
         impactFreezeFrames: 3
         holdFrames: 19
@@ -295,7 +324,7 @@ MonoBehaviour:
           motionData:
             rid: -2
           vfxData:
-            rid: -2
+            rid: 1588256093655269554
           audioData:
             rid: 3251577426625691651
           hitData:
@@ -564,8 +593,8 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 4
-        hitSFX: {fileID: 0}
-        hitVFXType: 0
+        hitSFX: {fileID: 8300000, guid: 8b53895fd7379e24ea509fca8b1db7da, type: 3}
+        hitVFXType: 11
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
     - rid: 3251577402691944716
@@ -614,6 +643,7 @@ MonoBehaviour:
         activeFrames: 7
         damageType: 1
         debugColor: {r: 0.42, g: 0.81, b: 1, a: 1}
+        projectileType: 0
         projectileData: {fileID: 11400000, guid: 59a15c91716f1fd40865da0b0945529e, type: 2}
         overrideSpawnOffset: 1
         spawnOffset: {x: 0.9179106, y: 2.260359}
@@ -641,6 +671,14 @@ MonoBehaviour:
           volume: 1
           pitchVariation: 1
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: 5e78046cfac8c004b8c36df1567acd2d, type: 3}
+          triggerFrame: 2
+          duration: 28
+          channel: 1
+          volume: 0.5
+          pitchVariation: 1.2
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 3251577426625691650
       type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -653,6 +691,14 @@ MonoBehaviour:
           volume: 1
           pitchVariation: 1
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: 5e78046cfac8c004b8c36df1567acd2d, type: 3}
+          triggerFrame: 16
+          duration: 26
+          channel: 1
+          volume: 0.5
+          pitchVariation: 0.8
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 3251577426625691651
       type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -663,5 +709,13 @@ MonoBehaviour:
           duration: 34
           channel: 0
           volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: 5e78046cfac8c004b8c36df1567acd2d, type: 3}
+          triggerFrame: 10
+          duration: 34
+          channel: 1
+          volume: 0.5
           pitchVariation: 1
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}

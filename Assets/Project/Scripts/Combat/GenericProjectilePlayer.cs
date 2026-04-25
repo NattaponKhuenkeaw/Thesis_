@@ -7,6 +7,7 @@ namespace Project.Combat
     {
         private static readonly int SpawnStateHash = Animator.StringToHash("Spawn");
         private static readonly int LoopStateHash = Animator.StringToHash("Loop");
+        private static readonly int PlayStateHash = Animator.StringToHash("Play");
 
         private ProjectileVFXManager owningManager;
         private Animator cachedAnimator;
@@ -18,7 +19,7 @@ namespace Project.Combat
         private void Awake()
         {
             runtime = GetComponent<ProjectileRuntime>();
-            cachedAnimator = GetComponent<Animator>();
+            cachedAnimator = GetComponentInChildren<Animator>();
 
             if (cachedAnimator != null && cachedAnimator.runtimeAnimatorController != null)
             {
@@ -38,12 +39,29 @@ namespace Project.Combat
 
             if (overrideController != null && data != null)
             {
-                // Fallback: If spawnClip is null, use loopClip for both
                 AnimationClip spawn = data.spawnClip != null ? data.spawnClip : data.loopClip;
                 AnimationClip loop = data.loopClip;
 
-                overrideController["Projectile_Spawn"] = spawn;
-                overrideController["Projectile_Loop"] = loop;
+                var overrides = new System.Collections.Generic.List<System.Collections.Generic.KeyValuePair<AnimationClip, AnimationClip>>();
+                overrideController.GetOverrides(overrides);
+
+                for (int i = 0; i < overrides.Count; i++)
+                {
+                    if (overrides[i].Key != null)
+                    {
+                        string clipName = overrides[i].Key.name.ToLowerInvariant();
+                        if (clipName.Contains("spawn") || clipName.Contains("start"))
+                        {
+                            overrides[i] = new System.Collections.Generic.KeyValuePair<AnimationClip, AnimationClip>(overrides[i].Key, spawn);
+                        }
+                        else
+                        {
+                            overrides[i] = new System.Collections.Generic.KeyValuePair<AnimationClip, AnimationClip>(overrides[i].Key, loop);
+                        }
+                    }
+                }
+
+                overrideController.ApplyOverrides(overrides);
             }
 
             gameObject.SetActive(true);
@@ -82,14 +100,13 @@ namespace Project.Combat
                 return false;
             }
 
-            // We check for the generic state name in the animator controller
-            if (!cachedAnimator.HasState(0, SpawnStateHash))
+            if (cachedAnimator.HasState(0, SpawnStateHash))
             {
-                return false;
+                cachedAnimator.Play(SpawnStateHash, 0, 0f);
+                return true;
             }
 
-            cachedAnimator.Play(SpawnStateHash, 0, 0f);
-            return true;
+            return false;
         }
 
         public void PlayLoopAnimation()
@@ -102,6 +119,10 @@ namespace Project.Combat
             if (cachedAnimator.HasState(0, LoopStateHash))
             {
                 cachedAnimator.Play(LoopStateHash, 0, 0f);
+            }
+            else if (cachedAnimator.HasState(0, PlayStateHash))
+            {
+                cachedAnimator.Play(PlayStateHash, 0, 0f);
             }
         }
 
