@@ -39,7 +39,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public float airAttackComboResetCooldown = 0.5f;
     private float airAttackComboCooldownEndTime;
 
-    private readonly Dictionary<AttackCategory, float> lastCategoryUseTime = new Dictionary<AttackCategory, float>();
+    private readonly Dictionary<string, float> lastCategoryUseTime = new Dictionary<string, float>();
     private readonly Dictionary<string, float> lastActionUseTime = new Dictionary<string, float>();
     private readonly HashSet<EnemyController> hitEnemiesThisStep = new HashSet<EnemyController>();
 
@@ -348,12 +348,14 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             return false;
         }
 
-        if (!string.IsNullOrEmpty(actionName) && lastActionUseTime.TryGetValue(actionName, out float actionUseTime))
+        string actionKey = BuildActionCooldownKey(category, actionName);
+        if (lastActionUseTime.TryGetValue(actionKey, out float actionUseTime))
         {
             return Time.time < actionUseTime + GetFinalCooldown(category, cooldown, actionName);
         }
 
-        if (!lastCategoryUseTime.TryGetValue(category, out float useTime))
+        string categoryKey = BuildCategoryCooldownKey(category);
+        if (!lastCategoryUseTime.TryGetValue(categoryKey, out float useTime))
         {
             return false;
         }
@@ -363,12 +365,14 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     public float GetRemainingCooldown(AttackCategory category, float cooldown, string actionName = null)
     {
-        if (!string.IsNullOrEmpty(actionName) && lastActionUseTime.TryGetValue(actionName, out float actionUseTime))
+        string actionKey = BuildActionCooldownKey(category, actionName);
+        if (lastActionUseTime.TryGetValue(actionKey, out float actionUseTime))
         {
             return Mathf.Max(actionUseTime + GetFinalCooldown(category, cooldown, actionName) - Time.time, 0f);
         }
 
-        if (!lastCategoryUseTime.TryGetValue(category, out float useTime))
+        string categoryKey = BuildCategoryCooldownKey(category);
+        if (!lastCategoryUseTime.TryGetValue(categoryKey, out float useTime))
         {
             return 0f;
         }
@@ -1085,12 +1089,36 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     private void RecordActionUse(AttackCategory category, string actionName)
     {
         float useTime = Time.time;
-        lastCategoryUseTime[category] = useTime;
+        lastCategoryUseTime[BuildCategoryCooldownKey(category)] = useTime;
+        lastActionUseTime[BuildActionCooldownKey(category, actionName)] = useTime;
+    }
 
-        if (!string.IsNullOrEmpty(actionName))
+    private string BuildCategoryCooldownKey(AttackCategory category)
+    {
+        return $"{GetCooldownCharacterKey()}::{category}";
+    }
+
+    private string BuildActionCooldownKey(AttackCategory category, string actionName)
+    {
+        string normalizedActionName = string.IsNullOrWhiteSpace(actionName) ? "Default" : actionName;
+        return $"{BuildCategoryCooldownKey(category)}::{normalizedActionName}";
+    }
+
+    private string GetCooldownCharacterKey()
+    {
+        if (playerCharacter != null && playerCharacter.characterObject != null)
         {
-            lastActionUseTime[actionName] = useTime;
+            if (!string.IsNullOrWhiteSpace(playerCharacter.characterObject.characterId))
+                return playerCharacter.characterObject.characterId;
+
+            if (playerCharacter.characterObject.metaData != null
+                && !string.IsNullOrWhiteSpace(playerCharacter.characterObject.metaData.displayName))
+            {
+                return playerCharacter.characterObject.metaData.displayName;
+            }
         }
+
+        return "UnknownCharacter";
     }
 
     /// <summary>
