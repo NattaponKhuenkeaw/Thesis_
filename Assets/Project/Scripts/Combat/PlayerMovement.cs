@@ -164,6 +164,7 @@ public class PlayerMovement : MonoBehaviour
     // =========================================================
     public bool IsDashing => fsm != null && fsm.CurrentStateId == PlayerStateId.Dashing;
     public bool IsJumping => Time.time < jumpStartupEndTime;
+    public bool IsDroppingDown => dropDownCoroutine != null;
     public bool IsLanding => Time.time < landingEndTime;
     public float HorizontalInput => horizontalInput;
     public float VerticalVelocity => rb != null ? rb.linearVelocity.y : 0f;
@@ -289,6 +290,11 @@ public class PlayerMovement : MonoBehaviour
         isHoldingDown = isPressed;
     }
 
+    public bool IsDownInputHeld()
+    {
+        return isHoldingDown;
+    }
+
     public void SetJumpHeld(bool isPressed)
     {
         jumpHeld = isPressed;
@@ -361,11 +367,17 @@ public class PlayerMovement : MonoBehaviour
 
     public bool TryDropDown()
     {
+        if (IsDroppingDown)
+            return false;
+
+        if (!CanDropDown())
+            RefreshGroundStateForDropDown();
+
         if (!CanDropDown())
             return false;
 
-        if (dropDownCoroutine != null)
-            StopCoroutine(dropDownCoroutine);
+        coyoteUntil = -999f;
+        jumpBufferedUntil = -999f;
 
         dropDownCoroutine = StartCoroutine(DropDownRoutine(currentGroundCollider));
         return true;
@@ -474,6 +486,10 @@ public class PlayerMovement : MonoBehaviour
 
     private Collider2D GetBestGroundCollider(Collider2D[] hits, int hitCount)
     {
+        Collider2D bestHit = null;
+        float bestTop = float.MinValue;
+        bool bestIsOneWay = false;
+
         for (int i = 0; i < hitCount; i++)
         {
             Collider2D hit = hits[i];
@@ -483,10 +499,26 @@ public class PlayerMovement : MonoBehaviour
             if (ignoredGroundCollider != null && hit == ignoredGroundCollider)
                 continue;
 
-            return hit;
+            float top = hit.bounds.max.y;
+            bool isOneWay = oneWayPlatformLayer >= 0 && hit.gameObject.layer == oneWayPlatformLayer;
+
+            if (bestHit == null || top > bestTop + 0.001f)
+            {
+                bestHit = hit;
+                bestTop = top;
+                bestIsOneWay = isOneWay;
+                continue;
+            }
+
+            if (Mathf.Abs(top - bestTop) <= 0.02f && isOneWay && !bestIsOneWay)
+            {
+                bestHit = hit;
+                bestTop = top;
+                bestIsOneWay = true;
+            }
         }
 
-        return null;
+        return bestHit;
     }
 
     private void TryConsumeBufferedJump()
@@ -702,6 +734,16 @@ public class PlayerMovement : MonoBehaviour
             && currentGroundCollider != null
             && oneWayPlatformLayer >= 0
             && currentGroundCollider.gameObject.layer == oneWayPlatformLayer;
+    }
+
+    private void RefreshGroundStateForDropDown()
+    {
+        if (groundCheck == null)
+            return;
+
+        int hitCount = Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundContactFilter, groundHitBuffer);
+        currentGroundCollider = GetBestGroundCollider(groundHitBuffer, hitCount);
+        isGrounded = currentGroundCollider != null;
     }
 
     private bool ShouldSuppressLandingFeedback()

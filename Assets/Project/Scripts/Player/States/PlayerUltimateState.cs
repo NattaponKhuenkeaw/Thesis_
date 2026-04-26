@@ -166,7 +166,7 @@ public class PlayerUltimateState : CombatPlayerState
             }
 
             activeUltimateAction = resolver.ActiveCombatAction as UltimateAction;
-            
+            TryStartCooldown();
             ExecuteCombatStep(step, ctx, false);
             // --------------------------
 

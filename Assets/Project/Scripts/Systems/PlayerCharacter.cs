@@ -76,19 +76,25 @@ public class PlayerCharacter : MonoBehaviour
     // =========================================================
     public void ApplyCharacterData()
     {
+        ApplyCharacterData(null);
+    }
+
+    public void ApplyCharacterData(float? initialHp)
+    {
         if (characterObject == null)
             return;
 
         ApplyMovementData();
         ApplyAnimationData();
-        InitializeHP();
+        InitializeHP(initialHp);
         PassiveController?.InitializeFromCharacterData();
     }
 
-    public void SetCharacter(CharacterObject newCharacter)
+    public void SetCharacter(CharacterObject newCharacter, float? initialHp = null)
     {
+        PrepareForCharacterSwitch();
         characterObject = newCharacter;
-        ApplyCharacterData();
+        ApplyCharacterData(initialHp);
         PassiveController?.InitializeFromCharacterData();
         OnCharacterChanged?.Invoke(characterObject);
     }
@@ -96,13 +102,24 @@ public class PlayerCharacter : MonoBehaviour
     // =========================================================
     // HP Methods (absorbed from CharacterRuntime)
     // =========================================================
-    public void InitializeHP()
+    public void InitializeHP(float? initialHp = null)
     {
         if (characterObject == null)
             return;
 
-        currentHP = MaxHP;
-        deathEventRaised = false;
+        float maxHp = MaxHP;
+        currentHP = Mathf.Clamp(initialHp ?? maxHp, 0f, maxHp);
+        deathEventRaised = currentHP <= 0f;
+        NotifyHealthChanged();
+    }
+
+    public void SetCurrentHP(float value)
+    {
+        if (characterObject == null)
+            return;
+
+        currentHP = Mathf.Clamp(value, 0f, MaxHP);
+        deathEventRaised = currentHP <= 0f;
         NotifyHealthChanged();
     }
 
@@ -204,6 +221,14 @@ public class PlayerCharacter : MonoBehaviour
 
         if (PassiveController == null)
             PassiveController = GetComponent<CharacterPassiveController>();
+    }
+
+    private void PrepareForCharacterSwitch()
+    {
+        Combat?.ResetCombo();
+        Movement?.CancelAttackMotion();
+        Movement?.StopDashPhysics();
+        StateMachine?.ResetForCharacterSwitch();
     }
 
     private void ApplyMovementData()

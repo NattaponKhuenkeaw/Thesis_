@@ -200,10 +200,9 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     {
         if (hasStartedCooldown || player.Combat == null) return;
 
-        var currentStep = player.Combat.GetCurrentStepData();
-        if (currentStep == null) return;
-
-        // If we have an active skill action resolved, use its cooldown
+        // Start cooldown from the resolved action itself. This allows callers
+        // to begin cooldown as soon as the action is committed, while the late
+        // calls from cancel/complete/exit still act as a safety fallback.
         if (resolver.ActiveCombatAction is SkillAction skillAction && skillAction.cooldown > 0f)
         {
             player.Combat.StartActionCooldown(GetAttackCategory(), skillAction.actionName);
