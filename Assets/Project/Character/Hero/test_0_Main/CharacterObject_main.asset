@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 255da7e6c6e2e0147ab812b7ed3943c0, type: 3}
+  m_Name: CharacterObject_main
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterObject
+  characterId: char-0-main
+  characterType: 0
+  elementType: 1
+  previewPrefab: {fileID: 6597880524197938003, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
+  stats:
+    maxHP: 100
+    attack: 10
+    defense: 5
+    elementalMultiplier: 1
+    moveSpeed: 10
+    jumpForce: 22
+    maxJumpCount: 1
+    maxAirDashCount: 1
+    groundAcceleration: 80
+    groundDeceleration: 90
+    airAcceleration: 55
+    airDeceleration: 40
+    airSpeedMultiplier: 1
+  metaData:
+    displayName: Main
+    description: 
+    portrait: {fileID: 0}
+    animatorController: {fileID: 9100000, guid: 38e3871755c7d8d46bbcaadba6a293a7, type: 2}
+    attackSfx: {fileID: 0}
+    skillSfx: {fileID: 0}
+    hurtSfx: {fileID: 0}
+  _authoredFPS: 24
+  upgrade:
+    level: 1
+    constellationRank: 0
+    progressionPoints: 3
+  _dashData:
+    animationClip: {fileID: 7400000, guid: a3c837dc24c5bff43b19dd4e52b327ab, type: 2}
+    startupFrames: 5
+    activeFrames: 12
+    recoveryFrames: 12
+    cancelWindowStartFrame: 25
+    dashSpeed: 50
+    cooldownFrames: 24
+  progressionDefinition:
+    maxConstellationRank: 6
+    constellationNodes: []
+    passiveNodes: []
+  actionResolverTable: {fileID: 11400000, guid: 4c22d52c4e028734cbd3294422a85e5b, type: 2}

@@ -423,13 +423,21 @@ namespace CombatEditor.UI
 
             item.RegisterCallback<ClickEvent>(evt => SelectNode(node));
 
-            if (node.DeleteCallback != null)
+            if (node.DeleteCallback != null || (node.DataType == "ComboNode" && node.DataRef is ComboNode))
             {
                 item.AddManipulator(new ContextualMenuManipulator(evt =>
                 {
-                    string menuLabel = node.DataType == "CombatAction" ? "Delete Action" :
-                                       (node.Depth == 0 ? "Delete Root Node" : "Remove Link");
-                    evt.menu.AppendAction(menuLabel, _ => node.DeleteCallback());
+                    if (node.DeleteCallback != null)
+                    {
+                        string menuLabel = node.DataType == "CombatAction" ? "Delete Action" :
+                                           (node.Depth == 0 ? "Delete Root Node" : "Remove Link");
+                        evt.menu.AppendAction(menuLabel, _ => node.DeleteCallback());
+                    }
+
+                    if (node.DataType == "ComboNode" && node.DataRef is ComboNode originalCombo)
+                    {
+                        evt.menu.AppendAction("Duplicate as Child", _ => DuplicateNodeAsChild(originalCombo));
+                    }
                 }));
             }
 
@@ -463,6 +471,90 @@ namespace CombatEditor.UI
             }
 
             OnSelectionChanged?.Invoke(node);
+        }
+
+        private void DuplicateNodeAsChild(ComboNode originalCombo)
+        {
+            if (originalCombo == null || character == null || character.actionResolverTable == null) return;
+
+            Undo.RecordObject(character.actionResolverTable, "Duplicate Step as Child");
+
+            var newComboNode = new ComboNode();
+
+            if (originalCombo.stepData != null)
+            {
+                var originalStep = originalCombo.stepData;
+                var newStep = new AttackStepData
+                {
+                    stepName = originalStep.stepName + " (Copy)",
+                    animationClip = originalStep.animationClip,
+                    lockAirPosition = originalStep.lockAirPosition,
+                    autoChainToNext = originalStep.autoChainToNext,
+                    startupFrames = originalStep.startupFrames,
+                    activeFrames = originalStep.activeFrames,
+                    recoveryFrames = originalStep.recoveryFrames,
+                    cancelWindowStartFrame = originalStep.cancelWindowStartFrame,
+                    loopActivePhase = originalStep.loopActivePhase,
+                    componentOrder = originalStep.componentOrder != null ? new List<string>(originalStep.componentOrder) : new List<string>()
+                };
+
+                if (originalStep.triggerWindows != null)
+                {
+                    newStep.triggerWindows = new List<TriggerWindow>();
+                    foreach (var trigger in originalStep.triggerWindows)
+                    {
+                        newStep.triggerWindows.Add(new TriggerWindow
+                        {
+                            startFrame = trigger.startFrame,
+                            endFrame = trigger.endFrame,
+                            priority = trigger.priority,
+                            targetNode = trigger.targetNode,
+                            triggerConditions = trigger.triggerConditions != null ? new List<ActionConditionBase>(trigger.triggerConditions) : new List<ActionConditionBase>()
+                        });
+                    }
+                }
+
+                if (originalStep.motionData != null)
+                {
+                    newStep.motionData = JsonUtility.FromJson<MotionFrameData>(JsonUtility.ToJson(originalStep.motionData));
+                }
+                if (originalStep.vfxData != null)
+                {
+                    newStep.vfxData = JsonUtility.FromJson<VFXFrameData>(JsonUtility.ToJson(originalStep.vfxData));
+                }
+                if (originalStep.audioData != null)
+                {
+                    newStep.audioData = JsonUtility.FromJson<AudioFrameData>(JsonUtility.ToJson(originalStep.audioData));
+                }
+                if (originalStep.hitData != null)
+                {
+                    newStep.hitData = JsonUtility.FromJson<HitFrameData>(JsonUtility.ToJson(originalStep.hitData));
+                    newStep.hitData.hitboxes = new List<HitboxBase>();
+                    if (originalStep.hitData.hitboxes != null)
+                    {
+                        foreach (var hb in originalStep.hitData.hitboxes)
+                        {
+                            if (hb == null) continue;
+                            var hbJson = JsonUtility.ToJson(hb);
+                            if (hb is NormalHitbox)
+                                newStep.hitData.hitboxes.Add(JsonUtility.FromJson<NormalHitbox>(hbJson));
+                            else if (hb is GrabHitbox)
+                                newStep.hitData.hitboxes.Add(JsonUtility.FromJson<GrabHitbox>(hbJson));
+                            else if (hb is ProjectileSpawnHitbox)
+                                newStep.hitData.hitboxes.Add(JsonUtility.FromJson<ProjectileSpawnHitbox>(hbJson));
+                        }
+                    }
+                }
+
+                newComboNode.stepData = newStep;
+            }
+
+            var oldNext = originalCombo.defaultNext;
+            originalCombo.defaultNext = newComboNode;
+            newComboNode.defaultNext = oldNext;
+
+            EditorUtility.SetDirty(character.actionResolverTable);
+            Build(character);
         }
     }
 }
