@@ -158,7 +158,7 @@ public class PlayerHUD : MonoBehaviour
         if (playerCharacter == null)
         {
             if (hpText != null)
-                hpText.text = "HP -- / --";
+                hpText.text = "-- / --";
 
             if (healthSlider != null)
                 healthSlider.value = 0f;
@@ -185,7 +185,7 @@ public class PlayerHUD : MonoBehaviour
             healthFillImage.fillAmount = normalizedHp;
 
         if (hpText != null)
-            hpText.text = $"HP {Mathf.CeilToInt(currentHp)} / {Mathf.CeilToInt(maxHp)}";
+            hpText.text = $"{Mathf.CeilToInt(currentHp)} / {Mathf.CeilToInt(maxHp)}";
 
         lastCharacterKey = GetCharacterKey();
     }

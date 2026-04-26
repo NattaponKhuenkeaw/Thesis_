@@ -97,11 +97,11 @@ GameObject:
   - component: {fileID: 5371397137189720922}
   - component: {fileID: 1830555458098172541}
   - component: {fileID: 729008942358398209}
-  - component: {fileID: 5987486934514239479}
   - component: {fileID: 4691528794087154357}
   - component: {fileID: 5450070007788991123}
   - component: {fileID: 6196953050443969776}
   - component: {fileID: 5415922272028008889}
+  - component: {fileID: 5987486934514239479}
   m_Layer: 7
   m_Name: Player
   m_TagString: Player
@@ -363,20 +363,6 @@ MonoBehaviour:
     isBurning: 0
     isFrozen: 0
     isDead: 0
---- !u!114 &5987486934514239479
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7851930121724842516}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2fab8a9e978ecec4c9e4572b6319438b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SkillTreeController
-  playerCharacter: {fileID: 729008942358398209}
-  passiveController: {fileID: 0}
 --- !u!114 &4691528794087154357
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -440,6 +426,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HitFeedbackResolver
   defaultConfig: {fileID: 11400000, guid: 30b421f1f1ccf8248b45bd6650ecf84e, type: 2}
+--- !u!114 &5987486934514239479
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7851930121724842516}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2fab8a9e978ecec4c9e4572b6319438b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SkillTreeController
+  playerCharacter: {fileID: 729008942358398209}
+  passiveController: {fileID: 0}
 --- !u!1001 &6857509681489621141
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -75,7 +75,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.8, y: 0.4}
         size: {x: 1, y: 0.8}
-        damageMultiplier: 1
+        damageMultiplier: 0.3
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
