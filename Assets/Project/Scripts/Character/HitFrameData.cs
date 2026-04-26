@@ -128,7 +128,6 @@ public class GrabHitbox : HitboxBase
     public int impactFreezeFrames = 4;
     public int holdFrames = 24;
     public int recoveryFrames = 6;
-    public Vector2 snapOffset = new Vector2(0.6f, 0f);
     public Color flashColor = Color.red;
     public int flashFrames = 6;
 

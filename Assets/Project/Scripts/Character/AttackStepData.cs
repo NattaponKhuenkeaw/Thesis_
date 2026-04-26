@@ -15,13 +15,15 @@ public class AttackStepData : ActionFrameData
     public const string VfxComponentKey = "vfx";
     public const string AudioComponentKey = "audio";
     public const string HitboxComponentKey = "hitbox";
+    public const string EventComponentKey = "events";
 
     private static readonly string[] DefaultComponentOrder =
     {
         MotionComponentKey,
         VfxComponentKey,
         AudioComponentKey,
-        HitboxComponentKey
+        HitboxComponentKey,
+        EventComponentKey
     };
 
     [Header("Step Info")]
@@ -51,6 +53,7 @@ public class AttackStepData : ActionFrameData
     [SerializeReference] public VFXFrameData vfxData;
     [SerializeReference] public AudioFrameData audioData;
     [SerializeReference] public HitFrameData hitData;
+    [SerializeReference] public ActionEventFrameData eventData;
     [HideInInspector] public List<string> componentOrder = new List<string>(DefaultComponentOrder);
 
     public override void Rescale(float ratio)
@@ -61,6 +64,7 @@ public class AttackStepData : ActionFrameData
         vfxData?.Rescale(ratio);
         audioData?.Rescale(ratio);
         hitData?.Rescale(ratio);
+        eventData?.Rescale(ratio);
     }
 
     public void EnsureComponentOrder()
@@ -164,6 +168,7 @@ public class AttackStepData : ActionFrameData
             VfxComponentKey => vfxData != null,
             AudioComponentKey => audioData != null,
             HitboxComponentKey => hitData != null,
+            EventComponentKey => eventData != null,
             _ => false
         };
     }
@@ -173,6 +178,7 @@ public class AttackStepData : ActionFrameData
         return componentKey == MotionComponentKey
             || componentKey == VfxComponentKey
             || componentKey == AudioComponentKey
-            || componentKey == HitboxComponentKey;
+            || componentKey == HitboxComponentKey
+            || componentKey == EventComponentKey;
     }
 }

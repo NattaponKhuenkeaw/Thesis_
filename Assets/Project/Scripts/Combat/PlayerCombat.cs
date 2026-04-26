@@ -67,6 +67,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         public int recoveryFrames;
     }
     private GrabParams lastGrabParams;
+    public Vector2 LastGrabOffset => lastGrabParams.snapOffset;
 
     public ThrowContext activeThrowContext;
 
@@ -179,10 +180,12 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         // --- NEW: Priority Rendering ---
         SetPriority(true);
 
-        // --- NEW: Auto-Maintain Grab at Frame 0 ---
-        if (HasGrabbedEnemy() && lastGrabParams.recoveryFrames > 0)
+        // --- GrabSession: Auto-extend hold through this step ---
+        if (activeThrowContext != null && activeThrowContext.IsActive)
         {
-            MaintainGrabThroughFollowUp(step.startupFrames + step.activeFrames + 1);
+            int totalStepFrames = step.startupFrames + step.activeFrames
+                                + step.recoveryFrames + 2;
+            activeThrowContext.ExtendHold(totalStepFrames, lastGrabParams.recoveryFrames);
         }
 
         CombatLog($"Execute: '{step.stepName}' (Depth {depth}, Air={airCombo}, Category={category}, Action={currentActionName})");
@@ -243,10 +246,10 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
                 // Explicitly reset the HitBoxDamage component so it can hit the same targets again
                 hitBoxDamage?.ResetActivationState();
 
-                // Maintain grab for the duration of the next loop cycle to prevent premature drop
-                if (HasGrabbedEnemy())
+                // GrabSession: Extend hold for the duration of the next loop cycle
+                if (activeThrowContext != null && activeThrowContext.IsActive)
                 {
-                    MaintainGrabThroughFollowUp(currentStepData.activeFrames + 1);
+                    activeThrowContext.ExtendHold(currentStepData.activeFrames + 1);
                 }
 
                 // --- NEW: Re-trigger Motion on Wrap ---
@@ -412,6 +415,9 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         currentGrabHitbox = null;
         lastGrabParams = default;
 
+        // End any active grab session on combo reset
+        EndGrabSession();
+
         DisableHitbox(true);
         movement?.CancelAttackMotion();
         animHandler?.ResetCombo();
@@ -499,6 +505,17 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         }
 
         activeThrowContext.AddGrabbedTarget(enemy);
+
+        // --- Seamless Multi-Step Grab Re-binding ---
+        // If the session is active (e.g. hitting an already grabbed enemy with another GrabHitbox),
+        // update it with the new grab socket and offset so ExtendHold uses the correct new positions.
+        if (activeThrowContext.IsActive)
+        {
+            Transform socket = hitBoxController != null && hitBoxController.attackAnchor != null 
+                             ? hitBoxController.attackAnchor 
+                             : transform.root;
+            activeThrowContext.UpdateSession(socket, LastGrabOffset);
+        }
     }
 
     public void ClearGrabbedEnemy(EnemyController enemy = null)
@@ -516,6 +533,30 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         activeThrowContext?.BreakGrab();
     }
 
+    /// <summary>
+    /// Ends the grab session normally (clean release).
+    /// Called when the throw's final step reaches Recovery, allowing
+    /// the slam hitbox's reaction to handle the enemy's transition.
+    /// </summary>
+    public void EndGrabSession()
+    {
+        if (activeThrowContext == null || !activeThrowContext.IsActive) return;
+        activeThrowContext.ReleaseClean();
+        lastGrabParams = default;
+    }
+
+    /// <summary>
+    /// Force-releases all grabbed enemies with a safe eject direction.
+    /// Used when the player is interrupted (hitstun, cancel, state exit).
+    /// Applies a short knockdown to the enemy so they don't freeze in place.
+    /// </summary>
+    public void ForceReleaseGrab(Vector2 ejectDirection, float ejectSpeed = 4f)
+    {
+        if (activeThrowContext == null || !activeThrowContext.IsActive) return;
+        activeThrowContext.ForceRelease(ejectDirection, ejectSpeed);
+        lastGrabParams = default;
+    }
+
     public bool ValidateGrabTarget(EnemyController enemy, GrabHitbox grabHitbox = null)
     {
         if (grabHitbox == null)
@@ -526,6 +567,15 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         if (enemy == null || grabHitbox == null || !enemy.IsAlive)
         {
             return false;
+        }
+
+        // --- Seamless Multi-Step Grab ---
+        // If we are ALREADY holding the enemy in a grab session, they are explicitly
+        // a valid target for our combo's subsequent grab hitboxes, regardless of their
+        // exact velocity or physics state at this microsecond.
+        if (IsHoldingEnemy(enemy))
+        {
+            return true;
         }
 
         if (!grabHitbox.canGrabAirborne && IsEnemyAirborneForGrab(enemy))
@@ -691,7 +741,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         currentGrabHitbox = grabHitbox;
         lastGrabParams = new GrabParams 
         { 
-            snapOffset = grabHitbox.snapOffset, 
+            snapOffset = Vector2.zero, 
             recoveryFrames = grabHitbox.recoveryFrames 
         };
         hitBoxController?.ApplyHitbox(grabHitbox);
@@ -1019,10 +1069,11 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             return true;
         }
 
-        if (activeThrowContext != null && activeThrowContext.HasTarget(enemy))
-        {
-            return false;
-        }
+        // --- Seamless Multi-Step Grab ---
+        // We removed the block that returned false if the enemy was already in activeThrowContext.
+        // Returning false here prevented subsequent GrabHitboxes in a combo chain from hitting 
+        // the enemy, which broke multi-step grabs that needed to re-evaluate or update offsets.
+        // Instead, we let ValidateGrabTarget handle it, which returns true for already held enemies.
 
         return ValidateGrabTarget(enemy);
     }

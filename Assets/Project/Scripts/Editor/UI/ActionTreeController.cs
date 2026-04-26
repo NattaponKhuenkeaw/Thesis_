@@ -526,6 +526,10 @@ namespace CombatEditor.UI
                 {
                     newStep.audioData = JsonUtility.FromJson<AudioFrameData>(JsonUtility.ToJson(originalStep.audioData));
                 }
+                if (originalStep.eventData != null)
+                {
+                    newStep.eventData = JsonUtility.FromJson<ActionEventFrameData>(JsonUtility.ToJson(originalStep.eventData));
+                }
                 if (originalStep.hitData != null)
                 {
                     newStep.hitData = JsonUtility.FromJson<HitFrameData>(JsonUtility.ToJson(originalStep.hitData));

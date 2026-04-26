@@ -52,7 +52,15 @@ public class PlayerHitstunState : FrameDataPlayerState
 
         if (player.Combat != null)
         {
-            player.Combat.ReleaseGrabbedEnemy();
+            // GrabSession: Force-release with eject so grabbed enemies don't
+            // freeze in place when the player gets interrupted by taking damage.
+            if (player.Combat.HasGrabbedEnemy())
+            {
+                Vector2 ejectDir = player.Movement != null
+                    ? new Vector2(player.Movement.FacingDirection, 0.3f).normalized
+                    : Vector2.right;
+                player.Combat.ForceReleaseGrab(ejectDir, 4f);
+            }
             player.Combat.ResetCombo();
         }
 

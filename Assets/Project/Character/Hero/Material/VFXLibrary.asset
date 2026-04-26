@@ -195,3 +195,12 @@ MonoBehaviour:
       flipWithCharacter: 1
       isLocalSpace: 1
       obeyHitstop: 1
+  - categoryName: Ultimate
+    entries:
+    - type: 40
+      clip: {fileID: 7400000, guid: b53fc5f11238cda4b9c6c3a50cbae232, type: 2}
+      localScale: {x: 1, y: 1, z: 1}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 0

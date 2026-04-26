@@ -10,12 +10,26 @@ using UnityEngine;
 /// </summary>
 public class GameFreezeManager : MonoBehaviour
 {
+    public readonly struct FreezeToken
+    {
+        public FreezeToken(int id)
+        {
+            Id = id;
+        }
+
+        public int Id { get; }
+        public bool IsValid => Id != 0;
+    }
+
     public static GameFreezeManager Instance { get; private set; }
 
     private Coroutine freezeCoroutine;
     private int currentFreezeFramesRemaining;
+    private int nextFreezeTokenId = 1;
+    private int activeScopedFreezeTokenId;
 
     public bool IsTimeFrozen => Time.timeScale <= 0f;
+    public bool HasActiveScopedFreeze => activeScopedFreezeTokenId != 0;
 
     private void Awake()
     {
@@ -47,6 +61,7 @@ public class GameFreezeManager : MonoBehaviour
     public void FreezeFrame(int frames)
     {
         if (frames <= 0) return;
+        if (HasActiveScopedFreeze) return;
 
         // If a new freeze is requested, we take the maximum duration
         if (frames > currentFreezeFramesRemaining)
@@ -63,22 +78,35 @@ public class GameFreezeManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Special freeze for Ultimate activations.
-    /// Freezes indefinitely until RestoreTime() is called.
-    /// Useful for synchronizing with external sequences like the Flash Overlay.
-    /// </summary>
-    public void UltimateFreezeManual()
+    public FreezeToken BeginScopedFreeze()
     {
-        currentFreezeFramesRemaining = 0; // Disable frame-based restoration
-        
+        currentFreezeFramesRemaining = 0;
+
         if (freezeCoroutine != null)
         {
             StopCoroutine(freezeCoroutine);
             freezeCoroutine = null;
         }
-        
+
+        activeScopedFreezeTokenId = nextFreezeTokenId++;
         Time.timeScale = 0f;
+        return new FreezeToken(activeScopedFreezeTokenId);
+    }
+
+    public bool EndScopedFreeze(FreezeToken token)
+    {
+        if (!OwnsScopedFreeze(token))
+        {
+            return false;
+        }
+
+        RestoreTime();
+        return true;
+    }
+
+    public bool OwnsScopedFreeze(FreezeToken token)
+    {
+        return token.IsValid && activeScopedFreezeTokenId == token.Id;
     }
 
     /// <summary>
@@ -87,14 +115,18 @@ public class GameFreezeManager : MonoBehaviour
     /// </summary>
     public void UltimateFreeze(int frames, Action onFreezeEnd = null)
     {
-        // For Ultimate, we always override the current freeze
+        if (HasActiveScopedFreeze)
+        {
+            return;
+        }
+
         currentFreezeFramesRemaining = frames;
-        
+
         if (freezeCoroutine != null)
         {
             StopCoroutine(freezeCoroutine);
         }
-        
+
         float durationSeconds = frames / FrameDataConstants.LOGIC_FPS;
         freezeCoroutine = StartCoroutine(FreezeRoutine(durationSeconds, onFreezeEnd));
     }
@@ -125,5 +157,6 @@ public class GameFreezeManager : MonoBehaviour
         }
         Time.timeScale = 1f;
         currentFreezeFramesRemaining = 0;
+        activeScopedFreezeTokenId = 0;
     }
 }

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 /// <summary>
 /// Frame-data-driven skill state with buffered follow-up support.
@@ -40,14 +40,14 @@ public class PlayerSkillState : CombatPlayerState
 
     protected override void HandleInputDuringRecovery()
     {
-        if (TryConsumeAllowedBuffers()) return;
         if (TryAutoChain()) return;
+        if (TryConsumeAllowedBuffers()) return;
     }
 
     protected override void HandleInputDuringCancel()
     {
-        if (TryConsumeAllowedBuffers()) return;
         if (TryAutoChain()) return;
+        if (TryConsumeAllowedBuffers()) return;
     }
 
     public override bool HandleSkillInput()

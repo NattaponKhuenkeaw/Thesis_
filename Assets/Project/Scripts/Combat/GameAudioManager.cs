@@ -108,15 +108,20 @@ public class GameAudioManager : MonoBehaviour
 
     public void PlayUltimateActivation(UltimateAction ultimate)
     {
-        if (ultimate.activationVoice != null)
+        if (ultimate == null) return;
+        PlayUltimateActivation(ultimate.activationVoice, ultimate.activationSFX, ultimate.voiceDelay);
+    }
+
+    public void PlayUltimateActivation(AudioClip activationVoice, AudioClip activationSFX, float voiceDelay)
+    {
+        if (activationVoice != null)
         {
-            StartCoroutine(PlayUnscaledDelayed(ultimate.activationVoice, ultimate.voiceDelay, true));
+            StartCoroutine(PlayUnscaledDelayed(activationVoice, voiceDelay, true));
         }
 
-        if (ultimate.activationSFX != null)
+        if (activationSFX != null)
         {
-            // Usually SFX plays immediately
-            StartCoroutine(PlayUnscaledDelayed(ultimate.activationSFX, 0f, false));
+            StartCoroutine(PlayUnscaledDelayed(activationSFX, 0f, false));
         }
     }
 

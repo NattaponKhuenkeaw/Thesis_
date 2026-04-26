@@ -94,7 +94,7 @@ public class InteractableWorldUI : MonoBehaviour
             catch (System.ArgumentException)
             {
                 // Ignore invalid key paths quietly or log a warning
-                Debug.LogWarning($"[InteractableWorldUI] Invalid key string: '{keyString}'. Please check the Inspector.");
+                //Debug.LogWarning($"[InteractableWorldUI] Invalid key string: '{keyString}'. Please check the Inspector.");
             }
         }
     }
@@ -104,7 +104,7 @@ public class InteractableWorldUI : MonoBehaviour
         // Ensure the interacting object is the Player
         if (other.CompareTag("Player"))
         {
-            Debug.Log("Player entered range");
+            //Debug.Log("Player entered range");
             if (!isPlayerInRange)
             {
                 playerTransform = other.transform;
@@ -136,7 +136,7 @@ public class InteractableWorldUI : MonoBehaviour
 
     private void OnTriggerExit2D(Collider2D other)
     {
-        Debug.Log("Player is out of range");
+        //Debug.Log("Player is out of range");
         if (other.CompareTag("Player"))
         {
             isPlayerInRange = false;
@@ -181,7 +181,7 @@ public class InteractableWorldUI : MonoBehaviour
 
         if (isPlayerInRange && playerTransform != null)
         {
-            Debug.Log($"Player interacted with {gameObject.name}. Type: {interactionType}");
+            //Debug.Log($"Player interacted with {gameObject.name}. Type: {interactionType}");
             
             // Interaction logic switch
             switch (interactionType)

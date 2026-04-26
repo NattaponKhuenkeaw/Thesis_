@@ -107,7 +107,13 @@ public class PlayerStateMachine : MonoBehaviour
     /// </summary>
     public void ChangeState(PlayerState newState, TransitionContext context)
     {
-        if (newState == null || newState == CurrentState)
+        if (newState == null)
+            return;
+
+        // Self-interrupt protection: normally we don't re-enter the same state.
+        // However, if the state is a FrameDataPlayerState, we allow re-entry
+        // to support self-cancels (e.g., dash-to-dash or attack-to-attack chains).
+        if (newState == CurrentState && !(newState is FrameDataPlayerState))
             return;
 
         PlayerStateId prevId = CurrentStateId;
@@ -275,6 +281,12 @@ public class PlayerStateMachine : MonoBehaviour
 
         if (CurrentState.AcceptsJumpInput)
         {
+            // Pre-validate: reject if no jump resources available.
+            // Without this, the action state would be interrupted for a jump
+            // that never physically executes (e.g., 0 jumps left while airborne).
+            if (playerCharacter.Movement != null && !playerCharacter.Movement.CanJump())
+                return;
+
             InputBuffer?.ConsumeJump();
             ChangeState(JumpState);
             CurrentState.OnJumpInput();

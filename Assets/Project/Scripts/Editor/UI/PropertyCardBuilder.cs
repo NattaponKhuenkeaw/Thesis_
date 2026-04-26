@@ -590,6 +590,24 @@ namespace CombatEditor.UI
                             MarkDirtyAndRebuild();
                         }, reorderIndex, orderedComponents.Count);
                         break;
+
+                    case AttackStepData.EventComponentKey when step.eventData != null:
+                        BuildFoldoutCard("Action Event Data", "event_data", step.eventData.TrackColor, body =>
+                        {
+                            BuildActionEventCard(body, step.eventData);
+                        }, () =>
+                        {
+                            RecordUndo("Remove Action Events");
+                            step.eventData = null;
+                            MarkDirtyAndRebuild();
+                        }, false, componentList, newIndex =>
+                        {
+                            if (newIndex == reorderIndex) return;
+                            RecordUndo("Reorder Components");
+                            step.MoveComponentKey(AttackStepData.EventComponentKey, newIndex);
+                            MarkDirtyAndRebuild();
+                        }, reorderIndex, orderedComponents.Count);
+                        break;
                 }
             }
 
@@ -1412,6 +1430,168 @@ namespace CombatEditor.UI
             body.Add(addButton);
         }
 
+        private void BuildActionEventCard(VisualElement body, ActionEventFrameData eventData)
+        {
+            if (eventData.entries == null) eventData.entries = new List<ActionEventEntry>();
+
+            VisualElement itemList = new VisualElement();
+            body.Add(itemList);
+
+            for (int i = 0; i < eventData.entries.Count; i++)
+            {
+                int idx = i;
+                ActionEventEntry entry = eventData.entries[i];
+                if (entry.overlaySettings == null)
+                {
+                    entry.overlaySettings = new UltimateOverlaySequenceSettings();
+                }
+
+                BuildFoldoutCard($"Event #{idx + 1}: {entry.label}", $"event_entry_{idx}", entry.trackColor, inner =>
+                {
+                    AddTextField(inner, "Label", entry.label, value =>
+                    {
+                        RecordUndo("Edit Event Label");
+                        entry.label = value;
+                        MarkDirty();
+                    });
+                    AddEnumField(inner, "Event Type", entry.eventType, value =>
+                    {
+                        RecordUndo("Edit Event Type");
+                        entry.eventType = (ActionEventType)value;
+                        MarkDirty();
+                    });
+                    AddIntField(inner, "Trigger Frame", entry.triggerFrame, value =>
+                    {
+                        RecordUndo("Edit Event Frame");
+                        entry.triggerFrame = value;
+                        MarkDirty();
+                    });
+                    AddColorField(inner, "Track Color", entry.trackColor, value =>
+                    {
+                        RecordUndo("Edit Event Color");
+                        entry.trackColor = value;
+                        MarkDirty();
+                    });
+
+                    AddSeparator(inner, "Freeze Behavior");
+                    AddToggleField(inner, "Freeze World", entry.freezeWorld, value =>
+                    {
+                        RecordUndo("Edit Event Freeze");
+                        entry.freezeWorld = value;
+                        MarkDirty();
+                    });
+                    AddEnumField(inner, "Timeline Mode", entry.timelineMode, value =>
+                    {
+                        RecordUndo("Edit Event Timeline Mode");
+                        entry.timelineMode = (UltimateFreezeTimelineMode)value;
+                        MarkDirty();
+                    });
+
+                    AddSeparator(inner, "Overlay Sequence");
+                    AddFloatField(inner, "Fade In", entry.overlaySettings.fadeInDuration, value =>
+                    {
+                        RecordUndo("Edit Event Fade In");
+                        entry.overlaySettings.fadeInDuration = Mathf.Max(0f, value);
+                        MarkDirty();
+                    });
+                    AddFloatField(inner, "Hold", entry.overlaySettings.holdDuration, value =>
+                    {
+                        RecordUndo("Edit Event Hold");
+                        entry.overlaySettings.holdDuration = Mathf.Max(0f, value);
+                        MarkDirty();
+                    });
+                    AddFloatField(inner, "Darken", entry.overlaySettings.darkenDuration, value =>
+                    {
+                        RecordUndo("Edit Event Darken");
+                        entry.overlaySettings.darkenDuration = Mathf.Max(0f, value);
+                        MarkDirty();
+                    });
+                    AddFloatField(inner, "Black Hold", entry.overlaySettings.blackHoldDuration, value =>
+                    {
+                        RecordUndo("Edit Event Black Hold");
+                        entry.overlaySettings.blackHoldDuration = Mathf.Max(0f, value);
+                        MarkDirty();
+                    });
+                    AddFloatField(inner, "Fade Out", entry.overlaySettings.fadeOutDuration, value =>
+                    {
+                        RecordUndo("Edit Event Fade Out");
+                        entry.overlaySettings.fadeOutDuration = Mathf.Max(0f, value);
+                        MarkDirty();
+                    });
+                    AddColorField(inner, "Flash Color", entry.overlaySettings.flashColor, value =>
+                    {
+                        RecordUndo("Edit Event Flash Color");
+                        entry.overlaySettings.flashColor = value;
+                        MarkDirty();
+                    });
+                    AddColorField(inner, "Dark Color", entry.overlaySettings.darkColor, value =>
+                    {
+                        RecordUndo("Edit Event Dark Color");
+                        entry.overlaySettings.darkColor = value;
+                        MarkDirty();
+                    });
+
+                    AddSeparator(inner, "Activation Payload");
+                    AddEnumField(inner, "VFX Type", entry.activationVFXType, value =>
+                    {
+                        RecordUndo("Edit Event VFX Type");
+                        entry.activationVFXType = (Project.Combat.VFXType)value;
+                        MarkDirty();
+                    });
+                    AddObjectField(inner, "VFX Prefab (Override)", entry.activationVFXPrefab, value =>
+                    {
+                        RecordUndo("Edit Event VFX Prefab");
+                        entry.activationVFXPrefab = value as GameObject;
+                        MarkDirty();
+                    });
+                    AddVector3Field(inner, "VFX Offset", entry.activationVFXOffset, value =>
+                    {
+                        RecordUndo("Edit Event VFX Offset");
+                        entry.activationVFXOffset = value;
+                        MarkDirty();
+                    });
+                    AddObjectField(inner, "Voice Clip", entry.activationVoice, value =>
+                    {
+                        RecordUndo("Edit Event Voice");
+                        entry.activationVoice = value as AudioClip;
+                        MarkDirty();
+                    });
+                    AddObjectField(inner, "SFX Clip", entry.activationSFX, value =>
+                    {
+                        RecordUndo("Edit Event SFX");
+                        entry.activationSFX = value as AudioClip;
+                        MarkDirty();
+                    });
+                    AddFloatField(inner, "Voice Delay", entry.voiceDelay, value =>
+                    {
+                        RecordUndo("Edit Event Voice Delay");
+                        entry.voiceDelay = Mathf.Max(0f, value);
+                        MarkDirty();
+                    });
+                }, () =>
+                {
+                    RecordUndo("Delete Action Event");
+                    eventData.entries.RemoveAt(idx);
+                    MarkDirtyAndRebuild();
+                }, isSubCard: true, parent: itemList, onReorder: newIndex =>
+                {
+                    ReorderListItem(eventData.entries, idx, newIndex, "Reorder Action Event");
+                }, reorderIndex: idx, reorderCount: eventData.entries.Count);
+            }
+
+            Button addButton = new Button(() =>
+            {
+                RecordUndo("Add Action Event");
+                eventData.entries.Add(new ActionEventEntry());
+                MarkDirtyAndRebuild();
+            })
+            {
+                text = "Add Action Event"
+            };
+            addButton.AddToClassList("component-add-entry-btn");
+            body.Add(addButton);
+        }
+
         private void BuildHitDataCard(VisualElement body, HitFrameData hitData)
         {
             if (hitData.hitboxes == null) hitData.hitboxes = new List<HitboxBase>();
@@ -1761,13 +1941,7 @@ namespace CombatEditor.UI
                 MarkDirty();
             });
 
-            AddSeparator(body, "Snapping");
-            AddVector2Field(body, "Snap Offset", hitbox.snapOffset, value =>
-            {
-                RecordUndo("Edit Grab Snap Offset");
-                hitbox.snapOffset = value;
-                MarkDirty();
-            });
+
 
             AddSeparator(body, "Flash");
             AddColorField(body, "Flash Color", hitbox.flashColor, value =>
@@ -1899,6 +2073,17 @@ namespace CombatEditor.UI
                     });
                 }
                 else menu.AddDisabledItem(new GUIContent("Hitbox Data (added)"));
+
+                if (step.eventData == null)
+                {
+                    menu.AddItem(new GUIContent("Action Event Data"), false, () =>
+                    {
+                        RecordUndo("Add Action Events");
+                        step.eventData = new ActionEventFrameData();
+                        MarkDirtyAndRebuild();
+                    });
+                }
+                else menu.AddDisabledItem(new GUIContent("Action Event Data (added)"));
 
                 menu.ShowAsContext();
             })

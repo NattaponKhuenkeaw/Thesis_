@@ -118,14 +118,14 @@ public class PlayerAttackState : CombatPlayerState
 
     protected override void HandleInputDuringRecovery()
     {
-        if (TryConsumeAllowedBuffers()) return;
         if (TryAutoChain()) return;
+        if (TryConsumeAllowedBuffers()) return;
     }
 
     protected override void HandleInputDuringCancel()
     {
-        if (TryConsumeAllowedBuffers()) return;
         if (TryAutoChain()) return;
+        if (TryConsumeAllowedBuffers()) return;
     }
 
 

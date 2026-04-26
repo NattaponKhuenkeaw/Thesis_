@@ -95,6 +95,10 @@ public class PlayerDashState : FrameDataPlayerState
     // =========================================================
     public override bool HandleDashInput(float inputX)
     {
+        // If we've already started the dash physics, return false to let the FSM
+        // handle re-dash interrupts via RouteDashInput and InterruptPolicy.
+        if (dashStarted) return false;
+
         OnDashInput(inputX);
         return true;
     }

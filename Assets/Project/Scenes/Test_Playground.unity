@@ -374,9 +374,21 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3910294197192437969, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
+      propertyPath: m_Size.x
+      value: 2.15
+      objectReference: {fileID: 0}
+    - target: {fileID: 3910294197192437969, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
+      propertyPath: m_Size.y
+      value: 5.825
+      objectReference: {fileID: 0}
     - target: {fileID: 7731053110207872557, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
       propertyPath: m_Name
       value: ProjectileSpawnerPrefab
+      objectReference: {fileID: 0}
+    - target: {fileID: 7731053110207872557, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -620,6 +632,18 @@ PrefabInstance:
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 9100000, guid: b4f7f50e094f0f145a2251ad62172a8d, type: 2}
+    - target: {fileID: 6196953050443969776, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
+      propertyPath: showFsmLogs
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6196953050443969776, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
+      propertyPath: showCombatLogs
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6196953050443969776, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
+      propertyPath: showFrameDataLogs
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7851930121724842516, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: m_Name
       value: Player

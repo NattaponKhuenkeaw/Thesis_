@@ -22,7 +22,18 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588256048081535101
-  skillActions: []
+  skillActions:
+  - actionName: Yonokeze
+    context: 0
+    priority: 0
+    conditions: []
+    comboTree:
+      treeName: Combo
+      comboResetDelay: 0.8
+      rootNode:
+        rid: 1588256145469341789
+    cooldown: 3
+    energyCost: 0
   ultimateActions: []
   standaloneActions: []
   defaultLinearStep:
@@ -143,7 +154,7 @@ MonoBehaviour:
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
-        impactFreezeFrames: 3
+        impactFreezeFrames: 1
         knockbackFrames: 10
         knockupFrames: 8
         knockfallFrames: 7
@@ -176,7 +187,7 @@ MonoBehaviour:
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
-        impactFreezeFrames: 3
+        impactFreezeFrames: 1
         knockbackFrames: 10
         knockupFrames: 8
         knockfallFrames: 7
@@ -372,19 +383,19 @@ MonoBehaviour:
         impactTier: 3
         useDeterministicReaction: 1
         reactionKind: 2
-        impactFreezeFrames: 10
+        impactFreezeFrames: 4
         knockbackFrames: 14
-        knockupFrames: 11
-        knockfallFrames: 10
+        knockupFrames: 50
+        knockfallFrames: 50
         recoveryFrames: 9
         horizontalSpeed: 5
-        launchSpeed: 2
+        launchSpeed: 10
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
         maxJuggleCount: 20
-        juggleLaunchScale: 0.85
+        juggleLaunchScale: 2
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
@@ -423,7 +434,7 @@ MonoBehaviour:
           vfxData:
             rid: 1588256115435503722
           audioData:
-            rid: -2
+            rid: 1588256145469341794
           hitData:
             rid: 1588256048081535134
           componentOrder:
@@ -749,7 +760,7 @@ MonoBehaviour:
           vfxData:
             rid: 1588256115435503723
           audioData:
-            rid: -2
+            rid: 1588256145469341793
           hitData:
             rid: 1588256048081535169
           componentOrder:
@@ -921,7 +932,7 @@ MonoBehaviour:
           vfxData:
             rid: -2
           audioData:
-            rid: -2
+            rid: 1588256145469341795
           hitData:
             rid: 1588256093655269461
           componentOrder:
@@ -1077,3 +1088,123 @@ MonoBehaviour:
           rid: -2
         onGrabSuccessNode:
           rid: -2
+    - rid: 1588256145469341789
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 26
+          activeFrames: 21
+          recoveryFrames: 17
+          cancelWindowStartFrame: 61
+          loopActivePhase: 0
+          stepName: Yonokeze
+          animationClip: {fileID: 7400000, guid: 6ae74e424f6da7541ac385765b953aca, type: 2}
+          lockAirPosition: 1
+          autoChainToNext: 0
+          triggerWindows: []
+          motionData:
+            rid: -2
+          vfxData:
+            rid: -2
+          audioData:
+            rid: 1588256145469341790
+          hitData:
+            rid: 1588256145469341791
+          componentOrder:
+          - motion
+          - vfx
+          - audio
+          - hitbox
+        routes: []
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 1588256145469341790
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: 05e30b2677844e44090beb203a395426, type: 3}
+          triggerFrame: 7
+          duration: 36
+          channel: 0
+          volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: f8b7ea09989c82a478645e674010a3c5, type: 3}
+          triggerFrame: 27
+          duration: 4
+          channel: 1
+          volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 1588256145469341791
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 1588256145469341792
+    - rid: 1588256145469341792
+      type: {class: ProjectileSpawnHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 0
+        activeFrames: 1
+        damageType: 5
+        debugColor: {r: 0.42, g: 0.81, b: 1, a: 1}
+        projectileType: 0
+        projectileData: {fileID: 11400000, guid: c29dd69da0c215d4e92ee4ad2b461f42, type: 2}
+        overrideSpawnOffset: 1
+        spawnOffset: {x: 0.7202251, y: -0.052989125}
+    - rid: 1588256145469341793
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: 028945aa0edd4244d9a273aec2458043, type: 3}
+          triggerFrame: 11
+          duration: 41
+          channel: 0
+          volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 1588256145469341794
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: 89828ad405b7a3242a87e2d30d0cadeb, type: 3}
+          triggerFrame: 10
+          duration: 27
+          channel: 1
+          volume: 0.5
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: 89828ad405b7a3242a87e2d30d0cadeb, type: 3}
+          triggerFrame: 37
+          duration: 32
+          channel: 1
+          volume: 1
+          pitchVariation: 0.8
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: eac3ad0f9e2cf834c96b0930a5e7c8bb, type: 3}
+          triggerFrame: 6
+          duration: 31
+          channel: 0
+          volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 1588256145469341795
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: 3889ee9f4f41cf849af489aa7e8eb608, type: 3}
+          triggerFrame: 0
+          duration: 22
+          channel: 0
+          volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}

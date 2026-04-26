@@ -155,9 +155,16 @@ public class HitBoxDamage : MonoBehaviour
             else
                 playerCombat?.ClearGrabbedEnemy(enemy);
         }
-        else if (playerCombat != null && playerCombat.IsHoldingEnemy(enemy) && enemy.CurrentReactionState != EnemyReactionState.Grabbed)
+        else if (playerCombat != null && playerCombat.IsHoldingEnemy(enemy))
         {
-            playerCombat.ClearGrabbedEnemy(enemy);
+            // CRITICAL: Do NOT clear the grab just because the enemy's reaction
+            // state changed. During a throw sequence, slam hitboxes intentionally
+            // change the enemy from Grabbed → Knockback/Knockup. The GrabSession
+            // in ThrowContext is the authority on whether the enemy is still held.
+            //
+            // The session will be ended explicitly by:
+            //   - ThrowContext.ReleaseClean() when the throw finishes normally
+            //   - ThrowContext.ForceRelease() when the player is interrupted
         }
 
         int finalHitstun = GetConfiguredHitstopFrames();
@@ -265,13 +272,13 @@ public class HitBoxDamage : MonoBehaviour
         data.juggleLaunchScale = 1f;
         data.juggleStunScale = 1f;
         data.grabSocket = GetGrabSocket();
-        data.grabOffset = currentGrabHitbox.snapOffset;
+        data.grabOffset = Vector2.zero;
         data.hitstunFrames = currentGrabHitbox.impactFreezeFrames;
         data.knockbackFrames = currentGrabHitbox.holdFrames;
         data.reactionVelocity = Vector2.zero;
         data.isKnockdown = false;
         data.snapToAttacker = false;
-        data.snapOffset = currentGrabHitbox.snapOffset;
+        data.snapOffset = Vector2.zero;
         data.flashColor = currentGrabHitbox.flashColor;
         data.flashFrames = currentGrabHitbox.flashFrames;
         data.impactTier = currentGrabHitbox.impactTier;

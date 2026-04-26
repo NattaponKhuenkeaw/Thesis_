@@ -2,13 +2,12 @@ using UnityEngine;
 
 /// <summary>
 /// Frame-data-driven ultimate state with buffered follow-up support.
-/// Inherits CombatPlayerState for shared resolution and interrupt logic.
-/// Handles ultimate activation effects like flashes and time freezes.
+/// Ultimate activation presentation is authored on the resolved step's
+/// action-event track, not hard-coded in this state.
 /// </summary>
 public class PlayerUltimateState : CombatPlayerState
 {
     private UltimateAction activeUltimateAction;
-    private bool isWaitingForActivation;
 
     public PlayerUltimateState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
@@ -25,108 +24,30 @@ public class PlayerUltimateState : CombatPlayerState
     public override bool LocksFacing => true;
 
     protected override AttackCategory GetAttackCategory() => AttackCategory.Ultimate;
-
     protected override InterruptPolicy GetInterruptPolicy() => InterruptPolicy.Ultimate;
 
     public override void Enter(TransitionContext context)
     {
         base.Enter(context);
         activeUltimateAction = null;
-
-        if (UltimateFlashOverlay.Instance != null)
-        {
-            UltimateFlashOverlay.Instance.OnBlackScreenStarted += HandleBlackScreenStarted;
-            UltimateFlashOverlay.Instance.OnSequenceEnded += HandleSequenceEnded;
-        }
     }
 
     public override void Exit()
     {
         base.Exit();
         activeUltimateAction = null;
-
-        if (UltimateFlashOverlay.Instance != null)
-        {
-            UltimateFlashOverlay.Instance.OnBlackScreenStarted -= HandleBlackScreenStarted;
-            UltimateFlashOverlay.Instance.OnSequenceEnded -= HandleSequenceEnded;
-        }
-
-        isWaitingForActivation = false;
-    }
-
-    private void HandleBlackScreenStarted()
-    {
-        if (activeUltimateAction == null) return;
-
-        Transform playerTransform = player.transform;
-        Vector3 offset = activeUltimateAction.activationVFXOffset;
-
-        // Flip X offset based on facing direction
-        float facingDirection = playerTransform.localScale.x > 0 ? 1f : -1f;
-        offset.x *= facingDirection;
-
-        Vector3 spawnPosition = playerTransform.position + offset;
-
-        // 1. Try Library-driven VFX (Optimized)
-        if (activeUltimateAction.activationVFXType != Project.Combat.VFXType.None && Project.Combat.VFXManager.Instance != null)
-        {
-            Project.Combat.VFXManager.Instance.Spawn(activeUltimateAction.activationVFXType, spawnPosition, facingDirection < 0);
-        }
-        // 2. Fallback to Prefab (Legacy)
-        else if (activeUltimateAction.activationVFXPrefab != null)
-        {
-            GameObject vfxInstance = Object.Instantiate(activeUltimateAction.activationVFXPrefab, spawnPosition, playerTransform.rotation);
-
-            // FORCE UNSCALED TIME
-            var pss = vfxInstance.GetComponentsInChildren<ParticleSystem>();
-            foreach (var ps in pss)
-            {
-                var main = ps.main;
-                main.useUnscaledTime = true;
-            }
-
-            var anims = vfxInstance.GetComponentsInChildren<Animator>();
-            foreach (var a in anims)
-            {
-                a.updateMode = AnimatorUpdateMode.UnscaledTime;
-            }
-        }
-
-        // Audio
-        if (GameAudioManager.Instance != null)
-        {
-            GameAudioManager.Instance.PlayUltimateActivation(activeUltimateAction);
-        }
-    }
-
-    private void HandleSequenceEnded()
-    {
-        if (!isWaitingForActivation) return;
-
-        if (GameFreezeManager.Instance != null)
-        {
-            GameFreezeManager.Instance.RestoreTime();
-        }
-
-        isWaitingForActivation = false;
-    }
-
-    public override void Update()
-    {
-        if (isWaitingForActivation) return;
-        base.Update();
     }
 
     protected override void HandleInputDuringRecovery()
     {
-        if (TryConsumeAllowedBuffers()) return;
         if (TryAutoChain()) return;
+        if (TryConsumeAllowedBuffers()) return;
     }
 
     protected override void HandleInputDuringCancel()
     {
-        if (TryConsumeAllowedBuffers()) return;
         if (TryAutoChain()) return;
+        if (TryConsumeAllowedBuffers()) return;
     }
 
     public override bool HandleUltimateInput()
@@ -149,7 +70,7 @@ public class PlayerUltimateState : CombatPlayerState
         {
             InputContext ctx = BuildInputContext();
             AttackStepData step = resolver.ResolveInitial(ctx, resolverTable, AttackCategory.Ultimate);
-            
+
             if (step == null)
             {
                 ExitToAppropriateMovementState();
@@ -168,41 +89,25 @@ public class PlayerUltimateState : CombatPlayerState
             activeUltimateAction = resolver.ActiveCombatAction as UltimateAction;
             TryStartCooldown();
             ExecuteCombatStep(step, ctx, false);
-            // --------------------------
 
             if (activeUltimateAction != null && activeUltimateAction.useDashAfterImage && player.Movement != null)
-
-                // Burst Visuals
-                if (activeUltimateAction != null && activeUltimateAction.useDashAfterImage && player.Movement != null)
             {
                 player.Movement.SpawnUltimateBurst(3, 0.08f);
             }
 
-            isWaitingForActivation = true;
-
-            // Activation Effects
-            if (GameFreezeManager.Instance != null)
-            {
-                GameFreezeManager.Instance.UltimateFreezeManual(); 
-            }
-            if (UltimateFlashOverlay.Instance != null)
-            {
-                UltimateFlashOverlay.Instance.PlayActivationFlash();
-            }
-
-            return; 
+            return;
         }
 
-        if (currentPhase == ActionPhase.Cancel && TryResolveNextUltimateStep())
+        if (currentPhase == ActionPhase.Cancel)
         {
-            return;
+            TryResolveNextUltimateStep();
         }
     }
 
     private bool TryResolveNextUltimateStep(bool isAutoChain = false)
     {
         bool success = TryResolveNextStep(isAutoChain);
-        
+
         if (success && activeUltimateAction != null && activeUltimateAction.useDashAfterImage && player.Movement != null)
         {
             player.Movement.SpawnUltimateBurst(3, 0.08f);

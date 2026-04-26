@@ -136,6 +136,7 @@ public class PlayerMovement : MonoBehaviour
     private Coroutine attackMotionCoroutine;
     private Coroutine plungeAfterimageCoroutine;
     private bool isAttackMotionActive;
+    private bool useUnscaledAttackMotion;
 
     // Drop-down
     private Coroutine dropDownCoroutine;
@@ -433,6 +434,11 @@ public class PlayerMovement : MonoBehaviour
         attackMotionCoroutine = StartCoroutine(AttackMovementCoroutine(keyframe));
     }
 
+    public void SetUseUnscaledAttackMotion(bool useUnscaled)
+    {
+        useUnscaledAttackMotion = useUnscaled;
+    }
+
     public void CancelAttackMotion()
     {
         StopAttackMotion();
@@ -697,11 +703,23 @@ public class PlayerMovement : MonoBehaviour
         isAttackMotionActive = false;
         attackMotionVelocityX = 0f;
         attackMotionVelocityY = 0f;
+        useUnscaledAttackMotion = false;
     }
 
     public bool CanDash()
     {
         return CanStartGroundDash() || CanStartAirDash();
+    }
+
+    /// <summary>
+    /// Returns true if the player has jump resources available (ground or air jump).
+    /// Used by the FSM for pre-validation before committing to a jump state transition.
+    /// </summary>
+    public bool CanJump()
+    {
+        if (IsDashing && !IsInDashRecovery()) return false;
+        if (IsJumping) return false;
+        return IsGroundJumpAvailable() || CanUseAirJump();
     }
 
     private bool CanStartGroundDash()
@@ -862,9 +880,19 @@ public class PlayerMovement : MonoBehaviour
         if (TryHandleAttackFacingLockOn())
             return;
 
-        // Use FSM state's LocksFacing flag instead of hard-coded state checks
-        bool facingLocked = fsm != null && fsm.CurrentState != null && fsm.CurrentState.LocksFacing;
-        bool canUpdateFacing = !facingLocked || (combat != null && combat.CanSwitchDirection());
+        // InputGate: FrameData states use per-phase InputGate as the single source of truth.
+        // Non-FrameData states (Idle, Move, Jump) use the LocksFacing flag.
+        bool canUpdateFacing;
+        if (fsm != null && fsm.CurrentState is FrameDataPlayerState fdState)
+        {
+            canUpdateFacing = fdState.AllowsFacing();
+        }
+        else
+        {
+            bool facingLocked = fsm != null && fsm.CurrentState != null && fsm.CurrentState.LocksFacing;
+            canUpdateFacing = !facingLocked;
+        }
+
         if (!canUpdateFacing)
             return;
 
@@ -1194,14 +1222,22 @@ public class PlayerMovement : MonoBehaviour
             float elapsed = 0f;
             while (elapsed < durationSeconds)
             {
-                elapsed += Time.fixedDeltaTime;
+                float stepDelta = useUnscaledAttackMotion ? Time.unscaledDeltaTime : Time.fixedDeltaTime;
+                elapsed += stepDelta;
                 float t = Mathf.Clamp01(elapsed / durationSeconds);
                 
                 // Use LeanTween's easing evaluation
                 float easedT = TweenEase(0f, 1f, t, keyframe.easing);
 
                 Vector2 currentTarget = Vector2.Lerp(startPos, targetPos, easedT);
-                
+
+                if (useUnscaledAttackMotion)
+                {
+                    rb.position = currentTarget;
+                    yield return null;
+                    continue;
+                }
+
                 // Set velocity to reach the next interpolated point
                 Vector2 diff = currentTarget - rb.position;
                 attackMotionVelocityX = diff.x / Time.fixedDeltaTime;

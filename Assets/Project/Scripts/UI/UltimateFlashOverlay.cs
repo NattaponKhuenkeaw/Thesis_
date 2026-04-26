@@ -3,17 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// Background flash VFX for Ultimate activations and Ultimate hit impacts.
-/// Renders BEHIND all game sprites (characters, enemies, projectiles, VFX)
-/// using a SpriteRenderer on a low sorting order, so only the background
-/// flashes white — just like KOF2002UM.
-///
-/// Scene Setup:
-///   Create a child GameObject under CameraSetUp (or any persistent root):
-///     - Add SpriteRenderer with a plain white 1x1 sprite
-///     - Set Sorting Layer to "Default" (or your background layer)
-///     - Set Order in Layer to a very low value (e.g., -9999)
-///     - Attach this component
-///     - The sprite will be auto-scaled to fill the camera view
+/// Renders behind gameplay sprites using a fullscreen SpriteRenderer.
 /// </summary>
 public class UltimateFlashOverlay : MonoBehaviour
 {
@@ -23,31 +13,17 @@ public class UltimateFlashOverlay : MonoBehaviour
     [SerializeField] private SpriteRenderer flashRenderer;
     [SerializeField] private Camera targetCamera;
 
-    [Header("Activation Flash Timing (Real-Time Seconds)")]
-    [Tooltip("How fast the background snaps to white on Ultimate activation.")]
-    [SerializeField] private float activationFadeInDuration = 0.03f;
-    [Tooltip("How long the background holds at peak white.")]
-    [SerializeField] private float activationHoldDuration = 0.15f;
-    [Tooltip("How fast the white shifts to dark/black.")]
-    [SerializeField] private float activationDarkenDuration = 0.12f;
-    [Tooltip("How long the black/dark screen holds before fading out.")]
-    [SerializeField] private float activationBlackHoldDuration = 0.5f;
-    [Tooltip("How fast the dark fades back to transparent.")]
-    [SerializeField] private float activationFadeOutDuration = 0.25f;
+    [Header("Default Activation Sequence")]
+    [SerializeField] private UltimateOverlaySequenceSettings defaultSequenceSettings = new UltimateOverlaySequenceSettings();
 
     [Header("Hit Flash Settings")]
     [Tooltip("Duration of the single-frame hit flash (real-time seconds).")]
     [SerializeField] private float hitFlashDuration = 0.04f;
 
-    [Header("Colors")]
-    [SerializeField] private Color flashColor = Color.white;
-    [SerializeField] private Color darkColor = new Color(0.05f, 0.02f, 0.1f, 1f);
-
-    public event System.Action OnBlackScreenStarted;
-    public event System.Action OnSequenceEnded;
-
     private Coroutine activationCoroutine;
     private Coroutine hitFlashCoroutine;
+    private System.Action blackScreenStartedCallback;
+    private System.Action sequenceEndedCallback;
 
     private void Awake()
     {
@@ -86,7 +62,7 @@ public class UltimateFlashOverlay : MonoBehaviour
     {
         if (flashRenderer != null)
         {
-            Color c = flashColor;
+            Color c = GetDefaultFlashColor();
             c.a = 0f;
             flashRenderer.color = c;
         }
@@ -99,9 +75,6 @@ public class UltimateFlashOverlay : MonoBehaviour
         FollowCamera();
     }
 
-    /// <summary>
-    /// Scales the sprite to fill the entire camera viewport.
-    /// </summary>
     private void FitToCamera()
     {
         if (targetCamera == null || flashRenderer == null || flashRenderer.sprite == null)
@@ -114,56 +87,77 @@ public class UltimateFlashOverlay : MonoBehaviour
 
         Vector2 spriteSize = flashRenderer.sprite.bounds.size;
         transform.localScale = new Vector3(
-            cameraWidth / spriteSize.x * 1.2f,   // slight overscale to avoid edge gaps
+            cameraWidth / spriteSize.x * 1.2f,
             cameraHeight / spriteSize.y * 1.2f,
             1f);
     }
 
-    /// <summary>
-    /// Keeps the flash quad centered on the camera.
-    /// </summary>
     private void FollowCamera()
     {
-        if (targetCamera == null) return;
+        if (targetCamera == null)
+        {
+            return;
+        }
 
         Vector3 camPos = targetCamera.transform.position;
         transform.position = new Vector3(camPos.x, camPos.y, transform.position.z);
     }
 
-    // =========================================================
-    // Public API
-    // =========================================================
-
-    /// <summary>
-    /// Plays the full Ultimate activation flash sequence (KOF-style).
-    /// White flash → hold → darken → fade out.
-    /// Uses unscaledDeltaTime so it animates during Time.timeScale = 0.
-    /// </summary>
     public void PlayActivationFlash()
     {
+        PlaySequence(defaultSequenceSettings);
+    }
+
+    public void PlaySequence(
+        UltimateOverlaySequenceSettings settings,
+        System.Action onBlackScreenStarted = null,
+        System.Action onSequenceEnded = null)
+    {
+        UltimateOverlaySequenceSettings resolvedSettings = settings ?? defaultSequenceSettings ?? new UltimateOverlaySequenceSettings();
+
         if (activationCoroutine != null)
         {
             StopCoroutine(activationCoroutine);
+            activationCoroutine = null;
         }
 
-        // Cancel any hit flash in progress
         if (hitFlashCoroutine != null)
         {
             StopCoroutine(hitFlashCoroutine);
             hitFlashCoroutine = null;
         }
 
-        activationCoroutine = StartCoroutine(ActivationFlashRoutine());
+        blackScreenStartedCallback = onBlackScreenStarted;
+        sequenceEndedCallback = onSequenceEnded;
+        activationCoroutine = StartCoroutine(ActivationFlashRoutine(resolvedSettings));
     }
 
-    /// <summary>
-    /// Plays a single-frame white background flash (for Ultimate hits).
-    /// Does not interrupt the activation flash if one is playing.
-    /// </summary>
+    public void StopSequence(bool invokeEndedCallback = false)
+    {
+        if (activationCoroutine != null)
+        {
+            StopCoroutine(activationCoroutine);
+            activationCoroutine = null;
+        }
+
+        SetAlpha(0f);
+
+        System.Action ended = sequenceEndedCallback;
+        blackScreenStartedCallback = null;
+        sequenceEndedCallback = null;
+
+        if (invokeEndedCallback)
+        {
+            ended?.Invoke();
+        }
+    }
+
     public void PlayHitFlash()
     {
-        // Don't interrupt the activation flash
-        if (activationCoroutine != null) return;
+        if (activationCoroutine != null)
+        {
+            return;
+        }
 
         if (hitFlashCoroutine != null)
         {
@@ -173,90 +167,95 @@ public class UltimateFlashOverlay : MonoBehaviour
         hitFlashCoroutine = StartCoroutine(HitFlashRoutine());
     }
 
-    // =========================================================
-    // Coroutines
-    // =========================================================
-
-    private IEnumerator ActivationFlashRoutine()
+    private IEnumerator ActivationFlashRoutine(UltimateOverlaySequenceSettings settings)
     {
-        if (flashRenderer == null) yield break;
+        if (flashRenderer == null)
+        {
+            yield break;
+        }
 
-        // Reset
         SetAlpha(0f);
-        flashRenderer.color = WithAlpha(flashColor, 0f);
+        flashRenderer.color = WithAlpha(settings.flashColor, 0f);
 
-        // 1. Fast flash to white
         float elapsed = 0f;
-        while (elapsed < activationFadeInDuration)
+        while (elapsed < settings.fadeInDuration)
         {
             elapsed += Time.unscaledDeltaTime;
-            float t = Mathf.Clamp01(elapsed / activationFadeInDuration);
-            flashRenderer.color = WithAlpha(flashColor, t);
+            float t = settings.fadeInDuration <= 0f ? 1f : Mathf.Clamp01(elapsed / settings.fadeInDuration);
+            flashRenderer.color = WithAlpha(settings.flashColor, t);
             yield return null;
         }
-        flashRenderer.color = WithAlpha(flashColor, 1f);
+        flashRenderer.color = WithAlpha(settings.flashColor, 1f);
 
-        // 2. Hold at peak white
-        yield return new WaitForSecondsRealtime(activationHoldDuration);
+        if (settings.holdDuration > 0f)
+        {
+            yield return new WaitForSecondsRealtime(settings.holdDuration);
+        }
 
-        // 3. Shift white → dark
         elapsed = 0f;
-        while (elapsed < activationDarkenDuration)
+        while (elapsed < settings.darkenDuration)
         {
             elapsed += Time.unscaledDeltaTime;
-            float t = Mathf.Clamp01(elapsed / activationDarkenDuration);
-            flashRenderer.color = Color.Lerp(flashColor, darkColor, t);
+            float t = settings.darkenDuration <= 0f ? 1f : Mathf.Clamp01(elapsed / settings.darkenDuration);
+            flashRenderer.color = Color.Lerp(settings.flashColor, settings.darkColor, t);
             yield return null;
         }
-        flashRenderer.color = darkColor;
+        flashRenderer.color = settings.darkColor;
 
-        // NEW: Trigger event when the screen is fully dark
-        OnBlackScreenStarted?.Invoke();
+        blackScreenStartedCallback?.Invoke();
 
-        // 3.5 Hold while dark
-        yield return new WaitForSecondsRealtime(activationBlackHoldDuration);
+        if (settings.blackHoldDuration > 0f)
+        {
+            yield return new WaitForSecondsRealtime(settings.blackHoldDuration);
+        }
 
-        // 4. Fade dark → transparent
         elapsed = 0f;
-        while (elapsed < activationFadeOutDuration)
+        while (elapsed < settings.fadeOutDuration)
         {
             elapsed += Time.unscaledDeltaTime;
-            float t = Mathf.Clamp01(elapsed / activationFadeOutDuration);
-            flashRenderer.color = WithAlpha(darkColor, 1f - t);
+            float t = settings.fadeOutDuration <= 0f ? 1f : Mathf.Clamp01(elapsed / settings.fadeOutDuration);
+            flashRenderer.color = WithAlpha(settings.darkColor, 1f - t);
             yield return null;
         }
+
         SetAlpha(0f);
-
         activationCoroutine = null;
-        OnSequenceEnded?.Invoke();
+
+        System.Action ended = sequenceEndedCallback;
+        blackScreenStartedCallback = null;
+        sequenceEndedCallback = null;
+        ended?.Invoke();
     }
 
     private IEnumerator HitFlashRoutine()
     {
-        if (flashRenderer == null) yield break;
+        if (flashRenderer == null)
+        {
+            yield break;
+        }
 
-        // Instant white flash
-        flashRenderer.color = WithAlpha(flashColor, 1f);
-
-        // Hold for ~1 frame equivalent
+        flashRenderer.color = WithAlpha(GetDefaultFlashColor(), 1f);
         yield return new WaitForSecondsRealtime(hitFlashDuration);
-
-        // Snap back to transparent
         SetAlpha(0f);
 
         hitFlashCoroutine = null;
     }
 
-    // =========================================================
-    // Helpers
-    // =========================================================
-
     private void SetAlpha(float alpha)
     {
-        if (flashRenderer == null) return;
+        if (flashRenderer == null)
+        {
+            return;
+        }
+
         Color c = flashRenderer.color;
         c.a = alpha;
         flashRenderer.color = c;
+    }
+
+    private Color GetDefaultFlashColor()
+    {
+        return defaultSequenceSettings != null ? defaultSequenceSettings.flashColor : Color.white;
     }
 
     private static Color WithAlpha(Color color, float alpha)

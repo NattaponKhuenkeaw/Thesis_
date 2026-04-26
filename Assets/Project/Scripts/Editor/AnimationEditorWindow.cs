@@ -687,6 +687,26 @@ public class AnimationEditorWindow : EditorWindow
                         }
                         break;
                     }
+
+                    case AttackStepData.EventComponentKey when step.eventData != null && step.eventData.entries != null:
+                    {
+                        foreach (var eventEntry in step.eventData.entries)
+                        {
+                            if (eventEntry == null)
+                            {
+                                continue;
+                            }
+
+                            var eventTrack = new TimelineGridElement.TimelineTrack
+                            {
+                                label = eventEntry.label,
+                                color = eventEntry.trackColor
+                            };
+                            eventTrack.ranges.Add((eventEntry.triggerFrame, eventEntry.GetTimelineDurationFrames()));
+                            timelineGrid.Tracks.Add(eventTrack);
+                        }
+                        break;
+                    }
                 }
             }
         }

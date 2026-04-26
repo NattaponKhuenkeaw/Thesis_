@@ -104,6 +104,37 @@ public class EnemyHitReactionHandler : MonoBehaviour
             return;
         }
 
+        // --- Seamless Multi-Step Grab Re-Grab ---
+        // If the enemy is already grabbed by us, and we hit them with another GrabHitbox,
+        // we update their data but SKIP cancelling their current reaction and entering ImpactFreeze.
+        // Entering ImpactFreeze would restore their gravity momentarily and cause them to drop/glitch.
+        bool isReGrab = currentState == EnemyReactionState.Grabbed &&
+                        data.reactionKind == EnemyReactionKind.Grab &&
+                        currentReaction.reactionOwnerId == data.reactionOwnerId;
+
+        if (isReGrab)
+        {
+            currentReaction = data;
+            attackerPos = attackerPosition;
+            
+            // Skip ImpactFreeze for seamless regrabs to prevent ProcessReactionFrame 
+            // from forcing the state into ImpactFreeze, which drops kinematic body.
+            currentReactionFrame = currentReaction.ImpactFreezeFrames + 1;
+            logicTimeCounter = currentReactionFrame * (1f / FrameDataConstants.LOGIC_FPS);
+            
+            // Snap them immediately to the new socket/offset
+            UpdateGrabbedBinding();
+            
+            // Optionally, trigger a flash effect for the new hit since we skip ImpactFreeze
+            if (data.flashFrames > 0 && controller != null)
+            {
+                // Note: The EnemyController's TakeHit already started the FlashRoutine, 
+                // so we just need to return safely here.
+            }
+
+            return;
+        }
+
         bool airborneJuggle = data.reactionKind == EnemyReactionKind.Knockup && IsAirJuggleContext();
         if (airborneJuggle)
         {

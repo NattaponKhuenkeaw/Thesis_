@@ -92,14 +92,19 @@ public abstract class FrameDataPlayerState : PlayerState
 
     /// <summary>
     /// Subclasses return their interrupt policy. The base class uses this
-    /// for ALL interrupt/cancel checks.
+    /// for ALL interrupt/cancel checks and InputGate queries.
     /// </summary>
     protected virtual InterruptPolicy GetInterruptPolicy() => new InterruptPolicy
     {
         startup  = ActionCategory.None,
         active   = ActionCategory.None,
         recovery = ActionCategory.None,
-        cancel   = ActionCategory.All
+        cancel   = ActionCategory.All,
+        // Default InputGate: facing allowed during startup, all open on cancel
+        startupGate  = InputGate.AllowFacing,
+        activeGate   = InputGate.None,
+        recoveryGate = InputGate.None,
+        cancelGate   = InputGate.AllowAll
     };
 
     /// <summary>
@@ -110,6 +115,36 @@ public abstract class FrameDataPlayerState : PlayerState
     {
         ActionCategory allowed = GetInterruptPolicy().GetAllowedFor(currentPhase);
         return (allowed & incoming) != 0;
+    }
+
+    // =========================================================
+    // InputGate — Per-phase continuous input control
+    // =========================================================
+
+    /// <summary>
+    /// Returns the InputGate for the current phase.
+    /// </summary>
+    public InputGate GetCurrentInputGate()
+    {
+        return GetInterruptPolicy().GetInputGateFor(currentPhase);
+    }
+
+    /// <summary>
+    /// Whether the current phase allows facing direction changes from player input.
+    /// Consulted by PlayerMovement.UpdateFacing() as the single source of truth
+    /// for FrameData-driven states.
+    /// </summary>
+    public bool AllowsFacing()
+    {
+        return (GetCurrentInputGate() & InputGate.AllowFacing) != 0;
+    }
+
+    /// <summary>
+    /// Whether the current phase allows movement input to influence physics.
+    /// </summary>
+    public bool AllowsMovement()
+    {
+        return (GetCurrentInputGate() & InputGate.AllowMovement) != 0;
     }
 
     // =========================================================
@@ -143,7 +178,25 @@ public abstract class FrameDataPlayerState : PlayerState
         currentPhase = ActionPhase.None;
     }
 
+    public override void Update()
+    {
+        if (ShouldAdvanceWithUnscaledTime())
+        {
+            AdvanceFrames(Time.unscaledDeltaTime);
+        }
+    }
+
     public override void FixedUpdate()
+    {
+        if (ShouldAdvanceWithUnscaledTime())
+        {
+            return;
+        }
+
+        AdvanceFrames(Time.fixedDeltaTime);
+    }
+
+    private void AdvanceFrames(float deltaTime)
     {
         if (cachedFrameData == null)
             return;
@@ -154,10 +207,10 @@ public abstract class FrameDataPlayerState : PlayerState
             return;
         }
 
-        logicTimeCounter += Time.fixedDeltaTime;
-        
+        logicTimeCounter += deltaTime;
+
         // Stabilized math: using small epsilon (+0.001f) ensures frame 1 triggers on the very first
-        // tick (e.g. 0.02s * 60 = 1.2, 1.2 + 0.001 = 1.201 -> Floor = 1) without skipping frames.
+        // tick without skipping frames.
         int targetFrame = Mathf.FloorToInt(logicTimeCounter * LOGIC_FPS + 0.001f);
 
         while (currentFrame < targetFrame)
@@ -263,6 +316,15 @@ public abstract class FrameDataPlayerState : PlayerState
     protected virtual bool ShouldAdvanceLogicFrames()
     {
         return true;
+    }
+
+    /// <summary>
+    /// Allows derived states to move their frame timeline from Update using
+    /// unscaled time instead of FixedUpdate.
+    /// </summary>
+    protected virtual bool ShouldAdvanceWithUnscaledTime()
+    {
+        return false;
     }
 
     /// <summary>
