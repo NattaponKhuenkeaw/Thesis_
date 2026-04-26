@@ -175,6 +175,26 @@ public class PlayerStateMachine : MonoBehaviour
 
     public bool IsInState(PlayerStateId stateId) => CurrentStateId == stateId;
 
+    public void ResetForCharacterSwitch()
+    {
+        if (IdleState == null)
+            InitializeStates();
+
+        InputBuffer?.ClearAll();
+
+        if (CurrentState is FrameDataPlayerState || CurrentState == AttackState || CurrentState == SkillState || CurrentState == UltimateState)
+        {
+            PlayerState targetState = ResolveLocomotionStateForCharacterSwitch();
+            ChangeState(targetState);
+        }
+        else if (CurrentState == null)
+        {
+            ChangeState(ResolveLocomotionStateForCharacterSwitch());
+        }
+
+        InputBuffer?.ClearAll();
+    }
+
     // =========================================================
     // Centralized Input Routing
     // These methods atomically handle "check → transition → forward"
@@ -405,6 +425,20 @@ public class PlayerStateMachine : MonoBehaviour
         UltimateState = new PlayerUltimateState(playerCharacter, this);
         HitstunState = new PlayerHitstunState(playerCharacter, this);
         DeadState = new PlayerDeadState(playerCharacter, this);
+    }
+
+    private PlayerState ResolveLocomotionStateForCharacterSwitch()
+    {
+        if (playerCharacter == null || playerCharacter.Movement == null)
+            return IdleState;
+
+        if (!playerCharacter.Movement.IsGrounded())
+            return JumpState;
+
+        if (Mathf.Abs(playerCharacter.Movement.HorizontalInput) > 0.01f)
+            return MoveState;
+
+        return IdleState;
     }
 
     private bool ShouldPrioritizeBufferedJumpBeforeCombat()

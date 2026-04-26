@@ -55,6 +55,9 @@ public class TeamSwitchHUD : MonoBehaviour
 
         if (stateMachine == null)
             stateMachine = Object.FindFirstObjectByType<PlayerStateMachine>();
+
+        if (slotContainer == null)
+            slotContainer = FindSlotContainer();
     }
 
     private void BindTeamLoader()
@@ -64,8 +67,10 @@ public class TeamSwitchHUD : MonoBehaviour
 
         teamLoader.OnTeamChanged -= HandleTeamChanged;
         teamLoader.OnCurrentCharacterChanged -= HandleCurrentCharacterChanged;
+        teamLoader.OnCharacterHealthUpdated -= HandleCharacterHealthUpdated;
         teamLoader.OnTeamChanged += HandleTeamChanged;
         teamLoader.OnCurrentCharacterChanged += HandleCurrentCharacterChanged;
+        teamLoader.OnCharacterHealthUpdated += HandleCharacterHealthUpdated;
     }
 
     private void UnbindTeamLoader()
@@ -75,6 +80,7 @@ public class TeamSwitchHUD : MonoBehaviour
 
         teamLoader.OnTeamChanged -= HandleTeamChanged;
         teamLoader.OnCurrentCharacterChanged -= HandleCurrentCharacterChanged;
+        teamLoader.OnCharacterHealthUpdated -= HandleCharacterHealthUpdated;
     }
 
     private void HandleTeamChanged()
@@ -87,7 +93,24 @@ public class TeamSwitchHUD : MonoBehaviour
         if (teamLoader == null)
             return;
 
+        RefreshAllSlotHealth();
         UpdateActiveIndicator(teamLoader.CurrentIndex);
+    }
+
+    private void HandleCharacterHealthUpdated(CharacterObject character, float currentHp, float maxHp)
+    {
+        if (character == null)
+            return;
+
+        for (int i = 0; i < activeSlots.Count; i++)
+        {
+            CharacterSwitchSlot slot = activeSlots[i];
+            if (slot == null || slot.BoundCharacter != character)
+                continue;
+
+            slot.RefreshHealth(currentHp, maxHp);
+            return;
+        }
     }
 
     private string BuildTeamSignature()
@@ -109,7 +132,7 @@ public class TeamSwitchHUD : MonoBehaviour
     // เปลี่ยนให้เป็น public เผื่อในอนาคตอยากสั่ง Refresh จากสคริปต์อื่นโดยตรง
     public void InitializeHUD()
     {
-        if (teamLoader == null || teamLoader.team == null) return;
+        if (teamLoader == null || teamLoader.team == null || slotContainer == null || slotPrefab == null) return;
 
         lastTeamSignature = BuildTeamSignature();
 
@@ -135,6 +158,7 @@ public class TeamSwitchHUD : MonoBehaviour
             }
         }
 
+        RefreshAllSlotHealth();
         UpdateActiveIndicator(teamLoader.CurrentIndex);
     }
 
@@ -154,6 +178,53 @@ public class TeamSwitchHUD : MonoBehaviour
         UpdateActiveIndicator(index);
     }
 
+    public bool TryGetCharacterHealth(CharacterObject character, out float currentHp, out float maxHp)
+    {
+        currentHp = 0f;
+        maxHp = 0f;
+
+        if (teamLoader == null || character == null)
+            return false;
+
+        maxHp = teamLoader.GetCharacterMaxHP(character);
+        currentHp = teamLoader.GetCharacterCurrentHP(character);
+        return maxHp > 0f;
+    }
+
+    private Transform FindSlotContainer()
+    {
+        Canvas[] canvases = Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        for (int i = 0; i < canvases.Length; i++)
+        {
+            if (canvases[i] == null)
+                continue;
+
+            Transform teamSwitchPanel = FindChildRecursive(canvases[i].transform, "TeamSwitchPanel");
+            if (teamSwitchPanel != null)
+                return teamSwitchPanel;
+        }
+
+        return null;
+    }
+
+    private Transform FindChildRecursive(Transform parent, string childName)
+    {
+        if (parent == null)
+            return null;
+
+        if (parent.name == childName)
+            return parent;
+
+        foreach (Transform child in parent)
+        {
+            Transform found = FindChildRecursive(child, childName);
+            if (found != null)
+                return found;
+        }
+
+        return null;
+    }
+
     private void UpdateActiveIndicator(int activeIndex)
     {
         lastActiveIndex = activeIndex;
@@ -162,6 +233,17 @@ public class TeamSwitchHUD : MonoBehaviour
         {
             bool isCurrentActive = activeSlots[i] != null && activeSlots[i].SlotIndex == activeIndex;
             activeSlots[i].SetActiveStatus(isCurrentActive);
+        }
+    }
+
+    private void RefreshAllSlotHealth()
+    {
+        for (int i = 0; i < activeSlots.Count; i++)
+        {
+            if (activeSlots[i] == null)
+                continue;
+
+            activeSlots[i].RefreshFromHUD();
         }
     }
 }

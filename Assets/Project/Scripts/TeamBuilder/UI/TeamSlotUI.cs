@@ -234,7 +234,7 @@ namespace Project.TeamBuilder.UI
 
             if (atkText != null) atkText.text = $"{totalATK:F0}";
             if (defText != null) defText.text = $"{totalDEF:F0}";
-            if (hpText != null) hpText.text = $"{totalHP:F0}";
+            UpdateHealthDisplay(totalHP);
         }
 
         /// <summary>
@@ -315,6 +315,38 @@ namespace Project.TeamBuilder.UI
                 if (artifactSlots[i] != null)
                     artifactSlots[i].SetArtifact(artifacts[i]);
             }
+        }
+
+        private void Update()
+        {
+            if (currentCharacter == null || currentCharacter.characterObjectData == null || hpText == null)
+                return;
+
+            UpdateHealthDisplay(currentCharacter.characterObjectData.stats != null
+                ? currentCharacter.characterObjectData.stats.maxHP
+                : 0f);
+        }
+
+        private void UpdateHealthDisplay(float fallbackMaxHp)
+        {
+            if (hpText == null)
+                return;
+
+            if (currentCharacter == null || currentCharacter.characterObjectData == null)
+            {
+                hpText.text = string.Empty;
+                return;
+            }
+
+            if (parentBuilder != null
+                && parentBuilder.TryGetCharacterHealth(currentCharacter.characterObjectData, out float currentHp, out float maxHp)
+                && maxHp > 0f)
+            {
+                hpText.text = $"{Mathf.CeilToInt(currentHp)}/{Mathf.CeilToInt(maxHp)}";
+                return;
+            }
+
+            hpText.text = $"{fallbackMaxHp:F0}";
         }
     }
 }

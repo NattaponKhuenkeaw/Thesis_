@@ -1,9 +1,11 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class TeamLoader : MonoBehaviour
 {
     public event System.Action OnTeamChanged;
     public event System.Action OnCurrentCharacterChanged;
+    public event System.Action<CharacterObject, float, float> OnCharacterHealthUpdated;
 
     // =========================================================
     // Team Data
@@ -22,6 +24,7 @@ public class TeamLoader : MonoBehaviour
     // =========================================================
     [Header("Runtime State")]
     [SerializeField] private int currentIndex = 0;
+    private readonly Dictionary<CharacterObject, float> characterCurrentHP = new Dictionary<CharacterObject, float>();
 
     // =========================================================
     // Properties
@@ -41,8 +44,20 @@ public class TeamLoader : MonoBehaviour
             playerCharacter = Object.FindFirstObjectByType<PlayerCharacter>();
     }
 
+    void OnEnable()
+    {
+        BindPlayerCharacter();
+    }
+
+    void OnDisable()
+    {
+        UnbindPlayerCharacter();
+    }
+
     void Start()
     {
+        BindPlayerCharacter();
+
         if (HasCurrentTeamCharacter())
         {
             LoadCurrentCharacter();
@@ -66,6 +81,8 @@ public class TeamLoader : MonoBehaviour
             return;
         }
 
+        SaveActiveCharacterHP();
+
         int validIndex = ResolvePreferredIndex(CurrentCharacter);
         if (validIndex < 0)
         {
@@ -86,7 +103,8 @@ public class TeamLoader : MonoBehaviour
             return;
         }
 
-        playerCharacter.SetCharacter(targetCharacter);
+        playerCharacter.SetCharacter(targetCharacter, GetStoredHP(targetCharacter));
+        NotifyCharacterHealthUpdated(targetCharacter);
         NotifyCurrentCharacterChanged();
         Debug.Log("Switched to: " + targetCharacter.metaData.displayName);
     }
@@ -133,9 +151,20 @@ public class TeamLoader : MonoBehaviour
     {
         if (newTeam == null) return;
 
+        SaveActiveCharacterHP();
+
         CharacterObject previouslySelected = CurrentCharacter;
         if (previouslySelected == null && playerCharacter != null)
             previouslySelected = playerCharacter.characterObject;
+
+        HashSet<CharacterObject> incomingCharacters = new HashSet<CharacterObject>();
+        for (int i = 0; i < newTeam.Length; i++)
+        {
+            if (newTeam[i] != null)
+                incomingCharacters.Add(newTeam[i]);
+        }
+
+        ClearRemovedCharacterHP(incomingCharacters);
 
         team = new CharacterObject[newTeam.Length];
         for (int i = 0; i < newTeam.Length; i++)
@@ -157,7 +186,9 @@ public class TeamLoader : MonoBehaviour
         if (team == null || index < 0 || index >= team.Length)
             return;
 
+        CharacterObject removedCharacter = team[index];
         team[index] = null;
+        ResetCharacterHP(removedCharacter);
 
         if (currentIndex == index)
         {
@@ -275,5 +306,141 @@ public class TeamLoader : MonoBehaviour
     private void NotifyCurrentCharacterChanged()
     {
         OnCurrentCharacterChanged?.Invoke();
+    }
+
+    public float GetCharacterCurrentHP(CharacterObject character)
+    {
+        if (character == null)
+            return 0f;
+
+        if (playerCharacter != null && playerCharacter.characterObject == character)
+            return playerCharacter.CurrentHP;
+
+        return GetStoredHP(character);
+    }
+
+    public float GetCharacterMaxHP(CharacterObject character)
+    {
+        if (character == null || character.stats == null)
+            return 0f;
+
+        return character.stats.maxHP;
+    }
+
+    public void ResetCharacterHP(CharacterObject character)
+    {
+        if (character == null)
+            return;
+
+        characterCurrentHP.Remove(character);
+        NotifyCharacterHealthUpdated(character);
+    }
+
+    private void BindPlayerCharacter()
+    {
+        if (playerCharacter == null)
+            playerCharacter = Object.FindFirstObjectByType<PlayerCharacter>();
+
+        if (playerCharacter == null)
+            return;
+
+        playerCharacter.OnHealthChanged -= HandlePlayerHealthChanged;
+        playerCharacter.OnCharacterChanged -= HandlePlayerCharacterChanged;
+        playerCharacter.OnHealthChanged += HandlePlayerHealthChanged;
+        playerCharacter.OnCharacterChanged += HandlePlayerCharacterChanged;
+    }
+
+    private void UnbindPlayerCharacter()
+    {
+        if (playerCharacter == null)
+            return;
+
+        playerCharacter.OnHealthChanged -= HandlePlayerHealthChanged;
+        playerCharacter.OnCharacterChanged -= HandlePlayerCharacterChanged;
+    }
+
+    private void HandlePlayerHealthChanged(float currentHp, float maxHp)
+    {
+        if (playerCharacter == null || playerCharacter.characterObject == null)
+            return;
+
+        characterCurrentHP[playerCharacter.characterObject] = Mathf.Clamp(currentHp, 0f, maxHp);
+        NotifyCharacterHealthUpdated(playerCharacter.characterObject, currentHp, maxHp);
+    }
+
+    private void HandlePlayerCharacterChanged(CharacterObject character)
+    {
+        if (playerCharacter == null || character == null)
+            return;
+
+        characterCurrentHP[character] = Mathf.Clamp(playerCharacter.CurrentHP, 0f, playerCharacter.MaxHP);
+        NotifyCharacterHealthUpdated(character, playerCharacter.CurrentHP, playerCharacter.MaxHP);
+    }
+
+    private void SaveActiveCharacterHP()
+    {
+        if (playerCharacter == null || playerCharacter.characterObject == null)
+            return;
+
+        if (FindCharacterIndex(playerCharacter.characterObject) < 0)
+            return;
+
+        characterCurrentHP[playerCharacter.characterObject] = Mathf.Clamp(playerCharacter.CurrentHP, 0f, playerCharacter.MaxHP);
+    }
+
+    private float GetStoredHP(CharacterObject character)
+    {
+        if (character == null)
+            return 0f;
+
+        float maxHp = GetCharacterMaxHP(character);
+        if (maxHp <= 0f)
+            return 0f;
+
+        if (characterCurrentHP.TryGetValue(character, out float hp))
+            return Mathf.Clamp(hp, 0f, maxHp);
+
+        return maxHp;
+    }
+
+    private void ClearRemovedCharacterHP(HashSet<CharacterObject> validCharacters)
+    {
+        if (characterCurrentHP.Count == 0)
+            return;
+
+        List<CharacterObject> removed = null;
+        foreach (CharacterObject character in characterCurrentHP.Keys)
+        {
+            if (character == null || validCharacters.Contains(character))
+                continue;
+
+            removed ??= new List<CharacterObject>();
+            removed.Add(character);
+        }
+
+        if (removed == null)
+            return;
+
+        for (int i = 0; i < removed.Count; i++)
+        {
+            characterCurrentHP.Remove(removed[i]);
+            NotifyCharacterHealthUpdated(removed[i]);
+        }
+    }
+
+    private void NotifyCharacterHealthUpdated(CharacterObject character)
+    {
+        if (character == null)
+            return;
+
+        NotifyCharacterHealthUpdated(character, GetCharacterCurrentHP(character), GetCharacterMaxHP(character));
+    }
+
+    private void NotifyCharacterHealthUpdated(CharacterObject character, float currentHp, float maxHp)
+    {
+        if (character == null)
+            return;
+
+        OnCharacterHealthUpdated?.Invoke(character, currentHp, maxHp);
     }
 }

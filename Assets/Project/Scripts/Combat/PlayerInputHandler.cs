@@ -107,6 +107,23 @@ public class InputHandler_Player : MonoBehaviour
         if (Project.UI.InputLockManager.IsLocked) return;
         if (!value.isPressed) return;
 
+        moveInput = GetLatestMoveInput();
+        stateMachine?.InputBuffer?.SetDirectionalInput(moveInput);
+        stateMachine?.RouteDownInput(moveInput.y < -0.5f);
+
+        PlayerMovement movement = stateMachine != null && stateMachine.playerCharacter != null
+            ? stateMachine.playerCharacter.Movement
+            : null;
+
+        if (movement != null && moveInput.y < -0.5f)
+        {
+            if (movement.IsDroppingDown || movement.TryDropDown())
+            {
+                stateMachine?.InputBuffer?.ConsumeJump();
+                return;
+            }
+        }
+
         // Buffer jump in the centralized buffer
         if (stateMachine?.InputBuffer != null)
             stateMachine.InputBuffer.BufferJump();
@@ -186,5 +203,17 @@ public class InputHandler_Player : MonoBehaviour
         // If jump is being prioritized from the ground, do not allow the same
         // callback to start a ground combat action before the state fully flips airborne.
         return stateMachine.CurrentStateId == PlayerStateId.Jumping;
+    }
+
+    private Vector2 GetLatestMoveInput()
+    {
+        if (playerInput == null || playerInput.actions == null)
+            return moveInput;
+
+        InputAction moveAction = playerInput.actions["Move"];
+        if (moveAction == null)
+            return moveInput;
+
+        return moveAction.ReadValue<Vector2>();
     }
 }

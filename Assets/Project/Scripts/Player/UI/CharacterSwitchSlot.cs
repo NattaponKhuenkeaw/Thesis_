@@ -10,6 +10,7 @@ public class CharacterSwitchSlot : MonoBehaviour
     public TMP_Text hotkeyText;        
 
     [Header("Health Bar")]
+    public Slider hpSlider;
     public Image hpFill;               
 
     private int slotIndex;
@@ -17,6 +18,7 @@ public class CharacterSwitchSlot : MonoBehaviour
     private CharacterObject boundCharacter;
 
     public int SlotIndex => slotIndex;
+    public CharacterObject BoundCharacter => boundCharacter;
 
     public void Setup(CharacterObject character, int index, TeamSwitchHUD manager)
     {
@@ -35,6 +37,11 @@ public class CharacterSwitchSlot : MonoBehaviour
         {
              characterIcon.sprite = boundCharacter.metaData.portrait; 
         }
+
+        if (hpSlider == null)
+            hpSlider = GetComponentInChildren<Slider>(true);
+
+        RefreshFromHUD();
     }
 
     public void SetActiveStatus(bool isActive)
@@ -45,19 +52,40 @@ public class CharacterSwitchSlot : MonoBehaviour
         }
     }
 
-    private void Update()
+    public void RefreshFromHUD()
     {
-        if (boundCharacter != null && boundCharacter.stats != null && hpFill != null)
+        if (boundCharacter != null && hudManager != null && (hpFill != null || hpSlider != null))
         {
-            float maxHP = boundCharacter.stats.maxHP;
-
-            // ⚠️ อย่าลืมแก้ให้ดึงค่าเลือดปัจจุบัน
-            float currentHP = maxHP;
-
-            if (maxHP > 0)
-                hpFill.fillAmount = currentHP / maxHP;
+            if (hudManager.TryGetCharacterHealth(boundCharacter, out float currentHP, out float maxHP) && maxHP > 0f)
+                RefreshHealth(currentHP, maxHP);
             else
-                hpFill.fillAmount = 0;
+                RefreshHealth(0f, 0f);
         }
+    }
+
+    public void RefreshHealth(float currentHP, float maxHP)
+    {
+        if (maxHP <= 0f)
+        {
+            if (hpSlider != null)
+                hpSlider.value = 0f;
+
+            if (hpFill != null)
+                hpFill.fillAmount = 0f;
+
+            return;
+        }
+
+        float normalized = Mathf.Clamp01(currentHP / maxHP);
+
+        if (hpSlider != null)
+        {
+            hpSlider.minValue = 0f;
+            hpSlider.maxValue = 1f;
+            hpSlider.value = normalized;
+        }
+
+        if (hpFill != null)
+            hpFill.fillAmount = normalized;
     }
 }

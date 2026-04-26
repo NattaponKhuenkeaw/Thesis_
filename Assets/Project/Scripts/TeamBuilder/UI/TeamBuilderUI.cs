@@ -173,6 +173,19 @@ namespace Project.TeamBuilder.UI
             OnSlotChanged();
         }
 
+        public bool TryGetCharacterHealth(CharacterObject character, out float currentHp, out float maxHp)
+        {
+            currentHp = 0f;
+            maxHp = 0f;
+
+            if (teamLoader == null || character == null)
+                return false;
+
+            maxHp = teamLoader.GetCharacterMaxHP(character);
+            currentHp = teamLoader.GetCharacterCurrentHP(character);
+            return maxHp > 0f;
+        }
+
         // =========================================================
         // Private Methods
         // =========================================================

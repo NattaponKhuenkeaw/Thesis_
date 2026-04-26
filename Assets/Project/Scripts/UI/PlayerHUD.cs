@@ -11,6 +11,7 @@ public class PlayerHUD : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private PlayerCharacter playerCharacter;
+    [SerializeField] private TeamLoader teamLoader;
     [SerializeField] private Canvas targetCanvas;
 
     private RectTransform hudRoot;
@@ -72,6 +73,9 @@ public class PlayerHUD : MonoBehaviour
     {
         if (playerCharacter == null)
             playerCharacter = GetComponent<PlayerCharacter>();
+
+        if (teamLoader == null)
+            teamLoader = Object.FindFirstObjectByType<TeamLoader>();
 
         if (targetCanvas == null || FindHudRoot(targetCanvas.transform) == null)
             targetCanvas = FindTargetCanvas();
@@ -172,6 +176,17 @@ public class PlayerHUD : MonoBehaviour
 
         float maxHp = Mathf.Max(1f, playerCharacter.MaxHP);
         float currentHp = Mathf.Clamp(playerCharacter.CurrentHP, 0f, maxHp);
+
+        if (teamLoader != null && playerCharacter.characterObject != null)
+        {
+            float trackedMaxHp = teamLoader.GetCharacterMaxHP(playerCharacter.characterObject);
+            if (trackedMaxHp > 0f)
+            {
+                maxHp = trackedMaxHp;
+                currentHp = Mathf.Clamp(teamLoader.GetCharacterCurrentHP(playerCharacter.characterObject), 0f, maxHp);
+            }
+        }
+
         float normalizedHp = Mathf.Clamp01(currentHp / maxHp);
 
         if (healthSlider != null)

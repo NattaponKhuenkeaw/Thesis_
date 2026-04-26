@@ -87,6 +87,7 @@ public class PlayerSkillState : CombatPlayerState
             }
 
             activeSkillAction = resolver.ActiveCombatAction as SkillAction;
+            TryStartCooldown();
             ExecuteCombatStep(step, ctx, false);
 
             return;
