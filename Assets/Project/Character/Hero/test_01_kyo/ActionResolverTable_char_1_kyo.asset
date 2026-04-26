@@ -41,7 +41,7 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588255892939997282
-    cooldown: 0
+    cooldown: 5
     energyCost: 0
   - actionName: 
     context: 0
@@ -52,7 +52,7 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588255892939997283
-    cooldown: 2
+    cooldown: 5
     energyCost: 0
   ultimateActions:
   - actionName: 
