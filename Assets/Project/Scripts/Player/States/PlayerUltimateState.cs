@@ -168,11 +168,6 @@ public class PlayerUltimateState : CombatPlayerState
             activeUltimateAction = resolver.ActiveCombatAction as UltimateAction;
             
             ExecuteCombatStep(step, ctx, false);
-
-            if (AbilityUIManager.Instance != null && activeUltimateAction != null)
-            {
-                AbilityUIManager.Instance.TriggerCooldown(AbilityUIManager.AbilityType.Ultimate, activeUltimateAction.cooldown);
-            }
             // --------------------------
 
             if (activeUltimateAction != null && activeUltimateAction.useDashAfterImage && player.Movement != null)

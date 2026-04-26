@@ -207,6 +207,17 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         if (resolver.ActiveCombatAction is SkillAction skillAction && skillAction.cooldown > 0f)
         {
             player.Combat.StartActionCooldown(GetAttackCategory(), skillAction.actionName);
+
+            if (AbilityUIManager.Instance != null)
+            {
+                AbilityUIManager.AbilityType abilityType =
+                    GetAttackCategory() == AttackCategory.Ultimate
+                        ? AbilityUIManager.AbilityType.Ultimate
+                        : AbilityUIManager.AbilityType.Skill;
+
+                AbilityUIManager.Instance.TriggerCooldown(abilityType, skillAction.cooldown);
+            }
+
             hasStartedCooldown = true;
         }
     }

@@ -89,11 +89,6 @@ public class PlayerSkillState : CombatPlayerState
             activeSkillAction = resolver.ActiveCombatAction as SkillAction;
             ExecuteCombatStep(step, ctx, false);
 
-            if (AbilityUIManager.Instance != null && activeSkillAction != null)
-            {
-                AbilityUIManager.Instance.TriggerCooldown(AbilityUIManager.AbilityType.Skill, activeSkillAction.cooldown);
-            }
-
             return;
         }
 
