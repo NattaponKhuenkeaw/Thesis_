@@ -2741,6 +2741,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4147797027542046518, guid: 43cbec3fbcbf21b48a8e74deb4d559c0, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4414813599021882450, guid: 43cbec3fbcbf21b48a8e74deb4d559c0, type: 3}
       propertyPath: emptyStateOverlay
       value: 

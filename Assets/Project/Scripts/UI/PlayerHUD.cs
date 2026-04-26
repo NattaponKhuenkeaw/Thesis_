@@ -7,6 +7,8 @@ using UnityEngine.UI;
 /// </summary>
 public class PlayerHUD : MonoBehaviour
 {
+    private static readonly string[] HudRootNames = { "PlayerHP_UI", "PlayerUI" };
+
     [Header("References")]
     [SerializeField] private PlayerCharacter playerCharacter;
     [SerializeField] private Canvas targetCanvas;
@@ -46,6 +48,7 @@ public class PlayerHUD : MonoBehaviour
             return;
 
         subscribedPlayer.OnHealthChanged -= HandleHealthChanged;
+        subscribedPlayer.OnCharacterChanged -= HandleCharacterChanged;
         subscribedPlayer.OnDied -= HandleDied;
         subscribedPlayer = null;
     }
@@ -70,7 +73,7 @@ public class PlayerHUD : MonoBehaviour
         if (playerCharacter == null)
             playerCharacter = GetComponent<PlayerCharacter>();
 
-        if (targetCanvas == null)
+        if (targetCanvas == null || FindHudRoot(targetCanvas.transform) == null)
             targetCanvas = FindTargetCanvas();
     }
 
@@ -94,6 +97,7 @@ public class PlayerHUD : MonoBehaviour
         if (subscribedPlayer != null)
         {
             subscribedPlayer.OnHealthChanged -= HandleHealthChanged;
+            subscribedPlayer.OnCharacterChanged -= HandleCharacterChanged;
             subscribedPlayer.OnDied -= HandleDied;
         }
 
@@ -102,6 +106,7 @@ public class PlayerHUD : MonoBehaviour
         if (subscribedPlayer != null)
         {
             subscribedPlayer.OnHealthChanged += HandleHealthChanged;
+            subscribedPlayer.OnCharacterChanged += HandleCharacterChanged;
             subscribedPlayer.OnDied += HandleDied;
         }
     }
@@ -124,6 +129,12 @@ public class PlayerHUD : MonoBehaviour
     private void HandleDied()
     {
         RefreshHUD();
+    }
+
+    private void HandleCharacterChanged(CharacterObject newCharacter)
+    {
+        lastCharacterKey = string.Empty;
+        EnsureHudReady();
     }
 
     private void RefreshHUD()
@@ -195,7 +206,7 @@ public class PlayerHUD : MonoBehaviour
             if (canvas == null)
                 continue;
 
-            if (FindChildRecursive(canvas.transform, "PlayerUI") != null)
+            if (FindHudRoot(canvas.transform) != null)
                 return canvas.rootCanvas != null ? canvas.rootCanvas : canvas;
         }
 
@@ -206,7 +217,7 @@ public class PlayerHUD : MonoBehaviour
     {
         if (targetCanvas != null)
         {
-            Transform playerUi = FindChildRecursive(targetCanvas.transform, "PlayerUI");
+            Transform playerUi = FindHudRoot(targetCanvas.transform);
             if (playerUi != null)
                 return playerUi;
         }
@@ -244,6 +255,21 @@ public class PlayerHUD : MonoBehaviour
             hpText = null;
             hudRoot = null;
         }
+    }
+
+    private Transform FindHudRoot(Transform parent)
+    {
+        if (parent == null)
+            return null;
+
+        for (int i = 0; i < HudRootNames.Length; i++)
+        {
+            Transform foundByName = FindChildRecursive(parent, HudRootNames[i]);
+            if (foundByName != null)
+                return foundByName;
+        }
+
+        return null;
     }
 
     private Transform FindChildRecursive(Transform parent, string childName)

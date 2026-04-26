@@ -16,6 +16,8 @@ public class CharacterSwitchSlot : MonoBehaviour
     private TeamSwitchHUD hudManager;
     private CharacterObject boundCharacter;
 
+    public int SlotIndex => slotIndex;
+
     public void Setup(CharacterObject character, int index, TeamSwitchHUD manager)
     {
         slotIndex = index;

@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class TeamLoader : MonoBehaviour
 {
+    public event System.Action OnTeamChanged;
+    public event System.Action OnCurrentCharacterChanged;
+
     // =========================================================
     // Team Data
     // =========================================================
@@ -63,50 +66,48 @@ public class TeamLoader : MonoBehaviour
             return;
         }
 
-        if (team == null || team.Length == 0)
+        int validIndex = ResolvePreferredIndex(CurrentCharacter);
+        if (validIndex < 0)
         {
-            Debug.LogWarning("TeamLoader: Team is empty");
+            currentIndex = -1;
+            NotifyCurrentCharacterChanged();
+            Debug.LogWarning("TeamLoader: Team has no valid character to load");
             return;
         }
 
-        if (currentIndex < 0 || currentIndex >= team.Length)
-        {
-            currentIndex = 0;
-        }
+        currentIndex = validIndex;
 
-        if (team[currentIndex] == null)
+        CharacterObject targetCharacter = team[currentIndex];
+        if (targetCharacter == null)
         {
-            Debug.LogWarning("TeamLoader: Current team slot is empty");
+            currentIndex = -1;
+            NotifyCurrentCharacterChanged();
+            Debug.LogWarning("TeamLoader: Resolved team slot is empty");
             return;
         }
 
-        playerCharacter.SetCharacter(team[currentIndex]);
-        Debug.Log("Switched to: " + team[currentIndex].metaData.displayName);
+        playerCharacter.SetCharacter(targetCharacter);
+        NotifyCurrentCharacterChanged();
+        Debug.Log("Switched to: " + targetCharacter.metaData.displayName);
     }
 
     public void SwitchNext()
     {
-        if (team == null || team.Length == 0)
+        int nextIndex = FindNextOccupiedIndex(currentIndex, 1);
+        if (nextIndex < 0)
             return;
 
-        currentIndex++;
-
-        if (currentIndex >= team.Length)
-            currentIndex = 0;
-
+        currentIndex = nextIndex;
         LoadCurrentCharacter();
     }
 
     public void SwitchPrevious()
     {
-        if (team == null || team.Length == 0)
+        int previousIndex = FindNextOccupiedIndex(currentIndex, -1);
+        if (previousIndex < 0)
             return;
 
-        currentIndex--;
-
-        if (currentIndex < 0)
-            currentIndex = team.Length - 1;
-
+        currentIndex = previousIndex;
         LoadCurrentCharacter();
     }
 
@@ -116,6 +117,9 @@ public class TeamLoader : MonoBehaviour
             return;
 
         if (index < 0 || index >= team.Length)
+            return;
+
+        if (team[index] == null)
             return;
 
         currentIndex = index;
@@ -129,23 +133,19 @@ public class TeamLoader : MonoBehaviour
     {
         if (newTeam == null) return;
 
-        team = newTeam;
+        CharacterObject previouslySelected = CurrentCharacter;
+        if (previouslySelected == null && playerCharacter != null)
+            previouslySelected = playerCharacter.characterObject;
 
-        // Reset index if current slot is now empty
-        if (currentIndex >= team.Length || team[currentIndex] == null)
+        team = new CharacterObject[newTeam.Length];
+        for (int i = 0; i < newTeam.Length; i++)
         {
-            // Find the first non-null slot
-            currentIndex = 0;
-            for (int i = 0; i < team.Length; i++)
-            {
-                if (team[i] != null)
-                {
-                    currentIndex = i;
-                    break;
-                }
-            }
+            team[i] = newTeam[i];
         }
 
+        currentIndex = ResolvePreferredIndex(previouslySelected);
+
+        NotifyTeamChanged();
         LoadCurrentCharacter();
     }
 
@@ -158,6 +158,14 @@ public class TeamLoader : MonoBehaviour
             return;
 
         team[index] = null;
+
+        if (currentIndex == index)
+        {
+            currentIndex = ResolvePreferredIndex(playerCharacter != null ? playerCharacter.characterObject : null);
+            LoadCurrentCharacter();
+        }
+
+        NotifyTeamChanged();
     }
 
     private bool TryUseAssignedCharacter()
@@ -181,6 +189,70 @@ public class TeamLoader : MonoBehaviour
             && team[currentIndex] != null;
     }
 
+    private int ResolvePreferredIndex(CharacterObject preferredCharacter)
+    {
+        if (team == null || team.Length == 0)
+            return -1;
+
+        int preferredIndex = FindCharacterIndex(preferredCharacter);
+        if (preferredIndex >= 0 && team[preferredIndex] != null)
+            return preferredIndex;
+
+        if (currentIndex >= 0 && currentIndex < team.Length && team[currentIndex] != null)
+            return currentIndex;
+
+        return FindFirstOccupiedIndex();
+    }
+
+    private int FindFirstOccupiedIndex()
+    {
+        if (team == null)
+            return -1;
+
+        for (int i = 0; i < team.Length; i++)
+        {
+            if (team[i] != null)
+                return i;
+        }
+
+        return -1;
+    }
+
+    private int FindNextOccupiedIndex(int startIndex, int direction)
+    {
+        if (team == null || team.Length == 0)
+            return -1;
+
+        int occupiedCount = 0;
+        for (int i = 0; i < team.Length; i++)
+        {
+            if (team[i] != null)
+                occupiedCount++;
+        }
+
+        if (occupiedCount == 0)
+            return -1;
+
+        int index = startIndex;
+        if (index < 0 || index >= team.Length)
+            index = direction > 0 ? -1 : 0;
+
+        for (int i = 0; i < team.Length; i++)
+        {
+            index += direction;
+
+            if (index >= team.Length)
+                index = 0;
+            else if (index < 0)
+                index = team.Length - 1;
+
+            if (team[index] != null)
+                return index;
+        }
+
+        return -1;
+    }
+
     private int FindCharacterIndex(CharacterObject character)
     {
         if (character == null || team == null)
@@ -193,5 +265,15 @@ public class TeamLoader : MonoBehaviour
         }
 
         return -1;
+    }
+
+    private void NotifyTeamChanged()
+    {
+        OnTeamChanged?.Invoke();
+    }
+
+    private void NotifyCurrentCharacterChanged()
+    {
+        OnCurrentCharacterChanged?.Invoke();
     }
 }

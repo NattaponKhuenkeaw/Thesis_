@@ -13,50 +13,97 @@ public class TeamSwitchHUD : MonoBehaviour
 
     private List<CharacterSwitchSlot> activeSlots = new List<CharacterSwitchSlot>();
     private int lastActiveIndex = -1;
-    private int lastTeamCount = -1; // ตัวแปรใหม่สำหรับจำจำนวนคนในทีม
+    private string lastTeamSignature = string.Empty;
 
     void Start()
     {
-        if (teamLoader == null)
-            teamLoader = Object.FindFirstObjectByType<TeamLoader>();
-
-        if (stateMachine == null)
-            stateMachine = Object.FindFirstObjectByType<PlayerStateMachine>();
-
+        CacheDependencies();
         InitializeHUD();
+    }
+
+    void OnEnable()
+    {
+        CacheDependencies();
+        BindTeamLoader();
+    }
+
+    void OnDisable()
+    {
+        UnbindTeamLoader();
     }
 
     void Update()
     {
         if (teamLoader == null) return;
 
-        // 1. ตรวจจับอัตโนมัติ: เช็คว่ามีการเพิ่ม/ลดตัวละครในทีมหรือไม่
-        int currentTeamCount = CountActiveTeamMembers();
-        if (currentTeamCount != lastTeamCount)
+        string currentTeamSignature = BuildTeamSignature();
+        if (currentTeamSignature != lastTeamSignature)
         {
-            // ถ้าจำนวนคนในทีมเปลี่ยนไป ให้ล้าง UI เก่าแล้วสร้างใหม่ทั้งหมด
             InitializeHUD();
         }
 
-        // 2. อัปเดตสัญลักษณ์ Active เมื่อเปลี่ยนตัวละคร
         if (teamLoader.CurrentIndex != lastActiveIndex)
         {
             UpdateActiveIndicator(teamLoader.CurrentIndex);
         }
     }
 
-    // ฟังก์ชันนับว่าตอนนี้มีฮีโร่ในทีมกี่ตัว (ข้ามช่องที่ว่างเปล่า)
-    private int CountActiveTeamMembers()
+    private void CacheDependencies()
     {
-        int count = 0;
-        if (teamLoader.team != null)
+        if (teamLoader == null)
+            teamLoader = Object.FindFirstObjectByType<TeamLoader>();
+
+        if (stateMachine == null)
+            stateMachine = Object.FindFirstObjectByType<PlayerStateMachine>();
+    }
+
+    private void BindTeamLoader()
+    {
+        if (teamLoader == null)
+            return;
+
+        teamLoader.OnTeamChanged -= HandleTeamChanged;
+        teamLoader.OnCurrentCharacterChanged -= HandleCurrentCharacterChanged;
+        teamLoader.OnTeamChanged += HandleTeamChanged;
+        teamLoader.OnCurrentCharacterChanged += HandleCurrentCharacterChanged;
+    }
+
+    private void UnbindTeamLoader()
+    {
+        if (teamLoader == null)
+            return;
+
+        teamLoader.OnTeamChanged -= HandleTeamChanged;
+        teamLoader.OnCurrentCharacterChanged -= HandleCurrentCharacterChanged;
+    }
+
+    private void HandleTeamChanged()
+    {
+        InitializeHUD();
+    }
+
+    private void HandleCurrentCharacterChanged()
+    {
+        if (teamLoader == null)
+            return;
+
+        UpdateActiveIndicator(teamLoader.CurrentIndex);
+    }
+
+    private string BuildTeamSignature()
+    {
+        if (teamLoader == null || teamLoader.team == null)
+            return string.Empty;
+
+        System.Text.StringBuilder builder = new System.Text.StringBuilder();
+        for (int i = 0; i < teamLoader.team.Length; i++)
         {
-            for (int i = 0; i < teamLoader.team.Length; i++)
-            {
-                if (teamLoader.team[i] != null) count++;
-            }
+            CharacterObject character = teamLoader.team[i];
+            builder.Append(i).Append(':');
+            builder.Append(character != null ? character.GetInstanceID() : 0);
+            builder.Append('|');
         }
-        return count;
+        return builder.ToString();
     }
 
     // เปลี่ยนให้เป็น public เผื่อในอนาคตอยากสั่ง Refresh จากสคริปต์อื่นโดยตรง
@@ -64,22 +111,18 @@ public class TeamSwitchHUD : MonoBehaviour
     {
         if (teamLoader == null || teamLoader.team == null) return;
 
-        // บันทึกจำนวนคนในทีมล่าสุดไว้
-        lastTeamCount = CountActiveTeamMembers();
+        lastTeamSignature = BuildTeamSignature();
 
-        // ลบปุ่มเก่าทิ้ง (ถ้ามี)
         foreach (Transform child in slotContainer)
         {
             Destroy(child.gameObject);
         }
         activeSlots.Clear();
 
-        // สร้างปุ่มใหม่ตามตัวละครที่มีอยู่จริง ณ ปัจจุบัน
         for (int i = 0; i < teamLoader.team.Length; i++)
         {
             CharacterObject character = teamLoader.team[i];
 
-            // ข้ามช่องที่ไม่มีฮีโร่
             if (character == null) continue;
 
             GameObject newSlotObj = Instantiate(slotPrefab, slotContainer);
@@ -92,7 +135,6 @@ public class TeamSwitchHUD : MonoBehaviour
             }
         }
 
-        // อัปเดตสัญลักษณ์ช่องที่เล่นอยู่
         UpdateActiveIndicator(teamLoader.CurrentIndex);
     }
 
@@ -118,7 +160,7 @@ public class TeamSwitchHUD : MonoBehaviour
 
         for (int i = 0; i < activeSlots.Count; i++)
         {
-            bool isCurrentActive = (i == activeIndex);
+            bool isCurrentActive = activeSlots[i] != null && activeSlots[i].SlotIndex == activeIndex;
             activeSlots[i].SetActiveStatus(isCurrentActive);
         }
     }

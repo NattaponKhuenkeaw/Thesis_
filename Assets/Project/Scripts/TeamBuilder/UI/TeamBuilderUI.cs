@@ -188,6 +188,12 @@ namespace Project.TeamBuilder.UI
             CharacterObject[] existingTeam = teamLoader.team;
             if (existingTeam == null) return;
 
+            for (int i = 0; i < teamSlots.Length; i++)
+            {
+                if (teamSlots[i] != null)
+                    teamSlots[i].ClearSlot();
+            }
+
             for (int i = 0; i < teamSlots.Length && i < existingTeam.Length; i++)
             {
                 if (teamSlots[i] == null) continue;
