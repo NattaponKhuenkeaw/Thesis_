@@ -107,6 +107,16 @@ public class InputHandler_Player : MonoBehaviour
         if (Project.UI.InputLockManager.IsLocked) return;
         if (!value.isPressed) return;
 
+        if (playerInput != null && playerInput.actions != null)
+        {
+            InputAction moveAction = playerInput.actions["Move"];
+            if (moveAction != null)
+                moveInput = moveAction.ReadValue<Vector2>();
+        }
+
+        stateMachine?.InputBuffer?.SetDirectionalInput(moveInput);
+        stateMachine?.RouteDownInput(moveInput.y < -0.5f);
+
         // Buffer jump in the centralized buffer
         if (stateMachine?.InputBuffer != null)
             stateMachine.InputBuffer.BufferJump();

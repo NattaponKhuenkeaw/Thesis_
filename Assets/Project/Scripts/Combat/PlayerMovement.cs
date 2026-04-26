@@ -168,6 +168,7 @@ public class PlayerMovement : MonoBehaviour
     public float HorizontalInput => horizontalInput;
     public float VerticalVelocity => rb != null ? rb.linearVelocity.y : 0f;
     public int FacingDirection => transform.eulerAngles.y > 90f ? -1 : 1;
+    public bool IsHoldingDownInput => isHoldingDown;
 
     // =========================================================
     // Events
@@ -474,6 +475,9 @@ public class PlayerMovement : MonoBehaviour
 
     private Collider2D GetBestGroundCollider(Collider2D[] hits, int hitCount)
     {
+        Collider2D bestCollider = null;
+        float bestTop = float.NegativeInfinity;
+
         for (int i = 0; i < hitCount; i++)
         {
             Collider2D hit = hits[i];
@@ -483,10 +487,24 @@ public class PlayerMovement : MonoBehaviour
             if (ignoredGroundCollider != null && hit == ignoredGroundCollider)
                 continue;
 
-            return hit;
+            float hitTop = hit.bounds.max.y;
+            bool isBetter = bestCollider == null || hitTop > bestTop + 0.001f;
+
+            if (!isBetter && bestCollider != null && Mathf.Abs(hitTop - bestTop) <= 0.001f)
+            {
+                bool hitIsOneWay = oneWayPlatformLayer >= 0 && hit.gameObject.layer == oneWayPlatformLayer;
+                bool bestIsOneWay = oneWayPlatformLayer >= 0 && bestCollider.gameObject.layer == oneWayPlatformLayer;
+                isBetter = hitIsOneWay && !bestIsOneWay;
+            }
+
+            if (isBetter)
+            {
+                bestCollider = hit;
+                bestTop = hitTop;
+            }
         }
 
-        return null;
+        return bestCollider;
     }
 
     private void TryConsumeBufferedJump()

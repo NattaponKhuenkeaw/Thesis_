@@ -78,7 +78,8 @@ public class PlayerJumpState : PlayerState
             return;
 
         // Try drop-down first
-        if (cachedMoveInput.y < -0.5f && player.Movement.TryDropDown())
+        bool wantsDropDown = cachedMoveInput.y < -0.5f || player.Movement.IsHoldingDownInput;
+        if (wantsDropDown && player.Movement.TryDropDown())
             return;
 
         player.Movement.Jump();
