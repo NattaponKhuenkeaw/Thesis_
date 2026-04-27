@@ -21,7 +21,7 @@ namespace Project.UI
         public static void Lock()
         {
             lockCount++;
-            Debug.Log($"[InputLockManager] Input Locked. Active locks: {lockCount}");
+            //Debug.Log($"[InputLockManager] Input Locked. Active locks: {lockCount}");
             
             // Optional: Handle cursor visibility here if desired globally
             // Cursor.visible = true;
@@ -36,7 +36,7 @@ namespace Project.UI
             if (lockCount > 0)
             {
                 lockCount--;
-                Debug.Log($"[InputLockManager] Input Unlocked. Active locks: {lockCount}");
+                //Debug.Log($"[InputLockManager] Input Unlocked. Active locks: {lockCount}");
                 
                 // Optional: Handle cursor visibility here if desired globally
                 // if (!IsLocked)
@@ -47,7 +47,7 @@ namespace Project.UI
             }
             else
             {
-                Debug.LogWarning("[InputLockManager] Attempted to unlock, but lock count was already 0.");
+                //Debug.LogWarning("[InputLockManager] Attempted to unlock, but lock count was already 0.");
             }
         }
 
@@ -57,7 +57,7 @@ namespace Project.UI
         public static void ResetLocks()
         {
             lockCount = 0;
-            Debug.Log("[InputLockManager] All locks reset.");
+            //Debug.Log("[InputLockManager] All locks reset.");
         }
     }
 }

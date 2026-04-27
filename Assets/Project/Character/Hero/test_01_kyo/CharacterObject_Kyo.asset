@@ -34,6 +34,8 @@ MonoBehaviour:
     skillSfx: {fileID: 0}
     hurtSfx: {fileID: 0}
   movementProfile: {fileID: 11400000, guid: cd71e34e3ebc46d458f1965ef79c3daf, type: 2}
+  maxJumpOverride: -1
+  maxAirDashOverride: -1
   _authoredFPS: 24
   upgrade:
     level: 1

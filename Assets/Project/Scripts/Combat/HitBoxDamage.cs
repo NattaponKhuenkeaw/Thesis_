@@ -243,6 +243,8 @@ public class HitBoxDamage : MonoBehaviour
                     data.snapWorldPosition = GetActiveHitboxCenter();
                 }
             }
+
+            data.breaksGrab = currentNormalHitbox.breaksGrab;
         }
 
         ReactionResolver.ResolveAgainstTarget(enemy, ref data);

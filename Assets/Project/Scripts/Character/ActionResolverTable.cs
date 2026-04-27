@@ -19,9 +19,6 @@ public class ActionResolverTable : ScriptableObject
 
     [Header("Standalone Contextual Actions (checked before combo trees)")]
     [Tooltip("One-shot actions like Plunge, post-skill specials, counter-attacks.")]
-    public StandaloneAction[] standaloneActions;
+    public List<StandaloneAction> standaloneActions = new List<StandaloneAction>();
 
-    [Header("Fallback")]
-    [Tooltip("If no combat actions match, execute this linear step instead of ignoring the input (prevents combo breakage if trees are misconfigured).")]
-    public AttackStepData defaultLinearStep;
 }

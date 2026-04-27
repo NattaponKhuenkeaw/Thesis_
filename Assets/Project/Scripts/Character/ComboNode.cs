@@ -217,6 +217,9 @@ public class ComboTree
 [System.Serializable]
 public class StandaloneAction : CombatAction
 {
+    private const float DefaultChargeSteeringStrength = 8f;
+    private const float DefaultChargeSteeringMaxRedirect = 3.5f;
+
     public override AttackCategory Category => AttackCategory.Normal;
 
     [Header("Legacy Match Conditions (Obsolete)")]
@@ -232,10 +235,47 @@ public class StandaloneAction : CombatAction
     [Obsolete("Use comboTree instead")] [SerializeReference] public ComboNode followUpNode;
 
     [Header("Plunge Behavior")]
-    [Tooltip("If true, this action enters plunge-fall mode before executing the step on landing.")]
+    [Tooltip("If true, this standalone action uses the plunge flow: charge/root step -> dive step -> landing impact.")]
     public bool isPlungeAction = false;
     public float plungeDownwardSpeed = 18f;
+    public float plungeChargeSteeringStrength = DefaultChargeSteeringStrength;
+    public float plungeChargeMaxHorizontalRedirect = DefaultChargeSteeringMaxRedirect;
+    public bool updateFacingDuringPlungeCharge = true;
+
+    [Header("Legacy Plunge Fallback (Obsolete)")]
+    [Tooltip("Used only when no plunge dive step is authored in comboTree.")]
     public string plungeFallAnimState = "Plunge_Fall";
+
+    public ComboNode GetEntryNode()
+    {
+        return comboTree != null ? comboTree.rootNode : null;
+    }
+
+    public AttackStepData GetEntryStep()
+    {
+        if (comboTree?.rootNode?.stepData != null)
+        {
+            return comboTree.rootNode.stepData;
+        }
+
+        return stepData;
+    }
+
+    public ComboNode GetDiveNode()
+    {
+        ComboNode rootNode = comboTree != null ? comboTree.rootNode : null;
+        if (rootNode != null)
+        {
+            return rootNode.defaultNext;
+        }
+
+        return followUpNode;
+    }
+
+    public bool HasAuthoredPlungeTree()
+    {
+        return comboTree?.rootNode?.stepData != null;
+    }
 
     public void MigrateToConditions()
     {

@@ -336,6 +336,7 @@ public class CameraManager : MonoBehaviour
     {
         EnemyController nearestEnemy = null;
         float nearestDistanceSqr = float.MaxValue;
+        float playerFacingDir = _playerTransform != null && _playerTransform.eulerAngles.y > 90f ? -1f : 1f;
 
         foreach (var kvp in _engagedEnemies)
         {
@@ -352,6 +353,14 @@ public class CameraManager : MonoBehaviour
             }
 
             float distanceSqr = ((Vector2)enemy.transform.position - fromPosition).sqrMagnitude;
+            float enemyDirX = enemy.transform.position.x - fromPosition.x;
+            
+            // Penalize enemies behind the player heavily so they are only chosen if no one is in front
+            if (enemyDirX * playerFacingDir < 0f)
+            {
+                distanceSqr += 1000000f;
+            }
+
             if (distanceSqr < nearestDistanceSqr)
             {
                 nearestDistanceSqr = distanceSqr;

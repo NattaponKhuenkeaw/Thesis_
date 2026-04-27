@@ -97,6 +97,18 @@ namespace Project.TeamBuilder.UI
         {
             if (isInTeam) return; // Don't allow dragging characters already in team
 
+            // Ensure we have a root canvas for the ghost
+            if (rootCanvas == null)
+            {
+                rootCanvas = GetComponentInParent<Canvas>()?.rootCanvas;
+            }
+
+            if (rootCanvas == null)
+            {
+                Debug.LogWarning("CharacterGridItemUI: Cannot drag because no root Canvas was found.");
+                return;
+            }
+
             // Create a floating ghost
             GameObject ghostObj = new GameObject("DragGhost");
             dragGhost = ghostObj.transform;

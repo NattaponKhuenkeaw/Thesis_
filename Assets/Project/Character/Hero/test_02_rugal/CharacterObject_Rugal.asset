@@ -21,15 +21,6 @@ MonoBehaviour:
     attack: 13
     defense: 7
     elementalMultiplier: 1
-    moveSpeed: 6.5
-    jumpForce: 22
-    maxJumpCount: 3
-    maxAirDashCount: 1
-    groundAcceleration: 80
-    groundDeceleration: 90
-    airAcceleration: 55
-    airDeceleration: 40
-    airSpeedMultiplier: 1
   metaData:
     displayName: Rugal
     description: "\u0E1E\u0E48\u0E2D\u0E04\u0E49\u0E32\u0E2D\u0E32\u0E27\u0E38\u0E18\u0E1C\u0E39\u0E49\u0E17\u0E23\u0E07\u0E2D\u0E34\u0E17\u0E18\u0E34\u0E1E\u0E25\u0E41\u0E25\u0E30\u0E1A\u0E49\u0E32\u0E04\u0E25\u0E31\u0E48\u0E07\u0E01\u0E32\u0E23\u0E15\u0E48\u0E2D\u0E2A\u0E39\u0E49
@@ -41,6 +32,9 @@ MonoBehaviour:
     attackSfx: {fileID: 0}
     skillSfx: {fileID: 0}
     hurtSfx: {fileID: 0}
+  movementProfile: {fileID: 11400000, guid: cd71e34e3ebc46d458f1965ef79c3daf, type: 2}
+  maxJumpOverride: -1
+  maxAirDashOverride: -1
   _authoredFPS: 24
   upgrade:
     level: 1

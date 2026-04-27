@@ -112,12 +112,17 @@ namespace CombatCore
                     // 1. Release the grab binding on the enemy side
                     enemy.ReleaseGrab(AttackerId);
 
-                    // 2. Apply a knockdown reaction so the enemy cleanly
+                    // 2. Clamp eject to X-axis only — never launch the enemy upward
+                    //    on an interrupt. They should slide away and recover cleanly.
+                    float ejectX = ejectDirection.x != 0f ? Mathf.Sign(ejectDirection.x) : 1f;
+                    Vector2 horizontalEject = new Vector2(ejectX, 0f);
+
+                    // 3. Apply a knockback reaction so the enemy cleanly
                     //    falls away instead of freezing at the socket position
                     HitReactionData knockdownData = new HitReactionData
                     {
                         damage = 0f,
-                        knockbackDirection = ejectDirection,
+                        knockbackDirection = horizontalEject,
                         reactionKind = EnemyReactionKind.Knockback,
                         reactionTiming = HitReactionData.CreateTiming(0, 8, 12),
                         horizontalSpeed = ejectSpeed,

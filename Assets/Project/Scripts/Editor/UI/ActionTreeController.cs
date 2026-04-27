@@ -73,7 +73,7 @@ namespace CombatEditor.UI
             // 0. Resolver Table Settings
             if (character.actionResolverTable != null)
             {
-                BuildSingleCategory("⚙ Resolver Settings", "Settings", "Global Settings", "ResolverTable", character.actionResolverTable);
+                BuildSingleCategory("⚁EResolver Settings", "Settings", "Global Settings", "ResolverTable", character.actionResolverTable);
                 BuildResolverTableCategories(character.actionResolverTable);
             }
 
@@ -86,47 +86,10 @@ namespace CombatEditor.UI
 
         private void BuildResolverTableCategories(ActionResolverTable table)
         {
-            BuildActionsForList("⚔ Combo", "Combo", table.comboActions, table, AttackCategory.Normal);
+            BuildActionsForList("⚁ECombo", "Combo", table.comboActions, table, AttackCategory.Normal);
             BuildActionsForList("🌀 Skill", "Skill", table.skillActions, table, AttackCategory.Skill);
             BuildActionsForList("⚡ Ultimate", "Ultimate", table.ultimateActions, table, AttackCategory.Ultimate);
-
-            // Standalone Actions (Plunge, etc)
-            if (table.standaloneActions != null && table.standaloneActions.Length > 0)
-            {
-                string cat = "Standalone";
-                if (!expandedState.ContainsKey(cat)) expandedState[cat] = true;
-
-                var catRoot = BuildCategoryHeader("💫 Contextual Actions", cat, () => Build(character));
-                if (expandedState[cat])
-                {
-                    var itemsContainer = new VisualElement();
-                    itemsContainer.AddToClassList("sidebar-items");
-
-                    for (int i = 0; i < table.standaloneActions.Length; i++)
-                    {
-                        var sa = table.standaloneActions[i];
-                        string category = $"Standalone_{i}";
-                        string label = sa.isPlungeAction ? "Plunge Attack" : $"⚒ Contextual Action {i+1}";
-                        
-                        // Treat as CombatAction so users can edit its advanced conditions natively.
-                        var settingsNode = new ActionNode($"⚙ Setup {label}", category, "CombatAction", sa);
-                        itemsContainer.Add(CreateLeafItem(settingsNode));
-                        
-                        // Root Step configuration for the contextual action
-                        if (sa.stepData != null)
-                        {
-                            var stepNode = new ActionNode($"↳ {sa.stepData.stepName}", category, "AttackStep", sa.stepData);
-                            itemsContainer.Add(CreateLeafItem(stepNode));
-                        }
-                        if (sa.followUpNode != null)
-                        {
-                            BuildTreeNodeRecursive(itemsContainer, sa.followUpNode, category, 1, null, null, new HashSet<ComboNode>());
-                        }
-                    }
-                    catRoot.Add(itemsContainer);
-                }
-                container.Add(catRoot);
-            }
+            BuildActionsForList("💫 Contextual", "Standalone", table.standaloneActions, table, AttackCategory.Normal);
         }
 
         private void BuildActionsForList<T>(string titlePrefix, string categoryPrefix, List<T> actions, ActionResolverTable table, AttackCategory cat) where T : CombatAction, new()
@@ -136,7 +99,8 @@ namespace CombatEditor.UI
                 for (int i = 0; i < actions.Count; i++)
                 {
                     var action = actions[i];
-                    string title = $"{titlePrefix} {action.actionName} ({action.context})";
+                    string displayLabel = (action is StandaloneAction sa && sa.isPlungeAction) ? "Plunge Attack" : action.actionName;
+                    string title = $"{titlePrefix} {displayLabel} ({action.context})";
                     string category = $"{categoryPrefix}_{i}";
 
                     System.Action deleteAction = () => {
@@ -190,7 +154,7 @@ namespace CombatEditor.UI
                 
                 /* Removed internal deleteAction declaration */
 
-                var settingsNode = new ActionNode($"⚙ {action.actionName} setup", category, "CombatAction", action, 0, deleteAction);
+                var settingsNode = new ActionNode($"⚁E{action.actionName} setup", category, "CombatAction", action, 0, deleteAction);
                 itemsContainer.Add(CreateLeafItem(settingsNode));
 
                 if (root != null)

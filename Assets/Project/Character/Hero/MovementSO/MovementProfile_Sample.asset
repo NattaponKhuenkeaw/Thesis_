@@ -10,32 +10,40 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 138b668169d86f14d8f2e020a5f632eb, type: 3}
-  m_Name: MovementProfile_Fast
+  m_Name: MovementProfile_Sample
   m_EditorClassIdentifier: Assembly-CSharp::MovementProfile
   moveSpeed: 9.5
-  jumpForce: 17
+  jumpForce: 18
   maxJumpCount: 1
   maxAirDashCount: 1
   groundAcceleration: 110
-  groundDeceleration: 200
-  airAcceleration: 110
-  airDeceleration: 40
+  groundDeceleration: 150
+  airAcceleration: 45
+  airDeceleration: 110
   airSpeedMultiplier: 1
-  fastFallMultiplier: 5
-  riseGravityMultiplier: 1
-  apexGravityMultiplier: 2.4
+  fastFallMultiplier: 10
+  riseGravityMultiplier: 1.5
+  apexGravityMultiplier: 5
   apexVelocityThreshold: 1.6
-  postAttackGravityGraceDuration: 0.2
-  coyoteTime: 0.08
-  jumpBufferTime: 0.12
-  jumpCutMultiplier: 0.5
-  fallGravityMultiplier: 1.6
-  lowJumpGravityMultiplier: 2.2
-  maxFallSpeed: 18
-  jumpStartupTime: 0.05
+  postAttackGravityGraceDuration: 0.1
+  coyoteTime: 0.12
+  jumpBufferTime: 0.15
+  fallGravityMultiplier: 2.2
+  maxFallSpeed: 25
+  jumpStartupTime: 0.1
   landingLagTime: 0.1
   dropDownDuration: 0.2
+  movementInputDeadZone: 0.7
+  verticalSpeedPenalty: 0.5
   groundedActionProbeDistance: 0.35
   airborneActionVelocityThreshold: 0.05
   enableAttackFacingLockOn: 1
   attackFacingCancelInputThreshold: 0.2
+  airborneGravityPolicy:
+    startupScale: 0.05
+    activeScale: 0
+    recoveryStartScale: 0.05
+    recoveryEndScale: 0.3
+    recoveryEasing: 1
+    velocityExitThreshold: 0.5
+  airborneActionDriftScale: 0.3

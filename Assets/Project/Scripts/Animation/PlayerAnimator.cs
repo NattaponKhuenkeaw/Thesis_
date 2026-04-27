@@ -87,7 +87,13 @@ public class PlayerAnimator : MonoBehaviour
         
         if (isActivelyAttacking)
         {
-            anim.SetBool(isGroundedHash, false);
+            // Only force grounded to false if we are specifically in an air combo.
+            // For ground attacks, we want the animator to know we are grounded.
+            if (combat.IsAirCombo)
+            {
+                anim.SetBool(isGroundedHash, false);
+            }
+            
             anim.SetFloat(speedHash, 0f);
             anim.SetFloat(verticalVelocityHash, 0f);
             wasFalling = false;
@@ -161,7 +167,7 @@ public class PlayerAnimator : MonoBehaviour
         anim.SetBool(isDieHash, isDead);
     }
 
-    public void TriggerAttackCombo(int comboStep, string explicitClipName = null)
+    public void TriggerAttackCombo(int comboStep, string explicitClipName = null, string stepName = null)
     {
         // Prioritize attack animation over lingering jump transitions when attacking mid-air.
         SafeResetTrigger(jumpHash);
@@ -172,20 +178,30 @@ public class PlayerAnimator : MonoBehaviour
         {
             candidates.Add(explicitClipName);
         }
-        else
+        
+        if (!string.IsNullOrEmpty(stepName))
         {
-            candidates.Add($"Attack_{comboStep}");
-            candidates.Add($"Attack{comboStep}");
-            candidates.Add($"_Attack{comboStep}");
+            candidates.Add(stepName);
+            // Common permutations
+            candidates.Add(stepName.ToLower());
+            candidates.Add(stepName.ToUpper());
         }
+        
+        // Always add generic candidates as fallbacks
+        candidates.Add($"Attack_{comboStep}");
+        candidates.Add($"Attack{comboStep}");
+        candidates.Add($"_Attack{comboStep}");
+        candidates.Add($"Attack_{comboStep:D2}"); // Attack_01 style
 
         if (!TryPlayFirstExistingState(candidates.ToArray()))
         {
-            //Debug.LogWarning($"[PlayerAnimator] Missing State in Animator! Could not find state for Attack Step {comboStep} or Explicit Clip '{explicitClipName}'.");
+            // If still nothing, try to use a trigger if the parameter exists
+            SafeSetTrigger(Animator.StringToHash("Attack"));
+            anim.SetInteger(Animator.StringToHash("ComboStep"), comboStep);
         }
     }
 
-    public void TriggerAirAttack(int comboStep, string explicitClipName = null)
+    public void TriggerAirAttack(int comboStep, string explicitClipName = null, string stepName = null)
     {
         if (anim == null)
             return;
@@ -201,14 +217,28 @@ public class PlayerAnimator : MonoBehaviour
         {
             candidates.Add(explicitClipName);
         }
-        else
+        
+        if (!string.IsNullOrEmpty(stepName))
         {
-            candidates.AddRange(GetAirAttackStateCandidates(normalizedStep));
+            candidates.Add(stepName);
+            // Common permutations
+            candidates.Add(stepName.ToLower());
+            candidates.Add(stepName.ToUpper());
+            if (!stepName.Contains("_")) candidates.Add($"Air_{stepName}");
         }
+        
+        // Always add generic candidates as fallbacks
+        candidates.AddRange(GetAirAttackStateCandidates(normalizedStep));
 
         if (!TryPlayFirstExistingState(candidates.ToArray()))
         {
-            //Debug.LogWarning($"[PlayerAnimator] Missing State in Animator! Could not find state for Air Attack Step {comboStep} or Explicit Clip '{explicitClipName}'.");
+            // Fallback to integer parameter if it exists
+            int airStepHash = Animator.StringToHash("AirComboStep");
+            if (animParamHashes.Contains(airStepHash))
+            {
+                anim.SetInteger(airStepHash, normalizedStep);
+                SafeSetTrigger(Animator.StringToHash("AirAttack"));
+            }
         }
     }
 
@@ -286,10 +316,9 @@ public class PlayerAnimator : MonoBehaviour
         {
             candidates.Add(explicitClipName);
         }
-        else
-        {
-            candidates.AddRange(GetSkillStateCandidates(airborne));
-        }
+        
+        // Always add generic candidates as fallbacks
+        candidates.AddRange(GetSkillStateCandidates(airborne));
 
         if (TryPlayFirstExistingState(candidates.ToArray()))
             return;
@@ -311,10 +340,9 @@ public class PlayerAnimator : MonoBehaviour
         {
             candidates.Add(explicitClipName);
         }
-        else
-        {
-            candidates.AddRange(GetUltimateStateCandidates(airborne));
-        }
+        
+        // Always add generic candidates as fallbacks
+        candidates.AddRange(GetUltimateStateCandidates(airborne));
 
         if (TryPlayFirstExistingState(candidates.ToArray()))
             return;
@@ -357,10 +385,10 @@ public class PlayerAnimator : MonoBehaviour
         int normalizedStep = Mathf.Max(1, comboStep);
         return normalizedStep switch
         {
-            1 => new[] { "Air_Attack1", "_AirAttack1", "AirAttack1" },
-            2 => new[] { "Air_Attack2", "_AirAttack2", "AirAttack2" },
-            3 => new[] { "Air_Attack3", "_AirAttack3", "AirAttack3" },
-            _ => new[] { $"Air_Attack{normalizedStep}", $"_AirAttack{normalizedStep}", $"AirAttack{normalizedStep}" }
+            1 => new[] { "Air_Attack1", "_AirAttack1", "AirAttack1", "Air_Attack_1", "AirAttack_1" },
+            2 => new[] { "Air_Attack2", "_AirAttack2", "AirAttack2", "Air_Attack_2", "AirAttack_2" },
+            3 => new[] { "Air_Attack3", "_AirAttack3", "AirAttack3", "Air_Attack_3", "AirAttack_3" },
+            _ => new[] { $"Air_Attack{normalizedStep}", $"_AirAttack{normalizedStep}", $"AirAttack{normalizedStep}", $"Air_Attack_{normalizedStep}" }
         };
     }
 

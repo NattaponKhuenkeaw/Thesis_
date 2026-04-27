@@ -152,4 +152,25 @@ public struct InterruptPolicy
         recoveryGate = InputGate.None,
         cancelGate   = InputGate.AllowAll
     };
+
+    /// <summary>
+    /// AirborneAttack: Same interrupt categories as BasicAttack, but with
+    /// airborne-specific InputGate rules. Recovery allows movement input
+    /// so the gravity drift system can read horizontal input for air control.
+    /// </summary>
+    public static readonly InterruptPolicy AirborneAttack = new InterruptPolicy
+    {
+        startup = ActionCategory.None,
+        active = ActionCategory.Ultimate | ActionCategory.Skill
+                 | ActionCategory.Jump | ActionCategory.Dash,
+        recovery = ActionCategory.Ultimate | ActionCategory.Skill
+                 | ActionCategory.Jump | ActionCategory.Dash
+                 | ActionCategory.BasicAttack | ActionCategory.Switch,
+        cancel = ActionCategory.All & ~ActionCategory.Switch,
+        // InputGate — airborne: facing on startup, movement on recovery for air drift control
+        startupGate  = InputGate.AllowFacing,
+        activeGate   = InputGate.None,
+        recoveryGate = InputGate.AllowMovement,
+        cancelGate   = InputGate.AllowAll
+    };
 }

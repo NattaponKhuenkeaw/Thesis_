@@ -124,14 +124,27 @@ public class EnemyHitReactionHandler : MonoBehaviour
             
             // Snap them immediately to the new socket/offset
             UpdateGrabbedBinding();
-            
-            // Optionally, trigger a flash effect for the new hit since we skip ImpactFreeze
-            if (data.flashFrames > 0 && controller != null)
-            {
-                // Note: The EnemyController's TakeHit already started the FlashRoutine, 
-                // so we just need to return safely here.
-            }
 
+            return;
+        }
+
+        // --- Grab-Immune Absorption ---
+        // If the enemy is grabbed by us and we hit them with a NON-Grab hitbox
+        // (e.g. a projectile's NormalHitbox during a grab combo), absorb the hit
+        // without changing the reaction state. The enemy stays grabbed.
+        // Damage and flash are already applied by EnemyController.TakeHit() before
+        // this method is called, so we just need to return early.
+        //
+        // EXCEPTION: If the hitbox is explicitly marked as 'breaksGrab' (e.g. a slam/finisher),
+        // we DO NOT absorb it so the enemy can play the correct finisher reaction.
+        bool isGrabbedAbsorption = currentState == EnemyReactionState.Grabbed &&
+                                   data.reactionKind != EnemyReactionKind.Grab &&
+                                   !data.breaksGrab &&
+                                   currentReaction.reactionOwnerId != 0 &&
+                                   currentReaction.reactionOwnerId == data.reactionOwnerId;
+
+        if (isGrabbedAbsorption)
+        {
             return;
         }
 

@@ -98,6 +98,10 @@ public class NormalHitbox : HitboxBase
     public Project.Combat.VFXType hitVFXType = Project.Combat.VFXType.None;
     public GameObject hitVFXPrefab;
     public Vector2 hitVFXOffset;
+
+    [Header("Grab Interaction")]
+    [Tooltip("If true, this hit will knock the enemy out of a grab session even if from the same owner.")]
+    public bool breaksGrab = false;
 }
 
 // ─── Grab Hitbox ─────────────────────────────────────────

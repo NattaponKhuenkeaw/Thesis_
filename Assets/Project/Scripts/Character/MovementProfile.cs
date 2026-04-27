@@ -54,12 +54,8 @@ public class MovementProfile : ScriptableObject
     public float coyoteTime = 0.08f;
     [Tooltip("Time window before hitting the ground where a jump input is buffered.")]
     public float jumpBufferTime = 0.12f;
-    [Tooltip("Multiplier applied to vertical velocity if the jump button is released early.")]
-    public float jumpCutMultiplier = 0.5f;
     [Tooltip("Standard gravity multiplier applied while falling.")]
     public float fallGravityMultiplier = 1.6f;
-    [Tooltip("Gravity multiplier applied for short/low jumps.")]
-    public float lowJumpGravityMultiplier = 2.2f;
     [Tooltip("Terminal velocity (max speed) when falling.")]
     public float maxFallSpeed = 18f;
 
@@ -73,6 +69,20 @@ public class MovementProfile : ScriptableObject
     public float landingLagTime = 0.1f;
     [Tooltip("Duration of the drop-down (one-way platform) phase.")]
     public float dropDownDuration = 0.2f;
+
+    // =========================================================
+    // Movement Commitment
+    // =========================================================
+    [Header("Movement Commitment")]
+    [Tooltip("Horizontal input magnitude below this threshold only turns facing direction without moving. " +
+             "Creates a 'commit to run' feel. 0 = disabled (always move). 0.7 = need ~70% stick to start running.")]
+    [Range(0f, 0.95f)]
+    public float movementInputDeadZone = 0.7f;
+
+    [Tooltip("How much vertical velocity reduces horizontal speed. 0 = no penalty. " +
+             "0.5 = at terminal velocity, horizontal speed is halved. 1 = at terminal velocity, no horizontal movement.")]
+    [Range(0f, 1f)]
+    public float verticalSpeedPenalty = 0.5f;
 
     // =========================================================
     // Action Context
@@ -91,4 +101,16 @@ public class MovementProfile : ScriptableObject
     public bool enableAttackFacingLockOn = true;
     [Tooltip("Horizontal input threshold to manually override and cancel an attack facing lock-on.")]
     public float attackFacingCancelInputThreshold = 0.2f;
+
+    // =========================================================
+    // Airborne Action Physics
+    // =========================================================
+    [Header("Airborne Action Physics")]
+    [Tooltip("Per-phase gravity policy for airborne attacks. Controls how gravity/momentum behave during Startup, Active, and Recovery.")]
+    public AirborneGravityPolicy airborneGravityPolicy = AirborneGravityPolicy.Default;
+
+    [Tooltip("Air horizontal control multiplier applied during airborne attack phases. " +
+             "Multiplied by the gravity scale to smoothly reduce air drift during committed frames.")]
+    [Range(0f, 1f)]
+    public float airborneActionDriftScale = 0.3f;
 }

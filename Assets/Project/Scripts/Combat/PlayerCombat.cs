@@ -81,6 +81,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public AttackCategory CurrentAttackCategory => currentAttackCategory;
     public bool IsExecutingAutoChainStep => isExecutingAutoChainStep;
     public bool HadGrabAtStepStart => hadGrabAtStepStart;
+    public bool IsAirCombo => isAirCombo;
 
     void Awake()
     {
@@ -208,9 +209,9 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
                 default:
                     if (airCombo)
-                        animHandler.TriggerAirAttack(depth, clipName);
+                        animHandler.TriggerAirAttack(depth, clipName, currentActionName);
                     else
-                        animHandler.TriggerAttackCombo(depth, clipName);
+                        animHandler.TriggerAttackCombo(depth, clipName, currentActionName);
                     break;
             }
         }
@@ -338,9 +339,27 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     }
 
     public bool ShouldSuppressLandingFeedback() => isPlungeFalling;
-    public bool ShouldLockAirComboInPlace() => IsAttacking() && !isPlungeFalling && isAirCombo && 
-                                              currentStepData != null && currentStepData.lockAirPosition &&
-                                              movement != null && !movement.IsGrounded();
+
+    /// <summary>
+    /// Whether the player is currently in an airborne combat action.
+    /// Used by PlayerMovement to decide whether to apply airborne gravity policy.
+    /// Returns true for ANY active combat action (Attack, Skill, Ultimate) while airborne.
+    /// </summary>
+    public bool IsInAirborneAction() => IsAttacking() && !isPlungeFalling &&
+                                        movement != null && !movement.IsGrounded();
+
+    /// <summary>
+    /// Current gravity scale factor for airborne actions (0..1).
+    /// Set by CombatPlayerState based on the current action phase and AirborneGravityPolicy.
+    /// </summary>
+    private float airborneGravityScaleOverride = 1f;
+
+    public float GetAirborneGravityScale() => airborneGravityScaleOverride;
+
+    /// <summary>
+    /// Called by CombatPlayerState to communicate the current phase's gravity scale.
+    /// </summary>
+    public void SetAirborneGravityScale(float scale) => airborneGravityScaleOverride = Mathf.Clamp01(scale);
     public int GetComboStep() => comboDepth;
     public bool CanSwitchDirection() => currentPhase == ActionPhase.None || currentPhase == ActionPhase.Startup;
     public bool CanMoveAfterAttack() => !IsAttacking();
@@ -418,6 +437,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         currentAttackFrame = 0;
         isPlungeFalling = false;
         isAirCombo = false;
+        airborneGravityScaleOverride = 1f;
         isExecutingAutoChainStep = false;
         currentGrabHitbox = null;
         lastGrabParams = default;

@@ -18,6 +18,7 @@ public enum PlayerStateId
     Attacking,
     Skill,
     Ultimate,
+    AirborneAttacking,
     Hitstun,
     Dead
 }
@@ -87,7 +88,7 @@ public abstract class PlayerState
     // FSM uses these for centralized default routing.
     // =========================================================
 
-    /// <summary>If true, move/down/jumpHeld inputs are forwarded to PlayerMovement.</summary>
+    /// <summary>If true, move/down inputs are forwarded to PlayerMovement.</summary>
     public virtual bool AcceptsMoveInput => false;
 
     /// <summary>If true, FSM will route dash input through default CanDash→DashState transition.</summary>
@@ -151,15 +152,6 @@ public abstract class PlayerState
     {
         if (AcceptsMoveInput && player.Movement != null)
             player.Movement.SetDownInput(held);
-    }
-
-    /// <summary>
-    /// Jump held (for variable jump height). Default: forwards if AcceptsMoveInput.
-    /// </summary>
-    public virtual void OnJumpHeld(bool held)
-    {
-        if (AcceptsMoveInput && player.Movement != null)
-            player.Movement.SetJumpHeld(held);
     }
 
     /// <summary>

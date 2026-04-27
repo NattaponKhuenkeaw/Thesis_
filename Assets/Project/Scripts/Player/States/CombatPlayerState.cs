@@ -14,11 +14,16 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     protected bool hasStartedCooldown;
 
     private readonly HashSet<ActionEventEntry> triggeredActionEvents = new HashSet<ActionEventEntry>();
-    private bool prevFrameGrounded;
+    protected bool prevFrameGrounded;
     private ActionEventEntry activeActionSequence;
     private GameFreezeManager.FreezeToken activeFreezeToken;
     private bool pauseCurrentNodeForSequence;
     private bool advanceCurrentNodeWithUnscaledTime;
+
+    // --- Airborne Gravity Policy ---
+    private AirborneGravityPolicy gravityPolicy;
+    private int recoveryFrameCount;
+    private int framesInRecovery;
 
     public CombatPlayerState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
@@ -36,17 +41,18 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         }
 
         prevFrameGrounded = player.Movement != null && player.Movement.IsGrounded();
+
+        // --- Gravity Policy ---
+        gravityPolicy = player.Movement != null && player.Movement.profile != null
+            ? player.Movement.profile.airborneGravityPolicy
+            : AirborneGravityPolicy.Default;
+        framesInRecovery = 0;
+        recoveryFrameCount = 0;
+        UpdateGravityScale(ActionPhase.Startup, 0f);
     }
 
-    public override void FixedUpdate()
-    {
-        base.FixedUpdate();
-
-        if (player.Movement != null)
-        {
-            prevFrameGrounded = player.Movement.IsGrounded();
-        }
-    }
+    // Removed FixedUpdate update of prevFrameGrounded to ensure Update() has exclusive control 
+    // over the frame-to-frame transition for landing detection.
 
     public override void Exit()
     {
@@ -69,6 +75,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
                 player.Combat.ResetCombo();
 
             player.Combat.SetPlungeFalling(false);
+            player.Combat.SetAirborneGravityScale(1f); // Restore gravity
         }
 
         if (player.Combat != null)
@@ -84,6 +91,12 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
     public override void Update()
     {
+        // Check for landing BEFORE base.Update() advances frames, so we can interrupt cleanly
+        if (player.Movement != null && player.Movement.IsGrounded() && !prevFrameGrounded)
+        {
+            OnLandedDuringCombat();
+        }
+
         base.Update();
 
         if (fsm.CurrentState != this)
@@ -91,10 +104,24 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             return;
         }
 
-        if (player.Movement != null)
+        // --- Recovery Early Exit (Gravity takes over) ---
+        if (currentPhase == ActionPhase.Recovery && player.Movement != null && player.Combat != null && player.Combat.IsInAirborneAction())
         {
-            prevFrameGrounded = player.Movement.IsGrounded();
+            float maxFall = player.Movement.profile != null
+                ? player.Movement.profile.maxFallSpeed
+                : 18f;
+
+            if (gravityPolicy.ShouldExitRecovery(player.Movement.VerticalVelocity, maxFall))
+            {
+                fsm.Log("FSM", $"[{StateId}] Recovery exit: fall velocity threshold reached", Color.yellow);
+                OnActionComplete();
+                return;
+            }
         }
+
+        // --- Continuous Gravity Update ---
+        // Ensures ground-to-air transitions (via motionData) react instantly.
+        UpdateGravityScale(currentPhase, GetRecoveryProgress());
 
         if (player.Combat != null && player.Combat.IsAttacking() && currentPhase == ActionPhase.Active)
         {
@@ -111,6 +138,11 @@ public abstract class CombatPlayerState : FrameDataPlayerState
                     ExecuteCombatStep(triggeredStep, ctx, true);
                 }
             }
+        }
+
+        if (player.Movement != null)
+        {
+            prevFrameGrounded = player.Movement.IsGrounded();
         }
     }
 
@@ -202,6 +234,11 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     {
         player.Combat?.ProcessFrameFromState(frame, phase);
         ProcessActionEvents(frame);
+
+        if (phase == ActionPhase.Recovery)
+        {
+            framesInRecovery++;
+        }
     }
 
     protected override bool ShouldAdvanceLogicFrames()
@@ -244,6 +281,31 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     protected override void OnCancelBegin()
     {
         TryStartCooldown();
+    }
+
+    protected override void OnPhaseChanged(ActionPhase oldPhase, ActionPhase newPhase)
+    {
+        base.OnPhaseChanged(oldPhase, newPhase);
+
+        if (newPhase == ActionPhase.Startup)
+        {
+            if (player.Combat != null && player.Combat.IsInAirborneAction() && player.Movement != null)
+            {
+                Rigidbody2D rb = player.Movement.GetComponent<Rigidbody2D>();
+                if (rb != null)
+                {
+                    rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * gravityPolicy.startupVelocityRetain);
+                }
+            }
+        }
+        else if (newPhase == ActionPhase.Recovery)
+        {
+            framesInRecovery = 0;
+            ActionFrameData frameData = CachedFrameData;
+            recoveryFrameCount = frameData != null ? frameData.recoveryFrames : 1;
+        }
+
+        UpdateGravityScale(newPhase, 0f);
     }
 
     protected virtual void TryStartCooldown()
@@ -534,6 +596,43 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         if (player.Animator != null && player.Animator.anim != null)
         {
             player.Animator.anim.updateMode = AnimatorUpdateMode.Normal;
+        }
+    }
+
+    // =========================================================
+    // Airborne Gravity & Landing
+    // =========================================================
+
+    private void UpdateGravityScale(ActionPhase phase, float recoveryProgress)
+    {
+        // Only apply airborne gravity policy if we are actually airborne
+        if (player.Combat != null && player.Combat.IsInAirborneAction())
+        {
+            float scale = gravityPolicy.Evaluate(phase, recoveryProgress);
+            player.Combat.SetAirborneGravityScale(scale);
+        }
+        else if (player.Combat != null)
+        {
+            // Reset to full gravity when grounded or not in airborne action
+            player.Combat.SetAirborneGravityScale(1f);
+        }
+    }
+
+    private float GetRecoveryProgress()
+    {
+        if (currentPhase != ActionPhase.Recovery) return 0f;
+        return recoveryFrameCount > 0 ? (float)framesInRecovery / recoveryFrameCount : 1f;
+    }
+
+    private void OnLandedDuringCombat()
+    {
+        if (player.Combat == null) return;
+
+        if (player.Combat.ShouldInterruptAttackOnGrounded())
+        {
+            fsm.Log("FSM", $"[{StateId}] Interrupted by landing", Color.yellow);
+            player.Combat.ResetCombo();
+            ExitToAppropriateMovementState();
         }
     }
 }

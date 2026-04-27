@@ -28,6 +28,7 @@ public class PlayerStateMachine : MonoBehaviour
     public PlayerJumpState JumpState { get; private set; }
     public PlayerDashState DashState { get; private set; }
     public PlayerAttackState AttackState { get; private set; }
+    public PlayerAirAttackState AirAttackState { get; private set; }
     public PlayerSkillState SkillState { get; private set; }
     public PlayerUltimateState UltimateState { get; private set; }
     public PlayerHitstunState HitstunState { get; private set; }
@@ -246,14 +247,6 @@ public class PlayerStateMachine : MonoBehaviour
     }
 
     /// <summary>
-    /// Route jump held. Always forwarded to current state.
-    /// </summary>
-    public void RouteJumpHeld(bool held)
-    {
-        CurrentState?.OnJumpHeld(held);
-    }
-
-    /// <summary>
     /// Route jump pressed. If the current state handles it (returns true),
     /// no further routing is done. Otherwise, it uses the default Accept Jump logic.
     /// </summary>
@@ -281,7 +274,7 @@ public class PlayerStateMachine : MonoBehaviour
                 ChangeState(JumpState);
                 CurrentState.OnJumpInput();
 
-                if (interruptedState == PlayerStateId.Attacking)
+                if (interruptedState == PlayerStateId.Attacking || interruptedState == PlayerStateId.AirborneAttacking)
                 {
                     RouteAttackInput();
                 }
@@ -380,7 +373,8 @@ public class PlayerStateMachine : MonoBehaviour
 
         if (CurrentState.AcceptsAttackInput && playerCharacter.HasActionForContext(AttackCategory.Normal))
         {
-            ChangeState(AttackState);
+            bool isGrounded = playerCharacter.Movement != null && playerCharacter.Movement.IsGroundedForActionSelection();
+            ChangeState(isGrounded ? AttackState : AirAttackState);
             CurrentState.OnAttackInput();
         }
     }
@@ -455,6 +449,7 @@ public class PlayerStateMachine : MonoBehaviour
         JumpState = new PlayerJumpState(playerCharacter, this);
         DashState = new PlayerDashState(playerCharacter, this);
         AttackState = new PlayerAttackState(playerCharacter, this);
+        AirAttackState = new PlayerAirAttackState(playerCharacter, this);
         SkillState = new PlayerSkillState(playerCharacter, this);
         UltimateState = new PlayerUltimateState(playerCharacter, this);
         HitstunState = new PlayerHitstunState(playerCharacter, this);
@@ -497,7 +492,7 @@ public class PlayerStateMachine : MonoBehaviour
         if (currentFrameState == null)
             return false;
 
-        if (CurrentStateId != PlayerStateId.Attacking && CurrentStateId != PlayerStateId.Skill)
+        if (CurrentStateId != PlayerStateId.Attacking && CurrentStateId != PlayerStateId.AirborneAttacking && CurrentStateId != PlayerStateId.Skill)
             return false;
 
         if (playerCharacter == null || playerCharacter.Movement == null)

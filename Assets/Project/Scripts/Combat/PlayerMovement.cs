@@ -58,15 +58,17 @@ public class PlayerMovement : MonoBehaviour
     // Private Runtime Data
     // =========================================================
     private Rigidbody2D rb;
+    public Rigidbody2D RB => rb;
     private PlayerStateMachine fsm;
     private ICharacterCombat combat;
 
     private bool isGrounded;
     private bool wasGrounded;
     private bool isHoldingDown;
-    private bool jumpHeld;
     private float originalGravityScale;
     private float horizontalInput;
+    private float lastAppliedMotionVelocityX;
+    private float lastAppliedMotionVelocityY;
     private float jumpBufferedUntil = -999f;
     private float coyoteUntil = -999f;
     private int jumpsUsed;
@@ -119,6 +121,9 @@ public class PlayerMovement : MonoBehaviour
     private bool hasPerformedInitialLockOnForCurrentStep;
     private int lastObservedComboStep = -1;
 
+    // Auto Target Setting
+    private bool _isAutoTargetEnabled = true;
+
     [HideInInspector] public int maxJumpOverride = -1;
     [HideInInspector] public int maxAirDashOverride = -1;
 
@@ -132,7 +137,8 @@ public class PlayerMovement : MonoBehaviour
     public bool IsJumping => Time.time < jumpStartupEndTime;
     public bool IsDroppingDown => dropDownCoroutine != null;
     public bool IsLanding => Time.time < landingEndTime;
-    public float HorizontalInput => horizontalInput;
+    public float HorizontalInput => GetEffectiveHorizontalInput();
+    public float RawHorizontalInput => horizontalInput;
     public float VerticalVelocity => rb != null ? rb.linearVelocity.y : 0f;
     public int FacingDirection => transform.eulerAngles.y > 90f ? -1 : 1;
 
@@ -210,6 +216,7 @@ public class PlayerMovement : MonoBehaviour
     {
         OnDashStart?.Invoke();
         dashDir = GetDashDirection(inputX);
+        SetFacingDirection((int)dashDir, false);
         currentDashFrame = 0;
         dashLogicTimeCounter = 0f;
         lastAfterimageTime = -dashAfterimageSpawnInterval;
@@ -217,7 +224,6 @@ public class PlayerMovement : MonoBehaviour
 
     public void SetDownInput(bool isPressed) => isHoldingDown = isPressed;
     public bool IsDownInputHeld() => isHoldingDown;
-    public void SetJumpHeld(bool isPressed) => jumpHeld = isPressed;
     public bool IsGrounded() => isGrounded;
 
     public bool IsGroundedForActionSelection()
@@ -250,17 +256,26 @@ public class PlayerMovement : MonoBehaviour
         return true;
     }
 
+    public void ToggleAutoTarget(TMPro.TMP_Text toggleText)
+    {
+        _isAutoTargetEnabled = !_isAutoTargetEnabled;
+        if (toggleText != null)
+        {
+            toggleText.text = _isAutoTargetEnabled ? "Auto Target: ON" : "Auto Target: OFF";
+        }
+    }
+
     public void ForceFaceDirectionFromInput(Vector2 input)
     {
         if (Mathf.Abs(input.x) < 0.1f) return;
         SetFacingDirection(input.x > 0 ? 1 : -1, false);
     }
 
-    public void StartPlungeMotion(float downwardSpeed)
+    public void StartPlungeMotion(float downwardSpeed, float horizontalVelocity = 0f)
     {
         StopAttackMotion();
         float speed = downwardSpeed > 0 ? downwardSpeed : P.jumpForce;
-        rb.linearVelocity = new Vector2(rb.linearVelocity.x, -speed);
+        rb.linearVelocity = new Vector2(horizontalVelocity, -speed);
         if (enableDashAfterimage) plungeAfterimageCoroutine = StartCoroutine(PlungeAfterimageRoutine());
     }
 
@@ -330,13 +345,52 @@ public class PlayerMovement : MonoBehaviour
 
     private void HandleVerticalPhysics()
     {
-        if (IsDashing || isAttackMotionActive) return;
-        if (combat != null && combat.ShouldLockAirComboInPlace()) { rb.gravityScale = 0f; rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f); wasLockingAirCombo = true; postAttackGraceTimer = 0f; return; }
+        if (IsDashing) return;
+
+        // ─── Airborne Action Gravity & Motion Y Override ───
+        if (combat != null && combat.IsActiveCombat())
+        {
+            float gravScale = combat.GetAirborneGravityScale();
+            bool isVerticallyDriven = isAttackMotionActive && Mathf.Abs(attackMotionVelocityY) > 0.001f;
+
+            if (combat.IsInAirborneAction() || isVerticallyDriven)
+            {
+                if (gravScale <= 0.001f || isVerticallyDriven)
+                {
+                    // Fully locked: zero gravity, purely motion-driven vertical velocity
+                    // This securely forces ground launchers to obey motion Y instead of standard gravity.
+                    rb.gravityScale = 0f;
+                    float motionOffsetY = isAttackMotionActive ? attackMotionVelocityY : 0f;
+                    rb.linearVelocity = new Vector2(rb.linearVelocity.x, motionOffsetY);
+                }
+                else
+                {
+                    // Partial gravity: apply scaled gravity (Startup/Recovery phases)
+                    rb.gravityScale = originalGravityScale * gravScale;
+                }
+
+                if (combat.IsInAirborneAction())
+                {
+                    wasLockingAirCombo = true;
+                    postAttackGraceTimer = 0f;
+
+                    // Clamp fall speed even during partial gravity
+                    if (rb.linearVelocity.y < -P.maxFallSpeed)
+                        rb.linearVelocity = new Vector2(rb.linearVelocity.x, -P.maxFallSpeed);
+                }
+                
+                // If it was just a ground attack with Y drive, we return early so normal gravity doesn't ruin it.
+                if (isVerticallyDriven || combat.IsInAirborneAction()) 
+                    return;
+            }
+        }
+
+        // ─── Post-airborne grace period (transition back to normal physics) ───
         if (wasLockingAirCombo) { postAttackGraceTimer = P.postAttackGravityGraceDuration; wasLockingAirCombo = false; }
         float targetG = originalGravityScale;
         if (isGrounded) { rb.gravityScale = targetG; postAttackGraceTimer = 0f; return; }
         if (postAttackGraceTimer > 0f) { targetG *= (1f - (postAttackGraceTimer / Mathf.Max(0.001f, P.postAttackGravityGraceDuration))); postAttackGraceTimer -= Time.fixedDeltaTime; }
-        if (rb.linearVelocity.y > P.apexVelocityThreshold) targetG *= jumpHeld ? P.riseGravityMultiplier : P.lowJumpGravityMultiplier;
+        if (rb.linearVelocity.y > P.apexVelocityThreshold) targetG *= P.riseGravityMultiplier;
         else if (isHoldingDown && rb.linearVelocity.y < 0) targetG *= P.fastFallMultiplier;
         else if (rb.linearVelocity.y < -P.apexVelocityThreshold) targetG *= P.fallGravityMultiplier;
         else targetG *= P.apexGravityMultiplier;
@@ -375,15 +429,92 @@ public class PlayerMovement : MonoBehaviour
         return IsLanding;
     }
 
+    private float GetEffectiveHorizontalInput()
+    {
+        float absInput = Mathf.Abs(horizontalInput);
+        if (P.movementInputDeadZone > 0f && absInput < P.movementInputDeadZone)
+        {
+            return 0f;
+        }
+        return horizontalInput;
+    }
+
     private void ApplyHorizontalMovement()
     {
         if (rb == null || IsDashing) return;
-        if (isAttackMotionActive) { rb.linearVelocity = new Vector2(attackMotionVelocityX, attackMotionVelocityY); return; }
-        if (IsMovementLocked()) { rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y); return; }
-        float targetX = horizontalInput * P.moveSpeed * (isGrounded ? 1f : P.airSpeedMultiplier);
-        float accel = Mathf.Abs(targetX) < 0.01f ? (isGrounded ? P.groundDeceleration : P.airDeceleration) : (isGrounded ? P.groundAcceleration : P.airAcceleration);
-        if (Mathf.Abs(rb.linearVelocity.x) > 0.01f && Mathf.Sign(targetX) != Mathf.Sign(rb.linearVelocity.x) && !isGrounded) accel *= 1.15f;
-        rb.linearVelocity = new Vector2(Mathf.MoveTowards(rb.linearVelocity.x, targetX, accel * Time.fixedDeltaTime), rb.linearVelocity.y);
+
+        // 1. Recover physics-only velocity from last frame before calculating this frame's physics.
+        // This prevents the additive motion from accumulating into acceleration (the 'flying away' bug).
+        float currentPhysX = rb.linearVelocity.x - lastAppliedMotionVelocityX;
+        float currentPhysY = rb.linearVelocity.y - lastAppliedMotionVelocityY;
+
+        // ─── Attack Motion: additive offset ───
+        float motionOffsetX = isAttackMotionActive ? attackMotionVelocityX : 0f;
+        float motionOffsetY = isAttackMotionActive ? attackMotionVelocityY : 0f;
+
+        // ─── Airborne Action Drift ───
+        if (combat != null && combat.IsInAirborneAction())
+        {
+            float gravScale = combat.GetAirborneGravityScale();
+            float driftScale = P.airborneActionDriftScale * gravScale;
+
+            float newPhysX;
+            if (driftScale <= 0.001f)
+            {
+                newPhysX = Mathf.MoveTowards(currentPhysX, 0f, P.airDeceleration * Time.fixedDeltaTime);
+            }
+            else
+            {
+                float targetX = horizontalInput * P.moveSpeed * P.airSpeedMultiplier * driftScale;
+                float accel = P.airAcceleration * driftScale;
+                newPhysX = Mathf.MoveTowards(currentPhysX, targetX, accel * Time.fixedDeltaTime);
+            }
+
+            lastAppliedMotionVelocityX = motionOffsetX;
+            lastAppliedMotionVelocityY = motionOffsetY;
+            rb.linearVelocity = new Vector2(newPhysX + motionOffsetX, currentPhysY + motionOffsetY);
+            return;
+        }
+
+        if (IsMovementLocked())
+        {
+            lastAppliedMotionVelocityX = motionOffsetX;
+            lastAppliedMotionVelocityY = motionOffsetY;
+            rb.linearVelocity = new Vector2(motionOffsetX, currentPhysY + motionOffsetY);
+            return;
+        }
+
+        // ─── Input Dead Zone ───
+        float effectiveInput = GetEffectiveHorizontalInput();
+
+        // ─── Vertical Velocity Attenuation ───
+        // Higher vertical speed = less horizontal control
+        float verticalAttenuation = 1f;
+        if (!isGrounded && P.verticalSpeedPenalty > 0f)
+        {
+            // Use jumpForce as reference when rising, maxFallSpeed when falling for consistent feel
+            float refSpeed = rb.linearVelocity.y > 0 ? P.jumpForce : P.maxFallSpeed;
+            if (refSpeed > 0.001f)
+            {
+                float normalizedVertSpeed = Mathf.Abs(rb.linearVelocity.y) / refSpeed;
+                verticalAttenuation = 1f - (Mathf.Clamp01(normalizedVertSpeed) * P.verticalSpeedPenalty);
+            }
+        }
+
+        float baseSpeed = P.moveSpeed * (isGrounded ? 1f : P.airSpeedMultiplier) * verticalAttenuation;
+        float tgtX = effectiveInput * baseSpeed;
+        float acc = Mathf.Abs(tgtX) < 0.01f
+            ? (isGrounded ? P.groundDeceleration : P.airDeceleration)
+            : (isGrounded ? P.groundAcceleration : P.airAcceleration);
+
+        if (Mathf.Abs(currentPhysX) > 0.01f && Mathf.Sign(tgtX) != Mathf.Sign(currentPhysX) && !isGrounded)
+            acc *= 1.15f;
+
+        float nextPhysX = Mathf.MoveTowards(currentPhysX, tgtX, acc * Time.fixedDeltaTime);
+
+        lastAppliedMotionVelocityX = motionOffsetX;
+        lastAppliedMotionVelocityY = motionOffsetY;
+        rb.linearVelocity = new Vector2(nextPhysX + motionOffsetX, currentPhysY + motionOffsetY);
     }
 
     private void UpdateFacing()
@@ -391,6 +522,7 @@ public class PlayerMovement : MonoBehaviour
         UpdateAttackFacingLockOnState();
         if (TryHandleAttackFacingLockOn()) return;
         bool canFace = fsm != null && (fsm.CurrentState is FrameDataPlayerState fd ? fd.AllowsFacing() : !fsm.CurrentState.LocksFacing);
+        // Facing responds to raw horizontal input above noise floor, bypassing dead zone
         if (canFace) { if (horizontalInput > 0.01f) SetFacingDirection(1, true); else if (horizontalInput < -0.01f) SetFacingDirection(-1, true); }
     }
 
@@ -406,6 +538,7 @@ public class PlayerMovement : MonoBehaviour
 
     private bool TryHandleAttackFacingLockOn()
     {
+        if (!_isAutoTargetEnabled) return false;
         if (hasPerformedInitialLockOnForCurrentStep || (combat != null && combat.IsExecutingAutoChainStep)) return false;
         if (!P.enableAttackFacingLockOn || attackFacingLockOnCancelledForCurrentAttack || combat == null || !combat.IsAttacking() || CameraManager.instance == null || Mathf.Abs(horizontalInput) >= P.attackFacingCancelInputThreshold) return false;
         EnemyController target = CameraManager.instance.GetNearestEngagedEnemy(transform.position);
@@ -473,11 +606,70 @@ public class PlayerMovement : MonoBehaviour
 
     private IEnumerator AttackMovementCoroutine(MotionKeyframe k)
     {
-        isAttackMotionActive = true; float dir = FacingDirection; Vector2 start = rb.position, target = start;
-        switch (k.taskType) { case MotionTaskType.Relative: target = start + new Vector2(k.position.x * dir, k.position.y); break; case MotionTaskType.Absolute: target = start + (Vector2)k.position; break; case MotionTaskType.SnapToEnemy: Transform s = GetSnapTarget(8f); if (s != null) { Vector2 toE = (Vector2)s.position - start; target = (Vector2)s.position - (toE.normalized * 1.2f); } else target = start + new Vector2(k.position.x * dir, k.position.y); break; }
+        isAttackMotionActive = true;
+        float dir = FacingDirection;
+        Vector2 start = rb.position;
+        Vector2 target = start;
+
+        switch (k.taskType)
+        {
+            case MotionTaskType.Relative:
+                target = start + new Vector2(k.position.x * dir, k.position.y);
+                break;
+            case MotionTaskType.Absolute:
+                target = start + (Vector2)k.position;
+                break;
+            case MotionTaskType.SnapToEnemy:
+                Transform s = GetSnapTarget(8f);
+                if (s != null)
+                {
+                    Vector2 toE = (Vector2)s.position - start;
+                    target = (Vector2)s.position - (toE.normalized * 1.2f);
+                }
+                else
+                {
+                    target = start + new Vector2(k.position.x * dir, k.position.y);
+                }
+                break;
+        }
+
         float dur = Mathf.Max(0, k.endFrame - k.startFrame) / (float)FrameDataConstants.LOGIC_FPS;
-        if (dur <= 0) rb.position = target;
-        else { float e = 0f; while (e < dur) { float delta = useUnscaledAttackMotion ? Time.unscaledDeltaTime : Time.fixedDeltaTime; e += delta; float t = Mathf.Clamp01(e / dur); Vector2 cur = Vector2.Lerp(start, target, TweenEase(0, 1, t, k.easing)); if (useUnscaledAttackMotion) { rb.position = cur; yield return null; } else { Vector2 d = cur - rb.position; attackMotionVelocityX = d.x / Time.fixedDeltaTime; attackMotionVelocityY = d.y / Time.fixedDeltaTime; yield return new WaitForFixedUpdate(); } } }
+
+        if (dur <= 0)
+        {
+            rb.position = target;
+        }
+        else
+        {
+            float elapsed = 0f;
+            Vector2 prevLerpPos = start;
+
+            while (elapsed < dur)
+            {
+                float delta = useUnscaledAttackMotion ? Time.unscaledDeltaTime : Time.fixedDeltaTime;
+                elapsed += delta;
+                float t = Mathf.Clamp01(elapsed / dur);
+                Vector2 currentLerpPos = Vector2.Lerp(start, target, TweenEase(0, 1, t, k.easing));
+
+                if (useUnscaledAttackMotion)
+                {
+                    // Unscaled mode: direct position set (used for cinematics/ultimates)
+                    rb.position = currentLerpPos;
+                    yield return null;
+                }
+                else
+                {
+                    // Additive mode: compute the offset velocity this frame.
+                    // This gets ADDED to normal physics in ApplyHorizontalMovement.
+                    Vector2 frameDelta = currentLerpPos - prevLerpPos;
+                    attackMotionVelocityX = frameDelta.x / Mathf.Max(Time.fixedDeltaTime, 0.001f);
+                    attackMotionVelocityY = frameDelta.y / Mathf.Max(Time.fixedDeltaTime, 0.001f);
+                    prevLerpPos = currentLerpPos;
+                    yield return new WaitForFixedUpdate();
+                }
+            }
+        }
+
         StopAttackMotion();
     }
 

@@ -26,16 +26,36 @@ public class PlayerJumpState : PlayerState
     // Capabilities
     // =========================================================
     public override bool AcceptsMoveInput => true;
-    public override bool AcceptsDashInput => true;
+    public override bool AcceptsDashInput => player.Movement == null || !player.Movement.IsJumping;
     public override bool AcceptsJumpInput => true;   // custom handler (drop-down, double jump)
-    public override bool AcceptsAttackInput => true;  // custom handler (air combos + plunge via resolver)
-    public override bool AcceptsSkillInput => true;
-    public override bool AcceptsUltimateInput => true;
+    public override bool AcceptsAttackInput => player.Movement == null || !player.Movement.IsJumping;
+    public override bool AcceptsSkillInput => player.Movement == null || !player.Movement.IsJumping;
+    public override bool AcceptsUltimateInput => player.Movement == null || !player.Movement.IsJumping;
 
     public override void Update()
     {
         if (player.Movement == null)
             return;
+
+        // Process buffered inputs once jump startup is complete
+        if (!player.Movement.IsJumping && fsm.InputBuffer != null)
+        {
+            if (fsm.InputBuffer.HasAttackBuffer && fsm.InputBuffer.ConsumeAttack())
+            {
+                OnAttackInput();
+                return;
+            }
+            if (fsm.InputBuffer.HasSkillBuffer && fsm.InputBuffer.ConsumeSkill())
+            {
+                fsm.RouteSkillInput();
+                return;
+            }
+            if (fsm.InputBuffer.HasDashBuffer && fsm.InputBuffer.ConsumeDash(out float dir))
+            {
+                fsm.RouteDashInput(dir);
+                return;
+            }
+        }
 
         // Landed: go to Idle or Move
         // We only land if we are grounded, not in jump startup, and NOT moving upwards significantly.
@@ -100,7 +120,7 @@ public class PlayerJumpState : PlayerState
     /// </summary>
     public override void OnAttackInput()
     {
-        fsm.ChangeState(fsm.AttackState);
+        fsm.ChangeState(fsm.AirAttackState);
         fsm.CurrentState.OnAttackInput();
     }
 }

@@ -695,83 +695,66 @@ namespace CombatEditor.UI
                     });
                 }
 
-                if (action is StandaloneAction sa && sa.stepData != null)
+                if (action is StandaloneAction sa)
                 {
-                    AddSeparator(body, "Automatic Transitions (Interrupts)");
-                    if (sa.stepData.triggerWindows == null) sa.stepData.triggerWindows = new List<TriggerWindow>();
+                    AddSeparator(body, "Plunge Behavior");
+                    AddToggleField(body, "Use Plunge Flow", sa.isPlungeAction, value => {
+                        RecordUndo("Toggle Plunge Flow");
+                        sa.isPlungeAction = value;
+                        MarkDirty();
+                    });
 
-                    CombatAction currentAction = GetCurrentAction();
-                    List<ComboNode> allNodes = GetAllNodesInAction(currentAction);
-                    List<string> nodeNames = new List<string> { "NONE (End)" };
-                    foreach (var n in allNodes) nodeNames.Add(n.stepData?.stepName ?? "Unnamed");
+                    AddFloatField(body, "Dive Downward Speed", sa.plungeDownwardSpeed, value => {
+                        RecordUndo("Edit Plunge Dive Speed");
+                        sa.plungeDownwardSpeed = value;
+                        MarkDirty();
+                    });
 
-                    for (int i = 0; i < sa.stepData.triggerWindows.Count; i++)
+                    AddFloatField(body, "Charge Steering Strength", sa.plungeChargeSteeringStrength, value => {
+                        RecordUndo("Edit Plunge Steering Strength");
+                        sa.plungeChargeSteeringStrength = value;
+                        MarkDirty();
+                    });
+
+                    AddFloatField(body, "Charge Max Horizontal Redirect", sa.plungeChargeMaxHorizontalRedirect, value => {
+                        RecordUndo("Edit Plunge Redirect");
+                        sa.plungeChargeMaxHorizontalRedirect = value;
+                        MarkDirty();
+                    });
+
+                    AddToggleField(body, "Update Facing During Charge", sa.updateFacingDuringPlungeCharge, value => {
+                        RecordUndo("Toggle Plunge Facing Update");
+                        sa.updateFacingDuringPlungeCharge = value;
+                        MarkDirty();
+                    });
+
+                    AddTextField(body, "Legacy Dive Anim Fallback", sa.plungeFallAnimState, value => {
+                        RecordUndo("Edit Legacy Plunge Anim");
+                        sa.plungeFallAnimState = value;
+                        MarkDirty();
+                    });
+
+                    AddSeparator(body, "Tree Authoring");
+                    if (sa.comboTree == null || sa.comboTree.rootNode == null)
                     {
-                        int index = i;
-                        var trigger = sa.stepData.triggerWindows[i];
+                        body.Add(new HelpBox("Standalone actions now author their flow through comboTree. Create or migrate the root node here, then add the dive step as Default Next and the impact step through a landing trigger.", HelpBoxMessageType.Info));
 
-                        VisualElement triggerBox = new VisualElement();
-                        triggerBox.AddToClassList("route-box");
-                        triggerBox.style.backgroundColor = new Color(0.2f, 0.2f, 0.1f, 0.3f);
-                        triggerBox.style.paddingLeft = 5;
-                        triggerBox.style.paddingBottom = 5;
-                        triggerBox.style.marginBottom = 10;
-
-                        AddIntField(triggerBox, "Priority", trigger.priority, val => {
-                            RecordUndo("Change Trigger Priority");
-                            trigger.priority = val;
-                            MarkDirty();
-                        });
-
-                        AddSeparator(triggerBox, "Conditions (Checked every active frame)");
-                        BuildConditionList(triggerBox, trigger.triggerConditions, $"sa_trigger_conditions_{index}", "Trigger");
-
-                        VisualElement targetRow = new VisualElement();
-                        targetRow.AddToClassList("card-field-row");
-                        
-                        int currentIndex = trigger.targetNode == null ? 0 : allNodes.IndexOf(trigger.targetNode) + 1;
-                        DropdownField targetDropdown = new DropdownField("Target", nodeNames, currentIndex);
-                        targetDropdown.RegisterValueChangedCallback(evt => {
-                            RecordUndo("Change Trigger Target");
-                            int newIdx = targetDropdown.index;
-                            if (newIdx == 0) trigger.targetNode = null;
-                            else if (newIdx - 1 < allNodes.Count) trigger.targetNode = allNodes[newIdx - 1];
+                        var createTreeButton = new Button(() => {
+                            RecordUndo("Create Standalone Combo Tree");
+                            sa.comboTree ??= new ComboTree { treeName = sa.actionName };
+                            sa.comboTree.rootNode = new ComboNode
+                            {
+                                stepData = sa.stepData ?? new AttackStepData
+                                {
+                                    stepName = sa.isPlungeAction ? "Plunge Charge" : "Context Action Entry"
+                                },
+                                defaultNext = sa.followUpNode
+                            };
                             MarkDirtyAndRebuild();
-                        });
-                        targetRow.Add(targetDropdown);
-                        
-                        if (trigger.targetNode != null)
-                        {
-                            var goBtn = new Button(() => treeController.SelectNodeByData(trigger.targetNode)) { text = "→" };
-                            targetRow.Add(goBtn);
-                        }
-                        else
-                        {
-                            var createTargetBtn = new Button(() => {
-                                RecordUndo("Create Trigger Target");
-                                trigger.targetNode = new ComboNode { stepData = new AttackStepData { stepName = "New Trigger Step" } };
-                                MarkDirtyAndRebuild();
-                            }) { text = "+ Create Target" };
-                            targetRow.Add(createTargetBtn);
-                        }
-                        triggerBox.Add(targetRow);
-
-                        var removeBtn = new Button(() => {
-                            RecordUndo("Remove Trigger");
-                            sa.stepData.triggerWindows.RemoveAt(index);
-                            MarkDirtyAndRebuild();
-                        }) { text = "Remove Automatic Transition" };
-                        triggerBox.Add(removeBtn);
-
-                        body.Add(triggerBox);
+                        })
+                        { text = sa.stepData != null || sa.followUpNode != null ? "Migrate Legacy Step Into Combo Tree" : "Create Combo Tree Root" };
+                        body.Add(createTreeButton);
                     }
-
-                    var addAutoBtn = new Button(() => {
-                        RecordUndo("Add Automatic Transition");
-                        sa.stepData.triggerWindows.Add(new TriggerWindow { startFrame = 0, endFrame = -1 });
-                        MarkDirtyAndRebuild();
-                    }) { text = "+ Add Automatic Transition" };
-                    body.Add(addAutoBtn);
                 }
             });
         }
@@ -789,7 +772,7 @@ namespace CombatEditor.UI
                 return character.actionResolverTable.skillActions[idx];
             if (cat.StartsWith("Ultimate_") && int.TryParse(cat.Substring(9), out idx) && idx < character.actionResolverTable.ultimateActions.Count)
                 return character.actionResolverTable.ultimateActions[idx];
-            if (cat.StartsWith("Standalone_") && int.TryParse(cat.Substring(11), out idx) && idx < character.actionResolverTable.standaloneActions.Length)
+            if (cat.StartsWith("Standalone_") && int.TryParse(cat.Substring(11), out idx) && idx < character.actionResolverTable.standaloneActions.Count)
                 return character.actionResolverTable.standaloneActions[idx];
             return null;
         }
@@ -861,7 +844,7 @@ namespace CombatEditor.UI
                 {
                     var goBtn = new Button(() => {
                         treeController.SelectNodeByData(node.defaultNext);
-                    }) { text = "→" };
+                    }) { text = "->" };
                     defaultNextRow.Add(goBtn);
                 }
                 else
@@ -907,7 +890,7 @@ namespace CombatEditor.UI
                     {
                         var goBtn = new Button(() => {
                             treeController.SelectNodeByData(node.onGrabSuccessNode);
-                        }) { text = "→" };
+                        }) { text = "->" };
                         grabNextRow.Add(goBtn);
                     }
                     else
@@ -978,7 +961,7 @@ namespace CombatEditor.UI
                     {
                         var goBtn = new Button(() => {
                             treeController.SelectNodeByData(route.targetNode);
-                        }) { text = "→" };
+                        }) { text = "->" };
                         targetRow.Add(goBtn);
                     }
                     else
@@ -1054,7 +1037,7 @@ namespace CombatEditor.UI
                     
                     if (trigger.targetNode != null)
                     {
-                        var goBtn = new Button(() => treeController.SelectNodeByData(trigger.targetNode)) { text = "→" };
+                        var goBtn = new Button(() => treeController.SelectNodeByData(trigger.targetNode)) { text = "->" };
                         targetRow.Add(goBtn);
                     }
                     else
@@ -1096,58 +1079,6 @@ namespace CombatEditor.UI
             BuildFoldoutCard("Global Resolver Tools", "resolver_tools", new Color(0.2f, 0.7f, 0.4f), body =>
             {
                 body.Add(new HelpBox("Data migration tools are no longer available. Combat actions must be authored using advanced Condition lists inside the combo trees natively.", HelpBoxMessageType.Info));
-                
-                AddSeparator(body, "Fallback Behavior");
-
-                var defaultStepBox = new Box();
-                defaultStepBox.style.marginTop = 5;
-                defaultStepBox.style.marginBottom = 10;
-                defaultStepBox.style.paddingTop = 5;
-                defaultStepBox.style.paddingBottom = 5;
-                defaultStepBox.style.paddingLeft = 5;
-                defaultStepBox.style.paddingRight = 5;
-                body.Add(defaultStepBox);
-
-                if (table.defaultLinearStep == null)
-                {
-                    Button createBtn = new Button(() => {
-                        RecordUndo("Create Default Step");
-                        table.defaultLinearStep = new AttackStepData { stepName = "Global Fallback" };
-                        MarkDirtyAndRebuild();
-                    }) { text = "+ Create Default Fallback Step" };
-                    defaultStepBox.Add(createBtn);
-                }
-                else
-                {
-                    VisualElement row = new VisualElement();
-                    row.style.flexDirection = FlexDirection.Row;
-                    row.style.justifyContent = Justify.SpaceBetween;
-
-                    Label label = new Label($"Fallback: {table.defaultLinearStep.stepName}");
-                    label.style.unityFontStyleAndWeight = FontStyle.Bold;
-                    row.Add(label);
-
-                    VisualElement btnRow = new VisualElement();
-                    btnRow.style.flexDirection = FlexDirection.Row;
-
-                    Button editBtn = new Button(() => {
-                        // We can't use SelectNodeByData directly because it's not in the tree,
-                        // but we can just call the builder method.
-                        container.Clear();
-                        BuildAttackStepCards(table.defaultLinearStep);
-                    }) { text = "⚙ Edit" };
-                    btnRow.Add(editBtn);
-
-                    Button clearBtn = new Button(() => {
-                        RecordUndo("Clear Default Step");
-                        table.defaultLinearStep = null;
-                        MarkDirtyAndRebuild();
-                    }) { text = "X" };
-                    btnRow.Add(clearBtn);
-
-                    row.Add(btnRow);
-                    defaultStepBox.Add(row);
-                }
             });
         }
 
@@ -1856,6 +1787,14 @@ namespace CombatEditor.UI
                 MarkDirty();
             });
 
+            AddSeparator(body, "Grab Interaction");
+            AddToggle(body, "Breaks Grab", hitbox.breaksGrab, value =>
+            {
+                RecordUndo("Edit Breaks Grab");
+                hitbox.breaksGrab = value;
+                MarkDirty();
+            });
+
             AddSeparator(body, "Hit Feedback (Override)");
             AddObjectField(body, "Hit SFX", hitbox.hitSFX, value =>
             {
@@ -1997,7 +1936,7 @@ namespace CombatEditor.UI
             {
                 Button editBtn = new Button(() => ProjectileEditorWindow.OpenWindow(hitbox.projectileData)) 
                 { 
-                    text = "✎ Edit Projectile Hitboxes",
+                    text = "Edit Projectile Hitboxes",
                     style = { marginTop = 5, marginBottom = 5 }
                 };
                 editBtn.AddToClassList("component-add-entry-btn");

@@ -113,6 +113,8 @@ public struct HitReactionData
     public Color flashColor;
     public int flashFrames;
 
+    public bool breaksGrab;
+
     // =========================================================
     // Damage Text Impact
     // =========================================================

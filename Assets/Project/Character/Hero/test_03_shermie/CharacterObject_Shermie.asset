@@ -21,15 +21,6 @@ MonoBehaviour:
     attack: 4
     defense: 10
     elementalMultiplier: 1
-    moveSpeed: 4.5
-    jumpForce: 22
-    maxJumpCount: 1
-    maxAirDashCount: 1
-    groundAcceleration: 80
-    groundDeceleration: 90
-    airAcceleration: 55
-    airDeceleration: 40
-    airSpeedMultiplier: 1
   metaData:
     displayName: Shermie
     description: "\u0E2B\u0E19\u0E36\u0E48\u0E07\u0E43\u0E19\u0E2A\u0E35\u0E48\u0E08\u0E15\u0E38\u0E23\u0E40\u0E17\u0E1E\u0E41\u0E2B\u0E48\u0E07\u0E42\u0E2D\u0E42\u0E23\u0E08\u0E34\u0E17\u0E35\u0E48\u0E21\u0E32\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E2B\u0E19\u0E49\u0E32\u0E21\u0E49\u0E32\u0E1B\u0E34\u0E14\u0E15\u0E32
@@ -41,6 +32,9 @@ MonoBehaviour:
     attackSfx: {fileID: 0}
     skillSfx: {fileID: 0}
     hurtSfx: {fileID: 0}
+  movementProfile: {fileID: 11400000, guid: cd71e34e3ebc46d458f1965ef79c3daf, type: 2}
+  maxJumpOverride: -1
+  maxAirDashOverride: -1
   _authoredFPS: 24
   upgrade:
     level: 1

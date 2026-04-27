@@ -556,6 +556,17 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &803896290 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7051458404118508803, guid: ad344c037067bc046b7efda449c32141, type: 3}
+  m_PrefabInstance: {fileID: 1491375371}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!1001 &962912716
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -609,8 +620,12 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1263886174}
     - target: {fileID: 3236367016635035437, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
+      propertyPath: 'team.Array.data[0]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
+    - target: {fileID: 3236367016635035437, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: switchCooldownDuration
-      value: 1
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 5450070007788991123, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: targetCanvas
@@ -619,7 +634,7 @@ PrefabInstance:
     - target: {fileID: 6090851060313224835, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 9100000, guid: b4f7f50e094f0f145a2251ad62172a8d, type: 2}
+      objectReference: {fileID: 9100000, guid: 38e3871755c7d8d46bbcaadba6a293a7, type: 2}
     - target: {fileID: 7851930121724842516, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: m_Name
       value: Player
@@ -1556,6 +1571,26 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3896861459717966992, guid: ad344c037067bc046b7efda449c32141, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3896861459717966992, guid: ad344c037067bc046b7efda449c32141, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3896861459717966992, guid: ad344c037067bc046b7efda449c32141, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3896861459717966992, guid: ad344c037067bc046b7efda449c32141, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3896861459717966992, guid: ad344c037067bc046b7efda449c32141, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4009138901142221556, guid: ad344c037067bc046b7efda449c32141, type: 3}
       propertyPath: shopManager
       value: 
@@ -1668,6 +1703,14 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6267552012794931371, guid: ad344c037067bc046b7efda449c32141, type: 3}
+      propertyPath: m_Name
+      value: ToggleAutoTargeting
+      objectReference: {fileID: 0}
+    - target: {fileID: 6267552012794931371, guid: ad344c037067bc046b7efda449c32141, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6498852480580743394, guid: ad344c037067bc046b7efda449c32141, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
@@ -1691,6 +1734,56 @@ PrefabInstance:
     - target: {fileID: 6630892402177141338, guid: ad344c037067bc046b7efda449c32141, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: -162.6328
+      objectReference: {fileID: 0}
+    - target: {fileID: 6897667771738182892, guid: ad344c037067bc046b7efda449c32141, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6897667771738182892, guid: ad344c037067bc046b7efda449c32141, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 5987486934906660419}
+    - target: {fileID: 6897667771738182892, guid: ad344c037067bc046b7efda449c32141, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: ToggleAutoTarget
+      objectReference: {fileID: 0}
+    - target: {fileID: 6897667771738182892, guid: ad344c037067bc046b7efda449c32141, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: PlayerMovement, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 6897667771738182892, guid: ad344c037067bc046b7efda449c32141, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgument
+      value: 
+      objectReference: {fileID: 803896290}
+    - target: {fileID: 6897667771738182892, guid: ad344c037067bc046b7efda449c32141, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: TMPro.TMP_Text, Unity.TextMeshPro
+      objectReference: {fileID: 0}
+    - target: {fileID: 7051458404118508803, guid: ad344c037067bc046b7efda449c32141, type: 3}
+      propertyPath: m_text
+      value: 'Toggle Auto Targeting
+
+'
+      objectReference: {fileID: 0}
+    - target: {fileID: 7051458404118508803, guid: ad344c037067bc046b7efda449c32141, type: 3}
+      propertyPath: m_fontSize
+      value: 23.95
+      objectReference: {fileID: 0}
+    - target: {fileID: 7051458404118508803, guid: ad344c037067bc046b7efda449c32141, type: 3}
+      propertyPath: m_fontAsset
+      value: 
+      objectReference: {fileID: 11400000, guid: c76e8317ce034f44aa4a67c18a082049, type: 2}
+    - target: {fileID: 7051458404118508803, guid: ad344c037067bc046b7efda449c32141, type: 3}
+      propertyPath: m_fontStyle
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7051458404118508803, guid: ad344c037067bc046b7efda449c32141, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: -2788837241560181309, guid: c76e8317ce034f44aa4a67c18a082049, type: 2}
+    - target: {fileID: 7051458404118508803, guid: ad344c037067bc046b7efda449c32141, type: 3}
+      propertyPath: m_hasFontAssetChanged
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7229437517361570865, guid: ad344c037067bc046b7efda449c32141, type: 3}
       propertyPath: m_Name
@@ -3423,6 +3516,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: afc73ed630e759549b882dd868006dec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerStateMachine
+--- !u!114 &5987486934906660419 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6805025547357927974, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
+  m_PrefabInstance: {fileID: 962912716}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30743ed04525aed4da9e51a9f1319260, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
 --- !u!1001 &7384834776605378918
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3795,11 +3899,11 @@ SceneRoots:
   - {fileID: 1653632140}
   - {fileID: 619394802}
   - {fileID: 418771782}
+  - {fileID: 7384834776605378918}
   - {fileID: 1491375371}
   - {fileID: 1242803640}
   - {fileID: 2091320175}
   - {fileID: 4123050586773883339}
-  - {fileID: 7384834776605378918}
   - {fileID: 1372166142}
   - {fileID: 8547742220081044511}
   - {fileID: 1913867595}

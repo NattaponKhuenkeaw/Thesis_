@@ -25,32 +25,6 @@ MonoBehaviour:
   skillActions: []
   ultimateActions: []
   standaloneActions: []
-  defaultLinearStep:
-    startupFrames: 10
-    activeFrames: 15
-    recoveryFrames: 20
-    cancelWindowStartFrame: 35
-    loopActivePhase: 0
-    stepName: Attack
-    animationClip: {fileID: 0}
-    lockAirPosition: 1
-    autoChainToNext: 0
-    triggerWindows: []
-    motionData:
-      rid: -2
-    vfxData:
-      rid: -2
-    audioData:
-      rid: -2
-    hitData:
-      rid: -2
-    eventData:
-      rid: -2
-    componentOrder:
-    - motion
-    - vfx
-    - audio
-    - hitbox
   references:
     version: 2
     RefIds:
@@ -60,9 +34,9 @@ MonoBehaviour:
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
         stepData:
-          startupFrames: 4
+          startupFrames: 6
           activeFrames: 10
-          recoveryFrames: 14
+          recoveryFrames: 12
           cancelWindowStartFrame: 25
           loopActivePhase: 0
           stepName: Attack1
@@ -88,7 +62,7 @@ MonoBehaviour:
           - events
         routes: []
         defaultNext:
-          rid: 1588256136747024577
+          rid: 1588256162561392759
         onGrabSuccessNode:
           rid: -2
     - rid: 1588256136747024574
@@ -140,6 +114,7 @@ MonoBehaviour:
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
     - rid: 1588256136747024577
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -149,7 +124,7 @@ MonoBehaviour:
           recoveryFrames: 17
           cancelWindowStartFrame: 49
           loopActivePhase: 0
-          stepName: Attack2
+          stepName: Attack3
           animationClip: {fileID: 7400000, guid: 851df54155449ce448a03fb6be4e1dce, type: 2}
           lockAirPosition: 1
           autoChainToNext: 0
@@ -224,6 +199,7 @@ MonoBehaviour:
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
     - rid: 1588256136747024597
       type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -241,3 +217,130 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
+    - rid: 1588256162561392759
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 6
+          activeFrames: 22
+          recoveryFrames: 15
+          cancelWindowStartFrame: 42
+          loopActivePhase: 0
+          stepName: Attack2
+          animationClip: {fileID: 7400000, guid: 16980d03d7e2f824ba2af7a0b368a8f0, type: 2}
+          lockAirPosition: 1
+          autoChainToNext: 0
+          triggerWindows: []
+          motionData:
+            rid: 1588256162561392760
+          vfxData:
+            rid: -2
+          audioData:
+            rid: -2
+          hitData:
+            rid: 1588256162561392761
+          eventData:
+            rid: -2
+          componentOrder:
+          - motion
+          - vfx
+          - audio
+          - hitbox
+          - events
+        routes: []
+        defaultNext:
+          rid: 1588256136747024577
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 1588256162561392760
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - startFrame: 0
+          endFrame: 6
+          taskType: 0
+          easing: 34
+          position: {x: 2, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 12
+          endFrame: 18
+          taskType: 0
+          easing: 34
+          position: {x: 0.5, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 1588256162561392761
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 1588256162561392762
+        - rid: 1588256162561392763
+    - rid: 1588256162561392762
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 0
+        activeFrames: 2
+        damageType: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 1.5048555, y: 1.3050013}
+        size: {x: 2.9318297, y: 1.844233}
+        damageMultiplier: 0.3
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 1
+        impactFreezeFrames: 0
+        knockbackFrames: 11
+        knockupFrames: 9
+        knockfallFrames: 7
+        recoveryFrames: 6
+        horizontalSpeed: 5
+        launchSpeed: 1
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 5
+        hitSFX: {fileID: 0}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+    - rid: 1588256162561392763
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 11
+        activeFrames: 2
+        damageType: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 1.9921656, y: 1.3485112}
+        size: {x: 2.8622146, y: 2.2445211}
+        damageMultiplier: 0.3
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 1
+        impactFreezeFrames: 0
+        knockbackFrames: 11
+        knockupFrames: 9
+        knockfallFrames: 7
+        recoveryFrames: 6
+        horizontalSpeed: 5
+        launchSpeed: 1
+        useSnapToAnchor: 0
+        snapOffset: {x: 0.5, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        maxJuggleCount: 2
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 5
+        hitSFX: {fileID: 0}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0

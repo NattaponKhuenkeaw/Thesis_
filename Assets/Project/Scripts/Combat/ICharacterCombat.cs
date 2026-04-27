@@ -8,10 +8,12 @@ public interface ICharacterCombat
     // Movement Queries (used by PlayerMovement)
     // =========================================================
     bool IsAttacking();
+    bool IsActiveCombat();
     bool CanMoveAfterAttack();
     bool CanSwitchDirection();
     bool ShouldSuppressLandingFeedback();
-    bool ShouldLockAirComboInPlace();
+    bool IsInAirborneAction();
+    float GetAirborneGravityScale();
 
     // =========================================================
     // Combat Engine (used by PlayerAttackState)

@@ -8,8 +8,11 @@ using UnityEngine;
 /// </summary>
 public class PlayerAttackState : CombatPlayerState
 {
-    private bool isPlungeFalling = false;
+    private const float PlungeInputThreshold = 0.2f;
+
+    private bool isPlungeFalling;
     private StandaloneAction activePlungeAction;
+    private float plungeHorizontalVelocity;
 
     public PlayerAttackState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
@@ -32,7 +35,7 @@ public class PlayerAttackState : CombatPlayerState
 
     protected override InterruptPolicy GetInterruptPolicy()
     {
-        if (isPlungeFalling) return InterruptPolicy.Ultimate; // lock during plunge
+        if (isPlungeFalling) return InterruptPolicy.Ultimate;
         return InterruptPolicy.BasicAttack;
     }
 
@@ -44,6 +47,10 @@ public class PlayerAttackState : CombatPlayerState
     {
         base.Enter(context);
 
+        isPlungeFalling = false;
+        activePlungeAction = null;
+        plungeHorizontalVelocity = 0f;
+
         if (player.Movement != null)
             player.Movement.OnLand += HandlePlungeLanding;
     }
@@ -54,6 +61,7 @@ public class PlayerAttackState : CombatPlayerState
 
         isPlungeFalling = false;
         activePlungeAction = null;
+        plungeHorizontalVelocity = 0f;
 
         if (player.Combat != null)
             player.Combat.SetPlungeFalling(false);
@@ -64,30 +72,43 @@ public class PlayerAttackState : CombatPlayerState
 
     public override void Update()
     {
-        // Plunge fall mode: just wait for landing
-        if (isPlungeFalling) return;
+        base.Update();
 
-        base.Update(); // Handles Environmental Interruptions (Wall, Grounding, landing) via ActionResolver
+        if (fsm.CurrentState != this)
+            return;
 
-        // Safety: if Combat is no longer attacking and we have no frame data
+        if (resolver.IsPlungeChargeActive && !isPlungeFalling)
+        {
+            UpdatePlungeChargeSteering();
+        }
+
         if (player.Combat != null && !player.Combat.IsAttacking() && currentPhase == ActionPhase.None && !isPlungeFalling)
         {
-            if (fsm.CurrentState == this)
-                ExitToAppropriateMovementState();
+            ExitToAppropriateMovementState();
         }
-    }
-
-    protected override bool ShouldAdvanceLogicFrames()
-    {
-        if (isPlungeFalling) return false;
-        return base.ShouldAdvanceLogicFrames();
     }
 
     protected override void OnActionComplete()
     {
+        if (resolver.IsPlungeChargeActive)
+        {
+            AttackStepData diveStep = resolver.ResolvePlungeDive();
+            if (diveStep != null)
+            {
+                InputContext ctx = BuildInputContext();
+                ExecuteCombatStep(diveStep, ctx, true);
+                EnterPlungeFall(diveStep);
+            }
+            else
+            {
+                // Fallback if no dive step is authored
+                EnterPlungeFall(null);
+            }
+            return;
+        }
+
         if (player.Combat != null && player.Combat.IsAttacking())
         {
-            // Check if air combo should preserve progress
             if (resolver.IsActive && !resolver.IsLastStep() && !isPlungeFalling
                 && player.Movement != null && !player.Movement.IsGrounded())
             {
@@ -102,6 +123,8 @@ public class PlayerAttackState : CombatPlayerState
         }
 
         resolver.Reset();
+        activePlungeAction = null;
+        plungeHorizontalVelocity = 0f;
 
         if (fsm.CurrentState == this)
             ExitToAppropriateMovementState();
@@ -128,8 +151,6 @@ public class PlayerAttackState : CombatPlayerState
         if (TryConsumeAllowedBuffers()) return;
     }
 
-
-
     public override bool HandleAttackInput()
     {
         OnAttackInput();
@@ -152,12 +173,13 @@ public class PlayerAttackState : CombatPlayerState
 
                 if (step == null && resolver.IsPlungeFalling)
                 {
-                    EnterPlungeFall();
+                    EnterPlungeFall(null);
                     return;
                 }
 
                 if (step != null)
                 {
+                    activePlungeAction = resolver.ActivePlungeAction;
                     player.Combat.SetAirCombo(resolver.IsAirCombo);
                     ExecuteCombatStep(step, ctx, false);
                 }
@@ -209,10 +231,64 @@ public class PlayerAttackState : CombatPlayerState
     }
 
     // =========================================================
-    // Plunge Fall Mode
+    // Plunge Runtime
     // =========================================================
 
-    private void EnterPlungeFall()
+    private void UpdatePlungeChargeSteering()
+    {
+        activePlungeAction = resolver.ActivePlungeAction;
+        if (activePlungeAction == null)
+        {
+            plungeHorizontalVelocity = 0f;
+            return;
+        }
+
+        Vector2 input = Buffer != null ? Buffer.DirectionalInput : Vector2.zero;
+        float targetHorizontalVelocity = 0f;
+        bool hasHorizontalIntent = Mathf.Abs(input.x) >= PlungeInputThreshold;
+        bool hasDownCommit = input.y <= -0.5f;
+
+        if (hasHorizontalIntent)
+        {
+            targetHorizontalVelocity = Mathf.Sign(input.x) * Mathf.Max(0f, activePlungeAction.plungeChargeMaxHorizontalRedirect);
+
+            if (activePlungeAction.updateFacingDuringPlungeCharge)
+            {
+                player.Movement?.ForceFaceDirectionFromInput(new Vector2(input.x, 0f));
+            }
+        }
+
+        float steeringStrength = Mathf.Max(0f, activePlungeAction.plungeChargeSteeringStrength);
+        
+        // Increase responsiveness: Use a higher multiplier if the player is actively trying to steer
+        float finalSteeringStrength = hasHorizontalIntent ? steeringStrength * 2f : steeringStrength;
+
+        plungeHorizontalVelocity = Mathf.MoveTowards(
+            plungeHorizontalVelocity,
+            targetHorizontalVelocity,
+            finalSteeringStrength * Time.deltaTime);
+
+        if (hasDownCommit)
+        {
+            // If pressing down, focus the steering back to center for a straight drop
+            plungeHorizontalVelocity = Mathf.MoveTowards(
+                plungeHorizontalVelocity,
+                0f,
+                steeringStrength * 3f * Time.deltaTime);
+        }
+
+        // Apply a small amount of horizontal drift to the character during the charge phase for better 'feel'
+        if (player.Movement != null && !player.Movement.IsGrounded())
+        {
+            // We only apply a fraction of the steering to the actual Rigidbody during the charge 
+            // so it doesn't feel like they are flying away, but still feels responsive to input.
+            float driftAmount = plungeHorizontalVelocity * 0.3f; 
+            Vector2 currentVel = player.Movement.RB.linearVelocity;
+            player.Movement.RB.linearVelocity = new Vector2(driftAmount, currentVel.y);
+        }
+    }
+
+    private void EnterPlungeFall(AttackStepData diveStep)
     {
         activePlungeAction = resolver.ActivePlungeAction;
         if (activePlungeAction == null) return;
@@ -223,11 +299,13 @@ public class PlayerAttackState : CombatPlayerState
         if (player.Movement != null)
         {
             player.Movement.CancelAttackMotion();
-            player.Movement.StartPlungeMotion(activePlungeAction.plungeDownwardSpeed);
+            player.Movement.StartPlungeMotion(activePlungeAction.plungeDownwardSpeed, plungeHorizontalVelocity);
         }
 
-        if (player.Animator != null)
+        if ((diveStep == null || diveStep.animationClip == null) && player.Animator != null)
             player.Animator.TriggerPlungeFall(activePlungeAction.plungeFallAnimState);
+
+        plungeHorizontalVelocity = 0f;
     }
 
     private void HandlePlungeLanding()
@@ -237,15 +315,20 @@ public class PlayerAttackState : CombatPlayerState
         isPlungeFalling = false;
         player.Combat?.SetPlungeFalling(false);
 
-        AttackStepData impactStep = resolver.ResolvePlungeLanding();
+        StateContext ctx = BuildInputContext();
+        int activeFrame = GetCurrentPlungeActiveFrame();
+        ctx.activeFrame = activeFrame;
+
+        AttackStepData impactStep = resolver.ResolvePlungeLanding(ctx, activeFrame);
         if (impactStep != null && player.Combat != null)
         {
-            InputContext ctx = BuildInputContext();
             ExecuteCombatStep(impactStep, ctx, true);
 
-            if (player.Animator != null)
+            if (impactStep.animationClip == null && player.Animator != null)
             {
-                string stateName = impactStep.animationClip != null ? impactStep.animationClip.name : "Attack_1";
+                string stateName = !string.IsNullOrWhiteSpace(impactStep.stepName)
+                    ? impactStep.stepName
+                    : "Attack_1";
                 player.Animator.TriggerPlungeImpact(stateName);
             }
         }
@@ -257,5 +340,16 @@ public class PlayerAttackState : CombatPlayerState
         }
 
         activePlungeAction = null;
+        plungeHorizontalVelocity = 0f;
+    }
+
+    private int GetCurrentPlungeActiveFrame()
+    {
+        AttackStepData currentStep = resolver.GetCurrentStepData();
+        if (currentStep == null)
+            return 0;
+
+        int activeFrame = currentFrame - currentStep.startupFrames + 1;
+        return Mathf.Max(activeFrame, 0);
     }
 }

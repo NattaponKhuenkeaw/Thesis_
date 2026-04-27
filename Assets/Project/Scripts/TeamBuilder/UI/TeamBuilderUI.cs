@@ -46,6 +46,12 @@ namespace Project.TeamBuilder.UI
             if (isInitialized) return;
             isInitialized = true;
 
+            // Fallback for rootCanvas if not assigned in inspector
+            if (rootCanvas == null)
+            {
+                rootCanvas = GetComponentInParent<Canvas>()?.rootCanvas;
+            }
+
             // Initialize the grid panel
             if (gridPanel != null)
                 gridPanel.Init(this, rootCanvas);

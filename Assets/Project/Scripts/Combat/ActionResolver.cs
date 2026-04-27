@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // =========================================================
-// ActionResolver — Stateful runtime combo tree walker.
+// ActionResolver - Stateful runtime combo tree walker.
 // Created per-combo session by PlayerAttackState.
 // Tracks current position in the tree and resolves
 // the next AttackStepData based on InputContext.
@@ -10,6 +10,13 @@ using UnityEngine;
 
 public class ActionResolver
 {
+    public enum PlungeSessionPhase
+    {
+        None,
+        Charge,
+        Dive
+    }
+
     // =========================================================
     // State
     // =========================================================
@@ -23,7 +30,7 @@ public class ActionResolver
 
     public void SetLogger(PlayerStateMachine stateMachine)
     {
-        this.fsm = stateMachine;
+        fsm = stateMachine;
     }
 
     private void Log(string message, Color color)
@@ -34,14 +41,16 @@ public class ActionResolver
         }
     }
 
-    private void Log(string message) => Log(message, new Color(0.7f, 0.7f, 1f)); // Default light blue
+    private void Log(string message) => Log(message, new Color(0.7f, 0.7f, 1f));
 
     // =========================================================
     // Public Read-Only
     // =========================================================
     public int TreeDepth => treeDepth;
     public bool IsActive => currentNode != null || activeStandalone != null;
-    public bool IsPlungeFalling { get; private set; }
+    public PlungeSessionPhase CurrentPlungePhase { get; private set; }
+    public bool IsPlungeChargeActive => CurrentPlungePhase == PlungeSessionPhase.Charge;
+    public bool IsPlungeFalling => CurrentPlungePhase == PlungeSessionPhase.Dive;
     public CombatAction ActiveCombatAction { get; private set; }
 
     /// <summary>
@@ -50,7 +59,7 @@ public class ActionResolver
     public StandaloneAction ActivePlungeAction => activeStandalone != null && activeStandalone.isPlungeAction ? activeStandalone : null;
 
     // =========================================================
-    // Resolve — First Attack Input (no active combo)
+    // Resolve - First Attack Input (no active combo)
     // =========================================================
 
     /// <summary>
@@ -70,16 +79,34 @@ public class ActionResolver
         {
             Log($"Standalone Match! Priority: {standalone.priority}, Plunge: {standalone.isPlungeAction}", Color.yellow);
             activeStandalone = standalone;
+            ActiveCombatAction = standalone;
+            activeTree = standalone.comboTree;
 
             if (standalone.isPlungeAction)
             {
-                // Plunge: don't execute the step yet — enter plunge fall mode
-                IsPlungeFalling = true;
+                if (standalone.HasAuthoredPlungeTree())
+                {
+                    currentNode = standalone.GetEntryNode();
+                    CurrentPlungePhase = PlungeSessionPhase.Charge;
+                    treeDepth = 1;
+                    return currentNode != null ? currentNode.stepData : null;
+                }
+
+                // Legacy fallback: preserve the old immediate-dive plunge behavior
+                // when the authored data has not been migrated yet.
+                CurrentPlungePhase = PlungeSessionPhase.Dive;
                 treeDepth = 1;
-                return null; // Signal to PlayerAttackState to enter plunge fall mode
+                return null;
             }
 
-            currentNode = standalone.followUpNode; // may be null (one-shot)
+            if (standalone.GetEntryNode() != null)
+            {
+                currentNode = standalone.GetEntryNode();
+                treeDepth = 1;
+                return currentNode.stepData;
+            }
+
+            currentNode = standalone.followUpNode;
             treeDepth = 1;
             return standalone.stepData;
         }
@@ -87,8 +114,8 @@ public class ActionResolver
         // 2. Select the highest priority matching CombatAction
         CombatAction bestAction = null;
         CombatActionContext expectedContext = ctx.isGrounded ? CombatActionContext.Ground : CombatActionContext.Air;
-        
-        System.Collections.Generic.IEnumerable<CombatAction> searchList = category switch
+
+        IEnumerable<CombatAction> searchList = category switch
         {
             AttackCategory.Normal => table.comboActions,
             AttackCategory.Skill => table.skillActions,
@@ -118,15 +145,7 @@ public class ActionResolver
         else
         {
             Log($"Resolution Failed: No matching {category} action for context {expectedContext}.", Color.red);
-            if (table.defaultLinearStep != null)
-            {
-                Log($"Using Default Linear Step fallback.", Color.yellow);
-                activeTree = new ComboTree { rootNode = new ComboNode { stepData = table.defaultLinearStep } };
-            }
-            else
-            {
-                return null;
-            }
+            return null;
         }
 
         if (activeTree?.rootNode == null)
@@ -135,14 +154,12 @@ public class ActionResolver
             return null;
         }
 
-        // 3. Check if the ROOT node itself has a matching route for the initial input
+        // 3. Check if the root node itself has a matching route for the initial input
         currentNode = activeTree.rootNode;
-        // Don't follow defaultNext on first resolve (allowDefault = false)
         ComboNode resolved = ComboRouter.ResolveRoute(currentNode, ctx, false);
-        
+
         if (resolved != null && resolved != currentNode)
         {
-            // A root-level route matched (e.g., Down+LMB on first input)
             Log($"Root Route matched! -> '{resolved.stepData?.stepName}'");
             currentNode = resolved;
         }
@@ -152,7 +169,7 @@ public class ActionResolver
     }
 
     // =========================================================
-    // Resolve — Subsequent Attack Input (mid-combo)
+    // Resolve - Subsequent Attack Input (mid-combo)
     // =========================================================
 
     /// <summary>
@@ -166,7 +183,6 @@ public class ActionResolver
 
         string prevNodeName = currentNode.stepData?.stepName ?? "Unknown";
 
-        // Check conditional routes on current node (top-to-bottom, priority-sorted)
         ComboNode nextNode = ComboRouter.ResolveRoute(currentNode, ctx, allowDefault: false);
 
         if (nextNode != null)
@@ -176,7 +192,6 @@ public class ActionResolver
         }
         else
         {
-            // No route matched -> follow default chain
             ComboNode defaultNext = currentNode.defaultNext;
             if (defaultNext != null)
             {
@@ -185,9 +200,6 @@ public class ActionResolver
             }
             else
             {
-                // IMPORTANT: If no automatic follow-up exists, DO NOT wipe currentNode.
-                // Wiping currentNode prevents ResolveTriggers (active phase interruptions)
-                // from working for the remainder of the animation.
                 if (fsm != null && fsm.showCombatLogs)
                     Log($"Combo End: [{prevNodeName}] has no automatic follow-up.", Color.gray);
                 return null;
@@ -201,14 +213,13 @@ public class ActionResolver
     }
 
     // =========================================================
-    // Grab Success — Dedicated route for successful grabs
+    // Grab Success - Dedicated route for successful grabs
     // =========================================================
 
     public AttackStepData ResolveGrabSuccess(InputContext ctx)
     {
         if (currentNode == null) return null;
 
-        // 1. Dedicated grab success node (highest priority)
         if (currentNode.onGrabSuccessNode != null)
         {
             string prevNodeName = currentNode.stepData?.stepName ?? "Unknown";
@@ -218,7 +229,6 @@ public class ActionResolver
             return currentNode.stepData;
         }
 
-        // 2. Check routes that specifically require a grabbed enemy (never fall to defaultNext)
         if (currentNode.routes != null)
         {
             ComboRoute autoSuccessRoute = null;
@@ -230,33 +240,29 @@ public class ActionResolver
                 ComboRoute route = currentNode.routes[i];
                 if (route?.targetNode == null || !route.requireGrabbedEnemy) continue;
 
-                // Priority A: Explicit Auto-Execute (NONE)
                 if (route.direction == DirectionRequirement.None)
                 {
                     if (autoSuccessRoute == null || route.priority > autoSuccessRoute.priority)
                         autoSuccessRoute = route;
                 }
 
-                // Priority B: Matching Direction (Choice)
                 if (ComboRouter.RouteMatches(route, ctx))
                 {
                     if (directionalMatchRoute == null || route.priority > directionalMatchRoute.priority)
                         directionalMatchRoute = route;
                 }
 
-                // Priority C: Any Grab Route (Fallback)
                 if (fallbackGrabRoute == null || route.priority > fallbackGrabRoute.priority)
                     fallbackGrabRoute = route;
             }
 
-            // Execute in priority order: None > Directional > Fallback
             ComboRoute bestMatch = autoSuccessRoute ?? directionalMatchRoute ?? fallbackGrabRoute;
 
             if (bestMatch != null)
             {
                 string prevNodeName = currentNode.stepData?.stepName ?? "Unknown";
-                string matchType = bestMatch == autoSuccessRoute ? "AUTO-NONE" : 
-                                 bestMatch == directionalMatchRoute ? "DIRECTIONAL" : "FALLBACK";
+                string matchType = bestMatch == autoSuccessRoute ? "AUTO-NONE" :
+                    bestMatch == directionalMatchRoute ? "DIRECTIONAL" : "FALLBACK";
 
                 Log($"Grab Route Match ({matchType})! [{prevNodeName}] -> '{bestMatch.targetNode.stepData?.stepName}'", Color.green);
                 currentNode = bestMatch.targetNode;
@@ -269,7 +275,7 @@ public class ActionResolver
     }
 
     // =========================================================
-    // Immediate Routes — Environment-driven interruptions (e.g. Wall Hit)
+    // Immediate Routes - Environment-driven interruptions
     // =========================================================
 
     public AttackStepData ResolveTriggers(StateContext ctx, int activeFrame)
@@ -300,19 +306,17 @@ public class ActionResolver
 
         if (bestMatch != null)
         {
-            // Trigger callbacks for matching conditions
             foreach (var condition in bestMatch.triggerConditions)
             {
-                if (condition != null) condition.OnTriggered(ctx);
+                condition?.OnTriggered(ctx);
             }
 
-            // Reject if we are trying to transition to ourselves
             if (bestMatch.targetNode.stepData == GetCurrentStepData())
             {
                 return null;
             }
 
-            Log($"Trigger Window Matched! [{currentStep.stepName}] → '{(bestMatch.targetNode.stepData != null ? bestMatch.targetNode.stepData.stepName : "???")}'", Color.green);
+            Log($"Trigger Window Matched! [{currentStep.stepName}] -> '{(bestMatch.targetNode.stepData != null ? bestMatch.targetNode.stepData.stepName : "???")}'", Color.green);
             currentNode = bestMatch.targetNode;
             treeDepth++;
             return currentNode.stepData;
@@ -323,8 +327,6 @@ public class ActionResolver
 
     public AttackStepData ResolveImmediateRoute(StateContext ctx)
     {
-        // Standard conditional routes no longer immediately interrupt.
-        // User must use triggerWindows for interruptions.
         return null;
     }
 
@@ -340,23 +342,89 @@ public class ActionResolver
         return currentNode.stepData;
     }
 
-
-
     // =========================================================
-    // Plunge Landing — Execute the plunge impact step
+    // Plunge Runtime
     // =========================================================
+
+    public AttackStepData ResolvePlungeDive()
+    {
+        if (activeStandalone == null || !activeStandalone.isPlungeAction)
+        {
+            return null;
+        }
+
+        ComboNode diveNode = null;
+
+        if (CurrentPlungePhase == PlungeSessionPhase.Charge)
+        {
+            diveNode = currentNode != null ? currentNode.defaultNext : activeStandalone.GetDiveNode();
+        }
+        else if (CurrentPlungePhase == PlungeSessionPhase.None)
+        {
+            diveNode = activeStandalone.GetDiveNode();
+        }
+
+        if (diveNode == null || diveNode.stepData == null)
+        {
+            return null;
+        }
+
+        currentNode = diveNode;
+        CurrentPlungePhase = PlungeSessionPhase.Dive;
+        treeDepth++;
+        return currentNode.stepData;
+    }
 
     /// <summary>
-    /// Called when the player lands during plunge fall mode.
+    /// Called when the player lands during plunge dive mode.
     /// Returns the plunge impact step data.
     /// </summary>
-    public AttackStepData ResolvePlungeLanding()
+    public AttackStepData ResolvePlungeLanding(StateContext ctx, int activeFrame)
     {
-        IsPlungeFalling = false;
+        CurrentPlungePhase = PlungeSessionPhase.None;
 
         if (activeStandalone == null) return null;
 
-        currentNode = activeStandalone.followUpNode; // follow-up after impact (may be null)
+        AttackStepData currentStep = GetCurrentStepData();
+        if (currentStep != null && currentStep.triggerWindows != null)
+        {
+            TriggerWindow bestMatch = null;
+            for (int i = 0; i < currentStep.triggerWindows.Count; i++)
+            {
+                var trigger = currentStep.triggerWindows[i];
+                if (trigger == null || trigger.targetNode == null) continue;
+
+                bool inWindow = trigger.IsInWindow(activeFrame);
+                bool conditionsMet = ActionConditionUtility.AllMet(trigger.triggerConditions, ctx);
+                if (!inWindow || !conditionsMet) continue;
+
+                if (bestMatch == null || trigger.priority > bestMatch.priority)
+                {
+                    bestMatch = trigger;
+                }
+            }
+
+            if (bestMatch != null)
+            {
+                foreach (var condition in bestMatch.triggerConditions)
+                {
+                    condition?.OnTriggered(ctx);
+                }
+
+                currentNode = bestMatch.targetNode;
+                treeDepth++;
+                return currentNode.stepData;
+            }
+        }
+
+        ComboNode fallbackImpactNode = currentNode != null ? currentNode.defaultNext : activeStandalone.followUpNode;
+        if (fallbackImpactNode != null && fallbackImpactNode.stepData != null)
+        {
+            currentNode = fallbackImpactNode;
+            treeDepth++;
+            return currentNode.stepData;
+        }
+
         return activeStandalone.stepData;
     }
 
@@ -364,16 +432,11 @@ public class ActionResolver
     // Queries
     // =========================================================
 
-    /// <summary>
-    /// Whether there are more steps available after the current one.
-    /// Used for ShouldPreserveAirComboOnComplete checks.
-    /// </summary>
     public bool HasNextStep(InputContext ctx)
     {
         if (currentNode == null) return false;
         if (currentNode.defaultNext != null) return true;
 
-        // Check if any route could potentially match
         if (currentNode.routes != null)
         {
             for (int i = 0; i < currentNode.routes.Count; i++)
@@ -385,9 +448,6 @@ public class ActionResolver
         return false;
     }
 
-    /// <summary>
-    /// Whether the current node is the last in its chain (no defaultNext, no routes).
-    /// </summary>
     public bool IsLastStep()
     {
         if (currentNode == null) return true;
@@ -404,23 +464,14 @@ public class ActionResolver
         return true;
     }
 
-    /// <summary>
-    /// Whether the current attack is an air combo.
-    /// </summary>
-    public bool IsAirCombo => (ActiveCombatAction != null && ActiveCombatAction.context == CombatActionContext.Air) 
-                           || (activeStandalone != null && activeStandalone.requireAirborne);
+    public bool IsAirCombo => (ActiveCombatAction != null && ActiveCombatAction.context == CombatActionContext.Air)
+        || (activeStandalone != null && activeStandalone.requireAirborne);
 
-    /// <summary>
-    /// Get the combo reset delay from the active tree.
-    /// </summary>
     public float GetComboResetDelay()
     {
         return activeTree?.comboResetDelay ?? 0.8f;
     }
 
-    /// <summary>
-    /// Get the current step data (for frame data queries).
-    /// </summary>
     public AttackStepData GetCurrentStepData()
     {
         return currentNode?.stepData;
@@ -437,14 +488,12 @@ public class ActionResolver
         activeStandalone = null;
         ActiveCombatAction = null;
         treeDepth = 0;
-        IsPlungeFalling = false;
+        CurrentPlungePhase = PlungeSessionPhase.None;
     }
 
     // =========================================================
-    // Internal — Route Matching
+    // Internal - Route Matching
     // =========================================================
-
-
 
     private StandaloneAction FindMatchingStandalone(StateContext ctx, ActionResolverTable table)
     {
@@ -452,11 +501,10 @@ public class ActionResolver
 
         StandaloneAction bestMatch = null;
 
-        for (int i = 0; i < table.standaloneActions.Length; i++)
+        for (int i = 0; i < table.standaloneActions.Count; i++)
         {
             StandaloneAction sa = table.standaloneActions[i];
-            
-            // Allow checking if there's comboTree or stepData
+
             if (sa?.comboTree == null && sa?.stepData == null && !sa.isPlungeAction) continue;
 
             if (ActionMatches(sa, ctx))

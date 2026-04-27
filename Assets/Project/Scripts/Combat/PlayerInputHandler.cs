@@ -41,7 +41,6 @@ public class InputHandler_Player : MonoBehaviour
         {
             moveInput = Vector2.zero;
             stateMachine?.RouteMoveInput(Vector2.zero);
-            stateMachine?.RouteJumpHeld(false);
             return;
         }
 
@@ -53,13 +52,6 @@ public class InputHandler_Player : MonoBehaviour
         if (stateMachine != null)
         {
             stateMachine.RouteMoveInput(moveInput);
-
-            if (playerInput != null && playerInput.actions != null)
-            {
-                InputAction jumpAction = playerInput.actions["Jump"];
-                if (jumpAction != null)
-                    stateMachine.RouteJumpHeld(jumpAction.IsPressed());
-            }
         }
 
         HandleTeamSwitchInput();
