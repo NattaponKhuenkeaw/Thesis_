@@ -19,11 +19,15 @@ public class TeamLoader : MonoBehaviour
     [Header("Dependencies")]
     public PlayerCharacter playerCharacter;
 
+    [Header("Switch Cooldown")]
+    [Min(0f)] public float switchCooldownDuration = 1.5f;
+
     // =========================================================
     // Runtime State
     // =========================================================
     [Header("Runtime State")]
     [SerializeField] private int currentIndex = 0;
+    [SerializeField] private float lastSwitchTime = -999f;
     private readonly Dictionary<CharacterObject, float> characterCurrentHP = new Dictionary<CharacterObject, float>();
 
     // =========================================================
@@ -34,6 +38,10 @@ public class TeamLoader : MonoBehaviour
         (team != null && team.Length > 0 && currentIndex >= 0 && currentIndex < team.Length)
         ? team[currentIndex]
         : null;
+    public bool IsSwitchOnCooldown => switchCooldownDuration > 0f && Time.time < lastSwitchTime + switchCooldownDuration;
+    public float RemainingCooldown => !IsSwitchOnCooldown
+        ? 0f
+        : Mathf.Max(0f, (lastSwitchTime + switchCooldownDuration) - Time.time);
 
     // =========================================================
     // Unity Methods
@@ -109,39 +117,45 @@ public class TeamLoader : MonoBehaviour
         Debug.Log("Switched to: " + targetCharacter.metaData.displayName);
     }
 
-    public void SwitchNext()
+    public bool SwitchNext()
     {
         int nextIndex = FindNextOccupiedIndex(currentIndex, 1);
         if (nextIndex < 0)
-            return;
+            return false;
 
-        currentIndex = nextIndex;
-        LoadCurrentCharacter();
+        return SwitchToIndex(nextIndex);
     }
 
-    public void SwitchPrevious()
+    public bool SwitchPrevious()
     {
         int previousIndex = FindNextOccupiedIndex(currentIndex, -1);
         if (previousIndex < 0)
-            return;
+            return false;
 
-        currentIndex = previousIndex;
-        LoadCurrentCharacter();
+        return SwitchToIndex(previousIndex);
     }
 
-    public void SwitchToIndex(int index)
+    public bool SwitchToIndex(int index)
     {
         if (team == null || team.Length == 0)
-            return;
+            return false;
 
         if (index < 0 || index >= team.Length)
-            return;
+            return false;
 
         if (team[index] == null)
-            return;
+            return false;
+
+        if (currentIndex == index)
+            return false;
+
+        if (IsSwitchOnCooldown)
+            return false;
 
         currentIndex = index;
+        lastSwitchTime = Time.time;
         LoadCurrentCharacter();
+        return true;
     }
 
     /// <summary>

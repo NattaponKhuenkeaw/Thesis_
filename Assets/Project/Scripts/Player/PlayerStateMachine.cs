@@ -18,6 +18,7 @@ public class PlayerStateMachine : MonoBehaviour
     // =========================================================
     [Header("Dependencies")]
     public PlayerCharacter playerCharacter;
+    public TeamLoader teamLoader;
 
     // =========================================================
     // State Instances (created once, reused)
@@ -70,6 +71,9 @@ public class PlayerStateMachine : MonoBehaviour
     {
         if (playerCharacter == null)
             playerCharacter = GetComponent<PlayerCharacter>();
+
+        if (teamLoader == null)
+            teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
     }
 
     void Start()
@@ -174,6 +178,24 @@ public class PlayerStateMachine : MonoBehaviour
     }
 
     public bool IsInState(PlayerStateId stateId) => CurrentStateId == stateId;
+
+    public bool TryConsumeBufferedSwitch()
+    {
+        if (InputBuffer == null || teamLoader == null)
+            return false;
+
+        if (!CanSwitchCharacter())
+            return false;
+
+        if (!InputBuffer.ConsumeSwitch(out int targetIndex))
+            return false;
+
+        if (!teamLoader.SwitchToIndex(targetIndex))
+            return false;
+
+        InputBuffer.ClearAll();
+        return true;
+    }
 
     public void ResetForCharacterSwitch()
     {
@@ -487,6 +509,9 @@ public class PlayerStateMachine : MonoBehaviour
 
     public bool CanSwitchCharacter()
     {
+        if (teamLoader != null && teamLoader.IsSwitchOnCooldown)
+            return false;
+
         if (CurrentState == null) return false;
 
         // 1. ถ้าตัวละครกำลังออกท่า (Dash, Attack, Skill, Ultimate)

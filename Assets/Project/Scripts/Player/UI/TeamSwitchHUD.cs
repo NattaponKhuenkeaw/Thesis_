@@ -46,6 +46,8 @@ public class TeamSwitchHUD : MonoBehaviour
         {
             UpdateActiveIndicator(teamLoader.CurrentIndex);
         }
+
+        RefreshAllSlotCooldown();
     }
 
     private void CacheDependencies()
@@ -174,8 +176,8 @@ public class TeamSwitchHUD : MonoBehaviour
             return;
         }
 
-        teamLoader.SwitchToIndex(index);
-        UpdateActiveIndicator(index);
+        if (teamLoader.SwitchToIndex(index))
+            UpdateActiveIndicator(index);
     }
 
     public bool TryGetCharacterHealth(CharacterObject character, out float currentHp, out float maxHp)
@@ -244,6 +246,20 @@ public class TeamSwitchHUD : MonoBehaviour
                 continue;
 
             activeSlots[i].RefreshFromHUD();
+        }
+    }
+
+    private void RefreshAllSlotCooldown()
+    {
+        float duration = teamLoader.switchCooldownDuration;
+        float remaining = teamLoader.RemainingCooldown;
+
+        for (int i = 0; i < activeSlots.Count; i++)
+        {
+            if (activeSlots[i] == null)
+                continue;
+
+            activeSlots[i].RefreshCooldown(remaining, duration);
         }
     }
 }

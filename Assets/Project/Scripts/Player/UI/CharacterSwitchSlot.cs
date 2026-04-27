@@ -13,6 +13,13 @@ public class CharacterSwitchSlot : MonoBehaviour
     public Slider hpSlider;
     public Image hpFill;               
 
+    [Header("Switch Cooldown UI")]
+    public Image cooldownFill;
+    public TMP_Text cooldownText;
+
+    private int lastCooldownSecond = -1;
+    private bool isCooldownVisible;
+
     private int slotIndex;
     private TeamSwitchHUD hudManager;
     private CharacterObject boundCharacter;
@@ -41,6 +48,7 @@ public class CharacterSwitchSlot : MonoBehaviour
         if (hpSlider == null)
             hpSlider = GetComponentInChildren<Slider>(true);
 
+        RefreshCooldown(0f, 0f);
         RefreshFromHUD();
     }
 
@@ -87,5 +95,55 @@ public class CharacterSwitchSlot : MonoBehaviour
 
         if (hpFill != null)
             hpFill.fillAmount = normalized;
+    }
+
+    public void RefreshCooldown(float remainingCooldown, float totalCooldown)
+    {
+        if (totalCooldown <= 0f || remainingCooldown <= 0f)
+        {
+            SetCooldownVisible(false);
+            return;
+        }
+
+        float normalized = Mathf.Clamp01(remainingCooldown / totalCooldown);
+
+        if (cooldownFill != null)
+        {
+            if (!isCooldownVisible)
+                cooldownFill.gameObject.SetActive(true);
+            cooldownFill.fillAmount = normalized;
+        }
+
+        if (cooldownText != null)
+        {
+            if (!isCooldownVisible)
+                cooldownText.gameObject.SetActive(true);
+
+            int currentSecond = Mathf.CeilToInt(remainingCooldown);
+            if (currentSecond != lastCooldownSecond)
+            {
+                cooldownText.text = currentSecond.ToString();
+                lastCooldownSecond = currentSecond;
+            }
+        }
+
+        isCooldownVisible = true;
+    }
+
+    private void SetCooldownVisible(bool visible)
+    {
+        if (isCooldownVisible == visible)
+            return;
+
+        if (cooldownFill != null)
+            cooldownFill.gameObject.SetActive(visible);
+
+        if (cooldownText != null)
+            cooldownText.gameObject.SetActive(visible);
+
+        isCooldownVisible = visible;
+
+        if (!visible)
+            lastCooldownSecond = -1;
     }
 }

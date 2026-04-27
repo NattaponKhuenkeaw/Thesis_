@@ -16,15 +16,18 @@ public class ActionInputBuffer
     private float jumpBufferedUntil   = -999f;
     private float skillBufferedUntil  = -999f;
     private float ultimateBufferedUntil = -999f;
+    private float switchBufferedUntil = -999f;
 
     // Directional input snapshot at time of buffer
     private float dashInputX;
+    private int switchTargetIndex = -1;
     private Vector2 directionalSnapshot;
 
     // =========================================================
     // Configuration
     // =========================================================
     private const float DEFAULT_BUFFER_DURATION = 0.15f;
+    private const float SWITCH_BUFFER_DURATION = 0.35f;
 
     // =========================================================
     // Read-only Queries
@@ -34,6 +37,7 @@ public class ActionInputBuffer
     public bool HasJumpBuffer   => Time.time <= jumpBufferedUntil;
     public bool HasSkillBuffer  => Time.time <= skillBufferedUntil;
     public bool HasUltimateBuffer => Time.time <= ultimateBufferedUntil;
+    public bool HasSwitchBuffer => Time.time <= switchBufferedUntil;
 
     /// <summary>Directional input at time the buffer was written.</summary>
     public Vector2 DirectionalInput => directionalSnapshot;
@@ -71,6 +75,12 @@ public class ActionInputBuffer
     public void BufferUltimate(float duration = DEFAULT_BUFFER_DURATION)
     {
         ultimateBufferedUntil = Time.time + duration;
+    }
+
+    public void BufferSwitch(int targetIndex, float duration = SWITCH_BUFFER_DURATION)
+    {
+        switchBufferedUntil = Time.time + duration;
+        switchTargetIndex = targetIndex;
     }
 
     /// <summary>
@@ -125,6 +135,20 @@ public class ActionInputBuffer
         return true;
     }
 
+    public bool ConsumeSwitch(out int targetIndex)
+    {
+        targetIndex = switchTargetIndex;
+        if (!HasSwitchBuffer)
+        {
+            targetIndex = -1;
+            return false;
+        }
+
+        switchBufferedUntil = -999f;
+        switchTargetIndex = -1;
+        return true;
+    }
+
     // =========================================================
     // Utility
     // =========================================================
@@ -135,9 +159,11 @@ public class ActionInputBuffer
         jumpBufferedUntil   = -999f;
         skillBufferedUntil  = -999f;
         ultimateBufferedUntil = -999f;
+        switchBufferedUntil = -999f;
         dashInputX = 0f;
+        switchTargetIndex = -1;
     }
 
     /// <summary>Returns true if ANY buffer is active.</summary>
-    public bool HasAnyBuffer => HasAttackBuffer || HasDashBuffer || HasJumpBuffer || HasSkillBuffer || HasUltimateBuffer;
+    public bool HasAnyBuffer => HasAttackBuffer || HasDashBuffer || HasJumpBuffer || HasSkillBuffer || HasUltimateBuffer || HasSwitchBuffer;
 }

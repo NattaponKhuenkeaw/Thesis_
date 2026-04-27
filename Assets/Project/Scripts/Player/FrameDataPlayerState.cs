@@ -342,6 +342,11 @@ public abstract class FrameDataPlayerState : PlayerState
         ActionInputBuffer buffer = fsm.InputBuffer;
         if (buffer == null) return false;
 
+        if ((allowed & ActionCategory.Switch) != 0 && fsm.TryConsumeBufferedSwitch())
+        {
+            return fsm.CurrentState != this || currentFrame == -1;
+        }
+
         if ((allowed & ActionCategory.Ultimate) != 0 && buffer.ConsumeUltimate())
         {
             fsm.RouteUltimateInput();
