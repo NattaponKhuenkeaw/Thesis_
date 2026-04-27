@@ -374,21 +374,9 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3910294197192437969, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
-      propertyPath: m_Size.x
-      value: 2.15
-      objectReference: {fileID: 0}
-    - target: {fileID: 3910294197192437969, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
-      propertyPath: m_Size.y
-      value: 5.825
-      objectReference: {fileID: 0}
     - target: {fileID: 7731053110207872557, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
       propertyPath: m_Name
       value: ProjectileSpawnerPrefab
-      objectReference: {fileID: 0}
-    - target: {fileID: 7731053110207872557, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
-      propertyPath: m_IsActive
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -621,9 +609,9 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1263886174}
     - target: {fileID: 3236367016635035437, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
-      propertyPath: 'team.Array.data[0]'
-      value: 
-      objectReference: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
+      propertyPath: switchCooldownDuration
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5450070007788991123, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: targetCanvas
       value: 
@@ -631,19 +619,7 @@ PrefabInstance:
     - target: {fileID: 6090851060313224835, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 9100000, guid: 38e3871755c7d8d46bbcaadba6a293a7, type: 2}
-    - target: {fileID: 6196953050443969776, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
-      propertyPath: showFsmLogs
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6196953050443969776, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
-      propertyPath: showCombatLogs
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6196953050443969776, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
-      propertyPath: showFrameDataLogs
-      value: 0
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 9100000, guid: b4f7f50e094f0f145a2251ad62172a8d, type: 2}
     - target: {fileID: 7851930121724842516, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: m_Name
       value: Player
@@ -1754,7 +1730,9 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7939744026216003685, guid: ad344c037067bc046b7efda449c32141, type: 3}
       propertyPath: m_text
-      value: "WELCOME to my SHOP \U0001F607"
+      value: 'WELCOME
+
+        to my SHOP '
       objectReference: {fileID: 0}
     - target: {fileID: 8086179606939421735, guid: ad344c037067bc046b7efda449c32141, type: 3}
       propertyPath: m_IsActive

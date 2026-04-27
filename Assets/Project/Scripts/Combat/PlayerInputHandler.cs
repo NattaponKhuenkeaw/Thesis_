@@ -62,20 +62,7 @@ public class InputHandler_Player : MonoBehaviour
             }
         }
 
-        // Team switching
-        if (teamLoader != null && Keyboard.current != null)
-        {
-            
-            if (stateMachine != null && stateMachine.CanSwitchCharacter())
-            {
-                if (Keyboard.current.digit1Key.wasPressedThisFrame)
-                    teamLoader.SwitchToIndex(0);
-                if (Keyboard.current.digit2Key.wasPressedThisFrame)
-                    teamLoader.SwitchToIndex(1);
-                if (Keyboard.current.digit3Key.wasPressedThisFrame)
-                    teamLoader.SwitchToIndex(2);
-            }
-        }
+        HandleTeamSwitchInput();
 
         // Skill tree debug shortcuts
         if (Keyboard.current != null && skillTreeController != null)
@@ -203,6 +190,21 @@ public class InputHandler_Player : MonoBehaviour
         // If jump is being prioritized from the ground, do not allow the same
         // callback to start a ground combat action before the state fully flips airborne.
         return stateMachine.CurrentStateId == PlayerStateId.Jumping;
+    }
+
+    private void HandleTeamSwitchInput()
+    {
+        if (Keyboard.current == null || stateMachine == null || stateMachine.InputBuffer == null)
+            return;
+
+        if (Keyboard.current.digit1Key.wasPressedThisFrame)
+            stateMachine.InputBuffer.BufferSwitch(0);
+        if (Keyboard.current.digit2Key.wasPressedThisFrame)
+            stateMachine.InputBuffer.BufferSwitch(1);
+        if (Keyboard.current.digit3Key.wasPressedThisFrame)
+            stateMachine.InputBuffer.BufferSwitch(2);
+
+        stateMachine.TryConsumeBufferedSwitch();
     }
 
     private Vector2 GetLatestMoveInput()
