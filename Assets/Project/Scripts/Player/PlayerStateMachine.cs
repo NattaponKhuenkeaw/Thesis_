@@ -356,7 +356,7 @@ public class PlayerStateMachine : MonoBehaviour
         // State-first: let the current state try to consume the input
         if (CurrentState.HandleAttackInput()) return;
 
-        if (CurrentState.AcceptsAttackInput)
+        if (CurrentState.AcceptsAttackInput && playerCharacter.HasActionForContext(AttackCategory.Normal))
         {
             ChangeState(AttackState);
             CurrentState.OnAttackInput();
@@ -392,7 +392,7 @@ public class PlayerStateMachine : MonoBehaviour
         // State-first: let the current state try to consume the input
         if (CurrentState.HandleSkillInput()) return;
 
-        if (CurrentState.AcceptsSkillInput)
+        if (CurrentState.AcceptsSkillInput && playerCharacter.HasActionForContext(AttackCategory.Skill))
         {
             ChangeState(SkillState);
             CurrentState.OnSkillInput();
@@ -416,7 +416,7 @@ public class PlayerStateMachine : MonoBehaviour
         // State-first: let the current state try to consume the input
         if (CurrentState.HandleUltimateInput()) return;
 
-        if (CurrentState.AcceptsUltimateInput)
+        if (CurrentState.AcceptsUltimateInput && playerCharacter.HasActionForContext(AttackCategory.Ultimate))
         {
             ChangeState(UltimateState);
             CurrentState.OnUltimateInput();

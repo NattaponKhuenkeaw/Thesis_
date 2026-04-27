@@ -631,7 +631,7 @@ PrefabInstance:
     - target: {fileID: 6090851060313224835, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 9100000, guid: b4f7f50e094f0f145a2251ad62172a8d, type: 2}
+      objectReference: {fileID: 9100000, guid: 38e3871755c7d8d46bbcaadba6a293a7, type: 2}
     - target: {fileID: 6196953050443969776, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: showFsmLogs
       value: 1
@@ -1754,9 +1754,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7939744026216003685, guid: ad344c037067bc046b7efda449c32141, type: 3}
       propertyPath: m_text
-      value: 'WELCOME
-
-        to my SHOP '
+      value: "WELCOME to my SHOP \U0001F607"
       objectReference: {fileID: 0}
     - target: {fileID: 8086179606939421735, guid: ad344c037067bc046b7efda449c32141, type: 3}
       propertyPath: m_IsActive

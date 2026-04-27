@@ -440,7 +440,10 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     {
         Transform playerTransform = player.transform;
         Vector3 offset = entry.activationVFXOffset;
-        float facingDirection = playerTransform.localScale.x > 0 ? 1f : -1f;
+        
+        // Fix: Use player's FacingDirection instead of scale.x (since player flips via Y rotation)
+        float facingDirection = player.Movement != null ? player.Movement.FacingDirection : (playerTransform.localScale.x > 0 ? 1f : -1f);
+        
         offset.x *= facingDirection;
 
         Vector3 spawnPosition = playerTransform.position + offset;

@@ -73,6 +73,8 @@ MonoBehaviour:
       rid: -2
     hitData:
       rid: -2
+    eventData:
+      rid: -2
     componentOrder:
     - motion
     - vfx
@@ -105,6 +107,8 @@ MonoBehaviour:
             rid: 3251577378342174815
           hitData:
             rid: 1588255929706479934
+          eventData:
+            rid: -2
           componentOrder:
           - motion
           - vfx
@@ -220,6 +224,8 @@ MonoBehaviour:
             rid: 3251577360560685258
           hitData:
             rid: 1588255929706479939
+          eventData:
+            rid: -2
           componentOrder:
           - motion
           - vfx
@@ -301,6 +307,8 @@ MonoBehaviour:
             rid: 3251577378342174816
           hitData:
             rid: 1588255929706479943
+          eventData:
+            rid: -2
           componentOrder:
           - motion
           - vfx
@@ -382,6 +390,8 @@ MonoBehaviour:
             rid: 3251577378342174817
           hitData:
             rid: 1588255929706479961
+          eventData:
+            rid: -2
           componentOrder:
           - motion
           - vfx
@@ -572,6 +582,8 @@ MonoBehaviour:
             rid: 3251577360560685260
           hitData:
             rid: 1588255929706479968
+          eventData:
+            rid: -2
           componentOrder:
           - motion
           - vfx
@@ -660,6 +672,8 @@ MonoBehaviour:
             rid: 3251577378342174818
           hitData:
             rid: 1588255929706479987
+          eventData:
+            rid: -2
           componentOrder:
           - motion
           - vfx
@@ -782,6 +796,8 @@ MonoBehaviour:
             rid: 3251577360560685155
           hitData:
             rid: 1588255929706479997
+          eventData:
+            rid: -2
           componentOrder:
           - motion
           - vfx
@@ -963,11 +979,14 @@ MonoBehaviour:
             rid: 3251577378342174819
           hitData:
             rid: 1588255929706480005
+          eventData:
+            rid: 1588256159804948557
           componentOrder:
           - motion
           - vfx
           - audio
           - hitbox
+          - events
         routes: []
         defaultNext:
           rid: -2
@@ -992,7 +1011,6 @@ MonoBehaviour:
         impactFreezeFrames: 8
         holdFrames: 20
         recoveryFrames: 5
-        snapOffset: {x: 0.6, y: 0}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 5
         hitSFX: {fileID: 8300000, guid: d517d1ac88bbb2f48b4747a86083d9c5, type: 3}
@@ -1048,11 +1066,14 @@ MonoBehaviour:
             rid: -2
           hitData:
             rid: 1588255929706480014
+          eventData:
+            rid: -2
           componentOrder:
           - motion
           - vfx
           - audio
           - hitbox
+          - events
         routes: []
         defaultNext:
           rid: -2
@@ -1096,11 +1117,14 @@ MonoBehaviour:
             rid: 3251577360560685241
           hitData:
             rid: 1588255929706480028
+          eventData:
+            rid: -2
           componentOrder:
           - motion
           - vfx
           - audio
           - hitbox
+          - events
         routes: []
         defaultNext:
           rid: -2
@@ -1144,6 +1168,30 @@ MonoBehaviour:
         hitVFXType: 107
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
+    - rid: 1588256159804948557
+      type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: Ultimate Sequence
+          eventType: 0
+          triggerFrame: 0
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          freezeWorld: 1
+          timelineMode: 0
+          activationVFXType: 40
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: -0.6, y: 2.8, z: 0}
+          activationVoice: {fileID: 8300000, guid: d328f76e3165a5b42bd510497bc10aab, type: 3}
+          activationSFX: {fileID: 8300000, guid: ed0af5caac4022f4c863b2a5b665c05a, type: 3}
+          voiceDelay: 0.1
     - rid: 3251577360560685155
       type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -1225,7 +1273,7 @@ MonoBehaviour:
           vfxType: 106
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
-          triggerFrame: 0
+          triggerFrame: 9
           duration: 43
           trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
           transformKeys:
@@ -1408,9 +1456,8 @@ MonoBehaviour:
         canGrabAirborne: 0
         damageMultiplier: 0
         impactFreezeFrames: 0
-        holdFrames: 24
+        holdFrames: 5000
         recoveryFrames: 6
-        snapOffset: {x: 0.6, y: 0}
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 0}

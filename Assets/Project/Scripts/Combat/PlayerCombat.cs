@@ -42,6 +42,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     private readonly Dictionary<AttackCategory, float> lastCategoryUseTime = new Dictionary<AttackCategory, float>();
     private readonly Dictionary<string, float> lastActionUseTime = new Dictionary<string, float>();
     private readonly HashSet<EnemyController> hitEnemiesThisStep = new HashSet<EnemyController>();
+    private readonly HashSet<EnemyController> grabTargetsThisStep = new HashSet<EnemyController>();
 
     private AttackStepData currentStepData;
     private AttackCategory currentAttackCategory = AttackCategory.Normal;
@@ -175,6 +176,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         triggeredVFXEntriesSet.Clear();
         CleanupStepVFX(); // --- NEW: Cleanup VFX from previous step ---
         currentGrabHitbox = null; // Clear stale grab state from previous step
+        hitEnemiesThisStep.Clear();
+        grabTargetsThisStep.Clear();
         DisableHitbox(true);
 
         // --- NEW: Priority Rendering ---
@@ -414,6 +417,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         isExecutingAutoChainStep = false;
         currentGrabHitbox = null;
         lastGrabParams = default;
+        grabTargetsThisStep.Clear();
 
         // End any active grab session on combo reset
         EndGrabSession();
@@ -442,6 +446,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         // hitstop is now global
         hitboxActiveCount = 0;
         currentGrabHitbox = null;
+        grabTargetsThisStep.Clear();
         DisableHitbox(true);
 
         if (cachedAnimator != null)
@@ -944,18 +949,32 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
                 continue;
             }
 
+            // --- Multi-Step Grab Logic ---
+            // If it's a GrabHitbox, we only allow it to hit each enemy ONCE per step.
+            // This prevents the "re-grab" glitch during looping active phases.
+            if (currentGrabHitbox != null && grabTargetsThisStep.Contains(enemy))
+            {
+                continue;
+            }
+
             hitEnemiesThisStep.Add(enemy);
+            if (currentGrabHitbox != null)
+            {
+                grabTargetsThisStep.Add(enemy);
+            }
+
             CombatLog($"HIT: {enemy.gameObject.name} (Damage: {hitBoxDamage?.DamageValue ?? 0f:F1})");
 
+            bool wasAlreadyHeld = IsHoldingEnemy(enemy);
             hitBoxDamage?.ProcessHit(enemy);
 
-            if (currentGrabHitbox != null)
+            if (currentGrabHitbox != null && !wasAlreadyHeld && IsHoldingEnemy(enemy))
             {
                 didGrabAny = true;
             }
         }
 
-        if (didGrabAny && HasGrabbedEnemy())
+        if (didGrabAny)
         {
             if (playerCharacter != null && playerCharacter.StateMachine != null && playerCharacter.StateMachine.showCombatLogs)
                 Debug.Log($"[Combat] ON_GRAB_SUCCESS Detected on frame {currentAttackFrame}. Invoking success transition.");

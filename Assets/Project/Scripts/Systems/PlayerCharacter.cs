@@ -202,6 +202,34 @@ public class PlayerCharacter : MonoBehaviour
         status.ApplyStatus(statusEffect, enabled);
     }
 
+    /// <summary>
+    /// Checks if a valid combat action exists for the current context (grounded/airborne, input, etc.).
+    /// Used by the FSM to prevent locking movement when no action is available.
+    /// </summary>
+    public bool HasActionForContext(AttackCategory category)
+    {
+        if (characterObject == null || characterObject.actionResolverTable == null)
+            return false;
+
+        bool actionGrounded = Movement != null && Movement.IsGroundedForActionSelection();
+        InputContext ctx = new InputContext
+        {
+            isGrounded = actionGrounded,
+            directionalInput = StateMachine != null && StateMachine.InputBuffer != null 
+                ? StateMachine.InputBuffer.DirectionalInput 
+                : Vector2.zero,
+            facingDirection = Movement != null ? Movement.FacingDirection : 1,
+            hasGrabbedEnemy = Combat != null && Combat.HasGrabbedEnemy(),
+            isAgainstWall = Movement != null && Movement.IsAgainstWall(),
+            passiveController = PassiveController,
+            runtimeState = PassiveController != null ? PassiveController.RuntimeState : null
+        };
+
+        // Standard ActionResolver used for one-off validation
+        ActionResolver resolver = new ActionResolver();
+        return resolver.ResolveInitial(ctx, characterObject.actionResolverTable, category) != null;
+    }
+
     // =========================================================
     // Private Methods
     // =========================================================
@@ -236,19 +264,10 @@ public class PlayerCharacter : MonoBehaviour
         if (Movement == null || characterObject == null)
             return;
 
-        CharacterStats stats = characterObject.stats;
-
-        Movement.speed = stats.moveSpeed;
-        Movement.jumpForce = stats.jumpForce;
-        Movement.maxJumpCount = stats.maxJumpCount;
-        Movement.maxAirDashCount = stats.maxAirDashCount;
-        Movement.groundAcceleration = stats.groundAcceleration;
-        Movement.groundDeceleration = stats.groundDeceleration;
-        Movement.airAcceleration = stats.airAcceleration;
-        Movement.airDeceleration = stats.airDeceleration;
-        Movement.airSpeedMultiplier = stats.airSpeedMultiplier;
-
+        Movement.profile = characterObject.movementProfile;
         Movement.dashData = characterObject.DashData;
+        Movement.maxJumpOverride = characterObject.maxJumpOverride;
+        Movement.maxAirDashOverride = characterObject.maxAirDashOverride;
     }
 
     private void ApplyAnimationData()

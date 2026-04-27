@@ -21,15 +21,6 @@ MonoBehaviour:
     attack: 10
     defense: 7
     elementalMultiplier: 1
-    moveSpeed: 10
-    jumpForce: 22
-    maxJumpCount: 1
-    maxAirDashCount: 1
-    groundAcceleration: 110
-    groundDeceleration: 150
-    airAcceleration: 55
-    airDeceleration: 40
-    airSpeedMultiplier: 1
   metaData:
     displayName: Kyo
     description: "\u0E17\u0E32\u0E22\u0E32\u0E17\u0E15\u0E23\u0E30\u0E01\u0E39\u0E25\u0E04\u0E38\u0E0B\u0E32\u0E19\u0E32\u0E07\u0E34
@@ -42,6 +33,7 @@ MonoBehaviour:
     attackSfx: {fileID: 0}
     skillSfx: {fileID: 0}
     hurtSfx: {fileID: 0}
+  movementProfile: {fileID: 11400000, guid: cd71e34e3ebc46d458f1965ef79c3daf, type: 2}
   _authoredFPS: 24
   upgrade:
     level: 1

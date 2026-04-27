@@ -21,15 +21,6 @@ MonoBehaviour:
     attack: 10
     defense: 5
     elementalMultiplier: 1
-    moveSpeed: 10
-    jumpForce: 22
-    maxJumpCount: 1
-    maxAirDashCount: 1
-    groundAcceleration: 80
-    groundDeceleration: 90
-    airAcceleration: 55
-    airDeceleration: 40
-    airSpeedMultiplier: 1
   metaData:
     displayName: Main
     description: 
@@ -38,6 +29,7 @@ MonoBehaviour:
     attackSfx: {fileID: 0}
     skillSfx: {fileID: 0}
     hurtSfx: {fileID: 0}
+  movementProfile: {fileID: 0}
   _authoredFPS: 24
   upgrade:
     level: 1

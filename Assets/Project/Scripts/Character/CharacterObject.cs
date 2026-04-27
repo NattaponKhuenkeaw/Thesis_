@@ -41,6 +41,15 @@ public class CharacterObject : ScriptableObject
     public CharacterStats stats = new CharacterStats();
     public CharacterMetaData metaData = new CharacterMetaData();
 
+    [Header("Movement Profile")]
+    [Tooltip("Per-character movement tuning. If null, PlayerMovement uses sensible defaults.")]
+    public MovementProfile movementProfile;
+
+    [Tooltip("Optional override for max jumps. If -1, the MovementProfile value is used.")]
+    public int maxJumpOverride = -1;
+    [Tooltip("Optional override for max air dashes. If -1, the MovementProfile value is used.")]
+    public int maxAirDashOverride = -1;
+
     [Tooltip("The frame rate this character's data was authored for. Used by migration utilities.")]
     [SerializeField] private float _authoredFPS = 24f;
     public float AuthoredFPS => _authoredFPS;

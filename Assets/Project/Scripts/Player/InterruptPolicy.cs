@@ -90,7 +90,7 @@ public struct InterruptPolicy
         // InputGate — fully committed, no continuous input until cancel
         startupGate  = InputGate.None,
         activeGate   = InputGate.None,
-        recoveryGate = InputGate.AllowAll,
+        recoveryGate = InputGate.None,
         cancelGate   = InputGate.AllowAll
     };
 
@@ -109,7 +109,7 @@ public struct InterruptPolicy
         // InputGate — dash direction is committed on startup, no changes until cancel
         startupGate  = InputGate.None,
         activeGate   = InputGate.None,
-        recoveryGate = InputGate.AllowAll,
+        recoveryGate = InputGate.None,
         cancelGate   = InputGate.AllowAll
     };
 
@@ -128,7 +128,7 @@ public struct InterruptPolicy
         // InputGate — allow facing adjustment during startup, locked once active
         startupGate  = InputGate.AllowFacing,
         activeGate   = InputGate.None,
-        recoveryGate = InputGate.AllowAll,
+        recoveryGate = InputGate.None,
         cancelGate   = InputGate.AllowAll
     };
 
@@ -149,7 +149,7 @@ public struct InterruptPolicy
         // InputGate — allow facing adjustment during startup, locked once active
         startupGate  = InputGate.AllowFacing,
         activeGate   = InputGate.None,
-        recoveryGate = InputGate.AllowAll,
+        recoveryGate = InputGate.None,
         cancelGate   = InputGate.AllowAll
     };
 }

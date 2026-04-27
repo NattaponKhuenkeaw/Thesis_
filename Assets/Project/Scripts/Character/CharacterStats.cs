@@ -12,21 +12,5 @@ public class CharacterStats
     public float defense = 5f;
     public float elementalMultiplier = 1f;
 
-    // =========================================================
-    // Movement
-    // =========================================================
-    [Header("Movement")]
-    public float moveSpeed = 5f;
-    public float jumpForce = 10f;
-    public int maxJumpCount = 1;
-    public int maxAirDashCount = 1;
-    public float groundAcceleration = 80f;
-    public float groundDeceleration = 90f;
-    public float airAcceleration = 55f;
-    public float airDeceleration = 40f;
-    public float airSpeedMultiplier = 1f;
-
-
-
     // End of CharacterStats
 }

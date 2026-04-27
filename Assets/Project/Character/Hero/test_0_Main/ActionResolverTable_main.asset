@@ -44,6 +44,8 @@ MonoBehaviour:
       rid: -2
     hitData:
       rid: -2
+    eventData:
+      rid: -2
     componentOrder:
     - motion
     - vfx
@@ -59,9 +61,9 @@ MonoBehaviour:
       data:
         stepData:
           startupFrames: 4
-          activeFrames: 6
-          recoveryFrames: 8
-          cancelWindowStartFrame: 16
+          activeFrames: 10
+          recoveryFrames: 14
+          cancelWindowStartFrame: 25
           loopActivePhase: 0
           stepName: Attack1
           animationClip: {fileID: 7400000, guid: b6fee8eee9433e84e8f83854d34360c3, type: 2}
@@ -76,11 +78,14 @@ MonoBehaviour:
             rid: -2
           hitData:
             rid: 1588256136747024575
+          eventData:
+            rid: -2
           componentOrder:
           - motion
           - vfx
           - audio
           - hitbox
+          - events
         routes: []
         defaultNext:
           rid: 1588256136747024577
@@ -91,7 +96,7 @@ MonoBehaviour:
       data:
         keyframes:
         - startFrame: 0
-          endFrame: 6
+          endFrame: 10
           taskType: 0
           easing: 1
           position: {x: 1, y: 0, z: 0}
@@ -106,7 +111,7 @@ MonoBehaviour:
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 0
-        activeFrames: 3
+        activeFrames: 4
         damageType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 2.1995919, y: 1.8162396}
@@ -115,11 +120,11 @@ MonoBehaviour:
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
-        impactFreezeFrames: 4
-        knockbackFrames: 15
-        knockupFrames: 12
-        knockfallFrames: 10
-        recoveryFrames: 9
+        impactFreezeFrames: 6
+        knockbackFrames: 24
+        knockupFrames: 18
+        knockfallFrames: 15
+        recoveryFrames: 14
         horizontalSpeed: 3
         launchSpeed: 1
         useSnapToAnchor: 0
@@ -130,7 +135,7 @@ MonoBehaviour:
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
+        flashFrames: 10
         hitSFX: {fileID: 0}
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
@@ -157,11 +162,14 @@ MonoBehaviour:
             rid: -2
           hitData:
             rid: 1588256136747024579
+          eventData:
+            rid: -2
           componentOrder:
           - motion
           - vfx
           - audio
           - hitbox
+          - events
         routes: []
         defaultNext:
           rid: -2
