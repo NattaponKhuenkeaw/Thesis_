@@ -3,6 +3,8 @@ using System.Collections.Generic;
 
 public class TeamLoader : MonoBehaviour
 {
+    private const int DefaultTeamSize = 3;
+
     public event System.Action OnTeamChanged;
     public event System.Action OnCurrentCharacterChanged;
     public event System.Action<CharacterObject, float, float> OnCharacterHealthUpdated;
@@ -38,6 +40,7 @@ public class TeamLoader : MonoBehaviour
         (team != null && team.Length > 0 && currentIndex >= 0 && currentIndex < team.Length)
         ? team[currentIndex]
         : null;
+    public int CharacterCount => CountCharacters(team);
     public bool IsSwitchOnCooldown => switchCooldownDuration > 0f && Time.time < lastSwitchTime + switchCooldownDuration;
     public float RemainingCooldown => !IsSwitchOnCooldown
         ? 0f
@@ -66,15 +69,7 @@ public class TeamLoader : MonoBehaviour
     {
         BindPlayerCharacter();
 
-        if (HasCurrentTeamCharacter())
-        {
-            LoadCurrentCharacter();
-            return;
-        }
-
-        if (TryUseAssignedCharacter())
-            return;
-
+        BackfillCurrentSlotFromActiveCharacter();
         LoadCurrentCharacter();
     }
 
@@ -158,18 +153,103 @@ public class TeamLoader : MonoBehaviour
         return true;
     }
 
-    /// <summary>
-    /// Replaces the team array with data pushed from the Team Builder UI.
-    /// </summary>
-    public void SetTeamFromUI(CharacterObject[] newTeam)
+    public bool ContainsCharacter(CharacterObject character)
     {
-        if (newTeam == null) return;
+        return FindCharacterIndex(character) >= 0;
+    }
+
+    public bool CanRemoveCharacterAt(int slotIndex)
+    {
+        if (team == null || slotIndex < 0 || slotIndex >= team.Length)
+            return false;
+
+        if (team[slotIndex] == null)
+            return false;
+
+        return CountCharacters(team) > 1;
+    }
+
+    public bool RemoveCharacter(int slotIndex)
+    {
+        if (!CanRemoveCharacterAt(slotIndex))
+            return false;
 
         SaveActiveCharacterHP();
 
-        CharacterObject previouslySelected = CurrentCharacter;
-        if (previouslySelected == null && playerCharacter != null)
-            previouslySelected = playerCharacter.characterObject;
+        CharacterObject removedCharacter = team[slotIndex];
+        int previousIndex = currentIndex;
+
+        team[slotIndex] = null;
+        RemoveStoredHpIfCharacterNoLongerInTeam(removedCharacter);
+
+        if (slotIndex == previousIndex || previousIndex < 0 || previousIndex >= team.Length || team[previousIndex] == null)
+            currentIndex = FindNearestOccupiedIndex(previousIndex);
+
+        NotifyTeamChanged();
+        LoadCurrentCharacter();
+        return true;
+    }
+
+    /// <summary>
+    /// Replaces a single team slot with a new character reference.
+    /// Useful when the runtime main character and TeamLoader need to be force-synced.
+    /// </summary>
+    public bool ReplaceCharacter(int slotIndex, CharacterObject newCharacter, bool reloadIfActive = true)
+    {
+        if (slotIndex < 0)
+            return false;
+
+        EnsureTeamCapacity(Mathf.Max(slotIndex + 1, DefaultTeamSize));
+        SaveActiveCharacterHP();
+
+        CharacterObject removedCharacter = team[slotIndex];
+        if (newCharacter == null && removedCharacter != null && CountCharacters(team) <= 1)
+            return false;
+
+        if (removedCharacter == newCharacter)
+        {
+            if (reloadIfActive && slotIndex == currentIndex && newCharacter != null)
+                LoadCurrentCharacter();
+
+            return false;
+        }
+
+        team[slotIndex] = newCharacter;
+        RemoveStoredHpIfCharacterNoLongerInTeam(removedCharacter);
+
+        int previousIndex = currentIndex;
+        CharacterObject preferredCharacter = CurrentCharacter;
+        if (slotIndex == currentIndex)
+            preferredCharacter = newCharacter;
+
+        currentIndex = ResolvePreferredIndex(preferredCharacter, previousIndex);
+
+        NotifyTeamChanged();
+
+        if (reloadIfActive && slotIndex == currentIndex)
+            LoadCurrentCharacter();
+
+        return true;
+    }
+
+    /// <summary>
+    /// Synchronizes the runtime team from an external source.
+    /// TeamLoader remains the gameplay authority after this call.
+    /// </summary>
+    public void SyncWithTeam(CharacterObject[] newTeam, CharacterObject preferredCharacter = null)
+    {
+        if (newTeam == null)
+            return;
+
+        SaveActiveCharacterHP();
+
+        int previousIndex = currentIndex;
+
+        CharacterObject desiredCharacter = preferredCharacter;
+        if (desiredCharacter == null)
+            desiredCharacter = CurrentCharacter;
+        if (desiredCharacter == null && playerCharacter != null)
+            desiredCharacter = playerCharacter.characterObject;
 
         HashSet<CharacterObject> incomingCharacters = new HashSet<CharacterObject>();
         for (int i = 0; i < newTeam.Length; i++)
@@ -178,18 +258,52 @@ public class TeamLoader : MonoBehaviour
                 incomingCharacters.Add(newTeam[i]);
         }
 
+        if (incomingCharacters.Count == 0)
+        {
+            CharacterObject fallbackCharacter = desiredCharacter;
+            if (fallbackCharacter == null && playerCharacter != null)
+                fallbackCharacter = playerCharacter.characterObject;
+
+            if (fallbackCharacter == null)
+            {
+                Debug.LogWarning("TeamLoader: Ignored empty team sync because no fallback character exists");
+                return;
+            }
+
+            team = new CharacterObject[Mathf.Max(1, newTeam.Length)];
+            int fallbackIndex = Mathf.Clamp(previousIndex, 0, team.Length - 1);
+            team[fallbackIndex] = fallbackCharacter;
+            currentIndex = fallbackIndex;
+
+            NotifyTeamChanged();
+            LoadCurrentCharacter();
+            return;
+        }
+
         ClearRemovedCharacterHP(incomingCharacters);
 
-        team = new CharacterObject[newTeam.Length];
+        team = new CharacterObject[Mathf.Max(1, newTeam.Length)];
         for (int i = 0; i < newTeam.Length; i++)
         {
             team[i] = newTeam[i];
         }
 
-        currentIndex = ResolvePreferredIndex(previouslySelected);
+        currentIndex = ResolvePreferredIndex(desiredCharacter, previousIndex);
 
         NotifyTeamChanged();
         LoadCurrentCharacter();
+    }
+
+    /// <summary>
+    /// Replaces the team array with data pushed from the Team Builder UI.
+    /// </summary>
+    public void SetTeamFromUI(CharacterObject[] newTeam)
+    {
+        CharacterObject previouslySelected = CurrentCharacter;
+        if (previouslySelected == null && playerCharacter != null)
+            previouslySelected = playerCharacter.characterObject;
+
+        SyncWithTeam(newTeam, previouslySelected);
     }
 
     /// <summary>
@@ -197,33 +311,7 @@ public class TeamLoader : MonoBehaviour
     /// </summary>
     public void ClearSlot(int index)
     {
-        if (team == null || index < 0 || index >= team.Length)
-            return;
-
-        CharacterObject removedCharacter = team[index];
-        team[index] = null;
-        ResetCharacterHP(removedCharacter);
-
-        if (currentIndex == index)
-        {
-            currentIndex = ResolvePreferredIndex(playerCharacter != null ? playerCharacter.characterObject : null);
-            LoadCurrentCharacter();
-        }
-
-        NotifyTeamChanged();
-    }
-
-    private bool TryUseAssignedCharacter()
-    {
-        if (playerCharacter == null || playerCharacter.characterObject == null)
-            return false;
-
-        int assignedIndex = FindCharacterIndex(playerCharacter.characterObject);
-        if (assignedIndex >= 0)
-            currentIndex = assignedIndex;
-
-        playerCharacter.ApplyCharacterData();
-        return true;
+        RemoveCharacter(index);
     }
 
     private bool HasCurrentTeamCharacter()
@@ -234,7 +322,7 @@ public class TeamLoader : MonoBehaviour
             && team[currentIndex] != null;
     }
 
-    private int ResolvePreferredIndex(CharacterObject preferredCharacter)
+    private int ResolvePreferredIndex(CharacterObject preferredCharacter, int fallbackOriginIndex = -1)
     {
         if (team == null || team.Length == 0)
             return -1;
@@ -242,6 +330,14 @@ public class TeamLoader : MonoBehaviour
         int preferredIndex = FindCharacterIndex(preferredCharacter);
         if (preferredIndex >= 0 && team[preferredIndex] != null)
             return preferredIndex;
+
+        int originIndex = fallbackOriginIndex >= 0 ? fallbackOriginIndex : currentIndex;
+        if (originIndex >= 0 && originIndex < team.Length && team[originIndex] != null)
+            return originIndex;
+
+        int nearestIndex = FindNearestOccupiedIndex(originIndex);
+        if (nearestIndex >= 0)
+            return nearestIndex;
 
         if (currentIndex >= 0 && currentIndex < team.Length && team[currentIndex] != null)
             return currentIndex;
@@ -261,6 +357,29 @@ public class TeamLoader : MonoBehaviour
         }
 
         return -1;
+    }
+
+    private int FindNearestOccupiedIndex(int originIndex)
+    {
+        if (team == null || team.Length == 0)
+            return -1;
+
+        if (originIndex >= 0 && originIndex < team.Length && team[originIndex] != null)
+            return originIndex;
+
+        int maxDistance = team.Length - 1;
+        for (int distance = 1; distance <= maxDistance; distance++)
+        {
+            int rightIndex = originIndex + distance;
+            if (rightIndex >= 0 && rightIndex < team.Length && team[rightIndex] != null)
+                return rightIndex;
+
+            int leftIndex = originIndex - distance;
+            if (leftIndex >= 0 && leftIndex < team.Length && team[leftIndex] != null)
+                return leftIndex;
+        }
+
+        return FindFirstOccupiedIndex();
     }
 
     private int FindNextOccupiedIndex(int startIndex, int direction)
@@ -312,9 +431,72 @@ public class TeamLoader : MonoBehaviour
         return -1;
     }
 
+    private void BackfillCurrentSlotFromActiveCharacter()
+    {
+        if (HasCurrentTeamCharacter())
+            return;
+
+        if (playerCharacter == null || playerCharacter.characterObject == null)
+            return;
+
+        EnsureTeamCapacity(DefaultTeamSize);
+
+        int existingIndex = FindCharacterIndex(playerCharacter.characterObject);
+        if (existingIndex >= 0)
+        {
+            currentIndex = existingIndex;
+            return;
+        }
+
+        int targetIndex = currentIndex;
+        if (targetIndex < 0 || targetIndex >= team.Length)
+            targetIndex = 0;
+
+        CharacterObject removedCharacter = team[targetIndex];
+        team[targetIndex] = playerCharacter.characterObject;
+        currentIndex = targetIndex;
+
+        RemoveStoredHpIfCharacterNoLongerInTeam(removedCharacter);
+        NotifyTeamChanged();
+    }
+
+    private void EnsureTeamCapacity(int minimumLength)
+    {
+        int length = Mathf.Max(1, minimumLength);
+
+        if (team != null && team.Length >= length)
+            return;
+
+        CharacterObject[] previousTeam = team;
+        team = new CharacterObject[length];
+
+        if (previousTeam == null)
+            return;
+
+        for (int i = 0; i < previousTeam.Length && i < team.Length; i++)
+        {
+            team[i] = previousTeam[i];
+        }
+    }
+
     private void NotifyTeamChanged()
     {
         OnTeamChanged?.Invoke();
+    }
+
+    private int CountCharacters(CharacterObject[] teamData)
+    {
+        if (teamData == null)
+            return 0;
+
+        int count = 0;
+        for (int i = 0; i < teamData.Length; i++)
+        {
+            if (teamData[i] != null)
+                count++;
+        }
+
+        return count;
     }
 
     private void NotifyCurrentCharacterChanged()
@@ -415,6 +597,18 @@ public class TeamLoader : MonoBehaviour
             return Mathf.Clamp(hp, 0f, maxHp);
 
         return maxHp;
+    }
+
+    private void RemoveStoredHpIfCharacterNoLongerInTeam(CharacterObject character)
+    {
+        if (character == null)
+            return;
+
+        if (FindCharacterIndex(character) >= 0)
+            return;
+
+        characterCurrentHP.Remove(character);
+        NotifyCharacterHealthUpdated(character);
     }
 
     private void ClearRemovedCharacterHP(HashSet<CharacterObject> validCharacters)

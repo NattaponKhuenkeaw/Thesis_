@@ -10,9 +10,10 @@ namespace Project.TeamBuilder.UI
     /// Individual team slot — displays character portrait, element icon,
     /// 3 artifact sub-slots, and ATK/DEF/HP stats.
     /// Implements IDropHandler to receive character drags from the grid.
-    /// Implements IPointerClickHandler to select the active character.
+    /// Implements pointer + drag handlers to select active character and drag equipped
+    /// characters back out to the inventory grid.
     /// </summary>
-    public class TeamSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler
+    public class TeamSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         // =========================================================
         // UI References
@@ -47,6 +48,7 @@ namespace Project.TeamBuilder.UI
         private CharacterItem currentCharacter;
         private TeamBuilderUI parentBuilder;
         private int slotIndex;
+        private CanvasGroup canvasGroup;
 
         // =========================================================
         // Properties
@@ -61,6 +63,9 @@ namespace Project.TeamBuilder.UI
         {
             parentBuilder = builder;
             slotIndex = index;
+            canvasGroup = GetComponent<CanvasGroup>();
+            if (canvasGroup == null)
+                canvasGroup = gameObject.AddComponent<CanvasGroup>();
 
             // Initialize artifact sub-slots
             foreach (var artifactSlot in artifactSlots)
@@ -81,6 +86,7 @@ namespace Project.TeamBuilder.UI
         /// </summary>
         public void SetCharacter(CharacterItem character)
         {
+            ResetDragState();
             currentCharacter = character;
 
             if (character == null)
@@ -141,6 +147,7 @@ namespace Project.TeamBuilder.UI
         /// </summary>
         public void ClearSlot()
         {
+            ResetDragState();
             currentCharacter = null;
 
             if (profileImage != null)
@@ -294,6 +301,34 @@ namespace Project.TeamBuilder.UI
             parentBuilder.SetActiveIndex(slotIndex);
         }
 
+        public void OnBeginDrag(PointerEventData eventData)
+        {
+            if (currentCharacter == null || profileImage == null || profileImage.sprite == null)
+                return;
+
+            if (canvasGroup != null)
+                canvasGroup.blocksRaycasts = false;
+        }
+
+        public void OnDrag(PointerEventData eventData)
+        {
+        }
+
+        public void OnEndDrag(PointerEventData eventData)
+        {
+            GameObject dropTarget = eventData.pointerEnter;
+            bool droppedOnInventoryPanel = dropTarget != null
+                && dropTarget.GetComponentInParent<CharacterGridInventoryUI>() != null;
+
+            ResetDragState();
+
+            if (currentCharacter == null || parentBuilder == null)
+                return;
+
+            if (droppedOnInventoryPanel)
+                parentBuilder.TryRemoveCharacterFromSlot(slotIndex);
+        }
+
         // =========================================================
         // Helpers
         // =========================================================
@@ -347,6 +382,22 @@ namespace Project.TeamBuilder.UI
             }
 
             hpText.text = $"{fallbackMaxHp:F0}";
+        }
+
+        private void OnDisable()
+        {
+            ResetDragState();
+        }
+
+        private void OnDestroy()
+        {
+            ResetDragState();
+        }
+
+        private void ResetDragState()
+        {
+            if (canvasGroup != null)
+                canvasGroup.blocksRaycasts = true;
         }
     }
 }

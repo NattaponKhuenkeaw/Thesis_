@@ -106,7 +106,15 @@ namespace Project.ShopSystem
         /// </summary>
         public bool TrySell(BaseItem item)
         {
-            if (playerInventory == null) return false;
+            if (playerInventory == null || item == null)
+                return false;
+
+            if (!CanSellItem(item, out string failureMessage))
+            {
+                if (!string.IsNullOrEmpty(failureMessage) && ShopPopupText.Instance != null)
+                    ShopPopupText.Instance.Show(failureMessage);
+                return false;
+            }
 
             if (playerInventory.HasItem(item))
             {
@@ -126,8 +134,17 @@ namespace Project.ShopSystem
         /// </summary>
         public List<BaseItem> GetSellableItems()
         {
-            if (playerInventory == null) return new List<BaseItem>();
-            return playerInventory.ownedItems;
+            if (playerInventory == null)
+                return new List<BaseItem>();
+
+            List<BaseItem> sellableItems = new List<BaseItem>();
+            foreach (BaseItem item in playerInventory.ownedItems)
+            {
+                if (CanSellItem(item, out _))
+                    sellableItems.Add(item);
+            }
+
+            return sellableItems;
         }
 
         /// <summary>
@@ -167,6 +184,52 @@ namespace Project.ShopSystem
             
             // Artifact and Character are always 1
             return 1;
+        }
+
+        public bool CanSellItem(BaseItem item, out string failureMessage)
+        {
+            failureMessage = string.Empty;
+
+            if (playerInventory == null || item == null)
+                return false;
+
+            if (!playerInventory.HasItem(item))
+                return false;
+
+            if (item is not CharacterItem characterItem)
+                return true;
+
+            TeamLoader teamLoader = Object.FindFirstObjectByType<TeamLoader>();
+            if (teamLoader != null
+                && characterItem.characterObjectData != null
+                && teamLoader.ContainsCharacter(characterItem.characterObjectData))
+            {
+                failureMessage = "Character is in team!";
+                return false;
+            }
+
+            if (GetOwnedCharacterCount() <= 1)
+            {
+                failureMessage = "Keep at least 1 character!";
+                return false;
+            }
+
+            return true;
+        }
+
+        private int GetOwnedCharacterCount()
+        {
+            if (playerInventory == null || playerInventory.ownedItems == null)
+                return 0;
+
+            int count = 0;
+            foreach (BaseItem ownedItem in playerInventory.ownedItems)
+            {
+                if (ownedItem is CharacterItem)
+                    count++;
+            }
+
+            return count;
         }
     }
 }
