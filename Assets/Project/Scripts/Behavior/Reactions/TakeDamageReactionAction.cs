@@ -116,6 +116,11 @@ namespace Unity.Behavior
 
         private void HandleDamaged(HitReactionData data)
         {
+            if (m_Controller != null && !m_Controller.LastHitAppliedReaction)
+            {
+                return;
+            }
+
             m_HitReceived = true;
         }
 

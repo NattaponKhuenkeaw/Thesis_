@@ -50,6 +50,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
     public int CurrentReactionTotalFrames => currentReaction.TotalReactionFrames;
     public int CurrentReactionProgressFrame => currentReactionFrame;
     public bool IsGrabbed => currentReaction.reactionKind == EnemyReactionKind.Grab;
+    public bool IsGroundedForCombat => IsGrounded();
 
     void Awake()
     {

@@ -6,7 +6,7 @@ using Unity.Behavior;
     [Serializable, GeneratePropertyBag]
     [Condition(
         name: "Can Attack",
-        description: "Returns Success when the CanAttack blackboard variable is true and the target is within AttackRange.",
+        description: "Returns Success when the CanAttack blackboard variable is true, the target is within AttackRange, the enemy is not in hit reaction, and the enemy is grounded.",
         story: "[Agent] [CanAttack] to [Target] within [AttackRange]",
         category: "Conditions/Combat",
         id: "a1b2c3d4e5f60005aabbccddeeff0005")]
@@ -22,6 +22,21 @@ using Unity.Behavior;
             if (Agent == null || Target == null || CanAttack == null) return false;
             if (Agent.Value == null || Target.Value == null) return false;
             if (!CanAttack.Value) return false;
+
+            EnemyController controller = Agent.Value.GetComponent<EnemyController>();
+            if (controller != null)
+            {
+                if (controller.CurrentReactionState != EnemyReactionState.None)
+                    return false;
+
+                EnemyHitReactionHandler hitReactionHandler = controller.hitReactionHandler != null
+                    ? controller.hitReactionHandler
+                    : Agent.Value.GetComponent<EnemyHitReactionHandler>();
+
+                if (hitReactionHandler != null && !hitReactionHandler.IsGroundedForCombat)
+                    return false;
+            }
+
             return Vector2.Distance(Agent.Value.transform.position, Target.Value.transform.position) <= AttackRange.Value;
         }
     }

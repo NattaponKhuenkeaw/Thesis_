@@ -44,6 +44,11 @@ public class EnemyController : MonoBehaviour
     [Header("Combo State")]
     [SerializeField] private int currentComboHits = 0;
     public int CurrentComboHits => currentComboHits;
+    public bool LastHitAppliedReaction { get; private set; } = true;
+
+    [Header("Anti-Stunlock")]
+    [SerializeField] private int antiStunlockComboThreshold = 4;
+    [SerializeField] [Range(0f, 1f)] private float antiStunlockResistChance = 0.3f;
 
     // =========================================================
     // References
@@ -61,6 +66,8 @@ public class EnemyController : MonoBehaviour
 
     /// <summary>Main body collider (disabled on death).</summary>
     public Collider2D bodyCollider;
+
+    [SerializeField] private EnemyWorldUI worldUI;
 
     [Header("Hit Reaction")]
     public EnemyHitReactionHandler hitReactionHandler;
@@ -84,6 +91,9 @@ public class EnemyController : MonoBehaviour
 
         if (hitReactionHandler == null)
             hitReactionHandler = GetComponent<EnemyHitReactionHandler>();
+
+        if (worldUI == null)
+            worldUI = GetComponentInChildren<EnemyWorldUI>(true);
 
         // Start with hitbox disabled
         if (attackHitbox != null)
@@ -169,18 +179,28 @@ public class EnemyController : MonoBehaviour
         currentHP -= reactionData.damage;
         currentHP  = Mathf.Max(currentHP, 0f);
 
+        bool shouldApplyReaction = ShouldApplyHitReaction();
+        LastHitAppliedReaction = shouldApplyReaction;
+
+        if (!shouldApplyReaction)
+        {
+            // Once the enemy successfully resists stagger, break the combo counter so
+            // it does not immediately keep armoring through every following hit.
+            currentComboHits = 0;
+        }
+
         // Fire event (AnimationHandler_Enemy triggers TakeDamage anim via this)
         OnDamaged?.Invoke(reactionData);
 
         // Notify Blackboard for BehaviorGraph
         var behaviorAgent = GetComponent<BehaviorGraphAgent>();
-        if (behaviorAgent != null)
+        if (behaviorAgent != null && shouldApplyReaction)
         {
             behaviorAgent.SetVariableValue("IsTakingDamage", true);
         }
 
         // Delegate to the hit reaction handler (freeze, knockback, flash, etc.)
-        if (hitReactionHandler != null)
+        if (hitReactionHandler != null && shouldApplyReaction)
         {
             hitReactionHandler.StartReaction(reactionData, attackerPosition);
         }
@@ -197,6 +217,30 @@ public class EnemyController : MonoBehaviour
 
         if (currentHP <= 0f)
             Die();
+    }
+
+    private bool ShouldApplyHitReaction()
+    {
+        if (hitReactionHandler == null)
+            return true;
+
+        if (antiStunlockComboThreshold <= 0 || antiStunlockResistChance <= 0f)
+            return true;
+
+        bool isGrounded = hitReactionHandler.IsGroundedForCombat;
+        if (!isGrounded)
+            return true;
+
+        bool isAirborneReaction =
+            CurrentReactionState == EnemyReactionState.Knockup ||
+            CurrentReactionState == EnemyReactionState.Knockfall;
+        if (isAirborneReaction)
+            return true;
+
+        if (currentComboHits < antiStunlockComboThreshold)
+            return true;
+
+        return UnityEngine.Random.value > antiStunlockResistChance;
     }
 
     public void ResetComboCount()
@@ -345,6 +389,16 @@ public class EnemyController : MonoBehaviour
     public void NotifyStateChanged(State newState)
     {
         OnStateChanged?.Invoke(newState);
+    }
+
+    public void TriggerAttackWarning(float duration = -1f)
+    {
+        worldUI?.ShowAttackWarning(duration);
+    }
+
+    public void HideAttackWarning()
+    {
+        worldUI?.HideAttackWarning();
     }
 
     // =========================================================

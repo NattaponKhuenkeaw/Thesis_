@@ -32,6 +32,10 @@ public class EnemyWorldUI : MonoBehaviour
 
     [SerializeField] private bool hideCanvasOnDeath = true;
 
+    [Header("Attack Warning")]
+    [SerializeField] private GameObject attackWarningIcon;
+    [SerializeField] private float defaultAttackWarningDuration = 0.5f;
+
     [Header("Impact Scaling")]
     [Tooltip("Text scale for BasicCombo tier hits (smallest).")]
     [SerializeField] private float basicComboScale = 1.0f;
@@ -45,6 +49,7 @@ public class EnemyWorldUI : MonoBehaviour
     private RectTransform damageTextRect;
     private List<TMP_Text> damageTextPool = new List<TMP_Text>();
     private Coroutine healthLerpCoroutine;
+    private Coroutine attackWarningCoroutine;
     private Color damageTextBaseColor = Color.white;
     private Vector3 baseLocalScale = Vector3.one;
 
@@ -79,6 +84,9 @@ public class EnemyWorldUI : MonoBehaviour
             damageTextPool.Add(damageText);
         }
 
+        if (attackWarningIcon != null)
+            attackWarningIcon.SetActive(false);
+
         UpdateHealthBar();
     }
 
@@ -90,6 +98,7 @@ public class EnemyWorldUI : MonoBehaviour
 
     private void OnDisable()
     {
+        HideAttackWarning();
         UnsubscribeFromEnemyEvents();
     }
 
@@ -187,10 +196,36 @@ public class EnemyWorldUI : MonoBehaviour
 
     private void HandleDied()
     {
+        HideAttackWarning();
         UpdateHealthBar();
 
         if (hideCanvasOnDeath)
             gameObject.SetActive(false);
+    }
+
+    public void ShowAttackWarning(float duration = -1f)
+    {
+        if (attackWarningIcon == null)
+            return;
+
+        float resolvedDuration = duration > 0f ? duration : defaultAttackWarningDuration;
+
+        if (attackWarningCoroutine != null)
+            StopCoroutine(attackWarningCoroutine);
+
+        attackWarningCoroutine = StartCoroutine(AttackWarningRoutine(resolvedDuration));
+    }
+
+    public void HideAttackWarning()
+    {
+        if (attackWarningCoroutine != null)
+        {
+            StopCoroutine(attackWarningCoroutine);
+            attackWarningCoroutine = null;
+        }
+
+        if (attackWarningIcon != null)
+            attackWarningIcon.SetActive(false);
     }
 
     private void UpdateHealthBar()
@@ -236,6 +271,14 @@ public class EnemyWorldUI : MonoBehaviour
 
         damageLerpSlider.value = targetValue;
         healthLerpCoroutine = null;
+    }
+
+    private IEnumerator AttackWarningRoutine(float duration)
+    {
+        attackWarningIcon.SetActive(true);
+        yield return new WaitForSeconds(duration);
+        attackWarningIcon.SetActive(false);
+        attackWarningCoroutine = null;
     }
 
     private void ShowDamageText(float damage, DamageImpactTier impactTier, DamageType damageType)
