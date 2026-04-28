@@ -552,7 +552,15 @@ public class PlayerMovement : MonoBehaviour
         bool attacking = combat != null && combat.IsAttacking();
         int step = combat != null ? combat.GetComboStep() : -1;
         if (!attacking) { attackFacingLockOnCancelledForCurrentAttack = false; wasAttackLockOnActive = false; hasPerformedInitialLockOnForCurrentStep = false; lastObservedComboStep = -1; return; }
-        if (!wasAttackLockOnActive || step != lastObservedComboStep) { attackFacingLockOnCancelledForCurrentAttack = false; hasPerformedInitialLockOnForCurrentStep = combat != null && combat.IsExecutingAutoChainStep; }
+        if (!wasAttackLockOnActive)
+        {
+            attackFacingLockOnCancelledForCurrentAttack = false;
+            hasPerformedInitialLockOnForCurrentStep = combat != null && combat.IsExecutingAutoChainStep;
+        }
+        else if (step != lastObservedComboStep)
+        {
+            hasPerformedInitialLockOnForCurrentStep = combat != null && combat.IsExecutingAutoChainStep;
+        }
         if (Mathf.Abs(horizontalInput) >= P.attackFacingCancelInputThreshold) attackFacingLockOnCancelledForCurrentAttack = true;
         wasAttackLockOnActive = true; lastObservedComboStep = step;
     }
@@ -561,12 +569,29 @@ public class PlayerMovement : MonoBehaviour
     {
         if (!_isAutoTargetEnabled) return false;
         if (hasPerformedInitialLockOnForCurrentStep || (combat != null && combat.IsExecutingAutoChainStep)) return false;
-        if (!P.enableAttackFacingLockOn || attackFacingLockOnCancelledForCurrentAttack || combat == null || !combat.IsAttacking() || CameraManager.instance == null || Mathf.Abs(horizontalInput) >= P.attackFacingCancelInputThreshold) return false;
-        EnemyController target = CameraManager.instance.GetNearestEngagedEnemy(transform.position);
-        if (target == null) return false;
+        if (!P.enableAttackFacingLockOn || attackFacingLockOnCancelledForCurrentAttack || combat == null || !combat.IsAttacking() || Mathf.Abs(horizontalInput) >= P.attackFacingCancelInputThreshold) return false;
+        EnemyController target = GetAttackFacingLockOnTarget();
+        if (target == null || !target.IsAlive) return false;
         float dx = target.transform.position.x - transform.position.x;
-        if (Mathf.Abs(dx) <= 0.05f) return false;
+        if (Mathf.Abs(dx) <= Mathf.Max(0.2f, P.attackFacingCancelInputThreshold)) return false;
         SetFacingDirection(dx >= 0f ? 1 : -1, false); hasPerformedInitialLockOnForCurrentStep = true; return true;
+    }
+
+    private EnemyController GetAttackFacingLockOnTarget()
+    {
+        EnemyController target = CameraManager.instance != null
+            ? CameraManager.instance.GetNearestEngagedEnemy(transform.position)
+            : null;
+
+        if (target != null && target.IsAlive)
+            return target;
+
+        Transform fallbackTarget = GetSnapTarget(8f);
+        if (fallbackTarget == null)
+            return null;
+
+        EnemyController fallbackEnemy = fallbackTarget.GetComponentInParent<EnemyController>();
+        return fallbackEnemy != null && fallbackEnemy.IsAlive ? fallbackEnemy : null;
     }
 
     private void SetFacingDirection(int dir, bool respectCD)

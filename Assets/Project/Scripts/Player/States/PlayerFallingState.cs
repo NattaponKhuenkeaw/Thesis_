@@ -17,7 +17,7 @@ public class PlayerFallingState : PlayerState
     // Capabilities — movement and facing only
     // =========================================================
     public override bool AcceptsMoveInput => true;
-    public override bool AcceptsDashInput => false;
+    public override bool AcceptsDashInput => true;
     public override bool AcceptsJumpInput => true; // Allow coyote-time jump or double jump
     public override bool AcceptsAttackInput => false;
     public override bool AcceptsSkillInput => false;
