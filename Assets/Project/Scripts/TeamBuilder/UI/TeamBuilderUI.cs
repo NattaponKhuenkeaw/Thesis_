@@ -37,6 +37,8 @@ namespace Project.TeamBuilder.UI
         // Runtime State
         // =========================================================
         private bool isInitialized = false;
+        private readonly Dictionary<CharacterObject, CharacterItem> runtimeCharacterItems = new Dictionary<CharacterObject, CharacterItem>();
+        public Canvas RootCanvas => rootCanvas;
 
         // =========================================================
         // Initialization
@@ -145,8 +147,8 @@ namespace Project.TeamBuilder.UI
         {
             if (teamLoader == null) return;
 
-            teamLoader.SwitchToIndex(index);
-            RefreshActiveIndex();
+            if (teamLoader.SwitchToIndex(index))
+                RefreshActiveIndex();
         }
 
         /// <summary>
@@ -171,12 +173,37 @@ namespace Project.TeamBuilder.UI
         /// </summary>
         public void RemoveCharacterFromSlot(int slotIndex)
         {
-            if (slotIndex < 0 || slotIndex >= teamSlots.Length) return;
+            TryRemoveCharacterFromSlot(slotIndex);
+        }
+
+        public bool CanRemoveCharacterFromSlot(int slotIndex)
+        {
+            if (slotIndex < 0 || slotIndex >= teamSlots.Length)
+                return false;
+
+            if (teamSlots[slotIndex] == null || teamSlots[slotIndex].CurrentCharacter == null)
+                return false;
+
+            int occupiedCount = 0;
+            for (int i = 0; i < teamSlots.Length; i++)
+            {
+                if (teamSlots[i] != null && teamSlots[i].CurrentCharacter != null)
+                    occupiedCount++;
+            }
+
+            return occupiedCount > 1;
+        }
+
+        public bool TryRemoveCharacterFromSlot(int slotIndex)
+        {
+            if (!CanRemoveCharacterFromSlot(slotIndex))
+                return false;
 
             if (teamSlots[slotIndex] != null)
                 teamSlots[slotIndex].ClearSlot();
 
             OnSlotChanged();
+            return true;
         }
 
         public bool TryGetCharacterHealth(CharacterObject character, out float currentHp, out float maxHp)
@@ -251,9 +278,13 @@ namespace Project.TeamBuilder.UI
 
             // No matching item in inventory — create a runtime wrapper
             // so the TeamBuilder UI can still display this character
+            if (runtimeCharacterItems.TryGetValue(charObj, out CharacterItem cachedItem) && cachedItem != null)
+                return cachedItem;
+
             CharacterItem runtimeItem = ScriptableObject.CreateInstance<CharacterItem>();
             runtimeItem.characterObjectData = charObj;
             runtimeItem.SyncFromCharacterObjectData();
+            runtimeCharacterItems[charObj] = runtimeItem;
             return runtimeItem;
         }
 
@@ -272,6 +303,25 @@ namespace Project.TeamBuilder.UI
                 {
                     ownedCharacters.Add(charItem);
                 }
+            }
+
+            foreach (CharacterItem runtimeItem in runtimeCharacterItems.Values)
+            {
+                if (runtimeItem == null || runtimeItem.characterObjectData == null)
+                    continue;
+
+                bool alreadyOwned = false;
+                for (int i = 0; i < ownedCharacters.Count; i++)
+                {
+                    if (ownedCharacters[i] != null && ownedCharacters[i].characterObjectData == runtimeItem.characterObjectData)
+                    {
+                        alreadyOwned = true;
+                        break;
+                    }
+                }
+
+                if (!alreadyOwned)
+                    ownedCharacters.Add(runtimeItem);
             }
 
             gridPanel.PopulateGrid(ownedCharacters);
@@ -293,7 +343,7 @@ namespace Project.TeamBuilder.UI
                     teamData[i] = null;
             }
 
-            teamLoader.SetTeamFromUI(teamData);
+            teamLoader.SyncWithTeam(teamData);
         }
     }
 }
