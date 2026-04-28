@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 138b668169d86f14d8f2e020a5f632eb, type: 3}
   m_Name: MovementProfile_Sample
   m_EditorClassIdentifier: Assembly-CSharp::MovementProfile
-  moveSpeed: 9.5
+  moveSpeed: 7
   jumpForce: 18
   maxJumpCount: 1
   maxAirDashCount: 1
@@ -40,6 +40,7 @@ MonoBehaviour:
   enableAttackFacingLockOn: 1
   attackFacingCancelInputThreshold: 0.2
   airborneGravityPolicy:
+    startupVelocityRetain: 0.3
     startupScale: 0.05
     activeScale: 0
     recoveryStartScale: 0.05
