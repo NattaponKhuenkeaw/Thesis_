@@ -82,7 +82,7 @@ MonoBehaviour:
   - rid: 2092758195661963430
   - rid: 2092758196289274340
   - rid: 1737768876771639545
-  m_VersionTimestamp: 639130003202207795
+  m_VersionTimestamp: 639130087211643214
   m_SerializedVersion: 2
   m_DebugInfo: {fileID: -927852618135409272}
   m_RuntimeGraph: {fileID: 86214112262725933}
@@ -4873,23 +4873,6 @@ MonoBehaviour:
       type: {class: 'BlackboardVariable`1[[UnityEngine.GameObject, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 1
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 1
           m_Value1: 0
         Name: Self
@@ -4898,23 +4881,6 @@ MonoBehaviour:
       type: {class: 'BlackboardVariable`1[[UnityEngine.GameObject, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 183
-            'bytes[1]': 207
-            'bytes[2]': 236
-            'bytes[3]': 86
-            'bytes[4]': 170
-            'bytes[5]': 171
-            'bytes[6]': 204
-            'bytes[7]': 106
-            'bytes[8]': 124
-            'bytes[9]': 214
-            'bytes[10]': 146
-            'bytes[11]': 84
-            'bytes[12]': 108
-            'bytes[13]': 72
-            'bytes[14]': 128
-            'bytes[15]': 87
           m_Value0: 7695714611360485303
           m_Value1: 6305119108431271548
         Name: Target
@@ -4923,23 +4889,6 @@ MonoBehaviour:
       type: {class: 'BlackboardVariable`1[[UnityEngine.GameObject, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 201
-            'bytes[1]': 143
-            'bytes[2]': 90
-            'bytes[3]': 238
-            'bytes[4]': 211
-            'bytes[5]': 190
-            'bytes[6]': 94
-            'bytes[7]': 226
-            'bytes[8]': 125
-            'bytes[9]': 58
-            'bytes[10]': 15
-            'bytes[11]': 124
-            'bytes[12]': 190
-            'bytes[13]': 27
-            'bytes[14]': 221
-            'bytes[15]': 87
           m_Value0: 16311684717828804553
           m_Value1: 6331247156091894397
         Name: ExclamationMark
@@ -4948,23 +4897,6 @@ MonoBehaviour:
       type: {class: 'BlackboardVariable`1[[System.Boolean, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 135
-            'bytes[1]': 1
-            'bytes[2]': 86
-            'bytes[3]': 105
-            'bytes[4]': 214
-            'bytes[5]': 100
-            'bytes[6]': 123
-            'bytes[7]': 139
-            'bytes[8]': 172
-            'bytes[9]': 75
-            'bytes[10]': 194
-            'bytes[11]': 7
-            'bytes[12]': 158
-            'bytes[13]': 12
-            'bytes[14]': 147
-            'bytes[15]': 134
           m_Value0: 10050737865460416903
           m_Value1: 9697108295533349804
         Name: IsAlive
@@ -4973,23 +4905,6 @@ MonoBehaviour:
       type: {class: 'BlackboardVariable`1[[System.Boolean, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 108
-            'bytes[1]': 49
-            'bytes[2]': 26
-            'bytes[3]': 25
-            'bytes[4]': 195
-            'bytes[5]': 33
-            'bytes[6]': 248
-            'bytes[7]': 128
-            'bytes[8]': 70
-            'bytes[9]': 218
-            'bytes[10]': 224
-            'bytes[11]': 175
-            'bytes[12]': 81
-            'bytes[13]': 232
-            'bytes[14]': 33
-            'bytes[15]': 248
           m_Value0: 9293214952902504812
           m_Value1: 17879827433178323526
         Name: CanAttack
@@ -4998,23 +4913,6 @@ MonoBehaviour:
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 40
-            'bytes[1]': 196
-            'bytes[2]': 153
-            'bytes[3]': 171
-            'bytes[4]': 181
-            'bytes[5]': 163
-            'bytes[6]': 53
-            'bytes[7]': 134
-            'bytes[8]': 194
-            'bytes[9]': 30
-            'bytes[10]': 234
-            'bytes[11]': 211
-            'bytes[12]': 105
-            'bytes[13]': 244
-            'bytes[14]': 254
-            'bytes[15]': 228
           m_Value0: 9670815775511397416
           m_Value1: 16500894820096155330
         Name: DetectRadius
@@ -5023,23 +4921,6 @@ MonoBehaviour:
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 181
-            'bytes[1]': 4
-            'bytes[2]': 124
-            'bytes[3]': 220
-            'bytes[4]': 146
-            'bytes[5]': 212
-            'bytes[6]': 30
-            'bytes[7]': 129
-            'bytes[8]': 58
-            'bytes[9]': 123
-            'bytes[10]': 41
-            'bytes[11]': 252
-            'bytes[12]': 89
-            'bytes[13]': 103
-            'bytes[14]': 77
-            'bytes[15]': 53
           m_Value0: 9304107607423452341
           m_Value1: 3840839693397228346
         Name: AttackRange
@@ -5048,23 +4929,6 @@ MonoBehaviour:
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 130
-            'bytes[1]': 147
-            'bytes[2]': 186
-            'bytes[3]': 121
-            'bytes[4]': 3
-            'bytes[5]': 7
-            'bytes[6]': 187
-            'bytes[7]': 96
-            'bytes[8]': 19
-            'bytes[9]': 130
-            'bytes[10]': 8
-            'bytes[11]': 48
-            'bytes[12]': 172
-            'bytes[13]': 96
-            'bytes[14]': 240
-            'bytes[15]': 86
           m_Value0: 6970172559794541442
           m_Value1: 6264613374328865299
         Name: TooCloseRange
@@ -5073,23 +4937,6 @@ MonoBehaviour:
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 95
-            'bytes[1]': 152
-            'bytes[2]': 17
-            'bytes[3]': 203
-            'bytes[4]': 181
-            'bytes[5]': 184
-            'bytes[6]': 164
-            'bytes[7]': 146
-            'bytes[8]': 252
-            'bytes[9]': 150
-            'bytes[10]': 84
-            'bytes[11]': 109
-            'bytes[12]': 203
-            'bytes[13]': 110
-            'bytes[14]': 86
-            'bytes[15]': 89
           m_Value0: 10566773716653545567
           m_Value1: 6437454537364379388
         Name: MoveSpeed
@@ -5098,23 +4945,6 @@ MonoBehaviour:
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 77
-            'bytes[1]': 104
-            'bytes[2]': 56
-            'bytes[3]': 67
-            'bytes[4]': 54
-            'bytes[5]': 97
-            'bytes[6]': 93
-            'bytes[7]': 155
-            'bytes[8]': 185
-            'bytes[9]': 220
-            'bytes[10]': 128
-            'bytes[11]': 49
-            'bytes[12]': 211
-            'bytes[13]': 163
-            'bytes[14]': 125
-            'bytes[15]': 42
           m_Value0: 11195211134396819533
           m_Value1: 3061783449145760953
         Name: ChaseSpeed
@@ -5123,23 +4953,6 @@ MonoBehaviour:
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 126
-            'bytes[1]': 189
-            'bytes[2]': 231
-            'bytes[3]': 27
-            'bytes[4]': 117
-            'bytes[5]': 159
-            'bytes[6]': 32
-            'bytes[7]': 153
-            'bytes[8]': 125
-            'bytes[9]': 217
-            'bytes[10]': 220
-            'bytes[11]': 161
-            'bytes[12]': 186
-            'bytes[13]': 61
-            'bytes[14]': 123
-            'bytes[15]': 193
           m_Value0: 11033994412385877374
           m_Value1: 13941804943244319101
         Name: PatrolRadius
@@ -5148,23 +4961,6 @@ MonoBehaviour:
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 70
-            'bytes[1]': 12
-            'bytes[2]': 79
-            'bytes[3]': 20
-            'bytes[4]': 163
-            'bytes[5]': 239
-            'bytes[6]': 61
-            'bytes[7]': 191
-            'bytes[8]': 135
-            'bytes[9]': 9
-            'bytes[10]': 124
-            'bytes[11]': 238
-            'bytes[12]': 53
-            'bytes[13]': 29
-            'bytes[14]': 76
-            'bytes[15]': 197
           m_Value0: 13780433918523018310
           m_Value1: 14216770241173391751
         Name: IdleDuration
@@ -5173,23 +4969,6 @@ MonoBehaviour:
       type: {class: 'BlackboardVariable`1[[System.Boolean, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 122
-            'bytes[1]': 136
-            'bytes[2]': 65
-            'bytes[3]': 20
-            'bytes[4]': 246
-            'bytes[5]': 24
-            'bytes[6]': 114
-            'bytes[7]': 44
-            'bytes[8]': 240
-            'bytes[9]': 198
-            'bytes[10]': 19
-            'bytes[11]': 203
-            'bytes[12]': 255
-            'bytes[13]': 68
-            'bytes[14]': 108
-            'bytes[15]': 153
           m_Value0: 3202649730194704506
           m_Value1: 11055287050702145264
         Name: IsTakingDamage
@@ -5198,50 +4977,14 @@ MonoBehaviour:
       type: {class: 'BlackboardVariable`1[[State, Assembly-CSharp]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 216
-            'bytes[1]': 196
-            'bytes[2]': 179
-            'bytes[3]': 225
-            'bytes[4]': 102
-            'bytes[5]': 123
-            'bytes[6]': 199
-            'bytes[7]': 133
-            'bytes[8]': 202
-            'bytes[9]': 102
-            'bytes[10]': 47
-            'bytes[11]': 247
-            'bytes[12]': 150
-            'bytes[13]': 123
-            'bytes[14]': 217
-            'bytes[15]': 25
           m_Value0: 9639809209213371608
           m_Value1: 1862655809216800458
         Name: EnemyState
         m_Value: 0
-    - rid: 1737768876771639692
+    - rid: 1737768876771639792
       type: {class: Start, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 27
-            'bytes[1]': 52
-            'bytes[2]': 36
-            'bytes[3]': 242
-            'bytes[4]': 42
-            'bytes[5]': 50
-            'bytes[6]': 98
-            'bytes[7]': 240
-            'bytes[8]': 111
-            'bytes[9]': 169
-            'bytes[10]': 44
-            'bytes[11]': 157
-            'bytes[12]': 60
-            'bytes[13]': 79
-            'bytes[14]': 86
-            'bytes[15]': 175
           m_Value0: 17321462276852823067
           m_Value1: 12634372926388087151
         Graph:
@@ -5249,297 +4992,138 @@ MonoBehaviour:
         m_Parent:
           rid: -2
         m_Child:
-          rid: 1737768876771639693
+          rid: 1737768876771639793
         Repeat: 1
         AllowMultipleRepeatsPerTick: 0
-        m_CurrentFrame: 0
-        m_FrameDelta: 0
-    - rid: 1737768876771639693
+    - rid: 1737768876771639793
       type: {class: BranchingConditionComposite, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 83
-            'bytes[1]': 142
-            'bytes[2]': 235
-            'bytes[3]': 48
-            'bytes[4]': 235
-            'bytes[5]': 193
-            'bytes[6]': 209
-            'bytes[7]': 83
-            'bytes[8]': 201
-            'bytes[9]': 230
-            'bytes[10]': 165
-            'bytes[11]': 2
-            'bytes[12]': 16
-            'bytes[13]': 190
-            'bytes[14]': 173
-            'bytes[15]': 154
           m_Value0: 6039821791162764883
           m_Value1: 11145773628785026761
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639692
+          rid: 1737768876771639792
         m_Children:
-        - rid: 1737768876771639694
-        - rid: 1737768876771639695
+        - rid: 1737768876771639794
+        - rid: 1737768876771639795
         m_RegisteredObservers: []
         m_Conditions:
-        - rid: 1737768876771639696
+        - rid: 1737768876771639796
         m_RequiresAllConditions: 0
         True:
-          rid: 1737768876771639694
+          rid: 1737768876771639794
         False:
-          rid: 1737768876771639695
+          rid: 1737768876771639795
         m_CurrentChild:
           rid: -2
         m_ObserverType: 0
-    - rid: 1737768876771639694
+    - rid: 1737768876771639794
       type: {class: ParallelAllComposite, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 26
-            'bytes[1]': 185
-            'bytes[2]': 28
-            'bytes[3]': 206
-            'bytes[4]': 63
-            'bytes[5]': 252
-            'bytes[6]': 71
-            'bytes[7]': 58
-            'bytes[8]': 218
-            'bytes[9]': 229
-            'bytes[10]': 114
-            'bytes[11]': 168
-            'bytes[12]': 180
-            'bytes[13]': 100
-            'bytes[14]': 236
-            'bytes[15]': 157
           m_Value0: 4199602528517404954
           m_Value1: 11379581085541393882
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639693
+          rid: 1737768876771639793
         m_Children:
-        - rid: 1737768876771639697
-        - rid: 1737768876771639698
+        - rid: 1737768876771639797
+        - rid: 1737768876771639798
         m_RegisteredObservers: []
-    - rid: 1737768876771639695
+    - rid: 1737768876771639795
       type: {class: SequenceComposite, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 134
-            'bytes[1]': 232
-            'bytes[2]': 232
-            'bytes[3]': 138
-            'bytes[4]': 100
-            'bytes[5]': 51
-            'bytes[6]': 134
-            'bytes[7]': 20
-            'bytes[8]': 65
-            'bytes[9]': 136
-            'bytes[10]': 111
-            'bytes[11]': 213
-            'bytes[12]': 135
-            'bytes[13]': 187
-            'bytes[14]': 225
-            'bytes[15]': 79
           m_Value0: 1478926034558052486
           m_Value1: 5756087990832040001
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639693
+          rid: 1737768876771639793
         m_Children:
-        - rid: 1737768876771639699
-        - rid: 1737768876771639700
+        - rid: 1737768876771639799
+        - rid: 1737768876771639800
         m_RegisteredObservers: []
-        m_CurrentChild: 0
-    - rid: 1737768876771639696
+    - rid: 1737768876771639796
       type: {class: IsAliveCondition, ns: , asm: Assembly-CSharp}
       data:
         Graph:
           rid: 2729789868407783686
         Agent:
           rid: 1588255640948048155
-    - rid: 1737768876771639697
+    - rid: 1737768876771639797
       type: {class: SequenceComposite, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 84
-            'bytes[1]': 154
-            'bytes[2]': 170
-            'bytes[3]': 25
-            'bytes[4]': 64
-            'bytes[5]': 101
-            'bytes[6]': 215
-            'bytes[7]': 121
-            'bytes[8]': 99
-            'bytes[9]': 32
-            'bytes[10]': 202
-            'bytes[11]': 12
-            'bytes[12]': 0
-            'bytes[13]': 233
-            'bytes[14]': 17
-            'bytes[15]': 79
           m_Value0: 8779597324564994644
           m_Value1: 5697591190024233059
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639694
+          rid: 1737768876771639794
         m_Children:
-        - rid: 1737768876771639701
-        - rid: 1737768876771639702
+        - rid: 1737768876771639801
+        - rid: 1737768876771639802
         m_RegisteredObservers: []
-        m_CurrentChild: 0
-    - rid: 1737768876771639698
+    - rid: 1737768876771639798
       type: {class: SelectorComposite, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 35
-            'bytes[1]': 88
-            'bytes[2]': 144
-            'bytes[3]': 198
-            'bytes[4]': 111
-            'bytes[5]': 222
-            'bytes[6]': 171
-            'bytes[7]': 13
-            'bytes[8]': 108
-            'bytes[9]': 100
-            'bytes[10]': 41
-            'bytes[11]': 10
-            'bytes[12]': 121
-            'bytes[13]': 184
-            'bytes[14]': 170
-            'bytes[15]': 142
           m_Value0: 985125515164669987
           m_Value1: 10280231929427616876
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639694
+          rid: 1737768876771639794
         m_Children:
-        - rid: 1737768876771639703
-        - rid: 1737768876771639704
+        - rid: 1737768876771639803
+        - rid: 1737768876771639804
         m_RegisteredObservers:
         - Observer:
-            rid: 1737768876771639704
-        m_CurrentChild: 0
-    - rid: 1737768876771639699
+            rid: 1737768876771639804
+    - rid: 1737768876771639799
       type: {class: SetEnemyStateAction, ns: Unity.Behavior, asm: Assembly-CSharp}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 146
-            'bytes[1]': 117
-            'bytes[2]': 208
-            'bytes[3]': 248
-            'bytes[4]': 199
-            'bytes[5]': 193
-            'bytes[6]': 84
-            'bytes[7]': 0
-            'bytes[8]': 231
-            'bytes[9]': 241
-            'bytes[10]': 41
-            'bytes[11]': 241
-            'bytes[12]': 48
-            'bytes[13]': 33
-            'bytes[14]': 72
-            'bytes[15]': 184
           m_Value0: 23856962660758930
           m_Value1: 13278899995390112231
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639695
+          rid: 1737768876771639795
         EnemyState:
           rid: 1588255640948048168
         TargetState:
-          rid: 1737768876771639705
+          rid: 1737768876771639805
         Agent:
-          rid: 1737768876771639706
-    - rid: 1737768876771639700
+          rid: 1737768876771639806
+    - rid: 1737768876771639800
       type: {class: DieAction, ns: Unity.Behavior, asm: Assembly-CSharp}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 117
-            'bytes[1]': 208
-            'bytes[2]': 221
-            'bytes[3]': 92
-            'bytes[4]': 39
-            'bytes[5]': 235
-            'bytes[6]': 6
-            'bytes[7]': 164
-            'bytes[8]': 29
-            'bytes[9]': 107
-            'bytes[10]': 124
-            'bytes[11]': 126
-            'bytes[12]': 109
-            'bytes[13]': 234
-            'bytes[14]': 71
-            'bytes[15]': 232
           m_Value0: 11819392826374738037
           m_Value1: 16737604296140155677
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639695
+          rid: 1737768876771639795
         Agent:
           rid: 1588255640948048155
         DeathAnimDuration:
-          rid: 1737768876771639707
-        m_Timer: 0
-        m_Controller: {fileID: 0}
-    - rid: 1737768876771639701
+          rid: 1737768876771639807
+    - rid: 1737768876771639801
       type: {class: DetectTargetAction, ns: Unity.Behavior, asm: Assembly-CSharp}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 84
-            'bytes[1]': 154
-            'bytes[2]': 170
-            'bytes[3]': 25
-            'bytes[4]': 64
-            'bytes[5]': 101
-            'bytes[6]': 215
-            'bytes[7]': 121
-            'bytes[8]': 99
-            'bytes[9]': 32
-            'bytes[10]': 202
-            'bytes[11]': 12
-            'bytes[12]': 0
-            'bytes[13]': 233
-            'bytes[14]': 17
-            'bytes[15]': 79
           m_Value0: 8779597324564994644
           m_Value1: 5697591190024233059
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639697
+          rid: 1737768876771639797
         Agent:
           rid: 1588255640948048155
         Radius:
@@ -5547,349 +5131,145 @@ MonoBehaviour:
         Target:
           rid: 1588255640948048156
         TargetTag:
-          rid: 1737768876771639708
-    - rid: 1737768876771639702
+          rid: 1737768876771639808
+    - rid: 1737768876771639802
       type: {class: SequenceComposite, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 220
-            'bytes[1]': 200
-            'bytes[2]': 59
-            'bytes[3]': 200
-            'bytes[4]': 41
-            'bytes[5]': 4
-            'bytes[6]': 247
-            'bytes[7]': 226
-            'bytes[8]': 179
-            'bytes[9]': 32
-            'bytes[10]': 254
-            'bytes[11]': 209
-            'bytes[12]': 255
-            'bytes[13]': 149
-            'bytes[14]': 222
-            'bytes[15]': 159
           m_Value0: 16354545149318777052
           m_Value1: 11519809822832599219
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639697
+          rid: 1737768876771639797
         m_Children:
-        - rid: 1737768876771639709
-        - rid: 1737768876771639710
-        - rid: 1737768876771639711
+        - rid: 1737768876771639809
+        - rid: 1737768876771639810
+        - rid: 1737768876771639811
         m_RegisteredObservers: []
-        m_CurrentChild: 0
-    - rid: 1737768876771639703
+    - rid: 1737768876771639803
       type: {class: ConditionalGuardModifier, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 243
-            'bytes[1]': 14
-            'bytes[2]': 27
-            'bytes[3]': 96
-            'bytes[4]': 120
-            'bytes[5]': 252
-            'bytes[6]': 164
-            'bytes[7]': 65
-            'bytes[8]': 196
-            'bytes[9]': 222
-            'bytes[10]': 242
-            'bytes[11]': 200
-            'bytes[12]': 25
-            'bytes[13]': 129
-            'bytes[14]': 63
-            'bytes[15]': 154
           m_Value0: 4730183102584524531
           m_Value1: 11114744353119198916
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639698
+          rid: 1737768876771639798
         m_Child:
-          rid: 1737768876771639712
+          rid: 1737768876771639812
         m_Conditions:
-        - rid: 1737768876771639713
+        - rid: 1737768876771639813
         m_RequiresAllConditions: 0
         m_ObserverType: 0
-    - rid: 1737768876771639704
+    - rid: 1737768876771639804
       type: {class: ObserverAbortModifier, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 209
-            'bytes[1]': 233
-            'bytes[2]': 150
-            'bytes[3]': 4
-            'bytes[4]': 28
-            'bytes[5]': 20
-            'bytes[6]': 29
-            'bytes[7]': 192
-            'bytes[8]': 15
-            'bytes[9]': 144
-            'bytes[10]': 158
-            'bytes[11]': 209
-            'bytes[12]': 87
-            'bytes[13]': 249
-            'bytes[14]': 69
-            'bytes[15]': 9
           m_Value0: 13843242940175411665
           m_Value1: 668214275308687375
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639698
+          rid: 1737768876771639798
         m_Child:
-          rid: 1737768876771639714
+          rid: 1737768876771639814
         m_Conditions:
-        - rid: 1737768876771639715
+        - rid: 1737768876771639815
         m_RequiresAllConditions: 0
         m_AbortTarget: 2
-    - rid: 1737768876771639705
+    - rid: 1737768876771639805
       type: {class: 'BlackboardVariable`1[[State, Assembly-CSharp]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 6
-    - rid: 1737768876771639706
+    - rid: 1737768876771639806
       type: {class: 'BlackboardVariable`1[[UnityEngine.GameObject, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: {fileID: 0}
-    - rid: 1737768876771639707
+    - rid: 1737768876771639807
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 1.2
-    - rid: 1737768876771639708
+    - rid: 1737768876771639808
       type: {class: 'BlackboardVariable`1[[System.String, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: Player
-    - rid: 1737768876771639709
+    - rid: 1737768876771639809
       type: {class: ConditionalGuardAction, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 50
-            'bytes[1]': 224
-            'bytes[2]': 231
-            'bytes[3]': 161
-            'bytes[4]': 61
-            'bytes[5]': 10
-            'bytes[6]': 185
-            'bytes[7]': 26
-            'bytes[8]': 53
-            'bytes[9]': 106
-            'bytes[10]': 85
-            'bytes[11]': 82
-            'bytes[12]': 98
-            'bytes[13]': 41
-            'bytes[14]': 16
-            'bytes[15]': 27
           m_Value0: 1925581575503208498
           m_Value1: 1950104140916288053
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639702
+          rid: 1737768876771639802
         m_Conditions:
-        - rid: 1737768876771639716
+        - rid: 1737768876771639816
         m_RequiresAllConditions: 1
-    - rid: 1737768876771639710
+    - rid: 1737768876771639810
       type: {class: ConditionalGuardAction, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 47
-            'bytes[1]': 231
-            'bytes[2]': 137
-            'bytes[3]': 89
-            'bytes[4]': 17
-            'bytes[5]': 119
-            'bytes[6]': 127
-            'bytes[7]': 249
-            'bytes[8]': 48
-            'bytes[9]': 139
-            'bytes[10]': 232
-            'bytes[11]': 166
-            'bytes[12]': 172
-            'bytes[13]': 243
-            'bytes[14]': 48
-            'bytes[15]': 73
           m_Value0: 17978219153886668591
           m_Value1: 5273983086511033136
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639702
+          rid: 1737768876771639802
         m_Conditions:
-        - rid: 1737768876771639717
+        - rid: 1737768876771639817
         m_RequiresAllConditions: 0
-    - rid: 1737768876771639711
+    - rid: 1737768876771639811
       type: {class: SequenceComposite, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 7
-            'bytes[1]': 235
-            'bytes[2]': 204
-            'bytes[3]': 108
-            'bytes[4]': 102
-            'bytes[5]': 144
-            'bytes[6]': 178
-            'bytes[7]': 141
-            'bytes[8]': 110
-            'bytes[9]': 181
-            'bytes[10]': 185
-            'bytes[11]': 62
-            'bytes[12]': 27
-            'bytes[13]': 28
-            'bytes[14]': 252
-            'bytes[15]': 160
           m_Value0: 10210382074788768519
           m_Value1: 11600177643541607790
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639702
+          rid: 1737768876771639802
         m_Children:
-        - rid: 1737768876771639718
-        - rid: 1737768876771639719
-        - rid: 1737768876771639720
-        - rid: 1737768876771639721
-        - rid: 1737768876771639722
+        - rid: 1737768876771639818
+        - rid: 1737768876771639819
+        - rid: 1737768876771639820
+        - rid: 1737768876771639821
+        - rid: 1737768876771639822
         m_RegisteredObservers: []
-        m_CurrentChild: 0
-    - rid: 1737768876771639712
+    - rid: 1737768876771639812
       type: {class: SequenceComposite, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 187
-            'bytes[1]': 177
-            'bytes[2]': 146
-            'bytes[3]': 73
-            'bytes[4]': 226
-            'bytes[5]': 243
-            'bytes[6]': 241
-            'bytes[7]': 170
-            'bytes[8]': 83
-            'bytes[9]': 212
-            'bytes[10]': 32
-            'bytes[11]': 187
-            'bytes[12]': 15
-            'bytes[13]': 247
-            'bytes[14]': 63
-            'bytes[15]': 207
           m_Value0: 12317894609057526203
           m_Value1: 14933926536319915091
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639703
+          rid: 1737768876771639803
         m_Children:
-        - rid: 1737768876771639723
-        - rid: 1737768876771639724
-        - rid: 1737768876771639725
+        - rid: 1737768876771639823
+        - rid: 1737768876771639824
+        - rid: 1737768876771639825
         m_RegisteredObservers: []
-        m_CurrentChild: 0
-    - rid: 1737768876771639713
+    - rid: 1737768876771639813
       type: {class: IsTakingDamageCondition, ns: , asm: Assembly-CSharp}
       data:
         Graph:
@@ -5898,50 +5278,31 @@ MonoBehaviour:
           rid: 1588255640948048155
         IsTakingDamage:
           rid: 1588255640948048167
-    - rid: 1737768876771639714
+    - rid: 1737768876771639814
       type: {class: BranchingConditionComposite, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 176
-            'bytes[1]': 241
-            'bytes[2]': 230
-            'bytes[3]': 133
-            'bytes[4]': 246
-            'bytes[5]': 7
-            'bytes[6]': 178
-            'bytes[7]': 233
-            'bytes[8]': 63
-            'bytes[9]': 242
-            'bytes[10]': 44
-            'bytes[11]': 129
-            'bytes[12]': 201
-            'bytes[13]': 172
-            'bytes[14]': 38
-            'bytes[15]': 82
           m_Value0: 16839530712081559984
           m_Value1: 5919608741680706111
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639704
+          rid: 1737768876771639804
         m_Children:
-        - rid: 1737768876771639726
-        - rid: 1737768876771639727
+        - rid: 1737768876771639826
+        - rid: 1737768876771639827
         m_RegisteredObservers: []
         m_Conditions:
-        - rid: 1737768876771639728
+        - rid: 1737768876771639828
         m_RequiresAllConditions: 0
         True:
-          rid: 1737768876771639726
+          rid: 1737768876771639826
         False:
-          rid: 1737768876771639727
+          rid: 1737768876771639827
         m_CurrentChild:
           rid: -2
         m_ObserverType: 0
-    - rid: 1737768876771639715
+    - rid: 1737768876771639815
       type: {class: IsTakingDamageCondition, ns: , asm: Assembly-CSharp}
       data:
         Graph:
@@ -5950,7 +5311,7 @@ MonoBehaviour:
           rid: 1588255640948048155
         IsTakingDamage:
           rid: 1588255640948048167
-    - rid: 1737768876771639716
+    - rid: 1737768876771639816
       type: {class: IsPlayerInRadiusCondition, ns: , asm: Assembly-CSharp}
       data:
         Graph:
@@ -5962,1093 +5323,443 @@ MonoBehaviour:
         DetectRadius:
           rid: 1588255640948048160
         RequireLineOfSight:
-          rid: 1737768876771639729
+          rid: 1737768876771639829
         ObstacleLayer:
+          serializedVersion: 2
           m_Bits: 0
-    - rid: 1737768876771639717
+    - rid: 1737768876771639817
       type: {class: HasTargetCondition, ns: Unity.Behavior, asm: Assembly-CSharp}
       data:
         Graph:
           rid: 2729789868407783686
         Target:
           rid: 1588255640948048156
-    - rid: 1737768876771639718
+    - rid: 1737768876771639818
       type: {class: WaitAction, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 29
-            'bytes[1]': 158
-            'bytes[2]': 83
-            'bytes[3]': 241
-            'bytes[4]': 144
-            'bytes[5]': 193
-            'bytes[6]': 102
-            'bytes[7]': 114
-            'bytes[8]': 61
-            'bytes[9]': 167
-            'bytes[10]': 138
-            'bytes[11]': 225
-            'bytes[12]': 247
-            'bytes[13]': 140
-            'bytes[14]': 160
-            'bytes[15]': 96
           m_Value0: 8243488996216512029
           m_Value1: 6962720020183557949
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639711
+          rid: 1737768876771639811
         SecondsToWait:
-          rid: 1737768876771639730
-        m_Timer: 0
-    - rid: 1737768876771639719
+          rid: 1737768876771639830
+    - rid: 1737768876771639819
       type: {class: SetEnemyStateAction, ns: Unity.Behavior, asm: Assembly-CSharp}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 197
-            'bytes[1]': 138
-            'bytes[2]': 102
-            'bytes[3]': 5
-            'bytes[4]': 234
-            'bytes[5]': 246
-            'bytes[6]': 180
-            'bytes[7]': 63
-            'bytes[8]': 127
-            'bytes[9]': 101
-            'bytes[10]': 116
-            'bytes[11]': 95
-            'bytes[12]': 195
-            'bytes[13]': 252
-            'bytes[14]': 36
-            'bytes[15]': 37
           m_Value0: 4590565405170764485
           m_Value1: 2676541994615203199
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639711
+          rid: 1737768876771639811
         EnemyState:
           rid: 1588255640948048168
         TargetState:
-          rid: 1737768876771639731
+          rid: 1737768876771639831
         Agent:
-          rid: 1737768876771639732
-    - rid: 1737768876771639720
+          rid: 1737768876771639832
+    - rid: 1737768876771639820
       type: {class: FlipToFaceTargetAction, ns: Unity.Behavior, asm: Assembly-CSharp}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 154
-            'bytes[1]': 131
-            'bytes[2]': 221
-            'bytes[3]': 45
-            'bytes[4]': 7
-            'bytes[5]': 70
-            'bytes[6]': 6
-            'bytes[7]': 134
-            'bytes[8]': 158
-            'bytes[9]': 98
-            'bytes[10]': 79
-            'bytes[11]': 135
-            'bytes[12]': 34
-            'bytes[13]': 226
-            'bytes[14]': 229
-            'bytes[15]': 241
           m_Value0: 9657483447590814618
           m_Value1: 17430586570734264990
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639711
+          rid: 1737768876771639811
         Transform:
-          rid: 1737768876771639733
+          rid: 1737768876771639833
         Target:
-          rid: 1737768876771639734
+          rid: 1737768876771639834
         Continuous:
-          rid: 1737768876771639735
+          rid: 1737768876771639835
         FacingRightByDefault:
-          rid: 1737768876771639736
-    - rid: 1737768876771639721
+          rid: 1737768876771639836
+    - rid: 1737768876771639821
       type: {class: NoticeExclamationAction, ns: Unity.Behavior, asm: Assembly-CSharp}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 191
-            'bytes[1]': 228
-            'bytes[2]': 251
-            'bytes[3]': 101
-            'bytes[4]': 39
-            'bytes[5]': 14
-            'bytes[6]': 46
-            'bytes[7]': 251
-            'bytes[8]': 252
-            'bytes[9]': 204
-            'bytes[10]': 86
-            'bytes[11]': 83
-            'bytes[12]': 132
-            'bytes[13]': 12
-            'bytes[14]': 181
-            'bytes[15]': 200
           m_Value0: 18099419514826122431
           m_Value1: 14462479540843629820
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639711
+          rid: 1737768876771639811
         Agent:
           rid: 1588255640948048155
         ExclamationMark:
           rid: 1588255640948048157
         Target:
-          rid: 1737768876771639737
+          rid: 1737768876771639837
         DisplayDuration:
-          rid: 1737768876771639738
+          rid: 1737768876771639838
         UseBillboard: 1
-        m_Mark: {fileID: 0}
-        m_Timer: 0
-        m_PopDuration: 0.4
-    - rid: 1737768876771639722
+    - rid: 1737768876771639822
       type: {class: WaitAction, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 84
-            'bytes[1]': 248
-            'bytes[2]': 234
-            'bytes[3]': 228
-            'bytes[4]': 204
-            'bytes[5]': 202
-            'bytes[6]': 113
-            'bytes[7]': 129
-            'bytes[8]': 211
-            'bytes[9]': 212
-            'bytes[10]': 142
-            'bytes[11]': 239
-            'bytes[12]': 163
-            'bytes[13]': 112
-            'bytes[14]': 226
-            'bytes[15]': 254
           m_Value0: 9327459284623751252
           m_Value1: 18366366079771399379
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639711
+          rid: 1737768876771639811
         SecondsToWait:
-          rid: 1737768876771639739
-        m_Timer: 0
-    - rid: 1737768876771639723
+          rid: 1737768876771639839
+    - rid: 1737768876771639823
       type: {class: SetEnemyStateAction, ns: Unity.Behavior, asm: Assembly-CSharp}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 128
-            'bytes[1]': 140
-            'bytes[2]': 169
-            'bytes[3]': 188
-            'bytes[4]': 78
-            'bytes[5]': 32
-            'bytes[6]': 204
-            'bytes[7]': 153
-            'bytes[8]': 75
-            'bytes[9]': 52
-            'bytes[10]': 158
-            'bytes[11]': 46
-            'bytes[12]': 164
-            'bytes[13]': 101
-            'bytes[14]': 155
-            'bytes[15]': 192
           m_Value0: 11082268305596714112
           m_Value1: 13878798432503477323
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639712
+          rid: 1737768876771639812
         EnemyState:
           rid: 1588255640948048168
         TargetState:
-          rid: 1737768876771639740
+          rid: 1737768876771639840
         Agent:
-          rid: 1737768876771639741
-    - rid: 1737768876771639724
+          rid: 1737768876771639841
+    - rid: 1737768876771639824
       type: {class: FlipToFaceTargetAction, ns: Unity.Behavior, asm: Assembly-CSharp}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 66
-            'bytes[1]': 89
-            'bytes[2]': 140
-            'bytes[3]': 137
-            'bytes[4]': 182
-            'bytes[5]': 234
-            'bytes[6]': 218
-            'bytes[7]': 177
-            'bytes[8]': 16
-            'bytes[9]': 236
-            'bytes[10]': 160
-            'bytes[11]': 227
-            'bytes[12]': 9
-            'bytes[13]': 9
-            'bytes[14]': 196
-            'bytes[15]': 113
           m_Value0: 12815813759348791618
           m_Value1: 8197687159799475216
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639712
+          rid: 1737768876771639812
         Transform:
-          rid: 1737768876771639742
+          rid: 1737768876771639842
         Target:
-          rid: 1737768876771639743
+          rid: 1737768876771639843
         Continuous:
-          rid: 1737768876771639744
+          rid: 1737768876771639844
         FacingRightByDefault:
-          rid: 1737768876771639745
-    - rid: 1737768876771639725
+          rid: 1737768876771639845
+    - rid: 1737768876771639825
       type: {class: TakeDamageReactionAction, ns: Unity.Behavior, asm: Assembly-CSharp}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 9
-            'bytes[1]': 10
-            'bytes[2]': 180
-            'bytes[3]': 40
-            'bytes[4]': 113
-            'bytes[5]': 90
-            'bytes[6]': 178
-            'bytes[7]': 76
-            'bytes[8]': 142
-            'bytes[9]': 150
-            'bytes[10]': 103
-            'bytes[11]': 41
-            'bytes[12]': 92
-            'bytes[13]': 91
-            'bytes[14]': 236
-            'bytes[15]': 69
           m_Value0: 5526579134797711881
           m_Value1: 5038502534510515854
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639712
+          rid: 1737768876771639812
         Agent:
           rid: 1588255640948048155
         IsTakingDamage:
           rid: 1588255640948048167
         StunDuration:
-          rid: 1737768876771639746
-        m_Controller: {fileID: 0}
-        m_Handler: {fileID: 0}
-        m_AnimHandler: {fileID: 0}
-        m_HitReceived: 0
-        m_WaitingForReaction: 0
-        m_FallbackTimer: 0
-    - rid: 1737768876771639726
+          rid: 1737768876771639846
+    - rid: 1737768876771639826
       type: {class: SequenceComposite, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 35
-            'bytes[1]': 39
-            'bytes[2]': 153
-            'bytes[3]': 119
-            'bytes[4]': 205
-            'bytes[5]': 189
-            'bytes[6]': 57
-            'bytes[7]': 33
-            'bytes[8]': 231
-            'bytes[9]': 229
-            'bytes[10]': 31
-            'bytes[11]': 129
-            'bytes[12]': 8
-            'bytes[13]': 139
-            'bytes[14]': 108
-            'bytes[15]': 111
           m_Value0: 2394153367096600355
           m_Value1: 8028945104337102311
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639714
+          rid: 1737768876771639814
         m_Children:
-        - rid: 1737768876771639747
-        - rid: 1737768876771639748
+        - rid: 1737768876771639847
+        - rid: 1737768876771639848
         m_RegisteredObservers: []
-        m_CurrentChild: 0
-    - rid: 1737768876771639727
+    - rid: 1737768876771639827
       type: {class: SequenceComposite, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 1
-            'bytes[1]': 100
-            'bytes[2]': 199
-            'bytes[3]': 61
-            'bytes[4]': 193
-            'bytes[5]': 195
-            'bytes[6]': 31
-            'bytes[7]': 75
-            'bytes[8]': 148
-            'bytes[9]': 217
-            'bytes[10]': 250
-            'bytes[11]': 90
-            'bytes[12]': 176
-            'bytes[13]': 207
-            'bytes[14]': 199
-            'bytes[15]': 143
           m_Value0: 5413260511855207425
           m_Value1: 10360477824136698260
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639714
+          rid: 1737768876771639814
         m_Children:
-        - rid: 1737768876771639749
+        - rid: 1737768876771639849
         m_RegisteredObservers:
         - Observer:
-            rid: 1737768876771639749
-        m_CurrentChild: 0
-    - rid: 1737768876771639728
+            rid: 1737768876771639849
+    - rid: 1737768876771639828
       type: {class: HasTargetCondition, ns: Unity.Behavior, asm: Assembly-CSharp}
       data:
         Graph:
           rid: 2729789868407783686
         Target:
           rid: 1588255640948048156
-    - rid: 1737768876771639729
+    - rid: 1737768876771639829
       type: {class: 'BlackboardVariable`1[[System.Boolean, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 0
-    - rid: 1737768876771639730
+    - rid: 1737768876771639830
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 1
-    - rid: 1737768876771639731
+    - rid: 1737768876771639831
       type: {class: 'BlackboardVariable`1[[State, Assembly-CSharp]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 2
-    - rid: 1737768876771639732
+    - rid: 1737768876771639832
       type: {class: 'BlackboardVariable`1[[UnityEngine.GameObject, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: {fileID: 0}
-    - rid: 1737768876771639733
+    - rid: 1737768876771639833
       type: {class: 'GameObjectToComponentBlackboardVariable`1[[UnityEngine.Transform, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: {fileID: 0}
         m_LinkedVariable:
           rid: 1588255640948048155
-        m_LinkedObject: {fileID: 0}
-        m_CallbackRegistered: 0
-    - rid: 1737768876771639734
+    - rid: 1737768876771639834
       type: {class: 'GameObjectToComponentBlackboardVariable`1[[UnityEngine.Transform, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: {fileID: 0}
         m_LinkedVariable:
           rid: 1588255640948048156
-        m_LinkedObject: {fileID: 0}
-        m_CallbackRegistered: 0
-    - rid: 1737768876771639735
+    - rid: 1737768876771639835
       type: {class: 'BlackboardVariable`1[[System.Boolean, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 0
-    - rid: 1737768876771639736
+    - rid: 1737768876771639836
       type: {class: 'BlackboardVariable`1[[System.Boolean, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 1
-    - rid: 1737768876771639737
+    - rid: 1737768876771639837
       type: {class: 'BlackboardVariable`1[[UnityEngine.GameObject, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: {fileID: 0}
-    - rid: 1737768876771639738
+    - rid: 1737768876771639838
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 0.7
-    - rid: 1737768876771639739
+    - rid: 1737768876771639839
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 0.5
-    - rid: 1737768876771639740
+    - rid: 1737768876771639840
       type: {class: 'BlackboardVariable`1[[State, Assembly-CSharp]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 5
-    - rid: 1737768876771639741
+    - rid: 1737768876771639841
       type: {class: 'BlackboardVariable`1[[UnityEngine.GameObject, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: {fileID: 0}
-    - rid: 1737768876771639742
+    - rid: 1737768876771639842
       type: {class: 'GameObjectToComponentBlackboardVariable`1[[UnityEngine.Transform, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: {fileID: 0}
         m_LinkedVariable:
           rid: 1588255640948048155
-        m_LinkedObject: {fileID: 0}
-        m_CallbackRegistered: 0
-    - rid: 1737768876771639743
+    - rid: 1737768876771639843
       type: {class: 'GameObjectToComponentBlackboardVariable`1[[UnityEngine.Transform, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: {fileID: 0}
         m_LinkedVariable:
           rid: 1588255640948048156
-        m_LinkedObject: {fileID: 0}
-        m_CallbackRegistered: 0
-    - rid: 1737768876771639744
+    - rid: 1737768876771639844
       type: {class: 'BlackboardVariable`1[[System.Boolean, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 0
-    - rid: 1737768876771639745
+    - rid: 1737768876771639845
       type: {class: 'BlackboardVariable`1[[System.Boolean, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 1
-    - rid: 1737768876771639746
+    - rid: 1737768876771639846
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 0.3
-    - rid: 1737768876771639747
+    - rid: 1737768876771639847
       type: {class: ConditionalGuardAction, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 35
-            'bytes[1]': 39
-            'bytes[2]': 153
-            'bytes[3]': 119
-            'bytes[4]': 205
-            'bytes[5]': 189
-            'bytes[6]': 57
-            'bytes[7]': 33
-            'bytes[8]': 231
-            'bytes[9]': 229
-            'bytes[10]': 31
-            'bytes[11]': 129
-            'bytes[12]': 8
-            'bytes[13]': 139
-            'bytes[14]': 108
-            'bytes[15]': 111
           m_Value0: 2394153367096600355
           m_Value1: 8028945104337102311
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639726
+          rid: 1737768876771639826
         m_Conditions:
-        - rid: 1737768876771639750
+        - rid: 1737768876771639850
         m_RequiresAllConditions: 0
-    - rid: 1737768876771639748
+    - rid: 1737768876771639848
       type: {class: SequenceComposite, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 235
-            'bytes[1]': 252
-            'bytes[2]': 239
-            'bytes[3]': 147
-            'bytes[4]': 73
-            'bytes[5]': 33
-            'bytes[6]': 10
-            'bytes[7]': 115
-            'bytes[8]': 183
-            'bytes[9]': 56
-            'bytes[10]': 164
-            'bytes[11]': 52
-            'bytes[12]': 100
-            'bytes[13]': 214
-            'bytes[14]': 1
-            'bytes[15]': 109
           m_Value0: 8289474664027127019
           m_Value1: 7854794950979106999
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639726
+          rid: 1737768876771639826
         m_Children:
-        - rid: 1737768876771639751
-        - rid: 1737768876771639752
-        - rid: 1737768876771639753
-        - rid: 1737768876771639754
-        - rid: 1737768876771639755
+        - rid: 1737768876771639851
+        - rid: 1737768876771639852
+        - rid: 1737768876771639853
+        - rid: 1737768876771639854
+        - rid: 1737768876771639855
         m_RegisteredObservers: []
-        m_CurrentChild: 0
-    - rid: 1737768876771639749
+    - rid: 1737768876771639849
       type: {class: ObserverAbortModifier, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 226
-            'bytes[1]': 42
-            'bytes[2]': 67
-            'bytes[3]': 190
-            'bytes[4]': 64
-            'bytes[5]': 214
-            'bytes[6]': 80
-            'bytes[7]': 152
-            'bytes[8]': 233
-            'bytes[9]': 176
-            'bytes[10]': 47
-            'bytes[11]': 191
-            'bytes[12]': 107
-            'bytes[13]': 162
-            'bytes[14]': 65
-            'bytes[15]': 126
           m_Value0: 10975507865460222690
           m_Value1: 9097731305917886697
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639727
+          rid: 1737768876771639827
         m_Child:
-          rid: 1737768876771639756
+          rid: 1737768876771639856
         m_Conditions:
-        - rid: 1737768876771639757
+        - rid: 1737768876771639857
         m_RequiresAllConditions: 0
         m_AbortTarget: 2
-    - rid: 1737768876771639750
+    - rid: 1737768876771639850
       type: {class: HasTargetCondition, ns: Unity.Behavior, asm: Assembly-CSharp}
       data:
         Graph:
           rid: 2729789868407783686
         Target:
           rid: 1588255640948048156
-    - rid: 1737768876771639751
+    - rid: 1737768876771639851
       type: {class: SetVariableValueAction, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 126
-            'bytes[1]': 63
-            'bytes[2]': 148
-            'bytes[3]': 121
-            'bytes[4]': 7
-            'bytes[5]': 83
-            'bytes[6]': 235
-            'bytes[7]': 39
-            'bytes[8]': 162
-            'bytes[9]': 192
-            'bytes[10]': 58
-            'bytes[11]': 212
-            'bytes[12]': 87
-            'bytes[13]': 244
-            'bytes[14]': 130
-            'bytes[15]': 142
           m_Value0: 2876484078575828862
           m_Value1: 10269038758418104482
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639748
+          rid: 1737768876771639848
         Variable:
           rid: 1588255640948048159
         Value:
-          rid: 1737768876771639758
-    - rid: 1737768876771639752
+          rid: 1737768876771639858
+    - rid: 1737768876771639852
       type: {class: FlipToFaceTargetAction, ns: Unity.Behavior, asm: Assembly-CSharp}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 253
-            'bytes[1]': 72
-            'bytes[2]': 93
-            'bytes[3]': 54
-            'bytes[4]': 159
-            'bytes[5]': 181
-            'bytes[6]': 183
-            'bytes[7]': 83
-            'bytes[8]': 60
-            'bytes[9]': 130
-            'bytes[10]': 250
-            'bytes[11]': 42
-            'bytes[12]': 157
-            'bytes[13]': 101
-            'bytes[14]': 238
-            'bytes[15]': 67
           m_Value0: 6032489921302579453
           m_Value1: 4894961570703639100
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639748
+          rid: 1737768876771639848
         Transform:
-          rid: 1737768876771639759
+          rid: 1737768876771639859
         Target:
-          rid: 1737768876771639760
+          rid: 1737768876771639860
         Continuous:
-          rid: 1737768876771639761
+          rid: 1737768876771639861
         FacingRightByDefault:
-          rid: 1737768876771639762
-    - rid: 1737768876771639753
+          rid: 1737768876771639862
+    - rid: 1737768876771639853
       type: {class: SetEnemyStateAction, ns: Unity.Behavior, asm: Assembly-CSharp}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 78
-            'bytes[1]': 118
-            'bytes[2]': 22
-            'bytes[3]': 68
-            'bytes[4]': 65
-            'bytes[5]': 157
-            'bytes[6]': 99
-            'bytes[7]': 173
-            'bytes[8]': 178
-            'bytes[9]': 224
-            'bytes[10]': 23
-            'bytes[11]': 122
-            'bytes[12]': 95
-            'bytes[13]': 152
-            'bytes[14]': 124
-            'bytes[15]': 185
           m_Value0: 12494002694896645710
           m_Value1: 13365725329966489778
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639748
+          rid: 1737768876771639848
         EnemyState:
           rid: 1588255640948048168
         TargetState:
-          rid: 1737768876771639763
+          rid: 1737768876771639863
         Agent:
-          rid: 1737768876771639764
-    - rid: 1737768876771639754
+          rid: 1737768876771639864
+    - rid: 1737768876771639854
       type: {class: ChaseAction, ns: , asm: Assembly-CSharp}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 37
-            'bytes[1]': 93
-            'bytes[2]': 205
-            'bytes[3]': 116
-            'bytes[4]': 177
-            'bytes[5]': 14
-            'bytes[6]': 99
-            'bytes[7]': 197
-            'bytes[8]': 106
-            'bytes[9]': 103
-            'bytes[10]': 176
-            'bytes[11]': 113
-            'bytes[12]': 71
-            'bytes[13]': 109
-            'bytes[14]': 8
-            'bytes[15]': 200
           m_Value0: 14223228203497774373
           m_Value1: 14413890761016764266
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639748
+          rid: 1737768876771639848
         Agent:
           rid: 1588255640948048155
         Target:
@@ -7057,402 +5768,160 @@ MonoBehaviour:
           rid: 1588255640948048164
         AttackRange:
           rid: 1588255640948048161
-        m_Controller: {fileID: 0}
-        m_AnimHandler: {fileID: 0}
-    - rid: 1737768876771639755
+    - rid: 1737768876771639855
       type: {class: SequenceComposite, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 243
-            'bytes[1]': 126
-            'bytes[2]': 189
-            'bytes[3]': 129
-            'bytes[4]': 29
-            'bytes[5]': 190
-            'bytes[6]': 177
-            'bytes[7]': 51
-            'bytes[8]': 220
-            'bytes[9]': 27
-            'bytes[10]': 233
-            'bytes[11]': 125
-            'bytes[12]': 149
-            'bytes[13]': 149
-            'bytes[14]': 38
-            'bytes[15]': 175
           m_Value0: 3724967400752119539
           m_Value1: 12620939475047488476
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639748
+          rid: 1737768876771639848
         m_Children:
-        - rid: 1737768876771639765
-        - rid: 1737768876771639766
+        - rid: 1737768876771639865
+        - rid: 1737768876771639866
         m_RegisteredObservers: []
-        m_CurrentChild: 0
-    - rid: 1737768876771639756
+    - rid: 1737768876771639856
       type: {class: SequenceComposite, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 147
-            'bytes[1]': 32
-            'bytes[2]': 75
-            'bytes[3]': 205
-            'bytes[4]': 195
-            'bytes[5]': 162
-            'bytes[6]': 96
-            'bytes[7]': 242
-            'bytes[8]': 253
-            'bytes[9]': 149
-            'bytes[10]': 50
-            'bytes[11]': 3
-            'bytes[12]': 13
-            'bytes[13]': 235
-            'bytes[14]': 207
-            'bytes[15]': 237
           m_Value0: 17465138316789358739
           m_Value1: 17136173548288775677
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639749
+          rid: 1737768876771639849
         m_Children:
-        - rid: 1737768876771639767
-        - rid: 1737768876771639768
-        - rid: 1737768876771639769
-        - rid: 1737768876771639770
+        - rid: 1737768876771639867
+        - rid: 1737768876771639868
+        - rid: 1737768876771639869
+        - rid: 1737768876771639870
         m_RegisteredObservers: []
-        m_CurrentChild: 0
-    - rid: 1737768876771639757
+    - rid: 1737768876771639857
       type: {class: HasTargetCondition, ns: Unity.Behavior, asm: Assembly-CSharp}
       data:
         Graph:
           rid: 2729789868407783686
         Target:
           rid: 1588255640948048156
-    - rid: 1737768876771639758
+    - rid: 1737768876771639858
       type: {class: 'BlackboardVariable`1[[System.Boolean, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 0
-    - rid: 1737768876771639759
+    - rid: 1737768876771639859
       type: {class: 'GameObjectToComponentBlackboardVariable`1[[UnityEngine.Transform, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: {fileID: 0}
         m_LinkedVariable:
           rid: 1588255640948048155
-        m_LinkedObject: {fileID: 0}
-        m_CallbackRegistered: 0
-    - rid: 1737768876771639760
+    - rid: 1737768876771639860
       type: {class: 'GameObjectToComponentBlackboardVariable`1[[UnityEngine.Transform, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: {fileID: 0}
         m_LinkedVariable:
           rid: 1588255640948048156
-        m_LinkedObject: {fileID: 0}
-        m_CallbackRegistered: 0
-    - rid: 1737768876771639761
+    - rid: 1737768876771639861
       type: {class: 'BlackboardVariable`1[[System.Boolean, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 0
-    - rid: 1737768876771639762
+    - rid: 1737768876771639862
       type: {class: 'BlackboardVariable`1[[System.Boolean, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 1
-    - rid: 1737768876771639763
+    - rid: 1737768876771639863
       type: {class: 'BlackboardVariable`1[[State, Assembly-CSharp]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 3
-    - rid: 1737768876771639764
+    - rid: 1737768876771639864
       type: {class: 'BlackboardVariable`1[[UnityEngine.GameObject, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: {fileID: 0}
-    - rid: 1737768876771639765
+    - rid: 1737768876771639865
       type: {class: ConditionalGuardAction, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 243
-            'bytes[1]': 126
-            'bytes[2]': 189
-            'bytes[3]': 129
-            'bytes[4]': 29
-            'bytes[5]': 190
-            'bytes[6]': 177
-            'bytes[7]': 51
-            'bytes[8]': 220
-            'bytes[9]': 27
-            'bytes[10]': 233
-            'bytes[11]': 125
-            'bytes[12]': 149
-            'bytes[13]': 149
-            'bytes[14]': 38
-            'bytes[15]': 175
           m_Value0: 3724967400752119539
           m_Value1: 12620939475047488476
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639755
+          rid: 1737768876771639855
         m_Conditions:
-        - rid: 1737768876771639771
+        - rid: 1737768876771639871
         m_RequiresAllConditions: 0
-    - rid: 1737768876771639766
+    - rid: 1737768876771639866
       type: {class: SequenceComposite, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 151
-            'bytes[1]': 197
-            'bytes[2]': 161
-            'bytes[3]': 64
-            'bytes[4]': 3
-            'bytes[5]': 13
-            'bytes[6]': 202
-            'bytes[7]': 252
-            'bytes[8]': 246
-            'bytes[9]': 200
-            'bytes[10]': 162
-            'bytes[11]': 204
-            'bytes[12]': 66
-            'bytes[13]': 119
-            'bytes[14]': 174
-            'bytes[15]': 11
           m_Value0: 18215385950473799063
           m_Value1: 841741309149628662
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639755
+          rid: 1737768876771639855
         m_Children:
-        - rid: 1737768876771639772
-        - rid: 1737768876771639773
-        - rid: 1737768876771639774
-        - rid: 1737768876771639775
-        - rid: 1737768876771639776
-        - rid: 1737768876771639777
+        - rid: 1737768876771639872
+        - rid: 1737768876771639873
+        - rid: 1737768876771639874
+        - rid: 1737768876771639875
+        - rid: 1737768876771639876
+        - rid: 1737768876771639877
         m_RegisteredObservers: []
-        m_CurrentChild: 0
-    - rid: 1737768876771639767
+    - rid: 1737768876771639867
       type: {class: SetEnemyStateAction, ns: Unity.Behavior, asm: Assembly-CSharp}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 223
-            'bytes[1]': 90
-            'bytes[2]': 254
-            'bytes[3]': 205
-            'bytes[4]': 214
-            'bytes[5]': 236
-            'bytes[6]': 118
-            'bytes[7]': 247
-            'bytes[8]': 51
-            'bytes[9]': 83
-            'bytes[10]': 179
-            'bytes[11]': 118
-            'bytes[12]': 22
-            'bytes[13]': 174
-            'bytes[14]': 184
-            'bytes[15]': 219
           m_Value0: 17831700181943212767
           m_Value1: 15832595901524955955
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639756
+          rid: 1737768876771639856
         EnemyState:
           rid: 1588255640948048168
         TargetState:
-          rid: 1737768876771639778
+          rid: 1737768876771639878
         Agent:
-          rid: 1737768876771639779
-    - rid: 1737768876771639768
+          rid: 1737768876771639879
+    - rid: 1737768876771639868
       type: {class: PatrolAction, ns: , asm: Assembly-CSharp}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 241
-            'bytes[1]': 179
-            'bytes[2]': 151
-            'bytes[3]': 174
-            'bytes[4]': 45
-            'bytes[5]': 147
-            'bytes[6]': 59
-            'bytes[7]': 99
-            'bytes[8]': 131
-            'bytes[9]': 17
-            'bytes[10]': 117
-            'bytes[11]': 229
-            'bytes[12]': 3
-            'bytes[13]': 173
-            'bytes[14]': 71
-            'bytes[15]': 118
           m_Value0: 7150470657792783345
           m_Value1: 8522971052068114819
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639756
+          rid: 1737768876771639856
         Agent:
           rid: 1588255640948048155
         Target:
@@ -7464,84 +5933,38 @@ MonoBehaviour:
         MoveSpeed:
           rid: 1588255640948048163
         ArrivalThreshold:
-          rid: 1737768876771639780
-        m_Controller: {fileID: 0}
-        m_AnimHandler: {fileID: 0}
-        m_SpawnPosition: {x: 0, y: 0}
-        m_TargetPosition: {x: 0, y: 0}
-        m_Initialized: 0
-    - rid: 1737768876771639769
+          rid: 1737768876771639880
+    - rid: 1737768876771639869
       type: {class: SetEnemyStateAction, ns: Unity.Behavior, asm: Assembly-CSharp}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 42
-            'bytes[1]': 40
-            'bytes[2]': 233
-            'bytes[3]': 119
-            'bytes[4]': 146
-            'bytes[5]': 253
-            'bytes[6]': 45
-            'bytes[7]': 39
-            'bytes[8]': 240
-            'bytes[9]': 84
-            'bytes[10]': 19
-            'bytes[11]': 63
-            'bytes[12]': 255
-            'bytes[13]': 46
-            'bytes[14]': 231
-            'bytes[15]': 38
           m_Value0: 2823191346949990442
           m_Value1: 2803260966871192816
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639756
+          rid: 1737768876771639856
         EnemyState:
           rid: 1588255640948048168
         TargetState:
-          rid: 1737768876771639781
+          rid: 1737768876771639881
         Agent:
-          rid: 1737768876771639782
-    - rid: 1737768876771639770
+          rid: 1737768876771639882
+    - rid: 1737768876771639870
       type: {class: IdleAction, ns: , asm: Assembly-CSharp}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 19
-            'bytes[1]': 104
-            'bytes[2]': 30
-            'bytes[3]': 175
-            'bytes[4]': 66
-            'bytes[5]': 139
-            'bytes[6]': 254
-            'bytes[7]': 200
-            'bytes[8]': 15
-            'bytes[9]': 220
-            'bytes[10]': 168
-            'bytes[11]': 28
-            'bytes[12]': 46
-            'bytes[13]': 182
-            'bytes[14]': 17
-            'bytes[15]': 196
           m_Value0: 14483166570192201747
           m_Value1: 14128273815203535887
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639756
+          rid: 1737768876771639856
         Agent:
           rid: 1588255640948048155
         IdleDuration:
           rid: 1588255640948048166
-        m_Controller: {fileID: 0}
-        m_AnimHandler: {fileID: 0}
-        m_Timer: 0
-    - rid: 1737768876771639771
+    - rid: 1737768876771639871
       type: {class: IsPlayerInAttackRangeCondition, ns: , asm: Assembly-CSharp}
       data:
         Graph:
@@ -7552,167 +5975,71 @@ MonoBehaviour:
           rid: 1588255640948048156
         AttackRange:
           rid: 1588255640948048161
-    - rid: 1737768876771639772
+    - rid: 1737768876771639872
       type: {class: SetVariableValueAction, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 122
-            'bytes[1]': 52
-            'bytes[2]': 140
-            'bytes[3]': 156
-            'bytes[4]': 165
-            'bytes[5]': 247
-            'bytes[6]': 114
-            'bytes[7]': 5
-            'bytes[8]': 99
-            'bytes[9]': 92
-            'bytes[10]': 129
-            'bytes[11]': 112
-            'bytes[12]': 224
-            'bytes[13]': 52
-            'bytes[14]': 86
-            'bytes[15]': 243
           m_Value0: 392648408202753146
           m_Value1: 17534260337778449507
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639766
+          rid: 1737768876771639866
         Variable:
           rid: 1588255640948048159
         Value:
-          rid: 1737768876771639783
-    - rid: 1737768876771639773
+          rid: 1737768876771639883
+    - rid: 1737768876771639873
       type: {class: ConditionalGuardAction, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 110
-            'bytes[1]': 22
-            'bytes[2]': 130
-            'bytes[3]': 128
-            'bytes[4]': 39
-            'bytes[5]': 92
-            'bytes[6]': 38
-            'bytes[7]': 43
-            'bytes[8]': 221
-            'bytes[9]': 71
-            'bytes[10]': 82
-            'bytes[11]': 215
-            'bytes[12]': 216
-            'bytes[13]': 232
-            'bytes[14]': 11
-            'bytes[15]': 216
           m_Value0: 3109273917475395182
           m_Value1: 15567792554959325149
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639766
+          rid: 1737768876771639866
         m_Conditions:
-        - rid: 1737768876771639784
+        - rid: 1737768876771639884
         m_RequiresAllConditions: 0
-    - rid: 1737768876771639774
+    - rid: 1737768876771639874
       type: {class: WaitAction, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 22
-            'bytes[1]': 206
-            'bytes[2]': 5
-            'bytes[3]': 9
-            'bytes[4]': 250
-            'bytes[5]': 120
-            'bytes[6]': 237
-            'bytes[7]': 67
-            'bytes[8]': 244
-            'bytes[9]': 102
-            'bytes[10]': 2
-            'bytes[11]': 41
-            'bytes[12]': 135
-            'bytes[13]': 87
-            'bytes[14]': 207
-            'bytes[15]': 5
           m_Value0: 4894701385310129686
           m_Value1: 418649528388970228
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639766
+          rid: 1737768876771639866
         SecondsToWait:
-          rid: 1737768876771639785
-        m_Timer: 0
-    - rid: 1737768876771639775
+          rid: 1737768876771639885
+    - rid: 1737768876771639875
       type: {class: SetEnemyStateAction, ns: Unity.Behavior, asm: Assembly-CSharp}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 239
-            'bytes[1]': 53
-            'bytes[2]': 162
-            'bytes[3]': 57
-            'bytes[4]': 0
-            'bytes[5]': 104
-            'bytes[6]': 222
-            'bytes[7]': 62
-            'bytes[8]': 140
-            'bytes[9]': 73
-            'bytes[10]': 245
-            'bytes[11]': 206
-            'bytes[12]': 235
-            'bytes[13]': 120
-            'bytes[14]': 240
-            'bytes[15]': 116
           m_Value0: 4530172625357518319
           m_Value1: 8426367856995027340
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639766
+          rid: 1737768876771639866
         EnemyState:
           rid: 1588255640948048168
         TargetState:
-          rid: 1737768876771639786
+          rid: 1737768876771639886
         Agent:
-          rid: 1737768876771639787
-    - rid: 1737768876771639776
-      type: {class: AttackAction, ns: , asm: Assembly-CSharp}
+          rid: 1737768876771639887
+    - rid: 1737768876771639876
+      type: {class: EnemyAttackAction, ns: , asm: Assembly-CSharp}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 182
-            'bytes[1]': 154
-            'bytes[2]': 178
-            'bytes[3]': 44
-            'bytes[4]': 134
-            'bytes[5]': 157
-            'bytes[6]': 75
-            'bytes[7]': 162
-            'bytes[8]': 94
-            'bytes[9]': 10
-            'bytes[10]': 146
-            'bytes[11]': 155
-            'bytes[12]': 153
-            'bytes[13]': 95
-            'bytes[14]': 213
-            'bytes[15]': 19
           m_Value0: 11694614056998705846
           m_Value1: 1429153570104674910
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639766
+          rid: 1737768876771639866
         Agent:
           rid: 1588255640948048155
         Target:
@@ -7720,200 +6047,72 @@ MonoBehaviour:
         CanAttack:
           rid: 1588255640948048159
         WarningDuration:
-          rid: 1737768876771639788
+          rid: 1737768876771639888
         HitWindowDuration:
-          rid: 1737768876771639789
+          rid: 1737768876771639889
         AttackCooldown:
-          rid: 1737768876771639790
-        m_Controller: {fileID: 0}
-        m_AnimHandler: {fileID: 0}
-        m_Timer: 0
-        m_AttackStartTime: 0
-        m_AttackStarted: 0
-        m_HitboxDisabled: 0
-    - rid: 1737768876771639777
+          rid: 1737768876771639890
+    - rid: 1737768876771639877
       type: {class: WaitAction, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
-        <CurrentStatus>k__BackingField: 0
-        <IsRunning>k__BackingField: 0
         ID:
-          m_Hash128:
-            'bytes[0]': 124
-            'bytes[1]': 197
-            'bytes[2]': 6
-            'bytes[3]': 35
-            'bytes[4]': 126
-            'bytes[5]': 102
-            'bytes[6]': 126
-            'bytes[7]': 81
-            'bytes[8]': 146
-            'bytes[9]': 133
-            'bytes[10]': 206
-            'bytes[11]': 146
-            'bytes[12]': 115
-            'bytes[13]': 102
-            'bytes[14]': 235
-            'bytes[15]': 247
           m_Value0: 5872243656077264252
           m_Value1: 17864484993465484690
         Graph:
           rid: 2729789868407783686
         m_Parent:
-          rid: 1737768876771639766
+          rid: 1737768876771639866
         SecondsToWait:
-          rid: 1737768876771639791
-        m_Timer: 0
-    - rid: 1737768876771639778
+          rid: 1737768876771639891
+    - rid: 1737768876771639878
       type: {class: 'BlackboardVariable`1[[State, Assembly-CSharp]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 1
-    - rid: 1737768876771639779
+    - rid: 1737768876771639879
       type: {class: 'BlackboardVariable`1[[UnityEngine.GameObject, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: {fileID: 0}
-    - rid: 1737768876771639780
+    - rid: 1737768876771639880
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 0.15
-    - rid: 1737768876771639781
+    - rid: 1737768876771639881
       type: {class: 'BlackboardVariable`1[[State, Assembly-CSharp]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 0
-    - rid: 1737768876771639782
+    - rid: 1737768876771639882
       type: {class: 'BlackboardVariable`1[[UnityEngine.GameObject, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: {fileID: 0}
-    - rid: 1737768876771639783
+    - rid: 1737768876771639883
       type: {class: 'BlackboardVariable`1[[System.Boolean, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 1
-    - rid: 1737768876771639784
+    - rid: 1737768876771639884
       type: {class: CanAttackCondition, ns: , asm: Assembly-CSharp}
       data:
         Graph:
@@ -7926,177 +6125,58 @@ MonoBehaviour:
           rid: 1588255640948048159
         AttackRange:
           rid: 1588255640948048161
-    - rid: 1737768876771639785
+    - rid: 1737768876771639885
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 1
-    - rid: 1737768876771639786
+    - rid: 1737768876771639886
       type: {class: 'BlackboardVariable`1[[State, Assembly-CSharp]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 4
-    - rid: 1737768876771639787
+    - rid: 1737768876771639887
       type: {class: 'BlackboardVariable`1[[UnityEngine.GameObject, UnityEngine.CoreModule]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: {fileID: 0}
-    - rid: 1737768876771639788
+    - rid: 1737768876771639888
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 0.5
-    - rid: 1737768876771639789
+    - rid: 1737768876771639889
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 0.2
-    - rid: 1737768876771639790
+    - rid: 1737768876771639890
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
         m_Value: 1.2
-    - rid: 1737768876771639791
+    - rid: 1737768876771639891
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         GUID:
-          m_Hash128:
-            'bytes[0]': 0
-            'bytes[1]': 0
-            'bytes[2]': 0
-            'bytes[3]': 0
-            'bytes[4]': 0
-            'bytes[5]': 0
-            'bytes[6]': 0
-            'bytes[7]': 0
-            'bytes[8]': 0
-            'bytes[9]': 0
-            'bytes[10]': 0
-            'bytes[11]': 0
-            'bytes[12]': 0
-            'bytes[13]': 0
-            'bytes[14]': 0
-            'bytes[15]': 0
           m_Value0: 0
           m_Value1: 0
         Name: 
@@ -8105,23 +6185,6 @@ MonoBehaviour:
       type: {class: BehaviorGraphModule, ns: Unity.Behavior, asm: Unity.Behavior}
       data:
         AuthoringAssetID:
-          m_Hash128:
-            'bytes[0]': 18
-            'bytes[1]': 198
-            'bytes[2]': 23
-            'bytes[3]': 25
-            'bytes[4]': 110
-            'bytes[5]': 93
-            'bytes[6]': 73
-            'bytes[7]': 20
-            'bytes[8]': 169
-            'bytes[9]': 204
-            'bytes[10]': 145
-            'bytes[11]': 41
-            'bytes[12]': 243
-            'bytes[13]': 103
-            'bytes[14]': 122
-            'bytes[15]': 23
           m_Value0: 1461802281507210770
           m_Value1: 1691778904103177385
         m_DebugInfo: {fileID: -927852618135409272}
@@ -8129,11 +6192,8 @@ MonoBehaviour:
           rid: 2729789868407783687
         BlackboardGroupReferences: []
         Root:
-          rid: 1737768876771639692
-        m_NodesChanged: 0
-        <IsEndingBranch>k__BackingField: 0
-        m_VersionTimestamp: 639129992263123392
-        <GameObject>k__BackingField: {fileID: 0}
+          rid: 1737768876771639792
+        m_VersionTimestamp: 639130087211643214
     - rid: 2729789868407783687
       type: {class: BlackboardReference, ns: Unity.Behavior, asm: Unity.Behavior}
       data:

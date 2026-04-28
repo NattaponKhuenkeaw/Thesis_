@@ -943,11 +943,6 @@ PlatformEffector2D:
   m_UseSideFriction: 0
   m_UseSideBounce: 0
   m_SideArc: 1
---- !u!1 &1214795546 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8076686819922873423, guid: fe04a9cf17d368a4cbf256db61cc07e0, type: 3}
-  m_PrefabInstance: {fileID: 1695201451}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1242803636
 GameObject:
   m_ObjectHideFlags: 0
@@ -1999,14 +1994,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Enemy1
       objectReference: {fileID: 0}
-    - target: {fileID: 7015949067103983918, guid: fe04a9cf17d368a4cbf256db61cc07e0, type: 3}
-      propertyPath: attackWarningIcon
-      value: 
-      objectReference: {fileID: 1214795546}
-    - target: {fileID: 7015949067103983918, guid: fe04a9cf17d368a4cbf256db61cc07e0, type: 3}
-      propertyPath: defaultAttackWarningDuration
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 7519174093949083380, guid: fe04a9cf17d368a4cbf256db61cc07e0, type: 3}
       propertyPath: m_LocalPosition.x
       value: -19.22
@@ -2045,10 +2032,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7519174093949083380, guid: fe04a9cf17d368a4cbf256db61cc07e0, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8076686819922873423, guid: fe04a9cf17d368a4cbf256db61cc07e0, type: 3}
-      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

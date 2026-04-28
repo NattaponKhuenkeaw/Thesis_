@@ -45,6 +45,12 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         if (m_Controller == null || m_AnimHandler == null)
             return Status.Failure;
 
+        // Do not begin a telegraph while the enemy is already inside a hit-reaction.
+        // Without this guard, the warning can be consumed in the background while the
+        // player is mashing attacks, so the next visible attack feels unwarned.
+        if (m_Controller.CurrentReactionState != EnemyReactionState.None)
+            return Status.Failure;
+
         if (CanAttack != null)
             CanAttack.Value = false;
 
@@ -65,6 +71,18 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
 
     protected override Status OnUpdate()
     {
+        // Abort immediately if the enemy gets interrupted by player hits while this
+        // attack action is telegraphing or active. That ensures the next real attack
+        // re-enters from OnStart and shows a fresh warning instead of silently
+        // continuing the previous timer in the background.
+        if (m_Controller == null || m_Controller.CurrentReactionState != EnemyReactionState.None)
+        {
+            if (CanAttack != null)
+                CanAttack.Value = true;
+
+            return Status.Failure;
+        }
+
         m_Timer += Time.deltaTime;
 
         float telegraphDuration = Mathf.Max(0f, WarningDuration.Value);
@@ -93,6 +111,13 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
     {
         m_Controller?.SetAttackHitboxActive(false);
         m_Controller?.HideAttackWarning();
+
+        // If the attack action is interrupted (for example by hit reaction),
+        // make sure the blackboard gate is reopened so the enemy can re-enter
+        // its attack flow and show warning again on the next valid attack.
+        if (CanAttack != null)
+            CanAttack.Value = true;
+
         m_Controller = null;
         m_AnimHandler = null;
     }
