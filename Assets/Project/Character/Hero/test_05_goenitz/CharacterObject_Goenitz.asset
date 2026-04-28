@@ -21,15 +21,6 @@ MonoBehaviour:
     attack: 13
     defense: 7
     elementalMultiplier: 1
-    moveSpeed: 4.5
-    jumpForce: 22
-    maxJumpCount: 2
-    maxAirDashCount: 2
-    groundAcceleration: 110
-    groundDeceleration: 120
-    airAcceleration: 55
-    airDeceleration: 40
-    airSpeedMultiplier: 1
   metaData:
     displayName: Goenitz
     description: "\u0E15\u0E31\u0E27\u0E25\u0E30\u0E04\u0E23\u0E40\u0E27\u0E2D\u0E23\u0E4C\u0E0A\u0E31\u0E19\u0E2A\u0E25\u0E31\u0E1A\u0E40\u0E1E\u0E28
@@ -42,6 +33,9 @@ MonoBehaviour:
     attackSfx: {fileID: 0}
     skillSfx: {fileID: 0}
     hurtSfx: {fileID: 0}
+  movementProfile: {fileID: 11400000, guid: cd71e34e3ebc46d458f1965ef79c3daf, type: 2}
+  maxJumpOverride: 2
+  maxAirDashOverride: -1
   _authoredFPS: 24
   upgrade:
     level: 1

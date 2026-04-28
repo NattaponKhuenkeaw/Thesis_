@@ -22,7 +22,7 @@ MonoBehaviour:
   airDeceleration: 110
   airSpeedMultiplier: 1
   fastFallMultiplier: 10
-  riseGravityMultiplier: 1.5
+  riseGravityMultiplier: 3
   apexGravityMultiplier: 5
   apexVelocityThreshold: 1.6
   postAttackGravityGraceDuration: 0.1
@@ -40,10 +40,11 @@ MonoBehaviour:
   enableAttackFacingLockOn: 1
   attackFacingCancelInputThreshold: 0.2
   airborneGravityPolicy:
-    startupScale: 0.05
-    activeScale: 0
-    recoveryStartScale: 0.05
-    recoveryEndScale: 0.3
+    startupVelocityRetain: 0.05
+    startupScale: 0
+    activeScale: 0.1
+    recoveryStartScale: 0.5
+    recoveryEndScale: 1
     recoveryEasing: 1
     velocityExitThreshold: 0.5
   airborneActionDriftScale: 0.3

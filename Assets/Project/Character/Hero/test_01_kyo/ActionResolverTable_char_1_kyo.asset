@@ -491,9 +491,9 @@ MonoBehaviour:
       data:
         stepData:
           startupFrames: 20
-          activeFrames: 11
-          recoveryFrames: 8
-          cancelWindowStartFrame: 42
+          activeFrames: 6
+          recoveryFrames: 13
+          cancelWindowStartFrame: 32
           loopActivePhase: 0
           stepName: R.E.D Kick
           animationClip: {fileID: 7400000, guid: a36de9711e8cd9a46a70df996e055f29, type: 2}

@@ -36,10 +36,9 @@ public class CameraShakeController : MonoBehaviour
     {
         if (strength <= 0f) return;
 
-        // Prefer centralized CameraManager shake
-        if (CameraManager.instance != null)
+        if (GameImpulseController.Instance != null)
         {
-            CameraManager.instance.Shake(strength);
+            GameImpulseController.Instance.PlayOneShot(strength);
             return;
         }
 
@@ -59,9 +58,9 @@ public class CameraShakeController : MonoBehaviour
     /// </summary>
     public void ShakeByImpact(DamageImpactTier tier)
     {
-        if (CameraManager.instance != null)
+        if (GameImpulseController.Instance != null)
         {
-            CameraManager.instance.ShakeByImpact(tier);
+            GameImpulseController.Instance.PlayImpact(tier);
             return;
         }
 

@@ -68,6 +68,12 @@ public class PlayerUltimateState : CombatPlayerState
 
         if (currentPhase == ActionPhase.None)
         {
+            if (ShouldAbortBeforeExecution())
+            {
+                resolver.Reset();
+                return;
+            }
+
             InputContext ctx = BuildInputContext();
             AttackStepData step = resolver.ResolveInitial(ctx, resolverTable, AttackCategory.Ultimate);
 
@@ -87,8 +93,8 @@ public class PlayerUltimateState : CombatPlayerState
             }
 
             activeUltimateAction = resolver.ActiveCombatAction as UltimateAction;
-            TryStartCooldown();
             ExecuteCombatStep(step, ctx, false);
+            TryStartCooldown();
 
             if (activeUltimateAction != null && activeUltimateAction.useDashAfterImage && player.Movement != null)
             {

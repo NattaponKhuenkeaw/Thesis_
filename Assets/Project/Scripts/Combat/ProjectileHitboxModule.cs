@@ -29,9 +29,9 @@ public sealed class ProjectileHitboxModule
         triggerCollider.enabled = true;
     }
 
-    public void ConfigurePassiveCollider(Vector2 size)
+    public void ConfigurePassiveCollider(Vector2 offset, Vector2 size)
     {
-        triggerCollider.offset = Vector2.zero;
+        triggerCollider.offset = offset;
         triggerCollider.size = size;
         triggerCollider.enabled = true;
         hitBoxDamage.enabled = false;
@@ -45,7 +45,13 @@ public sealed class ProjectileHitboxModule
 
         if (hitbox == null)
         {
-            ConfigurePassiveCollider(runtime.ProjectileData != null ? runtime.ProjectileData.travelColliderSize : Vector2.one * 0.5f);
+            Vector2 passiveOffset = runtime.ProjectileData != null
+                ? runtime.ProjectileData.ResolvePassiveColliderOffset(facing)
+                : Vector2.zero;
+            Vector2 passiveSize = runtime.ProjectileData != null
+                ? runtime.ProjectileData.travelColliderSize
+                : Vector2.one * 0.5f;
+            ConfigurePassiveCollider(passiveOffset, passiveSize);
             return false;
         }
 
@@ -88,20 +94,50 @@ public sealed class ProjectileHitboxModule
 
     public bool TryProcessHit(Collider2D other)
     {
+        EnemyController enemy = other != null ? other.GetComponentInParent<EnemyController>() : null;
+        return TryProcessHit(enemy);
+    }
+
+    public void BeginHitCycle()
+    {
+        if (activeHitbox == null || !triggerCollider.enabled || !hitBoxDamage.enabled)
+        {
+            return;
+        }
+
+        hitBoxDamage.ResetActivationState();
+    }
+
+    public bool TryProcessHit(EnemyController enemy)
+    {
         if (activeHitbox == null || !triggerCollider.enabled || !hitBoxDamage.enabled)
         {
             return false;
         }
 
-        EnemyController enemy = other.GetComponentInParent<EnemyController>();
         if (enemy == null || !enemy.IsAlive)
         {
             return false;
         }
 
-        hitBoxDamage.ResetActivationState();
         hitBoxDamage.ProcessHit(enemy);
         return true;
+    }
+
+    public void RefreshColliderGeometry(float facing)
+    {
+        if (activeHitbox != null)
+        {
+            hitBoxController.ApplyHitbox(activeHitbox, facing);
+            return;
+        }
+
+        if (runtime.ProjectileData != null)
+        {
+            ConfigurePassiveCollider(
+                runtime.ProjectileData.ResolvePassiveColliderOffset(facing),
+                runtime.ProjectileData.travelColliderSize);
+        }
     }
 
     public void Disable()

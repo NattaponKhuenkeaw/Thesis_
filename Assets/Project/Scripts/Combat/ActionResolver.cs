@@ -181,6 +181,21 @@ public class ActionResolver
     {
         if (currentNode == null) return null;
 
+        // Context Validation: Prevent Air combos from continuing on the Ground and vice versa.
+        if (ActiveCombatAction != null && ActiveCombatAction.context != CombatActionContext.Both)
+        {
+            if (ActiveCombatAction.context == CombatActionContext.Ground && !ctx.isGrounded)
+            {
+                Log($"Context Invalidated: Expected Ground, but is Airborne. Canceling chain.", Color.red);
+                return null; // Force chain break, FSM will start a new air action
+            }
+            if (ActiveCombatAction.context == CombatActionContext.Air && ctx.isGrounded)
+            {
+                Log($"Context Invalidated: Expected Air, but is Grounded. Canceling chain.", Color.red);
+                return null; // Force chain break, FSM will start a new ground action
+            }
+        }
+
         string prevNodeName = currentNode.stepData?.stepName ?? "Unknown";
 
         ComboNode nextNode = ComboRouter.ResolveRoute(currentNode, ctx, allowDefault: false);

@@ -1,16 +1,30 @@
 using UnityEngine;
 
 /// <summary>
-/// Jump/Airborne state: player is in the air (jump, fall, or walked off ledge).
-/// Has custom jump logic (drop-down, double jump) and attack logic (air combos + plunge).
-/// Plunge attack is now triggered via Down+Attack through the ActionResolver,
-/// not through a hard-coded Jump+Down check.
+/// Airborne state: player is in the air after a jump impulse has fired.
+/// All inputs are allowed — attacks, skills, dashes, double jumps, drop-down.
+/// This replaces the old PlayerJumpState's mid-air behavior.
+///
+/// Landing detection: when grounded + not moving upward → exit to Idle/Move.
 /// </summary>
-public class PlayerJumpState : PlayerState
+public class PlayerAirborneState : PlayerState
 {
     private Vector2 cachedMoveInput;
 
-    public PlayerJumpState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
+    public PlayerAirborneState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
+
+    public override PlayerStateId StateId => PlayerStateId.Airborne;
+    public override PlayerStatePriority Priority => PlayerStatePriority.Ability;
+
+    // =========================================================
+    // Capabilities — AllowAll
+    // =========================================================
+    public override bool AcceptsMoveInput => true;
+    public override bool AcceptsDashInput => true;
+    public override bool AcceptsJumpInput => true;
+    public override bool AcceptsAttackInput => true;
+    public override bool AcceptsSkillInput => true;
+    public override bool AcceptsUltimateInput => true;
 
     public override void Enter()
     {
@@ -19,26 +33,12 @@ public class PlayerJumpState : PlayerState
             player.Animator.RestoreAirborneState();
     }
 
-    public override PlayerStateId StateId => PlayerStateId.Jumping;
-    public override PlayerStatePriority Priority => PlayerStatePriority.Ability;
-
-    // =========================================================
-    // Capabilities
-    // =========================================================
-    public override bool AcceptsMoveInput => true;
-    public override bool AcceptsDashInput => player.Movement == null || !player.Movement.IsJumping;
-    public override bool AcceptsJumpInput => true;   // custom handler (drop-down, double jump)
-    public override bool AcceptsAttackInput => player.Movement == null || !player.Movement.IsJumping;
-    public override bool AcceptsSkillInput => player.Movement == null || !player.Movement.IsJumping;
-    public override bool AcceptsUltimateInput => player.Movement == null || !player.Movement.IsJumping;
-
     public override void Update()
     {
-        if (player.Movement == null)
-            return;
+        if (player.Movement == null) return;
 
-        // Process buffered inputs once jump startup is complete
-        if (!player.Movement.IsJumping && fsm.InputBuffer != null)
+        // Process buffered inputs
+        if (fsm.InputBuffer != null)
         {
             if (fsm.InputBuffer.HasAttackBuffer && fsm.InputBuffer.ConsumeAttack())
             {
@@ -57,11 +57,9 @@ public class PlayerJumpState : PlayerState
             }
         }
 
-        // Landed: go to Idle or Move
-        // We only land if we are grounded, not in jump startup, and NOT moving upwards significantly.
-        // This prevents the "grounded" overlap from snapping us back to Idle in the first frame of a jump.
+        // Landed detection
         bool isMovingUp = player.Movement.VerticalVelocity > 0.1f;
-        if (player.Movement.IsGrounded() && !player.Movement.IsJumping && !isMovingUp)
+        if (player.Movement.GroundState.IsEffectivelyGrounded && !isMovingUp)
         {
             if (Mathf.Abs(player.Movement.HorizontalInput) > 0.01f)
                 fsm.ChangeState(fsm.MoveState);
@@ -71,7 +69,7 @@ public class PlayerJumpState : PlayerState
     }
 
     // =========================================================
-    // Custom Input — move also caches for drop-down checks
+    // Input Hooks
     // =========================================================
     public override void OnMoveInput(Vector2 input)
     {
@@ -90,12 +88,10 @@ public class PlayerJumpState : PlayerState
 
     /// <summary>
     /// Custom jump: drop-down → double jump priority chain.
-    /// Plunge attack has been moved to OnAttackInput (Down+Attack via ActionResolver).
     /// </summary>
     public override void OnJumpInput()
     {
-        if (player.Movement == null)
-            return;
+        if (player.Movement == null) return;
 
         // Try drop-down first
         bool wantsDropDown = cachedMoveInput.y < -0.5f || player.Movement.IsDownInputHeld();
@@ -105,7 +101,11 @@ public class PlayerJumpState : PlayerState
                 return;
         }
 
-        player.Movement.Jump();
+        // Double jump: go through startup
+        if (player.Movement.CanJump())
+        {
+            fsm.ChangeState(fsm.JumpStartupState);
+        }
     }
 
     public override bool HandleAttackInput()
@@ -115,8 +115,7 @@ public class PlayerJumpState : PlayerState
     }
 
     /// <summary>
-    /// Custom attack: air combos and plunge (via ActionResolver).
-    /// The resolver handles Down+Attack → Plunge as a StandaloneAction.
+    /// Air attack: transition to AirAttackState.
     /// </summary>
     public override void OnAttackInput()
     {

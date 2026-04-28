@@ -68,6 +68,12 @@ public class PlayerSkillState : CombatPlayerState
 
         if (currentPhase == ActionPhase.None)
         {
+            if (ShouldAbortBeforeExecution())
+            {
+                resolver.Reset();
+                return;
+            }
+
             InputContext ctx = BuildInputContext();
             AttackStepData step = resolver.ResolveInitial(ctx, resolverTable, AttackCategory.Skill);
             
@@ -87,8 +93,8 @@ public class PlayerSkillState : CombatPlayerState
             }
 
             activeSkillAction = resolver.ActiveCombatAction as SkillAction;
-            TryStartCooldown();
             ExecuteCombatStep(step, ctx, false);
+            TryStartCooldown();
 
             return;
         }

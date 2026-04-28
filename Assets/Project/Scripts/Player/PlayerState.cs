@@ -13,7 +13,9 @@ public enum PlayerStateId
     None,
     Idle,
     Running,
-    Jumping,
+    JumpStartup,
+    Airborne,
+    Falling,
     Dashing,
     Attacking,
     Skill,
@@ -158,7 +160,11 @@ public abstract class PlayerState
     /// Jump pressed. Default: no-op. FSM handles default routing via AcceptsJumpInput.
     /// Override only if the state has custom jump behavior (e.g., JumpState's drop-down/plunge logic).
     /// </summary>
-    public virtual void OnJumpInput() { }
+    public virtual void OnJumpInput()
+    {
+        if (AcceptsJumpInput)
+            fsm.ChangeState(fsm.JumpStartupState);
+    }
 
     /// <summary>
     /// Dash pressed. Default: no-op. FSM handles default routing via AcceptsDashInput.
@@ -202,13 +208,13 @@ public abstract class PlayerState
         // Always ensure gravity/motion control is returned to movement unit
         player.Movement.CancelAttackMotion();
 
-        if (!player.Movement.IsGrounded())
+        if (!player.Movement.GroundState.IsEffectivelyGrounded)
         {
             fsm.Log("FSM", "[Exit] Determined: Airborne \u2192 Jumping", Color.cyan);
             if (player.Animator != null)
                 player.Animator.RestoreAirborneState();
 
-            fsm.ChangeState(fsm.JumpState);
+            fsm.ChangeState(fsm.AirborneState);
         }
         else if (Mathf.Abs(player.Movement.HorizontalInput) > 0.01f)
         {

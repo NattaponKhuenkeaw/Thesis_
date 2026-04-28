@@ -24,9 +24,11 @@ public class GameFreezeManager : MonoBehaviour
     public static GameFreezeManager Instance { get; private set; }
 
     private Coroutine freezeCoroutine;
+    private Coroutine slowMotionCoroutine;
     private int currentFreezeFramesRemaining;
     private int nextFreezeTokenId = 1;
     private int activeScopedFreezeTokenId;
+    private float defaultFixedDeltaTime;
 
     public bool IsTimeFrozen => Time.timeScale <= 0f;
     public bool HasActiveScopedFreeze => activeScopedFreezeTokenId != 0;
@@ -37,6 +39,7 @@ public class GameFreezeManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            defaultFixedDeltaTime = Time.fixedDeltaTime;
         }
         else
         {
@@ -50,6 +53,7 @@ public class GameFreezeManager : MonoBehaviour
         {
             // Ensure timeScale is restored if the manager is destroyed
             Time.timeScale = 1f;
+            Time.fixedDeltaTime = defaultFixedDeltaTime > 0f ? defaultFixedDeltaTime : 0.02f;
             Instance = null;
         }
     }
@@ -62,6 +66,8 @@ public class GameFreezeManager : MonoBehaviour
     {
         if (frames <= 0) return;
         if (HasActiveScopedFreeze) return;
+
+        StopSlowMotion(false);
 
         // If a new freeze is requested, we take the maximum duration
         if (frames > currentFreezeFramesRemaining)
@@ -81,6 +87,7 @@ public class GameFreezeManager : MonoBehaviour
     public FreezeToken BeginScopedFreeze()
     {
         currentFreezeFramesRemaining = 0;
+        StopSlowMotion(false);
 
         if (freezeCoroutine != null)
         {
@@ -120,6 +127,8 @@ public class GameFreezeManager : MonoBehaviour
             return;
         }
 
+        StopSlowMotion(false);
+
         currentFreezeFramesRemaining = frames;
 
         if (freezeCoroutine != null)
@@ -139,10 +148,56 @@ public class GameFreezeManager : MonoBehaviour
         yield return new WaitForSecondsRealtime(seconds);
 
         Time.timeScale = 1f;
+        Time.fixedDeltaTime = defaultFixedDeltaTime;
         currentFreezeFramesRemaining = 0;
         freezeCoroutine = null;
         
         onComplete?.Invoke();
+    }
+
+    public void PlaySlowMotion(float timeScale, float duration, float delaySeconds = 0f)
+    {
+        if (duration <= 0f || timeScale <= 0f || timeScale >= 1f)
+        {
+            return;
+        }
+
+        if (slowMotionCoroutine != null)
+        {
+            StopCoroutine(slowMotionCoroutine);
+        }
+
+        slowMotionCoroutine = StartCoroutine(SlowMotionRoutine(
+            Mathf.Clamp(timeScale, 0.01f, 0.99f),
+            duration,
+            Mathf.Max(0f, delaySeconds)));
+    }
+
+    private IEnumerator SlowMotionRoutine(float timeScale, float duration, float delaySeconds)
+    {
+        if (delaySeconds > 0f)
+        {
+            yield return new WaitForSecondsRealtime(delaySeconds);
+        }
+
+        if (HasActiveScopedFreeze || IsTimeFrozen)
+        {
+            slowMotionCoroutine = null;
+            yield break;
+        }
+
+        Time.timeScale = timeScale;
+        Time.fixedDeltaTime = defaultFixedDeltaTime * timeScale;
+
+        yield return new WaitForSecondsRealtime(duration);
+
+        if (!HasActiveScopedFreeze && !IsTimeFrozen)
+        {
+            Time.timeScale = 1f;
+            Time.fixedDeltaTime = defaultFixedDeltaTime;
+        }
+
+        slowMotionCoroutine = null;
     }
 
     /// <summary>
@@ -155,8 +210,26 @@ public class GameFreezeManager : MonoBehaviour
             StopCoroutine(freezeCoroutine);
             freezeCoroutine = null;
         }
+
+        StopSlowMotion(false);
         Time.timeScale = 1f;
+        Time.fixedDeltaTime = defaultFixedDeltaTime;
         currentFreezeFramesRemaining = 0;
         activeScopedFreezeTokenId = 0;
+    }
+
+    private void StopSlowMotion(bool restoreTimeScale)
+    {
+        if (slowMotionCoroutine != null)
+        {
+            StopCoroutine(slowMotionCoroutine);
+            slowMotionCoroutine = null;
+        }
+
+        if (restoreTimeScale)
+        {
+            Time.timeScale = 1f;
+            Time.fixedDeltaTime = defaultFixedDeltaTime;
+        }
     }
 }

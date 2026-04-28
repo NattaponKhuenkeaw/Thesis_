@@ -181,7 +181,7 @@ public class InputHandler_Player : MonoBehaviour
 
         // If jump is being prioritized from the ground, do not allow the same
         // callback to start a ground combat action before the state fully flips airborne.
-        return stateMachine.CurrentStateId == PlayerStateId.Jumping;
+        return stateMachine.CurrentStateId == PlayerStateId.JumpStartup || stateMachine.CurrentStateId == PlayerStateId.Airborne;
     }
 
     private void HandleTeamSwitchInput()

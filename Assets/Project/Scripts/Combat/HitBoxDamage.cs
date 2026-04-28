@@ -46,6 +46,11 @@ public class HitBoxDamage : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
+        if (projectileOwner != null)
+        {
+            return;
+        }
+
         EnemyController enemy = other.GetComponentInParent<EnemyController>();
         if (enemy != null)
         {

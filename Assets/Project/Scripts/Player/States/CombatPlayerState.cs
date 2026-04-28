@@ -14,11 +14,13 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     protected bool hasStartedCooldown;
 
     private readonly HashSet<ActionEventEntry> triggeredActionEvents = new HashSet<ActionEventEntry>();
+    private readonly Dictionary<ActionEventEntry, Coroutine> activeAfterImageCoroutines = new Dictionary<ActionEventEntry, Coroutine>();
     protected bool prevFrameGrounded;
     private ActionEventEntry activeActionSequence;
     private GameFreezeManager.FreezeToken activeFreezeToken;
     private bool pauseCurrentNodeForSequence;
     private bool advanceCurrentNodeWithUnscaledTime;
+    private Coroutine activeActionSequenceCoroutine;
 
     // --- Airborne Gravity Policy ---
     private AirborneGravityPolicy gravityPolicy;
@@ -40,7 +42,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             player.Combat.OnGrabConnected += HandleGrabConnected;
         }
 
-        prevFrameGrounded = player.Movement != null && player.Movement.IsGrounded();
+        prevFrameGrounded = player.Movement != null && player.Movement.GroundState.IsEffectivelyGrounded;
 
         // --- Gravity Policy ---
         gravityPolicy = player.Movement != null && player.Movement.profile != null
@@ -57,6 +59,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     public override void Exit()
     {
         EndActiveActionEventSequence();
+        StopAfterImageTrails();
         TryStartCooldown();
 
         if (player.Combat != null && player.Combat.HasGrabbedEnemy())
@@ -92,7 +95,8 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     public override void Update()
     {
         // Check for landing BEFORE base.Update() advances frames, so we can interrupt cleanly
-        if (player.Movement != null && player.Movement.IsGrounded() && !prevFrameGrounded)
+        bool isMovingUp = player.Movement != null && player.Movement.VerticalVelocity > 0.1f;
+        if (player.Movement != null && player.Movement.GroundState.IsEffectivelyGrounded && !prevFrameGrounded && !isMovingUp)
         {
             OnLandedDuringCombat();
         }
@@ -142,7 +146,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
         if (player.Movement != null)
         {
-            prevFrameGrounded = player.Movement.IsGrounded();
+            prevFrameGrounded = player.Movement.GroundState.IsEffectivelyGrounded;
         }
     }
 
@@ -333,7 +337,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     protected virtual InputContext BuildInputContext()
     {
         ActionInputBuffer buffer = fsm.InputBuffer;
-        bool physicallyGrounded = player.Movement != null && player.Movement.IsGrounded();
+        bool physicallyGrounded = player.Movement != null && player.Movement.GroundState.IsEffectivelyGrounded;
         bool actionGrounded = player.Movement != null && player.Movement.IsGroundedForActionSelection();
 
         return new InputContext
@@ -366,6 +370,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     protected void ExecuteCombatStep(AttackStepData step, InputContext ctx, bool isAutoChain)
     {
         EndActiveActionEventSequence();
+        StopAfterImageTrails();
         triggeredActionEvents.Clear();
 
         if (player.Movement != null)
@@ -445,6 +450,18 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             case ActionEventType.UltimateOverlaySequence:
                 StartUltimateOverlaySequence(entry);
                 break;
+
+            case ActionEventType.TeleportToNearestEnemy:
+                StartTeleportToNearestEnemySequence(entry);
+                break;
+
+            case ActionEventType.ScreenImpulse:
+                TriggerScreenImpulse(entry);
+                break;
+
+            case ActionEventType.AfterImage:
+                StartAfterImageTrail(entry);
+                break;
         }
     }
 
@@ -493,9 +510,151 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             FinishActiveActionSequence);
     }
 
+    private void StartTeleportToNearestEnemySequence(ActionEventEntry entry)
+    {
+        EndActiveActionEventSequence();
+
+        if (entry == null)
+        {
+            return;
+        }
+
+        entry.teleportSettings ??= new TeleportEventSettings();
+        TeleportEventSettings settings = entry.teleportSettings;
+        EnemyController target = player.Combat != null
+            ? player.Combat.FindNearestEnemyTarget(settings.targetRadius)
+            : null;
+
+        if (target == null)
+        {
+            return;
+        }
+
+        activeActionSequence = entry;
+        pauseCurrentNodeForSequence = false;
+        advanceCurrentNodeWithUnscaledTime = false;
+
+        if (settings.snapCameraToPlayer && CameraManager.instance != null)
+        {
+            CameraManager.instance.BeginTemporaryPlayerSnap(settings.cameraSnapDuration);
+        }
+
+        TeleportPlayerNearTarget(target, settings);
+
+        if (settings.cameraImpulseStrength > 0f && GameImpulseController.Instance != null)
+        {
+            GameImpulseController.Instance.PlayOneShot(settings.cameraImpulseStrength);
+        }
+
+        if (settings.playScreenFlick
+            && settings.screenFlickSettings != null
+            && UltimateFlashOverlay.Instance != null)
+        {
+            UltimateFlashOverlay.Instance.PlaySequence(
+                settings.screenFlickSettings,
+                null,
+                FinishActiveActionSequence);
+            return;
+        }
+
+        float duration = settings.GetTotalDurationSeconds();
+        if (duration > 0f && player != null)
+        {
+            activeActionSequenceCoroutine = player.StartCoroutine(FinishActionSequenceAfterDelay(duration));
+            return;
+        }
+
+        FinishActiveActionSequence();
+    }
+
+    private void TeleportPlayerNearTarget(EnemyController target, TeleportEventSettings settings)
+    {
+        if (target == null)
+        {
+            return;
+        }
+
+        Vector3 playerPosition = player.transform.position;
+        float targetX = target.transform.position.x;
+        float horizontalDirection = Mathf.Abs(targetX - playerPosition.x) > 0.001f
+            ? Mathf.Sign(targetX - playerPosition.x)
+            : (player.Movement != null ? player.Movement.FacingDirection : 1f);
+        float resolvedOffset = Mathf.Max(0f, settings.teleportOffsetX);
+        float destinationX = targetX - (horizontalDirection * resolvedOffset);
+
+        if (player.Movement != null)
+        {
+            Vector3 warpDelta = player.Movement.TeleportHorizontally(destinationX);
+            player.Movement.SnapFacingDirection(horizontalDirection >= 0f ? 1 : -1);
+            player.Combat?.HandleOwnerTeleported();
+            CameraManager.instance?.NotifyPlayerWarp(warpDelta);
+        }
+        else
+        {
+            Vector3 destination = new Vector3(destinationX, playerPosition.y, playerPosition.z);
+            Vector3 warpDelta = destination - playerPosition;
+            player.transform.position = destination;
+            Physics2D.SyncTransforms();
+            player.Combat?.HandleOwnerTeleported();
+            CameraManager.instance?.NotifyPlayerWarp(warpDelta);
+        }
+    }
+
     private void HandleUltimateSequenceBlackScreenStarted(ActionEventEntry entry)
     {
         TriggerUltimateSequencePayload(entry);
+    }
+
+    private void TriggerScreenImpulse(ActionEventEntry entry)
+    {
+        if (entry?.screenImpulseSettings?.impulse == null || GameImpulseController.Instance == null)
+        {
+            return;
+        }
+
+        GameImpulseController.Instance.Play(entry.screenImpulseSettings.impulse);
+    }
+
+    private void StartAfterImageTrail(ActionEventEntry entry)
+    {
+        if (entry?.afterImageSettings == null || player?.Movement == null)
+        {
+            return;
+        }
+
+        StopAfterImageTrail(entry);
+
+        Coroutine routine = player.StartCoroutine(RunAfterImageTrail(entry));
+        activeAfterImageCoroutines[entry] = routine;
+    }
+
+    private System.Collections.IEnumerator RunAfterImageTrail(ActionEventEntry entry)
+    {
+        AttackStepData sourceStep = player.Combat != null ? player.Combat.GetCurrentStepData() : null;
+        AfterImageEventSettings settings = entry.afterImageSettings;
+        float interval = Mathf.Max(0.01f, settings.spawnIntervalSeconds);
+        float elapsed = interval;
+
+        while (fsm.CurrentState == this
+            && player.Combat != null
+            && player.Combat.GetCurrentStepData() == sourceStep)
+        {
+            if (settings.endMode == AfterImageEndMode.EndAtFrame && CurrentFrame > settings.endFrame)
+            {
+                break;
+            }
+
+            if (elapsed >= interval)
+            {
+                player.Movement.SpawnAfterimage();
+                elapsed = 0f;
+            }
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        activeAfterImageCoroutines.Remove(entry);
     }
 
     private void TriggerUltimateSequencePayload(ActionEventEntry entry)
@@ -540,9 +699,20 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
     private void FinishActiveActionSequence()
     {
+        if (activeActionSequenceCoroutine != null && player != null)
+        {
+            player.StopCoroutine(activeActionSequenceCoroutine);
+            activeActionSequenceCoroutine = null;
+        }
+
         if (GameFreezeManager.Instance != null && activeFreezeToken.IsValid)
         {
             GameFreezeManager.Instance.EndScopedFreeze(activeFreezeToken);
+        }
+
+        if (CameraManager.instance != null)
+        {
+            CameraManager.instance.EndTemporaryPlayerSnap();
         }
 
         // Restore animator update mode to normal after the sequence finishes
@@ -560,6 +730,12 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
     private void EndActiveActionEventSequence()
     {
+        if (activeActionSequenceCoroutine != null && player != null)
+        {
+            player.StopCoroutine(activeActionSequenceCoroutine);
+            activeActionSequenceCoroutine = null;
+        }
+
         if (UltimateFlashOverlay.Instance != null)
         {
             UltimateFlashOverlay.Instance.StopSequence(false);
@@ -568,6 +744,11 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         if (GameFreezeManager.Instance != null && activeFreezeToken.IsValid)
         {
             GameFreezeManager.Instance.EndScopedFreeze(activeFreezeToken);
+        }
+
+        if (CameraManager.instance != null)
+        {
+            CameraManager.instance.EndTemporaryPlayerSnap();
         }
 
         // Restore animator update mode to normal if we were in an unscaled sequence
@@ -588,15 +769,63 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         triggeredActionEvents.Clear();
         activeActionSequence = null;
         activeFreezeToken = default;
+        activeActionSequenceCoroutine = null;
         pauseCurrentNodeForSequence = false;
         advanceCurrentNodeWithUnscaledTime = false;
         player.Movement?.SetUseUnscaledAttackMotion(false);
+        StopAfterImageTrails();
+
+        if (CameraManager.instance != null)
+        {
+            CameraManager.instance.EndTemporaryPlayerSnap();
+        }
 
         // Safety reset for animator update mode
         if (player.Animator != null && player.Animator.anim != null)
         {
             player.Animator.anim.updateMode = AnimatorUpdateMode.Normal;
         }
+    }
+
+    private System.Collections.IEnumerator FinishActionSequenceAfterDelay(float duration)
+    {
+        yield return new WaitForSecondsRealtime(duration);
+        activeActionSequenceCoroutine = null;
+        FinishActiveActionSequence();
+    }
+
+    private void StopAfterImageTrails()
+    {
+        if (player == null || activeAfterImageCoroutines.Count == 0)
+        {
+            activeAfterImageCoroutines.Clear();
+            return;
+        }
+
+        foreach (Coroutine routine in activeAfterImageCoroutines.Values)
+        {
+            if (routine != null)
+            {
+                player.StopCoroutine(routine);
+            }
+        }
+
+        activeAfterImageCoroutines.Clear();
+    }
+
+    private void StopAfterImageTrail(ActionEventEntry entry)
+    {
+        if (player == null || entry == null)
+        {
+            return;
+        }
+
+        if (activeAfterImageCoroutines.TryGetValue(entry, out Coroutine routine) && routine != null)
+        {
+            player.StopCoroutine(routine);
+        }
+
+        activeAfterImageCoroutines.Remove(entry);
     }
 
     // =========================================================
@@ -634,5 +863,38 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             player.Combat.ResetCombo();
             ExitToAppropriateMovementState();
         }
+    }
+
+    // =========================================================
+    // Pre-Execution Interrupt Guard
+    // =========================================================
+
+    /// <summary>
+    /// Centralized guard that checks whether a new combat action should be
+    /// aborted BEFORE resolve/execute/cooldown. Call this at the top of
+    /// OnSkillInput / OnUltimateInput / OnAttackInput when currentPhase == None.
+    ///
+    /// Returns true if the action was aborted (state already exited).
+    /// </summary>
+    protected bool ShouldAbortBeforeExecution()
+    {
+        if (player.Movement == null) return false;
+
+        // Case 1: We just landed this frame — an airborne action would be
+        // immediately interrupted on the next Update(), wasting its cooldown.
+        bool isGrounded = player.Movement.GroundState.IsEffectivelyGrounded;
+        bool wasAirborneLastFrame = !prevFrameGrounded;
+        bool notMovingUp = player.Movement.VerticalVelocity <= 0.1f;
+
+        if (isGrounded && wasAirborneLastFrame && notMovingUp
+            && player.Combat != null && player.Combat.ShouldInterruptAttackOnGrounded())
+        {
+            fsm.Log("FSM", $"[{StateId}] Aborted: landing detected before execution", Color.yellow);
+            player.Combat.ResetCombo();
+            ExitToAppropriateMovementState();
+            return true;
+        }
+
+        return false;
     }
 }

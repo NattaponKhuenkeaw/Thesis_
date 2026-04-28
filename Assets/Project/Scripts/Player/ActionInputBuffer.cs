@@ -98,7 +98,7 @@ public class ActionInputBuffer
     public bool ConsumeAttack()
     {
         if (!HasAttackBuffer) return false;
-        attackBufferedUntil = -999f;
+        ClearAll();
         return true;
     }
 
@@ -110,28 +110,28 @@ public class ActionInputBuffer
             inputX = 0f;
             return false;
         }
-        dashBufferedUntil = -999f;
+        ClearAll();
         return true;
     }
 
     public bool ConsumeJump()
     {
         if (!HasJumpBuffer) return false;
-        jumpBufferedUntil = -999f;
+        ClearAll();
         return true;
     }
 
     public bool ConsumeSkill()
     {
         if (!HasSkillBuffer) return false;
-        skillBufferedUntil = -999f;
+        ClearAll();
         return true;
     }
 
     public bool ConsumeUltimate()
     {
         if (!HasUltimateBuffer) return false;
-        ultimateBufferedUntil = -999f;
+        ClearAll();
         return true;
     }
 
@@ -143,9 +143,7 @@ public class ActionInputBuffer
             targetIndex = -1;
             return false;
         }
-
-        switchBufferedUntil = -999f;
-        switchTargetIndex = -1;
+        ClearAll();
         return true;
     }
 

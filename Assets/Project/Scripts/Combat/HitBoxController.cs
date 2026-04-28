@@ -55,20 +55,7 @@ public class HitBoxController : MonoBehaviour
         if (hitbox == null)
             return;
 
-        Vector2 offset = Vector2.zero;
-        Vector2 size = Vector2.one;
-
-        if (hitbox is NormalHitbox normal)
-        {
-            offset = normal.offset;
-            size = normal.size;
-        }
-        else if (hitbox is GrabHitbox grab)
-        {
-            offset = grab.offset;
-            size = grab.size;
-        }
-        else
+        if (!ProjectileSpatialUtility.TryGetHitboxGeometry(hitbox, overrideFacing, out Vector2 offset, out Vector2 size))
         {
             // Non-spatial hitboxes (like projectile spawn markers) don't update collider geometry
             return;
@@ -76,19 +63,22 @@ public class HitBoxController : MonoBehaviour
 
         if (anchorMode == HitboxAnchorMode.Self)
         {
-            float facingSign = Mathf.Approximately(overrideFacing, 0f) ? 1f : Mathf.Sign(overrideFacing);
-            Vector2 newOffset = offset;
-            newOffset.x *= facingSign;
-
             // Apply the offset directly to the collider, do NOT shift the transform.
             // This prevents the projectile from jumping when switching states.
-            hitboxCollider.offset = newOffset;
+            hitboxCollider.offset = offset;
             hitboxCollider.size = size;
         }
         else
         {
             // Player melee/grab hitboxes are authored as child-local geometry.
-            transform.localPosition = new Vector3(offset.x, offset.y, 0f);
+            Vector2 localOffset = hitbox switch
+            {
+                NormalHitbox normalHitbox => normalHitbox.offset,
+                GrabHitbox grabHitbox => grabHitbox.offset,
+                _ => Vector2.zero
+            };
+
+            transform.localPosition = new Vector3(localOffset.x, localOffset.y, 0f);
             transform.localRotation = Quaternion.identity;
             hitboxCollider.offset = Vector2.zero;
             hitboxCollider.size = size;

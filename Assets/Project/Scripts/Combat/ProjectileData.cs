@@ -1,12 +1,6 @@
 using System;
 using UnityEngine;
 
-public enum ProjectileSpawnMode
-{
-    FromCaster,
-    TrackTarget
-}
-
 public enum SpawnPositionMode
 {
     Caster,
@@ -19,6 +13,19 @@ public enum ProjectileTraversalMode
     Linear,
     Homing,
     Anchored
+}
+
+public enum ProjectileReferencePointMode
+{
+    Pivot,
+    Center,
+    GroundProjection
+}
+
+public enum ProjectileHitCountMode
+{
+    Shared,
+    PerEnemy
 }
 
 [Serializable]
@@ -42,6 +49,141 @@ public class ProjectileFeedbackDefinition
     public Vector2 offset = Vector2.zero;
 }
 
+public static class ProjectileSpatialUtility
+{
+    private const float GroundProjectionPadding = 0.5f;
+    private const float GroundProjectionDistance = 100f;
+
+    public static Vector2 ResolveFacingAwareOffset(Vector2 offset, float facingSign)
+    {
+        float resolvedSign = facingSign < 0f ? -1f : 1f;
+        offset.x = Mathf.Abs(offset.x) * resolvedSign;
+        return offset;
+    }
+
+    public static bool TryGetHitboxGeometry(HitboxBase hitbox, float facingSign, out Vector2 offset, out Vector2 size)
+    {
+        offset = Vector2.zero;
+        size = Vector2.zero;
+
+        switch (hitbox)
+        {
+            case NormalHitbox normalHitbox:
+                offset = ResolveFacingAwareOffset(normalHitbox.offset, facingSign);
+                size = normalHitbox.size;
+                return true;
+
+            case GrabHitbox grabHitbox:
+                offset = ResolveFacingAwareOffset(grabHitbox.offset, facingSign);
+                size = grabHitbox.size;
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
+    public static Vector2 ResolveReferencePosition(Transform actor, ProjectileReferencePointMode mode)
+    {
+        if (actor == null)
+        {
+            return Vector2.zero;
+        }
+
+        if (mode == ProjectileReferencePointMode.Pivot)
+        {
+            return actor.position;
+        }
+
+        Collider2D referenceCollider = ResolveReferenceCollider(actor);
+        return mode switch
+        {
+            ProjectileReferencePointMode.Center => referenceCollider != null
+                ? (Vector2)referenceCollider.bounds.center
+                : (Vector2)actor.position,
+            ProjectileReferencePointMode.GroundProjection => ResolveGroundProjection(actor, referenceCollider),
+            _ => actor.position
+        };
+    }
+
+    private static Collider2D ResolveReferenceCollider(Transform actor)
+    {
+        if (actor == null)
+        {
+            return null;
+        }
+
+        EnemyController enemy = actor.GetComponent<EnemyController>() ?? actor.GetComponentInParent<EnemyController>();
+        if (enemy != null && enemy.bodyCollider != null)
+        {
+            return enemy.bodyCollider;
+        }
+
+        Collider2D directCollider = actor.GetComponent<Collider2D>();
+        if (directCollider != null && !directCollider.isTrigger)
+        {
+            return directCollider;
+        }
+
+        Collider2D[] childColliders = actor.GetComponentsInChildren<Collider2D>(true);
+        for (int i = 0; i < childColliders.Length; i++)
+        {
+            Collider2D collider = childColliders[i];
+            if (collider != null && !collider.isTrigger)
+            {
+                return collider;
+            }
+        }
+
+        return childColliders.Length > 0 ? childColliders[0] : null;
+    }
+
+    private static Vector2 ResolveGroundProjection(Transform actor, Collider2D referenceCollider)
+    {
+        Vector2 pivot = actor.position;
+        int layerMask = ResolveGroundLayerMask(actor);
+        float originY = referenceCollider != null
+            ? referenceCollider.bounds.max.y + GroundProjectionPadding
+            : pivot.y + GroundProjectionPadding;
+        Vector2 rayOrigin = new Vector2(pivot.x, originY);
+
+        RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.down, GroundProjectionDistance, layerMask);
+        if (hit.collider != null)
+        {
+            return new Vector2(pivot.x, hit.point.y);
+        }
+
+        if (referenceCollider != null)
+        {
+            return new Vector2(pivot.x, referenceCollider.bounds.min.y);
+        }
+
+        return pivot;
+    }
+
+    private static int ResolveGroundLayerMask(Transform actor)
+    {
+        if (actor == null)
+        {
+            return Physics2D.DefaultRaycastLayers;
+        }
+
+        PlayerMovement playerMovement = actor.GetComponent<PlayerMovement>() ?? actor.GetComponentInParent<PlayerMovement>();
+        if (playerMovement != null && playerMovement.groundLayer.value != 0)
+        {
+            return playerMovement.groundLayer.value;
+        }
+
+        EnemyHitReactionHandler enemyGrounding = actor.GetComponent<EnemyHitReactionHandler>() ?? actor.GetComponentInParent<EnemyHitReactionHandler>();
+        if (enemyGrounding != null && enemyGrounding.groundLayers.value != 0)
+        {
+            return enemyGrounding.groundLayers.value;
+        }
+
+        return Physics2D.DefaultRaycastLayers;
+    }
+}
+
 [CreateAssetMenu(fileName = "ProjectileData_", menuName = "Game/Combat/Projectile Data")]
 public class ProjectileData : ScriptableObject
 {
@@ -56,6 +198,7 @@ public class ProjectileData : ScriptableObject
 
     [Header("Spawning State")]
     public SpawnPositionMode spawnPositionMode = SpawnPositionMode.Offset;
+    public ProjectileReferencePointMode spawnReferencePointMode = ProjectileReferencePointMode.Pivot;
     public bool playSpawnAnimation = true;
     public float spawnDuration = 0f;
     public bool inheritFacingDirection = true;
@@ -65,17 +208,17 @@ public class ProjectileData : ScriptableObject
         decrementsMaxHits = false
     };
 
-    [Header("Legacy Spawn Support")]
-    public ProjectileSpawnMode spawnMode = ProjectileSpawnMode.FromCaster;
-
     [Header("Updating State")]
     public ProjectileTraversalMode traversalMode = ProjectileTraversalMode.Linear;
-    public bool homeToTarget = false;
+    public ProjectileReferencePointMode trackingReferencePointMode = ProjectileReferencePointMode.Pivot;
+    public ProjectileReferencePointMode anchorReferencePointMode = ProjectileReferencePointMode.Pivot;
     public float homingTurnRate = 8f;
-    public bool anchorToCaster = false;
+    public float trackDelaySeconds = 0f;
+    public float trackingRadius = 0f;
     public float speed = 10f;
     public float lifetime = 2f;
     public int maxHits = 1;
+    public ProjectileHitCountMode hitCountMode = ProjectileHitCountMode.Shared;
     public ProjectilePhaseHitboxData routineHitbox = new ProjectilePhaseHitboxData
     {
         enabled = true,
@@ -84,10 +227,9 @@ public class ProjectileData : ScriptableObject
 
     [Header("Detection")]
     public Vector2 travelColliderSize = new Vector2(0.5f, 0.5f);
+    public Vector2 travelColliderOffset = Vector2.zero;
     public LayerMask enemyLayerMask = Physics2D.DefaultRaycastLayers;
 
-    [Header("Legacy Impact Routine")]
-    public HitFrameData impactHitData = new HitFrameData();
     [Tooltip("Frames to wait between hits in a multi-hit routine.")]
     public int hitIntervalFrames = 5;
     public bool stopOnImpact = true;
@@ -102,45 +244,24 @@ public class ProjectileData : ScriptableObject
     public Project.Combat.VFXType impactVFXType = Project.Combat.VFXType.HitSpark_Medium;
     public AudioClip impactAudio;
 
-    public ProjectileTraversalMode ResolveTraversalMode()
-    {
-        if (anchorToCaster)
-        {
-            return ProjectileTraversalMode.Anchored;
-        }
-
-        if (homeToTarget)
-        {
-            return ProjectileTraversalMode.Homing;
-        }
-
-        return traversalMode;
-    }
+    public bool RequiresTarget => spawnPositionMode == SpawnPositionMode.Target || traversalMode == ProjectileTraversalMode.Homing;
 
     public Vector2 ResolveSpawnPosition(ProjectileSpawnContext context)
     {
-        Vector2 facingOffset = ResolveFacingAwareOffset(context);
+        Vector2 facingOffset = ResolveRuntimeOffset(context, context.direction.x);
 
         switch (spawnPositionMode)
         {
             case SpawnPositionMode.Caster:
-                return context.casterTransform != null
-                    ? (Vector2)context.casterTransform.position + facingOffset
-                    : context.origin;
+                return ResolvePositionWithOffset(context.casterTransform, spawnReferencePointMode, facingOffset, context.origin);
 
             case SpawnPositionMode.Target:
-                // Fallback sequence: Target Transform -> Caster Transform (relative to target) -> Context Origin
                 if (context.targetTransform != null)
                 {
-                    return (Vector2)context.targetTransform.position + facingOffset;
-                }
-                
-                if (context.casterTransform != null)
-                {
-                    return (Vector2)context.casterTransform.position + facingOffset;
+                    return ResolvePositionWithOffset(context.targetTransform, spawnReferencePointMode, facingOffset, context.origin);
                 }
 
-                return context.origin;
+                return ResolvePositionWithOffset(context.casterTransform, spawnReferencePointMode, facingOffset, context.origin);
 
             case SpawnPositionMode.Offset:
             default:
@@ -162,12 +283,9 @@ public class ProjectileData : ScriptableObject
 
     public HitboxBase ResolveRoutineHitbox()
     {
-        if (routineHitbox != null && routineHitbox.HasHitbox)
-        {
-            return routineHitbox.hitbox;
-        }
-
-        return ResolveLegacyImpactHitbox();
+        return routineHitbox != null && routineHitbox.HasHitbox
+            ? routineHitbox.hitbox
+            : null;
     }
 
     public bool RoutineHitboxConsumesMaxHits()
@@ -180,26 +298,38 @@ public class ProjectileData : ScriptableObject
         return spawningHitbox != null && spawningHitbox.HasHitbox && spawningHitbox.decrementsMaxHits;
     }
 
-    private HitboxBase ResolveLegacyImpactHitbox()
+    public bool UsesSharedHitCount()
     {
-        if (impactHitData == null || impactHitData.hitboxes == null)
-        {
-            return null;
-        }
-
-        for (int i = 0; i < impactHitData.hitboxes.Count; i++)
-        {
-            HitboxBase hitbox = impactHitData.hitboxes[i];
-            if (hitbox is NormalHitbox or GrabHitbox)
-            {
-                return hitbox;
-            }
-        }
-
-        return null;
+        return hitCountMode == ProjectileHitCountMode.Shared;
     }
 
-    private Vector2 ResolveFacingAwareOffset(ProjectileSpawnContext context)
+    public Vector2 ResolveAnchoredPosition(ProjectileSpawnContext context, float facingSign)
+    {
+        Vector2 facingOffset = ResolveRuntimeOffset(context, facingSign);
+        return ResolvePositionWithOffset(context.casterTransform, anchorReferencePointMode, facingOffset, context.origin);
+    }
+
+    public Vector2 ResolveTrackingReferencePosition(Transform targetTransform)
+    {
+        return ProjectileSpatialUtility.ResolveReferencePosition(targetTransform, trackingReferencePointMode);
+    }
+
+    public Vector2 ResolveTrackingFallbackPosition(ProjectileSpawnContext context)
+    {
+        if (context.casterTransform != null)
+        {
+            return ProjectileSpatialUtility.ResolveReferencePosition(context.casterTransform, trackingReferencePointMode);
+        }
+
+        return context.origin;
+    }
+
+    public Vector2 ResolvePassiveColliderOffset(float facingSign)
+    {
+        return ProjectileSpatialUtility.ResolveFacingAwareOffset(travelColliderOffset, facingSign);
+    }
+
+    private Vector2 ResolveRuntimeOffset(ProjectileSpawnContext context, float facingSign)
     {
         Vector2 offset = context.resolvedSpawnOffset;
         if (offset == Vector2.zero)
@@ -207,16 +337,21 @@ public class ProjectileData : ScriptableObject
             offset = spawnOffset;
         }
 
-        if (context.direction.x < 0f)
+        return ProjectileSpatialUtility.ResolveFacingAwareOffset(offset, facingSign);
+    }
+
+    private static Vector2 ResolvePositionWithOffset(
+        Transform referenceTransform,
+        ProjectileReferencePointMode referencePointMode,
+        Vector2 offset,
+        Vector2 fallbackPosition)
+    {
+        if (referenceTransform == null)
         {
-            offset.x = -Mathf.Abs(offset.x);
-        }
-        else
-        {
-            offset.x = Mathf.Abs(offset.x);
+            return fallbackPosition;
         }
 
-        return offset;
+        return ProjectileSpatialUtility.ResolveReferencePosition(referenceTransform, referencePointMode) + offset;
     }
 }
 

@@ -1,8 +1,17 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Project.Combat;
 
 public class ProjectileRuntime : MonoBehaviour
 {
+    private struct TargetPositionSample
+    {
+        public float time;
+        public Vector2 position;
+    }
+
+    private const float TargetSampleRetentionPadding = 0.25f;
+
     private interface IProjectileRuntimeState
     {
         void Enter();
@@ -46,6 +55,7 @@ public class ProjectileRuntime : MonoBehaviour
         public void Tick(float deltaTime)
         {
             elapsed += deltaTime;
+            runtime.ProcessTrackedEnemiesIfReady();
 
             bool timerComplete = runtime.ProjectileData.spawnDuration <= 0f || elapsed >= runtime.ProjectileData.spawnDuration;
             bool animationComplete = !waitingForAnimation || runtime.owner.IsSpawnAnimationComplete();
@@ -99,6 +109,7 @@ public class ProjectileRuntime : MonoBehaviour
 
             runtime.traversalStrategy.Tick(runtime, runtime.ProjectileData, runtime.spawnContext, deltaTime);
             runtime.ApplyFacingVisual();
+            runtime.ProcessTrackedEnemiesIfReady();
         }
 
         public void HandleTrigger(Collider2D other)
@@ -154,12 +165,19 @@ public class ProjectileRuntime : MonoBehaviour
     private ProjectileHitboxModule hitboxModule;
     private IProjectileTraversalStrategy traversalStrategy;
     private IProjectileRuntimeState currentState;
+    private readonly List<TargetPositionSample> targetSamples = new List<TargetPositionSample>();
+    private readonly HashSet<EnemyController> trackedEnemies = new HashSet<EnemyController>();
+    private readonly List<EnemyController> trackedEnemyBuffer = new List<EnemyController>();
+    private readonly Dictionary<int, int> remainingHitsByEnemy = new Dictionary<int, int>();
 
     private Vector2 currentDirection = Vector2.right;
     private float lifeTimer;
     private bool currentHitConsumesMaxHits = true;
+    private bool processedHitsThisFrame;
     private bool releaseQueued;
     private bool isExpired;
+    private bool hitOccurredInCurrentBatch;
+    private Transform trackedTargetTransform;
     internal int hitCooldownFramesRemaining;
 
     public ProjectileData ProjectileData { get; private set; }
@@ -185,6 +203,13 @@ public class ProjectileRuntime : MonoBehaviour
         currentHitConsumesMaxHits = true;
         releaseQueued = false;
         isExpired = false;
+        processedHitsThisFrame = false;
+        hitOccurredInCurrentBatch = false;
+        trackedTargetTransform = null;
+        targetSamples.Clear();
+        trackedEnemies.Clear();
+        trackedEnemyBuffer.Clear();
+        remainingHitsByEnemy.Clear();
 
         EnsurePhysicsComponents();
         EnsureCombatComponents();
@@ -192,7 +217,7 @@ public class ProjectileRuntime : MonoBehaviour
 
         rb.linearVelocity = Vector2.zero;
         traversalStrategy = ProjectileTraversalStrategyFactory.Create(projectileData != null
-            ? projectileData.ResolveTraversalMode()
+            ? projectileData.traversalMode
             : ProjectileTraversalMode.Linear);
 
         if (projectileData != null && projectileData.HasSpawningState())
@@ -214,7 +239,14 @@ public class ProjectileRuntime : MonoBehaviour
         releaseQueued = false;
         hitCooldownFramesRemaining = 0;
         currentHitConsumesMaxHits = true;
+        processedHitsThisFrame = false;
+        hitOccurredInCurrentBatch = false;
         ProjectileData = null;
+        trackedTargetTransform = null;
+        targetSamples.Clear();
+        trackedEnemies.Clear();
+        trackedEnemyBuffer.Clear();
+        remainingHitsByEnemy.Clear();
 
         if (rb != null)
         {
@@ -233,6 +265,7 @@ public class ProjectileRuntime : MonoBehaviour
             return;
         }
 
+        processedHitsThisFrame = false;
         currentState?.Tick(Time.deltaTime);
     }
 
@@ -246,23 +279,36 @@ public class ProjectileRuntime : MonoBehaviour
         currentState?.HandleTrigger(other);
     }
 
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        EnemyController enemy = other != null ? other.GetComponentInParent<EnemyController>() : null;
+        if (enemy != null)
+        {
+            trackedEnemies.Remove(enemy);
+        }
+    }
+
     public void RegisterSuccessfulHit(EnemyController enemy)
     {
-        if (ProjectileData == null)
+        if (ProjectileData == null || enemy == null)
         {
             return;
         }
 
-        hitCooldownFramesRemaining = Mathf.Max(hitCooldownFramesRemaining, Mathf.Max(0, ProjectileData.hitIntervalFrames));
+        hitOccurredInCurrentBatch = true;
 
         if (currentHitConsumesMaxHits)
         {
-            spawnContext.remainingHits = Mathf.Max(0, spawnContext.remainingHits - 1);
-        }
-
-        if (spawnContext.remainingHits <= 0 && ProjectileData.destroyWhenHitsExhausted)
-        {
-            Expire();
+            if (ProjectileData.UsesSharedHitCount())
+            {
+                spawnContext.remainingHits = Mathf.Max(0, spawnContext.remainingHits - 1);
+            }
+            else
+            {
+                int enemyId = enemy.GetInstanceID();
+                int currentRemainingHits = GetRemainingHitsForEnemy(enemy);
+                remainingHitsByEnemy[enemyId] = Mathf.Max(0, currentRemainingHits - 1);
+            }
         }
     }
 
@@ -294,6 +340,46 @@ public class ProjectileRuntime : MonoBehaviour
     public void SetCurrentHitConsumesMaxHits(bool value)
     {
         currentHitConsumesMaxHits = value;
+    }
+
+    public Vector2 ResolveTrackingAimPosition()
+    {
+        if (ProjectileData == null)
+        {
+            return transform.position;
+        }
+
+        Transform trackingTarget = ResolveTrackingTarget();
+        if (trackingTarget == null)
+        {
+            ClearTrackingSamples();
+            return ProjectileData.ResolveTrackingFallbackPosition(spawnContext);
+        }
+
+        Vector2 targetPosition = ProjectileData.ResolveTrackingReferencePosition(trackingTarget);
+        RecordTrackingSample(trackingTarget, targetPosition);
+        spawnContext.targetTransform = trackingTarget;
+
+        float delay = Mathf.Max(0f, ProjectileData.trackDelaySeconds);
+        if (delay <= 0f || targetSamples.Count == 0)
+        {
+            return targetPosition;
+        }
+
+        float desiredSampleTime = Time.time - delay;
+        Vector2 delayedPosition = targetSamples[0].position;
+        for (int i = 0; i < targetSamples.Count; i++)
+        {
+            TargetPositionSample sample = targetSamples[i];
+            if (sample.time > desiredSampleTime)
+            {
+                break;
+            }
+
+            delayedPosition = sample.position;
+        }
+
+        return delayedPosition;
     }
 
     private void EnsurePhysicsComponents()
@@ -385,12 +471,6 @@ public class ProjectileRuntime : MonoBehaviour
         }
 
         HitboxBase spawnHitbox = ProjectileData.ResolveSpawningHitbox();
-        if (spawnHitbox == null)
-        {
-            hitboxModule.Disable();
-            return;
-        }
-
         hitboxModule.Reset();
         hitboxModule.Activate(
             spawnHitbox,
@@ -409,13 +489,6 @@ public class ProjectileRuntime : MonoBehaviour
 
         HitboxBase routineHitbox = ProjectileData.ResolveRoutineHitbox();
         hitboxModule.Reset();
-
-        if (routineHitbox == null)
-        {
-            hitboxModule.Disable();
-            return;
-        }
-
         hitboxModule.Activate(
             routineHitbox,
             spawnContext,
@@ -430,17 +503,7 @@ public class ProjectileRuntime : MonoBehaviour
 
     private void TryProcessTrigger(Collider2D other)
     {
-        if (ProjectileData == null || isExpired)
-        {
-            return;
-        }
-
-        if (hitCooldownFramesRemaining > 0)
-        {
-            return;
-        }
-
-        if (currentHitConsumesMaxHits && spawnContext.remainingHits <= 0)
+        if (ProjectileData == null || isExpired || other == null)
         {
             return;
         }
@@ -451,7 +514,14 @@ public class ProjectileRuntime : MonoBehaviour
             return;
         }
 
-        hitboxModule.TryProcessHit(other);
+        EnemyController enemy = other.GetComponentInParent<EnemyController>();
+        if (enemy == null || !enemy.IsAlive)
+        {
+            return;
+        }
+
+        trackedEnemies.Add(enemy);
+        ProcessTrackedEnemiesIfReady();
     }
 
     private void Expire()
@@ -466,10 +536,226 @@ public class ProjectileRuntime : MonoBehaviour
 
     private void ApplyFacingVisual()
     {
+        hitboxModule?.RefreshColliderGeometry(GetFacingSign());
+
         if (ProjectileData != null && ProjectileData.inheritFacingDirection)
         {
             float angle = GetFacingSign() < 0f ? 180f : 0f;
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
         }
+    }
+
+    private Transform ResolveTrackingTarget()
+    {
+        if (ProjectileData == null)
+        {
+            return null;
+        }
+
+        Vector2 searchOrigin = spawnContext.casterTransform != null
+            ? (Vector2)spawnContext.casterTransform.position
+            : spawnContext.origin;
+        float facingSign = spawnContext.direction.x < 0f ? -1f : 1f;
+
+        if (CameraManager.instance != null)
+        {
+            EnemyController candidate = CameraManager.instance.GetProjectileTrackingTarget(
+                searchOrigin,
+                facingSign,
+                ProjectileData.trackingRadius);
+            return candidate != null ? candidate.transform : null;
+        }
+
+        return IsTrackingTargetValid(spawnContext.targetTransform, searchOrigin, ProjectileData.trackingRadius)
+            ? spawnContext.targetTransform
+            : null;
+    }
+
+    private void ProcessTrackedEnemiesIfReady()
+    {
+        if (processedHitsThisFrame || ProjectileData == null || isExpired || hitboxModule == null)
+        {
+            return;
+        }
+
+        if (hitCooldownFramesRemaining > 0)
+        {
+            return;
+        }
+
+        if (currentHitConsumesMaxHits && ProjectileData.UsesSharedHitCount() && spawnContext.remainingHits <= 0)
+        {
+            return;
+        }
+
+        trackedEnemyBuffer.Clear();
+        foreach (EnemyController enemy in trackedEnemies)
+        {
+            if (enemy == null || !enemy.IsAlive || !IsEnemyTouchingTrigger(enemy))
+            {
+                continue;
+            }
+
+            trackedEnemyBuffer.Add(enemy);
+        }
+
+        if (trackedEnemyBuffer.Count == 0)
+        {
+            trackedEnemies.Clear();
+            return;
+        }
+
+        processedHitsThisFrame = true;
+        hitOccurredInCurrentBatch = false;
+        hitboxModule.BeginHitCycle();
+
+        for (int i = 0; i < trackedEnemyBuffer.Count; i++)
+        {
+            EnemyController enemy = trackedEnemyBuffer[i];
+            if (!CanHitEnemy(enemy))
+            {
+                continue;
+            }
+
+            hitboxModule.TryProcessHit(enemy);
+
+            if (ProjectileData.UsesSharedHitCount() && currentHitConsumesMaxHits && spawnContext.remainingHits <= 0)
+            {
+                break;
+            }
+        }
+
+        trackedEnemyBuffer.Clear();
+
+        if (!hitOccurredInCurrentBatch)
+        {
+            return;
+        }
+
+        hitCooldownFramesRemaining = Mathf.Max(hitCooldownFramesRemaining, Mathf.Max(0, ProjectileData.hitIntervalFrames));
+
+        if (ProjectileData.UsesSharedHitCount()
+            && ProjectileData.destroyWhenHitsExhausted
+            && currentHitConsumesMaxHits
+            && spawnContext.remainingHits <= 0)
+        {
+            Expire();
+        }
+    }
+
+    private bool CanHitEnemy(EnemyController enemy)
+    {
+        if (enemy == null || !enemy.IsAlive)
+        {
+            return false;
+        }
+
+        if (!currentHitConsumesMaxHits || ProjectileData == null)
+        {
+            return true;
+        }
+
+        if (ProjectileData.UsesSharedHitCount())
+        {
+            return spawnContext.remainingHits > 0;
+        }
+
+        return GetRemainingHitsForEnemy(enemy) > 0;
+    }
+
+    private int GetRemainingHitsForEnemy(EnemyController enemy)
+    {
+        if (enemy == null)
+        {
+            return 0;
+        }
+
+        int enemyId = enemy.GetInstanceID();
+        if (remainingHitsByEnemy.TryGetValue(enemyId, out int remainingHits))
+        {
+            return remainingHits;
+        }
+
+        remainingHits = ProjectileData != null ? Mathf.Max(1, ProjectileData.maxHits) : 1;
+        remainingHitsByEnemy[enemyId] = remainingHits;
+        return remainingHits;
+    }
+
+    private bool IsEnemyTouchingTrigger(EnemyController enemy)
+    {
+        if (enemy == null || triggerCollider == null || !triggerCollider.enabled)
+        {
+            return false;
+        }
+
+        if (enemy.bodyCollider != null)
+        {
+            return enemy.bodyCollider.IsTouching(triggerCollider);
+        }
+
+        Collider2D[] colliders = enemy.GetComponentsInChildren<Collider2D>(true);
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            Collider2D collider = colliders[i];
+            if (collider != null && collider.IsTouching(triggerCollider))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void RecordTrackingSample(Transform target, Vector2 position)
+    {
+        if (trackedTargetTransform != target)
+        {
+            trackedTargetTransform = target;
+            targetSamples.Clear();
+        }
+
+        targetSamples.Add(new TargetPositionSample
+        {
+            time = Time.time,
+            position = position
+        });
+
+        float minSampleTime = Time.time - Mathf.Max(0f, ProjectileData != null ? ProjectileData.trackDelaySeconds : 0f) - TargetSampleRetentionPadding;
+        while (targetSamples.Count > 1 && targetSamples[0].time < minSampleTime)
+        {
+            targetSamples.RemoveAt(0);
+        }
+    }
+
+    private void ClearTrackingSamples()
+    {
+        trackedTargetTransform = null;
+        targetSamples.Clear();
+        spawnContext.targetTransform = null;
+    }
+
+    private static bool IsTrackingTargetValid(Transform targetTransform, Vector2 searchOrigin, float maxRadius)
+    {
+        if (targetTransform == null)
+        {
+            return false;
+        }
+
+        EnemyController enemy = targetTransform.GetComponentInParent<EnemyController>();
+        if (enemy == null || !enemy.IsAlive)
+        {
+            return false;
+        }
+
+        if (maxRadius > 0f)
+        {
+            float maxRadiusSqr = maxRadius * maxRadius;
+            if (((Vector2)enemy.transform.position - searchOrigin).sqrMagnitude > maxRadiusSqr)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

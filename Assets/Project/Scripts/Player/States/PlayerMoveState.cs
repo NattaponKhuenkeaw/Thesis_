@@ -24,9 +24,9 @@ public class PlayerMoveState : PlayerState
         if (player.Movement == null)
             return;
 
-        if (!player.Movement.IsGrounded())
+        if (!player.Movement.GroundState.IsEffectivelyGrounded)
         {
-            fsm.ChangeState(fsm.JumpState);
+            fsm.ChangeState(fsm.FallingState);
             return;
         }
 

@@ -24,7 +24,7 @@ MonoBehaviour:
         rid: 1588255929706479932
   - actionName: Air Combo
     context: 1
-    priority: 10
+    priority: 1
     conditions: []
     comboTree:
       treeName: Combo
@@ -1185,6 +1185,21 @@ MonoBehaviour:
           activationVoice: {fileID: 8300000, guid: d328f76e3165a5b42bd510497bc10aab, type: 3}
           activationSFX: {fileID: 8300000, guid: ed0af5caac4022f4c863b2a5b665c05a, type: 3}
           voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
     - rid: 1588256162561392740
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:

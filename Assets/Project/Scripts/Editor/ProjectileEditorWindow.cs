@@ -2,7 +2,6 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using CombatCore;
 using CombatEditor.UI;
 
 namespace CombatEditor
@@ -13,22 +12,20 @@ namespace CombatEditor
         private PropertyCardBuilder cardBuilder;
         private VisualElement propertyScrollContent;
         private VisualElement timelineContainer;
-        private float lastUpdateTime;
-        private bool isPreviewingInScene;
 
         [MenuItem("Window/Projectile Editor")]
         public static void ShowWindow()
         {
-            var w = GetWindow<ProjectileEditorWindow>("☄ Projectile Editor");
-            w.minSize = new Vector2(400, 600);
+            ProjectileEditorWindow window = GetWindow<ProjectileEditorWindow>("笘・Projectile Editor");
+            window.minSize = new Vector2(400f, 600f);
         }
 
         public static void OpenWindow(ProjectileData projectile)
         {
-            var w = GetWindow<ProjectileEditorWindow>("☄ Projectile Editor");
-            w.selectedProjectile = projectile;
-            w.Show();
-            w.RefreshUI();
+            ProjectileEditorWindow window = GetWindow<ProjectileEditorWindow>("笘・Projectile Editor");
+            window.selectedProjectile = projectile;
+            window.Show();
+            window.RefreshUI();
         }
 
         private void OnEnable()
@@ -45,17 +42,17 @@ namespace CombatEditor
 
         public void CreateGUI()
         {
-            // Load stylesheets (reuse AnimationEditor styles where possible)
-            var uss = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/Project/Scripts/Editor/AnimationEditor.uss");
+            StyleSheet uss = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/Project/Scripts/Editor/AnimationEditor.uss");
             if (uss != null)
+            {
                 rootVisualElement.styleSheets.Add(uss);
+            }
 
             var root = new VisualElement { name = "root" };
             root.style.flexDirection = FlexDirection.Column;
-            root.style.flexGrow = 1;
+            root.style.flexGrow = 1f;
             rootVisualElement.Add(root);
 
-            // 1. Selector Bar
             var selectorBar = new VisualElement { name = "selector-bar" };
             selectorBar.style.flexDirection = FlexDirection.Row;
             selectorBar.style.paddingBottom = 10;
@@ -64,27 +61,27 @@ namespace CombatEditor
             selectorBar.style.paddingRight = 10;
             selectorBar.style.backgroundColor = new Color(0.15f, 0.15f, 0.15f);
 
-            var projField = new ObjectField("Projectile Data") 
-            { 
+            var projectileField = new ObjectField("Projectile Data")
+            {
                 objectType = typeof(ProjectileData),
                 value = selectedProjectile,
-                style = { flexGrow = 1 }
+                style = { flexGrow = 1f }
             };
-            projField.RegisterValueChangedCallback(evt => {
+            projectileField.RegisterValueChangedCallback(evt =>
+            {
                 selectedProjectile = evt.newValue as ProjectileData;
                 RefreshUI();
             });
-            selectorBar.Add(projField);
+            selectorBar.Add(projectileField);
             root.Add(selectorBar);
 
-            // 2. Main Body (Property Sidebar primarily)
             var body = new VisualElement { name = "body" };
-            body.style.flexGrow = 1;
+            body.style.flexGrow = 1f;
             body.style.flexDirection = FlexDirection.Row;
             root.Add(body);
 
             propertyScrollContent = new ScrollView { name = "property-scroll-content" };
-            propertyScrollContent.style.flexGrow = 1;
+            propertyScrollContent.style.flexGrow = 1f;
             propertyScrollContent.style.paddingLeft = 10;
             propertyScrollContent.style.paddingRight = 10;
             body.Add(propertyScrollContent);
@@ -99,7 +96,7 @@ namespace CombatEditor
             root.Add(timelineContainer);
 
             cardBuilder = new PropertyCardBuilder(propertyScrollContent, null, RefreshUI, RefreshUI);
-            
+
             rootVisualElement.RegisterCallback<KeyDownEvent>(OnKeyDown);
             rootVisualElement.focusable = true;
 
@@ -133,26 +130,36 @@ namespace CombatEditor
 
         private void RefreshUI()
         {
-            if (propertyScrollContent == null) return;
+            if (propertyScrollContent == null)
+            {
+                return;
+            }
 
-            // Save scroll if possible
             Vector2 savedScroll = Vector2.zero;
-            var oldTimelineBody = timelineContainer.Q<ScrollView>("timeline-body");
-            if (oldTimelineBody != null) savedScroll = oldTimelineBody.scrollOffset;
+            ScrollView oldTimelineBody = timelineContainer.Q<ScrollView>("timeline-body");
+            if (oldTimelineBody != null)
+            {
+                savedScroll = oldTimelineBody.scrollOffset;
+            }
 
             propertyScrollContent.Clear();
 
             if (selectedProjectile == null)
             {
-                propertyScrollContent.Add(new Label("Select a ProjectileData asset to begin editing.") {
-                    style = { flexGrow = 1, unityTextAlign = TextAnchor.MiddleCenter, color = Color.gray }
+                propertyScrollContent.Add(new Label("Select a ProjectileData asset to begin editing.")
+                {
+                    style =
+                    {
+                        flexGrow = 1f,
+                        unityTextAlign = TextAnchor.MiddleCenter,
+                        color = Color.gray
+                    }
                 });
                 return;
             }
 
             cardBuilder.SetTarget(selectedProjectile);
             cardBuilder.Build(selectedProjectile);
-            
             BuildPhaseTimeline(savedScroll);
         }
 
@@ -160,8 +167,14 @@ namespace CombatEditor
         {
             timelineContainer.Clear();
 
-            var title = new Label("Projectile Phase Timeline") {
-                 style = { unityFontStyleAndWeight = FontStyle.Bold, marginBottom = 5, marginTop = 5 }
+            var title = new Label("Projectile Phase Timeline")
+            {
+                style =
+                {
+                    unityFontStyleAndWeight = FontStyle.Bold,
+                    marginBottom = 5,
+                    marginTop = 5
+                }
             };
             timelineContainer.Add(title);
 
@@ -169,141 +182,180 @@ namespace CombatEditor
             timelineBody.style.flexDirection = FlexDirection.Row;
             timelineBody.style.height = 80;
             timelineContainer.Add(timelineBody);
+            timelineBody.schedule.Execute(() => timelineBody.scrollOffset = savedScroll);
 
-            // Restore scroll
-            timelineBody.schedule.Execute(() => {
-                timelineBody.scrollOffset = savedScroll;
-            });
-
-            // Determine max frame extent from both hitboxes
             int maxFrame = 10;
-            HitboxBase spawnHb = selectedProjectile.ResolveSpawningHitbox();
-            HitboxBase routineHb = selectedProjectile.ResolveRoutineHitbox();
+            HitboxBase spawnHitbox = selectedProjectile.ResolveSpawningHitbox();
+            HitboxBase routineHitbox = selectedProjectile.ResolveRoutineHitbox();
 
-            if (spawnHb != null) maxFrame = Mathf.Max(maxFrame, spawnHb.startFrameOffset + spawnHb.activeFrames);
-            if (routineHb != null) maxFrame = Mathf.Max(maxFrame, routineHb.startFrameOffset + routineHb.activeFrames);
+            if (spawnHitbox != null)
+            {
+                maxFrame = Mathf.Max(maxFrame, spawnHitbox.startFrameOffset + spawnHitbox.activeFrames);
+            }
+
+            if (routineHitbox != null)
+            {
+                maxFrame = Mathf.Max(maxFrame, routineHitbox.startFrameOffset + routineHitbox.activeFrames);
+            }
+
             maxFrame = Mathf.Max(30, maxFrame + 5);
-
             float frameWidth = 10f;
 
-            // Header for frame numbers
             var frameNumbers = new VisualElement { style = { flexDirection = FlexDirection.Row, height = 20 } };
-            for(int i = 0; i <= maxFrame; i++) {
-                if (i % 5 == 0) {
-                    var num = new Label(i.ToString()) { style = { position = Position.Absolute, left = i * frameWidth, fontSize = 9, color = Color.gray } };
-                    frameNumbers.Add(num);
+            for (int i = 0; i <= maxFrame; i++)
+            {
+                if (i % 5 != 0)
+                {
+                    continue;
                 }
+
+                var num = new Label(i.ToString())
+                {
+                    style =
+                    {
+                        position = Position.Absolute,
+                        left = i * frameWidth,
+                        fontSize = 9,
+                        color = Color.gray
+                    }
+                };
+                frameNumbers.Add(num);
             }
+
             timelineBody.Add(frameNumbers);
 
-            // Track: Spawning Hitbox
-            if (spawnHb != null)
+            if (spawnHitbox != null)
             {
-                var track = new VisualElement { name = "track" };
-                track.style.height = 15;
-                track.style.marginTop = 2;
-                track.style.flexDirection = FlexDirection.Row;
-                
-                var bar = new VisualElement();
-                bar.style.position = Position.Absolute;
-                bar.style.left = spawnHb.startFrameOffset * frameWidth;
-                bar.style.width = spawnHb.activeFrames * frameWidth;
-                bar.style.height = 12;
-                bar.style.backgroundColor = new Color(0.18f, 0.72f, 0.38f);
-                bar.style.borderLeftWidth = 1;
-                bar.style.borderRightWidth = 1;
-                bar.style.borderLeftColor = Color.black;
-                bar.style.borderRightColor = Color.black;
-                bar.style.borderTopColor = Color.black;
-                bar.style.borderBottomColor = Color.black;
-                
-                var label = new Label($"Spawn ({spawnHb.HitboxTypeName})") { style = { fontSize = 8, color = Color.black, unityTextAlign = TextAnchor.MiddleCenter } };
-                bar.Add(label);
-                
-                track.Add(bar);
-                timelineBody.Add(track);
+                timelineBody.Add(BuildTrackBar("Spawn", spawnHitbox, frameWidth, new Color(0.18f, 0.72f, 0.38f)));
             }
 
-            // Track: Routine Hitbox
-            if (routineHb != null)
+            if (routineHitbox != null)
             {
-                var track = new VisualElement { name = "track" };
-                track.style.height = 15;
-                track.style.marginTop = 2;
-                track.style.flexDirection = FlexDirection.Row;
-                
-                var bar = new VisualElement();
-                bar.style.position = Position.Absolute;
-                bar.style.left = routineHb.startFrameOffset * frameWidth;
-                bar.style.width = routineHb.activeFrames * frameWidth;
-                bar.style.height = 12;
-                bar.style.backgroundColor = new Color(0.2f, 0.6f, 1f);
-                bar.style.borderLeftWidth = 1;
-                bar.style.borderRightWidth = 1;
-                bar.style.borderLeftColor = Color.black;
-                bar.style.borderRightColor = Color.black;
-                bar.style.borderTopColor = Color.black;
-                bar.style.borderBottomColor = Color.black;
-                
-                var label = new Label($"Routine ({routineHb.HitboxTypeName})") { style = { fontSize = 8, color = Color.black, unityTextAlign = TextAnchor.MiddleCenter } };
-                bar.Add(label);
-                
-                track.Add(bar);
-                timelineBody.Add(track);
+                timelineBody.Add(BuildTrackBar("Routine", routineHitbox, frameWidth, new Color(0.2f, 0.6f, 1f)));
             }
 
-            // Show "no hitboxes" message if neither phase has one
-            if (spawnHb == null && routineHb == null)
+            if (spawnHitbox == null && routineHitbox == null)
             {
-                timelineBody.Add(new Label("No phase hitboxes configured.") {
-                    style = { color = Color.gray, unityFontStyleAndWeight = FontStyle.Italic, marginTop = 10 }
+                timelineBody.Add(new Label("No phase hitboxes configured.")
+                {
+                    style =
+                    {
+                        color = Color.gray,
+                        unityFontStyleAndWeight = FontStyle.Italic,
+                        marginTop = 10
+                    }
                 });
             }
         }
 
-        private void OnSceneGUI(SceneView sceneView)
+        private static VisualElement BuildTrackBar(string labelPrefix, HitboxBase hitbox, float frameWidth, Color trackColor)
         {
-            if (selectedProjectile == null) return;
+            var track = new VisualElement { name = "track" };
+            track.style.height = 15;
+            track.style.marginTop = 2;
+            track.style.flexDirection = FlexDirection.Row;
 
-            Handles.color = Color.cyan;
-            Vector2 spawnPos = Vector2.zero;
-            
-            // Draw Travel Path (simplified)
-            Handles.DrawDottedLine(spawnPos, spawnPos + Vector2.right * (selectedProjectile.speed * selectedProjectile.lifetime), 4f);
-            Handles.Label(spawnPos, "Spawn Point (Projectile Path Preview)");
+            var bar = new VisualElement();
+            bar.style.position = Position.Absolute;
+            bar.style.left = hitbox.startFrameOffset * frameWidth;
+            bar.style.width = hitbox.activeFrames * frameWidth;
+            bar.style.height = 12;
+            bar.style.backgroundColor = trackColor;
+            bar.style.borderLeftWidth = 1;
+            bar.style.borderRightWidth = 1;
+            bar.style.borderLeftColor = Color.black;
+            bar.style.borderRightColor = Color.black;
+            bar.style.borderTopColor = Color.black;
+            bar.style.borderBottomColor = Color.black;
 
-            // Draw Spawning Phase Hitbox
-            DrawPhaseHitboxGizmo(selectedProjectile.ResolveSpawningHitbox(), "Spawn", new Color(0.18f, 0.72f, 0.38f));
-
-            // Draw Routine Phase Hitbox
-            DrawPhaseHitboxGizmo(selectedProjectile.ResolveRoutineHitbox(), "Routine", new Color(0.2f, 0.6f, 1f));
+            var label = new Label($"{labelPrefix} ({hitbox.HitboxTypeName})")
+            {
+                style =
+                {
+                    fontSize = 8,
+                    color = Color.black,
+                    unityTextAlign = TextAnchor.MiddleCenter
+                }
+            };
+            bar.Add(label);
+            track.Add(bar);
+            return track;
         }
 
-        private void DrawPhaseHitboxGizmo(HitboxBase hitbox, string phaseLabel, Color fallbackColor)
+        private void OnSceneGUI(SceneView sceneView)
         {
-            if (hitbox == null) return;
+            if (selectedProjectile == null)
+            {
+                return;
+            }
 
-            Vector2 offset = Vector2.zero;
-            Vector2 size = Vector2.one;
+            Handles.Label(new Vector3(0f, 3.25f, 0f), "Projectile Local Space Preview");
+            DrawFacingPreview("Facing Left", -1f, new Vector2(-4f, 0f));
+            DrawFacingPreview("Facing Right", 1f, new Vector2(4f, 0f));
 
-            if (hitbox is NormalHitbox n) { offset = n.offset; size = n.size; }
-            else if (hitbox is GrabHitbox g) { offset = g.offset; size = g.size; }
-            else return;
+            Handles.color = new Color(1f, 1f, 1f, 0.2f);
+            Handles.DrawDottedLine(new Vector3(0f, -3f, 0f), new Vector3(0f, 3f, 0f), 4f);
+        }
 
-            Color color = hitbox.debugColor != default ? hitbox.debugColor : fallbackColor;
-            Handles.color = color;
-            Vector3 center = (Vector3)offset;
-            
-            Vector3 p1 = center + new Vector3(-size.x, -size.y, 0) * 0.5f;
-            Vector3 p2 = center + new Vector3(size.x, -size.y, 0) * 0.5f;
-            Vector3 p3 = center + new Vector3(size.x, size.y, 0) * 0.5f;
-            Vector3 p4 = center + new Vector3(-size.x, size.y, 0) * 0.5f;
-            
-            Handles.DrawPolyLine(p1, p2, p3, p4, p1);
-            Handles.Label(center, $"{phaseLabel}: {hitbox.HitboxTypeName} [F:{hitbox.startFrameOffset}-{hitbox.startFrameOffset + hitbox.activeFrames}]");
+        private void DrawFacingPreview(string label, float facingSign, Vector2 previewOrigin)
+        {
+            Handles.color = Color.white;
+            Handles.DrawSolidDisc(previewOrigin, Vector3.forward, 0.04f);
+            Handles.Label((Vector3)previewOrigin + new Vector3(-0.6f, 2.75f, 0f), label);
 
-            Handles.color = new Color(color.r, color.g, color.b, 0.15f);
-            Handles.DrawSolidRectangleWithOutline(new[] { p1, p2, p3, p4 }, Handles.color, Color.clear);
+            float travelDistance = Mathf.Max(0.75f, selectedProjectile.speed * Mathf.Max(0.1f, selectedProjectile.lifetime));
+            Vector2 pathEnd = previewOrigin + Vector2.right * facingSign * travelDistance;
+            Handles.color = Color.cyan;
+            Handles.DrawDottedLine(previewOrigin, pathEnd, 4f);
+            Handles.Label((Vector3)previewOrigin + new Vector3(-0.45f, -0.35f, 0f), "Origin");
+
+            DrawPassiveColliderGizmo(previewOrigin, facingSign);
+            DrawPhaseHitboxGizmo(selectedProjectile.ResolveSpawningHitbox(), "Spawn", new Color(0.18f, 0.72f, 0.38f), previewOrigin, facingSign);
+            DrawPhaseHitboxGizmo(selectedProjectile.ResolveRoutineHitbox(), "Routine", new Color(0.2f, 0.6f, 1f), previewOrigin, facingSign);
+        }
+
+        private void DrawPassiveColliderGizmo(Vector2 previewOrigin, float facingSign)
+        {
+            DrawRectGizmo(
+                previewOrigin + selectedProjectile.ResolvePassiveColliderOffset(facingSign),
+                selectedProjectile.travelColliderSize,
+                new Color(1f, 0.45f, 0.12f, 0.15f),
+                new Color(1f, 0.45f, 0.12f, 1f),
+                "Passive");
+        }
+
+        private void DrawPhaseHitboxGizmo(
+            HitboxBase hitbox,
+            string phaseLabel,
+            Color fallbackColor,
+            Vector2 previewOrigin,
+            float facingSign)
+        {
+            if (!ProjectileSpatialUtility.TryGetHitboxGeometry(hitbox, facingSign, out Vector2 offset, out Vector2 size))
+            {
+                return;
+            }
+
+            Color resolvedColor = hitbox.debugColor != default ? hitbox.debugColor : fallbackColor;
+            DrawRectGizmo(
+                previewOrigin + offset,
+                size,
+                new Color(resolvedColor.r, resolvedColor.g, resolvedColor.b, 0.15f),
+                resolvedColor,
+                $"{phaseLabel}: {hitbox.HitboxTypeName} [F:{hitbox.startFrameOffset}-{hitbox.startFrameOffset + hitbox.activeFrames}]");
+        }
+
+        private static void DrawRectGizmo(Vector2 center, Vector2 size, Color fillColor, Color outlineColor, string label)
+        {
+            Vector3 p1 = (Vector3)center + new Vector3(-size.x, -size.y, 0f) * 0.5f;
+            Vector3 p2 = (Vector3)center + new Vector3(size.x, -size.y, 0f) * 0.5f;
+            Vector3 p3 = (Vector3)center + new Vector3(size.x, size.y, 0f) * 0.5f;
+            Vector3 p4 = (Vector3)center + new Vector3(-size.x, size.y, 0f) * 0.5f;
+
+            Handles.color = fillColor;
+            Handles.DrawSolidRectangleWithOutline(new[] { p1, p2, p3, p4 }, fillColor, outlineColor);
+            Handles.color = outlineColor;
+            Handles.Label((Vector3)center + new Vector3(0f, size.y * 0.65f, 0f), label);
         }
     }
 }

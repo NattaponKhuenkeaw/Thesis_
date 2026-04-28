@@ -128,8 +128,17 @@ namespace CombatEditor.UI
                 {
                     RecordUndo("Edit Spawn Position Mode");
                     data.spawnPositionMode = (SpawnPositionMode)value;
-                    MarkDirty();
+                    MarkDirtyAndRebuild();
                 });
+                if (data.spawnPositionMode != SpawnPositionMode.Offset)
+                {
+                    AddEnumField(body, "Spawn Reference", data.spawnReferencePointMode, value =>
+                    {
+                        RecordUndo("Edit Spawn Reference");
+                        data.spawnReferencePointMode = (ProjectileReferencePointMode)value;
+                        MarkDirty();
+                    });
+                }
                 AddToggle(body, "Play Spawn Animation", data.playSpawnAnimation, value =>
                 {
                     RecordUndo("Toggle Spawn Animation");
@@ -163,13 +172,26 @@ namespace CombatEditor.UI
                     MarkDirtyAndRebuild();
                 });
 
-                if (data.traversalMode == ProjectileTraversalMode.Homing || data.homeToTarget)
+                bool usesTargetAcquisition = data.spawnPositionMode == SpawnPositionMode.Target
+                    || data.traversalMode == ProjectileTraversalMode.Homing;
+                if (usesTargetAcquisition)
                 {
-                    AddToggle(body, "Home to Target", data.homeToTarget, value =>
+                    AddSeparator(body, "Target Acquisition");
+                    AddFloatField(body, "Tracking Radius", data.trackingRadius, value =>
                     {
-                        RecordUndo("Toggle Homing");
-                        data.homeToTarget = value;
-                        MarkDirtyAndRebuild();
+                        RecordUndo("Edit Tracking Radius");
+                        data.trackingRadius = value;
+                        MarkDirty();
+                    });
+                }
+
+                if (data.traversalMode == ProjectileTraversalMode.Homing)
+                {
+                    AddEnumField(body, "Tracking Reference", data.trackingReferencePointMode, value =>
+                    {
+                        RecordUndo("Edit Tracking Reference");
+                        data.trackingReferencePointMode = (ProjectileReferencePointMode)value;
+                        MarkDirty();
                     });
                     AddFloatField(body, "Homing Turn Rate", data.homingTurnRate, value =>
                     {
@@ -177,15 +199,21 @@ namespace CombatEditor.UI
                         data.homingTurnRate = value;
                         MarkDirty();
                     });
+                    AddFloatField(body, "Track Delay", data.trackDelaySeconds, value =>
+                    {
+                        RecordUndo("Edit Track Delay");
+                        data.trackDelaySeconds = value;
+                        MarkDirty();
+                    });
                 }
 
-                if (data.traversalMode == ProjectileTraversalMode.Anchored || data.anchorToCaster)
+                if (data.traversalMode == ProjectileTraversalMode.Anchored)
                 {
-                    AddToggle(body, "Anchor to Caster", data.anchorToCaster, value =>
+                    AddEnumField(body, "Anchor Reference", data.anchorReferencePointMode, value =>
                     {
-                        RecordUndo("Toggle Anchor");
-                        data.anchorToCaster = value;
-                        MarkDirtyAndRebuild();
+                        RecordUndo("Edit Anchor Reference");
+                        data.anchorReferencePointMode = (ProjectileReferencePointMode)value;
+                        MarkDirty();
                     });
                 }
 
@@ -205,6 +233,12 @@ namespace CombatEditor.UI
                 {
                     RecordUndo("Edit Max Hits");
                     data.maxHits = value;
+                    MarkDirty();
+                });
+                AddEnumField(body, "Hit Count Mode", data.hitCountMode, value =>
+                {
+                    RecordUndo("Edit Hit Count Mode");
+                    data.hitCountMode = (ProjectileHitCountMode)value;
                     MarkDirty();
                 });
 
@@ -244,6 +278,12 @@ namespace CombatEditor.UI
             // ── 5. Detection ──
             BuildFoldoutCard("Detection", "proj_detection", new Color(0.8f, 0.2f, 0.2f), body =>
             {
+                AddVector2Field(body, "Travel Collider Offset", data.travelColliderOffset, value =>
+                {
+                    RecordUndo("Edit Detection Offset");
+                    data.travelColliderOffset = value;
+                    MarkDirty();
+                });
                 AddVector2Field(body, "Travel Collider Size", data.travelColliderSize, value =>
                 {
                     RecordUndo("Edit Detection Size");
@@ -1376,6 +1416,30 @@ namespace CombatEditor.UI
                 {
                     entry.overlaySettings = new UltimateOverlaySequenceSettings();
                 }
+                if (entry.teleportSettings == null)
+                {
+                    entry.teleportSettings = new TeleportEventSettings();
+                }
+                if (entry.teleportSettings.screenFlickSettings == null)
+                {
+                    entry.teleportSettings.screenFlickSettings = new UltimateOverlaySequenceSettings();
+                }
+                if (entry.screenImpulseSettings == null)
+                {
+                    entry.screenImpulseSettings = new ScreenImpulseEventSettings();
+                }
+                if (entry.screenImpulseSettings.impulse == null)
+                {
+                    entry.screenImpulseSettings.impulse = GameImpulseRequest.CreateActionEventDefault();
+                }
+                if (entry.screenImpulseSettings.impulse.slowMotion == null)
+                {
+                    entry.screenImpulseSettings.impulse.slowMotion = new SlowMotionSettings();
+                }
+                if (entry.afterImageSettings == null)
+                {
+                    entry.afterImageSettings = new AfterImageEventSettings();
+                }
 
                 BuildFoldoutCard($"Event #{idx + 1}: {entry.label}", $"event_entry_{idx}", entry.trackColor, inner =>
                 {
@@ -1389,7 +1453,7 @@ namespace CombatEditor.UI
                     {
                         RecordUndo("Edit Event Type");
                         entry.eventType = (ActionEventType)value;
-                        MarkDirty();
+                        MarkDirtyAndRebuild();
                     });
                     AddIntField(inner, "Trigger Frame", entry.triggerFrame, value =>
                     {
@@ -1404,101 +1468,24 @@ namespace CombatEditor.UI
                         MarkDirty();
                     });
 
-                    AddSeparator(inner, "Freeze Behavior");
-                    AddToggleField(inner, "Freeze World", entry.freezeWorld, value =>
+                    switch (entry.eventType)
                     {
-                        RecordUndo("Edit Event Freeze");
-                        entry.freezeWorld = value;
-                        MarkDirty();
-                    });
-                    AddEnumField(inner, "Timeline Mode", entry.timelineMode, value =>
-                    {
-                        RecordUndo("Edit Event Timeline Mode");
-                        entry.timelineMode = (UltimateFreezeTimelineMode)value;
-                        MarkDirty();
-                    });
+                        case ActionEventType.UltimateOverlaySequence:
+                            BuildUltimateActionEventFields(inner, entry);
+                            break;
 
-                    AddSeparator(inner, "Overlay Sequence");
-                    AddFloatField(inner, "Fade In", entry.overlaySettings.fadeInDuration, value =>
-                    {
-                        RecordUndo("Edit Event Fade In");
-                        entry.overlaySettings.fadeInDuration = Mathf.Max(0f, value);
-                        MarkDirty();
-                    });
-                    AddFloatField(inner, "Hold", entry.overlaySettings.holdDuration, value =>
-                    {
-                        RecordUndo("Edit Event Hold");
-                        entry.overlaySettings.holdDuration = Mathf.Max(0f, value);
-                        MarkDirty();
-                    });
-                    AddFloatField(inner, "Darken", entry.overlaySettings.darkenDuration, value =>
-                    {
-                        RecordUndo("Edit Event Darken");
-                        entry.overlaySettings.darkenDuration = Mathf.Max(0f, value);
-                        MarkDirty();
-                    });
-                    AddFloatField(inner, "Black Hold", entry.overlaySettings.blackHoldDuration, value =>
-                    {
-                        RecordUndo("Edit Event Black Hold");
-                        entry.overlaySettings.blackHoldDuration = Mathf.Max(0f, value);
-                        MarkDirty();
-                    });
-                    AddFloatField(inner, "Fade Out", entry.overlaySettings.fadeOutDuration, value =>
-                    {
-                        RecordUndo("Edit Event Fade Out");
-                        entry.overlaySettings.fadeOutDuration = Mathf.Max(0f, value);
-                        MarkDirty();
-                    });
-                    AddColorField(inner, "Flash Color", entry.overlaySettings.flashColor, value =>
-                    {
-                        RecordUndo("Edit Event Flash Color");
-                        entry.overlaySettings.flashColor = value;
-                        MarkDirty();
-                    });
-                    AddColorField(inner, "Dark Color", entry.overlaySettings.darkColor, value =>
-                    {
-                        RecordUndo("Edit Event Dark Color");
-                        entry.overlaySettings.darkColor = value;
-                        MarkDirty();
-                    });
+                        case ActionEventType.TeleportToNearestEnemy:
+                            BuildTeleportActionEventFields(inner, entry);
+                            break;
 
-                    AddSeparator(inner, "Activation Payload");
-                    AddEnumField(inner, "VFX Type", entry.activationVFXType, value =>
-                    {
-                        RecordUndo("Edit Event VFX Type");
-                        entry.activationVFXType = (Project.Combat.VFXType)value;
-                        MarkDirty();
-                    });
-                    AddObjectField(inner, "VFX Prefab (Override)", entry.activationVFXPrefab, value =>
-                    {
-                        RecordUndo("Edit Event VFX Prefab");
-                        entry.activationVFXPrefab = value as GameObject;
-                        MarkDirty();
-                    });
-                    AddVector3Field(inner, "VFX Offset", entry.activationVFXOffset, value =>
-                    {
-                        RecordUndo("Edit Event VFX Offset");
-                        entry.activationVFXOffset = value;
-                        MarkDirty();
-                    });
-                    AddObjectField(inner, "Voice Clip", entry.activationVoice, value =>
-                    {
-                        RecordUndo("Edit Event Voice");
-                        entry.activationVoice = value as AudioClip;
-                        MarkDirty();
-                    });
-                    AddObjectField(inner, "SFX Clip", entry.activationSFX, value =>
-                    {
-                        RecordUndo("Edit Event SFX");
-                        entry.activationSFX = value as AudioClip;
-                        MarkDirty();
-                    });
-                    AddFloatField(inner, "Voice Delay", entry.voiceDelay, value =>
-                    {
-                        RecordUndo("Edit Event Voice Delay");
-                        entry.voiceDelay = Mathf.Max(0f, value);
-                        MarkDirty();
-                    });
+                        case ActionEventType.ScreenImpulse:
+                            BuildScreenImpulseActionEventFields(inner, entry);
+                            break;
+
+                        case ActionEventType.AfterImage:
+                            BuildAfterImageActionEventFields(inner, entry);
+                            break;
+                    }
                 }, () =>
                 {
                     RecordUndo("Delete Action Event");
@@ -1521,6 +1508,270 @@ namespace CombatEditor.UI
             };
             addButton.AddToClassList("component-add-entry-btn");
             body.Add(addButton);
+        }
+
+        private void BuildUltimateActionEventFields(VisualElement inner, ActionEventEntry entry)
+        {
+            AddSeparator(inner, "Freeze Behavior");
+            AddToggleField(inner, "Freeze World", entry.freezeWorld, value =>
+            {
+                RecordUndo("Edit Event Freeze");
+                entry.freezeWorld = value;
+                MarkDirty();
+            });
+            AddEnumField(inner, "Timeline Mode", entry.timelineMode, value =>
+            {
+                RecordUndo("Edit Event Timeline Mode");
+                entry.timelineMode = (UltimateFreezeTimelineMode)value;
+                MarkDirty();
+            });
+
+            AddSeparator(inner, "Overlay Sequence");
+            BuildOverlaySequenceSettingsFields(inner, entry.overlaySettings, "Event");
+
+            AddSeparator(inner, "Activation Payload");
+            AddEnumField(inner, "VFX Type", entry.activationVFXType, value =>
+            {
+                RecordUndo("Edit Event VFX Type");
+                entry.activationVFXType = (Project.Combat.VFXType)value;
+                MarkDirty();
+            });
+            AddObjectField(inner, "VFX Prefab (Override)", entry.activationVFXPrefab, value =>
+            {
+                RecordUndo("Edit Event VFX Prefab");
+                entry.activationVFXPrefab = value as GameObject;
+                MarkDirty();
+            });
+            AddVector3Field(inner, "VFX Offset", entry.activationVFXOffset, value =>
+            {
+                RecordUndo("Edit Event VFX Offset");
+                entry.activationVFXOffset = value;
+                MarkDirty();
+            });
+            AddObjectField(inner, "Voice Clip", entry.activationVoice, value =>
+            {
+                RecordUndo("Edit Event Voice");
+                entry.activationVoice = value as AudioClip;
+                MarkDirty();
+            });
+            AddObjectField(inner, "SFX Clip", entry.activationSFX, value =>
+            {
+                RecordUndo("Edit Event SFX");
+                entry.activationSFX = value as AudioClip;
+                MarkDirty();
+            });
+            AddFloatField(inner, "Voice Delay", entry.voiceDelay, value =>
+            {
+                RecordUndo("Edit Event Voice Delay");
+                entry.voiceDelay = Mathf.Max(0f, value);
+                MarkDirty();
+            });
+        }
+
+        private void BuildTeleportActionEventFields(VisualElement inner, ActionEventEntry entry)
+        {
+            TeleportEventSettings settings = entry.teleportSettings ??= new TeleportEventSettings();
+            settings.screenFlickSettings ??= new UltimateOverlaySequenceSettings();
+
+            AddSeparator(inner, "Teleport");
+            AddFloatField(inner, "Target Radius", settings.targetRadius, value =>
+            {
+                RecordUndo("Edit Teleport Radius");
+                settings.targetRadius = Mathf.Max(0f, value);
+                MarkDirty();
+            });
+            AddFloatField(inner, "Offset X", settings.teleportOffsetX, value =>
+            {
+                RecordUndo("Edit Teleport Offset");
+                settings.teleportOffsetX = Mathf.Max(0f, value);
+                MarkDirty();
+            });
+            AddToggleField(inner, "Snap Camera To Player", settings.snapCameraToPlayer, value =>
+            {
+                RecordUndo("Toggle Teleport Camera Snap");
+                settings.snapCameraToPlayer = value;
+                MarkDirty();
+            });
+            AddFloatField(inner, "Camera Snap Duration", settings.cameraSnapDuration, value =>
+            {
+                RecordUndo("Edit Teleport Snap Duration");
+                settings.cameraSnapDuration = Mathf.Max(0f, value);
+                MarkDirty();
+            });
+            AddFloatField(inner, "Impulse Strength", settings.cameraImpulseStrength, value =>
+            {
+                RecordUndo("Edit Teleport Impulse");
+                settings.cameraImpulseStrength = Mathf.Max(0f, value);
+                MarkDirty();
+            });
+
+            AddSeparator(inner, "Screen Flick");
+            AddToggleField(inner, "Play Screen Flick", settings.playScreenFlick, value =>
+            {
+                RecordUndo("Toggle Teleport Screen Flick");
+                settings.playScreenFlick = value;
+                MarkDirtyAndRebuild();
+            });
+
+            if (settings.playScreenFlick)
+            {
+                BuildOverlaySequenceSettingsFields(inner, settings.screenFlickSettings, "Teleport Flick");
+            }
+        }
+
+        private void BuildScreenImpulseActionEventFields(VisualElement inner, ActionEventEntry entry)
+        {
+            ScreenImpulseEventSettings settings = entry.screenImpulseSettings ??= new ScreenImpulseEventSettings();
+            settings.impulse ??= GameImpulseRequest.CreateActionEventDefault();
+            settings.impulse.slowMotion ??= new SlowMotionSettings();
+
+            AddSeparator(inner, "Screen Impulse");
+            BuildGameImpulseRequestFields(inner, settings.impulse, "Screen Impulse");
+        }
+
+        private void BuildAfterImageActionEventFields(VisualElement inner, ActionEventEntry entry)
+        {
+            AfterImageEventSettings settings = entry.afterImageSettings ??= new AfterImageEventSettings();
+
+            AddSeparator(inner, "After Image");
+            AddFloatField(inner, "Spawn Interval", settings.spawnIntervalSeconds, value =>
+            {
+                RecordUndo("Edit After Image Interval");
+                settings.spawnIntervalSeconds = Mathf.Max(0.01f, value);
+                MarkDirty();
+            });
+            AddEnumField(inner, "End Mode", settings.endMode, value =>
+            {
+                RecordUndo("Edit After Image End Mode");
+                settings.endMode = (AfterImageEndMode)value;
+                MarkDirtyAndRebuild();
+            });
+
+            if (settings.endMode == AfterImageEndMode.EndAtFrame)
+            {
+                AddIntField(inner, "End Frame", settings.endFrame, value =>
+                {
+                    RecordUndo("Edit After Image End Frame");
+                    settings.endFrame = Mathf.Max(entry.triggerFrame, value);
+                    MarkDirty();
+                });
+            }
+        }
+
+        private void BuildGameImpulseRequestFields(VisualElement inner, GameImpulseRequest request, string undoPrefix)
+        {
+            if (request == null)
+            {
+                return;
+            }
+
+            request.slowMotion ??= new SlowMotionSettings();
+
+            AddFloatField(inner, "Start Strength", request.startStrength, value =>
+            {
+                RecordUndo($"Edit {undoPrefix} Start Strength");
+                request.startStrength = Mathf.Max(0f, value);
+                MarkDirty();
+            });
+            AddFloatField(inner, "End Strength", request.endStrength, value =>
+            {
+                RecordUndo($"Edit {undoPrefix} End Strength");
+                request.endStrength = Mathf.Max(0f, value);
+                MarkDirty();
+            });
+            AddFloatField(inner, "Duration", request.duration, value =>
+            {
+                RecordUndo($"Edit {undoPrefix} Duration");
+                request.duration = Mathf.Max(0f, value);
+                MarkDirty();
+            });
+            AddFloatField(inner, "Pulse Interval", request.pulseInterval, value =>
+            {
+                RecordUndo($"Edit {undoPrefix} Pulse Interval");
+                request.pulseInterval = Mathf.Max(0.01f, value);
+                MarkDirty();
+            });
+
+            AddSeparator(inner, "Slow Motion");
+            AddToggleField(inner, "Enable Slow Motion", request.slowMotion.enabled, value =>
+            {
+                RecordUndo($"Toggle {undoPrefix} Slow Motion");
+                request.slowMotion.enabled = value;
+                MarkDirtyAndRebuild();
+            });
+
+            if (request.slowMotion.enabled)
+            {
+                AddFloatField(inner, "Time Scale", request.slowMotion.timeScale, value =>
+                {
+                    RecordUndo($"Edit {undoPrefix} Time Scale");
+                    request.slowMotion.timeScale = Mathf.Clamp(value, 0.01f, 1f);
+                    MarkDirty();
+                });
+                AddFloatField(inner, "Slow Motion Duration", request.slowMotion.duration, value =>
+                {
+                    RecordUndo($"Edit {undoPrefix} Slow Duration");
+                    request.slowMotion.duration = Mathf.Max(0f, value);
+                    MarkDirty();
+                });
+                AddFloatField(inner, "Slow Motion Delay", request.slowMotion.delaySeconds, value =>
+                {
+                    RecordUndo($"Edit {undoPrefix} Slow Delay");
+                    request.slowMotion.delaySeconds = Mathf.Max(0f, value);
+                    MarkDirty();
+                });
+            }
+        }
+
+        private void BuildOverlaySequenceSettingsFields(VisualElement inner, UltimateOverlaySequenceSettings settings, string undoPrefix)
+        {
+            if (settings == null)
+            {
+                return;
+            }
+
+            AddFloatField(inner, "Fade In", settings.fadeInDuration, value =>
+            {
+                RecordUndo($"Edit {undoPrefix} Fade In");
+                settings.fadeInDuration = Mathf.Max(0f, value);
+                MarkDirty();
+            });
+            AddFloatField(inner, "Hold", settings.holdDuration, value =>
+            {
+                RecordUndo($"Edit {undoPrefix} Hold");
+                settings.holdDuration = Mathf.Max(0f, value);
+                MarkDirty();
+            });
+            AddFloatField(inner, "Darken", settings.darkenDuration, value =>
+            {
+                RecordUndo($"Edit {undoPrefix} Darken");
+                settings.darkenDuration = Mathf.Max(0f, value);
+                MarkDirty();
+            });
+            AddFloatField(inner, "Black Hold", settings.blackHoldDuration, value =>
+            {
+                RecordUndo($"Edit {undoPrefix} Black Hold");
+                settings.blackHoldDuration = Mathf.Max(0f, value);
+                MarkDirty();
+            });
+            AddFloatField(inner, "Fade Out", settings.fadeOutDuration, value =>
+            {
+                RecordUndo($"Edit {undoPrefix} Fade Out");
+                settings.fadeOutDuration = Mathf.Max(0f, value);
+                MarkDirty();
+            });
+            AddColorField(inner, "Flash Color", settings.flashColor, value =>
+            {
+                RecordUndo($"Edit {undoPrefix} Flash Color");
+                settings.flashColor = value;
+                MarkDirty();
+            });
+            AddColorField(inner, "Dark Color", settings.darkColor, value =>
+            {
+                RecordUndo($"Edit {undoPrefix} Dark Color");
+                settings.darkColor = value;
+                MarkDirty();
+            });
         }
 
         private void BuildHitDataCard(VisualElement body, HitFrameData hitData)

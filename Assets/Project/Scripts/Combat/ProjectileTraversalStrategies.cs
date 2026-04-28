@@ -39,15 +39,13 @@ public sealed class HomingProjectileTraversalStrategy : IProjectileTraversalStra
 {
     public void Tick(ProjectileRuntime runtime, ProjectileData data, ProjectileSpawnContext context, float deltaTime)
     {
-        if (context.targetTransform != null)
+        Vector2 aimPosition = runtime.ResolveTrackingAimPosition();
+        Vector2 toTarget = aimPosition - (Vector2)runtime.transform.position;
+        if (toTarget.sqrMagnitude > 0.0001f)
         {
-            Vector2 toTarget = (Vector2)(context.targetTransform.position - runtime.transform.position);
-            if (toTarget.sqrMagnitude > 0.0001f)
-            {
-                Vector2 desiredDirection = toTarget.normalized;
-                Vector2 blended = Vector2.Lerp(runtime.CurrentDirection, desiredDirection, data.homingTurnRate * deltaTime);
-                runtime.SetCurrentDirection(blended.sqrMagnitude > 0.0001f ? blended.normalized : desiredDirection);
-            }
+            Vector2 desiredDirection = toTarget.normalized;
+            Vector2 blended = Vector2.Lerp(runtime.CurrentDirection, desiredDirection, data.homingTurnRate * deltaTime);
+            runtime.SetCurrentDirection(blended.sqrMagnitude > 0.0001f ? blended.normalized : desiredDirection);
         }
 
         runtime.Translate(runtime.CurrentDirection * data.speed * deltaTime);
@@ -64,14 +62,6 @@ public sealed class AnchoredProjectileTraversalStrategy : IProjectileTraversalSt
             return;
         }
 
-        Vector2 offset = context.resolvedSpawnOffset;
-        if (offset == Vector2.zero)
-        {
-            offset = data.spawnOffset;
-        }
-
-        float sign = runtime.GetFacingSign();
-        offset.x = Mathf.Abs(offset.x) * sign;
-        runtime.SetWorldPosition((Vector2)context.casterTransform.position + offset);
+        runtime.SetWorldPosition(data.ResolveAnchoredPosition(context, runtime.GetFacingSign()));
     }
 }

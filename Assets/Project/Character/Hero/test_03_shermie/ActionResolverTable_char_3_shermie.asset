@@ -1170,6 +1170,36 @@ MonoBehaviour:
           activationVoice: {fileID: 8300000, guid: f20867bcfd2db214fb7a131510478ef8, type: 3}
           activationSFX: {fileID: 8300000, guid: a17ff62340838794aa61bcc8b4602cb1, type: 3}
           voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0.4
+              endStrength: 0.08
+              duration: 0.14
+              pulseInterval: 0.025
+              slowMotion:
+                enabled: 0
+                timeScale: 0.35
+                duration: 0.08
+                delaySeconds: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
     - rid: 1588256145469341830
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -1276,7 +1306,7 @@ MonoBehaviour:
           startupFrames: 12
           activeFrames: 8
           recoveryFrames: 30
-          cancelWindowStartFrame: 18
+          cancelWindowStartFrame: 45
           loopActivePhase: 0
           stepName: air_Attack1
           animationClip: {fileID: 7400000, guid: fba2a4536e88369438257a92c4166acb, type: 2}
@@ -1885,18 +1915,11 @@ MonoBehaviour:
           endFrame: 0
           taskType: 0
           easing: 1
-          position: {x: 1.7, y: 1.7, z: 0}
-          rotation: {x: 0, y: 0, z: 0}
-          scale: {x: 1, y: 1, z: 1}
-        - startFrame: 1
-          endFrame: 10
-          taskType: 0
-          easing: 1
-          position: {x: 0, y: 1, z: 0}
+          position: {x: 1.7, y: 0.3, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
         - startFrame: 10
-          endFrame: 44
+          endFrame: 33
           taskType: 0
           easing: 1
           position: {x: 0, y: -3, z: 0}

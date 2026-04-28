@@ -18,6 +18,7 @@ MonoBehaviour:
   loopClip: {fileID: 7400000, guid: 386ad011fe89f7e429c07d2c4ed5d40e, type: 2}
   spawnOffset: {x: 1.2, y: 0.4}
   spawnPositionMode: 2
+  spawnReferencePointMode: 0
   playSpawnAnimation: 0
   spawnDuration: 0.0025
   inheritFacingDirection: 1
@@ -26,11 +27,12 @@ MonoBehaviour:
     decrementsMaxHits: 0
     hitbox:
       rid: 1588256093655269584
-  spawnMode: 0
   traversalMode: 0
-  homeToTarget: 0
+  trackingReferencePointMode: 0
+  anchorReferencePointMode: 0
   homingTurnRate: 8
-  anchorToCaster: 0
+  trackDelaySeconds: 0
+  trackingRadius: 0
   speed: 10
   lifetime: 2
   maxHits: 3
@@ -40,11 +42,10 @@ MonoBehaviour:
     hitbox:
       rid: 1588256093655269585
   travelColliderSize: {x: 1, y: 1}
+  travelColliderOffset: {x: 0, y: 0}
   enemyLayerMask:
     serializedVersion: 2
     m_Bits: 256
-  impactHitData:
-    hitboxes: []
   hitIntervalFrames: 3
   stopOnImpact: 1
   destroyWhenHitsExhausted: 1

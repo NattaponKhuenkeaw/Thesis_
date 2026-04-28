@@ -120,6 +120,11 @@ public class CameraManager : MonoBehaviour
     // Y-damping
     private CinemachinePositionComposer _explorePositionComposer;
     private Coroutine _lerpYPanCoroutine;
+    private Coroutine _temporaryPlayerSnapCoroutine;
+    private CinemachineBrain _brain;
+    private CinemachineBlendDefinition _cachedBrainBlend;
+    private Vector3 _cachedExploreDamping;
+    private bool _isTemporarilySnappedToPlayer;
 
     public bool IsInCombat => _isInCombat;
     public bool IsLerpingYDamping { get; private set; }
@@ -162,6 +167,15 @@ public class CameraManager : MonoBehaviour
         // Auto-find impulse source
         if (_impulseSource == null)
             _impulseSource = GetComponentInChildren<CinemachineImpulseSource>();
+
+        if (_brain == null)
+        {
+            Camera mainCamera = Camera.main;
+            if (mainCamera != null)
+            {
+                _brain = mainCamera.GetComponent<CinemachineBrain>();
+            }
+        }
 
         // Cache explore cam's PositionComposer for Y-damping
         if (_exploreCam != null)
@@ -371,6 +385,157 @@ public class CameraManager : MonoBehaviour
         return nearestEnemy;
     }
 
+    public EnemyController GetProjectileTrackingTarget(Vector2 fromPosition, float facingSign, float maxRadius = 0f, bool includeLeavingTargets = false)
+    {
+        EnemyController inFront = GetWeightedEngagedEnemy(fromPosition, facingSign, maxRadius, includeLeavingTargets, true);
+        return inFront != null
+            ? inFront
+            : GetWeightedEngagedEnemy(fromPosition, facingSign, maxRadius, includeLeavingTargets, false);
+    }
+
+    public EnemyController GetNearestEngagedEnemyInRadius(Vector2 fromPosition, float maxRadius = 0f, bool includeLeavingTargets = false)
+    {
+        EnemyController nearestEnemy = null;
+        float nearestDistanceSqr = maxRadius > 0f ? maxRadius * maxRadius : float.MaxValue;
+
+        foreach (var kvp in _engagedEnemies)
+        {
+            EnemyController enemy = kvp.Key;
+            EngagedEnemyContext ctx = kvp.Value;
+            if (enemy == null || !enemy.IsAlive)
+            {
+                continue;
+            }
+
+            if (!includeLeavingTargets && ctx.isLeaving)
+            {
+                continue;
+            }
+
+            float distanceSqr = ((Vector2)enemy.transform.position - fromPosition).sqrMagnitude;
+            if (distanceSqr > nearestDistanceSqr)
+            {
+                continue;
+            }
+
+            nearestDistanceSqr = distanceSqr;
+            nearestEnemy = enemy;
+        }
+
+        return nearestEnemy;
+    }
+
+    public void NotifyPlayerWarp(Vector3 positionDelta)
+    {
+        if (_playerTransform == null)
+        {
+            return;
+        }
+
+        if (_exploreCam != null)
+        {
+            if (positionDelta.sqrMagnitude > 0.000001f)
+            {
+                _exploreCam.OnTargetObjectWarped(_playerTransform, positionDelta);
+            }
+            _exploreCam.PreviousStateIsValid = false;
+        }
+
+        if (_combatCam != null)
+        {
+            if (positionDelta.sqrMagnitude > 0.000001f)
+            {
+                _combatCam.OnTargetObjectWarped(_playerTransform, positionDelta);
+            }
+            _combatCam.PreviousStateIsValid = false;
+        }
+    }
+
+    public void BeginTemporaryPlayerSnap(float duration)
+    {
+        if (_exploreCam == null || _playerTransform == null)
+        {
+            return;
+        }
+
+        if (_temporaryPlayerSnapCoroutine != null)
+        {
+            StopCoroutine(_temporaryPlayerSnapCoroutine);
+            _temporaryPlayerSnapCoroutine = null;
+        }
+
+        if (!_isTemporarilySnappedToPlayer)
+        {
+            _cachedExploreDamping = _explorePositionComposer != null ? _explorePositionComposer.Damping : Vector3.zero;
+            if (_brain != null)
+            {
+                _cachedBrainBlend = _brain.DefaultBlend;
+            }
+        }
+
+        _isTemporarilySnappedToPlayer = true;
+
+        if (_explorePositionComposer != null)
+        {
+            _explorePositionComposer.Damping = Vector3.zero;
+        }
+
+        if (_brain != null)
+        {
+            _brain.DefaultBlend = new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.Cut, 0f);
+        }
+
+        _exploreCam.Priority = _activePriority + 100;
+        if (_combatCam != null)
+        {
+            _combatCam.Priority = _inactivePriority;
+        }
+
+        NotifyPlayerWarp(Vector3.zero);
+
+        if (duration > 0f)
+        {
+            _temporaryPlayerSnapCoroutine = StartCoroutine(EndTemporaryPlayerSnapAfterDelay(duration));
+        }
+    }
+
+    public void EndTemporaryPlayerSnap()
+    {
+        if (_temporaryPlayerSnapCoroutine != null)
+        {
+            StopCoroutine(_temporaryPlayerSnapCoroutine);
+            _temporaryPlayerSnapCoroutine = null;
+        }
+
+        if (!_isTemporarilySnappedToPlayer)
+        {
+            return;
+        }
+
+        _isTemporarilySnappedToPlayer = false;
+
+        if (_explorePositionComposer != null)
+        {
+            _explorePositionComposer.Damping = _cachedExploreDamping;
+        }
+
+        if (_brain != null)
+        {
+            _brain.DefaultBlend = _cachedBrainBlend;
+        }
+
+        if (_isInCombat)
+        {
+            SetCombatMode();
+        }
+        else
+        {
+            SetExploreMode();
+        }
+
+        NotifyPlayerWarp(Vector3.zero);
+    }
+
     // =========================================================
     // Public API — Screen Shake
     // =========================================================
@@ -379,10 +544,15 @@ public class CameraManager : MonoBehaviour
     /// Fire a screen shake impulse with raw strength.
     /// Works with any active vcam that has a CinemachineImpulseListener.
     /// </summary>
-    public void Shake(float strength)
+    public void EmitImpulse(float strength)
     {
         if (_impulseSource == null || strength <= 0f) return;
         _impulseSource.GenerateImpulse(strength);
+    }
+
+    public void Shake(float strength)
+    {
+        EmitImpulse(strength);
     }
 
     /// <summary>
@@ -391,6 +561,12 @@ public class CameraManager : MonoBehaviour
     /// </summary>
     public void ShakeByImpact(DamageImpactTier tier)
     {
+        if (GameImpulseController.Instance != null)
+        {
+            GameImpulseController.Instance.PlayImpact(tier);
+            return;
+        }
+
         float strength = tier switch
         {
             DamageImpactTier.Low      => _lowShake,
@@ -526,6 +702,59 @@ public class CameraManager : MonoBehaviour
         }
     }
 
+    private EnemyController GetWeightedEngagedEnemy(
+        Vector2 fromPosition,
+        float facingSign,
+        float maxRadius,
+        bool includeLeavingTargets,
+        bool requireInFront)
+    {
+        EnemyController bestEnemy = null;
+        float bestWeight = float.MinValue;
+        float bestDistanceSqr = float.MaxValue;
+        float maxRadiusSqr = maxRadius > 0f ? maxRadius * maxRadius : float.MaxValue;
+        float resolvedFacing = facingSign < 0f ? -1f : 1f;
+
+        foreach (var kvp in _engagedEnemies)
+        {
+            EnemyController enemy = kvp.Key;
+            EngagedEnemyContext ctx = kvp.Value;
+            if (enemy == null || !enemy.IsAlive)
+            {
+                continue;
+            }
+
+            if (!includeLeavingTargets && ctx.isLeaving)
+            {
+                continue;
+            }
+
+            Vector2 toEnemy = (Vector2)enemy.transform.position - fromPosition;
+            float distanceSqr = toEnemy.sqrMagnitude;
+            if (distanceSqr > maxRadiusSqr)
+            {
+                continue;
+            }
+
+            if (requireInFront && toEnemy.x * resolvedFacing < 0f)
+            {
+                continue;
+            }
+
+            float candidateWeight = ctx.currentWeight;
+            if (bestEnemy == null
+                || candidateWeight > bestWeight
+                || (Mathf.Approximately(candidateWeight, bestWeight) && distanceSqr < bestDistanceSqr))
+            {
+                bestEnemy = enemy;
+                bestWeight = candidateWeight;
+                bestDistanceSqr = distanceSqr;
+            }
+        }
+
+        return bestEnemy;
+    }
+
     private float EvaluateDesiredEnemyWeight(EnemyController enemy, EngagedEnemyContext ctx, out bool shouldLeaveByRange)
     {
         shouldLeaveByRange = false;
@@ -631,5 +860,11 @@ public class CameraManager : MonoBehaviour
         _explorePositionComposer.Damping = finalDamping;
 
         IsLerpingYDamping = false;
+    }
+
+    private IEnumerator EndTemporaryPlayerSnapAfterDelay(float duration)
+    {
+        yield return new WaitForSecondsRealtime(duration);
+        EndTemporaryPlayerSnap();
     }
 }

@@ -345,8 +345,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     /// Used by PlayerMovement to decide whether to apply airborne gravity policy.
     /// Returns true for ANY active combat action (Attack, Skill, Ultimate) while airborne.
     /// </summary>
-    public bool IsInAirborneAction() => IsAttacking() && !isPlungeFalling &&
-                                        movement != null && !movement.IsGrounded();
+    public bool IsInAirborneAction() => (currentPhase != ActionPhase.None) && !isPlungeFalling &&
+                                        (playerCharacter.StateMachine.CurrentStateId == PlayerStateId.AirborneAttacking || (movement != null && !movement.IsGrounded()));
 
     /// <summary>
     /// Current gravity scale factor for airborne actions (0..1).
@@ -365,6 +365,70 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public bool CanMoveAfterAttack() => !IsAttacking();
     public bool HasGrabbedEnemy() => activeThrowContext != null && activeThrowContext.HasAnyTargets();
     public AttackStepData GetCurrentStepData() => currentStepData;
+
+    public EnemyController FindNearestEnemyTarget(float maxRadius)
+    {
+        Vector2 origin = transform.position;
+        EnemyController nearestEnemy = CameraManager.instance != null
+            ? CameraManager.instance.GetNearestEngagedEnemyInRadius(origin, maxRadius)
+            : null;
+
+        float nearestDistanceSqr = nearestEnemy != null
+            ? ((Vector2)nearestEnemy.transform.position - origin).sqrMagnitude
+            : float.MaxValue;
+
+        if (maxRadius > 0f)
+        {
+            Collider2D[] hits = Physics2D.OverlapCircleAll(origin, maxRadius, enemyLayerMask);
+            for (int i = 0; i < hits.Length; i++)
+            {
+                Collider2D hit = hits[i];
+                if (hit == null)
+                {
+                    continue;
+                }
+
+                EnemyController enemy = hit.GetComponentInParent<EnemyController>();
+                if (enemy == null || !enemy.IsAlive)
+                {
+                    continue;
+                }
+
+                float distanceSqr = ((Vector2)enemy.transform.position - origin).sqrMagnitude;
+                if (distanceSqr >= nearestDistanceSqr)
+                {
+                    continue;
+                }
+
+                nearestDistanceSqr = distanceSqr;
+                nearestEnemy = enemy;
+            }
+        }
+
+        return nearestEnemy;
+    }
+
+    public void HandleOwnerTeleported()
+    {
+        if (activeThrowContext != null && activeThrowContext.IsActive)
+        {
+            Transform socket = hitBoxController != null && hitBoxController.attackAnchor != null
+                ? hitBoxController.attackAnchor
+                : transform;
+            activeThrowContext.UpdateSession(socket, LastGrabOffset);
+            activeThrowContext.ExtendHold(1, lastGrabParams.recoveryFrames);
+        }
+
+        if (hitboxActiveCount > 0 && hitboxObject != null && hitboxObject.activeSelf)
+        {
+            UpdateActiveHitboxPosition();
+            Physics2D.SyncTransforms();
+            PerformHitboxOverlapCheck();
+            return;
+        }
+
+        Physics2D.SyncTransforms();
+    }
 
     public bool IsOnCooldown(AttackCategory category, float cooldown, string actionName = null)
     {
@@ -660,10 +724,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         Vector2 origin = GetSpawnPosition(resolvedSpawnOffset);
         Vector2 direction = GetFacingDirection();
         int remainingHits = data != null ? Mathf.Max(1, data.maxHits) : 1;
-        bool needsTarget = data != null
-            && (data.homeToTarget
-                || data.spawnPositionMode == SpawnPositionMode.Target
-                || data.spawnMode == ProjectileSpawnMode.TrackTarget);
+        bool needsTarget = data != null && data.RequiresTarget;
 
         return new ProjectileSpawnContext
         {
@@ -671,7 +732,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             projectileData = data,
             casterTransform = transform,
             projectileParent = null,
-            targetTransform = needsTarget ? FindProjectileTarget() : null,
+            targetTransform = needsTarget ? FindProjectileTarget(data, direction.x) : null,
             passiveController = passiveController,
             sourceStep = currentStepData,
             sourceActionName = currentActionName,
@@ -1124,17 +1185,11 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     private Vector2 GetSpawnPosition(Vector2 offset)
     {
         Transform origin = transform;
-        Vector3 finalOffset = new Vector3(offset.x, offset.y, 0f);
-        if (movement != null && movement.FacingDirection == -1)
-        {
-            finalOffset.x = -Mathf.Abs(finalOffset.x);
-        }
-        else
-        {
-            finalOffset.x = Mathf.Abs(finalOffset.x);
-        }
+        Vector2 finalOffset = ProjectileSpatialUtility.ResolveFacingAwareOffset(
+            offset,
+            movement != null ? movement.FacingDirection : 1f);
 
-        return origin.position + finalOffset;
+        return (Vector2)origin.position + finalOffset;
     }
 
     private Vector2 GetFacingDirection()
@@ -1142,30 +1197,18 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         return movement != null && movement.FacingDirection == -1 ? Vector2.left : Vector2.right;
     }
 
-    private Transform FindProjectileTarget()
+    private Transform FindProjectileTarget(ProjectileData data, float facingSign)
     {
-        EnemyController[] enemies = FindObjectsByType<EnemyController>(FindObjectsSortMode.None);
-        EnemyController bestEnemy = null;
-        float bestDistance = float.MaxValue;
-        Vector2 origin = transform.position;
-
-        for (int i = 0; i < enemies.Length; i++)
+        if (CameraManager.instance == null)
         {
-            EnemyController enemy = enemies[i];
-            if (enemy == null || !enemy.IsAlive)
-            {
-                continue;
-            }
-
-            float distance = Vector2.SqrMagnitude((Vector2)enemy.transform.position - origin);
-            if (distance < bestDistance)
-            {
-                bestDistance = distance;
-                bestEnemy = enemy;
-            }
+            return null;
         }
 
-        return bestEnemy != null ? bestEnemy.transform : null;
+        EnemyController target = CameraManager.instance.GetProjectileTrackingTarget(
+            transform.position,
+            facingSign,
+            data != null ? data.trackingRadius : 0f);
+        return target != null ? target.transform : null;
     }
 
     private void CombatLog(string message)

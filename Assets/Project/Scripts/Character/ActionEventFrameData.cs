@@ -5,7 +5,10 @@ using UnityEngine;
 
 public enum ActionEventType
 {
-    UltimateOverlaySequence
+    UltimateOverlaySequence,
+    TeleportToNearestEnemy,
+    ScreenImpulse,
+    AfterImage
 }
 
 public enum UltimateFreezeTimelineMode
@@ -71,15 +74,113 @@ public class ActionEventEntry
     public AudioClip activationSFX;
     public float voiceDelay = 0.1f;
 
-    public int GetTimelineDurationFrames()
+    [Header("Teleport")]
+    public TeleportEventSettings teleportSettings = new TeleportEventSettings();
+
+    [Header("Screen Impulse")]
+    public ScreenImpulseEventSettings screenImpulseSettings = new ScreenImpulseEventSettings();
+
+    [Header("After Image")]
+    public AfterImageEventSettings afterImageSettings = new AfterImageEventSettings();
+
+    public int GetTimelineDurationFrames(int actionTotalFrames = -1)
     {
         if (eventType == ActionEventType.UltimateOverlaySequence && overlaySettings != null)
         {
             return Mathf.Max(1, Mathf.CeilToInt(overlaySettings.GetTotalDurationSeconds() * FrameDataConstants.LOGIC_FPS));
         }
 
+        if (eventType == ActionEventType.TeleportToNearestEnemy && teleportSettings != null)
+        {
+            return Mathf.Max(1, Mathf.CeilToInt(teleportSettings.GetTotalDurationSeconds() * FrameDataConstants.LOGIC_FPS));
+        }
+
+        if (eventType == ActionEventType.ScreenImpulse && screenImpulseSettings?.impulse != null)
+        {
+            return Mathf.Max(1, Mathf.CeilToInt(screenImpulseSettings.impulse.GetTotalDurationSeconds() * FrameDataConstants.LOGIC_FPS));
+        }
+
+        if (eventType == ActionEventType.AfterImage && afterImageSettings != null)
+        {
+            int endFrame = afterImageSettings.endMode == AfterImageEndMode.UntilActionEnd && actionTotalFrames > 0
+                ? actionTotalFrames
+                : afterImageSettings.endFrame;
+            return Mathf.Max(1, endFrame - triggerFrame + 1);
+        }
+
         return 1;
     }
+}
+
+[Serializable]
+public class TeleportEventSettings
+{
+    [Tooltip("Search radius used to find the nearest enemy. Works like projectile tracking radius.")]
+    public float targetRadius = 8f;
+
+    [Tooltip("Horizontal spacing kept between the player and the target after teleporting.")]
+    public float teleportOffsetX = 1.2f;
+
+    [Tooltip("If enabled, the camera cuts to the player for the duration of this event.")]
+    public bool snapCameraToPlayer = true;
+
+    [Tooltip("How long the camera stays snapped to the player before returning to normal behavior.")]
+    public float cameraSnapDuration = 0.12f;
+
+    [Tooltip("Play a small fullscreen flicker to soften the teleport cut.")]
+    public bool playScreenFlick = true;
+
+    public UltimateOverlaySequenceSettings screenFlickSettings = CreateDefaultScreenFlickSettings();
+
+    [Tooltip("Small impulse strength used to hide the teleport cut.")]
+    public float cameraImpulseStrength = 0.22f;
+
+    public float GetTotalDurationSeconds()
+    {
+        float flickDuration = playScreenFlick && screenFlickSettings != null
+            ? screenFlickSettings.GetTotalDurationSeconds()
+            : 0f;
+        return Mathf.Max(Mathf.Max(0f, cameraSnapDuration), flickDuration);
+    }
+
+    private static UltimateOverlaySequenceSettings CreateDefaultScreenFlickSettings()
+    {
+        return new UltimateOverlaySequenceSettings
+        {
+            fadeInDuration = 0.01f,
+            holdDuration = 0.015f,
+            darkenDuration = 0.015f,
+            blackHoldDuration = 0.04f,
+            fadeOutDuration = 0.06f,
+            flashColor = new Color(1f, 1f, 1f, 1f),
+            darkColor = new Color(0f, 0f, 0f, 0.85f)
+        };
+    }
+}
+
+[Serializable]
+public class ScreenImpulseEventSettings
+{
+    public GameImpulseRequest impulse = GameImpulseRequest.CreateActionEventDefault();
+}
+
+public enum AfterImageEndMode
+{
+    UntilActionEnd,
+    EndAtFrame
+}
+
+[Serializable]
+public class AfterImageEventSettings
+{
+    [Tooltip("How often to spawn a dash-like after image while this event is active.")]
+    public float spawnIntervalSeconds = 0.05f;
+
+    [Tooltip("Whether the after image runs to the end of the step or stops on a specific frame.")]
+    public AfterImageEndMode endMode = AfterImageEndMode.UntilActionEnd;
+
+    [Tooltip("Absolute frame where the after image effect stops when End Mode is set to EndAtFrame.")]
+    public int endFrame = 1;
 }
 
 [Serializable]

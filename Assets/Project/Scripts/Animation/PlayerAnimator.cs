@@ -77,7 +77,7 @@ public class PlayerAnimator : MonoBehaviour
         }
         anim.SetFloat(verticalVelocityHash, verticalVelocity);
 
-        anim.SetBool(isGroundedHash, movement.IsGrounded());
+        anim.SetBool(isGroundedHash, movement.GroundState.IsEffectivelyGrounded);
         anim.SetBool(isLandingHash, movement.IsLanding);
 
         // Check if we are in an "Active" combat action (Startup, Active, Recovery, Cancel).
@@ -101,7 +101,7 @@ public class PlayerAnimator : MonoBehaviour
         }
 
         bool suppressFallAnimation = (combat != null && combat.ShouldSuppressLandingFeedback());
-        bool isFalling = !suppressFallAnimation && !movement.IsGrounded() && rb.linearVelocity.y < -0.1f && !movement.IsLanding && !movement.IsJumping;
+        bool isFalling = !suppressFallAnimation && !movement.GroundState.IsEffectivelyGrounded && rb.linearVelocity.y < -0.1f && !movement.IsLanding && !movement.IsJumping;
         
         if (isFalling && !wasFalling)
         {
@@ -278,7 +278,7 @@ public class PlayerAnimator : MonoBehaviour
         if (isAlreadyAirborne && state.normalizedTime < 0.9f)
             return;
 
-        if (movement.IsGrounded())
+        if (movement.GroundState.IsEffectivelyGrounded)
         {
             anim.Play(jumpHash, 0, 0f);
             return;
@@ -299,7 +299,7 @@ public class PlayerAnimator : MonoBehaviour
     public void ResetCombo()
     {
         // Force-clear any combat specific booleans if added in the future
-        anim.SetBool(isGroundedHash, movement != null ? movement.IsGrounded() : true);
+        anim.SetBool(isGroundedHash, movement != null ? movement.GroundState.IsEffectivelyGrounded : true);
     }
 
     public void TriggerSkill(string explicitClipName = null, bool airborne = false)

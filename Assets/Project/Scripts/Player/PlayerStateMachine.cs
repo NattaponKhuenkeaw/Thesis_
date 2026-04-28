@@ -25,7 +25,9 @@ public class PlayerStateMachine : MonoBehaviour
     // =========================================================
     public PlayerIdleState IdleState { get; private set; }
     public PlayerMoveState MoveState { get; private set; }
-    public PlayerJumpState JumpState { get; private set; }
+    public PlayerJumpStartupState JumpStartupState { get; private set; }
+    public PlayerAirborneState AirborneState { get; private set; }
+    public PlayerFallingState FallingState { get; private set; }
     public PlayerDashState DashState { get; private set; }
     public PlayerAttackState AttackState { get; private set; }
     public PlayerAirAttackState AirAttackState { get; private set; }
@@ -123,7 +125,7 @@ public class PlayerStateMachine : MonoBehaviour
 
         PlayerStateId prevId = CurrentStateId;
         context.previousState = prevId;
-        context.wasAirborne = playerCharacter.Movement != null && !playerCharacter.Movement.IsGrounded();
+        context.wasAirborne = playerCharacter.Movement != null && !playerCharacter.Movement.GroundState.IsEffectivelyGrounded;
 
         CurrentState?.Exit();
         CurrentState = newState;
@@ -271,7 +273,7 @@ public class PlayerStateMachine : MonoBehaviour
                 PlayerStateId interruptedState = CurrentStateId;
                 InputBuffer?.ConsumeJump();
 
-                ChangeState(JumpState);
+                ChangeState(JumpStartupState);
                 CurrentState.OnJumpInput();
 
                 if (interruptedState == PlayerStateId.Attacking || interruptedState == PlayerStateId.AirborneAttacking)
@@ -303,7 +305,7 @@ public class PlayerStateMachine : MonoBehaviour
                 return;
 
             InputBuffer?.ConsumeJump();
-            ChangeState(JumpState);
+            ChangeState(JumpStartupState);
             CurrentState.OnJumpInput();
         }
     }
@@ -349,7 +351,7 @@ public class PlayerStateMachine : MonoBehaviour
         {
             RouteJumpInput();
 
-            if (CurrentStateId == PlayerStateId.Jumping)
+            if (CurrentStateId == PlayerStateId.Airborne || CurrentStateId == PlayerStateId.JumpStartup)
             {
                 RouteAttackInput();
             }
@@ -390,7 +392,7 @@ public class PlayerStateMachine : MonoBehaviour
         {
             RouteJumpInput();
 
-            if (CurrentStateId == PlayerStateId.Jumping)
+            if (CurrentStateId == PlayerStateId.Airborne || CurrentStateId == PlayerStateId.JumpStartup)
             {
                 RouteSkillInput();
             }
@@ -446,7 +448,9 @@ public class PlayerStateMachine : MonoBehaviour
     {
         IdleState = new PlayerIdleState(playerCharacter, this);
         MoveState = new PlayerMoveState(playerCharacter, this);
-        JumpState = new PlayerJumpState(playerCharacter, this);
+        JumpStartupState = new PlayerJumpStartupState(playerCharacter, this);
+        AirborneState = new PlayerAirborneState(playerCharacter, this);
+        FallingState = new PlayerFallingState(playerCharacter, this);
         DashState = new PlayerDashState(playerCharacter, this);
         AttackState = new PlayerAttackState(playerCharacter, this);
         AirAttackState = new PlayerAirAttackState(playerCharacter, this);
@@ -461,8 +465,8 @@ public class PlayerStateMachine : MonoBehaviour
         if (playerCharacter == null || playerCharacter.Movement == null)
             return IdleState;
 
-        if (!playerCharacter.Movement.IsGrounded())
-            return JumpState;
+        if (!playerCharacter.Movement.GroundState.IsEffectivelyGrounded)
+            return AirborneState;
 
         if (Mathf.Abs(playerCharacter.Movement.HorizontalInput) > 0.01f)
             return MoveState;
@@ -481,7 +485,7 @@ public class PlayerStateMachine : MonoBehaviour
         if (CurrentStateId != PlayerStateId.Idle && CurrentStateId != PlayerStateId.Running)
             return false;
 
-        if (!playerCharacter.Movement.IsGrounded())
+        if (!playerCharacter.Movement.GroundState.IsEffectivelyGrounded)
             return false;
 
         return true;
@@ -500,7 +504,7 @@ public class PlayerStateMachine : MonoBehaviour
 
         // We only want this safeguard for actions that are still effectively
         // ground-started and have not committed yet.
-        if (!playerCharacter.Movement.IsGrounded())
+        if (!playerCharacter.Movement.GroundState.IsEffectivelyGrounded)
             return false;
 
         if (currentFrameState.CurrentPhase == ActionPhase.None || currentFrameState.CurrentPhase == ActionPhase.Startup)
@@ -529,7 +533,7 @@ public class PlayerStateMachine : MonoBehaviour
         }
 
         // 2. ถ้าเป็น State เคลื่อนไหวปกติ อนุญาตให้เปลี่ยนตัวได้ทันที (Idle, Move, Jump)
-        if (CurrentState == IdleState || CurrentState == MoveState || CurrentState == JumpState)
+        if (CurrentState == IdleState || CurrentState == MoveState || CurrentState == AirborneState || CurrentState == FallingState || CurrentState == JumpStartupState)
         {
             return true;
         }

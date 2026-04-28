@@ -702,7 +702,7 @@ public class AnimationEditorWindow : EditorWindow
                                 label = eventEntry.label,
                                 color = eventEntry.trackColor
                             };
-                            eventTrack.ranges.Add((eventEntry.triggerFrame, eventEntry.GetTimelineDurationFrames()));
+                            eventTrack.ranges.Add((eventEntry.triggerFrame, eventEntry.GetTimelineDurationFrames(step.TotalFrames)));
                             timelineGrid.Tracks.Add(eventTrack);
                         }
                         break;

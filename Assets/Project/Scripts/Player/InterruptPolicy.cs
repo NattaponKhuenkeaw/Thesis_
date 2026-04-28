@@ -23,9 +23,9 @@ public enum ActionCategory
 public enum InputGate
 {
     None          = 0,
-    AllowMovement = 1 << 0,  // Horizontal movement input forwarded to physics
+    AllowMovement = 1 << 0,  // Restricted horizontal movement (forward only, rejected opposite)
     AllowFacing   = 1 << 1,  // Facing direction can change from player input
-    AllowAll      = ~0
+    AllowAll      = ~0       // Everything unlocked (standard physics movement)
 }
 
 /// <summary>
@@ -109,7 +109,7 @@ public struct InterruptPolicy
         // InputGate — dash direction is committed on startup, no changes until cancel
         startupGate  = InputGate.None,
         activeGate   = InputGate.None,
-        recoveryGate = InputGate.None,
+        recoveryGate = InputGate.AllowMovement,
         cancelGate   = InputGate.AllowAll
     };
 
@@ -128,7 +128,7 @@ public struct InterruptPolicy
         // InputGate — allow facing adjustment during startup, locked once active
         startupGate  = InputGate.AllowFacing,
         activeGate   = InputGate.None,
-        recoveryGate = InputGate.None,
+        recoveryGate = InputGate.AllowMovement,
         cancelGate   = InputGate.AllowAll
     };
 
@@ -149,7 +149,7 @@ public struct InterruptPolicy
         // InputGate — allow facing adjustment during startup, locked once active
         startupGate  = InputGate.AllowFacing,
         activeGate   = InputGate.None,
-        recoveryGate = InputGate.None,
+        recoveryGate = InputGate.AllowMovement,
         cancelGate   = InputGate.AllowAll
     };
 
