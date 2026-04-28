@@ -68,6 +68,9 @@ public class AnimationHandler_Enemy : MonoBehaviour
     // =========================================================
     private void HandleDamageTaken(HitReactionData data)
     {
+        if (enemyController != null && !enemyController.LastHitAppliedReaction)
+            return;
+
         TriggerTakeDamage();
     }
 
