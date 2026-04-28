@@ -62,6 +62,8 @@ public class EnemyController : MonoBehaviour
     /// <summary>Main body collider (disabled on death).</summary>
     public Collider2D bodyCollider;
 
+    [SerializeField] private EnemyWorldUI worldUI;
+
     [Header("Hit Reaction")]
     public EnemyHitReactionHandler hitReactionHandler;
 
@@ -84,6 +86,9 @@ public class EnemyController : MonoBehaviour
 
         if (hitReactionHandler == null)
             hitReactionHandler = GetComponent<EnemyHitReactionHandler>();
+
+        if (worldUI == null)
+            worldUI = GetComponentInChildren<EnemyWorldUI>(true);
 
         // Start with hitbox disabled
         if (attackHitbox != null)
@@ -345,6 +350,16 @@ public class EnemyController : MonoBehaviour
     public void NotifyStateChanged(State newState)
     {
         OnStateChanged?.Invoke(newState);
+    }
+
+    public void TriggerAttackWarning(float duration = -1f)
+    {
+        worldUI?.ShowAttackWarning(duration);
+    }
+
+    public void HideAttackWarning()
+    {
+        worldUI?.HideAttackWarning();
     }
 
     // =========================================================
