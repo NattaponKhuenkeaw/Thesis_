@@ -9,6 +9,17 @@ using UnityEngine;
 public class PlayerAttackState : CombatPlayerState
 {
     private const float PlungeInputThreshold = 0.2f;
+    private static readonly InterruptPolicy PlungeChargePolicy = new InterruptPolicy
+    {
+        startup = ActionCategory.None,
+        active = ActionCategory.None,
+        recovery = ActionCategory.None,
+        cancel = ActionCategory.None,
+        startupGate = InputGate.None,
+        activeGate = InputGate.None,
+        recoveryGate = InputGate.None,
+        cancelGate = InputGate.None
+    };
 
     private bool isPlungeFalling;
     private StandaloneAction activePlungeAction;
@@ -36,6 +47,7 @@ public class PlayerAttackState : CombatPlayerState
     protected override InterruptPolicy GetInterruptPolicy()
     {
         if (isPlungeFalling) return InterruptPolicy.Ultimate;
+        if (resolver.IsPlungeChargeActive) return PlungeChargePolicy;
         return InterruptPolicy.BasicAttack;
     }
 
@@ -77,11 +89,6 @@ public class PlayerAttackState : CombatPlayerState
         if (fsm.CurrentState != this)
             return;
 
-        if (resolver.IsPlungeChargeActive && !isPlungeFalling)
-        {
-            UpdatePlungeChargeSteering();
-        }
-
         if (player.Combat != null && !player.Combat.IsAttacking() && currentPhase == ActionPhase.None && !isPlungeFalling)
         {
             ExitToAppropriateMovementState();
@@ -109,7 +116,16 @@ public class PlayerAttackState : CombatPlayerState
 
         if (player.Combat != null && player.Combat.IsAttacking())
         {
-            if (resolver.IsActive && !resolver.IsLastStep() && !isPlungeFalling
+            // --- Plunge Protection ---
+            // If we are currently diving (isPlungeFalling), we do NOT reset the combo
+            // on action completion. The landing logic in HandlePlungeLanding will
+            // handle the transition to the impact node.
+            if (isPlungeFalling)
+            {
+                return;
+            }
+
+            if (resolver.IsActive && !resolver.IsLastStep()
                 && player.Movement != null && !player.Movement.IsGrounded())
             {
                 player.Combat.CancelCurrentAttackButKeepComboProgress();
@@ -182,6 +198,11 @@ public class PlayerAttackState : CombatPlayerState
                     activePlungeAction = resolver.ActivePlungeAction;
                     player.Combat.SetAirCombo(resolver.IsAirCombo);
                     ExecuteCombatStep(step, ctx, false);
+
+                    if (resolver.IsPlungeChargeActive)
+                    {
+                        ApplyPlungeChargeTemplate(step);
+                    }
                 }
             }
             return;
@@ -234,7 +255,17 @@ public class PlayerAttackState : CombatPlayerState
     // Plunge Runtime
     // =========================================================
 
-    private void UpdatePlungeChargeSteering()
+    private void ApplyPlungeChargeTemplate(AttackStepData chargeStep)
+    {
+        if (activePlungeAction == null || player.Movement == null || chargeStep == null)
+        {
+            return;
+        }
+
+        player.Movement.ApplyPlungeChargeLift(activePlungeAction.plungeChargeLift);
+    }
+
+    private void CachePlungeStrikeDirection()
     {
         activePlungeAction = resolver.ActivePlungeAction;
         if (activePlungeAction == null)
@@ -244,47 +275,32 @@ public class PlayerAttackState : CombatPlayerState
         }
 
         Vector2 input = Buffer != null ? Buffer.DirectionalInput : Vector2.zero;
-        float targetHorizontalVelocity = 0f;
         bool hasHorizontalIntent = Mathf.Abs(input.x) >= PlungeInputThreshold;
         bool hasDownCommit = input.y <= -0.5f;
 
         if (hasHorizontalIntent)
         {
-            targetHorizontalVelocity = Mathf.Sign(input.x) * Mathf.Max(0f, activePlungeAction.plungeChargeMaxHorizontalRedirect);
+            float steeringStrength = Mathf.Max(0f, activePlungeAction.plungeStrikeSteeringStrength);
+            float maxRedirect = Mathf.Max(0f, activePlungeAction.plungeStrikeMaxHorizontalRedirect);
+            float resolvedHorizontalVelocity = steeringStrength;
 
-            if (activePlungeAction.updateFacingDuringPlungeCharge)
+            if (maxRedirect > 0f)
             {
-                player.Movement?.ForceFaceDirectionFromInput(new Vector2(input.x, 0f));
+                resolvedHorizontalVelocity = resolvedHorizontalVelocity > 0f
+                    ? Mathf.Min(resolvedHorizontalVelocity, maxRedirect)
+                    : maxRedirect;
+            }
+
+            plungeHorizontalVelocity = Mathf.Sign(input.x) * resolvedHorizontalVelocity;
+
+            if (activePlungeAction.updateFacingDuringPlungeStrike)
+            {
+                player.Movement?.SnapFacingDirection(input.x > 0f ? 1 : -1);
             }
         }
-
-        float steeringStrength = Mathf.Max(0f, activePlungeAction.plungeChargeSteeringStrength);
-        
-        // Increase responsiveness: Use a higher multiplier if the player is actively trying to steer
-        float finalSteeringStrength = hasHorizontalIntent ? steeringStrength * 2f : steeringStrength;
-
-        plungeHorizontalVelocity = Mathf.MoveTowards(
-            plungeHorizontalVelocity,
-            targetHorizontalVelocity,
-            finalSteeringStrength * Time.deltaTime);
-
-        if (hasDownCommit)
+        else if (hasDownCommit)
         {
-            // If pressing down, focus the steering back to center for a straight drop
-            plungeHorizontalVelocity = Mathf.MoveTowards(
-                plungeHorizontalVelocity,
-                0f,
-                steeringStrength * 3f * Time.deltaTime);
-        }
-
-        // Apply a small amount of horizontal drift to the character during the charge phase for better 'feel'
-        if (player.Movement != null && !player.Movement.IsGrounded())
-        {
-            // We only apply a fraction of the steering to the actual Rigidbody during the charge 
-            // so it doesn't feel like they are flying away, but still feels responsive to input.
-            float driftAmount = plungeHorizontalVelocity * 0.3f; 
-            Vector2 currentVel = player.Movement.RB.linearVelocity;
-            player.Movement.RB.linearVelocity = new Vector2(driftAmount, currentVel.y);
+            plungeHorizontalVelocity = 0f;
         }
     }
 
@@ -292,6 +308,8 @@ public class PlayerAttackState : CombatPlayerState
     {
         activePlungeAction = resolver.ActivePlungeAction;
         if (activePlungeAction == null) return;
+
+        CachePlungeStrikeDirection();
 
         isPlungeFalling = true;
         player.Combat?.SetPlungeFalling(true);
@@ -301,9 +319,6 @@ public class PlayerAttackState : CombatPlayerState
             player.Movement.CancelAttackMotion();
             player.Movement.StartPlungeMotion(activePlungeAction.plungeDownwardSpeed, plungeHorizontalVelocity);
         }
-
-        if ((diveStep == null || diveStep.animationClip == null) && player.Animator != null)
-            player.Animator.TriggerPlungeFall(activePlungeAction.plungeFallAnimState);
 
         plungeHorizontalVelocity = 0f;
     }
@@ -316,6 +331,7 @@ public class PlayerAttackState : CombatPlayerState
         player.Combat?.SetPlungeFalling(false);
 
         StateContext ctx = BuildInputContext();
+        ctx.input.isAirCombo = false; // Prevent landing interrupt race condition
         int activeFrame = GetCurrentPlungeActiveFrame();
         ctx.activeFrame = activeFrame;
 
@@ -323,14 +339,6 @@ public class PlayerAttackState : CombatPlayerState
         if (impactStep != null && player.Combat != null)
         {
             ExecuteCombatStep(impactStep, ctx, true);
-
-            if (impactStep.animationClip == null && player.Animator != null)
-            {
-                string stateName = !string.IsNullOrWhiteSpace(impactStep.stepName)
-                    ? impactStep.stepName
-                    : "Attack_1";
-                player.Animator.TriggerPlungeImpact(stateName);
-            }
         }
         else
         {

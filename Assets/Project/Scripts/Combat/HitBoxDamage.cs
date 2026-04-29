@@ -149,16 +149,28 @@ public class HitBoxDamage : MonoBehaviour
 
         if (currentGrabHitbox != null)
         {
-            int ownerId = playerCombat != null ? playerCombat.transform.root.GetInstanceID() : transform.root.GetInstanceID();
+            PlayerCombat activePlayerCombat = playerCombat;
+            int ownerId;
+
+            if (projectileOwner != null && projectileOwner.AttackerTransform != null)
+            {
+                activePlayerCombat = projectileOwner.AttackerTransform.GetComponentInParent<PlayerCombat>();
+                ownerId = projectileOwner.AttackerTransform.root.GetInstanceID();
+            }
+            else
+            {
+                ownerId = playerCombat != null ? playerCombat.transform.root.GetInstanceID() : transform.root.GetInstanceID();
+            }
+
             bool isOwnedGrabReaction =
                 (enemy.CurrentReactionState == EnemyReactionState.ImpactFreeze
                  || enemy.CurrentReactionState == EnemyReactionState.Grabbed)
                 && enemy.CurrentReactionOwnerId == ownerId;
 
             if (isOwnedGrabReaction)
-                playerCombat?.RegisterGrabbedEnemy(enemy);
+                activePlayerCombat?.RegisterGrabbedEnemy(enemy, GetGrabSocket(), reactionData.grabOffset);
             else
-                playerCombat?.ClearGrabbedEnemy(enemy);
+                activePlayerCombat?.ClearGrabbedEnemy(enemy);
         }
         else if (playerCombat != null && playerCombat.IsHoldingEnemy(enemy))
         {
@@ -278,8 +290,24 @@ public class HitBoxDamage : MonoBehaviour
         data.maxJuggleCount = 0;
         data.juggleLaunchScale = 1f;
         data.juggleStunScale = 1f;
+        
         data.grabSocket = GetGrabSocket();
         data.grabOffset = Vector2.zero;
+
+        // If this grab is coming from a projectile, calculate the local offset 
+        // to its hitbox center so the enemy snaps to the "center" of the hit
+        // rather than the projectile's transform origin.
+        if (projectileOwner != null && data.grabSocket != null)
+        {
+            Vector2 worldCenter = GetActiveHitboxCenter();
+            Vector2 localCenter = data.grabSocket.InverseTransformPoint(worldCenter);
+
+            // UpdateGrabbedBinding() in EnemyHitReactionHandler applies facing 
+            // to the offset.x, so we normalize for facing here.
+            float facing = projectileOwner.GetFacingSign();
+            data.grabOffset = new Vector2(localCenter.x * facing, localCenter.y);
+        }
+
         data.hitstunFrames = currentGrabHitbox.impactFreezeFrames;
         data.knockbackFrames = currentGrabHitbox.holdFrames;
         data.reactionVelocity = Vector2.zero;
@@ -360,6 +388,9 @@ public class HitBoxDamage : MonoBehaviour
 
     private Transform GetGrabSocket()
     {
+        if (projectileOwner != null)
+            return projectileOwner.transform;
+
         if (playerCombat != null && playerCombat.hitBoxController != null && playerCombat.hitBoxController.attackAnchor != null)
             return playerCombat.hitBoxController.attackAnchor;
 

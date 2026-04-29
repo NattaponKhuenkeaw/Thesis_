@@ -25,3 +25,11 @@ MonoBehaviour:
     entries:
     - type: 30
       data: {fileID: 11400000, guid: 4c561112b8238eb4cb30c0b81d7bf72e, type: 2}
+    - type: 31
+      data: {fileID: 11400000, guid: 910706f3c74d07340b4569499057cc55, type: 2}
+  - categoryName: char-Main
+    entries:
+    - type: 100
+      data: {fileID: 11400000, guid: c7de229c6f7eb044682e28d12a70b7aa, type: 2}
+    - type: 100
+      data: {fileID: 11400000, guid: 39421ead371882444a4d9bc749e6471a, type: 2}

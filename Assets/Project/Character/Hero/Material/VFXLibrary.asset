@@ -195,11 +195,46 @@ MonoBehaviour:
       flipWithCharacter: 1
       isLocalSpace: 1
       obeyHitstop: 1
-  - categoryName: Ultimate
+  - categoryName: char-Main
     entries:
-    - type: 40
-      clip: {fileID: 7400000, guid: b53fc5f11238cda4b9c6c3a50cbae232, type: 2}
+    - type: 115
+      clip: {fileID: 7400000, guid: cba7932f75f2a684191d986d2c961049, type: 2}
       localScale: {x: 1, y: 1, z: 1}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 0
+    - type: 116
+      clip: {fileID: 7400000, guid: 29a2ba6ad941c9541ba1f3513d239687, type: 2}
+      localScale: {x: 1, y: 1, z: 1}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 0
+    - type: 117
+      clip: {fileID: 7400000, guid: cbdfd076d7a95d64e9441f82357840c0, type: 2}
+      localScale: {x: 1, y: 1, z: 1}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 0
+    - type: 122
+      clip: {fileID: 7400000, guid: d178e9a6e4bfb804699a616775290ffb, type: 2}
+      localScale: {x: 1, y: 1, z: 1}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 0
+    - type: 123
+      clip: {fileID: 7400000, guid: 9428c20ff6c0f9a44b48dc12ba1952bf, type: 2}
+      localScale: {x: 1, y: 1, z: 1}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 0
+    - type: 121
+      clip: {fileID: 7400000, guid: 31fd220b922b09f43aa4ba105661c186, type: 2}
+      localScale: {x: 1.3, y: 1.3, z: 1}
       tint: {r: 1, g: 1, b: 1, a: 1}
       flipWithCharacter: 1
       isLocalSpace: 0

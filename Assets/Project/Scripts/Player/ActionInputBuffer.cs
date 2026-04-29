@@ -22,6 +22,15 @@ public class ActionInputBuffer
     private float dashInputX;
     private int switchTargetIndex = -1;
     private Vector2 directionalSnapshot;
+    
+    // Debug toggle
+    public bool debugLogging = false;
+
+    private void Log(string message)
+    {
+        if (!debugLogging) return;
+        Debug.Log($"<b>[InputBuffer]</b> {message}");
+    }
 
     // =========================================================
     // Configuration
@@ -50,6 +59,7 @@ public class ActionInputBuffer
     public void BufferAttack(float duration = DEFAULT_BUFFER_DURATION)
     {
         attackBufferedUntil = Time.time + duration;
+        Log($"Buffered <b>Attack</b> for {duration}s");
     }
 
     /// <summary>Buffers a dash input and the specific horizontal direction pressed.</summary>
@@ -57,30 +67,35 @@ public class ActionInputBuffer
     {
         dashBufferedUntil = Time.time + duration;
         dashInputX = inputX;
+        Log($"Buffered <b>Dash</b> (X:{inputX}) for {duration}s");
     }
 
     /// <summary>Buffers a jump input for the specified duration.</summary>
     public void BufferJump(float duration = DEFAULT_BUFFER_DURATION)
     {
         jumpBufferedUntil = Time.time + duration;
+        Log($"Buffered <b>Jump</b> for {duration}s");
     }
 
     /// <summary>Buffers a skill input for the specified duration.</summary>
     public void BufferSkill(float duration = DEFAULT_BUFFER_DURATION)
     {
         skillBufferedUntil = Time.time + duration;
+        Log($"Buffered <b>Skill</b> for {duration}s");
     }
 
     /// <summary>Buffers an ultimate input for the specified duration.</summary>
     public void BufferUltimate(float duration = DEFAULT_BUFFER_DURATION)
     {
         ultimateBufferedUntil = Time.time + duration;
+        Log($"Buffered <b>Ultimate</b> for {duration}s");
     }
 
     public void BufferSwitch(int targetIndex, float duration = SWITCH_BUFFER_DURATION)
     {
         switchBufferedUntil = Time.time + duration;
         switchTargetIndex = targetIndex;
+        Log($"Buffered <b>Switch</b> (Target:{targetIndex}) for {duration}s");
     }
 
     /// <summary>
@@ -98,6 +113,7 @@ public class ActionInputBuffer
     public bool ConsumeAttack()
     {
         if (!HasAttackBuffer) return false;
+        Log("<color=green>Consumed <b>Attack</b></color>");
         ClearAll();
         return true;
     }
@@ -110,6 +126,7 @@ public class ActionInputBuffer
             inputX = 0f;
             return false;
         }
+        Log($"<color=green>Consumed <b>Dash</b> (X:{inputX})</color>");
         ClearAll();
         return true;
     }
@@ -117,6 +134,7 @@ public class ActionInputBuffer
     public bool ConsumeJump()
     {
         if (!HasJumpBuffer) return false;
+        Log("<color=green>Consumed <b>Jump</b></color>");
         ClearAll();
         return true;
     }
@@ -124,6 +142,7 @@ public class ActionInputBuffer
     public bool ConsumeSkill()
     {
         if (!HasSkillBuffer) return false;
+        Log("<color=green>Consumed <b>Skill</b></color>");
         ClearAll();
         return true;
     }
@@ -131,6 +150,7 @@ public class ActionInputBuffer
     public bool ConsumeUltimate()
     {
         if (!HasUltimateBuffer) return false;
+        Log("<color=green>Consumed <b>Ultimate</b></color>");
         ClearAll();
         return true;
     }
@@ -143,6 +163,7 @@ public class ActionInputBuffer
             targetIndex = -1;
             return false;
         }
+        Log($"<color=green>Consumed <b>Switch</b> (Target:{targetIndex})</color>");
         ClearAll();
         return true;
     }

@@ -219,6 +219,11 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         if (depth <= 1 && category == AttackCategory.Normal)
         {
             RecordActionUse(category, currentActionName);
+
+            if (airCombo && !IsStandaloneContextAction(currentActionName))
+            {
+                TriggerAirComboCooldown();
+            }
         }
 
         passiveController?.NotifyActionStarted(category, currentActionName, step);
@@ -486,12 +491,6 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         CleanupStepVFX(); // --- NEW: Cleanup VFX on combo reset ---
         if (currentPhase == ActionPhase.None && comboDepth == 0) return;
 
-        bool wasAirCombo = isAirCombo && comboDepth > 0 && !isPlungeFalling;
-        if (wasAirCombo && movement != null && !movement.IsGrounded())
-        {
-            TriggerAirComboCooldown();
-        }
-
         comboDepth = 0;
         currentPhase = ActionPhase.None;
         currentStepData = null;
@@ -585,7 +584,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         }
     }
 
-    public void RegisterGrabbedEnemy(EnemyController enemy)
+    public void RegisterGrabbedEnemy(EnemyController enemy, Transform socketOverride = null, Vector2 offsetOverride = default)
+
     {
         if (enemy == null)
         {
@@ -604,10 +604,10 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         // update it with the new grab socket and offset so ExtendHold uses the correct new positions.
         if (activeThrowContext.IsActive)
         {
-            Transform socket = hitBoxController != null && hitBoxController.attackAnchor != null 
+            Transform socket = socketOverride != null ? socketOverride : hitBoxController != null && hitBoxController.attackAnchor != null 
                              ? hitBoxController.attackAnchor 
                              : transform.root;
-            activeThrowContext.UpdateSession(socket, LastGrabOffset);
+            activeThrowContext.UpdateSession(socket, (socketOverride != null) ? offsetOverride : LastGrabOffset);
         }
     }
 
@@ -1083,6 +1083,11 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     private void HandleLandingComboReset()
     {
+        if (isPlungeFalling || ShouldSuppressLandingFeedback())
+        {
+            return;
+        }
+
         if (isAirCombo && comboDepth > 0)
         {
             ResetCombo();
@@ -1224,6 +1229,41 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         float useTime = Time.time;
         lastCategoryUseTime[BuildCategoryCooldownKey(category)] = useTime;
         lastActionUseTime[BuildActionCooldownKey(category, actionName)] = useTime;
+    }
+
+    private bool IsStandaloneContextAction(string actionName)
+    {
+        if (string.IsNullOrWhiteSpace(actionName)
+            || playerCharacter == null
+            || playerCharacter.characterObject == null
+            || playerCharacter.characterObject.actionResolverTable == null
+            || playerCharacter.characterObject.actionResolverTable.standaloneActions == null)
+        {
+            return false;
+        }
+
+        List<StandaloneAction> standaloneActions = playerCharacter.characterObject.actionResolverTable.standaloneActions;
+        for (int i = 0; i < standaloneActions.Count; i++)
+        {
+            StandaloneAction standaloneAction = standaloneActions[i];
+            if (standaloneAction == null)
+            {
+                continue;
+            }
+
+            if (string.Equals(standaloneAction.actionName, actionName, System.StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        // Exclude common plunge-related node names even if they aren't standalone entry points
+        if (actionName == "Strike" || actionName == "Impact" || actionName == "Dive")
+        {
+            return true;
+        }
+
+        return false;
     }
 
     private string BuildCategoryCooldownKey(AttackCategory category)
