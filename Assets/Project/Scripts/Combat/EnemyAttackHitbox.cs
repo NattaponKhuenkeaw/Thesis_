@@ -78,7 +78,8 @@ public class EnemyAttackHitbox : MonoBehaviour
             return;
         }
 
-        playerCharacter.TakeDamage(damage);
+        if (!playerCharacter.TakeDamage(damage))
+            return;
 
         // Camera shake: player got hit
         if (CameraManager.instance != null)

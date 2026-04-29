@@ -29,12 +29,17 @@ public class PlayerCharacter : MonoBehaviour
     [SerializeField] private float currentHP;
     [SerializeField] private CharacterStatus status = new CharacterStatus();
 
+    [Header("Damage Settings")]
+    [SerializeField] private float postHitInvulnerabilityDuration = 0.4f;
+
     public float CurrentHP => currentHP;
     public float MaxHP => characterObject != null && characterObject.stats != null ? characterObject.stats.maxHP : currentHP;
     public bool IsDead => currentHP <= 0f;
     public CharacterStatus Status => status;
+    public bool IsDamageInvulnerable => Time.time < damageInvulnerableUntil;
 
     private bool deathEventRaised;
+    private float damageInvulnerableUntil = -999f;
 
     // =========================================================
     // HP Events
@@ -110,6 +115,7 @@ public class PlayerCharacter : MonoBehaviour
         float maxHp = MaxHP;
         currentHP = Mathf.Clamp(initialHp ?? maxHp, 0f, maxHp);
         deathEventRaised = currentHP <= 0f;
+        damageInvulnerableUntil = -999f;
         NotifyHealthChanged();
     }
 
@@ -123,13 +129,13 @@ public class PlayerCharacter : MonoBehaviour
         NotifyHealthChanged();
     }
 
-    public void TakeDamage(float value)
+    public bool TakeDamage(float value)
     {
         if (value <= 0f || IsDead)
-            return;
+            return false;
 
-        if (Movement != null && Movement.IsInvincible())
-            return;
+        if (IsDamageInvulnerable || (Movement != null && Movement.IsInvincible()))
+            return false;
 
         float previousHP = currentHP;
         currentHP -= value;
@@ -137,7 +143,9 @@ public class PlayerCharacter : MonoBehaviour
 
         float actualDamage = previousHP - currentHP;
         if (actualDamage <= 0f)
-            return;
+            return false;
+
+        damageInvulnerableUntil = Time.time + Mathf.Max(0f, postHitInvulnerabilityDuration);
 
         OnDamaged?.Invoke(actualDamage);
         NotifyHealthChanged();
@@ -162,6 +170,8 @@ public class PlayerCharacter : MonoBehaviour
             if (StateMachine != null && !IsDead)
                 StateMachine.ChangeState(StateMachine.HitstunState);
         }
+
+        return true;
     }
 
     /// <summary>

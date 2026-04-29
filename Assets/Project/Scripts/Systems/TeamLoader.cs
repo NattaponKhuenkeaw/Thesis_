@@ -106,6 +106,13 @@ public class TeamLoader : MonoBehaviour
             return;
         }
 
+        if (playerCharacter.characterObject == targetCharacter)
+        {
+            NotifyCharacterHealthUpdated(targetCharacter);
+            NotifyCurrentCharacterChanged();
+            return;
+        }
+
         playerCharacter.SetCharacter(targetCharacter, GetStoredHP(targetCharacter));
         NotifyCharacterHealthUpdated(targetCharacter);
         NotifyCurrentCharacterChanged();
