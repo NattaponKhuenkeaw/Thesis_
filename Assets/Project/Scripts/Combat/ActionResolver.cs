@@ -73,8 +73,8 @@ public class ActionResolver
 
         if (table == null) return null;
 
-        // 1. Check standalone actions first (plunge, post-skill specials)
-        StandaloneAction standalone = FindMatchingStandalone(ctx, table);
+        // 1. Check standalone actions first, filtered by trigger category.
+        StandaloneAction standalone = FindMatchingStandalone(ctx, table, category);
         if (standalone != null)
         {
             Log($"Standalone Match! Priority: {standalone.priority}, Plunge: {standalone.isPlungeAction}", Color.yellow);
@@ -399,6 +399,7 @@ public class ActionResolver
         CurrentPlungePhase = PlungeSessionPhase.None;
 
         if (activeStandalone == null) return null;
+        bool hasAuthoredPlungeTree = activeStandalone.HasAuthoredPlungeTree();
 
         AttackStepData currentStep = GetCurrentStepData();
         if (currentStep != null && currentStep.triggerWindows != null)
@@ -409,7 +410,20 @@ public class ActionResolver
                 var trigger = currentStep.triggerWindows[i];
                 if (trigger == null || trigger.targetNode == null) continue;
 
-                bool inWindow = trigger.IsInWindow(activeFrame);
+                bool isLandingTrigger = false;
+                if (trigger.triggerConditions != null)
+                {
+                    for (int conditionIndex = 0; conditionIndex < trigger.triggerConditions.Count; conditionIndex++)
+                    {
+                        if (trigger.triggerConditions[conditionIndex] is AirborneLandingActionCondition)
+                        {
+                            isLandingTrigger = true;
+                            break;
+                        }
+                    }
+                }
+
+                bool inWindow = isLandingTrigger || trigger.IsInWindow(activeFrame);
                 bool conditionsMet = ActionConditionUtility.AllMet(trigger.triggerConditions, ctx);
                 if (!inWindow || !conditionsMet) continue;
 
@@ -440,7 +454,7 @@ public class ActionResolver
             return currentNode.stepData;
         }
 
-        return activeStandalone.stepData;
+        return hasAuthoredPlungeTree ? null : activeStandalone.stepData;
     }
 
     // =========================================================
@@ -510,7 +524,7 @@ public class ActionResolver
     // Internal - Route Matching
     // =========================================================
 
-    private StandaloneAction FindMatchingStandalone(StateContext ctx, ActionResolverTable table)
+    private StandaloneAction FindMatchingStandalone(StateContext ctx, ActionResolverTable table, AttackCategory category)
     {
         if (table.standaloneActions == null) return null;
 
@@ -520,7 +534,17 @@ public class ActionResolver
         {
             StandaloneAction sa = table.standaloneActions[i];
 
-            if (sa?.comboTree == null && sa?.stepData == null && !sa.isPlungeAction) continue;
+            if (sa == null)
+            {
+                continue;
+            }
+
+            if (sa.triggerCategory != category)
+            {
+                continue;
+            }
+
+            if (sa.comboTree == null && sa.stepData == null && !sa.isPlungeAction) continue;
 
             if (ActionMatches(sa, ctx))
             {

@@ -265,6 +265,13 @@ public class PlayerStateMachine : MonoBehaviour
 
         if (CurrentState is FrameDataPlayerState currentFrameState)
         {
+            // Centralized check for FrameData states: ignore interrupts if state says so.
+            // We check this BEFORE the conversion logic to respect the InterruptPolicy.
+            if (!currentFrameState.CanBeInterruptedBy(ActionCategory.Jump))
+            {
+                return;
+            }
+
             bool shouldConvertFreshGroundActionToAirborne =
                 ShouldConvertEarlyGroundCombatToAirborne(currentFrameState);
 
@@ -289,7 +296,7 @@ public class PlayerStateMachine : MonoBehaviour
             }
         }
 
-        // Centralized check for FrameData states: ignore interrupts if state says so
+        // Centralized check for non-conversion cases (already partially handled above for FrameData states)
         if (CurrentState is FrameDataPlayerState fdState && !fdState.CanBeInterruptedBy(ActionCategory.Jump))
         {
             // Do not allow jump interrupt if state is not in a cancellable phase

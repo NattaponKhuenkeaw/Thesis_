@@ -36,6 +36,7 @@ MonoBehaviour:
   speed: 0.1
   lifetime: 1
   maxHits: 16
+  hitCountMode: 0
   routineHitbox:
     enabled: 1
     decrementsMaxHits: 1

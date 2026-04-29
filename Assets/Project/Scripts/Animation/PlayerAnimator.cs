@@ -242,29 +242,6 @@ public class PlayerAnimator : MonoBehaviour
         }
     }
 
-    public void TriggerPlungeFall(string stateName)
-    {
-        if (anim == null)
-            return;
-
-        SafeResetTrigger(jumpHash);
-        SafeResetTrigger(landingHash);
-        anim.SetBool(isLandingHash, false);
-        PlayStateByName(stateName, "Plunge_Fall");
-    }
-
-    public void TriggerPlungeImpact(string stateName)
-    {
-        if (anim == null)
-            return;
-
-        SafeResetTrigger(jumpHash);
-        SafeResetTrigger(landingHash);
-        anim.SetBool(isLandingHash, false);
-
-        PlayStateByName(stateName, "Attack_1");
-    }
-
     public void RestoreAirborneState()
     {
         if (anim == null || movement == null || rb == null)

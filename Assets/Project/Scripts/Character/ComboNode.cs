@@ -217,8 +217,8 @@ public class ComboTree
 [System.Serializable]
 public class StandaloneAction : CombatAction
 {
-    private const float DefaultChargeSteeringStrength = 8f;
-    private const float DefaultChargeSteeringMaxRedirect = 3.5f;
+    private const float DefaultStrikeSteeringStrength = 8f;
+    private const float DefaultStrikeSteeringMaxRedirect = 3.5f;
 
     public override AttackCategory Category => AttackCategory.Normal;
 
@@ -234,13 +234,18 @@ public class StandaloneAction : CombatAction
     [Header("Legacy Follow-Up (Obsolete)")]
     [Obsolete("Use comboTree instead")] [SerializeReference] public ComboNode followUpNode;
 
+    [Header("Standalone Trigger")]
+    [Tooltip("Which combat input category can resolve this standalone action before regular combo trees.")]
+    public AttackCategory triggerCategory = AttackCategory.Normal;
+
     [Header("Plunge Behavior")]
     [Tooltip("If true, this standalone action uses the plunge flow: charge/root step -> dive step -> landing impact.")]
     public bool isPlungeAction = false;
+    public float plungeChargeLift = 1.5f;
     public float plungeDownwardSpeed = 18f;
-    public float plungeChargeSteeringStrength = DefaultChargeSteeringStrength;
-    public float plungeChargeMaxHorizontalRedirect = DefaultChargeSteeringMaxRedirect;
-    public bool updateFacingDuringPlungeCharge = true;
+    public float plungeStrikeSteeringStrength = DefaultStrikeSteeringStrength;
+    public float plungeStrikeMaxHorizontalRedirect = DefaultStrikeSteeringMaxRedirect;
+    public bool updateFacingDuringPlungeStrike = true;
 
     [Header("Legacy Plunge Fallback (Obsolete)")]
     [Tooltip("Used only when no plunge dive step is authored in comboTree.")]

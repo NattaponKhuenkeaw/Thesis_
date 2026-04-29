@@ -323,6 +323,14 @@ public class PlayerMovement : MonoBehaviour
         if (enableDashAfterimage) plungeAfterimageCoroutine = StartCoroutine(PlungeAfterimageRoutine());
     }
 
+    public void ApplyPlungeChargeLift(float upwardVelocity)
+    {
+        if (rb == null)
+            return;
+
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, upwardVelocity);
+    }
+
     public void StartDashCooldown() => dashCooldownFramesRemaining = dashData != null ? dashData.cooldownFrames : 0;
 
     public void ApplyAttackMovement(MotionKeyframe keyframe)

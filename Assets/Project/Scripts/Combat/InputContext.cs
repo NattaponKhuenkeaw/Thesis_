@@ -16,6 +16,7 @@ public struct InputContext
     public bool hasPreviouslyGrabbedEnemy;
     public bool isAgainstWall;
     public bool wasAirborne;
+    public bool isAirCombo;
     public CharacterPassiveController passiveController;
     public CombatRuntimeState runtimeState;
 

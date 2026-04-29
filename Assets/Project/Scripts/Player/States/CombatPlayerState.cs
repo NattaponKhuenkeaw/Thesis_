@@ -108,6 +108,12 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             return;
         }
 
+        // --- Ground State Tracking ---
+        if (player.Movement != null)
+        {
+            prevFrameGrounded = player.Movement.GroundState.IsEffectivelyGrounded;
+        }
+
         // --- Recovery Early Exit (Gravity takes over) ---
         if (currentPhase == ActionPhase.Recovery && player.Movement != null && player.Combat != null && player.Combat.IsInAirborneAction())
         {
@@ -350,6 +356,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             hasPreviouslyGrabbedEnemy = player.Combat != null && player.Combat.HadGrabAtStepStart,
             isAgainstWall = player.Movement != null && player.Movement.IsAgainstWall(),
             wasAirborne = !prevFrameGrounded && physicallyGrounded,
+            isAirCombo = player.Combat != null && player.Combat.IsAirCombo,
             passiveController = player.PassiveController,
             runtimeState = player.PassiveController != null ? player.PassiveController.RuntimeState : null
         };

@@ -737,42 +737,7 @@ namespace CombatEditor.UI
 
                 if (action is StandaloneAction sa)
                 {
-                    AddSeparator(body, "Plunge Behavior");
-                    AddToggleField(body, "Use Plunge Flow", sa.isPlungeAction, value => {
-                        RecordUndo("Toggle Plunge Flow");
-                        sa.isPlungeAction = value;
-                        MarkDirty();
-                    });
-
-                    AddFloatField(body, "Dive Downward Speed", sa.plungeDownwardSpeed, value => {
-                        RecordUndo("Edit Plunge Dive Speed");
-                        sa.plungeDownwardSpeed = value;
-                        MarkDirty();
-                    });
-
-                    AddFloatField(body, "Charge Steering Strength", sa.plungeChargeSteeringStrength, value => {
-                        RecordUndo("Edit Plunge Steering Strength");
-                        sa.plungeChargeSteeringStrength = value;
-                        MarkDirty();
-                    });
-
-                    AddFloatField(body, "Charge Max Horizontal Redirect", sa.plungeChargeMaxHorizontalRedirect, value => {
-                        RecordUndo("Edit Plunge Redirect");
-                        sa.plungeChargeMaxHorizontalRedirect = value;
-                        MarkDirty();
-                    });
-
-                    AddToggleField(body, "Update Facing During Charge", sa.updateFacingDuringPlungeCharge, value => {
-                        RecordUndo("Toggle Plunge Facing Update");
-                        sa.updateFacingDuringPlungeCharge = value;
-                        MarkDirty();
-                    });
-
-                    AddTextField(body, "Legacy Dive Anim Fallback", sa.plungeFallAnimState, value => {
-                        RecordUndo("Edit Legacy Plunge Anim");
-                        sa.plungeFallAnimState = value;
-                        MarkDirty();
-                    });
+                    BuildStandaloneActionFields(body, sa);
 
                     AddSeparator(body, "Tree Authoring");
                     if (sa.comboTree == null || sa.comboTree.rootNode == null)
@@ -843,6 +808,14 @@ namespace CombatEditor.UI
         private void BuildComboNodeCards(ComboNode node)
         {
             if (node == null) return;
+
+            if (GetCurrentAction() is StandaloneAction standaloneAction)
+            {
+                BuildFoldoutCard("Standalone Runtime", "standalone_runtime", new Color(0.75f, 0.4f, 0.9f), body =>
+                {
+                    BuildStandaloneActionFields(body, standaloneAction);
+                });
+            }
 
             // 1. Attack Step Card (Main Properties)
             BuildAttackStepCards(node.stepData);
@@ -1109,6 +1082,59 @@ namespace CombatEditor.UI
                     MarkDirtyAndRebuild();
                 }) { text = "+ Add Automatic Transition" };
                 body.Add(addAutoBtn);
+            });
+        }
+
+        private void BuildStandaloneActionFields(VisualElement body, StandaloneAction sa)
+        {
+            AddSeparator(body, "Standalone Trigger");
+            AddEnumField(body, "Trigger Category", sa.triggerCategory, value => {
+                RecordUndo("Edit Standalone Trigger Category");
+                sa.triggerCategory = (AttackCategory)value;
+                MarkDirty();
+            });
+
+            AddSeparator(body, "Plunge Behavior");
+            AddToggleField(body, "Use Plunge Flow", sa.isPlungeAction, value => {
+                RecordUndo("Toggle Plunge Flow");
+                sa.isPlungeAction = value;
+                MarkDirty();
+            });
+
+            AddFloatField(body, "Charge Lift", sa.plungeChargeLift, value => {
+                RecordUndo("Edit Plunge Charge Lift");
+                sa.plungeChargeLift = value;
+                MarkDirty();
+            });
+
+            AddFloatField(body, "Dive Downward Speed", sa.plungeDownwardSpeed, value => {
+                RecordUndo("Edit Plunge Dive Speed");
+                sa.plungeDownwardSpeed = value;
+                MarkDirty();
+            });
+
+            AddFloatField(body, "Strike Steering Strength", sa.plungeStrikeSteeringStrength, value => {
+                RecordUndo("Edit Plunge Strike Steering Strength");
+                sa.plungeStrikeSteeringStrength = value;
+                MarkDirty();
+            });
+
+            AddFloatField(body, "Strike Max Horizontal Redirect", sa.plungeStrikeMaxHorizontalRedirect, value => {
+                RecordUndo("Edit Plunge Strike Redirect");
+                sa.plungeStrikeMaxHorizontalRedirect = value;
+                MarkDirty();
+            });
+
+            AddToggleField(body, "Update Facing During Strike", sa.updateFacingDuringPlungeStrike, value => {
+                RecordUndo("Toggle Plunge Strike Facing Update");
+                sa.updateFacingDuringPlungeStrike = value;
+                MarkDirty();
+            });
+
+            AddTextField(body, "Legacy Dive Anim Fallback", sa.plungeFallAnimState, value => {
+                RecordUndo("Edit Legacy Plunge Anim");
+                sa.plungeFallAnimState = value;
+                MarkDirty();
             });
         }
 

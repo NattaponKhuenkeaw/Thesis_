@@ -539,7 +539,7 @@ MonoBehaviour:
         impactTier: 3
         useDeterministicReaction: 1
         reactionKind: 2
-        impactFreezeFrames: 10
+        impactFreezeFrames: 4
         knockbackFrames: 15
         knockupFrames: 12
         knockfallFrames: 10
@@ -589,7 +589,7 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
+        maxJuggleCount: 10
         juggleLaunchScale: 2
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
