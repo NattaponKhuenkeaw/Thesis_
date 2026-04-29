@@ -33,7 +33,7 @@ MonoBehaviour:
     attackSfx: {fileID: 0}
     skillSfx: {fileID: 0}
     hurtSfx: {fileID: 0}
-  movementProfile: {fileID: 11400000, guid: cd71e34e3ebc46d458f1965ef79c3daf, type: 2}
+  movementProfile: {fileID: 11400000, guid: b602c19e897c96a44a78f9defc7f3bb6, type: 2}
   maxJumpOverride: -1
   maxAirDashOverride: -1
   _authoredFPS: 24
@@ -200,3 +200,4 @@ MonoBehaviour:
       passiveHookTypeName: 
     passiveNodes: []
   actionResolverTable: {fileID: 11400000, guid: 93ffc437bab6ea2449e90ba52b119527, type: 2}
+  audioData: {fileID: 11400000, guid: 2e1cc3b89704d09409a0f8d5b4c62631, type: 2}

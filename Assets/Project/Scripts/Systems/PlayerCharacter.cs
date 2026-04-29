@@ -20,6 +20,7 @@ public class PlayerCharacter : MonoBehaviour
     public PlayerMovement Movement;
     public PlayerCombat Combat;
     public PlayerAnimator Animator;
+    public PlayerAudio Audio;
     public CharacterPassiveController PassiveController;
 
     // =========================================================
@@ -92,6 +93,7 @@ public class PlayerCharacter : MonoBehaviour
         ApplyMovementData();
         ApplyAnimationData();
         InitializeHP(initialHp);
+        InitializeAudio();
         PassiveController?.InitializeFromCharacterData();
     }
 
@@ -257,6 +259,9 @@ public class PlayerCharacter : MonoBehaviour
         if (Animator == null)
             Animator = GetComponentInChildren<PlayerAnimator>();
 
+        if (Audio == null)
+            Audio = GetComponent<PlayerAudio>();
+
         if (PassiveController == null)
             PassiveController = GetComponent<CharacterPassiveController>();
     }
@@ -302,5 +307,16 @@ public class PlayerCharacter : MonoBehaviour
     {
         if (OnHealthChanged != null)
             OnHealthChanged(currentHP, MaxHP);
+    }
+
+    private void InitializeAudio()
+    {
+        if (Audio == null)
+            Audio = gameObject.AddComponent<PlayerAudio>();
+
+        if (characterObject != null)
+        {
+            Audio.Initialize(this, characterObject.audioData);
+        }
     }
 }

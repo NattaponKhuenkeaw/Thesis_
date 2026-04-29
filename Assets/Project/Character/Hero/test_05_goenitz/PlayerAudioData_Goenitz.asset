@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 439bde92a263d984aa561a111ba9a27e, type: 3}
+  m_Name: PlayerAudioData_Goenitz
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerAudioData
+  mappings:
+  - stateId: 1
+    sfxVariants:
+    - {fileID: 8300000, guid: 427ed399f93a6cb4ba0fc95813b7f3e3, type: 3}
+    loopSFX: 1
+    volumeSFX: 1
+    pitchSFX: 1
+    voiceVariants: []
+    loopVoice: 0
+    volumeVoice: 0
+    pitchVoice: 0
+  - stateId: 3
+    sfxVariants:
+    - {fileID: 8300000, guid: 8a2d0e3c1a811af4ebc6804dc51b2615, type: 3}
+    loopSFX: 0
+    volumeSFX: 1
+    pitchSFX: 1
+    voiceVariants: []
+    loopVoice: 0
+    volumeVoice: 0
+    pitchVoice: 0
+  - stateId: 6
+    sfxVariants:
+    - {fileID: 8300000, guid: e79495f52477fbe43b43b9225312fe16, type: 3}
+    loopSFX: 0
+    volumeSFX: 0.7
+    pitchSFX: 1
+    voiceVariants:
+    - {fileID: 8300000, guid: 9908b182647152c4da03ff78d47cb1e5, type: 3}
+    loopVoice: 0
+    volumeVoice: 1
+    pitchVoice: 1
+  - stateId: 2
+    sfxVariants:
+    - {fileID: 8300000, guid: bd84abf6c9f438f4e9ba190e72bd497d, type: 3}
+    loopSFX: 1
+    volumeSFX: 0.5
+    pitchSFX: 1
+    voiceVariants: []
+    loopVoice: 0
+    volumeVoice: 1
+    pitchVoice: 1

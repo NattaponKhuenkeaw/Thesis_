@@ -45,11 +45,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TeamLoader
   team:
-  - {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
+  - {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
   - {fileID: 0}
   - {fileID: 0}
   playerCharacter: {fileID: 729008942358398209}
+  switchCooldownDuration: 3
   currentIndex: 0
+  lastSwitchTime: -999
 --- !u!1 &7291009428317185000
 GameObject:
   m_ObjectHideFlags: 0
@@ -102,6 +104,7 @@ GameObject:
   - component: {fileID: 6196953050443969776}
   - component: {fileID: 5415922272028008889}
   - component: {fileID: 5987486934514239479}
+  - component: {fileID: 3786497839190972144}
   m_Layer: 7
   m_Name: Player
   m_TagString: Player
@@ -170,8 +173,8 @@ MonoBehaviour:
   m_LightType: 3
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 1
+  m_Color: {r: 1, g: 0.9843137, b: 0.68235296, a: 1}
+  m_Intensity: 1.47
   m_LightVolumeIntensity: 1
   m_LightVolumeEnabled: 0
   m_ApplyToSortingLayers: 0000000005463c33a3c2eb65bb8c95ce
@@ -192,10 +195,10 @@ MonoBehaviour:
   m_LocalBounds:
     m_Center: {x: 0, y: -0.00000011920929, z: 0}
     m_Extent: {x: 0.9985302, y: 0.99853027, z: 0}
-  m_PointLightInnerAngle: 360
-  m_PointLightOuterAngle: 360
-  m_PointLightInnerRadius: 0
-  m_PointLightOuterRadius: 1
+  m_PointLightInnerAngle: 35.630005
+  m_PointLightOuterAngle: 343.46
+  m_PointLightInnerRadius: 0.15802285
+  m_PointLightOuterRadius: 3.7835743
   m_ShapeLightParametricSides: 5
   m_ShapeLightParametricAngleOffset: 0
   m_ShapeLightParametricRadius: 1
@@ -250,15 +253,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
   spriteRenderer: {fileID: 5710717605876365618}
   combatHandler: {fileID: 3573541607337625934}
-  speed: 5
-  jumpForce: 5
-  maxJumpCount: 1
-  maxAirDashCount: 1
-  groundAcceleration: 80
-  groundDeceleration: 90
-  airAcceleration: 55
-  airDeceleration: 40
-  airSpeedMultiplier: 1
+  profile: {fileID: 0}
   dashData:
     animationClip: {fileID: 0}
     startupFrames: 5
@@ -271,31 +266,15 @@ MonoBehaviour:
   dashAfterimageColor: {r: 0.6179246, g: 0.94856673, b: 1, a: 1}
   dashAfterimageLifetime: 0.2
   dashAfterimageSpawnInterval: 0.085
-  fastFallMultiplier: 3
-  riseGravityMultiplier: 2
-  apexGravityMultiplier: 2.5
-  apexVelocityThreshold: 1.35
-  postAttackGravityGraceDuration: 0.2
-  coyoteTime: 0.08
-  jumpBufferTime: 0.12
-  jumpCutMultiplier: 0.42
-  fallGravityMultiplier: 2.5
-  lowJumpGravityMultiplier: 1
-  maxFallSpeed: 50
   playerLayerName: Player
   enemyLayerName: Enemy
   oneWayPlatformLayerName: OneWayPlatform
-  jumpStartupTime: 0.05
-  landingLagTime: 0.1
-  dropDownDuration: 0.2
   groundCheck: {fileID: 3725453944956529812}
   groundLayer:
     serializedVersion: 2
     m_Bits: 8
-  groundedActionProbeDistance: 0.35
-  airborneActionVelocityThreshold: 0.05
-  enableAttackFacingLockOn: 1
-  attackFacingCancelInputThreshold: 0.2
+  maxJumpOverride: -1
+  maxAirDashOverride: -1
 --- !u!114 &5371397137189720922
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -356,6 +335,7 @@ MonoBehaviour:
   Movement: {fileID: 6805025547357927974}
   Combat: {fileID: 1830555458098172541}
   Animator: {fileID: 7874564147707268052}
+  Audio: {fileID: 0}
   PassiveController: {fileID: 4691528794087154357}
   currentHP: 0
   status:
@@ -363,6 +343,7 @@ MonoBehaviour:
     isBurning: 0
     isFrozen: 0
     isDead: 0
+  postHitInvulnerabilityDuration: 0.4
 --- !u!114 &4691528794087154357
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -396,6 +377,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHUD
   playerCharacter: {fileID: 729008942358398209}
+  teamLoader: {fileID: 0}
   targetCanvas: {fileID: 0}
 --- !u!114 &6196953050443969776
 MonoBehaviour:
@@ -410,9 +392,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerStateMachine
   playerCharacter: {fileID: 729008942358398209}
+  teamLoader: {fileID: 0}
   showFsmLogs: 0
-  showFrameDataLogs: 1
-  showCombatLogs: 1
+  showFrameDataLogs: 0
+  showCombatLogs: 0
 --- !u!114 &5415922272028008889
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -440,6 +423,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SkillTreeController
   playerCharacter: {fileID: 729008942358398209}
   passiveController: {fileID: 0}
+--- !u!114 &3786497839190972144
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7851930121724842516}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7559794f8c82a2459afac7271a1a458, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerAudio
 --- !u!1001 &6857509681489621141
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -451,10 +446,18 @@ PrefabInstance:
     - target: {fileID: 841549147893548566, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 9100000, guid: b4f7f50e094f0f145a2251ad62172a8d, type: 2}
+      objectReference: {fileID: 9100000, guid: 38e3871755c7d8d46bbcaadba6a293a7, type: 2}
+    - target: {fileID: 1182845670901008807, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
+      propertyPath: m_SortingOrder
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 1228648587804198703, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1390585622157898436, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1579617338873354533, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
       propertyPath: movement
@@ -464,6 +467,10 @@ PrefabInstance:
       propertyPath: worldAnchor
       value: 
       objectReference: {fileID: 8039369968335461904}
+    - target: {fileID: 2795941970376401442, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
+      propertyPath: m_SortingOrder
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2987741699807731709, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
       propertyPath: movement
       value: 

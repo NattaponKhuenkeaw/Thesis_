@@ -93,4 +93,7 @@ public class CharacterObject : ScriptableObject
     [Header("Action Resolver")]
     [Tooltip("Data-driven combo tree table. If null, legacy combo data is used as fallback.")]
     public ActionResolverTable actionResolverTable;
+
+    [Header("Audio")]
+    public PlayerAudioData audioData;
 }

@@ -32,8 +32,8 @@ MonoBehaviour:
     attackSfx: {fileID: 0}
     skillSfx: {fileID: 0}
     hurtSfx: {fileID: 0}
-  movementProfile: {fileID: 11400000, guid: cd71e34e3ebc46d458f1965ef79c3daf, type: 2}
-  maxJumpOverride: -1
+  movementProfile: {fileID: 11400000, guid: b71e22596438c5f4ab6e3f64f66c4479, type: 2}
+  maxJumpOverride: 2
   maxAirDashOverride: -1
   _authoredFPS: 24
   upgrade:
@@ -53,3 +53,4 @@ MonoBehaviour:
     constellationNodes: []
     passiveNodes: []
   actionResolverTable: {fileID: 11400000, guid: 24c1f4b36af412b4ebbeeb757fac41ef, type: 2}
+  audioData: {fileID: 11400000, guid: a619867be2a28f642b09a359f46a8a6a, type: 2}

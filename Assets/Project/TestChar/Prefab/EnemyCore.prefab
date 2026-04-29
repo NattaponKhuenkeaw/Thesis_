@@ -1180,8 +1180,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 859588101
+  m_SortingLayer: 1
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 0}
@@ -1325,9 +1325,12 @@ MonoBehaviour:
     isFrozen: 0
     isDead: 0
   currentComboHits: 0
+  antiStunlockComboThreshold: 4
+  antiStunlockResistChance: 0.3
   rb: {fileID: 6597299547389863175}
   attackHitbox: {fileID: 3145967654918923133}
   bodyCollider: {fileID: 7441673381418920329}
+  worldUI: {fileID: 0}
   hitReactionHandler: {fileID: -6515187417249938201}
 --- !u!114 &4337216351384873233
 MonoBehaviour:
@@ -1392,7 +1395,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8917136744719106790}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 073797afb82c5a1438f328866b10b3f0, type: 3}
   m_Name: 
@@ -1402,7 +1405,7 @@ MonoBehaviour:
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 1
+  m_Intensity: 3.75
   m_LightVolumeIntensity: 1
   m_LightVolumeEnabled: 0
   m_ApplyToSortingLayers: 
@@ -1421,12 +1424,12 @@ MonoBehaviour:
   m_ShadowVolumeIntensityEnabled: 0
   m_ShadowVolumeIntensity: 0.75
   m_LocalBounds:
-    m_Center: {x: 0, y: 0, z: 0}
-    m_Extent: {x: 0, y: 0, z: 0}
+    m_Center: {x: 0, y: -0.00000011920929, z: 0}
+    m_Extent: {x: 0.9985302, y: 0.99853027, z: 0}
   m_PointLightInnerAngle: 360
   m_PointLightOuterAngle: 360
   m_PointLightInnerRadius: 0
-  m_PointLightOuterRadius: 1
+  m_PointLightOuterRadius: 2.12
   m_ShapeLightParametricSides: 5
   m_ShapeLightParametricAngleOffset: 0
   m_ShapeLightParametricRadius: 1
@@ -1451,6 +1454,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHitReactionHandler
   currentState: 0
   currentJuggleCount: 0
+  airJuggleSessionActive: 0
   groundLayers:
     serializedVersion: 2
     m_Bits: 8
@@ -1754,6 +1758,8 @@ MonoBehaviour:
   healthLerpDelay: 0.75
   healthLerpDuration: 0.5
   hideCanvasOnDeath: 1
+  attackWarningIcon: {fileID: 0}
+  defaultAttackWarningDuration: 0.5
   basicComboScale: 1
   skillScale: 1.4
   ultimateScale: 2.3

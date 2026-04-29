@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MovementProfile
   moveSpeed: 7.5
   jumpForce: 20
-  maxJumpCount: 2
+  maxJumpCount: 1
   maxAirDashCount: 1
   groundAcceleration: 110
   groundDeceleration: 150
