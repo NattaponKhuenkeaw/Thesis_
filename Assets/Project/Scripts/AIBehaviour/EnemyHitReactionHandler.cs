@@ -557,10 +557,22 @@ public class EnemyHitReactionHandler : MonoBehaviour
         {
             data.juggleLaunchScale = 1f;
         }
+        else
+        {
+            // Authoring values above 1 cause exponential relaunch growth on long combos.
+            // Keep juggle scaling decay/hold-only so all characters share safe behavior.
+            data.juggleLaunchScale = Mathf.Min(data.juggleLaunchScale, 1f);
+        }
 
         if (data.juggleStunScale <= 0f)
         {
             data.juggleStunScale = 1f;
+        }
+        else
+        {
+            // Same protection for juggle stun duration; follow-up hits should not extend
+            // airborne time beyond the original hit unless we explicitly build a new system for it.
+            data.juggleStunScale = Mathf.Min(data.juggleStunScale, 1f);
         }
     }
 
@@ -587,10 +599,19 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
         data.launchSpeed = Mathf.Max(0f, data.LaunchSpeed * launchScale);
         data.horizontalSpeed = Mathf.Max(0f, data.HorizontalSpeed * Mathf.Lerp(1f, launchScale, 0.5f));
+
+        int scaledKnockupFrames = Mathf.Max(1, Mathf.RoundToInt(data.knockupFrames * stunScale));
+        int scaledKnockfallFrames = Mathf.Max(1, Mathf.RoundToInt(data.knockfallFrames * stunScale));
+        int scaledRecoveryFrames = Mathf.Max(0, Mathf.RoundToInt(data.RecoveryFrames * stunScale));
+
+        // Keep the authored frame fields in sync with the runtime timing object. ProcessKnockupFrames()
+        // uses these concrete values directly, so scaling only ActionFrameData is not enough.
+        data.knockupFrames = scaledKnockupFrames;
+        data.knockfallFrames = scaledKnockfallFrames;
         data.reactionTiming = HitReactionData.CreateTiming(
             data.ImpactFreezeFrames,
-            Mathf.Max(1, Mathf.RoundToInt(data.ActiveReactionFrames * stunScale)),
-            data.RecoveryFrames);
+            scaledKnockupFrames,
+            scaledRecoveryFrames);
 
         currentJuggleCount = Mathf.Min(maxJuggleCount, currentJuggleCount + 1);
     }
