@@ -61,8 +61,8 @@ public class PlayerJumpStartupState : PlayerState
             // Apply jump impulse
             player.Movement.ApplyJumpImpulse();
 
-            // Transition to Airborne
-            fsm.ChangeState(fsm.AirborneState);
+            // Transition to JumpRising
+            fsm.ChangeState(fsm.JumpRisingState);
         }
     }
 

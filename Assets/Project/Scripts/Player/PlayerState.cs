@@ -14,6 +14,7 @@ public enum PlayerStateId
     Idle,
     Running,
     JumpStartup,
+    JumpRising,
     Airborne,
     Falling,
     Dashing,

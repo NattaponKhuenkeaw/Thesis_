@@ -26,6 +26,7 @@ public class PlayerStateMachine : MonoBehaviour
     public PlayerIdleState IdleState { get; private set; }
     public PlayerMoveState MoveState { get; private set; }
     public PlayerJumpStartupState JumpStartupState { get; private set; }
+    public PlayerJumpRisingState JumpRisingState { get; private set; }
     public PlayerAirborneState AirborneState { get; private set; }
     public PlayerFallingState FallingState { get; private set; }
     public PlayerDashState DashState { get; private set; }
@@ -456,6 +457,7 @@ public class PlayerStateMachine : MonoBehaviour
         IdleState = new PlayerIdleState(playerCharacter, this);
         MoveState = new PlayerMoveState(playerCharacter, this);
         JumpStartupState = new PlayerJumpStartupState(playerCharacter, this);
+        JumpRisingState = new PlayerJumpRisingState(playerCharacter, this);
         AirborneState = new PlayerAirborneState(playerCharacter, this);
         FallingState = new PlayerFallingState(playerCharacter, this);
         DashState = new PlayerDashState(playerCharacter, this);

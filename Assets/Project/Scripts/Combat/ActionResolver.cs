@@ -10,12 +10,7 @@ using UnityEngine;
 
 public class ActionResolver
 {
-    public enum PlungeSessionPhase
-    {
-        None,
-        Charge,
-        Dive
-    }
+
 
     // =========================================================
     // State
@@ -48,15 +43,7 @@ public class ActionResolver
     // =========================================================
     public int TreeDepth => treeDepth;
     public bool IsActive => currentNode != null || activeStandalone != null;
-    public PlungeSessionPhase CurrentPlungePhase { get; private set; }
-    public bool IsPlungeChargeActive => CurrentPlungePhase == PlungeSessionPhase.Charge;
-    public bool IsPlungeFalling => CurrentPlungePhase == PlungeSessionPhase.Dive;
     public CombatAction ActiveCombatAction { get; private set; }
-
-    /// <summary>
-    /// Plunge data from the active standalone action (if any).
-    /// </summary>
-    public StandaloneAction ActivePlungeAction => activeStandalone != null && activeStandalone.isPlungeAction ? activeStandalone : null;
 
     // =========================================================
     // Resolve - First Attack Input (no active combo)
@@ -77,27 +64,10 @@ public class ActionResolver
         StandaloneAction standalone = FindMatchingStandalone(ctx, table, category);
         if (standalone != null)
         {
-            Log($"Standalone Match! Priority: {standalone.priority}, Plunge: {standalone.isPlungeAction}", Color.yellow);
+            Log($"Standalone Match! Priority: {standalone.priority}", Color.yellow);
             activeStandalone = standalone;
             ActiveCombatAction = standalone;
             activeTree = standalone.comboTree;
-
-            if (standalone.isPlungeAction)
-            {
-                if (standalone.HasAuthoredPlungeTree())
-                {
-                    currentNode = standalone.GetEntryNode();
-                    CurrentPlungePhase = PlungeSessionPhase.Charge;
-                    treeDepth = 1;
-                    return currentNode != null ? currentNode.stepData : null;
-                }
-
-                // Legacy fallback: preserve the old immediate-dive plunge behavior
-                // when the authored data has not been migrated yet.
-                CurrentPlungePhase = PlungeSessionPhase.Dive;
-                treeDepth = 1;
-                return null;
-            }
 
             if (standalone.GetEntryNode() != null)
             {
@@ -357,105 +327,7 @@ public class ActionResolver
         return currentNode.stepData;
     }
 
-    // =========================================================
-    // Plunge Runtime
-    // =========================================================
 
-    public AttackStepData ResolvePlungeDive()
-    {
-        if (activeStandalone == null || !activeStandalone.isPlungeAction)
-        {
-            return null;
-        }
-
-        ComboNode diveNode = null;
-
-        if (CurrentPlungePhase == PlungeSessionPhase.Charge)
-        {
-            diveNode = currentNode != null ? currentNode.defaultNext : activeStandalone.GetDiveNode();
-        }
-        else if (CurrentPlungePhase == PlungeSessionPhase.None)
-        {
-            diveNode = activeStandalone.GetDiveNode();
-        }
-
-        if (diveNode == null || diveNode.stepData == null)
-        {
-            return null;
-        }
-
-        currentNode = diveNode;
-        CurrentPlungePhase = PlungeSessionPhase.Dive;
-        treeDepth++;
-        return currentNode.stepData;
-    }
-
-    /// <summary>
-    /// Called when the player lands during plunge dive mode.
-    /// Returns the plunge impact step data.
-    /// </summary>
-    public AttackStepData ResolvePlungeLanding(StateContext ctx, int activeFrame)
-    {
-        CurrentPlungePhase = PlungeSessionPhase.None;
-
-        if (activeStandalone == null) return null;
-        bool hasAuthoredPlungeTree = activeStandalone.HasAuthoredPlungeTree();
-
-        AttackStepData currentStep = GetCurrentStepData();
-        if (currentStep != null && currentStep.triggerWindows != null)
-        {
-            TriggerWindow bestMatch = null;
-            for (int i = 0; i < currentStep.triggerWindows.Count; i++)
-            {
-                var trigger = currentStep.triggerWindows[i];
-                if (trigger == null || trigger.targetNode == null) continue;
-
-                bool isLandingTrigger = false;
-                if (trigger.triggerConditions != null)
-                {
-                    for (int conditionIndex = 0; conditionIndex < trigger.triggerConditions.Count; conditionIndex++)
-                    {
-                        if (trigger.triggerConditions[conditionIndex] is AirborneLandingActionCondition)
-                        {
-                            isLandingTrigger = true;
-                            break;
-                        }
-                    }
-                }
-
-                bool inWindow = isLandingTrigger || trigger.IsInWindow(activeFrame);
-                bool conditionsMet = ActionConditionUtility.AllMet(trigger.triggerConditions, ctx);
-                if (!inWindow || !conditionsMet) continue;
-
-                if (bestMatch == null || trigger.priority > bestMatch.priority)
-                {
-                    bestMatch = trigger;
-                }
-            }
-
-            if (bestMatch != null)
-            {
-                foreach (var condition in bestMatch.triggerConditions)
-                {
-                    condition?.OnTriggered(ctx);
-                }
-
-                currentNode = bestMatch.targetNode;
-                treeDepth++;
-                return currentNode.stepData;
-            }
-        }
-
-        ComboNode fallbackImpactNode = currentNode != null ? currentNode.defaultNext : activeStandalone.followUpNode;
-        if (fallbackImpactNode != null && fallbackImpactNode.stepData != null)
-        {
-            currentNode = fallbackImpactNode;
-            treeDepth++;
-            return currentNode.stepData;
-        }
-
-        return hasAuthoredPlungeTree ? null : activeStandalone.stepData;
-    }
 
     // =========================================================
     // Queries
@@ -493,8 +365,7 @@ public class ActionResolver
         return true;
     }
 
-    public bool IsAirCombo => (ActiveCombatAction != null && ActiveCombatAction.context == CombatActionContext.Air)
-        || (activeStandalone != null && activeStandalone.requireAirborne);
+    public bool IsAirCombo => ActiveCombatAction != null && ActiveCombatAction.context == CombatActionContext.Air;
 
     public float GetComboResetDelay()
     {
@@ -517,7 +388,6 @@ public class ActionResolver
         activeStandalone = null;
         ActiveCombatAction = null;
         treeDepth = 0;
-        CurrentPlungePhase = PlungeSessionPhase.None;
     }
 
     // =========================================================

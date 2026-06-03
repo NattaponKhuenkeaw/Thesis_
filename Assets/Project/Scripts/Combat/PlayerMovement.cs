@@ -95,7 +95,6 @@ public class PlayerMovement : MonoBehaviour
     // Attack motion
     private float attackMotionVelocityX;
     private Coroutine attackMotionCoroutine;
-    private Coroutine plungeAfterimageCoroutine;
     private bool isAttackMotionActive;
     private bool useUnscaledAttackMotion;
 
@@ -194,7 +193,7 @@ public class PlayerMovement : MonoBehaviour
     public void Jump()
     {
         if (IsDashing && !IsInDashRecovery()) return;
-        if (GroundState.IsGrounded || Time.time <= coyoteUntil) landingEndTime = -999f;
+        if (GroundState.IsEffectivelyGrounded || Time.time <= coyoteUntil) landingEndTime = -999f;
     }
 
     /// <summary>
@@ -219,6 +218,7 @@ public class PlayerMovement : MonoBehaviour
     /// </summary>
     public void ApplyJumpImpulse()
     {
+        GroundState.ClearAuthority();
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
         rb.AddForce(Vector2.up * P.jumpForce, ForceMode2D.Impulse);
         OnJumpStart?.Invoke();
@@ -242,12 +242,15 @@ public class PlayerMovement : MonoBehaviour
 
     public void SetDownInput(bool isPressed) => isHoldingDown = isPressed;
     public bool IsDownInputHeld() => isHoldingDown;
-    public bool IsGrounded() => GroundState.IsGrounded;
+    public bool IsGrounded() => GroundState.IsEffectivelyGrounded;
+    public bool IsPhysicallyGrounded() => GroundState.IsGrounded;
 
     public bool IsGroundedForActionSelection()
     {
+        // Cast-state authority must win over authored lift so grounded "Both"
+        // actions do not accidentally route into air cancels mid-motion.
+        if (GroundState.IsEffectivelyGrounded || (combat != null && combat.ShouldPreserveGroundAuthority())) return true;
         if (IsJumping || rb.linearVelocity.y > P.airborneActionVelocityThreshold) return false;
-        if (GroundState.IsGrounded) return true;
         return rb.linearVelocity.y <= 0f && IsNearGroundForActionSelection();
     }
 
@@ -268,6 +271,7 @@ public class PlayerMovement : MonoBehaviour
         if (IsDroppingDown) return false;
         if (!CanDropDown()) RefreshGroundStateForDropDown();
         if (!CanDropDown()) return false;
+        GroundState.ClearAuthority();
         coyoteUntil = -999f;
         dropDownCoroutine = StartCoroutine(DropDownRoutine(currentGroundCollider));
         return true;
@@ -315,21 +319,7 @@ public class PlayerMovement : MonoBehaviour
         return (Vector3)(nextPosition - previousPosition);
     }
 
-    public void StartPlungeMotion(float downwardSpeed, float horizontalVelocity = 0f)
-    {
-        StopAttackMotion();
-        float speed = downwardSpeed > 0 ? downwardSpeed : P.jumpForce;
-        rb.linearVelocity = new Vector2(horizontalVelocity, -speed);
-        if (enableDashAfterimage) plungeAfterimageCoroutine = StartCoroutine(PlungeAfterimageRoutine());
-    }
 
-    public void ApplyPlungeChargeLift(float upwardVelocity)
-    {
-        if (rb == null)
-            return;
-
-        rb.linearVelocity = new Vector2(rb.linearVelocity.x, upwardVelocity);
-    }
 
     public void StartDashCooldown() => dashCooldownFramesRemaining = dashData != null ? dashData.cooldownFrames : 0;
 
@@ -375,7 +365,7 @@ public class PlayerMovement : MonoBehaviour
         return best;
     }
 
-    private bool IsGroundJumpAvailable() => jumpsUsed == 0 && (GroundState.IsGrounded || Time.time <= coyoteUntil);
+    private bool IsGroundJumpAvailable() => jumpsUsed == 0 && (GroundState.IsEffectivelyGrounded || Time.time <= coyoteUntil);
     private bool CanUseAirJump() => jumpsUsed < MaxJumps;
 
     private void HandleVerticalPhysics()
@@ -401,7 +391,7 @@ public class PlayerMovement : MonoBehaviour
 
         // ─── Standard vertical physics (no combat coupling) ───
         float targetG = originalGravityScale;
-        if (GroundState.IsGrounded) { rb.gravityScale = targetG; return; }
+        if (GroundState.IsEffectivelyGrounded) { rb.gravityScale = targetG; return; }
 
         if (rb.linearVelocity.y > P.apexVelocityThreshold) targetG *= P.riseGravityMultiplier;
         else if (isHoldingDown && rb.linearVelocity.y < 0) targetG *= P.fastFallMultiplier;
@@ -416,13 +406,12 @@ public class PlayerMovement : MonoBehaviour
     private void StopAttackMotion()
     {
         if (attackMotionCoroutine != null) { StopCoroutine(attackMotionCoroutine); attackMotionCoroutine = null; }
-        if (plungeAfterimageCoroutine != null) { StopCoroutine(plungeAfterimageCoroutine); plungeAfterimageCoroutine = null; }
         isAttackMotionActive = false; attackMotionVelocityX = 0f; useUnscaledAttackMotion = false;
     }
 
-    private bool CanStartGroundDash() => dashCooldownFramesRemaining <= 0 && !IsLanding && (GroundState.IsGrounded || Time.time <= coyoteUntil);
-    private bool CanStartAirDash() => dashCooldownFramesRemaining <= 0 && !IsLanding && !GroundState.IsGrounded && Time.time > coyoteUntil && airDashesUsed < MaxAirDashes;
-    private bool CanDropDown() => GroundState.IsGrounded && currentGroundCollider != null && oneWayPlatformLayer >= 0 && currentGroundCollider.gameObject.layer == oneWayPlatformLayer;
+    private bool CanStartGroundDash() => dashCooldownFramesRemaining <= 0 && !IsLanding && (GroundState.IsEffectivelyGrounded || Time.time <= coyoteUntil);
+    private bool CanStartAirDash() => dashCooldownFramesRemaining <= 0 && !IsLanding && !GroundState.IsEffectivelyGrounded && Time.time > coyoteUntil && airDashesUsed < MaxAirDashes;
+    private bool CanDropDown() => GroundState.IsEffectivelyGrounded && currentGroundCollider != null && oneWayPlatformLayer >= 0 && currentGroundCollider.gameObject.layer == oneWayPlatformLayer;
     private void RefreshGroundStateForDropDown() { int hitCount = Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundContactFilter, groundHitBuffer); currentGroundCollider = GetBestGroundCollider(groundHitBuffer, hitCount); isGrounded = currentGroundCollider != null; GroundState.Tick(isGrounded, wasGrounded, rb.linearVelocity.y, IsJumping); }
     private bool ShouldSuppressLandingFeedback() => combat != null && combat.ShouldSuppressLandingFeedback();
 
@@ -520,7 +509,7 @@ public class PlayerMovement : MonoBehaviour
         // ─── Vertical Velocity Attenuation ───
         // Higher vertical speed = less horizontal control
         float verticalAttenuation = 1f;
-        if (!GroundState.IsGrounded && P.verticalSpeedPenalty > 0f)
+        if (!GroundState.IsEffectivelyGrounded && P.verticalSpeedPenalty > 0f)
         {
             // Use jumpForce as reference when rising, maxFallSpeed when falling for consistent feel
             float refSpeed = rb.linearVelocity.y > 0 ? P.jumpForce : P.maxFallSpeed;
@@ -531,13 +520,13 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        float baseSpeed = P.moveSpeed * (GroundState.IsGrounded ? 1f : P.airSpeedMultiplier) * verticalAttenuation;
+        float baseSpeed = P.moveSpeed * (GroundState.IsEffectivelyGrounded ? 1f : P.airSpeedMultiplier) * verticalAttenuation;
         float tgtX = effectiveInput * baseSpeed;
         float acc = Mathf.Abs(tgtX) < 0.01f
-            ? (GroundState.IsGrounded ? P.groundDeceleration : P.airDeceleration)
-            : (GroundState.IsGrounded ? P.groundAcceleration : P.airAcceleration);
+            ? (GroundState.IsEffectivelyGrounded ? P.groundDeceleration : P.airDeceleration)
+            : (GroundState.IsEffectivelyGrounded ? P.groundAcceleration : P.airAcceleration);
 
-        if (Mathf.Abs(currentPhysX) > 0.01f && Mathf.Sign(tgtX) != Mathf.Sign(currentPhysX) && !GroundState.IsGrounded)
+        if (Mathf.Abs(currentPhysX) > 0.01f && Mathf.Sign(tgtX) != Mathf.Sign(currentPhysX) && !GroundState.IsEffectivelyGrounded)
             acc *= 1.15f;
 
         float nextPhysX = Mathf.MoveTowards(currentPhysX, tgtX, acc * Time.fixedDeltaTime);
@@ -629,12 +618,7 @@ public class PlayerMovement : MonoBehaviour
     public bool IsInvincible() => IsDashing && dashData != null && currentDashFrame <= dashData.startupFrames + dashData.activeFrames;
     public bool IsInDashRecovery() => IsDashing && dashData != null && currentDashFrame > dashData.startupFrames + dashData.activeFrames;
 
-    private IEnumerator PlungeAfterimageRoutine()
-    {
-        float last = -dashAfterimageSpawnInterval, elapsed = 0f;
-        while (!GroundState.IsGrounded) { if (elapsed - last >= dashAfterimageSpawnInterval) { SpawnAfterimage(); last = elapsed; } elapsed += Time.deltaTime; yield return null; }
-        plungeAfterimageCoroutine = null;
-    }
+
 
     public void SpawnUltimateBurst(int count, float interval) => StartCoroutine(UltimateBurstRoutine(count, interval));
     private IEnumerator UltimateBurstRoutine(int count, float interval) { for (int i = 0; i < count; i++) { SpawnAfterimage(); yield return new WaitForSeconds(interval); } }

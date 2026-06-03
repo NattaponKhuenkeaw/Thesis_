@@ -58,6 +58,10 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
     public override void Exit()
     {
+        GroundStateAuthority authorityOnExit = player.Movement != null
+            ? player.Movement.GroundState.Authority
+            : GroundStateAuthority.Physical;
+
         EndActiveActionEventSequence();
         StopAfterImageTrails();
         TryStartCooldown();
@@ -77,13 +81,17 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             else
                 player.Combat.ResetCombo();
 
-            player.Combat.SetPlungeFalling(false);
             player.Combat.SetAirborneGravityScale(1f); // Restore gravity
         }
 
         if (player.Combat != null)
         {
             player.Combat.OnGrabConnected -= HandleGrabConnected;
+        }
+
+        if (player.Movement != null && authorityOnExit == GroundStateAuthority.ForceAirborne)
+        {
+            player.Movement.GroundState.ClearAuthority();
         }
 
         base.Exit();
@@ -94,6 +102,8 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
     public override void Update()
     {
+        UpdateGroundAuthorityGuardrail();
+
         // Check for landing BEFORE base.Update() advances frames, so we can interrupt cleanly
         bool isMovingUp = player.Movement != null && player.Movement.VerticalVelocity > 0.1f;
         if (player.Movement != null && player.Movement.GroundState.IsEffectivelyGrounded && !prevFrameGrounded && !isMovingUp)
@@ -130,7 +140,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         }
 
         // --- Continuous Gravity Update ---
-        // Ensures ground-to-air transitions (via motionData) react instantly.
+        // Keeps gravity synced with the current action authority after ground/air promotion decisions.
         UpdateGravityScale(currentPhase, GetRecoveryProgress());
 
         if (player.Combat != null && player.Combat.IsAttacking() && currentPhase == ActionPhase.Active)
@@ -343,8 +353,17 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     protected virtual InputContext BuildInputContext()
     {
         ActionInputBuffer buffer = fsm.InputBuffer;
-        bool physicallyGrounded = player.Movement != null && player.Movement.GroundState.IsEffectivelyGrounded;
-        bool actionGrounded = player.Movement != null && player.Movement.IsGroundedForActionSelection();
+        bool logicallyGrounded = player.Movement != null && player.Movement.GroundState.IsEffectivelyGrounded;
+        
+        bool actionGrounded;
+        if (player.Combat != null && player.Combat.IsAttacking())
+        {
+            actionGrounded = logicallyGrounded;
+        }
+        else
+        {
+            actionGrounded = player.Movement != null && player.Movement.IsGroundedForActionSelection();
+        }
 
         return new InputContext
         {
@@ -355,7 +374,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             hasGrabbedEnemy = player.Combat != null && player.Combat.HasGrabbedEnemy(),
             hasPreviouslyGrabbedEnemy = player.Combat != null && player.Combat.HadGrabAtStepStart,
             isAgainstWall = player.Movement != null && player.Movement.IsAgainstWall(),
-            wasAirborne = !prevFrameGrounded && physicallyGrounded,
+            wasAirborne = !prevFrameGrounded && logicallyGrounded,
             isAirCombo = player.Combat != null && player.Combat.IsAirCombo,
             passiveController = player.PassiveController,
             runtimeState = player.PassiveController != null ? player.PassiveController.RuntimeState : null
@@ -386,7 +405,13 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             player.Movement.ForceFaceDirectionFromInput(ctx.directionalInput);
         }
 
+        player.Combat?.BeginResolvedAction(
+            ctx.isGrounded,
+            !ctx.isGrounded,
+            resolver.ActiveCombatAction != null && resolver.ActiveCombatAction.allowGroundToAirTransition);
+
         player.Combat?.ExecuteStep(step, resolver.TreeDepth, !ctx.isGrounded, GetAttackCategory(), resolver.ActiveCombatAction?.actionName, isAutoChain);
+        UpdateGroundAuthorityGuardrail();
         RestartAction();
     }
 
@@ -870,6 +895,66 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             player.Combat.ResetCombo();
             ExitToAppropriateMovementState();
         }
+    }
+
+    private void UpdateGroundAuthorityGuardrail()
+    {
+        if (player.Movement == null)
+        {
+            return;
+        }
+
+        if (player.Combat == null || !player.Combat.IsAttacking())
+        {
+            if (player.Movement.GroundState.Authority == GroundStateAuthority.ForceAirborne)
+            {
+                player.Movement.GroundState.ClearAuthority();
+            }
+
+            return;
+        }
+
+        if (player.Combat.IsAirCombo)
+        {
+            if (player.Movement.IsPhysicallyGrounded() && player.Movement.VerticalVelocity <= 0.1f)
+            {
+                player.Movement.GroundState.ClearAuthority();
+            }
+            else
+            {
+                player.Movement.GroundState.SetAuthority(GroundStateAuthority.ForceAirborne);
+            }
+
+            return;
+        }
+
+        if (player.Combat.CurrentActionAllowsGroundToAirTransition)
+        {
+            if (!player.Movement.IsPhysicallyGrounded())
+            {
+                player.Combat.SetAirCombo(true);
+                player.Movement.GroundState.SetAuthority(GroundStateAuthority.ForceAirborne);
+
+                if (player.Animator != null)
+                {
+                    player.Animator.RestoreAirborneState();
+                }
+            }
+            else
+            {
+                player.Movement.GroundState.ClearAuthority();
+            }
+
+            return;
+        }
+
+        if (player.Combat.CurrentActionStartedGrounded)
+        {
+            player.Movement.GroundState.SetAuthority(GroundStateAuthority.StickyGrounded);
+            return;
+        }
+
+        player.Movement.GroundState.ClearAuthority();
     }
 
     // =========================================================

@@ -22,6 +22,10 @@ public abstract class CombatAction
     public CombatActionContext context = CombatActionContext.Ground;
     public int priority = 0;
     [SerializeReference] public List<ActionConditionBase> conditions = new List<ActionConditionBase>();
+
+    [Header("Ground Authority")]
+    [Tooltip("If this action starts on the ground, losing physical ground contact is allowed to promote it into an airborne action state.")]
+    public bool allowGroundToAirTransition = false;
     
     [Header("Combo Tree")]
     public ComboTree comboTree;
@@ -240,15 +244,22 @@ public class StandaloneAction : CombatAction
 
     [Header("Plunge Behavior")]
     [Tooltip("If true, this standalone action uses the plunge flow: charge/root step -> dive step -> landing impact.")]
+    [System.Obsolete("Plunge flow is deprecated at runtime.")]
     public bool isPlungeAction = false;
+    [System.Obsolete("Plunge flow is deprecated at runtime.")]
     public float plungeChargeLift = 1.5f;
+    [System.Obsolete("Plunge flow is deprecated at runtime.")]
     public float plungeDownwardSpeed = 18f;
+    [System.Obsolete("Plunge flow is deprecated at runtime.")]
     public float plungeStrikeSteeringStrength = DefaultStrikeSteeringStrength;
+    [System.Obsolete("Plunge flow is deprecated at runtime.")]
     public float plungeStrikeMaxHorizontalRedirect = DefaultStrikeSteeringMaxRedirect;
+    [System.Obsolete("Plunge flow is deprecated at runtime.")]
     public bool updateFacingDuringPlungeStrike = true;
 
     [Header("Legacy Plunge Fallback (Obsolete)")]
     [Tooltip("Used only when no plunge dive step is authored in comboTree.")]
+    [System.Obsolete("Plunge flow is deprecated at runtime.")]
     public string plungeFallAnimState = "Plunge_Fall";
 
     public ComboNode GetEntryNode()

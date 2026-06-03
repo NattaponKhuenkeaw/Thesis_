@@ -1,0 +1,3648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neo-JJK | Game Design Document</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* CSS Reset & Variables - JJK Shibuya & Kowloon Gritty Neon Theme */
+        :root {
+            --bg-main: #060709;      /* Dark ink black */
+            --bg-sidebar: #090a0d;   /* Gritty concrete black */
+            --bg-card: #0e1015;      /* Dark alley concrete */
+            --bg-card-hover: #131720; /* Slightly lit concrete */
+            --border-color: #242a38;  /* Steel border */
+            --border-heavy: 2px solid var(--border-color);
+            
+            --accent-red: #ff2a5f;    /* Shibuya Blood / Cursed Crimson */
+            --accent-cyan: #00ffd2;   /* Neon Cursed Energy Blue-Green */
+            --accent-yellow: #ffd000; /* Kowloon Taxi Amber / Neon Sign Gold */
+            --accent-purple: #ae48ff; /* Waifu Aura Violet */
+            --accent-blue: #005fff;   /* Deep Tech Blue */
+            
+            --text-primary: #ffffff;
+            --text-secondary: #a3aab6;
+            --text-muted: #5e6675;
+            
+            --glow-cyan: rgba(0, 255, 210, 0.15);
+            --glow-purple: rgba(174, 72, 255, 0.15);
+            --glow-red: rgba(255, 42, 95, 0.18);
+            --glow-yellow: rgba(255, 208, 0, 0.15);
+            
+            --gradient-cyan: linear-gradient(135deg, var(--accent-cyan) 0%, #00bcff 100%);
+            --gradient-purple: linear-gradient(135deg, var(--accent-purple) 0%, #ff5be2 100%);
+            --gradient-danger: linear-gradient(135deg, var(--accent-red) 0%, #ff7b00 100%);
+            --gradient-yellow: linear-gradient(135deg, var(--accent-yellow) 0%, #ff6c00 100%);
+            --gradient-success: linear-gradient(135deg, #00f585 0%, #00ffd2 100%);
+            
+            --sidebar-width: 300px;
+            --transition-speed: 0.25s;
+            --font-main: 'Outfit', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            /* Concrete grid texture */
+            background-image: 
+                radial-gradient(rgba(255, 42, 95, 0.04) 1px, transparent 0),
+                radial-gradient(rgba(0, 255, 210, 0.04) 1px, transparent 0);
+            background-size: 24px 24px;
+            background-position: 0 0, 12px 12px;
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            display: flex;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-main);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 0px;
+            border: 1px solid var(--accent-red);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-red);
+        }
+
+        /* Sidebar Styling */
+        aside {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background-color: var(--bg-sidebar);
+            border-right: 2px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            padding: 1.5rem 1rem;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+            padding: 0 0.5rem;
+            border-bottom: 2px dashed rgba(255, 42, 95, 0.15);
+            padding-bottom: 1rem;
+        }
+
+        .logo-title {
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 0 var(--accent-red), -1px -1px 0 var(--accent-cyan);
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-container i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.2rem;
+            background-color: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            font-size: 0.9rem;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-red);
+            box-shadow: 0 0 10px var(--glow-red);
+        }
+
+        .nav-links {
+            list-style: none;
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-right: 0.25rem;
+        }
+
+        .nav-links li {
+            margin-bottom: 0.35rem;
+        }
+
+        .nav-links a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.65rem 0.75rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+            background-color: var(--bg-card);
+            border-color: var(--border-color);
+            padding-left: 1rem;
+        }
+
+        .nav-links a.active {
+            color: var(--accent-red);
+            background-color: rgba(255, 42, 95, 0.05);
+            border-left: 4px solid var(--accent-red);
+            border-top: 1px solid rgba(255, 42, 95, 0.1);
+            border-bottom: 1px solid rgba(255, 42, 95, 0.1);
+            font-weight: 800;
+        }
+
+        /* Main Content Styling */
+        main {
+            margin-left: var(--sidebar-width);
+            flex-grow: 1;
+            padding: 2.5rem 4rem;
+            max-width: calc(100vw - var(--sidebar-width));
+            min-height: 100vh;
+        }
+
+        /* Header Hero section - Shibuya Cursed Zone style */
+        .hero {
+            position: relative;
+            background: linear-gradient(135deg, #0d0f14 0%, #060709 100%);
+            border: 2px solid var(--accent-red);
+            border-radius: 4px;
+            padding: 3.5rem;
+            margin-bottom: 3rem;
+            overflow: hidden;
+            box-shadow: 0 0 30px var(--glow-red);
+        }
+
+        /* Danger warning stripe overlays */
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: repeating-linear-gradient(45deg, var(--accent-yellow), var(--accent-yellow) 10px, #000 10px, #000 20px);
+            z-index: 2;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -50%;
+            right: -10%;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255, 42, 95, 0.08) 0%, transparent 60%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .hero-label {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            background: rgba(255, 42, 95, 0.1);
+            border: 1.5px solid var(--accent-red);
+            color: var(--accent-red);
+            border-radius: 0px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            margin-bottom: 1.2rem;
+            z-index: 1;
+            position: relative;
+        }
+
+        .hero-title {
+            font-size: 3.2rem;
+            font-weight: 900;
+            letter-spacing: -1px;
+            margin-bottom: 1rem;
+            z-index: 1;
+            position: relative;
+            text-transform: uppercase;
+            color: #fff;
+            text-shadow: 3px 3px 0 var(--accent-red), -2px -2px 0 var(--accent-cyan);
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 750px;
+            margin-bottom: 1.5rem;
+            z-index: 1;
+            position: relative;
+            border-left: 3px solid var(--accent-yellow);
+            padding-left: 1rem;
+        }
+
+        .hero-meta {
+            display: flex;
+            gap: 2rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            z-index: 1;
+            position: relative;
+            border-top: 2px dashed var(--border-color);
+            padding-top: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .hero-meta span strong {
+            color: var(--text-secondary);
+        }
+
+        /* Generic Section Elements */
+        section {
+            margin-bottom: 4.5rem;
+            scroll-margin-top: 2rem;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.8rem;
+            font-weight: 900;
+            margin-bottom: 1.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .section-header::before {
+            content: "// ";
+            color: var(--accent-red);
+            font-family: var(--font-code);
+            font-weight: 700;
+        }
+
+        .section-header i {
+            display: none; /* remove default icon for gritty title headers */
+        }
+
+        p {
+            color: var(--text-secondary);
+            margin-bottom: 1.25rem;
+            font-size: 1.05rem;
+            max-width: 900px;
+        }
+
+        /* Accent Alert Boxes */
+        .callout {
+            border: 2px solid var(--border-color);
+            border-left: 6px solid var(--accent-cyan);
+            border-radius: 4px;
+            padding: 1.25rem 1.5rem;
+            margin: 1.5rem 0;
+            max-width: 900px;
+            background-color: var(--bg-card);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .callout.danger {
+            border-left-color: var(--accent-red);
+            background: linear-gradient(90deg, rgba(255, 42, 95, 0.03) 0%, var(--bg-card) 100%);
+        }
+        
+        .callout.warning {
+            border-left-color: var(--accent-yellow);
+            background: linear-gradient(90deg, rgba(255, 208, 0, 0.03) 0%, var(--bg-card) 100%);
+        }
+
+        .callout.success {
+            border-left-color: var(--accent-cyan);
+        }
+
+        .callout-title {
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .callout.danger .callout-title { color: var(--accent-red); }
+        .callout.warning .callout-title { color: var(--accent-yellow); }
+        .callout.success .callout-title { color: var(--accent-cyan); }
+        .callout.info .callout-title { color: var(--accent-cyan); }
+
+        .callout p {
+            margin-bottom: 0;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        /* Pillars Grid */
+        .pillars-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+            max-width: 950px;
+        }
+
+        .pillar-card {
+            background-color: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1.75rem;
+            transition: all var(--transition-speed) ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pillar-card:hover {
+            transform: translate(-4px, -4px);
+            border-color: var(--accent-red);
+            box-shadow: 4px 4px 0 var(--accent-cyan), 0 0 20px var(--glow-red);
+        }
+
+        .pillar-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--gradient-danger);
+            opacity: 0;
+            transition: opacity var(--transition-speed) ease;
+        }
+
+        .pillar-card:hover::after {
+            opacity: 1;
+        }
+
+        .pillar-card i {
+            font-size: 2rem;
+            margin-bottom: 1.25rem;
+            background: var(--gradient-danger);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+
+        .pillar-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 0.75rem;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        .pillar-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            flex-grow: 1;
+        }
+
+        /* Styled Tables - Kowloon Dark Street Market style */
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 4px;
+            border: 2px solid var(--border-color);
+            margin: 1.5rem 0 2.5rem 0;
+            max-width: 950px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.95rem;
+        }
+
+        th {
+            background-color: var(--bg-sidebar);
+            color: var(--accent-yellow);
+            padding: 1.1rem 1.25rem;
+            font-weight: 900;
+            border-bottom: 2px solid var(--border-color);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        td {
+            padding: 1.1rem 1.25rem;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--bg-card);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: var(--bg-card-hover);
+            color: #fff;
+        }
+
+        td strong {
+            color: var(--accent-red);
+        }
+
+        /* Image Display Grid / Card */
+        .media-card {
+            background-color: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1.25rem;
+            max-width: 900px;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .media-frame {
+            border-radius: 2px;
+            overflow: hidden;
+            background-color: #000;
+            margin-bottom: 1rem;
+            position: relative;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            transition: all var(--transition-speed) ease;
+        }
+
+        .media-frame:hover {
+            border-color: var(--accent-red);
+            box-shadow: 0 0 20px var(--glow-red);
+        }
+
+        .media-frame img {
+            width: 100%;
+            height: auto;
+            max-height: 480px;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.5s ease;
+        }
+
+        .media-frame:hover img {
+            transform: scale(1.02);
+        }
+
+        .media-caption {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .media-caption i {
+            color: var(--accent-red);
+        }
+
+        /* Keycaps Controls */
+        .key {
+            display: inline-block;
+            min-width: 28px;
+            padding: 3px 6px;
+            font-family: var(--font-code);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            background: #151821;
+            border: 2px solid var(--border-color);
+            border-bottom: 4px solid var(--border-color);
+            border-radius: 4px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            margin: 0 2px;
+        }
+
+        /* Tabs styling - Cyberpunk Console style */
+        .tabs-container {
+            margin: 2rem 0;
+            max-width: 900px;
+        }
+
+        .tabs-header {
+            display: flex;
+            gap: 0.25rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0px;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: 2px solid transparent;
+            border-bottom: none;
+            color: var(--text-secondary);
+            font-family: var(--font-main);
+            font-size: 1rem;
+            font-weight: 800;
+            padding: 0.6rem 1.5rem;
+            border-radius: 4px 4px 0 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tab-btn:hover {
+            color: #fff;
+            background-color: var(--bg-card);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-red);
+            background-color: var(--bg-card);
+            border-color: var(--border-color) var(--border-color) var(--bg-card) var(--border-color);
+            box-shadow: inset 0 3px 0 var(--accent-red);
+        }
+
+        .tab-pane {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Removed vs Kept comparison list */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .comp-card {
+            border-radius: 4px;
+            padding: 1.5rem;
+            background-color: var(--bg-card);
+            border: 2px solid var(--border-color);
+        }
+
+        .comp-card.removed {
+            border-top: 4px solid var(--accent-red);
+            box-shadow: 0 4px 15px var(--glow-red);
+        }
+
+        .comp-card.kept {
+            border-top: 4px solid var(--accent-cyan);
+            box-shadow: 0 4px 15px var(--glow-cyan);
+        }
+
+        .comp-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 900;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .comp-header i {
+            font-size: 1.25rem;
+        }
+
+        .comp-card.removed .comp-header { color: var(--accent-red); }
+        .comp-card.kept .comp-header { color: var(--accent-cyan); }
+
+        .comp-list {
+            list-style: none;
+        }
+
+        .comp-list li {
+            padding: 0.6rem 0;
+            font-size: 0.95rem;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .comp-list li:last-child {
+            border-bottom: none;
+        }
+
+        .comp-list li i {
+            margin-top: 4px;
+        }
+
+        .comp-card.removed .comp-list li i { color: var(--accent-red); }
+        .comp-card.kept .comp-list li i { color: var(--accent-cyan); }
+
+        /* Character kit simulator (Interactive Widget) */
+        .simulator-widget {
+            background-color: var(--bg-sidebar);
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            padding: 2rem;
+            max-width: 900px;
+            margin: 2rem 0;
+            box-shadow: var(--shadow-md);
+            position: relative;
+        }
+
+        .sim-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .sim-title {
+            font-size: 1.3rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-transform: uppercase;
+            color: #fff;
+            text-shadow: 1px 1px 0 var(--accent-red);
+        }
+
+        .char-selector {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .char-select-btn {
+            background-color: var(--bg-card);
+            border: 2px solid var(--border-color);
+            color: var(--text-secondary);
+            font-family: var(--font-main);
+            padding: 0.5rem 1.1rem;
+            border-radius: 0px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+        }
+
+        .char-select-btn.active {
+            background-color: var(--accent-red);
+            color: #fff;
+            border-color: var(--accent-red);
+            box-shadow: 0 0 10px var(--glow-red);
+        }
+
+        .sim-body {
+            display: grid;
+            grid-template-columns: 1fr 1.4fr;
+            gap: 2rem;
+            min-height: 250px;
+        }
+
+        .char-details-panel {
+            background-color: var(--bg-card);
+            border-radius: 4px;
+            padding: 1.25rem;
+            border: 2px solid var(--border-color);
+        }
+
+        .char-role-badge {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            font-size: 0.75rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            border-radius: 0px;
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+
+        .char-role-badge.dps { background-color: rgba(255, 42, 95, 0.15); border: 1.5px solid var(--accent-red); color: var(--accent-red); }
+        .char-role-badge.subdps { background-color: rgba(174, 72, 255, 0.15); border: 1.5px solid var(--accent-purple); color: #c58dfc; }
+        .char-role-badge.support { background-color: rgba(0, 255, 210, 0.15); border: 1.5px solid var(--accent-cyan); color: var(--accent-cyan); }
+
+        .char-name {
+            font-size: 1.6rem;
+            font-weight: 900;
+            margin-bottom: 0.5rem;
+            color: #fff;
+        }
+
+        .char-tagline {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-style: italic;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+        }
+
+        .action-triggers {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .trigger-btn {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--bg-card);
+            border: 2px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.7rem 1.1rem;
+            border-radius: 0px;
+            font-family: var(--font-main);
+            font-weight: 800;
+            text-align: left;
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+            text-transform: uppercase;
+        }
+
+        .trigger-btn:hover {
+            border-color: var(--accent-cyan);
+            background-color: var(--bg-card-hover);
+            box-shadow: 0 0 10px var(--glow-cyan);
+        }
+
+        .trigger-btn.executing {
+            border-color: var(--accent-red);
+            box-shadow: 0 0 15px var(--glow-red);
+            background: rgba(255, 42, 95, 0.05);
+        }
+
+        /* Terminal with scanlines CRT effect */
+        .sim-console-panel {
+            display: flex;
+            flex-direction: column;
+            background-color: #050608;
+            border-radius: 4px;
+            border: 2px solid var(--border-color);
+            padding: 1.25rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Scanline Overlay */
+        .sim-console-panel::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .console-title {
+            font-family: var(--font-code);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--accent-yellow);
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+        }
+
+        .frame-visualizer {
+            background-color: #0b0c10;
+            border: 2px solid var(--border-color);
+            height: 36px;
+            border-radius: 0px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            display: flex;
+            position: relative;
+        }
+
+        .frame-phase {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 900;
+            color: #000;
+            text-transform: uppercase;
+        }
+
+        .frame-phase.windup { background: var(--accent-yellow); }
+        .frame-phase.active-phase { background: var(--accent-red); color: white; }
+        .frame-phase.recovery { background: var(--accent-cyan); }
+
+        .frame-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background-color: #fff;
+            box-shadow: 0 0 8px #fff;
+            transition: left 0.1s linear;
+            display: none;
+        }
+
+        .console-output {
+            flex-grow: 1;
+            background-color: rgba(0,0,0,0.5);
+            border-radius: 0px;
+            padding: 0.75rem;
+            font-family: var(--font-code);
+            font-size: 0.85rem;
+            color: #4ef287;
+            overflow-y: auto;
+            max-height: 160px;
+            border: 1px solid rgba(255,255,255,0.01);
+            z-index: 2;
+        }
+
+        .console-line {
+            margin-bottom: 0.35rem;
+            border-left: 2px solid var(--accent-cyan);
+            padding-left: 0.5rem;
+            animation: consoleLineIn 0.2s ease;
+        }
+
+        /* Stat Upgrade Interactive Calculator */
+        .calc-box {
+            background-color: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1.5rem;
+            max-width: 900px;
+            margin: 2rem 0;
+            display: grid;
+            grid-template-columns: 1.2fr 1.8fr;
+            gap: 2rem;
+        }
+
+        .calc-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .calc-control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .calc-control-group label {
+            font-size: 0.85rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: var(--accent-yellow);
+            letter-spacing: 0.5px;
+        }
+
+        .upgrade-checkbox-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .upgrade-checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .upgrade-checkbox-label input {
+            accent-color: var(--accent-red);
+        }
+
+        .calc-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .calc-stat-card {
+            background-color: rgba(0,0,0,0.3);
+            border: 2px solid var(--border-color);
+            border-radius: 2px;
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .calc-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .calc-stat-value {
+            font-family: var(--font-code);
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: baseline;
+            gap: 0.35rem;
+        }
+
+        .calc-stat-val-orig {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+
+        .calc-stat-diff {
+            font-size: 0.8rem;
+            color: var(--accent-cyan);
+            font-weight: 900;
+        }
+
+        /* 6-Month Roadmap Timeline - Gritty yellow/black caution wire style */
+        .timeline {
+            position: relative;
+            max-width: 900px;
+            margin: 2.5rem 0;
+            padding-left: 2rem;
+            border-left: 3px dashed var(--accent-yellow);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 2.5rem;
+        }
+
+        .timeline-badge {
+            position: absolute;
+            left: calc(-2rem - 10px);
+            top: 4px;
+            width: 18px;
+            height: 18px;
+            border-radius: 0px;
+            background-color: #000;
+            border: 3px solid var(--accent-yellow);
+            box-shadow: 0 0 10px var(--glow-yellow);
+            z-index: 10;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .timeline-item.completed .timeline-badge {
+            background-color: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 10px var(--glow-cyan);
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 0.75rem 1.25rem;
+            background-color: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 0px;
+            transition: all var(--transition-speed) ease;
+            user-select: none;
+        }
+
+        .timeline-header:hover {
+            border-color: var(--accent-red);
+            background-color: var(--bg-card-hover);
+        }
+
+        .timeline-header-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .timeline-month {
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-shadow: 1px 1px 0 var(--accent-red);
+        }
+
+        .timeline-focus {
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .timeline-toggle-icon {
+            color: var(--text-muted);
+            transition: transform var(--transition-speed) ease;
+        }
+
+        .timeline-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0, 1, 0, 1);
+            background-color: rgba(20, 23, 34, 0.2);
+            border-radius: 0px;
+            padding: 0 1.25rem;
+            margin: 0 2px;
+            border: 2px solid transparent;
+            border-top: none;
+        }
+
+        .timeline-item.active .timeline-header {
+            border-radius: 0px;
+            border-color: var(--border-color);
+            border-bottom: 2px dashed var(--border-color);
+        }
+
+        .timeline-item.active .timeline-content {
+            max-height: 1000px;
+            padding: 1.25rem;
+            border-color: var(--border-color);
+            transition: max-height 0.4s cubic-bezier(1, 0, 1, 0);
+        }
+
+        .timeline-item.active .timeline-toggle-icon {
+            transform: rotate(180deg);
+            color: var(--accent-red);
+        }
+
+        .roadmap-check-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255,255,255,0.01);
+        }
+
+        .roadmap-check-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .roadmap-check-item input[type="checkbox"] {
+            margin-top: 4px;
+            accent-color: var(--accent-cyan);
+            cursor: pointer;
+        }
+
+        .roadmap-check-text {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .roadmap-check-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #fff;
+        }
+
+        .roadmap-check-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .roadmap-check-item input[type="checkbox"]:checked ~ .roadmap-check-text .roadmap-check-title {
+            text-decoration: line-through;
+            color: var(--accent-red);
+            opacity: 0.6;
+        }
+
+        /* Directories visual tree view */
+        .directory-tree {
+            font-family: var(--font-code);
+            font-size: 0.85rem;
+            background-color: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            max-width: 900px;
+            color: var(--text-secondary);
+        }
+
+        .tree-line {
+            margin-bottom: 0.25rem;
+            white-space: pre;
+        }
+
+        .tree-comment {
+            color: var(--text-muted);
+        }
+
+        .tree-dir {
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        /* Prototype Debt interactive checklist */
+        .debt-list {
+            list-style: none;
+            max-width: 900px;
+            margin: 1.5rem 0;
+            background-color: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1.5rem;
+        }
+
+        .debt-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+        }
+
+        .debt-item:last-child {
+            border-bottom: none;
+        }
+
+        .debt-item input[type="checkbox"] {
+            margin-top: 4px;
+            accent-color: var(--accent-red);
+            cursor: pointer;
+        }
+
+        .debt-item-label {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            cursor: pointer;
+        }
+
+        .debt-item-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #fff;
+        }
+
+        .debt-item-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .debt-item input[type="checkbox"]:checked ~ .debt-item-label .debt-item-title {
+            text-decoration: line-through;
+            color: var(--accent-red);
+            opacity: 0.6;
+        }
+
+        /* Float To Top Button */
+        .float-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 44px;
+            height: 44px;
+            border-radius: 0px;
+            background-color: var(--bg-card);
+            border: 2px solid var(--border-color);
+            color: var(--accent-red);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+            transition: all var(--transition-speed) ease;
+            z-index: 99;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .float-btn.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .float-btn:hover {
+            border-color: var(--accent-red);
+            background-color: var(--accent-red);
+            color: #fff;
+            transform: translateY(-3px);
+            box-shadow: 0 0 15px var(--glow-red);
+        }
+
+        /* Lightbox Modal */
+        .lightbox-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(5,6,8,0.96);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-out;
+            animation: fadeIn 0.25s ease;
+        }
+
+        .lightbox-img {
+            max-width: 90%;
+            max-height: 85%;
+            border-radius: 0px;
+            border: 2px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            color: #fff;
+            font-size: 2.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Lore box */
+        .lore-box {
+            background: linear-gradient(135deg, rgba(255, 42, 95, 0.05) 0%, rgba(14, 16, 21, 0.5) 100%);
+            border: 2px solid rgba(255, 42, 95, 0.3);
+            border-radius: 4px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            position: relative;
+            max-width: 900px;
+        }
+
+        .lore-box::before {
+            content: "LORE FILE";
+            position: absolute;
+            top: -12px;
+            left: 16px;
+            background-color: var(--bg-main);
+            color: var(--accent-red);
+            padding: 2px 10px;
+            font-size: 0.75rem;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            border: 2.5px solid rgba(255, 42, 95, 0.3);
+            border-radius: 0px;
+        }
+
+        .lore-box p {
+            color: #ffe6eb;
+            font-style: normal;
+            font-size: 1rem;
+            line-height: 1.7;
+            margin-bottom: 0;
+            border-left: 2px solid var(--accent-yellow);
+            padding-left: 1rem;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 1024px) {
+            aside {
+                width: 70px;
+                padding: 1.5rem 0.5rem;
+            }
+            .logo-title, .search-container, .nav-links span {
+                display: none;
+            }
+            .logo-area {
+                justify-content: center;
+                border-bottom: none;
+            }
+            .nav-links a {
+                justify-content: center;
+                padding: 0.75rem;
+            }
+            main {
+                margin-left: 70px;
+                max-width: calc(100vw - 70px);
+                padding: 2rem 2rem;
+            }
+            .calc-box {
+                grid-template-columns: 1fr;
+            }
+            .sim-body {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            main {
+                padding: 1.5rem 1rem;
+            }
+            .hero {
+                padding: 2rem 1.5rem;
+            }
+            .hero-title {
+                font-size: 2.25rem;
+            }
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+            .timeline-header-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.25rem;
+            }
+        }
+            width: 100%;
+            height: auto;
+            max-height: 480px;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.5s ease;
+        }
+
+        .media-frame:hover img {
+            transform: scale(1.02);
+        }
+
+        .media-caption {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .media-caption i {
+            color: var(--accent-cyan);
+        }
+
+        /* Keycaps Controls */
+        .key {
+            display: inline-block;
+            min-width: 28px;
+            padding: 3px 6px;
+            font-family: var(--font-code);
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            background: linear-gradient(180deg, #2d3345 0%, #171a24 100%);
+            border: 1px solid #47516d;
+            border-bottom: 3px solid #141720;
+            border-radius: 4px;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            margin: 0 2px;
+        }
+
+        /* Tabs styling (Interactive) */
+        .tabs-container {
+            margin: 2rem 0;
+            max-width: 900px;
+        }
+
+        .tabs-header {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-family: var(--font-main);
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 0.5rem 1.25rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background-color: var(--bg-card);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-cyan);
+            background-color: rgba(0, 242, 254, 0.08);
+        }
+
+        .tab-pane {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Removed vs Kept comparison list */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .comp-card {
+            border-radius: 12px;
+            padding: 1.5rem;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+        }
+
+        .comp-card.removed {
+            border-top: 4px solid var(--accent-red);
+            box-shadow: 0 4px 15px var(--glow-red);
+        }
+
+        .comp-card.kept {
+            border-top: 4px solid var(--accent-green);
+            box-shadow: 0 4px 15px rgba(0, 176, 155, 0.08);
+        }
+
+        .comp-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 700;
+            font-size: 1.15rem;
+            margin-bottom: 1rem;
+        }
+
+        .comp-header i {
+            font-size: 1.25rem;
+        }
+
+        .comp-card.removed .comp-header { color: var(--accent-red); }
+        .comp-card.kept .comp-header { color: var(--accent-green); }
+
+        .comp-list {
+            list-style: none;
+        }
+
+        .comp-list li {
+            padding: 0.5rem 0;
+            font-size: 0.95rem;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .comp-list li:last-child {
+            border-bottom: none;
+        }
+
+        .comp-list li i {
+            margin-top: 4px;
+        }
+
+        .comp-card.removed .comp-list li i { color: rgba(255, 8, 68, 0.6); }
+        .comp-card.kept .comp-list li i { color: var(--accent-green); }
+
+        /* Character kit simulator (Interactive Widget) */
+        .simulator-widget {
+            background-color: var(--bg-sidebar);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 900px;
+            margin: 2rem 0;
+            box-shadow: var(--shadow-md);
+        }
+
+        .sim-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .sim-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sim-title i {
+            color: var(--accent-cyan);
+        }
+
+        .char-selector {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .char-select-btn {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-family: var(--font-main);
+            padding: 0.4rem 1rem;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .char-select-btn.active {
+            background: var(--gradient-cyan);
+            color: var(--bg-main);
+            border-color: var(--accent-cyan);
+        }
+
+        .sim-body {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 2rem;
+            min-height: 250px;
+        }
+
+        .char-details-panel {
+            background-color: var(--bg-card);
+            border-radius: 10px;
+            padding: 1.25rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .char-role-badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            border-radius: 4px;
+            margin-bottom: 0.75rem;
+        }
+
+        .char-role-badge.dps { background-color: rgba(255, 8, 68, 0.15); border: 1px solid var(--accent-red); color: #ff527b; }
+        .char-role-badge.subdps { background-color: rgba(155, 93, 229, 0.15); border: 1px solid var(--accent-purple); color: #c58dfc; }
+        .char-role-badge.support { background-color: rgba(0, 176, 155, 0.15); border: 1px solid var(--accent-green); color: #2ff3dd; }
+
+        .char-name {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .char-tagline {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-style: italic;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+        }
+
+        .action-triggers {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .trigger-btn {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.65rem 1rem;
+            border-radius: 6px;
+            font-family: var(--font-main);
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .trigger-btn:hover {
+            border-color: var(--accent-cyan);
+            background-color: var(--bg-card-hover);
+        }
+
+        .trigger-btn.executing {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 10px rgba(155, 93, 229, 0.2);
+        }
+
+        .sim-console-panel {
+            display: flex;
+            flex-direction: column;
+            background-color: #0c0e14;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            padding: 1.25rem;
+        }
+
+        .console-title {
+            font-family: var(--font-code);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .frame-visualizer {
+            background-color: rgba(255,255,255,0.02);
+            border: 1px solid var(--border-color);
+            height: 36px;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            display: flex;
+            position: relative;
+        }
+
+        .frame-phase {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--bg-main);
+            transition: width 0.3s ease;
+        }
+
+        .frame-phase.windup { background: #ffd200; }
+        .frame-phase.active-phase { background: #ff0844; color: white; }
+        .frame-phase.recovery { background: #00f2fe; }
+
+        .frame-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 2px;
+            height: 100%;
+            background-color: #fff;
+            box-shadow: 0 0 8px #fff;
+            transition: left 0.1s linear;
+            display: none;
+        }
+
+        .console-output {
+            flex-grow: 1;
+            background-color: rgba(0,0,0,0.3);
+            border-radius: 6px;
+            padding: 0.75rem;
+            font-family: var(--font-code);
+            font-size: 0.85rem;
+            color: #4ef287;
+            overflow-y: auto;
+            max-height: 160px;
+            border: 1px solid rgba(255,255,255,0.02);
+        }
+
+        .console-line {
+            margin-bottom: 0.35rem;
+            border-left: 2px solid #4ef287;
+            padding-left: 0.5rem;
+            animation: consoleLineIn 0.2s ease;
+        }
+
+        @keyframes consoleLineIn {
+            from { opacity: 0; transform: translateX(-5px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Stat Upgrade Interactive Calculator */
+        .calc-box {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            max-width: 900px;
+            margin: 2rem 0;
+            display: grid;
+            grid-template-columns: 1.2fr 1.8fr;
+            gap: 2rem;
+        }
+
+        .calc-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .calc-control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .calc-control-group label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        .upgrade-checkbox-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .upgrade-checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .upgrade-checkbox-label input {
+            accent-color: var(--accent-cyan);
+        }
+
+        .calc-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .calc-stat-card {
+            background-color: rgba(0,0,0,0.2);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .calc-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .calc-stat-value {
+            font-family: var(--font-code);
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: baseline;
+            gap: 0.35rem;
+        }
+
+        .calc-stat-val-orig {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+
+        .calc-stat-diff {
+            font-size: 0.8rem;
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        /* 6-Month Roadmap Timeline */
+        .timeline {
+            position: relative;
+            max-width: 900px;
+            margin: 2.5rem 0;
+            padding-left: 2rem;
+            border-left: 2px solid var(--border-color);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 2.5rem;
+        }
+
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .timeline-badge {
+            position: absolute;
+            left: calc(-2rem - 9px);
+            top: 4px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: var(--bg-main);
+            border: 3px solid var(--accent-cyan);
+            box-shadow: 0 0 10px var(--glow-cyan);
+            z-index: 10;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .timeline-item.completed .timeline-badge {
+            background-color: var(--accent-cyan);
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 0.75rem 1.25rem;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            transition: all var(--transition-speed) ease;
+            user-select: none;
+        }
+
+        .timeline-header:hover {
+            border-color: var(--accent-cyan);
+            background-color: var(--bg-card-hover);
+        }
+
+        .timeline-header-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .timeline-month {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .timeline-focus {
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .timeline-toggle-icon {
+            color: var(--text-muted);
+            transition: transform var(--transition-speed) ease;
+        }
+
+        .timeline-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0, 1, 0, 1);
+            background-color: rgba(20, 23, 34, 0.2);
+            border-radius: 0 0 8px 8px;
+            padding: 0 1.25rem;
+            margin: 0 1px;
+            border: 1px solid transparent;
+            border-top: none;
+        }
+
+        .timeline-item.active .timeline-header {
+            border-radius: 8px 8px 0 0;
+            border-color: var(--border-color);
+        }
+
+        .timeline-item.active .timeline-content {
+            max-height: 1000px;
+            padding: 1.25rem;
+            border-color: var(--border-color);
+            transition: max-height 0.4s cubic-bezier(1, 0, 1, 0);
+        }
+
+        .timeline-item.active .timeline-toggle-icon {
+            transform: rotate(180deg);
+            color: var(--accent-cyan);
+        }
+
+        .roadmap-check-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+        }
+
+        .roadmap-check-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .roadmap-check-item input[type="checkbox"] {
+            margin-top: 4px;
+            accent-color: var(--accent-cyan);
+            cursor: pointer;
+        }
+
+        .roadmap-check-text {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .roadmap-check-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .roadmap-check-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .roadmap-check-item input[type="checkbox"]:checked ~ .roadmap-check-text .roadmap-check-title {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        /* Directories visual tree view */
+        .directory-tree {
+            font-family: var(--font-code);
+            font-size: 0.85rem;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            max-width: 900px;
+            color: var(--text-secondary);
+        }
+
+        .tree-line {
+            margin-bottom: 0.25rem;
+            white-space: pre;
+        }
+
+        .tree-comment {
+            color: var(--text-muted);
+        }
+
+        .tree-dir {
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        /* Prototype Debt interactive checklist */
+        .debt-list {
+            list-style: none;
+            max-width: 900px;
+            margin: 1.5rem 0;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .debt-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .debt-item:last-child {
+            border-bottom: none;
+        }
+
+        .debt-item input[type="checkbox"] {
+            margin-top: 4px;
+            accent-color: var(--accent-cyan);
+            cursor: pointer;
+        }
+
+        .debt-item-label {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            cursor: pointer;
+        }
+
+        .debt-item-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .debt-item-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .debt-item input[type="checkbox"]:checked ~ .debt-item-label .debt-item-title {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        /* Float To Top Button */
+        .float-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+            transition: all var(--transition-speed) ease;
+            z-index: 99;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .float-btn.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .float-btn:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px var(--glow-cyan);
+        }
+
+        /* Lightbox Modal */
+        .lightbox-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(5,6,8,0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-out;
+            animation: fadeIn 0.25s ease;
+        }
+
+        .lightbox-img {
+            max-width: 90%;
+            max-height: 85%;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            color: var(--text-primary);
+            font-size: 2rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* Lore box */
+        .lore-box {
+            background: linear-gradient(135deg, rgba(155, 93, 229, 0.04) 0%, rgba(248, 87, 166, 0.04) 100%);
+            border: 1px solid rgba(155, 93, 229, 0.25);
+            border-radius: 12px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            position: relative;
+            max-width: 900px;
+        }
+
+        .lore-box::before {
+            content: "LORE";
+            position: absolute;
+            top: -12px;
+            left: 16px;
+            background-color: var(--bg-main);
+            color: var(--accent-purple);
+            padding: 2px 10px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            border-radius: 4px;
+            border: 1px solid rgba(155, 93, 229, 0.25);
+        }
+
+        .lore-box p {
+            color: #d1c4e9;
+            font-style: italic;
+            font-size: 1rem;
+            line-height: 1.7;
+            margin-bottom: 0;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 1024px) {
+            aside {
+                width: 70px;
+                padding: 1.5rem 0.5rem;
+            }
+            .logo-title, .search-container, .nav-links span {
+                display: none;
+            }
+            .logo-area {
+                justify-content: center;
+            }
+            .nav-links a {
+                justify-content: center;
+                padding: 0.75rem;
+            }
+            main {
+                margin-left: 70px;
+                max-width: calc(100vw - 70px);
+                padding: 2rem 2rem;
+            }
+            .calc-box {
+                grid-template-columns: 1fr;
+            }
+            .sim-body {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            main {
+                padding: 1.5rem 1rem;
+            }
+            .hero {
+                padding: 2rem 1.5rem;
+            }
+            .hero-title {
+                font-size: 2.25rem;
+            }
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+            .timeline-header-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <aside>
+        <div class="logo-area">
+            <i class="fa-solid fa-gamepad" style="font-size: 1.8rem; color: var(--accent-cyan);"></i>
+            <span class="logo-title">Neo-JJK GDD</span>
+        </div>
+        
+        <div class="search-container">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" class="search-input" id="gddSearch" placeholder="Search document...">
+        </div>
+
+        <ul class="nav-links">
+            <li><a href="#purpose" class="active"><i class="fa-solid fa-bullseye"></i> <span>Purpose & Constraint</span></a></li>
+            <li><a href="#identity"><i class="fa-solid fa-address-card"></i> <span>Project Identity</span></a></li>
+            <li><a href="#visuals"><i class="fa-solid fa-wand-magic-sparkles"></i> <span>Visual & Mood</span></a></li>
+            <li><a href="#inputs"><i class="fa-solid fa-keyboard"></i> <span>Controls & Inputs</span></a></li>
+            <li><a href="#core-loop"><i class="fa-solid fa-rotate"></i> <span>Core Loops</span></a></li>
+            <li><a href="#combat"><i class="fa-solid fa-shield-halved"></i> <span>Combat Direction</span></a></li>
+            <li><a href="#characters"><i class="fa-solid fa-user-gear"></i> <span>Character Kit Design</span></a></li>
+            <li><a href="#progression"><i class="fa-solid fa-gem"></i> <span>Rogue-Lite Progression</span></a></li>
+            <li><a href="#items-enemies"><i class="fa-solid fa-dragon"></i> <span>Items & Enemies</span></a></li>
+            <li><a href="#bosses"><i class="fa-solid fa-skull"></i> <span>Boss Battles</span></a></li>
+            <li><a href="#inspirations"><i class="fa-solid fa-lightbulb"></i> <span>Inspirations</span></a></li>
+            <li><a href="#tech-stack"><i class="fa-solid fa-server"></i> <span>Project Tech Stack</span></a></li>
+            <li><a href="#prototype-truth"><i class="fa-solid fa-code-compare"></i> <span>Prototype Truth</span></a></li>
+            <li><a href="#roadmap"><i class="fa-solid fa-timeline"></i> <span>6-Month Roadmap</span></a></li>
+        </ul>
+    </aside>
+
+    <!-- FLOATING TOP BUTTON -->
+    <button class="float-btn" id="scrollTopBtn" title="Go to top">
+        <i class="fa-solid fa-arrow-up"></i>
+    </button>
+
+    <!-- LIGHTBOX MODAL -->
+    <div class="lightbox-modal" id="lightboxModal">
+        <button class="lightbox-close"><i class="fa-solid fa-xmark"></i></button>
+        <img class="lightbox-img" src="" alt="Zoomed view">
+    </div>
+
+    <!-- MAIN BODY -->
+    <main>
+
+        <!-- HERO HEADER -->
+        <div class="hero">
+            <span class="hero-label">Official Authority Design Document</span>
+            <h1 class="hero-title">Neo-JJK Design Specification</h1>
+            <p class="hero-subtitle">Fast, flashy 2D side-scrolling hack-and-slash rogue-lite. Clean codebase, low floor, casual ceiling, and high visual payoff.</p>
+            
+            <div class="hero-meta">
+                <span><i class="fa-solid fa-code-branch"></i> Version: <strong>2.0 (Active)</strong></span>
+                <span><i class="fa-solid fa-clock"></i> Updated: <strong>June 2026</strong></span>
+                <span><i class="fa-solid fa-microchip"></i> Engine: <strong>Unity 6 LTS</strong></span>
+            </div>
+        </div>
+
+        <!-- PURPOSE SECTION -->
+        <section id="purpose">
+            <h2 class="section-header"><i class="fa-solid fa-bullseye"></i> Purpose & Constraints</h2>
+            <p>This document represents the active design authority for <strong>Neo-JJK</strong>, replacing the legacy combat guidelines. Neo-JJK has transitioned away from the fighting-game hybrid style to a highly approachable, fast-paced <strong>2D side-scrolling action hack-and-slash rogue-lite</strong>.</p>
+            
+            <div class="callout warning">
+                <div class="callout-title"><i class="fa-solid fa-triangle-exclamation"></i> Production Hard Constraints</div>
+                <p>The core philosophy governing this design shift is the deliberate elimination of complexity to match development scope:</p>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem; font-size: 0.95rem; color: var(--text-secondary);">
+                    <li><strong>Low development effort</strong> as a priority constraint.</li>
+                    <li><strong>Casual low skill floor & ceiling</strong> — easy onboarding, simple loops.</li>
+                    <li><strong>Simple code logic</strong> over clever, over-engineered systems.</li>
+                    <li><strong>Visual feedback impact (VFX)</strong> over animation frame-perfection.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- PROJECT IDENTITY -->
+        <section id="identity">
+            <h2 class="section-header"><i class="fa-solid fa-address-card"></i> Project Identity</h2>
+            <p>The pillars, core promise, and narrative themes details that establish the context of the game.</p>
+            
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">Field</th>
+                            <th>Direction & Philosophy</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Genre</strong></td>
+                            <td>2D Side-Scrolling Hack-and-Slash Action Rogue-lite</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Core Fantasy</strong></td>
+                            <td>Clear chaotic side-scrolling combat rooms with a small team of flashy characters, swapping them to spend skills, apply buffs, and burst enemies down.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Player Promise</strong></td>
+                            <td>Fast basic action, readable attacks, big VFX, simple upgrades, and easy team rotations.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Dev Philosophy</strong></td>
+                            <td>Clean, systematic, modular architecture. Keep scripts short, single-purpose, and easy to maintain. Avoid hardcoding.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Platform Priority</strong></td>
+                            <td>PC Focus (Keyboard & Mouse authoritative, Gamepad mapped)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="lore-box">
+                <p>"Shin" died and was transported into the Cursed Realm by a spirit waifu named "Blind". He discovered that players contain a Cursed Technique called "Aura" that amplifies their fighting spirit to combat the "Fiends". Time is the ultimate enemy. Dying resets the run, but if players fall behind, they lose their memories and become Fiends themselves. Only 1 out of 50 players can escape back to life.</p>
+            </div>
+
+            <h3 style="font-size: 1.3rem; margin-top: 2rem; margin-bottom: 1rem;">Experience Pillars</h3>
+            <div class="pillars-grid">
+                <div class="pillar-card">
+                    <i class="fa-solid fa-bolt"></i>
+                    <div class="pillar-title">Fast-paced Hack & Slash</div>
+                    <div class="pillar-desc">Prioritizes immediate movement action and flashy visuals over frame-perfect combos. Short learning curve; depth comes from team rotation synergy.</div>
+                </div>
+                <div class="pillar-card">
+                    <i class="fa-solid fa-people-group"></i>
+                    <div class="pillar-title">Beat 'Em & Recruit 'Em</div>
+                    <div class="pillar-desc">Defeating other players (bosses) in the Cursed Realm unlocks them as playable recruits. The Soul Shop acts as the progression hub between runs.</div>
+                </div>
+                <div class="pillar-card">
+                    <i class="fa-solid fa-dice"></i>
+                    <div class="pillar-title">Rogue-lite Mechanics</div>
+                    <div class="pillar-desc">Run-to-run character growth via the Permanent Potential Upgrade System and active/passive Artifact upgrades discovered in the dungeon rooms.</div>
+                </div>
+            </div>
+
+            <!-- GIF Embedding -->
+            <div class="media-card">
+                <div class="media-frame" onclick="openLightbox('https://digitalchumps.com/wp-content/uploads/2024/01/Jin.gif?x96629')">
+                    <img src="https://digitalchumps.com/wp-content/uploads/2024/01/Jin.gif?x96629" alt="Combat Presentation Concept">
+                </div>
+                <div class="media-caption">
+                    <i class="fa-solid fa-image"></i> Target combat presentation: visual impact, speed, slash shapes, and heavy hit reactions.
+                </div>
+            </div>
+        </section>
+
+        <!-- VISUALS AND SOUND -->
+        <section id="visuals">
+            <h2 class="section-header"><i class="fa-solid fa-wand-magic-sparkles"></i> Visual, Mood, and Audio Direction</h2>
+            <p>To support low development effort, the game sells its action through presentation. Short, simple character animations are amplified by grand, flashy effects.</p>
+
+            <div class="pillars-grid">
+                <div class="pillar-card">
+                    <i class="fa-solid fa-eye"></i>
+                    <div class="pillar-title">Art & Silhouette</div>
+                    <div class="pillar-desc">High readability, distinct silhouettes, and heavy, readable hit VFX. Large circular and arc slashes, danger indicators, and projectile tracers. Hollow Knight-level telegraphing.</div>
+                </div>
+                <div class="pillar-card">
+                    <i class="fa-solid fa-clapperboard"></i>
+                    <div class="pillar-title">Combat Presentation</div>
+                    <div class="pillar-desc">Visual impact relies on hit-stop (brief freeze on hits), camera shake relative to damage weight, screenshake on critical triggers, and full-screen ultimate flash elements.</div>
+                </div>
+                <div class="pillar-card">
+                    <i class="fa-solid fa-volume-high"></i>
+                    <div class="pillar-title">Audio feedback</div>
+                    <div class="pillar-desc">Dull impact sounds for blocked or minor hits, sharp cutting sounds for criticals, charging crescendos for ultimates, and distinct audio tells for incoming boss hazards.</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; max-width: 900px; margin: 2rem 0;">
+                <div class="media-card" style="margin: 0; padding: 1rem;">
+                    <div class="media-frame" onclick="openLightbox('https://i.redd.it/p4scnbqwrp991.gif')">
+                        <img src="https://i.redd.it/p4scnbqwrp991.gif" alt="Mood and Silhouette Art Concept" style="height: 160px; object-fit: cover;">
+                    </div>
+                    <div class="media-caption" style="font-size: 0.8rem; margin-top: 0.5rem;">
+                        <i class="fa-solid fa-image"></i> Dark, high-contrast silhouette mood
+                    </div>
+                </div>
+                <div class="media-card" style="margin: 0; padding: 1rem;">
+                    <div class="media-frame" onclick="openLightbox('https://play-lh.googleusercontent.com/en87Nnc-5suECm7xBou8Eux7FV1tQauF5rQwfwQS5KqfGXrTdXsJt_wAXIpxHJ2frNk=w526-h296-rw')">
+                        <img src="https://play-lh.googleusercontent.com/en87Nnc-5suECm7xBou8Eux7FV1tQauF5rQwfwQS5KqfGXrTdXsJt_wAXIpxHJ2frNk=w526-h296-rw" alt="Visual Reference 1" style="height: 160px; object-fit: cover;">
+                    </div>
+                    <div class="media-caption" style="font-size: 0.8rem; margin-top: 0.5rem;">
+                        <i class="fa-solid fa-image"></i> Flashy slash arcs & visual FX tells
+                    </div>
+                </div>
+                <div class="media-card" style="margin: 0; padding: 1rem;">
+                    <div class="media-frame" onclick="openLightbox('https://static.gameloop.com/img/4375ce928cc53fa9963f5133aef4ed2b.jpg?imageMogr2/thumbnail/undefinedxundefined/format/webp')">
+                        <img src="https://static.gameloop.com/img/4375ce928cc53fa9963f5133aef4ed2b.jpg?imageMogr2/thumbnail/undefinedxundefined/format/webp" alt="Visual Reference 2" style="height: 160px; object-fit: cover;">
+                    </div>
+                    <div class="media-caption" style="font-size: 0.8rem; margin-top: 0.5rem;">
+                        <i class="fa-solid fa-image"></i> High-tempo combat flow visuals
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CONTROLS AND INPUTS -->
+        <section id="inputs">
+            <h2 class="section-header"><i class="fa-solid fa-keyboard"></i> Platform and Input Philosophy</h2>
+            <p>PC Keyboard & Mouse controls represent the authoritative design layout. Controllers translate these exact verbs without precision variation.</p>
+            
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">Key Bind</th>
+                            <th style="width: 25%;">Combat Verb</th>
+                            <th>Behavior & Gameplay Logic</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="key">A</span> / <span class="key">D</span></td>
+                            <td>Move Left / Right</td>
+                            <td>Locomotion. Holding left/right influences dash direction.</td>
+                        </tr>
+                        <tr>
+                            <td><span class="key">Space</span></td>
+                            <td>Jump / Double Jump</td>
+                            <td>Vertical navigation. Double jump available for all characters.</td>
+                        </tr>
+                        <tr>
+                            <td><span class="key">LMB</span></td>
+                            <td>Basic Attack (BA)</td>
+                            <td>State-based simple linear attack chain (2-3 strikes).</td>
+                        </tr>
+                        <tr>
+                            <td><span class="key">RMB</span></td>
+                            <td>Skill</td>
+                            <td>Triggers character skill. Interrupts BA. Cooldown-gated.</td>
+                        </tr>
+                        <tr>
+                            <td><span class="key">Shift</span></td>
+                            <td>Dash</td>
+                            <td>Invincibility-frame dash. Responsive interrupt verb.</td>
+                        </tr>
+                        <tr>
+                            <td><span class="key">Q</span></td>
+                            <td>Ultimate</td>
+                            <td>Glow/Slow-mo visual finisher. Interrupts active skills.</td>
+                        </tr>
+                        <tr>
+                            <td><span class="key">1</span> / <span class="key">2</span> / <span class="key">3</span></td>
+                            <td>Team Swap</td>
+                            <td>Swap active character. Toggles team slot. Inherits buffer.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 style="font-size: 1.3rem; margin-top: 2rem; margin-bottom: 1rem;">Authoritative Input Rules</h3>
+            <ul style="margin-left: 1.5rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 0.75rem;">
+                <li><strong>12-Frame Input Buffer:</strong> Inputs pressed within 12 frames prior to current action recovery are cached and executed instantly.</li>
+                <li><strong>Input Type Priority:</strong> Hierarchical evaluation: <em>System/Swap/Dodge &gt; Skill/Ultimate &gt; Jump &gt; Basic Attack &gt; Locomotion</em>. Higher priority overrides current buffer.</li>
+                <li><strong>Team Swap Cancel:</strong> Swapping clones the incoming character into the field with a quick swap attack sequence, while the outgoing character finishes their active state before disappearing.</li>
+            </ul>
+        </section>
+
+        <!-- CORE LOOP -->
+        <section id="core-loop">
+            <h2 class="section-header"><i class="fa-solid fa-rotate"></i> Core Loops</h2>
+            <p>Simplifying the player's core cycle allows them to focus on immediate combat enjoyment and upgrades.</p>
+            
+            <div style="background-color: var(--bg-card); padding: 1.75rem; border: 1px solid var(--border-color); border-radius: 12px; margin: 1.5rem 0; max-width: 900px;">
+                <h4 style="margin-bottom: 1rem; color: var(--accent-cyan); display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-rotate-right"></i> Session Game Loop
+                </h4>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; font-size: 0.95rem; font-family: var(--font-code);">
+                    <span>Choose Team</span> <i class="fa-solid fa-arrow-right" style="color: var(--text-muted);"></i>
+                    <span>Combat Room</span> <i class="fa-solid fa-arrow-right" style="color: var(--text-muted);"></i>
+                    <span>Clear Waves</span> <i class="fa-solid fa-arrow-right" style="color: var(--text-muted);"></i>
+                    <span>Select Reward Upgrade</span> <i class="fa-solid fa-arrow-right" style="color: var(--text-muted);"></i>
+                    <span>Beat Boss / Die</span> <i class="fa-solid fa-arrow-right" style="color: var(--text-muted);"></i>
+                    <span>Permanent Shop Progression</span>
+                </div>
+            </div>
+
+            <div style="background-color: var(--bg-card); padding: 1.75rem; border: 1px solid var(--border-color); border-radius: 12px; max-width: 900px;">
+                <h4 style="margin-bottom: 1rem; color: var(--accent-purple); display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-arrows-spin"></i> Genshin-Style Team Rotation Flow
+                </h4>
+                <p style="font-size: 0.95rem; margin-bottom: 1rem;">Optimal combat output revolves around cycling characters to keep buffs active, rather than manual execution: </p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <strong style="color: var(--accent-red);">1. Main DPS Active</strong>
+                        <p style="font-size: 0.85rem; margin-top: 0.25rem;">Stays on field. Delivers basic chains and counts cooldowns.</p>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <strong style="color: var(--accent-purple);">2. Swap Support/Buff</strong>
+                        <p style="font-size: 0.85rem; margin-top: 0.25rem;">Quick-swap in to place shields, apply elemental states, or summon helpers.</p>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <strong style="color: var(--accent-cyan);">3. Swap Main DPS & Burst</strong>
+                        <p style="font-size: 0.85rem; margin-top: 0.25rem;">Swap back to Main DPS, inheriting active buffs to burst down enemies.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="media-card">
+                <div class="media-frame" onclick="openLightbox('https://digitalchumps.com/wp-content/uploads/2024/01/Gorgeous-action-packed-battles.gif?x96629')">
+                    <img src="https://digitalchumps.com/wp-content/uploads/2024/01/Gorgeous-action-packed-battles.gif?x96629" alt="Fast Paced Room Clearing">
+                </div>
+                <div class="media-caption">
+                    <i class="fa-solid fa-image"></i> Fast room clearing: group targets, cycle roles, deploy ultimate bursts, collect upgrades.
+                </div>
+            </div>
+        </section>
+
+        <!-- COMBAT DIRECTION & REMOVED MECHANICS -->
+        <section id="combat">
+            <h2 class="section-header"><i class="fa-solid fa-shield-halved"></i> Combat Direction</h2>
+            <p>Rotation-based structure replaces legacy combo-routing. The active design focuses on clear roles and simplified reactions.</p>
+            
+            <!-- Removed vs Kept interactive tabs -->
+            <div class="tabs-container">
+                <div class="tabs-header">
+                    <button class="tab-btn active" onclick="switchTab(event, 'kept-tab')">Active Core (Neo-JJK)</button>
+                    <button class="tab-btn" onclick="switchTab(event, 'removed-tab')">Removed Legacy DNA</button>
+                </div>
+                
+                <div id="kept-tab" class="tab-pane active">
+                    <div class="comparison-grid">
+                        <div class="comp-card kept">
+                            <div class="comp-header"><i class="fa-solid fa-circle-check"></i> Kept Systems</div>
+                            <ul class="comp-list">
+                                <li><i class="fa-solid fa-check"></i> <strong>Simple Stagger / Knockback:</strong> Basic hit animations.</li>
+                                <li><i class="fa-solid fa-check"></i> <strong>Dodge / Dash:</strong> Invulnerable frames for survival.</li>
+                                <li><i class="fa-solid fa-check"></i> <strong>Team Swap Cancel:</strong> Old char finishes action before disappearing.</li>
+                                <li><i class="fa-solid fa-check"></i> <strong>Buffer Inheritance:</strong> Key strings execute smoothly.</li>
+                                <li><i class="fa-solid fa-check"></i> <strong>Hit-Stop:</strong> Immediate combat feedback freeze.</li>
+                            </ul>
+                        </div>
+                        <div class="comp-card kept">
+                            <div class="comp-header"><i class="fa-solid fa-user-tag"></i> Role Budget</div>
+                            <ul class="comp-list">
+                                <li><strong>Main DPS:</strong> High field time, sustained normal chains.</li>
+                                <li><strong>Sub DPS:</strong> Cooldown dump, instant swaps.</li>
+                                <li><strong>Support:</strong> Shields, heals, party-wide damage amplification.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="removed-tab" class="tab-pane">
+                    <div class="comparison-grid">
+                        <div class="comp-card removed">
+                            <div class="comp-header"><i class="fa-solid fa-circle-xmark"></i> Deprecated Mechanics</div>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">To lower development burden, these fighting-game systems are completely disabled:</p>
+                            <ul class="comp-list">
+                                <li><i class="fa-solid fa-xmark"></i> Branching combo trees & timing windows.</li>
+                                <li><i class="fa-solid fa-xmark"></i> 60fps frame advantage & precision rules.</li>
+                                <li><i class="fa-solid fa-xmark"></i> Real airborne juggle physics & gravity chains.</li>
+                                <li><i class="fa-solid fa-xmark"></i> ZZZ-style perfect parry-swap triggers.</li>
+                                <li><i class="fa-solid fa-xmark"></i> Stance micro-loops & directional inputs.</li>
+                            </ul>
+                        </div>
+                        <div class="comp-card removed">
+                            <div class="comp-header"><i class="fa-solid fa-circle-question"></i> Hit reactions</div>
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">Only aesthetic hit reaction exists. Launch/juggle physics are animated tricks, not state rules.</p>
+                            <ul class="comp-list">
+                                <li><i class="fa-solid fa-xmark"></i> No stagger-lock loops.</li>
+                                <li><i class="fa-solid fa-xmark"></i> No combo requirement counters for scoring/scaling.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CHARACTER KIT DESIGN & SIMULATOR -->
+        <section id="characters">
+            <h2 class="section-header"><i class="fa-solid fa-user-gear"></i> Character Kit Design</h2>
+            <p>Character kits are budget-controlled to guarantee low implementation effort. Visual cues differentiate playstyles, not complex execution.</p>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">Kit Component</th>
+                            <th style="width: 15%;">Budget</th>
+                            <th>Guidelines & Design Constraints</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Basic Attack (BA)</strong></td>
+                            <td>2-3 States</td>
+                            <td>Simple forward-facing strikes, loopable, ground & air uniform.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Skill</strong></td>
+                            <td>1 Active</td>
+                            <td>Cooldown-gated. A/D inputs influence trajectory or area form.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Ultimate</strong></td>
+                            <td>1 Finisher</td>
+                            <td>Resource gated. Large flashy visual overlay. Screenshake trigger.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Passive</strong></td>
+                            <td>1 Modifier</td>
+                            <td>Simple stat or simple status application rule (e.g. +10% DMG on swap).</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Swap-In Effect</strong></td>
+                            <td>1 Utility</td>
+                            <td>Optional minor effect: small healing burst, brief shielding, or status spark.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- INTERACTIVE CHARACTER KIT SIMULATOR -->
+            <div class="simulator-widget">
+                <div class="sim-header">
+                    <div class="sim-title">
+                        <i class="fa-solid fa-laptop-code"></i> Character Kit Action Simulator
+                    </div>
+                    <div class="char-selector">
+                        <button class="char-select-btn active" onclick="selectSimChar('shin')">Shin (DPS)</button>
+                        <button class="char-select-btn" onclick="selectSimChar('blind')">Waifu (Sub-DPS)</button>
+                        <button class="char-select-btn" onclick="selectSimChar('sage')">Sage (Support)</button>
+                    </div>
+                </div>
+                
+                <div class="sim-body">
+                    <div class="char-details-panel">
+                        <span class="char-role-badge dps" id="charBadge">Main DPS</span>
+                        <div class="char-name" id="charName">Shin</div>
+                        <div class="char-tagline" id="charTag">"Spirit Fire Aura, fast blade combos"</div>
+                        
+                        <div class="action-triggers">
+                            <button class="trigger-btn" onclick="triggerAction('ba')">
+                                <span>Basic Attack (LMB)</span>
+                                <span class="key">LMB</span>
+                            </button>
+                            <button class="trigger-btn" onclick="triggerAction('skill')">
+                                <span>Aura Burst (RMB)</span>
+                                <span class="key">RMB</span>
+                            </button>
+                            <button class="trigger-btn" onclick="triggerAction('ult')">
+                                <span>Ultimate Slash (Q)</span>
+                                <span class="key">Q</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="sim-console-panel">
+                        <div class="console-title">
+                            <span>FSM Animation Log</span>
+                            <span id="cooldownLabel">CDR: 0%</span>
+                        </div>
+                        <div class="frame-visualizer">
+                            <div class="frame-phase windup" id="wPhase" style="width: 30%">Wind-Up</div>
+                            <div class="frame-phase active-phase" id="aPhase" style="width: 40%">Active</div>
+                            <div class="frame-phase recovery" id="rPhase" style="width: 30%">Recovery</div>
+                            <div class="frame-indicator" id="frameIndicator"></div>
+                        </div>
+                        <div class="console-output" id="consoleOutput">
+                            <div class="console-line">Ready to execute combat verbs...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="media-card">
+                <div class="media-frame" onclick="openLightbox('https://wutheringlab.com/wp-content/uploads/2023/06/8.gif')">
+                    <img src="https://wutheringlab.com/wp-content/uploads/2023/06/8.gif" alt="Dodge Dash Animation Concept">
+                </div>
+                <div class="media-caption">
+                    <i class="fa-solid fa-image"></i> Action flow: Dash cancels basic attack recovery instantly with invulnerability frames.
+                </div>
+            </div>
+        </section>
+
+        <!-- ROGUE-LITE PROGRESSION & PERSISTENT CHECKLIST -->
+        <section id="progression">
+            <h2 class="section-header"><i class="fa-solid fa-gem"></i> Rogue-Lite Progression</h2>
+            <p>Persistent Progression loops allow players to grow stronger between runs using the Cursed Realm currencies.</p>
+
+            <h3 style="font-size: 1.3rem; margin-top: 1.5rem; margin-bottom: 0.5rem;">Cursed Realm Currencies</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">Resource</th>
+                            <th>Obtain Path</th>
+                            <th style="width: 25%;">Rogue-lite Reset Rule</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Soul Currency</strong></td>
+                            <td>Standard room clears, enemy kills. Spent at mid-run Soul Shop.</td>
+                            <td><span style="color: var(--accent-red); font-weight: 700;">RESET ON DEATH</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Soul Fragments</strong></td>
+                            <td>Defeating Elites, Mini-Bosses, and Boss encounters.</td>
+                            <td><span style="color: var(--accent-green); font-weight: 700;">RETAINED PERMANENTLY</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Unlock Recruit</strong></td>
+                            <td>Unlocks character when defeated in active run. Permanent.</td>
+                            <td>Lose run slot, retain potential level.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Artifact Upgrades</strong></td>
+                            <td>Found in Chest rooms or bought. Permanent Potential levels.</td>
+                            <td>Lose run artifact, retain unlock bonus.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- INTERACTIVE STAT CALCULATOR -->
+            <h3 style="font-size: 1.3rem; margin-top: 2rem; margin-bottom: 0.5rem;">Interactive Upgrade Calculator</h3>
+            <p>Select upgrades below to see how Shin's base stats dynamically scale under the Cursed Realm system rules.</p>
+            
+            <div class="calc-box">
+                <div class="calc-controls">
+                    <div class="calc-control-group">
+                        <label>Active Charms (In-Run)</label>
+                        <div class="upgrade-checkbox-list">
+                            <label class="upgrade-checkbox-label">
+                                <input type="checkbox" id="upAtk" onchange="recalcStats()">
+                                <span>Damage Charm (+15% ATK)</span>
+                            </label>
+                            <label class="upgrade-checkbox-label">
+                                <input type="checkbox" id="upCdr" onchange="recalcStats()">
+                                <span>Cooldown Charm (+10% CDR)</span>
+                            </label>
+                            <label class="upgrade-checkbox-label">
+                                <input type="checkbox" id="upCrit" onchange="recalcStats()">
+                                <span>Status Charm (+15% CRIT)</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="calc-control-group">
+                        <label>Permanent Potential (Soul Shop)</label>
+                        <select id="potUpgrade" onchange="recalcStats()" style="width: 100%; padding: 0.5rem; background-color: var(--bg-sidebar); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 6px;">
+                            <option value="0">Constellation Lv.0 (Base)</option>
+                            <option value="1">Constellation Lv.1 (+10 ATK)</option>
+                            <option value="2">Constellation Lv.2 (+10 ATK, +5% CDR)</option>
+                            <option value="3">Constellation Lv.3 (+20 ATK, +5% CDR, +10% CRIT)</option>
+                            <option value="4">Constellation Lv.4 (+30 ATK, +10% CDR, +10% CRIT)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="calc-grid">
+                    <div class="calc-stat-card">
+                        <div class="calc-stat-label">Attack (ATK)</div>
+                        <div class="calc-stat-value">
+                            <span id="valAtk">10</span>
+                            <span class="calc-stat-val-orig">10</span>
+                        </div>
+                    </div>
+                    <div class="calc-stat-card">
+                        <div class="calc-stat-label">HP Bar</div>
+                        <div class="calc-stat-value">
+                            <span id="valHp">100</span>
+                        </div>
+                    </div>
+                    <div class="calc-stat-card">
+                        <div class="calc-stat-label">Crit Rate</div>
+                        <div class="calc-stat-value">
+                            <span id="valCrit">5%</span>
+                            <span class="calc-stat-diff" id="diffCrit"></span>
+                        </div>
+                    </div>
+                    <div class="calc-stat-card">
+                        <div class="calc-stat-label">Cooldown Reduction</div>
+                        <div class="calc-stat-value">
+                            <span id="valCdr">0%</span>
+                            <span class="calc-stat-diff" id="diffCdr"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GIF Constellation -->
+            <div class="media-card">
+                <div class="media-frame" onclick="openLightbox('https://static.wikia.nocookie.net/gensin-impact/images/3/3f/Constellation_Menu.png/revision/latest?cb=20220411014019')">
+                    <img src="https://static.wikia.nocookie.net/gensin-impact/images/3/3f/Constellation_Menu.png/revision/latest?cb=20220411014019" alt="Permanent Progression UI Concept">
+                </div>
+                <div class="media-caption">
+                    <i class="fa-solid fa-image"></i> Permanent progression framework: constellation points represent persistent skill/potency additions.
+                </div>
+            </div>
+        </section>
+
+        <!-- ITEMS AND ENEMIES -->
+        <section id="items-enemies">
+            <h2 class="section-header"><i class="fa-solid fa-dragon"></i> Gameplay Content: Items & Enemies</h2>
+            <p>Clear, one-sentence behaviors define the threats and treasures in the Cursed Realm, omitting hidden spreadsheets.</p>
+            
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">Item / Upgrade Type</th>
+                            <th style="width: 20%;">Pacing Role</th>
+                            <th>Expected Gameplay Behavior</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Damage Charm</strong></td>
+                            <td>DPS scaling</td>
+                            <td>Directly increases normal string, skill, or ultimate damage values.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cooldown Charm</strong></td>
+                            <td>Rotation speed</td>
+                            <td>Decreases active skill cooldowns. Re-activates skills on room clearing.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Shield Charm</strong></td>
+                            <td>Survival buffer</td>
+                            <td>Spawns a protective bubble absorbing 20% max HP damage upon character swap.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Status Charm</strong></td>
+                            <td>Synergy loop</td>
+                            <td>Attacks apply bleeding, burning, or slowness debuffs to targets.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 style="font-size: 1.3rem; margin-top: 2rem; margin-bottom: 1rem;">Enemy Archetypes</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;">
+                <div style="background-color: var(--bg-card); padding: 1.25rem; border: 1px solid var(--border-color); border-radius: 8px;">
+                    <strong style="color: var(--text-primary); font-size: 1.05rem;"><i class="fa-solid fa-spider" style="color: var(--accent-cyan); margin-right: 0.5rem;"></i> Trash Enemy</strong>
+                    <p style="font-size: 0.85rem; margin-top: 0.5rem; line-height: 1.5;">Low HP. Staggers on normal hit. Basic target used for fast room clear feel.</p>
+                </div>
+                <div style="background-color: var(--bg-card); padding: 1.25rem; border: 1px solid var(--border-color); border-radius: 8px;">
+                    <strong style="color: var(--text-primary); font-size: 1.05rem;"><i class="fa-solid fa-crosshairs" style="color: var(--accent-purple); margin-right: 0.5rem;"></i> Ranged Enemy</strong>
+                    <p style="font-size: 0.85rem; margin-top: 0.5rem; line-height: 1.5;">Forces repositioning. Fires telegraph-traced arrows/bullets from backline.</p>
+                </div>
+                <div style="background-color: var(--bg-card); padding: 1.25rem; border: 1px solid var(--border-color); border-radius: 8px;">
+                    <strong style="color: var(--text-primary); font-size: 1.05rem;"><i class="fa-solid fa-shield" style="color: var(--accent-green); margin-right: 0.5rem;"></i> Guard / Shield Enemy</strong>
+                    <p style="font-size: 0.85rem; margin-top: 0.5rem; line-height: 1.5;">Blocks frontal strikes. Weak from behind. No parry check needed.</p>
+                </div>
+                <div style="background-color: var(--bg-card); padding: 1.25rem; border: 1px solid var(--border-color); border-radius: 8px;">
+                    <strong style="color: var(--text-primary); font-size: 1.05rem;"><i class="fa-solid fa-skull-crossbones" style="color: var(--accent-red); margin-right: 0.5rem;"></i> Elite Mini-Boss</strong>
+                    <p style="font-size: 0.85rem; margin-top: 0.5rem; line-height: 1.5;">Super-armor status on heavy swings. Displays ground danger warning decals.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- BOSS BATTLES -->
+        <section id="bosses">
+            <h2 class="section-header"><i class="fa-solid fa-skull"></i> Boss Battle Direction</h2>
+            <p>Boss battles mimic generic 2D action stages (Hollow Knight style) over fighting-game dynamic AI. Large visual sweeps and predictable recovery loops are key.</p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin: 1.5rem 0;">
+                <div style="background-color: var(--bg-card); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 12px;">
+                    <h4 style="color: var(--accent-green); margin-bottom: 0.75rem;"><i class="fa-solid fa-circle-check"></i> Standard Boss Rules</h4>
+                    <ul style="margin-left: 1.25rem; font-size: 0.9rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 0.5rem;">
+                        <li>Large body size with strong silhouette readability.</li>
+                        <li>Super armor ignores active staggers during move wind-up.</li>
+                        <li>Telegraphed projectile bullet patterns.</li>
+                        <li>Phase shifts (adds ranged elements at 60% HP, speeds up at 30%).</li>
+                        <li>Clear recover windows (Boss freezes for 1.5s after large attacks).</li>
+                    </ul>
+                </div>
+                <div style="background-color: var(--bg-card); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 12px;">
+                    <h4 style="color: var(--accent-red); margin-bottom: 0.75rem;"><i class="fa-solid fa-circle-xmark"></i> Legacy Boss Behaviors (Removed)</h4>
+                    <ul style="margin-left: 1.25rem; font-size: 0.9rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 0.5rem;">
+                        <li>No launcher juggles or physics-driven air combos.</li>
+                        <li>No infinite stagger loops.</li>
+                        <li>No frame-trap checks or input-reading block behaviors.</li>
+                        <li>No complex close-quarter collision checks.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Boss Battle Encounter Circle -->
+            <div style="background: rgba(20, 23, 34, 0.4); border: 1px solid var(--border-color); padding: 1.75rem; border-radius: 12px; max-width: 900px; text-align: center;">
+                <strong style="display: block; margin-bottom: 1rem; color: var(--accent-cyan);">The Punish Window Cycle</strong>
+                <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; flex-wrap: wrap; font-family: var(--font-code); font-size: 0.85rem;">
+                    <span>Boss Winds Up (Warning Box)</span> <i class="fa-solid fa-angle-right"></i>
+                    <span>Player Dashes Through / Moves</span> <i class="fa-solid fa-angle-right"></i>
+                    <span>Boss Strike Misses</span> <i class="fa-solid fa-angle-right"></i>
+                    <span>Boss Enters Recovery Stun (1.5s)</span> <i class="fa-solid fa-angle-right"></i>
+                    <span style="color: var(--accent-cyan); font-weight: 700;">Player Swaps & Bursts!</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- INSPIRATIONS -->
+        <section id="inspirations">
+            <h2 class="section-header"><i class="fa-solid fa-lightbulb"></i> Inspirations and Boundaries</h2>
+            <p>Design boundary parameters defined by benchmarking high-quality references in the genre.</p>
+            
+            <!-- PRIMARY INSPIRATION (DUNGEON SLASHER) -->
+            <div class="pillar-card" style="border-color: var(--accent-cyan); box-shadow: 0 0 20px var(--glow-cyan); margin-bottom: 1.5rem; display: flex; flex-direction: row; gap: 2rem; align-items: center; max-width: 900px; padding: 1.5rem; flex-wrap: wrap;">
+                <div class="media-frame" style="flex: 1; min-width: 280px; height: 200px; margin-bottom: 0;" onclick="openLightbox('https://pbs.twimg.com/media/GjJqasrbIAI--4p.png')">
+                    <img src="https://pbs.twimg.com/media/GjJqasrbIAI--4p.png" style="height: 100%; object-fit: cover;" alt="Dungeon Slasher Reference">
+                </div>
+                <div style="flex: 1.2; min-width: 280px; display: flex; flex-direction: column; align-items: flex-start;">
+                    <span class="hero-label" style="padding: 0.25rem 0.5rem; margin-bottom: 0.75rem; font-size: 0.75rem; border-color: rgba(0, 242, 254, 0.4); background-color: rgba(0, 242, 254, 0.08);">★ PRIMARY INSPIRATION</span>
+                    <h3 style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.75rem;">Dungeon Slasher</h3>
+                    <p style="font-size: 0.95rem; line-height: 1.5; color: var(--text-secondary); margin-bottom: 0;">This game is the foundational combat model for Neo-JJK. It guides the fast-paced 2D side-scrolling combat rhythm, compact level exploration designs, simple melee/ranged target grouping tactics, and highly readable player-to-enemy hitbox triggers.</p>
+                </div>
+            </div>
+
+            <!-- OTHER INSPIRATIONS GRID -->
+            <div class="pillars-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-top: 0; max-width: 900px;">
+                <div class="pillar-card" style="padding: 1rem;">
+                    <div class="media-frame" style="height: 120px; margin-bottom: 0.75rem;" onclick="openLightbox('https://assets-prd.ignimgs.com/2022/09/29/screen-shot-2022-09-29-at-1-03-15-pm-1664481812278.png')">
+                        <img src="https://assets-prd.ignimgs.com/2022/09/29/screen-shot-2022-09-29-at-1-03-15-pm-1664481812278.png" style="height: 100%; object-fit: cover;" alt="Oblivion Override Reference">
+                    </div>
+                    <div class="pillar-title" style="font-size: 1.1rem; margin-bottom: 0.5rem;">Oblivion Override</div>
+                    <div class="pillar-desc" style="font-size: 0.85rem; line-height: 1.4;">Inspired the action rogue-lite pacing, upgrade synergy, and quick build growth.</div>
+                </div>
+                <div class="pillar-card" style="padding: 1rem;">
+                    <div class="media-frame" style="height: 120px; margin-bottom: 0.75rem;" onclick="openLightbox('https://play-lh.googleusercontent.com/8nuRkO_lfGb-QzIVH6XPbN6r9FMBphYJ-Z_jzHrtxZW_4txdwPjvl4frRo4QCr0BmuA')">
+                        <img src="https://play-lh.googleusercontent.com/8nuRkO_lfGb-QzIVH6XPbN6r9FMBphYJ-Z_jzHrtxZW_4txdwPjvl4frRo4QCr0BmuA" style="height: 100%; object-fit: cover;" alt="Skul: The Hero Slayer Reference">
+                    </div>
+                    <div class="pillar-title" style="font-size: 1.1rem; margin-bottom: 0.5rem;">Skul: The Hero Slayer</div>
+                    <div class="pillar-desc" style="font-size: 0.85rem; line-height: 1.4;">Inspired character identity through small kits, persistent soul shops, and run upgrades.</div>
+                </div>
+                <div class="pillar-card" style="padding: 1rem;">
+                    <div class="media-frame" style="height: 120px; margin-bottom: 0.75rem;" onclick="openLightbox('https://images.squarespace-cdn.com/content/v1/606d159a953867291018f801/1617765374873-IP4ANI7I6BITEWEVJMRJ/cp_thumbs__0002_God.jpg')">
+                        <img src="https://images.squarespace-cdn.com/content/v1/606d159a953867291018f801/1617765374873-IP4ANI7I6BITEWEVJMRJ/cp_thumbs__0002_God.jpg" style="height: 100%; object-fit: cover;" alt="Hollow Knight Reference">
+                    </div>
+                    <div class="pillar-title" style="font-size: 1.1rem; margin-bottom: 0.5rem;">Hollow Knight</div>
+                    <div class="pillar-desc" style="font-size: 0.85rem; line-height: 1.4;">Inspired boss fight design: large indicators, distinct telegraph frames, and safe zones.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PROJECT TECH STACK -->
+        <section id="tech-stack">
+            <h2 class="section-header"><i class="fa-solid fa-server"></i> Project Stack & Architecture</h2>
+            <p>The code architecture is designed to prevent technical debt. Data-driven ScriptableObjects organize content, and simple FSM structures control runtime logic.</p>
+
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;">Subsystem / Tool</th>
+                            <th style="width: 30%;">Stack Value</th>
+                            <th>Active Architecture Role</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Unity Engine</strong></td>
+                            <td>Unity 6 LTS (6000.x)</td>
+                            <td>Authoritative Runtime Engine.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Render Pipeline</strong></td>
+                            <td>URP 17.x</td>
+                            <td>Rendering, Post-processing volume effects, shader graphics.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Input System</strong></td>
+                            <td>Input System 1.8.x</td>
+                            <td>`PlayerInput` handles keyboard mapping and buffer windows.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Camera Manager</strong></td>
+                            <td>Cinemachine 3.x</td>
+                            <td>Combines combat-room camera clamping and screenshake triggers.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>AI Behavior Graph</strong></td>
+                            <td>Unity Behavior Graph</td>
+                            <td>Controls enemy chase, patrol, and attack FSM states.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 style="font-size: 1.3rem; margin-top: 2rem; margin-bottom: 0.5rem;">Subsystem Codebase Scale</h3>
+            <p>The prototype contains <strong>168 scripts</strong> structured under logical directories to prevent circular references:</p>
+            
+            <div class="directory-tree">
+<div class="tree-line">Assets/Project/Scripts/</div><div class="tree-line">├── <span class="tree-dir">AIBehaviour/</span>       <span class="tree-comment"># EnemyController, EnemyHitReactionHandler</span></div><div class="tree-line">├── <span class="tree-dir">Animation/</span>         <span class="tree-comment"># PlayerAnimator, AnimationHandler_Enemy</span></div><div class="tree-line">├── <span class="tree-dir">Behavior/</span>          <span class="tree-comment"># Unity Behavior graph nodes (Chase, Patrol)</span></div><div class="tree-line">├── <span class="tree-dir">Character/</span>         <span class="tree-comment"># SO definition scripts (CharacterObject, CombatData)</span></div><div class="tree-line">├── <span class="tree-dir">Combat/</span>            <span class="tree-comment"># Hitbox controllers, Projectiles, GameFreezeManager</span></div><div class="tree-line">├── <span class="tree-dir">Player/</span>            <span class="tree-comment"># PlayerStateMachine, all State subclasses</span></div><div class="tree-line">├── <span class="tree-dir">Shop/</span>              <span class="tree-comment"># ShopManager, PlayerShopInventory, ShopUI</span></div><div class="tree-line">└── <span class="tree-dir">Systems/</span>           <span class="tree-comment"># PlayerCharacter facade, TeamLoader script</span></div>            </div>
+        </section>
+
+        <!-- PROTOTYPE TRUTH & DEBT -->
+        <section id="prototype-truth">
+            <h2 class="section-header"><i class="fa-solid fa-code-compare"></i> Prototype Truth & Technical Debt</h2>
+            <p>The codebase review highlighted legacy code that needs refactoring to match the simplified Neo-JJK direction.</p>
+            
+            <div class="callout danger">
+                <div class="callout-title"><i class="fa-solid fa-triangle-exclamation"></i> Heavy Deletions (Fighting-Game Cleanups)</div>
+                <p>The following elements must be refactored or deleted from compilation paths: Branching Combo Trees (`ComboNode` / `ComboRoute`), Perfect-swap window checks, and deep airborne launch physics.</p>
+            </div>
+
+            <h3 style="font-size: 1.3rem; margin-top: 2rem; margin-bottom: 0.5rem;">Interactive Prototype Debt Checklist</h3>
+            <p>Check off resolved tasks below. Progress is saved automatically to track refactoring status.</p>
+            
+            <ul class="debt-list" id="debtList">
+                <li class="debt-item">
+                    <input type="checkbox" id="debt1" onchange="saveDebtState()">
+                    <div class="debt-item-label">
+                        <span class="debt-item-title">Decompress PlayerCombat.cs</span>
+                        <span class="debt-item-desc">Split the 48KB monolithic file into simple component executors.</span>
+                    </div>
+                </li>
+                <li class="debt-item">
+                    <input type="checkbox" id="debt2" onchange="saveDebtState()">
+                    <div class="debt-item-label">
+                        <span class="debt-item-title">Simplify CombatPlayerState.cs</span>
+                        <span class="debt-item-desc">Strip legacy 60fps frame advantage checks from state transitions.</span>
+                    </div>
+                </li>
+                <li class="debt-item">
+                    <input type="checkbox" id="debt3" onchange="saveDebtState()">
+                    <div class="debt-item-label">
+                        <span class="debt-item-title">Resolve Filename / Class Mismatches</span>
+                        <span class="debt-item-desc">Rename PlayerInputHandler to InputHandler_Player and AnimetionEventRelay to AnimationEventRelay.</span>
+                    </div>
+                </li>
+                <li class="debt-item">
+                    <input type="checkbox" id="debt4" onchange="saveDebtState()">
+                    <div class="debt-item-label">
+                        <span class="debt-item-title">Fix InputLockManager Locks</span>
+                        <span class="debt-item-desc">Prevent permanent input locks by switching to disposable lock handles.</span>
+                    </div>
+                </li>
+                <li class="debt-item">
+                    <input type="checkbox" id="debt5" onchange="saveDebtState()">
+                    <div class="debt-item-label">
+                        <span class="debt-item-title">Gate Debug Shortcuts</span>
+                        <span class="debt-item-desc">Place basic attack bypass checks behind #if UNITY_EDITOR blocks.</span>
+                    </div>
+                </li>
+            </ul>
+        </section>
+
+        <!-- 6-MONTH DEVELOPMENT ROADMAP (PERSISTENT CHECKLIST) -->
+        <section id="roadmap">
+            <h2 class="section-header"><i class="fa-solid fa-timeline"></i> 6-Month Development Roadmap</h2>
+            <p>The roadmap consists of 12 sprints (2 weeks each), taking the project from its fighting-game roots to a polished rogue-lite. Click on a month card to expand the checklist.</p>
+            
+            <div class="timeline" id="timelineList">
+                
+                <!-- Month 1 -->
+                <div class="timeline-item active" id="month1">
+                    <div class="timeline-badge"></div>
+                    <div class="timeline-header" onclick="toggleTimeline('month1')">
+                        <div class="timeline-header-info">
+                            <span class="timeline-month">Month 1</span>
+                            <span class="timeline-focus">Focus: Strip & Stabilize Codebase</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down timeline-toggle-icon"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="roadmap-check-item">
+                            <input type="checkbox" id="m1_1" onchange="saveRoadmap()">
+                            <div class="roadmap-check-text">
+                                <span class="roadmap-check-title">Audit codebase and file cleanup</span>
+                                <span class="roadmap-check-desc">Fix class mismatches (AnimetionEventRelay), organize folder structures.</span>
+                            </div>
+                        </div>
+                        <div class="roadmap-check-item">
+                            <input type="checkbox" id="m1_2" onchange="saveRoadmap()">
+                            <div class="roadmap-check-text">
+                                <span class="roadmap-check-title">Refactor InputLockManager</span>
+                                <span class="roadmap-check-desc">Ensure disposable handles prevent locked screens.</span>
+                            </div>
+                        </div>
+                        <div class="roadmap-check-item">
+                            <input type="checkbox" id="m1_3" onchange="saveRoadmap()">
+                            <div class="roadmap-check-text">
+                                <span class="roadmap-check-title">Simplify ActionResolver</span>
+                                <span class="roadmap-check-desc">Convert complex branching trees into simple linear normal strings.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Month 2 -->
+                <div class="timeline-item" id="month2">
+                    <div class="timeline-badge"></div>
+                    <div class="timeline-header" onclick="toggleTimeline('month2')">
+                        <div class="timeline-header-info">
+                            <span class="timeline-month">Month 2</span>
+                            <span class="timeline-focus">Focus: Core Combat Loop</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down timeline-toggle-icon"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="roadmap-check-item">
+                            <input type="checkbox" id="m2_1" onchange="saveRoadmap()">
+                            <div class="roadmap-check-text">
+                                <span class="roadmap-check-title">Verify core verbs on Ground and Air</span>
+                                <span class="roadmap-check-desc">Lock Ground/Air movement, dodge frame triggers, and skill casts.</span>
+                            </div>
+                        </div>
+                        <div class="roadmap-check-item">
+                            <input type="checkbox" id="m2_2" onchange="saveRoadmap()">
+                            <div class="roadmap-check-text">
+                                <span class="roadmap-check-title">Implement Hit-Stop & Camera Shake</span>
+                                <span class="roadmap-check-desc">Connect weight triggers from AttackStepData to camera tracking.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Month 3 -->
+                <div class="timeline-item" id="month3">
+                    <div class="timeline-badge"></div>
+                    <div class="timeline-header" onclick="toggleTimeline('month3')">
+                        <div class="timeline-header-info">
+                            <span class="timeline-month">Month 3</span>
+                            <span class="timeline-focus">Focus: Team Rotation & Swap System</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down timeline-toggle-icon"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="roadmap-check-item">
+                            <input type="checkbox" id="m3_1" onchange="saveRoadmap()">
+                            <div class="roadmap-check-text">
+                                <span class="roadmap-check-title">Refactor TeamLoader Swapping</span>
+                                <span class="roadmap-check-desc">Implement swap cancel sequence and input buffer inheritance.</span>
+                            </div>
+                        </div>
+                        <div class="roadmap-check-item">
+                            <input type="checkbox" id="m3_2" onchange="saveRoadmap()">
+                            <div class="roadmap-check-text">
+                                <span class="roadmap-check-title">Create Team HUD & Cooldown indicators</span>
+                                <span class="roadmap-check-desc">Build canvas layouts displaying secondary character statuses.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Month 4 -->
+                <div class="timeline-item" id="month4">
+                    <div class="timeline-badge"></div>
+                    <div class="timeline-header" onclick="toggleTimeline('month4')">
+                        <div class="timeline-header-info">
+                            <span class="timeline-month">Month 4</span>
+                            <span class="timeline-focus">Focus: Rogue-lite Loop & Shop</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down timeline-toggle-icon"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="roadmap-check-item">
+                            <input type="checkbox" id="m4_1" onchange="saveRoadmap()">
+                            <div class="roadmap-check-text">
+                                <span class="roadmap-check-title">Create Lobby & Scene Flow</span>
+                                <span class="roadmap-check-desc">Connect MainMenu, Lobby, Combat, Reward, and Result scenes.</span>
+                            </div>
+                        </div>
+                        <div class="roadmap-check-item">
+                            <input type="checkbox" id="m4_2" onchange="saveRoadmap()">
+                            <div class="roadmap-check-text">
+                                <span class="roadmap-check-title">Implement Soul Shop & Constellations</span>
+                                <span class="roadmap-check-desc">Build persistent Potential logic to save stats after run resets.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Month 5 -->
+                <div class="timeline-item" id="month5">
+                    <div class="timeline-badge"></div>
+                    <div class="timeline-header" onclick="toggleTimeline('month5')">
+                        <div class="timeline-header-info">
+                            <span class="timeline-month">Month 5</span>
+                            <span class="timeline-focus">Focus: Boss Patterns & Content expansion</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down timeline-toggle-icon"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="roadmap-check-item">
+                            <input type="checkbox" id="m5_1" onchange="saveRoadmap()">
+                            <div class="roadmap-check-text">
+                                <span class="roadmap-check-title">Build pattern-based boss controller</span>
+                                <span class="roadmap-check-desc">Assemble phase logic triggered at HP thresholds.</span>
+                            </div>
+                        </div>
+                        <div class="roadmap-check-item">
+                            <input type="checkbox" id="m5_2" onchange="saveRoadmap()">
+                            <div class="roadmap-check-text">
+                                <span class="roadmap-check-title">Scale item catalogs & artifacts</span>
+                                <span class="roadmap-check-desc">Create ScriptableObject definitions for charms and status effects.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Month 6 -->
+                <div class="timeline-item" id="month6">
+                    <div class="timeline-badge"></div>
+                    <div class="timeline-header" onclick="toggleTimeline('month6')">
+                        <div class="timeline-header-info">
+                            <span class="timeline-month">Month 6</span>
+                            <span class="timeline-focus">Focus: Polish pass & Thesis submission</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down timeline-toggle-icon"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <div class="roadmap-check-item">
+                            <input type="checkbox" id="m6_1" onchange="saveRoadmap()">
+                            <div class="roadmap-check-text">
+                                <span class="roadmap-check-title">VFX/SFX Optimization</span>
+                                <span class="roadmap-check-desc">Profile memory, use pooled game objects for projectile effects.</span>
+                            </div>
+                        </div>
+                        <div class="roadmap-check-item">
+                            <input type="checkbox" id="m6_2" onchange="saveRoadmap()">
+                            <div class="roadmap-check-text">
+                                <span class="roadmap-check-title">QA coverage and Integration Tests</span>
+                                <span class="roadmap-check-desc">Verify swap actions and upgrade states compile cleanly in release.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- FOOTER SUMMARY -->
+        <footer style="margin-top: 5rem; padding-top: 2rem; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.9rem; text-align: center;">
+            <p style="margin: 0 auto; max-width: 600px;">Neo-JJK Game Design Document Dashboard. Developed for human-readable design authority reference. Keep systems simple. Priority to flashy effects.</p>
+        </footer>
+
+    </main>
+
+    <!-- JS LOGIC -->
+    <script>
+        /* Sidebar active scrolling tracker */
+        window.addEventListener('DOMContentLoaded', () => {
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    const id = entry.target.getAttribute('id');
+                    if (entry.intersectionRatio > 0.15) {
+                        document.querySelectorAll('.nav-links a').forEach(a => {
+                            a.classList.remove('active');
+                        });
+                        const activeLink = document.querySelector(`.nav-links a[href="#${id}"]`);
+                        if (activeLink) activeLink.classList.add('active');
+                    }
+                });
+            }, { threshold: [0.15, 0.5], rootMargin: "0px 0px -40% 0px" });
+
+            document.querySelectorAll('section').forEach(section => {
+                observer.observe(section);
+            });
+            
+            // Load LocalStorage states
+            loadDebtState();
+            loadRoadmapState();
+            recalcStats();
+        });
+
+        /* Top Search Filter */
+        document.getElementById('gddSearch').addEventListener('input', function(e) {
+            const val = e.target.value.toLowerCase();
+            document.querySelectorAll('section').forEach(sec => {
+                const text = sec.textContent.toLowerCase();
+                if (text.includes(val)) {
+                    sec.style.display = 'block';
+                } else {
+                    sec.style.display = 'none';
+                }
+            });
+        });
+
+        /* Back to top float button control */
+        const scrollTopBtn = document.getElementById('scrollTopBtn');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                scrollTopBtn.classList.add('visible');
+            } else {
+                scrollTopBtn.classList.remove('visible');
+            }
+        });
+        scrollTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        /* Lightbox Image zoom handler */
+        const lightboxModal = document.getElementById('lightboxModal');
+        const lightboxImg = lightboxModal.querySelector('.lightbox-img');
+        
+        function openLightbox(src) {
+            lightboxImg.src = src;
+            lightboxModal.style.display = 'flex';
+        }
+        
+        lightboxModal.addEventListener('click', () => {
+            lightboxModal.style.display = 'none';
+        });
+
+        /* Tabs toggler helper */
+        function switchTab(evt, tabId) {
+            const container = evt.currentTarget.closest('.tabs-container');
+            container.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            container.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+            
+            evt.currentTarget.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        /* Timeline Accordion Toggler */
+        function toggleTimeline(id) {
+            const item = document.getElementById(id);
+            const isActive = item.classList.contains('active');
+            
+            // Collapse all
+            document.querySelectorAll('.timeline-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Toggle clicked
+            if (!isActive) {
+                item.classList.add('active');
+            }
+        }
+
+        /* Character kit simulator script data */
+        const charData = {
+            shin: {
+                name: "Shin",
+                role: "Main DPS",
+                roleClass: "dps",
+                tagline: '"Spirit Fire Aura, fast blade combos"',
+                actions: {
+                    ba: {
+                        name: "Flame Arc Chain",
+                        windup: 8, active: 10, recovery: 8,
+                        log: "Executed basic 3-hit string. (Hit 1: 5 DMG | Hit 2: 7 DMG | Hit 3: 12 DMG). VFX: Slash Arcs. Played SFX: Slash Impact."
+                    },
+                    skill: {
+                        name: "Aura Burst",
+                        windup: 12, active: 18, recovery: 12,
+                        log: "Cast Aura Burst. Steered forward (AD influence). VFX: Combustion Blast. Triggered hitstop (12 frames freeze)."
+                    },
+                    ult: {
+                        name: "Cursed Inferno",
+                        windup: 25, active: 30, recovery: 20,
+                        log: "DEPLOYED ULTIMATE: Cursed Inferno. Screenshake weight heavy. Play SFX: Aura Shimmer charge. VFX: Screenspace flame flash."
+                    }
+                }
+            },
+            blind: {
+                name: "Spirit Waifu (Blind)",
+                role: "Sub-DPS",
+                roleClass: "subdps",
+                tagline: '"Aura projectile triggers, quick positioning support"',
+                actions: {
+                    ba: {
+                        name: "Spectral Needle",
+                        windup: 6, active: 8, recovery: 6,
+                        log: "Fired a magic projectile. VFX: Spark trail. Block check: Ranged impact on target."
+                    },
+                    skill: {
+                        name: "Cursed Echo",
+                        windup: 10, active: 15, recovery: 10,
+                        log: "Cast Cursed Echo. Spawned tracking circle. VFX: Aura Ring. Support swap inherits active status indicator."
+                    },
+                    ult: {
+                        name: "Blind Judgement",
+                        windup: 20, active: 40, recovery: 15,
+                        log: "DEPLOYED ULTIMATE: Blind Judgement. Rain down tracking arrows on coordinate target. Dynamic slow-mo active."
+                    }
+                }
+            },
+            sage: {
+                name: "Sage",
+                role: "Support",
+                roleClass: "support",
+                tagline: '"Aura Barrier shielding, healing zones"',
+                actions: {
+                    ba: {
+                        name: "Stave Stagger",
+                        windup: 12, active: 8, recovery: 14,
+                        log: "Basic heavy staff smash. Staggered minor trash enemy. Low distance."
+                    },
+                    skill: {
+                        name: "Cursed Shield",
+                        windup: 8, active: 5, recovery: 10,
+                        log: "Spawned Aura Shield on active loader party. Absorb threshold: 25% max HP. SFX: Glass shimmer."
+                    },
+                    ult: {
+                        name: "Sanctuary Ward",
+                        windup: 15, active: 60, recovery: 15,
+                        log: "DEPLOYED ULTIMATE: Sanctuary Ward. Zone healing active (3% Max HP regen / tick). Played SFX: Celestial choir."
+                    }
+                }
+            }
+        };
+
+        let currentActiveSimChar = 'shin';
+        let isExecutingSimAction = false;
+
+        function selectSimChar(key) {
+            if (isExecutingSimAction) return;
+            currentActiveSimChar = key;
+            document.querySelectorAll('.char-select-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const data = charData[key];
+            const badge = document.getElementById('charBadge');
+            badge.textContent = data.role;
+            badge.className = `char-role-badge ${data.roleClass}`;
+
+            document.getElementById('charName').textContent = data.name;
+            document.getElementById('charTag').textContent = data.tagline;
+
+            // Update button texts
+            const buttons = document.querySelectorAll('.action-triggers .trigger-btn');
+            buttons[0].querySelector('span').textContent = data.actions.ba.name;
+            buttons[1].querySelector('span').textContent = data.actions.skill.name;
+            buttons[2].querySelector('span').textContent = data.actions.ult.name;
+
+            addConsoleLine(`Swapped loader focus to: ${data.name}. Ready.`);
+        }
+
+        function triggerAction(actionKey) {
+            if (isExecutingSimAction) return;
+            isExecutingSimAction = true;
+            
+            const btn = event.currentTarget;
+            btn.classList.add('executing');
+
+            const char = charData[currentActiveSimChar];
+            const action = char.actions[actionKey];
+
+            // Set frame-visualizer sections width
+            const totalFrames = action.windup + action.active + action.recovery;
+            const wPct = (action.windup / totalFrames) * 100;
+            const aPct = (action.active / totalFrames) * 100;
+            const rPct = (action.recovery / totalFrames) * 100;
+
+            document.getElementById('wPhase').style.width = `${wPct}%`;
+            document.getElementById('aPhase').style.width = `${aPct}%`;
+            document.getElementById('rPhase').style.width = `${rPct}%`;
+
+            const indicator = document.getElementById('frameIndicator');
+            indicator.style.display = 'block';
+            indicator.style.left = '0%';
+
+            addConsoleLine(`State FSM: ${action.name} initialized. Frames: ${totalFrames} (W:${action.windup} A:${action.active} R:${action.recovery})`);
+
+            // Animate indicator line
+            let start = null;
+            const duration = totalFrames * 16.67; // approx 60fps frame timing in ms
+            
+            function animateIndicator(timestamp) {
+                if (!start) start = timestamp;
+                const progress = timestamp - start;
+                const pct = Math.min((progress / duration) * 100, 100);
+                indicator.style.left = `${pct}%`;
+
+                if (progress < duration) {
+                    requestAnimationFrame(animateIndicator);
+                } else {
+                    indicator.style.display = 'none';
+                    btn.classList.remove('executing');
+                    isExecutingSimAction = false;
+                    addConsoleLine(`Success: ${action.log}`);
+                }
+            }
+            requestAnimationFrame(animateIndicator);
+        }
+
+        function addConsoleLine(text) {
+            const consoleBox = document.getElementById('consoleOutput');
+            const newLine = document.createElement('div');
+            newLine.className = 'console-line';
+            newLine.textContent = `> ${text}`;
+            consoleBox.appendChild(newLine);
+            consoleBox.scrollTop = consoleBox.scrollHeight;
+        }
+
+        /* Stats Calculator Script */
+        function recalcStats() {
+            let baseAtk = 10;
+            let baseHp = 100;
+            let baseCrit = 5;
+            let baseCdr = 0;
+
+            // Read potential values
+            const potLvl = parseInt(document.getElementById('potUpgrade').value);
+            if (potLvl >= 1) baseAtk += 10;
+            if (potLvl >= 2) { baseAtk += 10; baseCdr += 5; }
+            if (potLvl >= 3) { baseAtk += 20; baseCdr += 5; baseCrit += 10; }
+            if (potLvl >= 4) { baseAtk += 30; baseCdr += 10; baseCrit += 10; }
+
+            const baseAtkBeforeCharms = baseAtk;
+            const baseCritBeforeCharms = baseCrit;
+            const baseCdrBeforeCharms = baseCdr;
+
+            // Apply Charm upgrades
+            const hasAtkCharm = document.getElementById('upAtk').checked;
+            const hasCdrCharm = document.getElementById('upCdr').checked;
+            const hasCritCharm = document.getElementById('upCrit').checked;
+
+            if (hasAtkCharm) baseAtk = Math.round(baseAtk * 1.15);
+            if (hasCdrCharm) baseCdr += 10;
+            if (hasCritCharm) baseCrit += 15;
+
+            // Output values to UI
+            document.getElementById('valAtk').textContent = baseAtk;
+            document.querySelector('.calc-stat-val-orig').textContent = potLvl > 0 ? (potLvl >= 3 ? 30 : 20) : 10;
+            document.getElementById('valCrit').textContent = `${baseCrit}%`;
+            document.getElementById('valCdr').textContent = `${baseCdr}%`;
+
+            // Setup diff badges
+            const diffCrit = document.getElementById('diffCrit');
+            const diffCdr = document.getElementById('diffCdr');
+
+            diffCrit.textContent = baseCrit > baseCritBeforeCharms ? `(+${baseCrit - baseCritBeforeCharms}%)` : '';
+            diffCdr.textContent = baseCdr > baseCdrBeforeCharms ? `(+${baseCdr - baseCdrBeforeCharms}%)` : '';
+            
+            // Console update
+            document.getElementById('cooldownLabel').textContent = `CDR: ${baseCdr}%`;
+        }
+
+        /* LocalStorage Persistence for checklists */
+        function saveDebtState() {
+            const states = {};
+            document.querySelectorAll('#debtList input[type="checkbox"]').forEach(box => {
+                states[box.id] = box.checked;
+            });
+            localStorage.setItem('jjk_debt_states', JSON.stringify(states));
+        }
+
+        function loadDebtState() {
+            const data = localStorage.getItem('jjk_debt_states');
+            if (data) {
+                const states = JSON.parse(data);
+                Object.keys(states).forEach(id => {
+                    const box = document.getElementById(id);
+                    if (box) box.checked = states[id];
+                });
+            }
+        }
+
+        function saveRoadmap() {
+            const states = {};
+            document.querySelectorAll('#timelineList input[type="checkbox"]').forEach(box => {
+                states[box.id] = box.checked;
+            });
+            localStorage.setItem('jjk_roadmap_states', JSON.stringify(states));
+            
+            // Auto complete indicator class
+            updateTimelineBadgeStates();
+        }
+
+        function loadRoadmapState() {
+            const data = localStorage.getItem('jjk_roadmap_states');
+            if (data) {
+                const states = JSON.parse(data);
+                Object.keys(states).forEach(id => {
+                    const box = document.getElementById(id);
+                    if (box) box.checked = states[id];
+                });
+            }
+            updateTimelineBadgeStates();
+        }
+
+        function updateTimelineBadgeStates() {
+            document.querySelectorAll('.timeline-item').forEach(item => {
+                const checkboxes = item.querySelectorAll('input[type="checkbox"]');
+                const total = checkboxes.length;
+                let checkedCount = 0;
+                checkboxes.forEach(cb => { if (cb.checked) checkedCount++; });
+
+                if (total > 0 && checkedCount === total) {
+                    item.classList.add('completed');
+                } else {
+                    item.classList.remove('completed');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

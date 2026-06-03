@@ -12,6 +12,7 @@ public interface ICharacterCombat
     bool CanMoveAfterAttack();
     bool CanSwitchDirection();
     bool ShouldSuppressLandingFeedback();
+    bool ShouldPreserveGroundAuthority();
     bool IsInAirborneAction();
     float GetAirborneGravityScale();
 
@@ -41,8 +42,6 @@ public interface ICharacterCombat
     void TriggerAirComboCooldown();
     void ResetAirComboCooldown();
 
-    // Plunge state (set by PlayerAttackState)
-    void SetPlungeFalling(bool falling);
     void SetAirCombo(bool airCombo);
 
     // Events

@@ -53,8 +53,9 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     // Removed hitstopFramesLeft as it is now handled by GameFreezeManager
     private int hitboxActiveCount;
     private ActionPhase currentPhase = ActionPhase.None;
-    private bool isPlungeFalling;
     private bool isAirCombo;
+    private bool currentActionStartedGrounded;
+    private bool currentActionAllowsGroundToAirTransition;
     private bool isExecutingAutoChainStep;
     private GrabHitbox currentGrabHitbox;
     private bool hadGrabAtStepStart;
@@ -82,6 +83,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public bool IsExecutingAutoChainStep => isExecutingAutoChainStep;
     public bool HadGrabAtStepStart => hadGrabAtStepStart;
     public bool IsAirCombo => isAirCombo;
+    public bool CurrentActionStartedGrounded => currentActionStartedGrounded;
+    public bool CurrentActionAllowsGroundToAirTransition => currentActionAllowsGroundToAirTransition;
 
     void Awake()
     {
@@ -335,7 +338,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     public bool ShouldInterruptAttackOnGrounded()
     {
-        if (!IsAttacking() || isPlungeFalling)
+        if (!IsAttacking())
         {
             return false;
         }
@@ -343,15 +346,22 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         return isAirCombo;
     }
 
-    public bool ShouldSuppressLandingFeedback() => isPlungeFalling;
+    public bool ShouldSuppressLandingFeedback() => false;
 
     /// <summary>
     /// Whether the player is currently in an airborne combat action.
     /// Used by PlayerMovement to decide whether to apply airborne gravity policy.
     /// Returns true for ANY active combat action (Attack, Skill, Ultimate) while airborne.
     /// </summary>
-    public bool IsInAirborneAction() => (currentPhase != ActionPhase.None) && !isPlungeFalling &&
-                                        (playerCharacter.StateMachine.CurrentStateId == PlayerStateId.AirborneAttacking || (movement != null && !movement.IsGrounded()));
+    public bool IsInAirborneAction() => (currentPhase != ActionPhase.None) && isAirCombo;
+
+    public bool ShouldPreserveGroundAuthority()
+    {
+        return IsAttacking()
+            && currentActionStartedGrounded
+            && !currentActionAllowsGroundToAirTransition
+            && !isAirCombo;
+    }
 
     /// <summary>
     /// Current gravity scale factor for airborne actions (0..1).
@@ -479,7 +489,13 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         RecordActionUse(category, actionName ?? currentActionName);
     }
 
-    public void SetPlungeFalling(bool falling) => isPlungeFalling = falling;
+    public void BeginResolvedAction(bool startedGrounded, bool airCombo, bool allowGroundToAirTransition)
+    {
+        currentActionStartedGrounded = startedGrounded;
+        currentActionAllowsGroundToAirTransition = allowGroundToAirTransition;
+        isAirCombo = airCombo;
+    }
+
     public void SetAirCombo(bool airCombo) => isAirCombo = airCombo;
 
     public bool CanStartAirCombo() => Time.time >= airAttackComboCooldownEndTime;
@@ -498,8 +514,9 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         hitboxActiveCount = 0;
         // hitstop is now global
         currentAttackFrame = 0;
-        isPlungeFalling = false;
         isAirCombo = false;
+        currentActionStartedGrounded = false;
+        currentActionAllowsGroundToAirTransition = false;
         airborneGravityScaleOverride = 1f;
         isExecutingAutoChainStep = false;
         currentGrabHitbox = null;
@@ -541,6 +558,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             cachedAnimator.speed = 1f;
         }
 
+        currentActionStartedGrounded = false;
+        currentActionAllowsGroundToAirTransition = false;
         movement?.CancelAttackMotion();
         OnComboFinished?.Invoke();
     }
@@ -1070,7 +1089,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     private void HandleDashStart()
     {
-        if (isAirCombo && comboDepth > 0 && !isPlungeFalling && movement != null && !movement.IsGrounded())
+        if (isAirCombo && comboDepth > 0 && movement != null && !movement.IsGrounded())
             CancelCurrentAttackButKeepComboProgress();
         else
             ResetCombo();
@@ -1083,11 +1102,6 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     private void HandleLandingComboReset()
     {
-        if (isPlungeFalling || ShouldSuppressLandingFeedback())
-        {
-            return;
-        }
-
         if (isAirCombo && comboDepth > 0)
         {
             ResetCombo();

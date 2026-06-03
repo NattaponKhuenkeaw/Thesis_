@@ -32,11 +32,6 @@ public class PlayerAirAttackState : PlayerAttackState
 
     protected override InterruptPolicy GetInterruptPolicy()
     {
-        if (resolver.IsPlungeChargeActive || resolver.IsPlungeFalling)
-        {
-            return base.GetInterruptPolicy();
-        }
-
         return InterruptPolicy.AirborneAttack;
     }
 }
