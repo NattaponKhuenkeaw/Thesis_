@@ -762,6 +762,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             direction = direction,
             resolvedSpawnOffset = resolvedSpawnOffset,
             damage = damageData.damage,
+            isCrit = damageData.isCrit,
             remainingHits = remainingHits
         };
     }

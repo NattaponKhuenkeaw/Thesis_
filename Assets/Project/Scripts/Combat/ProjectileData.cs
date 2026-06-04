@@ -370,5 +370,6 @@ public struct ProjectileSpawnContext
     public Vector2 direction;
     public Vector2 resolvedSpawnOffset;
     public float damage;
+    public bool isCrit;
     public int remainingHits;
 }

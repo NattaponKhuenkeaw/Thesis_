@@ -286,7 +286,9 @@ public class PlayerCharacter : MonoBehaviour
         
         if (characterObject.stats != null && characterObject.stats.speed > 0)
         {
-            Movement.moveSpeedOverride = characterObject.stats.speed;
+            float baseSpeed = characterObject.movementProfile != null ? characterObject.movementProfile.moveSpeed : 5f;
+            float multiplier = characterObject.stats.speed / 10f; // Default base SPD is 10
+            Movement.moveSpeedOverride = baseSpeed * multiplier;
         }
         else
         {

@@ -53,8 +53,8 @@ namespace Project.TeamBuilder.UI
         {
             var data = currentCharacter.characterObjectData;
 
-            if (characterNameText != null) characterNameText.text = data.characterName;
-            if (characterPortrait != null) characterPortrait.sprite = data.characterIcon;
+            if (characterNameText != null) characterNameText.text = data.metaData != null ? data.metaData.displayName : currentCharacter.itemName;
+            if (characterPortrait != null) characterPortrait.sprite = data.metaData != null ? data.metaData.portrait : currentCharacter.icon;
             
             // Stats
             if (data.stats != null)
@@ -63,10 +63,9 @@ namespace Project.TeamBuilder.UI
                 if (atkText != null) atkText.text = $"ATK: {data.stats.attack}";
                 if (defText != null) defText.text = $"DEF: {data.stats.defense}";
                 
-                // SPD as 10(+2) format is requested. Wait, if it's base + add, we need base speed and add speed. 
-                // For now, we display the stat. The exact formatting "10(+2)" might need base and bonus split.
-                // Assuming data.stats.speed is the total or base for now.
-                if (spdText != null) spdText.text = $"SPD: {Mathf.RoundToInt(data.stats.speed)}(+0)";
+                int baseSpd = 10;
+                int bonusSpd = Mathf.RoundToInt(data.stats.speed) - baseSpd;
+                if (spdText != null) spdText.text = $"SPD: {baseSpd}(+{bonusSpd})";
                 
                 if (cdrText != null) cdrText.text = $"CDR: {data.stats.cooldownReduction}%";
                 if (critRateText != null) critRateText.text = $"CRIT: {data.stats.critRate}%";
@@ -82,9 +81,17 @@ namespace Project.TeamBuilder.UI
                 characterLoreText.text = data.metaData.description; // or lore field
             }
 
-            if (passiveDescriptionText != null && data.metaData != null && data.metaData.passiveSkill != null)
+            if (passiveDescriptionText != null)
             {
-                passiveDescriptionText.text = data.metaData.passiveSkill.description;
+                if (data.progressionDefinition != null && data.progressionDefinition.passiveNodes != null && data.progressionDefinition.passiveNodes.Count > 0)
+                {
+                    var firstPassive = data.progressionDefinition.passiveNodes[0];
+                    passiveDescriptionText.text = $"{firstPassive.nodeName}: {firstPassive.description}";
+                }
+                else
+                {
+                    passiveDescriptionText.text = "None";
+                }
             }
             
             if (potentialText != null)

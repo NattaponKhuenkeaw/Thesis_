@@ -20,7 +20,14 @@ MonoBehaviour:
     maxHP: 100
     attack: 10
     defense: 5
+    speed: 10
     elementalMultiplier: 1
+    critRate: 5
+    critDamage: 150
+    cooldownReduction: 0
+    skillMastery: 0
+    damageMastery: 0
+    damageResistance: 0
   metaData:
     displayName: Main
     description: 
@@ -47,7 +54,24 @@ MonoBehaviour:
     cooldownFrames: 24
   progressionDefinition:
     maxConstellationRank: 6
-    constellationNodes: []
+    constellationNodes:
+    - nodeId: 
+      nodeName: 
+      description: 
+      group: 0
+      constellationRank: 0
+      requiredNodeId: 
+      pointCost: 0
+      requiredConstellationRank: 0
+      unlockedByDefault: 0
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      passiveHookTypeName: 
     passiveNodes: []
   actionResolverTable: {fileID: 11400000, guid: 4c22d52c4e028734cbd3294422a85e5b, type: 2}
   audioData: {fileID: 11400000, guid: ef4f15f931ec82243bf22d736d76277c, type: 2}

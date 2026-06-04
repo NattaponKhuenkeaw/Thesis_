@@ -64,6 +64,7 @@ public sealed class ProjectileHitboxModule
             case NormalHitbox normalHitbox:
                 hitBoxDamage.SetHitData(
                     context.damage * normalHitbox.damageMultiplier,
+                    context.isCrit,
                     false,
                     0f,
                     0f,
@@ -78,6 +79,7 @@ public sealed class ProjectileHitboxModule
             case GrabHitbox grabHitbox:
                 hitBoxDamage.SetGrabData(
                     context.damage * grabHitbox.damageMultiplier,
+                    context.isCrit,
                     grabHitbox,
                     false,
                     context.category,
