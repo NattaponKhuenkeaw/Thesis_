@@ -27,6 +27,8 @@ public class EnemyController : MonoBehaviour
     public float maxHP = 100f;
     public float currentHP = 100f;
     public float attackDamage = 10f;
+    public float defense = 0f;
+    public float damageRes = 0f;
 
     // =========================================================
     // State
@@ -176,7 +178,10 @@ public class EnemyController : MonoBehaviour
         else if (currentComboHits >= 3 && reactionData.impactTier < DamageImpactTier.Medium)
             reactionData.impactTier = DamageImpactTier.Medium;
 
-        currentHP -= reactionData.damage;
+        float finalIncomingDamage = CombatFormula.CalculateIncomingDamage(reactionData.damage, defense, damageRes);
+        reactionData.damage = finalIncomingDamage;
+
+        currentHP -= finalIncomingDamage;
         currentHP  = Mathf.Max(currentHP, 0f);
 
         bool shouldApplyReaction = ShouldApplyHitReaction();

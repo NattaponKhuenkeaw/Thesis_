@@ -297,12 +297,21 @@ namespace Project.TeamBuilder.UI
         {
             if (currentCharacter == null || parentBuilder == null) return;
 
-            // Set this slot as active in the TeamLoader
-            parentBuilder.SetActiveIndex(slotIndex);
+            if (parentBuilder.currentMode == TeamBuilderMode.CombatZone)
+            {
+                parentBuilder.OpenInspectScreen(currentCharacter);
+            }
+            else
+            {
+                // Set this slot as active in the TeamLoader
+                parentBuilder.SetActiveIndex(slotIndex);
+            }
         }
 
         public void OnBeginDrag(PointerEventData eventData)
         {
+            if (parentBuilder != null && parentBuilder.currentMode == TeamBuilderMode.CombatZone) return;
+
             if (currentCharacter == null || profileImage == null || profileImage.sprite == null)
                 return;
 

@@ -5,6 +5,12 @@ using Project.ShopSystem;
 
 namespace Project.TeamBuilder.UI
 {
+    public enum TeamBuilderMode
+    {
+        SafeZone, // Interactive (Team Builder)
+        CombatZone // Read-Only (Normal Team Data)
+    }
+
     /// <summary>
     /// Main controller for the Team Builder UI.
     /// Manages the Character Grid Inventory panel and Team Slot panel.
@@ -39,6 +45,11 @@ namespace Project.TeamBuilder.UI
         private bool isInitialized = false;
         private readonly Dictionary<CharacterObject, CharacterItem> runtimeCharacterItems = new Dictionary<CharacterObject, CharacterItem>();
         public Canvas RootCanvas => rootCanvas;
+
+        [Header("Mode Settings")]
+        public TeamBuilderMode currentMode = TeamBuilderMode.SafeZone;
+        [SerializeField] private InspectScreenUI inspectScreenUI;
+        private float previousTimeScale = 1f;
 
         // =========================================================
         // Initialization
@@ -81,6 +92,18 @@ namespace Project.TeamBuilder.UI
             LoadExistingTeam();
             RefreshGrid();
             RefreshActiveIndex();
+
+            previousTimeScale = Time.timeScale;
+            Time.timeScale = 0f;
+
+            if (currentMode == TeamBuilderMode.CombatZone)
+            {
+                if (gridPanel != null) gridPanel.gameObject.SetActive(false);
+            }
+            else
+            {
+                if (gridPanel != null) gridPanel.gameObject.SetActive(true);
+            }
         }
 
         /// <summary>
@@ -90,6 +113,12 @@ namespace Project.TeamBuilder.UI
         public void OnPanelClosed()
         {
             SyncTeamToLoader();
+            Time.timeScale = previousTimeScale > 0f ? previousTimeScale : 1f;
+
+            if (inspectScreenUI != null && inspectScreenUI.gameObject.activeSelf)
+            {
+                inspectScreenUI.Close();
+            }
         }
 
         /// <summary>
@@ -138,6 +167,14 @@ namespace Project.TeamBuilder.UI
 
             // Live-sync team data to TeamLoader
             SyncTeamToLoader();
+        }
+
+        public void OpenInspectScreen(CharacterItem character)
+        {
+            if (inspectScreenUI != null && character != null)
+            {
+                inspectScreenUI.Open(character);
+            }
         }
 
         /// <summary>

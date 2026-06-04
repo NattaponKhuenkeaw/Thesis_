@@ -283,6 +283,15 @@ public class PlayerCharacter : MonoBehaviour
         Movement.dashData = characterObject.DashData;
         Movement.maxJumpOverride = characterObject.maxJumpOverride;
         Movement.maxAirDashOverride = characterObject.maxAirDashOverride;
+        
+        if (characterObject.stats != null && characterObject.stats.speed > 0)
+        {
+            Movement.moveSpeedOverride = characterObject.stats.speed;
+        }
+        else
+        {
+            Movement.moveSpeedOverride = -1f;
+        }
     }
 
     private void ApplyAnimationData()

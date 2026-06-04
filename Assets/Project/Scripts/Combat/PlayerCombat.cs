@@ -745,6 +745,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         int remainingHits = data != null ? Mathf.Max(1, data.maxHits) : 1;
         bool needsTarget = data != null && data.RequiresTarget;
 
+        var damageData = GetFinalAttackDamage(1f);
+
         return new ProjectileSpawnContext
         {
             projectileType = projectileType,
@@ -759,7 +761,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             origin = origin,
             direction = direction,
             resolvedSpawnOffset = resolvedSpawnOffset,
-            damage = GetFinalAttackDamage(1f),
+            damage = damageData.damage,
             remainingHits = remainingHits
         };
     }
@@ -831,8 +833,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             hitBoxController.ApplyHitbox(normalHitbox);
         }
 
-        float finalDamage = GetFinalAttackDamage(normalHitbox != null ? normalHitbox.damageMultiplier : 1f);
-        hitBoxDamage?.SetHitData(finalDamage, false, 0f, 0f, normalHitbox, currentAttackCategory, currentActionName, currentStepData, passiveController);
+        var damageData = GetFinalAttackDamage(normalHitbox != null ? normalHitbox.damageMultiplier : 1f);
+        hitBoxDamage?.SetHitData(damageData.damage, damageData.isCrit, false, 0f, 0f, normalHitbox, currentAttackCategory, currentActionName, currentStepData, passiveController);
         hitBoxDamage?.ResetActivationState();
 
         CombatLog($"Active: (Frame {currentAttackFrame})");
@@ -855,8 +857,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         };
         hitBoxController?.ApplyHitbox(grabHitbox);
 
-        float finalDamage = GetFinalAttackDamage(grabHitbox.damageMultiplier);
-        hitBoxDamage?.SetGrabData(finalDamage, grabHitbox, false, currentAttackCategory, currentActionName, currentStepData, passiveController);
+        var damageData = GetFinalAttackDamage(grabHitbox.damageMultiplier);
+        hitBoxDamage?.SetGrabData(damageData.damage, damageData.isCrit, grabHitbox, false, currentAttackCategory, currentActionName, currentStepData, passiveController);
         hitBoxDamage?.ResetActivationState();
 
         CombatLog($"Grab Active: (Frame {currentAttackFrame})");
@@ -1108,33 +1110,44 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         }
     }
 
-    private float GetFinalAttackDamage(float hitFrameMultiplier)
+    private (float damage, bool isCrit) GetFinalAttackDamage(float hitFrameMultiplier)
     {
         if (playerCharacter == null || playerCharacter.characterObject == null)
         {
-            return hitFrameMultiplier;
+            return (hitFrameMultiplier, false);
         }
 
-        float attackStat = playerCharacter.characterObject.stats.attack;
+        CharacterStats stats = playerCharacter.characterObject.stats;
+        float attackStat = stats.attack;
         if (passiveController != null)
         {
             attackStat = passiveController.ModifyValue(PassiveModifierTarget.AttackStat, attackStat);
         }
+        
+        bool isSkillOrUlt = currentAttackCategory == AttackCategory.Skill || currentAttackCategory == AttackCategory.Ultimate;
+        
+        float finalDamage = CombatFormula.CalculateOutgoingDamage(
+            baseAttack: attackStat,
+            actionMultiplier: hitFrameMultiplier,
+            critRate: stats.critRate,
+            critDmg: stats.critDamage,
+            skillMastery: stats.skillMastery,
+            dmgMastery: stats.damageMastery,
+            isSkillOrUlt: isSkillOrUlt,
+            out bool isCrit);
 
-        float damage = attackStat * hitFrameMultiplier;
-        if (passiveController == null)
+        if (passiveController != null)
         {
-            return damage;
+            PassiveModifierTarget modifierTarget = currentAttackCategory switch
+            {
+                AttackCategory.Skill => PassiveModifierTarget.SkillDamage,
+                AttackCategory.Ultimate => PassiveModifierTarget.UltimateDamage,
+                _ => PassiveModifierTarget.BasicAttackDamage
+            };
+            finalDamage = passiveController.ModifyValue(modifierTarget, finalDamage);
         }
 
-        PassiveModifierTarget modifierTarget = currentAttackCategory switch
-        {
-            AttackCategory.Skill => PassiveModifierTarget.SkillDamage,
-            AttackCategory.Ultimate => PassiveModifierTarget.UltimateDamage,
-            _ => PassiveModifierTarget.BasicAttackDamage
-        };
-
-        return passiveController.ModifyValue(modifierTarget, damage);
+        return (finalDamage, isCrit);
     }
 
     public float GetFinalCooldown(AttackCategory category, float baseValue, string actionName = null)

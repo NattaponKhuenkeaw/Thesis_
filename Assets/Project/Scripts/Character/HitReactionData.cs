@@ -62,6 +62,7 @@ public struct HitReactionData
     // Damage
     // =========================================================
     public float damage;
+    public bool isCriticalHit;
     public Vector2 knockbackDirection;
 
     // =========================================================
@@ -192,6 +193,7 @@ public struct HitReactionData
         return new HitReactionData
         {
             damage = damage,
+            isCriticalHit = false,
             knockbackDirection = direction,
             reactionKind = horizontal > 0f ? EnemyReactionKind.Knockback : EnemyReactionKind.Flinch,
             reactionTiming = CreateTiming(6, 15, 9),

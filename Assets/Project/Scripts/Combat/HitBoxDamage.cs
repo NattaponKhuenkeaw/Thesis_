@@ -12,6 +12,7 @@ public class HitBoxDamage : MonoBehaviour
     private NormalHitbox currentNormalHitbox;
     private GrabHitbox currentGrabHitbox;
     private float currentDamage = 1f;
+    private bool currentIsCrit = false;
     private bool hasTriggeredShakeThisActivation;
     private bool hasTriggeredHitStopThisActivation;
     private PlayerCombat playerCombat;
@@ -60,6 +61,7 @@ public class HitBoxDamage : MonoBehaviour
 
     public void SetHitData(
         float damage,
+        bool isCrit,
         bool lastHit,
         float stopDuration,
         float stopScale,
@@ -70,6 +72,7 @@ public class HitBoxDamage : MonoBehaviour
         CharacterPassiveController sourcePassiveController)
     {
         currentDamage = damage;
+        currentIsCrit = isCrit;
         currentNormalHitbox = hitbox;
         currentGrabHitbox = null;
         sourceCategory = category;
@@ -80,6 +83,7 @@ public class HitBoxDamage : MonoBehaviour
 
     public void SetGrabData(
         float damage,
+        bool isCrit,
         GrabHitbox hitbox,
         bool lastHit,
         AttackCategory category,
@@ -88,6 +92,7 @@ public class HitBoxDamage : MonoBehaviour
         CharacterPassiveController sourcePassiveController)
     {
         currentDamage = damage;
+        currentIsCrit = isCrit;
         currentGrabHitbox = hitbox;
         currentNormalHitbox = null;
         sourceCategory = category;
@@ -225,6 +230,7 @@ public class HitBoxDamage : MonoBehaviour
     private HitReactionData BuildReactionData(EnemyController enemy, Vector2 direction)
     {
         HitReactionData data = HitReactionData.Default(currentDamage, direction, 0f);
+        data.isCriticalHit = currentIsCrit;
         PopulateRuntimeContext(ref data);
 
         if (currentNormalHitbox != null)
@@ -271,6 +277,7 @@ public class HitBoxDamage : MonoBehaviour
     private HitReactionData BuildGrabReactionData(Vector2 direction)
     {
         HitReactionData data = HitReactionData.Default(currentDamage, direction, 0f);
+        data.isCriticalHit = currentIsCrit;
         PopulateRuntimeContext(ref data);
 
         if (currentGrabHitbox == null)

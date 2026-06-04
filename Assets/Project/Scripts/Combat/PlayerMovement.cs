@@ -120,9 +120,11 @@ public class PlayerMovement : MonoBehaviour
 
     [HideInInspector] public int maxJumpOverride = -1;
     [HideInInspector] public int maxAirDashOverride = -1;
+    [HideInInspector] public float moveSpeedOverride = -1f;
 
     private int MaxJumps => maxJumpOverride >= 0 ? maxJumpOverride : Mathf.Max(1, P.maxJumpCount);
     private int MaxAirDashes => maxAirDashOverride >= 0 ? maxAirDashOverride : Mathf.Max(0, P.maxAirDashCount);
+    private float BaseMoveSpeed => moveSpeedOverride >= 0f ? moveSpeedOverride : P.moveSpeed;
 
     // =========================================================
     // Computed State
@@ -486,7 +488,7 @@ public class PlayerMovement : MonoBehaviour
                     }
                 }
 
-                float targetX = movementInput * P.moveSpeed * P.airSpeedMultiplier * driftScale;
+                float targetX = movementInput * BaseMoveSpeed * P.airSpeedMultiplier * driftScale;
                 float accel = P.airAcceleration * driftScale;
                 newPhysX = Mathf.MoveTowards(currentPhysX, targetX, accel * Time.fixedDeltaTime);
             }
@@ -520,7 +522,7 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        float baseSpeed = P.moveSpeed * (GroundState.IsEffectivelyGrounded ? 1f : P.airSpeedMultiplier) * verticalAttenuation;
+        float baseSpeed = BaseMoveSpeed * (GroundState.IsEffectivelyGrounded ? 1f : P.airSpeedMultiplier) * verticalAttenuation;
         float tgtX = effectiveInput * baseSpeed;
         float acc = Mathf.Abs(tgtX) < 0.01f
             ? (GroundState.IsEffectivelyGrounded ? P.groundDeceleration : P.airDeceleration)
