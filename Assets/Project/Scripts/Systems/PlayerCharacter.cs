@@ -70,6 +70,11 @@ public class PlayerCharacter : MonoBehaviour
             var drawer = gameObject.AddComponent<ColliderDebugDrawer>();
             drawer.debugColor = Color.green; // Green for player
         }
+
+        if (GetComponent<PlayerSpeedFallbackFeedback>() == null)
+        {
+            gameObject.AddComponent<PlayerSpeedFallbackFeedback>();
+        }
     }
 
     void Start()
@@ -139,8 +144,17 @@ public class PlayerCharacter : MonoBehaviour
         if (IsDamageInvulnerable || (Movement != null && Movement.IsInvincible()))
             return false;
 
+        float finalDamage = value;
+        if (characterObject != null && characterObject.stats != null)
+        {
+            finalDamage = CombatFormula.CalculateIncomingDamage(
+                value,
+                characterObject.stats.defense,
+                characterObject.stats.damageResistance);
+        }
+
         float previousHP = currentHP;
-        currentHP -= value;
+        currentHP -= finalDamage;
         currentHP = Mathf.Max(currentHP, 0f);
 
         float actualDamage = previousHP - currentHP;

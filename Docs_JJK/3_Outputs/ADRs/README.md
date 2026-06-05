@@ -19,7 +19,7 @@ _Update this diagram as ADRs are added. Show which decisions depend on others._
 
 | # | Title | Status | Phase | Current Note |
 |---|-------|--------|-------|-------------|
-| [001](001-{kebab-title}.md) | {Title} | **Proposed** / Accepted / Deprecated | {Phase} | {status note} |
+| [001](001-aura-energy-resource-gated-ultimate.md) | Aura Energy Resource-Gated Ultimate System | **Proposed** | Phase 1 | Initial draft for refactoring Ultimate cooldowns to Aura Energy |
 
 ## Phase Mapping
 

@@ -22,8 +22,8 @@ MonoBehaviour:
     defense: 7
     speed: 10
     elementalMultiplier: 1
-    critRate: 100
-    critDamage: 150
+    critRate: 7
+    critDamage: 140
     cooldownReduction: 0
     skillMastery: 0
     damageMastery: 0

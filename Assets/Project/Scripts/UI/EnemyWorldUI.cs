@@ -46,6 +46,16 @@ public class EnemyWorldUI : MonoBehaviour
     [Tooltip("Overshoot multiplier for the punch-pop effect at start.")]
     [SerializeField] private float punchScaleOvershoot = 1.3f;
 
+    [Header("Critical Hit Styling")]
+    [Tooltip("Extra scale multiplier applied when the hit is a crit.")]
+    [SerializeField] private float critScaleMultiplier = 1.2f;
+    [Tooltip("Color used for crit damage text.")]
+    [SerializeField] private Color critTextColor = new Color(1f, 0.85f, 0.2f);
+    [Tooltip("Prefix shown before critical hit damage numbers.")]
+    [SerializeField] private string critTextPrefix = "CRIT ";
+    [Tooltip("Random rotation range applied to crit damage popups.")]
+    [SerializeField] private float critRotationRange = 15f;
+
     private RectTransform damageTextRect;
     private List<TMP_Text> damageTextPool = new List<TMP_Text>();
     private Coroutine healthLerpCoroutine;
@@ -191,7 +201,7 @@ public class EnemyWorldUI : MonoBehaviour
     private void HandleDamaged(HitReactionData data)
     {
         UpdateHealthBar();
-        ShowDamageText(data.damage, data.impactTier, data.damageType);
+        ShowDamageText(data.damage, data.impactTier, data.damageType, data.isCriticalHit);
     }
 
     private void HandleDied()
@@ -281,7 +291,7 @@ public class EnemyWorldUI : MonoBehaviour
         attackWarningCoroutine = null;
     }
 
-    private void ShowDamageText(float damage, DamageImpactTier impactTier, DamageType damageType)
+    private void ShowDamageText(float damage, DamageImpactTier impactTier, DamageType damageType, bool isCriticalHit)
     {
         if (Mathf.RoundToInt(damage) <= 0) return;
 
@@ -320,9 +330,24 @@ public class EnemyWorldUI : MonoBehaviour
             _                  => physicalColor
         };
 
-        t.text = Mathf.RoundToInt(damage).ToString();
+        if (isCriticalHit)
+        {
+            targetScale *= critScaleMultiplier;
+            elementColor = critTextColor;
+            t.text = $"{critTextPrefix}{Mathf.RoundToInt(damage)}";
+            t.fontStyle = FontStyles.Bold;
+        }
+        else
+        {
+            t.text = Mathf.RoundToInt(damage).ToString();
+            t.fontStyle = FontStyles.Normal;
+        }
+
         t.color = elementColor;
         r.anchoredPosition = randomStart;
+        r.localRotation = isCriticalHit
+            ? Quaternion.Euler(0f, 0f, Random.Range(-critRotationRange, critRotationRange))
+            : Quaternion.identity;
         t.gameObject.SetActive(true);
 
         StartCoroutine(DamageTextRoutine(t, randomStart, targetScale, elementColor));
@@ -399,6 +424,8 @@ public class EnemyWorldUI : MonoBehaviour
             yield return null;
         }
 
+        textInstance.fontStyle = FontStyles.Normal;
+        rect.localRotation = Quaternion.identity;
         textInstance.gameObject.SetActive(false);
     }
 

@@ -20,6 +20,11 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private Image iconImage;
         [SerializeField] private Image frameImage;
         [SerializeField] private TMP_Text nameText;
+        [SerializeField] private Image attributeImage; // For elemental attribute
+
+        [Header("Element Sprites")]
+        [Tooltip("Assign sprites in order: None, Earth, Water, Fire, Wind (matching ElementType enum order)")]
+        [SerializeField] private Sprite[] elementSprites = new Sprite[5];
 
         [Header("Visual States")]
         [SerializeField] private Color normalFrameColor = new Color(0.5f, 0.2f, 0.7f, 1f);
@@ -54,9 +59,19 @@ namespace Project.TeamBuilder.UI
             {
                 if (iconImage != null && item.characterObjectData.metaData.portrait != null)
                     iconImage.sprite = item.characterObjectData.metaData.portrait;
- 
+
                 if (nameText != null)
                     nameText.text = item.characterObjectData.metaData.displayName;
+                if (attributeImage != null)
+                {
+                    int elementIndex = (int)item.characterObjectData.elementType;
+                    bool hasElementSprite = elementIndex >= 0 && elementIndex < elementSprites.Length && elementSprites[elementIndex] != null;
+                    attributeImage.enabled = hasElementSprite;
+                    if (hasElementSprite)
+                    {
+                        attributeImage.sprite = elementSprites[elementIndex];
+                    }
+                }
             }
             else
             {

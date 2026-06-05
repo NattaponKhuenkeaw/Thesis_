@@ -76,7 +76,7 @@ public class TeamLoader : MonoBehaviour
     // =========================================================
     // Public Methods
     // =========================================================
-    public void LoadCurrentCharacter()
+    public void LoadCurrentCharacter(bool forceReload = false, bool preserveActiveHp = true)
     {
         if (playerCharacter == null)
         {
@@ -84,7 +84,8 @@ public class TeamLoader : MonoBehaviour
             return;
         }
 
-        SaveActiveCharacterHP();
+        if (preserveActiveHp)
+            SaveActiveCharacterHP();
 
         int validIndex = ResolvePreferredIndex(CurrentCharacter);
         if (validIndex < 0)
@@ -106,7 +107,7 @@ public class TeamLoader : MonoBehaviour
             return;
         }
 
-        if (playerCharacter.characterObject == targetCharacter)
+        if (!forceReload && playerCharacter.characterObject == targetCharacter)
         {
             NotifyCharacterHealthUpdated(targetCharacter);
             NotifyCurrentCharacterChanged();
@@ -302,6 +303,66 @@ public class TeamLoader : MonoBehaviour
     }
 
     /// <summary>
+    /// Commits a saved Team Builder loadout into runtime authority and resets transient combat state.
+    /// Unlike SyncWithTeam, deploy intentionally clears per-character HP cache and switch cooldown.
+    /// </summary>
+    public void DeployLoadout(CharacterObject[] newTeam, int preferredIndex)
+    {
+        if (newTeam == null)
+            return;
+
+        CharacterObject preferredCharacter = null;
+        if (preferredIndex >= 0 && preferredIndex < newTeam.Length)
+            preferredCharacter = newTeam[preferredIndex];
+
+        if (preferredCharacter == null && playerCharacter != null)
+            preferredCharacter = playerCharacter.characterObject;
+
+        int previousIndex = currentIndex;
+        HashSet<CharacterObject> incomingCharacters = new HashSet<CharacterObject>();
+        for (int i = 0; i < newTeam.Length; i++)
+        {
+            if (newTeam[i] != null)
+                incomingCharacters.Add(newTeam[i]);
+        }
+
+        if (incomingCharacters.Count == 0)
+        {
+            CharacterObject fallbackCharacter = preferredCharacter;
+            if (fallbackCharacter == null && CurrentCharacter != null)
+                fallbackCharacter = CurrentCharacter;
+
+            if (fallbackCharacter == null)
+            {
+                Debug.LogWarning("TeamLoader: Ignored empty deploy because no fallback character exists");
+                return;
+            }
+
+            team = new CharacterObject[Mathf.Max(1, newTeam.Length)];
+            int fallbackIndex = Mathf.Clamp(previousIndex, 0, team.Length - 1);
+            team[fallbackIndex] = fallbackCharacter;
+            currentIndex = fallbackIndex;
+        }
+        else
+        {
+            team = new CharacterObject[Mathf.Max(1, newTeam.Length)];
+            for (int i = 0; i < newTeam.Length; i++)
+            {
+                team[i] = newTeam[i];
+            }
+
+            currentIndex = ResolvePreferredIndex(preferredCharacter, Mathf.Clamp(preferredIndex, 0, team.Length - 1));
+        }
+
+        characterCurrentHP.Clear();
+        lastSwitchTime = -999f;
+
+        NotifyTeamChanged();
+        LoadCurrentCharacter(forceReload: true, preserveActiveHp: false);
+        ResetRuntimeTransientState();
+    }
+
+    /// <summary>
     /// Replaces the team array with data pushed from the Team Builder UI.
     /// </summary>
     public void SetTeamFromUI(CharacterObject[] newTeam)
@@ -489,6 +550,18 @@ public class TeamLoader : MonoBehaviour
     private void NotifyTeamChanged()
     {
         OnTeamChanged?.Invoke();
+    }
+
+    private void ResetRuntimeTransientState()
+    {
+        if (playerCharacter == null)
+            return;
+
+        playerCharacter.Combat?.ResetCombo();
+        playerCharacter.Movement?.CancelAttackMotion();
+        playerCharacter.Movement?.StopDashPhysics();
+        playerCharacter.StateMachine?.ResetForCharacterSwitch();
+        playerCharacter.StateMachine?.InputBuffer?.ClearAll();
     }
 
     private int CountCharacters(CharacterObject[] teamData)

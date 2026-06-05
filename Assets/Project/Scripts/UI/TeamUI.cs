@@ -6,97 +6,102 @@ using Project.TeamBuilder.UI;
 
 namespace Project.UI
 {
+    public enum TeamUIOpenMode
+    {
+        Auto,
+        SafeZone,
+        CombatZone
+    }
+
     [RequireComponent(typeof(CanvasGroup))]
     public class TeamUI : MonoBehaviour
     {
         [Header("Animation Settings")]
-        [SerializeField] private float slideOffset = 500f;
         [SerializeField] private float animationDuration = 0.4f;
+        [SerializeField] private int openSortingOrder = 5000;
 
         [Header("Team Builder Integration")]
         [SerializeField] private TeamBuilderUI teamBuilderUI;
+        [SerializeField] private TeamUIOpenMode defaultOpenMode = TeamUIOpenMode.Auto;
+        [SerializeField] private string uiActionMapName = "UI";
+        [SerializeField] private PlayerInput playerInput;
+        [SerializeField] private PlayerStateMachine playerStateMachine;
+
+        [Header("Input")]
+        [SerializeField] private bool listenForKeyboardToggle = true;
+        [SerializeField] private Key toggleKey = Key.Tab;
 
         private CanvasGroup canvasGroup;
-        private RectTransform rectTransform;
+        private Canvas rootCanvas;
         private Coroutine activeAnimation;
         private bool isOpen = false;
-
-        // FIX: Store the resting anchoredPosition as a stable base
-        private Vector2 baseAnchoredPosition;
-
-        // FIX: Track the animated offset separately — drives LateUpdate
-        private float currentXOffset = 0f;
-
-        // FIX: Flag so LateUpdate always runs while panel is active
-        private bool applyOffset = false;
+        private bool inputLockHeld = false;
+        private bool previousOverrideSorting = false;
+        private int previousSortingOrder = 0;
+        private string previousActionMapName;
 
         private void Awake()
         {
             canvasGroup = GetComponent<CanvasGroup>();
-            rectTransform = GetComponent<RectTransform>();
+            rootCanvas = GetComponent<Canvas>();
+            playerInput = playerInput ?? FindFirstObjectByType<PlayerInput>();
+            playerStateMachine = playerStateMachine ?? FindFirstObjectByType<PlayerStateMachine>();
 
             canvasGroup.alpha = 0f;
             canvasGroup.interactable = false;
             canvasGroup.blocksRaycasts = false;
         }
 
-        private void OnEnable()
-        {
-            // FIX: Capture base position HERE — after the LayoutGroup (if any)
-            // has had a chance to position the element when it becomes active.
-            // Schedule for end of frame so layout has settled.
-            StartCoroutine(CaptureBasePositionNextFrame());
-        }
-
-        private IEnumerator CaptureBasePositionNextFrame()
-        {
-            yield return null; // wait one frame for layout to settle
-            baseAnchoredPosition = rectTransform.anchoredPosition;
-
-            // Apply initial hidden offset immediately after capturing base
-            currentXOffset = -slideOffset;
-            applyOffset = true;
-        }
-
         private void Update()
         {
+            if (listenForKeyboardToggle
+                && Keyboard.current != null
+                && toggleKey != Key.None
+                && Keyboard.current[toggleKey].wasPressedThisFrame)
+            {
+                Toggle();
+                return;
+            }
+
             if (!isOpen) return;
 
             if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
             {
                 if (!EventSystem.current.IsPointerOverGameObject())
-                    Close();
+                    RequestClose();
             }
         }
 
-        private void LateUpdate()
+        public void Open()
         {
-            // FIX: Always SET position from a stable base, never ADD to live value.
-            // This works with or without a LayoutGroup.
-            if (!applyOffset) return;
-
-            Vector2 pos = baseAnchoredPosition;   // ← stable reference, not live pos
-            pos.x += currentXOffset;              // ← SET offset, not accumulate
-            rectTransform.anchoredPosition = pos;
+            OpenInMode(ResolveOpenMode());
         }
 
-        // =========================================================
-        // Public API
-        // =========================================================
-
-        public void Open()
+        public void OpenInMode(TeamBuilderMode mode)
         {
             if (isOpen) return;
 
             gameObject.SetActive(true);
             isOpen = true;
-            InputLockManager.Lock();
+            BringCanvasToFront();
+
+            if (!inputLockHeld)
+            {
+                InputLockManager.Lock();
+                inputLockHeld = true;
+                SwitchToUIActionMap();
+            }
+
+            playerStateMachine?.InputBuffer?.ClearAll();
 
             if (activeAnimation != null) StopCoroutine(activeAnimation);
             activeAnimation = StartCoroutine(AnimatePanel(true));
 
             if (teamBuilderUI != null)
+            {
+                teamBuilderUI.SetMode(mode);
                 teamBuilderUI.OnPanelOpened();
+            }
         }
 
         public void Close()
@@ -116,18 +121,34 @@ namespace Project.UI
 
         public void Toggle()
         {
-            if (isOpen) Close();
+            if (isOpen) RequestClose();
             else Open();
         }
 
-        // =========================================================
-        // Animation Coroutine
-        // =========================================================
+        public void ToggleInMode(TeamBuilderMode mode)
+        {
+            if (isOpen) RequestClose();
+            else OpenInMode(mode);
+        }
+
+        public void RequestClose()
+        {
+            if (!isOpen)
+            {
+                return;
+            }
+
+            if (teamBuilderUI != null && teamBuilderUI.TryRequestSafeZoneClose(Close))
+            {
+                return;
+            }
+
+            Close();
+        }
+
         private IEnumerator AnimatePanel(bool opening)
         {
             float elapsed = 0f;
-            float startOffset = currentXOffset;
-            float targetOffset = opening ? 0f : -slideOffset;
             float startAlpha = canvasGroup.alpha;
             float targetAlpha = opening ? 1f : 0f;
 
@@ -135,15 +156,12 @@ namespace Project.UI
             {
                 elapsed += Time.unscaledDeltaTime;
                 float t = Mathf.Clamp01(elapsed / animationDuration);
-                float curve = 1f - Mathf.Pow(1f - t, 3f); // Ease-out cubic
-
-                currentXOffset = Mathf.Lerp(startOffset, targetOffset, curve);
-                canvasGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, t);
+                float eased = 1f - Mathf.Pow(1f - t, 3f);
+                canvasGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, eased);
 
                 yield return null;
             }
 
-            currentXOffset = targetOffset;
             canvasGroup.alpha = targetAlpha;
 
             if (opening)
@@ -153,12 +171,109 @@ namespace Project.UI
             }
             else
             {
-                applyOffset = false;
-                gameObject.SetActive(false);
-                InputLockManager.Unlock();
+                RestoreCanvasSorting();
+                RestorePreviousActionMap();
+                if (inputLockHeld)
+                {
+                    InputLockManager.Unlock();
+                    inputLockHeld = false;
+                }
             }
 
             activeAnimation = null;
+        }
+
+        private TeamBuilderMode ResolveOpenMode()
+        {
+            return defaultOpenMode switch
+            {
+                TeamUIOpenMode.SafeZone => TeamBuilderMode.SafeZone,
+                TeamUIOpenMode.CombatZone => TeamBuilderMode.CombatZone,
+                _ => ResolveAutoMode()
+            };
+        }
+
+        private TeamBuilderMode ResolveAutoMode()
+        {
+            string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            if (!string.IsNullOrEmpty(sceneName))
+            {
+                string normalizedSceneName = sceneName.ToLowerInvariant();
+                if (normalizedSceneName.Contains("shop")
+                    || normalizedSceneName.Contains("lobby")
+                    || normalizedSceneName.Contains("hub"))
+                {
+                    return TeamBuilderMode.SafeZone;
+                }
+            }
+
+            return TeamBuilderMode.CombatZone;
+        }
+
+        private void BringCanvasToFront()
+        {
+            if (rootCanvas == null)
+            {
+                rootCanvas = GetComponent<Canvas>();
+            }
+
+            if (rootCanvas == null)
+            {
+                return;
+            }
+
+            previousOverrideSorting = rootCanvas.overrideSorting;
+            previousSortingOrder = rootCanvas.sortingOrder;
+            rootCanvas.overrideSorting = true;
+            rootCanvas.sortingOrder = openSortingOrder;
+        }
+
+        private void RestoreCanvasSorting()
+        {
+            if (rootCanvas == null)
+            {
+                return;
+            }
+
+            rootCanvas.overrideSorting = previousOverrideSorting;
+            rootCanvas.sortingOrder = previousSortingOrder;
+        }
+
+        private void SwitchToUIActionMap()
+        {
+            if (playerInput == null || playerInput.actions == null)
+            {
+                previousActionMapName = null;
+                return;
+            }
+
+            previousActionMapName = playerInput.currentActionMap != null
+                ? playerInput.currentActionMap.name
+                : null;
+
+            if (!string.IsNullOrWhiteSpace(uiActionMapName)
+                && playerInput.actions.FindActionMap(uiActionMapName, throwIfNotFound: false) != null)
+            {
+                playerInput.SwitchCurrentActionMap(uiActionMapName);
+            }
+        }
+
+        private void RestorePreviousActionMap()
+        {
+            if (playerInput == null
+                || playerInput.actions == null
+                || string.IsNullOrWhiteSpace(previousActionMapName))
+            {
+                previousActionMapName = null;
+                return;
+            }
+
+            if (playerInput.actions.FindActionMap(previousActionMapName, throwIfNotFound: false) != null)
+            {
+                playerInput.SwitchCurrentActionMap(previousActionMapName);
+            }
+
+            previousActionMapName = null;
         }
     }
 }

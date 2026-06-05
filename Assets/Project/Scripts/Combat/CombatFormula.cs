@@ -25,13 +25,22 @@ public static class CombatFormula
     public static float CalculateIncomingDamage(float incomingDamage, float defense, float damageRes)
     {
         // Defender Defense Mitigation
-        float defMitigation = 100f / (100f + defense);
+        float clampedDefense = Mathf.Max(0f, defense);
+        float defMitigation = 100f / (100f + clampedDefense);
         float damageAfterDef = incomingDamage * defMitigation;
         
         // Resistance Mitigation
-        float resMitigation = 1f - (damageRes / 100f);
+        float clampedResistance = Mathf.Clamp(damageRes, 0f, 90f);
+        float resMitigation = 1f - (clampedResistance / 100f);
         float mitigatedDamage = damageAfterDef * resMitigation;
         
         return Mathf.Max(1f, mitigatedDamage);
+    }
+
+    public static float CalculateCooldownDuration(float baseCooldown, float cooldownReductionPercent)
+    {
+        float resolvedCooldown = Mathf.Max(0.05f, baseCooldown);
+        float resolvedReduction = Mathf.Clamp(cooldownReductionPercent, 0f, 95f);
+        return Mathf.Max(0.05f, resolvedCooldown * (1f - (resolvedReduction / 100f)));
     }
 }

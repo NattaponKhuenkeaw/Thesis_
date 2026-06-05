@@ -1153,9 +1153,24 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     public float GetFinalCooldown(AttackCategory category, float baseValue, string actionName = null)
     {
-        return passiveController != null
-            ? passiveController.ModifyCooldown(category, actionName ?? currentActionName, baseValue)
-            : baseValue;
+        float cooldown = baseValue;
+
+        if ((category == AttackCategory.Skill || category == AttackCategory.Ultimate)
+            && playerCharacter != null
+            && playerCharacter.characterObject != null
+            && playerCharacter.characterObject.stats != null)
+        {
+            cooldown = CombatFormula.CalculateCooldownDuration(
+                baseValue,
+                playerCharacter.characterObject.stats.cooldownReduction);
+        }
+
+        if (passiveController != null)
+        {
+            cooldown = passiveController.ModifyCooldown(category, actionName ?? currentActionName, cooldown);
+        }
+
+        return Mathf.Max(0.05f, cooldown);
     }
 
     public float GetFinalUltimateDuration(float baseValue)

@@ -13,12 +13,21 @@ public class AbilityUIManager : MonoBehaviour
     [SerializeField] private PlayerCharacter playerCharacter;
 
     [Header("Skill UI")]
+    [SerializeField] private RectTransform skillReadyFeedbackRoot;
     public Image skillCooldownFill;
     public TMP_Text skillCooldownText;
 
     [Header("Ultimate UI")]
+    [SerializeField] private RectTransform ultReadyFeedbackRoot;
     public Image ultCooldownFill;
     public TMP_Text ultCooldownText;
+
+    [Header("Fallback Ready Feedback")]
+    [SerializeField] private bool playFallbackReadyFeedback = true;
+    [SerializeField] private Color readyGlintColor = new Color(1f, 1f, 1f, 0.85f);
+    [SerializeField] private Color readyBurstColor = new Color(0.6f, 1f, 0.85f, 0.9f);
+    [SerializeField] private float readyPulseScale = 1.25f;
+    [SerializeField] private float readyFeedbackDuration = 0.18f;
 
     private struct CooldownDisplayState
     {
@@ -31,6 +40,7 @@ public class AbilityUIManager : MonoBehaviour
 
     private PlayerCharacter subscribedPlayer;
     private string displayedCharacterKey = string.Empty;
+    private UIFeedbackDriver feedbackDriver;
 
     private void Reset()
     {
@@ -43,6 +53,7 @@ public class AbilityUIManager : MonoBehaviour
             Instance = this;
 
         CacheReferences();
+        feedbackDriver = UIFeedbackDriver.GetOrAdd(gameObject);
         ResetUI(skillCooldownFill, skillCooldownText);
         ResetUI(ultCooldownFill, ultCooldownText);
     }
@@ -66,8 +77,8 @@ public class AbilityUIManager : MonoBehaviour
 
     private void Update()
     {
-        TickCooldownDictionary(skillCooldowns);
-        TickCooldownDictionary(ultimateCooldowns);
+        TickCooldownDictionary(skillCooldowns, AbilityType.Skill);
+        TickCooldownDictionary(ultimateCooldowns, AbilityType.Ultimate);
 
         CacheReferences();
         RebindPlayer();
@@ -138,7 +149,7 @@ public class AbilityUIManager : MonoBehaviour
         RefreshActiveCharacterUI();
     }
 
-    private void TickCooldownDictionary(Dictionary<string, CooldownDisplayState> cooldowns)
+    private void TickCooldownDictionary(Dictionary<string, CooldownDisplayState> cooldowns, AbilityType type)
     {
         if (cooldowns.Count == 0)
             return;
@@ -156,6 +167,13 @@ public class AbilityUIManager : MonoBehaviour
             {
                 keysToClear ??= new List<string>();
                 keysToClear.Add(key);
+
+                string currentCharacterKey = GetCurrentCharacterKey();
+                if (string.Equals(key, currentCharacterKey, System.StringComparison.Ordinal))
+                {
+                    PlayAbilityReadyFeedback(type);
+                }
+
                 continue;
             }
 
@@ -239,5 +257,38 @@ public class AbilityUIManager : MonoBehaviour
             text.gameObject.SetActive(false);
             text.text = string.Empty;
         }
+    }
+
+    private void PlayAbilityReadyFeedback(AbilityType type)
+    {
+        if (!playFallbackReadyFeedback)
+        {
+            return;
+        }
+
+        Image targetFill = type == AbilityType.Skill ? skillCooldownFill : ultCooldownFill;
+        RectTransform targetRect = type == AbilityType.Skill ? skillReadyFeedbackRoot : ultReadyFeedbackRoot;
+        if (targetRect == null && targetFill != null)
+        {
+            Transform feedbackParent = targetFill.transform.parent != null
+                ? targetFill.transform.parent
+                : targetFill.transform;
+            targetRect = feedbackParent as RectTransform;
+        }
+
+        if (targetRect == null)
+        {
+            return;
+        }
+
+        feedbackDriver = feedbackDriver != null ? feedbackDriver : UIFeedbackDriver.GetOrAdd(gameObject);
+        if (feedbackDriver == null)
+        {
+            return;
+        }
+
+        feedbackDriver.PlayPulse(targetRect, readyPulseScale, readyFeedbackDuration);
+        feedbackDriver.PlayGlint(targetRect, readyGlintColor, readyFeedbackDuration);
+        feedbackDriver.PlayRadialBurst(targetRect, readyBurstColor, 8, 36f, readyFeedbackDuration);
     }
 }

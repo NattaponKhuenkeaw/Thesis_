@@ -343,7 +343,11 @@ public abstract class CombatPlayerState : FrameDataPlayerState
                         ? AbilityUIManager.AbilityType.Ultimate
                         : AbilityUIManager.AbilityType.Skill;
 
-                AbilityUIManager.Instance.TriggerCooldown(abilityType, skillAction.cooldown);
+                float resolvedCooldown = player.Combat.GetFinalCooldown(
+                    GetAttackCategory(),
+                    skillAction.cooldown,
+                    skillAction.actionName);
+                AbilityUIManager.Instance.TriggerCooldown(abilityType, resolvedCooldown);
             }
 
             hasStartedCooldown = true;

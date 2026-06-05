@@ -9,7 +9,7 @@ namespace Project.TeamBuilder.UI
     /// A mini artifact slot inside each TeamSlotUI.
     /// Accepts artifact drops and notifies parent to recalculate stats.
     /// </summary>
-    public class ArtifactSlotUI : MonoBehaviour, IDropHandler
+    public class ArtifactSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler
     {
         // =========================================================
         // UI References
@@ -101,6 +101,17 @@ namespace Project.TeamBuilder.UI
         {
             // Future: handle artifact drag-drop here
             // For now, artifacts are assigned programmatically or via button
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (parentSlot == null)
+            {
+                return;
+            }
+
+            int direction = eventData != null && eventData.button == PointerEventData.InputButton.Right ? -1 : 1;
+            parentSlot.HandleArtifactSlotClicked(this, direction);
         }
     }
 }

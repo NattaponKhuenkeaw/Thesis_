@@ -13,6 +13,11 @@ namespace Project.ShopSystem.UI
         [SerializeField] private Image frameImage;
         [SerializeField] private TMP_Text nameText;
         [SerializeField] private Button button;
+        [SerializeField] private Image attributeImage; // For elemental attribute
+
+        [Header("Element Sprites")]
+        [Tooltip("Assign sprites in order: None, Earth, Water, Fire, Wind (matching ElementType enum order)")]
+        [SerializeField] private Sprite[] elementSprites = new Sprite[5];
 
         [Header("Sold Out Overlay")]
         [Tooltip("A panel that covers the grid item when the item is already owned (one-time buy).")]
@@ -49,6 +54,25 @@ namespace Project.ShopSystem.UI
             if (frameImage != null)
             {
                 frameImage.color = GetItemTypeColor(item);
+            }
+
+            // Set attribute image based on item type
+            if (attributeImage != null)
+            {
+                if (item is CharacterItem characterItem && characterItem.characterObjectData != null)
+                {
+                    int elementIndex = (int)characterItem.characterObjectData.elementType;
+                    bool hasElementSprite = elementIndex >= 0 && elementIndex < elementSprites.Length && elementSprites[elementIndex] != null;
+                    attributeImage.enabled = hasElementSprite;
+                    if (hasElementSprite)
+                    {
+                        attributeImage.sprite = elementSprites[elementIndex];
+                    }
+                }
+                else
+                {
+                    attributeImage.enabled = false;
+                }
             }
 
             // Sold-out overlay for one-time-buy items already owned
