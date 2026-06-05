@@ -1,12 +1,12 @@
 ---
 slug: "aura-energy-ultimate-refactor"
-status: approved
+status: needs-human
 source: manual
 gdd_tags:
   - "combat-fsm"
 owner: "architect-agent"
 human_checkpoint: required
-next_agent: coder-agent
+next_agent: human
 blocked_by: []
 ---
 

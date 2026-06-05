@@ -144,18 +144,10 @@ public class BackgroundUltimateExecutor : MonoBehaviour
     {
         if (hitbox is NormalHitbox normalHitbox)
         {
-            if (cloneCollider != null)
+            if (cloneCollider is BoxCollider2D box)
             {
-                if (cloneCollider is BoxCollider2D box && normalHitbox.colliderType == HitboxColliderType.Box)
-                {
-                    box.offset = normalHitbox.offset;
-                    box.size = normalHitbox.size;
-                }
-                else if (cloneCollider is CircleCollider2D circle && normalHitbox.colliderType == HitboxColliderType.Circle)
-                {
-                    circle.offset = normalHitbox.offset;
-                    circle.radius = normalHitbox.radius;
-                }
+                box.offset = normalHitbox.offset;
+                box.size = normalHitbox.size;
             }
 
             var damageData = GetFinalAttackDamage(normalHitbox.damageMultiplier);
