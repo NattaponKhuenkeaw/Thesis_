@@ -1,13 +1,25 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System;
 
-public class TeamLoader : MonoBehaviour
+public interface ITeamEnergySystem
+{
+    float GetCharacterCurrentAE(CharacterObject character);
+    float GetCharacterMaxAE(CharacterObject character);
+    void SetCharacterCurrentAE(CharacterObject character, float value);
+    void AddCharacterAE(CharacterObject character, float amount);
+    float GetUltimateCost(CharacterObject character);
+    event Action<CharacterObject, float, float> OnCharacterAuraEnergyUpdated;
+}
+
+public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 {
     private const int DefaultTeamSize = 3;
 
     public event System.Action OnTeamChanged;
     public event System.Action OnCurrentCharacterChanged;
     public event System.Action<CharacterObject, float, float> OnCharacterHealthUpdated;
+    public event Action<CharacterObject, float, float> OnCharacterAuraEnergyUpdated;
 
     // =========================================================
     // Team Data
@@ -31,6 +43,7 @@ public class TeamLoader : MonoBehaviour
     [SerializeField] private int currentIndex = 0;
     [SerializeField] private float lastSwitchTime = -999f;
     private readonly Dictionary<CharacterObject, float> characterCurrentHP = new Dictionary<CharacterObject, float>();
+    private readonly Dictionary<CharacterObject, float> characterCurrentAE = new Dictionary<CharacterObject, float>();
 
     // =========================================================
     // Properties
@@ -155,6 +168,13 @@ public class TeamLoader : MonoBehaviour
         if (IsSwitchOnCooldown)
             return false;
 
+        // Spawn background executor if the switching-out character is performing an Ultimate
+        if (playerCharacter != null && playerCharacter.StateMachine != null 
+            && playerCharacter.StateMachine.CurrentStateId == PlayerStateId.Ultimate)
+        {
+            SpawnBackgroundUltimateExecutor();
+        }
+
         currentIndex = index;
         lastSwitchTime = Time.time;
         LoadCurrentCharacter();
@@ -198,10 +218,6 @@ public class TeamLoader : MonoBehaviour
         return true;
     }
 
-    /// <summary>
-    /// Replaces a single team slot with a new character reference.
-    /// Useful when the runtime main character and TeamLoader need to be force-synced.
-    /// </summary>
     public bool ReplaceCharacter(int slotIndex, CharacterObject newCharacter, bool reloadIfActive = true)
     {
         if (slotIndex < 0)
@@ -240,10 +256,6 @@ public class TeamLoader : MonoBehaviour
         return true;
     }
 
-    /// <summary>
-    /// Synchronizes the runtime team from an external source.
-    /// TeamLoader remains the gameplay authority after this call.
-    /// </summary>
     public void SyncWithTeam(CharacterObject[] newTeam, CharacterObject preferredCharacter = null)
     {
         if (newTeam == null)
@@ -302,10 +314,6 @@ public class TeamLoader : MonoBehaviour
         LoadCurrentCharacter();
     }
 
-    /// <summary>
-    /// Commits a saved Team Builder loadout into runtime authority and resets transient combat state.
-    /// Unlike SyncWithTeam, deploy intentionally clears per-character HP cache and switch cooldown.
-    /// </summary>
     public void DeployLoadout(CharacterObject[] newTeam, int preferredIndex)
     {
         if (newTeam == null)
@@ -355,6 +363,7 @@ public class TeamLoader : MonoBehaviour
         }
 
         characterCurrentHP.Clear();
+        characterCurrentAE.Clear();
         lastSwitchTime = -999f;
 
         NotifyTeamChanged();
@@ -362,9 +371,6 @@ public class TeamLoader : MonoBehaviour
         ResetRuntimeTransientState();
     }
 
-    /// <summary>
-    /// Replaces the team array with data pushed from the Team Builder UI.
-    /// </summary>
     public void SetTeamFromUI(CharacterObject[] newTeam)
     {
         CharacterObject previouslySelected = CurrentCharacter;
@@ -374,9 +380,6 @@ public class TeamLoader : MonoBehaviour
         SyncWithTeam(newTeam, previouslySelected);
     }
 
-    /// <summary>
-    /// Clears a specific team slot.
-    /// </summary>
     public void ClearSlot(int index)
     {
         RemoveCharacter(index);
@@ -688,6 +691,7 @@ public class TeamLoader : MonoBehaviour
             return;
 
         characterCurrentHP.Remove(character);
+        characterCurrentAE.Remove(character);
         NotifyCharacterHealthUpdated(character);
     }
 
@@ -712,6 +716,7 @@ public class TeamLoader : MonoBehaviour
         for (int i = 0; i < removed.Count; i++)
         {
             characterCurrentHP.Remove(removed[i]);
+            characterCurrentAE.Remove(removed[i]);
             NotifyCharacterHealthUpdated(removed[i]);
         }
     }
@@ -730,5 +735,92 @@ public class TeamLoader : MonoBehaviour
             return;
 
         OnCharacterHealthUpdated?.Invoke(character, currentHp, maxHp);
+    }
+
+    // =========================================================
+    // ITeamEnergySystem Implementation & Helpers
+    // =========================================================
+    public float GetCharacterCurrentAE(CharacterObject character)
+    {
+        if (character == null) return 0f;
+        if (!characterCurrentAE.TryGetValue(character, out float ae))
+        {
+            ae = 0f;
+            characterCurrentAE[character] = ae;
+        }
+        return ae;
+    }
+
+    public float GetCharacterMaxAE(CharacterObject character)
+    {
+        if (character == null) return 100f;
+        return character.stats != null ? character.stats.maxAuraEnergy : 100f;
+    }
+
+    public void SetCharacterCurrentAE(CharacterObject character, float value)
+    {
+        if (character == null) return;
+        float maxAE = GetCharacterMaxAE(character);
+        float newAE = Mathf.Clamp(value, 0f, maxAE);
+        characterCurrentAE[character] = newAE;
+        OnCharacterAuraEnergyUpdated?.Invoke(character, newAE, maxAE);
+    }
+
+    public float GetUltimateCost(CharacterObject character)
+    {
+        if (character == null || character.stats == null) return 100f;
+        
+        float cdr = character.stats.cooldownReduction / 100f;
+        float reduction = Mathf.Min(0.50f, cdr * 0.50f);
+        return 100f * (1.0f - reduction);
+    }
+
+    public void AddCharacterAE(CharacterObject character, float amount)
+    {
+        if (character == null) return;
+
+        float maxAE = GetCharacterMaxAE(character);
+        float currentAE = GetCharacterCurrentAE(character);
+        float newAE = Mathf.Clamp(currentAE + amount, 0f, maxAE);
+        characterCurrentAE[character] = newAE;
+
+        OnCharacterAuraEnergyUpdated?.Invoke(character, newAE, maxAE);
+    }
+
+    private void SpawnBackgroundUltimateExecutor()
+    {
+        if (playerCharacter == null) return;
+
+        PlayerUltimateState ultimateState = playerCharacter.StateMachine?.UltimateState;
+        if (ultimateState == null) return;
+
+        if (playerCharacter.StateMachine.CurrentStateId != PlayerStateId.Ultimate) return;
+
+        AttackStepData currentStep = playerCharacter.Combat?.GetCurrentStepData();
+        if (currentStep == null) return;
+
+        int currentFrame = ultimateState.CurrentFrame;
+        int facing = playerCharacter.Movement != null ? playerCharacter.Movement.FacingDirection : 1;
+
+        CharacterObject castingCharacter = playerCharacter.characterObject;
+        if (castingCharacter == null) return;
+
+        CharacterStats stats = castingCharacter.stats;
+
+        Sprite currentSprite = null;
+        SpriteRenderer sr = playerCharacter.GetComponentInChildren<SpriteRenderer>();
+        if (sr != null)
+        {
+            currentSprite = sr.sprite;
+        }
+
+        RuntimeAnimatorController animController = castingCharacter.metaData != null ? castingCharacter.metaData.animatorController : null;
+
+        GameObject executorGo = new GameObject("BackgroundUltimateExecutor_" + (castingCharacter.metaData != null ? castingCharacter.metaData.displayName : "Clone"));
+        executorGo.transform.position = playerCharacter.transform.position;
+        executorGo.transform.rotation = playerCharacter.transform.rotation;
+
+        BackgroundUltimateExecutor executor = executorGo.AddComponent<BackgroundUltimateExecutor>();
+        executor.Initialize(currentStep, currentFrame, facing, stats, currentSprite, animController);
     }
 }

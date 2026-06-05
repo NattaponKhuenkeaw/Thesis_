@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 
 public class TeamSwitchHUD : MonoBehaviour
@@ -70,9 +70,12 @@ public class TeamSwitchHUD : MonoBehaviour
         teamLoader.OnTeamChanged -= HandleTeamChanged;
         teamLoader.OnCurrentCharacterChanged -= HandleCurrentCharacterChanged;
         teamLoader.OnCharacterHealthUpdated -= HandleCharacterHealthUpdated;
+        teamLoader.OnCharacterAuraEnergyUpdated -= HandleCharacterAuraEnergyUpdated;
+
         teamLoader.OnTeamChanged += HandleTeamChanged;
         teamLoader.OnCurrentCharacterChanged += HandleCurrentCharacterChanged;
         teamLoader.OnCharacterHealthUpdated += HandleCharacterHealthUpdated;
+        teamLoader.OnCharacterAuraEnergyUpdated += HandleCharacterAuraEnergyUpdated;
     }
 
     private void UnbindTeamLoader()
@@ -83,6 +86,7 @@ public class TeamSwitchHUD : MonoBehaviour
         teamLoader.OnTeamChanged -= HandleTeamChanged;
         teamLoader.OnCurrentCharacterChanged -= HandleCurrentCharacterChanged;
         teamLoader.OnCharacterHealthUpdated -= HandleCharacterHealthUpdated;
+        teamLoader.OnCharacterAuraEnergyUpdated -= HandleCharacterAuraEnergyUpdated;
     }
 
     private void HandleTeamChanged()
@@ -111,6 +115,22 @@ public class TeamSwitchHUD : MonoBehaviour
                 continue;
 
             slot.RefreshHealth(currentHp, maxHp);
+            return;
+        }
+    }
+
+    private void HandleCharacterAuraEnergyUpdated(CharacterObject character, float currentAE, float maxAE)
+    {
+        if (character == null)
+            return;
+
+        for (int i = 0; i < activeSlots.Count; i++)
+        {
+            CharacterSwitchSlot slot = activeSlots[i];
+            if (slot == null || slot.BoundCharacter != character)
+                continue;
+
+            slot.RefreshEnergy(currentAE, maxAE);
             return;
         }
     }

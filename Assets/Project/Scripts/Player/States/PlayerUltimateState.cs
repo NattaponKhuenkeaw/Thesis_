@@ -8,6 +8,7 @@ using UnityEngine;
 public class PlayerUltimateState : CombatPlayerState
 {
     private UltimateAction activeUltimateAction;
+    private bool energyConsumed;
 
     public PlayerUltimateState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
@@ -30,12 +31,23 @@ public class PlayerUltimateState : CombatPlayerState
     {
         base.Enter(context);
         activeUltimateAction = null;
+        energyConsumed = false;
+        if (player != null)
+        {
+            player.HasSuperArmor = false;
+            player.IsUltimateInvulnerable = false;
+        }
     }
 
     public override void Exit()
     {
         base.Exit();
         activeUltimateAction = null;
+        if (player != null)
+        {
+            player.HasSuperArmor = false;
+            player.IsUltimateInvulnerable = false;
+        }
     }
 
     protected override void HandleInputDuringRecovery()
@@ -83,10 +95,13 @@ public class PlayerUltimateState : CombatPlayerState
                 return;
             }
 
-            if (resolver.ActiveCombatAction is SkillAction skillAction
-                && player.Combat.IsOnCooldown(AttackCategory.Ultimate, skillAction.cooldown, skillAction.actionName))
+            TeamLoader teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
+            float currentAE = teamLoader != null ? teamLoader.GetCharacterCurrentAE(player.characterObject) : 0f;
+            float cost = teamLoader != null ? teamLoader.GetUltimateCost(player.characterObject) : 100f;
+
+            if (currentAE < cost)
             {
-                fsm.Log("Ultimate", "Ultimate is on cooldown", Color.yellow);
+                fsm.Log("Ultimate", "Not enough Aura Energy for Ultimate", Color.yellow);
                 resolver.Reset();
                 ExitToAppropriateMovementState();
                 return;
@@ -94,7 +109,6 @@ public class PlayerUltimateState : CombatPlayerState
 
             activeUltimateAction = resolver.ActiveCombatAction as UltimateAction;
             ExecuteCombatStep(step, ctx, false);
-            TryStartCooldown();
 
             if (activeUltimateAction != null && activeUltimateAction.useDashAfterImage && player.Movement != null)
             {
@@ -120,5 +134,56 @@ public class PlayerUltimateState : CombatPlayerState
         }
 
         return success;
+    }
+
+    protected override void OnStartupBegin()
+    {
+        base.OnStartupBegin();
+        if (player != null)
+        {
+            player.IsUltimateInvulnerable = false;
+            player.HasSuperArmor = false;
+        }
+    }
+
+    protected override void OnActiveBegin()
+    {
+        base.OnActiveBegin();
+        if (player != null)
+        {
+            player.IsUltimateInvulnerable = true;
+            player.HasSuperArmor = true;
+            
+            if (!energyConsumed)
+            {
+                energyConsumed = true;
+                TeamLoader teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
+                if (teamLoader != null && player.characterObject != null)
+                {
+                    float cost = teamLoader.GetUltimateCost(player.characterObject);
+                    teamLoader.AddCharacterAE(player.characterObject, -cost);
+                }
+            }
+        }
+    }
+
+    protected override void OnRecoveryBegin()
+    {
+        base.OnRecoveryBegin();
+        if (player != null)
+        {
+            player.IsUltimateInvulnerable = false;
+            player.HasSuperArmor = false;
+        }
+    }
+
+    protected override void OnCancelBegin()
+    {
+        base.OnCancelBegin();
+        if (player != null)
+        {
+            player.IsUltimateInvulnerable = false;
+            player.HasSuperArmor = false;
+        }
     }
 }

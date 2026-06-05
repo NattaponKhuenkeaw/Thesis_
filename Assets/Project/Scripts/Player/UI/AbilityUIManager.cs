@@ -41,6 +41,7 @@ public class AbilityUIManager : MonoBehaviour
     private PlayerCharacter subscribedPlayer;
     private string displayedCharacterKey = string.Empty;
     private UIFeedbackDriver feedbackDriver;
+    private TeamLoader teamLoader;
 
     private void Reset()
     {
@@ -67,13 +68,24 @@ public class AbilityUIManager : MonoBehaviour
     private void OnEnable()
     {
         RebindPlayer();
+        if (teamLoader != null)
+        {
+            teamLoader.OnCharacterAuraEnergyUpdated -= HandleCharacterAuraEnergyUpdated;
+            teamLoader.OnCharacterAuraEnergyUpdated += HandleCharacterAuraEnergyUpdated;
+        }
         RefreshActiveCharacterUI();
     }
 
     private void OnDisable()
     {
         UnbindPlayer();
+        if (teamLoader != null)
+        {
+            teamLoader.OnCharacterAuraEnergyUpdated -= HandleCharacterAuraEnergyUpdated;
+        }
     }
+
+    private bool ultimateWasReadyLastFrame = false;
 
     private void Update()
     {
@@ -87,6 +99,7 @@ public class AbilityUIManager : MonoBehaviour
         if (currentCharacterKey != displayedCharacterKey)
         {
             displayedCharacterKey = currentCharacterKey;
+            ultimateWasReadyLastFrame = false;
         }
 
         RefreshActiveCharacterUI();
@@ -120,6 +133,23 @@ public class AbilityUIManager : MonoBehaviour
     {
         if (playerCharacter == null)
             playerCharacter = FindFirstObjectByType<PlayerCharacter>();
+        if (teamLoader == null)
+        {
+            teamLoader = FindFirstObjectByType<TeamLoader>();
+            if (teamLoader != null)
+            {
+                teamLoader.OnCharacterAuraEnergyUpdated -= HandleCharacterAuraEnergyUpdated;
+                teamLoader.OnCharacterAuraEnergyUpdated += HandleCharacterAuraEnergyUpdated;
+            }
+        }
+    }
+
+    private void HandleCharacterAuraEnergyUpdated(CharacterObject character, float currentAE, float maxAE)
+    {
+        if (playerCharacter != null && playerCharacter.characterObject == character)
+        {
+            RefreshActiveCharacterUI();
+        }
     }
 
     private void RebindPlayer()
@@ -195,7 +225,61 @@ public class AbilityUIManager : MonoBehaviour
         displayedCharacterKey = characterKey;
 
         RefreshAbilityUI(skillCooldowns, characterKey, skillCooldownFill, skillCooldownText);
-        RefreshAbilityUI(ultimateCooldowns, characterKey, ultCooldownFill, ultCooldownText);
+        UpdateUltimateEnergyUI();
+    }
+
+    private void UpdateUltimateEnergyUI()
+    {
+        if (ultCooldownFill == null && ultCooldownText == null)
+            return;
+
+        CharacterObject currentCharacter = playerCharacter != null ? playerCharacter.characterObject : null;
+        if (currentCharacter == null)
+        {
+            ResetUI(ultCooldownFill, ultCooldownText);
+            ultimateWasReadyLastFrame = false;
+            return;
+        }
+
+        if (teamLoader == null)
+        {
+            ResetUI(ultCooldownFill, ultCooldownText);
+            ultimateWasReadyLastFrame = false;
+            return;
+        }
+
+        float currentAE = teamLoader.GetCharacterCurrentAE(currentCharacter);
+        float maxAE = currentCharacter.stats != null ? currentCharacter.stats.maxAuraEnergy : 100f;
+        float fillRatio = maxAE > 0f ? Mathf.Clamp01(currentAE / maxAE) : 0f;
+
+        float cost = teamLoader.GetUltimateCost(currentCharacter);
+        bool isReady = currentAE >= cost;
+
+        if (isReady)
+        {
+            ResetUI(ultCooldownFill, ultCooldownText);
+
+            if (!ultimateWasReadyLastFrame)
+            {
+                PlayAbilityReadyFeedback(AbilityType.Ultimate);
+            }
+        }
+        else
+        {
+            if (ultCooldownFill != null)
+            {
+                ultCooldownFill.gameObject.SetActive(true);
+                ultCooldownFill.fillAmount = 1f - fillRatio;
+            }
+
+            if (ultCooldownText != null)
+            {
+                ultCooldownText.gameObject.SetActive(true);
+                ultCooldownText.text = Mathf.RoundToInt(fillRatio * 100f) + "%";
+            }
+        }
+
+        ultimateWasReadyLastFrame = isReady;
     }
 
     private void RefreshAbilityUI(

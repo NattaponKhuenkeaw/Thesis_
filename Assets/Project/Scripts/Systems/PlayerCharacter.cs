@@ -42,6 +42,9 @@ public class PlayerCharacter : MonoBehaviour
     private bool deathEventRaised;
     private float damageInvulnerableUntil = -999f;
 
+    public bool IsUltimateInvulnerable { get; set; } = false;
+    public bool HasSuperArmor { get; set; } = false;
+
     // =========================================================
     // HP Events
     // =========================================================
@@ -141,7 +144,7 @@ public class PlayerCharacter : MonoBehaviour
         if (value <= 0f || IsDead)
             return false;
 
-        if (IsDamageInvulnerable || (Movement != null && Movement.IsInvincible()))
+        if (IsDamageInvulnerable || (Movement != null && Movement.IsInvincible()) || IsUltimateInvulnerable)
             return false;
 
         float finalDamage = value;
@@ -176,13 +179,11 @@ public class PlayerCharacter : MonoBehaviour
             deathEventRaised = true;
             OnDied?.Invoke();
 
-            // Transition to dead state via state machine
             if (StateMachine != null)
                 StateMachine.ChangeState(StateMachine.DeadState);
         }
         else
         {
-            // Transition to hitstun state via state machine
             if (StateMachine != null && !IsDead)
                 StateMachine.ChangeState(StateMachine.HitstunState);
         }
@@ -190,10 +191,6 @@ public class PlayerCharacter : MonoBehaviour
         return true;
     }
 
-    /// <summary>
-    /// Attempts to trigger a counter-attack if the current state supports it.
-    /// Returns true if the hit was successfully countered (and damage should be negated).
-    /// </summary>
     public bool TryCounter(GameObject attacker)
     {
         if (IsDead) return false;

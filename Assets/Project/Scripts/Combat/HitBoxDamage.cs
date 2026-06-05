@@ -207,9 +207,11 @@ public class HitBoxDamage : MonoBehaviour
             UltimateFlashOverlay.Instance.PlayHitFlash();
         }
 
+        // Propagate hit and defeat status to PlayerCombat for Aura Energy generation
         if (playerCombat != null)
         {
-            playerCombat.NotifyEnemyHit(enemy);
+            bool isDefeated = enemy != null && !enemy.IsAlive;
+            playerCombat.NotifyEnemyHit(enemy, isDefeated);
             
             // Log to Training Debug Stats
             if (CombatCore.TrainingDebugStats.Instance != null)

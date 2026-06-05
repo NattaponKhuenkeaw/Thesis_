@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using TMPro; 
 
@@ -12,6 +12,10 @@ public class CharacterSwitchSlot : MonoBehaviour
     [Header("Health Bar")]
     public Slider hpSlider;
     public Image hpFill;               
+
+    [Header("Aura Energy Bar")]
+    public Slider aeSlider;
+    public Image aeFill;
 
     [Header("Switch Cooldown UI")]
     public Image cooldownFill;
@@ -69,6 +73,8 @@ public class CharacterSwitchSlot : MonoBehaviour
             else
                 RefreshHealth(0f, 0f);
         }
+
+        RefreshEnergy();
     }
 
     public void RefreshHealth(float currentHP, float maxHP)
@@ -95,6 +101,58 @@ public class CharacterSwitchSlot : MonoBehaviour
 
         if (hpFill != null)
             hpFill.fillAmount = normalized;
+    }
+
+    public void RefreshEnergy(float? currentAE = null, float? maxAE = null)
+    {
+        if (boundCharacter == null)
+        {
+            SetEnergyUI(0f, 100f);
+            return;
+        }
+
+        float actualCurrent = currentAE ?? 0f;
+        float actualMax = maxAE ?? 100f;
+
+        if (currentAE == null || maxAE == null)
+        {
+            TeamLoader teamLoader = hudManager != null ? hudManager.teamLoader : null;
+            if (teamLoader != null)
+            {
+                actualCurrent = teamLoader.GetCharacterCurrentAE(boundCharacter);
+                actualMax = teamLoader.GetCharacterMaxAE(boundCharacter);
+            }
+            else
+            {
+                actualMax = boundCharacter.stats != null ? boundCharacter.stats.maxAuraEnergy : 100f;
+            }
+        }
+
+        SetEnergyUI(actualCurrent, actualMax);
+    }
+
+    private void SetEnergyUI(float currentAE, float maxAE)
+    {
+        if (maxAE <= 0f)
+        {
+            if (aeSlider != null) aeSlider.value = 0f;
+            if (aeFill != null) aeFill.fillAmount = 0f;
+            return;
+        }
+
+        float normalized = Mathf.Clamp01(currentAE / maxAE);
+
+        if (aeSlider != null)
+        {
+            aeSlider.minValue = 0f;
+            aeSlider.maxValue = 1f;
+            aeSlider.value = normalized;
+        }
+
+        if (aeFill != null)
+        {
+            aeFill.fillAmount = normalized;
+        }
     }
 
     public void RefreshCooldown(float remainingCooldown, float totalCooldown)

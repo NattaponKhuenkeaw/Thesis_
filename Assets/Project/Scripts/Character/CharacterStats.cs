@@ -27,5 +27,11 @@ public class CharacterStats
     [Tooltip("Reduces all incoming damage (percentage)")]
     public float damageResistance = 0f;
 
+    [Header("Aura Energy")]
+    [Tooltip("Maximum aura energy capacity.")]
+    public float maxAuraEnergy = 100f;
+    [Tooltip("Multiplier applied to all gained aura energy.")]
+    public float auraEnergyMultiplier = 1f; // Multiplier for gained AE
+
     // End of CharacterStats
 }

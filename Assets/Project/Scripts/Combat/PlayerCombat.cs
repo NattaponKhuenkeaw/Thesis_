@@ -61,6 +61,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     private bool hadGrabAtStepStart;
     private Animator cachedAnimator;
     private Coroutine priorityResetCoroutine;
+    private TeamLoader teamLoader;
 
     [System.Serializable]
     public struct GrabParams
@@ -728,9 +729,35 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         }
     }
 
-    public void NotifyEnemyHit(EnemyController enemy)
+    public void NotifyEnemyHit(EnemyController enemy, bool isDefeated)
     {
         passiveController?.NotifyHitDealt(currentAttackCategory, currentActionName, currentStepData, enemy);
+
+        if (playerCharacter != null && playerCharacter.characterObject != null)
+        {
+            // Design Spec: 100% on defeat, 20% on normal hit
+            bool shouldGainAE = isDefeated || (UnityEngine.Random.value <= 0.2f);
+            if (!shouldGainAE) return;
+
+            float baseEnergy = 10f; // Design Spec: Base 10 AE
+            float multiplier = 1f;
+            if (playerCharacter.characterObject.stats != null)
+            {
+                multiplier = playerCharacter.characterObject.stats.auraEnergyMultiplier;
+            }
+
+            float energyToGain = baseEnergy * multiplier;
+
+            if (teamLoader == null)
+            {
+                teamLoader = Object.FindFirstObjectByType<TeamLoader>();
+            }
+
+            if (teamLoader != null)
+            {
+                teamLoader.AddCharacterAE(playerCharacter.characterObject, energyToGain);
+            }
+        }
     }
 
     public ProjectileSpawnContext BuildProjectileSpawnContext(ProjectileSpawnHitbox projectileHitbox)
