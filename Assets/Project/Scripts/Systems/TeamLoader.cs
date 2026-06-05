@@ -65,7 +65,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     void Awake()
     {
         if (playerCharacter == null)
-            playerCharacter = Object.FindFirstObjectByType<PlayerCharacter>();
+            playerCharacter = UnityEngine.Object.FindFirstObjectByType<PlayerCharacter>();
     }
 
     void OnEnable()
@@ -618,7 +618,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     private void BindPlayerCharacter()
     {
         if (playerCharacter == null)
-            playerCharacter = Object.FindFirstObjectByType<PlayerCharacter>();
+            playerCharacter = UnityEngine.Object.FindFirstObjectByType<PlayerCharacter>();
 
         if (playerCharacter == null)
             return;
