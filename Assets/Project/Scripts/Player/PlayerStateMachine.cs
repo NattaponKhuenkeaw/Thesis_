@@ -510,7 +510,7 @@ public class PlayerStateMachine : MonoBehaviour
             : 0f;
         float requiredAE = teamLoader != null && playerCharacter != null
             ? teamLoader.GetCharacterMaxAE(playerCharacter.characterObject)
-            : TeamLoader.DefaultUltimateAuraEnergyCost * TeamLoader.UltimateAuraEnergyStackMultiplier;
+            : TeamLoader.DefaultUltimateAuraEnergyCost;
 
         if (currentAE < requiredAE)
         {

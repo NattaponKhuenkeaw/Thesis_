@@ -100,7 +100,7 @@ public class PlayerUltimateState : CombatPlayerState
             float currentAE = teamLoader != null ? teamLoader.GetCharacterCurrentAE(player.characterObject) : 0f;
             float requiredAE = teamLoader != null
                 ? teamLoader.GetCharacterMaxAE(player.characterObject)
-                : TeamLoader.DefaultUltimateAuraEnergyCost * TeamLoader.UltimateAuraEnergyStackMultiplier;
+                : TeamLoader.DefaultUltimateAuraEnergyCost;
 
             if (currentAE < requiredAE)
             {

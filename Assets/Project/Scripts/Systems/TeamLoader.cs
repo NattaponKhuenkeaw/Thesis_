@@ -15,7 +15,6 @@ public interface ITeamEnergySystem
 public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 {
     public const float DefaultUltimateAuraEnergyCost = 100f;
-    public const float UltimateAuraEnergyStackMultiplier = 2f;
     private const int DefaultTeamSize = 3;
 
     public event System.Action OnTeamChanged;
@@ -772,8 +771,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     public float GetCharacterMaxAE(CharacterObject character)
     {
-        float highestUltimateCost = GetHighestUltimateCost(character);
-        return highestUltimateCost * UltimateAuraEnergyStackMultiplier;
+        return GetHighestUltimateCost(character);
     }
 
     public void SetCharacterCurrentAE(CharacterObject character, float value)

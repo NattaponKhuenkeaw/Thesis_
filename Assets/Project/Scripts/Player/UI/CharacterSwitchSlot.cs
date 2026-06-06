@@ -124,8 +124,7 @@ public class CharacterSwitchSlot : MonoBehaviour
             }
             else
             {
-                actualMax = TeamLoader.DefaultUltimateAuraEnergyCost
-                    * TeamLoader.UltimateAuraEnergyStackMultiplier;
+                actualMax = TeamLoader.DefaultUltimateAuraEnergyCost;
             }
         }
 

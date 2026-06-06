@@ -23,8 +23,8 @@ We decide to:
 7. **Apply Super Armor + Invulnerability (i-frames)** to the player character during the Active phase of the Ultimate, consuming AE on transition to Active rather than Startup.
 8. **Update HUD meters** (via `AbilityUIManager` and `CharacterSwitchSlot`) to show circular fill percentages and pulse/glow/chime feedback when ready.
 9. **Grant action-authored AE rewards once when an ActionResolver action starts.** `auraEnergyGainAmount` defaults to `0` and is multiplied by the acting character's `auraEnergyMultiplier`.
-10. **Set each character's maximum AE to twice their highest runtime Ultimate cost.** A 50 AE Ultimate therefore supports a 100 AE stack.
-11. **Require the AE meter to reach its full derived capacity before an Ultimate becomes ready.** Casting consumes the resolved Ultimate cost, but readiness does not trigger at the half-stack cost threshold.
+10. **Set each character's maximum AE to their runtime Ultimate cost.** A 50 AE Ultimate therefore has a 50 AE capacity.
+11. **Require the AE meter to reach its full derived capacity before an Ultimate becomes ready.** Capacity, readiness threshold, and consumed Ultimate cost use the same runtime value.
 
 ## Alternatives Considered
 
@@ -41,7 +41,7 @@ We decide to:
 - Robust handling of team-swapping ensures high-quality game feel.
 - Dynamic cost reduction integrates CDR mastery into the resource system logically.
 - Action designers can attach deterministic AE rewards directly to attacks, skills, or Ultimates.
-- AE capacity automatically follows authored Ultimate balance without a duplicate max-stat field.
+- AE capacity automatically matches authored Ultimate cost without a duplicate max-stat field.
 
 ### Negative / Trade-offs
 - Slight overhead from instantiating background executors.
