@@ -44,8 +44,11 @@ ActionResolver selects CombatAction
   -> melee/projectile/background executor configures HitBoxDamage
   -> primary damage resolves against one enemy
   -> eligible Additional Damage effects resolve as separate enemy hits
-  -> action-authored AE Reward is granted once for the successful hitbox
+  -> shared action claim grants authored AE Reward only on the first confirmed
+     damaging hit across melee, projectile, and background hitboxes
   -> character AuraEnergyRate independently rolls the fixed 10 AE reward
+  -> successful chance grants pass through PlayerCombat's configurable
+     max-grants-per-window gate before AE is added
   -> EnemyController returns the final damage payload accepted by the target
   -> Training Debug records that final payload rather than remaining-HP loss
 ```

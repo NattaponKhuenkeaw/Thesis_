@@ -36,6 +36,7 @@ MonoBehaviour:
   speed: 10
   lifetime: 2
   maxHits: 3
+  hitCountMode: 0
   routineHitbox:
     enabled: 1
     decrementsMaxHits: 1
@@ -74,7 +75,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0, y: 0.32}
         size: {x: 1, y: 0.8}
-        damageMultiplier: 0.3
+        damageRatio: 0.3
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
@@ -98,6 +99,7 @@ MonoBehaviour:
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
     - rid: 1588256093655269585
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
@@ -107,7 +109,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0, y: 0.32}
         size: {x: 1, y: 0.8}
-        damageMultiplier: 1
+        damageRatio: 0.3
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -131,3 +133,4 @@ MonoBehaviour:
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0

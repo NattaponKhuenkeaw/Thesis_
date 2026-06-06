@@ -10,6 +10,7 @@ public class BackgroundUltimateExecutor : MonoBehaviour
     private float sourceAttack;
     private float actionDamageMultiplier;
     private float auraEnergyReward;
+    private AuraEnergyRewardClaim auraEnergyRewardClaim;
     private AdditionalDamageEffectDefinition[] additionalDamageEffects;
     private PlayerCombat sourceCombat;
     private CharacterObject sourceCharacter;
@@ -34,6 +35,7 @@ public class BackgroundUltimateExecutor : MonoBehaviour
         float resolvedSourceAttack,
         float resolvedActionDamageMultiplier,
         float resolvedAuraEnergyReward,
+        AuraEnergyRewardClaim resolvedAuraEnergyRewardClaim,
         AdditionalDamageEffectDefinition[] resolvedAdditionalDamageEffects,
         PlayerCombat resolvedSourceCombat,
         CharacterObject resolvedSourceCharacter,
@@ -48,6 +50,7 @@ public class BackgroundUltimateExecutor : MonoBehaviour
         sourceAttack = Mathf.Max(0f, resolvedSourceAttack);
         actionDamageMultiplier = Mathf.Max(0f, resolvedActionDamageMultiplier);
         auraEnergyReward = Mathf.Max(0f, resolvedAuraEnergyReward);
+        auraEnergyRewardClaim = resolvedAuraEnergyRewardClaim;
         additionalDamageEffects = resolvedAdditionalDamageEffects
             ?? System.Array.Empty<AdditionalDamageEffectDefinition>();
         sourceCombat = resolvedSourceCombat;
@@ -269,7 +272,7 @@ public class BackgroundUltimateExecutor : MonoBehaviour
             additionalDamageEffects,
             sourceCombat,
             sourceCharacter,
-            auraEnergyReward);
+            auraEnergyRewardClaim);
     }
 
     /// <summary>Cleans up the executor and destroys the clone GameObject.</summary>

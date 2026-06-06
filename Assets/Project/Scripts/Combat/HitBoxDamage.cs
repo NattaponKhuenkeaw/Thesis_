@@ -30,7 +30,7 @@ public class HitBoxDamage : MonoBehaviour
     private AttackStepData sourceStepData;
     private PlayerCombat rewardOwner;
     private CharacterObject rewardCharacter;
-    private float auraEnergyReward;
+    private AuraEnergyRewardClaim auraEnergyRewardClaim;
 
     public float DamageValue => currentResolvedDamage;
 
@@ -129,7 +129,7 @@ public class HitBoxDamage : MonoBehaviour
         AdditionalDamageEffectDefinition[] additionalDamageEffects,
         PlayerCombat sourceCombat,
         CharacterObject sourceCharacter,
-        float actionAuraEnergyReward)
+        AuraEnergyRewardClaim actionRewardClaim)
     {
         usePerEnemyDamageCalculation = attackerStats != null;
         currentAttackerStats = attackerStats;
@@ -139,7 +139,7 @@ public class HitBoxDamage : MonoBehaviour
             ?? System.Array.Empty<AdditionalDamageEffectDefinition>();
         rewardOwner = sourceCombat;
         rewardCharacter = sourceCharacter;
-        auraEnergyReward = Mathf.Max(0f, actionAuraEnergyReward);
+        auraEnergyRewardClaim = actionRewardClaim;
         currentIsCrit = false;
         currentResolvedDamage = currentDamage;
     }
@@ -152,7 +152,7 @@ public class HitBoxDamage : MonoBehaviour
         currentAdditionalDamageEffects = System.Array.Empty<AdditionalDamageEffectDefinition>();
         rewardOwner = null;
         rewardCharacter = null;
-        auraEnergyReward = 0f;
+        auraEnergyRewardClaim = null;
     }
 
     public void ResetActivationState()
@@ -268,7 +268,7 @@ public class HitBoxDamage : MonoBehaviour
             passiveController?.NotifyHitDealt(sourceCategory, sourceActionName, sourceStepData, enemy);
             rewardOwner?.NotifyResolvedEnemyHit(
                 rewardCharacter,
-                auraEnergyReward);
+                auraEnergyRewardClaim);
         }
 
         if (CombatCore.TrainingDebugStats.Instance != null)

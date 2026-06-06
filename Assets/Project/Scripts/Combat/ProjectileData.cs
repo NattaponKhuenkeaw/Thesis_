@@ -373,6 +373,7 @@ public struct ProjectileSpawnContext
     public CharacterStats attackerStats;
     public float actionDamageMultiplier;
     public float auraEnergyReward;
+    public AuraEnergyRewardClaim auraEnergyRewardClaim;
     public AdditionalDamageEffectDefinition[] additionalDamageEffects;
     public bool isSkillOrUltimate;
     public int remainingHits;

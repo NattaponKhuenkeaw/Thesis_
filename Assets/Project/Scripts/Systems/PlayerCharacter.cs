@@ -260,8 +260,8 @@ public class PlayerCharacter : MonoBehaviour
         InputContext ctx = new InputContext
         {
             isGrounded = actionGrounded,
-            directionalInput = StateMachine != null && StateMachine.InputBuffer != null 
-                ? StateMachine.InputBuffer.DirectionalInput 
+            directionalInput = StateMachine != null && StateMachine.InputBuffer != null
+                ? StateMachine.InputBuffer.DirectionalInput
                 : Vector2.zero,
             facingDirection = Movement != null ? Movement.FacingDirection : 1,
             hasGrabbedEnemy = Combat != null && Combat.HasGrabbedEnemy(),
@@ -318,7 +318,7 @@ public class PlayerCharacter : MonoBehaviour
         Movement.dashData = characterObject.DashData;
         Movement.maxJumpOverride = characterObject.maxJumpOverride;
         Movement.maxAirDashOverride = characterObject.maxAirDashOverride;
-        
+
         if (Stats != null && Stats.speed > 0)
         {
             float baseSpeed = characterObject.movementProfile != null ? characterObject.movementProfile.moveSpeed : 5f;
@@ -342,7 +342,7 @@ public class PlayerCharacter : MonoBehaviour
         if (characterObject.metaData == null)
             return;
 
-        if (characterObject.metaData.animatorController == null || 
+        if (characterObject.metaData.animatorController == null ||
             Animator.anim.runtimeAnimatorController == characterObject.metaData.animatorController)
             return;
 

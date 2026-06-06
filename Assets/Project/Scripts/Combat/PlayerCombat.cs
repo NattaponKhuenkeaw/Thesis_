@@ -4,6 +4,26 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using Project.Combat;
 
+public sealed class AuraEnergyRewardClaim
+{
+    public float Amount { get; }
+    public bool IsClaimed { get; private set; }
+
+    public AuraEnergyRewardClaim(float amount)
+    {
+        Amount = Mathf.Max(0f, amount);
+    }
+
+    public bool TryClaim()
+    {
+        if (IsClaimed || Amount <= 0f)
+            return false;
+
+        IsClaimed = true;
+        return true;
+    }
+}
+
 /// <summary>
 /// Central combat executor for player-authored actions.
 /// The FSM and ActionResolver decide when/what to execute; this component
@@ -41,6 +61,10 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public float airAttackComboResetCooldown = 0.5f;
     private float airAttackComboCooldownEndTime;
 
+    [Header("Aura Energy Chance Gain Gate")]
+    [SerializeField, Min(1)] private int auraEnergyChanceGrantLimitPerWindow = 5;
+    [SerializeField, Min(0.01f)] private float auraEnergyChanceGrantWindowSeconds = 1f;
+
     private readonly Dictionary<string, float> lastCategoryUseTime = new Dictionary<string, float>();
     private readonly Dictionary<string, float> lastActionUseTime = new Dictionary<string, float>();
     private readonly HashSet<EnemyController> hitEnemiesThisStep = new HashSet<EnemyController>();
@@ -49,8 +73,10 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     private AttackStepData currentStepData;
     private AttackCategory currentAttackCategory = AttackCategory.Normal;
     private string currentActionName;
+    private CombatAction currentResolvedCombatAction;
     private float currentActionDamageMultiplier;
     private float currentAuraEnergyReward;
+    private AuraEnergyRewardClaim currentAuraEnergyRewardClaim;
     private AdditionalDamageEffectDefinition[] currentAdditionalDamageEffects =
         System.Array.Empty<AdditionalDamageEffectDefinition>();
     private int comboDepth;
@@ -68,6 +94,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     private Animator cachedAnimator;
     private Coroutine priorityResetCoroutine;
     private TeamLoader teamLoader;
+    private float auraEnergyChanceGrantWindowStartedAt = -999f;
+    private int auraEnergyChanceGrantsThisWindow;
 
     [System.Serializable]
     public struct GrabParams
@@ -94,6 +122,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public bool CurrentActionAllowsGroundToAirTransition => currentActionAllowsGroundToAirTransition;
     public float CurrentActionDamageMultiplier => currentActionDamageMultiplier;
     public float CurrentAuraEnergyReward => currentAuraEnergyReward;
+    public AuraEnergyRewardClaim CurrentAuraEnergyRewardClaim => currentAuraEnergyRewardClaim;
     public AdditionalDamageEffectDefinition[] CurrentAdditionalDamageEffects => currentAdditionalDamageEffects;
     public float CurrentSourceAttack => GetModifiedAttackStat();
 
@@ -512,12 +541,22 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         currentActionStartedGrounded = startedGrounded;
         currentActionAllowsGroundToAirTransition = allowGroundToAirTransition;
         isAirCombo = airCombo;
+        bool beginsNewAction = action == null
+            || currentResolvedCombatAction != action
+            || currentAuraEnergyRewardClaim == null;
+
+        currentResolvedCombatAction = action;
         currentActionDamageMultiplier = action != null
             ? Mathf.Max(0f, action.actionDamageMultiplier)
             : 0f;
         currentAuraEnergyReward = action != null
             ? Mathf.Max(0f, action.auraEnergyReward)
             : 0f;
+
+        if (beginsNewAction)
+        {
+            currentAuraEnergyRewardClaim = new AuraEnergyRewardClaim(currentAuraEnergyReward);
+        }
     }
 
     public void SetAirCombo(bool airCombo) => isAirCombo = airCombo;
@@ -535,8 +574,10 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         currentPhase = ActionPhase.None;
         currentStepData = null;
         currentActionName = null;
+        currentResolvedCombatAction = null;
         currentActionDamageMultiplier = 0f;
         currentAuraEnergyReward = 0f;
+        currentAuraEnergyRewardClaim = null;
         currentAdditionalDamageEffects = System.Array.Empty<AdditionalDamageEffectDefinition>();
         hitboxActiveCount = 0;
         // hitstop is now global
@@ -757,7 +798,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     public void NotifyResolvedEnemyHit(
         CharacterObject character,
-        float actionReward)
+        AuraEnergyRewardClaim actionRewardClaim)
     {
         if (character == null)
             return;
@@ -773,14 +814,20 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             ? Mathf.Max(0f, stats.auraEnergyMultiplier)
             : 1f;
 
-        float guaranteedReward = Mathf.Max(0f, actionReward) * statMultiplier;
-        if (guaranteedReward > 0f)
+        if (actionRewardClaim != null && actionRewardClaim.TryClaim())
         {
-            teamLoader.AddCharacterAE(character, guaranteedReward);
+            float guaranteedReward = actionRewardClaim.Amount * statMultiplier;
+            if (guaranteedReward > 0f)
+            {
+                teamLoader.AddCharacterAE(character, guaranteedReward);
+            }
         }
 
         // The fixed chance reward is independent from the action-authored reward.
         if (UnityEngine.Random.value > ResolveAuraEnergyGainChance(auraEnergyRate))
+            return;
+
+        if (!TryConsumeAuraEnergyChanceGrantSlot())
             return;
 
         float energyToGain = AuraEnergyChanceReward * statMultiplier;
@@ -789,6 +836,24 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             return;
 
         teamLoader.AddCharacterAE(character, energyToGain);
+    }
+
+    private bool TryConsumeAuraEnergyChanceGrantSlot()
+    {
+        float now = Time.time;
+        float windowDuration = Mathf.Max(0.01f, auraEnergyChanceGrantWindowSeconds);
+        if (now - auraEnergyChanceGrantWindowStartedAt >= windowDuration)
+        {
+            auraEnergyChanceGrantWindowStartedAt = now;
+            auraEnergyChanceGrantsThisWindow = 0;
+        }
+
+        int grantLimit = Mathf.Max(1, auraEnergyChanceGrantLimitPerWindow);
+        if (auraEnergyChanceGrantsThisWindow >= grantLimit)
+            return false;
+
+        auraEnergyChanceGrantsThisWindow++;
+        return true;
     }
 
     private static float ResolveAuraEnergyGainChance(AuraEnergyRate auraEnergyRate)
@@ -835,6 +900,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             attackerStats = stats,
             actionDamageMultiplier = currentActionDamageMultiplier,
             auraEnergyReward = currentAuraEnergyReward,
+            auraEnergyRewardClaim = currentAuraEnergyRewardClaim,
             additionalDamageEffects = currentAdditionalDamageEffects,
             isSkillOrUltimate = currentAttackCategory == AttackCategory.Skill || currentAttackCategory == AttackCategory.Ultimate,
             remainingHits = remainingHits,
@@ -1233,7 +1299,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             currentAdditionalDamageEffects,
             this,
             playerCharacter.characterObject,
-            currentAuraEnergyReward);
+            currentAuraEnergyRewardClaim);
     }
 
     public float GetFinalCooldown(AttackCategory category, float baseValue, string actionName = null)

@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -10,6 +11,52 @@ public class CombatRewardDamageTests
         ComboAction action = new ComboAction();
 
         Assert.That(action.auraEnergyReward, Is.EqualTo(0f));
+    }
+
+    [Test]
+    public void AuraEnergyRewardClaim_CanOnlyBeClaimedOnce()
+    {
+        AuraEnergyRewardClaim claim = new AuraEnergyRewardClaim(25f);
+
+        Assert.That(claim.TryClaim(), Is.True);
+        Assert.That(claim.TryClaim(), Is.False);
+        Assert.That(claim.Amount, Is.EqualTo(25f));
+    }
+
+    [Test]
+    public void PlayerCombat_ReusesRewardClaimAcrossStepsOfSameAction()
+    {
+        GameObject playerObject = new GameObject("Reward Claim Test Player");
+        PlayerCombat combat = playerObject.AddComponent<PlayerCombat>();
+        ComboAction action = new ComboAction { auraEnergyReward = 25f };
+
+        combat.BeginResolvedAction(true, false, false, action);
+        AuraEnergyRewardClaim firstClaim = combat.CurrentAuraEnergyRewardClaim;
+        combat.BeginResolvedAction(true, false, false, action);
+
+        Assert.That(combat.CurrentAuraEnergyRewardClaim, Is.SameAs(firstClaim));
+
+        Object.DestroyImmediate(playerObject);
+    }
+
+    [Test]
+    public void AuraEnergyChanceGainGate_LimitsGrantsWithinWindow()
+    {
+        GameObject playerObject = new GameObject("Chance Gate Test Player");
+        PlayerCombat combat = playerObject.AddComponent<PlayerCombat>();
+        MethodInfo consumeSlot = typeof(PlayerCombat).GetMethod(
+            "TryConsumeAuraEnergyChanceGrantSlot",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        Assert.That(consumeSlot, Is.Not.Null);
+        for (int i = 0; i < 5; i++)
+        {
+            Assert.That((bool)consumeSlot.Invoke(combat, null), Is.True);
+        }
+
+        Assert.That((bool)consumeSlot.Invoke(combat, null), Is.False);
+
+        Object.DestroyImmediate(playerObject);
     }
 
     [Test]

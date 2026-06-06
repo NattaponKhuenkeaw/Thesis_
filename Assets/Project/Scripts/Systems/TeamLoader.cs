@@ -1025,6 +1025,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             sourceCombat != null ? sourceCombat.CurrentSourceAttack : stats != null ? stats.attack : 0f,
             sourceCombat != null ? sourceCombat.CurrentActionDamageMultiplier : 0f,
             sourceCombat != null ? sourceCombat.CurrentAuraEnergyReward : 0f,
+            sourceCombat != null ? sourceCombat.CurrentAuraEnergyRewardClaim : null,
             sourceCombat != null ? sourceCombat.CurrentAdditionalDamageEffects : null,
             sourceCombat,
             castingCharacter,

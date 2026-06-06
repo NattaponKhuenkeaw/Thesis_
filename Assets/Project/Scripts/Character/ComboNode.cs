@@ -32,7 +32,7 @@ public abstract class CombatAction
     public float actionDamageMultiplier = 0f;
 
     [Header("Aura Energy Reward")]
-    [Tooltip("Guaranteed Aura Energy granted once when this action's hitbox successfully damages an enemy.")]
+    [Tooltip("Guaranteed Aura Energy granted once for the whole action after its first hitbox successfully damages an enemy.")]
     public float auraEnergyReward = 0f;
     
     [Header("Combo Tree")]

@@ -11,9 +11,11 @@ from confirmed enemy hits.
   bonuses used by HP, movement, damage, cooldown, AE, HUD, projectiles, and
   background Ultimates.
 - Separated hit-confirmed AE into two sources: every damaging hit rolls the
-  character's Low/Med/High rate for a fixed 10 AE base reward, while each
-  action may author one guaranteed `AE Reward` (default `0`) per successful
-  hitbox. Enemy defeat has no separate reward branch.
+  character's Low/Med/High rate for a fixed 10 AE base reward, with successful
+  chance grants bounded by PlayerCombat's configurable time-window gate. Each
+  action may author one guaranteed `AE Reward` (default `0`) that is claimed
+  only by the action's first damaging hit across every enemy and delivery path.
+  Enemy defeat has no separate reward branch.
 - Removed action-start AE grants, so missed attacks and out-of-combat skill spam
   cannot generate Aura Energy.
 - Removed `maxAuraEnergy` from `CharacterStats` and obsolete serialized character/artifact data.

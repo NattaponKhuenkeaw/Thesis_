@@ -36,6 +36,7 @@ MonoBehaviour:
   speed: 0.1
   lifetime: 3
   maxHits: 8
+  hitCountMode: 0
   routineHitbox:
     enabled: 1
     decrementsMaxHits: 1
@@ -76,7 +77,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0, y: 0}
         size: {x: 2, y: 2}
-        damageMultiplier: 0.2
+        damageRatio: 0.012
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 2

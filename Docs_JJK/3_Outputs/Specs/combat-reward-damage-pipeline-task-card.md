@@ -16,8 +16,11 @@ blocked_by: []
 ## Player-Facing Goal
 
 Aura Energy is earned only by attacks that damage an enemy. Every confirmed hit
-independently rolls the character's fixed 10 AE chance reward, while an action
-may also grant its own guaranteed `AE Reward` once per successful hitbox.
+independently rolls the character's fixed 10 AE chance reward, but successful
+chance grants are bounded by PlayerCombat's configurable grant-count and
+time-window gate. An action may also grant its own guaranteed `AE Reward`
+exactly once after the action's first confirmed damaging hit, regardless of how
+many hitboxes, projectiles, or enemies that action reaches.
 
 Damage supports mutually exclusive Normal and Elemental primary routines plus
 separate, non-critical Additional Damage ticks from passives or artifacts.
@@ -43,8 +46,11 @@ Equipped artifact stats affect the deployed character in combat.
 
 - [x] No AE is granted when an action starts or misses.
 - [x] Every damaging hit independently rolls the fixed PlayerCombat AE reward.
+- [x] Successful chance-based AE grants are limited by configurable
+      max-grants-per-window inputs on PlayerCombat.
 - [x] `CombatAction` exposes one guaranteed `AE Reward` field (default `0`) and
-      has no separate on-hit amount or on-kill branch.
+      grants it only once for the whole action, with no separate on-hit amount
+      or on-kill branch.
 - [x] AE capacity equals the resolved Ultimate AE cost exactly.
 - [x] Normal damage keeps the existing damage-mastery formula.
 - [x] Elemental damage replaces Normal damage and uses Elemental Multiplier

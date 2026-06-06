@@ -78,7 +78,7 @@ MonoBehaviour:
         offset: {x: 0, y: 2}
         size: {x: 10, y: 5}
         canGrabAirborne: 1
-        damageMultiplier: 3.5
+        damageRatio: 0.15
         impactFreezeFrames: 2
         holdFrames: 500
         recoveryFrames: 6

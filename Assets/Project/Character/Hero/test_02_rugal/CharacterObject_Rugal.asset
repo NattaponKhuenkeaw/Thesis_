@@ -38,6 +38,7 @@ MonoBehaviour:
     portrait: {fileID: 5350120682723182771, guid: 5238c90a9a0a0d44382f4790e2d6f5e7, type: 3}
     animatorController: {fileID: 9100000, guid: 815b33a35641994489dd122eacb4e98d, type: 2}
   auraEnergyRate: 0
+  audioData: {fileID: 11400000, guid: a619867be2a28f642b09a359f46a8a6a, type: 2}
   movementProfile: {fileID: 11400000, guid: b71e22596438c5f4ab6e3f64f66c4479, type: 2}
   maxJumpOverride: 2
   maxAirDashOverride: -1
@@ -59,4 +60,3 @@ MonoBehaviour:
     constellationNodes: []
     passiveNodes: []
   actionResolverTable: {fileID: 11400000, guid: 24c1f4b36af412b4ebbeeb757fac41ef, type: 2}
-  audioData: {fileID: 11400000, guid: a619867be2a28f642b09a359f46a8a6a, type: 2}

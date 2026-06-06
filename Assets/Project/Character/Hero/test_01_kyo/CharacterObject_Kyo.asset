@@ -39,6 +39,7 @@ MonoBehaviour:
     portrait: {fileID: -9219516506285710656, guid: df43e2734be96af43b5920fcbfb63b39, type: 3}
     animatorController: {fileID: 9100000, guid: 3436f3bf41714a54391f36d8cfdd4294, type: 2}
   auraEnergyRate: 0
+  audioData: {fileID: 11400000, guid: 2e1cc3b89704d09409a0f8d5b4c62631, type: 2}
   movementProfile: {fileID: 11400000, guid: b602c19e897c96a44a78f9defc7f3bb6, type: 2}
   maxJumpOverride: -1
   maxAirDashOverride: -1
@@ -78,6 +79,7 @@ MonoBehaviour:
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
+      additionalDamageEffects: []
       passiveHookTypeName: 
     - nodeId: KYO_C2_BURNING_CHAIN
       nodeName: Burning Chain
@@ -139,6 +141,7 @@ MonoBehaviour:
         status: 0
         chance: 0.5
         scope: 3
+      additionalDamageEffects: []
       passiveHookTypeName: 
     - nodeId: KYO_C6_FINISHER
       nodeName: Crimson Finisher
@@ -203,7 +206,7 @@ MonoBehaviour:
           duration: 0
         counterEffects: []
       onHitStatusEffects: []
+      additionalDamageEffects: []
       passiveHookTypeName: 
     passiveNodes: []
   actionResolverTable: {fileID: 11400000, guid: 93ffc437bab6ea2449e90ba52b119527, type: 2}
-  audioData: {fileID: 11400000, guid: 2e1cc3b89704d09409a0f8d5b4c62631, type: 2}

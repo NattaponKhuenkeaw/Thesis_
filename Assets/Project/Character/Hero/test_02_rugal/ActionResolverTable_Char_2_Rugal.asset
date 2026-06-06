@@ -30,7 +30,7 @@ MonoBehaviour:
     priority: 1
     conditions: []
     allowGroundToAirTransition: 0
-    actionDamageMultiplier: 0
+    actionDamageMultiplier: 3
     auraEnergyReward: 0
     comboTree:
       treeName: Combo
@@ -44,7 +44,7 @@ MonoBehaviour:
     conditions: []
     allowGroundToAirTransition: 0
     actionDamageMultiplier: 3
-    auraEnergyReward: 0
+    auraEnergyReward: 3
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
@@ -57,15 +57,15 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
-    actionDamageMultiplier: 0
+    actionDamageMultiplier: 8
     auraEnergyReward: 0
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
       rootNode:
         rid: 1588255929706480004
-    cooldown: 7
-    energyCost: 50
+    cooldown: 0
+    energyCost: 100
     activationVFXType: 40
     activationVFXPrefab: {fileID: 0}
     activationVFXOffset: {x: -0.5, y: 3, z: 0}

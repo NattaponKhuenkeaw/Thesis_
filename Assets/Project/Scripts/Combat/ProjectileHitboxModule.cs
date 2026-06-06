@@ -194,7 +194,7 @@ public sealed class ProjectileHitboxModule
             context.additionalDamageEffects,
             context.sourceCombat,
             context.sourceCharacter,
-            context.auraEnergyReward);
+            context.auraEnergyRewardClaim);
     }
 
     private static float ResolveHitDamageMultiplier(ProjectileSpawnContext context, float damageRatio)
