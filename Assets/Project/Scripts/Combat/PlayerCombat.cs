@@ -12,6 +12,8 @@ using Project.Combat;
 /// </summary>
 public class PlayerCombat : MonoBehaviour, ICharacterCombat
 {
+    private const float AuraEnergyChanceReward = 10f;
+
     [Header("Dependencies")]
     public PlayerCharacter playerCharacter;
     public PlayerAnimator animHandler;
@@ -39,12 +41,6 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public float airAttackComboResetCooldown = 0.5f;
     private float airAttackComboCooldownEndTime;
 
-    [Header("Aura Energy Rewards")]
-    [SerializeField, Min(1)] private int auraEnergyGrantLimitPerWindow = 5;
-    [SerializeField, Min(0.01f)] private float auraEnergyGrantWindowSeconds = 1f;
-    [SerializeField, Range(0f, 1f)] private float auraEnergyAdditionalSameFrameHitPenalty = 0.1f;
-    [SerializeField, Range(0f, 1f)] private float auraEnergySameFrameHitMultiplierFloor = 0.6f;
-
     private readonly Dictionary<string, float> lastCategoryUseTime = new Dictionary<string, float>();
     private readonly Dictionary<string, float> lastActionUseTime = new Dictionary<string, float>();
     private readonly HashSet<EnemyController> hitEnemiesThisStep = new HashSet<EnemyController>();
@@ -54,8 +50,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     private AttackCategory currentAttackCategory = AttackCategory.Normal;
     private string currentActionName;
     private float currentActionDamageMultiplier;
-    private float currentAuraEnergyOnHitAmount;
-    private float currentAuraEnergyOnKillAmount;
+    private float currentAuraEnergyReward;
     private AdditionalDamageEffectDefinition[] currentAdditionalDamageEffects =
         System.Array.Empty<AdditionalDamageEffectDefinition>();
     private int comboDepth;
@@ -73,10 +68,6 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     private Animator cachedAnimator;
     private Coroutine priorityResetCoroutine;
     private TeamLoader teamLoader;
-    private float auraEnergyGrantWindowStartedAt = -999f;
-    private int auraEnergyGrantsThisWindow;
-    private int auraEnergySameFrameHitFrame = -1;
-    private int auraEnergySameFrameHitAttempts;
 
     [System.Serializable]
     public struct GrabParams
@@ -102,8 +93,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public bool CurrentActionStartedGrounded => currentActionStartedGrounded;
     public bool CurrentActionAllowsGroundToAirTransition => currentActionAllowsGroundToAirTransition;
     public float CurrentActionDamageMultiplier => currentActionDamageMultiplier;
-    public float CurrentAuraEnergyOnHitAmount => currentAuraEnergyOnHitAmount;
-    public float CurrentAuraEnergyOnKillAmount => currentAuraEnergyOnKillAmount;
+    public float CurrentAuraEnergyReward => currentAuraEnergyReward;
     public AdditionalDamageEffectDefinition[] CurrentAdditionalDamageEffects => currentAdditionalDamageEffects;
     public float CurrentSourceAttack => GetModifiedAttackStat();
 
@@ -525,11 +515,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         currentActionDamageMultiplier = action != null
             ? Mathf.Max(0f, action.actionDamageMultiplier)
             : 0f;
-        currentAuraEnergyOnHitAmount = action != null
-            ? Mathf.Max(0f, action.auraEnergyGainAmount)
-            : 0f;
-        currentAuraEnergyOnKillAmount = action != null
-            ? Mathf.Max(0f, action.auraEnergyOnKillAmount)
+        currentAuraEnergyReward = action != null
+            ? Mathf.Max(0f, action.auraEnergyReward)
             : 0f;
     }
 
@@ -549,8 +536,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         currentStepData = null;
         currentActionName = null;
         currentActionDamageMultiplier = 0f;
-        currentAuraEnergyOnHitAmount = 0f;
-        currentAuraEnergyOnKillAmount = 0f;
+        currentAuraEnergyReward = 0f;
         currentAdditionalDamageEffects = System.Array.Empty<AdditionalDamageEffectDefinition>();
         hitboxActiveCount = 0;
         // hitstop is now global
@@ -771,47 +757,35 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     public void NotifyResolvedEnemyHit(
         CharacterObject character,
-        float onHitAmount,
-        float onKillAmount,
-        bool isDefeated)
+        float actionReward)
     {
-        float baseGainAmount = isDefeated ? onKillAmount : onHitAmount;
-        if (character == null || baseGainAmount <= 0f)
+        if (character == null)
             return;
 
         if (teamLoader == null)
             teamLoader = Object.FindFirstObjectByType<TeamLoader>();
+        if (teamLoader == null)
+            return;
 
-        CharacterStats stats = teamLoader != null
-            ? teamLoader.GetCharacterRuntimeStats(character)
-            : character.stats;
-        AuraEnergyRate auraEnergyRate = stats != null
-            ? stats.auraEnergyRate
-            : AuraEnergyRate.Med;
-
-        float hitDensityMultiplier = 1f;
-        if (!isDefeated)
-        {
-            if (UnityEngine.Random.value > ResolveAuraEnergyGainChance(auraEnergyRate))
-                return;
-
-            if (!TryConsumeAuraEnergyGrantSlot())
-                return;
-
-            hitDensityMultiplier = ConsumeSameFrameHitAuraMultiplier();
-        }
-
+        CharacterStats stats = teamLoader.GetCharacterRuntimeStats(character);
+        AuraEnergyRate auraEnergyRate = character.auraEnergyRate;
         float statMultiplier = stats != null
             ? Mathf.Max(0f, stats.auraEnergyMultiplier)
             : 1f;
-        float energyToGain = Mathf.Max(0f, baseGainAmount)
-            * statMultiplier
-            * hitDensityMultiplier;
 
-        if (energyToGain <= 0f)
+        float guaranteedReward = Mathf.Max(0f, actionReward) * statMultiplier;
+        if (guaranteedReward > 0f)
+        {
+            teamLoader.AddCharacterAE(character, guaranteedReward);
+        }
+
+        // The fixed chance reward is independent from the action-authored reward.
+        if (UnityEngine.Random.value > ResolveAuraEnergyGainChance(auraEnergyRate))
             return;
 
-        if (teamLoader == null)
+        float energyToGain = AuraEnergyChanceReward * statMultiplier;
+
+        if (energyToGain <= 0f)
             return;
 
         teamLoader.AddCharacterAE(character, energyToGain);
@@ -825,41 +799,6 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             AuraEnergyRate.High => 0.15f,
             _ => 0.10f
         };
-    }
-
-    private float ConsumeSameFrameHitAuraMultiplier()
-    {
-        int currentFrame = Time.frameCount;
-        if (auraEnergySameFrameHitFrame != currentFrame)
-        {
-            auraEnergySameFrameHitFrame = currentFrame;
-            auraEnergySameFrameHitAttempts = 0;
-        }
-
-        int additionalHitIndex = auraEnergySameFrameHitAttempts;
-        auraEnergySameFrameHitAttempts++;
-
-        float floor = Mathf.Clamp01(auraEnergySameFrameHitMultiplierFloor);
-        float penalty = Mathf.Max(0f, auraEnergyAdditionalSameFrameHitPenalty) * additionalHitIndex;
-        return Mathf.Max(floor, 1f - penalty);
-    }
-
-    private bool TryConsumeAuraEnergyGrantSlot()
-    {
-        float now = Time.time;
-        float windowDuration = Mathf.Max(0.01f, auraEnergyGrantWindowSeconds);
-        if (now - auraEnergyGrantWindowStartedAt >= windowDuration)
-        {
-            auraEnergyGrantWindowStartedAt = now;
-            auraEnergyGrantsThisWindow = 0;
-        }
-
-        int grantLimit = Mathf.Max(1, auraEnergyGrantLimitPerWindow);
-        if (auraEnergyGrantsThisWindow >= grantLimit)
-            return false;
-
-        auraEnergyGrantsThisWindow++;
-        return true;
     }
 
     public ProjectileSpawnContext BuildProjectileSpawnContext(ProjectileSpawnHitbox projectileHitbox)
@@ -895,8 +834,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             sourceAttack = sourceAttack,
             attackerStats = stats,
             actionDamageMultiplier = currentActionDamageMultiplier,
-            auraEnergyOnHitAmount = currentAuraEnergyOnHitAmount,
-            auraEnergyOnKillAmount = currentAuraEnergyOnKillAmount,
+            auraEnergyReward = currentAuraEnergyReward,
             additionalDamageEffects = currentAdditionalDamageEffects,
             isSkillOrUltimate = currentAttackCategory == AttackCategory.Skill || currentAttackCategory == AttackCategory.Ultimate,
             remainingHits = remainingHits,
@@ -1282,7 +1220,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     private void ConfigurePerEnemyDamageCalculation(HitBoxDamage targetHitBoxDamage)
     {
-        if (targetHitBoxDamage == null || playerCharacter == null || playerCharacter.characterObject == null || playerCharacter.Stats == null)
+        if (targetHitBoxDamage == null || playerCharacter == null)
         {
             return;
         }
@@ -1295,8 +1233,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             currentAdditionalDamageEffects,
             this,
             playerCharacter.characterObject,
-            currentAuraEnergyOnHitAmount,
-            currentAuraEnergyOnKillAmount);
+            currentAuraEnergyReward);
     }
 
     public float GetFinalCooldown(AttackCategory category, float baseValue, string actionName = null)

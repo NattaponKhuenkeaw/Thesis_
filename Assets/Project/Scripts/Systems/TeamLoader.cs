@@ -136,7 +136,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             targetCharacter,
             GetStoredHP(targetCharacter),
             GetCharacterRuntimeStats(targetCharacter),
-            GetEquippedArtifactsFor(targetCharacter));
+            GetEquippedArtifactsAt(currentIndex));
         NotifyCharacterHealthUpdated(targetCharacter);
         NotifyCurrentCharacterChanged();
         Debug.Log("Switched to: " + targetCharacter.metaData.displayName);
@@ -384,16 +384,35 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     public Artifact[] GetEquippedArtifactsFor(CharacterObject character)
     {
-        if (character == null || team == null || equippedArtifacts == null) return null;
+        int slotIndex = FindCharacterIndex(character);
+        return slotIndex >= 0 ? GetEquippedArtifactsAt(slotIndex) : System.Array.Empty<Artifact>();
+    }
 
-        for (int i = 0; i < team.Length; i++)
+    public Artifact[] GetEquippedArtifactsAt(int slotIndex)
+    {
+        if (team == null || slotIndex < 0 || slotIndex >= team.Length)
         {
-            if (team[i] == character && i < equippedArtifacts.Length)
-            {
-                return equippedArtifacts[i];
-            }
+            return System.Array.Empty<Artifact>();
         }
-        return null;
+
+        EnsureArtifactLoadoutCapacity(team.Length);
+        Artifact[] slotArtifacts = equippedArtifacts[slotIndex];
+
+        bool canBackfillActiveSlot = (slotArtifacts == null || slotArtifacts.Length == 0)
+            && slotIndex == currentIndex
+            && playerCharacter != null
+            && playerCharacter.characterObject == team[slotIndex]
+            && playerCharacter.EquippedArtifacts != null
+            && playerCharacter.EquippedArtifacts.Length > 0;
+
+        if (canBackfillActiveSlot)
+        {
+            slotArtifacts = CloneArtifactArray(playerCharacter.EquippedArtifacts);
+            equippedArtifacts[slotIndex] = slotArtifacts;
+            RebuildRuntimeStats();
+        }
+
+        return slotArtifacts ?? System.Array.Empty<Artifact>();
     }
 
     public void SetTeamFromUI(CharacterObject[] newTeam)
@@ -655,6 +674,41 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         }
 
         return clone;
+    }
+
+    private static Artifact[] CloneArtifactArray(Artifact[] source)
+    {
+        if (source == null || source.Length == 0)
+        {
+            return System.Array.Empty<Artifact>();
+        }
+
+        Artifact[] clone = new Artifact[source.Length];
+        System.Array.Copy(source, clone, source.Length);
+        return clone;
+    }
+
+    private void EnsureArtifactLoadoutCapacity(int slotCount)
+    {
+        int resolvedSlotCount = Mathf.Max(1, slotCount);
+        if (equippedArtifacts != null && equippedArtifacts.Length == resolvedSlotCount)
+        {
+            for (int i = 0; i < equippedArtifacts.Length; i++)
+            {
+                equippedArtifacts[i] ??= System.Array.Empty<Artifact>();
+            }
+            return;
+        }
+
+        Artifact[][] previousLoadout = equippedArtifacts;
+        equippedArtifacts = new Artifact[resolvedSlotCount][];
+
+        for (int i = 0; i < resolvedSlotCount; i++)
+        {
+            equippedArtifacts[i] = previousLoadout != null && i < previousLoadout.Length
+                ? previousLoadout[i] ?? System.Array.Empty<Artifact>()
+                : System.Array.Empty<Artifact>();
+        }
     }
 
     private void ResetRuntimeTransientState()
@@ -970,8 +1024,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             stats,
             sourceCombat != null ? sourceCombat.CurrentSourceAttack : stats != null ? stats.attack : 0f,
             sourceCombat != null ? sourceCombat.CurrentActionDamageMultiplier : 0f,
-            sourceCombat != null ? sourceCombat.CurrentAuraEnergyOnHitAmount : 0f,
-            sourceCombat != null ? sourceCombat.CurrentAuraEnergyOnKillAmount : 0f,
+            sourceCombat != null ? sourceCombat.CurrentAuraEnergyReward : 0f,
             sourceCombat != null ? sourceCombat.CurrentAdditionalDamageEffects : null,
             sourceCombat,
             castingCharacter,

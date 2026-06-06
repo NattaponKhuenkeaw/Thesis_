@@ -676,6 +676,11 @@ namespace Project.TeamBuilder.UI
                 CharacterItem matchingItem = FindCharacterItem(charObj);
                 teamSlots[i].SetCharacter(matchingItem);
 
+                if (teamLoader != null)
+                {
+                    Artifact[] runtimeArtifacts = teamLoader.GetEquippedArtifactsAt(i);
+                    teamSlots[i].SetEquippedArtifacts(CloneArtifactArray(runtimeArtifacts));
+                }
             }
 
             NormalizeStagedActiveIndex();

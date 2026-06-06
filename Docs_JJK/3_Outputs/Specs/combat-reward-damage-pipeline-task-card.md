@@ -15,9 +15,9 @@ blocked_by: []
 
 ## Player-Facing Goal
 
-Aura Energy is earned only by attacks that damage an enemy. A surviving target
-uses the action's on-hit AE chance, while a defeated target uses only the
-action's guaranteed on-kill reward.
+Aura Energy is earned only by attacks that damage an enemy. Every confirmed hit
+independently rolls the character's fixed 10 AE chance reward, while an action
+may also grant its own guaranteed `AE Reward` once per successful hitbox.
 
 Damage supports mutually exclusive Normal and Elemental primary routines plus
 separate, non-critical Additional Damage ticks from passives or artifacts.
@@ -42,8 +42,9 @@ Equipped artifact stats affect the deployed character in combat.
 ## Acceptance Criteria
 
 - [x] No AE is granted when an action starts or misses.
-- [x] A damaging hit branches once: on-kill reward if defeated, otherwise
-      on-hit chance.
+- [x] Every damaging hit independently rolls the fixed PlayerCombat AE reward.
+- [x] `CombatAction` exposes one guaranteed `AE Reward` field (default `0`) and
+      has no separate on-hit amount or on-kill branch.
 - [x] AE capacity equals the resolved Ultimate AE cost exactly.
 - [x] Normal damage keeps the existing damage-mastery formula.
 - [x] Elemental damage replaces Normal damage and uses Elemental Multiplier
@@ -54,6 +55,8 @@ Equipped artifact stats affect the deployed character in combat.
 - [x] Genocide Cutter deals 300% ATK total across three equal hit ratios.
 - [x] TeamLoader applies artifact bonuses to the matching runtime team slot.
 - [x] Melee, projectile, and background-Ultimate paths share the same rules.
+- [x] Training Debug records the final damage payload sent to the enemy rather
+      than HP loss capped by the target's remaining health.
 
 ## Human Checkpoint
 

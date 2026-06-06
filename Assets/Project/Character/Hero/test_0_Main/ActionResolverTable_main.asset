@@ -18,7 +18,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
-    auraEnergyGainAmount: 0
+    auraEnergyReward: 0
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
@@ -29,7 +29,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
-    auraEnergyGainAmount: 0
+    auraEnergyReward: 0
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
@@ -41,7 +41,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
-    auraEnergyGainAmount: 10
+    auraEnergyReward: 0
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
@@ -54,7 +54,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
-    auraEnergyGainAmount: 0
+    auraEnergyReward: 0
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8

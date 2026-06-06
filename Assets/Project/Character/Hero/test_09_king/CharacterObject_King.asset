@@ -38,9 +38,7 @@ MonoBehaviour:
       \u0E17\u0E35\u0E48\u0E1B\u0E25\u0E2D\u0E21\u0E15\u0E31\u0E27\u0E40\u0E1B\u0E47\u0E19\u0E0A\u0E32\u0E22\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E27\u0E07\u0E01\u0E32\u0E23\u0E15\u0E48\u0E2D\u0E2A\u0E39\u0E49\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E1B\u0E01\u0E1B\u0E49\u0E2D\u0E07\u0E19\u0E49\u0E2D\u0E07\u0E0A\u0E32\u0E22"
     portrait: {fileID: -4402777676040250342, guid: ab05259909e307744a8c7479c367de23, type: 3}
     animatorController: {fileID: 9100000, guid: 815b33a35641994489dd122eacb4e98d, type: 2}
-    attackSfx: {fileID: 0}
-    skillSfx: {fileID: 0}
-    hurtSfx: {fileID: 0}
+  auraEnergyRate: 1
   authoredFPS: 24
   upgrade:
     level: 1

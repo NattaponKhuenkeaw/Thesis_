@@ -37,8 +37,6 @@ public class CharacterStats
     [Header("Aura Energy")]
     [Tooltip("Multiplier applied to all gained aura energy.")]
     public float auraEnergyMultiplier = 1f; // Multiplier for gained AE
-    [Tooltip("Aura Energy gain rate tier. Low = 5% chance, Med = 10%, High = 15%.")]
-    public AuraEnergyRate auraEnergyRate = AuraEnergyRate.Med;
 
     public CharacterStats Clone()
     {
@@ -56,7 +54,6 @@ public class CharacterStats
             damageMastery = damageMastery,
             damageResistance = damageResistance,
             auraEnergyMultiplier = auraEnergyMultiplier,
-            auraEnergyRate = auraEnergyRate
         };
     }
 

@@ -14,7 +14,7 @@ public enum CombatActionContext
 }
 
 [System.Serializable]
-public abstract class CombatAction : ISerializationCallbackReceiver
+public abstract class CombatAction
 {
     public string actionName = "New Action";
     
@@ -32,11 +32,8 @@ public abstract class CombatAction : ISerializationCallbackReceiver
     public float actionDamageMultiplier = 0f;
 
     [Header("Aura Energy Reward")]
-    [Tooltip("Base Aura Energy used by the on-hit chance after this action damages a surviving enemy.")]
-    public float auraEnergyGainAmount = 0f;
-    [Tooltip("Base Aura Energy granted when this action's confirmed damage defeats an enemy.")]
-    public float auraEnergyOnKillAmount = 10f;
-    [SerializeField, HideInInspector] private bool hasInitializedOnKillAuraReward;
+    [Tooltip("Guaranteed Aura Energy granted once when this action's hitbox successfully damages an enemy.")]
+    public float auraEnergyReward = 0f;
     
     [Header("Combo Tree")]
     public ComboTree comboTree;
@@ -53,30 +50,6 @@ public abstract class CombatAction : ISerializationCallbackReceiver
         return actionDamageMultiplier * Mathf.Clamp01(damageRatio);
     }
 
-    public void SetAuraEnergyOnKillAmount(float value)
-    {
-        auraEnergyOnKillAmount = Mathf.Max(0f, value);
-        hasInitializedOnKillAuraReward = true;
-    }
-
-    public void OnBeforeSerialize()
-    {
-        InitializeOnKillAuraReward();
-    }
-
-    public void OnAfterDeserialize()
-    {
-        InitializeOnKillAuraReward();
-    }
-
-    private void InitializeOnKillAuraReward()
-    {
-        if (hasInitializedOnKillAuraReward)
-            return;
-
-        auraEnergyOnKillAmount = 10f;
-        hasInitializedOnKillAuraReward = true;
-    }
 }
 
 [System.Serializable]

@@ -22,14 +22,13 @@ MonoBehaviour:
     defense: 7
     speed: 10
     elementalMultiplier: 1
-    critRate: 3
+    critRate: 0
     critDamage: 150
     cooldownReduction: 0
     skillMastery: 0
     damageMastery: 0
     damageResistance: 0
     auraEnergyMultiplier: 1
-    auraEnergyRate: 0
   metaData:
     displayName: Rugal
     description: "\u0E1E\u0E48\u0E2D\u0E04\u0E49\u0E32\u0E2D\u0E32\u0E27\u0E38\u0E18\u0E1C\u0E39\u0E49\u0E17\u0E23\u0E07\u0E2D\u0E34\u0E17\u0E18\u0E34\u0E1E\u0E25\u0E41\u0E25\u0E30\u0E1A\u0E49\u0E32\u0E04\u0E25\u0E31\u0E48\u0E07\u0E01\u0E32\u0E23\u0E15\u0E48\u0E2D\u0E2A\u0E39\u0E49
@@ -38,9 +37,7 @@ MonoBehaviour:
       Genocide Cutter \u0E41\u0E25\u0E30\u0E21\u0E35\u0E1E\u0E25\u0E31\u0E07\u0E42\u0E2D\u0E42\u0E23\u0E08\u0E34\u0E41\u0E1D\u0E07\u0E2D\u0E22\u0E39\u0E48"
     portrait: {fileID: 5350120682723182771, guid: 5238c90a9a0a0d44382f4790e2d6f5e7, type: 3}
     animatorController: {fileID: 9100000, guid: 815b33a35641994489dd122eacb4e98d, type: 2}
-    attackSfx: {fileID: 0}
-    skillSfx: {fileID: 0}
-    hurtSfx: {fileID: 0}
+  auraEnergyRate: 0
   movementProfile: {fileID: 11400000, guid: b71e22596438c5f4ab6e3f64f66c4479, type: 2}
   maxJumpOverride: 2
   maxAirDashOverride: -1

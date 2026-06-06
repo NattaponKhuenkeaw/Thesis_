@@ -29,7 +29,6 @@ MonoBehaviour:
     damageMastery: 0
     damageResistance: 0
     auraEnergyMultiplier: 1.25
-    auraEnergyRate: 2
   metaData:
     displayName: Goenitz
     description: "\u0E15\u0E31\u0E27\u0E25\u0E30\u0E04\u0E23\u0E40\u0E27\u0E2D\u0E23\u0E4C\u0E0A\u0E31\u0E19\u0E2A\u0E25\u0E31\u0E1A\u0E40\u0E1E\u0E28
@@ -39,9 +38,7 @@ MonoBehaviour:
       \u0E21\u0E31\u0E01\u0E1B\u0E23\u0E32\u0E01\u0E0F\u0E15\u0E31\u0E27\u0E43\u0E19\u0E0A\u0E38\u0E14\u0E41\u0E21\u0E48\u0E0A\u0E35\u0E17\u0E35\u0E48\u0E14\u0E39\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22\u0E41\u0E15\u0E48\u0E41\u0E1D\u0E07\u0E44\u0E1B\u0E14\u0E49\u0E27\u0E22\u0E04\u0E27\u0E32\u0E21\u0E42\u0E2B\u0E14\u0E40\u0E2B\u0E35\u0E49\u0E22\u0E21\u0E15\u0E32\u0E21\u0E2A\u0E44\u0E15\u0E25\u0E4C\u0E2A\u0E32\u0E27\u0E01\u0E42\u0E2D\u0E42\u0E23\u0E08\u0E34"
     portrait: {fileID: 21300000, guid: a46bfd9a10ea71648a6b27d01472a600, type: 3}
     animatorController: {fileID: 9100000, guid: efb84dc297f28b2448da06b6d95f9b3b, type: 2}
-    attackSfx: {fileID: 0}
-    skillSfx: {fileID: 0}
-    hurtSfx: {fileID: 0}
+  auraEnergyRate: 2
   movementProfile: {fileID: 11400000, guid: b71e22596438c5f4ab6e3f64f66c4479, type: 2}
   maxJumpOverride: 2
   maxAirDashOverride: 2

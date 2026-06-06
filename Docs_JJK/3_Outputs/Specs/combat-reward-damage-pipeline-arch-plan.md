@@ -14,9 +14,11 @@ next_agent: "implementation-agent"
 ## Authority Decisions
 
 1. `HitBoxDamage` is the confirmation point for primary damage, Additional
-   Damage, defeat state, passive hit notification, and AE reward dispatch.
-2. `CombatAction` owns `actionDamageMultiplier`, `auraEnergyGainAmount`
-   (on-hit), and `auraEnergyOnKillAmount`.
+   Damage, passive hit notification, AE reward dispatch, and Training Debug
+   final-damage capture.
+2. `CombatAction` owns `actionDamageMultiplier` and one guaranteed
+   `auraEnergyReward` (default `0`). `PlayerCombat` separately owns the fixed
+   `10 AE` chance reward rolled on every damaging hit.
 3. `actionDamageMultiplier <= 0` preserves legacy direct per-hit multipliers.
    An authored positive value enables the new formula:
    `ATK * actionDamageMultiplier * Clamp01(hitbox.damageRatio)`.
@@ -42,9 +44,10 @@ ActionResolver selects CombatAction
   -> melee/projectile/background executor configures HitBoxDamage
   -> primary damage resolves against one enemy
   -> eligible Additional Damage effects resolve as separate enemy hits
-  -> final enemy alive/dead state is checked
-  -> defeated: guaranteed on-kill AE only
-  -> alive: on-hit AE chance only
+  -> action-authored AE Reward is granted once for the successful hitbox
+  -> character AuraEnergyRate independently rolls the fixed 10 AE reward
+  -> EnemyController returns the final damage payload accepted by the target
+  -> Training Debug records that final payload rather than remaining-HP loss
 ```
 
 ## Compatibility

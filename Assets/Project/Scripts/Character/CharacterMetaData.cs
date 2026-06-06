@@ -16,12 +16,4 @@ public class CharacterMetaData
     [Header("Visual")]
     public Sprite portrait;
     public RuntimeAnimatorController animatorController;
-
-    // =========================================================
-    // Audio
-    // =========================================================
-    [Header("Audio")]
-    public AudioClip attackSfx;
-    public AudioClip skillSfx;
-    public AudioClip hurtSfx;
 }

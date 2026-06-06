@@ -39,9 +39,7 @@ MonoBehaviour:
       Andy Bogard"
     portrait: {fileID: -6483566312599590887, guid: fde01166db257cb40b40577e8143bb57, type: 3}
     animatorController: {fileID: 9100000, guid: 815b33a35641994489dd122eacb4e98d, type: 2}
-    attackSfx: {fileID: 0}
-    skillSfx: {fileID: 0}
-    hurtSfx: {fileID: 0}
+  auraEnergyRate: 1
   authoredFPS: 24
   upgrade:
     level: 1

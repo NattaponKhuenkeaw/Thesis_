@@ -164,9 +164,9 @@ public class EnemyController : MonoBehaviour
     /// <summary>
     /// Full hit-reaction variant. Called by HitBoxDamage with frame-data-driven reaction.
     /// </summary>
-    public void TakeHit(HitReactionData reactionData, Vector2 attackerPosition)
+    public float TakeHit(HitReactionData reactionData, Vector2 attackerPosition)
     {
-        if (!isAlive) return;
+        if (!isAlive) return 0f;
 
         bool isAdditionalDamage = reactionData.damageRoutine == DamageRoutine.Additional;
 
@@ -208,7 +208,7 @@ public class EnemyController : MonoBehaviour
             if (currentHP <= 0f)
                 Die();
 
-            return;
+            return finalIncomingDamage;
         }
 
         // Notify Blackboard for BehaviorGraph
@@ -236,6 +236,8 @@ public class EnemyController : MonoBehaviour
 
         if (currentHP <= 0f)
             Die();
+
+        return finalIncomingDamage;
     }
 
     private bool ShouldApplyHitReaction()

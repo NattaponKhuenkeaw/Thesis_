@@ -36,9 +36,7 @@ MonoBehaviour:
       \u0E17\u0E38\u0E48\u0E21 (Grappling) \u0E17\u0E35\u0E48\u0E17\u0E23\u0E07\u0E1E\u0E25\u0E31\u0E07\u0E41\u0E25\u0E30\u0E04\u0E27\u0E1A\u0E04\u0E38\u0E21\u0E2A\u0E32\u0E22\u0E1F\u0E49\u0E32\u0E2A\u0E35\u0E21\u0E48\u0E27\u0E07\u0E44\u0E14\u0E49\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E19\u0E48\u0E32\u0E01\u0E25\u0E31\u0E27"
     portrait: {fileID: 21300000, guid: 6980df79b29645e4a9f7b01c22c621c5, type: 3}
     animatorController: {fileID: 9100000, guid: b4f7f50e094f0f145a2251ad62172a8d, type: 2}
-    attackSfx: {fileID: 0}
-    skillSfx: {fileID: 0}
-    hurtSfx: {fileID: 0}
+  auraEnergyRate: 1
   movementProfile: {fileID: 11400000, guid: b71e22596438c5f4ab6e3f64f66c4479, type: 2}
   maxJumpOverride: -1
   maxAirDashOverride: -1

@@ -22,7 +22,7 @@ MonoBehaviour:
   passiveDescription: Unique passive effect description here.
   bonusStats:
     maxHP: 0
-    attack: 3
+    attack: 15
     defense: 0
     speed: 0
     elementalMultiplier: 0
@@ -33,4 +33,4 @@ MonoBehaviour:
     damageMastery: 0
     damageResistance: 0
     auraEnergyMultiplier: 0
-    auraEnergyRate: 1
+  additionalDamageEffects: []

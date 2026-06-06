@@ -22,7 +22,7 @@ We decide to:
 6. **Support background execution of Ultimate active frames** during a team switch via a temporary `BackgroundUltimateExecutor` clone prefab.
 7. **Apply Super Armor + Invulnerability (i-frames)** to the player character during the Active phase of the Ultimate, consuming AE on transition to Active rather than Startup.
 8. **Update HUD meters** (via `AbilityUIManager` and `CharacterSwitchSlot`) to show circular fill percentages and pulse/glow/chime feedback when ready.
-9. **Grant action-authored AE only after confirmed enemy damage.** A surviving enemy rolls the action's `auraEnergyGainAmount` on-hit chance (default `0`); a defeated enemy uses only `auraEnergyOnKillAmount` (default `10`). Both are multiplied by the acting character's `auraEnergyMultiplier`.
+9. **Separate the two hit-confirmed AE sources.** Every damaging hit independently rolls the character's `AuraEnergyRate` (Low `5%`, Med `10%`, High `15%`) for a fixed `10 AE` base reward owned by `PlayerCombat`. Each `CombatAction` may also author one guaranteed `auraEnergyReward` (default `0`) that is granted once per successful hitbox delivery. Both rewards use the acting character's `auraEnergyMultiplier`; defeating an enemy has no separate AE branch.
 10. **Set each character's maximum AE to their runtime Ultimate cost.** A 50 AE Ultimate therefore has a 50 AE capacity.
 11. **Require the AE meter to reach its full derived capacity before an Ultimate becomes ready.** Capacity, readiness threshold, and consumed Ultimate cost use the same runtime value.
 
@@ -40,7 +40,7 @@ We decide to:
 - Encourages aggressive, combat-focused gameplay rather than passive waiting.
 - Robust handling of team-swapping ensures high-quality game feel.
 - Dynamic cost reduction integrates CDR mastery into the resource system logically.
-- Action designers can attach hit-confirmed on-hit and on-kill AE rewards directly to attacks, skills, or Ultimates.
+- Action designers can attach a guaranteed hit-confirmed AE reward directly to attacks, skills, or Ultimates without changing the global per-hit chance reward.
 - AE capacity automatically matches authored Ultimate cost without a duplicate max-stat field.
 
 ### Negative / Trade-offs
@@ -49,7 +49,7 @@ We decide to:
 
 ### Migration
 - Add `auraEnergyMultiplier` to `CharacterStats.cs`.
-- Author optional `auraEnergyGainAmount` and `auraEnergyOnKillAmount` values on ActionResolver actions.
+- Author an optional `auraEnergyReward` value on ActionResolver actions.
 - Derive maximum AE in `TeamLoader` from the character's Ultimate actions.
 - Update `HitBoxDamage.cs` to trigger AE generation on successful hits.
 - Refactor `PlayerUltimateState.cs` to check and consume AE instead of trigger cooldowns.

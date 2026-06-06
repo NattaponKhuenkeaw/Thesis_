@@ -40,9 +40,7 @@ MonoBehaviour:
       Candy"
     portrait: {fileID: -7830753740487926875, guid: 7550d0bdc8b434340912b62004099188, type: 3}
     animatorController: {fileID: 9100000, guid: 815b33a35641994489dd122eacb4e98d, type: 2}
-    attackSfx: {fileID: 0}
-    skillSfx: {fileID: 0}
-    hurtSfx: {fileID: 0}
+  auraEnergyRate: 1
   authoredFPS: 24
   upgrade:
     level: 1

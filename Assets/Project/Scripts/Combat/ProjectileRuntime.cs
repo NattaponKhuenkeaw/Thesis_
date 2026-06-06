@@ -588,6 +588,16 @@ public class ProjectileRuntime : MonoBehaviour
             return;
         }
 
+        if (currentHitConsumesMaxHits
+            && !ProjectileData.UsesSharedHitCount()
+            && trackedEnemies.Count > 0
+            && !HasHittableTrackedEnemy())
+        {
+            if (ProjectileData.destroyWhenHitsExhausted)
+                Expire();
+            return;
+        }
+
         trackedEnemyBuffer.Clear();
         foreach (EnemyController enemy in trackedEnemies)
         {
@@ -640,7 +650,29 @@ public class ProjectileRuntime : MonoBehaviour
             && spawnContext.remainingHits <= 0)
         {
             Expire();
+            return;
         }
+
+        if (!ProjectileData.UsesSharedHitCount()
+            && ProjectileData.destroyWhenHitsExhausted
+            && currentHitConsumesMaxHits
+            && !HasHittableTrackedEnemy())
+        {
+            Expire();
+        }
+    }
+
+    private bool HasHittableTrackedEnemy()
+    {
+        foreach (EnemyController enemy in trackedEnemies)
+        {
+            if (enemy != null && enemy.IsAlive && GetRemainingHitsForEnemy(enemy) > 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private bool CanHitEnemy(EnemyController enemy)

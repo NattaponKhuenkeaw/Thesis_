@@ -688,14 +688,9 @@ namespace CombatEditor.UI
                 });
 
                 AddSeparator(body, "Aura Energy Reward");
-                AddFloatField(body, "AE On Hit", action.auraEnergyGainAmount, value => {
-                    RecordUndo("Edit Aura Energy On Hit");
-                    action.auraEnergyGainAmount = Mathf.Max(0f, value);
-                    MarkDirty();
-                });
-                AddFloatField(body, "AE On Kill", action.auraEnergyOnKillAmount, value => {
-                    RecordUndo("Edit Aura Energy On Kill");
-                    action.SetAuraEnergyOnKillAmount(value);
+                AddFloatField(body, "AE Reward", action.auraEnergyReward, value => {
+                    RecordUndo("Edit Aura Energy Reward");
+                    action.auraEnergyReward = Mathf.Max(0f, value);
                     MarkDirty();
                 });
 

@@ -40,6 +40,10 @@ public class CharacterObject : ScriptableObject
     [Header("Data Blocks")]
     public CharacterStats stats = new CharacterStats();
     public CharacterMetaData metaData = new CharacterMetaData();
+    [Tooltip("Aura Energy gain rate tier. Low = 5% chance, Med = 10%, High = 15%.")]
+    public AuraEnergyRate auraEnergyRate = AuraEnergyRate.Med;
+    [Tooltip("Character audio profile used by PlayerAudio.")]
+    public PlayerAudioData audioData;
 
     [Header("Movement Profile")]
     [Tooltip("Per-character movement tuning. If null, PlayerMovement uses sensible defaults.")]
@@ -93,7 +97,4 @@ public class CharacterObject : ScriptableObject
     [Header("Action Resolver")]
     [Tooltip("Data-driven combo tree table. If null, legacy combo data is used as fallback.")]
     public ActionResolverTable actionResolverTable;
-
-    [Header("Audio")]
-    public PlayerAudioData audioData;
 }

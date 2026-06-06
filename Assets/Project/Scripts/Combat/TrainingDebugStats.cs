@@ -31,10 +31,21 @@ namespace CombatCore
         {
             if (_instance != null && _instance != this)
             {
-                Destroy(gameObject);
-                return;
+                if (_instance.gameObject.scene == gameObject.scene)
+                {
+                    Destroy(gameObject);
+                    return;
+                }
             }
             _instance = this;
+        }
+
+        private void OnDestroy()
+        {
+            if (_instance == this)
+            {
+                _instance = null;
+            }
         }
 
         void Update()

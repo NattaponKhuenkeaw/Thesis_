@@ -524,16 +524,14 @@ namespace Project.TeamBuilder.UI
 
         private void SetArtifacts(Artifact[] artifacts)
         {
-            if (artifacts == null)
-            {
-                return;
-            }
-
-            for (int i = 0; i < artifactSlots.Length && i < artifacts.Length; i++)
+            for (int i = 0; i < artifactSlots.Length; i++)
             {
                 if (artifactSlots[i] != null)
                 {
-                    artifactSlots[i].SetArtifact(artifacts[i]);
+                    Artifact artifact = artifacts != null && i < artifacts.Length
+                        ? artifacts[i]
+                        : null;
+                    artifactSlots[i].SetArtifact(artifact);
                 }
             }
         }

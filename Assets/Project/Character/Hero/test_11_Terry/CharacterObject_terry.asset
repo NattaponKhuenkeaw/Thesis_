@@ -40,9 +40,7 @@ MonoBehaviour:
       Power Geyser \u0E41\u0E25\u0E30 Buster Wolf"
     portrait: {fileID: 3718128805731047290, guid: 2345de14b19830f468a8893be0daa80d, type: 3}
     animatorController: {fileID: 9100000, guid: 815b33a35641994489dd122eacb4e98d, type: 2}
-    attackSfx: {fileID: 0}
-    skillSfx: {fileID: 0}
-    hurtSfx: {fileID: 0}
+  auraEnergyRate: 1
   authoredFPS: 24
   upgrade:
     level: 1

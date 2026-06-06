@@ -30,10 +30,9 @@ public class HitBoxDamage : MonoBehaviour
     private AttackStepData sourceStepData;
     private PlayerCombat rewardOwner;
     private CharacterObject rewardCharacter;
-    private float auraEnergyOnHitAmount;
-    private float auraEnergyOnKillAmount;
+    private float auraEnergyReward;
 
-    public float DamageValue => currentDamage;
+    public float DamageValue => currentResolvedDamage;
 
     void Awake()
     {
@@ -130,10 +129,9 @@ public class HitBoxDamage : MonoBehaviour
         AdditionalDamageEffectDefinition[] additionalDamageEffects,
         PlayerCombat sourceCombat,
         CharacterObject sourceCharacter,
-        float onHitAuraEnergy,
-        float onKillAuraEnergy)
+        float actionAuraEnergyReward)
     {
-        usePerEnemyDamageCalculation = true;
+        usePerEnemyDamageCalculation = attackerStats != null;
         currentAttackerStats = attackerStats;
         currentSourceAttack = Mathf.Max(0f, sourceAttack);
         currentIsSkillOrUltimate = isSkillOrUltimate;
@@ -141,8 +139,7 @@ public class HitBoxDamage : MonoBehaviour
             ?? System.Array.Empty<AdditionalDamageEffectDefinition>();
         rewardOwner = sourceCombat;
         rewardCharacter = sourceCharacter;
-        auraEnergyOnHitAmount = Mathf.Max(0f, onHitAuraEnergy);
-        auraEnergyOnKillAmount = Mathf.Max(0f, onKillAuraEnergy);
+        auraEnergyReward = Mathf.Max(0f, actionAuraEnergyReward);
         currentIsCrit = false;
         currentResolvedDamage = currentDamage;
     }
@@ -155,8 +152,7 @@ public class HitBoxDamage : MonoBehaviour
         currentAdditionalDamageEffects = System.Array.Empty<AdditionalDamageEffectDefinition>();
         rewardOwner = null;
         rewardCharacter = null;
-        auraEnergyOnHitAmount = 0f;
-        auraEnergyOnKillAmount = 0f;
+        auraEnergyReward = 0f;
     }
 
     public void ResetActivationState()
@@ -181,7 +177,6 @@ public class HitBoxDamage : MonoBehaviour
         hitEnemiesThisActivation.Add(enemy);
 
         Vector2 direction = GetHitDirection();
-        float primaryHpBefore = enemy.currentHP;
         ResolveDamageAgainstEnemy(enemy);
         HitReactionData reactionData = currentGrabHitbox != null
             ? BuildGrabReactionData(direction)
@@ -191,8 +186,7 @@ public class HitBoxDamage : MonoBehaviour
             ? projectileOwner.AttackerPosition
             : movement != null ? (Vector2)movement.transform.position : (Vector2)transform.root.position;
 
-        enemy.TakeHit(reactionData, attackerPosition);
-        float primaryDamageDealt = Mathf.Max(0f, primaryHpBefore - enemy.currentHP);
+        float primaryDamageDealt = enemy.TakeHit(reactionData, attackerPosition);
 
         if (primaryDamageDealt > 0f && enemy.IsAlive)
         {
@@ -269,25 +263,18 @@ public class HitBoxDamage : MonoBehaviour
         }
 
         bool dealtDamage = primaryDamageDealt > 0f;
-        bool isDefeated = enemy != null && !enemy.IsAlive;
-
         if (dealtDamage)
         {
             passiveController?.NotifyHitDealt(sourceCategory, sourceActionName, sourceStepData, enemy);
             rewardOwner?.NotifyResolvedEnemyHit(
                 rewardCharacter,
-                auraEnergyOnHitAmount,
-                auraEnergyOnKillAmount,
-                isDefeated);
-
-            if (CombatCore.TrainingDebugStats.Instance != null)
-                CombatCore.TrainingDebugStats.Instance.RecordHit(enemy, primaryDamageDealt);
+                auraEnergyReward);
         }
 
-        if (dealtDamage)
-        {
-            projectileOwner?.RegisterSuccessfulHit(enemy);
-        }
+        if (CombatCore.TrainingDebugStats.Instance != null)
+            CombatCore.TrainingDebugStats.Instance.RecordHit(enemy, primaryDamageDealt);
+
+        projectileOwner?.RegisterSuccessfulHit(enemy);
     }
 
     private void ResolveDamageAgainstEnemy(EnemyController enemy)
@@ -365,7 +352,6 @@ public class HitBoxDamage : MonoBehaviour
             if (resolvedDamage <= 0f)
                 continue;
 
-            float hpBefore = enemy.currentHP;
             HitReactionData additionalData = HitReactionData.Default(resolvedDamage, direction, 0f);
             additionalData.damageIsFinal = true;
             additionalData.damageRoutine = DamageRoutine.Additional;
@@ -375,8 +361,7 @@ public class HitBoxDamage : MonoBehaviour
             additionalData.impactTier = DamageImpactTier.Low;
             PopulateRuntimeContext(ref additionalData);
 
-            enemy.TakeHit(additionalData, attackerPosition);
-            float damageDealt = Mathf.Max(0f, hpBefore - enemy.currentHP);
+            float damageDealt = enemy.TakeHit(additionalData, attackerPosition);
 
             if (damageDealt > 0f && CombatCore.TrainingDebugStats.Instance != null)
             {

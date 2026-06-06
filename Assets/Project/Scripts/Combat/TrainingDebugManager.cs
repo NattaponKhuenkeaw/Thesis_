@@ -41,12 +41,23 @@ namespace CombatCore
         {
             if (_instance != null && _instance != this)
             {
-                Destroy(gameObject);
-                return;
+                if (_instance.gameObject.scene == gameObject.scene)
+                {
+                    Destroy(gameObject);
+                    return;
+                }
             }
             _instance = this;
             // Removed DontDestroyOnLoad to keep it scoped to the scene unless needed otherwise,
             // but plan implies a persistent singleton-like hub.
+        }
+
+        private void OnDestroy()
+        {
+            if (_instance == this)
+            {
+                _instance = null;
+            }
         }
     }
 }
