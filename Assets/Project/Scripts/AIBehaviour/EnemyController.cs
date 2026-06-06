@@ -168,15 +168,18 @@ public class EnemyController : MonoBehaviour
     {
         if (!isAlive) return;
 
-        // --- Dynamic Combo Scaling ---
-        currentComboHits++;
+        bool isAdditionalDamage = reactionData.damageRoutine == DamageRoutine.Additional;
 
-        // Upgrade Impact Tier based on combo progression
-        // Logic: every 3 hits upgrades to next tier if not already higher
-        if (currentComboHits >= 6 && reactionData.impactTier < DamageImpactTier.Heavy)
-            reactionData.impactTier = DamageImpactTier.Heavy;
-        else if (currentComboHits >= 3 && reactionData.impactTier < DamageImpactTier.Medium)
-            reactionData.impactTier = DamageImpactTier.Medium;
+        if (!isAdditionalDamage)
+        {
+            // Additional Damage is a separate number, not another combo impact.
+            currentComboHits++;
+
+            if (currentComboHits >= 6 && reactionData.impactTier < DamageImpactTier.Heavy)
+                reactionData.impactTier = DamageImpactTier.Heavy;
+            else if (currentComboHits >= 3 && reactionData.impactTier < DamageImpactTier.Medium)
+                reactionData.impactTier = DamageImpactTier.Medium;
+        }
 
         float finalIncomingDamage = reactionData.damageIsFinal
             ? reactionData.damage
@@ -186,10 +189,10 @@ public class EnemyController : MonoBehaviour
         currentHP -= finalIncomingDamage;
         currentHP  = Mathf.Max(currentHP, 0f);
 
-        bool shouldApplyReaction = ShouldApplyHitReaction();
+        bool shouldApplyReaction = !isAdditionalDamage && ShouldApplyHitReaction();
         LastHitAppliedReaction = shouldApplyReaction;
 
-        if (!shouldApplyReaction)
+        if (!shouldApplyReaction && !isAdditionalDamage)
         {
             // Once the enemy successfully resists stagger, break the combo counter so
             // it does not immediately keep armoring through every following hit.
@@ -198,6 +201,15 @@ public class EnemyController : MonoBehaviour
 
         // Fire event (AnimationHandler_Enemy triggers TakeDamage anim via this)
         OnDamaged?.Invoke(reactionData);
+
+        // Additional Damage intentionally skips reaction, flash, and behavior interruption.
+        if (isAdditionalDamage)
+        {
+            if (currentHP <= 0f)
+                Die();
+
+            return;
+        }
 
         // Notify Blackboard for BehaviorGraph
         var behaviorAgent = GetComponent<BehaviorGraphAgent>();

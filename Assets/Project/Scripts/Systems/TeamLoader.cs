@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System;
+using Project.InventorySystem.Items;
 
 public interface ITeamEnergySystem
 {
@@ -46,6 +47,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     [SerializeField] private float lastSwitchTime = -999f;
     private readonly Dictionary<CharacterObject, float> characterCurrentHP = new Dictionary<CharacterObject, float>();
     private readonly Dictionary<CharacterObject, float> characterCurrentAE = new Dictionary<CharacterObject, float>();
+    private readonly Dictionary<CharacterObject, CharacterStats> characterRuntimeStats = new Dictionary<CharacterObject, CharacterStats>();
 
     // =========================================================
     // Properties
@@ -85,6 +87,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         BindPlayerCharacter();
 
         BackfillCurrentSlotFromActiveCharacter();
+        RebuildRuntimeStats();
         LoadCurrentCharacter();
     }
 
@@ -129,7 +132,11 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             return;
         }
 
-        playerCharacter.SetCharacter(targetCharacter, GetStoredHP(targetCharacter));
+        playerCharacter.SetCharacter(
+            targetCharacter,
+            GetStoredHP(targetCharacter),
+            GetCharacterRuntimeStats(targetCharacter),
+            GetEquippedArtifactsFor(targetCharacter));
         NotifyCharacterHealthUpdated(targetCharacter);
         NotifyCurrentCharacterChanged();
         Debug.Log("Switched to: " + targetCharacter.metaData.displayName);
@@ -368,14 +375,14 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         characterCurrentAE.Clear();
         lastSwitchTime = -999f;
 
-        equippedArtifacts = artifactData;
+        equippedArtifacts = CloneArtifactLoadout(artifactData, team.Length);
 
         NotifyTeamChanged();
         LoadCurrentCharacter(forceReload: true, preserveActiveHp: false);
         ResetRuntimeTransientState();
     }
 
-    public Project.InventorySystem.Items.Artifact[] GetEquippedArtifactsFor(CharacterObject character)
+    public Artifact[] GetEquippedArtifactsFor(CharacterObject character)
     {
         if (character == null || team == null || equippedArtifacts == null) return null;
 
@@ -570,7 +577,84 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     private void NotifyTeamChanged()
     {
+        RebuildRuntimeStats();
         OnTeamChanged?.Invoke();
+    }
+
+    public CharacterStats GetCharacterRuntimeStats(CharacterObject character)
+    {
+        if (character == null)
+            return null;
+
+        if (characterRuntimeStats.TryGetValue(character, out CharacterStats stats))
+            return stats;
+
+        CharacterStats fallback = BuildRuntimeStats(character, FindCharacterIndex(character));
+        characterRuntimeStats[character] = fallback;
+        return fallback;
+    }
+
+    private void RebuildRuntimeStats()
+    {
+        characterRuntimeStats.Clear();
+        if (team == null)
+            return;
+
+        for (int i = 0; i < team.Length; i++)
+        {
+            CharacterObject character = team[i];
+            if (character != null)
+            {
+                characterRuntimeStats[character] = BuildRuntimeStats(character, i);
+            }
+        }
+    }
+
+    private CharacterStats BuildRuntimeStats(CharacterObject character, int slotIndex)
+    {
+        CharacterStats stats = character != null && character.stats != null
+            ? character.stats.Clone()
+            : new CharacterStats();
+
+        if (equippedArtifacts == null || slotIndex < 0 || slotIndex >= equippedArtifacts.Length)
+            return stats;
+
+        Artifact[] slotArtifacts = equippedArtifacts[slotIndex];
+        if (slotArtifacts == null)
+            return stats;
+
+        for (int i = 0; i < slotArtifacts.Length; i++)
+        {
+            Artifact artifact = slotArtifacts[i];
+            if (artifact != null)
+            {
+                stats.AddNumericBonuses(artifact.bonusStats);
+            }
+        }
+
+        return stats;
+    }
+
+    private static Artifact[][] CloneArtifactLoadout(Artifact[][] source, int slotCount)
+    {
+        int resolvedSlotCount = Mathf.Max(1, slotCount);
+        Artifact[][] clone = new Artifact[resolvedSlotCount][];
+
+        for (int slotIndex = 0; slotIndex < resolvedSlotCount; slotIndex++)
+        {
+            Artifact[] sourceSlot = source != null && slotIndex < source.Length
+                ? source[slotIndex]
+                : null;
+            int artifactCount = sourceSlot != null ? sourceSlot.Length : 0;
+            clone[slotIndex] = new Artifact[artifactCount];
+
+            for (int artifactIndex = 0; artifactIndex < artifactCount; artifactIndex++)
+            {
+                clone[slotIndex][artifactIndex] = sourceSlot[artifactIndex];
+            }
+        }
+
+        return clone;
     }
 
     private void ResetRuntimeTransientState()
@@ -618,10 +702,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     public float GetCharacterMaxHP(CharacterObject character)
     {
-        if (character == null || character.stats == null)
-            return 0f;
-
-        return character.stats.maxHP;
+        CharacterStats stats = GetCharacterRuntimeStats(character);
+        return stats != null ? stats.maxHP : 0f;
     }
 
     public void ResetCharacterHP(CharacterObject character)
@@ -710,6 +792,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
         characterCurrentHP.Remove(character);
         characterCurrentAE.Remove(character);
+        characterRuntimeStats.Remove(character);
         NotifyCharacterHealthUpdated(character);
     }
 
@@ -735,6 +818,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         {
             characterCurrentHP.Remove(removed[i]);
             characterCurrentAE.Remove(removed[i]);
+            characterRuntimeStats.Remove(removed[i]);
             NotifyCharacterHealthUpdated(removed[i]);
         }
     }
@@ -824,9 +908,10 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     public float GetUltimateCost(CharacterObject character, float baseCost)
     {
         float resolvedBaseCost = Mathf.Max(0f, baseCost);
-        if (character == null || character.stats == null) return resolvedBaseCost;
+        CharacterStats stats = GetCharacterRuntimeStats(character);
+        if (stats == null) return resolvedBaseCost;
         
-        float cdr = character.stats.cooldownReduction / 100f;
+        float cdr = stats.cooldownReduction / 100f;
         float reduction = Mathf.Min(0.50f, cdr * 0.50f);
         return resolvedBaseCost * (1.0f - reduction);
     }
@@ -861,7 +946,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         CharacterObject castingCharacter = playerCharacter.characterObject;
         if (castingCharacter == null) return;
 
-        CharacterStats stats = castingCharacter.stats;
+        CharacterStats stats = GetCharacterRuntimeStats(castingCharacter);
+        PlayerCombat sourceCombat = playerCharacter.Combat;
 
         Sprite currentSprite = null;
         SpriteRenderer sr = playerCharacter.GetComponentInChildren<SpriteRenderer>();
@@ -877,6 +963,20 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         executorGo.transform.rotation = playerCharacter.transform.rotation;
 
         BackgroundUltimateExecutor executor = executorGo.AddComponent<BackgroundUltimateExecutor>();
-        executor.Initialize(currentStep, currentFrame, facing, stats, currentSprite, animController);
+        executor.Initialize(
+            currentStep,
+            currentFrame,
+            facing,
+            stats,
+            sourceCombat != null ? sourceCombat.CurrentSourceAttack : stats != null ? stats.attack : 0f,
+            sourceCombat != null ? sourceCombat.CurrentActionDamageMultiplier : 0f,
+            sourceCombat != null ? sourceCombat.CurrentAuraEnergyOnHitAmount : 0f,
+            sourceCombat != null ? sourceCombat.CurrentAuraEnergyOnKillAmount : 0f,
+            sourceCombat != null ? sourceCombat.CurrentAdditionalDamageEffects : null,
+            sourceCombat,
+            castingCharacter,
+            sourceCombat != null ? sourceCombat.CurrentActionName : currentStep.stepName,
+            currentSprite,
+            animController);
     }
 }

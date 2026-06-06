@@ -50,12 +50,12 @@ public class PlayerSpeedFallbackFeedback : MonoBehaviour
 
     private bool ShouldSpawnStreak()
     {
-        if (playerCharacter == null || playerCharacter.characterObject == null || playerCharacter.characterObject.stats == null)
+        if (playerCharacter == null || playerCharacter.characterObject == null || playerCharacter.Stats == null)
         {
             return false;
         }
 
-        if (playerCharacter.characterObject.stats.speed < baseSpeedStat * streakThresholdMultiplier)
+        if (playerCharacter.Stats.speed < baseSpeedStat * streakThresholdMultiplier)
         {
             return false;
         }

@@ -41,7 +41,9 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
+    actionDamageMultiplier: 3
     auraEnergyGainAmount: 10
+    auraEnergyOnKillAmount: 10
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
@@ -54,7 +56,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
-    auraEnergyGainAmount: 10
+    auraEnergyGainAmount: 0
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
@@ -838,7 +840,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.5950986, y: 0.96649176}
         size: {x: 1.4098027, y: 1.9329835}
-        damageMultiplier: 1
+        damageRatio: 0.33333334
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 2
@@ -872,7 +874,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.90847754, y: 2.3834577}
         size: {x: 3.2177553, y: 1.268593}
-        damageMultiplier: 1
+        damageRatio: 0.33333334
         impactTier: 1
         useDeterministicReaction: 1
         reactionKind: 2
@@ -906,7 +908,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.15666091, y: 2.9375181}
         size: {x: 3.9332266, y: 1.877712}
-        damageMultiplier: 1
+        damageRatio: 0.33333334
         impactTier: 2
         useDeterministicReaction: 1
         reactionKind: 1

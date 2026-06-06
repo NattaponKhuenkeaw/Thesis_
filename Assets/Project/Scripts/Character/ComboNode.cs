@@ -14,7 +14,7 @@ public enum CombatActionContext
 }
 
 [System.Serializable]
-public abstract class CombatAction
+public abstract class CombatAction : ISerializationCallbackReceiver
 {
     public string actionName = "New Action";
     
@@ -27,14 +27,56 @@ public abstract class CombatAction
     [Tooltip("If this action starts on the ground, losing physical ground contact is allowed to promote it into an airborne action state.")]
     public bool allowGroundToAirTransition = false;
 
+    [Header("Action Damage")]
+    [Tooltip("Total ATK multiplier shared by this action's hitboxes. Values <= 0 preserve legacy direct per-hit multipliers.")]
+    public float actionDamageMultiplier = 0f;
+
     [Header("Aura Energy Reward")]
-    [Tooltip("Aura Energy granted once when this action starts, before Aura Energy Multiplier.")]
+    [Tooltip("Base Aura Energy used by the on-hit chance after this action damages a surviving enemy.")]
     public float auraEnergyGainAmount = 0f;
+    [Tooltip("Base Aura Energy granted when this action's confirmed damage defeats an enemy.")]
+    public float auraEnergyOnKillAmount = 10f;
+    [SerializeField, HideInInspector] private bool hasInitializedOnKillAuraReward;
     
     [Header("Combo Tree")]
     public ComboTree comboTree;
 
     public abstract AttackCategory Category { get; }
+
+    public float ResolveHitDamageMultiplier(float damageRatio)
+    {
+        if (actionDamageMultiplier <= 0f)
+        {
+            return Mathf.Max(0f, damageRatio);
+        }
+
+        return actionDamageMultiplier * Mathf.Clamp01(damageRatio);
+    }
+
+    public void SetAuraEnergyOnKillAmount(float value)
+    {
+        auraEnergyOnKillAmount = Mathf.Max(0f, value);
+        hasInitializedOnKillAuraReward = true;
+    }
+
+    public void OnBeforeSerialize()
+    {
+        InitializeOnKillAuraReward();
+    }
+
+    public void OnAfterDeserialize()
+    {
+        InitializeOnKillAuraReward();
+    }
+
+    private void InitializeOnKillAuraReward()
+    {
+        if (hasInitializedOnKillAuraReward)
+            return;
+
+        auraEnergyOnKillAmount = 10f;
+        hasInitializedOnKillAuraReward = true;
+    }
 }
 
 [System.Serializable]

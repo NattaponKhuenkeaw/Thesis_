@@ -358,6 +358,34 @@ public class CharacterPassiveController : MonoBehaviour
         }
     }
 
+    public AdditionalDamageEffectDefinition[] BuildAdditionalDamageEffectSnapshot(
+        AttackCategory category,
+        string actionName,
+        AttackStepData stepData)
+    {
+        List<AdditionalDamageEffectDefinition> effects = null;
+
+        foreach (ProgressionNodeDefinition node in GetActiveNodes())
+        {
+            AddAdditionalDamageEffects(node != null ? node.additionalDamageEffects : null, ref effects);
+        }
+
+        if (playerCharacter != null && playerCharacter.EquippedArtifacts != null)
+        {
+            for (int i = 0; i < playerCharacter.EquippedArtifacts.Length; i++)
+            {
+                Project.InventorySystem.Items.Artifact artifact = playerCharacter.EquippedArtifacts[i];
+                AddAdditionalDamageEffects(
+                    artifact != null ? artifact.additionalDamageEffects : null,
+                    ref effects);
+            }
+        }
+
+        return effects != null
+            ? effects.ToArray()
+            : Array.Empty<AdditionalDamageEffectDefinition>();
+    }
+
     public void SetConstellationRank(int rank)
     {
         progressionState.ConstellationRank = rank;
@@ -506,6 +534,24 @@ public class CharacterPassiveController : MonoBehaviour
                 hook.Initialize(this, node);
                 activeHooks.Add((node, hook));
             }
+        }
+    }
+
+    private static void AddAdditionalDamageEffects(
+        List<AdditionalDamageEffectDefinition> source,
+        ref List<AdditionalDamageEffectDefinition> destination)
+    {
+        if (source == null)
+            return;
+
+        for (int i = 0; i < source.Count; i++)
+        {
+            AdditionalDamageEffectDefinition effect = source[i];
+            if (effect == null)
+                continue;
+
+            destination ??= new List<AdditionalDamageEffectDefinition>();
+            destination.Add(effect);
         }
     }
 

@@ -252,6 +252,7 @@ public class ProgressionNodeDefinition
     public List<PassiveCounterEffectDefinition> counterEffects = new List<PassiveCounterEffectDefinition>();
     public List<PassiveConditionalStateEffectDefinition> conditionalStateEffects = new List<PassiveConditionalStateEffectDefinition>();
     public List<PassiveOnHitStatusEffectDefinition> onHitStatusEffects = new List<PassiveOnHitStatusEffectDefinition>();
+    public List<AdditionalDamageEffectDefinition> additionalDamageEffects = new List<AdditionalDamageEffectDefinition>();
     public string passiveHookTypeName;
 }
 

@@ -944,7 +944,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3910294197192437969, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
       propertyPath: m_Sprite
-      value: 
+      value:
       objectReference: {fileID: 4674733797560542320, guid: 577066e29193be946b2d71d3405b83ac, type: 3}
     - target: {fileID: 3910294197192437969, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
       propertyPath: m_WasSpriteAssigned
@@ -1016,7 +1016,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 26ca9c7b836b4484799758d2d223b4a9, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Project.Parallax.ParallaxBackground
   parallaxEffectMultiplier: {x: 0.7, y: 0.7}
   infiniteHorizontal: 1
@@ -1479,6 +1479,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 729008942358398209, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
+      propertyPath: Audio
+      value:
+      objectReference: {fileID: 5987486934906660420}
     - target: {fileID: 981543251540884086, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: m_Size.x
       value: 1.55
@@ -5483,6 +5487,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30743ed04525aed4da9e51a9f1319260, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
+--- !u!114 &5987486934906660420 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3786497839190972144, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
+  m_PrefabInstance: {fileID: 962912716}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7559794f8c82a2459afac7271a1a458, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerAudio
 --- !u!1001 &7384834776605378918
 PrefabInstance:
   m_ObjectHideFlags: 0

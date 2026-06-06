@@ -15,11 +15,11 @@ public class HitBoxDamage : MonoBehaviour
     private float currentResolvedDamage = 1f;
     private bool currentIsCrit = false;
     private bool usePerEnemyDamageCalculation;
-    private float currentCritRate;
-    private float currentCritDamage = 150f;
-    private float currentSkillMastery;
-    private float currentDamageMastery;
+    private CharacterStats currentAttackerStats;
+    private float currentSourceAttack;
     private bool currentIsSkillOrUltimate;
+    private AdditionalDamageEffectDefinition[] currentAdditionalDamageEffects =
+        System.Array.Empty<AdditionalDamageEffectDefinition>();
     private bool hasTriggeredShakeThisActivation;
     private bool hasTriggeredHitStopThisActivation;
     private PlayerCombat playerCombat;
@@ -28,6 +28,10 @@ public class HitBoxDamage : MonoBehaviour
     private AttackCategory sourceCategory = AttackCategory.Normal;
     private string sourceActionName;
     private AttackStepData sourceStepData;
+    private PlayerCombat rewardOwner;
+    private CharacterObject rewardCharacter;
+    private float auraEnergyOnHitAmount;
+    private float auraEnergyOnKillAmount;
 
     public float DamageValue => currentDamage;
 
@@ -87,7 +91,8 @@ public class HitBoxDamage : MonoBehaviour
         sourceCategory = category;
         sourceActionName = actionName;
         sourceStepData = stepData;
-        passiveController = sourcePassiveController ?? passiveController;
+        passiveController = sourcePassiveController;
+        ClearDamageSourceContext();
     }
 
     public void SetGrabData(
@@ -109,7 +114,8 @@ public class HitBoxDamage : MonoBehaviour
         sourceCategory = category;
         sourceActionName = actionName;
         sourceStepData = stepData;
-        passiveController = sourcePassiveController ?? passiveController;
+        passiveController = sourcePassiveController;
+        ClearDamageSourceContext();
     }
 
     public void SetProjectileOwner(ProjectileRuntime owner)
@@ -118,20 +124,39 @@ public class HitBoxDamage : MonoBehaviour
     }
 
     public void ConfigurePerEnemyDamageCalculation(
-        float critRate,
-        float critDamage,
-        float skillMastery,
-        float damageMastery,
-        bool isSkillOrUltimate)
+        CharacterStats attackerStats,
+        float sourceAttack,
+        bool isSkillOrUltimate,
+        AdditionalDamageEffectDefinition[] additionalDamageEffects,
+        PlayerCombat sourceCombat,
+        CharacterObject sourceCharacter,
+        float onHitAuraEnergy,
+        float onKillAuraEnergy)
     {
         usePerEnemyDamageCalculation = true;
-        currentCritRate = Mathf.Max(0f, critRate);
-        currentCritDamage = Mathf.Max(0f, critDamage);
-        currentSkillMastery = skillMastery;
-        currentDamageMastery = damageMastery;
+        currentAttackerStats = attackerStats;
+        currentSourceAttack = Mathf.Max(0f, sourceAttack);
         currentIsSkillOrUltimate = isSkillOrUltimate;
+        currentAdditionalDamageEffects = additionalDamageEffects
+            ?? System.Array.Empty<AdditionalDamageEffectDefinition>();
+        rewardOwner = sourceCombat;
+        rewardCharacter = sourceCharacter;
+        auraEnergyOnHitAmount = Mathf.Max(0f, onHitAuraEnergy);
+        auraEnergyOnKillAmount = Mathf.Max(0f, onKillAuraEnergy);
         currentIsCrit = false;
         currentResolvedDamage = currentDamage;
+    }
+
+    private void ClearDamageSourceContext()
+    {
+        currentAttackerStats = null;
+        currentSourceAttack = 0f;
+        currentIsSkillOrUltimate = false;
+        currentAdditionalDamageEffects = System.Array.Empty<AdditionalDamageEffectDefinition>();
+        rewardOwner = null;
+        rewardCharacter = null;
+        auraEnergyOnHitAmount = 0f;
+        auraEnergyOnKillAmount = 0f;
     }
 
     public void ResetActivationState()
@@ -156,6 +181,7 @@ public class HitBoxDamage : MonoBehaviour
         hitEnemiesThisActivation.Add(enemy);
 
         Vector2 direction = GetHitDirection();
+        float primaryHpBefore = enemy.currentHP;
         ResolveDamageAgainstEnemy(enemy);
         HitReactionData reactionData = currentGrabHitbox != null
             ? BuildGrabReactionData(direction)
@@ -166,6 +192,12 @@ public class HitBoxDamage : MonoBehaviour
             : movement != null ? (Vector2)movement.transform.position : (Vector2)transform.root.position;
 
         enemy.TakeHit(reactionData, attackerPosition);
+        float primaryDamageDealt = Mathf.Max(0f, primaryHpBefore - enemy.currentHP);
+
+        if (primaryDamageDealt > 0f && enemy.IsAlive)
+        {
+            ApplyAdditionalDamage(enemy, attackerPosition, direction);
+        }
 
         HitboxBase activeHitbox = (HitboxBase)currentGrabHitbox ?? currentNormalHitbox;
         DamageImpactTier resolvedTier = currentGrabHitbox != null
@@ -236,28 +268,26 @@ public class HitBoxDamage : MonoBehaviour
             UltimateFlashOverlay.Instance.PlayHitFlash();
         }
 
+        bool dealtDamage = primaryDamageDealt > 0f;
         bool isDefeated = enemy != null && !enemy.IsAlive;
 
-        // Propagate hit and defeat status to PlayerCombat for Aura Energy generation
-        if (playerCombat != null)
-        {
-            playerCombat.NotifyEnemyHit(enemy, isDefeated);
-            
-            // Log to Training Debug Stats
-            if (CombatCore.TrainingDebugStats.Instance != null)
-                CombatCore.TrainingDebugStats.Instance.RecordHit(enemy, reactionData.damage);
-        }
-        else
+        if (dealtDamage)
         {
             passiveController?.NotifyHitDealt(sourceCategory, sourceActionName, sourceStepData, enemy);
-            projectileOwner?.NotifyEnemyHit(enemy, isDefeated);
-            
-            // Log to Training Debug Stats even if from passive/AI hit
+            rewardOwner?.NotifyResolvedEnemyHit(
+                rewardCharacter,
+                auraEnergyOnHitAmount,
+                auraEnergyOnKillAmount,
+                isDefeated);
+
             if (CombatCore.TrainingDebugStats.Instance != null)
-                CombatCore.TrainingDebugStats.Instance.RecordHit(enemy, reactionData.damage);
+                CombatCore.TrainingDebugStats.Instance.RecordHit(enemy, primaryDamageDealt);
         }
 
-        projectileOwner?.RegisterSuccessfulHit(enemy);
+        if (dealtDamage)
+        {
+            projectileOwner?.RegisterSuccessfulHit(enemy);
+        }
     }
 
     private void ResolveDamageAgainstEnemy(EnemyController enemy)
@@ -268,18 +298,16 @@ public class HitBoxDamage : MonoBehaviour
             return;
         }
 
-        float mitigatedDamage = CombatFormula.CalculateIncomingDamage(currentDamage, enemy.defense, enemy.damageRes);
-        currentIsCrit = Random.Range(0f, 100f) <= currentCritRate;
-
-        float damageAfterCrit = currentIsCrit
-            ? mitigatedDamage * (currentCritDamage / 100f)
-            : mitigatedDamage;
-
-        float finalDamage = damageAfterCrit * (1f + currentDamageMastery / 100f);
-        if (currentIsSkillOrUltimate)
-        {
-            finalDamage *= 1f + currentSkillMastery / 100f;
-        }
+        DamageRoutine routine = ResolvePrimaryDamageRoutine();
+        float finalDamage = CombatFormula.CalculateResolvedDamage(
+            currentDamage,
+            routine,
+            ResolveDamageType(),
+            currentAttackerStats,
+            enemy.defense,
+            enemy.damageRes,
+            currentIsSkillOrUltimate,
+            out currentIsCrit);
 
         if (passiveController != null)
         {
@@ -295,11 +323,91 @@ public class HitBoxDamage : MonoBehaviour
         currentResolvedDamage = Mathf.Max(0f, finalDamage);
     }
 
+    private void ApplyAdditionalDamage(
+        EnemyController enemy,
+        Vector2 attackerPosition,
+        Vector2 direction)
+    {
+        if (enemy == null
+            || !enemy.IsAlive
+            || currentAdditionalDamageEffects == null
+            || currentAdditionalDamageEffects.Length == 0)
+        {
+            return;
+        }
+
+        PassiveEventContext context = new PassiveEventContext
+        {
+            category = sourceCategory,
+            actionName = sourceActionName,
+            stepData = sourceStepData,
+            runtimeState = passiveController != null ? passiveController.RuntimeState : null,
+            enemy = enemy
+        };
+
+        for (int i = 0; i < currentAdditionalDamageEffects.Length; i++)
+        {
+            AdditionalDamageEffectDefinition effect = currentAdditionalDamageEffects[i];
+            if (effect == null || !enemy.IsAlive || !effect.CanTrigger(context))
+                continue;
+
+            float baseDamage = currentSourceAttack * Mathf.Max(0f, effect.attackRatio);
+            float resolvedDamage = CombatFormula.CalculateResolvedDamage(
+                baseDamage,
+                DamageRoutine.Additional,
+                effect.damageType,
+                currentAttackerStats,
+                enemy.defense,
+                enemy.damageRes,
+                false,
+                out _);
+
+            if (resolvedDamage <= 0f)
+                continue;
+
+            float hpBefore = enemy.currentHP;
+            HitReactionData additionalData = HitReactionData.Default(resolvedDamage, direction, 0f);
+            additionalData.damageIsFinal = true;
+            additionalData.damageRoutine = DamageRoutine.Additional;
+            additionalData.damageType = effect.damageType;
+            additionalData.isCriticalHit = false;
+            additionalData.flashFrames = 0;
+            additionalData.impactTier = DamageImpactTier.Low;
+            PopulateRuntimeContext(ref additionalData);
+
+            enemy.TakeHit(additionalData, attackerPosition);
+            float damageDealt = Mathf.Max(0f, hpBefore - enemy.currentHP);
+
+            if (damageDealt > 0f && CombatCore.TrainingDebugStats.Instance != null)
+            {
+                CombatCore.TrainingDebugStats.Instance.RecordHit(enemy, damageDealt);
+            }
+        }
+    }
+
+    private DamageRoutine ResolvePrimaryDamageRoutine()
+    {
+        return ResolveDamageType() == DamageType.Physical
+            ? DamageRoutine.Normal
+            : DamageRoutine.Elemental;
+    }
+
+    private DamageType ResolveDamageType()
+    {
+        if (currentGrabHitbox != null)
+            return currentGrabHitbox.damageType;
+
+        return currentNormalHitbox != null
+            ? currentNormalHitbox.damageType
+            : DamageType.Physical;
+    }
+
     private HitReactionData BuildReactionData(EnemyController enemy, Vector2 direction)
     {
         HitReactionData data = HitReactionData.Default(currentResolvedDamage, direction, 0f);
         data.isCriticalHit = currentIsCrit;
         data.damageIsFinal = usePerEnemyDamageCalculation;
+        data.damageRoutine = ResolvePrimaryDamageRoutine();
         PopulateRuntimeContext(ref data);
 
         if (currentNormalHitbox != null)
@@ -348,6 +456,7 @@ public class HitBoxDamage : MonoBehaviour
         HitReactionData data = HitReactionData.Default(currentResolvedDamage, direction, 0f);
         data.isCriticalHit = currentIsCrit;
         data.damageIsFinal = usePerEnemyDamageCalculation;
+        data.damageRoutine = ResolvePrimaryDamageRoutine();
         PopulateRuntimeContext(ref data);
 
         if (currentGrabHitbox == null)

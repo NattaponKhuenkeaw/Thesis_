@@ -17,6 +17,8 @@ MonoBehaviour:
     context: 0
     priority: 0
     conditions: []
+    allowGroundToAirTransition: 0
+    auraEnergyGainAmount: 0
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
@@ -26,6 +28,8 @@ MonoBehaviour:
     context: 1
     priority: 0
     conditions: []
+    allowGroundToAirTransition: 0
+    auraEnergyGainAmount: 0
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
@@ -36,25 +40,28 @@ MonoBehaviour:
     context: 0
     priority: 0
     conditions: []
+    allowGroundToAirTransition: 0
+    auraEnergyGainAmount: 10
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
       rootNode:
         rid: 1588256193077837992
-    cooldown: 6
-    energyCost: 0
+    cooldown: 7
   ultimateActions:
   - actionName: Jailbreak Punisher
     context: 0
     priority: 0
     conditions: []
+    allowGroundToAirTransition: 0
+    auraEnergyGainAmount: 0
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
       rootNode:
         rid: 1588256193077837993
     cooldown: 20
-    energyCost: 0
+    energyCost: 100
     activationVFXType: 0
     activationVFXPrefab: {fileID: 0}
     activationVFXOffset: {x: 0, y: 0, z: 0}

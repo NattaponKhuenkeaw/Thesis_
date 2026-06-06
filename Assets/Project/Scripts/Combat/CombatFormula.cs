@@ -2,6 +2,52 @@ using UnityEngine;
 
 public static class CombatFormula
 {
+    public static float CalculateResolvedDamage(
+        float baseDamage,
+        DamageRoutine routine,
+        DamageType damageType,
+        CharacterStats attackerStats,
+        float defenderDefense,
+        float defenderDamageResistance,
+        bool isSkillOrUltimate,
+        out bool isCrit)
+    {
+        float mitigatedDamage = CalculateIncomingDamage(
+            Mathf.Max(0f, baseDamage),
+            defenderDefense,
+            defenderDamageResistance);
+
+        bool canCrit = routine != DamageRoutine.Additional;
+        float critRate = attackerStats != null ? Mathf.Max(0f, attackerStats.critRate) : 0f;
+        float critDamage = attackerStats != null ? Mathf.Max(0f, attackerStats.critDamage) : 150f;
+        isCrit = canCrit && Random.Range(0f, 100f) <= critRate;
+
+        float resolvedDamage = isCrit
+            ? mitigatedDamage * (critDamage / 100f)
+            : mitigatedDamage;
+
+        if (routine == DamageRoutine.Normal)
+        {
+            float damageMastery = attackerStats != null ? attackerStats.damageMastery : 0f;
+            resolvedDamage *= 1f + damageMastery / 100f;
+        }
+        else if (damageType != DamageType.Physical)
+        {
+            float elementalMultiplier = attackerStats != null
+                ? Mathf.Max(0f, attackerStats.elementalMultiplier)
+                : 1f;
+            resolvedDamage *= elementalMultiplier;
+        }
+
+        if (routine != DamageRoutine.Additional && isSkillOrUltimate)
+        {
+            float skillMastery = attackerStats != null ? attackerStats.skillMastery : 0f;
+            resolvedDamage *= 1f + skillMastery / 100f;
+        }
+
+        return Mathf.Max(0f, resolvedDamage);
+    }
+
     public static float CalculateOutgoingDamage(float baseAttack, float actionMultiplier, float critRate, float critDmg, float skillMastery, float dmgMastery, bool isSkillOrUlt, out bool isCrit)
     {
         float baseDamage = baseAttack * actionMultiplier;

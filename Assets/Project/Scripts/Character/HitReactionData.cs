@@ -24,6 +24,13 @@ public enum DamageType
     Nature
 }
 
+public enum DamageRoutine
+{
+    Normal,
+    Elemental,
+    Additional
+}
+
 public enum EnemyReactionKind
 {
     Flinch,
@@ -122,6 +129,7 @@ public struct HitReactionData
     // =========================================================
     public DamageImpactTier impactTier;
     public DamageType damageType;
+    public DamageRoutine damageRoutine;
 
     public int ImpactFreezeFrames => reactionTiming != null ? Mathf.Max(0, reactionTiming.startupFrames) : Mathf.Max(0, hitstunFrames);
     public int ActiveReactionFrames => reactionTiming != null ? Mathf.Max(0, reactionTiming.activeFrames) : Mathf.Max(0, knockbackFrames);
@@ -222,7 +230,8 @@ public struct HitReactionData
             flashColor = Color.red,
             flashFrames = 6,
             impactTier = DamageImpactTier.Low,
-            damageType = DamageType.Physical
+            damageType = DamageType.Physical,
+            damageRoutine = DamageRoutine.Normal
         };
     }
 }

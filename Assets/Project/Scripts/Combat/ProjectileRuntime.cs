@@ -312,14 +312,6 @@ public class ProjectileRuntime : MonoBehaviour
         }
     }
 
-    public void NotifyEnemyHit(EnemyController enemy, bool isDefeated)
-    {
-        spawnContext.sourceCombat?.NotifyProjectileEnemyHit(
-            enemy,
-            isDefeated,
-            spawnContext.sourceCharacter);
-    }
-
     public void Translate(Vector2 delta)
     {
         transform.position += (Vector3)delta;

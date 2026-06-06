@@ -153,7 +153,8 @@ public sealed class ProjectileHitboxModule
 
     private void ApplyNormalHitData(NormalHitbox normalHitbox, ProjectileSpawnContext context)
     {
-        float baseDamage = context.damage * (normalHitbox != null ? normalHitbox.damageMultiplier : 1f);
+        float ratio = normalHitbox != null ? normalHitbox.damageRatio : 1f;
+        float baseDamage = context.sourceAttack * ResolveHitDamageMultiplier(context, ratio);
         hitBoxDamage.SetHitData(
             baseDamage,
             false,
@@ -170,7 +171,8 @@ public sealed class ProjectileHitboxModule
 
     private void ApplyGrabHitData(GrabHitbox grabHitbox, ProjectileSpawnContext context)
     {
-        float baseDamage = context.damage * (grabHitbox != null ? grabHitbox.damageMultiplier : 1f);
+        float ratio = grabHitbox != null ? grabHitbox.damageRatio : 1f;
+        float baseDamage = context.sourceAttack * ResolveHitDamageMultiplier(context, ratio);
         hitBoxDamage.SetGrabData(
             baseDamage,
             false,
@@ -186,10 +188,23 @@ public sealed class ProjectileHitboxModule
     private void ConfigurePerEnemyDamageCalculation(ProjectileSpawnContext context)
     {
         hitBoxDamage.ConfigurePerEnemyDamageCalculation(
-            context.critRate,
-            context.critDamage,
-            context.skillMastery,
-            context.damageMastery,
-            context.isSkillOrUltimate);
+            context.attackerStats,
+            context.sourceAttack,
+            context.isSkillOrUltimate,
+            context.additionalDamageEffects,
+            context.sourceCombat,
+            context.sourceCharacter,
+            context.auraEnergyOnHitAmount,
+            context.auraEnergyOnKillAmount);
+    }
+
+    private static float ResolveHitDamageMultiplier(ProjectileSpawnContext context, float damageRatio)
+    {
+        if (context.actionDamageMultiplier <= 0f)
+        {
+            return Mathf.Max(0f, damageRatio);
+        }
+
+        return context.actionDamageMultiplier * Mathf.Clamp01(damageRatio);
     }
 }

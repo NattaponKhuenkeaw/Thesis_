@@ -12,7 +12,6 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     protected readonly ActionResolver resolver = new ActionResolver();
     protected ActionResolverTable resolverTable;
     protected bool hasStartedCooldown;
-    private bool hasGrantedActionAuraEnergy;
 
     private readonly HashSet<ActionEventEntry> triggeredActionEvents = new HashSet<ActionEventEntry>();
     private readonly Dictionary<ActionEventEntry, Coroutine> activeAfterImageCoroutines = new Dictionary<ActionEventEntry, Coroutine>();
@@ -36,7 +35,6 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         resolverTable = player.characterObject != null ? player.characterObject.actionResolverTable : null;
         resolver.SetLogger(fsm);
         hasStartedCooldown = false;
-        hasGrantedActionAuraEnergy = false;
         ResetActionEventTracking();
 
         if (player.Combat != null)
@@ -414,13 +412,8 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         player.Combat?.BeginResolvedAction(
             ctx.isGrounded,
             !ctx.isGrounded,
-            resolver.ActiveCombatAction != null && resolver.ActiveCombatAction.allowGroundToAirTransition);
-
-        if (!hasGrantedActionAuraEnergy && resolver.ActiveCombatAction != null)
-        {
-            player.Combat?.GrantResolvedActionAuraEnergy(resolver.ActiveCombatAction.auraEnergyGainAmount);
-            hasGrantedActionAuraEnergy = true;
-        }
+            resolver.ActiveCombatAction != null && resolver.ActiveCombatAction.allowGroundToAirTransition,
+            resolver.ActiveCombatAction);
 
         player.Combat?.ExecuteStep(
             step,

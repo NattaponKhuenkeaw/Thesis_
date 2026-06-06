@@ -7,6 +7,14 @@ public class BackgroundUltimateExecutor : MonoBehaviour
     private int currentFrame;
     private int facingDirection;
     private CharacterStats castingStats;
+    private float sourceAttack;
+    private float actionDamageMultiplier;
+    private float auraEnergyOnHitAmount;
+    private float auraEnergyOnKillAmount;
+    private AdditionalDamageEffectDefinition[] additionalDamageEffects;
+    private PlayerCombat sourceCombat;
+    private CharacterObject sourceCharacter;
+    private string sourceActionName;
     private GameObject visualClone;
 
     private HitBoxDamage cloneHitboxDamage;
@@ -19,12 +27,35 @@ public class BackgroundUltimateExecutor : MonoBehaviour
     private const float LOGIC_FPS = 60f;
 
     /// <summary>Initializes and starts the background ultimate simulation.</summary>
-    public void Initialize(AttackStepData step, int startFrame, int facing, CharacterStats stats, Sprite characterSprite, RuntimeAnimatorController animatorController)
+    public void Initialize(
+        AttackStepData step,
+        int startFrame,
+        int facing,
+        CharacterStats stats,
+        float resolvedSourceAttack,
+        float resolvedActionDamageMultiplier,
+        float onHitAuraEnergy,
+        float onKillAuraEnergy,
+        AdditionalDamageEffectDefinition[] resolvedAdditionalDamageEffects,
+        PlayerCombat resolvedSourceCombat,
+        CharacterObject resolvedSourceCharacter,
+        string resolvedSourceActionName,
+        Sprite characterSprite,
+        RuntimeAnimatorController animatorController)
     {
         ultimateStep = step;
         currentFrame = startFrame;
         facingDirection = facing;
         castingStats = stats;
+        sourceAttack = Mathf.Max(0f, resolvedSourceAttack);
+        actionDamageMultiplier = Mathf.Max(0f, resolvedActionDamageMultiplier);
+        auraEnergyOnHitAmount = Mathf.Max(0f, onHitAuraEnergy);
+        auraEnergyOnKillAmount = Mathf.Max(0f, onKillAuraEnergy);
+        additionalDamageEffects = resolvedAdditionalDamageEffects
+            ?? System.Array.Empty<AdditionalDamageEffectDefinition>();
+        sourceCombat = resolvedSourceCombat;
+        sourceCharacter = resolvedSourceCharacter;
+        sourceActionName = resolvedSourceActionName;
 
         // Set local scale for facing direction
         transform.localScale = new Vector3(facingDirection, 1f, 1f);
@@ -150,7 +181,7 @@ public class BackgroundUltimateExecutor : MonoBehaviour
                 box.size = normalHitbox.size;
             }
 
-            float baseDamage = GetBaseAttackDamage(normalHitbox.damageMultiplier);
+            float baseDamage = GetBaseAttackDamage(normalHitbox.damageRatio);
             if (cloneHitboxDamage != null)
             {
                 cloneHitboxDamage.SetHitData(
@@ -161,7 +192,7 @@ public class BackgroundUltimateExecutor : MonoBehaviour
                     0f,
                     normalHitbox,
                     AttackCategory.Ultimate,
-                    ultimateStep.stepName,
+                    sourceActionName ?? ultimateStep.stepName,
                     ultimateStep,
                     null);
                 ConfigurePerEnemyDamageCalculation(cloneHitboxDamage);
@@ -221,7 +252,10 @@ public class BackgroundUltimateExecutor : MonoBehaviour
             return hitFrameMultiplier;
         }
 
-        return Mathf.Max(0f, castingStats.attack * hitFrameMultiplier);
+        float multiplier = actionDamageMultiplier > 0f
+            ? actionDamageMultiplier * Mathf.Clamp01(hitFrameMultiplier)
+            : Mathf.Max(0f, hitFrameMultiplier);
+        return Mathf.Max(0f, sourceAttack * multiplier);
     }
 
     private void ConfigurePerEnemyDamageCalculation(HitBoxDamage targetHitBoxDamage)
@@ -232,11 +266,14 @@ public class BackgroundUltimateExecutor : MonoBehaviour
         }
 
         targetHitBoxDamage.ConfigurePerEnemyDamageCalculation(
-            castingStats.critRate,
-            castingStats.critDamage,
-            castingStats.skillMastery,
-            castingStats.damageMastery,
-            true);
+            castingStats,
+            sourceAttack,
+            true,
+            additionalDamageEffects,
+            sourceCombat,
+            sourceCharacter,
+            auraEnergyOnHitAmount,
+            auraEnergyOnKillAmount);
     }
 
     /// <summary>Cleans up the executor and destroys the clone GameObject.</summary>

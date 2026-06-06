@@ -369,11 +369,12 @@ public struct ProjectileSpawnContext
     public Vector2 origin;
     public Vector2 direction;
     public Vector2 resolvedSpawnOffset;
-    public float damage;
-    public float critRate;
-    public float critDamage;
-    public float skillMastery;
-    public float damageMastery;
+    public float sourceAttack;
+    public CharacterStats attackerStats;
+    public float actionDamageMultiplier;
+    public float auraEnergyOnHitAmount;
+    public float auraEnergyOnKillAmount;
+    public AdditionalDamageEffectDefinition[] additionalDamageEffects;
     public bool isSkillOrUltimate;
     public int remainingHits;
     public PlayerCombat sourceCombat;

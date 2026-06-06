@@ -40,5 +40,46 @@ public class CharacterStats
     [Tooltip("Aura Energy gain rate tier. Low = 5% chance, Med = 10%, High = 15%.")]
     public AuraEnergyRate auraEnergyRate = AuraEnergyRate.Med;
 
+    public CharacterStats Clone()
+    {
+        return new CharacterStats
+        {
+            maxHP = maxHP,
+            attack = attack,
+            defense = defense,
+            speed = speed,
+            elementalMultiplier = elementalMultiplier,
+            critRate = critRate,
+            critDamage = critDamage,
+            cooldownReduction = cooldownReduction,
+            skillMastery = skillMastery,
+            damageMastery = damageMastery,
+            damageResistance = damageResistance,
+            auraEnergyMultiplier = auraEnergyMultiplier,
+            auraEnergyRate = auraEnergyRate
+        };
+    }
+
+    public void AddNumericBonuses(CharacterStats bonus)
+    {
+        if (bonus == null)
+        {
+            return;
+        }
+
+        maxHP += bonus.maxHP;
+        attack += bonus.attack;
+        defense += bonus.defense;
+        speed += bonus.speed;
+        elementalMultiplier += bonus.elementalMultiplier;
+        critRate += bonus.critRate;
+        critDamage += bonus.critDamage;
+        cooldownReduction += bonus.cooldownReduction;
+        skillMastery += bonus.skillMastery;
+        damageMastery += bonus.damageMastery;
+        damageResistance += bonus.damageResistance;
+        auraEnergyMultiplier += bonus.auraEnergyMultiplier;
+    }
+
     // End of CharacterStats
 }

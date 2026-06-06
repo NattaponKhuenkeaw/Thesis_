@@ -210,7 +210,8 @@ public class PlayerHUD : MonoBehaviour
         if (playerCharacter == null || playerCharacter.characterObject == null)
             return string.Empty;
 
-        return playerCharacter.characterObject.characterId + "|" + playerCharacter.characterObject.stats.maxHP;
+        float maxHp = playerCharacter.Stats != null ? playerCharacter.Stats.maxHP : 0f;
+        return playerCharacter.characterObject.characterId + "|" + maxHp;
     }
 
     private Canvas FindTargetCanvas()

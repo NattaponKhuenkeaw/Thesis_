@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Project.InventorySystem.Items
@@ -13,5 +14,9 @@ namespace Project.InventorySystem.Items
         [Header("Stat Bonuses")]
         [Tooltip("Bonuses applied when this artifact is equipped. Can be positive or negative.")]
         public CharacterStats bonusStats;
+
+        [Header("Passive Damage")]
+        [Tooltip("Optional separate on-hit damage ticks. These cannot critically hit.")]
+        public List<AdditionalDamageEffectDefinition> additionalDamageEffects = new List<AdditionalDamageEffectDefinition>();
     }
 }

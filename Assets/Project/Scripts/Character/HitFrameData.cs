@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 // =========================================================
 // HitFrameData — Polymorphic hitbox container for an ActionStep.
@@ -55,7 +56,9 @@ public class NormalHitbox : HitboxBase
 
     // ── Damage & Knockback ──
     [Header("Damage & Knockback")]
-    public float damageMultiplier = 1f;
+    [FormerlySerializedAs("damageMultiplier")]
+    [Tooltip("Share of the CombatAction damage budget. Explicit action budgets clamp this value to 0..1.")]
+    public float damageRatio = 1f;
     public DamageImpactTier impactTier = DamageImpactTier.Low;
 
     // ── Reaction & HitStop ──
@@ -128,7 +131,9 @@ public class GrabHitbox : HitboxBase
     public bool canGrabAirborne = false;
 
     [Header("Damage")]
-    public float damageMultiplier = 0f;
+    [FormerlySerializedAs("damageMultiplier")]
+    [Tooltip("Share of the CombatAction damage budget. Explicit action budgets clamp this value to 0..1.")]
+    public float damageRatio = 0f;
     public int impactFreezeFrames = 4;
     public int holdFrames = 24;
     public int recoveryFrames = 6;

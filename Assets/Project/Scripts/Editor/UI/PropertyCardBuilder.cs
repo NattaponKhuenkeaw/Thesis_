@@ -680,10 +680,22 @@ namespace CombatEditor.UI
                     MarkDirty();
                 });
 
+                AddSeparator(body, "Action Damage");
+                AddFloatField(body, "Total ATK Multiplier", action.actionDamageMultiplier, value => {
+                    RecordUndo("Edit Action Damage");
+                    action.actionDamageMultiplier = Mathf.Max(0f, value);
+                    MarkDirty();
+                });
+
                 AddSeparator(body, "Aura Energy Reward");
-                AddFloatField(body, "Aura Energy Gain", action.auraEnergyGainAmount, value => {
-                    RecordUndo("Edit Aura Energy Gain");
+                AddFloatField(body, "AE On Hit", action.auraEnergyGainAmount, value => {
+                    RecordUndo("Edit Aura Energy On Hit");
                     action.auraEnergyGainAmount = Mathf.Max(0f, value);
+                    MarkDirty();
+                });
+                AddFloatField(body, "AE On Kill", action.auraEnergyOnKillAmount, value => {
+                    RecordUndo("Edit Aura Energy On Kill");
+                    action.SetAuraEnergyOnKillAmount(value);
                     MarkDirty();
                 });
 
@@ -1909,10 +1921,10 @@ namespace CombatEditor.UI
             });
 
             AddSeparator(body, "Damage and Impact");
-            AddFloatField(body, "Damage Scale", hitbox.damageMultiplier, value =>
+            AddFloatField(body, "Damage Ratio", hitbox.damageRatio, value =>
             {
-                RecordUndo("Edit Damage");
-                hitbox.damageMultiplier = value;
+                RecordUndo("Edit Damage Ratio");
+                hitbox.damageRatio = Mathf.Clamp01(value);
                 MarkDirty();
             });
             AddEnumField(body, "Impact Tier", hitbox.impactTier, value =>
@@ -2133,10 +2145,10 @@ namespace CombatEditor.UI
             });
 
             AddSeparator(body, "Damage and Impact");
-            AddFloatField(body, "Damage Scale", hitbox.damageMultiplier, value =>
+            AddFloatField(body, "Damage Ratio", hitbox.damageRatio, value =>
             {
-                RecordUndo("Edit Damage Scale");
-                hitbox.damageMultiplier = value;
+                RecordUndo("Edit Damage Ratio");
+                hitbox.damageRatio = Mathf.Clamp01(value);
                 MarkDirty();
             });
             AddEnumField(body, "Impact Tier", hitbox.impactTier, value =>
