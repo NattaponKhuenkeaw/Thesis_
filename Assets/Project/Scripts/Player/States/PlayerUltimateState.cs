@@ -98,13 +98,13 @@ public class PlayerUltimateState : CombatPlayerState
             TeamLoader teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
             activeUltimateAction = resolver.ActiveCombatAction as UltimateAction;
             float currentAE = teamLoader != null ? teamLoader.GetCharacterCurrentAE(player.characterObject) : 0f;
-            float cost = teamLoader != null
-                ? teamLoader.GetUltimateCost(player.characterObject, activeUltimateAction)
-                : TeamLoader.DefaultUltimateAuraEnergyCost;
+            float requiredAE = teamLoader != null
+                ? teamLoader.GetCharacterMaxAE(player.characterObject)
+                : TeamLoader.DefaultUltimateAuraEnergyCost * TeamLoader.UltimateAuraEnergyStackMultiplier;
 
-            if (currentAE < cost)
+            if (currentAE < requiredAE)
             {
-                fsm.Log("Ultimate", "Not enough Aura Energy for Ultimate", Color.yellow);
+                fsm.Log("Ultimate", "Aura Energy stack is not full", Color.yellow);
                 AbilityUIManager.Instance?.PlayAbilityRejectedFeedback(AbilityUIManager.AbilityType.Ultimate);
                 resolver.Reset();
                 ExitToAppropriateMovementState();

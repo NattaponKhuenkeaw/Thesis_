@@ -166,7 +166,7 @@ public class AbilityUIManager : MonoBehaviour
             lastObservedUltimateAE = currentAE;
             RefreshActiveCharacterUI();
 
-            bool readyNow = currentAE >= ResolveCurrentUltimateCost(character);
+            bool readyNow = currentAE >= maxAE;
             if (gained && !readyNow)
             {
                 PlayAuraEnergyGainFeedback();
@@ -278,8 +278,7 @@ public class AbilityUIManager : MonoBehaviour
         float maxAE = teamLoader.GetCharacterMaxAE(currentCharacter);
         float fillRatio = maxAE > 0f ? Mathf.Clamp01(currentAE / maxAE) : 0f;
 
-        float cost = ResolveCurrentUltimateCost(currentCharacter);
-        bool isReady = currentAE >= cost;
+        bool isReady = maxAE > 0f && currentAE >= maxAE;
 
         if (isReady)
         {
@@ -462,21 +461,6 @@ public class AbilityUIManager : MonoBehaviour
         }
 
         return targetRect;
-    }
-
-    private float ResolveCurrentUltimateCost(CharacterObject currentCharacter)
-    {
-        if (teamLoader == null)
-            return TeamLoader.DefaultUltimateAuraEnergyCost;
-
-        if (playerCharacter != null
-            && playerCharacter.TryResolveActionForContext(AttackCategory.Ultimate, out CombatAction action, out _)
-            && action is UltimateAction ultimateAction)
-        {
-            return teamLoader.GetUltimateCost(currentCharacter, ultimateAction);
-        }
-
-        return teamLoader.GetUltimateCost(currentCharacter);
     }
 
     private float GetCurrentAuraEnergy()

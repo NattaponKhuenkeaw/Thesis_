@@ -9,11 +9,13 @@ Finish the artifact build system branch and correct the Aura Energy integration 
 - Kept hit/defeat Aura Energy generation separate from deterministic action rewards.
 - Removed `maxAuraEnergy` from `CharacterStats` and obsolete serialized character/artifact data.
 - Derived each character's maximum AE as twice their highest runtime Ultimate cost.
+- Corrected Ultimate readiness so the HUD and input gate require the full derived AE capacity instead of becoming ready at one cost (50% of the stack).
 - Wired `StatItemUI` on `StatItem.prefab` so artifact preview stat rows receive their labels and values.
 
 ## Bugs Found
 - ActionResolver AE rewards were only forwarded into hit/projectile context, so using an authored action did not directly grant its reward.
 - Ultimate AE cost was authored and checked at runtime, but maximum AE still came from an unrelated `CharacterStats` field.
+- Ultimate readiness still compared current AE against one cast cost, making a two-cost meter appear full and castable at 50%.
 - `StatItem.prefab` was missing its `StatItemUI` component, leaving preview stat rows unpopulated.
 
 ## Validation

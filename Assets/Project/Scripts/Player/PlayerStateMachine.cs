@@ -508,14 +508,14 @@ public class PlayerStateMachine : MonoBehaviour
         float currentAE = teamLoader != null && playerCharacter != null
             ? teamLoader.GetCharacterCurrentAE(playerCharacter.characterObject)
             : 0f;
-        float cost = teamLoader != null && playerCharacter != null
-            ? teamLoader.GetUltimateCost(playerCharacter.characterObject, ultimateAction)
-            : TeamLoader.DefaultUltimateAuraEnergyCost;
+        float requiredAE = teamLoader != null && playerCharacter != null
+            ? teamLoader.GetCharacterMaxAE(playerCharacter.characterObject)
+            : TeamLoader.DefaultUltimateAuraEnergyCost * TeamLoader.UltimateAuraEnergyStackMultiplier;
 
-        if (currentAE < cost)
+        if (currentAE < requiredAE)
         {
             if (showFsmLogs)
-                Log("Ultimate", "Rejected before state entry: not enough Aura Energy", Color.yellow);
+                Log("Ultimate", "Rejected before state entry: Aura Energy stack is not full", Color.yellow);
 
             if (playFeedback)
                 PlayAbilityRejectedFeedback(AbilityUIManager.AbilityType.Ultimate);

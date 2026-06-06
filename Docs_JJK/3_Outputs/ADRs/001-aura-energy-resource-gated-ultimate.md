@@ -24,6 +24,7 @@ We decide to:
 8. **Update HUD meters** (via `AbilityUIManager` and `CharacterSwitchSlot`) to show circular fill percentages and pulse/glow/chime feedback when ready.
 9. **Grant action-authored AE rewards once when an ActionResolver action starts.** `auraEnergyGainAmount` defaults to `0` and is multiplied by the acting character's `auraEnergyMultiplier`.
 10. **Set each character's maximum AE to twice their highest runtime Ultimate cost.** A 50 AE Ultimate therefore supports a 100 AE stack.
+11. **Require the AE meter to reach its full derived capacity before an Ultimate becomes ready.** Casting consumes the resolved Ultimate cost, but readiness does not trigger at the half-stack cost threshold.
 
 ## Alternatives Considered
 
