@@ -14,6 +14,8 @@ public interface ITeamEnergySystem
 
 public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 {
+    public const float DefaultUltimateAuraEnergyCost = 100f;
+    public const float UltimateAuraEnergyStackMultiplier = 2f;
     private const int DefaultTeamSize = 3;
 
     public event System.Action OnTeamChanged;
@@ -26,6 +28,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     // =========================================================
     [Header("Team Data")]
     public CharacterObject[] team;
+    public Project.InventorySystem.Items.Artifact[][] equippedArtifacts;
 
     // =========================================================
     // Dependencies
@@ -314,7 +317,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         LoadCurrentCharacter();
     }
 
-    public void DeployLoadout(CharacterObject[] newTeam, int preferredIndex)
+    public void DeployLoadout(CharacterObject[] newTeam, int preferredIndex, Project.InventorySystem.Items.Artifact[][] artifactData = null)
     {
         if (newTeam == null)
             return;
@@ -366,9 +369,25 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         characterCurrentAE.Clear();
         lastSwitchTime = -999f;
 
+        equippedArtifacts = artifactData;
+
         NotifyTeamChanged();
         LoadCurrentCharacter(forceReload: true, preserveActiveHp: false);
         ResetRuntimeTransientState();
+    }
+
+    public Project.InventorySystem.Items.Artifact[] GetEquippedArtifactsFor(CharacterObject character)
+    {
+        if (character == null || team == null || equippedArtifacts == null) return null;
+
+        for (int i = 0; i < team.Length; i++)
+        {
+            if (team[i] == character && i < equippedArtifacts.Length)
+            {
+                return equippedArtifacts[i];
+            }
+        }
+        return null;
     }
 
     public void SetTeamFromUI(CharacterObject[] newTeam)
@@ -753,8 +772,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     public float GetCharacterMaxAE(CharacterObject character)
     {
-        if (character == null) return 100f;
-        return character.stats != null ? character.stats.maxAuraEnergy : 100f;
+        float highestUltimateCost = GetHighestUltimateCost(character);
+        return highestUltimateCost * UltimateAuraEnergyStackMultiplier;
     }
 
     public void SetCharacterCurrentAE(CharacterObject character, float value)
@@ -768,11 +787,50 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     public float GetUltimateCost(CharacterObject character)
     {
-        if (character == null || character.stats == null) return 100f;
+        return GetUltimateCost(character, DefaultUltimateAuraEnergyCost);
+    }
+
+    private float GetHighestUltimateCost(CharacterObject character)
+    {
+        if (character == null
+            || character.actionResolverTable == null
+            || character.actionResolverTable.ultimateActions == null
+            || character.actionResolverTable.ultimateActions.Count == 0)
+        {
+            return GetUltimateCost(character);
+        }
+
+        float highestCost = 0f;
+        List<UltimateAction> ultimateActions = character.actionResolverTable.ultimateActions;
+        for (int i = 0; i < ultimateActions.Count; i++)
+        {
+            UltimateAction ultimateAction = ultimateActions[i];
+            if (ultimateAction == null)
+                continue;
+
+            highestCost = Mathf.Max(highestCost, GetUltimateCost(character, ultimateAction));
+        }
+
+        return highestCost > 0f ? highestCost : GetUltimateCost(character);
+    }
+
+    public float GetUltimateCost(CharacterObject character, UltimateAction ultimateAction)
+    {
+        float baseCost = ultimateAction != null && ultimateAction.energyCost > 0f
+            ? ultimateAction.energyCost
+            : DefaultUltimateAuraEnergyCost;
+
+        return GetUltimateCost(character, baseCost);
+    }
+
+    public float GetUltimateCost(CharacterObject character, float baseCost)
+    {
+        float resolvedBaseCost = Mathf.Max(0f, baseCost);
+        if (character == null || character.stats == null) return resolvedBaseCost;
         
         float cdr = character.stats.cooldownReduction / 100f;
         float reduction = Mathf.Min(0.50f, cdr * 0.50f);
-        return 100f * (1.0f - reduction);
+        return resolvedBaseCost * (1.0f - reduction);
     }
 
     public void AddCharacterAE(CharacterObject character, float amount)

@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,6 +9,8 @@ using UnityEngine.UI;
 public class UIFeedbackDriver : MonoBehaviour
 {
     private static Sprite fallbackSprite;
+    private readonly Dictionary<Transform, Coroutine> activePulseCoroutines = new Dictionary<Transform, Coroutine>();
+    private readonly Dictionary<Transform, Vector3> pulseBaseScales = new Dictionary<Transform, Vector3>();
 
     public static UIFeedbackDriver GetOrAdd(GameObject host)
     {
@@ -31,7 +34,21 @@ public class UIFeedbackDriver : MonoBehaviour
             return null;
         }
 
-        return StartCoroutine(PulseRoutine(target, peakScale, duration));
+        bool alreadyPulsing = activePulseCoroutines.TryGetValue(target, out Coroutine activePulse);
+        Vector3 baseScale = alreadyPulsing && pulseBaseScales.TryGetValue(target, out Vector3 storedBaseScale)
+            ? storedBaseScale
+            : target.localScale;
+
+        if (alreadyPulsing && activePulse != null)
+        {
+            StopCoroutine(activePulse);
+        }
+
+        target.localScale = baseScale;
+        Coroutine coroutine = StartCoroutine(PulseRoutine(target, baseScale, peakScale, duration));
+        activePulseCoroutines[target] = coroutine;
+        pulseBaseScales[target] = baseScale;
+        return coroutine;
     }
 
     public Coroutine PlayWiggle(RectTransform target, Vector2 basePosition, float distance = 8f, float duration = 0.25f)
@@ -74,9 +91,8 @@ public class UIFeedbackDriver : MonoBehaviour
         return StartCoroutine(RadialBurstRoutine(parent, color, Mathf.Max(1, count), distance, duration));
     }
 
-    private IEnumerator PulseRoutine(Transform target, float peakScale, float duration)
+    private IEnumerator PulseRoutine(Transform target, Vector3 originalScale, float peakScale, float duration)
     {
-        Vector3 originalScale = target.localScale;
         float resolvedDuration = Mathf.Max(0.01f, duration);
         float elapsed = 0f;
 
@@ -90,6 +106,8 @@ public class UIFeedbackDriver : MonoBehaviour
         }
 
         target.localScale = originalScale;
+        activePulseCoroutines.Remove(target);
+        pulseBaseScales.Remove(target);
     }
 
     private IEnumerator WiggleRoutine(RectTransform target, Vector2 basePosition, float distance, float duration)

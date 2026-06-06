@@ -11,6 +11,7 @@ public class EnemyWorldUI : MonoBehaviour
     [SerializeField] private Slider healthSlider;
     [SerializeField] private Slider damageLerpSlider;
     [SerializeField] private TMP_Text damageText;
+    [SerializeField] private TMP_Text critDamageText;
 
     [Header("Damage Text — Random Position")]
     [Tooltip("Min/Max X offset for random spawn position on the canvas.")]
@@ -51,16 +52,17 @@ public class EnemyWorldUI : MonoBehaviour
     [SerializeField] private float critScaleMultiplier = 1.2f;
     [Tooltip("Color used for crit damage text.")]
     [SerializeField] private Color critTextColor = new Color(1f, 0.85f, 0.2f);
-    [Tooltip("Prefix shown before critical hit damage numbers.")]
-    [SerializeField] private string critTextPrefix = "CRIT ";
     [Tooltip("Random rotation range applied to crit damage popups.")]
     [SerializeField] private float critRotationRange = 15f;
 
     private RectTransform damageTextRect;
+    private RectTransform critDamageTextRect;
     private List<TMP_Text> damageTextPool = new List<TMP_Text>();
+    private List<TMP_Text> critDamageTextPool = new List<TMP_Text>();
     private Coroutine healthLerpCoroutine;
     private Coroutine attackWarningCoroutine;
     private Color damageTextBaseColor = Color.white;
+    private Color critDamageTextBaseColor = Color.white;
     private Vector3 baseLocalScale = Vector3.one;
 
     [Header("Elemental Colors")]
@@ -92,6 +94,14 @@ public class EnemyWorldUI : MonoBehaviour
             damageTextBaseColor = damageText.color;
             damageText.gameObject.SetActive(false);
             damageTextPool.Add(damageText);
+        }
+
+        if (critDamageText != null)
+        {
+            critDamageTextRect = critDamageText.rectTransform;
+            critDamageTextBaseColor = critDamageText.color;
+            critDamageText.gameObject.SetActive(false);
+            critDamageTextPool.Add(critDamageText);
         }
 
         if (attackWarningIcon != null)
@@ -153,6 +163,25 @@ public class EnemyWorldUI : MonoBehaviour
 
         if (damageText != null)
             damageTextRect = damageText.rectTransform;
+
+        if (critDamageText == null)
+        {
+            TMP_Text[] texts = GetComponentsInChildren<TMP_Text>(true);
+            for (int i = 0; i < texts.Length; i++)
+            {
+                TMP_Text text = texts[i];
+                if (text != null
+                    && text != damageText
+                    && text.name.Contains("Crit"))
+                {
+                    critDamageText = text;
+                    break;
+                }
+            }
+        }
+
+        if (critDamageText != null)
+            critDamageTextRect = critDamageText.rectTransform;
     }
 
     /// <summary>
@@ -293,9 +322,9 @@ public class EnemyWorldUI : MonoBehaviour
 
     private void ShowDamageText(float damage, DamageImpactTier impactTier, DamageType damageType, bool isCriticalHit)
     {
-        if (Mathf.RoundToInt(damage) <= 0) return;
+        if (damage <= 1f) return;
 
-        TMP_Text t = GetPooledText();
+        TMP_Text t = GetPooledText(isCriticalHit);
         if (t == null) return;
 
         RectTransform r = t.rectTransform;
@@ -333,8 +362,8 @@ public class EnemyWorldUI : MonoBehaviour
         if (isCriticalHit)
         {
             targetScale *= critScaleMultiplier;
-            elementColor = critTextColor;
-            t.text = $"{critTextPrefix}{Mathf.RoundToInt(damage)}";
+            elementColor = critDamageText != null ? critDamageTextBaseColor : critTextColor;
+            t.text = Mathf.RoundToInt(damage).ToString();
             t.fontStyle = FontStyles.Bold;
         }
         else
@@ -353,19 +382,23 @@ public class EnemyWorldUI : MonoBehaviour
         StartCoroutine(DamageTextRoutine(t, randomStart, targetScale, elementColor));
     }
 
-    private TMP_Text GetPooledText()
+    private TMP_Text GetPooledText(bool isCriticalHit)
     {
-        for (int i = 0; i < damageTextPool.Count; i++)
+        bool useCritText = isCriticalHit && critDamageText != null;
+        List<TMP_Text> targetPool = useCritText ? critDamageTextPool : damageTextPool;
+        TMP_Text template = useCritText ? critDamageText : damageText;
+
+        for (int i = 0; i < targetPool.Count; i++)
         {
-            if (!damageTextPool[i].gameObject.activeSelf)
-                return damageTextPool[i];
+            if (!targetPool[i].gameObject.activeSelf)
+                return targetPool[i];
         }
 
         // Expand pool if needed (cap at 15 for safety)
-        if (damageTextPool.Count < 15 && damageText != null)
+        if (targetPool.Count < 15 && template != null)
         {
-            TMP_Text newText = Instantiate(damageText, damageText.transform.parent);
-            damageTextPool.Add(newText);
+            TMP_Text newText = Instantiate(template, template.transform.parent);
+            targetPool.Add(newText);
             return newText;
         }
 

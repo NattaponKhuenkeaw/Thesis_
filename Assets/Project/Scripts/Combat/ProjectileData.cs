@@ -370,6 +370,12 @@ public struct ProjectileSpawnContext
     public Vector2 direction;
     public Vector2 resolvedSpawnOffset;
     public float damage;
-    public bool isCrit;
+    public float critRate;
+    public float critDamage;
+    public float skillMastery;
+    public float damageMastery;
+    public bool isSkillOrUltimate;
     public int remainingHits;
+    public PlayerCombat sourceCombat;
+    public CharacterObject sourceCharacter;
 }

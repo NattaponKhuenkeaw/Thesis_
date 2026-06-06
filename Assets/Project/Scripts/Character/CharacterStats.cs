@@ -1,5 +1,12 @@
 using UnityEngine;
 
+public enum AuraEnergyRate
+{
+    Low,
+    Med,
+    High
+}
+
 [System.Serializable]
 public class CharacterStats
 {
@@ -28,10 +35,10 @@ public class CharacterStats
     public float damageResistance = 0f;
 
     [Header("Aura Energy")]
-    [Tooltip("Maximum aura energy capacity.")]
-    public float maxAuraEnergy = 100f;
     [Tooltip("Multiplier applied to all gained aura energy.")]
     public float auraEnergyMultiplier = 1f; // Multiplier for gained AE
+    [Tooltip("Aura Energy gain rate tier. Low = 5% chance, Med = 10%, High = 15%.")]
+    public AuraEnergyRate auraEnergyRate = AuraEnergyRate.Med;
 
     // End of CharacterStats
 }

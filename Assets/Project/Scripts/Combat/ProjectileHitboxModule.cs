@@ -8,6 +8,7 @@ public sealed class ProjectileHitboxModule
     private readonly BoxCollider2D triggerCollider;
 
     private HitboxBase activeHitbox;
+    private ProjectileSpawnContext activeContext;
 
     public ProjectileHitboxModule(
         ProjectileRuntime runtime,
@@ -24,6 +25,7 @@ public sealed class ProjectileHitboxModule
     public void Reset()
     {
         activeHitbox = null;
+        activeContext = default;
         hitBoxDamage.enabled = false;
         hitBoxDamage.ResetActivationState();
         triggerCollider.enabled = true;
@@ -36,11 +38,13 @@ public sealed class ProjectileHitboxModule
         triggerCollider.enabled = true;
         hitBoxDamage.enabled = false;
         activeHitbox = null;
+        activeContext = default;
     }
 
     public bool Activate(HitboxBase hitbox, ProjectileSpawnContext context, float facing, bool consumeMaxHits)
     {
         activeHitbox = hitbox;
+        activeContext = context;
         runtime.SetCurrentHitConsumesMaxHits(consumeMaxHits);
 
         if (hitbox == null)
@@ -62,30 +66,12 @@ public sealed class ProjectileHitboxModule
         switch (hitbox)
         {
             case NormalHitbox normalHitbox:
-                hitBoxDamage.SetHitData(
-                    context.damage * normalHitbox.damageMultiplier,
-                    context.isCrit,
-                    false,
-                    0f,
-                    0f,
-                    normalHitbox,
-                    context.category,
-                    context.sourceActionName,
-                    context.sourceStep,
-                    context.passiveController);
+                ApplyNormalHitData(normalHitbox, context);
                 hitBoxDamage.enabled = true;
                 return true;
 
             case GrabHitbox grabHitbox:
-                hitBoxDamage.SetGrabData(
-                    context.damage * grabHitbox.damageMultiplier,
-                    context.isCrit,
-                    grabHitbox,
-                    false,
-                    context.category,
-                    context.sourceActionName,
-                    context.sourceStep,
-                    context.passiveController);
+                ApplyGrabHitData(grabHitbox, context);
                 hitBoxDamage.enabled = true;
                 return true;
         }
@@ -122,6 +108,7 @@ public sealed class ProjectileHitboxModule
             return false;
         }
 
+        RefreshActiveHitData();
         hitBoxDamage.ProcessHit(enemy);
         return true;
     }
@@ -145,7 +132,64 @@ public sealed class ProjectileHitboxModule
     public void Disable()
     {
         activeHitbox = null;
+        activeContext = default;
         hitBoxDamage.enabled = false;
         triggerCollider.enabled = false;
+    }
+
+    private void RefreshActiveHitData()
+    {
+        switch (activeHitbox)
+        {
+            case NormalHitbox normalHitbox:
+                ApplyNormalHitData(normalHitbox, activeContext);
+                break;
+
+            case GrabHitbox grabHitbox:
+                ApplyGrabHitData(grabHitbox, activeContext);
+                break;
+        }
+    }
+
+    private void ApplyNormalHitData(NormalHitbox normalHitbox, ProjectileSpawnContext context)
+    {
+        float baseDamage = context.damage * (normalHitbox != null ? normalHitbox.damageMultiplier : 1f);
+        hitBoxDamage.SetHitData(
+            baseDamage,
+            false,
+            false,
+            0f,
+            0f,
+            normalHitbox,
+            context.category,
+            context.sourceActionName,
+            context.sourceStep,
+            context.passiveController);
+        ConfigurePerEnemyDamageCalculation(context);
+    }
+
+    private void ApplyGrabHitData(GrabHitbox grabHitbox, ProjectileSpawnContext context)
+    {
+        float baseDamage = context.damage * (grabHitbox != null ? grabHitbox.damageMultiplier : 1f);
+        hitBoxDamage.SetGrabData(
+            baseDamage,
+            false,
+            grabHitbox,
+            false,
+            context.category,
+            context.sourceActionName,
+            context.sourceStep,
+            context.passiveController);
+        ConfigurePerEnemyDamageCalculation(context);
+    }
+
+    private void ConfigurePerEnemyDamageCalculation(ProjectileSpawnContext context)
+    {
+        hitBoxDamage.ConfigurePerEnemyDamageCalculation(
+            context.critRate,
+            context.critDamage,
+            context.skillMastery,
+            context.damageMastery,
+            context.isSkillOrUltimate);
     }
 }

@@ -178,7 +178,9 @@ public class EnemyController : MonoBehaviour
         else if (currentComboHits >= 3 && reactionData.impactTier < DamageImpactTier.Medium)
             reactionData.impactTier = DamageImpactTier.Medium;
 
-        float finalIncomingDamage = CombatFormula.CalculateIncomingDamage(reactionData.damage, defense, damageRes);
+        float finalIncomingDamage = reactionData.damageIsFinal
+            ? reactionData.damage
+            : CombatFormula.CalculateIncomingDamage(reactionData.damage, defense, damageRes);
         reactionData.damage = finalIncomingDamage;
 
         currentHP -= finalIncomingDamage;

@@ -418,10 +418,14 @@ public class PlayerStateMachine : MonoBehaviour
         // State-first: let the current state try to consume the input
         if (CurrentState.HandleSkillInput()) return;
 
-        if (CurrentState.AcceptsSkillInput && playerCharacter.HasActionForContext(AttackCategory.Skill))
+        if (CurrentState.AcceptsSkillInput && CanStartSkillAction(true))
         {
             ChangeState(SkillState);
             CurrentState.OnSkillInput();
+        }
+        else
+        {
+            InputBuffer?.ConsumeSkill();
         }
     }
 
@@ -442,16 +446,104 @@ public class PlayerStateMachine : MonoBehaviour
         // State-first: let the current state try to consume the input
         if (CurrentState.HandleUltimateInput()) return;
 
-        if (CurrentState.AcceptsUltimateInput && playerCharacter.HasActionForContext(AttackCategory.Ultimate))
+        if (CurrentState.AcceptsUltimateInput && CanStartUltimateAction(true))
         {
             ChangeState(UltimateState);
             CurrentState.OnUltimateInput();
         }
+        else
+        {
+            InputBuffer?.ConsumeUltimate();
+        }
+    }
+
+    public bool CanStartSkillAction(bool playFeedback = false)
+    {
+        if (!TryResolveStartAction(AttackCategory.Skill, out CombatAction action, out _))
+        {
+            if (playFeedback)
+                PlayAbilityRejectedFeedback(AbilityUIManager.AbilityType.Skill);
+
+            return false;
+        }
+
+        if (action is SkillAction skillAction
+            && playerCharacter != null
+            && playerCharacter.Combat != null
+            && playerCharacter.Combat.IsOnCooldown(AttackCategory.Skill, skillAction.cooldown, skillAction.actionName))
+        {
+            if (showFsmLogs)
+                Log("Skill", "Rejected before state entry: skill is on cooldown", Color.yellow);
+
+            if (playFeedback)
+                PlayAbilityRejectedFeedback(AbilityUIManager.AbilityType.Skill);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    public bool CanStartUltimateAction(bool playFeedback = false)
+    {
+        if (!TryResolveStartAction(AttackCategory.Ultimate, out CombatAction action, out _))
+        {
+            if (playFeedback)
+                PlayAbilityRejectedFeedback(AbilityUIManager.AbilityType.Ultimate);
+
+            return false;
+        }
+
+        if (!(action is UltimateAction ultimateAction))
+        {
+            if (playFeedback)
+                PlayAbilityRejectedFeedback(AbilityUIManager.AbilityType.Ultimate);
+
+            return false;
+        }
+
+        if (teamLoader == null)
+            teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
+
+        float currentAE = teamLoader != null && playerCharacter != null
+            ? teamLoader.GetCharacterCurrentAE(playerCharacter.characterObject)
+            : 0f;
+        float cost = teamLoader != null && playerCharacter != null
+            ? teamLoader.GetUltimateCost(playerCharacter.characterObject, ultimateAction)
+            : TeamLoader.DefaultUltimateAuraEnergyCost;
+
+        if (currentAE < cost)
+        {
+            if (showFsmLogs)
+                Log("Ultimate", "Rejected before state entry: not enough Aura Energy", Color.yellow);
+
+            if (playFeedback)
+                PlayAbilityRejectedFeedback(AbilityUIManager.AbilityType.Ultimate);
+
+            return false;
+        }
+
+        return true;
     }
 
     // =========================================================
     // Private Methods
     // =========================================================
+    private bool TryResolveStartAction(AttackCategory category, out CombatAction action, out AttackStepData step)
+    {
+        action = null;
+        step = null;
+
+        return playerCharacter != null
+            && playerCharacter.TryResolveActionForContext(category, out action, out step);
+    }
+
+    private void PlayAbilityRejectedFeedback(AbilityUIManager.AbilityType abilityType)
+    {
+        if (AbilityUIManager.Instance != null)
+            AbilityUIManager.Instance.PlayAbilityRejectedFeedback(abilityType);
+    }
+
     private void InitializeStates()
     {
         IdleState = new PlayerIdleState(playerCharacter, this);

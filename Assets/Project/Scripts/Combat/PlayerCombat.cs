@@ -12,6 +12,8 @@ using Project.Combat;
 /// </summary>
 public class PlayerCombat : MonoBehaviour, ICharacterCombat
 {
+    private const float DefaultAuraEnergyGainAmount = 10f;
+
     [Header("Dependencies")]
     public PlayerCharacter playerCharacter;
     public PlayerAnimator animHandler;
@@ -39,6 +41,12 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public float airAttackComboResetCooldown = 0.5f;
     private float airAttackComboCooldownEndTime;
 
+    [Header("Aura Energy Rewards")]
+    [SerializeField, Min(1)] private int auraEnergyGrantLimitPerWindow = 5;
+    [SerializeField, Min(0.01f)] private float auraEnergyGrantWindowSeconds = 1f;
+    [SerializeField, Range(0f, 1f)] private float auraEnergyAdditionalSameFrameHitPenalty = 0.1f;
+    [SerializeField, Range(0f, 1f)] private float auraEnergySameFrameHitMultiplierFloor = 0.6f;
+
     private readonly Dictionary<string, float> lastCategoryUseTime = new Dictionary<string, float>();
     private readonly Dictionary<string, float> lastActionUseTime = new Dictionary<string, float>();
     private readonly HashSet<EnemyController> hitEnemiesThisStep = new HashSet<EnemyController>();
@@ -62,6 +70,10 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     private Animator cachedAnimator;
     private Coroutine priorityResetCoroutine;
     private TeamLoader teamLoader;
+    private float auraEnergyGrantWindowStartedAt = -999f;
+    private int auraEnergyGrantsThisWindow;
+    private int auraEnergySameFrameHitFrame = -1;
+    private int auraEnergySameFrameHitAttempts;
 
     [System.Serializable]
     public struct GrabParams
@@ -732,32 +744,130 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public void NotifyEnemyHit(EnemyController enemy, bool isDefeated)
     {
         passiveController?.NotifyHitDealt(currentAttackCategory, currentActionName, currentStepData, enemy);
+        TryGrantAuraEnergy(playerCharacter != null ? playerCharacter.characterObject : null, DefaultAuraEnergyGainAmount, isDefeated);
+    }
 
-        if (playerCharacter != null && playerCharacter.characterObject != null)
+    public void NotifyProjectileEnemyHit(
+        EnemyController enemy,
+        bool isDefeated,
+        CharacterObject sourceCharacter)
+    {
+        TryGrantAuraEnergy(sourceCharacter, DefaultAuraEnergyGainAmount, isDefeated);
+    }
+
+    public void GrantResolvedActionAuraEnergy(float baseGainAmount)
+    {
+        if (baseGainAmount <= 0f || playerCharacter == null || playerCharacter.characterObject == null)
+            return;
+
+        CharacterObject character = playerCharacter.characterObject;
+        float multiplier = character.stats != null
+            ? Mathf.Max(0f, character.stats.auraEnergyMultiplier)
+            : 1f;
+        float energyToGain = Mathf.Max(0f, baseGainAmount) * multiplier;
+        if (energyToGain <= 0f)
+            return;
+
+        if (teamLoader == null)
+            teamLoader = Object.FindFirstObjectByType<TeamLoader>();
+
+        teamLoader?.AddCharacterAE(character, energyToGain);
+    }
+
+    private bool TryGrantAuraEnergy(CharacterObject character, float baseGainAmount, bool isDefeated)
+    {
+        if (character == null || baseGainAmount <= 0f)
+            return false;
+
+        float sameFrameHitMultiplier = ConsumeSameFrameHitAuraMultiplier();
+        AuraEnergyRate auraEnergyRate = character.stats != null
+            ? character.stats.auraEnergyRate
+            : AuraEnergyRate.Med;
+        float gainChance = ResolveAuraEnergyGainChance(auraEnergyRate);
+        bool shouldGainAE = isDefeated || UnityEngine.Random.value <= gainChance;
+        if (!shouldGainAE)
+            return false;
+
+        if (!TryConsumeAuraEnergyGrantSlot())
+            return false;
+
+        Vector2 gainRange = ResolveAuraEnergyGainRange(auraEnergyRate);
+        float rangeMin = Mathf.Min(gainRange.x, gainRange.y);
+        float rangeMax = Mathf.Max(gainRange.x, gainRange.y);
+        float randomMultiplier = UnityEngine.Random.Range(rangeMin, rangeMax);
+        float statMultiplier = character.stats != null
+            ? Mathf.Max(0f, character.stats.auraEnergyMultiplier)
+            : 1f;
+        float energyToGain = Mathf.Max(0f, baseGainAmount) * randomMultiplier * statMultiplier * sameFrameHitMultiplier;
+
+        if (energyToGain <= 0f)
+            return false;
+
+        if (teamLoader == null)
         {
-            // Design Spec: 100% on defeat, 20% on normal hit
-            bool shouldGainAE = isDefeated || (UnityEngine.Random.value <= 0.2f);
-            if (!shouldGainAE) return;
-
-            float baseEnergy = 10f; // Design Spec: Base 10 AE
-            float multiplier = 1f;
-            if (playerCharacter.characterObject.stats != null)
-            {
-                multiplier = playerCharacter.characterObject.stats.auraEnergyMultiplier;
-            }
-
-            float energyToGain = baseEnergy * multiplier;
-
-            if (teamLoader == null)
-            {
-                teamLoader = Object.FindFirstObjectByType<TeamLoader>();
-            }
-
-            if (teamLoader != null)
-            {
-                teamLoader.AddCharacterAE(playerCharacter.characterObject, energyToGain);
-            }
+            teamLoader = Object.FindFirstObjectByType<TeamLoader>();
         }
+
+        if (teamLoader == null)
+            return false;
+
+        teamLoader.AddCharacterAE(character, energyToGain);
+        return true;
+    }
+
+    private static float ResolveAuraEnergyGainChance(AuraEnergyRate auraEnergyRate)
+    {
+        return auraEnergyRate switch
+        {
+            AuraEnergyRate.Low => 0.05f,
+            AuraEnergyRate.High => 0.15f,
+            _ => 0.10f
+        };
+    }
+
+    private static Vector2 ResolveAuraEnergyGainRange(AuraEnergyRate auraEnergyRate)
+    {
+        return auraEnergyRate switch
+        {
+            AuraEnergyRate.Low => new Vector2(0.3f, 1.0f),
+            AuraEnergyRate.High => new Vector2(0.5f, 1.2f),
+            _ => new Vector2(0.4f, 1.0f)
+        };
+    }
+
+    private float ConsumeSameFrameHitAuraMultiplier()
+    {
+        int currentFrame = Time.frameCount;
+        if (auraEnergySameFrameHitFrame != currentFrame)
+        {
+            auraEnergySameFrameHitFrame = currentFrame;
+            auraEnergySameFrameHitAttempts = 0;
+        }
+
+        int additionalHitIndex = auraEnergySameFrameHitAttempts;
+        auraEnergySameFrameHitAttempts++;
+
+        float floor = Mathf.Clamp01(auraEnergySameFrameHitMultiplierFloor);
+        float penalty = Mathf.Max(0f, auraEnergyAdditionalSameFrameHitPenalty) * additionalHitIndex;
+        return Mathf.Max(floor, 1f - penalty);
+    }
+
+    private bool TryConsumeAuraEnergyGrantSlot()
+    {
+        float now = Time.time;
+        float windowDuration = Mathf.Max(0.01f, auraEnergyGrantWindowSeconds);
+        if (now - auraEnergyGrantWindowStartedAt >= windowDuration)
+        {
+            auraEnergyGrantWindowStartedAt = now;
+            auraEnergyGrantsThisWindow = 0;
+        }
+
+        int grantLimit = Mathf.Max(1, auraEnergyGrantLimitPerWindow);
+        if (auraEnergyGrantsThisWindow >= grantLimit)
+            return false;
+
+        auraEnergyGrantsThisWindow++;
+        return true;
     }
 
     public ProjectileSpawnContext BuildProjectileSpawnContext(ProjectileSpawnHitbox projectileHitbox)
@@ -772,7 +882,9 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         int remainingHits = data != null ? Mathf.Max(1, data.maxHits) : 1;
         bool needsTarget = data != null && data.RequiresTarget;
 
-        var damageData = GetFinalAttackDamage(1f);
+        float baseDamage = GetBaseAttackDamage(1f);
+        CharacterObject sourceCharacter = playerCharacter != null ? playerCharacter.characterObject : null;
+        CharacterStats stats = sourceCharacter != null ? sourceCharacter.stats : null;
 
         return new ProjectileSpawnContext
         {
@@ -788,9 +900,15 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             origin = origin,
             direction = direction,
             resolvedSpawnOffset = resolvedSpawnOffset,
-            damage = damageData.damage,
-            isCrit = damageData.isCrit,
-            remainingHits = remainingHits
+            damage = baseDamage,
+            critRate = stats != null ? stats.critRate : 0f,
+            critDamage = stats != null ? stats.critDamage : 150f,
+            skillMastery = stats != null ? stats.skillMastery : 0f,
+            damageMastery = stats != null ? stats.damageMastery : 0f,
+            isSkillOrUltimate = currentAttackCategory == AttackCategory.Skill || currentAttackCategory == AttackCategory.Ultimate,
+            remainingHits = remainingHits,
+            sourceCombat = this,
+            sourceCharacter = sourceCharacter
         };
     }
 
@@ -861,8 +979,9 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             hitBoxController.ApplyHitbox(normalHitbox);
         }
 
-        var damageData = GetFinalAttackDamage(normalHitbox != null ? normalHitbox.damageMultiplier : 1f);
-        hitBoxDamage?.SetHitData(damageData.damage, damageData.isCrit, false, 0f, 0f, normalHitbox, currentAttackCategory, currentActionName, currentStepData, passiveController);
+        float baseDamage = GetBaseAttackDamage(normalHitbox != null ? normalHitbox.damageMultiplier : 1f);
+        hitBoxDamage?.SetHitData(baseDamage, false, false, 0f, 0f, normalHitbox, currentAttackCategory, currentActionName, currentStepData, passiveController);
+        ConfigurePerEnemyDamageCalculation(hitBoxDamage);
         hitBoxDamage?.ResetActivationState();
 
         CombatLog($"Active: (Frame {currentAttackFrame})");
@@ -885,8 +1004,9 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         };
         hitBoxController?.ApplyHitbox(grabHitbox);
 
-        var damageData = GetFinalAttackDamage(grabHitbox.damageMultiplier);
-        hitBoxDamage?.SetGrabData(damageData.damage, damageData.isCrit, grabHitbox, false, currentAttackCategory, currentActionName, currentStepData, passiveController);
+        float baseDamage = GetBaseAttackDamage(grabHitbox.damageMultiplier);
+        hitBoxDamage?.SetGrabData(baseDamage, false, grabHitbox, false, currentAttackCategory, currentActionName, currentStepData, passiveController);
+        ConfigurePerEnemyDamageCalculation(hitBoxDamage);
         hitBoxDamage?.ResetActivationState();
 
         CombatLog($"Grab Active: (Frame {currentAttackFrame})");
@@ -1138,44 +1258,36 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         }
     }
 
-    private (float damage, bool isCrit) GetFinalAttackDamage(float hitFrameMultiplier)
+    private float GetBaseAttackDamage(float hitFrameMultiplier)
     {
-        if (playerCharacter == null || playerCharacter.characterObject == null)
+        if (playerCharacter == null || playerCharacter.characterObject == null || playerCharacter.characterObject.stats == null)
         {
-            return (hitFrameMultiplier, false);
+            return hitFrameMultiplier;
         }
 
-        CharacterStats stats = playerCharacter.characterObject.stats;
-        float attackStat = stats.attack;
+        float attackStat = playerCharacter.characterObject.stats.attack;
         if (passiveController != null)
         {
             attackStat = passiveController.ModifyValue(PassiveModifierTarget.AttackStat, attackStat);
         }
-        
-        bool isSkillOrUlt = currentAttackCategory == AttackCategory.Skill || currentAttackCategory == AttackCategory.Ultimate;
-        
-        float finalDamage = CombatFormula.CalculateOutgoingDamage(
-            baseAttack: attackStat,
-            actionMultiplier: hitFrameMultiplier,
-            critRate: stats.critRate,
-            critDmg: stats.critDamage,
-            skillMastery: stats.skillMastery,
-            dmgMastery: stats.damageMastery,
-            isSkillOrUlt: isSkillOrUlt,
-            out bool isCrit);
 
-        if (passiveController != null)
+        return Mathf.Max(0f, attackStat * hitFrameMultiplier);
+    }
+
+    private void ConfigurePerEnemyDamageCalculation(HitBoxDamage targetHitBoxDamage)
+    {
+        if (targetHitBoxDamage == null || playerCharacter == null || playerCharacter.characterObject == null || playerCharacter.characterObject.stats == null)
         {
-            PassiveModifierTarget modifierTarget = currentAttackCategory switch
-            {
-                AttackCategory.Skill => PassiveModifierTarget.SkillDamage,
-                AttackCategory.Ultimate => PassiveModifierTarget.UltimateDamage,
-                _ => PassiveModifierTarget.BasicAttackDamage
-            };
-            finalDamage = passiveController.ModifyValue(modifierTarget, finalDamage);
+            return;
         }
 
-        return (finalDamage, isCrit);
+        CharacterStats stats = playerCharacter.characterObject.stats;
+        targetHitBoxDamage.ConfigurePerEnemyDamageCalculation(
+            stats.critRate,
+            stats.critDamage,
+            stats.skillMastery,
+            stats.damageMastery,
+            currentAttackCategory == AttackCategory.Skill || currentAttackCategory == AttackCategory.Ultimate);
     }
 
     public float GetFinalCooldown(AttackCategory category, float baseValue, string actionName = null)

@@ -680,26 +680,35 @@ namespace CombatEditor.UI
                     MarkDirty();
                 });
 
+                AddSeparator(body, "Aura Energy Reward");
+                AddFloatField(body, "Aura Energy Gain", action.auraEnergyGainAmount, value => {
+                    RecordUndo("Edit Aura Energy Gain");
+                    action.auraEnergyGainAmount = Mathf.Max(0f, value);
+                    MarkDirty();
+                });
+
                 AddSeparator(body, "Advanced Conditions");
                 BuildConditionList(body, action.conditions, $"action_conditions_{action.actionName}", "Action");
 
                 if (action is SkillAction skill)
                 {
-                    AddSeparator(body, "Resource Cost");
+                    AddSeparator(body, "Cooldown");
                     AddFloatField(body, "Cooldown", skill.cooldown, value => {
                         RecordUndo("Edit Cooldown");
-                        skill.cooldown = value;
-                        MarkDirty();
-                    });
-                    AddFloatField(body, "Energy Cost", skill.energyCost, value => {
-                        RecordUndo("Edit Energy Cost");
-                        skill.energyCost = value;
+                        skill.cooldown = Mathf.Max(0f, value);
                         MarkDirty();
                     });
                 }
 
                 if (action is UltimateAction ultimate)
                 {
+                    AddSeparator(body, "Aura Energy Cost");
+                    AddFloatField(body, "AE Cost", ultimate.energyCost, value => {
+                        RecordUndo("Edit Ultimate AE Cost");
+                        ultimate.energyCost = Mathf.Max(0f, value);
+                        MarkDirty();
+                    });
+
                     AddSeparator(body, "Activation FX (Plays during black screen)");
                     AddEnumField(body, "VFX Type", ultimate.activationVFXType, value => {
                         RecordUndo("Edit Ultimate VFX Type");

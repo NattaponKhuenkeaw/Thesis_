@@ -7,10 +7,11 @@ namespace Project.InventorySystem.Items
     {
         [Header("Artifact Specifics")]
         public bool isEquippable = true;
+        [TextArea(3, 5)]
+        public string passiveDescription = "Unique passive effect description here.";
 
         [Header("Stat Bonuses")]
-        public float bonusATK = 0f;
-        public float bonusDEF = 0f;
-        public float bonusHP = 0f;
+        [Tooltip("Bonuses applied when this artifact is equipped. Can be positive or negative.")]
+        public CharacterStats bonusStats;
     }
 }

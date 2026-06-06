@@ -26,6 +26,10 @@ public abstract class CombatAction
     [Header("Ground Authority")]
     [Tooltip("If this action starts on the ground, losing physical ground contact is allowed to promote it into an airborne action state.")]
     public bool allowGroundToAirTransition = false;
+
+    [Header("Aura Energy Reward")]
+    [Tooltip("Aura Energy granted once when this action starts, before Aura Energy Multiplier.")]
+    public float auraEnergyGainAmount = 0f;
     
     [Header("Combo Tree")]
     public ComboTree comboTree;
@@ -47,14 +51,16 @@ public class SkillAction : CombatAction
     [Header("Resource Cost")]
     [Tooltip("Cooldown in seconds (0 = no cooldown).")]
     public float cooldown = 0f;
-    [Tooltip("Energy cost for this action (0 = free).")]
-    public float energyCost = 0f;
 }
 
 [System.Serializable]
 public class UltimateAction : SkillAction
 {
     public override AttackCategory Category => AttackCategory.Ultimate;
+
+    [Header("Aura Energy Cost")]
+    [Tooltip("Base AE cost before CDR cost reduction. Values <= 0 fall back to the default 100 AE cost.")]
+    public float energyCost = 100f;
 
     [Header("Activation VFX")]
     [Tooltip("VFX spawned when the background turns black during activation.")]

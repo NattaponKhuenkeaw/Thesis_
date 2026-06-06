@@ -154,8 +154,12 @@ namespace Project.TeamBuilder.UI
             UpdateGhostPosition(eventData);
 
             // Make original semi-transparent during drag
-            canvasGroup.alpha = 0.5f;
-            canvasGroup.blocksRaycasts = false;
+            if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 0.5f;
+                canvasGroup.blocksRaycasts = false;
+            }
         }
 
         public void OnDrag(PointerEventData eventData)
@@ -173,13 +177,13 @@ namespace Project.TeamBuilder.UI
             // Restore original appearance
             if (!isInTeam)
             {
-                canvasGroup.alpha = 1f;
+                if (canvasGroup != null) canvasGroup.alpha = 1f;
             }
             else
             {
-                canvasGroup.alpha = inTeamAlpha;
+                if (canvasGroup != null) canvasGroup.alpha = inTeamAlpha;
             }
-            canvasGroup.blocksRaycasts = true;
+            if (canvasGroup != null) canvasGroup.blocksRaycasts = true;
         }
 
         /// <summary>

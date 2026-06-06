@@ -21,7 +21,7 @@ public class CharacterSwitchSlot : MonoBehaviour
     public Image cooldownFill;
     public TMP_Text cooldownText;
 
-    private int lastCooldownSecond = -1;
+    private string lastCooldownText = string.Empty;
     private bool isCooldownVisible;
 
     private int slotIndex;
@@ -124,7 +124,8 @@ public class CharacterSwitchSlot : MonoBehaviour
             }
             else
             {
-                actualMax = boundCharacter.stats != null ? boundCharacter.stats.maxAuraEnergy : 100f;
+                actualMax = TeamLoader.DefaultUltimateAuraEnergyCost
+                    * TeamLoader.UltimateAuraEnergyStackMultiplier;
             }
         }
 
@@ -177,11 +178,11 @@ public class CharacterSwitchSlot : MonoBehaviour
             if (!isCooldownVisible)
                 cooldownText.gameObject.SetActive(true);
 
-            int currentSecond = Mathf.CeilToInt(remainingCooldown);
-            if (currentSecond != lastCooldownSecond)
+            string currentText = FormatCooldownText(remainingCooldown);
+            if (currentText != lastCooldownText)
             {
-                cooldownText.text = currentSecond.ToString();
-                lastCooldownSecond = currentSecond;
+                cooldownText.text = currentText;
+                lastCooldownText = currentText;
             }
         }
 
@@ -202,6 +203,13 @@ public class CharacterSwitchSlot : MonoBehaviour
         isCooldownVisible = visible;
 
         if (!visible)
-            lastCooldownSecond = -1;
+            lastCooldownText = string.Empty;
+    }
+
+    private static string FormatCooldownText(float seconds)
+    {
+        return seconds < 1f
+            ? seconds.ToString("0.0")
+            : Mathf.CeilToInt(seconds).ToString();
     }
 }

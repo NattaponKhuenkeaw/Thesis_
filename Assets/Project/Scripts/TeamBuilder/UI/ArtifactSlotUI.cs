@@ -9,7 +9,7 @@ namespace Project.TeamBuilder.UI
     /// A mini artifact slot inside each TeamSlotUI.
     /// Accepts artifact drops and notifies parent to recalculate stats.
     /// </summary>
-    public class ArtifactSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler
+    public class ArtifactSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler
     {
         // =========================================================
         // UI References
@@ -95,12 +95,34 @@ namespace Project.TeamBuilder.UI
         }
 
         // =========================================================
+        // Drag Ghost State
+        // =========================================================
+        private Transform dragGhost;
+        private Canvas rootCanvas;
+
+        // =========================================================
         // Drop Handler
         // =========================================================
         public void OnDrop(PointerEventData eventData)
         {
-            // Future: handle artifact drag-drop here
-            // For now, artifacts are assigned programmatically or via button
+            SetDropHighlight(false);
+
+            if (parentSlot == null) return;
+
+            // Handle drop from ArtifactGridItemUI
+            ArtifactGridItemUI gridItem = eventData.pointerDrag?.GetComponent<ArtifactGridItemUI>();
+            if (gridItem != null && gridItem.ArtifactData != null)
+            {
+                parentSlot.HandleArtifactDrop(this, gridItem.ArtifactData);
+                return;
+            }
+
+            // Handle drop from another ArtifactSlotUI
+            ArtifactSlotUI sourceSlot = eventData.pointerDrag?.GetComponent<ArtifactSlotUI>();
+            if (sourceSlot != null && sourceSlot != this && sourceSlot.GetArtifact() != null)
+            {
+                parentSlot.HandleArtifactSwap(this, sourceSlot);
+            }
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -110,8 +132,133 @@ namespace Project.TeamBuilder.UI
                 return;
             }
 
-            int direction = eventData != null && eventData.button == PointerEventData.InputButton.Right ? -1 : 1;
-            parentSlot.HandleArtifactSlotClicked(this, direction);
+            // Only Right-Click is supported now (to remove)
+            if (eventData != null && eventData.button == PointerEventData.InputButton.Right)
+            {
+                parentSlot.HandleArtifactSlotClicked(this, -1);
+            }
+        }
+
+        // =========================================================
+        // Slot-to-Slot Dragging
+        // =========================================================
+        public void OnBeginDrag(PointerEventData eventData)
+        {
+            if (currentArtifact == null) return;
+
+            if (rootCanvas == null)
+            {
+                rootCanvas = GetComponentInParent<Canvas>()?.rootCanvas;
+            }
+
+            if (rootCanvas == null) return;
+
+            GameObject ghostObj = new GameObject("ArtifactSlotDragGhost");
+            dragGhost = ghostObj.transform;
+            dragGhost.SetParent(rootCanvas.transform, false);
+
+            Image ghostImage = ghostObj.AddComponent<Image>();
+            if (artifactIcon != null && artifactIcon.sprite != null)
+            {
+                ghostImage.sprite = artifactIcon.sprite;
+            }
+            ghostImage.raycastTarget = false;
+
+            RectTransform ghostRect = ghostObj.GetComponent<RectTransform>();
+            ghostRect.anchorMin = Vector2.zero;
+            ghostRect.anchorMax = Vector2.zero;
+            ghostRect.pivot = new Vector2(0.5f, 0.5f);
+            ghostRect.sizeDelta = new Vector2(60f, 60f);
+            ghostImage.color = new Color(1f, 1f, 1f, 0.85f);
+
+            UpdateGhostPosition(eventData);
+
+            if (artifactIcon != null)
+            {
+                artifactIcon.color = new Color(1f, 1f, 1f, 0.5f);
+            }
+        }
+
+        public void OnDrag(PointerEventData eventData)
+        {
+            if (dragGhost == null) return;
+            UpdateGhostPosition(eventData);
+        }
+
+        public void OnEndDrag(PointerEventData eventData)
+        {
+            if (dragGhost != null)
+            {
+                Destroy(dragGhost.gameObject);
+            }
+
+            if (artifactIcon != null && currentArtifact != null)
+            {
+                artifactIcon.color = Color.white;
+            }
+
+            // If dropped outside of any valid drop target, remove it
+            GameObject dropTarget = eventData.pointerEnter;
+            if (dropTarget == null || dropTarget.GetComponentInParent<ArtifactSlotUI>() == null)
+            {
+                if (parentSlot != null)
+                {
+                    parentSlot.HandleArtifactSlotClicked(this, -1); // Remove
+                }
+            }
+        }
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            if (eventData.dragging) SetDropHighlight(true);
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            SetDropHighlight(false);
+        }
+
+        private void UpdateGhostPosition(PointerEventData eventData)
+        {
+            if (dragGhost == null || rootCanvas == null) return;
+
+            RectTransform ghostRect = dragGhost as RectTransform;
+            if (rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay)
+            {
+                RectTransform canvasRect = rootCanvas.GetComponent<RectTransform>();
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    canvasRect, eventData.position, null, out Vector2 localPoint
+                );
+                Vector2 pivotOffset = canvasRect.pivot * canvasRect.rect.size;
+                ghostRect.anchoredPosition = localPoint + pivotOffset;
+            }
+            else
+            {
+                RectTransform canvasRect = rootCanvas.GetComponent<RectTransform>();
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    canvasRect, eventData.position, rootCanvas.worldCamera, out Vector2 localPoint
+                );
+                Vector2 pivotOffset = canvasRect.pivot * canvasRect.rect.size;
+                ghostRect.anchoredPosition = localPoint + pivotOffset;
+            }
+        }
+
+        // =========================================================
+        // Visual Highlights
+        // =========================================================
+        public void SetDropHighlight(bool highlighted)
+        {
+            if (slotBackground != null)
+            {
+                if (highlighted)
+                {
+                    slotBackground.color = new Color(1f, 1f, 1f, 0.5f); // Highlight color
+                }
+                else
+                {
+                    slotBackground.color = (currentArtifact != null) ? filledSlotColor : emptySlotColor;
+                }
+            }
         }
     }
 }

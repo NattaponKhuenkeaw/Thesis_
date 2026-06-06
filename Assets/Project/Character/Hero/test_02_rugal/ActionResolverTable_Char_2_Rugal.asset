@@ -17,6 +17,8 @@ MonoBehaviour:
     context: 0
     priority: 0
     conditions: []
+    allowGroundToAirTransition: 0
+    auraEnergyGainAmount: 10
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
@@ -26,6 +28,8 @@ MonoBehaviour:
     context: 1
     priority: 1
     conditions: []
+    allowGroundToAirTransition: 0
+    auraEnergyGainAmount: 10
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
@@ -36,25 +40,28 @@ MonoBehaviour:
     context: 2
     priority: 0
     conditions: []
+    allowGroundToAirTransition: 0
+    auraEnergyGainAmount: 10
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
       rootNode:
         rid: 1588255929706479995
     cooldown: 2
-    energyCost: 0
   ultimateActions:
   - actionName: Gigantic Pressure
     context: 0
     priority: 0
     conditions: []
+    allowGroundToAirTransition: 0
+    auraEnergyGainAmount: 10
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
       rootNode:
         rid: 1588255929706480004
     cooldown: 7
-    energyCost: 0
+    energyCost: 50
     activationVFXType: 40
     activationVFXPrefab: {fileID: 0}
     activationVFXOffset: {x: -0.5, y: 3, z: 0}
@@ -1200,6 +1207,21 @@ MonoBehaviour:
               flashColor: {r: 1, g: 1, b: 1, a: 1}
               darkColor: {r: 0, g: 0, b: 0, a: 0.85}
             cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0.4
+              endStrength: 0.08
+              duration: 0.14
+              pulseInterval: 0.025
+              slowMotion:
+                enabled: 0
+                timeScale: 0.35
+                duration: 0.08
+                delaySeconds: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
     - rid: 1588256162561392740
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:

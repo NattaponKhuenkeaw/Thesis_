@@ -257,14 +257,14 @@ namespace Project.TeamBuilder.UI
             for (int i = 0; i < artifactSlots.Length; i++)
             {
                 ArtifactSlotUI slot = artifactSlots[i];
-                if (slot == null || slot.CurrentArtifact == null)
+                if (slot == null || slot.CurrentArtifact == null || slot.CurrentArtifact.bonusStats == null)
                 {
                     continue;
                 }
 
-                bonusAttack += slot.CurrentArtifact.bonusATK;
-                bonusDefense += slot.CurrentArtifact.bonusDEF;
-                bonusHp += slot.CurrentArtifact.bonusHP;
+                bonusAttack += slot.CurrentArtifact.bonusStats.attack;
+                bonusDefense += slot.CurrentArtifact.bonusStats.defense;
+                bonusHp += slot.CurrentArtifact.bonusStats.maxHP;
             }
 
             UpdateStatFeedback(atkText, ref atkFeedbackCoroutine, ref lastAttackBase, ref lastAttackBonus, baseStats.attack, bonusAttack);
@@ -435,11 +435,69 @@ namespace Project.TeamBuilder.UI
                 return;
             }
 
-            if (parentBuilder.TryResolveArtifactSelection(slot.GetArtifact(), direction, out Artifact nextArtifact))
+            // Right-click = remove artifact
+            if (direction < 0)
             {
-                slot.SetArtifact(nextArtifact);
+                slot.ClearArtifact();
                 parentBuilder.OnSlotChanged();
             }
+        }
+
+        public void HandleArtifactDrop(ArtifactSlotUI targetSlot, Artifact newArtifact)
+        {
+            if (parentBuilder == null || currentCharacter == null || targetSlot == null || newArtifact == null) return;
+
+            if (parentBuilder.CurrentMode == TeamBuilderMode.CombatZone)
+            {
+                PlayLockedFeedback();
+                return;
+            }
+
+            // Check if this artifact is already equipped somewhere else
+            TeamSlotUI existingSlot = parentBuilder.FindSlotWithArtifact(newArtifact);
+            if (existingSlot != null)
+            {
+                ArtifactSlotUI oldSubSlot = existingSlot.FindArtifactSlotWith(newArtifact);
+                if (oldSubSlot != null)
+                {
+                    oldSubSlot.ClearArtifact();
+                    existingSlot.RecalculateStats();
+                }
+            }
+
+            targetSlot.SetArtifact(newArtifact);
+            parentBuilder.OnSlotChanged();
+        }
+
+        public void HandleArtifactSwap(ArtifactSlotUI targetSlot, ArtifactSlotUI sourceSlot)
+        {
+            if (parentBuilder == null || currentCharacter == null || targetSlot == null || sourceSlot == null) return;
+
+            if (parentBuilder.CurrentMode == TeamBuilderMode.CombatZone)
+            {
+                PlayLockedFeedback();
+                return;
+            }
+
+            Artifact temp = targetSlot.GetArtifact();
+            targetSlot.SetArtifact(sourceSlot.GetArtifact());
+            sourceSlot.SetArtifact(temp);
+
+            parentBuilder.OnSlotChanged();
+        }
+
+        public ArtifactSlotUI FindArtifactSlotWith(Artifact artifact)
+        {
+            if (artifact == null) return null;
+
+            for (int i = 0; i < artifactSlots.Length; i++)
+            {
+                if (artifactSlots[i] != null && artifactSlots[i].GetArtifact() == artifact)
+                {
+                    return artifactSlots[i];
+                }
+            }
+            return null;
         }
 
         public Artifact[] GetEquippedArtifactsSnapshot()

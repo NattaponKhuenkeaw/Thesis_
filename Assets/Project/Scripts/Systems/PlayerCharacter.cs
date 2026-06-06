@@ -231,6 +231,14 @@ public class PlayerCharacter : MonoBehaviour
     /// </summary>
     public bool HasActionForContext(AttackCategory category)
     {
+        return TryResolveActionForContext(category, out _, out _);
+    }
+
+    public bool TryResolveActionForContext(AttackCategory category, out CombatAction action, out AttackStepData step)
+    {
+        action = null;
+        step = null;
+
         if (characterObject == null || characterObject.actionResolverTable == null)
             return false;
 
@@ -250,7 +258,9 @@ public class PlayerCharacter : MonoBehaviour
 
         // Standard ActionResolver used for one-off validation
         ActionResolver resolver = new ActionResolver();
-        return resolver.ResolveInitial(ctx, characterObject.actionResolverTable, category) != null;
+        step = resolver.ResolveInitial(ctx, characterObject.actionResolverTable, category);
+        action = resolver.ActiveCombatAction;
+        return step != null;
     }
 
     // =========================================================

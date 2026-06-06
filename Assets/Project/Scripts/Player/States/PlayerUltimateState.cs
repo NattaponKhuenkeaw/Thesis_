@@ -96,18 +96,21 @@ public class PlayerUltimateState : CombatPlayerState
             }
 
             TeamLoader teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
+            activeUltimateAction = resolver.ActiveCombatAction as UltimateAction;
             float currentAE = teamLoader != null ? teamLoader.GetCharacterCurrentAE(player.characterObject) : 0f;
-            float cost = teamLoader != null ? teamLoader.GetUltimateCost(player.characterObject) : 100f;
+            float cost = teamLoader != null
+                ? teamLoader.GetUltimateCost(player.characterObject, activeUltimateAction)
+                : TeamLoader.DefaultUltimateAuraEnergyCost;
 
             if (currentAE < cost)
             {
                 fsm.Log("Ultimate", "Not enough Aura Energy for Ultimate", Color.yellow);
+                AbilityUIManager.Instance?.PlayAbilityRejectedFeedback(AbilityUIManager.AbilityType.Ultimate);
                 resolver.Reset();
                 ExitToAppropriateMovementState();
                 return;
             }
 
-            activeUltimateAction = resolver.ActiveCombatAction as UltimateAction;
             ExecuteCombatStep(step, ctx, false);
 
             if (activeUltimateAction != null && activeUltimateAction.useDashAfterImage && player.Movement != null)
@@ -160,7 +163,7 @@ public class PlayerUltimateState : CombatPlayerState
                 TeamLoader teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
                 if (teamLoader != null && player.characterObject != null)
                 {
-                    float cost = teamLoader.GetUltimateCost(player.characterObject);
+                    float cost = teamLoader.GetUltimateCost(player.characterObject, activeUltimateAction);
                     teamLoader.AddCharacterAE(player.characterObject, -cost);
                 }
             }

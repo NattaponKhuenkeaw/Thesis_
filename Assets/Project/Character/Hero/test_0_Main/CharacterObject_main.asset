@@ -28,6 +28,8 @@ MonoBehaviour:
     skillMastery: 0
     damageMastery: 0
     damageResistance: 0
+    auraEnergyMultiplier: 1
+    auraEnergyRate: 1
   metaData:
     displayName: Main
     description: 

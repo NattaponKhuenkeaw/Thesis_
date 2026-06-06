@@ -150,12 +150,12 @@ public class BackgroundUltimateExecutor : MonoBehaviour
                 box.size = normalHitbox.size;
             }
 
-            var damageData = GetFinalAttackDamage(normalHitbox.damageMultiplier);
+            float baseDamage = GetBaseAttackDamage(normalHitbox.damageMultiplier);
             if (cloneHitboxDamage != null)
             {
                 cloneHitboxDamage.SetHitData(
-                    damageData.damage,
-                    damageData.isCrit,
+                    baseDamage,
+                    false,
                     false,
                     0f,
                     0f,
@@ -164,6 +164,7 @@ public class BackgroundUltimateExecutor : MonoBehaviour
                     ultimateStep.stepName,
                     ultimateStep,
                     null);
+                ConfigurePerEnemyDamageCalculation(cloneHitboxDamage);
                 cloneHitboxDamage.ResetActivationState();
             }
 
@@ -213,25 +214,29 @@ public class BackgroundUltimateExecutor : MonoBehaviour
         }
     }
 
-    private (float damage, bool isCrit) GetFinalAttackDamage(float hitFrameMultiplier)
+    private float GetBaseAttackDamage(float hitFrameMultiplier)
     {
         if (castingStats == null)
         {
-            return (hitFrameMultiplier, false);
+            return hitFrameMultiplier;
         }
 
-        float attackStat = castingStats.attack;
-        float finalDamage = CombatFormula.CalculateOutgoingDamage(
-            baseAttack: attackStat,
-            actionMultiplier: hitFrameMultiplier,
-            critRate: castingStats.critRate,
-            critDmg: castingStats.critDamage,
-            skillMastery: castingStats.skillMastery,
-            dmgMastery: castingStats.damageMastery,
-            isSkillOrUlt: true,
-            out bool isCrit);
+        return Mathf.Max(0f, castingStats.attack * hitFrameMultiplier);
+    }
 
-        return (finalDamage, isCrit);
+    private void ConfigurePerEnemyDamageCalculation(HitBoxDamage targetHitBoxDamage)
+    {
+        if (targetHitBoxDamage == null || castingStats == null)
+        {
+            return;
+        }
+
+        targetHitBoxDamage.ConfigurePerEnemyDamageCalculation(
+            castingStats.critRate,
+            castingStats.critDamage,
+            castingStats.skillMastery,
+            castingStats.damageMastery,
+            true);
     }
 
     /// <summary>Cleans up the executor and destroys the clone GameObject.</summary>

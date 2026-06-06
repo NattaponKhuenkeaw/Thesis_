@@ -12,7 +12,14 @@ public class HitBoxDamage : MonoBehaviour
     private NormalHitbox currentNormalHitbox;
     private GrabHitbox currentGrabHitbox;
     private float currentDamage = 1f;
+    private float currentResolvedDamage = 1f;
     private bool currentIsCrit = false;
+    private bool usePerEnemyDamageCalculation;
+    private float currentCritRate;
+    private float currentCritDamage = 150f;
+    private float currentSkillMastery;
+    private float currentDamageMastery;
+    private bool currentIsSkillOrUltimate;
     private bool hasTriggeredShakeThisActivation;
     private bool hasTriggeredHitStopThisActivation;
     private PlayerCombat playerCombat;
@@ -72,7 +79,9 @@ public class HitBoxDamage : MonoBehaviour
         CharacterPassiveController sourcePassiveController)
     {
         currentDamage = damage;
+        currentResolvedDamage = damage;
         currentIsCrit = isCrit;
+        usePerEnemyDamageCalculation = false;
         currentNormalHitbox = hitbox;
         currentGrabHitbox = null;
         sourceCategory = category;
@@ -92,7 +101,9 @@ public class HitBoxDamage : MonoBehaviour
         CharacterPassiveController sourcePassiveController)
     {
         currentDamage = damage;
+        currentResolvedDamage = damage;
         currentIsCrit = isCrit;
+        usePerEnemyDamageCalculation = false;
         currentGrabHitbox = hitbox;
         currentNormalHitbox = null;
         sourceCategory = category;
@@ -104,6 +115,23 @@ public class HitBoxDamage : MonoBehaviour
     public void SetProjectileOwner(ProjectileRuntime owner)
     {
         projectileOwner = owner;
+    }
+
+    public void ConfigurePerEnemyDamageCalculation(
+        float critRate,
+        float critDamage,
+        float skillMastery,
+        float damageMastery,
+        bool isSkillOrUltimate)
+    {
+        usePerEnemyDamageCalculation = true;
+        currentCritRate = Mathf.Max(0f, critRate);
+        currentCritDamage = Mathf.Max(0f, critDamage);
+        currentSkillMastery = skillMastery;
+        currentDamageMastery = damageMastery;
+        currentIsSkillOrUltimate = isSkillOrUltimate;
+        currentIsCrit = false;
+        currentResolvedDamage = currentDamage;
     }
 
     public void ResetActivationState()
@@ -128,6 +156,7 @@ public class HitBoxDamage : MonoBehaviour
         hitEnemiesThisActivation.Add(enemy);
 
         Vector2 direction = GetHitDirection();
+        ResolveDamageAgainstEnemy(enemy);
         HitReactionData reactionData = currentGrabHitbox != null
             ? BuildGrabReactionData(direction)
             : BuildReactionData(enemy, direction);
@@ -207,32 +236,70 @@ public class HitBoxDamage : MonoBehaviour
             UltimateFlashOverlay.Instance.PlayHitFlash();
         }
 
+        bool isDefeated = enemy != null && !enemy.IsAlive;
+
         // Propagate hit and defeat status to PlayerCombat for Aura Energy generation
         if (playerCombat != null)
         {
-            bool isDefeated = enemy != null && !enemy.IsAlive;
             playerCombat.NotifyEnemyHit(enemy, isDefeated);
             
             // Log to Training Debug Stats
             if (CombatCore.TrainingDebugStats.Instance != null)
-                CombatCore.TrainingDebugStats.Instance.RecordHit(enemy, currentDamage);
+                CombatCore.TrainingDebugStats.Instance.RecordHit(enemy, reactionData.damage);
         }
         else
         {
             passiveController?.NotifyHitDealt(sourceCategory, sourceActionName, sourceStepData, enemy);
+            projectileOwner?.NotifyEnemyHit(enemy, isDefeated);
             
             // Log to Training Debug Stats even if from passive/AI hit
             if (CombatCore.TrainingDebugStats.Instance != null)
-                CombatCore.TrainingDebugStats.Instance.RecordHit(enemy, currentDamage);
+                CombatCore.TrainingDebugStats.Instance.RecordHit(enemy, reactionData.damage);
         }
 
         projectileOwner?.RegisterSuccessfulHit(enemy);
     }
 
+    private void ResolveDamageAgainstEnemy(EnemyController enemy)
+    {
+        currentResolvedDamage = currentDamage;
+        if (!usePerEnemyDamageCalculation || enemy == null)
+        {
+            return;
+        }
+
+        float mitigatedDamage = CombatFormula.CalculateIncomingDamage(currentDamage, enemy.defense, enemy.damageRes);
+        currentIsCrit = Random.Range(0f, 100f) <= currentCritRate;
+
+        float damageAfterCrit = currentIsCrit
+            ? mitigatedDamage * (currentCritDamage / 100f)
+            : mitigatedDamage;
+
+        float finalDamage = damageAfterCrit * (1f + currentDamageMastery / 100f);
+        if (currentIsSkillOrUltimate)
+        {
+            finalDamage *= 1f + currentSkillMastery / 100f;
+        }
+
+        if (passiveController != null)
+        {
+            PassiveModifierTarget modifierTarget = sourceCategory switch
+            {
+                AttackCategory.Skill => PassiveModifierTarget.SkillDamage,
+                AttackCategory.Ultimate => PassiveModifierTarget.UltimateDamage,
+                _ => PassiveModifierTarget.BasicAttackDamage
+            };
+            finalDamage = passiveController.ModifyValue(modifierTarget, finalDamage);
+        }
+
+        currentResolvedDamage = Mathf.Max(0f, finalDamage);
+    }
+
     private HitReactionData BuildReactionData(EnemyController enemy, Vector2 direction)
     {
-        HitReactionData data = HitReactionData.Default(currentDamage, direction, 0f);
+        HitReactionData data = HitReactionData.Default(currentResolvedDamage, direction, 0f);
         data.isCriticalHit = currentIsCrit;
+        data.damageIsFinal = usePerEnemyDamageCalculation;
         PopulateRuntimeContext(ref data);
 
         if (currentNormalHitbox != null)
@@ -278,8 +345,9 @@ public class HitBoxDamage : MonoBehaviour
 
     private HitReactionData BuildGrabReactionData(Vector2 direction)
     {
-        HitReactionData data = HitReactionData.Default(currentDamage, direction, 0f);
+        HitReactionData data = HitReactionData.Default(currentResolvedDamage, direction, 0f);
         data.isCriticalHit = currentIsCrit;
+        data.damageIsFinal = usePerEnemyDamageCalculation;
         PopulateRuntimeContext(ref data);
 
         if (currentGrabHitbox == null)

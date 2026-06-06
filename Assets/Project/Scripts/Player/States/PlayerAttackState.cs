@@ -148,6 +148,12 @@ public class PlayerAttackState : CombatPlayerState
     {
         if (!CanBeInterruptedBy(ActionCategory.Skill)) return;
 
+        if (!fsm.CanStartSkillAction(true))
+        {
+            Buffer?.ConsumeSkill();
+            return;
+        }
+
         Buffer?.ConsumeSkill();
         fsm.ChangeState(fsm.SkillState);
         fsm.CurrentState.OnSkillInput();
@@ -162,6 +168,12 @@ public class PlayerAttackState : CombatPlayerState
     public override void OnUltimateInput()
     {
         if (!CanBeInterruptedBy(ActionCategory.Ultimate)) return;
+
+        if (!fsm.CanStartUltimateAction(true))
+        {
+            Buffer?.ConsumeUltimate();
+            return;
+        }
 
         Buffer?.ConsumeUltimate();
         fsm.ChangeState(fsm.UltimateState);

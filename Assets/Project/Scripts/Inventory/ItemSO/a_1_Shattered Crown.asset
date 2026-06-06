@@ -16,6 +16,21 @@ MonoBehaviour:
   itemName: Shattered Crown
   description: 'Passive: +15% CRIT rate. Broken fragments orbit the wearer, dealing
     minor splash on hit.'
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: d5a382783dfb61c4292b7cd32ac523e9, type: 3}
   price: 800
   isEquippable: 1
+  passiveDescription: Unique passive effect description here.
+  bonusStats:
+    maxHP: 0
+    attack: 0
+    defense: 0
+    speed: 0
+    elementalMultiplier: 0
+    critRate: 15
+    critDamage: 35
+    cooldownReduction: 0
+    skillMastery: 0
+    damageMastery: 0
+    damageResistance: 0
+    auraEnergyMultiplier: 0
+    auraEnergyRate: 1

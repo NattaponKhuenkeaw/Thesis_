@@ -41,7 +41,8 @@ namespace Project.TeamBuilder.UI
         // Panels
         // =========================================================
         [Header("Panels")]
-        [SerializeField] private CharacterGridInventoryUI gridPanel;
+        [SerializeField] private InventoryBuilderPanel inventoryPanel;
+        [SerializeField] private ArtifactPreviewPanel artifactPreviewPanel;
         [SerializeField] private TeamSlotUI[] teamSlots = new TeamSlotUI[3];
         [SerializeField] private GameObject playerHolderButton;
         [SerializeField] private bool openGridPanelOnSafeZoneOpen = false;
@@ -56,7 +57,6 @@ namespace Project.TeamBuilder.UI
         // Runtime State
         // =========================================================
         private bool isInitialized = false;
-        private bool isGridPanelOpen = false;
         private int panelOpenedFrame = -1;
         private int stagedActiveIndex = 0;
         private bool hasDraftChanges = false;
@@ -83,7 +83,7 @@ namespace Project.TeamBuilder.UI
 
         private void Update()
         {
-            if (currentMode != TeamBuilderMode.SafeZone || !isGridPanelOpen)
+            if (currentMode != TeamBuilderMode.SafeZone || (inventoryPanel == null || !inventoryPanel.IsCharacterGridOpen))
             {
                 return;
             }
@@ -142,9 +142,12 @@ namespace Project.TeamBuilder.UI
 
             EnsureDeployConfirmationPanel();
 
-            // Initialize the grid panel
-            if (gridPanel != null)
-                gridPanel.Init(this, rootCanvas);
+            // Initialize the grid panels
+            if (inventoryPanel != null)
+            {
+                inventoryPanel.Init(this, rootCanvas);
+                inventoryPanel.SubscribeToArtifactClicks(HandleArtifactClicked);
+            }
 
             // Initialize each team slot
             for (int i = 0; i < teamSlots.Length; i++)
@@ -176,9 +179,9 @@ namespace Project.TeamBuilder.UI
                 LoadRuntimeDraft();
             }
 
-            isGridPanelOpen = currentMode == TeamBuilderMode.SafeZone && openGridPanelOnSafeZoneOpen;
-            if (isGridPanelOpen)
+            if (currentMode == TeamBuilderMode.SafeZone && openGridPanelOnSafeZoneOpen)
             {
+                if (inventoryPanel != null) inventoryPanel.ToggleCharacterGrid();
                 panelOpenedFrame = Time.frameCount;
             }
             RefreshGrid();
@@ -199,7 +202,7 @@ namespace Project.TeamBuilder.UI
         public void OnPanelClosed()
         {
             pendingCloseAfterDeploy = null;
-            isGridPanelOpen = false;
+            if (inventoryPanel != null) inventoryPanel.CloseAll();
             isPanelSessionActive = false;
             ClearDraftCache();
             HideDeployConfirmation();
@@ -211,15 +214,20 @@ namespace Project.TeamBuilder.UI
                 inspectScreenUI.Close();
             }
 
+            if (artifactPreviewPanel != null && artifactPreviewPanel.IsOpen)
+            {
+                artifactPreviewPanel.Close();
+            }
+
             ApplyModeVisualState();
         }
 
         public void SetMode(TeamBuilderMode mode)
         {
             currentMode = mode;
-            if (currentMode == TeamBuilderMode.CombatZone)
+            if (currentMode == TeamBuilderMode.CombatZone && inventoryPanel != null)
             {
-                isGridPanelOpen = false;
+                inventoryPanel.CloseAll();
             }
 
             ApplyModeVisualState();
@@ -227,12 +235,8 @@ namespace Project.TeamBuilder.UI
 
         public void OpenCharacterGridPanel()
         {
-            if (currentMode != TeamBuilderMode.SafeZone)
-            {
-                return;
-            }
-
-            isGridPanelOpen = true;
+            if (currentMode != TeamBuilderMode.SafeZone || inventoryPanel == null) return;
+            if (!inventoryPanel.IsCharacterGridOpen) inventoryPanel.ToggleCharacterGrid();
             panelOpenedFrame = Time.frameCount;
             RefreshGrid();
             ApplyModeVisualState();
@@ -240,7 +244,10 @@ namespace Project.TeamBuilder.UI
 
         public void CloseCharacterGridPanel()
         {
-            isGridPanelOpen = false;
+            if (inventoryPanel != null && inventoryPanel.IsCharacterGridOpen)
+            {
+                inventoryPanel.CloseAll();
+            }
             ApplyModeVisualState();
         }
 
@@ -248,17 +255,50 @@ namespace Project.TeamBuilder.UI
         {
             if (currentMode != TeamBuilderMode.SafeZone)
             {
-                CloseCharacterGridPanel();
+                if (inventoryPanel != null) inventoryPanel.CloseAll();
+                ApplyModeVisualState();
                 return;
             }
 
-            isGridPanelOpen = !isGridPanelOpen;
-            if (isGridPanelOpen)
+            if (inventoryPanel != null)
             {
-                panelOpenedFrame = Time.frameCount;
-                RefreshGrid();
+                inventoryPanel.ToggleCharacterGrid();
+                if (inventoryPanel.IsCharacterGridOpen)
+                {
+                    panelOpenedFrame = Time.frameCount;
+                    RefreshGrid();
+                }
+            }
+            ApplyModeVisualState();
+        }
+
+        public void ToggleArtifactGridPanel()
+        {
+            if (currentMode != TeamBuilderMode.SafeZone)
+            {
+                if (inventoryPanel != null) inventoryPanel.CloseAll();
+                ApplyModeVisualState();
+                return;
             }
 
+            if (inventoryPanel != null)
+            {
+                inventoryPanel.ToggleArtifactGrid();
+                if (inventoryPanel.IsArtifactGridOpen)
+                {
+                    panelOpenedFrame = Time.frameCount;
+                    RefreshGrid();
+                }
+            }
+            ApplyModeVisualState();
+        }
+
+        public void CloseArtifactGridPanel()
+        {
+            if (inventoryPanel != null && inventoryPanel.IsArtifactGridOpen)
+            {
+                inventoryPanel.CloseAll();
+            }
             ApplyModeVisualState();
         }
 
@@ -272,6 +312,8 @@ namespace Project.TeamBuilder.UI
             foreach (var slot in teamSlots)
             {
                 if (slot != null && slot.CurrentCharacter == character)
+
+
                     return true;
             }
             return false;
@@ -293,6 +335,25 @@ namespace Project.TeamBuilder.UI
             return null;
         }
 
+        public bool IsArtifactEquippedOnTeam(Artifact artifact)
+        {
+            return FindSlotWithArtifact(artifact) != null;
+        }
+
+        public TeamSlotUI FindSlotWithArtifact(Artifact artifact)
+        {
+            if (artifact == null) return null;
+
+            foreach (var slot in teamSlots)
+            {
+                if (slot != null && slot.FindArtifactSlotWith(artifact) != null)
+                {
+                    return slot;
+                }
+            }
+            return null;
+        }
+
         /// <summary>
         /// Called by TeamSlotUI whenever a slot changes (character placed/swapped/removed).
         /// Refreshes the local draft only. Runtime TeamLoader is updated only by Deploy.
@@ -302,8 +363,8 @@ namespace Project.TeamBuilder.UI
             hasDraftChanges = true;
 
             // Refresh grid item dim states
-            if (gridPanel != null)
-                gridPanel.RefreshInTeamStates();
+            if (inventoryPanel != null)
+                inventoryPanel.RefreshInTeamStates();
 
             // Refresh active index highlighting
             NormalizeStagedActiveIndex();
@@ -536,7 +597,7 @@ namespace Project.TeamBuilder.UI
                     return false;
                 }
 
-                if (dropTarget.GetComponentInParent<CharacterGridInventoryUI>() != null)
+                if (dropTarget.GetComponentInParent<InventoryBuilderPanel>() != null)
                 {
                     return true;
                 }
@@ -719,7 +780,7 @@ namespace Project.TeamBuilder.UI
         /// </summary>
         private void RefreshGrid()
         {
-            if (gridPanel == null || playerInventory == null) return;
+            if (inventoryPanel == null || playerInventory == null) return;
 
             // Filter only CharacterItems from the player's inventory
             List<CharacterItem> ownedCharacters = new List<CharacterItem>();
@@ -750,8 +811,20 @@ namespace Project.TeamBuilder.UI
                     ownedCharacters.Add(runtimeItem);
             }
 
-            gridPanel.PopulateGrid(ownedCharacters);
+            if (inventoryPanel != null)
+            {
+                inventoryPanel.Populate(ownedCharacters, GetOwnedArtifacts());
+            }
+
             ApplyModeVisualState();
+        }
+
+        private void HandleArtifactClicked(Artifact artifact)
+        {
+            if (artifactPreviewPanel != null && artifact != null)
+            {
+                artifactPreviewPanel.Open(artifact);
+            }
         }
 
         private void ApplyModeVisualState()
@@ -761,9 +834,9 @@ namespace Project.TeamBuilder.UI
                 return;
             }
 
-            if (gridPanel != null)
+            if (inventoryPanel != null)
             {
-                gridPanel.gameObject.SetActive(currentMode == TeamBuilderMode.SafeZone && isGridPanelOpen);
+                inventoryPanel.SetVisible(currentMode == TeamBuilderMode.SafeZone);
             }
 
             if (playerHolderButton != null)
@@ -784,11 +857,12 @@ namespace Project.TeamBuilder.UI
         private void DeployDraftToRuntime()
         {
             CharacterObject[] teamData = BuildDraftTeamData();
+            Artifact[][] artifactData = BuildDraftArtifactData();
             NormalizeStagedActiveIndex();
 
             if (teamLoader != null)
             {
-                teamLoader.DeployLoadout(teamData, stagedActiveIndex);
+                teamLoader.DeployLoadout(teamData, stagedActiveIndex, artifactData);
             }
 
             hasDraftChanges = false;
@@ -1019,12 +1093,12 @@ namespace Project.TeamBuilder.UI
 
         private bool IsPointerOutsideCharacterGrid()
         {
-            if (gridPanel == null)
+            if (inventoryPanel == null)
             {
                 return true;
             }
 
-            RectTransform gridRect = gridPanel.GetComponent<RectTransform>();
+            RectTransform gridRect = inventoryPanel.GetComponent<RectTransform>();
             if (IsPointerInsideRect(gridRect))
             {
                 return false;

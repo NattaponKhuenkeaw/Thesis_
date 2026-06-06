@@ -2,7 +2,7 @@
 
 | Field       | Value                    |
 |-------------|--------------------------|
-| Status      | **Proposed**             |
+| Status      | **Accepted**             |
 | Date        | 2026-06-05               |
 | Author      | Software Architect Agent |
 | GDD Section | `@tag:combat`            |
@@ -16,12 +16,14 @@ The current player Ultimate ability system relies on standard time-based cooldow
 We decide to:
 1. **Remove time-based cooldown gating** from the Ultimate ability and replace it with an Aura Energy (AE) resource gate.
 2. **Store AE per character** in the `TeamLoader` runtime state manager to support individual meters for benched characters.
-3. **Add progression stats** `maxAuraEnergy` and `auraEnergyMultiplier` to `CharacterStats`.
+3. **Keep only `auraEnergyMultiplier` as a progression stat** on `CharacterStats`. Maximum AE is derived from authored Ultimate costs instead of stored independently.
 4. **Calculate Ultimate cost dynamically** using the formula: `Base Cost (100 AE) * (1.0 - Math.Min(0.50f, CDR * 0.50f))` where CDR is the character's `cooldownReduction` stat divided by 100.
 5. **Resolve hit events deterministically** for AE gain inside `HitBoxDamage` to prevent framerate-dependent energy generation.
 6. **Support background execution of Ultimate active frames** during a team switch via a temporary `BackgroundUltimateExecutor` clone prefab.
 7. **Apply Super Armor + Invulnerability (i-frames)** to the player character during the Active phase of the Ultimate, consuming AE on transition to Active rather than Startup.
 8. **Update HUD meters** (via `AbilityUIManager` and `CharacterSwitchSlot`) to show circular fill percentages and pulse/glow/chime feedback when ready.
+9. **Grant action-authored AE rewards once when an ActionResolver action starts.** `auraEnergyGainAmount` defaults to `0` and is multiplied by the acting character's `auraEnergyMultiplier`.
+10. **Set each character's maximum AE to twice their highest runtime Ultimate cost.** A 50 AE Ultimate therefore supports a 100 AE stack.
 
 ## Alternatives Considered
 
@@ -37,13 +39,17 @@ We decide to:
 - Encourages aggressive, combat-focused gameplay rather than passive waiting.
 - Robust handling of team-swapping ensures high-quality game feel.
 - Dynamic cost reduction integrates CDR mastery into the resource system logically.
+- Action designers can attach deterministic AE rewards directly to attacks, skills, or Ultimates.
+- AE capacity automatically follows authored Ultimate balance without a duplicate max-stat field.
 
 ### Negative / Trade-offs
 - Slight overhead from instantiating background executors.
 - Complex HUD syncing between active character and benched character slots.
 
 ### Migration
-- Add `maxAuraEnergy` and `auraEnergyMultiplier` to `CharacterStats.cs`.
+- Add `auraEnergyMultiplier` to `CharacterStats.cs`.
+- Author optional `auraEnergyGainAmount` values on ActionResolver actions.
+- Derive maximum AE in `TeamLoader` from the character's Ultimate actions.
 - Update `HitBoxDamage.cs` to trigger AE generation on successful hits.
 - Refactor `PlayerUltimateState.cs` to check and consume AE instead of trigger cooldowns.
 - Refactor `AbilityUIManager.cs` and `CharacterSwitchSlot.cs` to read AE and cost values.

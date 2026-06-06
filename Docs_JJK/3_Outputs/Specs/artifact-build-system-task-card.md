@@ -1,6 +1,6 @@
 ---
 slug: "artifact-build-system"
-status: draft
+status: DONE
 source: manual
 gdd_tags:
   - "progression"

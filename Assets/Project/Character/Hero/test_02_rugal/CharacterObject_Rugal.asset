@@ -22,12 +22,14 @@ MonoBehaviour:
     defense: 7
     speed: 10
     elementalMultiplier: 1
-    critRate: 7
-    critDamage: 140
+    critRate: 3
+    critDamage: 150
     cooldownReduction: 0
     skillMastery: 0
     damageMastery: 0
     damageResistance: 0
+    auraEnergyMultiplier: 1
+    auraEnergyRate: 0
   metaData:
     displayName: Rugal
     description: "\u0E1E\u0E48\u0E2D\u0E04\u0E49\u0E32\u0E2D\u0E32\u0E27\u0E38\u0E18\u0E1C\u0E39\u0E49\u0E17\u0E23\u0E07\u0E2D\u0E34\u0E17\u0E18\u0E34\u0E1E\u0E25\u0E41\u0E25\u0E30\u0E1A\u0E49\u0E32\u0E04\u0E25\u0E31\u0E48\u0E07\u0E01\u0E32\u0E23\u0E15\u0E48\u0E2D\u0E2A\u0E39\u0E49

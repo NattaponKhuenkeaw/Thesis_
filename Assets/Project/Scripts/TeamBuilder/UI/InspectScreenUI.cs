@@ -108,21 +108,35 @@ namespace Project.TeamBuilder.UI
         private void PopulateData()
         {
             CharacterObject data = currentCharacter.characterObjectData;
-            float artifactBonusAtk = 0f;
-            float artifactBonusDef = 0f;
-            float artifactBonusHp = 0f;
+            float bonusHp = 0f;
+            float bonusAtk = 0f;
+            float bonusDef = 0f;
+            float bonusSpd = 0f;
+            float bonusCdr = 0f;
+            float bonusCritRate = 0f;
+            float bonusCritDmg = 0f;
+            float bonusSkillMastery = 0f;
+            float bonusDmgMastery = 0f;
+            float bonusDmgRes = 0f;
 
             for (int i = 0; i < currentArtifacts.Length; i++)
             {
                 Artifact artifact = currentArtifacts[i];
-                if (artifact == null)
+                if (artifact == null || artifact.bonusStats == null)
                 {
                     continue;
                 }
 
-                artifactBonusAtk += artifact.bonusATK;
-                artifactBonusDef += artifact.bonusDEF;
-                artifactBonusHp += artifact.bonusHP;
+                bonusHp += artifact.bonusStats.maxHP;
+                bonusAtk += artifact.bonusStats.attack;
+                bonusDef += artifact.bonusStats.defense;
+                bonusSpd += artifact.bonusStats.speed;
+                bonusCdr += artifact.bonusStats.cooldownReduction;
+                bonusCritRate += artifact.bonusStats.critRate;
+                bonusCritDmg += artifact.bonusStats.critDamage;
+                bonusSkillMastery += artifact.bonusStats.skillMastery;
+                bonusDmgMastery += artifact.bonusStats.damageMastery;
+                bonusDmgRes += artifact.bonusStats.damageResistance;
             }
 
             if (characterNameText != null)
@@ -148,16 +162,16 @@ namespace Project.TeamBuilder.UI
 
             if (data.stats != null)
             {
-                if (hpText != null) hpText.text = $"HP: {FormatStatValue(data.stats.maxHP, artifactBonusHp)}";
-                if (atkText != null) atkText.text = $"ATK: {FormatStatValue(data.stats.attack, artifactBonusAtk)}";
-                if (defText != null) defText.text = $"DEF: {FormatStatValue(data.stats.defense, artifactBonusDef)}";
-                if (spdText != null) spdText.text = $"SPD: {FormatStatValue(10f, data.stats.speed - 10f)}";
-                if (cdrText != null) cdrText.text = $"CDR: {FormatStatValue(data.stats.cooldownReduction, 0f)}";
-                if (critRateText != null) critRateText.text = $"CRIT: {FormatStatValue(data.stats.critRate, 0f)}";
-                if (critDmgText != null) critDmgText.text = $"CRIT DMG: {FormatStatValue(data.stats.critDamage, 0f)}";
-                if (skillMasteryText != null) skillMasteryText.text = $"SKILL MASTERY: {FormatStatValue(data.stats.skillMastery, 0f)}";
-                if (dmgMasteryText != null) dmgMasteryText.text = $"DMG MASTERY: {FormatStatValue(data.stats.damageMastery, 0f)}";
-                if (dmgResText != null) dmgResText.text = $"DMG RES: {FormatStatValue(data.stats.damageResistance, 0f)}";
+                if (hpText != null) hpText.text = $"HP: {FormatStatValue(data.stats.maxHP, bonusHp)}";
+                if (atkText != null) atkText.text = $"ATK: {FormatStatValue(data.stats.attack, bonusAtk)}";
+                if (defText != null) defText.text = $"DEF: {FormatStatValue(data.stats.defense, bonusDef)}";
+                if (spdText != null) spdText.text = $"SPD: {FormatStatValue(data.stats.speed, bonusSpd)}";
+                if (cdrText != null) cdrText.text = $"CDR: {FormatStatValue(data.stats.cooldownReduction, bonusCdr)}";
+                if (critRateText != null) critRateText.text = $"CRIT: {FormatStatValue(data.stats.critRate, bonusCritRate)}";
+                if (critDmgText != null) critDmgText.text = $"CRIT DMG: {FormatStatValue(data.stats.critDamage, bonusCritDmg)}";
+                if (skillMasteryText != null) skillMasteryText.text = $"SKILL MASTERY: {FormatStatValue(data.stats.skillMastery, bonusSkillMastery)}";
+                if (dmgMasteryText != null) dmgMasteryText.text = $"DMG MASTERY: {FormatStatValue(data.stats.damageMastery, bonusDmgMastery)}";
+                if (dmgResText != null) dmgResText.text = $"DMG RES: {FormatStatValue(data.stats.damageResistance, bonusDmgRes)}";
             }
 
             if (characterLoreText != null && data.metaData != null)
@@ -317,12 +331,10 @@ namespace Project.TeamBuilder.UI
                 }
 
                 builder.Append($"Slot {i + 1}: {artifact.itemName}");
-                builder.AppendLine();
-                builder.Append($"ATK +{Mathf.RoundToInt(artifact.bonusATK)} | DEF +{Mathf.RoundToInt(artifact.bonusDEF)} | HP +{Mathf.RoundToInt(artifact.bonusHP)}");
-                if (!string.IsNullOrWhiteSpace(artifact.description))
+                if (!string.IsNullOrWhiteSpace(artifact.passiveDescription))
                 {
                     builder.AppendLine();
-                    builder.Append(artifact.description);
+                    builder.Append(artifact.passiveDescription);
                 }
             }
 
@@ -382,7 +394,18 @@ namespace Project.TeamBuilder.UI
 
         private static string FormatStatValue(float baseValue, float additionalValue)
         {
-            return $"{Mathf.RoundToInt(baseValue)}(+{Mathf.RoundToInt(additionalValue)})";
+            if (Mathf.Abs(additionalValue) > 0.001f)
+            {
+                if (additionalValue > 0)
+                {
+                    return $"{Mathf.RoundToInt(baseValue)} (<color=#4ADE80>+{Mathf.RoundToInt(additionalValue)}</color>)";
+                }
+                else
+                {
+                    return $"{Mathf.RoundToInt(baseValue)} (<color=#EF4444>{Mathf.RoundToInt(additionalValue)}</color>)";
+                }
+            }
+            return $"{Mathf.RoundToInt(baseValue)}";
         }
 
         private void ConfigurePotentialHoverFallback()

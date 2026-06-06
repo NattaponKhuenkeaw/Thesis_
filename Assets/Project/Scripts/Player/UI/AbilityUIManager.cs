@@ -29,6 +29,17 @@ public class AbilityUIManager : MonoBehaviour
     [SerializeField] private float readyPulseScale = 1.25f;
     [SerializeField] private float readyFeedbackDuration = 0.18f;
 
+    [Header("Fallback Rejected Feedback")]
+    [SerializeField] private Color rejectedFlashColor = new Color(1f, 0.2f, 0.15f, 0.9f);
+    [SerializeField] private float rejectedWiggleDistance = 8f;
+    [SerializeField] private float rejectedFeedbackDuration = 0.18f;
+
+    [Header("Fallback Aura Gain Feedback")]
+    [SerializeField] private Color auraGainGlintColor = new Color(0.45f, 1f, 0.75f, 0.55f);
+    [SerializeField] private float auraGainPulseScale = 1.04f;
+    [SerializeField] private float auraGainFeedbackDuration = 0.1f;
+    [SerializeField] private float auraGainFeedbackMinInterval = 0.08f;
+
     private struct CooldownDisplayState
     {
         public float current;
@@ -42,6 +53,8 @@ public class AbilityUIManager : MonoBehaviour
     private string displayedCharacterKey = string.Empty;
     private UIFeedbackDriver feedbackDriver;
     private TeamLoader teamLoader;
+    private float lastObservedUltimateAE = -1f;
+    private float lastAuraGainFeedbackTime = -999f;
 
     private void Reset()
     {
@@ -100,6 +113,7 @@ public class AbilityUIManager : MonoBehaviour
         {
             displayedCharacterKey = currentCharacterKey;
             ultimateWasReadyLastFrame = false;
+            lastObservedUltimateAE = GetCurrentAuraEnergy();
         }
 
         RefreshActiveCharacterUI();
@@ -148,7 +162,15 @@ public class AbilityUIManager : MonoBehaviour
     {
         if (playerCharacter != null && playerCharacter.characterObject == character)
         {
+            bool gained = lastObservedUltimateAE >= 0f && currentAE > lastObservedUltimateAE + 0.01f;
+            lastObservedUltimateAE = currentAE;
             RefreshActiveCharacterUI();
+
+            bool readyNow = currentAE >= ResolveCurrentUltimateCost(character);
+            if (gained && !readyNow)
+            {
+                PlayAuraEnergyGainFeedback();
+            }
         }
     }
 
@@ -176,6 +198,8 @@ public class AbilityUIManager : MonoBehaviour
     private void HandleCharacterChanged(CharacterObject newCharacter)
     {
         displayedCharacterKey = BuildCharacterKey(newCharacter);
+        ultimateWasReadyLastFrame = false;
+        lastObservedUltimateAE = GetCurrentAuraEnergy();
         RefreshActiveCharacterUI();
     }
 
@@ -238,6 +262,7 @@ public class AbilityUIManager : MonoBehaviour
         {
             ResetUI(ultCooldownFill, ultCooldownText);
             ultimateWasReadyLastFrame = false;
+            lastObservedUltimateAE = -1f;
             return;
         }
 
@@ -245,14 +270,15 @@ public class AbilityUIManager : MonoBehaviour
         {
             ResetUI(ultCooldownFill, ultCooldownText);
             ultimateWasReadyLastFrame = false;
+            lastObservedUltimateAE = -1f;
             return;
         }
 
         float currentAE = teamLoader.GetCharacterCurrentAE(currentCharacter);
-        float maxAE = currentCharacter.stats != null ? currentCharacter.stats.maxAuraEnergy : 100f;
+        float maxAE = teamLoader.GetCharacterMaxAE(currentCharacter);
         float fillRatio = maxAE > 0f ? Mathf.Clamp01(currentAE / maxAE) : 0f;
 
-        float cost = teamLoader.GetUltimateCost(currentCharacter);
+        float cost = ResolveCurrentUltimateCost(currentCharacter);
         bool isReady = currentAE >= cost;
 
         if (isReady)
@@ -274,10 +300,13 @@ public class AbilityUIManager : MonoBehaviour
 
             if (ultCooldownText != null)
             {
-                ultCooldownText.gameObject.SetActive(true);
-                ultCooldownText.text = Mathf.RoundToInt(fillRatio * 100f) + "%";
+                ultCooldownText.gameObject.SetActive(false);
+                ultCooldownText.text = string.Empty;
             }
         }
+
+        if (lastObservedUltimateAE < 0f)
+            lastObservedUltimateAE = currentAE;
 
         ultimateWasReadyLastFrame = isReady;
     }
@@ -325,7 +354,7 @@ public class AbilityUIManager : MonoBehaviour
         fillImage.gameObject.SetActive(true);
         text.gameObject.SetActive(true);
         fillImage.fillAmount = Mathf.Clamp01(current / max);
-        text.text = Mathf.Ceil(current).ToString();
+        text.text = FormatCooldownText(current);
     }
 
     private void ResetUI(Image fillImage, TMP_Text text)
@@ -374,5 +403,94 @@ public class AbilityUIManager : MonoBehaviour
         feedbackDriver.PlayPulse(targetRect, readyPulseScale, readyFeedbackDuration);
         feedbackDriver.PlayGlint(targetRect, readyGlintColor, readyFeedbackDuration);
         feedbackDriver.PlayRadialBurst(targetRect, readyBurstColor, 8, 36f, readyFeedbackDuration);
+    }
+
+    public void PlayAbilityRejectedFeedback(AbilityType type)
+    {
+        RectTransform targetRect = ResolveFeedbackRoot(type);
+        if (targetRect == null)
+        {
+            return;
+        }
+
+        feedbackDriver = feedbackDriver != null ? feedbackDriver : UIFeedbackDriver.GetOrAdd(gameObject);
+        if (feedbackDriver == null)
+        {
+            return;
+        }
+
+        Vector2 origin = targetRect.anchoredPosition;
+        feedbackDriver.PlayWiggle(targetRect, origin, rejectedWiggleDistance, rejectedFeedbackDuration);
+        feedbackDriver.PlayGlint(targetRect, rejectedFlashColor, rejectedFeedbackDuration);
+    }
+
+    private void PlayAuraEnergyGainFeedback()
+    {
+        float now = Time.unscaledTime;
+        if (now - lastAuraGainFeedbackTime < auraGainFeedbackMinInterval)
+        {
+            return;
+        }
+
+        RectTransform targetRect = ResolveFeedbackRoot(AbilityType.Ultimate);
+        if (targetRect == null)
+        {
+            return;
+        }
+
+        feedbackDriver = feedbackDriver != null ? feedbackDriver : UIFeedbackDriver.GetOrAdd(gameObject);
+        if (feedbackDriver == null)
+        {
+            return;
+        }
+
+        lastAuraGainFeedbackTime = now;
+        feedbackDriver.PlayPulse(targetRect, auraGainPulseScale, auraGainFeedbackDuration);
+        feedbackDriver.PlayGlint(targetRect, auraGainGlintColor, auraGainFeedbackDuration);
+    }
+
+    private RectTransform ResolveFeedbackRoot(AbilityType type)
+    {
+        Image targetFill = type == AbilityType.Skill ? skillCooldownFill : ultCooldownFill;
+        RectTransform targetRect = type == AbilityType.Skill ? skillReadyFeedbackRoot : ultReadyFeedbackRoot;
+        if (targetRect == null && targetFill != null)
+        {
+            Transform feedbackParent = targetFill.transform.parent != null
+                ? targetFill.transform.parent
+                : targetFill.transform;
+            targetRect = feedbackParent as RectTransform;
+        }
+
+        return targetRect;
+    }
+
+    private float ResolveCurrentUltimateCost(CharacterObject currentCharacter)
+    {
+        if (teamLoader == null)
+            return TeamLoader.DefaultUltimateAuraEnergyCost;
+
+        if (playerCharacter != null
+            && playerCharacter.TryResolveActionForContext(AttackCategory.Ultimate, out CombatAction action, out _)
+            && action is UltimateAction ultimateAction)
+        {
+            return teamLoader.GetUltimateCost(currentCharacter, ultimateAction);
+        }
+
+        return teamLoader.GetUltimateCost(currentCharacter);
+    }
+
+    private float GetCurrentAuraEnergy()
+    {
+        CharacterObject currentCharacter = playerCharacter != null ? playerCharacter.characterObject : null;
+        return teamLoader != null && currentCharacter != null
+            ? teamLoader.GetCharacterCurrentAE(currentCharacter)
+            : -1f;
+    }
+
+    private static string FormatCooldownText(float seconds)
+    {
+        return seconds < 1f
+            ? seconds.ToString("0.0")
+            : Mathf.CeilToInt(seconds).ToString();
     }
 }
