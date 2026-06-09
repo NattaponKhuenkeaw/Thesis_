@@ -49,7 +49,7 @@ This Design aim for Casual Game with Low Floor. Low Ceiling. High Impact in Flas
 
 3. **Rogue-lite Mechanics**
    - **Soul System (Character Potential)**: Upgradable character progression that unlocks new combo routes, modifies passive loops, and changes skill utilities.
-   - **Artifact System**: Passive and active power-ups found during Cursed Realm runs.
+   - **Artifact System**: One-time-owned Soul Shop equipment that adds runtime stats to a deployed character.
 
 ---
 
@@ -282,7 +282,7 @@ Every character has actions governed by distinct Wind-up (SF), Active (AF), and 
 
 - **Basic Attack (BA)**: Simple Linear State Attack 2-3 State Hit like MMORPG. Fast and Loopable.
 - **Skill**: Custom ability. Cancels BA. Cooldown-gated. A/D inputs steer/alter trajectory or form.
-- **Ultimate (Ult)**: High-damage finisher. Cancels Skill.
+- **Ultimate (Ult)**: High-damage finisher. Cancels Skill. Requires the character's Aura Energy meter to reach the authored Ultimate cost.
 
 All Action can be done on Ground or Air, The Player FSM should stay the same result.
 
@@ -306,8 +306,31 @@ Remove any Character Lock position/gravity on Action (Except Dash/Jump) to preve
 
 - Flashy burst action.
 - High impact VFX.
-- Simple resource or cooldown gate.
+- Aura Energy resource gate; Ultimate is not cooldown-gated.
+- Each Ultimate authors its own Aura Energy cost. The character's maximum Aura Energy equals its highest authored Ultimate cost.
+- Cooldown Reduction lowers the effective Aura Energy cost, capped at 50% cost reduction.
 - Should be easy to trigger and understand.
+
+### Aura Energy
+
+- Aura Energy is stored separately for each team character.
+- Aura Energy is granted only after an attack confirms damage on an enemy. Starting or missing an action grants nothing.
+- Every damaging hit independently rolls the character's Aura Energy Rate: Low 5%, Medium 10%, or High 15%.
+- A successful chance roll grants a base 10 Aura Energy, multiplied by the character's Aura Energy Multiplier.
+- Chance-based grants are limited by a configurable number of grants within a short time window so dense multi-hit actions cannot refill the meter without limit.
+- A combat action may author one guaranteed `AE Reward`. It is claimed once by the first damaging hit from that action, across melee, projectile, and background-Ultimate delivery.
+- Defeating an enemy does not provide a separate Aura Energy reward.
+
+### Damage Resolution
+
+- Combat actions may author a total action damage multiplier. Each hitbox uses a clamped 0-100% ratio of that total budget.
+- Legacy actions without a total damage budget continue to use each hitbox ratio directly.
+- Physical primary damage uses the Normal routine and Damage Mastery.
+- Non-physical primary damage uses the Elemental routine and Elemental Multiplier instead of Damage Mastery.
+- Skill and Ultimate primary damage also use Skill Mastery.
+- Normal and Elemental primary damage can critically hit.
+- Additional Damage from passives or artifacts is resolved as a separate damage event and cannot critically hit.
+- Melee hitboxes, projectiles, and background Ultimates use the same per-enemy damage and Aura Energy rules.
 
 ### Dodge / Dash
 
@@ -345,6 +368,11 @@ Remove any Character Lock position/gravity on Action (Except Dash/Jump) to preve
 | CRIT Dmg | XX% | Critical Damage |
 |DMG Mastery| XX% | Damage Mastery |
 |DMG Res| XX% | Damage Resistance |
+| Elemental Multiplier | X.XX | Multiplier used by non-physical Elemental damage instead of Damage Mastery |
+| Skill Mastery | XX% | Bonus applied to Skill and Ultimate primary damage |
+| Aura Energy Multiplier | X.XX | Multiplier applied to chance-based Aura Energy gains |
+
+Artifact bonuses are added to a character's base stats when the team is deployed. Runtime HP, movement speed, damage, cooldown calculations, Aura Energy, HUD values, projectiles, and background Ultimates read the resolved runtime stats.
 
 ---
 
@@ -357,6 +385,25 @@ Remove any Character Lock position/gravity on Action (Except Dash/Jump) to preve
 - **Shop Rule** : The Soul Shop act as a safe haven for players. It is the only place where players can change, replace, or purchase their loadout (Character/Artifact) before venturing into the next Cursed Realm.  
 - **Shop Algorithm**: The shop algorithm will use the pool of character, artifact that the player have unlocked and the pool of enemy in the Cursed Realm that the player have defeated or explored. it never present what you never seen.
 - **Shop Reroll**: Player can Reroll shop Item but the new Item price will overpriced increase every time you reroll.
+- **Duplicate Progression Target**: Reacquiring an owned Character advances its
+  permanent Potential path. Reacquiring an owned Artifact during a run converts
+  the duplicate into that Artifact's Fragment for Transcendence.
+- **Current Implementation Note**: One-time ownership filtering still treats
+  owned Characters and Artifacts as sold out. Duplicate conversion is not
+  implemented yet. Consumable Items remain repeatable purchases.
+
+### Team Builder Loadout Flow
+
+- The Team Builder supports up to three character slots, with three Artifact slots per character.
+- Owned Characters and Artifacts are shown in separate inventory grids.
+- Artifacts can be dragged from the grid into a slot, moved between characters, swapped with an occupied slot, or removed by dragging them outside a valid slot.
+- One Artifact instance cannot be equipped in more than one slot at the same time.
+- Character and Inspect screens show base stats plus positive or negative Artifact bonuses.
+- Team edits are a session-only draft. Opening a fresh Team Builder session loads the current runtime team, active slot, and equipped Artifacts.
+- Switching between Team Builder panels preserves the in-session draft.
+- `Deploy` opens a confirmation dialog. Confirming is the only action that writes the staged characters, active slot, and Artifacts to the runtime team.
+- `Cancel` restores the runtime loadout. Closing the Team UI clears undeployed draft changes.
+- In Combat Zone mode, loadout editing is locked while inspection remains available.
 
 ### Utility Resource
 
@@ -365,10 +412,37 @@ Remove any Character Lock position/gravity on Action (Except Dash/Jump) to preve
 |Currency | The In-Game Utility Currency for **Soul Shop** | Lose |
 | Soul Fragment | The Currency of the game can only acquire by defeating the Elite/Boss enemy on the Cursed Realm Run. | Retain |
 | Character | The Characters that can use in the game. | Lose but retain the upgrade |
-| Artifact | The Passive and active power-ups found during Cursed Realm runs. | Lose but Retain the Upgrade |
+| Artifact | Equipment assigned to character loadouts. | Lose on run failure; permanent Transcendence is retained. Current implementation still retains ownership. |
+| EXP Potion | Consumable Character EXP used only from Character Inspector. | Lose |
+| Artifact Fragment | Artifact-specific duplicate material used for Transcendence. | Persistence on run loss is TBD |
 | Items | The consumable items that can use during the Cursed Realm runs. | Lose |
 
 P.S Lose but retain Upgrade mean you lose that Item/Character/Artifact if you die in Cursed Realm Run but if you able to buy again, they will come with latest of your unlocked upgrade(e.g Instead of new Fresh Potential Lv.0 they come with Potential Lv.5 and Artifacts also the same rule.)
+
+### Character Level System
+
+Character Level is run-scoped growth for each acquired character. It is
+separate from permanent Character Potential.
+
+- Every character starts each run at **Lv.1**.
+- A character also starts with the permanent Potential rank the player has
+  already unlocked for that character.
+- Character Level, current EXP, and unspent EXP Potions are removed when the
+  run is lost or reset.
+- The maximum Character Level is **Lv.30/30**.
+- Characters gain EXP only from **EXP Potions**. Defeating monsters does not
+  directly grant EXP.
+- EXP Potions can be obtained from the **Soul Shop** and **Room Clear Rewards**.
+- EXP Potions are consumed only through the Character Level System UI.
+- The Character Level System UI is accessible only through the Character
+  Inspector UI.
+- When current EXP reaches or exceeds the current level EXP cap, the character
+  levels up. Excess EXP carries into the next level.
+- Leveling increases only the character's basic **ATK, DEF, and Max HP**.
+- EXP curves, potion values, per-level stat growth, and level-up costs require
+  a separate balance specification before implementation.
+- Runtime Character Level and EXP belong to the run save and TeamLoader runtime
+  state. Permanent Potential belongs to permanent progression data.
 
 ### Character Potential Rule
 
@@ -438,6 +512,8 @@ Bad upgrade examples:
 
 Items should be understandable in one sentence. Avoid hidden formulas and combo conditions.
 
+### Charm Types
+
 | Item / Upgrade Type | Role | Intended Effect |
 | --- | --- | --- |
 | Damage Charm | DPS scaling | Increase basic, skill, or ultimate damage. |
@@ -446,6 +522,86 @@ Items should be understandable in one sentence. Avoid hidden formulas and combo 
 | Burst Charm | Ultimate support | Increase ultimate damage or energy gain. |
 | Status Charm | Simple synergy | Add burn, slow, bleed, curse, or other straightforward status effects. |
 | Reward Charm | Rogue-lite pacing | Add rerolls, extra choices, or increased currency. |
+
+### Cursed Realm Artifacts
+
+Artifacts are equipment that can be assigned to a character before deployment.
+Each character has three Artifact slots. Equipped Artifact `bonusStats` are
+added to that character's runtime stats. Artifact data can also author separate
+Additional Damage effects, although the four currently authored Artifacts do
+not contain an Additional Damage effect.
+
+Passive descriptions are currently display text unless the behavior is also represented by implemented stat bonuses or an authored runtime effect.
+
+### Artifact Transcendence
+
+Artifact Transcendence is the permanent Artifact upgrade system.
+
+- Each Artifact has a maximum Transcendence Level of **+5/5**.
+- When the player obtains a duplicate of an Artifact they already own during a
+  run, the duplicate converts into that Artifact's specific Fragment.
+- Artifact Fragments are spent only in the Artifact Transcendence System UI.
+- The Artifact Transcendence System UI is accessible only through **Character
+  Inspector UI -> Artifact Section**.
+- Transcendence improves the Artifact's numeric stats and its authored passive
+  effect.
+- Transcendence Level is permanent across runs and must be restored when the
+  Artifact is reacquired.
+- Runtime equipped-Artifact data must include both the Artifact identity and
+  its permanent Transcendence Level.
+- Fragment costs, duplicate conversion quantity, fragment behavior on run loss,
+  stat scaling, and passive scaling require a separate balance specification
+  before implementation.
+
+| Implemented Artifact | Price | Implemented Runtime Bonuses | Displayed Passive Description |
+| --- | ---: | --- | --- |
+| **Blind's Boundless Ribbon** | 2000 | +1 SPD, +10 CDR, +0.15 Aura Energy Multiplier | Damage resistance and swap-heal text are display-only. |
+| **Fiend-Flesh Mask** | 650 | +15% ATK, -5% DEF | Defeat-stack and dark-slash text are display-only. |
+| **Soul-Merchant's Scales** | 1200 | +10% DMG Mastery | Soul Fragment and reroll-discount text are display-only. |
+| **Broken Chrono-Relic** | 950 | +15% CRIT Damage | Room-entry ATK decay and cooldown-refund text are display-only. |
+
+#### Planned Artifact Concepts
+
+These speculative Artifacts remain part of the design direction. They are not claims about current runtime implementation.
+
+| Artifact Name | Type / Role | Stats | Passive Effect | Description | Lore / World Setting |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Blind's Boundless Ribbon** | Support / Healing | +10% CDR, +10% SPD | **Spirit Guide:** Active characters receive 15% damage resistance. Swapping leaves a trail of energy healing the incoming character for 8% of their missing HP. | Stabilizes team health during rotations, reflecting Blind's protective yet eerie guidance. | *A strip of black silk from Blind's blindfold. "Follow my thread, or lose yourself to the fog."* |
+| **Fiend-Flesh Mask** | Damage / Risk | +15% ATK, -5% DEF | **Monstrous Hunger:** Defeating an enemy increases DMG Mastery by 2% for 6s (up to 5 stacks). Max stacks release a small dark slash that staggers trash enemies. | High-impact offensive mask that rewards aggressive clearing but lowers defense. | *Carved from a freshly slain Fiend, who was once one of the 50 players left behind in the death game.* |
+| **Soul-Merchant's Scales** | Economy / Status | +10% DMG Mastery, +15% Item Drop Rate | **Toll of the Dead:** Defeating Elites/Bosses yields 25% more Soul Fragments; rerolling the Soul Shop costs 10% less in-run currency. | Economy-boosting charm that allows players to upgrade character potentials faster. | *Used by the opportunist devil of the Soul Shop. "Everything has a price here, kid... even memories."* |
+| **Broken Chrono-Relic** | Time Pressure | +15% CRIT Dmg | **Time Limit:** Gain +20% ATK on entering a room, decaying by 1% every 2s. Clearing before decay refunds 20% Ultimate cooldown. | Promotes rapid room clearing under the Cursed Realm's core "time limit" pressure. | *In the Cursed Realm, time is your ultimate executioner. Run faster, kill faster, or forget your name.* |
+| **Aura-Resonating Shard** | Rotation / CC | +15% DMG Mastery | **Synergy Wave:** Swapping characters triggers an Aura burst dealing 100% ATK as damage and knocking back nearby enemies. | Directly leverages team-swap mechanics to turn character swaps into offensive tools. | *Clashing Auras from player swaps release shockwaves of raw fighting spirit that Fiends fear.* |
+| **Rival's Broken Crest** | Boss Counter / Ult | +10% CRIT Rate, +10% ATK | **Cruel Competition:** Deal 20% more damage to Bosses. Defeating a boss instantly and fully charges the active character's Ultimate. | Tailored for boss encounters, turning rival players into ultimate battery sources. | *Only 1 of 50 players can return to the living world. If you do not break their crest, they will shatter yours.* |
+| **Shroud of Deprivation** | Utility / CC Immunity | +15% DEF, +10% DMG Res | **Blind Faith:** Swapped-in characters are immune to crowd control effects (slow, freeze, stagger) for 3s. | Guarantees safe setup and execution of skills/ultimates upon entry. | *A dark wrap that blocks out sight. "The horrors of this place are easier to fight when you shut out the terror of seeing them."* |
+| **Memory-Draining Urn** | Survival / Shield | +15% Max HP | **Amnesia Shield:** Landing 10 Basic Attacks grants a Shield equal to 8% Max HP (12s CD) which explodes for physical damage when broken/expired. | Converts sustained combat into defensive shielding and passive area damage. | *Urn catching fragments of forgotten pasts leaked during death and respawn, hardening them into armor.* |
+| **Shin's Rusty Dagger** | Crisis / Low-HP | +10% ATK, +5% SPD | **Desperate Struggle:** Deal up to 30% more damage based on missing HP (scaling linearly below 50% HP). | High-risk, high-reward crisis multiplier that helps survive close-call encounters. | *Shin's starting blade. Useless against giant Fiends, yet his refusal to let go gave birth to his Aura.* |
+| **Aura-Charged Shackle** | Cooldown / Rotation | +12% CDR, +10% Max HP | **Rebirth Chain:** Using an Ultimate reduces the skill cooldowns of all off-field characters by 4s. | Keeps off-field support skills running, accelerating team rotation setups. | *A heavy shackle chaining the team's souls. No matter how many deaths, it drags them back to start.* |
+| **Blind's Whispering Bell** | Utility / Stealth | +10% CDR, +5% SPD | **Spirit Shroud:** Swapping in grants 2.5s stealth. Using a Skill/Ultimate breaks stealth early but deals +25% damage. | Grants temporary safety upon swap-in for tactical positioning. | *A silent bell. "Silence your Aura, Shin. If they cannot sense your spirit, they cannot target your heart."* |
+| **Gravely-Wounded Band** | Risk / Life Steal | +20% CRIT Dmg, -10% Max HP | **Last Stand:** When HP falls below 30%, gain +25% CRIT Rate and +15% Life Steal on all Basic Attacks. | High-risk survival accessory that converts near-death situations into offensive comebacks. | *Bloodstained band of a player who fought with fractured limbs, stealing strength from Fiends' flesh.* |
+| **Fiendish Tendril** | Crowd Control | +12% DMG Mastery, +5% DEF | **Vortex Grasp:** Landing a Skill pulls trash enemies toward the target point and inflicts 'Decay' (reducing enemy damage by 15% for 4s). | Adds crowd-control grouping to characters' skills, setting up targets for DPS burst. | *A writhing appendage harvested from a giant Fiend, twitching in response to living Aura.* |
+| **Coin of the False Winner** | Economy / Risk | +25% Currency Gain, -15% DMG Res | **Double or Nothing:** Clearing a room without taking damage doubles currency. Taking damage reduces it by 50%. | High-stakes economy charm for players confident in their movement and dodging. | *Minted by the Soul Shop's devil. "Play perfectly, or pay the toll," shown by the crown and skull.* |
+| **Shin's Cracked Hourglass** | Cooldown / Trigger | +15% CDR | **Temporal Paradox:** Every 30s, the next Skill used has its cooldown instantly reset. | Allows double-casting of character skills, adding massive burst potential to rotation loops. | *Shin watched the sand slip away, knowing delay meant forgetting. Smashed to bend time to his urgency.* |
+| **Phantasmal Mirror** | Rotation / Clone | +10% ATK, +10% SPD | **Doppelganger:** Swapping leaves a spectral clone of the outgoing character that executes one final Basic Attack dealing 50% damage. | Enhances team rotation by maintaining a brief offensive presence from swapped-out characters. | *A mirror reflecting your Aura. In the Cursed Realm, your shadow is the only ally that won't betray you.* |
+| **Crown of the Usurper** | Ultimate / Risk | +30% Ultimate Damage, -10% Max HP | **Blood Tithe:** Using an Ultimate consumes 10% current HP but grants +20% Ultimate CRIT Rate. | Sacrifices health to guarantee critical hits on high-impact ultimate animations. | *Worn by the 'King' of the 50 rivals who drained his team to power an ultimate, dying at the lobby gates.* |
+| **Tether of the Damned** | Defensive / Support | +15% DEF, +10% DMG Res | **Shared Burden:** When an off-field character takes damage (e.g., from traps), the active character gains a Shield equal to 12% Max HP. | Mitigates environmental and trap damage by protecting the active character. | *A leash of Aura binding the party's souls. In this death game, your teammates are your shield.* |
+| **Blind's Piercing Sight** | Precision / Flanking | +15% CRIT Rate | **Backstab:** Attacking enemies from behind increases CRIT Damage by 35% and ignores 15% DEF. | Rewards tactical flanking and positioning, especially during boss recovery windows. | *Blind senses weaknesses in Aura. "They have a blind spot, Shin. Strike there, and make it quick."* |
+| **Soul-Eater's Goblet** | Survival / Healing | +15% Max HP | **Reap:** Defeating an Elite restores 15% active Max HP; defeating a Boss fully restores the entire team's HP. | Reliable sustain tool for long runs, ensuring recovery from high-threat encounters. | *A dark cup drinking the spilling Aura of dying rivals. Keeps the user's memories fresh and sweet.* |
+
+### Current Implementation Replacements and Gaps
+
+| Previous or Planned Behavior | Current Game State |
+| --- | --- |
+| Ultimate cooldown or generic resource gate | Replaced by per-character Aura Energy. Maximum capacity is derived from the authored Ultimate cost. |
+| Aura Energy granted when an action starts, misses, or defeats an enemy | Replaced by confirmed-damage rewards: a per-hit chance reward plus one optional guaranteed action reward. |
+| Independent hitbox damage values for multi-hit actions | Replaced by an optional total action damage budget distributed through per-hit ratios. |
+| One shared damage formula | Replaced by Normal, Elemental, and non-critical Additional Damage routines. |
+| Character base stats used directly during combat | Replaced by per-team-slot runtime stats built from the character plus equipped Artifact bonuses. |
+| Team Builder edits immediately changing runtime state | Replaced by a session draft. Only confirmed Deploy writes the loadout to `TeamLoader`. |
+| Character Level and EXP Potion progression | Target design documented; runtime level state, EXP curves, potion inventory, UI, and reset flow are not implemented yet. |
+| Artifact Transcendence and Artifact Fragments | Target design documented; permanent levels, fragment conversion, upgrade costs, passive scaling, and save data are not implemented yet. |
+| Artifact passive descriptions automatically executing | Not implemented generically. Only numeric `bonusStats` and explicitly authored Additional Damage effects affect combat. |
+| The four displayed Artifact passive effects | Not authored as runtime effects in the current Artifact assets. |
+| Finding Artifacts during Cursed Realm runs and losing them on run failure | Not implemented by this branch; current code covers Soul Shop ownership, loadout management, and deployment. |
 
 ---
 
@@ -940,7 +1096,7 @@ Do not hallucinate completed architecture, engine details, scene names, or imple
 
 - BA: 2-3 hit forward-facing loop, fast, loopable
 - Skill: 1 active per character, cooldown-gated, A / D steers direction
-- Ultimate: flashy burst, full resource or cooldown gate
+- Ultimate: flashy burst, gated by the character's full Aura Energy cost
 - Dodge / Dash: i-frame dash, simple survival verb
 - Hit detection: `OverlapCircle` / `OverlapBox`, `NonAlloc` variants
 - Damage formula: `base × modifier × defense` (keep `DamageCalculator` pure)
@@ -973,7 +1129,7 @@ Do not hallucinate completed architecture, engine details, scene names, or imple
 - `TeamLoader`: manage 3-character party (simplify existing)
 - Swap keys 1 / 2 / 3: instant character change
 - Swap animation: clone-in new, old continues last action then fades
-- Per-character cooldowns: skill / ult tick independently
+- Per-character resources: Skill cooldown and Ultimate Aura Energy are tracked independently
 - Per-character HP via `TeamLoader` (already works)
 - Input buffer inheritance: new character inherits previous buffer
 
@@ -1048,7 +1204,7 @@ Do not hallucinate completed architecture, engine details, scene names, or imple
 - 3+ enemy archetypes: trash, ranged, shield, elite
 - 5+ room layouts with varying compositions
 - 10+ upgrades across all reward categories
-- 3+ artifacts with passive effects
+- 3+ artifacts with runtime stat bonuses; passive descriptions require separately authored runtime effects
 - Difficulty scaling per room depth
 
 **Accept:** Runs feel varied. Characters differ. Upgrades create build identity.

@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
 using Project.InventorySystem.Items;
+using Project.UI;
 
 namespace Project.TeamBuilder.UI
 {
@@ -22,9 +23,8 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private TMP_Text nameText;
         [SerializeField] private Image attributeImage; // For elemental attribute
 
-        [Header("Element Sprites")]
-        [Tooltip("Assign sprites in order: None, Earth, Water, Fire, Wind (matching ElementType enum order)")]
-        [SerializeField] private Sprite[] elementSprites = new Sprite[5];
+        [Header("Element Settings")]
+        [SerializeField] private ElementSpriteResolver elementResolver;
 
         [Header("Visual States")]
         [SerializeField] private Color normalFrameColor = new Color(0.5f, 0.2f, 0.7f, 1f);
@@ -62,15 +62,10 @@ namespace Project.TeamBuilder.UI
 
                 if (nameText != null)
                     nameText.text = item.characterObjectData.metaData.displayName;
-                if (attributeImage != null)
+                
+                if (attributeImage != null && elementResolver != null)
                 {
-                    int elementIndex = (int)item.characterObjectData.elementType;
-                    bool hasElementSprite = elementIndex >= 0 && elementIndex < elementSprites.Length && elementSprites[elementIndex] != null;
-                    attributeImage.enabled = hasElementSprite;
-                    if (hasElementSprite)
-                    {
-                        attributeImage.sprite = elementSprites[elementIndex];
-                    }
+                    elementResolver.ResolveImage(attributeImage, item.characterObjectData.elementType);
                 }
             }
             else
@@ -112,7 +107,6 @@ namespace Project.TeamBuilder.UI
         {
             if (isInTeam) return; // Don't allow dragging characters already in team
 
-            // Ensure we have a root canvas for the ghost
             if (rootCanvas == null)
             {
                 rootCanvas = GetComponentInParent<Canvas>()?.rootCanvas;
@@ -124,34 +118,8 @@ namespace Project.TeamBuilder.UI
                 return;
             }
 
-            // Create a floating ghost
-            GameObject ghostObj = new GameObject("DragGhost");
-            dragGhost = ghostObj.transform;
-
-            // Parent it to the root canvas so it renders on top
-            dragGhost.SetParent(rootCanvas.transform, false);
-
-            // Add an Image for the ghost visual
-            Image ghostImage = ghostObj.AddComponent<Image>();
-            if (iconImage != null && iconImage.sprite != null)
-            {
-                ghostImage.sprite = iconImage.sprite;
-            }
-            ghostImage.raycastTarget = false;
-
-            // Configure the ghost RectTransform so it tracks the mouse correctly.
-            // Anchor to bottom-left so anchoredPosition == position in canvas units
-            // measured from (0,0). Then UpdateGhostPosition converts the screen
-            // point into that space, accounting for CanvasScaler.
-            RectTransform ghostRect = ghostObj.GetComponent<RectTransform>();
-            ghostRect.anchorMin = Vector2.zero;
-            ghostRect.anchorMax = Vector2.zero;
-            ghostRect.pivot = new Vector2(0.5f, 0.5f);
-            ghostRect.sizeDelta = new Vector2(80f, 80f);
-            ghostImage.color = new Color(1f, 1f, 1f, 0.75f);
-
-            // Move to cursor position
-            UpdateGhostPosition(eventData);
+            Sprite dragSprite = (iconImage != null) ? iconImage.sprite : null;
+            dragGhost = UIDragGhostHelper.CreateGhost(rootCanvas, dragSprite, new Vector2(80f, 80f), 0.75f, "DragGhost");
 
             // Make original semi-transparent during drag
             if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
@@ -165,14 +133,12 @@ namespace Project.TeamBuilder.UI
         public void OnDrag(PointerEventData eventData)
         {
             if (dragGhost == null) return;
-            UpdateGhostPosition(eventData);
+            UIDragGhostHelper.UpdatePosition(dragGhost, rootCanvas, eventData.position);
         }
 
         public void OnEndDrag(PointerEventData eventData)
         {
-            // Destroy the ghost
-            if (dragGhost != null)
-                Destroy(dragGhost.gameObject);
+            UIDragGhostHelper.DestroyGhost(ref dragGhost);
 
             // Restore original appearance
             if (!isInTeam)
@@ -184,50 +150,6 @@ namespace Project.TeamBuilder.UI
                 if (canvasGroup != null) canvasGroup.alpha = inTeamAlpha;
             }
             if (canvasGroup != null) canvasGroup.blocksRaycasts = true;
-        }
-
-        /// <summary>
-        /// Converts the pointer screen position into the ghost's
-        /// anchoredPosition inside the root canvas, correctly handling
-        /// both Screen Space - Overlay and Screen Space - Camera canvases
-        /// as well as any CanvasScaler reference-resolution scaling.
-        /// </summary>
-        private void UpdateGhostPosition(PointerEventData eventData)
-        {
-            if (dragGhost == null || rootCanvas == null) return;
-
-            RectTransform ghostRect = dragGhost as RectTransform;
-            if (ghostRect == null) ghostRect = dragGhost.GetComponent<RectTransform>();
-
-            if (rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay)
-            {
-                // For Overlay, convert the screen point through the canvas
-                // RectTransform so CanvasScaler scaling is respected.
-                RectTransform canvasRect = rootCanvas.GetComponent<RectTransform>();
-                Vector2 localPoint;
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    canvasRect, eventData.position, null, out localPoint
-                );
-
-                // localPoint is relative to canvas pivot (usually center).
-                // Convert to anchored position relative to bottom-left.
-                Vector2 canvasSize = canvasRect.rect.size;
-                Vector2 pivotOffset = canvasRect.pivot * canvasSize;
-                ghostRect.anchoredPosition = localPoint + pivotOffset;
-            }
-            else
-            {
-                // For Screen Space - Camera / World Space
-                RectTransform canvasRect = rootCanvas.GetComponent<RectTransform>();
-                Vector2 localPoint;
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    canvasRect, eventData.position, rootCanvas.worldCamera, out localPoint
-                );
-
-                Vector2 canvasSize = canvasRect.rect.size;
-                Vector2 pivotOffset = canvasRect.pivot * canvasSize;
-                ghostRect.anchoredPosition = localPoint + pivotOffset;
-            }
         }
     }
 }

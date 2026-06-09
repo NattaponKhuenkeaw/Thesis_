@@ -10,27 +10,28 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 03e4f3be22e57da4781a512abdccc61d, type: 3}
-  m_Name: a_2_Echo Compass
+  m_Name: a_4_Memory-Draining Urn
   m_EditorClassIdentifier: Assembly-CSharp::Project.InventorySystem.Items.Artifact
-  id: ART-002
-  itemName: Echo Compass
-  description: Reveals hidden paths on the map. ATK +10% when user falls below 30%
-    HP.
-  icon: {fileID: 0}
-  price: 650
+  id: ART-004
+  itemName: Memory-Draining Urn
+  description: Urn catching fragments of forgotten pasts leaked during death and
+    respawn, hardening them into armor.
+  icon: {fileID: 21300000, guid: 25f44d725976c2f46a83e2ad93aca1a9, type: 3}
+  price: 950
   isEquippable: 1
-  passiveDescription: Unique passive effect description here.
+  passiveDescription: Landing 10 Basic Attacks grants a Shield equal to 8% Max HP
+    (12s CD) which explodes for physical damage when broken/expired.
   bonusStats:
-    maxHP: 0
-    attack: 15
+    maxHP: 15
+    attack: 0
     defense: 0
-    speed: 0
+    speed: -0.5
     elementalMultiplier: 0
     critRate: 0
     critDamage: 0
     cooldownReduction: 0
     skillMastery: 0
     damageMastery: 0
-    damageResistance: 0
+    damageResistance: 5
     auraEnergyMultiplier: 0
   additionalDamageEffects: []

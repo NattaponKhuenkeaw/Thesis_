@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Project.InventorySystem.Items;
+using Project.UI;
 
 namespace Project.TeamBuilder.UI
 {
@@ -17,7 +18,8 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private Image elementIcon;
         [SerializeField] private TMP_Text characterNameText;
         [SerializeField] private TMP_Text characterLoreText;
-        [SerializeField] private Sprite[] elementSprites = new Sprite[5];
+        [Header("Element Settings")]
+        [SerializeField] private ElementSpriteResolver elementResolver;
 
         [Header("Combat Stats")]
         [SerializeField] private TMP_Text hpText;
@@ -149,29 +151,23 @@ namespace Project.TeamBuilder.UI
                 characterPortrait.sprite = data.metaData != null ? data.metaData.portrait : currentCharacter.icon;
             }
 
-            if (elementIcon != null)
+            if (elementIcon != null && elementResolver != null)
             {
-                int elementIndex = (int)data.elementType;
-                bool hasElementSprite = elementIndex >= 0 && elementIndex < elementSprites.Length && elementSprites[elementIndex] != null;
-                elementIcon.enabled = hasElementSprite;
-                if (hasElementSprite)
-                {
-                    elementIcon.sprite = elementSprites[elementIndex];
-                }
+                elementResolver.ResolveImage(elementIcon, data.elementType);
             }
 
             if (data.stats != null)
             {
-                if (hpText != null) hpText.text = $"HP: {FormatStatValue(data.stats.maxHP, bonusHp)}";
-                if (atkText != null) atkText.text = $"ATK: {FormatStatValue(data.stats.attack, bonusAtk)}";
-                if (defText != null) defText.text = $"DEF: {FormatStatValue(data.stats.defense, bonusDef)}";
-                if (spdText != null) spdText.text = $"SPD: {FormatStatValue(data.stats.speed, bonusSpd)}";
-                if (cdrText != null) cdrText.text = $"CDR: {FormatStatValue(data.stats.cooldownReduction, bonusCdr)}";
-                if (critRateText != null) critRateText.text = $"CRIT: {FormatStatValue(data.stats.critRate, bonusCritRate)}";
-                if (critDmgText != null) critDmgText.text = $"CRIT DMG: {FormatStatValue(data.stats.critDamage, bonusCritDmg)}";
-                if (skillMasteryText != null) skillMasteryText.text = $"SKILL MASTERY: {FormatStatValue(data.stats.skillMastery, bonusSkillMastery)}";
-                if (dmgMasteryText != null) dmgMasteryText.text = $"DMG MASTERY: {FormatStatValue(data.stats.damageMastery, bonusDmgMastery)}";
-                if (dmgResText != null) dmgResText.text = $"DMG RES: {FormatStatValue(data.stats.damageResistance, bonusDmgRes)}";
+                if (hpText != null) hpText.text = $"HP: {FormatStatValue(data.stats.maxHP, bonusHp, "hp")}";
+                if (atkText != null) atkText.text = $"ATK: {FormatStatValue(data.stats.attack, bonusAtk, "atk")}";
+                if (defText != null) defText.text = $"DEF: {FormatStatValue(data.stats.defense, bonusDef, "def")}";
+                if (spdText != null) spdText.text = $"SPD: {FormatStatValue(data.stats.speed, bonusSpd, "spd")}";
+                if (cdrText != null) cdrText.text = $"CDR: {FormatStatValue(data.stats.cooldownReduction, bonusCdr, "cdr")}";
+                if (critRateText != null) critRateText.text = $"CRIT: {FormatStatValue(data.stats.critRate, bonusCritRate, "crit")}";
+                if (critDmgText != null) critDmgText.text = $"CRIT DMG: {FormatStatValue(data.stats.critDamage, bonusCritDmg, "crit")}";
+                if (skillMasteryText != null) skillMasteryText.text = $"SKILL MASTERY: {FormatStatValue(data.stats.skillMastery, bonusSkillMastery, "mastery")}";
+                if (dmgMasteryText != null) dmgMasteryText.text = $"DMG MASTERY: {FormatStatValue(data.stats.damageMastery, bonusDmgMastery, "mastery")}";
+                if (dmgResText != null) dmgResText.text = $"DMG RES: {FormatStatValue(data.stats.damageResistance, bonusDmgRes, "resist")}";
             }
 
             if (characterLoreText != null && data.metaData != null)
@@ -392,20 +388,9 @@ namespace Project.TeamBuilder.UI
             return null;
         }
 
-        private static string FormatStatValue(float baseValue, float additionalValue)
+        private static string FormatStatValue(float baseValue, float additionalValue, string statName)
         {
-            if (Mathf.Abs(additionalValue) > 0.001f)
-            {
-                if (additionalValue > 0)
-                {
-                    return $"{Mathf.RoundToInt(baseValue)} (<color=#4ADE80>+{Mathf.RoundToInt(additionalValue)}</color>)";
-                }
-                else
-                {
-                    return $"{Mathf.RoundToInt(baseValue)} (<color=#EF4444>{Mathf.RoundToInt(additionalValue)}</color>)";
-                }
-            }
-            return $"{Mathf.RoundToInt(baseValue)}";
+            return StatFormatHelper.Format(baseValue, additionalValue, statName, true);
         }
 
         private void ConfigurePotentialHoverFallback()

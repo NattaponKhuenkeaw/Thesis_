@@ -549,10 +549,10 @@ public class HitBoxDamage : MonoBehaviour
     private int GetConfiguredHitstopFrames()
     {
         if (currentGrabHitbox != null)
-            return currentIsCrit ? Mathf.Max(6, currentGrabHitbox.impactFreezeFrames) : currentGrabHitbox.impactFreezeFrames;
+            return currentIsCrit ? Mathf.Max(2, currentGrabHitbox.impactFreezeFrames) : currentGrabHitbox.impactFreezeFrames;
 
         if (currentNormalHitbox != null)
-            return currentIsCrit ? Mathf.Max(6, currentNormalHitbox.impactFreezeFrames) : currentNormalHitbox.impactFreezeFrames;
+            return currentIsCrit ? Mathf.Max(2, currentNormalHitbox.impactFreezeFrames) : currentNormalHitbox.impactFreezeFrames;
 
         return 0;
     }
@@ -597,8 +597,8 @@ public class HitBoxDamage : MonoBehaviour
         DamageImpactTier tier = DamageImpactTier.Low;
         if (currentGrabHitbox != null) tier = currentGrabHitbox.impactTier;
         else if (currentNormalHitbox != null) tier = currentNormalHitbox.impactTier;
-        if (currentIsCrit && tier < DamageImpactTier.Heavy)
-            tier = DamageImpactTier.Heavy;
+        if (currentIsCrit && tier < DamageImpactTier.Medium)
+            tier = DamageImpactTier.Medium;
 
         if (cameraShake != null)
             cameraShake.ShakeByImpact(tier);

@@ -99,16 +99,18 @@ namespace Project.TeamBuilder.UI
 
                 if (statItemPrefab != null && currentArtifact.bonusStats != null)
                 {
-                    AddStatItemIfNonZero("Max HP", currentArtifact.bonusStats.maxHP);
-                    AddStatItemIfNonZero("ATK", currentArtifact.bonusStats.attack);
-                    AddStatItemIfNonZero("DEF", currentArtifact.bonusStats.defense);
-                    AddStatItemIfNonZero("SPD", currentArtifact.bonusStats.speed);
-                    AddStatItemIfNonZero("Crit Rate", currentArtifact.bonusStats.critRate);
-                    AddStatItemIfNonZero("Crit DMG", currentArtifact.bonusStats.critDamage);
-                    AddStatItemIfNonZero("CDR", currentArtifact.bonusStats.cooldownReduction);
-                    AddStatItemIfNonZero("Skill Mastery", currentArtifact.bonusStats.skillMastery);
-                    AddStatItemIfNonZero("DMG Mastery", currentArtifact.bonusStats.damageMastery);
-                    AddStatItemIfNonZero("DMG Resist", currentArtifact.bonusStats.damageResistance);
+                    AddStatItemIfNonZero("Max HP", currentArtifact.bonusStats.maxHP, "hp");
+                    AddStatItemIfNonZero("ATK", currentArtifact.bonusStats.attack, "atk");
+                    AddStatItemIfNonZero("DEF", currentArtifact.bonusStats.defense, "def");
+                    AddStatItemIfNonZero("SPD", currentArtifact.bonusStats.speed, "spd");
+                    AddStatItemIfNonZero("Crit Rate", currentArtifact.bonusStats.critRate, "crit");
+                    AddStatItemIfNonZero("Crit DMG", currentArtifact.bonusStats.critDamage, "crit");
+                    AddStatItemIfNonZero("CDR", currentArtifact.bonusStats.cooldownReduction, "cdr");
+                    AddStatItemIfNonZero("Skill Mastery", currentArtifact.bonusStats.skillMastery, "mastery");
+                    AddStatItemIfNonZero("DMG Mastery", currentArtifact.bonusStats.damageMastery, "mastery");
+                    AddStatItemIfNonZero("DMG Resist", currentArtifact.bonusStats.damageResistance, "resist");
+                    AddStatItemIfNonZero("Aura Energy Multiplier", currentArtifact.bonusStats.auraEnergyMultiplier * 100f, "ae");
+                    AddStatItemIfNonZero("Elemental Multiplier", currentArtifact.bonusStats.elementalMultiplier, "elemental");
                 }
             }
 
@@ -123,7 +125,7 @@ namespace Project.TeamBuilder.UI
             }
         }
 
-        private void AddStatItemIfNonZero(string statName, float value)
+        private void AddStatItemIfNonZero(string statName, float value, string statKey = "")
         {
             if (Mathf.Abs(value) > 0.001f)
             {
@@ -131,7 +133,7 @@ namespace Project.TeamBuilder.UI
                 StatItemUI ui = obj.GetComponent<StatItemUI>();
                 if (ui != null)
                 {
-                    ui.Setup(statName, value);
+                    ui.Setup(statName, value, statKey);
                 }
             }
         }

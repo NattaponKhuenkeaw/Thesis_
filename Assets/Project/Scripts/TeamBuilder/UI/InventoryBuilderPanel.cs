@@ -23,6 +23,7 @@ namespace Project.TeamBuilder.UI
         public bool IsArtifactGridOpen => artifactGridPanel != null && artifactGridPanel.gameObject.activeSelf;
         public bool IsAnyPanelOpen => IsCharacterGridOpen || IsArtifactGridOpen;
 
+
         public void Init(TeamBuilderUI teamBuilder, Canvas canvas)
         {
             parentTeamBuilder = teamBuilder;

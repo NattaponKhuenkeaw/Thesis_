@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Project.InventorySystem.Items;
+using Project.UI;
 using System;
 
 namespace Project.ShopSystem.UI
@@ -15,9 +16,8 @@ namespace Project.ShopSystem.UI
         [SerializeField] private Button button;
         [SerializeField] private Image attributeImage; // For elemental attribute
 
-        [Header("Element Sprites")]
-        [Tooltip("Assign sprites in order: None, Earth, Water, Fire, Wind (matching ElementType enum order)")]
-        [SerializeField] private Sprite[] elementSprites = new Sprite[5];
+        [Header("Element Settings")]
+        [SerializeField] private ElementSpriteResolver elementResolver;
 
         [Header("Sold Out Overlay")]
         [Tooltip("A panel that covers the grid item when the item is already owned (one-time buy).")]
@@ -59,15 +59,9 @@ namespace Project.ShopSystem.UI
             // Set attribute image based on item type
             if (attributeImage != null)
             {
-                if (item is CharacterItem characterItem && characterItem.characterObjectData != null)
+                if (item is CharacterItem characterItem && characterItem.characterObjectData != null && elementResolver != null)
                 {
-                    int elementIndex = (int)characterItem.characterObjectData.elementType;
-                    bool hasElementSprite = elementIndex >= 0 && elementIndex < elementSprites.Length && elementSprites[elementIndex] != null;
-                    attributeImage.enabled = hasElementSprite;
-                    if (hasElementSprite)
-                    {
-                        attributeImage.sprite = elementSprites[elementIndex];
-                    }
+                    elementResolver.ResolveImage(attributeImage, characterItem.characterObjectData.elementType);
                 }
                 else
                 {
@@ -110,10 +104,7 @@ namespace Project.ShopSystem.UI
         /// </summary>
         public static int GetSortOrder(BaseItem item)
         {
-            if (item is Item)          return 0; // Consumable
-            if (item is CharacterItem) return 1; // Character
-            if (item is Artifact)      return 2; // Artifact
-            return 3; // Unknown fallback
+            return ItemCategoryHelper.GetSortOrder(item);
         }
 
         /// <summary>
@@ -122,7 +113,7 @@ namespace Project.ShopSystem.UI
         /// </summary>
         public static bool IsOneTimeBuyItem(BaseItem item)
         {
-            return (item is Artifact || item is CharacterItem);
+            return ItemCategoryHelper.IsOneTimeBuy(item);
         }
 
         private void OnClicked()

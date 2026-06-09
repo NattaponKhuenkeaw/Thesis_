@@ -47,7 +47,7 @@ namespace Project.ShopSystem
                 if (excludeOwnedItems && playerInventory != null && playerInventory.HasItem(item))
                 {
                     // Only exclude one-time-buy items (Artifact/Character) that are already owned
-                    if (ShopGridItemUI.IsOneTimeBuyItem(item))
+                    if (ItemCategoryHelper.IsOneTimeBuy(item))
                         continue;
                 }
                 
@@ -153,7 +153,7 @@ namespace Project.ShopSystem
         public bool IsItemSoldOut(BaseItem item)
         {
             if (playerInventory == null) return false;
-            return ShopGridItemUI.IsOneTimeBuyItem(item) && playerInventory.HasItem(item);
+            return ItemCategoryHelper.IsOneTimeBuy(item) && playerInventory.HasItem(item);
         }
 
         /// <summary>

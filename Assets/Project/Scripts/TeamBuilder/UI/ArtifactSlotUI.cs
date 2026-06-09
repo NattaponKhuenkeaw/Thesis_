@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using Project.InventorySystem.Items;
+using Project.UI;
 
 namespace Project.TeamBuilder.UI
 {
@@ -32,6 +33,7 @@ namespace Project.TeamBuilder.UI
         // Properties
         // =========================================================
         public Artifact CurrentArtifact => currentArtifact;
+        public TeamSlotUI ParentSlot => parentSlot;
 
         // =========================================================
         // Initialization
@@ -68,9 +70,7 @@ namespace Project.TeamBuilder.UI
                 slotBackground.color = (artifact != null) ? filledSlotColor : emptySlotColor;
             }
 
-            // Notify parent to recalculate stats
-            if (parentSlot != null)
-                parentSlot.RecalculateStats();
+            // Removed automatic recalculation to allow TeamSlotUI to batch updates.
         }
 
         public void ClearArtifact()
@@ -87,6 +87,8 @@ namespace Project.TeamBuilder.UI
             {
                 slotBackground.color = emptySlotColor;
             }
+
+            // Removed automatic recalculation to allow TeamSlotUI to batch updates.
         }
 
         public Artifact GetArtifact()
@@ -153,25 +155,8 @@ namespace Project.TeamBuilder.UI
 
             if (rootCanvas == null) return;
 
-            GameObject ghostObj = new GameObject("ArtifactSlotDragGhost");
-            dragGhost = ghostObj.transform;
-            dragGhost.SetParent(rootCanvas.transform, false);
-
-            Image ghostImage = ghostObj.AddComponent<Image>();
-            if (artifactIcon != null && artifactIcon.sprite != null)
-            {
-                ghostImage.sprite = artifactIcon.sprite;
-            }
-            ghostImage.raycastTarget = false;
-
-            RectTransform ghostRect = ghostObj.GetComponent<RectTransform>();
-            ghostRect.anchorMin = Vector2.zero;
-            ghostRect.anchorMax = Vector2.zero;
-            ghostRect.pivot = new Vector2(0.5f, 0.5f);
-            ghostRect.sizeDelta = new Vector2(60f, 60f);
-            ghostImage.color = new Color(1f, 1f, 1f, 0.85f);
-
-            UpdateGhostPosition(eventData);
+            Sprite dragSprite = (artifactIcon != null) ? artifactIcon.sprite : null;
+            dragGhost = UIDragGhostHelper.CreateGhost(rootCanvas, dragSprite, new Vector2(60f, 60f), 0.85f, "ArtifactSlotDragGhost");
 
             if (artifactIcon != null)
             {
@@ -182,15 +167,12 @@ namespace Project.TeamBuilder.UI
         public void OnDrag(PointerEventData eventData)
         {
             if (dragGhost == null) return;
-            UpdateGhostPosition(eventData);
+            UIDragGhostHelper.UpdatePosition(dragGhost, rootCanvas, eventData.position);
         }
 
         public void OnEndDrag(PointerEventData eventData)
         {
-            if (dragGhost != null)
-            {
-                Destroy(dragGhost.gameObject);
-            }
+            UIDragGhostHelper.DestroyGhost(ref dragGhost);
 
             if (artifactIcon != null && currentArtifact != null)
             {
@@ -216,31 +198,6 @@ namespace Project.TeamBuilder.UI
         public void OnPointerExit(PointerEventData eventData)
         {
             SetDropHighlight(false);
-        }
-
-        private void UpdateGhostPosition(PointerEventData eventData)
-        {
-            if (dragGhost == null || rootCanvas == null) return;
-
-            RectTransform ghostRect = dragGhost as RectTransform;
-            if (rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay)
-            {
-                RectTransform canvasRect = rootCanvas.GetComponent<RectTransform>();
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    canvasRect, eventData.position, null, out Vector2 localPoint
-                );
-                Vector2 pivotOffset = canvasRect.pivot * canvasRect.rect.size;
-                ghostRect.anchoredPosition = localPoint + pivotOffset;
-            }
-            else
-            {
-                RectTransform canvasRect = rootCanvas.GetComponent<RectTransform>();
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                    canvasRect, eventData.position, rootCanvas.worldCamera, out Vector2 localPoint
-                );
-                Vector2 pivotOffset = canvasRect.pivot * canvasRect.rect.size;
-                ghostRect.anchoredPosition = localPoint + pivotOffset;
-            }
         }
 
         // =========================================================

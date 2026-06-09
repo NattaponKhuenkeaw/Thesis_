@@ -45,11 +45,11 @@ public class EnemyWorldUI : MonoBehaviour
     [Tooltip("Text scale for Ultimate tier hits (biggest).")]
     [SerializeField] private float ultimateScale = 2.0f;
     [Tooltip("Overshoot multiplier for the punch-pop effect at start.")]
-    [SerializeField] private float punchScaleOvershoot = 1.3f;
+    [SerializeField] private float punchScaleOvershoot = 1.02f;
 
     [Header("Critical Hit Styling")]
     [Tooltip("Extra scale multiplier applied when the hit is a crit.")]
-    [SerializeField] private float critScaleMultiplier = 1.2f;
+    [SerializeField] private float critScaleMultiplier = 1.15f;
     [Tooltip("Color used for crit damage text.")]
     [SerializeField] private Color critTextColor = new Color(1f, 0.85f, 0.2f);
     [Tooltip("Random rotation range applied to crit damage popups.")]

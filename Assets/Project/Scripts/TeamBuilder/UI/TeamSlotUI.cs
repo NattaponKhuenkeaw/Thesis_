@@ -4,6 +4,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TMPro;
 using Project.InventorySystem.Items;
+using Project.UI;
 
 namespace Project.TeamBuilder.UI
 {
@@ -45,13 +46,13 @@ namespace Project.TeamBuilder.UI
         [Header("Stat Feedback")]
         [SerializeField] private Color statNormalColor = Color.white;
         [SerializeField] private Color statBoostColor = new Color(0.45f, 1f, 0.45f, 1f);
+        [SerializeField] private Color statDowngradeColor = new Color(1f, 0.4f, 0.4f, 1f);
         [SerializeField] private Color placementBurstColor = new Color(0.75f, 1f, 0.9f, 0.9f);
         [SerializeField] private float statFeedbackDuration = 0.3f;
         [SerializeField] private float statFeedbackScale = 1.2f;
 
-        [Header("Element Sprites")]
-        [Tooltip("Assign sprites in order: None, Earth, Water, Fire, Wind (matching ElementType enum order)")]
-        [SerializeField] private Sprite[] elementSprites = new Sprite[5];
+        [Header("Element Settings")]
+        [SerializeField] private ElementSpriteResolver elementResolver;
 
         private CharacterItem currentCharacter;
         private TeamBuilderUI parentBuilder;
@@ -72,6 +73,7 @@ namespace Project.TeamBuilder.UI
         private float lastDefenseBonus;
         private float lastHpBase;
         private float lastHpBonus;
+        private CharacterStats lastEffectiveStats;
         private bool hasStatSnapshot;
 
         public CharacterItem CurrentCharacter => currentCharacter;
@@ -140,15 +142,9 @@ namespace Project.TeamBuilder.UI
                 characterNameText.text = charObj != null ? charObj.metaData.displayName : character.itemName;
             }
 
-            if (elementIcon != null && charObj != null)
+            if (elementIcon != null && charObj != null && elementResolver != null)
             {
-                int elementIndex = (int)charObj.elementType;
-                bool hasElementSprite = elementIndex >= 0 && elementIndex < elementSprites.Length && elementSprites[elementIndex] != null;
-                elementIcon.enabled = hasElementSprite;
-                if (hasElementSprite)
-                {
-                    elementIcon.sprite = elementSprites[elementIndex];
-                }
+                elementResolver.ResolveImage(elementIcon, charObj.elementType);
             }
 
             if (emptyStateOverlay != null)
@@ -234,9 +230,11 @@ namespace Project.TeamBuilder.UI
 
             SetCharacter(other.currentCharacter);
             SetArtifacts(other.GetEquippedArtifacts());
+            RecalculateStats();
 
             other.SetCharacter(tempChar);
             other.SetArtifacts(tempArtifacts);
+            other.RecalculateStats();
         }
 
         public void RecalculateStats()
@@ -249,10 +247,11 @@ namespace Project.TeamBuilder.UI
                 return;
             }
 
-            CharacterStats baseStats = currentCharacter.characterObjectData.stats;
+            CharacterStats baseStats = currentCharacter.characterObjectData.stats ?? new CharacterStats();
             float bonusAttack = 0f;
             float bonusDefense = 0f;
             float bonusHp = 0f;
+            CharacterStats effectiveStats = baseStats.Clone();
 
             for (int i = 0; i < artifactSlots.Length; i++)
             {
@@ -265,18 +264,27 @@ namespace Project.TeamBuilder.UI
                 bonusAttack += slot.CurrentArtifact.bonusStats.attack;
                 bonusDefense += slot.CurrentArtifact.bonusStats.defense;
                 bonusHp += slot.CurrentArtifact.bonusStats.maxHP;
+                ApplyArtifactBonus(effectiveStats, baseStats, slot.CurrentArtifact.bonusStats);
             }
 
-            UpdateStatFeedback(atkText, ref atkFeedbackCoroutine, ref lastAttackBase, ref lastAttackBonus, baseStats.attack, bonusAttack);
-            UpdateStatFeedback(defText, ref defFeedbackCoroutine, ref lastDefenseBase, ref lastDefenseBonus, baseStats.defense, bonusDefense);
-            UpdateStatFeedback(hpText, ref hpFeedbackCoroutine, ref lastHpBase, ref lastHpBonus, baseStats.maxHP, bonusHp);
+            UpdateStatFeedback(atkText, ref atkFeedbackCoroutine, ref lastAttackBase, ref lastAttackBonus, baseStats.attack, bonusAttack, "atk");
+            UpdateStatFeedback(defText, ref defFeedbackCoroutine, ref lastDefenseBase, ref lastDefenseBonus, baseStats.defense, bonusDefense, "def");
+            UpdateStatFeedback(hpText, ref hpFeedbackCoroutine, ref lastHpBase, ref lastHpBonus, baseStats.maxHP, bonusHp, "hp");
+
+            if (hasStatSnapshot && lastEffectiveStats != null)
+            {
+                float trend = CalculateStatTrend(lastEffectiveStats, effectiveStats);
+                if (Mathf.Abs(trend) > 0.001f)
+                {
+                    PlayOverallStatFeedback(trend > 0f);
+                }
+            }
+
+            lastEffectiveStats = effectiveStats.Clone();
             hasStatSnapshot = true;
         }
 
-        public CharacterItem GetCharacterItem()
-        {
-            return currentCharacter;
-        }
+
 
         public void OnDrop(PointerEventData eventData)
         {
@@ -439,6 +447,7 @@ namespace Project.TeamBuilder.UI
             if (direction < 0)
             {
                 slot.ClearArtifact();
+                RecalculateStats();
                 parentBuilder.OnSlotChanged();
             }
         }
@@ -461,11 +470,15 @@ namespace Project.TeamBuilder.UI
                 if (oldSubSlot != null)
                 {
                     oldSubSlot.ClearArtifact();
-                    existingSlot.RecalculateStats();
+                    if (existingSlot != this)
+                    {
+                        existingSlot.RecalculateStats();
+                    }
                 }
             }
 
             targetSlot.SetArtifact(newArtifact);
+            RecalculateStats();
             parentBuilder.OnSlotChanged();
         }
 
@@ -480,9 +493,15 @@ namespace Project.TeamBuilder.UI
             }
 
             Artifact temp = targetSlot.GetArtifact();
+            TeamSlotUI sourceParent = sourceSlot.ParentSlot;
             targetSlot.SetArtifact(sourceSlot.GetArtifact());
             sourceSlot.SetArtifact(temp);
 
+            RecalculateStats();
+            if (sourceParent != null && sourceParent != this)
+            {
+                sourceParent.RecalculateStats();
+            }
             parentBuilder.OnSlotChanged();
         }
 
@@ -500,18 +519,7 @@ namespace Project.TeamBuilder.UI
             return null;
         }
 
-        public Artifact[] GetEquippedArtifactsSnapshot()
-        {
-            return GetEquippedArtifacts();
-        }
-
-        public void SetEquippedArtifacts(Artifact[] artifacts)
-        {
-            SetArtifacts(artifacts);
-            RecalculateStats();
-        }
-
-        private Artifact[] GetEquippedArtifacts()
+        public Artifact[] GetEquippedArtifacts()
         {
             Artifact[] artifacts = new Artifact[artifactSlots.Length];
             for (int i = 0; i < artifactSlots.Length; i++)
@@ -520,6 +528,12 @@ namespace Project.TeamBuilder.UI
             }
 
             return artifacts;
+        }
+
+        public void SetEquippedArtifacts(Artifact[] artifacts)
+        {
+            SetArtifacts(artifacts);
+            RecalculateStats();
         }
 
         private void SetArtifacts(Artifact[] artifacts)
@@ -571,23 +585,9 @@ namespace Project.TeamBuilder.UI
                 return;
             }
 
-            GameObject ghostObject = new GameObject("TeamSlotDragGhost", typeof(RectTransform), typeof(Image));
-            dragGhost = ghostObject.transform;
-            dragGhost.SetParent(parentBuilder.RootCanvas.transform, false);
-
-            Image ghostImage = ghostObject.GetComponent<Image>();
-            ghostImage.sprite = profileImage.sprite;
-            ghostImage.color = new Color(1f, 1f, 1f, 0.78f);
-            ghostImage.raycastTarget = false;
-
             RectTransform sourceRect = profileImage.rectTransform != null ? profileImage.rectTransform : rectTransform;
-            RectTransform ghostRect = ghostObject.GetComponent<RectTransform>();
-            ghostRect.anchorMin = Vector2.zero;
-            ghostRect.anchorMax = Vector2.zero;
-            ghostRect.pivot = new Vector2(0.5f, 0.5f);
-            ghostRect.sizeDelta = sourceRect != null ? sourceRect.rect.size : new Vector2(80f, 80f);
-
-            UpdateDragGhostPosition(eventData);
+            Vector2 size = sourceRect != null ? sourceRect.rect.size : new Vector2(80f, 80f);
+            dragGhost = UIDragGhostHelper.CreateGhost(parentBuilder.RootCanvas, profileImage.sprite, size, 0.78f, "TeamSlotDragGhost");
         }
 
         private void UpdateDragGhostPosition(PointerEventData eventData)
@@ -597,29 +597,12 @@ namespace Project.TeamBuilder.UI
                 return;
             }
 
-            RectTransform ghostRect = dragGhost as RectTransform;
-            RectTransform canvasRect = parentBuilder.RootCanvas.GetComponent<RectTransform>();
-            Camera eventCamera = parentBuilder.RootCanvas.renderMode == RenderMode.ScreenSpaceOverlay
-                ? null
-                : parentBuilder.RootCanvas.worldCamera;
-
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, eventData.position, eventCamera, out Vector2 localPoint))
-            {
-                Vector2 canvasSize = canvasRect.rect.size;
-                Vector2 pivotOffset = canvasRect.pivot * canvasSize;
-                ghostRect.anchoredPosition = localPoint + pivotOffset;
-            }
+            UIDragGhostHelper.UpdatePosition(dragGhost, parentBuilder.RootCanvas, eventData.position);
         }
 
         private void DestroyDragGhost()
         {
-            if (dragGhost == null)
-            {
-                return;
-            }
-
-            Destroy(dragGhost.gameObject);
-            dragGhost = null;
+            UIDragGhostHelper.DestroyGhost(ref dragGhost);
         }
 
         private void PlayLockedFeedback()
@@ -678,7 +661,7 @@ namespace Project.TeamBuilder.UI
             }
 
             inspectHoldCoroutine = null;
-            parentBuilder.OpenInspectScreen(currentCharacter, GetEquippedArtifactsSnapshot());
+            parentBuilder.OpenInspectScreen(currentCharacter, GetEquippedArtifacts());
         }
 
         private void CancelInspectHold()
@@ -734,7 +717,8 @@ namespace Project.TeamBuilder.UI
             ref float previousBaseValue,
             ref float previousBonusValue,
             float nextBaseValue,
-            float nextBonusValue)
+            float nextBonusValue,
+            string statName)
         {
             if (targetText == null)
             {
@@ -755,7 +739,7 @@ namespace Project.TeamBuilder.UI
 
             if (!shouldAnimate)
             {
-                targetText.text = FormatStatValue(nextBaseValue, nextBonusValue);
+                targetText.text = FormatStatValue(nextBaseValue, nextBonusValue, statName);
                 targetText.color = statNormalColor;
                 targetText.transform.localScale = Vector3.one;
             }
@@ -766,7 +750,8 @@ namespace Project.TeamBuilder.UI
                     previousBaseValue,
                     previousBonusValue,
                     nextBaseValue,
-                    nextBonusValue));
+                    nextBonusValue,
+                    statName));
             }
 
             previousBaseValue = nextBaseValue;
@@ -778,9 +763,25 @@ namespace Project.TeamBuilder.UI
             float startBaseValue,
             float startBonusValue,
             float endBaseValue,
-            float endBonusValue)
+            float endBonusValue,
+            string statName)
         {
             float elapsed = 0f;
+
+            // Determine if upgrade or downgrade
+            string statKey = statName != null ? statName.ToLowerInvariant() : "";
+            bool isPercentMultiplier = statKey.Contains("hp") || statKey.Contains("atk") || statKey.Contains("def");
+
+            float startTotal = isPercentMultiplier
+                ? startBaseValue * (1f + startBonusValue / 100f)
+                : startBaseValue + startBonusValue;
+
+            float endTotal = isPercentMultiplier
+                ? endBaseValue * (1f + endBonusValue / 100f)
+                : endBaseValue + endBonusValue;
+
+            bool isUpgrade = endTotal > startTotal;
+            Color flashColor = isUpgrade ? statBoostColor : statDowngradeColor;
 
             while (elapsed < statFeedbackDuration)
             {
@@ -790,20 +791,99 @@ namespace Project.TeamBuilder.UI
                 float currentBase = Mathf.Lerp(startBaseValue, endBaseValue, eased);
                 float currentBonus = Mathf.Lerp(startBonusValue, endBonusValue, eased);
 
-                targetText.text = FormatStatValue(currentBase, currentBonus);
-                targetText.color = Color.Lerp(statBoostColor, statNormalColor, t);
+                targetText.text = FormatStatValue(currentBase, currentBonus, statName);
+                targetText.color = Color.Lerp(flashColor, statNormalColor, t);
                 targetText.transform.localScale = Vector3.one * Mathf.Lerp(statFeedbackScale, 1f, t);
                 yield return null;
             }
 
-            targetText.text = FormatStatValue(endBaseValue, endBonusValue);
+            targetText.text = FormatStatValue(endBaseValue, endBonusValue, statName);
             targetText.color = statNormalColor;
             targetText.transform.localScale = Vector3.one;
         }
 
-        private static string FormatStatValue(float baseValue, float bonusValue)
+        private static string FormatStatValue(float baseValue, float bonusValue, string statName)
         {
-            return $"{Mathf.RoundToInt(baseValue)}(+{Mathf.RoundToInt(bonusValue)})";
+            return StatFormatHelper.Format(baseValue, bonusValue, statName, false);
+        }
+
+        private void PlayOverallStatFeedback(bool isUpgrade)
+        {
+            feedbackDriver = feedbackDriver != null ? feedbackDriver : UIFeedbackDriver.GetOrAdd(gameObject);
+            if (feedbackDriver == null)
+            {
+                return;
+            }
+
+            Color feedbackColor = isUpgrade ? statBoostColor : statDowngradeColor;
+            Graphic feedbackGraphic = profileImage != null ? profileImage : atkText;
+            if (feedbackGraphic != null)
+            {
+                feedbackDriver.PlayFlash(feedbackGraphic, feedbackColor, statFeedbackDuration);
+            }
+
+            if (rectTransform != null)
+            {
+                float cardPulseScale = Mathf.Lerp(1f, statFeedbackScale, 0.45f);
+                feedbackDriver.PlayPulse(rectTransform, cardPulseScale, statFeedbackDuration);
+            }
+        }
+
+        private static void ApplyArtifactBonus(
+            CharacterStats effectiveStats,
+            CharacterStats baseStats,
+            CharacterStats bonusStats)
+        {
+            if (effectiveStats == null || bonusStats == null)
+            {
+                return;
+            }
+
+            if (baseStats != null)
+            {
+                effectiveStats.maxHP += baseStats.maxHP * (bonusStats.maxHP / 100f);
+                effectiveStats.attack += baseStats.attack * (bonusStats.attack / 100f);
+                effectiveStats.defense += baseStats.defense * (bonusStats.defense / 100f);
+            }
+
+            effectiveStats.speed += bonusStats.speed;
+            effectiveStats.elementalMultiplier += bonusStats.elementalMultiplier / 100f;
+            effectiveStats.critRate += bonusStats.critRate;
+            effectiveStats.critDamage += bonusStats.critDamage;
+            effectiveStats.cooldownReduction += bonusStats.cooldownReduction;
+            effectiveStats.skillMastery += bonusStats.skillMastery;
+            effectiveStats.damageMastery += bonusStats.damageMastery;
+            effectiveStats.damageResistance += bonusStats.damageResistance;
+            effectiveStats.auraEnergyMultiplier += bonusStats.auraEnergyMultiplier;
+        }
+
+        private static float CalculateStatTrend(CharacterStats previous, CharacterStats next)
+        {
+            if (previous == null || next == null)
+            {
+                return 0f;
+            }
+
+            float trend = 0f;
+            trend += NormalizeDelta(previous.maxHP, next.maxHP);
+            trend += NormalizeDelta(previous.attack, next.attack);
+            trend += NormalizeDelta(previous.defense, next.defense);
+            trend += NormalizeDelta(previous.speed, next.speed);
+            trend += NormalizeDelta(previous.elementalMultiplier, next.elementalMultiplier);
+            trend += NormalizeDelta(previous.critRate, next.critRate);
+            trend += NormalizeDelta(previous.critDamage, next.critDamage);
+            trend += NormalizeDelta(previous.cooldownReduction, next.cooldownReduction);
+            trend += NormalizeDelta(previous.skillMastery, next.skillMastery);
+            trend += NormalizeDelta(previous.damageMastery, next.damageMastery);
+            trend += NormalizeDelta(previous.damageResistance, next.damageResistance);
+            trend += NormalizeDelta(previous.auraEnergyMultiplier, next.auraEnergyMultiplier);
+            return trend;
+        }
+
+        private static float NormalizeDelta(float previous, float next)
+        {
+            float denominator = Mathf.Max(1f, Mathf.Abs(previous));
+            return (next - previous) / denominator;
         }
     }
 }

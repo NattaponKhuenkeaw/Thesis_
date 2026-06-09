@@ -1596,6 +1596,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 67ca9820e8816c44590ac0315e2ef991, type: 3}
+--- !u!1 &2328031192748680711 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3929694059667106457, guid: 67ca9820e8816c44590ac0315e2ef991, type: 3}
+  m_PrefabInstance: {fileID: 1641500372536904862}
+  m_PrefabAsset: {fileID: 0}
 --- !u!224 &5637577748060009575 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6411847085569128697, guid: 67ca9820e8816c44590ac0315e2ef991, type: 3}
@@ -1758,17 +1763,19 @@ MonoBehaviour:
   damagePopDuration: 0.1
   damageScaleDownDuration: 0.15
   damageFreezeDuration: 0.4
+  damageShrinkDuration: 0.15
   damageFadeDuration: 0.3
   healthLerpDelay: 0.75
   healthLerpDuration: 0.5
   hideCanvasOnDeath: 1
-  attackWarningIcon: {fileID: 0}
+  attackWarningIcon: {fileID: 2328031192748680711}
   defaultAttackWarningDuration: 0.5
-  basicComboScale: 1
-  skillScale: 1.2
+  basicComboScale: 0.9
+  skillScale: 1.1
   ultimateScale: 2
   punchScaleOvershoot: 1.02
-  critScaleMultiplier: 1.35
+  damageShrinkScaleMultiplier: 0.5
+  critScaleMultiplier: 1.15
   critTextColor: {r: 1, g: 0.85, b: 0.2, a: 1}
   critRotationRange: 15
   physicalColor: {r: 1, g: 1, b: 1, a: 1}

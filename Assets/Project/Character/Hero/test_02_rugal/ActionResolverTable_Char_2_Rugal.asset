@@ -18,7 +18,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
-    actionDamageMultiplier: 0
+    actionDamageMultiplier: 7.5
     auraEnergyReward: 0
     comboTree:
       treeName: Combo
@@ -44,7 +44,7 @@ MonoBehaviour:
     conditions: []
     allowGroundToAirTransition: 0
     actionDamageMultiplier: 3
-    auraEnergyReward: 3
+    auraEnergyReward: 10
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
@@ -140,7 +140,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.2081623, y: 1.4506402}
         size: {x: 2.1791368, y: 1.6012073}
-        damageRatio: 0.5
+        damageRatio: 0.07
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
@@ -174,7 +174,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.0418745, y: 2.0638552}
         size: {x: 2.1186674, y: 1.5105046}
-        damageRatio: 0.7
+        damageRatio: 0.03
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -228,6 +228,7 @@ MonoBehaviour:
           - vfx
           - audio
           - hitbox
+          - events
         routes: []
         defaultNext:
           rid: 1588255929706479941
@@ -258,7 +259,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.2610719, y: 2.0250905}
         size: {x: 2.2244859, y: 1.7523781}
-        damageRatio: 1.3
+        damageRatio: 0.17
         impactTier: 2
         useDeterministicReaction: 1
         reactionKind: 1
@@ -312,6 +313,7 @@ MonoBehaviour:
           - vfx
           - audio
           - hitbox
+          - events
         routes: []
         defaultNext:
           rid: 1588255929706479959
@@ -342,7 +344,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.9059641, y: 1.0946585}
         size: {x: 2.8131735, y: 1.5770748}
-        damageRatio: 0.7
+        damageRatio: 0.12
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -396,6 +398,7 @@ MonoBehaviour:
           - vfx
           - audio
           - hitbox
+          - events
         routes: []
         defaultNext:
           rid: 1588255929706479985
@@ -436,7 +439,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.8297181, y: 1.5144072}
         size: {x: 2.3967237, y: 1.6618077}
-        damageRatio: 0.5
+        damageRatio: 0.05
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 2
@@ -470,7 +473,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.84457517, y: 2.665961}
         size: {x: 1.7132201, y: 2.1818643}
-        damageRatio: 0.3
+        damageRatio: 0.03
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 2
@@ -504,7 +507,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.64398295, y: 3.036006}
         size: {x: 2.0549724, y: 2.981391}
-        damageRatio: 0.3
+        damageRatio: 0.03
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -538,7 +541,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.79257005, y: 2.3836448}
         size: {x: 2.768192, y: 1.4983611}
-        damageRatio: 0.7
+        damageRatio: 0.09
         impactTier: 2
         useDeterministicReaction: 1
         reactionKind: 1
@@ -592,6 +595,7 @@ MonoBehaviour:
           - vfx
           - audio
           - hitbox
+          - events
         routes: []
         defaultNext:
           rid: -2
@@ -629,7 +633,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.135947, y: 3.5382276}
         size: {x: 2.7830505, y: 2.5979095}
-        damageRatio: 2
+        damageRatio: 0.23
         impactTier: 3
         useDeterministicReaction: 1
         reactionKind: 2
@@ -683,6 +687,7 @@ MonoBehaviour:
           - vfx
           - audio
           - hitbox
+          - events
         routes: []
         defaultNext:
           rid: 1588255929706479966
@@ -721,7 +726,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.57688326, y: 1.8789463}
         size: {x: 2.4661958, y: 1.2079847}
-        damageRatio: 0.5
+        damageRatio: 0.1
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 2
@@ -755,7 +760,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.6470058, y: 2.3634276}
         size: {x: 2.7849336, y: 1.1824857}
-        damageRatio: 0.7
+        damageRatio: 0.08
         impactTier: 2
         useDeterministicReaction: 1
         reactionKind: 1
@@ -822,8 +827,15 @@ MonoBehaviour:
         - startFrame: 13
           endFrame: 19
           taskType: 0
-          easing: 1
+          easing: 16
           position: {x: 0, y: 1, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 34
+          endFrame: 56
+          taskType: 0
+          easing: 16
+          position: {x: 0, y: -1, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
     - rid: 1588255929706479997
@@ -1147,7 +1159,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.544281, y: 1.8981042}
         size: {x: 2.603067, y: 2.5366564}
-        damageRatio: 5
+        damageRatio: 1
         impactTier: 3
         useDeterministicReaction: 1
         reactionKind: 2
@@ -1552,7 +1564,7 @@ MonoBehaviour:
           endFrame: 85
           taskType: 0
           easing: 16
-          position: {x: -1.5, y: 0.25, z: 0}
+          position: {x: -1.5, y: 0.35, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
         - startFrame: 92
@@ -1566,7 +1578,7 @@ MonoBehaviour:
           endFrame: 92
           taskType: 0
           easing: 16
-          position: {x: -0.1, y: 0.25, z: 0}
+          position: {x: -0.1, y: 0.15, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
     - rid: 3251577360560685241

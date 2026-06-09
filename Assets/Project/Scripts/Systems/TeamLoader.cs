@@ -17,6 +17,29 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 {
     public const float DefaultUltimateAuraEnergyCost = 100f;
     private const int DefaultTeamSize = 3;
+    private const int DefaultArtifactSlotCount = 3;
+
+    [Serializable]
+    private sealed class ArtifactLoadoutSlot
+    {
+        [SerializeField] private Artifact[] artifacts = new Artifact[DefaultArtifactSlotCount];
+        [SerializeField] private bool hasSnapshot;
+
+        public Artifact[] Artifacts => artifacts;
+        public bool HasSnapshot => hasSnapshot;
+
+        public void SetArtifacts(Artifact[] source)
+        {
+            int artifactCount = Mathf.Max(DefaultArtifactSlotCount, source != null ? source.Length : 0);
+            artifacts = new Artifact[artifactCount];
+            if (source != null)
+            {
+                Array.Copy(source, artifacts, source.Length);
+            }
+
+            hasSnapshot = true;
+        }
+    }
 
     public event System.Action OnTeamChanged;
     public event System.Action OnCurrentCharacterChanged;
@@ -28,7 +51,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     // =========================================================
     [Header("Team Data")]
     public CharacterObject[] team;
-    public Project.InventorySystem.Items.Artifact[][] equippedArtifacts;
+    [SerializeField] private ArtifactLoadoutSlot[] equippedArtifactSlots = new ArtifactLoadoutSlot[DefaultTeamSize];
 
     // =========================================================
     // Dependencies
@@ -70,6 +93,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     {
         if (playerCharacter == null)
             playerCharacter = UnityEngine.Object.FindFirstObjectByType<PlayerCharacter>();
+
+        EnsureArtifactLoadoutCapacity(team != null ? team.Length : DefaultTeamSize);
     }
 
     void OnEnable()
@@ -328,6 +353,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         if (newTeam == null)
             return;
 
+        SaveActiveCharacterHP();
+
         CharacterObject preferredCharacter = null;
         if (preferredIndex >= 0 && preferredIndex < newTeam.Length)
             preferredCharacter = newTeam[preferredIndex];
@@ -342,6 +369,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             if (newTeam[i] != null)
                 incomingCharacters.Add(newTeam[i]);
         }
+
+        ClearRemovedCharacterHP(incomingCharacters);
 
         if (incomingCharacters.Count == 0)
         {
@@ -371,14 +400,15 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             currentIndex = ResolvePreferredIndex(preferredCharacter, Mathf.Clamp(preferredIndex, 0, team.Length - 1));
         }
 
-        characterCurrentHP.Clear();
-        characterCurrentAE.Clear();
         lastSwitchTime = -999f;
 
-        equippedArtifacts = CloneArtifactLoadout(artifactData, team.Length);
+        StoreArtifactLoadout(artifactData, team.Length);
+        RebuildRuntimeStats();
+        ClampStoredRuntimeResources();
 
         NotifyTeamChanged();
         LoadCurrentCharacter(forceReload: true, preserveActiveHp: false);
+        NotifyAllCharacterResources();
         ResetRuntimeTransientState();
     }
 
@@ -396,9 +426,9 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         }
 
         EnsureArtifactLoadoutCapacity(team.Length);
-        Artifact[] slotArtifacts = equippedArtifacts[slotIndex];
+        Artifact[] slotArtifacts = equippedArtifactSlots[slotIndex].Artifacts;
 
-        bool canBackfillActiveSlot = (slotArtifacts == null || slotArtifacts.Length == 0)
+        bool canBackfillActiveSlot = !equippedArtifactSlots[slotIndex].HasSnapshot
             && slotIndex == currentIndex
             && playerCharacter != null
             && playerCharacter.characterObject == team[slotIndex]
@@ -408,11 +438,24 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         if (canBackfillActiveSlot)
         {
             slotArtifacts = CloneArtifactArray(playerCharacter.EquippedArtifacts);
-            equippedArtifacts[slotIndex] = slotArtifacts;
+            equippedArtifactSlots[slotIndex].SetArtifacts(slotArtifacts);
+            slotArtifacts = equippedArtifactSlots[slotIndex].Artifacts;
             RebuildRuntimeStats();
         }
 
         return slotArtifacts ?? System.Array.Empty<Artifact>();
+    }
+
+    public void RefreshRuntimeState()
+    {
+        SaveActiveCharacterHP();
+        EnsureArtifactLoadoutCapacity(team != null ? team.Length : DefaultTeamSize);
+        RebuildRuntimeStats();
+        ClampStoredRuntimeResources();
+        OnTeamChanged?.Invoke();
+        LoadCurrentCharacter(forceReload: true, preserveActiveHp: false);
+        NotifyAllCharacterResources();
+        ResetRuntimeTransientState();
     }
 
     public void SetTeamFromUI(CharacterObject[] newTeam)
@@ -635,45 +678,59 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             ? character.stats.Clone()
             : new CharacterStats();
 
-        if (equippedArtifacts == null || slotIndex < 0 || slotIndex >= equippedArtifacts.Length)
+        if (equippedArtifactSlots == null || slotIndex < 0 || slotIndex >= equippedArtifactSlots.Length)
             return stats;
 
-        Artifact[] slotArtifacts = equippedArtifacts[slotIndex];
+        Artifact[] slotArtifacts = equippedArtifactSlots[slotIndex]?.Artifacts;
         if (slotArtifacts == null)
             return stats;
+
+        float hpPercentBonus = 0f;
+        float atkPercentBonus = 0f;
+        float defPercentBonus = 0f;
 
         for (int i = 0; i < slotArtifacts.Length; i++)
         {
             Artifact artifact = slotArtifacts[i];
-            if (artifact != null)
+            if (artifact != null && artifact.bonusStats != null)
             {
-                stats.AddNumericBonuses(artifact.bonusStats);
+                hpPercentBonus += artifact.bonusStats.maxHP;
+                atkPercentBonus += artifact.bonusStats.attack;
+                defPercentBonus += artifact.bonusStats.defense;
+
+                // Add other non-multiplier stats normally
+                stats.speed += artifact.bonusStats.speed;
+                stats.elementalMultiplier += artifact.bonusStats.elementalMultiplier / 100f;
+                stats.critRate += artifact.bonusStats.critRate;
+                stats.critDamage += artifact.bonusStats.critDamage;
+                stats.cooldownReduction += artifact.bonusStats.cooldownReduction;
+                stats.skillMastery += artifact.bonusStats.skillMastery;
+                stats.damageMastery += artifact.bonusStats.damageMastery;
+                stats.damageResistance += artifact.bonusStats.damageResistance;
+                stats.auraEnergyMultiplier += artifact.bonusStats.auraEnergyMultiplier;
             }
+        }
+
+        if (character != null && character.stats != null)
+        {
+            stats.maxHP = character.stats.maxHP * (1f + hpPercentBonus / 100f);
+            stats.attack = character.stats.attack * (1f + atkPercentBonus / 100f);
+            stats.defense = character.stats.defense * (1f + defPercentBonus / 100f);
         }
 
         return stats;
     }
 
-    private static Artifact[][] CloneArtifactLoadout(Artifact[][] source, int slotCount)
+    private void StoreArtifactLoadout(Artifact[][] source, int slotCount)
     {
-        int resolvedSlotCount = Mathf.Max(1, slotCount);
-        Artifact[][] clone = new Artifact[resolvedSlotCount][];
-
-        for (int slotIndex = 0; slotIndex < resolvedSlotCount; slotIndex++)
+        EnsureArtifactLoadoutCapacity(slotCount);
+        for (int slotIndex = 0; slotIndex < equippedArtifactSlots.Length; slotIndex++)
         {
             Artifact[] sourceSlot = source != null && slotIndex < source.Length
                 ? source[slotIndex]
                 : null;
-            int artifactCount = sourceSlot != null ? sourceSlot.Length : 0;
-            clone[slotIndex] = new Artifact[artifactCount];
-
-            for (int artifactIndex = 0; artifactIndex < artifactCount; artifactIndex++)
-            {
-                clone[slotIndex][artifactIndex] = sourceSlot[artifactIndex];
-            }
+            equippedArtifactSlots[slotIndex].SetArtifacts(sourceSlot);
         }
-
-        return clone;
     }
 
     private static Artifact[] CloneArtifactArray(Artifact[] source)
@@ -691,23 +748,75 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     private void EnsureArtifactLoadoutCapacity(int slotCount)
     {
         int resolvedSlotCount = Mathf.Max(1, slotCount);
-        if (equippedArtifacts != null && equippedArtifacts.Length == resolvedSlotCount)
+        if (equippedArtifactSlots != null && equippedArtifactSlots.Length == resolvedSlotCount)
         {
-            for (int i = 0; i < equippedArtifacts.Length; i++)
+            for (int i = 0; i < equippedArtifactSlots.Length; i++)
             {
-                equippedArtifacts[i] ??= System.Array.Empty<Artifact>();
+                equippedArtifactSlots[i] ??= new ArtifactLoadoutSlot();
             }
             return;
         }
 
-        Artifact[][] previousLoadout = equippedArtifacts;
-        equippedArtifacts = new Artifact[resolvedSlotCount][];
+        ArtifactLoadoutSlot[] previousLoadout = equippedArtifactSlots;
+        equippedArtifactSlots = new ArtifactLoadoutSlot[resolvedSlotCount];
 
         for (int i = 0; i < resolvedSlotCount; i++)
         {
-            equippedArtifacts[i] = previousLoadout != null && i < previousLoadout.Length
-                ? previousLoadout[i] ?? System.Array.Empty<Artifact>()
-                : System.Array.Empty<Artifact>();
+            equippedArtifactSlots[i] = previousLoadout != null && i < previousLoadout.Length
+                ? previousLoadout[i] ?? new ArtifactLoadoutSlot()
+                : new ArtifactLoadoutSlot();
+        }
+    }
+
+    private void ClampStoredRuntimeResources()
+    {
+        if (team == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < team.Length; i++)
+        {
+            CharacterObject character = team[i];
+            if (character == null)
+            {
+                continue;
+            }
+
+            float maxHp = GetCharacterMaxHP(character);
+            if (characterCurrentHP.TryGetValue(character, out float currentHp))
+            {
+                characterCurrentHP[character] = Mathf.Clamp(currentHp, 0f, maxHp);
+            }
+
+            float maxAe = GetCharacterMaxAE(character);
+            if (characterCurrentAE.TryGetValue(character, out float currentAe))
+            {
+                characterCurrentAE[character] = Mathf.Clamp(currentAe, 0f, maxAe);
+            }
+        }
+    }
+
+    private void NotifyAllCharacterResources()
+    {
+        if (team == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < team.Length; i++)
+        {
+            CharacterObject character = team[i];
+            if (character == null)
+            {
+                continue;
+            }
+
+            NotifyCharacterHealthUpdated(character);
+            OnCharacterAuraEnergyUpdated?.Invoke(
+                character,
+                GetCharacterCurrentAE(character),
+                GetCharacterMaxAE(character));
         }
     }
 

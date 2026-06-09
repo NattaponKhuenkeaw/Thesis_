@@ -143,7 +143,7 @@ MonoBehaviour:
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
-        impactFreezeFrames: 6
+        impactFreezeFrames: 3
         knockbackFrames: 24
         knockupFrames: 18
         knockfallFrames: 15

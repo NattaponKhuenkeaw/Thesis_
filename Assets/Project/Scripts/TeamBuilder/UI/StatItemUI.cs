@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using Project.UI;
 
 namespace Project.TeamBuilder.UI
 {
@@ -8,25 +9,21 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private TMP_Text statNameText;
         [SerializeField] private TMP_Text statValueText;
 
-        public void Setup(string statName, float value)
+        /// <summary>
+        /// Sets up the stat item display.
+        /// </summary>
+        /// <param name="statName">Display name of the stat (e.g. "CDR", "Crit Rate").</param>
+        /// <param name="value">The bonus value to display.</param>
+        /// <param name="statKey">Lowercase key used to determine formatting (e.g. "cdr", "crit", "mastery", "resist").</param>
+        public void Setup(string statName, float value, string statKey = "")
         {
             if (statNameText != null)
                 statNameText.text = statName;
 
             if (statValueText != null)
             {
-                if (value > 0)
-                {
-                    statValueText.text = $"<color=#4ADE80>+{value}</color>";
-                }
-                else if (value < 0)
-                {
-                    statValueText.text = $"<color=#EF4444>{value}</color>";
-                }
-                else
-                {
-                    statValueText.text = "0";
-                }
+                // Use StatFormatHelper: pass the value as baseValue and specify isSingleValue = true.
+                statValueText.text = StatFormatHelper.Format(value, 0f, statKey, true, true);
             }
         }
     }

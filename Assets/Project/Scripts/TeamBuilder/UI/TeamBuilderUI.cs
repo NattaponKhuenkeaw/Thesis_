@@ -53,37 +53,43 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private Button deployCancelButton;
         [SerializeField] private TeamUI owningTeamUI;
 
+        [Header("Mode Settings")]
+        [SerializeField] private TeamBuilderMode currentMode = TeamBuilderMode.CombatZone;
+        [SerializeField] private InspectScreenUI inspectScreenUI;
+
+        [Header("Audio Settings")]
+        [SerializeField] [Range(0f, 1f)] private float panelAudioDuckVolume = 0.35f;
+        [SerializeField] private AudioLowPassFilter panelLowPassFilter;
+        [SerializeField] [Range(10f, 22000f)] private float panelLowPassCutoff = 350f;
+
+        // =========================================================
+        // Controllers (Extracted Responsibilities)
+        // =========================================================
+        private TeamDraftController draftController;
+        private DeployConfirmationController deployController;
+        private PanelAudioController audioController;
+
         // =========================================================
         // Runtime State
         // =========================================================
         private bool isInitialized = false;
         private int panelOpenedFrame = -1;
-        private int stagedActiveIndex = 0;
-        private bool hasDraftChanges = false;
-        private System.Action pendingCloseAfterDeploy;
         private bool isPanelSessionActive = false;
-        private CharacterObject[] cachedTeamData;
-        private Artifact[][] cachedArtifactsBySlot;
-        private int cachedActiveIndex = 0;
-        private readonly Dictionary<CharacterObject, CharacterItem> runtimeCharacterItems = new Dictionary<CharacterObject, CharacterItem>();
-        public Canvas RootCanvas => rootCanvas;
-
-        [Header("Mode Settings")]
-        [SerializeField] private TeamBuilderMode currentMode = TeamBuilderMode.CombatZone;
-        [SerializeField] private InspectScreenUI inspectScreenUI;
-        [SerializeField] [Range(0f, 1f)] private float panelAudioDuckVolume = 0.35f;
-        [SerializeField] private AudioLowPassFilter panelLowPassFilter;
-        [SerializeField] [Range(10f, 22000f)] private float panelLowPassCutoff = 350f;
         private float previousTimeScale = 1f;
-        private float previousAudioListenerVolume = 1f;
-        private float previousLowPassCutoff = 22000f;
-        private bool previousLowPassEnabled;
+        private System.Action pendingCloseAfterDeploy;
+        private bool isInventoryPanelOpen = false;
+
+        // =========================================================
+        // Properties
+        // =========================================================
+        public Canvas RootCanvas => rootCanvas;
         public TeamBuilderMode CurrentMode => currentMode;
-        public bool HasDraftChanges => hasDraftChanges;
+        public bool HasDraftChanges => draftController != null ? draftController.hasDraftChanges : false;
+        public int StagedActiveIndex => draftController != null ? draftController.stagedActiveIndex : 0;
 
         private void Update()
         {
-            if (currentMode != TeamBuilderMode.SafeZone || (inventoryPanel == null || !inventoryPanel.IsCharacterGridOpen))
+            if (currentMode != TeamBuilderMode.SafeZone || (inventoryPanel == null || !isInventoryPanelOpen))
             {
                 return;
             }
@@ -93,9 +99,9 @@ namespace Project.TeamBuilder.UI
                 return;
             }
 
-            if (Pointer.current != null && Pointer.current.press.wasPressedThisFrame && IsPointerOutsideCharacterGrid())
+            if (Pointer.current != null && Pointer.current.press.wasPressedThisFrame && IsPointerOutsideInventoryPanels())
             {
-                CloseCharacterGridPanel();
+                CloseInventoryPanel();
             }
         }
 
@@ -109,10 +115,12 @@ namespace Project.TeamBuilder.UI
 
             EnsureInitialized();
             ApplyModeVisualState();
+
+
         }
 
         // =========================================================
-        // Initialization
+        // Initialization & Setup
         // =========================================================
         private void EnsureInitialized()
         {
@@ -140,12 +148,26 @@ namespace Project.TeamBuilder.UI
                 owningTeamUI = GetComponentInParent<TeamUI>();
             }
 
-            EnsureDeployConfirmationPanel();
+            // Instantiate extracted sub-controllers
+            draftController = new TeamDraftController(playerInventory, teamLoader, teamSlots);
+            deployController = new DeployConfirmationController(
+                rootCanvas,
+                deployConfirmationPanel,
+                deployConfirmButton,
+                deployCancelButton,
+                OnDeployConfirmed,
+                OnDeployCancelled
+            );
+            audioController = new PanelAudioController(panelAudioDuckVolume, panelLowPassFilter, panelLowPassCutoff);
+
+            deployController.Setup();
 
             // Initialize the grid panels
             if (inventoryPanel != null)
             {
                 inventoryPanel.Init(this, rootCanvas);
+                inventoryPanel.SetVisible(false);
+
                 inventoryPanel.SubscribeToArtifactClicks(HandleArtifactClicked);
             }
 
@@ -158,56 +180,65 @@ namespace Project.TeamBuilder.UI
         }
 
         // =========================================================
-        // Public API
+        // Public Panel Lifecycle APIs
         // =========================================================
 
-        /// <summary>
-        /// Called by TeamUI when the panel finishes opening.
-        /// Loads the current team and populates the character grid.
-        /// Does NOT manage InputLock or panel activation — TeamUI handles that.
-        /// </summary>
         public void OnPanelOpened()
         {
             EnsureInitialized();
             if (isPanelSessionActive)
             {
-                RestoreCachedDraft();
+                draftController.RestoreCachedDraft();
             }
             else
             {
                 isPanelSessionActive = true;
-                LoadRuntimeDraft();
+                draftController.LoadRuntimeDraft();
             }
 
             if (currentMode == TeamBuilderMode.SafeZone && openGridPanelOnSafeZoneOpen)
             {
-                if (inventoryPanel != null) inventoryPanel.ToggleCharacterGrid();
+                if (inventoryPanel != null)
+                {
+                    isInventoryPanelOpen = true;
+                    inventoryPanel.ToggleCharacterGrid();
+                }
                 panelOpenedFrame = Time.frameCount;
             }
+            else
+            {
+                isInventoryPanelOpen = false;
+                if (inventoryPanel != null)
+                {
+                    inventoryPanel.CloseAll();
+                    inventoryPanel.SetVisible(false);
+                }
+            }
+
             RefreshGrid();
             RefreshActiveIndex();
 
             previousTimeScale = Time.timeScale;
-            previousAudioListenerVolume = AudioListener.volume;
             Time.timeScale = 0f;
-            ApplyPauseAudioState();
+            audioController.ApplyPauseAudioState();
 
             ApplyModeVisualState();
         }
 
-        /// <summary>
-        /// Called by TeamUI just before the panel starts closing.
-        /// Closing cancels un-deployed Team Builder edits and leaves runtime authority untouched.
-        /// </summary>
         public void OnPanelClosed()
         {
             pendingCloseAfterDeploy = null;
-            if (inventoryPanel != null) inventoryPanel.CloseAll();
+            if (inventoryPanel != null)
+            {
+                inventoryPanel.CloseAll();
+                inventoryPanel.SetVisible(false);
+            }
+            isInventoryPanelOpen = false;
             isPanelSessionActive = false;
-            ClearDraftCache();
-            HideDeployConfirmation();
+            draftController.ClearDraftCache();
+            deployController.Hide();
             Time.timeScale = previousTimeScale > 0f ? previousTimeScale : 1f;
-            RestorePauseAudioState();
+            audioController.RestorePauseAudioState();
 
             if (inspectScreenUI != null && inspectScreenUI.gameObject.activeSelf)
             {
@@ -217,6 +248,11 @@ namespace Project.TeamBuilder.UI
             if (artifactPreviewPanel != null && artifactPreviewPanel.IsOpen)
             {
                 artifactPreviewPanel.Close();
+            }
+
+            if (teamLoader != null)
+            {
+                teamLoader.RefreshRuntimeState();
             }
 
             ApplyModeVisualState();
@@ -233,12 +269,48 @@ namespace Project.TeamBuilder.UI
             ApplyModeVisualState();
         }
 
-        public void OpenCharacterGridPanel()
+        // =========================================================
+        // Character & Artifact Grid Panels
+        // =========================================================
+
+        public void CloseInventoryPanel()
         {
-            if (currentMode != TeamBuilderMode.SafeZone || inventoryPanel == null) return;
-            if (!inventoryPanel.IsCharacterGridOpen) inventoryPanel.ToggleCharacterGrid();
-            panelOpenedFrame = Time.frameCount;
-            RefreshGrid();
+            if (inventoryPanel != null)
+            {
+                inventoryPanel.CloseAll();
+                inventoryPanel.SetVisible(false);
+            }
+            isInventoryPanelOpen = false;
+            ApplyModeVisualState();
+        }
+
+        public void ToggleInventoryPanel()
+        {
+            if (currentMode != TeamBuilderMode.SafeZone)
+            {
+                CloseInventoryPanel();
+                return;
+            }
+
+            if (inventoryPanel != null)
+            {
+                isInventoryPanelOpen = !isInventoryPanelOpen;
+                if (isInventoryPanelOpen)
+                {
+                    inventoryPanel.SetVisible(true);
+                    if (!inventoryPanel.IsAnyPanelOpen)
+                    {
+                        inventoryPanel.ToggleCharacterGrid();
+                    }
+                    panelOpenedFrame = Time.frameCount;
+                    RefreshGrid();
+                }
+                else
+                {
+                    inventoryPanel.CloseAll();
+                    inventoryPanel.SetVisible(false);
+                }
+            }
             ApplyModeVisualState();
         }
 
@@ -248,6 +320,7 @@ namespace Project.TeamBuilder.UI
             {
                 inventoryPanel.CloseAll();
             }
+            isInventoryPanelOpen = inventoryPanel != null && inventoryPanel.IsAnyPanelOpen;
             ApplyModeVisualState();
         }
 
@@ -255,14 +328,15 @@ namespace Project.TeamBuilder.UI
         {
             if (currentMode != TeamBuilderMode.SafeZone)
             {
-                if (inventoryPanel != null) inventoryPanel.CloseAll();
-                ApplyModeVisualState();
+                CloseInventoryPanel();
                 return;
             }
 
             if (inventoryPanel != null)
             {
+                inventoryPanel.SetVisible(true);
                 inventoryPanel.ToggleCharacterGrid();
+                isInventoryPanelOpen = inventoryPanel.IsAnyPanelOpen;
                 if (inventoryPanel.IsCharacterGridOpen)
                 {
                     panelOpenedFrame = Time.frameCount;
@@ -276,14 +350,15 @@ namespace Project.TeamBuilder.UI
         {
             if (currentMode != TeamBuilderMode.SafeZone)
             {
-                if (inventoryPanel != null) inventoryPanel.CloseAll();
-                ApplyModeVisualState();
+                CloseInventoryPanel();
                 return;
             }
 
             if (inventoryPanel != null)
             {
+                inventoryPanel.SetVisible(true);
                 inventoryPanel.ToggleArtifactGrid();
+                isInventoryPanelOpen = inventoryPanel.IsAnyPanelOpen;
                 if (inventoryPanel.IsArtifactGridOpen)
                 {
                     panelOpenedFrame = Time.frameCount;
@@ -299,12 +374,14 @@ namespace Project.TeamBuilder.UI
             {
                 inventoryPanel.CloseAll();
             }
+            isInventoryPanelOpen = inventoryPanel != null && inventoryPanel.IsAnyPanelOpen;
             ApplyModeVisualState();
         }
 
-        /// <summary>
-        /// Checks if a character is currently placed in any team slot.
-        /// </summary>
+        // =========================================================
+        // Queries & Slot Lookups
+        // =========================================================
+
         public bool IsCharacterInTeam(CharacterItem character)
         {
             if (character == null) return false;
@@ -312,17 +389,11 @@ namespace Project.TeamBuilder.UI
             foreach (var slot in teamSlots)
             {
                 if (slot != null && slot.CurrentCharacter == character)
-
-
                     return true;
             }
             return false;
         }
 
-        /// <summary>
-        /// Finds the TeamSlotUI that currently holds the given character.
-        /// Returns null if the character is not in any slot.
-        /// </summary>
         public TeamSlotUI FindSlotWithCharacter(CharacterItem character)
         {
             if (character == null) return null;
@@ -354,22 +425,22 @@ namespace Project.TeamBuilder.UI
             return null;
         }
 
-        /// <summary>
-        /// Called by TeamSlotUI whenever a slot changes (character placed/swapped/removed).
-        /// Refreshes the local draft only. Runtime TeamLoader is updated only by Deploy.
-        /// </summary>
+        // =========================================================
+        // Team Slot Actions & Callbacks
+        // =========================================================
+
         public void OnSlotChanged()
         {
-            hasDraftChanges = true;
+            if (draftController == null) return;
 
-            // Refresh grid item dim states
+            draftController.hasDraftChanges = true;
+
             if (inventoryPanel != null)
                 inventoryPanel.RefreshInTeamStates();
 
-            // Refresh active index highlighting
-            NormalizeStagedActiveIndex();
+            draftController.NormalizeStagedActiveIndex();
             RefreshActiveIndex();
-            SaveDraftCache();
+            draftController.SaveDraftCache();
         }
 
         public void OnDeployClicked()
@@ -380,13 +451,13 @@ namespace Project.TeamBuilder.UI
             }
 
             EnsureInitialized();
-            ShowDeployConfirmation();
+            deployController.Show();
         }
 
         public void OnDeployConfirmed()
         {
-            SaveDraftCache();
-            HideDeployConfirmation();
+            draftController.SaveDraftCache();
+            deployController.Hide();
             DeployDraftToRuntime();
 
             System.Action closeAfterDeploy = pendingCloseAfterDeploy;
@@ -406,7 +477,7 @@ namespace Project.TeamBuilder.UI
         {
             System.Action closeAfterCancel = pendingCloseAfterDeploy;
             pendingCloseAfterDeploy = null;
-            HideDeployConfirmation();
+            deployController.Hide();
 
             if (closeAfterCancel != null)
             {
@@ -421,18 +492,22 @@ namespace Project.TeamBuilder.UI
         public void OnCancelClicked()
         {
             pendingCloseAfterDeploy = null;
-            HideDeployConfirmation();
-            LoadRuntimeDraft();
+            deployController.Hide();
+            draftController.LoadRuntimeDraft();
             RefreshGrid();
             RefreshActiveIndex();
             ApplyModeVisualState();
         }
 
+        // =========================================================
+        // Inspector Panel Integration
+        // =========================================================
+
         public void OpenInspectScreen(CharacterItem character)
         {
             if (inspectScreenUI != null && character != null)
             {
-                SaveDraftCache();
+                draftController.SaveDraftCache();
                 inspectScreenUI.Open(character);
             }
         }
@@ -441,7 +516,7 @@ namespace Project.TeamBuilder.UI
         {
             if (inspectScreenUI != null && character != null)
             {
-                SaveDraftCache();
+                draftController.SaveDraftCache();
                 inspectScreenUI.Open(character, equippedArtifacts);
             }
         }
@@ -499,44 +574,45 @@ namespace Project.TeamBuilder.UI
             return ownedArtifacts;
         }
 
-        /// <summary>
-        /// Sets the active character index in the staged Team Builder draft.
-        /// </summary>
+        // =========================================================
+        // Staged Active Team Index
+        // =========================================================
+
         public void SetActiveIndex(int index)
         {
-            if (index < 0 || index >= teamSlots.Length)
+            if (draftController == null || index < 0 || index >= teamSlots.Length)
                 return;
 
             if (teamSlots[index] == null || teamSlots[index].CurrentCharacter == null)
                 return;
 
-            if (stagedActiveIndex == index)
+            if (draftController.stagedActiveIndex == index)
                 return;
 
-            stagedActiveIndex = index;
-            hasDraftChanges = true;
+            draftController.stagedActiveIndex = index;
+            draftController.hasDraftChanges = true;
             RefreshActiveIndex();
-            SaveDraftCache();
+            draftController.SaveDraftCache();
         }
 
-        /// <summary>
-        /// Updates the visual highlight for the currently active character index.
-        /// </summary>
         public void RefreshActiveIndex()
         {
-            NormalizeStagedActiveIndex();
+            if (draftController == null) return;
+
+            draftController.NormalizeStagedActiveIndex();
             for (int i = 0; i < teamSlots.Length; i++)
             {
                 if (teamSlots[i] != null)
                 {
-                    teamSlots[i].SetActiveState(i == stagedActiveIndex);
+                    teamSlots[i].SetActiveState(i == draftController.stagedActiveIndex);
                 }
             }
         }
 
-        /// <summary>
-        /// Removes a character from its team slot (e.g. when dragged out of the panel area).
-        /// </summary>
+        // =========================================================
+        // Character Slot Removal (Drag & Drop)
+        // =========================================================
+
         public void RemoveCharacterFromSlot(int slotIndex)
         {
             TryRemoveCharacterFromSlot(slotIndex);
@@ -580,9 +656,9 @@ namespace Project.TeamBuilder.UI
             }
 
             EnsureInitialized();
-            SaveDraftCache();
+            draftController.SaveDraftCache();
             pendingCloseAfterDeploy = closeAfterSave;
-            ShowDeployConfirmation();
+            deployController.Show();
             return true;
         }
 
@@ -607,23 +683,9 @@ namespace Project.TeamBuilder.UI
             return !IsScreenPointInsideRect(builderRect, eventData != null ? eventData.position : Vector2.zero);
         }
 
-        private bool HasConfiguredTeamSlots()
-        {
-            if (teamSlots == null)
-            {
-                return false;
-            }
-
-            for (int i = 0; i < teamSlots.Length; i++)
-            {
-                if (teamSlots[i] != null)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
+        // =========================================================
+        // Helper Methods
+        // =========================================================
 
         public bool TryGetCharacterHealth(CharacterObject character, out float currentHp, out float maxHp)
         {
@@ -638,154 +700,25 @@ namespace Project.TeamBuilder.UI
             return maxHp > 0f;
         }
 
-        // =========================================================
-        // Private Methods
-        // =========================================================
-
-        /// <summary>
-        /// Loads the live runtime TeamLoader into the Team Builder draft.
-        /// </summary>
-        private void LoadRuntimeDraft()
+        private void DeployDraftToRuntime()
         {
-            if (playerInventory == null) return;
+            draftController.NormalizeStagedActiveIndex();
+            CharacterObject[] teamData = draftController.BuildDraftTeamData();
+            Artifact[][] artifactData = draftController.BuildDraftArtifactData();
 
-            CharacterObject[] existingTeam = teamLoader != null ? teamLoader.team : null;
-
-            if (existingTeam == null) return;
-
-            for (int i = 0; i < teamSlots.Length; i++)
+            if (teamLoader != null)
             {
-                if (teamSlots[i] != null)
-                    teamSlots[i].ClearSlot();
+                teamLoader.DeployLoadout(teamData, draftController.stagedActiveIndex, artifactData);
             }
 
-            stagedActiveIndex = teamLoader != null ? teamLoader.CurrentIndex : 0;
-
-            for (int i = 0; i < teamSlots.Length && i < existingTeam.Length; i++)
-            {
-                if (teamSlots[i] == null) continue;
-
-                CharacterObject charObj = existingTeam[i];
-                if (charObj == null)
-                {
-                    teamSlots[i].ClearSlot();
-                    continue;
-                }
-
-                // Find matching character item in inventory
-                CharacterItem matchingItem = FindCharacterItem(charObj);
-                teamSlots[i].SetCharacter(matchingItem);
-
-                if (teamLoader != null)
-                {
-                    Artifact[] runtimeArtifacts = teamLoader.GetEquippedArtifactsAt(i);
-                    teamSlots[i].SetEquippedArtifacts(CloneArtifactArray(runtimeArtifacts));
-                }
-            }
-
-            NormalizeStagedActiveIndex();
-            hasDraftChanges = false;
-            SaveDraftCache();
+            draftController.hasDraftChanges = false;
+            RefreshGrid();
+            RefreshActiveIndex();
         }
 
-        private void RestoreCachedDraft()
-        {
-            if (cachedTeamData == null)
-            {
-                LoadRuntimeDraft();
-                return;
-            }
-
-            LoadDraftSnapshot(cachedTeamData, cachedArtifactsBySlot, cachedActiveIndex);
-        }
-
-        private void LoadDraftSnapshot(CharacterObject[] teamData, Artifact[][] artifactsBySlot, int activeIndex)
-        {
-            if (playerInventory == null || teamData == null) return;
-
-            for (int i = 0; i < teamSlots.Length; i++)
-            {
-                if (teamSlots[i] != null)
-                    teamSlots[i].ClearSlot();
-            }
-
-            stagedActiveIndex = activeIndex;
-
-            for (int i = 0; i < teamSlots.Length && i < teamData.Length; i++)
-            {
-                if (teamSlots[i] == null) continue;
-
-                CharacterObject charObj = teamData[i];
-                if (charObj == null)
-                {
-                    teamSlots[i].ClearSlot();
-                    continue;
-                }
-
-                CharacterItem matchingItem = FindCharacterItem(charObj);
-                teamSlots[i].SetCharacter(matchingItem);
-
-                if (artifactsBySlot != null && i < artifactsBySlot.Length)
-                {
-                    teamSlots[i].SetEquippedArtifacts(CloneArtifactArray(artifactsBySlot[i]));
-                }
-            }
-
-            NormalizeStagedActiveIndex();
-        }
-
-        private void SaveDraftCache()
-        {
-            cachedTeamData = BuildDraftTeamData();
-            cachedArtifactsBySlot = BuildDraftArtifactData();
-            cachedActiveIndex = stagedActiveIndex;
-        }
-
-        private void ClearDraftCache()
-        {
-            cachedTeamData = null;
-            cachedArtifactsBySlot = null;
-            cachedActiveIndex = 0;
-            hasDraftChanges = false;
-        }
-
-        /// <summary>
-        /// Helper to find a CharacterItem in the inventory by its CharacterObject reference.
-        /// </summary>
-        private CharacterItem FindCharacterItem(CharacterObject charObj)
-        {
-            if (charObj == null) return null;
-
-            // First, try to find a matching CharacterItem in the player inventory
-            if (playerInventory != null)
-            {
-                foreach (var item in playerInventory.ownedItems)
-                {
-                    if (item is CharacterItem charItem && charItem.characterObjectData == charObj)
-                    {
-                        return charItem;
-                    }
-                }
-            }
-
-            // No matching item in inventory — create a runtime wrapper
-            // so the TeamBuilder UI can still display this character
-            if (runtimeCharacterItems.TryGetValue(charObj, out CharacterItem cachedItem) && cachedItem != null)
-                return cachedItem;
-
-            CharacterItem runtimeItem = ScriptableObject.CreateInstance<CharacterItem>();
-            runtimeItem.characterObjectData = charObj;
-            runtimeItem.SyncFromCharacterObjectData();
-            runtimeCharacterItems[charObj] = runtimeItem;
-            return runtimeItem;
-        }
-
-        /// <summary>
-        /// Reads owned characters from the player inventory and populates the grid.
-        /// </summary>
         private void RefreshGrid()
         {
-            if (inventoryPanel == null || playerInventory == null) return;
+            if (inventoryPanel == null || playerInventory == null || draftController == null) return;
 
             // Filter only CharacterItems from the player's inventory
             List<CharacterItem> ownedCharacters = new List<CharacterItem>();
@@ -797,7 +730,7 @@ namespace Project.TeamBuilder.UI
                 }
             }
 
-            foreach (CharacterItem runtimeItem in runtimeCharacterItems.Values)
+            foreach (CharacterItem runtimeItem in draftController.GetRuntimeCharacterItems())
             {
                 if (runtimeItem == null || runtimeItem.characterObjectData == null)
                     continue;
@@ -841,7 +774,7 @@ namespace Project.TeamBuilder.UI
 
             if (inventoryPanel != null)
             {
-                inventoryPanel.SetVisible(currentMode == TeamBuilderMode.SafeZone);
+                inventoryPanel.SetVisible(currentMode == TeamBuilderMode.SafeZone && isInventoryPanelOpen);
             }
 
             if (playerHolderButton != null)
@@ -859,274 +792,36 @@ namespace Project.TeamBuilder.UI
             }
         }
 
-        private void DeployDraftToRuntime()
+        private bool HasConfiguredTeamSlots()
         {
-            CharacterObject[] teamData = BuildDraftTeamData();
-            Artifact[][] artifactData = BuildDraftArtifactData();
-            NormalizeStagedActiveIndex();
-
-            if (teamLoader != null)
-            {
-                teamLoader.DeployLoadout(teamData, stagedActiveIndex, artifactData);
-            }
-
-            hasDraftChanges = false;
-            RefreshGrid();
-            RefreshActiveIndex();
-        }
-
-        private CharacterObject[] BuildDraftTeamData()
-        {
-            CharacterObject[] teamData = new CharacterObject[teamSlots.Length];
-            for (int i = 0; i < teamSlots.Length; i++)
-            {
-                if (teamSlots[i] != null && teamSlots[i].CurrentCharacter != null)
-                    teamData[i] = teamSlots[i].CurrentCharacter.characterObjectData;
-                else
-                    teamData[i] = null;
-            }
-
-            return teamData;
-        }
-
-        private Artifact[][] BuildDraftArtifactData()
-        {
-            Artifact[][] artifactsBySlot = new Artifact[teamSlots.Length][];
-            for (int i = 0; i < teamSlots.Length; i++)
-            {
-                artifactsBySlot[i] = teamSlots[i] != null
-                    ? teamSlots[i].GetEquippedArtifactsSnapshot()
-                    : null;
-            }
-
-            return artifactsBySlot;
-        }
-
-        private static Artifact[] CloneArtifactArray(Artifact[] source)
-        {
-            if (source == null)
-            {
-                return null;
-            }
-
-            Artifact[] clone = new Artifact[source.Length];
-            for (int i = 0; i < source.Length; i++)
-            {
-                clone[i] = source[i];
-            }
-
-            return clone;
-        }
-
-        private void NormalizeStagedActiveIndex()
-        {
-            if (teamSlots == null || teamSlots.Length == 0)
-            {
-                stagedActiveIndex = 0;
-                return;
-            }
-
-            if (stagedActiveIndex >= 0
-                && stagedActiveIndex < teamSlots.Length
-                && teamSlots[stagedActiveIndex] != null
-                && teamSlots[stagedActiveIndex].CurrentCharacter != null)
-            {
-                return;
-            }
+            if (teamSlots == null) return false;
 
             for (int i = 0; i < teamSlots.Length; i++)
             {
-                if (teamSlots[i] != null && teamSlots[i].CurrentCharacter != null)
-                {
-                    stagedActiveIndex = i;
-                    return;
-                }
+                if (teamSlots[i] != null) return true;
             }
 
-            stagedActiveIndex = 0;
+            return false;
         }
 
-        private void EnsureDeployConfirmationPanel()
+        private bool IsPointerOutsideInventoryPanels()
         {
-            if (deployConfirmationPanel == null)
-            {
-                deployConfirmationPanel = CreateDeployConfirmationPanel();
-            }
-
-            if (deployConfirmButton != null)
-            {
-                deployConfirmButton.onClick.RemoveListener(OnDeployConfirmed);
-                deployConfirmButton.onClick.AddListener(OnDeployConfirmed);
-            }
-
-            if (deployCancelButton != null)
-            {
-                deployCancelButton.onClick.RemoveListener(OnDeployCancelled);
-                deployCancelButton.onClick.AddListener(OnDeployCancelled);
-            }
-
-            HideDeployConfirmation();
-        }
-
-        private GameObject CreateDeployConfirmationPanel()
-        {
-            Transform parent = rootCanvas != null ? rootCanvas.transform : transform;
-
-            GameObject overlay = new GameObject("Deploy Confirmation Panel", typeof(RectTransform), typeof(CanvasGroup), typeof(Image));
-            overlay.transform.SetParent(parent, false);
-
-            RectTransform overlayRect = overlay.GetComponent<RectTransform>();
-            overlayRect.anchorMin = Vector2.zero;
-            overlayRect.anchorMax = Vector2.one;
-            overlayRect.offsetMin = Vector2.zero;
-            overlayRect.offsetMax = Vector2.zero;
-
-            Image overlayImage = overlay.GetComponent<Image>();
-            overlayImage.color = new Color(0f, 0f, 0f, 0.62f);
-
-            GameObject card = new GameObject("Dialog", typeof(RectTransform), typeof(Image));
-            card.transform.SetParent(overlay.transform, false);
-            RectTransform cardRect = card.GetComponent<RectTransform>();
-            cardRect.anchorMin = new Vector2(0.5f, 0.5f);
-            cardRect.anchorMax = new Vector2(0.5f, 0.5f);
-            cardRect.pivot = new Vector2(0.5f, 0.5f);
-            cardRect.sizeDelta = new Vector2(460f, 220f);
-            cardRect.anchoredPosition = Vector2.zero;
-
-            Image cardImage = card.GetComponent<Image>();
-            cardImage.color = new Color(0.07f, 0.08f, 0.1f, 0.96f);
-
-            CreateDialogText(card.transform, "Title", "Save Loadout?", 26f, FontStyles.Bold, new Vector2(0f, 62f));
-            CreateDialogText(
-                card.transform,
-                "Message",
-                "This saves the Team Builder profile, refreshes TeamLoader runtime when available, then closes the Team UI.",
-                16f,
-                FontStyles.Normal,
-                new Vector2(0f, 10f));
-
-            deployConfirmButton = CreateDialogButton(card.transform, "Confirm Button", "Save", new Vector2(-90f, -68f), new Color(0.2f, 0.75f, 0.48f, 1f));
-            deployCancelButton = CreateDialogButton(card.transform, "Cancel Button", "Cancel", new Vector2(90f, -68f), new Color(0.28f, 0.3f, 0.34f, 1f));
-
-            overlay.SetActive(false);
-            return overlay;
-        }
-
-        private static TextMeshProUGUI CreateDialogText(
-            Transform parent,
-            string name,
-            string text,
-            float fontSize,
-            FontStyles fontStyle,
-            Vector2 anchoredPosition)
-        {
-            GameObject textObject = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
-            textObject.transform.SetParent(parent, false);
-
-            RectTransform rectTransform = textObject.GetComponent<RectTransform>();
-            rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-            rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-            rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            rectTransform.sizeDelta = new Vector2(380f, fontSize > 20f ? 38f : 72f);
-            rectTransform.anchoredPosition = anchoredPosition;
-
-            TextMeshProUGUI label = textObject.GetComponent<TextMeshProUGUI>();
-            label.text = text;
-            label.fontSize = fontSize;
-            label.fontStyle = fontStyle;
-            label.alignment = TextAlignmentOptions.Center;
-            label.color = Color.white;
-            label.textWrappingMode = TextWrappingModes.Normal;
-            return label;
-        }
-
-        private static Button CreateDialogButton(
-            Transform parent,
-            string name,
-            string text,
-            Vector2 anchoredPosition,
-            Color color)
-        {
-            GameObject buttonObject = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
-            buttonObject.transform.SetParent(parent, false);
-
-            RectTransform buttonRect = buttonObject.GetComponent<RectTransform>();
-            buttonRect.anchorMin = new Vector2(0.5f, 0.5f);
-            buttonRect.anchorMax = new Vector2(0.5f, 0.5f);
-            buttonRect.pivot = new Vector2(0.5f, 0.5f);
-            buttonRect.sizeDelta = new Vector2(136f, 44f);
-            buttonRect.anchoredPosition = anchoredPosition;
-
-            Image buttonImage = buttonObject.GetComponent<Image>();
-            buttonImage.color = color;
-
-            Button button = buttonObject.GetComponent<Button>();
-            GameObject labelObject = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
-            labelObject.transform.SetParent(buttonObject.transform, false);
-
-            RectTransform labelRect = labelObject.GetComponent<RectTransform>();
-            labelRect.anchorMin = Vector2.zero;
-            labelRect.anchorMax = Vector2.one;
-            labelRect.offsetMin = Vector2.zero;
-            labelRect.offsetMax = Vector2.zero;
-
-            TextMeshProUGUI label = labelObject.GetComponent<TextMeshProUGUI>();
-            label.text = text;
-            label.fontSize = 17f;
-            label.fontStyle = FontStyles.Bold;
-            label.alignment = TextAlignmentOptions.Center;
-            label.color = Color.white;
-
-            return button;
-        }
-
-        private void ShowDeployConfirmation()
-        {
-            if (deployConfirmationPanel != null)
-            {
-                deployConfirmationPanel.SetActive(true);
-            }
-        }
-
-        private void HideDeployConfirmation()
-        {
-            if (deployConfirmationPanel != null)
-            {
-                deployConfirmationPanel.SetActive(false);
-            }
-        }
-
-        private bool IsPointerOutsideCharacterGrid()
-        {
-            if (inventoryPanel == null)
-            {
-                return true;
-            }
+            if (inventoryPanel == null) return true;
 
             RectTransform gridRect = inventoryPanel.GetComponent<RectTransform>();
-            if (IsPointerInsideRect(gridRect))
-            {
-                return false;
-            }
+            if (IsPointerInsideRect(gridRect)) return false;
 
             if (playerHolderButton != null)
             {
                 RectTransform holderRect = playerHolderButton.GetComponent<RectTransform>();
-                if (IsPointerInsideRect(holderRect))
-                {
-                    return false;
-                }
+                if (IsPointerInsideRect(holderRect)) return false;
 
-                // Check all active children since button components might be offset outside the holder's bounds
                 foreach (Transform child in playerHolderButton.transform)
                 {
                     if (child.gameObject.activeSelf)
                     {
                         RectTransform childRect = child.GetComponent<RectTransform>();
-                        if (IsPointerInsideRect(childRect))
-                        {
-                            return false;
-                        }
+                        if (IsPointerInsideRect(childRect)) return false;
                     }
                 }
             }
@@ -1142,10 +837,7 @@ namespace Project.TeamBuilder.UI
 
         private bool IsScreenPointInsideRect(RectTransform targetRect, Vector2 screenPoint)
         {
-            if (targetRect == null)
-            {
-                return false;
-            }
+            if (targetRect == null) return false;
 
             Camera eventCamera = null;
             if (rootCanvas != null && rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
@@ -1154,31 +846,6 @@ namespace Project.TeamBuilder.UI
             }
 
             return RectTransformUtility.RectangleContainsScreenPoint(targetRect, screenPoint, eventCamera);
-        }
-
-        private void ApplyPauseAudioState()
-        {
-            if (panelLowPassFilter != null)
-            {
-                previousLowPassEnabled = panelLowPassFilter.enabled;
-                previousLowPassCutoff = panelLowPassFilter.cutoffFrequency;
-                panelLowPassFilter.enabled = true;
-                panelLowPassFilter.cutoffFrequency = panelLowPassCutoff;
-                return;
-            }
-
-            AudioListener.volume = Mathf.Clamp01(previousAudioListenerVolume * panelAudioDuckVolume);
-        }
-
-        private void RestorePauseAudioState()
-        {
-            if (panelLowPassFilter != null)
-            {
-                panelLowPassFilter.cutoffFrequency = previousLowPassCutoff;
-                panelLowPassFilter.enabled = previousLowPassEnabled;
-            }
-
-            AudioListener.volume = previousAudioListenerVolume;
         }
     }
 }
