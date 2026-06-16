@@ -1,9 +1,13 @@
 using System.Collections;
-using System.Text;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Project.InventorySystem.Items;
+using Project.ShopSystem;
+using Project.TeamBuilder.UI.Panels;
+using Project.TeamBuilder.UI.Interfaces;
+using Project.Core.ZoneState;
 using Project.UI;
 
 namespace Project.TeamBuilder.UI
@@ -12,48 +16,153 @@ namespace Project.TeamBuilder.UI
     {
         [Header("UI Panels")]
         [SerializeField] private GameObject contentPanel;
+        [SerializeField] private GameObject emptyStatePanel;
+        [SerializeField] private Button openButton;
+        [SerializeField] private Button closeButton;
+        [SerializeField] private Button infoTabButton;
+        [SerializeField] private Button skillTabButton;
+        [SerializeField] private Button equipmentTabButton;
+        [SerializeField] private Transform characterSliderGridParent;
+        [SerializeField] private GameObject characterSliderItemPrefab;
 
-        [Header("Character Info")]
-        [SerializeField] private Image characterPortrait;
-        [SerializeField] private Image elementIcon;
-        [SerializeField] private TMP_Text characterNameText;
-        [SerializeField] private TMP_Text characterLoreText;
-        [Header("Element Settings")]
-        [SerializeField] private ElementSpriteResolver elementResolver;
-
-        [Header("Combat Stats")]
-        [SerializeField] private TMP_Text hpText;
-        [SerializeField] private TMP_Text atkText;
-        [SerializeField] private TMP_Text defText;
-        [SerializeField] private TMP_Text spdText;
-        [SerializeField] private TMP_Text cdrText;
-        [SerializeField] private TMP_Text critRateText;
-        [SerializeField] private TMP_Text critDmgText;
-        [SerializeField] private TMP_Text elementalMasteryText;
-        [SerializeField] private TMP_Text impactText;
-        [SerializeField] private TMP_Text AEgainText;
-
-        [Header("Passive & Potential")]
-        [SerializeField] private TMP_Text passiveDescriptionText;
-        [SerializeField] private TMP_Text artifactDescriptionText;
-        [SerializeField] private TMP_Text potentialText;
+        [Header("Data Sources")]
+        [SerializeField] private PlayerShopInventory playerInventory;
+        [SerializeField] private TeamLoader teamLoader;
+        [SerializeField] private TeamUI owningTeamUI;
 
         [Header("Animation")]
         [SerializeField] private float slideOffset = 480f;
         [SerializeField] private float slideDuration = 0.25f;
 
-        [Header("Fallback Potential Feedback")]
-        [SerializeField] private bool enablePotentialHoverFallback = true;
-        [SerializeField] private float potentialHoverScale = 1.1f;
-        [SerializeField] private float potentialHoverDuration = 0.1f;
-        [SerializeField] private Color potentialHoverGlowColor = new Color(1f, 0.85f, 0.25f, 0.85f);
-
         private CharacterItem currentCharacter;
         private Artifact[] currentArtifacts = new Artifact[0];
+        private readonly List<CharacterItem> availableCharacters = new List<CharacterItem>();
+        private readonly List<CharacterGridItemUI> sliderItems = new List<CharacterGridItemUI>();
         private RectTransform panelRectTransform;
         private CanvasGroup panelCanvasGroup;
         private Coroutine transitionCoroutine;
         private Vector2 openAnchoredPosition;
+        private int selectedCharacterIndex = -1;
+        private InspectPage activePage = InspectPage.Info;
+        
+        [Header("Mode Settings")]
+        [SerializeField] private ZoneStateProvider zoneStateProvider;
+        private ZoneMode currentMode = ZoneMode.CombatZone;
+        
+        private IInspectSubPanel[] subPanels;
+        private CharacterInfoPanel infoPanel;
+        private CharacterSkillPanel skillPanel;
+        private EquipmentPanel equipmentPanel;
+        private CharacterLevelPanel levelPanel;
+        private CharacterPotentialPanel potentialPanel;
+
+        private enum InspectPage
+        {
+            Info,
+            Skill,
+            Equipment,
+            Level,
+            Potential
+        }
+
+        private void OnEnable()
+        {
+            ResolveMissingReferences();
+
+            if (zoneStateProvider != null)
+            {
+                zoneStateProvider.OnZoneModeChanged += HandleZoneChanged;
+                HandleZoneChanged(zoneStateProvider.CurrentMode);
+            }
+
+            if (openButton != null)
+            {
+                openButton.onClick.RemoveListener(OpenFirstAvailableCharacter);
+                openButton.onClick.AddListener(OpenFirstAvailableCharacter);
+            }
+
+            if (closeButton != null)
+            {
+                closeButton.onClick.RemoveListener(Close);
+                closeButton.onClick.AddListener(Close);
+            }
+
+            if (infoTabButton != null)
+            {
+                infoTabButton.onClick.RemoveListener(ShowInfoPage);
+                infoTabButton.onClick.AddListener(ShowInfoPage);
+            }
+
+            if (skillTabButton != null)
+            {
+                skillTabButton.onClick.RemoveListener(ShowSkillPage);
+                skillTabButton.onClick.AddListener(ShowSkillPage);
+            }
+
+            if (equipmentTabButton != null)
+            {
+                equipmentTabButton.onClick.RemoveListener(ShowEquipmentPage);
+                equipmentTabButton.onClick.AddListener(ShowEquipmentPage);
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (zoneStateProvider != null)
+            {
+                zoneStateProvider.OnZoneModeChanged -= HandleZoneChanged;
+            }
+
+            if (openButton != null)
+            {
+                openButton.onClick.RemoveListener(OpenFirstAvailableCharacter);
+            }
+
+            if (closeButton != null)
+            {
+                closeButton.onClick.RemoveListener(Close);
+            }
+
+            if (infoTabButton != null)
+            {
+                infoTabButton.onClick.RemoveListener(ShowInfoPage);
+            }
+
+            if (skillTabButton != null)
+            {
+                skillTabButton.onClick.RemoveListener(ShowSkillPage);
+            }
+
+            if (equipmentTabButton != null)
+            {
+                equipmentTabButton.onClick.RemoveListener(ShowEquipmentPage);
+            }
+        }
+
+        private void HandleZoneChanged(ZoneMode newMode)
+        {
+            currentMode = newMode;
+            if (currentMode == ZoneMode.CombatZone)
+            {
+                Close();
+            }
+
+            if (openButton != null)
+            {
+                openButton.gameObject.SetActive(currentMode == ZoneMode.SafeZone);
+            }
+
+            if (subPanels != null)
+            {
+                foreach (var panel in subPanels)
+                {
+                    if (panel is IZoneStateListener listener)
+                    {
+                        listener.OnZoneChanged(newMode);
+                    }
+                }
+            }
+        }
 
         private void Awake()
         {
@@ -71,22 +180,78 @@ namespace Project.TeamBuilder.UI
                 openAnchoredPosition = panelRectTransform.anchoredPosition;
             }
 
-            targetPanel.SetActive(false);
-            panelCanvasGroup.alpha = 0f;
+            // Gather all sub-panels
+            subPanels = targetPanel.GetComponentsInChildren<IInspectSubPanel>(true);
+            infoPanel = targetPanel.GetComponentInChildren<CharacterInfoPanel>(true);
+            skillPanel = targetPanel.GetComponentInChildren<CharacterSkillPanel>(true);
+            equipmentPanel = targetPanel.GetComponentInChildren<EquipmentPanel>(true);
+            levelPanel = targetPanel.GetComponentInChildren<CharacterLevelPanel>(true);
+            potentialPanel = targetPanel.GetComponentInChildren<CharacterPotentialPanel>(true);
+            ResolveMissingReferences();
+
+            SetPanelVisible(false);
         }
 
-        public void Open(CharacterItem character, Artifact[] equippedArtifacts = null)
+        private void Start()
         {
-            if (character == null || character.characterObjectData == null)
+            if (playerInventory == null)
+            {
+                playerInventory = FindFirstObjectByType<PlayerShopInventory>();
+            }
+
+            if (teamLoader == null)
+            {
+                teamLoader = FindFirstObjectByType<TeamLoader>();
+            }
+
+            if (owningTeamUI == null)
+            {
+                owningTeamUI = GetComponentInParent<TeamUI>();
+            }
+        }
+
+        public void OpenFirstAvailableCharacter()
+        {
+            OpenInspector();
+        }
+
+        public void OpenInspector()
+        {
+            ZoneMode liveMode = zoneStateProvider != null ? zoneStateProvider.CurrentMode : currentMode;
+            currentMode = liveMode;
+            if (liveMode != ZoneMode.SafeZone)
             {
                 return;
             }
 
-            currentCharacter = character;
-            currentArtifacts = equippedArtifacts ?? new Artifact[0];
-            GameObject targetPanel = contentPanel != null ? contentPanel : gameObject;
-            targetPanel.SetActive(true);
+            RefreshAvailableCharacters();
+            CharacterItem firstCharacter = availableCharacters.Count > 0 ? availableCharacters[0] : null;
+            activePage = InspectPage.Info;
+            Open(firstCharacter);
+        }
 
+        public void Open(CharacterItem character, Artifact[] equippedArtifacts = null)
+        {
+            ZoneMode liveMode = zoneStateProvider != null ? zoneStateProvider.CurrentMode : currentMode;
+            currentMode = liveMode;
+            if (liveMode != ZoneMode.SafeZone)
+            {
+                return;
+            }
+
+            RefreshAvailableCharacters();
+            currentCharacter = character;
+            selectedCharacterIndex = availableCharacters.IndexOf(character);
+            currentArtifacts = equippedArtifacts ?? ResolveEquippedArtifacts(character);
+            if (owningTeamUI == null)
+            {
+                owningTeamUI = GetComponentInParent<TeamUI>();
+            }
+
+            owningTeamUI?.OpenCanvasShell();
+            SetPanelVisible(true);
+
+            PopulateCharacterSlider();
             PopulateData();
             PlayTransition(true);
         }
@@ -98,7 +263,7 @@ namespace Project.TeamBuilder.UI
 
         public void Close()
         {
-            bool isOpen = currentCharacter != null || ((contentPanel != null ? contentPanel : gameObject).activeSelf);
+            bool isOpen = currentCharacter != null || IsPanelVisible();
             if (!isOpen)
             {
                 return;
@@ -109,87 +274,87 @@ namespace Project.TeamBuilder.UI
 
         private void PopulateData()
         {
-            CharacterObject data = currentCharacter.characterObjectData;
-            float bonusHp = 0f;
-            float bonusAtk = 0f;
-            float bonusDef = 0f;
-            float bonusSpd = 0f;
-            float bonusCdr = 0f;
-            float bonusCritRate = 0f;
-            float bonusCritDmg = 0f;
-            float bonusElementalMastery = 0f;
-            float bonusImpact = 0f;
-            float bonusAeRecharge = 0f;
-
-            for (int i = 0; i < currentArtifacts.Length; i++)
+            bool hasCharacter = currentCharacter != null && currentCharacter.characterObjectData != null;
+            if (emptyStatePanel != null)
             {
-                Artifact artifact = currentArtifacts[i];
-                if (artifact == null || artifact.bonusStats == null)
+                emptyStatePanel.SetActive(!hasCharacter);
+            }
+
+            if (!hasCharacter)
+            {
+                if (subPanels != null)
                 {
-                    continue;
+                    foreach (var panel in subPanels)
+                    {
+                        panel.Hide();
+                    }
                 }
 
-                bonusHp += artifact.bonusStats.maxHP;
-                bonusAtk += artifact.bonusStats.attack;
-                bonusDef += artifact.bonusStats.defense;
-                bonusSpd += artifact.bonusStats.speed;
-                bonusCdr += artifact.bonusStats.cooldownRate;
-                bonusCritRate += artifact.bonusStats.critRate;
-                bonusCritDmg += artifact.bonusStats.critDamage;
-                bonusElementalMastery += artifact.bonusStats.elementalMastery;
-                bonusImpact += artifact.bonusStats.impact;
-                bonusAeRecharge += artifact.bonusStats.aeRecharge;
+                return;
             }
 
-            if (characterNameText != null)
+            if (subPanels == null) return;
+
+            foreach (var panel in subPanels)
             {
-                characterNameText.text = data.metaData != null ? data.metaData.displayName : currentCharacter.itemName;
+                bool showPanel = ShouldShowPanel(panel);
+                if (showPanel)
+                {
+                    panel.Show();
+                }
+                else
+                {
+                    panel.Hide();
+                }
+
+                panel.PopulateData(currentCharacter, currentArtifacts);
+            }
+        }
+
+        private bool ShouldShowPanel(IInspectSubPanel panel)
+        {
+            if (panel == null)
+            {
+                return false;
             }
 
-            if (characterPortrait != null)
+            return activePage switch
             {
-                characterPortrait.sprite = data.metaData != null ? data.metaData.portrait : currentCharacter.icon;
+                InspectPage.Info => panel == infoPanel,
+                InspectPage.Skill => panel == skillPanel,
+                InspectPage.Equipment => panel == equipmentPanel,
+                InspectPage.Level => panel == levelPanel,
+                InspectPage.Potential => panel == potentialPanel,
+                _ => false
+            };
+        }
+
+        private void RefreshAvailableCharacters()
+        {
+            availableCharacters.Clear();
+            if (playerInventory == null || playerInventory.ownedItems == null)
+            {
+                return;
             }
 
-            if (elementIcon != null && elementResolver != null)
+            foreach (BaseItem item in playerInventory.ownedItems)
             {
-                elementResolver.ResolveImage(elementIcon, data.elementType);
+                if (item is CharacterItem characterItem && characterItem.characterObjectData != null)
+                {
+                    availableCharacters.Add(characterItem);
+                }
+            }
+        }
+
+        private Artifact[] ResolveEquippedArtifacts(CharacterItem character)
+        {
+            if (teamLoader == null || character == null || character.characterObjectData == null)
+            {
+                return new Artifact[0];
             }
 
-            if (data.stats != null)
-            {
-                if (hpText != null) hpText.text = FormatStatValue(data.stats.maxHP, bonusHp, "hp");
-                if (atkText != null) atkText.text = FormatStatValue(data.stats.attack, bonusAtk, "atk");
-                if (defText != null) defText.text = FormatStatValue(data.stats.defense, bonusDef, "def");
-                if (spdText != null) spdText.text = FormatStatValue(data.stats.speed, bonusSpd, "spd");
-                if (cdrText != null) cdrText.text = FormatStatValue(data.stats.cooldownRate, bonusCdr, "cdr");
-                if (critRateText != null) critRateText.text = FormatStatValue(data.stats.critRate, bonusCritRate, "crit");
-                if (critDmgText != null) critDmgText.text = FormatStatValue(data.stats.critDamage, bonusCritDmg, "crit");
-                if (elementalMasteryText != null) elementalMasteryText.text = FormatStatValue(data.stats.elementalMastery, bonusElementalMastery, "elemental");
-                if (impactText != null) impactText.text = FormatStatValue(data.stats.impact, bonusImpact, "impact");
-                if (AEgainText != null) AEgainText.text = FormatStatValue(data.stats.aeRecharge * 100f, bonusAeRecharge * 100f, "ae");
-            }
-
-            if (characterLoreText != null && data.metaData != null)
-            {
-                characterLoreText.text = data.metaData.description;
-            }
-
-            if (passiveDescriptionText != null)
-            {
-                passiveDescriptionText.text = BuildPassiveSummary(data);
-            }
-
-            if (artifactDescriptionText != null)
-            {
-                artifactDescriptionText.text = BuildArtifactSummary();
-            }
-
-            if (potentialText != null)
-            {
-                potentialText.text = BuildPotentialSummary(data);
-                ConfigurePotentialHoverFallback();
-            }
+            Artifact[] artifacts = teamLoader.GetEquippedArtifactsFor(character.characterObjectData);
+            return artifacts ?? new Artifact[0];
         }
 
         private void PlayTransition(bool opening)
@@ -207,7 +372,7 @@ namespace Project.TeamBuilder.UI
             GameObject targetPanel = contentPanel != null ? contentPanel : gameObject;
             if (panelRectTransform == null)
             {
-                targetPanel.SetActive(opening);
+                SetPanelVisible(opening);
                 if (!opening)
                 {
                     currentCharacter = null;
@@ -250,163 +415,300 @@ namespace Project.TeamBuilder.UI
 
             if (!opening)
             {
-                targetPanel.SetActive(false);
+                SetPanelVisible(false);
                 currentCharacter = null;
                 currentArtifacts = new Artifact[0];
+                ClearCharacterSlider();
+                owningTeamUI?.ReleaseCanvasShell();
             }
 
             transitionCoroutine = null;
         }
 
-        private string BuildPassiveSummary(CharacterObject data)
+        public void ShowInfoPage()
         {
-            if (data.progressionDefinition == null)
-            {
-                return "None";
-            }
-
-            StringBuilder builder = new StringBuilder();
-            int currentRank = data.upgrade != null ? data.upgrade.constellationRank : 0;
-
-            if (data.progressionDefinition.passiveNodes != null)
-            {
-                for (int i = 0; i < data.progressionDefinition.passiveNodes.Count; i++)
-                {
-                    ProgressionNodeDefinition node = data.progressionDefinition.passiveNodes[i];
-                    if (node == null)
-                    {
-                        continue;
-                    }
-
-                    bool isUnlocked = node.unlockedByDefault
-                        || (node.requiredConstellationRank > 0 && node.requiredConstellationRank <= currentRank)
-                        || (node.constellationRank > 0 && node.constellationRank <= currentRank);
-                    if (!isUnlocked)
-                    {
-                        continue;
-                    }
-
-                    if (builder.Length > 0)
-                    {
-                        builder.AppendLine();
-                    }
-
-                    builder.Append("- ");
-                    builder.Append(string.IsNullOrWhiteSpace(node.nodeName) ? "Passive" : node.nodeName);
-                    if (!string.IsNullOrWhiteSpace(node.description))
-                    {
-                        builder.Append(": ");
-                        builder.Append(node.description);
-                    }
-                }
-            }
-
-            return builder.Length > 0 ? builder.ToString() : "None";
+            SetActivePage(InspectPage.Info);
         }
 
-        private string BuildArtifactSummary()
+        public void ShowSkillPage()
         {
-            if (currentArtifacts == null || currentArtifacts.Length == 0)
+            SetActivePage(InspectPage.Skill);
+        }
+
+        public void ShowEquipmentPage()
+        {
+            SetActivePage(InspectPage.Equipment);
+        }
+
+        public void ShowLevelPage()
+        {
+            SetActivePage(InspectPage.Level);
+        }
+
+        public void ShowPotentialPage()
+        {
+            SetActivePage(InspectPage.Potential);
+        }
+
+        private void SetActivePage(InspectPage page)
+        {
+            activePage = page;
+            PopulateData();
+        }
+
+        private void PopulateCharacterSlider()
+        {
+            ClearCharacterSlider();
+            if (characterSliderGridParent == null || characterSliderItemPrefab == null)
             {
-                return "No equipped artifacts.";
+                PopulateFallbackCharacterSlider();
+                return;
             }
 
-            StringBuilder builder = new StringBuilder();
-            for (int i = 0; i < currentArtifacts.Length; i++)
+            for (int i = 0; i < availableCharacters.Count; i++)
             {
-                Artifact artifact = currentArtifacts[i];
-                if (i > 0)
+                CharacterItem character = availableCharacters[i];
+                if (character == null)
                 {
-                    builder.AppendLine();
-                }
-
-                if (artifact == null)
-                {
-                    builder.Append($"Slot {i + 1}: Empty");
                     continue;
                 }
 
-                builder.Append($"Slot {i + 1}: {artifact.itemName}");
-                if (!string.IsNullOrWhiteSpace(artifact.passiveDescription))
+                GameObject itemObject = Instantiate(characterSliderItemPrefab, characterSliderGridParent);
+                CharacterGridItemUI itemUI = itemObject.GetComponent<CharacterGridItemUI>();
+                if (itemUI == null)
                 {
-                    builder.AppendLine();
-                    builder.Append(artifact.passiveDescription);
+                    continue;
                 }
-            }
 
-            return builder.ToString();
+                itemUI.Init(character, null, i == selectedCharacterIndex, SelectCharacterFromSlider);
+                sliderItems.Add(itemUI);
+            }
         }
 
-        private string BuildPotentialSummary(CharacterObject data)
+        private void ClearCharacterSlider()
         {
-            StringBuilder builder = new StringBuilder();
-            int currentRank = data.upgrade != null ? data.upgrade.constellationRank : 0;
-
-            for (int level = 1; level <= 6; level++)
+            for (int i = 0; i < sliderItems.Count; i++)
             {
-                if (level > 1)
+                if (sliderItems[i] != null)
                 {
-                    builder.AppendLine();
-                }
-
-                ProgressionNodeDefinition node = FindConstellationNode(data.progressionDefinition, level);
-                string stateLabel = level <= currentRank ? (level == currentRank ? "CURRENT" : "UNLOCKED") : "LOCKED";
-                builder.Append($"Lv.{level} [{stateLabel}]");
-
-                if (node != null && !string.IsNullOrWhiteSpace(node.nodeName))
-                {
-                    builder.Append(" ");
-                    builder.Append(node.nodeName);
-                }
-
-                if (node != null && !string.IsNullOrWhiteSpace(node.description))
-                {
-                    builder.Append(": ");
-                    builder.Append(node.description);
+                    Destroy(sliderItems[i].gameObject);
                 }
             }
 
-            return builder.ToString();
+            sliderItems.Clear();
         }
 
-        private static ProgressionNodeDefinition FindConstellationNode(CharacterProgressionDefinition progression, int rank)
+        private void SelectCharacterFromSlider(CharacterItem character)
         {
-            if (progression == null || progression.constellationNodes == null)
+            Open(character);
+        }
+
+        private void PopulateFallbackCharacterSlider()
+        {
+            Transform parent = characterSliderGridParent != null
+                ? characterSliderGridParent
+                : (contentPanel != null ? contentPanel.transform : transform);
+
+            for (int i = 0; i < availableCharacters.Count; i++)
             {
-                return null;
+                CharacterItem character = availableCharacters[i];
+                if (character == null)
+                {
+                    continue;
+                }
+
+                GameObject itemObject = new GameObject("CharacterSliderItem", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button), typeof(CharacterGridItemUI));
+                itemObject.transform.SetParent(parent, false);
+
+                RectTransform rectTransform = itemObject.GetComponent<RectTransform>();
+                rectTransform.sizeDelta = new Vector2(72f, 72f);
+
+                Image image = itemObject.GetComponent<Image>();
+                image.sprite = character.icon;
+                image.color = i == selectedCharacterIndex ? new Color(0.8f, 0.9f, 1f, 1f) : Color.white;
+
+                GameObject labelObject = new GameObject("Name", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+                labelObject.transform.SetParent(itemObject.transform, false);
+
+                RectTransform labelRect = labelObject.GetComponent<RectTransform>();
+                labelRect.anchorMin = new Vector2(0f, 0f);
+                labelRect.anchorMax = new Vector2(1f, 0.3f);
+                labelRect.offsetMin = Vector2.zero;
+                labelRect.offsetMax = Vector2.zero;
+
+                TextMeshProUGUI label = labelObject.GetComponent<TextMeshProUGUI>();
+                label.text = character.itemName;
+                label.fontSize = 12f;
+                label.alignment = TextAlignmentOptions.Center;
+
+                CharacterGridItemUI itemUI = itemObject.GetComponent<CharacterGridItemUI>();
+                itemUI.Init(character, null, i == selectedCharacterIndex, SelectCharacterFromSlider);
+                sliderItems.Add(itemUI);
+            }
+        }
+
+        private void ResolveMissingReferences()
+        {
+            if (owningTeamUI == null)
+            {
+                owningTeamUI = GetComponentInParent<TeamUI>();
             }
 
-            for (int i = 0; i < progression.constellationNodes.Count; i++)
+            if (openButton == null)
             {
-                ProgressionNodeDefinition node = progression.constellationNodes[i];
-                if (node != null && node.constellationRank == rank)
+                openButton = FindButtonByNames("OpenButton", "InspectorButton", "CharacterInspectorButton", "InspectButton");
+            }
+
+            if (openButton == null || IsHiddenWithPanel(openButton.transform))
+            {
+                openButton = CreateFallbackOpenButton();
+            }
+
+            if (infoTabButton == null)
+            {
+                infoTabButton = FindButtonByNames("Info", "InfoButton");
+            }
+
+            if (skillTabButton == null)
+            {
+                skillTabButton = FindButtonByNames("Skill", "SkillButton");
+            }
+
+            if (equipmentTabButton == null)
+            {
+                equipmentTabButton = FindButtonByNames("Equipment", "EquipmentButton");
+            }
+
+            if (characterSliderGridParent == null)
+            {
+                characterSliderGridParent = FindTransformByNames("CharacterSliderGrid", "CharacterSlider", "SliderGrid", "SliderContent");
+            }
+
+            if (characterSliderItemPrefab == null)
+            {
+                CharacterGridItemUI existingItem = GetComponentInChildren<CharacterGridItemUI>(true);
+                if (existingItem != null)
                 {
-                    return node;
+                    characterSliderItemPrefab = existingItem.gameObject;
+                }
+            }
+        }
+
+        private Button FindButtonByNames(params string[] names)
+        {
+            Button[] buttons = GetComponentsInChildren<Button>(true);
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                if (buttons[i] == null)
+                {
+                    continue;
+                }
+
+                string buttonName = buttons[i].gameObject.name;
+                for (int j = 0; j < names.Length; j++)
+                {
+                    if (string.Equals(buttonName, names[j], System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        return buttons[i];
+                    }
                 }
             }
 
             return null;
         }
 
-        private static string FormatStatValue(float baseValue, float additionalValue, string statName)
+        private Button CreateFallbackOpenButton()
         {
-            return StatFormatHelper.Format(baseValue, additionalValue, statName, true);
+            GameObject buttonObject = new GameObject("CharacterInspectorButton", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+            Transform parent = transform.parent != null ? transform.parent : transform;
+            buttonObject.transform.SetParent(parent, false);
+
+            RectTransform rectTransform = buttonObject.GetComponent<RectTransform>();
+            rectTransform.anchorMin = new Vector2(1f, 1f);
+            rectTransform.anchorMax = new Vector2(1f, 1f);
+            rectTransform.pivot = new Vector2(1f, 1f);
+            rectTransform.anchoredPosition = new Vector2(-24f, -24f);
+            rectTransform.sizeDelta = new Vector2(132f, 36f);
+
+            Image image = buttonObject.GetComponent<Image>();
+            image.color = new Color(0.14f, 0.16f, 0.2f, 0.9f);
+
+            GameObject labelObject = new GameObject("Text", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+            labelObject.transform.SetParent(buttonObject.transform, false);
+
+            RectTransform labelRect = labelObject.GetComponent<RectTransform>();
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.offsetMin = Vector2.zero;
+            labelRect.offsetMax = Vector2.zero;
+
+            TextMeshProUGUI label = labelObject.GetComponent<TextMeshProUGUI>();
+            label.text = "Inspector";
+            label.fontSize = 18f;
+            label.alignment = TextAlignmentOptions.Center;
+            label.color = Color.white;
+
+            return buttonObject.GetComponent<Button>();
         }
 
-        private void ConfigurePotentialHoverFallback()
+        private bool IsHiddenWithPanel(Transform target)
         {
-            if (!enablePotentialHoverFallback || potentialText == null)
+            if (target == null)
             {
-                return;
+                return false;
             }
 
-            UIHoverFallbackFeedback hoverFeedback = potentialText.GetComponent<UIHoverFallbackFeedback>();
-            if (hoverFeedback == null)
+            GameObject targetPanel = contentPanel != null ? contentPanel : gameObject;
+            return targetPanel == gameObject && target.IsChildOf(transform);
+        }
+
+        private bool IsPanelVisible()
+        {
+            GameObject targetPanel = contentPanel != null ? contentPanel : gameObject;
+            if (targetPanel != gameObject)
             {
-                hoverFeedback = potentialText.gameObject.AddComponent<UIHoverFallbackFeedback>();
+                return targetPanel.activeSelf;
             }
 
-            hoverFeedback.Configure(potentialHoverScale, potentialHoverGlowColor, potentialHoverDuration);
+            return panelCanvasGroup == null || panelCanvasGroup.alpha > 0.01f;
+        }
+
+        private void SetPanelVisible(bool visible)
+        {
+            GameObject targetPanel = contentPanel != null ? contentPanel : gameObject;
+            if (targetPanel != gameObject)
+            {
+                targetPanel.SetActive(visible);
+            }
+            else if (!gameObject.activeSelf)
+            {
+                gameObject.SetActive(true);
+            }
+
+            if (panelCanvasGroup != null)
+            {
+                panelCanvasGroup.alpha = visible ? 1f : 0f;
+                panelCanvasGroup.interactable = visible;
+                panelCanvasGroup.blocksRaycasts = visible;
+            }
+        }
+
+        private Transform FindTransformByNames(params string[] names)
+        {
+            Transform[] transforms = GetComponentsInChildren<Transform>(true);
+            for (int i = 0; i < transforms.Length; i++)
+            {
+                string transformName = transforms[i].gameObject.name;
+                for (int j = 0; j < names.Length; j++)
+                {
+                    if (string.Equals(transformName, names[j], System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        return transforms[i];
+                    }
+                }
+            }
+
+            return null;
         }
     }
 }

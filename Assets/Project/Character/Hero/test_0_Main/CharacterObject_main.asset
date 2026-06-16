@@ -40,8 +40,14 @@ MonoBehaviour:
   _authoredFPS: 24
   upgrade:
     level: 1
+    maxLevel: 30
+    currentExp: 0
+    expToNextLevel: 100
     constellationRank: 0
     progressionPoints: 3
+    attackPerLevel: 0
+    defensePerLevel: 0
+    maxHpPerLevel: 0
   _dashData:
     animationClip: {fileID: 7400000, guid: a3c837dc24c5bff43b19dd4e52b327ab, type: 2}
     startupFrames: 5
@@ -52,24 +58,6 @@ MonoBehaviour:
     cooldownFrames: 24
   progressionDefinition:
     maxConstellationRank: 6
-    constellationNodes:
-    - nodeId: 
-      nodeName: 
-      description: 
-      group: 0
-      constellationRank: 0
-      requiredNodeId: 
-      pointCost: 0
-      requiredConstellationRank: 0
-      unlockedByDefault: 0
-      statModifiers: []
-      cooldownModifiers: []
-      actionModifiers: []
-      runtimeTagEffects: []
-      counterEffects: []
-      conditionalStateEffects: []
-      onHitStatusEffects: []
-      additionalDamageEffects: []
-      passiveHookTypeName: 
+    constellationNodes: []
     passiveNodes: []
   actionResolverTable: {fileID: 11400000, guid: 4c22d52c4e028734cbd3294422a85e5b, type: 2}

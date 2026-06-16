@@ -7,15 +7,10 @@ using TMPro;
 using Project.InventorySystem.Items;
 using Project.ShopSystem;
 using Project.UI;
+using Project.Core.ZoneState;
 
 namespace Project.TeamBuilder.UI
 {
-    public enum TeamBuilderMode
-    {
-        SafeZone, // Interactive (Team Builder)
-        CombatZone // Read-Only (Normal Team Data)
-    }
-
     /// <summary>
     /// Main controller for the Team Builder UI.
     /// Manages the Character Grid Inventory panel and Team Slot panel.
@@ -54,7 +49,8 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private TeamUI owningTeamUI;
 
         [Header("Mode Settings")]
-        [SerializeField] private TeamBuilderMode currentMode = TeamBuilderMode.CombatZone;
+        [SerializeField] private ZoneStateProvider zoneStateProvider;
+        private ZoneMode currentMode = ZoneMode.CombatZone;
         [SerializeField] private InspectScreenUI inspectScreenUI;
 
         [Header("Audio Settings")]
@@ -72,24 +68,48 @@ namespace Project.TeamBuilder.UI
         // =========================================================
         // Runtime State
         // =========================================================
+        private IZoneStateListener[] modeHandlers;
         private bool isInitialized = false;
         private int panelOpenedFrame = -1;
         private bool isPanelSessionActive = false;
         private float previousTimeScale = 1f;
         private System.Action pendingCloseAfterDeploy;
         private bool isInventoryPanelOpen = false;
+        private int selectedCharacterSwitchSlotIndex = -1;
 
         // =========================================================
         // Properties
         // =========================================================
         public Canvas RootCanvas => rootCanvas;
-        public TeamBuilderMode CurrentMode => currentMode;
+        public ZoneMode CurrentMode => currentMode;
         public bool HasDraftChanges => draftController != null ? draftController.hasDraftChanges : false;
         public int StagedActiveIndex => draftController != null ? draftController.stagedActiveIndex : 0;
 
+        private void OnEnable()
+        {
+            if (zoneStateProvider != null)
+            {
+                zoneStateProvider.OnZoneModeChanged += HandleZoneChanged;
+                HandleZoneChanged(zoneStateProvider.CurrentMode);
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (zoneStateProvider != null)
+            {
+                zoneStateProvider.OnZoneModeChanged -= HandleZoneChanged;
+            }
+        }
+
+        private void HandleZoneChanged(ZoneMode newMode)
+        {
+            SetMode(newMode);
+        }
+
         private void Update()
         {
-            if (currentMode != TeamBuilderMode.SafeZone || (inventoryPanel == null || !isInventoryPanelOpen))
+            if (currentMode != ZoneMode.SafeZone || (inventoryPanel == null || !isInventoryPanelOpen))
             {
                 return;
             }
@@ -162,6 +182,8 @@ namespace Project.TeamBuilder.UI
 
             deployController.Setup();
 
+            modeHandlers = GetComponentsInChildren<IZoneStateListener>(true);
+
             // Initialize the grid panels
             if (inventoryPanel != null)
             {
@@ -196,7 +218,7 @@ namespace Project.TeamBuilder.UI
                 draftController.LoadRuntimeDraft();
             }
 
-            if (currentMode == TeamBuilderMode.SafeZone && openGridPanelOnSafeZoneOpen)
+            if (currentMode == ZoneMode.SafeZone && openGridPanelOnSafeZoneOpen)
             {
                 if (inventoryPanel != null)
                 {
@@ -258,12 +280,13 @@ namespace Project.TeamBuilder.UI
             ApplyModeVisualState();
         }
 
-        public void SetMode(TeamBuilderMode mode)
+        public void SetMode(ZoneMode mode)
         {
             currentMode = mode;
-            if (currentMode == TeamBuilderMode.CombatZone && inventoryPanel != null)
+            if (currentMode == ZoneMode.CombatZone && inventoryPanel != null)
             {
                 inventoryPanel.CloseAll();
+                selectedCharacterSwitchSlotIndex = -1;
             }
 
             ApplyModeVisualState();
@@ -281,12 +304,13 @@ namespace Project.TeamBuilder.UI
                 inventoryPanel.SetVisible(false);
             }
             isInventoryPanelOpen = false;
+            selectedCharacterSwitchSlotIndex = -1;
             ApplyModeVisualState();
         }
 
         public void ToggleInventoryPanel()
         {
-            if (currentMode != TeamBuilderMode.SafeZone)
+            if (currentMode != ZoneMode.SafeZone)
             {
                 CloseInventoryPanel();
                 return;
@@ -309,6 +333,7 @@ namespace Project.TeamBuilder.UI
                 {
                     inventoryPanel.CloseAll();
                     inventoryPanel.SetVisible(false);
+                    selectedCharacterSwitchSlotIndex = -1;
                 }
             }
             ApplyModeVisualState();
@@ -321,12 +346,16 @@ namespace Project.TeamBuilder.UI
                 inventoryPanel.CloseAll();
             }
             isInventoryPanelOpen = inventoryPanel != null && inventoryPanel.IsAnyPanelOpen;
+            if (!isInventoryPanelOpen)
+            {
+                selectedCharacterSwitchSlotIndex = -1;
+            }
             ApplyModeVisualState();
         }
 
         public void ToggleCharacterGridPanel()
         {
-            if (currentMode != TeamBuilderMode.SafeZone)
+            if (currentMode != ZoneMode.SafeZone)
             {
                 CloseInventoryPanel();
                 return;
@@ -346,9 +375,77 @@ namespace Project.TeamBuilder.UI
             ApplyModeVisualState();
         }
 
+        public void BeginCharacterSwitch(int slotIndex)
+        {
+            if (currentMode != ZoneMode.SafeZone)
+            {
+                CloseInventoryPanel();
+                return;
+            }
+
+            if (slotIndex < 0 || slotIndex >= teamSlots.Length || teamSlots[slotIndex] == null)
+            {
+                return;
+            }
+
+            selectedCharacterSwitchSlotIndex = slotIndex;
+            isInventoryPanelOpen = true;
+
+            if (inventoryPanel != null)
+            {
+                inventoryPanel.SetVisible(true);
+                if (!inventoryPanel.IsCharacterGridOpen)
+                {
+                    inventoryPanel.ToggleCharacterGrid();
+                }
+
+                panelOpenedFrame = Time.frameCount;
+                RefreshGrid();
+            }
+
+            ApplyModeVisualState();
+        }
+
+        public void TryAssignCharacterToSelectedSlot(CharacterItem incomingChar)
+        {
+            if (currentMode != ZoneMode.SafeZone || incomingChar == null)
+            {
+                return;
+            }
+
+            if (selectedCharacterSwitchSlotIndex < 0 || selectedCharacterSwitchSlotIndex >= teamSlots.Length)
+            {
+                return;
+            }
+
+            TeamSlotUI targetSlot = teamSlots[selectedCharacterSwitchSlotIndex];
+            if (targetSlot == null)
+            {
+                return;
+            }
+
+            TeamSlotUI existingSlot = FindSlotWithCharacter(incomingChar);
+            if (existingSlot != null && existingSlot != targetSlot)
+            {
+                existingSlot.SetCharacter(targetSlot.CurrentCharacter);
+                targetSlot.SetCharacter(incomingChar);
+            }
+            else if (existingSlot == targetSlot)
+            {
+                return;
+            }
+            else
+            {
+                targetSlot.SetCharacter(incomingChar);
+            }
+
+            OnSlotChanged();
+            CloseInventoryPanel();
+        }
+
         public void ToggleArtifactGridPanel()
         {
-            if (currentMode != TeamBuilderMode.SafeZone)
+            if (currentMode != ZoneMode.SafeZone)
             {
                 CloseInventoryPanel();
                 return;
@@ -445,7 +542,7 @@ namespace Project.TeamBuilder.UI
 
         public void OnDeployClicked()
         {
-            if (currentMode != TeamBuilderMode.SafeZone)
+            if (currentMode != ZoneMode.SafeZone)
             {
                 return;
             }
@@ -497,28 +594,6 @@ namespace Project.TeamBuilder.UI
             RefreshGrid();
             RefreshActiveIndex();
             ApplyModeVisualState();
-        }
-
-        // =========================================================
-        // Inspector Panel Integration
-        // =========================================================
-
-        public void OpenInspectScreen(CharacterItem character)
-        {
-            if (inspectScreenUI != null && character != null)
-            {
-                draftController.SaveDraftCache();
-                inspectScreenUI.Open(character);
-            }
-        }
-
-        public void OpenInspectScreen(CharacterItem character, Artifact[] equippedArtifacts)
-        {
-            if (inspectScreenUI != null && character != null)
-            {
-                draftController.SaveDraftCache();
-                inspectScreenUI.Open(character, equippedArtifacts);
-            }
         }
 
         public bool TryResolveArtifactSelection(Artifact currentArtifact, int direction, out Artifact resolvedArtifact)
@@ -650,7 +725,7 @@ namespace Project.TeamBuilder.UI
 
         public bool TryRequestSafeZoneClose(System.Action closeAfterSave)
         {
-            if (currentMode != TeamBuilderMode.SafeZone)
+            if (currentMode != ZoneMode.SafeZone)
             {
                 return false;
             }
@@ -774,20 +849,28 @@ namespace Project.TeamBuilder.UI
 
             if (inventoryPanel != null)
             {
-                inventoryPanel.SetVisible(currentMode == TeamBuilderMode.SafeZone && isInventoryPanelOpen);
+                inventoryPanel.SetVisible(currentMode == ZoneMode.SafeZone && isInventoryPanelOpen);
             }
 
             if (playerHolderButton != null)
             {
-                playerHolderButton.SetActive(currentMode == TeamBuilderMode.SafeZone);
+                playerHolderButton.SetActive(false);
             }
 
-            bool isLocked = currentMode == TeamBuilderMode.CombatZone;
+            bool isLocked = currentMode == ZoneMode.CombatZone;
             for (int i = 0; i < teamSlots.Length; i++)
             {
                 if (teamSlots[i] != null)
                 {
                     teamSlots[i].SetLockedVisualState(isLocked);
+                }
+            }
+
+            if (modeHandlers != null)
+            {
+                foreach (var handler in modeHandlers)
+                {
+                    handler.OnZoneChanged(currentMode);
                 }
             }
         }

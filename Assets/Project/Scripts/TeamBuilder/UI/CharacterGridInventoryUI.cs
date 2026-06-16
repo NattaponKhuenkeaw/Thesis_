@@ -60,7 +60,10 @@ namespace Project.TeamBuilder.UI
                 if (cellUI != null)
                 {
                     bool isInTeam = (parentBuilder != null) && parentBuilder.IsCharacterInTeam(character);
-                    cellUI.Init(character, rootCanvas, isInTeam);
+                    System.Action<CharacterItem> clickHandler = parentBuilder != null
+                        ? parentBuilder.TryAssignCharacterToSelectedSlot
+                        : null;
+                    cellUI.Init(character, rootCanvas, isInTeam, clickHandler);
                     spawnedItems.Add(cellUI);
                 }
             }

@@ -22,6 +22,7 @@ namespace Project.TeamBuilder.UI
         [Header("Visual Settings")]
         [SerializeField] private Color emptySlotColor = new Color(0.2f, 0.2f, 0.2f, 0.5f);
         [SerializeField] private Color filledSlotColor = new Color(0.6f, 0.15f, 0.15f, 1f);
+        [SerializeField] private bool readOnly = false;
 
         // =========================================================
         // Runtime State
@@ -34,6 +35,7 @@ namespace Project.TeamBuilder.UI
         // =========================================================
         public Artifact CurrentArtifact => currentArtifact;
         public TeamSlotUI ParentSlot => parentSlot;
+        public bool ReadOnly => readOnly;
 
         // =========================================================
         // Initialization
@@ -96,6 +98,11 @@ namespace Project.TeamBuilder.UI
             return currentArtifact;
         }
 
+        public void SetReadOnly(bool value)
+        {
+            readOnly = value;
+        }
+
         // =========================================================
         // Drag Ghost State
         // =========================================================
@@ -109,7 +116,7 @@ namespace Project.TeamBuilder.UI
         {
             SetDropHighlight(false);
 
-            if (parentSlot == null) return;
+            if (readOnly || parentSlot == null) return;
 
             // Handle drop from ArtifactGridItemUI
             ArtifactGridItemUI gridItem = eventData.pointerDrag?.GetComponent<ArtifactGridItemUI>();
@@ -129,7 +136,7 @@ namespace Project.TeamBuilder.UI
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (parentSlot == null)
+            if (readOnly || parentSlot == null)
             {
                 return;
             }
@@ -146,7 +153,7 @@ namespace Project.TeamBuilder.UI
         // =========================================================
         public void OnBeginDrag(PointerEventData eventData)
         {
-            if (currentArtifact == null) return;
+            if (readOnly || currentArtifact == null) return;
 
             if (rootCanvas == null)
             {
@@ -192,7 +199,7 @@ namespace Project.TeamBuilder.UI
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            if (eventData.dragging) SetDropHighlight(true);
+            if (!readOnly && eventData.dragging) SetDropHighlight(true);
         }
 
         public void OnPointerExit(PointerEventData eventData)

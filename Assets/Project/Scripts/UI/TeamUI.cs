@@ -6,14 +6,6 @@ using Project.TeamBuilder.UI;
 
 namespace Project.UI
 {
-    public enum TeamUIOpenMode
-    {
-        Auto,
-        SafeZone,
-        CombatZone
-    }
-
-    [RequireComponent(typeof(CanvasGroup))]
     public class TeamUI : MonoBehaviour
     {
         [Header("Animation Settings")]
@@ -22,7 +14,6 @@ namespace Project.UI
 
         [Header("Team Builder Integration")]
         [SerializeField] private TeamBuilderUI teamBuilderUI;
-        [SerializeField] private TeamUIOpenMode defaultOpenMode = TeamUIOpenMode.Auto;
         [SerializeField] private string uiActionMapName = "UI";
         [SerializeField] private PlayerInput playerInput;
         [SerializeField] private PlayerStateMachine playerStateMachine;
@@ -40,6 +31,8 @@ namespace Project.UI
         private int previousSortingOrder = 0;
         private string previousActionMapName;
 
+        public bool IsTeamBuilderOpen => isOpen;
+
         private void Awake()
         {
             canvasGroup = GetComponent<CanvasGroup>();
@@ -47,9 +40,17 @@ namespace Project.UI
             playerInput = playerInput ?? FindFirstObjectByType<PlayerInput>();
             playerStateMachine = playerStateMachine ?? FindFirstObjectByType<PlayerStateMachine>();
 
-            canvasGroup.alpha = 0f;
-            canvasGroup.interactable = false;
-            canvasGroup.blocksRaycasts = false;
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 1f;
+                canvasGroup.interactable = true;
+                canvasGroup.blocksRaycasts = true;
+            }
+
+            if (teamBuilderUI != null)
+            {
+                teamBuilderUI.gameObject.SetActive(false);
+            }
         }
 
         private void Update()
@@ -74,32 +75,18 @@ namespace Project.UI
 
         public void Open()
         {
-            OpenInMode(ResolveOpenMode());
-        }
-
-        public void OpenInMode(TeamBuilderMode mode)
-        {
             if (isOpen) return;
 
-            gameObject.SetActive(true);
+            OpenCanvasShell();
             isOpen = true;
-            BringCanvasToFront();
-
-            if (!inputLockHeld)
-            {
-                InputLockManager.Lock();
-                inputLockHeld = true;
-                SwitchToUIActionMap();
-            }
-
-            playerStateMachine?.InputBuffer?.ClearAll();
-
-            if (activeAnimation != null) StopCoroutine(activeAnimation);
-            activeAnimation = StartCoroutine(AnimatePanel(true));
 
             if (teamBuilderUI != null)
             {
-                teamBuilderUI.SetMode(mode);
+                teamBuilderUI.gameObject.SetActive(true);
+            }
+
+            if (teamBuilderUI != null)
+            {
                 teamBuilderUI.OnPanelOpened();
             }
         }
@@ -112,23 +99,60 @@ namespace Project.UI
                 teamBuilderUI.OnPanelClosed();
 
             isOpen = false;
-            canvasGroup.interactable = false;
-            canvasGroup.blocksRaycasts = false;
 
             if (activeAnimation != null) StopCoroutine(activeAnimation);
             activeAnimation = StartCoroutine(AnimatePanel(false));
+        }
+
+        public void OpenCanvasShell()
+        {
+            gameObject.SetActive(true);
+            BringCanvasToFront();
+
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 1f;
+                canvasGroup.interactable = true;
+                canvasGroup.blocksRaycasts = true;
+            }
+
+            if (!inputLockHeld)
+            {
+                InputLockManager.Lock();
+                inputLockHeld = true;
+                SwitchToUIActionMap();
+            }
+
+            playerStateMachine?.InputBuffer?.ClearAll();
+        }
+
+        public void ReleaseCanvasShell()
+        {
+            if (isOpen)
+            {
+                return;
+            }
+
+            RestoreCanvasSorting();
+            RestorePreviousActionMap();
+            if (inputLockHeld)
+            {
+                InputLockManager.Unlock();
+                inputLockHeld = false;
+            }
+
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 1f;
+                canvasGroup.interactable = true;
+                canvasGroup.blocksRaycasts = true;
+            }
         }
 
         public void Toggle()
         {
             if (isOpen) RequestClose();
             else Open();
-        }
-
-        public void ToggleInMode(TeamBuilderMode mode)
-        {
-            if (isOpen) RequestClose();
-            else OpenInMode(mode);
         }
 
         public void RequestClose()
@@ -149,28 +173,29 @@ namespace Project.UI
         private IEnumerator AnimatePanel(bool opening)
         {
             float elapsed = 0f;
-            float startAlpha = canvasGroup.alpha;
-            float targetAlpha = opening ? 1f : 0f;
 
             while (elapsed < animationDuration)
             {
                 elapsed += Time.unscaledDeltaTime;
-                float t = Mathf.Clamp01(elapsed / animationDuration);
-                float eased = 1f - Mathf.Pow(1f - t, 3f);
-                canvasGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, eased);
-
                 yield return null;
             }
 
-            canvasGroup.alpha = targetAlpha;
-
             if (opening)
             {
-                canvasGroup.interactable = true;
-                canvasGroup.blocksRaycasts = true;
+                if (canvasGroup != null)
+                {
+                    canvasGroup.alpha = 1f;
+                    canvasGroup.interactable = true;
+                    canvasGroup.blocksRaycasts = true;
+                }
             }
             else
             {
+                if (teamBuilderUI != null)
+                {
+                    teamBuilderUI.gameObject.SetActive(false);
+                }
+
                 RestoreCanvasSorting();
                 RestorePreviousActionMap();
                 if (inputLockHeld)
@@ -183,32 +208,7 @@ namespace Project.UI
             activeAnimation = null;
         }
 
-        private TeamBuilderMode ResolveOpenMode()
-        {
-            return defaultOpenMode switch
-            {
-                TeamUIOpenMode.SafeZone => TeamBuilderMode.SafeZone,
-                TeamUIOpenMode.CombatZone => TeamBuilderMode.CombatZone,
-                _ => ResolveAutoMode()
-            };
-        }
 
-        private TeamBuilderMode ResolveAutoMode()
-        {
-            string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-            if (!string.IsNullOrEmpty(sceneName))
-            {
-                string normalizedSceneName = sceneName.ToLowerInvariant();
-                if (normalizedSceneName.Contains("shop")
-                    || normalizedSceneName.Contains("lobby")
-                    || normalizedSceneName.Contains("hub"))
-                {
-                    return TeamBuilderMode.SafeZone;
-                }
-            }
-
-            return TeamBuilderMode.CombatZone;
-        }
 
         private void BringCanvasToFront()
         {

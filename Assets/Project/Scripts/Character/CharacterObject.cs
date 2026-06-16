@@ -91,6 +91,10 @@ public class CharacterObject : ScriptableObject
     [Header("Progression")]
     public CharacterProgressionDefinition progressionDefinition = new CharacterProgressionDefinition();
 
+    public CharacterStats GetLeveledStats()
+    {
+        return upgrade != null ? upgrade.ApplyLevelGrowth(stats) : (stats != null ? stats.Clone() : new CharacterStats());
+    }
 
     // =========================================================
     // Action Resolver (New Combo Tree System)

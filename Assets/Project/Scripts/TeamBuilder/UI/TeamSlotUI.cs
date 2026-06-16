@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using TMPro;
 using Project.InventorySystem.Items;
 using Project.UI;
+using Project.Core.ZoneState;
 
 namespace Project.TeamBuilder.UI
 {
@@ -17,6 +18,7 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private Image profileImage;
         [SerializeField] private Image elementIcon;
         [SerializeField] private TMP_Text characterNameText;
+        [SerializeField] private TMP_Text levelText;
 
         [Header("Stat Texts")]
         [SerializeField] private TMP_Text atkText;
@@ -142,6 +144,13 @@ namespace Project.TeamBuilder.UI
                 characterNameText.text = charObj != null ? charObj.metaData.displayName : character.itemName;
             }
 
+            if (levelText != null)
+            {
+                levelText.text = charObj != null && charObj.upgrade != null
+                    ? charObj.upgrade.LevelLabel
+                    : "Lv.1/30";
+            }
+
             if (elementIcon != null && charObj != null && elementResolver != null)
             {
                 elementResolver.ResolveImage(elementIcon, charObj.elementType);
@@ -170,6 +179,11 @@ namespace Project.TeamBuilder.UI
             if (characterNameText != null)
             {
                 characterNameText.text = "Empty";
+            }
+
+            if (levelText != null)
+            {
+                levelText.text = string.Empty;
             }
 
             if (elementIcon != null)
@@ -247,7 +261,7 @@ namespace Project.TeamBuilder.UI
                 return;
             }
 
-            CharacterStats baseStats = currentCharacter.characterObjectData.stats ?? new CharacterStats();
+            CharacterStats baseStats = currentCharacter.characterObjectData.GetLeveledStats();
             float bonusAttack = 0f;
             float bonusDefense = 0f;
             float bonusHp = 0f;
@@ -288,7 +302,7 @@ namespace Project.TeamBuilder.UI
 
         public void OnDrop(PointerEventData eventData)
         {
-            if (parentBuilder == null || parentBuilder.CurrentMode == TeamBuilderMode.CombatZone)
+            if (parentBuilder == null || parentBuilder.CurrentMode == ZoneMode.CombatZone)
             {
                 return;
             }
@@ -308,47 +322,23 @@ namespace Project.TeamBuilder.UI
                 return;
             }
 
-            CharacterGridItemUI draggedItem = eventData.pointerDrag?.GetComponent<CharacterGridItemUI>();
-            if (draggedItem == null || draggedItem.CharacterData == null)
-            {
-                return;
-            }
-
-            CharacterItem incomingChar = draggedItem.CharacterData;
-            TeamSlotUI existingSlot = parentBuilder.FindSlotWithCharacter(incomingChar);
-
-            if (existingSlot != null && existingSlot != this)
-            {
-                existingSlot.SetCharacter(currentCharacter);
-                SetCharacter(incomingChar);
-            }
-            else if (existingSlot == this)
-            {
-                return;
-            }
-            else
-            {
-                SetCharacter(incomingChar);
-            }
-
-            parentBuilder.OnSlotChanged();
-            PlayPlacementFeedback();
+            // Character inventory items are click-to-switch per GDD. Team slots remain draggable.
         }
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (currentCharacter == null || parentBuilder == null)
+            if (parentBuilder == null)
             {
                 return;
             }
 
-            if (parentBuilder.CurrentMode == TeamBuilderMode.CombatZone)
+            if (parentBuilder.CurrentMode == ZoneMode.CombatZone)
             {
                 return;
             }
             else
             {
-                parentBuilder.SetActiveIndex(slotIndex);
+                parentBuilder.BeginCharacterSwitch(slotIndex);
             }
         }
 
@@ -359,7 +349,7 @@ namespace Project.TeamBuilder.UI
                 return;
             }
 
-            if (parentBuilder.CurrentMode != TeamBuilderMode.CombatZone)
+            if (parentBuilder.CurrentMode != ZoneMode.CombatZone)
             {
                 return;
             }
@@ -382,7 +372,7 @@ namespace Project.TeamBuilder.UI
         {
             CancelInspectHold();
 
-            if (parentBuilder != null && parentBuilder.CurrentMode == TeamBuilderMode.CombatZone)
+            if (parentBuilder != null && parentBuilder.CurrentMode == ZoneMode.CombatZone)
             {
                 PlayLockedFeedback();
                 return;
@@ -431,7 +421,7 @@ namespace Project.TeamBuilder.UI
                 return;
             }
 
-            if (parentBuilder.CurrentMode == TeamBuilderMode.CombatZone)
+            if (parentBuilder.CurrentMode == ZoneMode.CombatZone)
             {
                 PlayLockedFeedback();
                 return;
@@ -456,7 +446,7 @@ namespace Project.TeamBuilder.UI
         {
             if (parentBuilder == null || currentCharacter == null || targetSlot == null || newArtifact == null) return;
 
-            if (parentBuilder.CurrentMode == TeamBuilderMode.CombatZone)
+            if (parentBuilder.CurrentMode == ZoneMode.CombatZone)
             {
                 PlayLockedFeedback();
                 return;
@@ -486,7 +476,7 @@ namespace Project.TeamBuilder.UI
         {
             if (parentBuilder == null || currentCharacter == null || targetSlot == null || sourceSlot == null) return;
 
-            if (parentBuilder.CurrentMode == TeamBuilderMode.CombatZone)
+            if (parentBuilder.CurrentMode == ZoneMode.CombatZone)
             {
                 PlayLockedFeedback();
                 return;
@@ -661,7 +651,7 @@ namespace Project.TeamBuilder.UI
             }
 
             inspectHoldCoroutine = null;
-            parentBuilder.OpenInspectScreen(currentCharacter, GetEquippedArtifacts());
+            PlayLockedFeedback();
         }
 
         private void CancelInspectHold()

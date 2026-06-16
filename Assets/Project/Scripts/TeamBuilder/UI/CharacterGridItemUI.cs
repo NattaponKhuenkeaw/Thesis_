@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using System;
 using TMPro;
 using Project.InventorySystem.Items;
 using Project.UI;
@@ -8,11 +9,10 @@ using Project.UI;
 namespace Project.TeamBuilder.UI
 {
     /// <summary>
-    /// A draggable character cell in the Character Grid Inventory.
-    /// Implements Unity's drag interfaces to create a floating ghost during drag.
+    /// A selectable character cell in the Character Grid Inventory.
     /// </summary>
     [RequireComponent(typeof(CanvasGroup))]
-    public class CharacterGridItemUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+    public class CharacterGridItemUI : MonoBehaviour, IPointerClickHandler
     {
         // =========================================================
         // UI References
@@ -21,6 +21,8 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private Image iconImage;
         [SerializeField] private Image frameImage;
         [SerializeField] private TMP_Text nameText;
+        [SerializeField] private TMP_Text levelText;
+        [SerializeField] private TMP_Text equippedText;
         [SerializeField] private Image attributeImage; // For elemental attribute
 
         [Header("Element Settings")]
@@ -36,8 +38,8 @@ namespace Project.TeamBuilder.UI
         // =========================================================
         private CharacterItem characterItem;
         private CanvasGroup canvasGroup;
-        private Transform dragGhost;
         private Canvas rootCanvas;
+        private Action<CharacterItem> clickCallback;
         private bool isInTeam = false;
 
         // =========================================================
@@ -48,10 +50,11 @@ namespace Project.TeamBuilder.UI
         // =========================================================
         // Initialization
         // =========================================================
-        public void Init(CharacterItem item, Canvas canvas, bool alreadyInTeam = false)
+        public void Init(CharacterItem item, Canvas canvas, bool alreadyInTeam = false, Action<CharacterItem> onClicked = null)
         {
             characterItem = item;
             rootCanvas = canvas;
+            clickCallback = onClicked;
             canvasGroup = GetComponent<CanvasGroup>();
 
             // Set visuals from CharacterObject
@@ -62,6 +65,11 @@ namespace Project.TeamBuilder.UI
 
                 if (nameText != null)
                     nameText.text = item.characterObjectData.metaData.displayName;
+
+                if (levelText != null)
+                    levelText.text = item.characterObjectData.upgrade != null
+                        ? item.characterObjectData.upgrade.LevelLabel
+                        : "Lv.1/30";
                 
                 if (attributeImage != null && elementResolver != null)
                 {
@@ -75,6 +83,9 @@ namespace Project.TeamBuilder.UI
 
                 if (nameText != null)
                     nameText.text = item.itemName;
+
+                if (levelText != null)
+                    levelText.text = string.Empty;
             }
 
             SetInTeamState(alreadyInTeam);
@@ -98,58 +109,17 @@ namespace Project.TeamBuilder.UI
                 canvasGroup.alpha = 1f;
                 if (frameImage != null) frameImage.color = normalFrameColor;
             }
-        }
 
-        // =========================================================
-        // Drag Handlers
-        // =========================================================
-        public void OnBeginDrag(PointerEventData eventData)
-        {
-            if (isInTeam) return; // Don't allow dragging characters already in team
-
-            if (rootCanvas == null)
+            if (equippedText != null)
             {
-                rootCanvas = GetComponentInParent<Canvas>()?.rootCanvas;
-            }
-
-            if (rootCanvas == null)
-            {
-                Debug.LogWarning("CharacterGridItemUI: Cannot drag because no root Canvas was found.");
-                return;
-            }
-
-            Sprite dragSprite = (iconImage != null) ? iconImage.sprite : null;
-            dragGhost = UIDragGhostHelper.CreateGhost(rootCanvas, dragSprite, new Vector2(80f, 80f), 0.75f, "DragGhost");
-
-            // Make original semi-transparent during drag
-            if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
-            if (canvasGroup != null)
-            {
-                canvasGroup.alpha = 0.5f;
-                canvasGroup.blocksRaycasts = false;
+                equippedText.text = "Equipped";
+                equippedText.gameObject.SetActive(inTeam);
             }
         }
 
-        public void OnDrag(PointerEventData eventData)
+        public void OnPointerClick(PointerEventData eventData)
         {
-            if (dragGhost == null) return;
-            UIDragGhostHelper.UpdatePosition(dragGhost, rootCanvas, eventData.position);
-        }
-
-        public void OnEndDrag(PointerEventData eventData)
-        {
-            UIDragGhostHelper.DestroyGhost(ref dragGhost);
-
-            // Restore original appearance
-            if (!isInTeam)
-            {
-                if (canvasGroup != null) canvasGroup.alpha = 1f;
-            }
-            else
-            {
-                if (canvasGroup != null) canvasGroup.alpha = inTeamAlpha;
-            }
-            if (canvasGroup != null) canvasGroup.blocksRaycasts = true;
+            clickCallback?.Invoke(characterItem);
         }
     }
 }

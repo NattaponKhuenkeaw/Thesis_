@@ -3,6 +3,7 @@ using System.Reflection;
 using NUnit.Framework;
 using Project.InventorySystem.Items;
 using Project.TeamBuilder.UI;
+using Project.Core.ZoneState;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
@@ -107,7 +108,7 @@ public class TeamRuntimeStatFeedbackTests
             artifactSlotObject.transform.SetParent(slotObject.transform, false);
 
             TeamBuilderUI builder = builderObject.AddComponent<TeamBuilderUI>();
-            SetPrivateField(builder, "currentMode", TeamBuilderMode.SafeZone);
+            SetPrivateField(builder, "currentMode", ZoneMode.SafeZone);
 
             TeamSlotUI teamSlot = slotObject.AddComponent<TeamSlotUI>();
             ArtifactSlotUI artifactSlot = artifactSlotObject.GetComponent<ArtifactSlotUI>();
