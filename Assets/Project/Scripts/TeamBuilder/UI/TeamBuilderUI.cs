@@ -16,7 +16,7 @@ namespace Project.TeamBuilder.UI
     /// Manages the Character Grid Inventory panel and Team Slot panel.
     /// Syncs team data to the TeamLoader for gameplay.
     /// </summary>
-    public class TeamBuilderUI : MonoBehaviour
+    public class TeamBuilderUI : MonoBehaviour, IOrchestratedPanel
     {
         // =========================================================
         // Dependencies
@@ -278,6 +278,37 @@ namespace Project.TeamBuilder.UI
             }
 
             ApplyModeVisualState();
+            owningTeamUI?.UnregisterActivePanel(this);
+            gameObject.SetActive(false);
+        }
+
+        public bool TryRequestClose(System.Action closeAction)
+        {
+            return TryRequestSafeZoneClose(closeAction);
+        }
+
+        public void OpenPanel()
+        {
+            gameObject.SetActive(true);
+            owningTeamUI?.RegisterActivePanel(this);
+            OnPanelOpened();
+        }
+
+        public void ClosePanel()
+        {
+            OnPanelClosed();
+        }
+
+        public void TogglePanel()
+        {
+            if (gameObject.activeSelf)
+            {
+                ClosePanel();
+            }
+            else
+            {
+                OpenPanel();
+            }
         }
 
         public void SetMode(ZoneMode mode)
@@ -564,9 +595,9 @@ namespace Project.TeamBuilder.UI
             {
                 closeAfterDeploy.Invoke();
             }
-            else if (owningTeamUI != null)
+            else
             {
-                owningTeamUI.Close();
+                ClosePanel();
             }
         }
 
@@ -580,9 +611,9 @@ namespace Project.TeamBuilder.UI
             {
                 closeAfterCancel.Invoke();
             }
-            else if (owningTeamUI != null)
+            else
             {
-                owningTeamUI.Close();
+                ClosePanel();
             }
         }
 

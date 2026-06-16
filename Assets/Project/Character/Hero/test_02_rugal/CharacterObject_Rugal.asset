@@ -43,8 +43,14 @@ MonoBehaviour:
   _authoredFPS: 24
   upgrade:
     level: 1
+    maxLevel: 30
+    currentExp: 0
+    expToNextLevel: 100
     constellationRank: 0
     progressionPoints: 3
+    attackPerLevel: 0
+    defensePerLevel: 0
+    maxHpPerLevel: 0
   _dashData:
     animationClip: {fileID: 7400000, guid: 3e950a7b365be294c97ddb9271fb0efe, type: 2}
     startupFrames: 8

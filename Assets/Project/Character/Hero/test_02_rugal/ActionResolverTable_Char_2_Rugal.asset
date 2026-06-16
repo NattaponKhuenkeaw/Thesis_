@@ -1017,7 +1017,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 33
-        damageType: 0
+        damageType: 6
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: -0.5507513, y: 1.9592235}
         size: {x: 1.3459373, y: 0.992684}
@@ -1155,7 +1155,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 2
         activeFrames: 15
-        damageType: 0
+        damageType: 6
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.544281, y: 1.8981042}
         size: {x: 2.603067, y: 2.5366564}

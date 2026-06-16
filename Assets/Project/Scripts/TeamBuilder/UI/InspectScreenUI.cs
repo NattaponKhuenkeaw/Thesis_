@@ -12,7 +12,7 @@ using Project.UI;
 
 namespace Project.TeamBuilder.UI
 {
-    public class InspectScreenUI : MonoBehaviour
+    public class InspectScreenUI : MonoBehaviour, IOrchestratedPanel
     {
         [Header("UI Panels")]
         [SerializeField] private GameObject contentPanel;
@@ -55,6 +55,7 @@ namespace Project.TeamBuilder.UI
         private EquipmentPanel equipmentPanel;
         private CharacterLevelPanel levelPanel;
         private CharacterPotentialPanel potentialPanel;
+        private CharacterVisualPanel visualPanel;
 
         private enum InspectPage
         {
@@ -187,9 +188,20 @@ namespace Project.TeamBuilder.UI
             equipmentPanel = targetPanel.GetComponentInChildren<EquipmentPanel>(true);
             levelPanel = targetPanel.GetComponentInChildren<CharacterLevelPanel>(true);
             potentialPanel = targetPanel.GetComponentInChildren<CharacterPotentialPanel>(true);
+            visualPanel = targetPanel.GetComponentInChildren<CharacterVisualPanel>(true);
             ResolveMissingReferences();
 
-            SetPanelVisible(false);
+            // Initialize visibility states without deactivating the host gameObject
+            if (panelCanvasGroup != null)
+            {
+                panelCanvasGroup.alpha = 0f;
+                panelCanvasGroup.interactable = false;
+                panelCanvasGroup.blocksRaycasts = false;
+            }
+            if (targetPanel != gameObject)
+            {
+                targetPanel.SetActive(false);
+            }
         }
 
         private void Start()
@@ -208,6 +220,21 @@ namespace Project.TeamBuilder.UI
             {
                 owningTeamUI = GetComponentInParent<TeamUI>();
             }
+        }
+
+        public void OnPanelOpened()
+        {
+            OpenFirstAvailableCharacter();
+        }
+
+        public void OnPanelClosed()
+        {
+            Close();
+        }
+
+        public bool TryRequestClose(System.Action closeAction)
+        {
+            return false;
         }
 
         public void OpenFirstAvailableCharacter()
@@ -248,7 +275,7 @@ namespace Project.TeamBuilder.UI
                 owningTeamUI = GetComponentInParent<TeamUI>();
             }
 
-            owningTeamUI?.OpenCanvasShell();
+            owningTeamUI?.RegisterActivePanel(this);
             SetPanelVisible(true);
 
             PopulateCharacterSlider();
@@ -316,6 +343,11 @@ namespace Project.TeamBuilder.UI
             if (panel == null)
             {
                 return false;
+            }
+
+            if (panel == visualPanel)
+            {
+                return true;
             }
 
             return activePage switch
@@ -419,7 +451,7 @@ namespace Project.TeamBuilder.UI
                 currentCharacter = null;
                 currentArtifacts = new Artifact[0];
                 ClearCharacterSlider();
-                owningTeamUI?.ReleaseCanvasShell();
+                owningTeamUI?.UnregisterActivePanel(this);
             }
 
             transitionCoroutine = null;
@@ -675,14 +707,20 @@ namespace Project.TeamBuilder.UI
 
         private void SetPanelVisible(bool visible)
         {
+            if (visible && !gameObject.activeSelf)
+            {
+                gameObject.SetActive(true);
+            }
+
             GameObject targetPanel = contentPanel != null ? contentPanel : gameObject;
             if (targetPanel != gameObject)
             {
                 targetPanel.SetActive(visible);
             }
-            else if (!gameObject.activeSelf)
+
+            if (!visible && gameObject.activeSelf)
             {
-                gameObject.SetActive(true);
+                gameObject.SetActive(false);
             }
 
             if (panelCanvasGroup != null)

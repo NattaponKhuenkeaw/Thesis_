@@ -31,8 +31,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 3666162024591934300}
-  - {fileID: 878098034213783914}
+  - {fileID: 2097615021021156747}
   - {fileID: 8941683036705941995}
   - {fileID: 7084419975888384094}
   - {fileID: 6129693240543031486}
@@ -93,7 +92,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 926385fe5159eec49adf2f48047a01ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.TeamBuilder.UI.InspectScreenUI
-  contentPanel: {fileID: 2770844722460556591}
+  contentPanel: {fileID: 8598368119931572103}
   emptyStatePanel: {fileID: 8514660937333416587}
   openButton: {fileID: 0}
   closeButton: {fileID: 1242359683604398520}
@@ -7438,18 +7437,18 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2668949154858492944}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8760326518641721583}
   - {fileID: 6119237355131661869}
-  m_Father: {fileID: 5729534584361006379}
+  m_Father: {fileID: 2097615021021156747}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 165.09, y: 0}
+  m_AnchoredPosition: {x: 377.455, y: 0}
   m_SizeDelta: {x: 754.91, y: 1080}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!222 &1815978902988360674
@@ -7879,18 +7878,18 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2770844722460556591}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2586162626772752219}
   - {fileID: 2068127877517107188}
-  m_Father: {fileID: 5729534584361006379}
+  m_Father: {fileID: 2097615021021156747}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -500, y: 0}
   m_SizeDelta: {x: 1000, y: 1080}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!222 &8763603415620446022
@@ -10754,7 +10753,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Project.UI.TeamUI
   animationDuration: 0.4
   openSortingOrder: 5000
-  teamBuilderUI: {fileID: 4151762214980514351}
+  defaultPanel: {fileID: 0}
   uiActionMapName: UI
   playerInput: {fileID: 0}
   playerStateMachine: {fileID: 0}
@@ -19098,7 +19097,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -0.00005649032}
+  m_AnchoredPosition: {x: 0, y: -0.0010252957}
   m_SizeDelta: {x: 0, y: 949.05}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &5975919139889086180
@@ -21527,6 +21526,43 @@ MonoBehaviour:
   m_Spacing: {x: 40, y: 20}
   m_Constraint: 0
   m_ConstraintCount: 2
+--- !u!1 &8598368119931572103
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2097615021021156747}
+  m_Layer: 5
+  m_Name: Content
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &2097615021021156747
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8598368119931572103}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 3666162024591934300}
+  - {fileID: 878098034213783914}
+  m_Father: {fileID: 5729534584361006379}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 143.8175, y: 0}
+  m_SizeDelta: {x: 2632.365, y: 1080}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &8614009577027139607
 GameObject:
   m_ObjectHideFlags: 0

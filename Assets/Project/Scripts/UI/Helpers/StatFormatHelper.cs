@@ -88,6 +88,8 @@ namespace Project.UI
             // Standard base + bonus formatting
             if (isCDR)
             {
+                float totalValue = baseValue + bonusValue;
+                string formattedTotal = totalValue.ToString("0.#");
                 if (useRichTextColor)
                 {
                     if (Mathf.Abs(bonusValue) > 0.001f)
@@ -95,10 +97,9 @@ namespace Project.UI
                         string colorTag = bonusValue > 0.001f ? "#4ADE80" : "#EF4444";
                         string sign = bonusValue >= 0f ? "-" : "+";
                         string formattedBonus = FormatFloat(bonusValue);
-                        string formattedBase = baseValue.ToString("0.#");
-                        return $"-{formattedBase}% (<color={colorTag}>{sign}{formattedBonus}%</color>)";
+                        return $"-{formattedTotal}% (<color={colorTag}>{sign}{formattedBonus}%</color>)";
                     }
-                    return $"-{baseValue.ToString("0.#")}%";
+                    return $"-{formattedTotal}%";
                 }
                 else
                 {
@@ -106,14 +107,15 @@ namespace Project.UI
                     {
                         string sign = bonusValue >= 0f ? "-" : "+";
                         string formattedBonus = FormatFloat(bonusValue);
-                        string formattedBase = baseValue.ToString("0.#");
-                        return $"-{formattedBase}%({sign}{formattedBonus}%)";
+                        return $"-{formattedTotal}%({sign}{formattedBonus}%)";
                     }
-                    return $"-{baseValue.ToString("0.#")}%";
+                    return $"-{formattedTotal}%";
                 }
             }
             else if (isPercent)
             {
+                float totalValue = baseValue + bonusValue;
+                string formattedTotal = totalValue.ToString("0.#");
                 if (useRichTextColor)
                 {
                     if (Mathf.Abs(bonusValue) > 0.001f)
@@ -121,10 +123,9 @@ namespace Project.UI
                         string colorTag = bonusValue > 0.001f ? "#4ADE80" : "#EF4444";
                         string sign = bonusValue >= -0.001f ? "+" : "-";
                         string formattedBonus = FormatFloat(bonusValue);
-                        string formattedBase = baseValue.ToString("0.#");
-                        return $"{formattedBase}% (<color={colorTag}>{sign}{formattedBonus}%</color>)";
+                        return $"{formattedTotal}% (<color={colorTag}>{sign}{formattedBonus}%</color>)";
                     }
-                    return $"{baseValue.ToString("0.#")}%";
+                    return $"{formattedTotal}%";
                 }
                 else
                 {
@@ -132,10 +133,9 @@ namespace Project.UI
                     {
                         string sign = bonusValue >= -0.001f ? "+" : "-";
                         string formattedBonus = FormatFloat(bonusValue);
-                        string formattedBase = baseValue.ToString("0.#");
-                        return $"{formattedBase}%({sign}{formattedBonus}%)";
+                        return $"{formattedTotal}%({sign}{formattedBonus}%)";
                     }
-                    return $"{baseValue.ToString("0.#")}%";
+                    return $"{formattedTotal}%";
                 }
             }
             else if (isBaseFlatBonusPercent)
@@ -167,7 +167,8 @@ namespace Project.UI
             }
             else
             {
-                string formattedBase = Mathf.RoundToInt(baseValue).ToString();
+                float totalValue = baseValue + bonusValue;
+                string formattedTotal = Mathf.RoundToInt(totalValue).ToString();
                 if (useRichTextColor)
                 {
                     if (Mathf.Abs(bonusValue) > 0.001f)
@@ -175,9 +176,9 @@ namespace Project.UI
                         string colorTag = bonusValue > 0.001f ? "#4ADE80" : "#EF4444";
                         string sign = bonusValue >= 0f ? "+" : "";
                         string formattedBonus = Mathf.RoundToInt(bonusValue).ToString();
-                        return $"{formattedBase} (<color={colorTag}>{sign}{formattedBonus}</color>)";
+                        return $"{formattedTotal} (<color={colorTag}>{sign}{formattedBonus}</color>)";
                     }
-                    return $"{formattedBase}";
+                    return $"{formattedTotal}";
                 }
                 else
                 {
@@ -185,9 +186,9 @@ namespace Project.UI
                     {
                         string sign = bonusValue >= 0f ? "+" : "";
                         string formattedBonus = Mathf.RoundToInt(bonusValue).ToString();
-                        return $"{formattedBase}({sign}{formattedBonus})";
+                        return $"{formattedTotal}({sign}{formattedBonus})";
                     }
-                    return $"{formattedBase}";
+                    return $"{formattedTotal}";
                 }
             }
         }

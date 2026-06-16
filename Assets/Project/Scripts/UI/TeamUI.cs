@@ -1,37 +1,27 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using System.Collections;
-using Project.TeamBuilder.UI;
 
 namespace Project.UI
 {
     public class TeamUI : MonoBehaviour
     {
-        [Header("Animation Settings")]
-        [SerializeField] private float animationDuration = 0.4f;
+        [Header("Canvas Settings")]
         [SerializeField] private int openSortingOrder = 5000;
-
-        [Header("Team Builder Integration")]
-        [SerializeField] private TeamBuilderUI teamBuilderUI;
         [SerializeField] private string uiActionMapName = "UI";
         [SerializeField] private PlayerInput playerInput;
         [SerializeField] private PlayerStateMachine playerStateMachine;
 
-        [Header("Input")]
-        [SerializeField] private bool listenForKeyboardToggle = true;
-        [SerializeField] private Key toggleKey = Key.Tab;
-
         private CanvasGroup canvasGroup;
         private Canvas rootCanvas;
-        private Coroutine activeAnimation;
+        private IOrchestratedPanel activePanel;
         private bool isOpen = false;
         private bool inputLockHeld = false;
         private bool previousOverrideSorting = false;
         private int previousSortingOrder = 0;
         private string previousActionMapName;
 
-        public bool IsTeamBuilderOpen => isOpen;
+        public bool IsTeamBuilderOpen => activePanel != null;
 
         private void Awake()
         {
@@ -46,62 +36,68 @@ namespace Project.UI
                 canvasGroup.interactable = true;
                 canvasGroup.blocksRaycasts = true;
             }
-
-            if (teamBuilderUI != null)
-            {
-                teamBuilderUI.gameObject.SetActive(false);
-            }
         }
 
         private void Update()
         {
-            if (listenForKeyboardToggle
-                && Keyboard.current != null
-                && toggleKey != Key.None
-                && Keyboard.current[toggleKey].wasPressedThisFrame)
-            {
-                Toggle();
-                return;
-            }
-
-            if (!isOpen) return;
+            if (activePanel == null) return;
 
             if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
             {
                 if (!EventSystem.current.IsPointerOverGameObject())
-                    RequestClose();
+                    RequestCloseActivePanel();
             }
         }
 
-        public void Open()
+        public void RegisterActivePanel(IOrchestratedPanel panel)
         {
-            if (isOpen) return;
+            if (activePanel == panel) return;
 
-            OpenCanvasShell();
+            if (activePanel != null)
+            {
+                activePanel.OnPanelClosed();
+            }
+
+            activePanel = panel;
             isOpen = true;
+            OpenCanvasShell();
+        }
 
-            if (teamBuilderUI != null)
+        public void UnregisterActivePanel(IOrchestratedPanel panel)
+        {
+            if (activePanel == panel)
             {
-                teamBuilderUI.gameObject.SetActive(true);
-            }
+                activePanel = null;
+                isOpen = false;
 
-            if (teamBuilderUI != null)
-            {
-                teamBuilderUI.OnPanelOpened();
+                RestoreCanvasSorting();
+                RestorePreviousActionMap();
+                if (inputLockHeld)
+                {
+                    InputLockManager.Unlock();
+                    inputLockHeld = false;
+                }
             }
         }
 
-        public void Close()
+        public void RequestCloseActivePanel()
         {
-            if (!isOpen) return;
+            if (activePanel == null) return;
 
-            if (teamBuilderUI != null)
-                teamBuilderUI.OnPanelClosed();
+            if (activePanel.TryRequestClose(CloseActivePanel))
+            {
+                return;
+            }
 
-            isOpen = false;
+            CloseActivePanel();
+        }
 
-            if (activeAnimation != null) StopCoroutine(activeAnimation);
-            activeAnimation = StartCoroutine(AnimatePanel(false));
+        private void CloseActivePanel()
+        {
+            if (activePanel != null)
+            {
+                activePanel.OnPanelClosed();
+            }
         }
 
         public void OpenCanvasShell()
@@ -125,90 +121,6 @@ namespace Project.UI
 
             playerStateMachine?.InputBuffer?.ClearAll();
         }
-
-        public void ReleaseCanvasShell()
-        {
-            if (isOpen)
-            {
-                return;
-            }
-
-            RestoreCanvasSorting();
-            RestorePreviousActionMap();
-            if (inputLockHeld)
-            {
-                InputLockManager.Unlock();
-                inputLockHeld = false;
-            }
-
-            if (canvasGroup != null)
-            {
-                canvasGroup.alpha = 1f;
-                canvasGroup.interactable = true;
-                canvasGroup.blocksRaycasts = true;
-            }
-        }
-
-        public void Toggle()
-        {
-            if (isOpen) RequestClose();
-            else Open();
-        }
-
-        public void RequestClose()
-        {
-            if (!isOpen)
-            {
-                return;
-            }
-
-            if (teamBuilderUI != null && teamBuilderUI.TryRequestSafeZoneClose(Close))
-            {
-                return;
-            }
-
-            Close();
-        }
-
-        private IEnumerator AnimatePanel(bool opening)
-        {
-            float elapsed = 0f;
-
-            while (elapsed < animationDuration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                yield return null;
-            }
-
-            if (opening)
-            {
-                if (canvasGroup != null)
-                {
-                    canvasGroup.alpha = 1f;
-                    canvasGroup.interactable = true;
-                    canvasGroup.blocksRaycasts = true;
-                }
-            }
-            else
-            {
-                if (teamBuilderUI != null)
-                {
-                    teamBuilderUI.gameObject.SetActive(false);
-                }
-
-                RestoreCanvasSorting();
-                RestorePreviousActionMap();
-                if (inputLockHeld)
-                {
-                    InputLockManager.Unlock();
-                    inputLockHeld = false;
-                }
-            }
-
-            activeAnimation = null;
-        }
-
-
 
         private void BringCanvasToFront()
         {
