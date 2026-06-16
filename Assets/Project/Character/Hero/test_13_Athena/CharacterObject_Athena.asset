@@ -20,7 +20,7 @@ MonoBehaviour:
     maxHP: 100
     attack: 10
     defense: 5
-    elementalMultiplier: 1
+    elementalMastery: 0
     moveSpeed: 5
     jumpForce: 10
     maxJumpCount: 1

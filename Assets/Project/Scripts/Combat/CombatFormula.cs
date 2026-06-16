@@ -8,14 +8,12 @@ public static class CombatFormula
         DamageType damageType,
         CharacterStats attackerStats,
         float defenderDefense,
-        float defenderDamageResistance,
-        bool isSkillOrUltimate,
+        AttackCategory category,
         out bool isCrit)
     {
         float mitigatedDamage = CalculateIncomingDamage(
             Mathf.Max(0f, baseDamage),
-            defenderDefense,
-            defenderDamageResistance);
+            defenderDefense);
 
         bool canCrit = routine != DamageRoutine.Additional;
         float critRate = attackerStats != null ? Mathf.Max(0f, attackerStats.critRate) : 0f;
@@ -26,29 +24,27 @@ public static class CombatFormula
             ? mitigatedDamage * (critDamage / 100f)
             : mitigatedDamage;
 
-        if (routine == DamageRoutine.Normal)
+        if (routine != DamageRoutine.Additional)
         {
-            float damageMastery = attackerStats != null ? attackerStats.damageMastery : 0f;
-            resolvedDamage *= 1f + damageMastery / 100f;
-        }
-        else if (damageType != DamageType.Physical)
-        {
-            float elementalMultiplier = attackerStats != null
-                ? Mathf.Max(0f, attackerStats.elementalMultiplier)
-                : 1f;
-            resolvedDamage *= elementalMultiplier;
-        }
+            if (damageType != DamageType.Physical)
+            {
+                float elementalMastery = attackerStats != null
+                    ? Mathf.Max(0f, attackerStats.elementalMastery)
+                    : 0f;
+                resolvedDamage *= 1f + elementalMastery / 100f;
+            }
 
-        if (routine != DamageRoutine.Additional && isSkillOrUltimate)
-        {
-            float skillMastery = attackerStats != null ? attackerStats.skillMastery : 0f;
-            resolvedDamage *= 1f + skillMastery / 100f;
+            if (category == AttackCategory.Ultimate)
+            {
+                float impact = attackerStats != null ? attackerStats.impact : 0f;
+                resolvedDamage *= 1f + impact / 100f;
+            }
         }
 
         return Mathf.Max(0f, resolvedDamage);
     }
 
-    public static float CalculateOutgoingDamage(float baseAttack, float actionMultiplier, float critRate, float critDmg, float skillMastery, float dmgMastery, bool isSkillOrUlt, out bool isCrit)
+    public static float CalculateOutgoingDamage(float baseAttack, float actionMultiplier, float critRate, float critDmg, float impact, bool isUlt, out bool isCrit)
     {
         float baseDamage = baseAttack * actionMultiplier;
         
@@ -58,35 +54,29 @@ public static class CombatFormula
         
         float damageAfterCrit = isCrit ? baseDamage * (critDmg / 100f) : baseDamage;
         
-        // Masteries
-        float outgoingDamage = damageAfterCrit * (1f + (dmgMastery / 100f));
-        if (isSkillOrUlt)
+        float outgoingDamage = damageAfterCrit;
+        if (isUlt)
         {
-            outgoingDamage *= (1f + (skillMastery / 100f));
+            outgoingDamage *= (1f + (impact / 100f));
         }
         
         return outgoingDamage;
     }
 
-    public static float CalculateIncomingDamage(float incomingDamage, float defense, float damageRes)
+    public static float CalculateIncomingDamage(float incomingDamage, float defense)
     {
         // Defender Defense Mitigation
         float clampedDefense = Mathf.Max(0f, defense);
         float defMitigation = 100f / (100f + clampedDefense);
         float damageAfterDef = incomingDamage * defMitigation;
         
-        // Resistance Mitigation
-        float clampedResistance = Mathf.Clamp(damageRes, 0f, 90f);
-        float resMitigation = 1f - (clampedResistance / 100f);
-        float mitigatedDamage = damageAfterDef * resMitigation;
-        
-        return Mathf.Max(1f, mitigatedDamage);
+        return Mathf.Max(1f, damageAfterDef);
     }
 
-    public static float CalculateCooldownDuration(float baseCooldown, float cooldownReductionPercent)
+    public static float CalculateCooldownDuration(float baseCooldown, float cooldownRatePercent)
     {
         float resolvedCooldown = Mathf.Max(0.05f, baseCooldown);
-        float resolvedReduction = Mathf.Clamp(cooldownReductionPercent, 0f, 95f);
+        float resolvedReduction = Mathf.Clamp(cooldownRatePercent, 0f, 95f);
         return Mathf.Max(0.05f, resolvedCooldown * (1f - (resolvedReduction / 100f)));
     }
 }

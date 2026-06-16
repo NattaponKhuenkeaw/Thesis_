@@ -183,7 +183,7 @@ public class EnemyController : MonoBehaviour
 
         float finalIncomingDamage = reactionData.damageIsFinal
             ? reactionData.damage
-            : CombatFormula.CalculateIncomingDamage(reactionData.damage, defense, damageRes);
+            : CombatFormula.CalculateIncomingDamage(reactionData.damage, defense);
         reactionData.damage = finalIncomingDamage;
 
         currentHP -= finalIncomingDamage;

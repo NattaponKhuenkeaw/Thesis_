@@ -166,8 +166,7 @@ public class PlayerCharacter : MonoBehaviour
         {
             finalDamage = CombatFormula.CalculateIncomingDamage(
                 value,
-                Stats.defense,
-                Stats.damageResistance);
+                Stats.defense);
         }
 
         float previousHP = currentHP;

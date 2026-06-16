@@ -811,7 +811,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         CharacterStats stats = teamLoader.GetCharacterRuntimeStats(character);
         AuraEnergyRate auraEnergyRate = character.auraEnergyRate;
         float statMultiplier = stats != null
-            ? Mathf.Max(0f, stats.auraEnergyMultiplier)
+            ? Mathf.Max(0f, stats.aeRecharge)
             : 1f;
 
         if (actionRewardClaim != null && actionRewardClaim.TryClaim())
@@ -1313,7 +1313,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         {
             cooldown = CombatFormula.CalculateCooldownDuration(
                 baseValue,
-                playerCharacter.Stats.cooldownReduction);
+                playerCharacter.Stats.cooldownRate);
         }
 
         if (passiveController != null)

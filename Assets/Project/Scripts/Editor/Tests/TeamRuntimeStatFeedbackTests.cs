@@ -30,7 +30,7 @@ public class TeamRuntimeStatFeedbackTests
             character.upgrade.constellationRank = 1;
             artifact.bonusStats = CreateZeroBonusStats();
             artifact.bonusStats.maxHP = 50f;
-            artifact.bonusStats.cooldownReduction = 50f;
+            artifact.bonusStats.cooldownRate = 50f;
 
             teamLoader.DeployLoadout(
                 new[] { character },
@@ -39,7 +39,7 @@ public class TeamRuntimeStatFeedbackTests
 
             Assert.That(teamLoader.GetEquippedArtifactsAt(0)[0], Is.SameAs(artifact));
             Assert.That(playerCharacter.MaxHP, Is.EqualTo(150f).Within(0.001f));
-            Assert.That(playerCharacter.Stats.cooldownReduction, Is.EqualTo(50f).Within(0.001f));
+            Assert.That(playerCharacter.Stats.cooldownRate, Is.EqualTo(50f).Within(0.001f));
             Assert.That(passiveController.ProgressionState.ConstellationRank, Is.EqualTo(1));
 
             playerCharacter.SetCurrentHP(140f);
@@ -72,7 +72,7 @@ public class TeamRuntimeStatFeedbackTests
 
         CharacterStats baseline = new CharacterStats();
         CharacterStats upgraded = baseline.Clone();
-        upgraded.cooldownReduction += 50f;
+        upgraded.cooldownRate += 50f;
 
         float equipTrend = (float)calculateTrend.Invoke(null, new object[] { baseline, upgraded });
         float removeTrend = (float)calculateTrend.Invoke(null, new object[] { upgraded, baseline });
@@ -117,7 +117,7 @@ public class TeamRuntimeStatFeedbackTests
 
             characterItem.characterObjectData = character;
             artifact.bonusStats = CreateZeroBonusStats();
-            artifact.bonusStats.cooldownReduction = 50f;
+            artifact.bonusStats.cooldownRate = 50f;
 
             teamSlot.Init(builder, 0);
             teamSlot.SetCharacter(characterItem);
@@ -154,14 +154,12 @@ public class TeamRuntimeStatFeedbackTests
             attack = 0f,
             defense = 0f,
             speed = 0f,
-            elementalMultiplier = 0f,
+            elementalMastery = 0f,
             critRate = 0f,
             critDamage = 0f,
-            cooldownReduction = 0f,
-            skillMastery = 0f,
-            damageMastery = 0f,
-            damageResistance = 0f,
-            auraEnergyMultiplier = 0f
+            cooldownRate = 0f,
+            impact = 0f,
+            aeRecharge = 0f
         };
     }
 

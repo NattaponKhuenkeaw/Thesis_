@@ -17,17 +17,16 @@ MonoBehaviour:
   elementType: 2
   previewPrefab: {fileID: 6597880524197938003, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
   stats:
-    maxHP: 200
-    attack: 4
-    defense: 10
-    speed: 10
-    elementalMultiplier: 1
+    maxHP: 1250
+    attack: 26
+    defense: 51
+    speed: 5.5
+    elementalMastery: 0
     critRate: 5
     critDamage: 150
-    cooldownReduction: 0
-    skillMastery: 0
-    damageMastery: 0
-    damageResistance: 0
+    cooldownRate: 0
+    impact: 0
+    aeRecharge: 1
   metaData:
     displayName: Shermie
     description: "\u0E2B\u0E19\u0E36\u0E48\u0E07\u0E43\u0E19\u0E2A\u0E35\u0E48\u0E08\u0E15\u0E38\u0E23\u0E40\u0E17\u0E1E\u0E41\u0E2B\u0E48\u0E07\u0E42\u0E2D\u0E42\u0E23\u0E08\u0E34\u0E17\u0E35\u0E48\u0E21\u0E32\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E2B\u0E19\u0E49\u0E32\u0E21\u0E49\u0E32\u0E1B\u0E34\u0E14\u0E15\u0E32
@@ -37,6 +36,7 @@ MonoBehaviour:
     portrait: {fileID: 21300000, guid: 6980df79b29645e4a9f7b01c22c621c5, type: 3}
     animatorController: {fileID: 9100000, guid: b4f7f50e094f0f145a2251ad62172a8d, type: 2}
   auraEnergyRate: 1
+  audioData: {fileID: 11400000, guid: 6991358fa89718147bf6ecce8bbac525, type: 2}
   movementProfile: {fileID: 11400000, guid: b71e22596438c5f4ab6e3f64f66c4479, type: 2}
   maxJumpOverride: -1
   maxAirDashOverride: -1
@@ -58,4 +58,3 @@ MonoBehaviour:
     constellationNodes: []
     passiveNodes: []
   actionResolverTable: {fileID: 11400000, guid: 8b31e6f175b0958468f7ada8b8e14098, type: 2}
-  audioData: {fileID: 11400000, guid: 6991358fa89718147bf6ecce8bbac525, type: 2}

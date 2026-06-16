@@ -490,20 +490,17 @@ MonoBehaviour:
   padlockOverlay: {fileID: 0}
   uiAudioSource: {fileID: 0}
   lockedActionSfx: {fileID: 0}
+  inspectHoldDuration: 0.45
   lockedWiggleDuration: 0.25
   lockedWiggleDistance: 8
   padlockPulseScale: 1.15
   statNormalColor: {r: 1, g: 1, b: 1, a: 1}
   statBoostColor: {r: 0.45, g: 1, b: 0.45, a: 1}
   statDowngradeColor: {r: 1, g: 0.4, b: 0.4, a: 1}
+  placementBurstColor: {r: 0.75, g: 1, b: 0.9, a: 0.9}
   statFeedbackDuration: 0.3
   statFeedbackScale: 1.2
-  elementSprites:
-  - {fileID: 0}
-  - {fileID: 21300000, guid: 0cb8634b4dc2531499817875b4aa0832, type: 3}
-  - {fileID: 21300000, guid: ab68fa42c73b91348a4a6baa978ca7ad, type: 3}
-  - {fileID: 21300000, guid: a7d3d9ce50bb3f3469562d4c64078615, type: 3}
-  - {fileID: 21300000, guid: 5952a85c977a2a942bdd8e54f5cb6390, type: 3}
+  elementResolver: {fileID: 11400000, guid: 15da9c863c2902f4ea5980af2cb0e61c, type: 2}
 --- !u!114 &4680375229781783477
 MonoBehaviour:
   m_ObjectHideFlags: 0

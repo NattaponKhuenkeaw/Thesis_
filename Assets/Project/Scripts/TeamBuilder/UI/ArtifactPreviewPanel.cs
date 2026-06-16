@@ -99,18 +99,16 @@ namespace Project.TeamBuilder.UI
 
                 if (statItemPrefab != null && currentArtifact.bonusStats != null)
                 {
-                    AddStatItemIfNonZero("Max HP", currentArtifact.bonusStats.maxHP, "hp");
+                    AddStatItemIfNonZero("HP", currentArtifact.bonusStats.maxHP, "hp");
                     AddStatItemIfNonZero("ATK", currentArtifact.bonusStats.attack, "atk");
                     AddStatItemIfNonZero("DEF", currentArtifact.bonusStats.defense, "def");
                     AddStatItemIfNonZero("SPD", currentArtifact.bonusStats.speed, "spd");
                     AddStatItemIfNonZero("Crit Rate", currentArtifact.bonusStats.critRate, "crit");
                     AddStatItemIfNonZero("Crit DMG", currentArtifact.bonusStats.critDamage, "crit");
-                    AddStatItemIfNonZero("CDR", currentArtifact.bonusStats.cooldownReduction, "cdr");
-                    AddStatItemIfNonZero("Skill Mastery", currentArtifact.bonusStats.skillMastery, "mastery");
-                    AddStatItemIfNonZero("DMG Mastery", currentArtifact.bonusStats.damageMastery, "mastery");
-                    AddStatItemIfNonZero("DMG Resist", currentArtifact.bonusStats.damageResistance, "resist");
-                    AddStatItemIfNonZero("Aura Energy Multiplier", currentArtifact.bonusStats.auraEnergyMultiplier * 100f, "ae");
-                    AddStatItemIfNonZero("Elemental Multiplier", currentArtifact.bonusStats.elementalMultiplier, "elemental");
+                    AddStatItemIfNonZero("Cooldown Rate", currentArtifact.bonusStats.cooldownRate, "cdr");
+                    AddStatItemIfNonZero("Elemental Mastery", currentArtifact.bonusStats.elementalMastery, "elemental");
+                    AddStatItemIfNonZero("Impact", currentArtifact.bonusStats.impact, "impact");
+                    AddStatItemIfNonZero("AE Recharge", currentArtifact.bonusStats.aeRecharge * 100f, "ae");
                 }
             }
 

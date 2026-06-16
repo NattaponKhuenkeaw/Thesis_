@@ -18,17 +18,15 @@ MonoBehaviour:
   previewPrefab: {fileID: 6597880524197938003, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
   stats:
     maxHP: 892
-    attack: 44
-    defense: 57
-    speed: 10
-    elementalMultiplier: 1
+    attack: 45
+    defense: 37
+    speed: 7.5
+    elementalMastery: 0
     critRate: 5
     critDamage: 150
-    cooldownReduction: 0
-    skillMastery: 0
-    damageMastery: 0
-    damageResistance: 0
-    auraEnergyMultiplier: 1
+    cooldownRate: 0
+    impact: 0
+    aeRecharge: 1
   metaData:
     displayName: Kyo
     description: "\u0E17\u0E32\u0E22\u0E32\u0E17\u0E15\u0E23\u0E30\u0E01\u0E39\u0E25\u0E04\u0E38\u0E0B\u0E32\u0E19\u0E32\u0E07\u0E34
@@ -40,7 +38,7 @@ MonoBehaviour:
     animatorController: {fileID: 9100000, guid: 3436f3bf41714a54391f36d8cfdd4294, type: 2}
   auraEnergyRate: 0
   audioData: {fileID: 11400000, guid: 2e1cc3b89704d09409a0f8d5b4c62631, type: 2}
-  movementProfile: {fileID: 11400000, guid: b602c19e897c96a44a78f9defc7f3bb6, type: 2}
+  movementProfile: {fileID: 11400000, guid: cd71e34e3ebc46d458f1965ef79c3daf, type: 2}
   maxJumpOverride: -1
   maxAirDashOverride: -1
   _authoredFPS: 24

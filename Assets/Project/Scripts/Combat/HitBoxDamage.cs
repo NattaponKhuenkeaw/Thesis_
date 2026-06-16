@@ -292,8 +292,7 @@ public class HitBoxDamage : MonoBehaviour
             ResolveDamageType(),
             currentAttackerStats,
             enemy.defense,
-            enemy.damageRes,
-            currentIsSkillOrUltimate,
+            sourceCategory,
             out currentIsCrit);
 
         if (passiveController != null)
@@ -345,8 +344,7 @@ public class HitBoxDamage : MonoBehaviour
                 effect.damageType,
                 currentAttackerStats,
                 enemy.defense,
-                enemy.damageRes,
-                false,
+                AttackCategory.Normal,
                 out _);
 
             if (resolvedDamage <= 0f)

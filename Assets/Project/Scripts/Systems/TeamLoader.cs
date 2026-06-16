@@ -698,16 +698,14 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
                 atkPercentBonus += artifact.bonusStats.attack;
                 defPercentBonus += artifact.bonusStats.defense;
 
-                // Add other non-multiplier stats normally
+                // Add other stats normally
                 stats.speed += artifact.bonusStats.speed;
-                stats.elementalMultiplier += artifact.bonusStats.elementalMultiplier / 100f;
+                stats.elementalMastery += artifact.bonusStats.elementalMastery;
                 stats.critRate += artifact.bonusStats.critRate;
                 stats.critDamage += artifact.bonusStats.critDamage;
-                stats.cooldownReduction += artifact.bonusStats.cooldownReduction;
-                stats.skillMastery += artifact.bonusStats.skillMastery;
-                stats.damageMastery += artifact.bonusStats.damageMastery;
-                stats.damageResistance += artifact.bonusStats.damageResistance;
-                stats.auraEnergyMultiplier += artifact.bonusStats.auraEnergyMultiplier;
+                stats.cooldownRate += artifact.bonusStats.cooldownRate;
+                stats.impact += artifact.bonusStats.impact;
+                stats.aeRecharge += artifact.bonusStats.aeRecharge;
             }
         }
 
@@ -1074,7 +1072,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         CharacterStats stats = GetCharacterRuntimeStats(character);
         if (stats == null) return resolvedBaseCost;
         
-        float cdr = stats.cooldownReduction / 100f;
+        float cdr = stats.cooldownRate / 100f;
         float reduction = Mathf.Min(0.50f, cdr * 0.50f);
         return resolvedBaseCost * (1.0f - reduction);
     }

@@ -29,9 +29,9 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private TMP_Text cdrText;
         [SerializeField] private TMP_Text critRateText;
         [SerializeField] private TMP_Text critDmgText;
-        [SerializeField] private TMP_Text skillMasteryText;
-        [SerializeField] private TMP_Text dmgMasteryText;
-        [SerializeField] private TMP_Text dmgResText;
+        [SerializeField] private TMP_Text elementalMasteryText;
+        [SerializeField] private TMP_Text impactText;
+        [SerializeField] private TMP_Text AEgainText;
 
         [Header("Passive & Potential")]
         [SerializeField] private TMP_Text passiveDescriptionText;
@@ -117,9 +117,9 @@ namespace Project.TeamBuilder.UI
             float bonusCdr = 0f;
             float bonusCritRate = 0f;
             float bonusCritDmg = 0f;
-            float bonusSkillMastery = 0f;
-            float bonusDmgMastery = 0f;
-            float bonusDmgRes = 0f;
+            float bonusElementalMastery = 0f;
+            float bonusImpact = 0f;
+            float bonusAeRecharge = 0f;
 
             for (int i = 0; i < currentArtifacts.Length; i++)
             {
@@ -133,12 +133,12 @@ namespace Project.TeamBuilder.UI
                 bonusAtk += artifact.bonusStats.attack;
                 bonusDef += artifact.bonusStats.defense;
                 bonusSpd += artifact.bonusStats.speed;
-                bonusCdr += artifact.bonusStats.cooldownReduction;
+                bonusCdr += artifact.bonusStats.cooldownRate;
                 bonusCritRate += artifact.bonusStats.critRate;
                 bonusCritDmg += artifact.bonusStats.critDamage;
-                bonusSkillMastery += artifact.bonusStats.skillMastery;
-                bonusDmgMastery += artifact.bonusStats.damageMastery;
-                bonusDmgRes += artifact.bonusStats.damageResistance;
+                bonusElementalMastery += artifact.bonusStats.elementalMastery;
+                bonusImpact += artifact.bonusStats.impact;
+                bonusAeRecharge += artifact.bonusStats.aeRecharge;
             }
 
             if (characterNameText != null)
@@ -158,16 +158,16 @@ namespace Project.TeamBuilder.UI
 
             if (data.stats != null)
             {
-                if (hpText != null) hpText.text = $"HP: {FormatStatValue(data.stats.maxHP, bonusHp, "hp")}";
-                if (atkText != null) atkText.text = $"ATK: {FormatStatValue(data.stats.attack, bonusAtk, "atk")}";
-                if (defText != null) defText.text = $"DEF: {FormatStatValue(data.stats.defense, bonusDef, "def")}";
-                if (spdText != null) spdText.text = $"SPD: {FormatStatValue(data.stats.speed, bonusSpd, "spd")}";
-                if (cdrText != null) cdrText.text = $"CDR: {FormatStatValue(data.stats.cooldownReduction, bonusCdr, "cdr")}";
-                if (critRateText != null) critRateText.text = $"CRIT: {FormatStatValue(data.stats.critRate, bonusCritRate, "crit")}";
-                if (critDmgText != null) critDmgText.text = $"CRIT DMG: {FormatStatValue(data.stats.critDamage, bonusCritDmg, "crit")}";
-                if (skillMasteryText != null) skillMasteryText.text = $"SKILL MASTERY: {FormatStatValue(data.stats.skillMastery, bonusSkillMastery, "mastery")}";
-                if (dmgMasteryText != null) dmgMasteryText.text = $"DMG MASTERY: {FormatStatValue(data.stats.damageMastery, bonusDmgMastery, "mastery")}";
-                if (dmgResText != null) dmgResText.text = $"DMG RES: {FormatStatValue(data.stats.damageResistance, bonusDmgRes, "resist")}";
+                if (hpText != null) hpText.text = FormatStatValue(data.stats.maxHP, bonusHp, "hp");
+                if (atkText != null) atkText.text = FormatStatValue(data.stats.attack, bonusAtk, "atk");
+                if (defText != null) defText.text = FormatStatValue(data.stats.defense, bonusDef, "def");
+                if (spdText != null) spdText.text = FormatStatValue(data.stats.speed, bonusSpd, "spd");
+                if (cdrText != null) cdrText.text = FormatStatValue(data.stats.cooldownRate, bonusCdr, "cdr");
+                if (critRateText != null) critRateText.text = FormatStatValue(data.stats.critRate, bonusCritRate, "crit");
+                if (critDmgText != null) critDmgText.text = FormatStatValue(data.stats.critDamage, bonusCritDmg, "crit");
+                if (elementalMasteryText != null) elementalMasteryText.text = FormatStatValue(data.stats.elementalMastery, bonusElementalMastery, "elemental");
+                if (impactText != null) impactText.text = FormatStatValue(data.stats.impact, bonusImpact, "impact");
+                if (AEgainText != null) AEgainText.text = FormatStatValue(data.stats.aeRecharge * 100f, bonusAeRecharge * 100f, "ae");
             }
 
             if (characterLoreText != null && data.metaData != null)

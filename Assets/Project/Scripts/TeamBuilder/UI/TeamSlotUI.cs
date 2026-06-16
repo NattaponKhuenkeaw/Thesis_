@@ -847,14 +847,12 @@ namespace Project.TeamBuilder.UI
             }
 
             effectiveStats.speed += bonusStats.speed;
-            effectiveStats.elementalMultiplier += bonusStats.elementalMultiplier / 100f;
+            effectiveStats.elementalMastery += bonusStats.elementalMastery;
             effectiveStats.critRate += bonusStats.critRate;
             effectiveStats.critDamage += bonusStats.critDamage;
-            effectiveStats.cooldownReduction += bonusStats.cooldownReduction;
-            effectiveStats.skillMastery += bonusStats.skillMastery;
-            effectiveStats.damageMastery += bonusStats.damageMastery;
-            effectiveStats.damageResistance += bonusStats.damageResistance;
-            effectiveStats.auraEnergyMultiplier += bonusStats.auraEnergyMultiplier;
+            effectiveStats.cooldownRate += bonusStats.cooldownRate;
+            effectiveStats.impact += bonusStats.impact;
+            effectiveStats.aeRecharge += bonusStats.aeRecharge;
         }
 
         private static float CalculateStatTrend(CharacterStats previous, CharacterStats next)
@@ -869,14 +867,12 @@ namespace Project.TeamBuilder.UI
             trend += NormalizeDelta(previous.attack, next.attack);
             trend += NormalizeDelta(previous.defense, next.defense);
             trend += NormalizeDelta(previous.speed, next.speed);
-            trend += NormalizeDelta(previous.elementalMultiplier, next.elementalMultiplier);
+            trend += NormalizeDelta(previous.elementalMastery, next.elementalMastery);
             trend += NormalizeDelta(previous.critRate, next.critRate);
             trend += NormalizeDelta(previous.critDamage, next.critDamage);
-            trend += NormalizeDelta(previous.cooldownReduction, next.cooldownReduction);
-            trend += NormalizeDelta(previous.skillMastery, next.skillMastery);
-            trend += NormalizeDelta(previous.damageMastery, next.damageMastery);
-            trend += NormalizeDelta(previous.damageResistance, next.damageResistance);
-            trend += NormalizeDelta(previous.auraEnergyMultiplier, next.auraEnergyMultiplier);
+            trend += NormalizeDelta(previous.cooldownRate, next.cooldownRate);
+            trend += NormalizeDelta(previous.impact, next.impact);
+            trend += NormalizeDelta(previous.aeRecharge, next.aeRecharge);
             return trend;
         }
 

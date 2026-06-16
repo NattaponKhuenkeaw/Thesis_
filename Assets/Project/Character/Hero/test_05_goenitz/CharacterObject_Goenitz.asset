@@ -20,15 +20,13 @@ MonoBehaviour:
     maxHP: 783
     attack: 65
     defense: 22
-    speed: 10
-    elementalMultiplier: 1
+    speed: 5.5
+    elementalMastery: 0
     critRate: 5
     critDamage: 225
-    cooldownReduction: 0
-    skillMastery: 0
-    damageMastery: 0
-    damageResistance: 0
-    auraEnergyMultiplier: 1
+    cooldownRate: 0
+    impact: 0
+    aeRecharge: 1
   metaData:
     displayName: Goenitz
     description: "\u0E15\u0E31\u0E27\u0E25\u0E30\u0E04\u0E23\u0E40\u0E27\u0E2D\u0E23\u0E4C\u0E0A\u0E31\u0E19\u0E2A\u0E25\u0E31\u0E1A\u0E40\u0E1E\u0E28

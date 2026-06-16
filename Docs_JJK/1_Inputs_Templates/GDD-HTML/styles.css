@@ -1,0 +1,94 @@
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #050608;
+}
+::-webkit-scrollbar-thumb {
+    background: #1c202a;
+    border: 2px solid #050608;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #ff003c;
+}
+
+/* Glitch animations */
+.neon-flicker {
+    animation: flicker 4s infinite alternate;
+}
+
+@keyframes flicker {
+    0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+        opacity: 1;
+        text-shadow: 0 0 8px rgba(255, 0, 60, 0.6), 0 0 20px rgba(255, 0, 60, 0.4);
+    }
+    20%, 24%, 55% {
+        opacity: 0.6;
+        text-shadow: none;
+    }
+}
+
+/* Hazard stripes */
+.hazard-stripes {
+    background: repeating-linear-gradient(
+        -45deg,
+        #f5a623,
+        #f5a623 10px,
+        #000000 10px,
+        #000000 20px
+    );
+}
+
+/* Cursed energy aura */
+.cursed-glow {
+    box-shadow: 0 0 25px rgba(188, 0, 221, 0.15), inset 0 0 15px rgba(0, 255, 127, 0.05);
+}
+
+/* Custom Clip path angles for Shonen cutouts */
+.shonen-clip {
+    clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);
+}
+
+.shonen-clip-both {
+    clip-path: polygon(5% 0, 100% 0, 95% 100%, 0% 100%);
+}
+
+/* Noise overlay to resemble Kowloon urban decay */
+.kowloon-grunge {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 0);
+    background-size: 16px 16px;
+}
+
+/* Slide animations */
+.tab-pane {
+    display: none;
+}
+.tab-pane.active {
+    display: block;
+    animation: paneSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes paneSlideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+/* Styling for keyboard keys in input table and simulator */
+.key {
+    background-color: #161922;
+    border: 1px solid #2e3648;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #ff003c;
+    box-shadow: 0 2px 0 #050608;
+    display: inline-block;
+}

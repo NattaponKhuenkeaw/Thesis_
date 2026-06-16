@@ -7,10 +7,11 @@ using EditorAttributes;
 public enum ElementType
 {
     None,
-    Earth,
-    Water,
-    Fire,
-    Wind
+    Geo,
+    Hydro,
+    Pyro,
+    Anemo,
+    Electro
 }
 
 public enum CharacterType

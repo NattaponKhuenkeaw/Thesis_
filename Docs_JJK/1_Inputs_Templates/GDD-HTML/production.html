@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neo-JJK | Engineering</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS v3 Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom Extracted Config & Logic -->
+    <script src="scripts.js"></script>
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-shibuya-bg text-gray-200 font-outfit min-h-screen overflow-x-hidden flex kowloon-grunge">
+
+    <!-- SUBWAY NAVIGATION SIDEBAR -->
+    <aside class="fixed top-0 left-0 w-[300px] h-screen bg-shibuya-concrete border-r border-shibuya-metal/60 flex flex-col z-50 p-6 hidden lg:flex">
+        <!-- Brand Header -->
+        <div class="flex items-center gap-3 mb-8 pb-4 border-b border-shibuya-metal/30">
+            <div class="w-8 h-8 rounded bg-shibuya-crimson flex items-center justify-center text-white font-bebas text-xl border border-shibuya-crimson/50 shadow-neon-crimson">
+                呪
+            </div>
+            <div class="flex flex-col">
+                <span class="font-bebas text-2xl tracking-wider text-white leading-none">NEO-JJK: ARCHIVE</span>
+                <span class="text-[9px] font-mono tracking-widest text-shibuya-crimson uppercase mt-0.5">SHIBUYA SUBWAY OPERATIONS</span>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative mb-6">
+            <i class="fa-solid fa-skull absolute left-3 top-1/2 -translate-y-1/2 text-shibuya-crimson/70 text-xs"></i>
+            <input type="text" id="gddSearch" class="w-full pl-9 pr-4 py-2 bg-shibuya-slate border border-shibuya-metal/60 rounded-md text-white font-outfit text-sm placeholder-gray-500 focus:outline-none focus:border-shibuya-crimson focus:ring-1 focus:ring-shibuya-crimson/30 transition-all" placeholder="FILTER CURSED CODES...">
+        </div>
+
+        <!-- Kowloon Vertical Neon Sign -->
+        <div class="mb-4 bg-shibuya-bg p-3 border border-shibuya-metal/50 rounded flex items-center justify-between relative overflow-hidden">
+            <div class="flex flex-col">
+                <span class="font-tc font-bold text-shibuya-jade text-sm tracking-widest">領域展開 ・ 渋谷事変</span>
+                <span class="font-mono text-[9px] text-gray-500 uppercase mt-0.5">District: Kowloon Alley</span>
+            </div>
+            <span class="font-bebas text-xs px-2 py-0.5 rounded bg-shibuya-crimson/20 border border-shibuya-crimson/40 text-shibuya-crimson animate-pulse">INCIDENT 02</span>
+        </div>
+
+        <!-- Menu Navigation Links -->
+        <nav class="flex-grow overflow-y-auto pr-1">
+            <ul class="space-y-1 text-sm font-bebas tracking-wide">
+                <!-- Page 1: Core Identity -->
+                <div class="text-[10px] font-mono tracking-widest text-shibuya-crimson/40 uppercase mt-4 mb-2 px-3 flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-shibuya-crimson/40"></span> CORE IDENTITY
+                </div>
+                <li><a href="index.html#purpose" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-crimson/60 font-mono">01.</span> PURPOSE & CONSTRAINT</span><span class="text-[9px] font-tc text-shibuya-crimson/60">[渋谷]</span></a></li>
+                <li><a href="index.html#identity" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-jade/60 font-mono">02.</span> PROJECT IDENTITY</span><span class="text-[9px] font-tc text-shibuya-jade/60">[特級]</span></a></li>
+                <li><a href="index.html#visuals" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-amber/60 font-mono">03.</span> VISUAL & SOUND</span><span class="text-[9px] font-tc text-shibuya-amber/60">[画風]</span></a></li>
+                <li><a href="index.html#inspirations" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-jade/60 font-mono">11.</span> REFERENCE GAMES</span><span class="text-[9px] font-tc text-shibuya-jade/60">[範例]</span></a></li>
+
+                <!-- Page 2: Game Systems -->
+                <div class="text-[10px] font-mono tracking-widest text-shibuya-jade/40 uppercase mt-4 mb-2 px-3 flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-shibuya-jade/40"></span> GAME SYSTEMS
+                </div>
+                <li><a href="mechanics.html#inputs" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-crimson/60 font-mono">04.</span> KEYS & INPUTS</span><span class="text-[9px] font-tc text-shibuya-crimson/60">[制御]</span></a></li>
+                <li><a href="mechanics.html#core-loop" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-jade/60 font-mono">05.</span> CORE GAME LOOPS</span><span class="text-[9px] font-tc text-shibuya-jade/60">[輪廻]</span></a></li>
+                <li><a href="mechanics.html#combat" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-purple/60 font-mono">06.</span> COMBAT DIRECTION</span><span class="text-[9px] font-tc text-shibuya-purple/60">[呪法]</span></a></li>
+                <li><a href="mechanics.html#progression" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-jade/60 font-mono">08.</span> ROGUE PROGRESS</span><span class="text-[9px] font-tc text-shibuya-jade/60">[昇華]</span></a></li>
+
+                <!-- Page 3: Game Content -->
+                <div class="text-[10px] font-mono tracking-widest text-shibuya-amber/40 uppercase mt-4 mb-2 px-3 flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-shibuya-amber/40"></span> GAME CONTENT
+                </div>
+                <li><a href="database.html#characters" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-crimson/60 font-mono">07.</span> ROSTER KIT</span><span class="text-[9px] font-tc text-shibuya-crimson/60">[名簿]</span></a></li>
+                <li><a href="database.html#items-enemies" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-amber/60 font-mono">09.</span> ITEMS & ENEMIES</span><span class="text-[9px] font-tc text-shibuya-amber/60">[呪具]</span></a></li>
+                <li><a href="database.html#bosses" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-crimson/60 font-mono">10.</span> BOSS FIGHTS</span><span class="text-[9px] font-tc text-shibuya-crimson/60">[大敵]</span></a></li>
+
+                <!-- Page 4: Engineering (Active) -->
+                <div class="text-[10px] font-mono tracking-widest text-white uppercase mt-4 mb-2 px-3 py-1 flex items-center gap-1.5 border-l-2 border-shibuya-purple bg-shibuya-slate/30">
+                    <span class="w-1.5 h-1.5 rounded-full bg-shibuya-purple animate-pulse shadow-[0_0_8px_#bc00dd]"></span> ENGINEERING
+                </div>
+                <li><a href="production.html#tech-stack" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-amber font-mono">12.</span> TECH ARCHITECTURE</span><span class="text-[9px] font-tc text-shibuya-amber">[構築]</span></a></li>
+                <li><a href="production.html#prototype-truth" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-crimson font-mono">13.</span> TECHNICAL DEBT</span><span class="text-[9px] font-tc text-shibuya-crimson">[禊ぎ]</span></a></li>
+                <li><a href="production.html#roadmap" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-jade font-mono">14.</span> SUBWAY TIMELINE</span><span class="text-[9px] font-tc text-shibuya-jade font-bold">[作戦]</span></a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- BACK TO TOP FLOATING BUTTON -->
+    <button id="scrollTopBtn" class="fixed bottom-6 right-6 w-12 h-12 bg-shibuya-concrete border-2 border-shibuya-crimson text-shibuya-crimson rounded flex items-center justify-center hover:bg-shibuya-crimson hover:text-white shadow-neon-crimson transition-all cursor-pointer z-50 opacity-0 pointer-events-none">
+        <i class="fa-solid fa-arrow-up text-lg"></i>
+    </button>
+
+    <!-- LIGHTBOX MODAL -->
+    <div id="lightboxModal" class="fixed top-0 left-0 w-screen h-screen bg-black/95 backdrop-blur-md z-[999] hidden items-center justify-center cursor-zoom-out">
+        <button class="absolute top-6 right-6 text-white hover:text-shibuya-crimson transition-colors text-3xl"><i class="fa-solid fa-xmark"></i></button>
+        <img class="lightbox-img max-w-[90%] max-h-[85%] border border-shibuya-metal/50 rounded shadow-2xl" src="" alt="Cursed Expand Scope">
+    </div>
+
+    <!-- MAIN OPERATIONS BOARD -->
+    <main class="flex-grow lg:ml-[300px] px-4 md:px-12 py-8 max-w-full lg:max-w-[calc(100vw-300px)]">
+
+        <!-- INCIDENT FLASH HEADER (SHONEN PORTAL VIBE) -->
+        <div class="relative bg-shibuya-concrete border-4 border-black shadow-figma-crimson p-6 md:p-8 rounded-none mb-12 overflow-hidden select-none">
+            <!-- Diagonal Hazard Bar decoration -->
+            <div class="absolute top-0 right-0 w-24 h-full bg-gradient-to-l from-shibuya-purple/10 to-transparent pointer-events-none"></div>
+            
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <span class="bg-shibuya-purple text-white font-bebas text-xs md:text-sm font-bold tracking-widest px-3 py-1 rounded-none shonen-clip">
+                    OPERATION ARCHIVE // SPECIAL GRADE ONLY [特級]
+                </span>
+                <span class="text-xs font-mono text-shibuya-amber flex items-center gap-1.5 font-bold">
+                    <span class="w-2.5 h-2.5 rounded-full bg-shibuya-amber animate-ping"></span> SIGNAL ACTIVE
+                </span>
+            </div>
+
+            <h1 class="font-bebas text-5xl md:text-7xl font-black text-white leading-none tracking-tight mb-3">
+                NEO-JJK: <span class="text-shibuya-purple neon-flicker">ENGINEERING</span> OPERATIONS
+            </h1>
+            <p class="font-outfit text-gray-400 text-sm md:text-lg max-w-3xl mb-6">
+                Technical architecture documentation, codebase scripts layout tree, detected technical debts checklist, and 6-month timeline roadmap.
+            </p>
+        </div>
+
+        <!-- 12. PROJECT TECH STACK -->
+        <section id="tech-stack" class="mb-16 scroll-mt-6">
+            <h2 class="font-bebas text-4xl text-white flex items-center gap-3 border-b-2 border-shibuya-metal/60 pb-2 mb-6">
+                <span class="bg-shibuya-amber text-black px-2 py-0.5 text-2xl font-bold shonen-clip">12</span>
+                <span>[構築技術] RE-ALIGNED UNITY ARCHITECTURE</span>
+            </h2>
+            
+            <div class="overflow-x-auto border border-shibuya-metal shadow-md mb-8">
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="bg-shibuya-slate border-b border-shibuya-metal/50 text-white font-bebas tracking-wide text-xs">
+                            <th class="p-4">SUBSYSTEM LAYER</th>
+                            <th class="p-4">UNITY STACK VALUE</th>
+                            <th class="p-4">CORE SYSTEM RESPONSIBILITY</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-shibuya-concrete divide-y divide-shibuya-metal/30">
+                        <tr>
+                            <td class="p-4 font-bold text-white">Engine / Version</td>
+                            <td class="p-4 font-mono text-xs">Unity 6 LTS</td>
+                            <td class="p-4 text-gray-400">Authoritative runtime runtime loop.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 font-bold text-white">Render Pipeline</td>
+                            <td class="p-4 font-mono text-xs">URP 17.x</td>
+                            <td class="p-4 text-gray-400">Post-processing filters, shader graph overlays, VFX graph particle sweeps.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 font-bold text-white">Input Module</td>
+                            <td class="p-4 font-mono text-xs">Input System 1.8.x</td>
+                            <td class="p-4 text-gray-400">Handles action buffer cache tables.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 font-bold text-white">Camera Director</td>
+                            <td class="p-4 font-mono text-xs">Cinemachine 3.x</td>
+                            <td class="p-4 text-gray-400">Controls camera clamping, priority switches, and shakes.</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 font-bold text-white">AI Controller</td>
+                            <td class="p-4 font-mono text-xs">Behavior Graph</td>
+                            <td class="p-4 text-gray-400">Unity Behavior graph nodes governing basic fiend movements.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Folder tree layout -->
+            <h3 class="font-bebas text-2xl text-white mb-4">Encapsulated Scripts folder convention</h3>
+            <div class="font-mono text-xs bg-black/60 border border-shibuya-metal/80 p-5 rounded text-gray-400 space-y-1">
+                <div>Assets/Project/Scripts/</div>
+                <div>├── <span class="text-shibuya-jade font-bold">AIBehaviour/</span>       <span class="text-gray-600">// EnemyController, EnemyHitReactionHandler</span></div>
+                <div>├── <span class="text-shibuya-jade font-bold">Animation/</span>         <span class="text-gray-600">// PlayerAnimator, AnimationHandler_Enemy</span></div>
+                <div>├── <span class="text-shibuya-jade font-bold">Behavior/</span>          <span class="text-gray-600">// Unity Behavior Graph node expansions</span></div>
+                <div>├── <span class="text-shibuya-jade font-bold">Character/</span>         <span class="text-gray-600">// SO definitions (CharacterObject, CombatData)</span></div>
+                <div>├── <span class="text-shibuya-jade font-bold">Combat/</span>            <span class="text-gray-600">// Hitbox trackers, Projectiles, GameFreezeManager</span></div>
+                <div>├── <span class="text-shibuya-jade font-bold">Player/</span>            <span class="text-gray-600">// PlayerStateMachine, all State subclasses</span></div>
+                <div>├── <span class="text-shibuya-jade font-bold">Shop/</span>              <span class="text-gray-600">// ShopManager, PlayerShopInventory, ShopUI</span></div>
+                <div>└── <span class="text-shibuya-jade font-bold">Systems/</span>           <span class="text-gray-600">// PlayerCharacter facade, TeamLoader script</span></div>
+            </div>
+        </section>
+
+        <!-- 13. PROTOTYPE TRUTH & CHECKLIST -->
+        <section id="prototype-truth" class="mb-16 scroll-mt-6">
+            <h2 class="font-bebas text-4xl text-white flex items-center gap-3 border-b-2 border-shibuya-metal/60 pb-2 mb-6">
+                <span class="bg-shibuya-crimson text-black px-2 py-0.5 text-2xl font-bold shonen-clip">13</span>
+                <span>[禊ぎリスト] DETECTED TECHNICAL DEBT CHORES</span>
+            </h2>
+            <p class="text-gray-300 max-w-3xl mb-8">
+                Refactoring milestones mapped from structural audits of our 168 prototype codebase scripts.
+            </p>
+
+            <!-- FIGMA DEBT CHECKLIST -->
+            <div class="bg-shibuya-concrete border border-shibuya-metal p-6 max-w-4xl shadow-figma-crimson">
+                <h4 class="font-bebas text-2xl text-shibuya-crimson mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-radiation"></i> TECHNICAL DEBT RESOLUTION LIST
+                </h4>
+                
+                <ul id="debtList" class="space-y-4 font-mono text-xs">
+                    <li class="flex items-start gap-3 bg-black/30 p-3 border border-shibuya-metal/40">
+                        <input type="checkbox" id="debt1" class="mt-0.5 accent-shibuya-crimson cursor-pointer" onchange="saveDebtState()">
+                        <div class="flex flex-col gap-0.5 cursor-pointer">
+                            <span class="debt-item-title font-bold text-white">Decompose monolithic PlayerCombat.cs (48KB)</span>
+                            <span class="debt-item-desc text-gray-500">Split into smaller components: hitbox activator, projectile controller, and visual feedback presenter.</span>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3 bg-black/30 p-3 border border-shibuya-metal/40">
+                        <input type="checkbox" id="debt2" class="mt-0.5 accent-shibuya-crimson cursor-pointer" onchange="saveDebtState()">
+                        <div class="flex flex-col gap-0.5 cursor-pointer">
+                            <span class="debt-item-title font-bold text-white">Decompress CombatPlayerState.cs (32KB)</span>
+                            <span class="debt-item-desc text-gray-500">Remove legacy frame-advantage rules, link windows, and airborne launch logic.</span>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3 bg-black/30 p-3 border border-shibuya-metal/40">
+                        <input type="checkbox" id="debt3" class="mt-0.5 accent-shibuya-crimson cursor-pointer" onchange="saveDebtState()">
+                        <div class="flex flex-col gap-0.5 cursor-pointer">
+                            <span class="debt-item-title font-bold text-white">Fix class/filename mismatches</span>
+                            <span class="debt-item-desc text-gray-500">Rename PlayerInputHandler to InputHandler_Player and AnimetionEventRelay to AnimationEventRelay.</span>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3 bg-black/30 p-3 border border-shibuya-metal/40">
+                        <input type="checkbox" id="debt4" class="mt-0.5 accent-shibuya-crimson cursor-pointer" onchange="saveDebtState()">
+                        <div class="flex flex-col gap-0.5 cursor-pointer">
+                            <span class="debt-item-title font-bold text-white">Prevent InputLockManager locks</span>
+                            <span class="debt-item-desc text-gray-500">Convert the static lock layout to a disposable handle design to prevent UI lock freezes.</span>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3 bg-black/30 p-3 border border-shibuya-metal/40">
+                        <input type="checkbox" id="debt5" class="mt-0.5 accent-shibuya-crimson cursor-pointer" onchange="saveDebtState()">
+                        <div class="flex flex-col gap-0.5 cursor-pointer">
+                            <span class="debt-item-title font-bold text-white">Gate debug override shortcuts</span>
+                            <span class="debt-item-desc text-gray-500">Ensure the basic attack numeric shortcuts compile strictly within #if UNITY_EDITOR blocks.</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 14. 6-MONTH ROADMAP TIMELINE -->
+        <section id="roadmap" class="mb-16 scroll-mt-6">
+            <h2 class="font-bebas text-4xl text-white flex items-center gap-3 border-b-2 border-shibuya-metal/60 pb-2 mb-6">
+                <span class="bg-shibuya-jade text-black px-2 py-0.5 text-2xl font-bold shonen-clip">14</span>
+                <span>[渋谷作戦] SHIBUYA OPERATIONS ROADMAP</span>
+            </h2>
+            <p class="text-gray-300 max-w-3xl mb-8">
+                The 6-Month timeline mapped to sub-sprint operations across Shibuya Station's underground floors. Expand months to check off checklist progress.
+            </p>
+
+            <!-- TIMELINE -->
+            <div id="timelineList" class="relative max-w-4xl pl-6 border-l-2 border-shibuya-metal/60 font-mono text-xs space-y-6 select-none">
+                
+                <!-- Month 1 -->
+                <div id="month1" class="relative timeline-item active">
+                    <span class="absolute left-[-31px] top-1 w-4 h-4 rounded-full bg-shibuya-bg border-2 border-shibuya-crimson shadow-neon-crimson timeline-badge"></span>
+                    <div class="bg-shibuya-concrete border border-shibuya-metal/80 rounded">
+                        <div class="flex justify-between items-center bg-shibuya-slate/50 p-3 border-b border-shibuya-metal/40 cursor-pointer hover:bg-shibuya-slate/80 transition-colors" onclick="toggleTimeline('month1')">
+                            <div class="flex items-center gap-4">
+                                <span class="font-bebas text-lg text-white font-bold tracking-wider">MONTH 1 // B5F - SUBWAY PLATFORM</span>
+                                <span class="text-[10px] text-shibuya-crimson font-bold uppercase">Strip & Stabilize</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down text-gray-500 timeline-toggle-icon"></i>
+                        </div>
+                        
+                        <div class="timeline-content p-4 space-y-3 bg-black/20">
+                            <div class="flex items-start gap-3">
+                                <input type="checkbox" id="m1_1" class="mt-0.5 accent-shibuya-jade cursor-pointer" onchange="saveRoadmap()">
+                                <div class="flex flex-col gap-0.5">
+                                    <span class="roadmap-check-title font-bold text-white">Stabilize simple compile conditions</span>
+                                    <span class="roadmap-check-desc text-gray-500">Organize assembly definitions (.asmdef) across all scripts.</span>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <input type="checkbox" id="m1_2" class="mt-0.5 accent-shibuya-jade cursor-pointer" onchange="saveRoadmap()">
+                                <div class="flex flex-col gap-0.5">
+                                    <span class="roadmap-check-title font-bold text-white">Inject InputLockManager fixes</span>
+                                    <span class="roadmap-check-desc text-gray-500">Transition panels to disposable handles to guarantee clean screen closes.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Month 2 -->
+                <div id="month2" class="relative timeline-item">
+                    <span class="absolute left-[-31px] top-1 w-4 h-4 rounded-full bg-shibuya-bg border-2 border-shibuya-jade shadow-neon-jade timeline-badge"></span>
+                    <div class="bg-shibuya-concrete border border-shibuya-metal/80 rounded">
+                        <div class="flex justify-between items-center bg-shibuya-slate/50 p-3 border-b border-shibuya-metal/40 cursor-pointer hover:bg-shibuya-slate/80 transition-colors" onclick="toggleTimeline('month2')">
+                            <div class="flex items-center gap-4">
+                                <span class="font-bebas text-lg text-white font-bold tracking-wider">MONTH 2 // B4F - CONCOURSE DEPOT</span>
+                                <span class="text-[10px] text-shibuya-jade font-bold uppercase">Combat Core</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down text-gray-500 timeline-toggle-icon"></i>
+                        </div>
+                        
+                        <div class="timeline-content p-4 space-y-3 bg-black/20">
+                            <div class="flex items-start gap-3">
+                                <input type="checkbox" id="m2_1" class="mt-0.5 accent-shibuya-jade cursor-pointer" onchange="saveRoadmap()">
+                                <div class="flex flex-col gap-0.5">
+                                    <span class="roadmap-check-title font-bold text-white">Implement active slash scripts</span>
+                                    <span class="roadmap-check-desc text-gray-500">Lock Ground/Air standard strings, dash interrupts, and simple triggers.</span>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <input type="checkbox" id="m2_2" class="mt-0.5 accent-shibuya-jade cursor-pointer" onchange="saveRoadmap()">
+                                <div class="flex flex-col gap-0.5">
+                                    <span class="roadmap-check-title font-bold text-white">Bind visual frame freezes</span>
+                                    <span class="roadmap-check-desc text-gray-500">Verify Cinemachine shakes and frame hit-stop.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Month 3 -->
+                <div id="month3" class="relative timeline-item">
+                    <span class="absolute left-[-31px] top-1 w-4 h-4 rounded-full bg-shibuya-bg border-2 border-shibuya-amber shadow-neon-amber timeline-badge"></span>
+                    <div class="bg-shibuya-concrete border border-shibuya-metal/80 rounded">
+                        <div class="flex justify-between items-center bg-shibuya-slate/50 p-3 border-b border-shibuya-metal/40 cursor-pointer hover:bg-shibuya-slate/80 transition-colors" onclick="toggleTimeline('month3')">
+                            <div class="flex items-center gap-4">
+                                <span class="font-bebas text-lg text-white font-bold tracking-wider">MONTH 3 // B3F - CONTROL HUB</span>
+                                <span class="text-[10px] text-shibuya-amber font-bold uppercase">Team & Swap</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down text-gray-500 timeline-toggle-icon"></i>
+                        </div>
+                        
+                        <div class="timeline-content p-4 space-y-3 bg-black/20">
+                            <div class="flex items-start gap-3">
+                                <input type="checkbox" id="m3_1" class="mt-0.5 accent-shibuya-jade cursor-pointer" onchange="saveRoadmap()">
+                                <div class="flex flex-col gap-0.5">
+                                    <span class="roadmap-check-title font-bold text-white">Develop TeamLoader swaps</span>
+                                    <span class="roadmap-check-desc text-gray-500">Enable swap cancels and buffer inheritance across active characters.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Month 4 -->
+                <div id="month4" class="relative timeline-item">
+                    <span class="absolute left-[-31px] top-1 w-4 h-4 rounded-full bg-shibuya-bg border-2 border-shibuya-purple shadow-neon-purple timeline-badge"></span>
+                    <div class="bg-shibuya-concrete border border-shibuya-metal/80 rounded">
+                        <div class="flex justify-between items-center bg-shibuya-slate/50 p-3 border-b border-shibuya-metal/40 cursor-pointer hover:bg-shibuya-slate/80 transition-colors" onclick="toggleTimeline('month4')">
+                            <div class="flex items-center gap-4">
+                                <span class="font-bebas text-lg text-white font-bold tracking-wider">MONTH 4 // B2F - SHOPPING ARCADE</span>
+                                <span class="text-[10px] text-shibuya-purple font-bold uppercase">Rogue-lite Loop</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down text-gray-500 timeline-toggle-icon"></i>
+                        </div>
+                        
+                        <div class="timeline-content p-4 space-y-3 bg-black/20">
+                            <div class="flex items-start gap-3">
+                                <input type="checkbox" id="m4_1" class="mt-0.5 accent-shibuya-jade cursor-pointer" onchange="saveRoadmap()">
+                                <div class="flex flex-col gap-0.5">
+                                    <span class="roadmap-check-title font-bold text-white">Assemble Subway Lobby Flow</span>
+                                    <span class="roadmap-check-desc text-gray-500">Connect Lobby, Soul Shop NPC, and combat room scenes.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Month 5 -->
+                <div id="month5" class="relative timeline-item">
+                    <span class="absolute left-[-31px] top-1 w-4 h-4 rounded-full bg-shibuya-bg border-2 border-shibuya-crimson shadow-neon-crimson timeline-badge"></span>
+                    <div class="bg-shibuya-concrete border border-shibuya-metal/80 rounded">
+                        <div class="flex justify-between items-center bg-shibuya-slate/50 p-3 border-b border-shibuya-metal/40 cursor-pointer hover:bg-shibuya-slate/80 transition-colors" onclick="toggleTimeline('month5')">
+                            <div class="flex items-center gap-4">
+                                <span class="font-bebas text-lg text-white font-bold tracking-wider">MONTH 5 // B1F - TICKET GATE</span>
+                                <span class="text-[10px] text-shibuya-crimson font-bold uppercase">Boss & Content</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down text-gray-500 timeline-toggle-icon"></i>
+                        </div>
+                        
+                        <div class="timeline-content p-4 space-y-3 bg-black/20">
+                            <div class="flex items-start gap-3">
+                                <input type="checkbox" id="m5_1" class="mt-0.5 accent-shibuya-jade cursor-pointer" onchange="saveRoadmap()">
+                                <div class="flex flex-col gap-0.5">
+                                    <span class="roadmap-check-title font-bold text-white">Develop boss phase controllers</span>
+                                    <span class="roadmap-check-desc text-gray-500">Assemble HP threshold conditions and warning zone triggers.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Month 6 -->
+                <div id="month6" class="relative timeline-item">
+                    <span class="absolute left-[-31px] top-1 w-4 h-4 rounded-full bg-shibuya-bg border-2 border-shibuya-jade shadow-neon-jade timeline-badge"></span>
+                    <div class="bg-shibuya-concrete border border-shibuya-metal/80 rounded">
+                        <div class="flex justify-between items-center bg-shibuya-slate/50 p-3 border-b border-shibuya-metal/40 cursor-pointer hover:bg-shibuya-slate/80 transition-colors" onclick="toggleTimeline('month6')">
+                            <div class="flex items-center gap-4">
+                                <span class="font-bebas text-lg text-white font-bold tracking-wider">MONTH 6 // GROUND LEVEL - SHIBUYA OVERGROUND</span>
+                                <span class="text-[10px] text-shibuya-jade font-bold uppercase">Thesis & Shipping</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down text-gray-500 timeline-toggle-icon"></i>
+                        </div>
+                        
+                        <div class="timeline-content p-4 space-y-3 bg-black/20">
+                            <div class="flex items-start gap-3">
+                                <input type="checkbox" id="m6_1" class="mt-0.5 accent-shibuya-jade cursor-pointer" onchange="saveRoadmap()">
+                                <div class="flex flex-col gap-0.5">
+                                    <span class="roadmap-check-title font-bold text-white">Compile shipping build</span>
+                                    <span class="roadmap-check-desc text-gray-500">Ensure optimal GC performance, asset bundle structures, and thesis write-ups.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- OPERATION FOOTER -->
+        <footer class="mt-16 pt-8 border-t border-shibuya-metal/40 text-center text-xs font-mono text-gray-500">
+            <p>SHIBUYA SUBWAY OPERATIONS DIVISION // NEO-JJK DESIGN ARCHIVE // CONFIDENTIAL [特級]</p>
+        </footer>
+
+    </main>
+
+</body>
+</html>

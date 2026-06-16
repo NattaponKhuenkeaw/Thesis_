@@ -17,18 +17,16 @@ MonoBehaviour:
   elementType: 1
   previewPrefab: {fileID: 6597880524197938003, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
   stats:
-    maxHP: 911
-    attack: 41
-    defense: 37
+    maxHP: 813
+    attack: 50
+    defense: 38
     speed: 7.5
-    elementalMultiplier: 1
+    elementalMastery: 0
     critRate: 5
     critDamage: 150
-    cooldownReduction: 0
-    skillMastery: 0
-    damageMastery: 0
-    damageResistance: 0
-    auraEnergyMultiplier: 1
+    cooldownRate: 0
+    impact: 0
+    aeRecharge: 1
   metaData:
     displayName: Main
     description: 

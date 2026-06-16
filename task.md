@@ -2,3 +2,7 @@
 - [x] Fix negative/fractional stat formatting bug (e.g. negative SPD showing +0 red text) in `StatFormatHelper.cs`
 - [x] Populate and normalize Elemental Multiplier in `ArtifactPreviewPanel.cs`, `TeamLoader.cs`, and `TeamSlotUI.cs`
 - [x] Fix current HP resetting to max HP on TeamUI refresh/deploy in `TeamLoader.cs`
+- [x] Create `styles.css` (Extract styles)
+- [x] Create `scripts.js` (Extract scripts and Tailwind config)
+- [/] Create `index.html` (Core Identity: 01, 02, 03, 11)
+- [/] Create `mechanics.html` (Game Systems: 04, 05, 06, 08)

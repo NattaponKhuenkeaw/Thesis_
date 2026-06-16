@@ -383,27 +383,23 @@ Artifact bonuses are added to a character's base stats when the team is deployed
 
 - **Shop Lore** : a opportunist devil that collect a dead soul on Cursed Realm and sell for high price.
 - **Shop Rule** : The Soul Shop act as a safe haven for players. It is the only place where players can change, replace, or purchase their loadout (Character/Artifact) before venturing into the next Cursed Realm.  
-- **Shop Algorithm**: The shop algorithm will use the pool of character, artifact that the player have unlocked and the pool of enemy in the Cursed Realm that the player have defeated or explored. it never present what you never seen.
-- **Shop Reroll**: Player can Reroll shop Item but the new Item price will overpriced increase every time you reroll.
-- **Duplicate Progression Target**: Reacquiring an owned Character advances its
-  permanent Potential path. Reacquiring an owned Artifact during a run converts
-  the duplicate into that Artifact's Fragment for Transcendence.
-- **Current Implementation Note**: One-time ownership filtering still treats
-  owned Characters and Artifacts as sold out. Duplicate conversion is not
-  implemented yet. Consumable Items remain repeatable purchases.
+- **Shop Environment** : A Whole Scene-Fixed Camera-Walkable-Background UI-driven rather than Overlay UI (Like Blazblue Entropy Effect). Player can walk Right off-screen to leave the Shop Scene.
+- **Shop Algorithm**: The shop algorithm will randomize items on an Item Zone on the floor. It uses the pool of characters and artifacts the player has unlocked. When a player walks into an Item Zone, it shows Information / Price / Icon on the background layer. Player can press Click to Buy. All Item Zones are One-Time buy per shop entered. If the Artifact or Character that the player already owns populates as an Item Zone, it will become a Fragment (an Item for Upgrade) instead.
+- **Shop Reroll**: Player can Reroll shop Items but the new Item price will increase exponentially every time you reroll.
+- **Sell Zone**: There is a Sell Zone that connects to the Player Inventory (Backpack System UI) where players can sell items for a cheap price.
+- **Duplicate Progression Target**: Reacquiring an owned Character advances its permanent Potential path. Reacquiring an owned Artifact during a run converts the duplicate into that Artifact's Fragment for Transcendence.
+- **Current Implementation Note**: One-time ownership filtering still treats owned Characters and Artifacts as sold out. Duplicate conversion is not implemented yet. Consumable Items remain repeatable purchases.
 
-### Team Builder Loadout Flow
+### Team Builder & Team Lookup Flow
 
-- The Team Builder supports up to three character slots, with three Artifact slots per character.
-- Owned Characters and Artifacts are shown in separate inventory grids.
-- Artifacts can be dragged from the grid into a slot, moved between characters, swapped with an occupied slot, or removed by dragging them outside a valid slot.
-- One Artifact instance cannot be equipped in more than one slot at the same time.
-- Character and Inspect screens show base stats plus positive or negative Artifact bonuses.
-- Team edits are a session-only draft. Opening a fresh Team Builder session loads the current runtime team, active slot, and equipped Artifacts.
-- Switching between Team Builder panels preserves the in-session draft.
-- `Deploy` opens a confirmation dialog. Confirming is the only action that writes the staged characters, active slot, and Artifacts to the runtime team.
-- `Cancel` restores the runtime loadout. Closing the Team UI clears undeployed draft changes.
-- In Combat Zone mode, loadout editing is locked while inspection remains available.
+- **Safe Zone Rule**: Character Inspector / Backpack / TeamBuilder are ONLY accessible in Safe Zones (e.g. Shop Room). In Combat-Zones, their UI will disappear to improve player focus on exploration & combat. In Combat-Zone, only "Team Lookup" is available to view the team without modification.
+- **TeamLookup / TeamBuilder** is a UI-Slot Team of 3 containing 3 Artifacts individually. It operates as a Grid-Box (Standard-Gacha Team Roster) accessible via UI Icon or TAB key.
+- It aims for easy Lookup, Summarization, and modification of the current Build and Team. It displays Overall Information (Stats / Role / Character Basic Data like Name, Role, Element, Level, Potential, Equipment) with an Artifact Preview Window on Mouse Raycast to improve QOL.
+- To Deploy Character/Artifact, the player clicks on the desired TeamSlot, bringing up the Character Inventory.
+- Character Inventory consists of Grid-Like CharItems (Element, Level, and an "In-Team" text if already deployed). It features a Character Switch preview (current char in this slot -> selected char to that slot).
+- **Drag & Drop** only works on the TeamSlotUI. Dragging causes the screen to fade to translucent black, highlighting available drop spots. (CharacterGridItem uses click-to-switch per slot, but characters in the TeamSlotUI are draggable).
+- Only when entering TeamBuilder Mode (Safe Zone) can players Drag&Drop or Change Character/Artifact. The player must click **Deploy (Save)** for changes to be applied.
+- In Combat Zone mode, loadout editing is locked while Team Lookup remains available.
 
 ### Utility Resource
 
@@ -421,28 +417,39 @@ P.S Lose but retain Upgrade mean you lose that Item/Character/Artifact if you di
 
 ### Character Level System
 
-Character Level is run-scoped growth for each acquired character. It is
-separate from permanent Character Potential.
+Character Level is run-scoped growth for each acquired character. It is separate from permanent Character Potential.
 
 - Every character starts each run at **Lv.1**.
-- A character also starts with the permanent Potential rank the player has
-  already unlocked for that character.
-- Character Level, current EXP, and unspent EXP Potions are removed when the
-  run is lost or reset.
+- A character also starts with the permanent Potential rank the player has already unlocked for that character.
+- Character Level, current EXP, and unspent EXP Potions are removed when the run is lost or reset.
 - The maximum Character Level is **Lv.30/30**.
-- Characters gain EXP only from **EXP Potions**. Defeating monsters does not
-  directly grant EXP.
+- Characters gain EXP only from **EXP Potions**. Defeating monsters does not directly grant EXP.
 - EXP Potions can be obtained from the **Soul Shop** and **Room Clear Rewards**.
 - EXP Potions are consumed only through the Character Level System UI.
-- The Character Level System UI is accessible only through the Character
-  Inspector UI.
-- When current EXP reaches or exceeds the current level EXP cap, the character
-  levels up. Excess EXP carries into the next level.
+- When current EXP reaches or exceeds the current level EXP cap, the character levels up. Excess EXP carries into the next level.
 - Leveling increases only the character's basic **ATK, DEF, and Max HP**.
-- EXP curves, potion values, per-level stat growth, and level-up costs require
-  a separate balance specification before implementation.
-- Runtime Character Level and EXP belong to the run save and TeamLoader runtime
-  state. Permanent Potential belongs to permanent progression data.
+
+### Character Inspector System
+
+- **Access**: [Safe Zone Only] Accessed through UI Icon and exited with a button. Disappears in Combat Zones.
+- **Purpose**: Designed to show the whole information of a character.
+- **Layout**: Contains a Character Slider Panel, Character Visual Panel, and Content Panel.
+  - **Character Slider Panel**: For selecting characters; features a slider-like character icon selection matching standard gacha aesthetics.
+  - **Character Visual Panel**: Emphasizes the character Icon, Name, Element, and Role based on the slider selection.
+  - **Content Panel**: Populates based on the selected character and contains the following windows:
+    - **Character Info Panel**: Current level, potential, all character stats, and 3 Artifact Slots.
+    - **Character Skill Panel**: Icon and Information for Basic Attack, Skill, Ultimate, and Passive with embedded text (values change depending on unlocked Potential).
+    - **Equipment Panel**: 3 Artifact Slots. Clicking an equipped Artifact shows an Artifact Preview Panel with [Ascend / Switch] buttons. Clicking Switch opens the InventoryGridItem filtered by Artifact type ("Click to Switch per slot"). Clicking Ascend enters the Artifact Ascend UI.
+    - **Character Level Panel**: Displays current level, Level Slider bar, current EXP / max EXP, EXP Potion ItemGrid, and a Level-Up button. Clicking an EXP Potion previews how much it will increase the Character Level; clicking the level-up button confirms the decision.
+    - **Character Potential Panel**: A full screen change (exited through a back button). Contains Potential Nodes (seperate from Skill/Ultimate/Passive, Lv.0 -> Lv.4 requiring 16 upgrades). Clicking a node shows a Potential Preview Panel (Context / Item Needed / Ascend button). Dupe fragments are required to ascend.
+
+### Backpack System
+
+- **Access**: [Safe Zone Only] Accessed through UI. Disappears in Combat Zones.
+- **Layout**: Contains GridBox-like population and Preview.
+- **InventoryGridItem**: Displays the amount, currently owned-by character (for Artifacts), Icon, and visual type (Artifact, Consumables, or Dupe Item).
+- **Character Items**: Characters are NOT considered InventoryItems and won't show in the Backpack. Only Character Dupes (Soul Fragments) are considered Items.
+- **ItemPreview**: A simple preview window showing the item Icon and text description.
 
 ### Character Potential Rule
 
@@ -926,6 +933,14 @@ Assets/Project/Scripts/
 | `RewardRoom` | Upgrade choice, heal, event, or shop encounter |
 | `BossRoom` | Pattern-based boss fight |
 | `Result` | Run win / fail summary, return to lobby |
+
+### Rogue-lite (Speculative) System
+
+- The Rogue-lite flow is **Room-Driven**. Players must clear/beat all enemies and survive to proceed. It operates as a simple A -> B expedition.
+- Once the player clears the room, the exit unlocks and the GameManager generates a randomized Room and Reward for the player to choose from (3 Choices).
+- Every third room cleared opens a **Shop Path** for the player to stop by. If the player chooses not to enter the Shop, the shop path disappears and requires another 3 room clears to appear again.
+- Inside the Combat Room, the game will generate a pattern of biome and Monster Waves.
+- The Reward System provides randomized choices but fixed amounts (Currency / Item / Artifact). These randomized drops are pulled from the CodexInventory and scale based on Difficulty.
 
 ---
 
