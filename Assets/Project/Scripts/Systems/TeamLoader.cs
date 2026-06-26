@@ -119,16 +119,13 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     // =========================================================
     // Public Methods
     // =========================================================
-    public void LoadCurrentCharacter(bool forceReload = false, bool preserveActiveHp = true)
+    public void LoadCurrentCharacter(bool forceReload = false)
     {
         if (playerCharacter == null)
         {
             Debug.LogWarning("TeamLoader: PlayerCharacter is missing");
             return;
         }
-
-        if (preserveActiveHp)
-            SaveActiveCharacterHP();
 
         int validIndex = ResolvePreferredIndex(CurrentCharacter);
         if (validIndex < 0)
@@ -236,16 +233,11 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         if (!CanRemoveCharacterAt(slotIndex))
             return false;
 
-        SaveActiveCharacterHP();
-
-        CharacterObject removedCharacter = team[slotIndex];
         int previousIndex = currentIndex;
-
         team[slotIndex] = null;
-        RemoveStoredHpIfCharacterNoLongerInTeam(removedCharacter);
 
         if (slotIndex == previousIndex || previousIndex < 0 || previousIndex >= team.Length || team[previousIndex] == null)
-            currentIndex = FindNearestOccupiedIndex(previousIndex);
+            currentIndex = ResolvePreferredIndex(null, previousIndex);
 
         NotifyTeamChanged();
         LoadCurrentCharacter();
@@ -258,7 +250,6 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             return false;
 
         EnsureTeamCapacity(Mathf.Max(slotIndex + 1, DefaultTeamSize));
-        SaveActiveCharacterHP();
 
         CharacterObject removedCharacter = team[slotIndex];
         if (newCharacter == null && removedCharacter != null && CountCharacters(team) <= 1)
@@ -273,7 +264,6 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         }
 
         team[slotIndex] = newCharacter;
-        RemoveStoredHpIfCharacterNoLongerInTeam(removedCharacter);
 
         int previousIndex = currentIndex;
         CharacterObject preferredCharacter = CurrentCharacter;
@@ -294,8 +284,6 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     {
         if (newTeam == null)
             return;
-
-        SaveActiveCharacterHP();
 
         int previousIndex = currentIndex;
 
@@ -334,8 +322,6 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             return;
         }
 
-        ClearRemovedCharacterHP(incomingCharacters);
-
         team = new CharacterObject[Mathf.Max(1, newTeam.Length)];
         for (int i = 0; i < newTeam.Length; i++)
         {
@@ -353,8 +339,6 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         if (newTeam == null)
             return;
 
-        SaveActiveCharacterHP();
-
         CharacterObject preferredCharacter = null;
         if (preferredIndex >= 0 && preferredIndex < newTeam.Length)
             preferredCharacter = newTeam[preferredIndex];
@@ -369,8 +353,6 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             if (newTeam[i] != null)
                 incomingCharacters.Add(newTeam[i]);
         }
-
-        ClearRemovedCharacterHP(incomingCharacters);
 
         if (incomingCharacters.Count == 0)
         {
@@ -407,7 +389,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         ClampStoredRuntimeResources();
 
         NotifyTeamChanged();
-        LoadCurrentCharacter(forceReload: true, preserveActiveHp: false);
+        LoadCurrentCharacter(forceReload: true);
         NotifyAllCharacterResources();
         ResetRuntimeTransientState();
     }
@@ -426,9 +408,9 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         }
 
         EnsureArtifactLoadoutCapacity(team.Length);
-        Artifact[] slotArtifacts = equippedArtifactSlots[slotIndex].Artifacts;
+        var slot = equippedArtifactSlots[slotIndex];
 
-        bool canBackfillActiveSlot = !equippedArtifactSlots[slotIndex].HasSnapshot
+        bool canBackfillActiveSlot = !slot.HasSnapshot
             && slotIndex == currentIndex
             && playerCharacter != null
             && playerCharacter.characterObject == team[slotIndex]
@@ -437,23 +419,20 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
         if (canBackfillActiveSlot)
         {
-            slotArtifacts = CloneArtifactArray(playerCharacter.EquippedArtifacts);
-            equippedArtifactSlots[slotIndex].SetArtifacts(slotArtifacts);
-            slotArtifacts = equippedArtifactSlots[slotIndex].Artifacts;
+            slot.SetArtifacts(playerCharacter.EquippedArtifacts);
             RebuildRuntimeStats();
         }
 
-        return slotArtifacts ?? System.Array.Empty<Artifact>();
+        return slot.Artifacts ?? System.Array.Empty<Artifact>();
     }
 
     public void RefreshRuntimeState()
     {
-        SaveActiveCharacterHP();
         EnsureArtifactLoadoutCapacity(team != null ? team.Length : DefaultTeamSize);
         RebuildRuntimeStats();
         ClampStoredRuntimeResources();
         OnTeamChanged?.Invoke();
-        LoadCurrentCharacter(forceReload: true, preserveActiveHp: false);
+        LoadCurrentCharacter(forceReload: true);
         NotifyAllCharacterResources();
         ResetRuntimeTransientState();
     }
@@ -493,13 +472,6 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         if (originIndex >= 0 && originIndex < team.Length && team[originIndex] != null)
             return originIndex;
 
-        int nearestIndex = FindNearestOccupiedIndex(originIndex);
-        if (nearestIndex >= 0)
-            return nearestIndex;
-
-        if (currentIndex >= 0 && currentIndex < team.Length && team[currentIndex] != null)
-            return currentIndex;
-
         return FindFirstOccupiedIndex();
     }
 
@@ -517,61 +489,15 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         return -1;
     }
 
-    private int FindNearestOccupiedIndex(int originIndex)
-    {
-        if (team == null || team.Length == 0)
-            return -1;
-
-        if (originIndex >= 0 && originIndex < team.Length && team[originIndex] != null)
-            return originIndex;
-
-        int maxDistance = team.Length - 1;
-        for (int distance = 1; distance <= maxDistance; distance++)
-        {
-            int rightIndex = originIndex + distance;
-            if (rightIndex >= 0 && rightIndex < team.Length && team[rightIndex] != null)
-                return rightIndex;
-
-            int leftIndex = originIndex - distance;
-            if (leftIndex >= 0 && leftIndex < team.Length && team[leftIndex] != null)
-                return leftIndex;
-        }
-
-        return FindFirstOccupiedIndex();
-    }
-
     private int FindNextOccupiedIndex(int startIndex, int direction)
     {
-        if (team == null || team.Length == 0)
-            return -1;
-
-        int occupiedCount = 0;
-        for (int i = 0; i < team.Length; i++)
-        {
-            if (team[i] != null)
-                occupiedCount++;
-        }
-
-        if (occupiedCount == 0)
-            return -1;
-
+        if (team == null || team.Length == 0) return -1;
         int index = startIndex;
-        if (index < 0 || index >= team.Length)
-            index = direction > 0 ? -1 : 0;
-
         for (int i = 0; i < team.Length; i++)
         {
-            index += direction;
-
-            if (index >= team.Length)
-                index = 0;
-            else if (index < 0)
-                index = team.Length - 1;
-
-            if (team[index] != null)
-                return index;
+            index = (index + direction + team.Length) % team.Length;
+            if (team[index] != null) return index;
         }
-
         return -1;
     }
 
@@ -610,35 +536,26 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         if (targetIndex < 0 || targetIndex >= team.Length)
             targetIndex = 0;
 
-        CharacterObject removedCharacter = team[targetIndex];
         team[targetIndex] = playerCharacter.characterObject;
         currentIndex = targetIndex;
 
-        RemoveStoredHpIfCharacterNoLongerInTeam(removedCharacter);
         NotifyTeamChanged();
     }
 
     private void EnsureTeamCapacity(int minimumLength)
     {
         int length = Mathf.Max(1, minimumLength);
-
-        if (team != null && team.Length >= length)
-            return;
-
-        CharacterObject[] previousTeam = team;
-        team = new CharacterObject[length];
-
-        if (previousTeam == null)
-            return;
-
-        for (int i = 0; i < previousTeam.Length && i < team.Length; i++)
+        if (team == null || team.Length < length)
         {
-            team[i] = previousTeam[i];
+            var old = team;
+            team = new CharacterObject[length];
+            if (old != null) Array.Copy(old, team, old.Length);
         }
     }
 
     private void NotifyTeamChanged()
     {
+        CleanUpStoredData();
         RebuildRuntimeStats();
         OnTeamChanged?.Invoke();
     }
@@ -731,38 +648,18 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         }
     }
 
-    private static Artifact[] CloneArtifactArray(Artifact[] source)
-    {
-        if (source == null || source.Length == 0)
-        {
-            return System.Array.Empty<Artifact>();
-        }
-
-        Artifact[] clone = new Artifact[source.Length];
-        System.Array.Copy(source, clone, source.Length);
-        return clone;
-    }
-
     private void EnsureArtifactLoadoutCapacity(int slotCount)
     {
-        int resolvedSlotCount = Mathf.Max(1, slotCount);
-        if (equippedArtifactSlots != null && equippedArtifactSlots.Length == resolvedSlotCount)
+        int count = Mathf.Max(1, slotCount);
+        if (equippedArtifactSlots == null || equippedArtifactSlots.Length != count)
         {
-            for (int i = 0; i < equippedArtifactSlots.Length; i++)
-            {
-                equippedArtifactSlots[i] ??= new ArtifactLoadoutSlot();
-            }
-            return;
+            var old = equippedArtifactSlots;
+            equippedArtifactSlots = new ArtifactLoadoutSlot[count];
+            if (old != null) Array.Copy(old, equippedArtifactSlots, Mathf.Min(old.Length, count));
         }
-
-        ArtifactLoadoutSlot[] previousLoadout = equippedArtifactSlots;
-        equippedArtifactSlots = new ArtifactLoadoutSlot[resolvedSlotCount];
-
-        for (int i = 0; i < resolvedSlotCount; i++)
+        for (int i = 0; i < count; i++)
         {
-            equippedArtifactSlots[i] = previousLoadout != null && i < previousLoadout.Length
-                ? previousLoadout[i] ?? new ArtifactLoadoutSlot()
-                : new ArtifactLoadoutSlot();
+            equippedArtifactSlots[i] ??= new ArtifactLoadoutSlot();
         }
     }
 
@@ -905,7 +802,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             return;
 
         characterCurrentHP[playerCharacter.characterObject] = Mathf.Clamp(currentHp, 0f, maxHp);
-        NotifyCharacterHealthUpdated(playerCharacter.characterObject, currentHp, maxHp);
+        NotifyCharacterHealthUpdated(playerCharacter.characterObject);
     }
 
     private void HandlePlayerCharacterChanged(CharacterObject character)
@@ -914,18 +811,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             return;
 
         characterCurrentHP[character] = Mathf.Clamp(playerCharacter.CurrentHP, 0f, playerCharacter.MaxHP);
-        NotifyCharacterHealthUpdated(character, playerCharacter.CurrentHP, playerCharacter.MaxHP);
-    }
-
-    private void SaveActiveCharacterHP()
-    {
-        if (playerCharacter == null || playerCharacter.characterObject == null)
-            return;
-
-        if (FindCharacterIndex(playerCharacter.characterObject) < 0)
-            return;
-
-        characterCurrentHP[playerCharacter.characterObject] = Mathf.Clamp(playerCharacter.CurrentHP, 0f, playerCharacter.MaxHP);
+        NotifyCharacterHealthUpdated(character);
     }
 
     private float GetStoredHP(CharacterObject character)
@@ -943,61 +829,29 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         return maxHp;
     }
 
-    private void RemoveStoredHpIfCharacterNoLongerInTeam(CharacterObject character)
+    private void CleanUpStoredData()
     {
-        if (character == null)
-            return;
-
-        if (FindCharacterIndex(character) >= 0)
-            return;
-
-        characterCurrentHP.Remove(character);
-        characterCurrentAE.Remove(character);
-        characterRuntimeStats.Remove(character);
-        NotifyCharacterHealthUpdated(character);
-    }
-
-    private void ClearRemovedCharacterHP(HashSet<CharacterObject> validCharacters)
-    {
-        if (characterCurrentHP.Count == 0)
-            return;
-
-        List<CharacterObject> removed = null;
-        foreach (CharacterObject character in characterCurrentHP.Keys)
+        if (team == null) return;
+        List<CharacterObject> keysToRemove = new List<CharacterObject>();
+        foreach (var key in characterCurrentHP.Keys)
         {
-            if (character == null || validCharacters.Contains(character))
-                continue;
-
-            removed ??= new List<CharacterObject>();
-            removed.Add(character);
+            if (Array.IndexOf(team, key) < 0)
+                keysToRemove.Add(key);
         }
-
-        if (removed == null)
-            return;
-
-        for (int i = 0; i < removed.Count; i++)
+        foreach (var key in keysToRemove)
         {
-            characterCurrentHP.Remove(removed[i]);
-            characterCurrentAE.Remove(removed[i]);
-            characterRuntimeStats.Remove(removed[i]);
-            NotifyCharacterHealthUpdated(removed[i]);
+            characterCurrentHP.Remove(key);
+            characterCurrentAE.Remove(key);
+            characterRuntimeStats.Remove(key);
         }
     }
 
     private void NotifyCharacterHealthUpdated(CharacterObject character)
     {
-        if (character == null)
-            return;
-
-        NotifyCharacterHealthUpdated(character, GetCharacterCurrentHP(character), GetCharacterMaxHP(character));
-    }
-
-    private void NotifyCharacterHealthUpdated(CharacterObject character, float currentHp, float maxHp)
-    {
-        if (character == null)
-            return;
-
-        OnCharacterHealthUpdated?.Invoke(character, currentHp, maxHp);
+        if (character != null)
+        {
+            OnCharacterHealthUpdated?.Invoke(character, GetCharacterCurrentHP(character), GetCharacterMaxHP(character));
+        }
     }
 
     // =========================================================
@@ -1030,31 +884,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     public float GetUltimateCost(CharacterObject character)
     {
-        return GetUltimateCost(character, DefaultUltimateAuraEnergyCost);
-    }
-
-    private float GetHighestUltimateCost(CharacterObject character)
-    {
-        if (character == null
-            || character.actionResolverTable == null
-            || character.actionResolverTable.ultimateActions == null
-            || character.actionResolverTable.ultimateActions.Count == 0)
-        {
-            return GetUltimateCost(character);
-        }
-
-        float highestCost = 0f;
-        List<UltimateAction> ultimateActions = character.actionResolverTable.ultimateActions;
-        for (int i = 0; i < ultimateActions.Count; i++)
-        {
-            UltimateAction ultimateAction = ultimateActions[i];
-            if (ultimateAction == null)
-                continue;
-
-            highestCost = Mathf.Max(highestCost, GetUltimateCost(character, ultimateAction));
-        }
-
-        return highestCost > 0f ? highestCost : GetUltimateCost(character);
+        return GetHighestUltimateCost(character);
     }
 
     public float GetUltimateCost(CharacterObject character, UltimateAction ultimateAction)
@@ -1062,11 +892,28 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         float baseCost = ultimateAction != null && ultimateAction.energyCost > 0f
             ? ultimateAction.energyCost
             : DefaultUltimateAuraEnergyCost;
-
-        return GetUltimateCost(character, baseCost);
+        return CalculateReducedCost(character, baseCost);
     }
 
-    public float GetUltimateCost(CharacterObject character, float baseCost)
+    private float GetHighestUltimateCost(CharacterObject character)
+    {
+        if (character == null) return 0f;
+        float highestCost = 0f;
+        if (character.actionResolverTable != null && character.actionResolverTable.ultimateActions != null)
+        {
+            for (int i = 0; i < character.actionResolverTable.ultimateActions.Count; i++)
+            {
+                var action = character.actionResolverTable.ultimateActions[i];
+                if (action != null)
+                {
+                    highestCost = Mathf.Max(highestCost, GetUltimateCost(character, action));
+                }
+            }
+        }
+        return highestCost > 0f ? highestCost : CalculateReducedCost(character, DefaultUltimateAuraEnergyCost);
+    }
+
+    private float CalculateReducedCost(CharacterObject character, float baseCost)
     {
         float resolvedBaseCost = Mathf.Max(0f, baseCost);
         CharacterStats stats = GetCharacterRuntimeStats(character);
@@ -1119,24 +966,15 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
         RuntimeAnimatorController animController = castingCharacter.metaData != null ? castingCharacter.metaData.animatorController : null;
 
-        GameObject executorGo = new GameObject("BackgroundUltimateExecutor_" + (castingCharacter.metaData != null ? castingCharacter.metaData.displayName : "Clone"));
-        executorGo.transform.position = playerCharacter.transform.position;
-        executorGo.transform.rotation = playerCharacter.transform.rotation;
-
-        BackgroundUltimateExecutor executor = executorGo.AddComponent<BackgroundUltimateExecutor>();
-        executor.Initialize(
+        BackgroundUltimateExecutor.Spawn(
+            playerCharacter.gameObject,
             currentStep,
             currentFrame,
             facing,
             stats,
-            sourceCombat != null ? sourceCombat.CurrentSourceAttack : stats != null ? stats.attack : 0f,
-            sourceCombat != null ? sourceCombat.CurrentActionDamageMultiplier : 0f,
-            sourceCombat != null ? sourceCombat.CurrentAuraEnergyReward : 0f,
-            sourceCombat != null ? sourceCombat.CurrentAuraEnergyRewardClaim : null,
-            sourceCombat != null ? sourceCombat.CurrentAdditionalDamageEffects : null,
             sourceCombat,
             castingCharacter,
-            sourceCombat != null ? sourceCombat.CurrentActionName : currentStep.stepName,
+            currentStep.stepName,
             currentSprite,
             animController);
     }

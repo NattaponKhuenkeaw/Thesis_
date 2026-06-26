@@ -15,7 +15,6 @@ namespace Project.UI
         private CanvasGroup canvasGroup;
         private Canvas rootCanvas;
         private IOrchestratedPanel activePanel;
-        private bool isOpen = false;
         private bool inputLockHeld = false;
         private bool previousOverrideSorting = false;
         private int previousSortingOrder = 0;
@@ -59,7 +58,6 @@ namespace Project.UI
             }
 
             activePanel = panel;
-            isOpen = true;
             OpenCanvasShell();
         }
 
@@ -68,7 +66,6 @@ namespace Project.UI
             if (activePanel == panel)
             {
                 activePanel = null;
-                isOpen = false;
 
                 RestoreCanvasSorting();
                 RestorePreviousActionMap();

@@ -12,8 +12,6 @@ public class TeamSwitchHUD : MonoBehaviour
     public GameObject slotPrefab;
 
     private List<CharacterSwitchSlot> activeSlots = new List<CharacterSwitchSlot>();
-    private int lastActiveIndex = -1;
-    private string lastTeamSignature = string.Empty;
 
     void Start()
     {
@@ -34,20 +32,10 @@ public class TeamSwitchHUD : MonoBehaviour
 
     void Update()
     {
-        if (teamLoader == null) return;
-
-        string currentTeamSignature = BuildTeamSignature();
-        if (currentTeamSignature != lastTeamSignature)
+        if (teamLoader != null)
         {
-            InitializeHUD();
+            RefreshAllSlotCooldown();
         }
-
-        if (teamLoader.CurrentIndex != lastActiveIndex)
-        {
-            UpdateActiveIndicator(teamLoader.CurrentIndex);
-        }
-
-        RefreshAllSlotCooldown();
     }
 
     private void CacheDependencies()
@@ -135,28 +123,10 @@ public class TeamSwitchHUD : MonoBehaviour
         }
     }
 
-    private string BuildTeamSignature()
-    {
-        if (teamLoader == null || teamLoader.team == null)
-            return string.Empty;
-
-        System.Text.StringBuilder builder = new System.Text.StringBuilder();
-        for (int i = 0; i < teamLoader.team.Length; i++)
-        {
-            CharacterObject character = teamLoader.team[i];
-            builder.Append(i).Append(':');
-            builder.Append(character != null ? character.GetInstanceID() : 0);
-            builder.Append('|');
-        }
-        return builder.ToString();
-    }
-
     // เปลี่ยนให้เป็น public เผื่อในอนาคตอยากสั่ง Refresh จากสคริปต์อื่นโดยตรง
     public void InitializeHUD()
     {
         if (teamLoader == null || teamLoader.team == null || slotContainer == null || slotPrefab == null) return;
-
-        lastTeamSignature = BuildTeamSignature();
 
         foreach (Transform child in slotContainer)
         {
@@ -249,8 +219,6 @@ public class TeamSwitchHUD : MonoBehaviour
 
     private void UpdateActiveIndicator(int activeIndex)
     {
-        lastActiveIndex = activeIndex;
-
         for (int i = 0; i < activeSlots.Count; i++)
         {
             bool isCurrentActive = activeSlots[i] != null && activeSlots[i].SlotIndex == activeIndex;

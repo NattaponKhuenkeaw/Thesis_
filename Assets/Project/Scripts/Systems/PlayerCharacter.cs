@@ -93,12 +93,7 @@ public class PlayerCharacter : MonoBehaviour
     // =========================================================
     // Public Methods
     // =========================================================
-    public void ApplyCharacterData()
-    {
-        ApplyCharacterData(null);
-    }
-
-    public void ApplyCharacterData(float? initialHp)
+    public void ApplyCharacterData(float? initialHp = null)
     {
         if (characterObject == null)
             return;

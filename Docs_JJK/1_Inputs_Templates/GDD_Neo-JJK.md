@@ -21,7 +21,7 @@ This Design aim for Casual Game with Low Floor. Low Ceiling. High Impact in Flas
 ---
 
 <!-- @tag:identity -->
-## Project Identity
+# Project Identity
 
 | Field | Direction |
 | --- | --- |
@@ -45,7 +45,6 @@ This Design aim for Casual Game with Low Floor. Low Ceiling. High Impact in Flas
 2. **Beat Them and Acquire Them**
    - **Defeat Bosses**: Defeating other players (bosses) in the Cursed Realm unlocks them as playable characters in your pool.
    - **Soul Shop**: Shop for selling what you get from previously run (like *Dead Cell*) such as Character, Artifact, Items etc and Purchase and recruit defeated players to build your team.
-   <img src="https://digitalchumps.com/wp-content/uploads/2024/01/Jin.gif?x96629" alt="Blazblue Entropy Effect Combat]" width="800">
 
 3. **Rogue-lite Mechanics**
    - **Soul System (Character Potential)**: Upgradable character progression that unlocks new combo routes, modifies passive loops, and changes skill utilities.
@@ -54,7 +53,7 @@ This Design aim for Casual Game with Low Floor. Low Ceiling. High Impact in Flas
 ---
 
 <!-- @tag:visual-audio -->
-## Visual, Mood, and Audio Direction
+# Visual, Mood, and Audio Direction
 
 ### Mood Board Keywords
 
@@ -92,7 +91,7 @@ Sound should make combat easy to read:
 ---
 
 <!-- @tag:platform-input -->
-## Platform and Input Philosophy
+# Platform and Input Philosophy
 
 ### Primary Rule
 
@@ -120,7 +119,7 @@ Sound should make combat easy to read:
 ---
 
 <!-- @tag:core-loop -->
-## Core Game Loop
+# Core Game Loop
 
 <img src="https://digitalchumps.com/wp-content/uploads/2024/01/Gorgeous-action-packed-battles.gif?x96629" alt="Blazblue Entropy Effect Combat]" width="800">
 
@@ -160,120 +159,7 @@ Players should fail because they mistimed dodges, stood in boss patterns, chose 
 ---
 
 <!-- @tag:combat -->
-## Combat Direction
-
-### Team-Combat Rules
-
-Team combat is **rotation-based**, not combo-driven.
-
-Characters are tools in a simple loop:
-
-- DPS stays active and deals most damage.
-- Buffer/support swaps in briefly.
-- Buffer/support spends skill or ultimate.
-- DPS returns to use stronger damage.
-
-**Role Classification**:
-
-- **Main DPS**: High on-field presence, executes core combos and sustained loops.
-- **Sub DPS**: Quick-swap burst, dumps Skills/Ultimates.
-- **Support**: Defensive utility (shields/heals) and team-wide offensive buffs.
-
-### Swap Rules
-
-Allowed:
-
-- **Team Swap Cancel** : When press Team Swap will clone another character into field with **Swap animation sequence** while the previous character will continue to execute their last action until end then disappear, the movement of the previous character will also be preserved and executed normally.
-- **Team Swap Inheritance** : the new character will Inheritance the last Input buffer of previous character to continue chaining.
-- **Optional** swap-in effect, such as small damage, shield, heal, buff, or particle burst depend on Character Passive or Artifact.
-
-<!-- @tag:combat-scope -->
-## Combat Scope and Removed Mechanics
-
-### Active Combat Model
-
-Neo-JJK combat is:
-
-- Fast-paced
-- Side-scrolling
-- Hack-and-slash
-- Skill cooldown based
-- Ultimate burst based
-- Team-rotation based
-- VFX-heavy
-- Simple to tune
-
-### Removed Entirely
-
-The following are not part of the active design:
-
-- Fighting-game DNA as a system goal
-- KOF / BlazBlue-style combo routing
-- Frame data rules
-- Frame advantage logic
-- Strict cancel policy
-- Link timing
-- Air attack systems
-- Plunge attack systems
-- Real knock-up juggle systems
-- Real knock-fall combo sessions
-- Complex hit reaction trees
-- Defensive/offensive stance micro loop
-- ZZZ-like Perfect Swap
-- Combo-driven character potential upgrades
-
-### Hit Reaction Policy
-
-Allowed:
-
-- Hit-stop
-- Short stagger
-- Knockback
-- Fake knock-up animation
-- Fake knockdown animation
-- Boss flinch VFX for feedback
-
-Not allowed:
-
-- Real juggle state machines
-- Extended airborne combo rules
-- Enemy launch physics as a core system
-- Boss stagger-lock loops
-- Combo counter requirements for damage
-
-Hit reactions should be presentation-first. If the player sees a knock-up, it can simply be an animation/VFX trick rather than a deep gameplay state.
-
----
-<!-- @tag:characters -->
-### Character Kit Design Principles
-
-Each character should stay small:
-
-| Kit Part | Budget |
-| --- | --- |
-| Basic Attack | 2-3 simple states/hits maximum |
-| Skill | 1 simple active skill |
-| Ultimate | 1 flashy high-impact action |
-| Passive | Simple stat/effect rule |
-| Swap Effect | Optional, simple, non-precision |
-
-Characters should feel different through:
-
-- Range
-- Cooldown
-- Area shape
-- Damage type
-- Buff/debuff role
-- VFX identity
-- Simple status effects
-
-Characters should not feel different through:
-
-- Long combo lists
-- Stance routing
-- Air routes
-- Frame advantage
-- Character-specific cancel rules
+# Combat Design
 
 ### Combat Action System
 
@@ -327,7 +213,6 @@ Remove any Character Lock position/gravity on Action (Except Dash/Jump) to preve
 - Legacy actions without a total damage budget continue to use each hitbox ratio directly.
 - Physical primary damage uses the Normal routine and Damage Mastery.
 - Non-physical primary damage uses the Elemental routine and Elemental Multiplier instead of Damage Mastery.
-- Skill and Ultimate primary damage also use Skill Mastery.
 - Normal and Elemental primary damage can critically hit.
 - Additional Damage from passives or artifacts is resolved as a separate damage event and cannot critically hit.
 - Melee hitboxes, projectiles, and background Ultimates use the same per-enemy damage and Aura Energy rules.
@@ -343,7 +228,6 @@ Remove any Character Lock position/gravity on Action (Except Dash/Jump) to preve
 - Changes active character.
 - May have cooldown if needed.
 - May trigger a simple swap effect.
-- Does not create perfect-swap gameplay.
 
 ### Buff / Debuff
 
@@ -351,69 +235,85 @@ Remove any Character Lock position/gravity on Action (Except Dash/Jump) to preve
 - Avoid stacking rules that need spreadsheets.
 - Make UI feedback readable.
 
-### Character Data
+### Elemental Reaction
 
-#### Character Stats
+> Inspiration by Zenless Zone Zero Anomaly System
+
+When Player encounter Enemy. all Enemy will have a gauge of each Elemental. when player attacking them with a specific elemental Damage, it will Increase the Gauge. After the specific gauge is filled will have a unique reaction of each Element.
+
+- **Elemental Gauge**: Nomrally Capped 100/100 of progressive bar, each enemy have Strong or Weak to specific Elemental meaning if enemy have Strong to Ash, the Ash Gauge is 150/150, if enemy have Weak to Ash, the Ash Gauge is 50/50.
+- **Enemy Elemental Gauge**: Base Gauge amount is 20% of their Max HP.
+- **Building up**: The rate of Increase depend on character's **Elemental Mastery**. Skill will do **100%** of **Base Damage×Elemental Multiplier** to Gauge, Basic Attack **50%** of **Base Damage×Elemental Multiplier** to Gauge, Ultimate will do **200%** of **Base Damage×Elemental Multiplier** to Gauge.
+- **DOT**: Some Element have DOT when apply. the DOT will also help Increase Elemental Gauge per tick. DOT will deal 30% of **Attacker's ATKxElemental Mastery%** (DOT doesn't Stack but Replace with Strongest one if they are same Element)
+- **Elemental Reaction**: Trigger when Enemy Elemental Gauge reach 100/100. Trigger a unique Element Effect and the Enemy take damage from specific Elemental Increase by 50% for 20 second.(then the gauge is reset)
+
+(P.S Each Elemental Gauge can be filled simultaneously)
+
+### Team-Combat Rules
+
+Team combat is **rotation-based**, not combo-driven.
+
+Characters are tools in a simple loop:
+
+- DPS stays active and deals most damage.
+- Buffer/support swaps in briefly.
+- Buffer/support spends skill or ultimate.
+- DPS returns to use stronger damage.
+
+**Role Classification**:
+
+- **Main DPS**: High on-field presence, executes core combos and sustained loops.
+- **Sub DPS**: Quick-swap burst, dumps Skills/Ultimates.
+- **Support**: Defensive utility (shields/heals) and team-wide offensive buffs.
+
+### Swap Rules
+
+- **Team Swap Cancel** : When press Team Swap will clone another character into field with **Swap animation sequence** while the previous character will continue to execute their last action until end then disappear, the movement of the previous character will also be preserved and executed normally.
+- **Team Swap Inheritance** : the new character will Inheritance the last Input buffer of previous character to continue chaining.
+- **Optional** swap-in effect, such as small damage, shield, heal, buff, or particle burst depend on Character Passive or Artifact.
+
+---
+
+<!-- @tag:characters -->
+# Character Design
+
+### Character Stats
 
 <img src="https://upload-os-bbs.hoyolab.com/upload/2025/01/28/13693861/d7cf74b844c6ff690f37810e2610c852_2399325505013166081.jpg?x-oss-process=image%2Fresize%2Cs_1000%2Fauto-orient%2C0%2Finterlace%2C1%2Fformat%2Cwebp%2Fquality%2Cq_70" alt="Wuthering Wave Combat]" width="800">
 
 | Stats | Value | Description |
 | --- | --- | --- |
-| ATK | 10 | Attack |
-| DEF | 10 | Defense |
-| HP | 100 | Health |
+| ATK | XX | Attack |
+| DEF | XX | Defense |
+| HP | XXX | Health |
 |SPD | X | Speed |
 | CDR | XX% | Cooldown Reduction Mastery |
 | CRIT | XX% | Critical Rate |
-| CRIT Dmg | XX% | Critical Damage |
-|DMG Mastery| XX% | Damage Mastery |
-|DMG Res| XX% | Damage Resistance |
-| Elemental Multiplier | X.XX | Multiplier used by non-physical Elemental damage instead of Damage Mastery |
-| Skill Mastery | XX% | Bonus applied to Skill and Ultimate primary damage |
-| Aura Energy Multiplier | X.XX | Multiplier applied to chance-based Aura Energy gains |
+| CRIT Dmg | XXX% | Critical Damage |
+| Elemental Multiplier | X.XX% | Multiplier used by Elemental damage |
+| Impact | X.XX% | Multiplier used for Ultimate |
+| Aura Energy Recharge(AE) | X.XX% | Multiplier on all Aura Energy recharge |
 
 Artifact bonuses are added to a character's base stats when the team is deployed. Runtime HP, movement speed, damage, cooldown calculations, Aura Energy, HUD values, projectiles, and background Ultimates read the resolved runtime stats.
 
+### Character Role
+
+<img src="https://media.discordapp.net/attachments/1508760327712669696/1508760328874492004/ca1.png?ex=6a35088d&is=6a33b70d&hm=42de706cd5fd8230f0d8891717d15cae5d622bffdf7ebb1fd81812bb50aa2720&=&format=webp&quality=lossless&width=1535&height=863" alt="Character Stats]" width="800">
+
+### Elemental Type
+
+![Elemental Type](https://media.discordapp.net/attachments/1515649413287247892/1515649413437980772/1.png?ex=6a350c03&is=6a33ba83&hm=7dbc4813f0d141149b66895d83b8193a02f3fc2a463e73b4b1e149c864ea706d&=&format=webp&quality=lossless&width=1536&height=864)
+
+| Type | Description | Have DOT? | Effect |
+| --- | --- | --- | --- |
+| Memory | The one who still clings to something and doesn't want to lose | No | Enemy will unable to react for 8 seconds. |
+| Echo | The one who is still searching for the meaning of something | No | When Elemental Reaction is removed, Deal Echo damage of that 20s accumulate damage / 2. |
+| Ash | The one who still has something left to do | Yes | Inflict Ash damage based on Enemy's lost HP (Capped 8% of Enemy's Max HP) once. |
+| Void | The one who tries to escape from something they don't want to face | Yes | Deal Explosive AOE Void damage of 150%ATK once. Enemy debuffed Confusion(attack randomly) for 15 seconds. if Enemy is Elite or Bosses, will decrease their Action Speed by 30% instead. |
+
 ---
 
-<!-- @tag:progression -->
-## Rogue-Lite Progression
-
-### Soul Shop System
-
-- **Shop Lore** : a opportunist devil that collect a dead soul on Cursed Realm and sell for high price.
-- **Shop Rule** : The Soul Shop act as a safe haven for players. It is the only place where players can change, replace, or purchase their loadout (Character/Artifact) before venturing into the next Cursed Realm.  
-- **Shop Environment** : A Whole Scene-Fixed Camera-Walkable-Background UI-driven rather than Overlay UI (Like Blazblue Entropy Effect). Player can walk Right off-screen to leave the Shop Scene.
-- **Shop Algorithm**: The shop algorithm will randomize items on an Item Zone on the floor. It uses the pool of characters and artifacts the player has unlocked. When a player walks into an Item Zone, it shows Information / Price / Icon on the background layer. Player can press Click to Buy. All Item Zones are One-Time buy per shop entered. If the Artifact or Character that the player already owns populates as an Item Zone, it will become a Fragment (an Item for Upgrade) instead.
-- **Shop Reroll**: Player can Reroll shop Items but the new Item price will increase exponentially every time you reroll.
-- **Sell Zone**: There is a Sell Zone that connects to the Player Inventory (Backpack System UI) where players can sell items for a cheap price.
-- **Duplicate Progression Target**: Reacquiring an owned Character advances its permanent Potential path. Reacquiring an owned Artifact during a run converts the duplicate into that Artifact's Fragment for Transcendence.
-- **Current Implementation Note**: One-time ownership filtering still treats owned Characters and Artifacts as sold out. Duplicate conversion is not implemented yet. Consumable Items remain repeatable purchases.
-
-### Team Builder & Team Lookup Flow
-
-- **Safe Zone Rule**: Character Inspector / Backpack / TeamBuilder are ONLY accessible in Safe Zones (e.g. Shop Room). In Combat-Zones, their UI will disappear to improve player focus on exploration & combat. In Combat-Zone, only "Team Lookup" is available to view the team without modification.
-- **TeamLookup / TeamBuilder** is a UI-Slot Team of 3 containing 3 Artifacts individually. It operates as a Grid-Box (Standard-Gacha Team Roster) accessible via UI Icon or TAB key.
-- It aims for easy Lookup, Summarization, and modification of the current Build and Team. It displays Overall Information (Stats / Role / Character Basic Data like Name, Role, Element, Level, Potential, Equipment) with an Artifact Preview Window on Mouse Raycast to improve QOL.
-- To Deploy Character/Artifact, the player clicks on the desired TeamSlot, bringing up the Character Inventory.
-- Character Inventory consists of Grid-Like CharItems (Element, Level, and an "In-Team" text if already deployed). It features a Character Switch preview (current char in this slot -> selected char to that slot).
-- **Drag & Drop** only works on the TeamSlotUI. Dragging causes the screen to fade to translucent black, highlighting available drop spots. (CharacterGridItem uses click-to-switch per slot, but characters in the TeamSlotUI are draggable).
-- Only when entering TeamBuilder Mode (Safe Zone) can players Drag&Drop or Change Character/Artifact. The player must click **Deploy (Save)** for changes to be applied.
-- In Combat Zone mode, loadout editing is locked while Team Lookup remains available.
-
-### Utility Resource
-
-| Entity | Description | Rogue-lite Reset |
-| --- | --- | --- |
-|Currency | The In-Game Utility Currency for **Soul Shop** | Lose |
-| Soul Fragment | The Currency of the game can only acquire by defeating the Elite/Boss enemy on the Cursed Realm Run. | Retain |
-| Character | The Characters that can use in the game. | Lose but retain the upgrade |
-| Artifact | Equipment assigned to character loadouts. | Lose on run failure; permanent Transcendence is retained. Current implementation still retains ownership. |
-| EXP Potion | Consumable Character EXP used only from Character Inspector. | Lose |
-| Artifact Fragment | Artifact-specific duplicate material used for Transcendence. | Persistence on run loss is TBD |
-| Items | The consumable items that can use during the Cursed Realm runs. | Lose |
-
-P.S Lose but retain Upgrade mean you lose that Item/Character/Artifact if you die in Cursed Realm Run but if you able to buy again, they will come with latest of your unlocked upgrade(e.g Instead of new Fresh Potential Lv.0 they come with Potential Lv.5 and Artifacts also the same rule.)
+![Character Level System](https://www.gameuidatabase.com/uploads/Genshin-Impact01032021-021309-52226.jpg)
 
 ### Character Level System
 
@@ -428,6 +328,35 @@ Character Level is run-scoped growth for each acquired character. It is separate
 - EXP Potions are consumed only through the Character Level System UI.
 - When current EXP reaches or exceeds the current level EXP cap, the character levels up. Excess EXP carries into the next level.
 - Leveling increases only the character's basic **ATK, DEF, and Max HP**.
+
+---
+
+### Character Potential System
+
+![Character Potential Rule](https://static.wikia.nocookie.net/gensin-impact/images/3/3f/Constellation_Menu.png/revision/latest?cb=20220411014019)
+
+#### Permanent Potential Upgrade
+
+- it represent a system like Constellation or Aetherium Core in Honkai Star Rail. this will use to permanent upgrade that character.
+- Seperate into 3 Main Node (Skill / Ultimate / Passive). with **4/4** nodes each.
+- Potential upgrade only acquired when you buy that character from Soul Shop again.
+- Max upgrade is 1/6 step
+
+### Reward Categories
+
+| Reward Type | Role | Intended Effect |
+| --- | --- | --- |
+| Stat Boost | Simple power growth | Increase damage, health, crit, defense, speed, or cooldown efficiency. |
+| Skill Modifier | Light build identity | Change area, projectile count, duration, or status chance. |
+| Team Modifier | Rotation support | Improve buffs, swap effects, energy gain, or support uptime. |
+| Survival Modifier | Forgiveness | Add shield, heal, damage reduction, revive, or hazard resistance. |
+| Economy Modifier | Run pacing | Increase currency, reward choices, rerolls, or upgrade quality. |
+
+---
+
+<!-- @tag: ui -->
+
+# UX/UI Design
 
 ### Character Inspector System
 
@@ -451,86 +380,54 @@ Character Level is run-scoped growth for each acquired character. It is separate
 - **Character Items**: Characters are NOT considered InventoryItems and won't show in the Backpack. Only Character Dupes (Soul Fragments) are considered Items.
 - **ItemPreview**: A simple preview window showing the item Icon and text description.
 
-### Character Potential Rule
+### Team Builder & Team Lookup Flow
 
-![Character Potential Rule](https://static.wikia.nocookie.net/gensin-impact/images/3/3f/Constellation_Menu.png/revision/latest?cb=20220411014019)
+- **Safe Zone Rule**: Character Inspector / Backpack / TeamBuilder are ONLY accessible in Safe Zones (e.g. Shop Room). In Combat-Zones, their UI will disappear to improve player focus on exploration & combat. In Combat-Zone, only "Team Lookup" is available to view the team without modification.
+- **TeamLookup / TeamBuilder** is a UI-Slot Team of 3 containing 3 Artifacts individually. It operates as a Grid-Box (Standard-Gacha Team Roster) accessible via UI Icon or TAB key.
+- It aims for easy Lookup, Summarization, and modification of the current Build and Team. It displays Overall Information (Stats / Role / Character Basic Data like Name, Role, Element, Level, Potential, Equipment) with an Artifact Preview Window on Mouse Raycast to improve QOL.
+- To Deploy Character/Artifact, the player clicks on the desired TeamSlot, bringing up the Character Inventory.
+- Character Inventory consists of Grid-Like CharItems (Element, Level, and an "In-Team" text if already deployed). It features a Character Switch preview (current char in this slot -> selected char to that slot).
+- **Drag & Drop** only works on the TeamSlotUI. Dragging causes the screen to fade to translucent black, highlighting available drop spots. (CharacterGridItem uses click-to-switch per slot, but characters in the TeamSlotUI are draggable).
+- Only when entering TeamBuilder Mode (Safe Zone) can players Drag&Drop or Change Character/Artifact. The player must click **Deploy (Save)** for changes to be applied.
+- In Combat Zone mode, loadout editing is locked while Team Lookup remains available.
 
-#### Permanent Potential Upgrade
+---
 
-- it represent a system like Constellation or Aetherium Core in Honkai Star Rail. this will use to permanent upgrade that character. Linear path no seperation, each upgrade will always benefit to the character in a different way.
-- Potential upgrade only acquired when you buy that character from Soul Shop again, the price will increase every time you upgrade.
-- Max upgrade is 1/6 step
+<!-- @tag:progression -->
+# Rogue-Lite Progression
 
-#### Potential can
+   <img src="https://digitalchumps.com/wp-content/uploads/2024/01/Jin.gif?x96629" alt="Blazblue Entropy Effect Combat]" width="800">
 
-- Increase stats
-- Increase effect strength
-- Reduce cooldown
-- Increase skill area
-- Add a simple projectile
-- Add a simple status chance
-- Improve shield/heal/buff value
-- Improve ultimate charge or damage
+### Soul Shop System
 
-#### Potential must not
+- **Shop Lore** : a opportunist devil that collect a dead soul on Cursed Realm and sell for high price.
+- **Shop Rule** : The Soul Shop act as a safe haven for players. It is the only place where players can change, replace, or purchase their loadout (Character/Artifact) before venturing into the next Cursed Realm.  
+- **Shop Environment** : A Whole Scene-Fixed Camera-Walkable-Background UI-driven rather than Overlay UI (Like Blazblue Entropy Effect). Player can walk Right off-screen to leave the Shop Scene.
+- **Shop Algorithm**: The shop algorithm will randomize items on an Item Zone on the floor. It uses the pool of characters and artifacts the player has unlocked. When a player walks into an Item Zone, it shows Information / Price / Icon on the background layer. Player can press Click to Buy. All Item Zones are One-Time buy per shop entered. If the Artifact or Character that the player already owns populates as an Item Zone, it will become a Fragment (an Item for Upgrade) instead.
+- **Shop Reroll**: Player can Reroll shop Items but the new Item price will increase exponentially every time you reroll.
+- **Sell Zone**: There is a Sell Zone that connects to the Player Inventory (Backpack System UI) where players can sell items for a cheap price.
+- **Duplicate Progression Target**: Reacquiring an owned Character advances its permanent Potential path. Reacquiring an owned Artifact during a run converts the duplicate into that Artifact's Fragment for Transcendence.
+- **Current Implementation Note**: One-time ownership filtering still treats owned Characters and Artifacts as sold out. Duplicate conversion is not implemented yet. Consumable Items remain repeatable purchases.
 
-- Add new combo routes
-- Add new cancel rules
-- Add new air actions
-- Add new input strings
-- Change the character into a complex fighting-game kit
+### Utility Resource
 
-### Upgrade Design Rules
-
-Good upgrade examples:
-
-- Basic attack damage +15%
-- Skill cooldown -10%
-- Ultimate damage +20%
-- Dash leaves a small damage trail
-- Buff duration +2 seconds
-- Skill area becomes wider
-- First hit after swap deals bonus damage
-- Gain shield when using ultimate
-
-Bad upgrade examples:
-
-- Unlock an extra launcher branch
-- Enable jump cancel after hit 2
-- Add a perfect-swap counter route
-- Add frame advantage bonuses
-- Add combo-only damage scaling
-- Require a strict input sequence
-
-### Reward Categories
-
-| Reward Type | Role | Intended Effect |
+| Entity | Description | Rogue-lite Reset |
 | --- | --- | --- |
-| Stat Boost | Simple power growth | Increase damage, health, crit, defense, speed, or cooldown efficiency. |
-| Skill Modifier | Light build identity | Change area, projectile count, duration, or status chance. |
-| Team Modifier | Rotation support | Improve buffs, swap effects, energy gain, or support uptime. |
-| Survival Modifier | Forgiveness | Add shield, heal, damage reduction, revive, or hazard resistance. |
-| Economy Modifier | Run pacing | Increase currency, reward choices, rerolls, or upgrade quality. |
+|Currency | The In-Game Utility Currency for **Soul Shop** | Lose |
+| Character | The Characters that can use in the game. | Lose but upgraded are retain |
+| Artifact | Equipment assigned to character loadouts. | Lose but upgraded are retain |
+| EXP Potion | Consumable Character EXP used only from Character Inspector. | Lose |
+| Fragment | Fragment-specific duplicate material used for Transcendence or Potential. | Retain |
+| Items | The consumable items that can use during the Cursed Realm runs. | Lose |
+
+P.S Lose but retain Upgrade mean you lose that Item/Character/Artifact if you die in Cursed Realm Run but if you able to buy again, they will come with latest of your unlocked upgrade(e.g Instead of new Fresh Potential Lv.0 they come with Potential Lv.5 and Artifacts also the same rule.)
 
 ---
 
 <!-- @tag:items -->
-## Canonical Gameplay Content - Items and Upgrades
+## In-Game Items
 
-Items should be understandable in one sentence. Avoid hidden formulas and combo conditions.
-
-### Charm Types
-
-| Item / Upgrade Type | Role | Intended Effect |
-| --- | --- | --- |
-| Damage Charm | DPS scaling | Increase basic, skill, or ultimate damage. |
-| Cooldown Charm | Skill uptime | Reduce cooldowns or refund cooldown after room clear. |
-| Shield Charm | Survival | Give shield on swap, skill use, or boss phase transition. |
-| Burst Charm | Ultimate support | Increase ultimate damage or energy gain. |
-| Status Charm | Simple synergy | Add burn, slow, bleed, curse, or other straightforward status effects. |
-| Reward Charm | Rogue-lite pacing | Add rerolls, extra choices, or increased currency. |
-
-### Cursed Realm Artifacts
+### Artifacts
 
 Artifacts are equipment that can be assigned to a character before deployment.
 Each character has three Artifact slots. Equipped Artifact `bonusStats` are
@@ -613,7 +510,7 @@ These speculative Artifacts remain part of the design direction. They are not cl
 ---
 
 <!-- @tag:enemies -->
-## Canonical Gameplay Content - Enemies and Threats
+## In-Game Enemies and Threats
 
 ### Trash Enemy
 
@@ -705,8 +602,6 @@ They should feel closer to **generic 2D action bosses**:
 - Short punish windows
 - High VFX spectacle
 
-Hollow Knight is a better boss reference than KOF, BlazBlue, or ZZZ.
-
 ### Boss Rules
 
 Bosses should:
@@ -717,15 +612,6 @@ Bosses should:
 - Use projectile or pattern pressure.
 - Force dodging and repositioning.
 - Give obvious openings after major attacks.
-
-Bosses should not:
-
-- Be combo dummies.
-- Be thrown or grabbed.
-- Be launched into extended air combos.
-- Require perfect swap reactions.
-- Require frame-trap knowledge.
-- Depend on player combo optimization to be fun.
 
 ### Boss Encounter Loop
 
@@ -739,7 +625,7 @@ Bosses should not:
 ---
 
 <!-- @tag:inspirations -->
-## Inspirations and Design Boundaries
+# Inspirations and Design Boundaries
 
 ### Primary Inspirations
 
@@ -778,7 +664,6 @@ Bosses should not:
 | VFX | VFX Graph 17.x + Shader Graph 17.x |
 | Level Tools | ProBuilder 6.x |
 | AI | Unity Behavior Graph (enemy FSM nodes) |
-| Networking | None — single-player |
 | Version Control | Git + GitHub |
 | CI | GitHub Actions (stub) |
 | Testing | Unity Test Framework 1.x (0 % coverage) |
@@ -855,15 +740,6 @@ Assets/Project/Scripts/
 └── UI/              # PlayerHUD, SkillTreeUI, EnemyWorldUI, InputLockManager
 ```
 
-### Implementation Bias
-
-- Data-driven character definitions via ScriptableObject.
-- Cooldown timers over complex combo states.
-- Stat modifier lists over custom upgrade logic.
-- Simple enemy state machines via Behavior Graph.
-- Clear VFX hooks through existing feedback pipeline.
-- Minimal inheritance, minimal global manager growth.
-
 ---
 
 <!-- @tag:prototype-truth -->
@@ -885,28 +761,6 @@ Assets/Project/Scripts/
 | UI (10 scripts) | PlayerHUD, SkillTreeUI, EnemyWorldUI, TeamSwitchHUD | **Keep** — update for simplified combat |
 | Parallax (3 scripts) | Background parallax scrolling | **Keep** — fits 2D side-scrolling |
 | Editor Tools (9 scripts) | Animation editor, projectile editor, action tree controller | **Keep** — retain good infrastructure, adapt logic for simpler needs |
-
-### Fighting-Game DNA — Removal Targets
-
-| System | Scripts | Why Remove |
-|--------|---------|------------|
-| Branching Combo Trees | `ComboNode`, `ComboRoute` | Neo uses 2-3 hit BA loops (adapt ActionResolver logic instead of removing) |
-| Frame-data precision | `FrameDataPlayerState`, `ActionFrameData` | Neo uses simple phases, not 60 fps tick logic |
-| Grab / throw sessions | `ThrowContext`, grab logic in `HitBoxDamage` | Retained as useful tool for future development (do not strip) |
-| Complex air routing | `PlayerAirAttackState` | Shift to FSM ground <-> air overriding and simple gravity policy |
-| Combo conditions | `DirectionActionCondition`, `GroundedActionCondition` | No conditional branching |
-| Complex hit reactions | `ReactionResolver`, `ReactionRuleTable` | Neo uses hit-stop + knockback only |
-| Trigger windows | `TriggerWindow` in combo routing | No timing-window mechanics |
-
-### Prototype Debt
-
-- `PlayerCombat.cs` (48 KB) — needs decomposition into simple attack executor.
-- `CombatPlayerState.cs` (32 KB) — frame-data shared logic needs simplification.
-- `CameraManager.cs` (871 lines) — over-featured for Neo needs.
-- Filename / class mismatches: `PlayerInputHandler.cs` → `InputHandler_Player`, `AnimetionEventRelay.cs` → `AnimationEventRelay`.
-- Debug shortcuts (number keys) bypass skill progression in `PlayerInputHandler.cs`.
-- Static `InputLockManager` can permanently lock input on panel close failure.
-- 0 % test coverage.
 
 ### What Works Well
 
@@ -998,57 +852,6 @@ Do not dump all future gameplay into one global script just because it is faster
 - `UpgradeDefinition` - reward text, stat modifiers, simple triggered effects.
 - `EnemyDefinition` - health, movement, attack list, reward value.
 - `BossPatternDefinition` - telegraph, attack shape, projectile/area pattern, recovery.
-
-### Avoid Overbuilding
-
-Do not create:
-
-- Full fighting-game frame data tables.
-- Deep combo scripting languages.
-- Advanced cancel graphs.
-- Real-time character action editors.
-- Custom physics juggle stacks.
-- Perfect-swap state machines.
-
----
-
-<!-- @tag:guardrails -->
-## Contributor Guardrails
-
-### Preserve These Non-Negotiables
-
-- Neo-JJK is a **2D side-scrolling action hack-and-slash rogue-lite**.
-- Combat is **rotation-based**, not combo-driven.
-- Team swap is simple character swapping, not Perfect Swap.
-- Character kits are small.
-- Upgrades increase stats/effects, not moveset complexity.
-- Bosses are pattern-based action bosses, not fighting-game opponents.
-- Low development effort is a design requirement.
-
-### You May Refactor Aggressively
-
-- Old combo assumptions.
-- Fighting-game terminology in future specs.
-- Perfect-swap planning.
-- Character potential that expands movesets.
-- Complex defensive/offensive loop descriptions.
-
-### Do Not Do These
-
-> See `@tag:combat-scope` for the full removed-mechanics list. Summary:
-
-- No frame-data rules, air / plunge combat, real juggle, complex cancel logic, ZZZ-like swap timing.
-- No bosses as stagger-lockable combo targets.
-- No upgrades requiring combo mastery.
-
-### AI Safety Rule
-
-Every future implementation must clearly separate:
-
-- **Current implementation truth**, confirmed by inspected files.
-- **Target design direction**, defined by this Neo GDD.
-
-Do not hallucinate completed architecture, engine details, scene names, or implemented systems.
 
 ---
 

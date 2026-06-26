@@ -65,15 +65,7 @@ public class EnemyWorldUI : MonoBehaviour
     private Color critDamageTextBaseColor = Color.white;
     private Vector3 baseLocalScale = Vector3.one;
 
-    [Header("Elemental Colors")]
-    [SerializeField] private Color physicalColor = Color.white;
-    [SerializeField] private Color fireColor = new Color(1f, 0.27f, 0f);      // OrangeRed
-    [SerializeField] private Color waterColor = new Color(0f, 0.75f, 1f);     // DeepSkyBlue
-    [SerializeField] private Color iceColor = new Color(0.88f, 1f, 1f);       // Cyan-ish
-    [SerializeField] private Color electroColor = new Color(0.85f, 0.44f, 0.84f); // Orchid/Purple
-    [SerializeField] private Color windColor = new Color(0.94f, 1f, 0.94f);   // Mint/Teal
-    [SerializeField] private Color rockColor = new Color(0.96f, 0.64f, 0.38f); // SandyBrown
-    [SerializeField] private Color natureColor = new Color(0.2f, 0.8f, 0.2f);   // LimeGreen
+
 
     private void Reset()
     {
@@ -230,7 +222,7 @@ public class EnemyWorldUI : MonoBehaviour
     private void HandleDamaged(HitReactionData data)
     {
         UpdateHealthBar();
-        ShowDamageText(data.damage, data.impactTier, data.damageType, data.isCriticalHit);
+        ShowDamageText(data.damage, data.impactTier, data.elementType, data.isCriticalHit);
     }
 
     private void HandleDied()
@@ -320,7 +312,7 @@ public class EnemyWorldUI : MonoBehaviour
         attackWarningCoroutine = null;
     }
 
-    private void ShowDamageText(float damage, DamageImpactTier impactTier, DamageType damageType, bool isCriticalHit)
+    private void ShowDamageText(float damage, DamageImpactTier impactTier, ElementType elementType, bool isCriticalHit)
     {
         if (damage <= 1f) return;
 
@@ -347,17 +339,12 @@ public class EnemyWorldUI : MonoBehaviour
         };
 
         // --- Elemental Color ---
-        Color elementColor = damageType switch
+        Color elementColor = Color.white;
+        var db = ElementDatabase.Load();
+        if (db != null)
         {
-            DamageType.Fire    => fireColor,
-            DamageType.Water   => waterColor,
-            DamageType.Ice     => iceColor,
-            DamageType.Electro => electroColor,
-            DamageType.Wind    => windColor,
-            DamageType.Rock    => rockColor,
-            DamageType.Nature  => natureColor,
-            _                  => physicalColor
-        };
+            elementColor = db.GetDamageColor(elementType);
+        }
 
         if (isCriticalHit)
         {

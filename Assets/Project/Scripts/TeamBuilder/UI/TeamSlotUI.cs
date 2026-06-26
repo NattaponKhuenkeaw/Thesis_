@@ -12,7 +12,7 @@ namespace Project.TeamBuilder.UI
     /// <summary>
     /// Individual team slot that supports safe-zone editing and combat-zone inspection.
     /// </summary>
-    public class TeamSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
+    public class TeamSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler, IPointerDownHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         [Header("Character Display")]
         [SerializeField] private Image profileImage;
@@ -40,7 +40,6 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private GameObject padlockOverlay;
         [SerializeField] private AudioSource uiAudioSource;
         [SerializeField] private AudioClip lockedActionSfx;
-        [SerializeField] private float inspectHoldDuration = 0.45f;
         [SerializeField] private float lockedWiggleDuration = 0.25f;
         [SerializeField] private float lockedWiggleDistance = 8f;
         [SerializeField] private float padlockPulseScale = 1.15f;
@@ -63,12 +62,11 @@ namespace Project.TeamBuilder.UI
         private RectTransform rectTransform;
         private Transform dragGhost;
         private Vector2 baseAnchoredPosition;
-        private Coroutine lockFeedbackCoroutine;
-        private Coroutine inspectHoldCoroutine;
+        private UIFeedbackDriver feedbackDriver;
+
         private Coroutine atkFeedbackCoroutine;
         private Coroutine defFeedbackCoroutine;
         private Coroutine hpFeedbackCoroutine;
-        private UIFeedbackDriver feedbackDriver;
         private float lastAttackBase;
         private float lastAttackBonus;
         private float lastDefenseBase;
@@ -258,6 +256,7 @@ namespace Project.TeamBuilder.UI
                 if (atkText != null) atkText.text = string.Empty;
                 if (defText != null) defText.text = string.Empty;
                 if (hpText != null) hpText.text = string.Empty;
+                hasStatSnapshot = false;
                 return;
             }
 
@@ -344,33 +343,15 @@ namespace Project.TeamBuilder.UI
 
         public void OnPointerDown(PointerEventData eventData)
         {
-            if (currentCharacter == null || parentBuilder == null)
+            if (currentCharacter == null || parentBuilder == null) return;
+            if (parentBuilder.CurrentMode == ZoneMode.CombatZone)
             {
-                return;
+                PlayLockedFeedback();
             }
-
-            if (parentBuilder.CurrentMode != ZoneMode.CombatZone)
-            {
-                return;
-            }
-
-            CancelInspectHold();
-            inspectHoldCoroutine = StartCoroutine(InspectHoldRoutine());
-        }
-
-        public void OnPointerUp(PointerEventData eventData)
-        {
-            CancelInspectHold();
-        }
-
-        public void OnPointerExit(PointerEventData eventData)
-        {
-            CancelInspectHold();
         }
 
         public void OnBeginDrag(PointerEventData eventData)
         {
-            CancelInspectHold();
 
             if (parentBuilder != null && parentBuilder.CurrentMode == ZoneMode.CombatZone)
             {
@@ -542,13 +523,11 @@ namespace Project.TeamBuilder.UI
 
         private void OnDisable()
         {
-            CancelInspectHold();
             ResetDragState();
         }
 
         private void OnDestroy()
         {
-            CancelInspectHold();
             ResetDragState();
         }
 
@@ -597,11 +576,6 @@ namespace Project.TeamBuilder.UI
 
         private void PlayLockedFeedback()
         {
-            if (lockFeedbackCoroutine != null)
-            {
-                StopCoroutine(lockFeedbackCoroutine);
-            }
-
             if (uiAudioSource != null && lockedActionSfx != null)
             {
                 uiAudioSource.PlayOneShot(lockedActionSfx);
@@ -620,85 +594,48 @@ namespace Project.TeamBuilder.UI
                 {
                     feedbackDriver.PlayFlash(lockGraphic, new Color(1f, 0.2f, 0.2f, lockGraphic.color.a), lockedWiggleDuration);
                 }
-
-                return;
             }
-
-            lockFeedbackCoroutine = StartCoroutine(PlayLockedFeedbackRoutine());
         }
 
         private void PlayPlacementFeedback()
         {
             feedbackDriver = feedbackDriver != null ? feedbackDriver : UIFeedbackDriver.GetOrAdd(gameObject);
-            if (feedbackDriver == null || rectTransform == null)
+            if (feedbackDriver != null && rectTransform != null)
+            {
+                feedbackDriver.PlayPulse(rectTransform, 1.08f, 0.12f);
+                feedbackDriver.PlayRadialBurst(rectTransform, placementBurstColor, 8, 34f, 0.12f);
+            }
+        }
+
+        private static string FormatStatValue(float baseValue, float bonusValue, string statName)
+        {
+            return StatFormatHelper.Format(baseValue, bonusValue, statName, true);
+        }
+
+        private static void ApplyArtifactBonus(
+            CharacterStats effectiveStats,
+            CharacterStats baseStats,
+            CharacterStats bonusStats)
+        {
+            if (effectiveStats == null || bonusStats == null)
             {
                 return;
             }
 
-            feedbackDriver.PlayPulse(rectTransform, 1.08f, 0.12f);
-            feedbackDriver.PlayRadialBurst(rectTransform, placementBurstColor, 8, 34f, 0.12f);
-        }
-
-        private IEnumerator InspectHoldRoutine()
-        {
-            float elapsed = 0f;
-            float requiredDuration = Mathf.Max(0.05f, inspectHoldDuration);
-
-            while (elapsed < requiredDuration)
+            if (baseStats != null)
             {
-                elapsed += Time.unscaledDeltaTime;
-                yield return null;
+                effectiveStats.maxHP += baseStats.maxHP * (bonusStats.maxHP / 100f);
+                effectiveStats.attack += baseStats.attack * (bonusStats.attack / 100f);
+                effectiveStats.defense += baseStats.defense * (bonusStats.defense / 100f);
             }
 
-            inspectHoldCoroutine = null;
-            PlayLockedFeedback();
-        }
-
-        private void CancelInspectHold()
-        {
-            if (inspectHoldCoroutine == null)
-            {
-                return;
-            }
-
-            StopCoroutine(inspectHoldCoroutine);
-            inspectHoldCoroutine = null;
-        }
-
-        private IEnumerator PlayLockedFeedbackRoutine()
-        {
-            if (rectTransform == null)
-            {
-                yield break;
-            }
-
-            Vector3 originalPadlockScale = padlockOverlay != null ? padlockOverlay.transform.localScale : Vector3.one;
-            float elapsed = 0f;
-
-            while (elapsed < lockedWiggleDuration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                float normalized = Mathf.Clamp01(elapsed / lockedWiggleDuration);
-                float damping = 1f - normalized;
-                float wiggle = Mathf.Sin(normalized * Mathf.PI * 6f) * lockedWiggleDistance * damping;
-                rectTransform.anchoredPosition = baseAnchoredPosition + new Vector2(wiggle, 0f);
-
-                if (padlockOverlay != null)
-                {
-                    float pulse = Mathf.Lerp(1f, padlockPulseScale, Mathf.Sin(normalized * Mathf.PI));
-                    padlockOverlay.transform.localScale = Vector3.one * pulse;
-                }
-
-                yield return null;
-            }
-
-            rectTransform.anchoredPosition = baseAnchoredPosition;
-            if (padlockOverlay != null)
-            {
-                padlockOverlay.transform.localScale = originalPadlockScale;
-            }
-
-            lockFeedbackCoroutine = null;
+            effectiveStats.speed += bonusStats.speed;
+            effectiveStats.elementalMastery += bonusStats.elementalMastery;
+            effectiveStats.critRate += bonusStats.critRate;
+            effectiveStats.critDamage += bonusStats.critDamage;
+            effectiveStats.cooldownRate += bonusStats.cooldownRate;
+            effectiveStats.impact += bonusStats.impact;
+            effectiveStats.aeRecharge += bonusStats.aeRecharge;
         }
 
         private void UpdateStatFeedback(
@@ -792,11 +729,6 @@ namespace Project.TeamBuilder.UI
             targetText.transform.localScale = Vector3.one;
         }
 
-        private static string FormatStatValue(float baseValue, float bonusValue, string statName)
-        {
-            return StatFormatHelper.Format(baseValue, bonusValue, statName, false);
-        }
-
         private void PlayOverallStatFeedback(bool isUpgrade)
         {
             feedbackDriver = feedbackDriver != null ? feedbackDriver : UIFeedbackDriver.GetOrAdd(gameObject);
@@ -817,32 +749,6 @@ namespace Project.TeamBuilder.UI
                 float cardPulseScale = Mathf.Lerp(1f, statFeedbackScale, 0.45f);
                 feedbackDriver.PlayPulse(rectTransform, cardPulseScale, statFeedbackDuration);
             }
-        }
-
-        private static void ApplyArtifactBonus(
-            CharacterStats effectiveStats,
-            CharacterStats baseStats,
-            CharacterStats bonusStats)
-        {
-            if (effectiveStats == null || bonusStats == null)
-            {
-                return;
-            }
-
-            if (baseStats != null)
-            {
-                effectiveStats.maxHP += baseStats.maxHP * (bonusStats.maxHP / 100f);
-                effectiveStats.attack += baseStats.attack * (bonusStats.attack / 100f);
-                effectiveStats.defense += baseStats.defense * (bonusStats.defense / 100f);
-            }
-
-            effectiveStats.speed += bonusStats.speed;
-            effectiveStats.elementalMastery += bonusStats.elementalMastery;
-            effectiveStats.critRate += bonusStats.critRate;
-            effectiveStats.critDamage += bonusStats.critDamage;
-            effectiveStats.cooldownRate += bonusStats.cooldownRate;
-            effectiveStats.impact += bonusStats.impact;
-            effectiveStats.aeRecharge += bonusStats.aeRecharge;
         }
 
         private static float CalculateStatTrend(CharacterStats previous, CharacterStats next)

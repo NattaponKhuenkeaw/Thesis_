@@ -387,10 +387,10 @@ namespace CombatEditor.UI
                     phaseData.hitbox.activeFrames = value;
                     MarkDirty();
                 });
-                AddEnumField(parent, "Damage Type", phaseData.hitbox.damageType, value =>
+                AddEnumField(parent, "Element Type", phaseData.hitbox.elementType, value =>
                 {
-                    RecordUndo($"Edit {undoPrefix} Damage Type");
-                    phaseData.hitbox.damageType = (DamageType)value;
+                    RecordUndo($"Edit {undoPrefix} Element Type");
+                    phaseData.hitbox.elementType = (ElementType)value;
                     MarkDirty();
                 });
                 AddColorField(parent, "Debug Color", phaseData.hitbox.debugColor, value =>
@@ -1869,10 +1869,10 @@ namespace CombatEditor.UI
                     hitbox.debugColor = value;
                     MarkDirty();
                 });
-                AddEnumField(inner, "Damage Type", hitbox.damageType, value =>
+                AddEnumField(inner, "Element Type", hitbox.elementType, value =>
                 {
-                    RecordUndo("Edit Damage Type");
-                    hitbox.damageType = (DamageType)value;
+                    RecordUndo("Edit Element Type");
+                    hitbox.elementType = (ElementType)value;
                     MarkDirty();
                 });
 

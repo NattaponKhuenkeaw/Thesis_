@@ -28,11 +28,11 @@ public class PlayerAudio : MonoBehaviour
 
         if (data == null)
         {
-            Debug.LogWarning($"[PlayerAudio] Initializing for {player.name} but audioData is NULL! Check if the CharacterObject has an AudioData assigned.");
+            //Debug.LogWarning($"[PlayerAudio] Initializing for {player.name} but audioData is NULL! Check if the CharacterObject has an AudioData assigned.");
         }
         else
         {
-            Debug.Log($"[PlayerAudio] Initializing for {player.name} with audioData: {data.name}");
+            //Debug.Log($"[PlayerAudio] Initializing for {player.name} with audioData: {data.name}");
         }
 
         if (player.StateMachine != null)
@@ -67,14 +67,14 @@ public class PlayerAudio : MonoBehaviour
     {
         if (audioData == null)
         {
-            Debug.LogWarning($"[PlayerAudio] HandleStateChanged ignored: audioData is NULL for {player.name}");
+            //Debug.LogWarning($"[PlayerAudio] HandleStateChanged ignored: audioData is NULL for {player.name}");
             return;
         }
 
         currentStateId = newState;
         var mapping = audioData.GetMapping(newState);
         
-        Debug.Log($"[PlayerAudio] State Change: {prevState} -> {newState}. Mapping found: {mapping != null} (Count in list: {audioData.mappings.Count})");
+        //Debug.Log($"[PlayerAudio] State Change: {prevState} -> {newState}. Mapping found: {mapping != null} (Count in list: {audioData.mappings.Count})");
 
         // Stop previous looping sounds if they shouldn't continue
         // (For now, we stop loops on state change unless the new state has the same loop? 
@@ -106,14 +106,14 @@ public class PlayerAudio : MonoBehaviour
             source.pitch = pitch;
             source.spatialBlend = 0f; // Force 2D
             source.Play();
-            Debug.Log($"[PlayerAudio] Playing LOOPING sound: {clip.name} (isVoice: {isVoice}, Volume: {volume}, Pitch: {pitch}) Status: {source.isPlaying}");
+            //Debug.Log($"[PlayerAudio] Playing LOOPING sound: {clip.name} (isVoice: {isVoice}, Volume: {volume}, Pitch: {pitch}) Status: {source.isPlaying}");
         }
         else
         {
             // Use GameAudioManager for one-shots to benefit from pooling
             if (GameAudioManager.Instance != null)
             {
-                Debug.Log($"[PlayerAudio] Playing ONESHOT sound: {clip.name} (isVoice: {isVoice}, Volume: {volume}, Pitch: {pitch})");
+                //Debug.Log($"[PlayerAudio] Playing ONESHOT sound: {clip.name} (isVoice: {isVoice}, Volume: {volume}, Pitch: {pitch})");
                 if (isVoice)
                 {
                     // Voice channel typically overrides previous voice in GameAudioManager
@@ -132,7 +132,7 @@ public class PlayerAudio : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning("[PlayerAudio] GameAudioManager.Instance is NULL!");
+                //Debug.LogWarning("[PlayerAudio] GameAudioManager.Instance is NULL!");
             }
         }
     }

@@ -26,6 +26,41 @@ public class BackgroundUltimateExecutor : MonoBehaviour
     private float logicTimeCounter = 0f;
     private const float LOGIC_FPS = 60f;
 
+    public static BackgroundUltimateExecutor Spawn(
+        GameObject playerGameObject,
+        AttackStepData currentStep,
+        int currentFrame,
+        int facing,
+        CharacterStats stats,
+        PlayerCombat sourceCombat,
+        CharacterObject castingCharacter,
+        string actionName,
+        Sprite currentSprite,
+        RuntimeAnimatorController animController)
+    {
+        GameObject executorGo = new GameObject("BackgroundUltimateExecutor_" + (castingCharacter.metaData != null ? castingCharacter.metaData.displayName : "Clone"));
+        executorGo.transform.position = playerGameObject.transform.position;
+        executorGo.transform.rotation = playerGameObject.transform.rotation;
+
+        BackgroundUltimateExecutor executor = executorGo.AddComponent<BackgroundUltimateExecutor>();
+        executor.Initialize(
+            currentStep,
+            currentFrame,
+            facing,
+            stats,
+            sourceCombat != null ? sourceCombat.CurrentSourceAttack : (stats != null ? stats.attack : 0f),
+            sourceCombat != null ? sourceCombat.CurrentActionDamageMultiplier : 0f,
+            sourceCombat != null ? sourceCombat.CurrentAuraEnergyReward : 0f,
+            sourceCombat != null ? sourceCombat.CurrentAuraEnergyRewardClaim : null,
+            sourceCombat != null ? sourceCombat.CurrentAdditionalDamageEffects : null,
+            sourceCombat,
+            castingCharacter,
+            sourceCombat != null ? sourceCombat.CurrentActionName : actionName,
+            currentSprite,
+            animController);
+        return executor;
+    }
+
     /// <summary>Initializes and starts the background ultimate simulation.</summary>
     public void Initialize(
         AttackStepData step,
