@@ -136,7 +136,7 @@ namespace CombatCore
                         flashColor = Color.white,
                         flashFrames = 0,
                         impactTier = DamageImpactTier.Low,
-                        damageType = DamageType.Physical,
+                        elementType = ElementType.None,
                         reactionOwnerId = AttackerId,
                     };
 

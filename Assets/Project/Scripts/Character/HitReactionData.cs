@@ -12,17 +12,7 @@ public enum DamageImpactTier
     Ultimate
 }
 
-public enum DamageType
-{
-    Physical,
-    Fire,
-    Water,
-    Ice,
-    Electro,
-    Wind,
-    Rock,
-    Nature
-}
+
 
 public enum DamageRoutine
 {
@@ -128,7 +118,7 @@ public struct HitReactionData
     // Damage Text Impact
     // =========================================================
     public DamageImpactTier impactTier;
-    public DamageType damageType;
+    public ElementType elementType;
     public DamageRoutine damageRoutine;
 
     public int ImpactFreezeFrames => reactionTiming != null ? Mathf.Max(0, reactionTiming.startupFrames) : Mathf.Max(0, hitstunFrames);
@@ -230,7 +220,7 @@ public struct HitReactionData
             flashColor = Color.red,
             flashFrames = 6,
             impactTier = DamageImpactTier.Low,
-            damageType = DamageType.Physical,
+            elementType = ElementType.None,
             damageRoutine = DamageRoutine.Normal
         };
     }

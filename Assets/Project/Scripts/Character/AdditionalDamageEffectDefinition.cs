@@ -10,7 +10,7 @@ public class AdditionalDamageEffectDefinition
 
     [Header("Damage")]
     [Min(0f)] public float attackRatio = 0.3f;
-    public DamageType damageType = DamageType.Electro;
+    public ElementType elementType = ElementType.None;
 
     public bool CanTrigger(PassiveEventContext context)
     {

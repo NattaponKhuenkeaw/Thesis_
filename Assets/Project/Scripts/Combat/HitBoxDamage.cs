@@ -188,9 +188,19 @@ public class HitBoxDamage : MonoBehaviour
 
         float primaryDamageDealt = enemy.TakeHit(reactionData, attackerPosition);
 
-        if (primaryDamageDealt > 0f && enemy.IsAlive)
+        if (primaryDamageDealt > 0f)
         {
-            ApplyAdditionalDamage(enemy, attackerPosition, direction);
+            var elementalState = enemy.GetComponent<EnemyElementalState>();
+            if (elementalState != null)
+            {
+                elementalState.RecordDamageTaken(primaryDamageDealt);
+                elementalState.ApplyElementalDamage(reactionData.elementType, currentDamage, currentAttackerStats, sourceCategory);
+            }
+
+            if (enemy.IsAlive)
+            {
+                ApplyAdditionalDamage(enemy, attackerPosition, direction);
+            }
         }
 
         HitboxBase activeHitbox = (HitboxBase)currentGrabHitbox ?? currentNormalHitbox;
@@ -289,11 +299,17 @@ public class HitBoxDamage : MonoBehaviour
         float finalDamage = CombatFormula.CalculateResolvedDamage(
             currentDamage,
             routine,
-            ResolveDamageType(),
+            ResolveElementType(),
             currentAttackerStats,
             enemy.defense,
             sourceCategory,
             out currentIsCrit);
+
+        var elementalState = enemy.GetComponent<EnemyElementalState>();
+        if (elementalState != null)
+        {
+            finalDamage = elementalState.ModifyIncomingDamage(ResolveElementType(), finalDamage);
+        }
 
         if (passiveController != null)
         {
@@ -341,7 +357,7 @@ public class HitBoxDamage : MonoBehaviour
             float resolvedDamage = CombatFormula.CalculateResolvedDamage(
                 baseDamage,
                 DamageRoutine.Additional,
-                effect.damageType,
+                effect.elementType,
                 currentAttackerStats,
                 enemy.defense,
                 AttackCategory.Normal,
@@ -353,7 +369,7 @@ public class HitBoxDamage : MonoBehaviour
             HitReactionData additionalData = HitReactionData.Default(resolvedDamage, direction, 0f);
             additionalData.damageIsFinal = true;
             additionalData.damageRoutine = DamageRoutine.Additional;
-            additionalData.damageType = effect.damageType;
+            additionalData.elementType = effect.elementType;
             additionalData.isCriticalHit = false;
             additionalData.flashFrames = 0;
             additionalData.impactTier = DamageImpactTier.Low;
@@ -361,28 +377,38 @@ public class HitBoxDamage : MonoBehaviour
 
             float damageDealt = enemy.TakeHit(additionalData, attackerPosition);
 
-            if (damageDealt > 0f && CombatCore.TrainingDebugStats.Instance != null)
+            if (damageDealt > 0f)
             {
-                CombatCore.TrainingDebugStats.Instance.RecordHit(enemy, damageDealt);
+                var elementalState = enemy.GetComponent<EnemyElementalState>();
+                if (elementalState != null)
+                {
+                    elementalState.RecordDamageTaken(damageDealt);
+                    elementalState.ApplyElementalDamage(additionalData.elementType, baseDamage, currentAttackerStats, AttackCategory.Normal);
+                }
+
+                if (CombatCore.TrainingDebugStats.Instance != null)
+                {
+                    CombatCore.TrainingDebugStats.Instance.RecordHit(enemy, damageDealt);
+                }
             }
         }
     }
 
     private DamageRoutine ResolvePrimaryDamageRoutine()
     {
-        return ResolveDamageType() == DamageType.Physical
+        return ResolveElementType() == ElementType.None
             ? DamageRoutine.Normal
             : DamageRoutine.Elemental;
     }
 
-    private DamageType ResolveDamageType()
+    private ElementType ResolveElementType()
     {
         if (currentGrabHitbox != null)
-            return currentGrabHitbox.damageType;
+            return currentGrabHitbox.elementType;
 
         return currentNormalHitbox != null
-            ? currentNormalHitbox.damageType
-            : DamageType.Physical;
+            ? currentNormalHitbox.elementType
+            : ElementType.None;
     }
 
     private HitReactionData BuildReactionData(EnemyController enemy, Vector2 direction)
@@ -398,7 +424,7 @@ public class HitBoxDamage : MonoBehaviour
             data.flashColor = currentNormalHitbox.flashColor;
             data.flashFrames = currentNormalHitbox.flashFrames;
             data.impactTier = currentNormalHitbox.impactTier;
-            data.damageType = currentNormalHitbox.damageType;
+            data.elementType = currentNormalHitbox.elementType;
 
             if (currentNormalHitbox.useDeterministicReaction)
             {
@@ -486,7 +512,7 @@ public class HitBoxDamage : MonoBehaviour
         data.flashColor = currentGrabHitbox.flashColor;
         data.flashFrames = currentGrabHitbox.flashFrames;
         data.impactTier = currentGrabHitbox.impactTier;
-        data.damageType = currentGrabHitbox.damageType;
+        data.elementType = currentGrabHitbox.elementType;
 
         return data;
     }
