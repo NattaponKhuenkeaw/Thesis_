@@ -3,14 +3,22 @@ using UnityEngine.UI;
 
 namespace Project.UI
 {
+    [System.Obsolete("Use ElementDatabase instead to resolve element icons and properties.")]
     [CreateAssetMenu(fileName = "ElementSpriteResolver", menuName = "UI/Element Sprite Resolver")]
     public class ElementSpriteResolver : ScriptableObject
     {
-        [Tooltip("Assign sprites in order: None, Earth, Water, Fire, Wind (matching ElementType enum order)")]
+        [Tooltip("Legacy: Assign sprites in order: None, Earth, Water, Fire, Wind (matching ElementType enum order)")]
         [SerializeField] private Sprite[] elementSprites = new Sprite[5];
 
         public Sprite GetSprite(ElementType elementType)
         {
+            var db = ElementDatabase.Load();
+            if (db != null)
+            {
+                var icon = db.GetIcon(elementType);
+                if (icon != null) return icon;
+            }
+
             int index = (int)elementType;
             if (index >= 0 && index < elementSprites.Length)
             {

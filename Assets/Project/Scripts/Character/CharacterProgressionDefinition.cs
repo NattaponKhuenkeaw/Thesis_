@@ -55,7 +55,12 @@ public enum PassiveCounterOperation
 
 public enum StatusEffectType
 {
-    Burn
+    Burn,
+    MemoryStagger,
+    AshDOT,
+    VoidDOT,
+    Confusion,
+    SlowAction
 }
 
 [Serializable]

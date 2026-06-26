@@ -4,14 +4,16 @@ using EditorAttributes;
 // =========================================================
 // Enums
 // =========================================================
-public enum ElementType
+
+
+public enum CharacterRole
 {
-    None,
-    Geo,
-    Hydro,
-    Pyro,
-    Anemo,
-    Electro
+    Reaper,     // Burst-DPS
+    Executioner,// Sustained-DPS
+    Herald,     // Support/Buffer
+    Arbiter,    // Crowd-Control/Debuffer
+    Warden,     // Tank/Defender
+    Keeper      // Healer/Support
 }
 
 public enum CharacterType

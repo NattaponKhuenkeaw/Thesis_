@@ -135,7 +135,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 4
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 2.1995919, y: 1.8162396}
         size: {x: 2.8946762, y: 1.0976708}
@@ -220,7 +220,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 4
         activeFrames: 7
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.3791339, y: 1.0363575}
         size: {x: 5.589065, y: 2.5641694}
@@ -330,7 +330,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 2
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.5048555, y: 1.3050013}
         size: {x: 2.9318297, y: 1.844233}
@@ -364,7 +364,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 22
         activeFrames: 2
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.9921656, y: 1.3485112}
         size: {x: 2.8622146, y: 2.2445211}
@@ -746,7 +746,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 3
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.7068697, y: 1.5693027}
         size: {x: 2.1382587, y: 3.4697359}
@@ -792,7 +792,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 4
-        damageType: 0
+        elementType: 0
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 6.5, y: 1.4}
         size: {x: 4.3108644, y: 3.5111265}
@@ -813,7 +813,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 38
         activeFrames: 6
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 2.1969538, y: 0.18269604}
         size: {x: 3.4213867, y: 0.98626053}
@@ -863,7 +863,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 3
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.7002583, y: 1.4658246}
         size: {x: 3.2558231, y: 2.5591278}
@@ -903,7 +903,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 3
-        damageType: 4
+        elementType: 4
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.6758268, y: 1.455477}
         size: {x: 1, y: 3.2006927}
@@ -937,7 +937,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 1
-        damageType: 4
+        elementType: 0
         debugColor: {r: 0.42, g: 0.81, b: 1, a: 1}
         projectileType: 0
         projectileData: {fileID: 11400000, guid: c7de229c6f7eb044682e28d12a70b7aa, type: 2}
@@ -966,7 +966,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 3
         activeFrames: 4
-        damageType: 0
+        elementType: 0
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 4.251956, y: 1.3999987}
         size: {x: 5, y: 5}
@@ -987,7 +987,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 3
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.63467, y: 1.4461191}
         size: {x: 3.3815913, y: 2.8922381}
@@ -1421,7 +1421,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 25
         activeFrames: 3
-        damageType: 4
+        elementType: 4
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -5.3543725, y: 2.4058695}
         size: {x: 9.297006, y: 5.6019297}
@@ -1460,7 +1460,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 3
-        damageType: 0
+        elementType: 0
         debugColor: {r: 0.42, g: 0.81, b: 1, a: 1}
         projectileType: 0
         projectileData: {fileID: 11400000, guid: 39421ead371882444a4d9bc749e6471a, type: 2}

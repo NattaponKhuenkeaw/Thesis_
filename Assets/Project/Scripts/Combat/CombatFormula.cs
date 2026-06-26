@@ -5,7 +5,7 @@ public static class CombatFormula
     public static float CalculateResolvedDamage(
         float baseDamage,
         DamageRoutine routine,
-        DamageType damageType,
+        ElementType elementType,
         CharacterStats attackerStats,
         float defenderDefense,
         AttackCategory category,
@@ -26,7 +26,7 @@ public static class CombatFormula
 
         if (routine != DamageRoutine.Additional)
         {
-            if (damageType != DamageType.Physical)
+            if (elementType != ElementType.None)
             {
                 float elementalMastery = attackerStats != null
                     ? Mathf.Max(0f, attackerStats.elementalMastery)

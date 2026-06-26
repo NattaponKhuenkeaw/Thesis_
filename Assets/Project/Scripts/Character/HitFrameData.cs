@@ -30,7 +30,7 @@ public abstract class HitboxBase
     public int activeFrames = 3;
 
     [Header("Damage")]
-    public DamageType damageType = DamageType.Physical;
+    public ElementType elementType = ElementType.None;
 
     [Header("Debug")]
     public Color debugColor = Color.red;

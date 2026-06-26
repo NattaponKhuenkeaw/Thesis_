@@ -1112,6 +1112,7 @@ GameObject:
   - component: {fileID: 4337216351384873233}
   - component: {fileID: -1236378588940687432}
   - component: {fileID: -6515187417249938201}
+  - component: {fileID: 7560202951372101729}
   m_Layer: 8
   m_Name: EnemyCore
   m_TagString: Enemy
@@ -1321,12 +1322,17 @@ MonoBehaviour:
   attackDamage: 10
   defense: 0
   damageRes: 0
+  isEliteOrBoss: 0
   isAlive: 1
   status:
     isStunned: 0
     isBurning: 0
     isFrozen: 0
     isDead: 0
+    isConfused: 0
+    isSlowed: 0
+    isAshDOTActive: 0
+    isVoidDOTActive: 0
   currentComboHits: 0
   antiStunlockComboThreshold: 4
   antiStunlockResistChance: 0.3
@@ -1463,6 +1469,19 @@ MonoBehaviour:
     m_Bits: 8
   groundCheckDistance: 0.08
   groundNormalMinY: 0.25
+--- !u!114 &7560202951372101729
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8917136744719106790}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f493f83c5c675934ab0bd8d51617d288, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyElementalState
+  profile: {fileID: 0}
 --- !u!1001 &1641500372536904862
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1763,7 +1782,6 @@ MonoBehaviour:
   damagePopDuration: 0.1
   damageScaleDownDuration: 0.15
   damageFreezeDuration: 0.4
-  damageShrinkDuration: 0.15
   damageFadeDuration: 0.3
   healthLerpDelay: 0.75
   healthLerpDuration: 0.5
@@ -1774,18 +1792,9 @@ MonoBehaviour:
   skillScale: 1.1
   ultimateScale: 2
   punchScaleOvershoot: 1.02
-  damageShrinkScaleMultiplier: 0.5
   critScaleMultiplier: 1.15
   critTextColor: {r: 1, g: 0.85, b: 0.2, a: 1}
   critRotationRange: 15
-  physicalColor: {r: 1, g: 1, b: 1, a: 1}
-  fireColor: {r: 1, g: 0.11792451, b: 0.15393767, a: 1}
-  waterColor: {r: 0, g: 0.75, b: 1, a: 1}
-  iceColor: {r: 0.88, g: 1, b: 1, a: 1}
-  electroColor: {r: 0.8318407, g: 0.19424175, b: 0.9150943, a: 1}
-  windColor: {r: 0.75, g: 1, b: 0.75, a: 1}
-  rockColor: {r: 0.9433962, g: 0.80982745, b: 0.22694907, a: 1}
-  natureColor: {r: 0.2, g: 0.8, b: 0.2, a: 1}
 --- !u!1001 &8533692132255817662
 PrefabInstance:
   m_ObjectHideFlags: 0

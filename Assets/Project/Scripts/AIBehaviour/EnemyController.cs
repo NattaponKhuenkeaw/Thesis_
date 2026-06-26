@@ -29,6 +29,7 @@ public class EnemyController : MonoBehaviour
     public float attackDamage = 10f;
     public float defense = 0f;
     public float damageRes = 0f;
+    public bool isEliteOrBoss = false;
 
     // =========================================================
     // State
