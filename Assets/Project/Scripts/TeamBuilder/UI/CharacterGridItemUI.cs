@@ -4,6 +4,7 @@ using UnityEngine.EventSystems;
 using System;
 using TMPro;
 using Project.InventorySystem.Items;
+using Project.ShopSystem;
 using Project.UI;
 
 namespace Project.TeamBuilder.UI
@@ -25,8 +26,6 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private TMP_Text equippedText;
         [SerializeField] private Image attributeImage; // For elemental attribute
 
-        [Header("Element Settings")]
-        [SerializeField] private ElementSpriteResolver elementResolver;
 
         [Header("Visual States")]
         [SerializeField] private Color normalFrameColor = new Color(0.5f, 0.2f, 0.7f, 1f);
@@ -40,6 +39,7 @@ namespace Project.TeamBuilder.UI
         private CanvasGroup canvasGroup;
         private Canvas rootCanvas;
         private Action<CharacterItem> clickCallback;
+        private PlayerRunInventory runInventory;
         private bool isInTeam = false;
 
         // =========================================================
@@ -50,11 +50,17 @@ namespace Project.TeamBuilder.UI
         // =========================================================
         // Initialization
         // =========================================================
-        public void Init(CharacterItem item, Canvas canvas, bool alreadyInTeam = false, Action<CharacterItem> onClicked = null)
+        public void Init(
+            CharacterItem item,
+            Canvas canvas,
+            bool alreadyInTeam = false,
+            Action<CharacterItem> onClicked = null,
+            PlayerRunInventory inventory = null)
         {
             characterItem = item;
             rootCanvas = canvas;
             clickCallback = onClicked;
+            runInventory = inventory;
             canvasGroup = GetComponent<CanvasGroup>();
 
             // Set visuals from CharacterObject
@@ -67,13 +73,21 @@ namespace Project.TeamBuilder.UI
                     nameText.text = item.characterObjectData.metaData.displayName;
 
                 if (levelText != null)
-                    levelText.text = item.characterObjectData.upgrade != null
-                        ? item.characterObjectData.upgrade.LevelLabel
-                        : "Lv.1/30";
-                
-                if (attributeImage != null && elementResolver != null)
                 {
-                    elementResolver.ResolveImage(attributeImage, item.characterObjectData.elementType);
+                    CharacterUpgrade upgrade = runInventory != null
+                        ? runInventory.GetCharacterUpgrade(item.characterObjectData)
+                        : item.characterObjectData.upgrade;
+                    levelText.text = upgrade != null
+                        ? upgrade.LevelLabel
+                        : "Lv.1/30";
+                }
+                
+                if (attributeImage != null)
+                {
+                    var db = ElementDatabase.Load();
+                    Sprite sprite = db != null ? db.GetIcon(item.characterObjectData.elementType) : null;
+                    attributeImage.sprite = sprite;
+                    attributeImage.enabled = sprite != null;
                 }
             }
             else

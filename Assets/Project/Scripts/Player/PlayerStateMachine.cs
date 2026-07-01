@@ -36,6 +36,7 @@ public class PlayerStateMachine : MonoBehaviour
     public PlayerUltimateState UltimateState { get; private set; }
     public PlayerHitstunState HitstunState { get; private set; }
     public PlayerDeadState DeadState { get; private set; }
+    public PlayerIntroState IntroState { get; private set; }
 
     // =========================================================
     // Debug Configuration
@@ -78,12 +79,16 @@ public class PlayerStateMachine : MonoBehaviour
 
         if (teamLoader == null)
             teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
+            
+        InitializeStates();
     }
 
     void Start()
     {
-        InitializeStates();
-        ChangeState(IdleState);
+        if (CurrentState == null)
+        {
+            ChangeState(IdleState);
+        }
     }
 
     void Update()
@@ -559,6 +564,7 @@ public class PlayerStateMachine : MonoBehaviour
         UltimateState = new PlayerUltimateState(playerCharacter, this);
         HitstunState = new PlayerHitstunState(playerCharacter, this);
         DeadState = new PlayerDeadState(playerCharacter, this);
+        IntroState = new PlayerIntroState(playerCharacter, this);
     }
 
     private PlayerState ResolveLocomotionStateForCharacterSwitch()

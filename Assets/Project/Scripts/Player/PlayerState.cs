@@ -23,7 +23,8 @@ public enum PlayerStateId
     Ultimate,
     AirborneAttacking,
     Hitstun,
-    Dead
+    Dead,
+    Intro
 }
 
 /// <summary>

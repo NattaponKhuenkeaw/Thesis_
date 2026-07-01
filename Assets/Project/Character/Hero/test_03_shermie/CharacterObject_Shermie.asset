@@ -15,14 +15,15 @@ MonoBehaviour:
   characterId: char_3_shermie
   characterType: 0
   elementType: 2
+  characterRole: 5
   previewPrefab: {fileID: 6597880524197938003, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
   stats:
     maxHP: 1250
     attack: 26
     defense: 51
-    speed: 5.5
+    speed: 6.5
     elementalMastery: 0
-    critRate: 5
+    critRate: 0
     critDamage: 150
     cooldownRate: 0
     impact: 0
@@ -37,14 +38,17 @@ MonoBehaviour:
     animatorController: {fileID: 9100000, guid: b4f7f50e094f0f145a2251ad62172a8d, type: 2}
   auraEnergyRate: 1
   audioData: {fileID: 11400000, guid: 6991358fa89718147bf6ecce8bbac525, type: 2}
-  movementProfile: {fileID: 11400000, guid: b71e22596438c5f4ab6e3f64f66c4479, type: 2}
+  movementProfile: {fileID: 11400000, guid: cbbe7a07e1e23f24aa3f66dc18af9905, type: 2}
   maxJumpOverride: -1
   maxAirDashOverride: -1
   _authoredFPS: 24
   upgrade:
     level: 1
-    constellationRank: 0
-    progressionPoints: 3
+    maxLevel: 30
+    currentExp: 0
+    attackPerLevel: 4.7
+    defensePerLevel: 5.5
+    maxHpPerLevel: 95
   _dashData:
     animationClip: {fileID: 7400000, guid: a58bc557533fb294eb5db9217ac6de3d, type: 2}
     startupFrames: 7

@@ -27,7 +27,7 @@ namespace Project.TeamBuilder.UI.Panels
             if (data.progressionDefinition == null) return "None";
 
             StringBuilder builder = new StringBuilder();
-            int currentRank = data.upgrade != null ? data.upgrade.constellationRank : 0;
+            int currentRank = 0;
 
             if (data.progressionDefinition.passiveNodes != null)
             {

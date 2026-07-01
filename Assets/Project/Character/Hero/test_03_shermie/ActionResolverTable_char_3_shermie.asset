@@ -17,6 +17,9 @@ MonoBehaviour:
     context: 0
     priority: 0
     conditions: []
+    allowGroundToAirTransition: 0
+    actionDamageMultiplier: 8.5
+    auraEnergyReward: 0
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
@@ -26,6 +29,9 @@ MonoBehaviour:
     context: 1
     priority: 0
     conditions: []
+    allowGroundToAirTransition: 0
+    actionDamageMultiplier: 0
+    auraEnergyReward: 0
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
@@ -36,18 +42,23 @@ MonoBehaviour:
     context: 0
     priority: 10
     conditions: []
+    allowGroundToAirTransition: 0
+    actionDamageMultiplier: 3.5
+    auraEnergyReward: 15
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
       rootNode:
         rid: 3251577378342174820
     cooldown: 7
-    energyCost: 0
   ultimateActions:
   - actionName: 
     context: 0
     priority: 0
     conditions: []
+    allowGroundToAirTransition: 0
+    actionDamageMultiplier: 10
+    auraEnergyReward: 5
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
@@ -123,11 +134,11 @@ MonoBehaviour:
       data:
         startFrameOffset: 1
         activeFrames: 5
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.3450406, y: 2.065068}
         size: {x: 1.4671774, y: 0.8958316}
-        damageMultiplier: 1
+        damageRatio: 1
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
@@ -215,11 +226,11 @@ MonoBehaviour:
       data:
         startFrameOffset: 1
         activeFrames: 5
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.8539051, y: 1.8674157}
         size: {x: 1.9942486, y: 0.95572567}
-        damageMultiplier: 1
+        damageRatio: 1
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 2
@@ -249,11 +260,11 @@ MonoBehaviour:
       data:
         startFrameOffset: 19
         activeFrames: 5
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.71015877, y: 2.0351207}
         size: {x: 2.0421643, y: 0.9796834}
-        damageMultiplier: 1.1
+        damageRatio: 1.1
         impactTier: 1
         useDeterministicReaction: 1
         reactionKind: 1
@@ -342,11 +353,11 @@ MonoBehaviour:
       data:
         startFrameOffset: 1
         activeFrames: 5
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.8898418, y: 1.9273101}
         size: {x: 2.114038, y: 1.650502}
-        damageMultiplier: 0.7
+        damageRatio: 0.7
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -376,11 +387,11 @@ MonoBehaviour:
       data:
         startFrameOffset: 8
         activeFrames: 4
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.24298084, y: 1.7536165}
         size: {x: 1.5150931, y: 2.980161}
-        damageMultiplier: 0.7
+        damageRatio: 0.7
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -410,11 +421,11 @@ MonoBehaviour:
       data:
         startFrameOffset: 12
         activeFrames: 5
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.7401054, y: 2.011163}
         size: {x: 2.0301862, y: 1.5786285}
-        damageMultiplier: 1.3
+        damageRatio: 1.3
         impactTier: 1
         useDeterministicReaction: 1
         reactionKind: 1
@@ -484,11 +495,11 @@ MonoBehaviour:
       data:
         startFrameOffset: 1
         activeFrames: 8
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.0025861263, y: 2.0291317}
         size: {x: 3.7311904, y: 1.3031144}
-        damageMultiplier: 2
+        damageRatio: 2
         impactTier: 2
         useDeterministicReaction: 1
         reactionKind: 1
@@ -584,12 +595,12 @@ MonoBehaviour:
       data:
         startFrameOffset: 1
         activeFrames: 10
-        damageType: 2
+        elementType: 2
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 0.95337725, y: 1.4333203}
         size: {x: 1.4827974, y: 1.8470726}
         canGrabAirborne: 1
-        damageMultiplier: 2
+        damageRatio: 2
         impactFreezeFrames: 0
         holdFrames: 24
         recoveryFrames: 6
@@ -668,6 +679,8 @@ MonoBehaviour:
       data:
         counterReaction:
           damage: 0
+          isCriticalHit: 0
+          damageIsFinal: 0
           knockbackDirection: {x: 0, y: 0}
           reactionKind: 1
           reactionTiming:
@@ -703,7 +716,8 @@ MonoBehaviour:
           flashFrames: 6
           breaksGrab: 0
           impactTier: 0
-          damageType: 0
+          elementType: 0
+          damageRoutine: 0
     - rid: 1588256136747024488
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -778,11 +792,11 @@ MonoBehaviour:
       data:
         startFrameOffset: 62
         activeFrames: 3
-        damageType: 2
+        elementType: 2
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.311993, y: 0.56738263}
         size: {x: 2.969209, y: 1.449838}
-        damageMultiplier: 5
+        damageRatio: 5
         impactTier: 3
         useDeterministicReaction: 1
         reactionKind: 2
@@ -853,12 +867,12 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 1
-        damageType: 2
+        elementType: 2
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 1.2170683, y: 0.91705257}
         size: {x: 3.7375476, y: 2.0341048}
         canGrabAirborne: 1
-        damageMultiplier: 0
+        damageRatio: 0
         impactFreezeFrames: 0
         holdFrames: 7156
         recoveryFrames: 9
@@ -874,11 +888,11 @@ MonoBehaviour:
       data:
         startFrameOffset: 75
         activeFrames: 4
-        damageType: 2
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -1.4754045, y: 0.3999999}
         size: {x: 2.8058772, y: 1.1972927}
-        damageMultiplier: 5
+        damageRatio: 5
         impactTier: 3
         useDeterministicReaction: 1
         reactionKind: 1
@@ -948,12 +962,12 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 1
-        damageType: 2
+        elementType: 2
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: -1.4820231, y: 0.77111274}
         size: {x: 4.0194426, y: 1.7708493}
         canGrabAirborne: 1
-        damageMultiplier: 0
+        damageRatio: 0
         impactFreezeFrames: 4
         holdFrames: 5000
         recoveryFrames: 6
@@ -1021,11 +1035,11 @@ MonoBehaviour:
       data:
         startFrameOffset: 62
         activeFrames: 3
-        damageType: 2
+        elementType: 2
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.311993, y: 0.56738263}
         size: {x: 2.969209, y: 1.449838}
-        damageMultiplier: 5
+        damageRatio: 5
         impactTier: 3
         useDeterministicReaction: 1
         reactionKind: 2
@@ -1096,12 +1110,12 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 3
-        damageType: 2
+        elementType: 2
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 1.4198639, y: 0.91705257}
         size: {x: 4.143139, y: 2.0341048}
         canGrabAirborne: 1
-        damageMultiplier: 0
+        damageRatio: 0
         impactFreezeFrames: 0
         holdFrames: 7156
         recoveryFrames: 9
@@ -1117,11 +1131,11 @@ MonoBehaviour:
       data:
         startFrameOffset: 71
         activeFrames: 4
-        damageType: 2
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -1.4754045, y: 0.3999999}
         size: {x: 2.8058772, y: 1.1972927}
-        damageMultiplier: 7
+        damageRatio: 7
         impactTier: 3
         useDeterministicReaction: 1
         reactionKind: 2
@@ -1246,12 +1260,12 @@ MonoBehaviour:
       data:
         startFrameOffset: 5
         activeFrames: 11
-        damageType: 2
+        elementType: 2
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 1.1331985, y: 1.885921}
         size: {x: 1.7296784, y: 1.4562433}
         canGrabAirborne: 1
-        damageMultiplier: 0
+        damageRatio: 0
         impactFreezeFrames: 0
         holdFrames: 24
         recoveryFrames: 6
@@ -1362,11 +1376,11 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 3
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.0848932, y: 1.9669154}
         size: {x: 2.3148942, y: 2.0053198}
-        damageMultiplier: 1
+        damageRatio: 1
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 2
@@ -1599,12 +1613,12 @@ MonoBehaviour:
       data:
         startFrameOffset: 1
         activeFrames: 30
-        damageType: 2
+        elementType: 2
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 0.50361294, y: 1.3693061}
         size: {x: 1.2597638, y: 1.1715475}
         canGrabAirborne: 1
-        damageMultiplier: 2
+        damageRatio: 2
         impactFreezeFrames: 0
         holdFrames: 24
         recoveryFrames: 6
@@ -1716,11 +1730,11 @@ MonoBehaviour:
       data:
         startFrameOffset: 83
         activeFrames: 6
-        damageType: 2
+        elementType: 2
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -1.1282648, y: 0.28957066}
         size: {x: 3.6333134, y: 0.95290196}
-        damageMultiplier: 3
+        damageRatio: 3
         impactTier: 2
         useDeterministicReaction: 1
         reactionKind: 2
@@ -1775,6 +1789,7 @@ MonoBehaviour:
           - vfx
           - audio
           - hitbox
+          - events
         routes:
         - rid: 3251577402691944758
         defaultNext:
@@ -1791,11 +1806,11 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 5
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.57389903, y: 1.0641747}
         size: {x: 1.9609334, y: 1.2522043}
-        damageMultiplier: 2
+        damageRatio: 2
         impactTier: 2
         useDeterministicReaction: 1
         reactionKind: 2
@@ -1988,11 +2003,11 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 16
-        damageType: 2
+        elementType: 2
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.09575868, y: 0.30218866}
         size: {x: 7.49467, y: 0.9956227}
-        damageMultiplier: 8
+        damageRatio: 8
         impactTier: 2
         useDeterministicReaction: 1
         reactionKind: 2

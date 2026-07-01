@@ -28,7 +28,15 @@ public class PlayerIdleState : PlayerState
     public override void Update()
     {
         if (player.Movement != null && !player.Movement.GroundState.IsEffectivelyGrounded)
+        {
             fsm.ChangeState(fsm.FallingState);
+            return;
+        }
+
+        if (player.Movement != null && Mathf.Abs(player.Movement.HorizontalInput) > 0.01f)
+        {
+            fsm.ChangeState(fsm.MoveState);
+        }
     }
 
     // =========================================================

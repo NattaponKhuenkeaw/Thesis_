@@ -31,7 +31,6 @@ public class PlayerCharacter : MonoBehaviour
     [SerializeField] private float currentHP;
     [SerializeField] private CharacterStatus status = new CharacterStatus();
     [SerializeField] private CharacterStats runtimeStats;
-    private Artifact[] equippedArtifacts = System.Array.Empty<Artifact>();
 
     [Header("Damage Settings")]
     [SerializeField] private float postHitInvulnerabilityDuration = 0.4f;
@@ -41,7 +40,6 @@ public class PlayerCharacter : MonoBehaviour
     public bool IsDead => currentHP <= 0f;
     public CharacterStatus Status => status;
     public CharacterStats Stats => runtimeStats ?? (characterObject != null ? characterObject.stats : null);
-    public Artifact[] EquippedArtifacts => equippedArtifacts;
     public bool IsDamageInvulnerable => Time.time < damageInvulnerableUntil;
 
     private bool deathEventRaised;
@@ -87,7 +85,10 @@ public class PlayerCharacter : MonoBehaviour
 
     void Start()
     {
-        ApplyCharacterData();
+        if (FindFirstObjectByType<TeamLoader>() == null)
+        {
+            ApplyCharacterData();
+        }
     }
 
     // =========================================================
@@ -98,7 +99,7 @@ public class PlayerCharacter : MonoBehaviour
         if (characterObject == null)
             return;
 
-        runtimeStats ??= characterObject.stats != null ? characterObject.stats.Clone() : null;
+        runtimeStats ??= characterObject != null ? characterObject.GetLeveledStats() : null;
         ApplyMovementData();
         ApplyAnimationData();
         InitializeHP(initialHp);
@@ -109,15 +110,13 @@ public class PlayerCharacter : MonoBehaviour
     public void SetCharacter(
         CharacterObject newCharacter,
         float? initialHp = null,
-        CharacterStats effectiveStats = null,
-        Artifact[] artifacts = null)
+        CharacterStats effectiveStats = null)
     {
         PrepareForCharacterSwitch();
         characterObject = newCharacter;
-        runtimeStats = effectiveStats ?? (newCharacter != null && newCharacter.stats != null
-            ? newCharacter.stats.Clone()
+        runtimeStats = effectiveStats ?? (newCharacter != null
+            ? newCharacter.GetLeveledStats()
             : null);
-        equippedArtifacts = artifacts ?? System.Array.Empty<Artifact>();
         ApplyCharacterData(initialHp);
         PassiveController?.InitializeFromCharacterData();
         OnCharacterChanged?.Invoke(characterObject);
@@ -315,9 +314,7 @@ public class PlayerCharacter : MonoBehaviour
 
         if (Stats != null && Stats.speed > 0)
         {
-            float baseSpeed = characterObject.movementProfile != null ? characterObject.movementProfile.moveSpeed : 5f;
-            float multiplier = Stats.speed / 10f; // Default base SPD is 10
-            Movement.moveSpeedOverride = baseSpeed * multiplier;
+            Movement.moveSpeedOverride = Stats.speed;
         }
         else
         {

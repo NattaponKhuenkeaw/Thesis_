@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using CombatCore;
 using UnityEngine;
+using Project.Core;
 
 /// <summary>
 /// Centralized manager for game-wide freezes (hitstop/hitfreeze).
@@ -35,15 +36,33 @@ public class GameFreezeManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
+        string sourceSceneName = gameObject.scene.name;
+        RootPersistentManager rootManager = GetComponentInParent<RootPersistentManager>();
+        if (rootManager != null && rootManager.IsDuplicate)
         {
-            Instance = this;
+            enabled = false;
+            return;
+        }
+
+        if (Instance != null && Instance != this)
+        {
+            Debug.Log($"[GameFreezeManager] Duplicate freeze manager '{gameObject.name}' loaded from scene '{sourceSceneName}'. Destroying duplicate.");
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+        defaultFixedDeltaTime = Time.fixedDeltaTime;
+
+        if (rootManager == null)
+        {
+            transform.SetParent(null);
             DontDestroyOnLoad(gameObject);
-            defaultFixedDeltaTime = Time.fixedDeltaTime;
+            Debug.Log($"[GameFreezeManager] Standalone freeze manager initialized from scene '{sourceSceneName}'.");
         }
         else
         {
-            Destroy(gameObject);
+            Debug.Log($"[GameFreezeManager] Freeze manager registered under persistent root '{rootManager.gameObject.name}'.");
         }
     }
 

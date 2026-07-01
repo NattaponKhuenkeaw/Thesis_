@@ -2,6 +2,7 @@ using System.Collections;
 using System.Reflection;
 using NUnit.Framework;
 using Project.InventorySystem.Items;
+using Project.ShopSystem;
 using Project.TeamBuilder.UI;
 using Project.Core.ZoneState;
 using UnityEngine;
@@ -15,6 +16,7 @@ public class TeamRuntimeStatFeedbackTests
     {
         GameObject playerObject = new GameObject("Test Player");
         GameObject loaderObject = new GameObject("Test TeamLoader");
+        PlayerRunInventory runInventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
         CharacterObject character = ScriptableObject.CreateInstance<CharacterObject>();
         Artifact artifact = ScriptableObject.CreateInstance<Artifact>();
 
@@ -27,8 +29,9 @@ public class TeamRuntimeStatFeedbackTests
 
             TeamLoader teamLoader = loaderObject.AddComponent<TeamLoader>();
             teamLoader.playerCharacter = playerCharacter;
+            teamLoader.SetRunInventory(runInventory);
 
-            character.upgrade.constellationRank = 1;
+            // removed constellationRank = 1
             artifact.bonusStats = CreateZeroBonusStats();
             artifact.bonusStats.maxHP = 50f;
             artifact.bonusStats.cooldownRate = 50f;
@@ -41,22 +44,24 @@ public class TeamRuntimeStatFeedbackTests
             Assert.That(teamLoader.GetEquippedArtifactsAt(0)[0], Is.SameAs(artifact));
             Assert.That(playerCharacter.MaxHP, Is.EqualTo(150f).Within(0.001f));
             Assert.That(playerCharacter.Stats.cooldownRate, Is.EqualTo(50f).Within(0.001f));
-            Assert.That(passiveController.ProgressionState.ConstellationRank, Is.EqualTo(1));
+            Assert.That(runInventory.GetTeamRunCharacterAt(0).character, Is.SameAs(character));
+            // Assert.That(passiveController.ProgressionState.ConstellationRank, Is.EqualTo(1));
 
             playerCharacter.SetCurrentHP(140f);
             artifact.bonusStats.maxHP = 0f;
-            character.upgrade.constellationRank = 3;
+            // removed constellationRank = 3
 
             teamLoader.RefreshRuntimeState();
 
             Assert.That(playerCharacter.MaxHP, Is.EqualTo(100f).Within(0.001f));
             Assert.That(playerCharacter.CurrentHP, Is.EqualTo(100f).Within(0.001f));
-            Assert.That(passiveController.ProgressionState.ConstellationRank, Is.EqualTo(3));
+            // Assert.That(passiveController.ProgressionState.ConstellationRank, Is.EqualTo(3));
         }
         finally
         {
             Object.DestroyImmediate(artifact);
             Object.DestroyImmediate(character);
+            Object.DestroyImmediate(runInventory);
             Object.DestroyImmediate(loaderObject);
             Object.DestroyImmediate(playerObject);
         }

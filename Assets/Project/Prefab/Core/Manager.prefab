@@ -56,6 +56,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8850677962514263319}
+  - component: {fileID: 7111990659181474709}
   m_Layer: 0
   m_Name: Manager
   m_TagString: Untagged
@@ -76,16 +77,27 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 3199879966490682287}
   - {fileID: 4846364119961122686}
   - {fileID: 1345745468925448282}
   - {fileID: 8940406991929132171}
   - {fileID: 1179765405635780010}
   - {fileID: 5364557721935254789}
-  - {fileID: 5498684333869800147}
+  - {fileID: 2328885466388573497}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1574394734015390253
+--- !u!114 &7111990659181474709
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 822730165316854140}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9022b4244d8a9f4c94d4a6339ee96af, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Core.RootPersistentManager
+--- !u!1 &1566489620681877580
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -93,22 +105,22 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 3199879966490682287}
-  - component: {fileID: 7596383799552064283}
+  - component: {fileID: 2328885466388573497}
+  - component: {fileID: 6754166015969975239}
   m_Layer: 0
-  m_Name: ShopManager
+  m_Name: SceneManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &3199879966490682287
+--- !u!4 &2328885466388573497
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1574394734015390253}
+  m_GameObject: {fileID: 1566489620681877580}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -117,23 +129,23 @@ Transform:
   m_Children: []
   m_Father: {fileID: 8850677962514263319}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7596383799552064283
+--- !u!114 &6754166015969975239
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1574394734015390253}
+  m_GameObject: {fileID: 1566489620681877580}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9987ac16b7db6514fa364ed3805aeb9b, type: 3}
+  m_Script: {fileID: 11500000, guid: 655e6a934d8c18c4b89f022743aeb960, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Project.ShopSystem.ShopManager
-  codexInventory: {fileID: 11400000, guid: a7f0cf31109da14429e721066996af56, type: 2}
-  playerInventory: {fileID: 11400000, guid: d983529ecff2e7347a1d3b9cab095e7c, type: 2}
-  itemsToDisplay: 30
-  excludeOwnedItems: 1
-  currentShopItems: []
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.SceneTransitionManager
+  fadeDuration: 0.5
+  zoneStateProvider: {fileID: 11400000, guid: becbee9470c028f4a8e6ee3f1b3c6383, type: 2}
+  mapData: {fileID: 11400000, guid: 286c2d1c11083884ea1cacac57e88f23, type: 2}
+  transitionOutSFX: {fileID: 0}
+  transitionInSFX: {fileID: 0}
 --- !u!1 &3340296907417705203
 GameObject:
   m_ObjectHideFlags: 0
@@ -315,54 +327,6 @@ MonoBehaviour:
   defaultProjectilePrefab: {fileID: -5072513830114651353, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
   initialPoolSize: 6
   maxPoolSize: 32
---- !u!1 &7620310492362470517
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 5498684333869800147}
-  - component: {fileID: 6575225447288332923}
-  m_Layer: 0
-  m_Name: HUD_Manager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &5498684333869800147
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7620310492362470517}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 8850677962514263319}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6575225447288332923
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7620310492362470517}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 95ef5052dea0cd54f8324f4746f13e3f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TeamSwitchHUD
-  teamLoader: {fileID: 0}
-  stateMachine: {fileID: 0}
-  slotContainer: {fileID: 0}
-  slotPrefab: {fileID: 451429812501022720, guid: ffa1711f80043cd43bf1e34fdeb517ec, type: 3}
 --- !u!1 &8295746963088055792
 GameObject:
   m_ObjectHideFlags: 0

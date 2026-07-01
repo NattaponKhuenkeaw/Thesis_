@@ -14,8 +14,7 @@ namespace Project.TeamBuilder.UI.Panels
         [SerializeField] private Image elementIcon;
         [SerializeField] private TMP_Text characterNameText;
         [SerializeField] private TMP_Text characterLoreText;
-        [Header("Element Settings")]
-        [SerializeField] private ElementSpriteResolver elementResolver;
+        [SerializeField] private CharacterElementRoleUI elementRoleUI;
 
         public void PopulateData(CharacterItem character, Artifact[] equippedArtifacts)
         {
@@ -28,8 +27,18 @@ namespace Project.TeamBuilder.UI.Panels
             if (characterPortrait != null)
                 characterPortrait.sprite = data.metaData != null ? data.metaData.portrait : character.icon;
 
-            if (elementIcon != null && elementResolver != null)
-                elementResolver.ResolveImage(elementIcon, data.elementType);
+            if (elementIcon != null)
+            {
+                var db = ElementDatabase.Load();
+                Sprite sprite = db != null ? db.GetIcon(data.elementType) : null;
+                elementIcon.sprite = sprite;
+                elementIcon.enabled = sprite != null;
+            }
+
+            if (elementRoleUI != null)
+            {
+                elementRoleUI.SetCharacter(data);
+            }
 
             if (characterLoreText != null && data.metaData != null)
                 characterLoreText.text = data.metaData.description;

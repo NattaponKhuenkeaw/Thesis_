@@ -15,12 +15,13 @@ MonoBehaviour:
   characterId: Char_2_Rugal
   characterType: 0
   elementType: 1
+  characterRole: 2
   previewPrefab: {fileID: 6597880524197938003, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
   stats:
     maxHP: 911
     attack: 34
     defense: 49
-    speed: 5.5
+    speed: 6.5
     elementalMastery: 0
     critRate: 0
     critDamage: 150
@@ -37,7 +38,7 @@ MonoBehaviour:
     animatorController: {fileID: 9100000, guid: 815b33a35641994489dd122eacb4e98d, type: 2}
   auraEnergyRate: 0
   audioData: {fileID: 11400000, guid: a619867be2a28f642b09a359f46a8a6a, type: 2}
-  movementProfile: {fileID: 11400000, guid: b71e22596438c5f4ab6e3f64f66c4479, type: 2}
+  movementProfile: {fileID: 11400000, guid: cbbe7a07e1e23f24aa3f66dc18af9905, type: 2}
   maxJumpOverride: 2
   maxAirDashOverride: -1
   _authoredFPS: 24
@@ -48,9 +49,9 @@ MonoBehaviour:
     expToNextLevel: 100
     constellationRank: 0
     progressionPoints: 3
-    attackPerLevel: 0
-    defensePerLevel: 0
-    maxHpPerLevel: 0
+    attackPerLevel: 5.7
+    defensePerLevel: 4.8
+    maxHpPerLevel: 82.85
   _dashData:
     animationClip: {fileID: 7400000, guid: 3e950a7b365be294c97ddb9271fb0efe, type: 2}
     startupFrames: 8

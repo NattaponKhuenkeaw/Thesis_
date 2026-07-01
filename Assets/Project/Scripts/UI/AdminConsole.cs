@@ -6,6 +6,9 @@ public class AdminConsole : MonoBehaviour
 
     [SerializeField] private GameObject enemyPrefab;
 
+    [Header("Reset Systems")]
+    [SerializeField] private Project.ShopSystem.PlayerRunInventory runInventory;
+    [SerializeField] private Project.Progression.PlayerMetaProgression progressionInventory;
 
     public void TeleportPlayer()
     {
@@ -31,6 +34,19 @@ public class AdminConsole : MonoBehaviour
     public void ResetLevel()
     {
         
+    }
+
+    public void ResetPlayerRun()
+    {
+        if (runInventory != null)
+        {
+            runInventory.ResetRunProgress();
+        }
+        if (progressionInventory != null)
+        {
+            progressionInventory.ClearFragments();
+        }
+        Debug.Log("[AdminConsole] Player Run Progress and Meta Progression have been reset.");
     }
 
     public void ToggleTrainingDebug()

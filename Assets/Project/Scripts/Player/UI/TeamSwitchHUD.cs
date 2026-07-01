@@ -126,7 +126,8 @@ public class TeamSwitchHUD : MonoBehaviour
     // เปลี่ยนให้เป็น public เผื่อในอนาคตอยากสั่ง Refresh จากสคริปต์อื่นโดยตรง
     public void InitializeHUD()
     {
-        if (teamLoader == null || teamLoader.team == null || slotContainer == null || slotPrefab == null) return;
+        CharacterObject[] teamSnapshot = teamLoader != null ? teamLoader.GetTeamSnapshot() : null;
+        if (teamLoader == null || teamSnapshot == null || slotContainer == null || slotPrefab == null) return;
 
         foreach (Transform child in slotContainer)
         {
@@ -134,9 +135,9 @@ public class TeamSwitchHUD : MonoBehaviour
         }
         activeSlots.Clear();
 
-        for (int i = 0; i < teamLoader.team.Length; i++)
+        for (int i = 0; i < teamSnapshot.Length; i++)
         {
-            CharacterObject character = teamLoader.team[i];
+            CharacterObject character = teamSnapshot[i];
 
             if (character == null) continue;
 

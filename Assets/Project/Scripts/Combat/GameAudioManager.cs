@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using Project.Core;
 
 public class GameAudioManager : MonoBehaviour
 {
@@ -14,15 +15,42 @@ public class GameAudioManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
+        string sourceSceneName = gameObject.scene.name;
+        RootPersistentManager rootManager = GetComponentInParent<RootPersistentManager>();
+        if (rootManager != null && rootManager.IsDuplicate)
         {
-            Instance = this;
+            enabled = false;
+            return;
+        }
+
+        if (Instance != null && Instance != this)
+        {
+            Debug.Log($"[GameAudioManager] Duplicate audio manager '{gameObject.name}' loaded from scene '{sourceSceneName}'. Destroying duplicate.");
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+
+        if (rootManager == null)
+        {
+            transform.SetParent(null);
             DontDestroyOnLoad(gameObject);
-            InitializePool();
+            Debug.Log($"[GameAudioManager] Standalone audio manager initialized from scene '{sourceSceneName}'.");
         }
         else
         {
-            Destroy(gameObject);
+            Debug.Log($"[GameAudioManager] Audio manager registered under persistent root '{rootManager.gameObject.name}'.");
+        }
+
+        InitializePool();
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
         }
     }
 

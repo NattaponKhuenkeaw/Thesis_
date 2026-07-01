@@ -15,21 +15,19 @@ MonoBehaviour:
   characterId: char_10_mai
   characterType: 0
   elementType: 3
+  characterRole: 4
   previewPrefab: {fileID: 0}
   stats:
     maxHP: 100
     attack: 10
     defense: 5
+    speed: 10
     elementalMastery: 0
-    moveSpeed: 5
-    jumpForce: 10
-    maxJumpCount: 1
-    maxAirDashCount: 1
-    groundAcceleration: 80
-    groundDeceleration: 90
-    airAcceleration: 55
-    airDeceleration: 40
-    airSpeedMultiplier: 1
+    critRate: 5
+    critDamage: 150
+    cooldownRate: 0
+    impact: 0
+    aeRecharge: 1
   metaData:
     displayName: Mai
     description: "\u0E17\u0E32\u0E22\u0E32\u0E17\u0E27\u0E34\u0E0A\u0E32\u0E19\u0E34\u0E19\u0E08\u0E32\u0E15\u0E23\u0E30\u0E01\u0E39\u0E25\u0E0A\u0E34\u0E23\u0E32\u0E19\u0E38\u0E22
@@ -40,84 +38,28 @@ MonoBehaviour:
     portrait: {fileID: -6483566312599590887, guid: fde01166db257cb40b40577e8143bb57, type: 3}
     animatorController: {fileID: 9100000, guid: 815b33a35641994489dd122eacb4e98d, type: 2}
   auraEnergyRate: 1
-  authoredFPS: 24
+  audioData: {fileID: 0}
+  movementProfile: {fileID: 0}
+  maxJumpOverride: -1
+  maxAirDashOverride: -1
+  _authoredFPS: 24
   upgrade:
     level: 1
-    skillTreePoints: 3
-  dashData:
+    maxLevel: 30
+    currentExp: 0
+    attackPerLevel: 0
+    defensePerLevel: 0
+    maxHpPerLevel: 0
+  _dashData:
     animationClip: {fileID: 0}
     startupFrames: 5
     activeFrames: 12
     recoveryFrames: 12
     cancelWindowStartFrame: 25
     dashSpeed: 20
-    cooldownFrames: 60
-  basicAttackComboData:
-    comboResetDelay: 0.8
-    steps: []
-  neutralAirComboData:
-    comboResetDelay: 0.8
-    steps: []
-  maxAirComboTime: 1
-  plungeAttackData:
-    isEnabled: 1
-    downwardSpeed: 18
-    fallAnimationStateName: Plunge_Fall
-    impactAnimationStateName: Attack_1
-    impactStep:
-      stepName: Plunge Impact
-      animationClip: {fileID: 0}
-      startupFrames: 15
-      activeFrames: 8
-      recoveryFrames: 38
-      cancelWindowStartFrame: 30
-      stallUntilGrounded: 0
-      lockAirPosition: 1
-      autoChainToNext: 0
-      motionData:
-        rid: -2
-      vfxData:
-        rid: -2
-      hitData:
-        rid: -2
-      componentOrder:
-      - motion
-      - vfx
-      - hitbox
-  skillData:
-    skillName: 
-    description: 
-    elementType: 0
-    frameData:
-      startupFrames: 5
-      activeFrames: 8
-      recoveryFrames: 20
-      cancelWindowStartFrame: 25
-    cooldown: 4
-    damageMultiplier: 1.5
-    knockbackForce: 6
-    skillPrefab: {fileID: 0}
-    spawnOffset: {x: 1, y: 0}
-  ultimateData:
-    ultimateName: 
-    description: 
-    elementType: 0
-    frameData:
-      startupFrames: 10
-      activeFrames: 15
-      recoveryFrames: 25
-      cancelWindowStartFrame: 0
-    cooldown: 12
-    activeDuration: 4
-    damageMultiplier: 0.5
-    hitInterval: 0.4
-    ultimatePrefab: {fileID: 0}
-    spawnOffset: {x: 1.5, y: 0}
-  skillTreeData:
-    nodes: []
+    cooldownFrames: 24
+  progressionDefinition:
+    maxConstellationRank: 6
+    constellationNodes: []
+    passiveNodes: []
   actionResolverTable: {fileID: 11400000, guid: eb708f9d91ba9eb44b54f21baede425a, type: 2}
-  references:
-    version: 2
-    RefIds:
-    - rid: -2
-      type: {class: , ns: , asm: }

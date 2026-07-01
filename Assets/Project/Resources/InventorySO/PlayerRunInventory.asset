@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f751d24bba349245994568f1cc35fed, type: 3}
+  m_Name: PlayerRunInventory
+  m_EditorClassIdentifier: Assembly-CSharp::Project.ShopSystem.PlayerRunInventory
+  ownedItems:
+  - {fileID: 11400000, guid: 588790c4612f0304f89d14fb2bd64923, type: 2}
+  - {fileID: 11400000, guid: bc26e0a53989a6d439beb924d07f61f8, type: 2}
+  - {fileID: 11400000, guid: 077165c891eca7b4f8fa6a6ccf2751f2, type: 2}
+  - {fileID: 11400000, guid: 7067f23f35adada468f5f53a56908cbe, type: 2}
+  itemStacks:
+  - item: {fileID: 11400000, guid: bc26e0a53989a6d439beb924d07f61f8, type: 2}
+    quantity: 11
+  currency: 851336
+  runCharacters:
+  - character: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
+    upgrade:
+      level: 1
+      maxLevel: 30
+      currentExp: 0
+      attackPerLevel: 6.1
+      defensePerLevel: 4.2
+      maxHpPerLevel: 81
+    currentHP: 813
+    currentAE: 60
+  - character: {fileID: 11400000, guid: c9c99302d3f5d8a43b612bd108aa3f05, type: 2}
+    upgrade:
+      level: 1
+      maxLevel: 30
+      currentExp: 0
+      attackPerLevel: 4.7
+      defensePerLevel: 5.5
+      maxHpPerLevel: 95
+    currentHP: 1250
+    currentAE: 0
+  - character: {fileID: 11400000, guid: 27891cf9824752045b475995e212e47e, type: 2}
+    upgrade:
+      level: 1
+      maxLevel: 30
+      currentExp: 0
+      attackPerLevel: 5.7
+      defensePerLevel: 4.8
+      maxHpPerLevel: 82.85
+    currentHP: 911
+    currentAE: 0
+  teamSlots:
+  - character: {fileID: 11400000, guid: c9c99302d3f5d8a43b612bd108aa3f05, type: 2}
+    artifacts:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+  - character: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
+    artifacts:
+    - {fileID: 11400000, guid: 8dae9784a4112a44691459c99d1d3a64, type: 2}
+    - {fileID: 11400000, guid: 68ba37ce923f66e48a0239356de067a9, type: 2}
+    - {fileID: 0}
+  - character: {fileID: 11400000, guid: 27891cf9824752045b475995e212e47e, type: 2}
+    artifacts:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+  activeTeamSlotIndex: 2

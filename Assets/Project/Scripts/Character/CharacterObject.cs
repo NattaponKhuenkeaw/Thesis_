@@ -8,6 +8,7 @@ using EditorAttributes;
 
 public enum CharacterRole
 {
+    None,
     Reaper,     // Burst-DPS
     Executioner,// Sustained-DPS
     Herald,     // Support/Buffer
@@ -33,6 +34,7 @@ public class CharacterObject : ScriptableObject
     public string characterId;
     public CharacterType characterType = CharacterType.Player;
     public ElementType elementType = ElementType.None;
+    public CharacterRole characterRole = CharacterRole.None;
 
     [Header("Editor & Preview")]
     public GameObject previewPrefab;
@@ -95,7 +97,20 @@ public class CharacterObject : ScriptableObject
 
     public CharacterStats GetLeveledStats()
     {
-        return upgrade != null ? upgrade.ApplyLevelGrowth(stats) : (stats != null ? stats.Clone() : new CharacterStats());
+        CharacterStats leveled = upgrade != null ? upgrade.ApplyLevelGrowth(stats) : (stats != null ? stats.Clone() : new CharacterStats());
+        if (movementProfile != null)
+        {
+            leveled.speed = movementProfile.moveSpeed;
+        }
+        return leveled;
+    }
+
+    private void OnValidate()
+    {
+        if (movementProfile != null && stats != null)
+        {
+            stats.speed = movementProfile.moveSpeed;
+        }
     }
 
     // =========================================================

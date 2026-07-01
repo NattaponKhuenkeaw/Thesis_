@@ -68,16 +68,23 @@ namespace Project.TeamBuilder.UI.Panels
         {
             if (character == null || character.characterObjectData == null) return;
             var data = character.characterObjectData;
-            var upgrade = data.upgrade;
+            var upgrade = inspectScreenUI != null ? inspectScreenUI.ResolveCharacterUpgrade(data) : data.upgrade;
 
             if (levelText != null)
             {
                 levelText.text = upgrade != null ? upgrade.LevelLabel : "Lv.1/30";
             }
 
+            // Hide the Level button when the character is already at max level.
+            if (levelPanelButton != null)
+            {
+                bool isMax = upgrade != null && upgrade.IsMaxLevel;
+                levelPanelButton.gameObject.SetActive(!isMax);
+            }
+
             if (potentialText != null)
             {
-                int currentPotential = upgrade != null ? upgrade.constellationRank : 0;
+                int currentPotential = 0;
                 int maxPotential = data.progressionDefinition != null ? Mathf.Max(1, data.progressionDefinition.maxConstellationRank) : 6;
                 potentialText.text = $"Potential {currentPotential}/{maxPotential}";
             }
@@ -106,7 +113,7 @@ namespace Project.TeamBuilder.UI.Panels
                 }
             }
 
-            CharacterStats baseStats = data.GetLeveledStats();
+            CharacterStats baseStats = inspectScreenUI != null ? inspectScreenUI.ResolveCharacterStats(data) : data.GetLeveledStats();
             if (baseStats != null)
             {
                 if (hpText != null) hpText.text = FormatStatValue(baseStats.maxHP, bonusHp, "hp");

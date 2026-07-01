@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Project.UI
 {
@@ -9,6 +10,22 @@ namespace Project.UI
     public static class InputLockManager
     {
         private static int lockCount = 0;
+
+        static InputLockManager()
+        {
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void Init()
+        {
+            ResetLocks();
+        }
+
+        private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            ResetLocks();
+        }
 
         /// <summary>
         /// Is player input currently locked?

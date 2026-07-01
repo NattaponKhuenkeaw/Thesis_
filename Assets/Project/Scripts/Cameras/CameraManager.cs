@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Cinemachine;
 using Unity.Behavior;
+using Project.Core.ZoneState;
 
 /// <summary>
 /// Central camera orchestrator. Manages Explore / Combat virtual camera switching
@@ -34,6 +35,13 @@ public class CameraManager : MonoBehaviour
 
     [Tooltip("The combat framing virtual camera (uses TargetGroup).")]
     [SerializeField] private CinemachineCamera _combatCam;
+
+    [Tooltip("The static virtual camera (no follow / fixed transform).")]
+    [SerializeField] private CinemachineCamera _staticCam;
+
+    [Header("Zone State")]
+    [Tooltip("The ZoneStateProvider that manages room state changes.")]
+    [SerializeField] private ZoneStateProvider _zoneStateProvider;
 
     [Header("Target Group")]
     [Tooltip("The CinemachineTargetGroup that the combat cam tracks.")]
@@ -149,8 +157,11 @@ public class CameraManager : MonoBehaviour
         {
 #if UNITY_EDITOR
             // Guard against MissingReferenceException in Inspector
-            if (UnityEditor.Selection.activeGameObject == gameObject)
+            if (UnityEditor.Selection.activeGameObject != null && 
+                (UnityEditor.Selection.activeGameObject == gameObject || UnityEditor.Selection.activeGameObject.transform.IsChildOf(transform)))
+            {
                 UnityEditor.Selection.activeGameObject = null;
+            }
 #endif
             Destroy(gameObject);
             return;
@@ -177,6 +188,34 @@ public class CameraManager : MonoBehaviour
             }
         }
 
+        // Auto-find static camera
+        if (_staticCam == null)
+        {
+            Transform staticCamTransform = transform.Find("CinemachineCamera_Static");
+            if (staticCamTransform != null)
+            {
+                _staticCam = staticCamTransform.GetComponent<CinemachineCamera>();
+            }
+            else
+            {
+                CinemachineCamera[] cams = GetComponentsInChildren<CinemachineCamera>(true);
+                foreach (var cam in cams)
+                {
+                    if (cam.gameObject.name.Contains("Static"))
+                    {
+                        _staticCam = cam;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Auto-load zone state provider
+        if (_zoneStateProvider == null)
+        {
+            _zoneStateProvider = Resources.Load<ZoneStateProvider>("CombatSO/ZoneStateProvider");
+        }
+
         // Cache explore cam's PositionComposer for Y-damping
         if (_exploreCam != null)
             _explorePositionComposer = _exploreCam.GetComponent<CinemachinePositionComposer>();
@@ -185,10 +224,24 @@ public class CameraManager : MonoBehaviour
         SetExploreMode();
     }
 
+    private void Start()
+    {
+        if (_zoneStateProvider != null)
+        {
+            _zoneStateProvider.OnRoomChanged += HandleRoomChanged;
+            UpdateCameraForRoom(_zoneStateProvider.CurrentRoom);
+        }
+    }
+
     private void OnDestroy()
     {
         if (instance == this)
             instance = null;
+
+        if (_zoneStateProvider != null)
+        {
+            _zoneStateProvider.OnRoomChanged -= HandleRoomChanged;
+        }
     }
 
     private void LateUpdate()
@@ -490,6 +543,10 @@ public class CameraManager : MonoBehaviour
         {
             _combatCam.Priority = _inactivePriority;
         }
+        if (_staticCam != null)
+        {
+            _staticCam.Priority = _inactivePriority;
+        }
 
         NotifyPlayerWarp(Vector3.zero);
 
@@ -597,20 +654,90 @@ public class CameraManager : MonoBehaviour
     // =========================================================
     private void SetExploreMode()
     {
+        if (_zoneStateProvider != null && _zoneStateProvider.CurrentRoom != null && _zoneStateProvider.CurrentRoom.UseStaticCamera)
+        {
+            SetStaticMode();
+            return;
+        }
+
         if (_exploreCam != null)
             _exploreCam.Priority = _activePriority;
 
         if (_combatCam != null)
             _combatCam.Priority = _inactivePriority;
+
+        if (_staticCam != null)
+            _staticCam.Priority = _inactivePriority;
     }
 
     private void SetCombatMode()
     {
+        if (_zoneStateProvider != null && _zoneStateProvider.CurrentRoom != null && _zoneStateProvider.CurrentRoom.UseStaticCamera)
+        {
+            SetStaticMode();
+            return;
+        }
+
         if (_combatCam != null)
             _combatCam.Priority = _activePriority;
 
         if (_exploreCam != null)
             _exploreCam.Priority = _inactivePriority;
+
+        if (_staticCam != null)
+            _staticCam.Priority = _inactivePriority;
+    }
+
+    private void SetStaticMode()
+    {
+        if (_staticCam != null)
+        {
+            _staticCam.Priority = _activePriority + 10;
+        }
+
+        if (_exploreCam != null)
+        {
+            _exploreCam.Priority = _inactivePriority;
+        }
+
+        if (_combatCam != null)
+        {
+            _combatCam.Priority = _inactivePriority;
+        }
+    }
+
+    private void HandleRoomChanged(RoomData room)
+    {
+        UpdateCameraForRoom(room);
+    }
+
+    private void UpdateCameraForRoom(RoomData room)
+    {
+        if (room != null && room.UseStaticCamera)
+        {
+            if (_staticCam != null)
+            {
+                _staticCam.Follow = null;
+                _staticCam.LookAt = null;
+            }
+            SetStaticMode();
+        }
+        else
+        {
+            if (_staticCam != null)
+            {
+                _staticCam.Priority = _inactivePriority;
+            }
+
+            if (_isInCombat)
+            {
+                SetCombatMode();
+            }
+            else
+            {
+                SetExploreMode();
+            }
+        }
     }
 
     private void ExitCombatMode()

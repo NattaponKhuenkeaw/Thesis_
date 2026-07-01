@@ -241,6 +241,67 @@ public class UIFeedbackDriver : MonoBehaviour
         }
     }
 
+    public Coroutine PlayFade(CanvasGroup canvasGroup, bool fadeIn, float duration = 0.25f, System.Action onComplete = null)
+    {
+        if (canvasGroup == null || !isActiveAndEnabled)
+        {
+            onComplete?.Invoke();
+            return null;
+        }
+
+        float startAlpha = canvasGroup.alpha;
+        float targetAlpha = fadeIn ? 1f : 0f;
+        return StartCoroutine(FadeRoutine(canvasGroup, startAlpha, targetAlpha, duration, onComplete));
+    }
+
+    private IEnumerator FadeRoutine(CanvasGroup canvasGroup, float startAlpha, float targetAlpha, float duration, System.Action onComplete)
+    {
+        float resolvedDuration = Mathf.Max(0.01f, duration);
+        float elapsed = 0f;
+        canvasGroup.alpha = startAlpha;
+
+        while (elapsed < resolvedDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / resolvedDuration);
+            canvasGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, t);
+            yield return null;
+        }
+
+        canvasGroup.alpha = targetAlpha;
+        onComplete?.Invoke();
+    }
+
+    public Coroutine PlaySlide(RectTransform target, Vector2 startPos, Vector2 endPos, float duration = 0.25f, System.Action onComplete = null)
+    {
+        if (target == null || !isActiveAndEnabled)
+        {
+            onComplete?.Invoke();
+            return null;
+        }
+
+        return StartCoroutine(SlideRoutine(target, startPos, endPos, duration, onComplete));
+    }
+
+    private IEnumerator SlideRoutine(RectTransform target, Vector2 startPos, Vector2 endPos, float duration, System.Action onComplete)
+    {
+        float resolvedDuration = Mathf.Max(0.01f, duration);
+        float elapsed = 0f;
+        target.anchoredPosition = startPos;
+
+        while (elapsed < resolvedDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / resolvedDuration);
+            float eased = 1f - Mathf.Pow(1f - t, 3f);
+            target.anchoredPosition = Vector2.Lerp(startPos, endPos, eased);
+            yield return null;
+        }
+
+        target.anchoredPosition = endPos;
+        onComplete?.Invoke();
+    }
+
     private static Sprite GetFallbackSprite()
     {
         if (fallbackSprite == null)

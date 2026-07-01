@@ -35,6 +35,38 @@ public class InputHandler_Player : MonoBehaviour
             skillTreeController = GetComponent<SkillTreeController>();
     }
 
+    void OnEnable()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    void OnDisable()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    void Start()
+    {
+        EnsurePlayerActionMap();
+    }
+
+    private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+    {
+        EnsurePlayerActionMap();
+    }
+
+    private void EnsurePlayerActionMap()
+    {
+        if (playerInput != null && playerInput.actions != null)
+        {
+            var map = playerInput.actions.FindActionMap("Player");
+            if (map != null)
+            {
+                playerInput.SwitchCurrentActionMap("Player");
+            }
+        }
+    }
+
     void Update()
     {
         if (Project.UI.InputLockManager.IsLocked)
@@ -161,7 +193,7 @@ public class InputHandler_Player : MonoBehaviour
         if (playerInput == null || playerInput.actions == null || stateMachine == null)
             return true;
 
-        InputAction jumpAction = playerInput.actions["Jump"];
+        InputAction jumpAction = playerInput.actions.FindAction("Jump", throwIfNotFound: false);
         if (jumpAction == null || !jumpAction.IsPressed())
             return true;
 
@@ -204,7 +236,7 @@ public class InputHandler_Player : MonoBehaviour
         if (playerInput == null || playerInput.actions == null)
             return moveInput;
 
-        InputAction moveAction = playerInput.actions["Move"];
+        InputAction moveAction = playerInput.actions.FindAction("Move", throwIfNotFound: false);
         if (moveAction == null)
             return moveInput;
 

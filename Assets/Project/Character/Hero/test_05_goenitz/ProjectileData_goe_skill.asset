@@ -16,12 +16,13 @@ MonoBehaviour:
   projectilePrefab: {fileID: 7731053110207872557, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
   spawnClip: {fileID: 7400000, guid: 10f3584fb0c795f4bb9a1980ecf6fad1, type: 2}
   loopClip: {fileID: 7400000, guid: 10f3584fb0c795f4bb9a1980ecf6fad1, type: 2}
-  spawnOffset: {x: 0, y: 0}
+  spawnOffset: {x: 3.5, y: 0}
   spawnPositionMode: 1
   spawnReferencePointMode: 2
   playSpawnAnimation: 0
   spawnDuration: 0
   inheritFacingDirection: 1
+  applyOffsetToTarget: 0
   spawningHitbox:
     enabled: 0
     decrementsMaxHits: 0
@@ -73,7 +74,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 1
         activeFrames: 3
-        damageType: 5
+        elementType: 2
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0, y: 5}
         size: {x: 1.5, y: 10}

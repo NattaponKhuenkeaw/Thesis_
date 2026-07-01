@@ -17,10 +17,14 @@ public class ElementDatabase : ScriptableObject
             return cachedDatabase;
         }
 
-        cachedDatabase = Resources.Load<ElementDatabase>("Combat/ElementDatabase");
+        cachedDatabase = Resources.Load<ElementDatabase>("ElementSO/ElementDatabase");
         if (cachedDatabase == null)
         {
-            Debug.LogWarning("ElementDatabase not found at 'Resources/Combat/ElementDatabase'. Creating a temporary fallback instance.");
+            cachedDatabase = Resources.Load<ElementDatabase>("Combat/ElementDatabase");
+        }
+        if (cachedDatabase == null)
+        {
+            Debug.LogWarning("ElementDatabase not found at 'Resources/ElementSO/ElementDatabase' or 'Resources/Combat/ElementDatabase'. Creating a temporary fallback instance.");
             cachedDatabase = CreateInstance<ElementDatabase>();
         }
         return cachedDatabase;

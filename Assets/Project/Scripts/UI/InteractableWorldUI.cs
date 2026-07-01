@@ -1,6 +1,7 @@
-using UnityEngine;
-using TMPro;
 using System.Collections;
+using System.Collections.Generic;
+using TMPro;
+using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 
@@ -12,7 +13,31 @@ public class InteractableWorldUI : MonoBehaviour
         Shop,
         Dialogue,
         SavePoint,
-        Custom
+        Custom,
+        ShopReroll
+    }
+
+    [System.Serializable]
+    private class PromptConfig
+    {
+        public InteractionType interactionType;
+        public string keyString;
+        public string descriptionString;
+        public Vector3 offsetFromPlayer = new Vector3(1f, 1.5f, -0.5f);
+        public float floatingSpeed = 2f;
+        public float floatingHeight = 0.1f;
+        public float uiSmoothTime = 0.15f;
+    }
+
+    private class PromptRuntime
+    {
+        public PromptConfig Config;
+        public GameObject Root;
+        public TMP_Text KeyText;
+        public TMP_Text DescriptionText;
+        public Vector3 BaseScale;
+        public Vector3 CurrentVelocity;
+        public Coroutine ScaleCoroutine;
     }
 
     [Header("Settings")]
@@ -20,194 +45,398 @@ public class InteractableWorldUI : MonoBehaviour
     [SerializeField] private string keyString;
     [SerializeField] private string descriptionString;
     [Tooltip("Offset relative to the player to ensure it doesn't block the front view.")]
-    [SerializeField] private Vector3 offsetFromPlayer = new Vector3(1f, 1.5f, -0.5f); 
+    [SerializeField] private Vector3 offsetFromPlayer = new Vector3(1f, 1.5f, -0.5f);
     [SerializeField] private float floatingSpeed = 2f;
     [SerializeField] private float floatingHeight = 0.1f;
-    
-    [Header("UI References")]
-    [Tooltip("The parent GameObject of the WorldSpace Canvas. Leave empty to use this gameObject.")]
+    [SerializeField] private float uiSmoothTime = 0.15f;
+
+    [Header("World Canvas")]
+    [Tooltip("Scene WorldCanvas root. If empty, the first GameObject named WorldCanvas is used.")]
+    [SerializeField] private Transform worldCanvasRoot;
+    [Tooltip("InteractionText prefab/template. If empty, WorldCanvas/InteractionText is used as the template.")]
+    [SerializeField] private GameObject interactionTextPrefab;
+
+    [Header("Legacy UI References")]
+    [Tooltip("Backward-compatible reference. If this is a WorldCanvas, it is used as worldCanvasRoot.")]
     [SerializeField] private GameObject uiCanvasObject;
-    [Tooltip("TextMeshPro component for the individual key press (e.g. 'E').")]
-    [SerializeField] private TMP_Text keyText; 
-    [Tooltip("TextMeshPro component for the description (e.g. 'Interact').")]
+    [SerializeField] private TMP_Text keyText;
     [SerializeField] private TMP_Text descriptionText;
-    
+
+    [Header("Additional Prompts")]
+    [SerializeField] private PromptConfig[] promptConfigs;
+
+    private readonly List<PromptRuntime> prompts = new List<PromptRuntime>();
     private Transform playerTransform;
     private Camera mainCamera;
-    private bool isPlayerInRange = false;
+    private bool isPlayerInRange;
 
-    private Vector3 currentVelocity = Vector3.zero;
-    [SerializeField] private float uiSmoothTime = 0.15f;
+    private void Awake()
+    {
+        ResolveWorldCanvas();
+        BuildPrompts();
+    }
 
     private void Start()
     {
         mainCamera = Camera.main;
-        
-        // If not assigned, assume this script is attached directly to the UI Canvas object
-        if (uiCanvasObject == null)
-            uiCanvasObject = this.gameObject;
-            
-        uiCanvasObject.SetActive(false);
+        HideTemplate();
+        SetPromptActive(false);
     }
 
     private void Update()
     {
-        if (isPlayerInRange && playerTransform != null && uiCanvasObject != null)
+        if (!isPlayerInRange || playerTransform == null)
         {
-            // 1. Calculate dynamic position around the player (e.g., right and slightly behind to not block view)
-            Vector3 targetPosition = playerTransform.position 
-                + (playerTransform.right * offsetFromPlayer.x) 
-                + (playerTransform.up * offsetFromPlayer.y) 
-                + (playerTransform.forward * offsetFromPlayer.z);
+            return;
+        }
 
-            // Add a simple floating up and down animation
-            float floatOffset = Mathf.Sin(Time.time * floatingSpeed) * floatingHeight;
-            targetPosition.y += floatOffset;
-
-            // 2. Smoothly move the UI to the target position
-            uiCanvasObject.transform.position = Vector3.SmoothDamp(uiCanvasObject.transform.position, targetPosition, ref currentVelocity, uiSmoothTime);
-
-            // 3. Billboard: Make UI always face the camera
-            if (mainCamera != null)
+        for (int i = 0; i < prompts.Count; i++)
+        {
+            PromptRuntime prompt = prompts[i];
+            if (prompt.Root == null)
             {
-                uiCanvasObject.transform.rotation = Quaternion.LookRotation(uiCanvasObject.transform.position - mainCamera.transform.position);
+                continue;
             }
 
-            // 4. Handle Input
-            HandlePlayerInput();
+            Vector3 targetPosition = playerTransform.position
+                + (playerTransform.right * prompt.Config.offsetFromPlayer.x)
+                + (playerTransform.up * prompt.Config.offsetFromPlayer.y)
+                + (playerTransform.forward * prompt.Config.offsetFromPlayer.z);
+
+            float floatOffset = Mathf.Sin(Time.time * prompt.Config.floatingSpeed) * prompt.Config.floatingHeight;
+            targetPosition.y += floatOffset;
+
+            prompt.Root.transform.position = Vector3.SmoothDamp(
+                prompt.Root.transform.position,
+                targetPosition,
+                ref prompt.CurrentVelocity,
+                prompt.Config.uiSmoothTime);
+
+            if (mainCamera != null)
+            {
+                prompt.Root.transform.rotation = Quaternion.LookRotation(prompt.Root.transform.position - mainCamera.transform.position);
+            }
         }
+
+        HandlePlayerInput();
+    }
+
+    private void ResolveWorldCanvas()
+    {
+        if (worldCanvasRoot == null && uiCanvasObject != null && uiCanvasObject.name == "WorldCanvas")
+        {
+            worldCanvasRoot = uiCanvasObject.transform;
+        }
+
+        if (worldCanvasRoot == null)
+        {
+            GameObject worldCanvas = GameObject.Find("WorldCanvas");
+            if (worldCanvas != null)
+            {
+                worldCanvasRoot = worldCanvas.transform;
+            }
+        }
+
+        if (interactionTextPrefab == null && worldCanvasRoot != null)
+        {
+            Transform template = worldCanvasRoot.Find("InteractionText");
+            if (template != null)
+            {
+                interactionTextPrefab = template.gameObject;
+            }
+        }
+    }
+
+    private void BuildPrompts()
+    {
+        prompts.Clear();
+        AddPrompt(new PromptConfig
+        {
+            interactionType = interactionType,
+            keyString = keyString,
+            descriptionString = descriptionString,
+            offsetFromPlayer = offsetFromPlayer,
+            floatingSpeed = floatingSpeed,
+            floatingHeight = floatingHeight,
+            uiSmoothTime = uiSmoothTime
+        }, preferLegacyReferences: true);
+
+        if (promptConfigs == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < promptConfigs.Length; i++)
+        {
+            AddPrompt(promptConfigs[i], preferLegacyReferences: false);
+        }
+    }
+
+    private void AddPrompt(PromptConfig config, bool preferLegacyReferences)
+    {
+        if (config == null || string.IsNullOrEmpty(config.keyString))
+        {
+            return;
+        }
+
+        GameObject promptRoot = preferLegacyReferences && uiCanvasObject != null && uiCanvasObject.name != "WorldCanvas"
+            ? uiCanvasObject
+            : CreatePromptInstance(config);
+
+        if (promptRoot == null)
+        {
+            return;
+        }
+
+        PromptRuntime runtime = new PromptRuntime
+        {
+            Config = config,
+            Root = promptRoot,
+            KeyText = preferLegacyReferences && keyText != null ? keyText : FindPromptText(promptRoot.transform, "KeyPress"),
+            DescriptionText = preferLegacyReferences && descriptionText != null ? descriptionText : FindPromptText(promptRoot.transform, "DescText"),
+            BaseScale = promptRoot.transform.localScale
+        };
+
+        prompts.Add(runtime);
+    }
+
+    private GameObject CreatePromptInstance(PromptConfig config)
+    {
+        if (interactionTextPrefab == null || worldCanvasRoot == null)
+        {
+            return null;
+        }
+
+        GameObject instance = Instantiate(interactionTextPrefab, worldCanvasRoot);
+        instance.name = $"InteractionText_{config.keyString}";
+        return instance;
+    }
+
+    private void HideTemplate()
+    {
+        if (interactionTextPrefab != null && interactionTextPrefab.transform.parent == worldCanvasRoot)
+        {
+            interactionTextPrefab.SetActive(false);
+        }
+    }
+
+    private static TMP_Text FindPromptText(Transform root, string childName)
+    {
+        if (root == null)
+        {
+            return null;
+        }
+
+        Transform child = FindChildRecursive(root, childName);
+        return child != null ? child.GetComponentInChildren<TMP_Text>(true) : null;
+    }
+
+    private static Transform FindChildRecursive(Transform root, string childName)
+    {
+        if (root.name == childName)
+        {
+            return root;
+        }
+
+        for (int i = 0; i < root.childCount; i++)
+        {
+            Transform found = FindChildRecursive(root.GetChild(i), childName);
+            if (found != null)
+            {
+                return found;
+            }
+        }
+
+        return null;
     }
 
     private void HandlePlayerInput()
     {
-        if (Keyboard.current != null && !string.IsNullOrEmpty(keyString))
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard == null)
         {
+            return;
+        }
+
+        for (int i = 0; i < prompts.Count; i++)
+        {
+            PromptRuntime prompt = prompts[i];
             try
             {
-                string keyPath = keyString.ToLower();
-                KeyControl control = Keyboard.current[keyPath] as KeyControl;
+                KeyControl control = keyboard[prompt.Config.keyString.ToLower()] as KeyControl;
                 if (control != null && control.wasPressedThisFrame)
                 {
-                    OnInteract();
+                    OnInteract(prompt.Config);
                 }
             }
             catch (System.ArgumentException)
             {
-                // Ignore invalid key paths quietly or log a warning
-                //Debug.LogWarning($"[InteractableWorldUI] Invalid key string: '{keyString}'. Please check the Inspector.");
+                // Invalid key strings are ignored so one bad prompt does not break nearby prompts.
             }
         }
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        // Ensure the interacting object is the Player
-        if (other.CompareTag("Player"))
+        if (!other.CompareTag("Player") || isPlayerInRange)
         {
-            //Debug.Log("Player entered range");
-            if (!isPlayerInRange)
+            return;
+        }
+
+        playerTransform = other.transform;
+        isPlayerInRange = true;
+
+        for (int i = 0; i < prompts.Count; i++)
+        {
+            PromptRuntime prompt = prompts[i];
+            if (prompt.Root == null)
             {
-                playerTransform = other.transform;
-                isPlayerInRange = true;
-                
-                if (keyText != null)
-                {
-                    keyText.text = keyString;
-                }
-
-                if (descriptionText != null)
-                {
-                    descriptionText.text = descriptionString;
-                }
-
-                if (uiCanvasObject != null)
-                {
-                    uiCanvasObject.SetActive(true);
-                    // Snap to starting position immediately when appearing so it doesn't fly from far away
-                    uiCanvasObject.transform.position = playerTransform.position + offsetFromPlayer;
-                    
-                    // Scale pop-in animation
-                    StopAllCoroutines();
-                    StartCoroutine(ScaleAnimation(0f, 1f, 0.25f));
-                }
+                continue;
             }
+
+            if (prompt.KeyText != null)
+            {
+                prompt.KeyText.text = prompt.Config.keyString;
+            }
+
+            if (prompt.DescriptionText != null)
+            {
+                prompt.DescriptionText.text = GetDisplayDescription(prompt.Config);
+            }
+
+            prompt.Root.SetActive(true);
+            prompt.Root.transform.position = GetPromptPosition(prompt.Config);
+            StartScaleAnimation(prompt, 0f, 1f, 0.25f);
         }
     }
 
     private void OnTriggerExit2D(Collider2D other)
     {
-        //Debug.Log("Player is out of range");
-        if (other.CompareTag("Player"))
+        if (!other.CompareTag("Player"))
         {
-            isPlayerInRange = false;
-            
-            if (uiCanvasObject != null)
-            {
-                // Scale pop-out animation, then deactivate
-                StopAllCoroutines();
-                StartCoroutine(ScaleAnimation(uiCanvasObject.transform.localScale.x, 0f, 0.15f, () => uiCanvasObject.SetActive(false)));
-            }
-            playerTransform = null;
+            return;
         }
+
+        isPlayerInRange = false;
+
+        for (int i = 0; i < prompts.Count; i++)
+        {
+            PromptRuntime prompt = prompts[i];
+            if (prompt.Root != null)
+            {
+                StartScaleAnimation(prompt, prompt.Root.transform.localScale.x, 0f, 0.15f, () => prompt.Root.SetActive(false));
+            }
+        }
+
+        playerTransform = null;
     }
 
-    private IEnumerator ScaleAnimation(float startScale, float endScale, float duration, System.Action onComplete = null)
+    private Vector3 GetPromptPosition(PromptConfig config)
+    {
+        return playerTransform.position
+            + (playerTransform.right * config.offsetFromPlayer.x)
+            + (playerTransform.up * config.offsetFromPlayer.y)
+            + (playerTransform.forward * config.offsetFromPlayer.z);
+    }
+
+    private void StartScaleAnimation(PromptRuntime prompt, float startScale, float endScale, float duration, System.Action onComplete = null)
+    {
+        if (prompt.ScaleCoroutine != null)
+        {
+            StopCoroutine(prompt.ScaleCoroutine);
+        }
+
+        prompt.ScaleCoroutine = StartCoroutine(ScaleAnimation(prompt, startScale, endScale, duration, onComplete));
+    }
+
+    private IEnumerator ScaleAnimation(PromptRuntime prompt, float startScale, float endScale, float duration, System.Action onComplete = null)
     {
         float timer = 0f;
-        Vector3 initialScale = Vector3.one * startScale;
-        Vector3 targetScale = Vector3.one * endScale;
+        Vector3 initialScale = prompt.BaseScale * startScale;
+        Vector3 targetScale = prompt.BaseScale * endScale;
 
-        uiCanvasObject.transform.localScale = initialScale;
+        prompt.Root.transform.localScale = initialScale;
 
         while (timer < duration)
         {
             timer += Time.deltaTime;
             float t = Mathf.Clamp01(timer / duration);
-            
-            // Ease-out cubic curve for snappy animation
             float curve = 1f - Mathf.Pow(1f - t, 3f);
-            
-            uiCanvasObject.transform.localScale = Vector3.Lerp(initialScale, targetScale, curve);
+
+            prompt.Root.transform.localScale = Vector3.Lerp(initialScale, targetScale, curve);
             yield return null;
         }
 
-        uiCanvasObject.transform.localScale = targetScale;
+        prompt.Root.transform.localScale = targetScale;
+        prompt.ScaleCoroutine = null;
         onComplete?.Invoke();
     }
 
-    private void OnInteract()
+    private void SetPromptActive(bool isActive)
     {
-        if (Project.UI.InputLockManager.IsLocked) return;
-
-        if (isPlayerInRange && playerTransform != null)
+        for (int i = 0; i < prompts.Count; i++)
         {
-            //Debug.Log($"Player interacted with {gameObject.name}. Type: {interactionType}");
-            
-            // Interaction logic switch
-            switch (interactionType)
+            if (prompts[i].Root != null)
             {
-                case InteractionType.Shop:
-                    Debug.Log("Triggering Shop UI Opening...");
-                    FindFirstObjectByType<Project.ShopSystem.UI.ShopUI>(FindObjectsInactive.Include)?.OpenShopUI();
-                    break;
-
-                case InteractionType.Dialogue:
-                    Debug.Log("Triggering Dialogue...");
-                    break;
-
-                case InteractionType.SavePoint:
-                    Debug.Log("Triggering Save Point...");
-                    break;
-
-                case InteractionType.Custom:
-                    Debug.Log("Triggering Custom Interaction...");
-                    break;
-                    
-                case InteractionType.None:
-                default:
-                    break;
+                prompts[i].Root.SetActive(isActive);
             }
         }
     }
 
+    private void OnInteract(PromptConfig prompt)
+    {
+        if (Project.UI.InputLockManager.IsLocked)
+        {
+            return;
+        }
+
+        switch (prompt.interactionType)
+        {
+            case InteractionType.Shop:
+                Debug.Log("Triggering Shop UI Opening...");
+                FindFirstObjectByType<Project.ShopSystem.UI.ShopUI>(FindObjectsInactive.Include)?.OpenShopUI();
+                break;
+            case InteractionType.Dialogue:
+                Debug.Log("Triggering Dialogue...");
+                break;
+            case InteractionType.SavePoint:
+                Debug.Log("Triggering Save Point...");
+                break;
+            case InteractionType.Custom:
+                Debug.Log("Triggering Custom Interaction...");
+                break;
+            case InteractionType.ShopReroll:
+                Project.ShopSystem.ShopManager shopManager = FindFirstObjectByType<Project.ShopSystem.ShopManager>();
+                if (shopManager != null && shopManager.TryRerollOffers())
+                {
+                    RefreshPromptDescriptions();
+                }
+                break;
+        }
+    }
+
+    private void RefreshPromptDescriptions()
+    {
+        for (int i = 0; i < prompts.Count; i++)
+        {
+            PromptRuntime prompt = prompts[i];
+            if (prompt.DescriptionText != null)
+            {
+                prompt.DescriptionText.text = GetDisplayDescription(prompt.Config);
+            }
+        }
+    }
+
+    private string GetDisplayDescription(PromptConfig prompt)
+    {
+        if (prompt.interactionType != InteractionType.ShopReroll)
+        {
+            return prompt.descriptionString;
+        }
+
+        Project.ShopSystem.ShopManager shopManager = FindFirstObjectByType<Project.ShopSystem.ShopManager>();
+        return shopManager != null
+            ? $"{prompt.descriptionString} +{shopManager.CurrentRerollPriceIncreasePercent:0.#}%"
+            : prompt.descriptionString;
+    }
 }

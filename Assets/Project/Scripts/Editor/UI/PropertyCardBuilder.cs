@@ -139,6 +139,15 @@ namespace CombatEditor.UI
                         MarkDirty();
                     });
                 }
+                if (data.spawnPositionMode == SpawnPositionMode.Target)
+                {
+                    AddToggle(body, "Apply Offset to Target", data.applyOffsetToTarget, value =>
+                    {
+                        RecordUndo("Toggle Apply Offset to Target");
+                        data.applyOffsetToTarget = value;
+                        MarkDirty();
+                    });
+                }
                 AddToggle(body, "Play Spawn Animation", data.playSpawnAnimation, value =>
                 {
                     RecordUndo("Toggle Spawn Animation");

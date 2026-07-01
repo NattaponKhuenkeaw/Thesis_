@@ -557,7 +557,7 @@ MonoBehaviour:
           startupFrames: 16
           activeFrames: 19
           recoveryFrames: 23
-          cancelWindowStartFrame: 45
+          cancelWindowStartFrame: 54
           loopActivePhase: 0
           stepName: Dark Chain
           animationClip: {fileID: 7400000, guid: 0317f3858efd2494ebd53095b4246805, type: 2}
@@ -592,7 +592,7 @@ MonoBehaviour:
           startupFrames: 7
           activeFrames: 85
           recoveryFrames: 26
-          cancelWindowStartFrame: 114
+          cancelWindowStartFrame: 120
           loopActivePhase: 1
           stepName: Jailbreak Punisher
           animationClip: {fileID: 7400000, guid: 4c30a6e1a58e81648952fafc139e3e7a, type: 2}
@@ -1087,7 +1087,7 @@ MonoBehaviour:
           startupFrames: 15
           activeFrames: 29
           recoveryFrames: 22
-          cancelWindowStartFrame: 51
+          cancelWindowStartFrame: 65
           loopActivePhase: 0
           stepName: Attack2
           animationClip: {fileID: 7400000, guid: 187716bc3cd73824e808dced430ba1bb, type: 2}
@@ -1351,7 +1351,7 @@ MonoBehaviour:
           startupFrames: 7
           activeFrames: 85
           recoveryFrames: 26
-          cancelWindowStartFrame: 114
+          cancelWindowStartFrame: 120
           loopActivePhase: 0
           stepName: Jailbreak Punisher (Copy)
           animationClip: {fileID: 7400000, guid: 4c30a6e1a58e81648952fafc139e3e7a, type: 2}

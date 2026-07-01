@@ -31,7 +31,11 @@ public class ReactionRuleTable : ScriptableObject
             return cachedTable;
         }
 
-        cachedTable = Resources.Load<ReactionRuleTable>("Combat/ReactionRuleTable");
+        cachedTable = Resources.Load<ReactionRuleTable>("CombatSO/ReactionRuleTable");
+        if (cachedTable == null)
+        {
+            cachedTable = Resources.Load<ReactionRuleTable>("Combat/ReactionRuleTable");
+        }
         return cachedTable;
     }
 

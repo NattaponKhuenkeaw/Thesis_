@@ -63,7 +63,10 @@ namespace Project.TeamBuilder.UI
                     System.Action<CharacterItem> clickHandler = parentBuilder != null
                         ? parentBuilder.TryAssignCharacterToSelectedSlot
                         : null;
-                    cellUI.Init(character, rootCanvas, isInTeam, clickHandler);
+                    PlayerRunInventory runInventory = parentBuilder != null
+                        ? parentBuilder.RunInventory
+                        : null;
+                    cellUI.Init(character, rootCanvas, isInTeam, clickHandler, runInventory);
                     spawnedItems.Add(cellUI);
                 }
             }

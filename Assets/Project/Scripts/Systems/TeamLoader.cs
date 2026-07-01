@@ -1,7 +1,10 @@
-using UnityEngine;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+using UnityEngine.Serialization;
 using Project.InventorySystem.Items;
+using Project.ShopSystem;
 
 public interface ITeamEnergySystem
 {
@@ -17,110 +20,96 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 {
     public const float DefaultUltimateAuraEnergyCost = 100f;
     private const int DefaultTeamSize = 3;
-    private const int DefaultArtifactSlotCount = 3;
 
-    [Serializable]
-    private sealed class ArtifactLoadoutSlot
-    {
-        [SerializeField] private Artifact[] artifacts = new Artifact[DefaultArtifactSlotCount];
-        [SerializeField] private bool hasSnapshot;
-
-        public Artifact[] Artifacts => artifacts;
-        public bool HasSnapshot => hasSnapshot;
-
-        public void SetArtifacts(Artifact[] source)
-        {
-            int artifactCount = Mathf.Max(DefaultArtifactSlotCount, source != null ? source.Length : 0);
-            artifacts = new Artifact[artifactCount];
-            if (source != null)
-            {
-                Array.Copy(source, artifacts, source.Length);
-            }
-
-            hasSnapshot = true;
-        }
-    }
-
-    public event System.Action OnTeamChanged;
-    public event System.Action OnCurrentCharacterChanged;
-    public event System.Action<CharacterObject, float, float> OnCharacterHealthUpdated;
+    public event Action OnTeamChanged;
+    public event Action OnCurrentCharacterChanged;
+    public event Action<CharacterObject, float, float> OnCharacterHealthUpdated;
     public event Action<CharacterObject, float, float> OnCharacterAuraEnergyUpdated;
 
-    // =========================================================
-    // Team Data
-    // =========================================================
     [Header("Team Data")]
-    public CharacterObject[] team;
-    [SerializeField] private ArtifactLoadoutSlot[] equippedArtifactSlots = new ArtifactLoadoutSlot[DefaultTeamSize];
+    [SerializeField] private PlayerRunInventory runInventory;
+    [FormerlySerializedAs("team")]
+    [SerializeField, HideInInspector] private CharacterObject[] serializedBootstrapTeam = Array.Empty<CharacterObject>();
 
-    // =========================================================
-    // Dependencies
-    // =========================================================
     [Header("Dependencies")]
     public PlayerCharacter playerCharacter;
 
     [Header("Switch Cooldown")]
     [Min(0f)] public float switchCooldownDuration = 1.5f;
 
-    // =========================================================
-    // Runtime State
-    // =========================================================
     [Header("Runtime State")]
     [SerializeField] private int currentIndex = 0;
     [SerializeField] private float lastSwitchTime = -999f;
-    private readonly Dictionary<CharacterObject, float> characterCurrentHP = new Dictionary<CharacterObject, float>();
-    private readonly Dictionary<CharacterObject, float> characterCurrentAE = new Dictionary<CharacterObject, float>();
-    private readonly Dictionary<CharacterObject, CharacterStats> characterRuntimeStats = new Dictionary<CharacterObject, CharacterStats>();
 
-    // =========================================================
-    // Properties
-    // =========================================================
+    private readonly Dictionary<CharacterObject, CharacterStats> characterRuntimeStats = new Dictionary<CharacterObject, CharacterStats>();
+    private CharacterObject[] teamSnapshot = Array.Empty<CharacterObject>();
+
+    public PlayerRunInventory RunInventory => runInventory;
     public int CurrentIndex => currentIndex;
     public CharacterObject CurrentCharacter =>
-        (team != null && team.Length > 0 && currentIndex >= 0 && currentIndex < team.Length)
-        ? team[currentIndex]
-        : null;
-    public int CharacterCount => CountCharacters(team);
+        teamSnapshot != null && currentIndex >= 0 && currentIndex < teamSnapshot.Length
+            ? teamSnapshot[currentIndex]
+            : null;
+    public int CharacterCount => CountCharacters(teamSnapshot);
     public bool IsSwitchOnCooldown => switchCooldownDuration > 0f && Time.time < lastSwitchTime + switchCooldownDuration;
     public float RemainingCooldown => !IsSwitchOnCooldown
         ? 0f
-        : Mathf.Max(0f, (lastSwitchTime + switchCooldownDuration) - Time.time);
+        : Mathf.Max(0f, lastSwitchTime + switchCooldownDuration - Time.time);
 
-    // =========================================================
-    // Unity Methods
-    // =========================================================
-    void Awake()
+    private void Awake()
     {
-        if (playerCharacter == null)
-            playerCharacter = UnityEngine.Object.FindFirstObjectByType<PlayerCharacter>();
-
-        EnsureArtifactLoadoutCapacity(team != null ? team.Length : DefaultTeamSize);
+        ResolveDependencies();
+        BootstrapRunInventoryTeam();
+        SyncTeamSnapshotFromInventory();
     }
 
-    void OnEnable()
+    private void OnEnable()
     {
         BindPlayerCharacter();
+        CharacterEvents.OnCharacterStatsChanged += HandleCharacterStatsChanged;
     }
 
-    void OnDisable()
+    private void OnDisable()
     {
         UnbindPlayerCharacter();
+        CharacterEvents.OnCharacterStatsChanged -= HandleCharacterStatsChanged;
     }
 
-    void Start()
+    private void Start()
     {
-        BindPlayerCharacter();
-
-        BackfillCurrentSlotFromActiveCharacter();
+        ResolveDependencies();
+        BootstrapRunInventoryTeam();
+        SyncTeamSnapshotFromInventory();
         RebuildRuntimeStats();
-        LoadCurrentCharacter();
+        LoadCurrentCharacter(forceReload: true);
     }
 
-    // =========================================================
-    // Public Methods
-    // =========================================================
+    public CharacterObject[] GetTeamSnapshot()
+    {
+        SyncTeamSnapshotFromInventory();
+        CharacterObject[] snapshot = new CharacterObject[teamSnapshot.Length];
+        Array.Copy(teamSnapshot, snapshot, teamSnapshot.Length);
+        return snapshot;
+    }
+
+    public void SetRunInventory(PlayerRunInventory inventory)
+    {
+        runInventory = inventory;
+        BootstrapRunInventoryTeam();
+        SyncTeamSnapshotFromInventory();
+        if (runInventory != null && runInventory.HasDeployedTeam())
+        {
+            RefreshRuntimeState();
+        }
+        else
+        {
+            RebuildRuntimeStats();
+        }
+    }
+
     public void LoadCurrentCharacter(bool forceReload = false)
     {
+        SyncTeamSnapshotFromInventory();
         if (playerCharacter == null)
         {
             Debug.LogWarning("TeamLoader: PlayerCharacter is missing");
@@ -137,8 +126,9 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         }
 
         currentIndex = validIndex;
+        runInventory?.SetActiveTeamSlotIndex(currentIndex);
 
-        CharacterObject targetCharacter = team[currentIndex];
+        CharacterObject targetCharacter = teamSnapshot[currentIndex];
         if (targetCharacter == null)
         {
             currentIndex = -1;
@@ -156,57 +146,73 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
         playerCharacter.SetCharacter(
             targetCharacter,
-            GetStoredHP(targetCharacter),
-            GetCharacterRuntimeStats(targetCharacter),
-            GetEquippedArtifactsAt(currentIndex));
+            GetCharacterCurrentHP(targetCharacter),
+            GetCharacterRuntimeStats(targetCharacter));
         NotifyCharacterHealthUpdated(targetCharacter);
         NotifyCurrentCharacterChanged();
-        Debug.Log("Switched to: " + targetCharacter.metaData.displayName);
+
+        string displayName = targetCharacter.metaData != null && !string.IsNullOrWhiteSpace(targetCharacter.metaData.displayName)
+            ? targetCharacter.metaData.displayName
+            : targetCharacter.name;
+        Debug.Log("Switched to: " + displayName);
     }
 
     public bool SwitchNext()
     {
+        SyncTeamSnapshotFromInventory();
         int nextIndex = FindNextOccupiedIndex(currentIndex, 1);
         if (nextIndex < 0)
+        {
             return false;
+        }
 
         return SwitchToIndex(nextIndex);
     }
 
     public bool SwitchPrevious()
     {
+        SyncTeamSnapshotFromInventory();
         int previousIndex = FindNextOccupiedIndex(currentIndex, -1);
         if (previousIndex < 0)
+        {
             return false;
+        }
 
         return SwitchToIndex(previousIndex);
     }
 
     public bool SwitchToIndex(int index)
     {
-        if (team == null || team.Length == 0)
+        SyncTeamSnapshotFromInventory();
+        if (teamSnapshot == null || teamSnapshot.Length == 0)
+        {
             return false;
+        }
 
-        if (index < 0 || index >= team.Length)
+        if (index < 0 || index >= teamSnapshot.Length || teamSnapshot[index] == null)
+        {
             return false;
-
-        if (team[index] == null)
-            return false;
+        }
 
         if (currentIndex == index)
+        {
             return false;
+        }
 
         if (IsSwitchOnCooldown)
+        {
             return false;
+        }
 
-        // Spawn background executor if the switching-out character is performing an Ultimate
-        if (playerCharacter != null && playerCharacter.StateMachine != null 
+        if (playerCharacter != null
+            && playerCharacter.StateMachine != null
             && playerCharacter.StateMachine.CurrentStateId == PlayerStateId.Ultimate)
         {
             SpawnBackgroundUltimateExecutor();
         }
 
         currentIndex = index;
+        runInventory?.SetActiveTeamSlotIndex(currentIndex);
         lastSwitchTime = Time.time;
         LoadCurrentCharacter();
         return true;
@@ -214,179 +220,55 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     public bool ContainsCharacter(CharacterObject character)
     {
+        SyncTeamSnapshotFromInventory();
         return FindCharacterIndex(character) >= 0;
     }
 
-    public bool CanRemoveCharacterAt(int slotIndex)
-    {
-        if (team == null || slotIndex < 0 || slotIndex >= team.Length)
-            return false;
-
-        if (team[slotIndex] == null)
-            return false;
-
-        return CountCharacters(team) > 1;
-    }
-
-    public bool RemoveCharacter(int slotIndex)
-    {
-        if (!CanRemoveCharacterAt(slotIndex))
-            return false;
-
-        int previousIndex = currentIndex;
-        team[slotIndex] = null;
-
-        if (slotIndex == previousIndex || previousIndex < 0 || previousIndex >= team.Length || team[previousIndex] == null)
-            currentIndex = ResolvePreferredIndex(null, previousIndex);
-
-        NotifyTeamChanged();
-        LoadCurrentCharacter();
-        return true;
-    }
-
-    public bool ReplaceCharacter(int slotIndex, CharacterObject newCharacter, bool reloadIfActive = true)
-    {
-        if (slotIndex < 0)
-            return false;
-
-        EnsureTeamCapacity(Mathf.Max(slotIndex + 1, DefaultTeamSize));
-
-        CharacterObject removedCharacter = team[slotIndex];
-        if (newCharacter == null && removedCharacter != null && CountCharacters(team) <= 1)
-            return false;
-
-        if (removedCharacter == newCharacter)
-        {
-            if (reloadIfActive && slotIndex == currentIndex && newCharacter != null)
-                LoadCurrentCharacter();
-
-            return false;
-        }
-
-        team[slotIndex] = newCharacter;
-
-        int previousIndex = currentIndex;
-        CharacterObject preferredCharacter = CurrentCharacter;
-        if (slotIndex == currentIndex)
-            preferredCharacter = newCharacter;
-
-        currentIndex = ResolvePreferredIndex(preferredCharacter, previousIndex);
-
-        NotifyTeamChanged();
-
-        if (reloadIfActive && slotIndex == currentIndex)
-            LoadCurrentCharacter();
-
-        return true;
-    }
-
-    public void SyncWithTeam(CharacterObject[] newTeam, CharacterObject preferredCharacter = null)
+    public void DeployLoadout(CharacterObject[] newTeam, int preferredIndex, Artifact[][] artifactData = null)
     {
         if (newTeam == null)
-            return;
-
-        int previousIndex = currentIndex;
-
-        CharacterObject desiredCharacter = preferredCharacter;
-        if (desiredCharacter == null)
-            desiredCharacter = CurrentCharacter;
-        if (desiredCharacter == null && playerCharacter != null)
-            desiredCharacter = playerCharacter.characterObject;
-
-        HashSet<CharacterObject> incomingCharacters = new HashSet<CharacterObject>();
-        for (int i = 0; i < newTeam.Length; i++)
         {
-            if (newTeam[i] != null)
-                incomingCharacters.Add(newTeam[i]);
-        }
-
-        if (incomingCharacters.Count == 0)
-        {
-            CharacterObject fallbackCharacter = desiredCharacter;
-            if (fallbackCharacter == null && playerCharacter != null)
-                fallbackCharacter = playerCharacter.characterObject;
-
-            if (fallbackCharacter == null)
-            {
-                Debug.LogWarning("TeamLoader: Ignored empty team sync because no fallback character exists");
-                return;
-            }
-
-            team = new CharacterObject[Mathf.Max(1, newTeam.Length)];
-            int fallbackIndex = Mathf.Clamp(previousIndex, 0, team.Length - 1);
-            team[fallbackIndex] = fallbackCharacter;
-            currentIndex = fallbackIndex;
-
-            NotifyTeamChanged();
-            LoadCurrentCharacter();
             return;
         }
 
-        team = new CharacterObject[Mathf.Max(1, newTeam.Length)];
-        for (int i = 0; i < newTeam.Length; i++)
-        {
-            team[i] = newTeam[i];
-        }
-
-        currentIndex = ResolvePreferredIndex(desiredCharacter, previousIndex);
-
-        NotifyTeamChanged();
-        LoadCurrentCharacter();
-    }
-
-    public void DeployLoadout(CharacterObject[] newTeam, int preferredIndex, Project.InventorySystem.Items.Artifact[][] artifactData = null)
-    {
-        if (newTeam == null)
-            return;
-
-        CharacterObject preferredCharacter = null;
-        if (preferredIndex >= 0 && preferredIndex < newTeam.Length)
-            preferredCharacter = newTeam[preferredIndex];
-
+        ResolveDependencies();
+        CharacterObject preferredCharacter = preferredIndex >= 0 && preferredIndex < newTeam.Length
+            ? newTeam[preferredIndex]
+            : null;
         if (preferredCharacter == null && playerCharacter != null)
+        {
             preferredCharacter = playerCharacter.characterObject;
+        }
 
         int previousIndex = currentIndex;
-        HashSet<CharacterObject> incomingCharacters = new HashSet<CharacterObject>();
-        for (int i = 0; i < newTeam.Length; i++)
+        CharacterObject[] resolvedTeam = BuildDeployTeam(newTeam, preferredCharacter, previousIndex, out int targetIndex);
+        if (CountCharacters(resolvedTeam) == 0)
         {
-            if (newTeam[i] != null)
-                incomingCharacters.Add(newTeam[i]);
+            Debug.LogWarning("TeamLoader: Ignored empty deploy because no fallback character exists");
+            return;
         }
 
-        if (incomingCharacters.Count == 0)
+        if (preferredCharacter != null)
         {
-            CharacterObject fallbackCharacter = preferredCharacter;
-            if (fallbackCharacter == null && CurrentCharacter != null)
-                fallbackCharacter = CurrentCharacter;
-
-            if (fallbackCharacter == null)
+            int preferredCharacterIndex = Array.IndexOf(resolvedTeam, preferredCharacter);
+            if (preferredCharacterIndex >= 0)
             {
-                Debug.LogWarning("TeamLoader: Ignored empty deploy because no fallback character exists");
-                return;
+                targetIndex = preferredCharacterIndex;
             }
-
-            team = new CharacterObject[Mathf.Max(1, newTeam.Length)];
-            int fallbackIndex = Mathf.Clamp(previousIndex, 0, team.Length - 1);
-            team[fallbackIndex] = fallbackCharacter;
-            currentIndex = fallbackIndex;
         }
-        else
+
+        if (preferredIndex >= 0 && preferredIndex < resolvedTeam.Length && resolvedTeam[preferredIndex] != null)
         {
-            team = new CharacterObject[Mathf.Max(1, newTeam.Length)];
-            for (int i = 0; i < newTeam.Length; i++)
-            {
-                team[i] = newTeam[i];
-            }
-
-            currentIndex = ResolvePreferredIndex(preferredCharacter, Mathf.Clamp(preferredIndex, 0, team.Length - 1));
+            targetIndex = preferredIndex;
         }
 
+        runInventory.DeployTeam(resolvedTeam, targetIndex, artifactData);
+        SyncTeamSnapshotFromInventory();
+        currentIndex = runInventory.ActiveTeamSlotIndex;
         lastSwitchTime = -999f;
 
-        StoreArtifactLoadout(artifactData, team.Length);
         RebuildRuntimeStats();
-        ClampStoredRuntimeResources();
+
 
         NotifyTeamChanged();
         LoadCurrentCharacter(forceReload: true);
@@ -397,365 +279,85 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     public Artifact[] GetEquippedArtifactsFor(CharacterObject character)
     {
         int slotIndex = FindCharacterIndex(character);
-        return slotIndex >= 0 ? GetEquippedArtifactsAt(slotIndex) : System.Array.Empty<Artifact>();
+        return slotIndex >= 0 ? GetEquippedArtifactsAt(slotIndex) : Array.Empty<Artifact>();
     }
 
     public Artifact[] GetEquippedArtifactsAt(int slotIndex)
     {
-        if (team == null || slotIndex < 0 || slotIndex >= team.Length)
+        SyncTeamSnapshotFromInventory();
+        if (runInventory == null || teamSnapshot == null || slotIndex < 0 || slotIndex >= teamSnapshot.Length)
         {
-            return System.Array.Empty<Artifact>();
+            return Array.Empty<Artifact>();
         }
 
-        EnsureArtifactLoadoutCapacity(team.Length);
-        var slot = equippedArtifactSlots[slotIndex];
-
-        bool canBackfillActiveSlot = !slot.HasSnapshot
-            && slotIndex == currentIndex
-            && playerCharacter != null
-            && playerCharacter.characterObject == team[slotIndex]
-            && playerCharacter.EquippedArtifacts != null
-            && playerCharacter.EquippedArtifacts.Length > 0;
-
-        if (canBackfillActiveSlot)
-        {
-            slot.SetArtifacts(playerCharacter.EquippedArtifacts);
-            RebuildRuntimeStats();
-        }
-
-        return slot.Artifacts ?? System.Array.Empty<Artifact>();
+        return runInventory.GetEquippedArtifactsAt(slotIndex);
     }
 
     public void RefreshRuntimeState()
     {
-        EnsureArtifactLoadoutCapacity(team != null ? team.Length : DefaultTeamSize);
+        SyncTeamSnapshotFromInventory();
         RebuildRuntimeStats();
-        ClampStoredRuntimeResources();
+
         OnTeamChanged?.Invoke();
         LoadCurrentCharacter(forceReload: true);
         NotifyAllCharacterResources();
         ResetRuntimeTransientState();
     }
 
-    public void SetTeamFromUI(CharacterObject[] newTeam)
-    {
-        CharacterObject previouslySelected = CurrentCharacter;
-        if (previouslySelected == null && playerCharacter != null)
-            previouslySelected = playerCharacter.characterObject;
-
-        SyncWithTeam(newTeam, previouslySelected);
-    }
-
-    public void ClearSlot(int index)
-    {
-        RemoveCharacter(index);
-    }
-
-    private bool HasCurrentTeamCharacter()
-    {
-        return team != null
-            && currentIndex >= 0
-            && currentIndex < team.Length
-            && team[currentIndex] != null;
-    }
-
-    private int ResolvePreferredIndex(CharacterObject preferredCharacter, int fallbackOriginIndex = -1)
-    {
-        if (team == null || team.Length == 0)
-            return -1;
-
-        int preferredIndex = FindCharacterIndex(preferredCharacter);
-        if (preferredIndex >= 0 && team[preferredIndex] != null)
-            return preferredIndex;
-
-        int originIndex = fallbackOriginIndex >= 0 ? fallbackOriginIndex : currentIndex;
-        if (originIndex >= 0 && originIndex < team.Length && team[originIndex] != null)
-            return originIndex;
-
-        return FindFirstOccupiedIndex();
-    }
-
-    private int FindFirstOccupiedIndex()
-    {
-        if (team == null)
-            return -1;
-
-        for (int i = 0; i < team.Length; i++)
-        {
-            if (team[i] != null)
-                return i;
-        }
-
-        return -1;
-    }
-
-    private int FindNextOccupiedIndex(int startIndex, int direction)
-    {
-        if (team == null || team.Length == 0) return -1;
-        int index = startIndex;
-        for (int i = 0; i < team.Length; i++)
-        {
-            index = (index + direction + team.Length) % team.Length;
-            if (team[index] != null) return index;
-        }
-        return -1;
-    }
-
-    private int FindCharacterIndex(CharacterObject character)
-    {
-        if (character == null || team == null)
-            return -1;
-
-        for (int i = 0; i < team.Length; i++)
-        {
-            if (team[i] == character)
-                return i;
-        }
-
-        return -1;
-    }
-
-    private void BackfillCurrentSlotFromActiveCharacter()
-    {
-        if (HasCurrentTeamCharacter())
-            return;
-
-        if (playerCharacter == null || playerCharacter.characterObject == null)
-            return;
-
-        EnsureTeamCapacity(DefaultTeamSize);
-
-        int existingIndex = FindCharacterIndex(playerCharacter.characterObject);
-        if (existingIndex >= 0)
-        {
-            currentIndex = existingIndex;
-            return;
-        }
-
-        int targetIndex = currentIndex;
-        if (targetIndex < 0 || targetIndex >= team.Length)
-            targetIndex = 0;
-
-        team[targetIndex] = playerCharacter.characterObject;
-        currentIndex = targetIndex;
-
-        NotifyTeamChanged();
-    }
-
-    private void EnsureTeamCapacity(int minimumLength)
-    {
-        int length = Mathf.Max(1, minimumLength);
-        if (team == null || team.Length < length)
-        {
-            var old = team;
-            team = new CharacterObject[length];
-            if (old != null) Array.Copy(old, team, old.Length);
-        }
-    }
-
-    private void NotifyTeamChanged()
-    {
-        CleanUpStoredData();
-        RebuildRuntimeStats();
-        OnTeamChanged?.Invoke();
-    }
-
     public CharacterStats GetCharacterRuntimeStats(CharacterObject character)
     {
         if (character == null)
+        {
             return null;
+        }
 
         if (characterRuntimeStats.TryGetValue(character, out CharacterStats stats))
+        {
             return stats;
+        }
 
         CharacterStats fallback = BuildRuntimeStats(character, FindCharacterIndex(character));
         characterRuntimeStats[character] = fallback;
         return fallback;
     }
 
-    private void RebuildRuntimeStats()
-    {
-        characterRuntimeStats.Clear();
-        if (team == null)
-            return;
-
-        for (int i = 0; i < team.Length; i++)
-        {
-            CharacterObject character = team[i];
-            if (character != null)
-            {
-                characterRuntimeStats[character] = BuildRuntimeStats(character, i);
-            }
-        }
-    }
-
-    private CharacterStats BuildRuntimeStats(CharacterObject character, int slotIndex)
-    {
-        CharacterStats stats = character != null && character.stats != null
-            ? character.stats.Clone()
-            : new CharacterStats();
-
-        if (equippedArtifactSlots == null || slotIndex < 0 || slotIndex >= equippedArtifactSlots.Length)
-            return stats;
-
-        Artifact[] slotArtifacts = equippedArtifactSlots[slotIndex]?.Artifacts;
-        if (slotArtifacts == null)
-            return stats;
-
-        float hpPercentBonus = 0f;
-        float atkPercentBonus = 0f;
-        float defPercentBonus = 0f;
-
-        for (int i = 0; i < slotArtifacts.Length; i++)
-        {
-            Artifact artifact = slotArtifacts[i];
-            if (artifact != null && artifact.bonusStats != null)
-            {
-                hpPercentBonus += artifact.bonusStats.maxHP;
-                atkPercentBonus += artifact.bonusStats.attack;
-                defPercentBonus += artifact.bonusStats.defense;
-
-                // Add other stats normally
-                stats.speed += artifact.bonusStats.speed;
-                stats.elementalMastery += artifact.bonusStats.elementalMastery;
-                stats.critRate += artifact.bonusStats.critRate;
-                stats.critDamage += artifact.bonusStats.critDamage;
-                stats.cooldownRate += artifact.bonusStats.cooldownRate;
-                stats.impact += artifact.bonusStats.impact;
-                stats.aeRecharge += artifact.bonusStats.aeRecharge;
-            }
-        }
-
-        if (character != null && character.stats != null)
-        {
-            stats.maxHP = character.stats.maxHP * (1f + hpPercentBonus / 100f);
-            stats.attack = character.stats.attack * (1f + atkPercentBonus / 100f);
-            stats.defense = character.stats.defense * (1f + defPercentBonus / 100f);
-        }
-
-        return stats;
-    }
-
-    private void StoreArtifactLoadout(Artifact[][] source, int slotCount)
-    {
-        EnsureArtifactLoadoutCapacity(slotCount);
-        for (int slotIndex = 0; slotIndex < equippedArtifactSlots.Length; slotIndex++)
-        {
-            Artifact[] sourceSlot = source != null && slotIndex < source.Length
-                ? source[slotIndex]
-                : null;
-            equippedArtifactSlots[slotIndex].SetArtifacts(sourceSlot);
-        }
-    }
-
-    private void EnsureArtifactLoadoutCapacity(int slotCount)
-    {
-        int count = Mathf.Max(1, slotCount);
-        if (equippedArtifactSlots == null || equippedArtifactSlots.Length != count)
-        {
-            var old = equippedArtifactSlots;
-            equippedArtifactSlots = new ArtifactLoadoutSlot[count];
-            if (old != null) Array.Copy(old, equippedArtifactSlots, Mathf.Min(old.Length, count));
-        }
-        for (int i = 0; i < count; i++)
-        {
-            equippedArtifactSlots[i] ??= new ArtifactLoadoutSlot();
-        }
-    }
-
-    private void ClampStoredRuntimeResources()
-    {
-        if (team == null)
-        {
-            return;
-        }
-
-        for (int i = 0; i < team.Length; i++)
-        {
-            CharacterObject character = team[i];
-            if (character == null)
-            {
-                continue;
-            }
-
-            float maxHp = GetCharacterMaxHP(character);
-            if (characterCurrentHP.TryGetValue(character, out float currentHp))
-            {
-                characterCurrentHP[character] = Mathf.Clamp(currentHp, 0f, maxHp);
-            }
-
-            float maxAe = GetCharacterMaxAE(character);
-            if (characterCurrentAE.TryGetValue(character, out float currentAe))
-            {
-                characterCurrentAE[character] = Mathf.Clamp(currentAe, 0f, maxAe);
-            }
-        }
-    }
-
-    private void NotifyAllCharacterResources()
-    {
-        if (team == null)
-        {
-            return;
-        }
-
-        for (int i = 0; i < team.Length; i++)
-        {
-            CharacterObject character = team[i];
-            if (character == null)
-            {
-                continue;
-            }
-
-            NotifyCharacterHealthUpdated(character);
-            OnCharacterAuraEnergyUpdated?.Invoke(
-                character,
-                GetCharacterCurrentAE(character),
-                GetCharacterMaxAE(character));
-        }
-    }
-
-    private void ResetRuntimeTransientState()
-    {
-        if (playerCharacter == null)
-            return;
-
-        playerCharacter.Combat?.ResetCombo();
-        playerCharacter.Movement?.CancelAttackMotion();
-        playerCharacter.Movement?.StopDashPhysics();
-        playerCharacter.StateMachine?.ResetForCharacterSwitch();
-        playerCharacter.StateMachine?.InputBuffer?.ClearAll();
-    }
-
-    private int CountCharacters(CharacterObject[] teamData)
-    {
-        if (teamData == null)
-            return 0;
-
-        int count = 0;
-        for (int i = 0; i < teamData.Length; i++)
-        {
-            if (teamData[i] != null)
-                count++;
-        }
-
-        return count;
-    }
-
-    private void NotifyCurrentCharacterChanged()
-    {
-        OnCurrentCharacterChanged?.Invoke();
-    }
-
     public float GetCharacterCurrentHP(CharacterObject character)
     {
-        if (character == null)
-            return 0f;
+        if (character == null || runInventory == null) return 0f;
 
         if (playerCharacter != null && playerCharacter.characterObject == character)
             return playerCharacter.CurrentHP;
 
-        return GetStoredHP(character);
+        var state = runInventory.GetRunCharacter(character);
+        if (state == null) return GetCharacterMaxHP(character);
+
+        if (state.currentHP < 0f) 
+        {
+            state.currentHP = GetCharacterMaxHP(character);
+        }
+
+        return state.currentHP;
+    }
+
+    public void SetCharacterCurrentHP(CharacterObject character, float hp)
+    {
+        if (character == null || runInventory == null) return;
+        
+        float maxHp = GetCharacterMaxHP(character);
+        float clampedHp = Mathf.Clamp(hp, 0f, maxHp);
+        
+        var state = runInventory.GetRunCharacter(character);
+        if (state != null)
+        {
+            state.currentHP = clampedHp;
+        }
+        
+        if (playerCharacter != null && playerCharacter.characterObject == character)
+        {
+            playerCharacter.ApplyCharacterData(clampedHp);
+        }
+        
+        NotifyCharacterHealthUpdated(character);
     }
 
     public float GetCharacterMaxHP(CharacterObject character)
@@ -766,106 +368,28 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     public void ResetCharacterHP(CharacterObject character)
     {
-        if (character == null)
-            return;
-
-        characterCurrentHP.Remove(character);
+        if (character == null || runInventory == null) return;
+        var state = runInventory.GetRunCharacter(character);
+        if (state != null)
+        {
+            state.currentHP = -1f;
+        }
         NotifyCharacterHealthUpdated(character);
     }
 
-    private void BindPlayerCharacter()
-    {
-        if (playerCharacter == null)
-            playerCharacter = UnityEngine.Object.FindFirstObjectByType<PlayerCharacter>();
-
-        if (playerCharacter == null)
-            return;
-
-        playerCharacter.OnHealthChanged -= HandlePlayerHealthChanged;
-        playerCharacter.OnCharacterChanged -= HandlePlayerCharacterChanged;
-        playerCharacter.OnHealthChanged += HandlePlayerHealthChanged;
-        playerCharacter.OnCharacterChanged += HandlePlayerCharacterChanged;
-    }
-
-    private void UnbindPlayerCharacter()
-    {
-        if (playerCharacter == null)
-            return;
-
-        playerCharacter.OnHealthChanged -= HandlePlayerHealthChanged;
-        playerCharacter.OnCharacterChanged -= HandlePlayerCharacterChanged;
-    }
-
-    private void HandlePlayerHealthChanged(float currentHp, float maxHp)
-    {
-        if (playerCharacter == null || playerCharacter.characterObject == null)
-            return;
-
-        characterCurrentHP[playerCharacter.characterObject] = Mathf.Clamp(currentHp, 0f, maxHp);
-        NotifyCharacterHealthUpdated(playerCharacter.characterObject);
-    }
-
-    private void HandlePlayerCharacterChanged(CharacterObject character)
-    {
-        if (playerCharacter == null || character == null)
-            return;
-
-        characterCurrentHP[character] = Mathf.Clamp(playerCharacter.CurrentHP, 0f, playerCharacter.MaxHP);
-        NotifyCharacterHealthUpdated(character);
-    }
-
-    private float GetStoredHP(CharacterObject character)
-    {
-        if (character == null)
-            return 0f;
-
-        float maxHp = GetCharacterMaxHP(character);
-        if (maxHp <= 0f)
-            return 0f;
-
-        if (characterCurrentHP.TryGetValue(character, out float hp))
-            return Mathf.Clamp(hp, 0f, maxHp);
-
-        return maxHp;
-    }
-
-    private void CleanUpStoredData()
-    {
-        if (team == null) return;
-        List<CharacterObject> keysToRemove = new List<CharacterObject>();
-        foreach (var key in characterCurrentHP.Keys)
-        {
-            if (Array.IndexOf(team, key) < 0)
-                keysToRemove.Add(key);
-        }
-        foreach (var key in keysToRemove)
-        {
-            characterCurrentHP.Remove(key);
-            characterCurrentAE.Remove(key);
-            characterRuntimeStats.Remove(key);
-        }
-    }
-
-    private void NotifyCharacterHealthUpdated(CharacterObject character)
-    {
-        if (character != null)
-        {
-            OnCharacterHealthUpdated?.Invoke(character, GetCharacterCurrentHP(character), GetCharacterMaxHP(character));
-        }
-    }
-
-    // =========================================================
-    // ITeamEnergySystem Implementation & Helpers
-    // =========================================================
     public float GetCharacterCurrentAE(CharacterObject character)
     {
-        if (character == null) return 0f;
-        if (!characterCurrentAE.TryGetValue(character, out float ae))
+        if (character == null || runInventory == null) return 0f;
+
+        var state = runInventory.GetRunCharacter(character);
+        if (state == null) return 0f;
+
+        if (state.currentAE < 0f)
         {
-            ae = 0f;
-            characterCurrentAE[character] = ae;
+            state.currentAE = 0f;
         }
-        return ae;
+
+        return state.currentAE;
     }
 
     public float GetCharacterMaxAE(CharacterObject character)
@@ -875,11 +399,31 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     public void SetCharacterCurrentAE(CharacterObject character, float value)
     {
-        if (character == null) return;
+        if (character == null || runInventory == null) return;
+
         float maxAE = GetCharacterMaxAE(character);
         float newAE = Mathf.Clamp(value, 0f, maxAE);
-        characterCurrentAE[character] = newAE;
+        
+        var state = runInventory.GetRunCharacter(character);
+        if (state != null)
+        {
+            state.currentAE = newAE;
+        }
+        
         OnCharacterAuraEnergyUpdated?.Invoke(character, newAE, maxAE);
+    }
+
+    public void AddCharacterAE(CharacterObject character, float amount)
+    {
+        if (character == null)
+        {
+            return;
+        }
+
+        float maxAE = GetCharacterMaxAE(character);
+        float currentAE = GetCharacterCurrentAE(character);
+        float newAE = Mathf.Clamp(currentAE + amount, 0f, maxAE);
+        SetCharacterCurrentAE(character, newAE);
     }
 
     public float GetUltimateCost(CharacterObject character)
@@ -895,21 +439,357 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         return CalculateReducedCost(character, baseCost);
     }
 
-    private float GetHighestUltimateCost(CharacterObject character)
+    private void ResolveDependencies()
     {
-        if (character == null) return 0f;
-        float highestCost = 0f;
-        if (character.actionResolverTable != null && character.actionResolverTable.ultimateActions != null)
+        if (playerCharacter == null)
         {
-            for (int i = 0; i < character.actionResolverTable.ultimateActions.Count; i++)
+            playerCharacter = UnityEngine.Object.FindFirstObjectByType<PlayerCharacter>();
+        }
+
+        if (runInventory == null && Application.isPlaying)
+        {
+            runInventory = Resources.Load<PlayerRunInventory>("InventorySO/PlayerRunInventory");
+        }
+
+        if (runInventory == null)
+        {
+            runInventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+            runInventory.hideFlags = HideFlags.DontSave;
+        }
+    }
+
+    private void BootstrapRunInventoryTeam()
+    {
+        if (runInventory == null || runInventory.HasDeployedTeam())
+        {
+            return;
+        }
+
+        if (serializedBootstrapTeam != null && CountCharacters(serializedBootstrapTeam) > 0)
+        {
+            runInventory.DeployTeam(serializedBootstrapTeam, currentIndex);
+            return;
+        }
+
+        if (playerCharacter != null && playerCharacter.characterObject != null)
+        {
+            CharacterObject[] fallbackTeam = new CharacterObject[Mathf.Max(DefaultTeamSize, currentIndex + 1)];
+            int fallbackIndex = Mathf.Clamp(currentIndex, 0, fallbackTeam.Length - 1);
+            fallbackTeam[fallbackIndex] = playerCharacter.characterObject;
+            runInventory.DeployTeam(fallbackTeam, fallbackIndex);
+        }
+    }
+
+    private void SyncTeamSnapshotFromInventory()
+    {
+        if (runInventory == null)
+        {
+            teamSnapshot = Array.Empty<CharacterObject>();
+            return;
+        }
+
+        teamSnapshot = runInventory.GetTeamSnapshot(DefaultTeamSize);
+        currentIndex = runInventory.ActiveTeamSlotIndex;
+    }
+
+    private CharacterObject[] BuildDeployTeam(
+        CharacterObject[] newTeam,
+        CharacterObject preferredCharacter,
+        int previousIndex,
+        out int targetIndex)
+    {
+        int slotCount = Mathf.Max(DefaultTeamSize, newTeam.Length);
+        CharacterObject[] resolvedTeam = new CharacterObject[slotCount];
+        Array.Copy(newTeam, resolvedTeam, Mathf.Min(newTeam.Length, resolvedTeam.Length));
+
+        if (CountCharacters(resolvedTeam) > 0)
+        {
+            targetIndex = Mathf.Clamp(previousIndex, 0, resolvedTeam.Length - 1);
+            if (targetIndex >= 0 && targetIndex < resolvedTeam.Length && resolvedTeam[targetIndex] == null)
             {
-                var action = character.actionResolverTable.ultimateActions[i];
-                if (action != null)
-                {
-                    highestCost = Mathf.Max(highestCost, GetUltimateCost(character, action));
-                }
+                targetIndex = ResolveFirstOccupiedIndex(resolvedTeam);
+            }
+            return resolvedTeam;
+        }
+
+        CharacterObject fallbackCharacter = preferredCharacter ?? CurrentCharacter;
+        if (fallbackCharacter == null && playerCharacter != null)
+        {
+            fallbackCharacter = playerCharacter.characterObject;
+        }
+
+        if (fallbackCharacter == null)
+        {
+            targetIndex = -1;
+            return resolvedTeam;
+        }
+
+        int fallbackIndex = Mathf.Clamp(previousIndex, 0, resolvedTeam.Length - 1);
+        resolvedTeam[fallbackIndex] = fallbackCharacter;
+        targetIndex = fallbackIndex;
+        return resolvedTeam;
+    }
+
+    private void HandleCharacterStatsChanged(CharacterObject changedChar)
+    {
+        if (changedChar == null)
+        {
+            return;
+        }
+
+        SyncTeamSnapshotFromInventory();
+        if (FindCharacterIndex(changedChar) >= 0)
+        {
+            RefreshRuntimeState();
+        }
+    }
+
+    private int ResolvePreferredIndex(CharacterObject preferredCharacter)
+    {
+        if (teamSnapshot == null || teamSnapshot.Length == 0)
+        {
+            return -1;
+        }
+
+        int preferredIndex = FindCharacterIndex(preferredCharacter);
+        if (preferredIndex >= 0 && teamSnapshot[preferredIndex] != null)
+        {
+            return preferredIndex;
+        }
+
+        if (currentIndex >= 0 && currentIndex < teamSnapshot.Length && teamSnapshot[currentIndex] != null)
+        {
+            return currentIndex;
+        }
+
+        return FindFirstOccupiedIndex();
+    }
+
+    private int FindFirstOccupiedIndex()
+    {
+        return ResolveFirstOccupiedIndex(teamSnapshot);
+    }
+
+    private static int ResolveFirstOccupiedIndex(CharacterObject[] characters) =>
+        characters != null ? Array.FindIndex(characters, c => c != null) : -1;
+
+    private int FindNextOccupiedIndex(int startIndex, int direction)
+    {
+        if (teamSnapshot == null || teamSnapshot.Length == 0)
+        {
+            return -1;
+        }
+
+        int index = startIndex;
+        for (int i = 0; i < teamSnapshot.Length; i++)
+        {
+            index = (index + direction + teamSnapshot.Length) % teamSnapshot.Length;
+            if (teamSnapshot[index] != null)
+            {
+                return index;
             }
         }
+
+        return -1;
+    }
+
+    private int FindCharacterIndex(CharacterObject character) =>
+        (character == null || teamSnapshot == null) ? -1 : Array.IndexOf(teamSnapshot, character);
+
+    private void NotifyTeamChanged()
+    {
+        CleanUpStoredData();
+        RebuildRuntimeStats();
+        OnTeamChanged?.Invoke();
+    }
+
+    private void RebuildRuntimeStats()
+    {
+        characterRuntimeStats.Clear();
+        SyncTeamSnapshotFromInventory();
+        if (teamSnapshot == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < teamSnapshot.Length; i++)
+        {
+            CharacterObject character = teamSnapshot[i];
+            if (character != null)
+            {
+                characterRuntimeStats[character] = BuildRuntimeStats(character, i);
+            }
+        }
+    }
+
+    private CharacterStats BuildRuntimeStats(CharacterObject character, int slotIndex)
+    {
+        CharacterStats stats = runInventory != null && character != null
+            ? runInventory.GetCharacterStats(character)
+            : (character != null ? character.GetLeveledStats() : new CharacterStats());
+
+        float baseLeveledHp = stats.maxHP;
+        float baseLeveledAtk = stats.attack;
+        float baseLeveledDef = stats.defense;
+
+        Artifact[] slotArtifacts = runInventory != null && slotIndex >= 0
+            ? runInventory.GetEquippedArtifactsAt(slotIndex)
+            : Array.Empty<Artifact>();
+
+        float hpPercentBonus = 0f;
+        float atkPercentBonus = 0f;
+        float defPercentBonus = 0f;
+
+        foreach (var artifact in slotArtifacts.Where(a => a?.bonusStats != null))
+        {
+            hpPercentBonus += artifact.bonusStats.maxHP;
+            atkPercentBonus += artifact.bonusStats.attack;
+            defPercentBonus += artifact.bonusStats.defense;
+
+            stats.speed += artifact.bonusStats.speed;
+            stats.elementalMastery += artifact.bonusStats.elementalMastery;
+            stats.critRate += artifact.bonusStats.critRate;
+            stats.critDamage += artifact.bonusStats.critDamage;
+            stats.cooldownRate += artifact.bonusStats.cooldownRate;
+            stats.impact += artifact.bonusStats.impact;
+            stats.aeRecharge += artifact.bonusStats.aeRecharge;
+        }
+
+        stats.maxHP = baseLeveledHp * (1f + hpPercentBonus / 100f);
+        stats.attack = baseLeveledAtk * (1f + atkPercentBonus / 100f);
+        stats.defense = baseLeveledDef * (1f + defPercentBonus / 100f);
+        return stats;
+    }
+
+
+    private void NotifyAllCharacterResources()
+    {
+        if (teamSnapshot == null) return;
+
+        foreach (var character in teamSnapshot.Where(c => c != null))
+        {
+            NotifyCharacterHealthUpdated(character);
+            OnCharacterAuraEnergyUpdated?.Invoke(
+                character,
+                GetCharacterCurrentAE(character),
+                GetCharacterMaxAE(character));
+        }
+    }
+
+    private void ResetRuntimeTransientState()
+    {
+        if (playerCharacter == null)
+        {
+            return;
+        }
+
+        playerCharacter.Combat?.ResetCombo();
+        playerCharacter.Movement?.CancelAttackMotion();
+        playerCharacter.Movement?.StopDashPhysics();
+        playerCharacter.StateMachine?.ResetForCharacterSwitch();
+        playerCharacter.StateMachine?.InputBuffer?.ClearAll();
+    }
+
+    private int CountCharacters(CharacterObject[] teamData) => teamData?.Count(c => c != null) ?? 0;
+
+    private void NotifyCurrentCharacterChanged()
+    {
+        OnCurrentCharacterChanged?.Invoke();
+    }
+
+    private void BindPlayerCharacter()
+    {
+        if (playerCharacter == null)
+        {
+            playerCharacter = UnityEngine.Object.FindFirstObjectByType<PlayerCharacter>();
+        }
+
+        if (playerCharacter == null)
+        {
+            return;
+        }
+
+        playerCharacter.OnHealthChanged -= HandlePlayerHealthChanged;
+        playerCharacter.OnCharacterChanged -= HandlePlayerCharacterChanged;
+        playerCharacter.OnHealthChanged += HandlePlayerHealthChanged;
+        playerCharacter.OnCharacterChanged += HandlePlayerCharacterChanged;
+    }
+
+    private void UnbindPlayerCharacter()
+    {
+        if (playerCharacter == null)
+        {
+            return;
+        }
+
+        playerCharacter.OnHealthChanged -= HandlePlayerHealthChanged;
+        playerCharacter.OnCharacterChanged -= HandlePlayerCharacterChanged;
+    }
+
+    private void HandlePlayerHealthChanged(float currentHp, float maxHp)
+    {
+        if (playerCharacter == null || playerCharacter.characterObject == null || runInventory == null)
+        {
+            return;
+        }
+
+        var state = runInventory.GetRunCharacter(playerCharacter.characterObject);
+        if (state != null)
+        {
+            state.currentHP = Mathf.Clamp(currentHp, 0f, maxHp);
+        }
+        
+        NotifyCharacterHealthUpdated(playerCharacter.characterObject);
+    }
+
+    private void HandlePlayerCharacterChanged(CharacterObject character)
+    {
+        if (playerCharacter == null || character == null || runInventory == null)
+        {
+            return;
+        }
+
+        var state = runInventory.GetRunCharacter(character);
+        if (state != null)
+        {
+            state.currentHP = Mathf.Clamp(playerCharacter.CurrentHP, 0f, GetCharacterMaxHP(character));
+        }
+        
+        NotifyCharacterHealthUpdated(character);
+    }
+
+    private void CleanUpStoredData()
+    {
+        if (teamSnapshot == null) return;
+
+        var keysToRemove = characterRuntimeStats.Keys.Where(k => !teamSnapshot.Contains(k)).ToList();
+        foreach (var key in keysToRemove)
+        {
+            characterRuntimeStats.Remove(key);
+        }
+    }
+
+    private void NotifyCharacterHealthUpdated(CharacterObject character)
+    {
+        if (character != null)
+        {
+            OnCharacterHealthUpdated?.Invoke(character, GetCharacterCurrentHP(character), GetCharacterMaxHP(character));
+        }
+    }
+
+    private float GetHighestUltimateCost(CharacterObject character)
+    {
+        if (character?.actionResolverTable?.ultimateActions == null)
+        {
+            return CalculateReducedCost(character, DefaultUltimateAuraEnergyCost);
+        }
+
+        float highestCost = character.actionResolverTable.ultimateActions
+            .Where(a => a != null)
+            .Select(a => GetUltimateCost(character, a))
+            .DefaultIfEmpty(0f)
+            .Max();
+
         return highestCost > 0f ? highestCost : CalculateReducedCost(character, DefaultUltimateAuraEnergyCost);
     }
 
@@ -917,42 +797,48 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     {
         float resolvedBaseCost = Mathf.Max(0f, baseCost);
         CharacterStats stats = GetCharacterRuntimeStats(character);
-        if (stats == null) return resolvedBaseCost;
-        
+        if (stats == null)
+        {
+            return resolvedBaseCost;
+        }
+
         float cdr = stats.cooldownRate / 100f;
         float reduction = Mathf.Min(0.50f, cdr * 0.50f);
-        return resolvedBaseCost * (1.0f - reduction);
-    }
-
-    public void AddCharacterAE(CharacterObject character, float amount)
-    {
-        if (character == null) return;
-
-        float maxAE = GetCharacterMaxAE(character);
-        float currentAE = GetCharacterCurrentAE(character);
-        float newAE = Mathf.Clamp(currentAE + amount, 0f, maxAE);
-        characterCurrentAE[character] = newAE;
-
-        OnCharacterAuraEnergyUpdated?.Invoke(character, newAE, maxAE);
+        return resolvedBaseCost * (1f - reduction);
     }
 
     private void SpawnBackgroundUltimateExecutor()
     {
-        if (playerCharacter == null) return;
+        if (playerCharacter == null)
+        {
+            return;
+        }
 
         PlayerUltimateState ultimateState = playerCharacter.StateMachine?.UltimateState;
-        if (ultimateState == null) return;
+        if (ultimateState == null)
+        {
+            return;
+        }
 
-        if (playerCharacter.StateMachine.CurrentStateId != PlayerStateId.Ultimate) return;
+        if (playerCharacter.StateMachine.CurrentStateId != PlayerStateId.Ultimate)
+        {
+            return;
+        }
 
         AttackStepData currentStep = playerCharacter.Combat?.GetCurrentStepData();
-        if (currentStep == null) return;
+        if (currentStep == null)
+        {
+            return;
+        }
 
         int currentFrame = ultimateState.CurrentFrame;
         int facing = playerCharacter.Movement != null ? playerCharacter.Movement.FacingDirection : 1;
 
         CharacterObject castingCharacter = playerCharacter.characterObject;
-        if (castingCharacter == null) return;
+        if (castingCharacter == null)
+        {
+            return;
+        }
 
         CharacterStats stats = GetCharacterRuntimeStats(castingCharacter);
         PlayerCombat sourceCombat = playerCharacter.Combat;
@@ -964,7 +850,9 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             currentSprite = sr.sprite;
         }
 
-        RuntimeAnimatorController animController = castingCharacter.metaData != null ? castingCharacter.metaData.animatorController : null;
+        RuntimeAnimatorController animController = castingCharacter.metaData != null
+            ? castingCharacter.metaData.animatorController
+            : null;
 
         BackgroundUltimateExecutor.Spawn(
             playerCharacter.gameObject,
@@ -978,4 +866,5 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             currentSprite,
             animController);
     }
+
 }

@@ -44,8 +44,8 @@ public class CharacterPassiveController : MonoBehaviour
         CharacterObject characterObject = playerCharacter != null ? playerCharacter.characterObject : null;
         CharacterUpgrade upgrade = characterObject != null ? characterObject.upgrade : null;
 
-        int constellationRank = upgrade != null ? upgrade.constellationRank : 0;
-        int progressionPoints = upgrade != null ? upgrade.progressionPoints : 0;
+        int constellationRank = 0;
+        int progressionPoints = 0;
         progressionState.Initialize(constellationRank, progressionPoints);
         runtimeState.Reset();
 
@@ -179,8 +179,8 @@ public class CharacterPassiveController : MonoBehaviour
             : null;
 
         progressionState.Initialize(
-            upgrade != null ? upgrade.constellationRank : 0,
-            upgrade != null ? upgrade.progressionPoints : 0);
+            0,
+            0);
 
         CharacterProgressionDefinition definition = GetDefinition();
         if (definition != null)
@@ -370,14 +370,22 @@ public class CharacterPassiveController : MonoBehaviour
             AddAdditionalDamageEffects(node != null ? node.additionalDamageEffects : null, ref effects);
         }
 
-        if (playerCharacter != null && playerCharacter.EquippedArtifacts != null)
+        if (playerCharacter != null && playerCharacter.characterObject != null)
         {
-            for (int i = 0; i < playerCharacter.EquippedArtifacts.Length; i++)
+            TeamLoader teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
+            if (teamLoader != null)
             {
-                Project.InventorySystem.Items.Artifact artifact = playerCharacter.EquippedArtifacts[i];
-                AddAdditionalDamageEffects(
-                    artifact != null ? artifact.additionalDamageEffects : null,
-                    ref effects);
+                Project.InventorySystem.Items.Artifact[] artifacts = teamLoader.GetEquippedArtifactsFor(playerCharacter.characterObject);
+                if (artifacts != null)
+                {
+                    for (int i = 0; i < artifacts.Length; i++)
+                    {
+                        Project.InventorySystem.Items.Artifact artifact = artifacts[i];
+                        AddAdditionalDamageEffects(
+                            artifact != null ? artifact.additionalDamageEffects : null,
+                            ref effects);
+                    }
+                }
             }
         }
 

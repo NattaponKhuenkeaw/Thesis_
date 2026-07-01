@@ -138,6 +138,7 @@ public class PlayerMovement : MonoBehaviour
     public float VerticalVelocity => rb != null ? rb.linearVelocity.y : 0f;
     public int FacingDirection => transform.eulerAngles.y > 90f ? -1 : 1;
 
+
     // =========================================================
     // Events
     // =========================================================

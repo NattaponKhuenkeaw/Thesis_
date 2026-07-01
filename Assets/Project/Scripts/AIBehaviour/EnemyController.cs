@@ -333,7 +333,7 @@ public class EnemyController : MonoBehaviour
             priorityResetCoroutine = null;
         }
 
-        if (delay > 0 && !isPriority)
+        if (delay > 0 && !isPriority && gameObject.activeInHierarchy && enabled)
         {
             priorityResetCoroutine = StartCoroutine(PriorityResetRoutine(delay));
         }

@@ -12,7 +12,7 @@ namespace Project.TeamBuilder.UI
     /// <summary>
     /// Individual team slot that supports safe-zone editing and combat-zone inspection.
     /// </summary>
-    public class TeamSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler, IPointerDownHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
+    public class TeamSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler, IPointerDownHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerUpHandler
     {
         [Header("Character Display")]
         [SerializeField] private Image profileImage;
@@ -52,8 +52,7 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private float statFeedbackDuration = 0.3f;
         [SerializeField] private float statFeedbackScale = 1.2f;
 
-        [Header("Element Settings")]
-        [SerializeField] private ElementSpriteResolver elementResolver;
+
 
         private CharacterItem currentCharacter;
         private TeamBuilderUI parentBuilder;
@@ -67,6 +66,7 @@ namespace Project.TeamBuilder.UI
         private Coroutine atkFeedbackCoroutine;
         private Coroutine defFeedbackCoroutine;
         private Coroutine hpFeedbackCoroutine;
+        private Coroutine rmbHoldCoroutine;
         private float lastAttackBase;
         private float lastAttackBonus;
         private float lastDefenseBase;
@@ -144,14 +144,21 @@ namespace Project.TeamBuilder.UI
 
             if (levelText != null)
             {
-                levelText.text = charObj != null && charObj.upgrade != null
-                    ? charObj.upgrade.LevelLabel
+                CharacterUpgrade upgrade = charObj != null && parentBuilder != null
+                    ? parentBuilder.ResolveCharacterUpgrade(charObj)
+                    : (charObj != null ? charObj.upgrade : null);
+
+                levelText.text = upgrade != null
+                    ? upgrade.LevelLabel
                     : "Lv.1/30";
             }
 
-            if (elementIcon != null && charObj != null && elementResolver != null)
+            if (elementIcon != null && charObj != null)
             {
-                elementResolver.ResolveImage(elementIcon, charObj.elementType);
+                var db = ElementDatabase.Load();
+                Sprite sprite = db != null ? db.GetIcon(charObj.elementType) : null;
+                elementIcon.sprite = sprite;
+                elementIcon.enabled = sprite != null;
             }
 
             if (emptyStateOverlay != null)
@@ -260,7 +267,10 @@ namespace Project.TeamBuilder.UI
                 return;
             }
 
-            CharacterStats baseStats = currentCharacter.characterObjectData.GetLeveledStats();
+            CharacterObject charObj = currentCharacter.characterObjectData;
+            CharacterStats baseStats = parentBuilder != null
+                ? parentBuilder.ResolveCharacterStats(charObj)
+                : charObj.GetLeveledStats();
             float bonusAttack = 0f;
             float bonusDefense = 0f;
             float bonusHp = 0f;
@@ -347,11 +357,58 @@ namespace Project.TeamBuilder.UI
             if (parentBuilder.CurrentMode == ZoneMode.CombatZone)
             {
                 PlayLockedFeedback();
+                return;
             }
+
+            if (eventData.button == PointerEventData.InputButton.Right)
+            {
+                if (rmbHoldCoroutine != null)
+                {
+                    StopCoroutine(rmbHoldCoroutine);
+                }
+                rmbHoldCoroutine = StartCoroutine(RmbHoldRoutine());
+            }
+        }
+
+        public void OnPointerUp(PointerEventData eventData)
+        {
+            if (eventData.button == PointerEventData.InputButton.Right)
+            {
+                if (rmbHoldCoroutine != null)
+                {
+                    StopCoroutine(rmbHoldCoroutine);
+                    rmbHoldCoroutine = null;
+                }
+            }
+        }
+
+        private IEnumerator RmbHoldRoutine()
+        {
+            yield return new WaitForSecondsRealtime(0.4f);
+
+            if (currentCharacter != null && currentCharacter.characterObjectData != null)
+            {
+                string charName = currentCharacter.characterObjectData.name;
+                if (UIManager.Instance != null)
+                {
+                    UIManager.Instance.OpenInspectorWithCharacter(charName);
+                }
+                else if (parentBuilder != null && parentBuilder.InspectScreenUI != null)
+                {
+                    // Fallback if UIManager is not yet set up in the scene.
+                    parentBuilder.InspectScreenUI.OpenInspectorWithCharacter(charName);
+                }
+            }
+            rmbHoldCoroutine = null;
         }
 
         public void OnBeginDrag(PointerEventData eventData)
         {
+            if (rmbHoldCoroutine != null)
+            {
+                StopCoroutine(rmbHoldCoroutine);
+                rmbHoldCoroutine = null;
+            }
 
             if (parentBuilder != null && parentBuilder.CurrentMode == ZoneMode.CombatZone)
             {

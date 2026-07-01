@@ -10,7 +10,7 @@ namespace Project.TeamBuilder.UI
     /// </summary>
     public class TeamDraftController
     {
-        private PlayerShopInventory playerInventory;
+        private PlayerRunInventory playerInventory;
         private TeamLoader teamLoader;
         private TeamSlotUI[] teamSlots;
 
@@ -23,7 +23,7 @@ namespace Project.TeamBuilder.UI
 
         private readonly Dictionary<CharacterObject, CharacterItem> runtimeCharacterItems = new Dictionary<CharacterObject, CharacterItem>();
 
-        public TeamDraftController(PlayerShopInventory inventory, TeamLoader loader, TeamSlotUI[] slots)
+        public TeamDraftController(PlayerRunInventory inventory, TeamLoader loader, TeamSlotUI[] slots)
         {
             playerInventory = inventory;
             teamLoader = loader;
@@ -34,7 +34,7 @@ namespace Project.TeamBuilder.UI
         {
             if (playerInventory == null) return;
 
-            CharacterObject[] existingTeam = teamLoader != null ? teamLoader.team : null;
+            CharacterObject[] existingTeam = teamLoader != null ? teamLoader.GetTeamSnapshot() : null;
             if (existingTeam == null) return;
 
             for (int i = 0; i < teamSlots.Length; i++)

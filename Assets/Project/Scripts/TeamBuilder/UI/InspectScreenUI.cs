@@ -12,12 +12,24 @@ using Project.UI;
 
 namespace Project.TeamBuilder.UI
 {
+    /// <summary>
+    /// Defines which tab is active in the Inspector panel.
+    /// Public so UIManager can request a specific page when opening.
+    /// </summary>
+    public enum InspectPage
+    {
+        Info,
+        Skill,
+        Equipment,
+        Level,
+        Potential
+    }
+
     public class InspectScreenUI : MonoBehaviour, IOrchestratedPanel
     {
         [Header("UI Panels")]
         [SerializeField] private GameObject contentPanel;
         [SerializeField] private GameObject emptyStatePanel;
-        [SerializeField] private Button openButton;
         [SerializeField] private Button closeButton;
         [SerializeField] private Button infoTabButton;
         [SerializeField] private Button skillTabButton;
@@ -26,7 +38,7 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private GameObject characterSliderItemPrefab;
 
         [Header("Data Sources")]
-        [SerializeField] private PlayerShopInventory playerInventory;
+        [SerializeField] private PlayerRunInventory playerInventory;
         [SerializeField] private TeamLoader teamLoader;
         [SerializeField] private TeamUI owningTeamUI;
 
@@ -40,9 +52,12 @@ namespace Project.TeamBuilder.UI
         private readonly List<CharacterGridItemUI> sliderItems = new List<CharacterGridItemUI>();
         private RectTransform panelRectTransform;
         private CanvasGroup panelCanvasGroup;
-        private Coroutine transitionCoroutine;
+        private CanvasGroup rootCanvasGroup;
+        private Coroutine fadeCoroutine;
+        private Coroutine slideCoroutine;
         private Vector2 openAnchoredPosition;
         private int selectedCharacterIndex = -1;
+        private UIFeedbackDriver cachedDriver;
         private InspectPage activePage = InspectPage.Info;
         
         [Header("Mode Settings")]
@@ -57,14 +72,7 @@ namespace Project.TeamBuilder.UI
         private CharacterPotentialPanel potentialPanel;
         private CharacterVisualPanel visualPanel;
 
-        private enum InspectPage
-        {
-            Info,
-            Skill,
-            Equipment,
-            Level,
-            Potential
-        }
+
 
         private void OnEnable()
         {
@@ -76,12 +84,7 @@ namespace Project.TeamBuilder.UI
                 HandleZoneChanged(zoneStateProvider.CurrentMode);
             }
 
-            if (openButton != null)
-            {
-                openButton.onClick.RemoveListener(OpenFirstAvailableCharacter);
-                openButton.onClick.AddListener(OpenFirstAvailableCharacter);
-            }
-
+            // Tab and close buttons live inside the panel — wire here so they re-fire after re-enables.
             if (closeButton != null)
             {
                 closeButton.onClick.RemoveListener(Close);
@@ -114,11 +117,6 @@ namespace Project.TeamBuilder.UI
                 zoneStateProvider.OnZoneModeChanged -= HandleZoneChanged;
             }
 
-            if (openButton != null)
-            {
-                openButton.onClick.RemoveListener(OpenFirstAvailableCharacter);
-            }
-
             if (closeButton != null)
             {
                 closeButton.onClick.RemoveListener(Close);
@@ -148,10 +146,6 @@ namespace Project.TeamBuilder.UI
                 Close();
             }
 
-            if (openButton != null)
-            {
-                openButton.gameObject.SetActive(currentMode == ZoneMode.SafeZone);
-            }
 
             if (subPanels != null)
             {
@@ -167,6 +161,12 @@ namespace Project.TeamBuilder.UI
 
         private void Awake()
         {
+            rootCanvasGroup = GetComponent<CanvasGroup>();
+            if (rootCanvasGroup == null)
+            {
+                rootCanvasGroup = gameObject.AddComponent<CanvasGroup>();
+            }
+
             GameObject targetPanel = contentPanel != null ? contentPanel : gameObject;
             panelRectTransform = targetPanel.GetComponent<RectTransform>();
             panelCanvasGroup = targetPanel.GetComponent<CanvasGroup>();
@@ -189,37 +189,34 @@ namespace Project.TeamBuilder.UI
             levelPanel = targetPanel.GetComponentInChildren<CharacterLevelPanel>(true);
             potentialPanel = targetPanel.GetComponentInChildren<CharacterPotentialPanel>(true);
             visualPanel = targetPanel.GetComponentInChildren<CharacterVisualPanel>(true);
-            ResolveMissingReferences();
 
-            // Initialize visibility states without deactivating the host gameObject
+            // Cache driver once — coroutines must be stopped on the same component that started them.
+            cachedDriver = UIFeedbackDriver.GetOrAdd(gameObject);
+
+            // Set root CanvasGroup to transparent on awake
+            if (rootCanvasGroup != null)
+            {
+                rootCanvasGroup.alpha = 0f;
+                rootCanvasGroup.interactable = false;
+                rootCanvasGroup.blocksRaycasts = false;
+            }
+
             if (panelCanvasGroup != null)
             {
-                panelCanvasGroup.alpha = 0f;
-                panelCanvasGroup.interactable = false;
-                panelCanvasGroup.blocksRaycasts = false;
+                panelCanvasGroup.alpha = 1f;
+                panelCanvasGroup.interactable = true;
+                panelCanvasGroup.blocksRaycasts = true;
             }
             if (targetPanel != gameObject)
             {
-                targetPanel.SetActive(false);
+                targetPanel.SetActive(true);
             }
         }
 
         private void Start()
         {
-            if (playerInventory == null)
-            {
-                playerInventory = FindFirstObjectByType<PlayerShopInventory>();
-            }
-
-            if (teamLoader == null)
-            {
-                teamLoader = FindFirstObjectByType<TeamLoader>();
-            }
-
-            if (owningTeamUI == null)
-            {
-                owningTeamUI = GetComponentInParent<TeamUI>();
-            }
+            // Resolve missing references in Start() when other components are initialized.
+            ResolveMissingReferences();
         }
 
         public void OnPanelOpened()
@@ -244,22 +241,79 @@ namespace Project.TeamBuilder.UI
 
         public void OpenInspector()
         {
-            ZoneMode liveMode = zoneStateProvider != null ? zoneStateProvider.CurrentMode : currentMode;
+            // When zoneStateProvider is null (e.g. playground scenes) default to SafeZone
+            // so the inspector is not silently blocked.
+            ZoneMode liveMode = zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone;
             currentMode = liveMode;
             if (liveMode != ZoneMode.SafeZone)
             {
+                Debug.Log("[InspectScreenUI] OpenInspector blocked: not in SafeZone.");
                 return;
             }
 
             RefreshAvailableCharacters();
-            CharacterItem firstCharacter = availableCharacters.Count > 0 ? availableCharacters[0] : null;
             activePage = InspectPage.Info;
-            Open(firstCharacter);
+            Open(null);
+        }
+
+        public void OpenInspectorWithCharacter(string name)
+        {
+            OpenInspectorWithCharacterOnPage(name, InspectPage.Info);
+        }
+
+        /// <summary>
+        /// Open the Inspector showing the first available character on a specific page.
+        /// Called by UIManager (e.g. UIManager.OpenInspectorOnPotential).
+        /// </summary>
+        public void OpenInspectorOnPage(InspectPage page)
+        {
+            ZoneMode liveMode = zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone;
+            currentMode = liveMode;
+            if (liveMode != ZoneMode.SafeZone)
+            {
+                Debug.Log("[InspectScreenUI] OpenInspectorOnPage blocked: not in SafeZone.");
+                return;
+            }
+
+            RefreshAvailableCharacters();
+            activePage = page;
+            Open(null);
+        }
+
+        /// <summary>
+        /// Open the Inspector on a specific character and jump to a specific page.
+        /// Called by UIManager (e.g. UIManager.OpenInspectorOnPotentialWithCharacter).
+        /// </summary>
+        public void OpenInspectorWithCharacterOnPage(string name, InspectPage page)
+        {
+            ZoneMode liveMode = zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone;
+            currentMode = liveMode;
+            if (liveMode != ZoneMode.SafeZone)
+            {
+                Debug.Log("[InspectScreenUI] OpenInspectorWithCharacterOnPage blocked: not in SafeZone.");
+                return;
+            }
+
+            RefreshAvailableCharacters();
+            CharacterItem targetChar = availableCharacters.Find(c =>
+                c != null && c.characterObjectData != null &&
+                (string.Equals(c.characterObjectData.name, name, System.StringComparison.OrdinalIgnoreCase) ||
+                 string.Equals(c.characterObjectData.characterId, name, System.StringComparison.OrdinalIgnoreCase))
+            );
+
+            if (targetChar == null)
+            {
+                Debug.LogError($"[InspectScreenUI] Character '{name}' not found in available characters!");
+                return;
+            }
+
+            activePage = page;
+            Open(targetChar);
         }
 
         public void Open(CharacterItem character, Artifact[] equippedArtifacts = null)
         {
-            ZoneMode liveMode = zoneStateProvider != null ? zoneStateProvider.CurrentMode : currentMode;
+            ZoneMode liveMode = zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone;
             currentMode = liveMode;
             if (liveMode != ZoneMode.SafeZone)
             {
@@ -276,11 +330,31 @@ namespace Project.TeamBuilder.UI
             }
 
             owningTeamUI?.RegisterActivePanel(this);
-            SetPanelVisible(true);
+
+            bool isAlreadyOpen = gameObject.activeSelf && rootCanvasGroup != null && rootCanvasGroup.alpha > 0.01f;
+
+            if (!isAlreadyOpen)
+            {
+                if (!gameObject.activeSelf)
+                {
+                    gameObject.SetActive(true);
+                }
+                if (contentPanel != null)
+                {
+                    contentPanel.SetActive(true);
+                }
+                if (rootCanvasGroup != null)
+                {
+                    rootCanvasGroup.alpha = 0f;
+                    rootCanvasGroup.interactable = true;
+                    rootCanvasGroup.blocksRaycasts = true;
+                }
+                PlayFadeTransition(true);
+            }
 
             PopulateCharacterSlider();
             PopulateData();
-            PlayTransition(true);
+            PlayContentSlideTransition();
         }
 
         public void Open(CharacterItem character)
@@ -290,13 +364,97 @@ namespace Project.TeamBuilder.UI
 
         public void Close()
         {
-            bool isOpen = currentCharacter != null || IsPanelVisible();
-            if (!isOpen)
+            bool isVisuallyOpen = gameObject.activeSelf && rootCanvasGroup != null && rootCanvasGroup.alpha > 0.01f;
+
+            if (!isVisuallyOpen)
             {
+                // Panel is not visually open, but may still hold a registered lock/action-map.
+                // Always release ownership so the action map and input lock are never stranded.
+                owningTeamUI?.UnregisterActivePanel(this);
                 return;
             }
 
-            PlayTransition(false);
+            if (rootCanvasGroup != null)
+            {
+                rootCanvasGroup.interactable = false;
+                rootCanvasGroup.blocksRaycasts = false;
+            }
+            PlayFadeTransition(false);
+        }
+
+        private void OnDestroy()
+        {
+            // Safety net: if this object is destroyed (e.g., scene unload) while a panel is registered,
+            // unregister immediately so the action map and input lock are always restored.
+            owningTeamUI?.UnregisterActivePanel(this);
+        }
+
+        private void PlayFadeTransition(bool opening)
+        {
+            // Always stop on the cached driver — the coroutine was started there.
+            if (fadeCoroutine != null && cachedDriver != null)
+            {
+                cachedDriver.StopCoroutine(fadeCoroutine);
+                fadeCoroutine = null;
+            }
+
+            if (cachedDriver != null)
+            {
+                fadeCoroutine = cachedDriver.PlayFade(rootCanvasGroup, opening, slideDuration, () =>
+                {
+                    if (!opening)
+                    {
+                        gameObject.SetActive(false);
+                        currentCharacter = null;
+                        currentArtifacts = new Artifact[0];
+                        ClearCharacterSlider();
+                        owningTeamUI?.UnregisterActivePanel(this);
+                    }
+                    fadeCoroutine = null;
+                });
+            }
+            else
+            {
+                if (rootCanvasGroup != null)
+                {
+                    rootCanvasGroup.alpha = opening ? 1f : 0f;
+                }
+                if (!opening)
+                {
+                    gameObject.SetActive(false);
+                    currentCharacter = null;
+                    currentArtifacts = new Artifact[0];
+                    ClearCharacterSlider();
+                    owningTeamUI?.UnregisterActivePanel(this);
+                }
+            }
+        }
+
+        private void PlayContentSlideTransition()
+        {
+            if (panelRectTransform == null) return;
+
+            // Stop on the correct owner.
+            if (slideCoroutine != null && cachedDriver != null)
+            {
+                cachedDriver.StopCoroutine(slideCoroutine);
+                slideCoroutine = null;
+            }
+
+            Vector2 startPos = openAnchoredPosition + new Vector2(slideOffset, 0f);
+            Vector2 endPos = openAnchoredPosition;
+
+            if (cachedDriver != null)
+            {
+                slideCoroutine = cachedDriver.PlaySlide(panelRectTransform, startPos, endPos, slideDuration, () =>
+                {
+                    slideCoroutine = null;
+                });
+            }
+            else
+            {
+                panelRectTransform.anchoredPosition = endPos;
+            }
         }
 
         private void PopulateData()
@@ -363,6 +521,7 @@ namespace Project.TeamBuilder.UI
 
         private void RefreshAvailableCharacters()
         {
+            ResolveRunInventory();
             availableCharacters.Clear();
             if (playerInventory == null || playerInventory.ownedItems == null)
             {
@@ -389,73 +548,7 @@ namespace Project.TeamBuilder.UI
             return artifacts ?? new Artifact[0];
         }
 
-        private void PlayTransition(bool opening)
-        {
-            if (transitionCoroutine != null)
-            {
-                StopCoroutine(transitionCoroutine);
-            }
 
-            transitionCoroutine = StartCoroutine(PlayTransitionRoutine(opening));
-        }
-
-        private IEnumerator PlayTransitionRoutine(bool opening)
-        {
-            GameObject targetPanel = contentPanel != null ? contentPanel : gameObject;
-            if (panelRectTransform == null)
-            {
-                SetPanelVisible(opening);
-                if (!opening)
-                {
-                    currentCharacter = null;
-                    currentArtifacts = new Artifact[0];
-                }
-                yield break;
-            }
-
-            if (opening)
-            {
-                panelRectTransform.anchoredPosition = openAnchoredPosition + new Vector2(slideOffset, 0f);
-            }
-
-            float elapsed = 0f;
-            Vector2 startPosition = panelRectTransform.anchoredPosition;
-            Vector2 endPosition = opening ? openAnchoredPosition : openAnchoredPosition + new Vector2(slideOffset, 0f);
-            float startAlpha = panelCanvasGroup != null ? panelCanvasGroup.alpha : (opening ? 0f : 1f);
-            float endAlpha = opening ? 1f : 0f;
-
-            while (elapsed < slideDuration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                float t = Mathf.Clamp01(elapsed / slideDuration);
-                float eased = 1f - Mathf.Pow(1f - t, 3f);
-                panelRectTransform.anchoredPosition = Vector2.Lerp(startPosition, endPosition, eased);
-
-                if (panelCanvasGroup != null)
-                {
-                    panelCanvasGroup.alpha = Mathf.Lerp(startAlpha, endAlpha, t);
-                }
-
-                yield return null;
-            }
-
-            panelRectTransform.anchoredPosition = endPosition;
-            if (panelCanvasGroup != null)
-            {
-                panelCanvasGroup.alpha = endAlpha;
-            }
-
-            if (!opening)
-            {
-                SetPanelVisible(false);
-                currentCharacter = null;
-                currentArtifacts = new Artifact[0];
-                ClearCharacterSlider();
-                owningTeamUI?.UnregisterActivePanel(this);
-            }
-
-            transitionCoroutine = null;
-        }
 
         public void ShowInfoPage()
         {
@@ -586,15 +679,15 @@ namespace Project.TeamBuilder.UI
                 owningTeamUI = GetComponentInParent<TeamUI>();
             }
 
-            if (openButton == null)
+            // Eagerly resolve teamLoader and playerInventory here (called from Awake)
+            // so they are ready before Start() — which is deferred when the GameObject
+            // starts inactive (SetActive(false) at end of Awake).
+            if (teamLoader == null)
             {
-                openButton = FindButtonByNames("OpenButton", "InspectorButton", "CharacterInspectorButton", "InspectButton");
+                teamLoader = FindFirstObjectByType<TeamLoader>(FindObjectsInactive.Include);
             }
 
-            if (openButton == null || IsHiddenWithPanel(openButton.transform))
-            {
-                openButton = CreateFallbackOpenButton();
-            }
+            ResolveRunInventory();
 
             if (infoTabButton == null)
             {
@@ -614,15 +707,6 @@ namespace Project.TeamBuilder.UI
             if (characterSliderGridParent == null)
             {
                 characterSliderGridParent = FindTransformByNames("CharacterSliderGrid", "CharacterSlider", "SliderGrid", "SliderContent");
-            }
-
-            if (characterSliderItemPrefab == null)
-            {
-                CharacterGridItemUI existingItem = GetComponentInChildren<CharacterGridItemUI>(true);
-                if (existingItem != null)
-                {
-                    characterSliderItemPrefab = existingItem.gameObject;
-                }
             }
         }
 
@@ -649,39 +733,7 @@ namespace Project.TeamBuilder.UI
             return null;
         }
 
-        private Button CreateFallbackOpenButton()
-        {
-            GameObject buttonObject = new GameObject("CharacterInspectorButton", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
-            Transform parent = transform.parent != null ? transform.parent : transform;
-            buttonObject.transform.SetParent(parent, false);
 
-            RectTransform rectTransform = buttonObject.GetComponent<RectTransform>();
-            rectTransform.anchorMin = new Vector2(1f, 1f);
-            rectTransform.anchorMax = new Vector2(1f, 1f);
-            rectTransform.pivot = new Vector2(1f, 1f);
-            rectTransform.anchoredPosition = new Vector2(-24f, -24f);
-            rectTransform.sizeDelta = new Vector2(132f, 36f);
-
-            Image image = buttonObject.GetComponent<Image>();
-            image.color = new Color(0.14f, 0.16f, 0.2f, 0.9f);
-
-            GameObject labelObject = new GameObject("Text", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
-            labelObject.transform.SetParent(buttonObject.transform, false);
-
-            RectTransform labelRect = labelObject.GetComponent<RectTransform>();
-            labelRect.anchorMin = Vector2.zero;
-            labelRect.anchorMax = Vector2.one;
-            labelRect.offsetMin = Vector2.zero;
-            labelRect.offsetMax = Vector2.zero;
-
-            TextMeshProUGUI label = labelObject.GetComponent<TextMeshProUGUI>();
-            label.text = "Inspector";
-            label.fontSize = 18f;
-            label.alignment = TextAlignmentOptions.Center;
-            label.color = Color.white;
-
-            return buttonObject.GetComponent<Button>();
-        }
 
         private bool IsHiddenWithPanel(Transform target)
         {
@@ -729,6 +781,62 @@ namespace Project.TeamBuilder.UI
                 panelCanvasGroup.interactable = visible;
                 panelCanvasGroup.blocksRaycasts = visible;
             }
+        }
+
+        public PlayerRunInventory ResolveRunInventory()
+        {
+            if (playerInventory == null)
+            {
+                if (teamLoader == null)
+                {
+                    teamLoader = FindFirstObjectByType<TeamLoader>(FindObjectsInactive.Include);
+                }
+                if (teamLoader != null && teamLoader.RunInventory != null)
+                {
+                    playerInventory = teamLoader.RunInventory;
+                }
+
+                // NOTE: PlayerRunInventory is a ScriptableObject — FindFirstObjectByType
+                // cannot locate ScriptableObjects. The correct fallbacks are:
+                // TeamBuilderUI.RunInventory (which already holds the reference),
+                // or Resources.Load as a last resort.
+                if (playerInventory == null)
+                {
+                    playerInventory = FindFirstObjectByType<TeamBuilderUI>(FindObjectsInactive.Include)?.RunInventory;
+                }
+
+                if (playerInventory == null)
+                {
+                    playerInventory = Resources.Load<PlayerRunInventory>("InventorySO/PlayerRunInventory");
+                }
+            }
+            return playerInventory;
+        }
+
+        public CharacterUpgrade ResolveCharacterUpgrade(CharacterObject character)
+        {
+            if (character == null) return null;
+            var runInv = ResolveRunInventory();
+            if (runInv != null)
+            {
+                var state = runInv.GetRunCharacter(character);
+                if (state != null && state.upgrade != null)
+                {
+                    return state.upgrade;
+                }
+            }
+            return character.upgrade;
+        }
+
+        public CharacterStats ResolveCharacterStats(CharacterObject character)
+        {
+            if (character == null) return null;
+            var runInv = ResolveRunInventory();
+            if (runInv != null)
+            {
+                return runInv.GetCharacterStats(character);
+            }
+            return character.GetLeveledStats();
         }
 
         private Transform FindTransformByNames(params string[] names)

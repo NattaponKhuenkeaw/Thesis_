@@ -202,6 +202,7 @@ public class ProjectileData : ScriptableObject
     public bool playSpawnAnimation = true;
     public float spawnDuration = 0f;
     public bool inheritFacingDirection = true;
+    public bool applyOffsetToTarget = true;
     public ProjectilePhaseHitboxData spawningHitbox = new ProjectilePhaseHitboxData
     {
         enabled = false,
@@ -258,10 +259,11 @@ public class ProjectileData : ScriptableObject
             case SpawnPositionMode.Target:
                 if (context.targetTransform != null)
                 {
-                    return ResolvePositionWithOffset(context.targetTransform, spawnReferencePointMode, facingOffset, context.origin);
+                    Vector2 offsetToApply = applyOffsetToTarget ? facingOffset : Vector2.zero;
+                    return ResolvePositionWithOffset(context.targetTransform, spawnReferencePointMode, offsetToApply, context.origin);
                 }
 
-                return ResolvePositionWithOffset(context.casterTransform, spawnReferencePointMode, facingOffset, context.origin);
+                return context.origin;
 
             case SpawnPositionMode.Offset:
             default:

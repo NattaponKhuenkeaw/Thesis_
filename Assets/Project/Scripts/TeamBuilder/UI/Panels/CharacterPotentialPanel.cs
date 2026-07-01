@@ -33,7 +33,7 @@ namespace Project.TeamBuilder.UI.Panels
         private string BuildPotentialSummary(CharacterObject data)
         {
             StringBuilder builder = new StringBuilder();
-            int currentRank = data.upgrade != null ? data.upgrade.constellationRank : 0;
+            int currentRank = 0;
 
             for (int level = 1; level <= 6; level++)
             {

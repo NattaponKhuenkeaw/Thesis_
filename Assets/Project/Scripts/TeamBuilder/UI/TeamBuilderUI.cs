@@ -23,7 +23,7 @@ namespace Project.TeamBuilder.UI
         // =========================================================
         [Header("Dependencies")]
         [Tooltip("Player inventory that stores owned items (CharacterItems live here).")]
-        [SerializeField] private PlayerShopInventory playerInventory;
+        [SerializeField] private PlayerRunInventory playerInventory;
 
         [Tooltip("The TeamLoader that manages the active team for gameplay.")]
         [SerializeField] private TeamLoader teamLoader;
@@ -84,6 +84,8 @@ namespace Project.TeamBuilder.UI
         public ZoneMode CurrentMode => currentMode;
         public bool HasDraftChanges => draftController != null ? draftController.hasDraftChanges : false;
         public int StagedActiveIndex => draftController != null ? draftController.stagedActiveIndex : 0;
+        public InspectScreenUI InspectScreenUI => inspectScreenUI;
+        public PlayerRunInventory RunInventory => playerInventory;
 
         private void OnEnable()
         {
@@ -166,6 +168,13 @@ namespace Project.TeamBuilder.UI
             if (owningTeamUI == null)
             {
                 owningTeamUI = GetComponentInParent<TeamUI>();
+            }
+
+            if (playerInventory == null)
+            {
+                playerInventory = teamLoader != null && teamLoader.RunInventory != null
+                    ? teamLoader.RunInventory
+                    : Resources.Load<PlayerRunInventory>("InventorySO/PlayerRunInventory");
             }
 
             // Instantiate extracted sub-controllers
@@ -290,6 +299,7 @@ namespace Project.TeamBuilder.UI
         public void OpenPanel()
         {
             gameObject.SetActive(true);
+            EnsureInitialized();
             owningTeamUI?.RegisterActivePanel(this);
             OnPanelOpened();
         }
@@ -539,6 +549,33 @@ namespace Project.TeamBuilder.UI
             return FindSlotWithArtifact(artifact) != null;
         }
 
+        public CharacterUpgrade ResolveCharacterUpgrade(CharacterObject character)
+        {
+            if (character == null)
+            {
+                return null;
+            }
+
+            PlayerRunInventory inventory = ResolveRunInventoryReference();
+            RunCharacterState state = inventory != null ? inventory.GetRunCharacter(character) : null;
+            return state != null && state.upgrade != null
+                ? state.upgrade
+                : character.upgrade;
+        }
+
+        public CharacterStats ResolveCharacterStats(CharacterObject character)
+        {
+            if (character == null)
+            {
+                return new CharacterStats();
+            }
+
+            PlayerRunInventory inventory = ResolveRunInventoryReference();
+            return inventory != null
+                ? inventory.GetCharacterStats(character)
+                : character.GetLeveledStats();
+        }
+
         public TeamSlotUI FindSlotWithArtifact(Artifact artifact)
         {
             if (artifact == null) return null;
@@ -551,6 +588,31 @@ namespace Project.TeamBuilder.UI
                 }
             }
             return null;
+        }
+
+        private PlayerRunInventory ResolveRunInventoryReference()
+        {
+            if (playerInventory != null)
+            {
+                return playerInventory;
+            }
+
+            if (teamLoader == null)
+            {
+                teamLoader = FindFirstObjectByType<TeamLoader>(FindObjectsInactive.Include);
+            }
+
+            if (teamLoader != null && teamLoader.RunInventory != null)
+            {
+                playerInventory = teamLoader.RunInventory;
+            }
+
+            if (playerInventory == null)
+            {
+                playerInventory = Resources.Load<PlayerRunInventory>("InventorySO/PlayerRunInventory");
+            }
+
+            return playerInventory;
         }
 
         // =========================================================
@@ -566,9 +628,9 @@ namespace Project.TeamBuilder.UI
             if (inventoryPanel != null)
                 inventoryPanel.RefreshInTeamStates();
 
-            draftController.NormalizeStagedActiveIndex();
+            deployController.Hide();
             RefreshActiveIndex();
-            draftController.SaveDraftCache();
+            ApplyModeVisualState();
         }
 
         public void OnDeployClicked()
@@ -595,10 +657,6 @@ namespace Project.TeamBuilder.UI
             {
                 closeAfterDeploy.Invoke();
             }
-            else
-            {
-                ClosePanel();
-            }
         }
 
         public void OnDeployCancelled()
@@ -610,10 +668,6 @@ namespace Project.TeamBuilder.UI
             if (closeAfterCancel != null)
             {
                 closeAfterCancel.Invoke();
-            }
-            else
-            {
-                ClosePanel();
             }
         }
 
@@ -885,7 +939,7 @@ namespace Project.TeamBuilder.UI
 
             if (playerHolderButton != null)
             {
-                playerHolderButton.SetActive(false);
+                playerHolderButton.SetActive(currentMode == ZoneMode.SafeZone);
             }
 
             bool isLocked = currentMode == ZoneMode.CombatZone;

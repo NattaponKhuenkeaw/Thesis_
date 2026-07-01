@@ -14,13 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterObject
   characterId: char_5_goenitz
   characterType: 0
-  elementType: 4
+  elementType: 2
+  characterRole: 1
   previewPrefab: {fileID: 6597880524197938003, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
   stats:
     maxHP: 783
     attack: 65
     defense: 22
-    speed: 5.5
+    speed: 6.5
     elementalMastery: 0
     critRate: 5
     critDamage: 225
@@ -38,14 +39,17 @@ MonoBehaviour:
     animatorController: {fileID: 9100000, guid: efb84dc297f28b2448da06b6d95f9b3b, type: 2}
   auraEnergyRate: 2
   audioData: {fileID: 11400000, guid: 59862e682f48ee94498de7b7a51bd3a0, type: 2}
-  movementProfile: {fileID: 11400000, guid: b71e22596438c5f4ab6e3f64f66c4479, type: 2}
+  movementProfile: {fileID: 11400000, guid: cbbe7a07e1e23f24aa3f66dc18af9905, type: 2}
   maxJumpOverride: 2
   maxAirDashOverride: 2
   _authoredFPS: 24
   upgrade:
     level: 1
-    constellationRank: 0
-    progressionPoints: 3
+    maxLevel: 30
+    currentExp: 0
+    attackPerLevel: 7
+    defensePerLevel: 3.7
+    maxHpPerLevel: 79.5
   _dashData:
     animationClip: {fileID: 7400000, guid: a84ff45c3f3eb5047be611bbaa8bb3e9, type: 2}
     startupFrames: 7

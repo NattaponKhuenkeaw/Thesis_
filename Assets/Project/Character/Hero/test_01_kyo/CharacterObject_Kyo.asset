@@ -15,12 +15,13 @@ MonoBehaviour:
   characterId: char_1_kyo
   characterType: 0
   elementType: 3
+  characterRole: 3
   previewPrefab: {fileID: 6597880524197938003, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
   stats:
     maxHP: 892
     attack: 45
     defense: 37
-    speed: 7.5
+    speed: 9
     elementalMastery: 0
     critRate: 5
     critDamage: 150
@@ -44,8 +45,14 @@ MonoBehaviour:
   _authoredFPS: 24
   upgrade:
     level: 1
+    maxLevel: 30
+    currentExp: 0
+    expToNextLevel: 100
     constellationRank: 0
     progressionPoints: 3
+    attackPerLevel: 5.2
+    defensePerLevel: 4.4
+    maxHpPerLevel: 80
   _dashData:
     animationClip: {fileID: 7400000, guid: 1170a54f57116384b8506475803c25eb, type: 2}
     startupFrames: 5

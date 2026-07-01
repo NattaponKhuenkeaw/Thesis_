@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Project.InventorySystem.Items;
+using Project.ShopSystem;
 using Project.UI;
 using System;
 
@@ -16,8 +17,6 @@ namespace Project.ShopSystem.UI
         [SerializeField] private Button button;
         [SerializeField] private Image attributeImage; // For elemental attribute
 
-        [Header("Element Settings")]
-        [SerializeField] private ElementSpriteResolver elementResolver;
 
         [Header("Sold Out Overlay")]
         [Tooltip("A panel that covers the grid item when the item is already owned (one-time buy).")]
@@ -28,18 +27,19 @@ namespace Project.ShopSystem.UI
         [SerializeField] private Color artifactColor   = new Color(0.6f, 0.15f, 0.15f, 1f);    // Dark Red
         [SerializeField] private Color characterColor  = new Color(0.5f, 0.2f, 0.7f, 1f);      // Purple
 
-        private BaseItem currentItem;
-        private Action<BaseItem> onClickCallback;
+        private ShopSellEntry currentEntry;
+        private Action<ShopSellEntry> onClickCallback;
 
         /// <summary>
         /// Initializes the grid item. Pass isSoldOut = true to show the sold-out overlay and block interaction.
         /// </summary>
-        public void Init(BaseItem item, Action<BaseItem> onClick, bool isSoldOut = false)
+        public void Init(ShopSellEntry entry, Action<ShopSellEntry> onClick, bool isSoldOut = false)
         {
-            currentItem = item;
+            currentEntry = entry;
             onClickCallback = onClick;
+            BaseItem item = entry.Item;
 
-            if (nameText != null) nameText.text = item.itemName;
+            if (nameText != null) nameText.text = entry.DisplayName;
 
             // Icon — always keep enabled, only swap sprite if available
             if (iconImage != null)
@@ -59,9 +59,12 @@ namespace Project.ShopSystem.UI
             // Set attribute image based on item type
             if (attributeImage != null)
             {
-                if (item is CharacterItem characterItem && characterItem.characterObjectData != null && elementResolver != null)
+                if (item is CharacterItem characterItem && characterItem.characterObjectData != null)
                 {
-                    elementResolver.ResolveImage(attributeImage, characterItem.characterObjectData.elementType);
+                    var db = ElementDatabase.Load();
+                    Sprite sprite = db != null ? db.GetIcon(characterItem.characterObjectData.elementType) : null;
+                    attributeImage.sprite = sprite;
+                    attributeImage.enabled = sprite != null;
                 }
                 else
                 {
@@ -118,7 +121,7 @@ namespace Project.ShopSystem.UI
 
         private void OnClicked()
         {
-            onClickCallback?.Invoke(currentItem);
+            onClickCallback?.Invoke(currentEntry);
         }
     }
 }

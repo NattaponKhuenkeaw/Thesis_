@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Project.InventorySystem.Items;
+using Project.ShopSystem;
 
 namespace Project.ShopSystem.UI
 {
@@ -25,11 +26,15 @@ namespace Project.ShopSystem.UI
         public TMPro.TMP_Text currencyText;
 
         private List<ShopGridItemUI> spawnedSlots = new List<ShopGridItemUI>();
-        private ShopTab currentTab = ShopTab.Buy;
+        private ShopTab currentTab = ShopTab.Sell;
 
         private void Start()
         {
-            if (buyTabButton != null) buyTabButton.onClick.AddListener(() => SwitchTab(ShopTab.Buy));
+            if (buyTabButton != null)
+            {
+                buyTabButton.gameObject.SetActive(false);
+            }
+
             if (sellTabButton != null) sellTabButton.onClick.AddListener(() => SwitchTab(ShopTab.Sell));
             
             // Initial render
@@ -47,7 +52,7 @@ namespace Project.ShopSystem.UI
             target.SetActive(true);
             Project.UI.InputLockManager.Lock();
             
-            SwitchTab(ShopTab.Buy);
+            SwitchTab(ShopTab.Sell);
             UpdateCurrencyDisplay();
         }
 
@@ -65,11 +70,11 @@ namespace Project.ShopSystem.UI
 
         public void SwitchTab(ShopTab tab)
         {
-            currentTab = tab;
+            currentTab = ShopTab.Sell;
             
             // UI feedback for tabs
-            if (buyTabButton != null) buyTabButton.interactable = (tab != ShopTab.Buy);
-            if (sellTabButton != null) sellTabButton.interactable = (tab != ShopTab.Sell);
+            if (buyTabButton != null) buyTabButton.interactable = false;
+            if (sellTabButton != null) sellTabButton.interactable = false;
 
             RefreshUI();
             if (previewPanel != null) previewPanel.ClearPreview();
@@ -86,24 +91,29 @@ namespace Project.ShopSystem.UI
             }
             spawnedSlots.Clear();
 
-            List<BaseItem> itemsToDisplay = (currentTab == ShopTab.Buy) 
-                ? new List<BaseItem>(shopManager.currentShopItems) 
-                : new List<BaseItem>(shopManager.GetSellableItems());
+            List<ShopSellEntry> itemsToDisplay = new List<ShopSellEntry>(shopManager.GetSellableEntries());
 
-            // Sort by type: Consumable (0) → Character (1) → Artifact (2)
-            itemsToDisplay.Sort((a, b) => ShopGridItemUI.GetSortOrder(a).CompareTo(ShopGridItemUI.GetSortOrder(b)));
+            // Sort by type: Consumable (0), Character (1), Artifact (2).
+            itemsToDisplay.Sort((a, b) =>
+            {
+                int sortCompare = ShopGridItemUI.GetSortOrder(a.Item).CompareTo(ShopGridItemUI.GetSortOrder(b.Item));
+                if (sortCompare != 0)
+                {
+                    return sortCompare;
+                }
+
+                return a.Kind.CompareTo(b.Kind);
+            });
 
             // Spawn new slots
-            foreach (var item in itemsToDisplay)
+            foreach (ShopSellEntry entry in itemsToDisplay)
             {
                 GameObject slotObj = Instantiate(gridItemPrefab, gridParent);
                 ShopGridItemUI slotUI = slotObj.GetComponent<ShopGridItemUI>();
                 
                 if (slotUI != null)
                 {
-                    // On Buy tab, check if one-time-buy item is already owned → sold out
-                    bool isSoldOut = (currentTab == ShopTab.Buy) && shopManager.IsItemSoldOut(item);
-                    slotUI.Init(item, OnGridItemClicked, isSoldOut);
+                    slotUI.Init(entry, OnGridItemClicked, isSoldOut: false);
                     spawnedSlots.Add(slotUI);
                 }
             }
@@ -111,46 +121,25 @@ namespace Project.ShopSystem.UI
             UpdateCurrencyDisplay();
         }
 
-        private void OnGridItemClicked(BaseItem item)
+        private void OnGridItemClicked(ShopSellEntry entry)
         {
-            if (previewPanel != null)
+            if (previewPanel != null && entry != null)
             {
-                bool canAfford = (currentTab == ShopTab.Buy) 
-                    ? (shopManager != null && shopManager.playerInventory != null && shopManager.playerInventory.CanAfford(item.price))
-                    : true;
-
-                int ownedCount = (shopManager != null) ? shopManager.GetOwnedCount(item) : 0;
-                int maxCount = (shopManager != null) ? shopManager.GetMaxCount(item) : 1;
-
-                previewPanel.ShowItem(item, currentTab, canAfford, ownedCount, maxCount, () => ProcessTransaction(item));
+                previewPanel.ShowSellEntry(entry, () => ProcessTransaction(entry));
             }
         }
 
-        private void ProcessTransaction(BaseItem item)
+        private void ProcessTransaction(ShopSellEntry entry)
         {
             if (shopManager == null) return;
 
-            bool success = false;
-            if (currentTab == ShopTab.Buy)
-            {
-                success = shopManager.TryPurchase(item);
-            }
-            else
-            {
-                success = shopManager.TrySell(item);
-            }
+            bool success = shopManager.TrySell(entry);
 
             if (success)
             {
                 RefreshUI();
                 if (previewPanel != null) previewPanel.ClearPreview();
             }
-            else if (currentTab == ShopTab.Buy && previewPanel != null)
-            {
-                // Purchase failed (insufficient funds) — update the button dynamically
-                previewPanel.SetBuyable(false);
-            }
-
             UpdateCurrencyDisplay();
         }
 
@@ -164,11 +153,10 @@ namespace Project.ShopSystem.UI
 
         public void ProcessReroll()
         {
-            if (shopManager != null && currentTab == ShopTab.Buy)
+            if (shopManager != null)
             {
-                shopManager.GenerateNewShopItems();
-                RefreshUI();
-                if (previewPanel != null) previewPanel.ClearPreview();
+                shopManager.TryRerollOffers();
+                UpdateCurrencyDisplay();
             }
         }
     }
