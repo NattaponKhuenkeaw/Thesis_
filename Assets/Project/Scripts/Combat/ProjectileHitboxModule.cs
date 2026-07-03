@@ -165,7 +165,8 @@ public sealed class ProjectileHitboxModule
             context.category,
             context.sourceActionName,
             context.sourceStep,
-            context.passiveController);
+            context.passiveController,
+            context.sourceActionId);
         ConfigurePerEnemyDamageCalculation(context);
     }
 
@@ -181,7 +182,8 @@ public sealed class ProjectileHitboxModule
             context.category,
             context.sourceActionName,
             context.sourceStep,
-            context.passiveController);
+            context.passiveController,
+            context.sourceActionId);
         ConfigurePerEnemyDamageCalculation(context);
     }
 

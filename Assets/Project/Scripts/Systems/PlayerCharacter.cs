@@ -2,7 +2,7 @@ using UnityEngine;
 using Project.InventorySystem.Items;
 
 /// <summary>
-/// Central player façade. Holds CharacterObject data, runtime HP (absorbed from CharacterRuntime),
+/// Central player facade. Holds CharacterObject data, runtime HP,
 /// and references to all player sub-systems.
 /// </summary>
 public class PlayerCharacter : MonoBehaviour
@@ -23,13 +23,13 @@ public class PlayerCharacter : MonoBehaviour
     public PlayerAnimator Animator;
     public PlayerAudio Audio;
     public CharacterPassiveController PassiveController;
+    public RuntimeEffectReceiver RuntimeEffects;
 
     // =========================================================
-    // Runtime HP (absorbed from CharacterRuntime)
+    // Runtime HP
     // =========================================================
     [Header("Runtime Stats")]
     [SerializeField] private float currentHP;
-    [SerializeField] private CharacterStatus status = new CharacterStatus();
     [SerializeField] private CharacterStats runtimeStats;
 
     [Header("Damage Settings")]
@@ -38,7 +38,6 @@ public class PlayerCharacter : MonoBehaviour
     public float CurrentHP => currentHP;
     public float MaxHP => Stats != null ? Stats.maxHP : currentHP;
     public bool IsDead => currentHP <= 0f;
-    public CharacterStatus Status => status;
     public CharacterStats Stats => runtimeStats ?? (characterObject != null ? characterObject.stats : null);
     public bool IsDamageInvulnerable => Time.time < damageInvulnerableUntil;
 
@@ -107,6 +106,18 @@ public class PlayerCharacter : MonoBehaviour
         PassiveController?.InitializeFromCharacterData();
     }
 
+    public void RefreshRuntimeStats(CharacterStats effectiveStats)
+    {
+        runtimeStats = effectiveStats ?? (characterObject != null ? characterObject.GetLeveledStats() : null);
+        ApplyMovementData();
+
+        if (characterObject != null)
+        {
+            currentHP = Mathf.Clamp(currentHP, 0f, MaxHP);
+            NotifyHealthChanged();
+        }
+    }
+
     public void SetCharacter(
         CharacterObject newCharacter,
         float? initialHp = null,
@@ -123,7 +134,7 @@ public class PlayerCharacter : MonoBehaviour
     }
 
     // =========================================================
-    // HP Methods (absorbed from CharacterRuntime)
+    // HP Methods
     // =========================================================
     public void InitializeHP(float? initialHp = null)
     {
@@ -155,12 +166,28 @@ public class PlayerCharacter : MonoBehaviour
         if (IsDamageInvulnerable || (Movement != null && Movement.IsInvincible()) || IsUltimateInvulnerable)
             return false;
 
+        if (PassiveController != null && PassiveController.TryEvadeIncomingDamage(value))
+            return false;
+
         float finalDamage = value;
         if (Stats != null)
         {
             finalDamage = CombatFormula.CalculateIncomingDamage(
                 value,
-                Stats.defense);
+                Stats.defense,
+                Stats.damageReduction);
+        }
+
+        if (RuntimeEffects != null)
+        {
+            RuntimeEffectDamageContext context = new RuntimeEffectDamageContext
+            {
+                sourceCharacter = characterObject,
+                sourceStats = Stats,
+                category = AttackCategory.Normal,
+                damage = finalDamage
+            };
+            finalDamage = RuntimeEffects.ModifyIncomingDamage(context, finalDamage);
         }
 
         float previousHP = currentHP;
@@ -229,7 +256,10 @@ public class PlayerCharacter : MonoBehaviour
 
     public void ApplyStatus(StatusEffectType statusEffect, bool enabled = true)
     {
-        status.ApplyStatus(statusEffect, enabled);
+        if (enabled && PassiveController != null && PassiveController.HasDebuffImmunity())
+            return;
+
+        RuntimeEffects?.ApplyStatus(statusEffect, enabled);
     }
 
     /// <summary>
@@ -292,6 +322,12 @@ public class PlayerCharacter : MonoBehaviour
 
         if (PassiveController == null)
             PassiveController = GetComponent<CharacterPassiveController>();
+
+        if (RuntimeEffects == null)
+            RuntimeEffects = GetComponent<RuntimeEffectReceiver>();
+
+        if (RuntimeEffects == null)
+            RuntimeEffects = gameObject.AddComponent<RuntimeEffectReceiver>();
     }
 
     private void PrepareForCharacterSwitch()

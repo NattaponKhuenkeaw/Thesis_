@@ -1,4 +1,4 @@
-#define DISABLE_EDITOR_EXTENTION
+// #define DISABLE_EDITOR_EXTENTION
 using System;
 using System.IO;
 using System.Linq;

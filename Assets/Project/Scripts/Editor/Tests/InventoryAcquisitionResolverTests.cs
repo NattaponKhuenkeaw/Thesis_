@@ -73,4 +73,67 @@ public class InventoryAcquisitionResolverTests
         Object.DestroyImmediate(metaProgression);
         Object.DestroyImmediate(artifact);
     }
+
+    [Test]
+    public void PotentialUpgradeSpendsFragmentsAndCapsTrack()
+    {
+        PlayerMetaProgression metaProgression = ScriptableObject.CreateInstance<PlayerMetaProgression>();
+        CharacterObject characterDefinition = ScriptableObject.CreateInstance<CharacterObject>();
+        CharacterItem characterItem = ScriptableObject.CreateInstance<CharacterItem>();
+
+        characterDefinition.characterId = "potential-character";
+        characterDefinition.kitDefinition.potentialNodes.Add(new PotentialNodeDefinition
+        {
+            nodeId = "potential-character.skill.lv1",
+            track = PotentialTrack.Skill,
+            level = 1,
+            fragmentCost = 2
+        });
+        characterItem.id = characterDefinition.characterId;
+        characterItem.itemName = "Potential Character";
+        characterItem.characterObjectData = characterDefinition;
+        metaProgression.AddFragments(characterItem, 10);
+
+        Assert.That(metaProgression.TryUpgradePotential(characterDefinition, PotentialTrack.Skill), Is.True);
+        Assert.That(metaProgression.GetPotentialLevel(characterDefinition, PotentialTrack.Skill), Is.EqualTo(1));
+        Assert.That(metaProgression.GetFragmentCount(characterItem), Is.EqualTo(8));
+
+        Assert.That(metaProgression.TryUpgradePotential(characterDefinition, PotentialTrack.Skill), Is.True);
+        Assert.That(metaProgression.TryUpgradePotential(characterDefinition, PotentialTrack.Skill), Is.True);
+        Assert.That(metaProgression.TryUpgradePotential(characterDefinition, PotentialTrack.Skill), Is.True);
+        Assert.That(metaProgression.GetPotentialLevel(characterDefinition, PotentialTrack.Skill), Is.EqualTo(4));
+        Assert.That(metaProgression.TryUpgradePotential(characterDefinition, PotentialTrack.Skill), Is.False);
+
+        Object.DestroyImmediate(metaProgression);
+        Object.DestroyImmediate(characterDefinition);
+        Object.DestroyImmediate(characterItem);
+    }
+
+    [Test]
+    public void MetaProgressionJsonRoundTripPreservesFragmentsAndPotential()
+    {
+        PlayerMetaProgression source = ScriptableObject.CreateInstance<PlayerMetaProgression>();
+        PlayerMetaProgression restored = ScriptableObject.CreateInstance<PlayerMetaProgression>();
+        CharacterObject characterDefinition = ScriptableObject.CreateInstance<CharacterObject>();
+        CharacterItem characterItem = ScriptableObject.CreateInstance<CharacterItem>();
+
+        characterDefinition.characterId = "roundtrip-character";
+        characterItem.id = characterDefinition.characterId;
+        characterItem.itemName = "Roundtrip Character";
+        characterItem.characterObjectData = characterDefinition;
+
+        source.AddFragments(characterItem, 4);
+        source.SetPotentialLevel(characterDefinition, PotentialTrack.Ultimate, 3);
+        string json = source.ExportJson();
+
+        restored.ImportJson(json);
+
+        Assert.That(restored.GetFragmentCount(characterItem), Is.EqualTo(4));
+        Assert.That(restored.GetPotentialLevel(characterDefinition, PotentialTrack.Ultimate), Is.EqualTo(3));
+
+        Object.DestroyImmediate(source);
+        Object.DestroyImmediate(restored);
+        Object.DestroyImmediate(characterDefinition);
+        Object.DestroyImmediate(characterItem);
+    }
 }

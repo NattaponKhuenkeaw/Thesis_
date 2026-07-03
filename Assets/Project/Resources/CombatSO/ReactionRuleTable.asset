@@ -31,12 +31,3 @@ MonoBehaviour:
     knockupFrames: 15
     knockfallFrames: 15
     recoveryFrames: 7
-  - targetState: 7
-    reactionKind: 2
-    landingBehavior: 0
-    canAirJuggle: 1
-    minimumLaunchSpeed: 4
-    knockbackFrames: 10
-    knockupFrames: 15
-    knockfallFrames: 15
-    recoveryFrames: 7

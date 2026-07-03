@@ -84,7 +84,7 @@ public class PlayerSkillState : CombatPlayerState
             }
 
             if (resolver.ActiveCombatAction is SkillAction skillAction
-                && player.Combat.IsOnCooldown(AttackCategory.Skill, skillAction.cooldown, skillAction.actionName))
+                && player.Combat.IsOnCooldown(AttackCategory.Skill, skillAction.cooldown, skillAction.actionName, skillAction.actionId))
             {
                 fsm.Log("Skill", "Skill is on cooldown", Color.yellow);
                 AbilityUIManager.Instance?.PlayAbilityRejectedFeedback(AbilityUIManager.AbilityType.Skill);

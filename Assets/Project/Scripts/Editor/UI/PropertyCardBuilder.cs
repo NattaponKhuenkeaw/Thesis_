@@ -2038,12 +2038,6 @@ namespace CombatEditor.UI
 
                 if (hitbox.canAirJuggle)
                 {
-                    AddIntField(body, "Max Juggles", hitbox.maxJuggleCount, value =>
-                    {
-                        RecordUndo("Edit Max Juggles");
-                        hitbox.maxJuggleCount = value;
-                        MarkDirty();
-                    });
                     AddFloatField(body, "Juggle Launch Scale", hitbox.juggleLaunchScale, value =>
                     {
                         RecordUndo("Edit Juggle Launch Scale");
@@ -2723,9 +2717,9 @@ namespace CombatEditor.UI
                     conditions.Add(new WallActionCondition());
                     MarkDirtyAndRebuild();
                 });
-                menu.AddItem(new GUIContent("Progression Rank"), false, () => {
+                menu.AddItem(new GUIContent("Potential Level"), false, () => {
                     RecordUndo($"Add {undoLabelPrefix} Condition");
-                    conditions.Add(new ProgressionRankActionCondition());
+                    conditions.Add(new PotentialLevelActionCondition());
                     MarkDirtyAndRebuild();
                 });
                 menu.AddItem(new GUIContent("Runtime Tag"), false, () => {
@@ -2802,15 +2796,20 @@ namespace CombatEditor.UI
                         MarkDirty();
                     });
                     break;
-                case ProgressionRankActionCondition progressionCondition:
-                    AddEnumField(parent, "Comparison", progressionCondition.comparison, value => {
-                        RecordUndo("Edit Condition Rank Compare");
-                        progressionCondition.comparison = (CounterComparison)value;
+                case PotentialLevelActionCondition potentialCondition:
+                    AddEnumField(parent, "Track", potentialCondition.track, value => {
+                        RecordUndo("Edit Condition Potential Track");
+                        potentialCondition.track = (PotentialTrack)value;
                         MarkDirty();
                     });
-                    AddIntField(parent, "Rank", progressionCondition.rank, value => {
-                        RecordUndo("Edit Condition Rank");
-                        progressionCondition.rank = value;
+                    AddEnumField(parent, "Comparison", potentialCondition.comparison, value => {
+                        RecordUndo("Edit Condition Potential Compare");
+                        potentialCondition.comparison = (CounterComparison)value;
+                        MarkDirty();
+                    });
+                    AddIntField(parent, "Level", potentialCondition.level, value => {
+                        RecordUndo("Edit Condition Potential Level");
+                        potentialCondition.level = Mathf.Clamp(value, 0, CharacterKitDefinition.MaxPotentialLevel);
                         MarkDirty();
                     });
                     break;
@@ -2891,7 +2890,7 @@ namespace CombatEditor.UI
                 PreviousStateActionCondition => "Previous State Condition",
                 GrabbedEnemyActionCondition => "Grabbed Target Condition",
                 WallActionCondition => "Wall Condition",
-                ProgressionRankActionCondition => "Progression Rank Condition",
+                PotentialLevelActionCondition => "Potential Level Condition",
                 RuntimeTagActionCondition => "Runtime Tag Condition",
                 RuntimeCounterActionCondition => "Runtime Counter Condition",
                 WaitActionCondition => "Wait Timer Condition",

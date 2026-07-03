@@ -44,7 +44,7 @@ public class SkillTreeNode
 
     public SkillTreeNode() { }
 
-    public SkillTreeNode(ProgressionNodeDefinition definition, bool unlocked)
+    public SkillTreeNode(PotentialNodeDefinition definition, bool unlocked)
     {
         if (definition == null)
         {
@@ -54,8 +54,8 @@ public class SkillTreeNode
         nodeId = definition.nodeId;
         nodeName = definition.nodeName;
         description = definition.description;
-        requiredNodeId = definition.requiredNodeId;
-        pointCost = definition.pointCost;
+        requiredNodeId = string.Empty;
+        pointCost = definition.fragmentCost;
         this.unlocked = unlocked;
     }
 }

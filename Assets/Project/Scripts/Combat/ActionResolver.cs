@@ -106,7 +106,7 @@ public class ActionResolver
 
         if (bestAction != null)
         {
-            Log($"Action Selection: '{bestAction.actionName}' (Category={category}, Priority={bestAction.priority})");
+            Log($"Action Selection: '{bestAction.ActionKey}' (Category={category}, Priority={bestAction.priority})");
             ActiveCombatAction = bestAction;
             activeTree = bestAction.comboTree;
         }
@@ -443,14 +443,21 @@ public class ActionResolver
             return true;
         }
 
-        if (!ctx.passiveController.IsActionUnlocked(action.actionName))
+        if (!ctx.passiveController.IsActionUnlocked(action.Category, action.actionId, action.actionName))
         {
             return false;
         }
 
-        if (ctx.passiveController.TryGetReplacementActionName(action.actionName, out string replacementActionName)
-            && !string.IsNullOrEmpty(replacementActionName)
-            && !string.Equals(replacementActionName, action.actionName))
+        if (ctx.passiveController.TryGetReplacementActionKey(
+                action.Category,
+                action.actionId,
+                action.actionName,
+                out string replacementActionId,
+                out string replacementActionName)
+            && ((!string.IsNullOrEmpty(replacementActionId)
+                 && !string.Equals(replacementActionId, action.actionId))
+                || (!string.IsNullOrEmpty(replacementActionName)
+                    && !string.Equals(replacementActionName, action.actionName))))
         {
             return false;
         }
@@ -466,7 +473,7 @@ public class ActionResolver
         }
 
         int bonus = ctx.passiveController != null
-            ? ctx.passiveController.GetActionPriorityModifier(action.actionName)
+            ? ctx.passiveController.GetActionPriorityModifier(action.Category, action.actionId, action.actionName)
             : 0;
 
         return action.priority + bonus;

@@ -47,9 +47,6 @@ MonoBehaviour:
     level: 1
     maxLevel: 30
     currentExp: 0
-    expToNextLevel: 100
-    constellationRank: 0
-    progressionPoints: 3
     attackPerLevel: 5.2
     defensePerLevel: 4.4
     maxHpPerLevel: 80
@@ -61,23 +58,22 @@ MonoBehaviour:
     cancelWindowStartFrame: 35
     dashSpeed: 40
     cooldownFrames: 24
-  progressionDefinition:
-    maxConstellationRank: 6
-    constellationNodes:
-    - nodeId: KYO_C0_PASSIVE
-      nodeName: Burning Bloodline
-      description: Boost Kyo elemental burn power for self by 50%.
-      group: 0
-      constellationRank: 0
-      requiredNodeId: 
-      pointCost: 0
-      requiredConstellationRank: 0
-      unlockedByDefault: 1
+  kitDefinition:
+    skill:
+      abilityId: kyo.skill
+      abilityName: Skill
+    ultimate:
+      abilityId: kyo.ultimate
+      abilityName: Ultimate
+    passive:
+      abilityId: kyo.passive
+      abilityName: Passive
+    basePassiveNode:
       statModifiers:
-      - target: 6
+      - target: 8
         operation: 0
-        value: 50
-        scope: 0
+        value: 15
+        scope: 2
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
@@ -85,133 +81,220 @@ MonoBehaviour:
       conditionalStateEffects: []
       onHitStatusEffects: []
       additionalDamageEffects: []
-      passiveHookTypeName: 
-    - nodeId: KYO_C2_BURNING_CHAIN
-      nodeName: Burning Chain
-      description: Ultimate grants Burning State and enables chained follow-ups.
-        Hits also have a chance to burn enemies.
-      group: 0
-      constellationRank: 2
-      requiredNodeId: 
-      pointCost: 0
-      requiredConstellationRank: 0
-      unlockedByDefault: 0
-      statModifiers: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName:
+      nodeId: kyo.passive.base
+      nodeName: Kusanagi Lineage
+      description: Increase allies Ash DMG by 15%.
+      track: 2
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
+    potentialNodes:
+    - statModifiers: []
       cooldownModifiers: []
-      actionModifiers: []
-      runtimeTagEffects:
-      - trigger: 1
-        filter:
-          filterByCategory: 1
-          category: 2
-          filterByActionName: 0
-          actionName: 
-          requireRuntimeTag: 0
-          runtimeTag: 
-        tag: BurningState
-        addTag: 1
-        duration: 8
-      counterEffects:
-      - trigger: 1
-        filter:
-          filterByCategory: 1
-          category: 2
-          filterByActionName: 0
-          actionName: 
-          requireRuntimeTag: 0
-          runtimeTag: 
-        counterId: UltimateFollowUpsRemaining
-        operation: 0
-        value: 3
-      - trigger: 1
-        filter:
-          filterByCategory: 1
-          category: 2
-          filterByActionName: 0
-          actionName: 
-          requireRuntimeTag: 0
-          runtimeTag: 
-        counterId: BurningBasicHitCount
-        operation: 3
-        value: 0
+      actionModifiers:
+      - category: 1
+        actionId: kyo.skill
+        actionName:
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId:
+        replacementActionName:
+        damageMultiplierOperation: 3
+        damageMultiplierValue: 4.5
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+      runtimeTagEffects: []
+      counterEffects: []
       conditionalStateEffects: []
-      onHitStatusEffects:
-      - filter:
-          filterByCategory: 0
-          category: 0
-          filterByActionName: 0
-          actionName: 
-          requireRuntimeTag: 0
-          runtimeTag: 
-        status: 0
-        chance: 0.5
-        scope: 3
+      onHitStatusEffects: []
       additionalDamageEffects: []
-      passiveHookTypeName: 
-    - nodeId: KYO_C6_FINISHER
-      nodeName: Crimson Finisher
-      description: Track Burning State basic hits to unlock a finishing ultimate
-        and boost ally burn power.
-      group: 0
-      constellationRank: 6
-      requiredNodeId: 
-      pointCost: 0
-      requiredConstellationRank: 0
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName:
+      nodeId: kyo.skill.lv1
+      nodeName: Skill Multiplier
+      description: Increase Skill multiplier to 450% of ATK.
+      track: 0
+      level: 1
+      fragmentCost: 1
       unlockedByDefault: 0
-      statModifiers:
-      - target: 7
-        operation: 0
-        value: 30
-        scope: 2
+    - statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
-      counterEffects:
-      - trigger: 2
-        filter:
-          filterByCategory: 1
-          category: 0
-          filterByActionName: 0
-          actionName: 
-          requireRuntimeTag: 1
-          runtimeTag: BurningState
-        counterId: BurningBasicHitCount
-        operation: 1
-        value: 1
-      conditionalStateEffects:
-      - trigger: 2
-        filter:
-          filterByCategory: 0
-          category: 0
-          filterByActionName: 0
-          actionName: 
-          requireRuntimeTag: 1
-          runtimeTag: BurningState
-        requiredTags:
-        - tag: BurningState
-          expectedValue: 1
-        requiredCounters:
-        - counterId: BurningBasicHitCount
-          comparison: 3
-          value: 5
-        - counterId: UltimateFollowUpsRemaining
-          comparison: 5
-          value: 0
-        runtimeTagEffects:
-        - trigger: 1
-          filter:
-            filterByCategory: 0
-            category: 0
-            filterByActionName: 0
-            actionName: 
-            requireRuntimeTag: 0
-            runtimeTag: 
-          tag: FinisherReady
-          addTag: 1
-          duration: 0
-        counterEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
       onHitStatusEffects: []
       additionalDamageEffects: []
-      passiveHookTypeName: 
-    passiveNodes: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers:
+      - trigger: 3
+        filter:
+          filterByCategory: 1
+          category: 1
+          filterByActionId: 1
+          actionId: kyo.skill
+          filterByActionName: 0
+          actionName:
+          requireRuntimeTag: 0
+          runtimeTag:
+        elementType: 3
+        incomingDamagePercentAdd: 0
+        resistancePercentAdd: 0
+        gaugeBuildPercentAdd: 25
+        permanent: 0
+        stacks: 0
+        duration: 0
+      passiveHookTypeName:
+      nodeId: kyo.skill.lv2
+      nodeName: Ash Daze Pressure
+      description: Skill hits increase Ash gauge build by 25%.
+      track: 0
+      level: 2
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers:
+      - category: 1
+        actionId: kyo.skill
+        actionName:
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId:
+        replacementActionName:
+        damageMultiplierOperation: 0
+        damageMultiplierValue: 0
+        auraEnergyRewardAdd: 1
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+      runtimeTagEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName:
+      nodeId: kyo.skill.lv3
+      nodeName: AE Reward
+      description: Increase Skill AE reward by 1.
+      track: 0
+      level: 3
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      defensiveEffects: []
+      resourceEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 1
+          filterByActionId: 1
+          actionId: kyo.skill
+          filterByActionName: 0
+          actionName:
+          requireRuntimeTag: 0
+          runtimeTag:
+        effectType: 0
+        scope: 2
+        valueSource: 0
+        valueRatio: 0.08
+        flatValue: 0
+        runtimeTag: waive_next_ultimate_cost
+        runtimeTagDuration: 0
+      enemyElementModifiers: []
+      passiveHookTypeName:
+      nodeId: kyo.skill.lv4
+      nodeName: Allied Flame Mend
+      description: Skill use heals all allies for 8% of Kyo ATK.
+      track: 0
+      level: 4
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers:
+      - category: 2
+        actionId: kyo.ultimate
+        actionName:
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId:
+        replacementActionName:
+        damageMultiplierOperation: 3
+        damageMultiplierValue: 8
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+      runtimeTagEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName:
+      nodeId: kyo.ultimate.lv2
+      nodeName: Ultimate Multiplier
+      description: Increase Ultimate multiplier to 800% of ATK.
+      track: 1
+      level: 2
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects:
+      - filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId:
+          filterByActionName: 0
+          actionName:
+          requireRuntimeTag: 0
+          runtimeTag:
+        chance: 0.2
+        internalCooldown: 0
+        attackRatio: 0.2
+        targetMaxHpRatio: 0
+        elementType: 3
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName:
+      nodeId: kyo.passive.lv1
+      nodeName: Ash Spark
+      description: When dealing damage, 20% chance to deal additional Ash DMG based on 20% ATK.
+      track: 2
+      level: 1
+      fragmentCost: 1
+      unlockedByDefault: 0
   actionResolverTable: {fileID: 11400000, guid: 93ffc437bab6ea2449e90ba52b119527, type: 2}

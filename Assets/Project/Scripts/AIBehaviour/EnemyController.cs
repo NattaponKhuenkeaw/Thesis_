@@ -36,9 +36,23 @@ public class EnemyController : MonoBehaviour
     // =========================================================
     [Header("Runtime State (read-only)")]
     [SerializeField] private bool isAlive = true;
-    [SerializeField] private CharacterStatus status = new CharacterStatus();
     public bool IsAlive => isAlive;
-    public CharacterStatus Status => status;
+    public RuntimeEffectReceiver RuntimeEffects
+    {
+        get
+        {
+            if (runtimeEffects == null)
+            {
+                runtimeEffects = GetComponent<RuntimeEffectReceiver>();
+                if (runtimeEffects == null)
+                {
+                    runtimeEffects = gameObject.AddComponent<RuntimeEffectReceiver>();
+                }
+            }
+
+            return runtimeEffects;
+        }
+    }
     public EnemyReactionState CurrentReactionState =>
         hitReactionHandler != null ? hitReactionHandler.CurrentState : EnemyReactionState.None;
     public int CurrentReactionOwnerId =>
@@ -63,6 +77,7 @@ public class EnemyController : MonoBehaviour
     private int[] originalSortingOrders;
     private Coroutine flashCoroutine;
     private Coroutine priorityResetCoroutine;
+    private RuntimeEffectReceiver runtimeEffects;
 
     /// <summary>Child hitbox collider used by AttackAction.</summary>
     public Collider2D attackHitbox;
@@ -97,6 +112,10 @@ public class EnemyController : MonoBehaviour
 
         if (worldUI == null)
             worldUI = GetComponentInChildren<EnemyWorldUI>(true);
+
+        runtimeEffects = GetComponent<RuntimeEffectReceiver>();
+        if (runtimeEffects == null)
+            runtimeEffects = gameObject.AddComponent<RuntimeEffectReceiver>();
 
         // Start with hitbox disabled
         if (attackHitbox != null)
@@ -184,7 +203,18 @@ public class EnemyController : MonoBehaviour
 
         float finalIncomingDamage = reactionData.damageIsFinal
             ? reactionData.damage
-            : CombatFormula.CalculateIncomingDamage(reactionData.damage, defense);
+            : CombatFormula.CalculateIncomingDamage(reactionData.damage, defense, damageRes);
+        if (runtimeEffects != null)
+        {
+            RuntimeEffectDamageContext effectContext = new RuntimeEffectDamageContext
+            {
+                targetEnemy = this,
+                elementType = reactionData.elementType,
+                damageRoutine = reactionData.damageRoutine,
+                damage = finalIncomingDamage
+            };
+            finalIncomingDamage = runtimeEffects.ModifyIncomingDamage(effectContext, finalIncomingDamage);
+        }
         reactionData.damage = finalIncomingDamage;
 
         currentHP -= finalIncomingDamage;
@@ -273,7 +303,7 @@ public class EnemyController : MonoBehaviour
 
     public void ApplyStatus(StatusEffectType statusEffect, bool enabled = true)
     {
-        status.ApplyStatus(statusEffect, enabled);
+        runtimeEffects?.ApplyStatus(statusEffect, enabled);
     }
 
     /// <summary>

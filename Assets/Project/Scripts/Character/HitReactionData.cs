@@ -72,7 +72,6 @@ public struct HitReactionData
     public float launchSpeed;
     public EnemyLandingBehavior landingBehavior;
     public bool canAirJuggle;
-    public int maxJuggleCount;
     public float juggleLaunchScale;
     public float juggleStunScale;
     public int knockupFrames;
@@ -201,7 +200,6 @@ public struct HitReactionData
             launchSpeed = 0f,
             landingBehavior = EnemyLandingBehavior.Recover,
             canAirJuggle = true,
-            maxJuggleCount = 2,
             juggleLaunchScale = 0.85f,
             juggleStunScale = 0.9f,
             hasSnapWorldPosition = false,

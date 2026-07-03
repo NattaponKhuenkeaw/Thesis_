@@ -16,7 +16,11 @@ public enum CombatActionContext
 [System.Serializable]
 public abstract class CombatAction
 {
+    [Tooltip("Stable backend identifier used by Potential and passive effects. Falls back to Action Name when empty.")]
+    public string actionId;
     public string actionName = "New Action";
+
+    public string ActionKey => !string.IsNullOrWhiteSpace(actionId) ? actionId : actionName;
     
     [Header("Activation Conditions")]
     public CombatActionContext context = CombatActionContext.Ground;

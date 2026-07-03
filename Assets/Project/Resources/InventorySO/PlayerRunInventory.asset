@@ -14,13 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Project.ShopSystem.PlayerRunInventory
   ownedItems:
   - {fileID: 11400000, guid: 588790c4612f0304f89d14fb2bd64923, type: 2}
-  - {fileID: 11400000, guid: bc26e0a53989a6d439beb924d07f61f8, type: 2}
-  - {fileID: 11400000, guid: 077165c891eca7b4f8fa6a6ccf2751f2, type: 2}
+  - {fileID: 11400000, guid: 6b2f112e2e15b20468e27601ac347a21, type: 2}
   - {fileID: 11400000, guid: 7067f23f35adada468f5f53a56908cbe, type: 2}
-  itemStacks:
-  - item: {fileID: 11400000, guid: bc26e0a53989a6d439beb924d07f61f8, type: 2}
-    quantity: 11
-  currency: 851336
+  - {fileID: 11400000, guid: 077165c891eca7b4f8fa6a6ccf2751f2, type: 2}
+  - {fileID: 11400000, guid: 947559303eef7b740a2c21e5f5e600a9, type: 2}
+  - {fileID: 11400000, guid: 890dffb705bf51748b2ec0257fa186fd, type: 2}
+  itemStacks: []
+  currency: 773381
   runCharacters:
   - character: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
     upgrade:
@@ -31,17 +31,17 @@ MonoBehaviour:
       defensePerLevel: 4.2
       maxHpPerLevel: 81
     currentHP: 813
-    currentAE: 60
-  - character: {fileID: 11400000, guid: c9c99302d3f5d8a43b612bd108aa3f05, type: 2}
+    currentAE: 100
+  - character: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
     upgrade:
       level: 1
       maxLevel: 30
       currentExp: 0
-      attackPerLevel: 4.7
-      defensePerLevel: 5.5
-      maxHpPerLevel: 95
-    currentHP: 1250
-    currentAE: 0
+      attackPerLevel: 5.2
+      defensePerLevel: 4.4
+      maxHpPerLevel: 80
+    currentHP: 892
+    currentAE: 78
   - character: {fileID: 11400000, guid: 27891cf9824752045b475995e212e47e, type: 2}
     upgrade:
       level: 1
@@ -51,21 +51,51 @@ MonoBehaviour:
       defensePerLevel: 4.8
       maxHpPerLevel: 82.85
     currentHP: 911
-    currentAE: 0
-  teamSlots:
+    currentAE: 100
   - character: {fileID: 11400000, guid: c9c99302d3f5d8a43b612bd108aa3f05, type: 2}
-    artifacts:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
+    upgrade:
+      level: 1
+      maxLevel: 30
+      currentExp: 0
+      attackPerLevel: 4.7
+      defensePerLevel: 5.5
+      maxHpPerLevel: 95
+    currentHP: -1
+    currentAE: -1
+  - character: {fileID: 11400000, guid: a2f28494c803e0b49a390a31a390a787, type: 2}
+    upgrade:
+      level: 1
+      maxLevel: 30
+      currentExp: 0
+      attackPerLevel: 7
+      defensePerLevel: 3.7
+      maxHpPerLevel: 79.5
+    currentHP: 783
+    currentAE: 30
+  - character: {fileID: 11400000, guid: 3e719a5c1668a4e4794aae8a7a41c733, type: 2}
+    upgrade:
+      level: 1
+      maxLevel: 30
+      currentExp: 0
+      attackPerLevel: 5.6
+      defensePerLevel: 4
+      maxHpPerLevel: 80
+    currentHP: 100
+    currentAE: 100
+  teamSlots:
   - character: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
     artifacts:
-    - {fileID: 11400000, guid: 8dae9784a4112a44691459c99d1d3a64, type: 2}
-    - {fileID: 11400000, guid: 68ba37ce923f66e48a0239356de067a9, type: 2}
     - {fileID: 0}
-  - character: {fileID: 11400000, guid: 27891cf9824752045b475995e212e47e, type: 2}
+    - {fileID: 0}
+    - {fileID: 0}
+  - character: {fileID: 11400000, guid: 3e719a5c1668a4e4794aae8a7a41c733, type: 2}
     artifacts:
     - {fileID: 0}
     - {fileID: 0}
     - {fileID: 0}
-  activeTeamSlotIndex: 2
+  - character: {fileID: 11400000, guid: a2f28494c803e0b49a390a31a390a787, type: 2}
+    artifacts:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+  activeTeamSlotIndex: 1

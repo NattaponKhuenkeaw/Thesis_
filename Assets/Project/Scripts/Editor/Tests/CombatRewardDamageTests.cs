@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using Project.Progression;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -85,6 +86,173 @@ public class CombatRewardDamageTests
         Assert.That(enemy.currentHP, Is.EqualTo(0f));
 
         if (enemyObject != null)
+        {
+            Object.DestroyImmediate(enemyObject);
+        }
+    }
+
+    [Test]
+    public void PassiveController_UsesUnlockedPotentialActionModifier()
+    {
+        GameObject playerObject = new GameObject("Potential Effect Test Player");
+        PlayerMetaProgression metaProgression = ScriptableObject.CreateInstance<PlayerMetaProgression>();
+        CharacterObject character = ScriptableObject.CreateInstance<CharacterObject>();
+
+        try
+        {
+            character.characterId = "effect-character";
+            character.kitDefinition.potentialNodes.Add(new PotentialNodeDefinition
+            {
+                nodeId = "effect-character.skill.lv1",
+                track = PotentialTrack.Skill,
+                level = 1,
+                actionModifiers =
+                {
+                    new PassiveActionModifierDefinition
+                    {
+                        category = AttackCategory.Skill,
+                        actionId = "effect.skill",
+                        damageMultiplierOperation = PassiveValueModifierOperation.Override,
+                        damageMultiplierValue = 6.5f
+                    }
+                }
+            });
+            metaProgression.SetPotentialLevel(character, PotentialTrack.Skill, 1);
+
+            PlayerCharacter player = playerObject.AddComponent<PlayerCharacter>();
+            CharacterPassiveController passiveController = playerObject.AddComponent<CharacterPassiveController>();
+            player.characterObject = character;
+            player.PassiveController = passiveController;
+            passiveController.playerCharacter = player;
+            passiveController.SetMetaProgression(metaProgression);
+            passiveController.InitializeFromCharacterData();
+
+            float resolved = passiveController.ModifyActionDamageMultiplier(
+                AttackCategory.Skill,
+                "effect.skill",
+                "Skill",
+                5f);
+
+            Assert.That(resolved, Is.EqualTo(6.5f).Within(0.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(character);
+            Object.DestroyImmediate(metaProgression);
+            Object.DestroyImmediate(playerObject);
+        }
+    }
+
+    [Test]
+    public void PassiveController_UsesHighestEvasionChance()
+    {
+        GameObject playerObject = new GameObject("Potential Evasion Test Player");
+        CharacterObject character = ScriptableObject.CreateInstance<CharacterObject>();
+
+        try
+        {
+            character.characterId = "evasion-character";
+            character.kitDefinition.basePassiveNode.defensiveEffects.Add(new PassiveDefensiveEffectDefinition
+            {
+                evasionChance = 1f
+            });
+
+            PlayerCharacter player = playerObject.AddComponent<PlayerCharacter>();
+            CharacterPassiveController passiveController = playerObject.AddComponent<CharacterPassiveController>();
+            player.characterObject = character;
+            player.PassiveController = passiveController;
+            passiveController.playerCharacter = player;
+            passiveController.InitializeFromCharacterData();
+
+            Assert.That(passiveController.TryEvadeIncomingDamage(100f), Is.True);
+        }
+        finally
+        {
+            Object.DestroyImmediate(character);
+            Object.DestroyImmediate(playerObject);
+        }
+    }
+
+    [Test]
+    public void PassiveController_AppliesStatModifierOnlyWhenRuntimeRequirementMatches()
+    {
+        GameObject playerObject = new GameObject("Potential Timed Stat Test Player");
+        CharacterObject character = ScriptableObject.CreateInstance<CharacterObject>();
+
+        try
+        {
+            character.characterId = "timed-stat-character";
+            character.kitDefinition.basePassiveNode.statModifiers.Add(new PassiveStatModifierDefinition
+            {
+                target = PassiveModifierTarget.CritRate,
+                operation = PassiveNumericOperation.Add,
+                value = 17f,
+                scope = PassiveEffectScope.Self,
+                requiredTags =
+                {
+                    new RuntimeTagRequirement
+                    {
+                        tag = "crit_window",
+                        expectedValue = true
+                    }
+                }
+            });
+
+            PlayerCharacter player = playerObject.AddComponent<PlayerCharacter>();
+            CharacterPassiveController passiveController = playerObject.AddComponent<CharacterPassiveController>();
+            player.characterObject = character;
+            player.PassiveController = passiveController;
+            passiveController.playerCharacter = player;
+            passiveController.InitializeFromCharacterData();
+
+            Assert.That(passiveController.ModifyValue(PassiveModifierTarget.CritRate, 5f), Is.EqualTo(5f).Within(0.001f));
+
+            passiveController.RuntimeState.SetTag("crit_window", 5f);
+
+            Assert.That(passiveController.ModifyValue(PassiveModifierTarget.CritRate, 5f), Is.EqualTo(22f).Within(0.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(character);
+            Object.DestroyImmediate(playerObject);
+        }
+    }
+
+    [Test]
+    public void AdditionalDamage_CalculatesAttackAndTargetMaxHpDamage()
+    {
+        AdditionalDamageEffectDefinition effect = new AdditionalDamageEffectDefinition
+        {
+            attackRatio = 0.2f,
+            targetMaxHpRatio = 0.04f
+        };
+        PassiveEventContext context = new PassiveEventContext
+        {
+            enemyMaxHp = 1000f
+        };
+
+        Assert.That(effect.CalculateBaseDamage(500f, context), Is.EqualTo(140f).Within(0.001f));
+    }
+
+    [Test]
+    public void EnemyElementalState_RuntimeEchoResistanceModifierAffectsOnlyRuntimeElement()
+    {
+        GameObject enemyObject = new GameObject("Runtime Element Test Enemy");
+        EnemyElementalState elementalState = enemyObject.AddComponent<EnemyElementalState>();
+
+        try
+        {
+            elementalState.ApplyRuntimeElementModifier(new PassiveEnemyElementModifierDefinition
+            {
+                elementType = ElementType.Echo,
+                resistancePercentAdd = -15f,
+                permanent = true
+            });
+
+            Assert.That(elementalState.ModifyIncomingDamage(ElementType.Echo, 100f), Is.EqualTo(115f).Within(0.001f));
+            Assert.That(elementalState.ModifyIncomingDamage(ElementType.Ash, 100f), Is.EqualTo(100f).Within(0.001f));
+        }
+        finally
         {
             Object.DestroyImmediate(enemyObject);
         }

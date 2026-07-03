@@ -576,6 +576,25 @@ namespace Project.TeamBuilder.UI
                 : character.GetLeveledStats();
         }
 
+        public CharacterStats ResolveCharacterBaseStats(CharacterObject character)
+        {
+            if (character == null)
+            {
+                return new CharacterStats();
+            }
+
+            PlayerRunInventory inventory = ResolveRunInventoryReference();
+            return inventory != null
+                ? inventory.GetCharacterBaseStats(character)
+                : character.GetLeveledStats();
+        }
+
+        public void ApplyRuntimeEffectsToStats(CharacterObject character, CharacterStats stats)
+        {
+            PlayerRunInventory inventory = ResolveRunInventoryReference();
+            inventory?.ApplyRuntimeEffectsToStats(character, stats);
+        }
+
         public TeamSlotUI FindSlotWithArtifact(Artifact artifact)
         {
             if (artifact == null) return null;

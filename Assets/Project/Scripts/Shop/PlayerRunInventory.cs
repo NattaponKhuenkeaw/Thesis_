@@ -25,6 +25,30 @@ namespace Project.ShopSystem
         public CharacterUpgrade upgrade = new CharacterUpgrade();
         public float currentHP = -1f;
         public float currentAE = -1f;
+        [SerializeField] private List<RuntimeEffectInstance> activeEffects = new List<RuntimeEffectInstance>();
+
+        public IReadOnlyList<RuntimeEffectInstance> ActiveEffects
+        {
+            get
+            {
+                EnsureEffectList();
+                return activeEffects;
+            }
+        }
+
+        internal List<RuntimeEffectInstance> MutableActiveEffects
+        {
+            get
+            {
+                EnsureEffectList();
+                return activeEffects;
+            }
+        }
+
+        internal void EnsureEffectList()
+        {
+            activeEffects ??= new List<RuntimeEffectInstance>();
+        }
     }
 
     [Serializable]
@@ -143,6 +167,8 @@ namespace Project.ShopSystem
         [NonSerialized] private bool isApplyingPersistentState;
         [NonSerialized] private Dictionary<string, BaseItem> itemIndexById;
         [NonSerialized] private Dictionary<string, CharacterItem> characterItemsByCharacterId;
+
+        public event Action<CharacterObject> OnRuntimeEffectsChanged;
 
         public IReadOnlyList<InventoryStack> ItemStacks
         {
@@ -534,6 +560,13 @@ namespace Project.ShopSystem
 
         public CharacterStats GetCharacterStats(CharacterObject character)
         {
+            CharacterStats stats = GetCharacterBaseStats(character);
+            ApplyRuntimeEffectsToStats(character, stats);
+            return stats;
+        }
+
+        public CharacterStats GetCharacterBaseStats(CharacterObject character)
+        {
             if (character == null)
             {
                 return new CharacterStats();
@@ -550,6 +583,194 @@ namespace Project.ShopSystem
             }
 
             return leveled;
+        }
+
+        public IReadOnlyList<RuntimeEffectInstance> GetActiveRuntimeEffects(CharacterObject character)
+        {
+            RunCharacterState state = GetRunCharacter(character);
+            return state != null
+                ? state.ActiveEffects
+                : Array.Empty<RuntimeEffectInstance>();
+        }
+
+        public bool ApplyRuntimeEffect(
+            CharacterObject targetCharacter,
+            RuntimeEffectDefinition effectDefinition,
+            CharacterObject sourceCharacter = null,
+            CharacterStats sourceStats = null,
+            float durationOverride = -1f)
+        {
+            if (targetCharacter == null || effectDefinition == null)
+            {
+                return false;
+            }
+
+            RunCharacterState state = GetOrCreateRunCharacterState(targetCharacter);
+            if (state == null)
+            {
+                return false;
+            }
+
+            state.EnsureEffectList();
+            List<RuntimeEffectInstance> activeEffects = state.MutableActiveEffects;
+            RuntimeEffectInstance instance = !effectDefinition.stackable
+                ? FindRuntimeEffect(activeEffects, effectDefinition)
+                : null;
+
+            CharacterStats resolvedSourceStats = sourceStats != null
+                ? sourceStats.Clone()
+                : (sourceCharacter != null ? GetCharacterStats(sourceCharacter) : GetCharacterBaseStats(targetCharacter));
+
+            if (instance != null)
+            {
+                if (effectDefinition.refreshDurationOnReapply)
+                {
+                    instance.Refresh(durationOverride);
+                }
+
+                RaiseRuntimeEffectsChanged(targetCharacter, effectDefinition.AffectsStats);
+                return true;
+            }
+
+            instance = new RuntimeEffectInstance();
+            instance.Initialize(effectDefinition, sourceCharacter, resolvedSourceStats, durationOverride);
+            activeEffects.Add(instance);
+            effectDefinition.OnApply(BuildRuntimeEffectContext(targetCharacter, state, instance, 0f));
+            RaiseRuntimeEffectsChanged(targetCharacter, effectDefinition.AffectsStats);
+
+            if (effectDefinition.durationType == RuntimeEffectDurationType.Instant)
+            {
+                RemoveRuntimeEffect(targetCharacter, state, instance);
+            }
+
+            return true;
+        }
+
+        public void ClearRuntimeEffects(CharacterObject character)
+        {
+            RunCharacterState state = GetRunCharacter(character);
+            if (state == null || state.MutableActiveEffects.Count == 0)
+            {
+                return;
+            }
+
+            bool affectedStats = false;
+            for (int i = 0; i < state.MutableActiveEffects.Count; i++)
+            {
+                RuntimeEffectInstance instance = state.MutableActiveEffects[i];
+                affectedStats |= instance != null && instance.definition != null && instance.definition.AffectsStats;
+            }
+
+            state.MutableActiveEffects.Clear();
+            RaiseRuntimeEffectsChanged(character, affectedStats);
+        }
+
+        public void TickRuntimeEffects(float deltaTime)
+        {
+            EnsureRunData();
+            float resolvedDelta = Mathf.Max(0f, deltaTime);
+
+            for (int stateIndex = 0; stateIndex < runCharacters.Count; stateIndex++)
+            {
+                RunCharacterState state = runCharacters[stateIndex];
+                if (state == null || state.character == null)
+                {
+                    continue;
+                }
+
+                state.EnsureEffectList();
+                List<RuntimeEffectInstance> activeEffects = state.MutableActiveEffects;
+                for (int effectIndex = activeEffects.Count - 1; effectIndex >= 0; effectIndex--)
+                {
+                    RuntimeEffectInstance instance = activeEffects[effectIndex];
+                    if (instance == null || instance.definition == null)
+                    {
+                        activeEffects.RemoveAt(effectIndex);
+                        RaiseRuntimeEffectsChanged(state.character, true);
+                        continue;
+                    }
+
+                    if (instance.UsesTimer)
+                    {
+                        instance.remainingSeconds -= resolvedDelta;
+                    }
+
+                    instance.elapsedSeconds += resolvedDelta;
+                    instance.definition.OnUpdate(BuildRuntimeEffectContext(state.character, state, instance, resolvedDelta));
+                    if (!instance.IsExpired)
+                    {
+                        continue;
+                    }
+
+                    RemoveRuntimeEffect(state.character, state, instance);
+                }
+            }
+        }
+
+        public void ApplyRuntimeEffectsToStats(CharacterObject character, CharacterStats stats)
+        {
+            if (character == null || stats == null)
+            {
+                return;
+            }
+
+            RunCharacterState state = GetRunCharacter(character);
+            if (state == null)
+            {
+                return;
+            }
+
+            List<RuntimeEffectInstance> activeEffects = state.MutableActiveEffects;
+            for (int i = 0; i < activeEffects.Count; i++)
+            {
+                RuntimeEffectInstance instance = activeEffects[i];
+                if (instance == null || instance.definition == null)
+                {
+                    continue;
+                }
+
+                instance.definition.ModifyStats(BuildRuntimeEffectContext(character, state, instance, 0f, stats), stats);
+            }
+        }
+
+        public float ModifyOutgoingDamage(
+            CharacterObject sourceCharacter,
+            RuntimeEffectDamageContext context,
+            float currentDamage)
+        {
+            return ModifyDamageWithRuntimeEffects(sourceCharacter, context, currentDamage, outgoing: true);
+        }
+
+        public float ModifyIncomingDamage(
+            CharacterObject targetCharacter,
+            RuntimeEffectDamageContext context,
+            float currentDamage)
+        {
+            return ModifyDamageWithRuntimeEffects(targetCharacter, context, currentDamage, outgoing: false);
+        }
+
+        public void NotifyRuntimeHitDealt(CharacterObject sourceCharacter, RuntimeEffectDamageContext context)
+        {
+            RunCharacterState state = GetRunCharacter(sourceCharacter);
+            if (state == null || context == null)
+            {
+                return;
+            }
+
+            List<RuntimeEffectInstance> activeEffects = state.MutableActiveEffects;
+            for (int i = 0; i < activeEffects.Count; i++)
+            {
+                RuntimeEffectInstance instance = activeEffects[i];
+                if (instance == null || instance.definition == null)
+                {
+                    continue;
+                }
+
+                context.instance = instance;
+                instance.definition.OnHitDealt(context);
+            }
+
+            context.instance = null;
         }
 
         public void SavePersistentState()
@@ -691,6 +912,116 @@ namespace Project.ShopSystem
         public void NotifyRunStateChanged()
         {
             SavePersistentState();
+        }
+
+        private RuntimeEffectContext BuildRuntimeEffectContext(
+            CharacterObject targetCharacter,
+            RunCharacterState state,
+            RuntimeEffectInstance instance,
+            float deltaTime,
+            CharacterStats targetStatsOverride = null)
+        {
+            PlayerCharacter activePlayer = FindActivePlayerFor(targetCharacter);
+            return new RuntimeEffectContext
+            {
+                runInventory = this,
+                instance = instance,
+                sourceCharacter = instance != null ? instance.sourceCharacter : null,
+                targetCharacter = targetCharacter,
+                sourceStats = instance != null ? instance.sourceStatsSnapshot : null,
+                targetStats = targetStatsOverride ?? (targetCharacter != null ? GetCharacterStats(targetCharacter) : null),
+                targetPlayer = activePlayer,
+                deltaTime = deltaTime
+            };
+        }
+
+        private float ModifyDamageWithRuntimeEffects(
+            CharacterObject character,
+            RuntimeEffectDamageContext context,
+            float currentDamage,
+            bool outgoing)
+        {
+            RunCharacterState state = GetRunCharacter(character);
+            if (state == null || context == null)
+            {
+                return currentDamage;
+            }
+
+            float result = currentDamage;
+            List<RuntimeEffectInstance> activeEffects = state.MutableActiveEffects;
+            for (int i = 0; i < activeEffects.Count; i++)
+            {
+                RuntimeEffectInstance instance = activeEffects[i];
+                if (instance == null || instance.definition == null)
+                {
+                    continue;
+                }
+
+                context.instance = instance;
+                result = outgoing
+                    ? instance.definition.ModifyOutgoingDamage(context, result)
+                    : instance.definition.ModifyIncomingDamage(context, result);
+            }
+
+            context.instance = null;
+            return Mathf.Max(0f, result);
+        }
+
+        private void RemoveRuntimeEffect(
+            CharacterObject targetCharacter,
+            RunCharacterState state,
+            RuntimeEffectInstance instance)
+        {
+            if (state == null || instance == null)
+            {
+                return;
+            }
+
+            bool affectsStats = instance.definition != null && instance.definition.AffectsStats;
+            instance.definition?.OnExpired(BuildRuntimeEffectContext(targetCharacter, state, instance, 0f));
+            state.MutableActiveEffects.Remove(instance);
+            RaiseRuntimeEffectsChanged(targetCharacter, affectsStats);
+        }
+
+        private void RaiseRuntimeEffectsChanged(CharacterObject character, bool affectsStats)
+        {
+            OnRuntimeEffectsChanged?.Invoke(character);
+            if (affectsStats)
+            {
+                CharacterEvents.NotifyStatsChanged(character);
+            }
+        }
+
+        private static RuntimeEffectInstance FindRuntimeEffect(
+            List<RuntimeEffectInstance> activeEffects,
+            RuntimeEffectDefinition effectDefinition)
+        {
+            if (activeEffects == null || effectDefinition == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < activeEffects.Count; i++)
+            {
+                RuntimeEffectInstance instance = activeEffects[i];
+                if (instance != null && instance.definition == effectDefinition)
+                {
+                    return instance;
+                }
+            }
+
+            return null;
+        }
+
+        private static PlayerCharacter FindActivePlayerFor(CharacterObject character)
+        {
+            if (character == null)
+            {
+                return null;
+            }
+
+            PlayerCharacter player = UnityEngine.Object.FindFirstObjectByType<PlayerCharacter>();
+            return player != null && player.characterObject == character ? player : null;
         }
 
         private void ApplyPersistentState(SavedPlayerRunInventoryData data)
@@ -952,6 +1283,16 @@ namespace Project.ShopSystem
                 if (state.upgrade == null)
                 {
                     state.upgrade = CreateRunUpgrade(state.character);
+                }
+
+                state.EnsureEffectList();
+                for (int effectIndex = state.MutableActiveEffects.Count - 1; effectIndex >= 0; effectIndex--)
+                {
+                    RuntimeEffectInstance effect = state.MutableActiveEffects[effectIndex];
+                    if (effect == null || effect.definition == null)
+                    {
+                        state.MutableActiveEffects.RemoveAt(effectIndex);
+                    }
                 }
             }
 

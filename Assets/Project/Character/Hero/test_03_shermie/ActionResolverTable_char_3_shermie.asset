@@ -18,7 +18,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
-    actionDamageMultiplier: 8.5
+    actionDamageMultiplier: 8
     auraEnergyReward: 0
     comboTree:
       treeName: Combo
@@ -30,7 +30,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
-    actionDamageMultiplier: 0
+    actionDamageMultiplier: 3
     auraEnergyReward: 0
     comboTree:
       treeName: Combo
@@ -43,7 +43,7 @@ MonoBehaviour:
     priority: 10
     conditions: []
     allowGroundToAirTransition: 0
-    actionDamageMultiplier: 3.5
+    actionDamageMultiplier: 5.5
     auraEnergyReward: 15
     comboTree:
       treeName: Combo
@@ -52,12 +52,12 @@ MonoBehaviour:
         rid: 3251577378342174820
     cooldown: 7
   ultimateActions:
-  - actionName: 
+  - actionName: Shermie Carnival
     context: 0
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
-    actionDamageMultiplier: 10
+    actionDamageMultiplier: 8
     auraEnergyReward: 5
     comboTree:
       treeName: Combo
@@ -65,7 +65,7 @@ MonoBehaviour:
       rootNode:
         rid: 3251577386225893517
     cooldown: 0
-    energyCost: 0
+    energyCost: 50
     activationVFXType: 0
     activationVFXPrefab: {fileID: 0}
     activationVFXOffset: {x: 0, y: 0, z: 0}
@@ -108,6 +108,7 @@ MonoBehaviour:
           - vfx
           - audio
           - hitbox
+          - events
         routes: []
         defaultNext:
           rid: 1588255929706479865
@@ -138,7 +139,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.3450406, y: 2.065068}
         size: {x: 1.4671774, y: 0.8958316}
-        damageRatio: 1
+        damageRatio: 0.05
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
@@ -192,6 +193,7 @@ MonoBehaviour:
           - vfx
           - audio
           - hitbox
+          - events
         routes: []
         defaultNext:
           rid: 1588255929706479870
@@ -230,7 +232,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.8539051, y: 1.8674157}
         size: {x: 1.9942486, y: 0.95572567}
-        damageRatio: 1
+        damageRatio: 0.06
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 2
@@ -264,8 +266,8 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.71015877, y: 2.0351207}
         size: {x: 2.0421643, y: 0.9796834}
-        damageRatio: 1.1
-        impactTier: 1
+        damageRatio: 0.08
+        impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
         impactFreezeFrames: 4
@@ -318,6 +320,7 @@ MonoBehaviour:
           - vfx
           - audio
           - hitbox
+          - events
         routes: []
         defaultNext:
           rid: 1588255929706479876
@@ -357,7 +360,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.8898418, y: 1.9273101}
         size: {x: 2.114038, y: 1.650502}
-        damageRatio: 0.7
+        damageRatio: 0.03
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -391,7 +394,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.24298084, y: 1.7536165}
         size: {x: 1.5150931, y: 2.980161}
-        damageRatio: 0.7
+        damageRatio: 0.04
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
@@ -425,7 +428,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.7401054, y: 2.011163}
         size: {x: 2.0301862, y: 1.5786285}
-        damageRatio: 1.3
+        damageRatio: 0.07
         impactTier: 1
         useDeterministicReaction: 1
         reactionKind: 1
@@ -499,7 +502,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.0025861263, y: 2.0291317}
         size: {x: 3.7311904, y: 1.3031144}
-        damageRatio: 2
+        damageRatio: 0.17
         impactTier: 2
         useDeterministicReaction: 1
         reactionKind: 1
@@ -600,7 +603,7 @@ MonoBehaviour:
         offset: {x: 0.95337725, y: 1.4333203}
         size: {x: 1.4827974, y: 1.8470726}
         canGrabAirborne: 1
-        damageRatio: 2
+        damageRatio: 0.07
         impactFreezeFrames: 0
         holdFrames: 24
         recoveryFrames: 6
@@ -796,7 +799,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.311993, y: 0.56738263}
         size: {x: 2.969209, y: 1.449838}
-        damageRatio: 5
+        damageRatio: 0.2
         impactTier: 3
         useDeterministicReaction: 1
         reactionKind: 2
@@ -888,11 +891,11 @@ MonoBehaviour:
       data:
         startFrameOffset: 75
         activeFrames: 4
-        elementType: 0
+        elementType: 2
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -1.4754045, y: 0.3999999}
         size: {x: 2.8058772, y: 1.1972927}
-        damageRatio: 5
+        damageRatio: 0.2
         impactTier: 3
         useDeterministicReaction: 1
         reactionKind: 1
@@ -1039,7 +1042,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.311993, y: 0.56738263}
         size: {x: 2.969209, y: 1.449838}
-        damageRatio: 5
+        damageRatio: 0.2
         impactTier: 3
         useDeterministicReaction: 1
         reactionKind: 2
@@ -1131,11 +1134,11 @@ MonoBehaviour:
       data:
         startFrameOffset: 71
         activeFrames: 4
-        elementType: 0
+        elementType: 2
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -1.4754045, y: 0.3999999}
         size: {x: 2.8058772, y: 1.1972927}
-        damageRatio: 7
+        damageRatio: 0.4
         impactTier: 3
         useDeterministicReaction: 1
         reactionKind: 2
@@ -1618,7 +1621,7 @@ MonoBehaviour:
         offset: {x: 0.50361294, y: 1.3693061}
         size: {x: 1.2597638, y: 1.1715475}
         canGrabAirborne: 1
-        damageRatio: 2
+        damageRatio: 0.3
         impactFreezeFrames: 0
         holdFrames: 24
         recoveryFrames: 6
@@ -1734,7 +1737,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -1.1282648, y: 0.28957066}
         size: {x: 3.6333134, y: 0.95290196}
-        damageRatio: 3
+        damageRatio: 0.3
         impactTier: 2
         useDeterministicReaction: 1
         reactionKind: 2
@@ -1810,7 +1813,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.57389903, y: 1.0641747}
         size: {x: 1.9609334, y: 1.2522043}
-        damageRatio: 2
+        damageRatio: 0.13
         impactTier: 2
         useDeterministicReaction: 1
         reactionKind: 2
@@ -2007,7 +2010,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.09575868, y: 0.30218866}
         size: {x: 7.49467, y: 0.9956227}
-        damageRatio: 8
+        damageRatio: 0.7
         impactTier: 2
         useDeterministicReaction: 1
         reactionKind: 2

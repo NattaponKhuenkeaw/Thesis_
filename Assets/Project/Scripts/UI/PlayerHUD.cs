@@ -1,9 +1,11 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Project.ShopSystem;
 
 /// <summary>
-/// Player HUD that subscribes to PlayerCharacter HP events (no longer uses CharacterRuntime).
+/// Player HUD that subscribes to PlayerCharacter HP and runtime effect events.
 /// </summary>
 public class PlayerHUD : MonoBehaviour
 {
@@ -13,6 +15,8 @@ public class PlayerHUD : MonoBehaviour
     [SerializeField] private PlayerCharacter playerCharacter;
     [SerializeField] private TeamLoader teamLoader;
     [SerializeField] private Canvas targetCanvas;
+    [SerializeField] private Transform runtimeEffectContainer;
+    [SerializeField] private RuntimeEffectIconUI runtimeEffectIconPrefab;
 
     private RectTransform hudRoot;
     private Slider healthSlider;
@@ -20,6 +24,8 @@ public class PlayerHUD : MonoBehaviour
     private TMP_Text nameText;
     private TMP_Text hpText;
     private PlayerCharacter subscribedPlayer;
+    private PlayerRunInventory subscribedEffectInventory;
+    private readonly List<RuntimeEffectIconUI> runtimeEffectIcons = new List<RuntimeEffectIconUI>();
     private string lastCharacterKey = string.Empty;
 
     private void Reset()
@@ -40,18 +46,25 @@ public class PlayerHUD : MonoBehaviour
     private void OnEnable()
     {
         RebindEvents();
+        RebindRuntimeEffectEvents();
         RefreshHUD();
     }
 
     private void OnDisable()
     {
-        if (subscribedPlayer == null)
-            return;
+        if (subscribedPlayer != null)
+        {
+            subscribedPlayer.OnHealthChanged -= HandleHealthChanged;
+            subscribedPlayer.OnCharacterChanged -= HandleCharacterChanged;
+            subscribedPlayer.OnDied -= HandleDied;
+            subscribedPlayer = null;
+        }
 
-        subscribedPlayer.OnHealthChanged -= HandleHealthChanged;
-        subscribedPlayer.OnCharacterChanged -= HandleCharacterChanged;
-        subscribedPlayer.OnDied -= HandleDied;
-        subscribedPlayer = null;
+        if (subscribedEffectInventory != null)
+        {
+            subscribedEffectInventory.OnRuntimeEffectsChanged -= HandleRuntimeEffectsChanged;
+            subscribedEffectInventory = null;
+        }
     }
 
     private void LateUpdate()
@@ -67,6 +80,8 @@ public class PlayerHUD : MonoBehaviour
         string currentCharacterKey = GetCharacterKey();
         if (currentCharacterKey != lastCharacterKey)
             RefreshHUD();
+
+        RefreshRuntimeEffects();
     }
 
     private void CacheReferences()
@@ -79,6 +94,9 @@ public class PlayerHUD : MonoBehaviour
 
         if (targetCanvas == null || FindHudRoot(targetCanvas.transform) == null)
             targetCanvas = FindTargetCanvas();
+
+        if (runtimeEffectContainer == null && hudRoot != null)
+            runtimeEffectContainer = FindRuntimeEffectContainer(hudRoot);
     }
 
     private void EnsureHudReady()
@@ -90,6 +108,7 @@ public class PlayerHUD : MonoBehaviour
 
         CreateHudIfNeeded();
         RebindEvents();
+        RebindRuntimeEffectEvents();
         RefreshHUD();
     }
 
@@ -203,6 +222,124 @@ public class PlayerHUD : MonoBehaviour
             hpText.text = $"{Mathf.CeilToInt(currentHp)} / {Mathf.CeilToInt(maxHp)}";
 
         lastCharacterKey = GetCharacterKey();
+        RefreshRuntimeEffects();
+    }
+
+    private void RebindRuntimeEffectEvents()
+    {
+        PlayerRunInventory inventory = ResolveEffectInventory();
+        if (inventory == subscribedEffectInventory)
+        {
+            return;
+        }
+
+        if (subscribedEffectInventory != null)
+        {
+            subscribedEffectInventory.OnRuntimeEffectsChanged -= HandleRuntimeEffectsChanged;
+        }
+
+        subscribedEffectInventory = inventory;
+        if (subscribedEffectInventory != null)
+        {
+            subscribedEffectInventory.OnRuntimeEffectsChanged += HandleRuntimeEffectsChanged;
+        }
+    }
+
+    private PlayerRunInventory ResolveEffectInventory()
+    {
+        if (teamLoader == null)
+        {
+            teamLoader = Object.FindFirstObjectByType<TeamLoader>();
+        }
+
+        return teamLoader != null ? teamLoader.RunInventory : null;
+    }
+
+    private void HandleRuntimeEffectsChanged(CharacterObject changedCharacter)
+    {
+        if (playerCharacter == null || changedCharacter == playerCharacter.characterObject)
+        {
+            RefreshRuntimeEffects();
+        }
+    }
+
+    private void RefreshRuntimeEffects()
+    {
+        if (playerCharacter == null || playerCharacter.characterObject == null)
+        {
+            SetRuntimeEffectIconCount(0);
+            return;
+        }
+
+        if (runtimeEffectContainer == null)
+        {
+            runtimeEffectContainer = hudRoot != null
+                ? FindRuntimeEffectContainer(hudRoot)
+                : targetCanvas != null ? FindRuntimeEffectContainer(targetCanvas.transform) : null;
+        }
+
+        if (runtimeEffectContainer == null)
+        {
+            return;
+        }
+
+        RebindRuntimeEffectEvents();
+        IReadOnlyList<RuntimeEffectInstance> effects = subscribedEffectInventory != null
+            ? subscribedEffectInventory.GetActiveRuntimeEffects(playerCharacter.characterObject)
+            : playerCharacter.RuntimeEffects != null ? playerCharacter.RuntimeEffects.ActiveEffects : null;
+
+        int count = effects != null ? effects.Count : 0;
+        SetRuntimeEffectIconCount(count);
+        for (int i = 0; i < count; i++)
+        {
+            runtimeEffectIcons[i].Bind(effects[i]);
+        }
+
+        playerCharacter.RuntimeEffects?.SyncVisuals(effects);
+    }
+
+    private void SetRuntimeEffectIconCount(int count)
+    {
+        for (int i = runtimeEffectIcons.Count; i < count; i++)
+        {
+            runtimeEffectIcons.Add(CreateRuntimeEffectIcon());
+        }
+
+        for (int i = 0; i < runtimeEffectIcons.Count; i++)
+        {
+            if (runtimeEffectIcons[i] != null)
+            {
+                runtimeEffectIcons[i].gameObject.SetActive(i < count);
+            }
+        }
+    }
+
+    private RuntimeEffectIconUI CreateRuntimeEffectIcon()
+    {
+        if (runtimeEffectIconPrefab != null)
+        {
+            return Instantiate(runtimeEffectIconPrefab, runtimeEffectContainer);
+        }
+
+        GameObject iconObject = new GameObject(
+            "RuntimeEffectIcon",
+            typeof(RectTransform),
+            typeof(CanvasRenderer),
+            typeof(Image),
+            typeof(RuntimeEffectIconUI));
+        iconObject.transform.SetParent(runtimeEffectContainer, false);
+        RectTransform rect = iconObject.GetComponent<RectTransform>();
+        rect.sizeDelta = new Vector2(28f, 28f);
+        return iconObject.GetComponent<RuntimeEffectIconUI>();
+    }
+
+    private Transform FindRuntimeEffectContainer(Transform parent)
+    {
+        return FindChildRecursive(parent, "BuffContainer")
+            ?? FindChildRecursive(parent, "BuffDebuffContainer")
+            ?? FindChildRecursive(parent, "StatusEffectContainer")
+            ?? FindChildRecursive(parent, "RuntimeEffectContainer")
+            ?? FindChildRecursive(parent, "EffectContainer");
     }
 
     private string GetCharacterKey()

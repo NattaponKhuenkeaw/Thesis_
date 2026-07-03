@@ -38,12 +38,12 @@ MonoBehaviour:
       rootNode:
         rid: 1588256193077837991
   skillActions:
-  - actionName: New Skill
+  - actionName: Dark Chain
     context: 0
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
-    actionDamageMultiplier: 5
+    actionDamageMultiplier: 3.5
     auraEnergyReward: 10
     comboTree:
       treeName: Combo
@@ -57,7 +57,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
-    actionDamageMultiplier: 10
+    actionDamageMultiplier: 7
     auraEnergyReward: 0
     comboTree:
       treeName: Combo

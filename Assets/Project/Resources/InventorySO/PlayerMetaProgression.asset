@@ -13,3 +13,4 @@ MonoBehaviour:
   m_Name: PlayerMetaProgression
   m_EditorClassIdentifier: Assembly-CSharp::Project.Progression.PlayerMetaProgression
   fragments: []
+  characterPotentials: []

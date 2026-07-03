@@ -88,7 +88,6 @@ public class NormalHitbox : HitboxBase
     
     public EnemyLandingBehavior landingBehavior = EnemyLandingBehavior.Knockdown;
     public bool canAirJuggle = true;
-    public int maxJuggleCount = 2;
     public float juggleLaunchScale = 0.85f;
     public float juggleStunScale = 0.9f;
 

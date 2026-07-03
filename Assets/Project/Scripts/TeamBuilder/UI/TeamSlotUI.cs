@@ -269,11 +269,8 @@ namespace Project.TeamBuilder.UI
 
             CharacterObject charObj = currentCharacter.characterObjectData;
             CharacterStats baseStats = parentBuilder != null
-                ? parentBuilder.ResolveCharacterStats(charObj)
+                ? parentBuilder.ResolveCharacterBaseStats(charObj)
                 : charObj.GetLeveledStats();
-            float bonusAttack = 0f;
-            float bonusDefense = 0f;
-            float bonusHp = 0f;
             CharacterStats effectiveStats = baseStats.Clone();
 
             for (int i = 0; i < artifactSlots.Length; i++)
@@ -284,15 +281,14 @@ namespace Project.TeamBuilder.UI
                     continue;
                 }
 
-                bonusAttack += slot.CurrentArtifact.bonusStats.attack;
-                bonusDefense += slot.CurrentArtifact.bonusStats.defense;
-                bonusHp += slot.CurrentArtifact.bonusStats.maxHP;
                 ApplyArtifactBonus(effectiveStats, baseStats, slot.CurrentArtifact.bonusStats);
             }
 
-            UpdateStatFeedback(atkText, ref atkFeedbackCoroutine, ref lastAttackBase, ref lastAttackBonus, baseStats.attack, bonusAttack, "atk");
-            UpdateStatFeedback(defText, ref defFeedbackCoroutine, ref lastDefenseBase, ref lastDefenseBonus, baseStats.defense, bonusDefense, "def");
-            UpdateStatFeedback(hpText, ref hpFeedbackCoroutine, ref lastHpBase, ref lastHpBonus, baseStats.maxHP, bonusHp, "hp");
+            parentBuilder?.ApplyRuntimeEffectsToStats(charObj, effectiveStats);
+
+            UpdateStatFeedback(atkText, ref atkFeedbackCoroutine, ref lastAttackBase, ref lastAttackBonus, baseStats.attack, effectiveStats.attack, "atk");
+            UpdateStatFeedback(defText, ref defFeedbackCoroutine, ref lastDefenseBase, ref lastDefenseBonus, baseStats.defense, effectiveStats.defense, "def");
+            UpdateStatFeedback(hpText, ref hpFeedbackCoroutine, ref lastHpBase, ref lastHpBonus, baseStats.maxHP, effectiveStats.maxHP, "hp");
 
             if (hasStatSnapshot && lastEffectiveStats != null)
             {
@@ -666,7 +662,7 @@ namespace Project.TeamBuilder.UI
 
         private static string FormatStatValue(float baseValue, float bonusValue, string statName)
         {
-            return StatFormatHelper.Format(baseValue, bonusValue, statName, true);
+            return StatFormatHelper.FormatResolved(baseValue, bonusValue, statName, true);
         }
 
         private static void ApplyArtifactBonus(
@@ -692,6 +688,7 @@ namespace Project.TeamBuilder.UI
             effectiveStats.critDamage += bonusStats.critDamage;
             effectiveStats.cooldownRate += bonusStats.cooldownRate;
             effectiveStats.impact += bonusStats.impact;
+            effectiveStats.damageReduction += bonusStats.damageReduction;
             effectiveStats.aeRecharge += bonusStats.aeRecharge;
         }
 
@@ -757,12 +754,12 @@ namespace Project.TeamBuilder.UI
             bool isPercentMultiplier = statKey.Contains("hp") || statKey.Contains("atk") || statKey.Contains("def");
 
             float startTotal = isPercentMultiplier
-                ? startBaseValue * (1f + startBonusValue / 100f)
-                : startBaseValue + startBonusValue;
+                ? startBonusValue
+                : startBonusValue;
 
             float endTotal = isPercentMultiplier
-                ? endBaseValue * (1f + endBonusValue / 100f)
-                : endBaseValue + endBonusValue;
+                ? endBonusValue
+                : endBonusValue;
 
             bool isUpgrade = endTotal > startTotal;
             Color flashColor = isUpgrade ? statBoostColor : statDowngradeColor;

@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: ActionResolverTable_char_5_goenitz
   m_EditorClassIdentifier: Assembly-CSharp::ActionResolverTable
   comboActions:
-  - actionName: Ground
+  - actionId: goenitz.basic.ground
+    actionName: Ground
     context: 0
     priority: 0
     conditions: []
@@ -25,7 +26,8 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588256048081535101
-  - actionName: Air
+  - actionId: goenitz.basic.air
+    actionName: Air
     context: 1
     priority: 0
     conditions: []
@@ -38,7 +40,8 @@ MonoBehaviour:
       rootNode:
         rid: 1588256185409339497
   skillActions:
-  - actionName: Yonokeze
+  - actionId: goenitz.skill.yonokaze
+    actionName: Yonokaze
     context: 0
     priority: 0
     conditions: []
@@ -52,12 +55,13 @@ MonoBehaviour:
         rid: 1588256145469341789
     cooldown: 3
   ultimateActions:
-  - actionName: New Ultimate
+  - actionId: goenitz.ultimate.yamidokoku
+    actionName: Yamidokoku
     context: 0
     priority: 10
     conditions: []
     allowGroundToAirTransition: 0
-    actionDamageMultiplier: 5
+    actionDamageMultiplier: 8.5
     auraEnergyReward: 0
     comboTree:
       treeName: Combo
@@ -1152,7 +1156,7 @@ MonoBehaviour:
           recoveryFrames: 17
           cancelWindowStartFrame: 61
           loopActivePhase: 0
-          stepName: Yonokeze
+          stepName: Yonokaze
           animationClip: {fileID: 7400000, guid: 6ae74e424f6da7541ac385765b953aca, type: 2}
           lockAirPosition: 1
           autoChainToNext: 0
@@ -1401,7 +1405,7 @@ MonoBehaviour:
           startupFrames: 10
           activeFrames: 15
           recoveryFrames: 20
-          cancelWindowStartFrame: 35
+          cancelWindowStartFrame: 41
           loopActivePhase: 0
           stepName: air_Attack3
           animationClip: {fileID: 7400000, guid: 849b3273fb6fe5647ab197ae9abf2063, type: 2}
@@ -1627,14 +1631,21 @@ MonoBehaviour:
           endFrame: 15
           taskType: 0
           easing: 1
-          position: {x: 2, y: 1, z: 0}
+          position: {x: 3, y: 0.5, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
         - startFrame: 15
-          endFrame: 32
+          endFrame: 20
           taskType: 0
           easing: 1
-          position: {x: 2, y: 0.5, z: 0}
+          position: {x: 1, y: 0.2, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 20
+          endFrame: 41
+          taskType: 0
+          easing: 1
+          position: {x: 0.5, y: -1, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
     - rid: 1588256193077837925
@@ -1656,15 +1667,15 @@ MonoBehaviour:
         impactTier: 1
         useDeterministicReaction: 1
         reactionKind: 1
-        impactFreezeFrames: 4
+        impactFreezeFrames: 1
         knockbackFrames: 15
         knockupFrames: 12
         knockfallFrames: 10
         recoveryFrames: 9
         horizontalSpeed: 3
         launchSpeed: 1
-        useSnapToAnchor: 0
-        snapOffset: {x: 0, y: 0}
+        useSnapToAnchor: 1
+        snapOffset: {x: 1, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
         maxJuggleCount: 2

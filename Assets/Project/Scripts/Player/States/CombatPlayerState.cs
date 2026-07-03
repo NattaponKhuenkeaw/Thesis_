@@ -334,7 +334,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
         if (resolver.ActiveCombatAction is SkillAction skillAction && skillAction.cooldown > 0f)
         {
-            player.Combat.StartActionCooldown(GetAttackCategory(), skillAction.actionName);
+            player.Combat.StartActionCooldown(GetAttackCategory(), skillAction.actionName, skillAction.actionId);
 
             if (AbilityUIManager.Instance != null)
             {
@@ -346,7 +346,8 @@ public abstract class CombatPlayerState : FrameDataPlayerState
                 float resolvedCooldown = player.Combat.GetFinalCooldown(
                     GetAttackCategory(),
                     skillAction.cooldown,
-                    skillAction.actionName);
+                    skillAction.actionName,
+                    skillAction.actionId);
                 AbilityUIManager.Instance.TriggerCooldown(abilityType, resolvedCooldown);
             }
 
@@ -421,6 +422,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             !ctx.isGrounded,
             GetAttackCategory(),
             resolver.ActiveCombatAction?.actionName,
+            resolver.ActiveCombatAction?.actionId,
             isAutoChain);
         UpdateGroundAuthorityGuardrail();
         RestartAction();

@@ -129,7 +129,6 @@ namespace CombatCore
                         launchSpeed = 0f,
                         landingBehavior = EnemyLandingBehavior.Recover,
                         canAirJuggle = false,
-                        maxJuggleCount = 0,
                         juggleLaunchScale = 1f,
                         juggleStunScale = 1f,
                         forceFaceAttacker = false,

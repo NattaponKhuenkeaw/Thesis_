@@ -578,9 +578,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
     private void PrepareAirJuggle(ref HitReactionData data)
     {
-        int maxJuggleCount = Mathf.Max(0, data.maxJuggleCount);
-
-        if (!data.canAirJuggle || currentJuggleCount >= maxJuggleCount)
+        if (!data.canAirJuggle)
         {
             data.launchSpeed = 0f;
             data.horizontalSpeed *= 0.5f;
@@ -613,7 +611,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
             scaledKnockupFrames,
             scaledRecoveryFrames);
 
-        currentJuggleCount = Mathf.Min(maxJuggleCount, currentJuggleCount + 1);
+        currentJuggleCount++;
     }
 
     private void ApplyLegacySnap(Vector2 attackerPosition)

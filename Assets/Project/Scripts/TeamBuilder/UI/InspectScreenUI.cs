@@ -839,6 +839,65 @@ namespace Project.TeamBuilder.UI
             return character.GetLeveledStats();
         }
 
+        public CharacterStats ResolveCharacterBaseStats(CharacterObject character)
+        {
+            if (character == null) return null;
+            var runInv = ResolveRunInventory();
+            if (runInv != null)
+            {
+                return runInv.GetCharacterBaseStats(character);
+            }
+            return character.GetLeveledStats();
+        }
+
+        public CharacterStats ResolveCharacterRuntimeStats(CharacterObject character, Artifact[] equippedArtifacts = null)
+        {
+            if (character == null) return null;
+            if (teamLoader != null && teamLoader.ContainsCharacter(character))
+            {
+                return teamLoader.GetCharacterRuntimeStats(character);
+            }
+
+            CharacterStats stats = ResolveCharacterBaseStats(character);
+            if (stats == null)
+            {
+                return null;
+            }
+
+            ApplyArtifactBonuses(stats, ResolveCharacterBaseStats(character), equippedArtifacts);
+            ResolveRunInventory()?.ApplyRuntimeEffectsToStats(character, stats);
+            return stats;
+        }
+
+        private static void ApplyArtifactBonuses(CharacterStats stats, CharacterStats baseStats, Artifact[] equippedArtifacts)
+        {
+            if (stats == null || baseStats == null || equippedArtifacts == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < equippedArtifacts.Length; i++)
+            {
+                Artifact artifact = equippedArtifacts[i];
+                if (artifact == null || artifact.bonusStats == null)
+                {
+                    continue;
+                }
+
+                stats.maxHP += baseStats.maxHP * (artifact.bonusStats.maxHP / 100f);
+                stats.attack += baseStats.attack * (artifact.bonusStats.attack / 100f);
+                stats.defense += baseStats.defense * (artifact.bonusStats.defense / 100f);
+                stats.speed += artifact.bonusStats.speed;
+                stats.elementalMastery += artifact.bonusStats.elementalMastery;
+                stats.critRate += artifact.bonusStats.critRate;
+                stats.critDamage += artifact.bonusStats.critDamage;
+                stats.cooldownRate += artifact.bonusStats.cooldownRate;
+                stats.impact += artifact.bonusStats.impact;
+                stats.damageReduction += artifact.bonusStats.damageReduction;
+                stats.aeRecharge += artifact.bonusStats.aeRecharge;
+            }
+        }
+
         private Transform FindTransformByNames(params string[] names)
         {
             Transform[] transforms = GetComponentsInChildren<Transform>(true);

@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Project.InventorySystem.Items;
+using Project.Progression;
 using Project.ShopSystem;
 
 public interface ITeamEnergySystem
@@ -33,6 +34,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     [Header("Dependencies")]
     public PlayerCharacter playerCharacter;
+    [SerializeField] private PlayerMetaProgression metaProgression;
 
     [Header("Switch Cooldown")]
     [Min(0f)] public float switchCooldownDuration = 1.5f;
@@ -82,6 +84,11 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         SyncTeamSnapshotFromInventory();
         RebuildRuntimeStats();
         LoadCurrentCharacter(forceReload: true);
+    }
+
+    private void Update()
+    {
+        runInventory?.TickRuntimeEffects(Time.deltaTime);
     }
 
     public CharacterObject[] GetTeamSnapshot()
@@ -436,7 +443,18 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         float baseCost = ultimateAction != null && ultimateAction.energyCost > 0f
             ? ultimateAction.energyCost
             : DefaultUltimateAuraEnergyCost;
-        return CalculateReducedCost(character, baseCost);
+        float cost = CalculateReducedCost(character, baseCost);
+        if (playerCharacter != null
+            && playerCharacter.characterObject == character
+            && playerCharacter.PassiveController != null)
+        {
+            cost = playerCharacter.PassiveController.ModifyUltimateEnergyCost(
+                ultimateAction != null ? ultimateAction.actionId : null,
+                ultimateAction != null ? ultimateAction.actionName : null,
+                cost);
+        }
+
+        return Mathf.Max(0f, cost);
     }
 
     private void ResolveDependencies()
@@ -455,6 +473,11 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         {
             runInventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
             runInventory.hideFlags = HideFlags.DontSave;
+        }
+
+        if (metaProgression == null && Application.isPlaying)
+        {
+            metaProgression = Resources.Load<PlayerMetaProgression>("InventorySO/PlayerMetaProgression");
         }
     }
 
@@ -540,8 +563,23 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         SyncTeamSnapshotFromInventory();
         if (FindCharacterIndex(changedChar) >= 0)
         {
-            RefreshRuntimeState();
+            RefreshRuntimeStatsOnly(changedChar);
         }
+    }
+
+    private void RefreshRuntimeStatsOnly(CharacterObject changedCharacter)
+    {
+        RebuildRuntimeStats();
+
+        if (playerCharacter != null && playerCharacter.characterObject != null)
+        {
+            CharacterStats activeStats = GetCharacterRuntimeStats(playerCharacter.characterObject);
+            playerCharacter.RefreshRuntimeStats(activeStats);
+            NotifyCharacterHealthUpdated(playerCharacter.characterObject);
+        }
+
+        NotifyCharacterHealthUpdated(changedCharacter);
+        OnTeamChanged?.Invoke();
     }
 
     private int ResolvePreferredIndex(CharacterObject preferredCharacter)
@@ -625,7 +663,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     private CharacterStats BuildRuntimeStats(CharacterObject character, int slotIndex)
     {
         CharacterStats stats = runInventory != null && character != null
-            ? runInventory.GetCharacterStats(character)
+            ? runInventory.GetCharacterBaseStats(character)
             : (character != null ? character.GetLeveledStats() : new CharacterStats());
 
         float baseLeveledHp = stats.maxHP;
@@ -652,13 +690,149 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             stats.critDamage += artifact.bonusStats.critDamage;
             stats.cooldownRate += artifact.bonusStats.cooldownRate;
             stats.impact += artifact.bonusStats.impact;
+            stats.damageReduction += artifact.bonusStats.damageReduction;
             stats.aeRecharge += artifact.bonusStats.aeRecharge;
         }
 
         stats.maxHP = baseLeveledHp * (1f + hpPercentBonus / 100f);
         stats.attack = baseLeveledAtk * (1f + atkPercentBonus / 100f);
         stats.defense = baseLeveledDef * (1f + defPercentBonus / 100f);
+        ApplyPotentialStatModifiers(stats, character);
+        runInventory?.ApplyRuntimeEffectsToStats(character, stats);
         return stats;
+    }
+
+    private void ApplyPotentialStatModifiers(CharacterStats stats, CharacterObject targetCharacter)
+    {
+        if (stats == null || targetCharacter == null || teamSnapshot == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < teamSnapshot.Length; i++)
+        {
+            CharacterObject sourceCharacter = teamSnapshot[i];
+            if (sourceCharacter == null || sourceCharacter.kitDefinition == null)
+            {
+                continue;
+            }
+
+            bool isSelf = sourceCharacter == targetCharacter;
+            ApplyPotentialStatModifiersFrom(stats, sourceCharacter, PassiveEffectScope.Team);
+
+            if (isSelf)
+            {
+                ApplyPotentialStatModifiersFrom(stats, sourceCharacter, PassiveEffectScope.Self);
+            }
+            else
+            {
+                ApplyPotentialStatModifiersFrom(stats, sourceCharacter, PassiveEffectScope.Allies);
+            }
+        }
+    }
+
+    private void ApplyPotentialStatModifiersFrom(
+        CharacterStats targetStats,
+        CharacterObject sourceCharacter,
+        PassiveEffectScope scope)
+    {
+        foreach (PotentialNodeDefinition node in EnumerateUnlockedPotentialNodes(sourceCharacter))
+        {
+            List<PassiveStatModifierDefinition> modifiers = node != null ? node.statModifiers : null;
+            if (modifiers == null)
+            {
+                continue;
+            }
+
+            for (int i = 0; i < modifiers.Count; i++)
+            {
+                PassiveStatModifierDefinition modifier = modifiers[i];
+                if (modifier == null || modifier.scope != scope)
+                {
+                    continue;
+                }
+
+                if (modifier.HasRuntimeRequirements)
+                {
+                    continue;
+                }
+
+                ApplyPotentialStatModifier(targetStats, modifier);
+            }
+        }
+    }
+
+    private IEnumerable<PotentialNodeDefinition> EnumerateUnlockedPotentialNodes(CharacterObject sourceCharacter)
+    {
+        if (sourceCharacter == null || sourceCharacter.kitDefinition == null)
+        {
+            yield break;
+        }
+
+        if (metaProgression != null)
+        {
+            foreach (PotentialNodeDefinition node in metaProgression.GetUnlockedPotentialNodes(sourceCharacter))
+            {
+                yield return node;
+            }
+
+            yield break;
+        }
+
+        foreach (PotentialNodeDefinition node in sourceCharacter.kitDefinition.EnumerateAllNodes())
+        {
+            if (node != null && (node.unlockedByDefault || node.level <= 0))
+            {
+                yield return node;
+            }
+        }
+    }
+
+    private static void ApplyPotentialStatModifier(CharacterStats targetStats, PassiveStatModifierDefinition modifier)
+    {
+        switch (modifier.target)
+        {
+            case PassiveModifierTarget.MaxHP:
+                targetStats.maxHP = ApplyPotentialStatValue(targetStats.maxHP, modifier);
+                break;
+            case PassiveModifierTarget.AttackStat:
+                targetStats.attack = ApplyPotentialStatValue(targetStats.attack, modifier);
+                break;
+            case PassiveModifierTarget.Defense:
+                targetStats.defense = ApplyPotentialStatValue(targetStats.defense, modifier);
+                break;
+            case PassiveModifierTarget.MoveSpeed:
+                targetStats.speed = ApplyPotentialStatValue(targetStats.speed, modifier);
+                break;
+            case PassiveModifierTarget.ElementalMastery:
+                targetStats.elementalMastery = ApplyPotentialStatValue(targetStats.elementalMastery, modifier);
+                break;
+            case PassiveModifierTarget.CritRate:
+                targetStats.critRate = ApplyPotentialStatValue(targetStats.critRate, modifier);
+                break;
+            case PassiveModifierTarget.CritDamage:
+                targetStats.critDamage = ApplyPotentialStatValue(targetStats.critDamage, modifier);
+                break;
+            case PassiveModifierTarget.CooldownRate:
+                targetStats.cooldownRate = ApplyPotentialStatValue(targetStats.cooldownRate, modifier);
+                break;
+            case PassiveModifierTarget.Impact:
+                targetStats.impact = ApplyPotentialStatValue(targetStats.impact, modifier);
+                break;
+            case PassiveModifierTarget.AuraEnergyRecharge:
+                targetStats.aeRecharge = ApplyPotentialStatValue(targetStats.aeRecharge, modifier);
+                break;
+            case PassiveModifierTarget.IncomingDamageTaken:
+                targetStats.damageReduction = ApplyPotentialStatValue(targetStats.damageReduction, modifier);
+                break;
+        }
+    }
+
+    private static float ApplyPotentialStatValue(float currentValue, PassiveStatModifierDefinition modifier)
+    {
+        return modifier.operation == PassiveNumericOperation.Add
+            ? currentValue + modifier.value
+            : currentValue * modifier.value;
     }
 
 
@@ -786,7 +960,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
         float highestCost = character.actionResolverTable.ultimateActions
             .Where(a => a != null)
-            .Select(a => GetUltimateCost(character, a))
+            .Select(a => CalculateReducedCost(character, a.energyCost > 0f ? a.energyCost : DefaultUltimateAuraEnergyCost))
             .DefaultIfEmpty(0f)
             .Max();
 

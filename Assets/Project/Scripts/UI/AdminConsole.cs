@@ -44,7 +44,7 @@ public class AdminConsole : MonoBehaviour
         }
         if (progressionInventory != null)
         {
-            progressionInventory.ClearFragments();
+            progressionInventory.ClearAllProgression();
         }
         Debug.Log("[AdminConsole] Player Run Progress and Meta Progression have been reset.");
     }

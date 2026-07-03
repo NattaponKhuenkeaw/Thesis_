@@ -30,13 +30,13 @@ public class SkillTreeController : MonoBehaviour
         SkillTreeNode node = GetNodeById(nodeId);
         if (node == null)
         {
-            Debug.LogWarning("SkillTreeController: Node not found -> " + nodeId);
+            Debug.LogWarning("Potential compatibility controller: Node not found -> " + nodeId);
             return false;
         }
 
         bool unlocked = passiveController != null && passiveController.UnlockNodeById(node.nodeId);
         if (unlocked)
-            Debug.Log($"SkillTreeController: Unlocked node -> {node.nodeName} | Remaining Points = {GetCurrentPoints()}");
+            Debug.Log($"Potential compatibility controller: Upgraded node -> {node.nodeName} | Remaining Fragments = {GetCurrentPoints()}");
 
         return unlocked;
     }
@@ -46,13 +46,13 @@ public class SkillTreeController : MonoBehaviour
         SkillTreeNode node = GetNodeById(nodeId);
         if (node == null)
         {
-            Debug.LogWarning("SkillTreeController: Node not found -> " + nodeId);
+            Debug.LogWarning("Potential compatibility controller: Node not found -> " + nodeId);
             return false;
         }
 
         bool locked = passiveController != null && passiveController.LockNodeById(node.nodeId);
         if (locked)
-            Debug.Log("SkillTreeController: Locked node -> " + node.nodeName);
+            Debug.Log("Potential compatibility controller: Lowered potential node -> " + node.nodeName);
 
         return locked;
     }
@@ -71,13 +71,13 @@ public class SkillTreeController : MonoBehaviour
         if (passiveController == null)
             return;
 
-        passiveController.ResetProgression();
-        Debug.Log("SkillTreeController: Reset all nodes");
+        passiveController.ResetPotentialLevels();
+        Debug.Log("Potential compatibility controller: Reset Potential levels");
     }
 
     public SkillTreeNode GetNodeById(string nodeId)
     {
-        ProgressionNodeDefinition node = passiveController != null ? passiveController.GetNodeById(nodeId) : null;
+        PotentialNodeDefinition node = passiveController != null ? passiveController.GetNodeById(nodeId) : null;
         return node != null ? new SkillTreeNode(node, IsNodeUnlocked(node.nodeId)) : null;
     }
 
@@ -89,7 +89,10 @@ public class SkillTreeController : MonoBehaviour
 
     public int GetCurrentPoints()
     {
-        return passiveController != null ? passiveController.ProgressionState.AvailablePoints : 0;
+        CharacterObject character = playerCharacter != null ? playerCharacter.characterObject : null;
+        return passiveController != null && passiveController.MetaProgression != null && character != null
+            ? passiveController.MetaProgression.GetFragmentCount(character.characterId)
+            : 0;
     }
 
     public bool CanUnlockNode(SkillTreeNode node)
@@ -97,7 +100,7 @@ public class SkillTreeController : MonoBehaviour
         if (node == null || passiveController == null)
             return false;
 
-        ProgressionNodeDefinition definition = passiveController.GetNodeById(node.nodeId);
+        PotentialNodeDefinition definition = passiveController.GetNodeById(node.nodeId);
         return passiveController.CanUnlockNode(definition);
     }
 

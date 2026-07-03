@@ -23,7 +23,7 @@ public interface ICharacterCombat
     void OnRecoveryPhaseFromState();
 
     // Step execution
-    void ExecuteStep(AttackStepData step, int comboDepth, bool isAirCombo, AttackCategory category, string resolvedActionName = null, bool isAutoChain = false);
+    void ExecuteStep(AttackStepData step, int comboDepth, bool isAirCombo, AttackCategory category, string resolvedActionName = null, string resolvedActionId = null, bool isAutoChain = false);
 
     // Step queries
     AttackStepData GetCurrentStepData();

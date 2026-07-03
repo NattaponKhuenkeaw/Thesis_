@@ -93,7 +93,7 @@ public class CharacterObject : ScriptableObject
     public DashData DashData => _dashData;
 
     [Header("Progression")]
-    public CharacterProgressionDefinition progressionDefinition = new CharacterProgressionDefinition();
+    public CharacterKitDefinition kitDefinition = new CharacterKitDefinition();
 
     public CharacterStats GetLeveledStats()
     {

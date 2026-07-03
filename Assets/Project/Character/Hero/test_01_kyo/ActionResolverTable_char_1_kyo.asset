@@ -13,19 +13,21 @@ MonoBehaviour:
   m_Name: ActionResolverTable_char_1_kyo
   m_EditorClassIdentifier: Assembly-CSharp::ActionResolverTable
   comboActions:
-  - actionName: 
+  - actionId: kyo.basic.ground
+    actionName: Ground
     context: 0
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
-    actionDamageMultiplier: 3
+    actionDamageMultiplier: 4
     auraEnergyReward: 0
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
       rootNode:
         rid: 3251577252092051566
-  - actionName: 
+  - actionId: kyo.basic.air
+    actionName: Air
     context: 1
     priority: 0
     conditions: []
@@ -38,12 +40,13 @@ MonoBehaviour:
       rootNode:
         rid: 1588255892939997271
   skillActions:
-  - actionName: 
+  - actionId: kyo.skill
+    actionName: Skill Air
     context: 1
     priority: 1
     conditions: []
     allowGroundToAirTransition: 0
-    actionDamageMultiplier: 4
+    actionDamageMultiplier: 3.5
     auraEnergyReward: 3
     comboTree:
       treeName: Combo
@@ -51,12 +54,13 @@ MonoBehaviour:
       rootNode:
         rid: 1588255892939997282
     cooldown: 7
-  - actionName: 
+  - actionId: kyo.skill
+    actionName: Skill
     context: 0
     priority: 1
     conditions: []
     allowGroundToAirTransition: 0
-    actionDamageMultiplier: 4
+    actionDamageMultiplier: 5
     auraEnergyReward: 3
     comboTree:
       treeName: Combo
@@ -65,13 +69,14 @@ MonoBehaviour:
         rid: 1588255892939997283
     cooldown: 7
   ultimateActions:
-  - actionName: 
+  - actionId: kyo.ultimate
+    actionName: Ultimate
     context: 0
     priority: 1
     conditions: []
     allowGroundToAirTransition: 0
     actionDamageMultiplier: 7
-    auraEnergyReward: 0
+    auraEnergyReward: 3
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
@@ -97,7 +102,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 5
         activeFrames: 2
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.39169496, y: 2.2068093}
         size: {x: 1.418764, y: 1.550219}
@@ -197,7 +202,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 1
         activeFrames: 5
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.86026186, y: 2.7276223}
         size: {x: 1.9641931, y: 1.6888655}
@@ -231,7 +236,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 29
         activeFrames: 4
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.92805606, y: 3.0138671}
         size: {x: 1.9189966, y: 1.5984726}
@@ -376,7 +381,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 1
         activeFrames: 16
-        damageType: 0
+        elementType: 3
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 0.9520402, y: 0.7560394}
         size: {x: 1.7284608, y: 1.5838614}
@@ -497,7 +502,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 68
         activeFrames: 7
-        damageType: 1
+        elementType: 3
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.0291088, y: 2.9201977}
         size: {x: 1.933407, y: 1.360044}
@@ -536,7 +541,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 1
         activeFrames: 5
-        damageType: 1
+        elementType: 3
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.662411, y: 1.3666884}
         size: {x: 4.4219246, y: 2.4720218}
@@ -637,7 +642,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 4
-        damageType: 1
+        elementType: 3
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.9195292, y: 1.5627012}
         size: {x: 1.4781201, y: 1.5171803}
@@ -671,7 +676,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 4
         activeFrames: 5
-        damageType: 1
+        elementType: 3
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.066226, y: 1.7311296}
         size: {x: 1.8149769, y: 1.4845805}
@@ -705,7 +710,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 9
         activeFrames: 6
-        damageType: 1
+        elementType: 3
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.41556025, y: 2.4943933}
         size: {x: 1.6991863, y: 1.4373637}
@@ -739,7 +744,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 15
         activeFrames: 5
-        damageType: 1
+        elementType: 3
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.116349936, y: 2.5917017}
         size: {x: 2.8498783, y: 1.3496011}
@@ -773,7 +778,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 20
         activeFrames: 5
-        damageType: 1
+        elementType: 3
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.21688676, y: 2.6520238}
         size: {x: 2.3002768, y: 1.4702454}
@@ -807,7 +812,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 24
         activeFrames: 3
-        damageType: 1
+        elementType: 3
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.0776701, y: 2.7475772}
         size: {x: 4.3227234, y: 1.6667986}
@@ -970,7 +975,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 1
         activeFrames: 3
-        damageType: 1
+        elementType: 3
         debugColor: {r: 0.42, g: 0.81, b: 1, a: 1}
         projectileType: 0
         projectileData: {fileID: 11400000, guid: 6b1d6a7d20195c940a7249e106a8cc1e, type: 2}
@@ -1334,7 +1339,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 1
         activeFrames: 4
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.0527048, y: 1.9185172}
         size: {x: 1.7736158, y: 0.9069997}
@@ -1404,7 +1409,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 2
         activeFrames: 3
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.28628784, y: 2.3803887}
         size: {x: 1.3284358, y: 2.0338614}
@@ -1438,7 +1443,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 8
         activeFrames: 4
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.48456204, y: 1.63021}
         size: {x: 2.0094042, y: 1.0838954}

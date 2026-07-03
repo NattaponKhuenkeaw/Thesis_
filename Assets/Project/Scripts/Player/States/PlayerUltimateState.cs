@@ -99,7 +99,7 @@ public class PlayerUltimateState : CombatPlayerState
             activeUltimateAction = resolver.ActiveCombatAction as UltimateAction;
             float currentAE = teamLoader != null ? teamLoader.GetCharacterCurrentAE(player.characterObject) : 0f;
             float requiredAE = teamLoader != null
-                ? teamLoader.GetCharacterMaxAE(player.characterObject)
+                ? teamLoader.GetUltimateCost(player.characterObject, activeUltimateAction)
                 : TeamLoader.DefaultUltimateAuraEnergyCost;
 
             if (currentAE < requiredAE)
@@ -165,6 +165,7 @@ public class PlayerUltimateState : CombatPlayerState
                 {
                     float cost = teamLoader.GetUltimateCost(player.characterObject, activeUltimateAction);
                     teamLoader.AddCharacterAE(player.characterObject, -cost);
+                    player.PassiveController?.RuntimeState?.RemoveTag("waive_next_ultimate_cost");
                 }
             }
         }

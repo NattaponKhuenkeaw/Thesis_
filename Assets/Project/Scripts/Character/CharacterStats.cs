@@ -29,6 +29,8 @@ public class CharacterStats
     public float cooldownRate = 0f;
     [Tooltip("Impact / Ultimate DMG (percentage, e.g. 10 = 10% more Ultimate DMG)")]
     public float impact = 0f;
+    [Tooltip("Incoming damage reduction (percentage, e.g. 20 = 20% less damage taken)")]
+    public float damageReduction = 0f;
 
     [Header("Aura Energy")]
     [Tooltip("Aura Energy Recharge multiplier (e.g. 1.0 = 100% standard AE recharge)")]
@@ -47,6 +49,7 @@ public class CharacterStats
             critDamage = critDamage,
             cooldownRate = cooldownRate,
             impact = impact,
+            damageReduction = damageReduction,
             aeRecharge = aeRecharge,
         };
     }
@@ -67,6 +70,7 @@ public class CharacterStats
         critDamage += bonus.critDamage;
         cooldownRate += bonus.cooldownRate;
         impact += bonus.impact;
+        damageReduction += bonus.damageReduction;
         aeRecharge += bonus.aeRecharge;
     }
 

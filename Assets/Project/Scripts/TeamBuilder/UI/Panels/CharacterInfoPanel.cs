@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using Project.InventorySystem.Items;
+using Project.Progression;
 using Project.UI;
 using Project.TeamBuilder.UI;
 using Project.TeamBuilder.UI.Interfaces;
@@ -84,48 +85,29 @@ namespace Project.TeamBuilder.UI.Panels
 
             if (potentialText != null)
             {
-                int currentPotential = 0;
-                int maxPotential = data.progressionDefinition != null ? Mathf.Max(1, data.progressionDefinition.maxConstellationRank) : 6;
+                int currentPotential = GetTotalPotentialLevel(data);
+                int maxPotential = CharacterKitDefinition.MaxPotentialLevel * 3;
                 potentialText.text = $"Potential {currentPotential}/{maxPotential}";
             }
 
             PopulateEquippedArtifactSlots(equippedArtifacts);
 
-            float bonusHp = 0f, bonusAtk = 0f, bonusDef = 0f, bonusSpd = 0f;
-            float bonusCdr = 0f, bonusCritRate = 0f, bonusCritDmg = 0f;
-            float bonusElementalMastery = 0f, bonusImpact = 0f, bonusAeRecharge = 0f;
-
-            if (equippedArtifacts != null)
+            CharacterStats baseStats = inspectScreenUI != null ? inspectScreenUI.ResolveCharacterBaseStats(data) : data.GetLeveledStats();
+            CharacterStats runtimeStats = inspectScreenUI != null
+                ? inspectScreenUI.ResolveCharacterRuntimeStats(data, equippedArtifacts)
+                : baseStats;
+            if (baseStats != null && runtimeStats != null)
             {
-                foreach (var artifact in equippedArtifacts)
-                {
-                    if (artifact == null || artifact.bonusStats == null) continue;
-                    bonusHp += artifact.bonusStats.maxHP;
-                    bonusAtk += artifact.bonusStats.attack;
-                    bonusDef += artifact.bonusStats.defense;
-                    bonusSpd += artifact.bonusStats.speed;
-                    bonusCdr += artifact.bonusStats.cooldownRate;
-                    bonusCritRate += artifact.bonusStats.critRate;
-                    bonusCritDmg += artifact.bonusStats.critDamage;
-                    bonusElementalMastery += artifact.bonusStats.elementalMastery;
-                    bonusImpact += artifact.bonusStats.impact;
-                    bonusAeRecharge += artifact.bonusStats.aeRecharge;
-                }
-            }
-
-            CharacterStats baseStats = inspectScreenUI != null ? inspectScreenUI.ResolveCharacterStats(data) : data.GetLeveledStats();
-            if (baseStats != null)
-            {
-                if (hpText != null) hpText.text = FormatStatValue(baseStats.maxHP, bonusHp, "hp");
-                if (atkText != null) atkText.text = FormatStatValue(baseStats.attack, bonusAtk, "atk");
-                if (defText != null) defText.text = FormatStatValue(baseStats.defense, bonusDef, "def");
-                if (spdText != null) spdText.text = FormatStatValue(baseStats.speed, bonusSpd, "spd");
-                if (cdrText != null) cdrText.text = FormatStatValue(baseStats.cooldownRate, bonusCdr, "cdr");
-                if (critRateText != null) critRateText.text = FormatStatValue(baseStats.critRate, bonusCritRate, "crit");
-                if (critDmgText != null) critDmgText.text = FormatStatValue(baseStats.critDamage, bonusCritDmg, "crit");
-                if (elementalMasteryText != null) elementalMasteryText.text = FormatStatValue(baseStats.elementalMastery, bonusElementalMastery, "elemental");
-                if (impactText != null) impactText.text = FormatStatValue(baseStats.impact, bonusImpact, "impact");
-                if (AEgainText != null) AEgainText.text = FormatStatValue(baseStats.aeRecharge * 100f, bonusAeRecharge * 100f, "ae");
+                if (hpText != null) hpText.text = FormatStatValue(baseStats.maxHP, runtimeStats.maxHP, "hp");
+                if (atkText != null) atkText.text = FormatStatValue(baseStats.attack, runtimeStats.attack, "atk");
+                if (defText != null) defText.text = FormatStatValue(baseStats.defense, runtimeStats.defense, "def");
+                if (spdText != null) spdText.text = FormatStatValue(baseStats.speed, runtimeStats.speed, "spd");
+                if (cdrText != null) cdrText.text = FormatStatValue(baseStats.cooldownRate, runtimeStats.cooldownRate, "cdr");
+                if (critRateText != null) critRateText.text = FormatStatValue(baseStats.critRate, runtimeStats.critRate, "crit");
+                if (critDmgText != null) critDmgText.text = FormatStatValue(baseStats.critDamage, runtimeStats.critDamage, "crit");
+                if (elementalMasteryText != null) elementalMasteryText.text = FormatStatValue(baseStats.elementalMastery, runtimeStats.elementalMastery, "elemental");
+                if (impactText != null) impactText.text = FormatStatValue(baseStats.impact, runtimeStats.impact, "impact");
+                if (AEgainText != null) AEgainText.text = FormatStatValue(baseStats.aeRecharge * 100f, runtimeStats.aeRecharge * 100f, "ae");
             }
         }
 
@@ -221,7 +203,22 @@ namespace Project.TeamBuilder.UI.Panels
 
         private static string FormatStatValue(float baseValue, float additionalValue, string statName)
         {
-            return StatFormatHelper.Format(baseValue, additionalValue, statName, true);
+            return StatFormatHelper.FormatResolved(baseValue, additionalValue, statName, true);
+        }
+
+        private static int GetTotalPotentialLevel(CharacterObject data)
+        {
+            if (data == null) return 0;
+
+            PlayerMetaProgression metaProgression = Resources.Load<PlayerMetaProgression>("InventorySO/PlayerMetaProgression");
+            if (metaProgression == null)
+            {
+                return 0;
+            }
+
+            return metaProgression.GetPotentialLevel(data, PotentialTrack.Skill)
+                + metaProgression.GetPotentialLevel(data, PotentialTrack.Ultimate)
+                + metaProgression.GetPotentialLevel(data, PotentialTrack.Passive);
         }
 
         public void Show() { gameObject.SetActive(true); }

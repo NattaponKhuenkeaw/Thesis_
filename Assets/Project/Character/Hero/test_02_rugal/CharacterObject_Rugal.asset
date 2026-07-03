@@ -46,9 +46,6 @@ MonoBehaviour:
     level: 1
     maxLevel: 30
     currentExp: 0
-    expToNextLevel: 100
-    constellationRank: 0
-    progressionPoints: 3
     attackPerLevel: 5.7
     defensePerLevel: 4.8
     maxHpPerLevel: 82.85
@@ -60,8 +57,35 @@ MonoBehaviour:
     cancelWindowStartFrame: 37
     dashSpeed: 45
     cooldownFrames: 24
-  progressionDefinition:
-    maxConstellationRank: 6
-    constellationNodes: []
-    passiveNodes: []
+  kitDefinition:
+    skill:
+      abilityId: 
+      abilityName: Skill
+    ultimate:
+      abilityId: 
+      abilityName: Ultimate
+    passive:
+      abilityId: 
+      abilityName: Passive
+    basePassiveNode:
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: base.passive
+      nodeName: Base Passive
+      description: 
+      track: 2
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
+    potentialNodes: []
   actionResolverTable: {fileID: 11400000, guid: 24c1f4b36af412b4ebbeeb757fac41ef, type: 2}

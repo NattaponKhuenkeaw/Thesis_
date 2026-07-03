@@ -26,6 +26,7 @@ public class HitBoxDamage : MonoBehaviour
     private ProjectileRuntime projectileOwner;
     private CharacterPassiveController passiveController;
     private AttackCategory sourceCategory = AttackCategory.Normal;
+    private string sourceActionId;
     private string sourceActionName;
     private AttackStepData sourceStepData;
     private PlayerCombat rewardOwner;
@@ -79,7 +80,8 @@ public class HitBoxDamage : MonoBehaviour
         AttackCategory category,
         string actionName,
         AttackStepData stepData,
-        CharacterPassiveController sourcePassiveController)
+        CharacterPassiveController sourcePassiveController,
+        string actionId = null)
     {
         currentDamage = damage;
         currentResolvedDamage = damage;
@@ -88,6 +90,7 @@ public class HitBoxDamage : MonoBehaviour
         currentNormalHitbox = hitbox;
         currentGrabHitbox = null;
         sourceCategory = category;
+        sourceActionId = actionId;
         sourceActionName = actionName;
         sourceStepData = stepData;
         passiveController = sourcePassiveController;
@@ -102,7 +105,8 @@ public class HitBoxDamage : MonoBehaviour
         AttackCategory category,
         string actionName,
         AttackStepData stepData,
-        CharacterPassiveController sourcePassiveController)
+        CharacterPassiveController sourcePassiveController,
+        string actionId = null)
     {
         currentDamage = damage;
         currentResolvedDamage = damage;
@@ -111,6 +115,7 @@ public class HitBoxDamage : MonoBehaviour
         currentGrabHitbox = hitbox;
         currentNormalHitbox = null;
         sourceCategory = category;
+        sourceActionId = actionId;
         sourceActionName = actionName;
         sourceStepData = stepData;
         passiveController = sourcePassiveController;
@@ -440,7 +445,6 @@ public class HitBoxDamage : MonoBehaviour
                     currentNormalHitbox.launchSpeed,
                     currentNormalHitbox.landingBehavior,
                     currentNormalHitbox.canAirJuggle,
-                    currentNormalHitbox.maxJuggleCount,
                     currentNormalHitbox.juggleLaunchScale,
                     currentNormalHitbox.juggleStunScale,
                     currentNormalHitbox.useSnapToAnchor,
@@ -482,7 +486,6 @@ public class HitBoxDamage : MonoBehaviour
         data.launchSpeed = 0f;
         data.landingBehavior = EnemyLandingBehavior.Recover;
         data.canAirJuggle = false;
-        data.maxJuggleCount = 0;
         data.juggleLaunchScale = 1f;
         data.juggleStunScale = 1f;
         
@@ -544,7 +547,6 @@ public class HitBoxDamage : MonoBehaviour
         float launchSpeed,
         EnemyLandingBehavior landingBehavior,
         bool canAirJuggle,
-        int maxJuggleCount,
         float juggleLaunchScale,
         float juggleStunScale,
         bool useSnapToAnchor = false,
@@ -560,7 +562,6 @@ public class HitBoxDamage : MonoBehaviour
         data.launchSpeed = Mathf.Max(0f, launchSpeed);
         data.landingBehavior = landingBehavior;
         data.canAirJuggle = canAirJuggle;
-        data.maxJuggleCount = Mathf.Max(0, maxJuggleCount);
         data.juggleLaunchScale = juggleLaunchScale;
         data.juggleStunScale = juggleStunScale;
 

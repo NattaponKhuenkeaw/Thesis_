@@ -34,6 +34,19 @@ public class EnemyElementalState : MonoBehaviour
 
     private List<ActiveDOT> activeDOTs = new List<ActiveDOT>();
 
+    private class ActiveRuntimeElementModifier
+    {
+        public PassiveEnemyElementModifierDefinition definition;
+        public ElementType elementType;
+        public float incomingDamagePercentAdd;
+        public float resistancePercentAdd;
+        public float gaugeBuildPercentAdd;
+        public bool permanent;
+        public float expiresAt;
+    }
+
+    private readonly List<ActiveRuntimeElementModifier> runtimeModifiers = new List<ActiveRuntimeElementModifier>();
+
     private void Awake()
     {
         enemy = GetComponent<EnemyController>();
@@ -54,6 +67,7 @@ public class EnemyElementalState : MonoBehaviour
         gauges.Clear();
         activeReactions.Clear();
         activeDOTs.Clear();
+        runtimeModifiers.Clear();
 
         float maxHpValue = enemy != null ? enemy.maxHP : 100f;
 
@@ -86,6 +100,7 @@ public class EnemyElementalState : MonoBehaviour
         float dt = Time.deltaTime;
         UpdateDOTs(dt);
         UpdateReactions(dt);
+        PruneExpiredRuntimeModifiers();
     }
 
     private void UpdateDOTs(float dt)
@@ -146,14 +161,23 @@ public class EnemyElementalState : MonoBehaviour
     public float ModifyIncomingDamage(ElementType elementType, float damage)
     {
         // GDD: Enemy takes 50% increased damage from specific Element for 20s during reaction
+        float result = damage;
         foreach (var reaction in activeReactions)
         {
             if (reaction.elementType == elementType)
             {
-                return damage * 1.5f;
+                result *= 1.5f;
+                break;
             }
         }
-        return damage;
+
+        float modifier = GetIncomingDamagePercentAdd(elementType);
+        if (Mathf.Abs(modifier) > 0.0001f)
+        {
+            result *= Mathf.Max(0f, 1f + modifier);
+        }
+
+        return result;
     }
 
     public void RecordDamageTaken(float damage)
@@ -198,6 +222,7 @@ public class EnemyElementalState : MonoBehaviour
 
         if (gauges.TryGetValue(element, out var gauge))
         {
+            amount *= Mathf.Max(0f, 1f + GetGaugeBuildPercentAdd(element));
             bool triggered = gauge.AddGauge(amount);
             if (triggered)
             {
@@ -272,6 +297,36 @@ public class EnemyElementalState : MonoBehaviour
         return activeReactions.Exists(r => r.elementType == element);
     }
 
+    public void ApplyRuntimeElementModifier(PassiveEnemyElementModifierDefinition effect)
+    {
+        if (effect == null || effect.elementType == ElementType.None)
+        {
+            return;
+        }
+
+        PruneExpiredRuntimeModifiers();
+
+        ActiveRuntimeElementModifier existing = null;
+        if (!effect.stacks)
+        {
+            existing = runtimeModifiers.Find(modifier => modifier.definition == effect);
+        }
+
+        ActiveRuntimeElementModifier modifierToApply = existing ?? new ActiveRuntimeElementModifier();
+        modifierToApply.definition = effect;
+        modifierToApply.elementType = effect.elementType;
+        modifierToApply.incomingDamagePercentAdd = NormalizePercent(effect.incomingDamagePercentAdd);
+        modifierToApply.resistancePercentAdd = NormalizePercent(effect.resistancePercentAdd);
+        modifierToApply.gaugeBuildPercentAdd = NormalizePercent(effect.gaugeBuildPercentAdd);
+        modifierToApply.permanent = effect.permanent || effect.duration <= 0f;
+        modifierToApply.expiresAt = modifierToApply.permanent ? float.PositiveInfinity : Time.time + Mathf.Max(0f, effect.duration);
+
+        if (existing == null)
+        {
+            runtimeModifiers.Add(modifierToApply);
+        }
+    }
+
     public float GetGaugeRatio(ElementType element)
     {
         if (gauges.TryGetValue(element, out var gauge))
@@ -279,5 +334,54 @@ public class EnemyElementalState : MonoBehaviour
             return gauge.GetProgressRatio();
         }
         return 0f;
+    }
+
+    private float GetIncomingDamagePercentAdd(ElementType element)
+    {
+        PruneExpiredRuntimeModifiers();
+        float total = 0f;
+        for (int i = 0; i < runtimeModifiers.Count; i++)
+        {
+            ActiveRuntimeElementModifier modifier = runtimeModifiers[i];
+            if (modifier != null && modifier.elementType == element)
+            {
+                total += modifier.incomingDamagePercentAdd - modifier.resistancePercentAdd;
+            }
+        }
+
+        return total;
+    }
+
+    private float GetGaugeBuildPercentAdd(ElementType element)
+    {
+        PruneExpiredRuntimeModifiers();
+        float total = 0f;
+        for (int i = 0; i < runtimeModifiers.Count; i++)
+        {
+            ActiveRuntimeElementModifier modifier = runtimeModifiers[i];
+            if (modifier != null && modifier.elementType == element)
+            {
+                total += modifier.gaugeBuildPercentAdd;
+            }
+        }
+
+        return total;
+    }
+
+    private void PruneExpiredRuntimeModifiers()
+    {
+        for (int i = runtimeModifiers.Count - 1; i >= 0; i--)
+        {
+            ActiveRuntimeElementModifier modifier = runtimeModifiers[i];
+            if (modifier == null || (!modifier.permanent && Time.time >= modifier.expiresAt))
+            {
+                runtimeModifiers.RemoveAt(i);
+            }
+        }
+    }
+
+    private static float NormalizePercent(float value)
+    {
+        return Mathf.Abs(value) > 1f ? value / 100f : value;
     }
 }

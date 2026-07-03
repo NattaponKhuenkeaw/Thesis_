@@ -475,7 +475,7 @@ public class PlayerStateMachine : MonoBehaviour
         if (action is SkillAction skillAction
             && playerCharacter != null
             && playerCharacter.Combat != null
-            && playerCharacter.Combat.IsOnCooldown(AttackCategory.Skill, skillAction.cooldown, skillAction.actionName))
+            && playerCharacter.Combat.IsOnCooldown(AttackCategory.Skill, skillAction.cooldown, skillAction.actionName, skillAction.actionId))
         {
             if (showFsmLogs)
                 Log("Skill", "Rejected before state entry: skill is on cooldown", Color.yellow);
@@ -514,7 +514,7 @@ public class PlayerStateMachine : MonoBehaviour
             ? teamLoader.GetCharacterCurrentAE(playerCharacter.characterObject)
             : 0f;
         float requiredAE = teamLoader != null && playerCharacter != null
-            ? teamLoader.GetCharacterMaxAE(playerCharacter.characterObject)
+            ? teamLoader.GetUltimateCost(playerCharacter.characterObject, ultimateAction)
             : TeamLoader.DefaultUltimateAuraEnergyCost;
 
         if (currentAE < requiredAE)

@@ -46,14 +46,14 @@ public class SkillTreeNodeButton : MonoBehaviour
             descriptionText.text = node.description;
 
         if (costText != null)
-            costText.text = "Cost: " + node.pointCost;
+            costText.text = "Fragments: " + node.pointCost;
 
         if (stateText != null)
         {
             if (node.unlocked)
                 stateText.text = "Unlocked";
             else if (skillTreeController.CanUnlockNode(node))
-                stateText.text = "Available";
+                stateText.text = "Upgradeable";
             else
                 stateText.text = "Locked";
         }

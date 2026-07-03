@@ -50,10 +50,10 @@ public class SkillTreeUI : MonoBehaviour
             return;
 
         if (characterNameText != null)
-            characterNameText.text = playerCharacter.characterObject.metaData.displayName + " Skill Tree";
+            characterNameText.text = playerCharacter.characterObject.metaData.displayName + " Potential";
 
         if (pointsText != null)
-            pointsText.text = "Points: " + skillTreeController.GetCurrentPoints();
+            pointsText.text = "Fragments: " + skillTreeController.GetCurrentPoints();
 
         if (nodeButtons == null)
             return;

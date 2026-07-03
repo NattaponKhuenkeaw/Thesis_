@@ -14,6 +14,7 @@ public class BackgroundUltimateExecutor : MonoBehaviour
     private AdditionalDamageEffectDefinition[] additionalDamageEffects;
     private PlayerCombat sourceCombat;
     private CharacterObject sourceCharacter;
+    private string sourceActionId;
     private string sourceActionName;
     private GameObject visualClone;
 
@@ -55,6 +56,7 @@ public class BackgroundUltimateExecutor : MonoBehaviour
             sourceCombat != null ? sourceCombat.CurrentAdditionalDamageEffects : null,
             sourceCombat,
             castingCharacter,
+            sourceCombat != null ? sourceCombat.CurrentActionId : null,
             sourceCombat != null ? sourceCombat.CurrentActionName : actionName,
             currentSprite,
             animController);
@@ -74,6 +76,7 @@ public class BackgroundUltimateExecutor : MonoBehaviour
         AdditionalDamageEffectDefinition[] resolvedAdditionalDamageEffects,
         PlayerCombat resolvedSourceCombat,
         CharacterObject resolvedSourceCharacter,
+        string resolvedSourceActionId,
         string resolvedSourceActionName,
         Sprite characterSprite,
         RuntimeAnimatorController animatorController)
@@ -90,6 +93,7 @@ public class BackgroundUltimateExecutor : MonoBehaviour
             ?? System.Array.Empty<AdditionalDamageEffectDefinition>();
         sourceCombat = resolvedSourceCombat;
         sourceCharacter = resolvedSourceCharacter;
+        sourceActionId = resolvedSourceActionId;
         sourceActionName = resolvedSourceActionName;
 
         // Set local scale for facing direction
@@ -229,7 +233,8 @@ public class BackgroundUltimateExecutor : MonoBehaviour
                     AttackCategory.Ultimate,
                     sourceActionName ?? ultimateStep.stepName,
                     ultimateStep,
-                    null);
+                    null,
+                    sourceActionId);
                 ConfigurePerEnemyDamageCalculation(cloneHitboxDamage);
                 cloneHitboxDamage.ResetActivationState();
             }

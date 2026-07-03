@@ -112,4 +112,44 @@ public class RunCharacterStateTests
         Object.DestroyImmediate(inventory);
         Object.DestroyImmediate(character);
     }
+
+    [Test]
+    public void RuntimeEffectStatBonusAppliesAndExpiresFromRunState()
+    {
+        PlayerRunInventory inventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        CharacterObject character = ScriptableObject.CreateInstance<CharacterObject>();
+        StatRuntimeEffectDefinition effect = ScriptableObject.CreateInstance<StatRuntimeEffectDefinition>();
+
+        try
+        {
+            character.stats.attack = 100f;
+            effect.durationType = RuntimeEffectDurationType.Seconds;
+            effect.durationSeconds = 1f;
+            effect.statModifiers.Add(new RuntimeEffectStatModifier
+            {
+                target = RuntimeEffectStatTarget.Attack,
+                operation = RuntimeEffectStatOperation.AddSourceStatRatio,
+                sourceStat = RuntimeEffectStatTarget.Attack,
+                value = 0.2f
+            });
+
+            inventory.DeployTeam(new[] { character }, 0);
+            inventory.ApplyRuntimeEffect(character, effect, character, character.stats);
+
+            Assert.That(inventory.GetCharacterStats(character).attack, Is.EqualTo(120f).Within(0.001f));
+            Assert.That(character.GetLeveledStats().attack, Is.EqualTo(100f).Within(0.001f));
+            Assert.That(inventory.GetActiveRuntimeEffects(character).Count, Is.EqualTo(1));
+
+            inventory.TickRuntimeEffects(1.1f);
+
+            Assert.That(inventory.GetCharacterStats(character).attack, Is.EqualTo(100f).Within(0.001f));
+            Assert.That(inventory.GetActiveRuntimeEffects(character).Count, Is.EqualTo(0));
+        }
+        finally
+        {
+            Object.DestroyImmediate(effect);
+            Object.DestroyImmediate(character);
+            Object.DestroyImmediate(inventory);
+        }
+    }
 }

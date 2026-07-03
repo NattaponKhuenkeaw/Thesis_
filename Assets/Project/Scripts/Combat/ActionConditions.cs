@@ -101,19 +101,20 @@ public class WallActionCondition : ActionConditionBase
 }
 
 [Serializable]
-public class ProgressionRankActionCondition : ActionConditionBase
+public class PotentialLevelActionCondition : ActionConditionBase
 {
     public override ConditionCategory Category => ConditionCategory.Status;
+    public PotentialTrack track = PotentialTrack.Passive;
     public CounterComparison comparison = CounterComparison.GreaterThanOrEqual;
-    public int rank = 0;
+    [Range(0, CharacterKitDefinition.MaxPotentialLevel)] public int level = 0;
 
     public override bool IsMet(InputContext context)
     {
-        int currentRank = context.passiveController != null
-            ? context.passiveController.ProgressionState.ConstellationRank
+        int currentLevel = context.passiveController != null
+            ? context.passiveController.GetPotentialLevel(track)
             : 0;
 
-        return ActionConditionUtility.EvaluateComparison(currentRank, comparison, rank);
+        return ActionConditionUtility.EvaluateComparison(currentLevel, comparison, level);
     }
 }
 

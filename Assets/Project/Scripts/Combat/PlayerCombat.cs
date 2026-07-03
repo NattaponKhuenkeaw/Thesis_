@@ -3,6 +3,7 @@ using CombatCore;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Project.Combat;
+using Project.ShopSystem;
 
 public sealed class AuraEnergyRewardClaim
 {
@@ -72,6 +73,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     private AttackStepData currentStepData;
     private AttackCategory currentAttackCategory = AttackCategory.Normal;
+    private string currentActionId;
     private string currentActionName;
     private CombatAction currentResolvedCombatAction;
     private float currentActionDamageMultiplier;
@@ -113,6 +115,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     public bool HasActiveHitstop => GameFreezeManager.Instance != null && GameFreezeManager.Instance.IsTimeFrozen;
     public CombatRuntimeState RuntimeState => passiveController != null ? passiveController.RuntimeState : null;
+    public string CurrentActionId => currentActionId;
     public string CurrentActionName => currentActionName;
     public AttackCategory CurrentAttackCategory => currentAttackCategory;
     public bool IsExecutingAutoChainStep => isExecutingAutoChainStep;
@@ -189,6 +192,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         bool airCombo,
         AttackCategory category,
         string resolvedActionName = null,
+        string resolvedActionId = null,
         bool isAutoChain = false)
     {
         if (step == null)
@@ -204,9 +208,10 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         isAirCombo = airCombo;
         isExecutingAutoChainStep = isAutoChain;
         currentAttackCategory = category;
+        currentActionId = resolvedActionId;
         currentActionName = resolvedActionName ?? step.stepName;
         currentAdditionalDamageEffects = passiveController != null
-            ? passiveController.BuildAdditionalDamageEffectSnapshot(category, currentActionName, step)
+            ? passiveController.BuildAdditionalDamageEffectSnapshot(category, currentActionId, currentActionName, step)
             : System.Array.Empty<AdditionalDamageEffectDefinition>();
         currentPhase = ActionPhase.Startup;
         currentAttackFrame = 0;
@@ -264,7 +269,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
         if (depth <= 1 && category == AttackCategory.Normal)
         {
-            RecordActionUse(category, currentActionName);
+            RecordActionUse(category, currentActionName, currentActionId);
 
             if (airCombo && !IsStandaloneContextAction(currentActionName))
             {
@@ -272,7 +277,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             }
         }
 
-        passiveController?.NotifyActionStarted(category, currentActionName, step);
+        passiveController?.NotifyActionStarted(category, currentActionId, currentActionName, step);
     }
 
     public void ProcessFrameFromState(int frame, ActionPhase phase)
@@ -488,17 +493,17 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         Physics2D.SyncTransforms();
     }
 
-    public bool IsOnCooldown(AttackCategory category, float cooldown, string actionName = null)
+    public bool IsOnCooldown(AttackCategory category, float cooldown, string actionName = null, string actionId = null)
     {
         if (cooldown <= 0f)
         {
             return false;
         }
 
-        string actionKey = BuildActionCooldownKey(category, actionName);
+        string actionKey = BuildActionCooldownKey(category, actionName, actionId);
         if (lastActionUseTime.TryGetValue(actionKey, out float actionUseTime))
         {
-            return Time.time < actionUseTime + GetFinalCooldown(category, cooldown, actionName);
+            return Time.time < actionUseTime + GetFinalCooldown(category, cooldown, actionName, actionId);
         }
 
         string categoryKey = BuildCategoryCooldownKey(category);
@@ -507,15 +512,15 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             return false;
         }
 
-        return Time.time < useTime + GetFinalCooldown(category, cooldown, actionName);
+        return Time.time < useTime + GetFinalCooldown(category, cooldown, actionName, actionId);
     }
 
-    public float GetRemainingCooldown(AttackCategory category, float cooldown, string actionName = null)
+    public float GetRemainingCooldown(AttackCategory category, float cooldown, string actionName = null, string actionId = null)
     {
-        string actionKey = BuildActionCooldownKey(category, actionName);
+        string actionKey = BuildActionCooldownKey(category, actionName, actionId);
         if (lastActionUseTime.TryGetValue(actionKey, out float actionUseTime))
         {
-            return Mathf.Max(actionUseTime + GetFinalCooldown(category, cooldown, actionName) - Time.time, 0f);
+            return Mathf.Max(actionUseTime + GetFinalCooldown(category, cooldown, actionName, actionId) - Time.time, 0f);
         }
 
         string categoryKey = BuildCategoryCooldownKey(category);
@@ -524,12 +529,23 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             return 0f;
         }
 
-        return Mathf.Max(useTime + GetFinalCooldown(category, cooldown, actionName) - Time.time, 0f);
+        return Mathf.Max(useTime + GetFinalCooldown(category, cooldown, actionName, actionId) - Time.time, 0f);
     }
 
-    public void StartActionCooldown(AttackCategory category, string actionName = null)
+    public void StartActionCooldown(AttackCategory category, string actionName = null, string actionId = null)
     {
-        RecordActionUse(category, actionName ?? currentActionName);
+        RecordActionUse(category, actionName ?? currentActionName, actionId ?? currentActionId);
+    }
+
+    public void ResetActionCooldown(AttackCategory category, string actionName = null, string actionId = null)
+    {
+        if (string.IsNullOrWhiteSpace(actionName) && string.IsNullOrWhiteSpace(actionId))
+        {
+            lastCategoryUseTime.Remove(BuildCategoryCooldownKey(category));
+            return;
+        }
+
+        lastActionUseTime.Remove(BuildActionCooldownKey(category, actionName, actionId));
     }
 
     public void BeginResolvedAction(
@@ -546,12 +562,27 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             || currentAuraEnergyRewardClaim == null;
 
         currentResolvedCombatAction = action;
+        currentActionId = action != null ? action.actionId : null;
         currentActionDamageMultiplier = action != null
             ? Mathf.Max(0f, action.actionDamageMultiplier)
             : 0f;
         currentAuraEnergyReward = action != null
             ? Mathf.Max(0f, action.auraEnergyReward)
             : 0f;
+
+        if (passiveController != null && action != null)
+        {
+            currentActionDamageMultiplier = passiveController.ModifyActionDamageMultiplier(
+                action.Category,
+                action.actionId,
+                action.actionName,
+                currentActionDamageMultiplier);
+            currentAuraEnergyReward = passiveController.ModifyAuraEnergyReward(
+                action.Category,
+                action.actionId,
+                action.actionName,
+                currentAuraEnergyReward);
+        }
 
         if (beginsNewAction)
         {
@@ -570,9 +601,16 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         CleanupStepVFX(); // --- NEW: Cleanup VFX on combo reset ---
         if (currentPhase == ActionPhase.None && comboDepth == 0) return;
 
+        passiveController?.NotifyActionEnded(
+            currentAttackCategory,
+            currentActionId,
+            currentActionName,
+            currentStepData);
+
         comboDepth = 0;
         currentPhase = ActionPhase.None;
         currentStepData = null;
+        currentActionId = null;
         currentActionName = null;
         currentResolvedCombatAction = null;
         currentActionDamageMultiplier = 0f;
@@ -613,6 +651,11 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public void CancelCurrentAttackButKeepComboProgress()
     {
         CleanupStepVFX(); // --- NEW: Cleanup VFX on attack cancel ---
+        passiveController?.NotifyActionEnded(
+            currentAttackCategory,
+            currentActionId,
+            currentActionName,
+            currentStepData);
         currentPhase = ActionPhase.None;
         currentAttackFrame = 0;
         // hitstop is now global
@@ -838,6 +881,33 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         teamLoader.AddCharacterAE(character, energyToGain);
     }
 
+    public float ModifyRuntimeOutgoingDamage(
+        CharacterObject character,
+        RuntimeEffectDamageContext context,
+        float currentDamage)
+    {
+        PlayerRunInventory inventory = ResolveRunInventory();
+        return inventory != null
+            ? inventory.ModifyOutgoingDamage(character, context, currentDamage)
+            : currentDamage;
+    }
+
+    public void NotifyRuntimeHitDealt(CharacterObject character, RuntimeEffectDamageContext context)
+    {
+        PlayerRunInventory inventory = ResolveRunInventory();
+        inventory?.NotifyRuntimeHitDealt(character, context);
+    }
+
+    private PlayerRunInventory ResolveRunInventory()
+    {
+        if (teamLoader == null)
+        {
+            teamLoader = Object.FindFirstObjectByType<TeamLoader>();
+        }
+
+        return teamLoader != null ? teamLoader.RunInventory : null;
+    }
+
     private bool TryConsumeAuraEnergyChanceGrantSlot()
     {
         float now = Time.time;
@@ -891,6 +961,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             targetTransform = needsTarget ? FindProjectileTarget(data, direction.x) : null,
             passiveController = passiveController,
             sourceStep = currentStepData,
+            sourceActionId = currentActionId,
             sourceActionName = currentActionName,
             category = currentAttackCategory,
             origin = origin,
@@ -977,7 +1048,18 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         }
 
         float baseDamage = GetBaseAttackDamage(normalHitbox != null ? normalHitbox.damageRatio : 1f);
-        hitBoxDamage?.SetHitData(baseDamage, false, false, 0f, 0f, normalHitbox, currentAttackCategory, currentActionName, currentStepData, passiveController);
+        hitBoxDamage?.SetHitData(
+            baseDamage,
+            false,
+            false,
+            0f,
+            0f,
+            normalHitbox,
+            currentAttackCategory,
+            currentActionName,
+            currentStepData,
+            passiveController,
+            currentActionId);
         ConfigurePerEnemyDamageCalculation(hitBoxDamage);
         hitBoxDamage?.ResetActivationState();
 
@@ -1002,7 +1084,16 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         hitBoxController?.ApplyHitbox(grabHitbox);
 
         float baseDamage = GetBaseAttackDamage(grabHitbox.damageRatio);
-        hitBoxDamage?.SetGrabData(baseDamage, false, grabHitbox, false, currentAttackCategory, currentActionName, currentStepData, passiveController);
+        hitBoxDamage?.SetGrabData(
+            baseDamage,
+            false,
+            grabHitbox,
+            false,
+            currentAttackCategory,
+            currentActionName,
+            currentStepData,
+            passiveController,
+            currentActionId);
         ConfigurePerEnemyDamageCalculation(hitBoxDamage);
         hitBoxDamage?.ResetActivationState();
 
@@ -1192,6 +1283,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         }
 
         bool didGrabAny = false;
+        EnemyController grabbedEnemy = null;
         foreach (Collider2D result in results)
         {
             EnemyController enemy = result.GetComponentInParent<EnemyController>();
@@ -1222,6 +1314,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             if (currentGrabHitbox != null && !wasAlreadyHeld && IsHoldingEnemy(enemy))
             {
                 didGrabAny = true;
+                grabbedEnemy ??= enemy;
             }
         }
 
@@ -1231,11 +1324,19 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
                 Debug.Log($"[Combat] ON_GRAB_SUCCESS Detected on frame {currentAttackFrame}. Invoking success transition.");
 
             OnGrabConnected?.Invoke();
+            passiveController?.NotifyGrabSuccess(
+                currentAttackCategory,
+                currentActionId,
+                currentActionName,
+                currentStepData,
+                grabbedEnemy);
         }
     }
 
     private void HandleDashStart()
     {
+        passiveController?.NotifyAfterDash();
+
         if (isAirCombo && comboDepth > 0 && movement != null && !movement.IsGrounded())
             CancelCurrentAttackButKeepComboProgress();
         else
@@ -1302,7 +1403,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             currentAuraEnergyRewardClaim);
     }
 
-    public float GetFinalCooldown(AttackCategory category, float baseValue, string actionName = null)
+    public float GetFinalCooldown(AttackCategory category, float baseValue, string actionName = null, string actionId = null)
     {
         float cooldown = baseValue;
 
@@ -1318,7 +1419,11 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
         if (passiveController != null)
         {
-            cooldown = passiveController.ModifyCooldown(category, actionName ?? currentActionName, cooldown);
+            cooldown = passiveController.ModifyCooldown(
+                category,
+                actionId ?? currentActionId,
+                actionName ?? currentActionName,
+                cooldown);
         }
 
         return Mathf.Max(0.05f, cooldown);
@@ -1418,11 +1523,11 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         }
     }
 
-    private void RecordActionUse(AttackCategory category, string actionName)
+    private void RecordActionUse(AttackCategory category, string actionName, string actionId = null)
     {
         float useTime = Time.time;
         lastCategoryUseTime[BuildCategoryCooldownKey(category)] = useTime;
-        lastActionUseTime[BuildActionCooldownKey(category, actionName)] = useTime;
+        lastActionUseTime[BuildActionCooldownKey(category, actionName, actionId)] = useTime;
     }
 
     private bool IsStandaloneContextAction(string actionName)
@@ -1465,9 +1570,11 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         return $"{GetCooldownCharacterKey()}::{category}";
     }
 
-    private string BuildActionCooldownKey(AttackCategory category, string actionName)
+    private string BuildActionCooldownKey(AttackCategory category, string actionName, string actionId = null)
     {
-        string normalizedActionName = string.IsNullOrWhiteSpace(actionName) ? "Default" : actionName;
+        string normalizedActionName = !string.IsNullOrWhiteSpace(actionId)
+            ? actionId
+            : string.IsNullOrWhiteSpace(actionName) ? "Default" : actionName;
         return $"{BuildCategoryCooldownKey(category)}::{normalizedActionName}";
     }
 

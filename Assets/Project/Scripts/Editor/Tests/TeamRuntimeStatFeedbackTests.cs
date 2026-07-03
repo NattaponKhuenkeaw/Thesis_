@@ -31,7 +31,6 @@ public class TeamRuntimeStatFeedbackTests
             teamLoader.playerCharacter = playerCharacter;
             teamLoader.SetRunInventory(runInventory);
 
-            // removed constellationRank = 1
             artifact.bonusStats = CreateZeroBonusStats();
             artifact.bonusStats.maxHP = 50f;
             artifact.bonusStats.cooldownRate = 50f;
@@ -45,17 +44,13 @@ public class TeamRuntimeStatFeedbackTests
             Assert.That(playerCharacter.MaxHP, Is.EqualTo(150f).Within(0.001f));
             Assert.That(playerCharacter.Stats.cooldownRate, Is.EqualTo(50f).Within(0.001f));
             Assert.That(runInventory.GetTeamRunCharacterAt(0).character, Is.SameAs(character));
-            // Assert.That(passiveController.ProgressionState.ConstellationRank, Is.EqualTo(1));
-
             playerCharacter.SetCurrentHP(140f);
             artifact.bonusStats.maxHP = 0f;
-            // removed constellationRank = 3
 
             teamLoader.RefreshRuntimeState();
 
             Assert.That(playerCharacter.MaxHP, Is.EqualTo(100f).Within(0.001f));
             Assert.That(playerCharacter.CurrentHP, Is.EqualTo(100f).Within(0.001f));
-            // Assert.That(passiveController.ProgressionState.ConstellationRank, Is.EqualTo(3));
         }
         finally
         {
@@ -85,6 +80,49 @@ public class TeamRuntimeStatFeedbackTests
 
         Assert.That(equipTrend, Is.GreaterThan(0f));
         Assert.That(removeTrend, Is.LessThan(0f));
+    }
+
+    [Test]
+    public void TeamLoader_AppliesTeamScopePotentialStatModifiers()
+    {
+        GameObject playerObject = new GameObject("Potential Stat Test Player");
+        GameObject loaderObject = new GameObject("Potential Stat Test Loader");
+        PlayerRunInventory runInventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        CharacterObject leader = ScriptableObject.CreateInstance<CharacterObject>();
+        CharacterObject ally = ScriptableObject.CreateInstance<CharacterObject>();
+
+        try
+        {
+            leader.characterId = "leader";
+            leader.stats.attack = 100f;
+            ally.characterId = "ally";
+            ally.stats.attack = 100f;
+            leader.kitDefinition.basePassiveNode.statModifiers.Add(new PassiveStatModifierDefinition
+            {
+                target = PassiveModifierTarget.AttackStat,
+                operation = PassiveNumericOperation.Add,
+                value = 10f,
+                scope = PassiveEffectScope.Team
+            });
+
+            PlayerCharacter playerCharacter = playerObject.AddComponent<PlayerCharacter>();
+            TeamLoader teamLoader = loaderObject.AddComponent<TeamLoader>();
+            teamLoader.playerCharacter = playerCharacter;
+            teamLoader.SetRunInventory(runInventory);
+
+            teamLoader.DeployLoadout(new[] { leader, ally }, 0);
+
+            Assert.That(teamLoader.GetCharacterRuntimeStats(leader).attack, Is.EqualTo(110f).Within(0.001f));
+            Assert.That(teamLoader.GetCharacterRuntimeStats(ally).attack, Is.EqualTo(110f).Within(0.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(ally);
+            Object.DestroyImmediate(leader);
+            Object.DestroyImmediate(runInventory);
+            Object.DestroyImmediate(loaderObject);
+            Object.DestroyImmediate(playerObject);
+        }
     }
 
     [UnityTest]

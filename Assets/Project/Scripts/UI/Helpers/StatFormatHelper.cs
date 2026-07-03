@@ -192,5 +192,64 @@ namespace Project.UI
                 }
             }
         }
+
+        public static string FormatResolved(float baseValue, float finalValue, string statName, bool useRichTextColor = false)
+        {
+            string statKey = statName != null ? statName.ToLowerInvariant() : "";
+            bool isCDR = statKey.Contains("cdr") || statKey.Contains("cooldown");
+            bool isPercent = isCDR
+                || statKey.Contains("crit")
+                || statKey.Contains("mastery")
+                || statKey.Contains("resist")
+                || statKey.Contains("elemental")
+                || statKey.Contains("ae")
+                || statKey.Contains("impact")
+                || statKey.Contains("reduction");
+
+            float delta = finalValue - baseValue;
+            if (Mathf.Abs(delta) <= 0.001f)
+            {
+                return Format(baseValue, 0f, statName, useRichTextColor);
+            }
+
+            if (isCDR)
+            {
+                string totalText = $"-{finalValue:0.#}%";
+                string sign = delta >= 0f ? "-" : "+";
+                string bonusText = $"{sign}{FormatFloat(delta)}%";
+                if (!useRichTextColor)
+                {
+                    return $"{totalText}({bonusText})";
+                }
+
+                string color = delta >= 0f ? "#4ADE80" : "#EF4444";
+                return $"{totalText} (<color={color}>{bonusText}</color>)";
+            }
+
+            if (isPercent)
+            {
+                string totalText = $"{finalValue:0.#}%";
+                string sign = delta >= 0f ? "+" : "-";
+                string bonusText = $"{sign}{FormatFloat(Mathf.Abs(delta))}%";
+                if (!useRichTextColor)
+                {
+                    return $"{totalText}({bonusText})";
+                }
+
+                string color = delta >= 0f ? "#4ADE80" : "#EF4444";
+                return $"{totalText} (<color={color}>{bonusText}</color>)";
+            }
+
+            string finalText = Mathf.RoundToInt(finalValue).ToString();
+            string deltaSign = delta >= 0f ? "+" : "-";
+            string deltaText = $"{deltaSign}{Mathf.RoundToInt(Mathf.Abs(delta))}";
+            if (!useRichTextColor)
+            {
+                return $"{finalText}({deltaText})";
+            }
+
+            string colorTag = delta >= 0f ? "#4ADE80" : "#EF4444";
+            return $"{finalText} (<color={colorTag}>{deltaText}</color>)";
+        }
     }
 }

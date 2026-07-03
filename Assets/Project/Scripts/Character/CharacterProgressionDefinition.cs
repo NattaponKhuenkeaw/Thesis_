@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ProgressionNodeGroup
+public enum PotentialTrack
 {
-    Constellation,
-    Passive,
-    SkillTree
+    Skill,
+    Ultimate,
+    Passive
 }
 
 public enum PassiveModifierTarget
@@ -21,7 +21,15 @@ public enum PassiveModifierTarget
     ElementalBurnSelf,
     ElementalBurnAllies,
     MaxHP,
-    MoveSpeed
+    MoveSpeed,
+    Defense,
+    CritRate,
+    CritDamage,
+    ElementalMastery,
+    CooldownRate,
+    Impact,
+    AuraEnergyRecharge,
+    IncomingDamageTaken
 }
 
 public enum PassiveEffectScope
@@ -38,11 +46,25 @@ public enum PassiveNumericOperation
     Multiply
 }
 
+public enum PassiveValueModifierOperation
+{
+    None,
+    Add,
+    Multiply,
+    Override
+}
+
 public enum PassiveTriggerType
 {
     Always,
     OnActionStarted,
-    OnHitDealt
+    OnActionEnded,
+    OnHitDealt,
+    OnCritHitDealt,
+    OnKillDealt,
+    OnGrabSuccess,
+    OnAfterDash,
+    OnIncomingDamageCheck
 }
 
 public enum PassiveCounterOperation
@@ -66,16 +88,27 @@ public enum StatusEffectType
 [Serializable]
 public class PassiveTriggerFilter
 {
+    [Tooltip("When enabled, this effect only applies to the selected action category.")]
     public bool filterByCategory = false;
     public AttackCategory category = AttackCategory.Normal;
+    [Tooltip("When enabled, this effect only applies to the stable CombatAction actionId.")]
+    public bool filterByActionId = false;
+    public string actionId;
+    [Tooltip("Fallback for older actions without actionId. Prefer actionId for new kit data.")]
     public bool filterByActionName = false;
     public string actionName;
+    [Tooltip("When enabled, this effect only applies while the source runtime state has this tag.")]
     public bool requireRuntimeTag = false;
     public string runtimeTag;
 
     public bool Matches(PassiveEventContext context)
     {
         if (filterByCategory && context.category != category)
+        {
+            return false;
+        }
+
+        if (filterByActionId && !string.Equals(context.actionId, actionId, StringComparison.Ordinal))
         {
             return false;
         }
@@ -147,12 +180,48 @@ public class PassiveStatModifierDefinition
     public PassiveNumericOperation operation = PassiveNumericOperation.Add;
     public float value = 0f;
     public PassiveEffectScope scope = PassiveEffectScope.Self;
+    public List<RuntimeTagRequirement> requiredTags = new List<RuntimeTagRequirement>();
+    public List<RuntimeCounterRequirement> requiredCounters = new List<RuntimeCounterRequirement>();
+
+    public bool HasRuntimeRequirements =>
+        (requiredTags != null && requiredTags.Count > 0)
+        || (requiredCounters != null && requiredCounters.Count > 0);
+
+    public bool RuntimeRequirementsMet(CombatRuntimeState runtimeState)
+    {
+        if (requiredTags != null)
+        {
+            for (int i = 0; i < requiredTags.Count; i++)
+            {
+                RuntimeTagRequirement requirement = requiredTags[i];
+                if (requirement != null && !requirement.Matches(runtimeState))
+                {
+                    return false;
+                }
+            }
+        }
+
+        if (requiredCounters != null)
+        {
+            for (int i = 0; i < requiredCounters.Count; i++)
+            {
+                RuntimeCounterRequirement requirement = requiredCounters[i];
+                if (requirement != null && !requirement.Matches(runtimeState))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
 }
 
 [Serializable]
 public class PassiveCooldownModifierDefinition
 {
     public AttackCategory category = AttackCategory.Skill;
+    public string actionId;
     public string actionName;
     public PassiveNumericOperation operation = PassiveNumericOperation.Add;
     public float value = 0f;
@@ -161,10 +230,45 @@ public class PassiveCooldownModifierDefinition
 [Serializable]
 public class PassiveActionModifierDefinition
 {
+    public AttackCategory category = AttackCategory.Normal;
+    public string actionId;
     public string actionName;
     public bool unlocked = true;
     public int priorityBonus = 0;
+    public string replacementActionId;
     public string replacementActionName;
+
+    [Header("Action Runtime Values")]
+    public PassiveValueModifierOperation damageMultiplierOperation = PassiveValueModifierOperation.None;
+    public float damageMultiplierValue = 0f;
+    public float auraEnergyRewardAdd = 0f;
+    public PassiveValueModifierOperation cooldownOperation = PassiveValueModifierOperation.None;
+    public float cooldownValue = 0f;
+    public PassiveValueModifierOperation energyCostOperation = PassiveValueModifierOperation.None;
+    public float energyCostValue = 0f;
+
+    public bool Matches(AttackCategory targetCategory, string targetActionId, string targetActionName)
+    {
+        if (category != targetCategory)
+        {
+            return false;
+        }
+
+        bool hasActionId = !string.IsNullOrWhiteSpace(actionId);
+        bool hasActionName = !string.IsNullOrWhiteSpace(actionName);
+
+        if (!hasActionId && !hasActionName)
+        {
+            return true;
+        }
+
+        if (hasActionId && string.Equals(actionId, targetActionId, StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        return hasActionName && string.Equals(actionName, targetActionName, StringComparison.Ordinal);
+    }
 }
 
 [Serializable]
@@ -175,6 +279,17 @@ public class PassiveRuntimeTagEffectDefinition
     public string tag;
     public bool addTag = true;
     public float duration = 0f;
+}
+
+[Serializable]
+public class PassiveRuntimeEffectDefinition
+{
+    public PassiveTriggerType trigger = PassiveTriggerType.OnActionEnded;
+    public PassiveTriggerFilter filter = new PassiveTriggerFilter();
+    public RuntimeEffectDefinition effect;
+    public PassiveEffectScope scope = PassiveEffectScope.Self;
+    [Tooltip("Use -1 to use the RuntimeEffectDefinition duration.")]
+    public float durationOverride = -1f;
 }
 
 [Serializable]
@@ -234,69 +349,147 @@ public class PassiveOnHitStatusEffectDefinition
 }
 
 [Serializable]
-public class ProgressionNodeDefinition
+public class PassiveDefensiveEffectDefinition
 {
-    [Header("Node")]
-    public string nodeId;
-    public string nodeName;
-    [TextArea] public string description;
-    public ProgressionNodeGroup group = ProgressionNodeGroup.Passive;
-    public int constellationRank = 0;
+    public PassiveTriggerFilter filter = new PassiveTriggerFilter();
+    [Range(0f, 1f)] public float evasionChance = 0f;
+    public bool grantsDamageImmunity = false;
+    public bool grantsDebuffImmunity = false;
+}
 
-    [Header("Requirements")]
-    public string requiredNodeId;
-    public int pointCost = 1;
-    public int requiredConstellationRank = 0;
-    public bool unlockedByDefault = false;
+public enum PassiveResourceEffectType
+{
+    Heal,
+    RefillUltimateAuraEnergy,
+    WaiveUltimateAuraEnergyCost,
+    ResetSkillCooldown,
+    ResetUltimateCooldown
+}
 
+[Serializable]
+public class PassiveResourceEffectDefinition
+{
+    public PassiveTriggerType trigger = PassiveTriggerType.OnHitDealt;
+    public PassiveTriggerFilter filter = new PassiveTriggerFilter();
+    public PassiveResourceEffectType effectType = PassiveResourceEffectType.Heal;
+    public PassiveEffectScope scope = PassiveEffectScope.Self;
+    public PassiveModifierTarget valueSource = PassiveModifierTarget.AttackStat;
+    public float valueRatio = 0f;
+    public float flatValue = 0f;
+    public string runtimeTag = "waive_next_ultimate_cost";
+    public float runtimeTagDuration = 0f;
+}
+
+[Serializable]
+public class PassiveEnemyElementModifierDefinition
+{
+    public PassiveTriggerType trigger = PassiveTriggerType.OnHitDealt;
+    public PassiveTriggerFilter filter = new PassiveTriggerFilter();
+    public ElementType elementType = ElementType.None;
+    public float incomingDamagePercentAdd = 0f;
+    public float resistancePercentAdd = 0f;
+    public float gaugeBuildPercentAdd = 0f;
+    public bool permanent = true;
+    public bool stacks = false;
+    [Min(0f)] public float duration = 0f;
+}
+
+[Serializable]
+public class CharacterEffectSetDefinition
+{
     [Header("Effects")]
     public List<PassiveStatModifierDefinition> statModifiers = new List<PassiveStatModifierDefinition>();
     public List<PassiveCooldownModifierDefinition> cooldownModifiers = new List<PassiveCooldownModifierDefinition>();
     public List<PassiveActionModifierDefinition> actionModifiers = new List<PassiveActionModifierDefinition>();
     public List<PassiveRuntimeTagEffectDefinition> runtimeTagEffects = new List<PassiveRuntimeTagEffectDefinition>();
+    public List<PassiveRuntimeEffectDefinition> runtimeEffects = new List<PassiveRuntimeEffectDefinition>();
     public List<PassiveCounterEffectDefinition> counterEffects = new List<PassiveCounterEffectDefinition>();
     public List<PassiveConditionalStateEffectDefinition> conditionalStateEffects = new List<PassiveConditionalStateEffectDefinition>();
     public List<PassiveOnHitStatusEffectDefinition> onHitStatusEffects = new List<PassiveOnHitStatusEffectDefinition>();
     public List<AdditionalDamageEffectDefinition> additionalDamageEffects = new List<AdditionalDamageEffectDefinition>();
+    public List<PassiveDefensiveEffectDefinition> defensiveEffects = new List<PassiveDefensiveEffectDefinition>();
+    public List<PassiveResourceEffectDefinition> resourceEffects = new List<PassiveResourceEffectDefinition>();
+    public List<PassiveEnemyElementModifierDefinition> enemyElementModifiers = new List<PassiveEnemyElementModifierDefinition>();
     public string passiveHookTypeName;
 }
 
 [Serializable]
-public class CharacterProgressionDefinition
+public class PotentialNodeDefinition : CharacterEffectSetDefinition
 {
-    public int maxConstellationRank = 6;
-    public List<ProgressionNodeDefinition> constellationNodes = new List<ProgressionNodeDefinition>();
-    public List<ProgressionNodeDefinition> passiveNodes = new List<ProgressionNodeDefinition>();
+    [Header("Potential Node")]
+    public string nodeId;
+    public string nodeName;
+    [TextArea] public string description;
+    public PotentialTrack track = PotentialTrack.Passive;
+    [Range(0, CharacterKitDefinition.MaxPotentialLevel)] public int level = 1;
+    [Min(0)] public int fragmentCost = 1;
+    public bool unlockedByDefault = false;
+}
 
-    public IEnumerable<ProgressionNodeDefinition> EnumerateAllNodes()
+[Serializable]
+public class CharacterAbilityDefinition
+{
+    [Tooltip("Stable action id in the character ActionResolverTable. Used to resolve the authored Skill/Ultimate action.")]
+    public string abilityId;
+    [Tooltip("Display label only. Damage and runtime behavior are resolved from ActionResolverTable and effect payloads.")]
+    public string abilityName;
+}
+
+[Serializable]
+public class CharacterKitDefinition
+{
+    public const int MaxPotentialLevel = 4;
+
+    [Header("Base Kit")]
+    public CharacterAbilityDefinition skill = new CharacterAbilityDefinition { abilityName = "Skill" };
+    public CharacterAbilityDefinition ultimate = new CharacterAbilityDefinition { abilityName = "Ultimate" };
+    public CharacterAbilityDefinition passive = new CharacterAbilityDefinition { abilityName = "Passive" };
+
+    [Header("Base Passive Runtime Effects")]
+    public PotentialNodeDefinition basePassiveNode = new PotentialNodeDefinition
     {
-        for (int i = 0; i < constellationNodes.Count; i++)
+        nodeId = "base.passive",
+        nodeName = "Base Passive",
+        track = PotentialTrack.Passive,
+        level = 0,
+        fragmentCost = 0,
+        unlockedByDefault = true
+    };
+
+    [Header("Potential Nodes")]
+    public List<PotentialNodeDefinition> potentialNodes = new List<PotentialNodeDefinition>();
+
+    public IEnumerable<PotentialNodeDefinition> EnumerateAllNodes(bool includeBasePassive = true)
+    {
+        if (includeBasePassive && basePassiveNode != null)
         {
-            if (constellationNodes[i] != null)
-            {
-                yield return constellationNodes[i];
-            }
+            yield return basePassiveNode;
         }
 
-        for (int i = 0; i < passiveNodes.Count; i++)
+        if (potentialNodes == null)
         {
-            if (passiveNodes[i] != null)
+            yield break;
+        }
+
+        for (int i = 0; i < potentialNodes.Count; i++)
+        {
+            if (potentialNodes[i] != null)
             {
-                yield return passiveNodes[i];
+                yield return potentialNodes[i];
             }
         }
     }
 
-    public ProgressionNodeDefinition GetNodeById(string nodeId)
+    public PotentialNodeDefinition GetNodeById(string nodeId)
     {
         if (string.IsNullOrEmpty(nodeId))
         {
             return null;
         }
 
-        foreach (ProgressionNodeDefinition node in EnumerateAllNodes())
+        foreach (PotentialNodeDefinition node in EnumerateAllNodes())
         {
-            if (string.Equals(node.nodeId, nodeId, StringComparison.Ordinal))
+            if (node != null && string.Equals(node.nodeId, nodeId, StringComparison.Ordinal))
             {
                 return node;
             }
@@ -310,8 +503,15 @@ public class CharacterProgressionDefinition
 public struct PassiveEventContext
 {
     public AttackCategory category;
+    public string actionId;
     public string actionName;
+    public ElementType elementType;
+    public bool isCriticalHit;
+    public float damageDealt;
+    public bool killedEnemy;
+    public float enemyMaxHp;
     public AttackStepData stepData;
     public CombatRuntimeState runtimeState;
     public EnemyController enemy;
+    public PlayerCharacter source;
 }

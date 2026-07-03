@@ -58,8 +58,401 @@ MonoBehaviour:
     cancelWindowStartFrame: 42
     dashSpeed: 110
     cooldownFrames: 18
-  progressionDefinition:
-    maxConstellationRank: 6
-    constellationNodes: []
-    passiveNodes: []
+  kitDefinition:
+    skill:
+      abilityId: goenitz.skill.yonokaze
+      abilityName: Yonokaze
+    ultimate:
+      abilityId: goenitz.ultimate.yamidokoku
+      abilityName: Yamidokoku
+    passive:
+      abilityId: goenitz.passive
+      abilityName: Passive
+    basePassiveNode:
+      statModifiers:
+      - target: 13
+        operation: 0
+        value: 100
+        scope: 0
+        requiredTags:
+        - tag: goenitz_yonokaze_crit_250
+          expectedValue: 1
+        requiredCounters: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 1
+          filterByActionId: 1
+          actionId: goenitz.skill.yonokaze
+          filterByActionName: 0
+          actionName: 
+          requireRuntimeTag: 0
+          runtimeTag: 
+        tag: goenitz_yonokaze_crit_250
+        addTag: 1
+        duration: 5
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      defensiveEffects:
+      - filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          requireRuntimeTag: 0
+          runtimeTag: 
+        evasionChance: 0.35
+        grantsDamageImmunity: 0
+        grantsDebuffImmunity: 0
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: goenitz.passive.base
+      nodeName: Wind Evasion
+      description: 35% chance to evade incoming enemy attacks.
+      track: 2
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
+    potentialNodes:
+    - statModifiers:
+      - target: 12
+        operation: 0
+        value: 17
+        scope: 0
+        requiredTags:
+        - tag: goenitz_yonokaze_crit_rate
+          expectedValue: 1
+        requiredCounters: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 1
+          filterByActionId: 1
+          actionId: goenitz.skill.yonokaze
+          filterByActionName: 0
+          actionName: 
+          requireRuntimeTag: 0
+          runtimeTag: 
+        tag: goenitz_yonokaze_crit_rate
+        addTag: 1
+        duration: 5
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: goenitz.skill.lv1
+      nodeName: Yonokaze Focus
+      description: Increase CRIT Chance by 17% for 5 seconds after Yonokaze.
+      track: 0
+      level: 1
+      fragmentCost: 1
+      unlockedByDefault: 1
+    - statModifiers:
+      - target: 13
+        operation: 0
+        value: 43
+        scope: 0
+        requiredTags:
+        - tag: goenitz_yonokaze_crit_damage
+          expectedValue: 1
+        requiredCounters: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 1
+          filterByActionId: 1
+          actionId: goenitz.skill.yonokaze
+          filterByActionName: 0
+          actionName: 
+          requireRuntimeTag: 0
+          runtimeTag: 
+        tag: goenitz_yonokaze_crit_damage
+        addTag: 1
+        duration: 5
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: goenitz.skill.lv2
+      nodeName: Yonokaze Edge
+      description: Increase CRIT Damage by 43% for 5 seconds after Yonokaze.
+      track: 0
+      level: 2
+      fragmentCost: 1
+      unlockedByDefault: 1
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers:
+      - category: 1
+        actionId: goenitz.skill.yonokaze
+        actionName: 
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId: 
+        replacementActionName: 
+        damageMultiplierOperation: 3
+        damageMultiplierValue: 6.5
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+      runtimeTagEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: goenitz.skill.lv3
+      nodeName: Yonokaze Force
+      description: Increase Yonokaze damage multiplier to 650%.
+      track: 0
+      level: 3
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers:
+      - trigger: 3
+        filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionId: 1
+          actionId: goenitz.ultimate.yamidokoku
+          filterByActionName: 0
+          actionName: 
+          requireRuntimeTag: 0
+          runtimeTag: 
+        elementType: 2
+        incomingDamagePercentAdd: 0
+        resistancePercentAdd: -15
+        gaugeBuildPercentAdd: 0
+        permanent: 1
+        stacks: 0
+        duration: 0
+      passiveHookTypeName: 
+      nodeId: goenitz.ultimate.lv1
+      nodeName: Echo Rend
+      description: Yamidokoku hits reduce enemy Echo resistance by 15%.
+      track: 1
+      level: 1
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers:
+      - category: 2
+        actionId: goenitz.ultimate.yamidokoku
+        actionName: 
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId: 
+        replacementActionName: 
+        damageMultiplierOperation: 3
+        damageMultiplierValue: 10
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+      runtimeTagEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: goenitz.ultimate.lv2
+      nodeName: Yamidokoku Force
+      description: Increase Yamidokoku damage multiplier to 1000%.
+      track: 1
+      level: 2
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      defensiveEffects: []
+      resourceEffects:
+      - trigger: 6
+        filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionId: 1
+          actionId: goenitz.ultimate.yamidokoku
+          filterByActionName: 0
+          actionName: 
+          requireRuntimeTag: 0
+          runtimeTag: 
+        effectType: 2
+        scope: 0
+        valueSource: 0
+        valueRatio: 0
+        flatValue: 0
+        runtimeTag: waive_next_ultimate_cost
+        runtimeTagDuration: 0
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: goenitz.ultimate.lv3
+      nodeName: Jissokoku Window
+      description: Successful Yamidokoku grab waives the next Ultimate AE cost.
+      track: 1
+      level: 3
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers:
+      - trigger: 4
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          requireRuntimeTag: 0
+          runtimeTag: 
+        elementType: 2
+        incomingDamagePercentAdd: 0
+        resistancePercentAdd: -15
+        gaugeBuildPercentAdd: 0
+        permanent: 1
+        stacks: 0
+        duration: 0
+      passiveHookTypeName: 
+      nodeId: goenitz.passive.lv1
+      nodeName: Echo Scar
+      description: Critical hits reduce enemy Echo resistance by 15%.
+      track: 2
+      level: 1
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects:
+      - trigger: 7
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          requireRuntimeTag: 0
+          runtimeTag: 
+        tag: after_dash_echo
+        addTag: 1
+        duration: 3
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects:
+      - filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          requireRuntimeTag: 1
+          runtimeTag: after_dash_echo
+        chance: 1
+        internalCooldown: 0
+        attackRatio: 0
+        targetMaxHpRatio: 0.04
+        elementType: 2
+        consumeRuntimeTagOnTrigger: 1
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: goenitz.passive.lv3
+      nodeName: After Dash Echo
+      description: After dash, first damaging action deals additional Echo DMG equal
+        to 4% enemy Max HP.
+      track: 2
+      level: 3
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      defensiveEffects:
+      - filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          requireRuntimeTag: 0
+          runtimeTag: 
+        evasionChance: 0.65
+        grantsDamageImmunity: 0
+        grantsDebuffImmunity: 0
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: goenitz.passive.lv4
+      nodeName: Wind Evasion Mastery
+      description: Increase evasion chance to 65%.
+      track: 2
+      level: 4
+      fragmentCost: 1
+      unlockedByDefault: 0
   actionResolverTable: {fileID: 11400000, guid: edfb0345aff2c904bae95d737bd41ce1, type: 2}

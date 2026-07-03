@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: ActionResolverTable_Char_2_Rugal
   m_EditorClassIdentifier: Assembly-CSharp::ActionResolverTable
   comboActions:
-  - actionName: 
+  - actionId: 
+    actionName: Ground Combo
     context: 0
     priority: 0
     conditions: []
@@ -25,7 +26,8 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588255929706479932
-  - actionName: Air Combo
+  - actionId: 
+    actionName: Air Combo
     context: 1
     priority: 1
     conditions: []
@@ -38,12 +40,13 @@ MonoBehaviour:
       rootNode:
         rid: 1588256162561392740
   skillActions:
-  - actionName: Genocide Cutter
+  - actionId: 
+    actionName: Genocide Cutter
     context: 2
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
-    actionDamageMultiplier: 3
+    actionDamageMultiplier: 4
     auraEnergyReward: 10
     comboTree:
       treeName: Combo
@@ -52,7 +55,8 @@ MonoBehaviour:
         rid: 1588255929706479995
     cooldown: 2
   ultimateActions:
-  - actionName: Gigantic Pressure
+  - actionId: 
+    actionName: Gigantic Pressure
     context: 0
     priority: 0
     conditions: []
@@ -136,7 +140,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 1
         activeFrames: 2
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.2081623, y: 1.4506402}
         size: {x: 2.1791368, y: 1.6012073}
@@ -170,7 +174,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 4
         activeFrames: 4
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.0418745, y: 2.0638552}
         size: {x: 2.1186674, y: 1.5105046}
@@ -255,7 +259,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 10
         activeFrames: 7
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.2610719, y: 2.0250905}
         size: {x: 2.2244859, y: 1.7523781}
@@ -268,7 +272,7 @@ MonoBehaviour:
         knockupFrames: 10
         knockfallFrames: 8
         recoveryFrames: 38
-        horizontalSpeed: 3
+        horizontalSpeed: 1
         launchSpeed: 1
         useSnapToAnchor: 1
         snapOffset: {x: 1.5, y: -1}
@@ -340,7 +344,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 4
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.9059641, y: 1.0946585}
         size: {x: 2.8131735, y: 1.5770748}
@@ -435,7 +439,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 1
         activeFrames: 5
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.8297181, y: 1.5144072}
         size: {x: 2.3967237, y: 1.6618077}
@@ -454,7 +458,7 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
+        maxJuggleCount: 20
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -469,7 +473,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 10
         activeFrames: 4
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.84457517, y: 2.665961}
         size: {x: 1.7132201, y: 2.1818643}
@@ -503,7 +507,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 18
         activeFrames: 4
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.64398295, y: 3.036006}
         size: {x: 2.0549724, y: 2.981391}
@@ -537,7 +541,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 27
         activeFrames: 4
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.79257005, y: 2.3836448}
         size: {x: 2.768192, y: 1.4983611}
@@ -629,7 +633,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 1
         activeFrames: 9
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.135947, y: 3.5382276}
         size: {x: 2.7830505, y: 2.5979095}
@@ -648,7 +652,7 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
+        maxJuggleCount: 20
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -722,7 +726,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 1
         activeFrames: 5
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.57688326, y: 1.8789463}
         size: {x: 2.4661958, y: 1.2079847}
@@ -741,7 +745,7 @@ MonoBehaviour:
         snapOffset: {x: 1, y: 1}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 4
+        maxJuggleCount: 20
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -756,7 +760,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 27
         activeFrames: 5
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.6470058, y: 2.3634276}
         size: {x: 2.7849336, y: 1.1824857}
@@ -850,7 +854,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 3
         activeFrames: 3
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.5950986, y: 0.96649176}
         size: {x: 1.4098027, y: 1.9329835}
@@ -869,7 +873,7 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
+        maxJuggleCount: 20
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -884,7 +888,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 8
         activeFrames: 4
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.90847754, y: 2.3834577}
         size: {x: 3.2177553, y: 1.268593}
@@ -918,7 +922,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 12
         activeFrames: 3
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.15666091, y: 2.9375181}
         size: {x: 3.9332266, y: 1.877712}
@@ -1017,7 +1021,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 33
-        damageType: 6
+        elementType: 0
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: -0.5507513, y: 1.9592235}
         size: {x: 1.3459373, y: 0.992684}
@@ -1155,7 +1159,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 2
         activeFrames: 15
-        damageType: 6
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.544281, y: 1.8981042}
         size: {x: 2.603067, y: 2.5366564}
@@ -1283,7 +1287,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 6
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.7917874, y: 1.2049178}
         size: {x: 2.363431, y: 1.7527595}
@@ -1414,7 +1418,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 3
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.9889096, y: 0.547842}
         size: {x: 3.086214, y: 2.081296}
@@ -1465,7 +1469,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 3
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.89034843, y: 1.5745219}
         size: {x: 2.1991625, y: 1.7034776}
@@ -1499,7 +1503,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 4
         activeFrames: 3
-        damageType: 0
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.685012, y: 0.35071954}
         size: {x: 3.0040789, y: 1.7856127}
@@ -1785,7 +1789,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 1
-        damageType: 0
+        elementType: 0
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 0.6, y: 0.3}
         size: {x: 0.8, y: 0.8}
