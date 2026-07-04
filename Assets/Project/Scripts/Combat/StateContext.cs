@@ -14,16 +14,18 @@ public struct StateContext
     // Transient runtime data for condition evaluation
     public int activeFrame;
     public GameObject attacker;
+    public string stepName;
 
     // Optional cached references to common components for conditions to query
     public CharacterPassiveController passiveController => input.passiveController;
     public CombatRuntimeState runtimeState => input.runtimeState;
 
-    public StateContext(InputContext input, int activeFrame = 0, GameObject attacker = null)
+    public StateContext(InputContext input, int activeFrame = 0, GameObject attacker = null, string stepName = null)
     {
         this.input = input;
         this.activeFrame = activeFrame;
         this.attacker = attacker;
+        this.stepName = stepName;
     }
 
     // Implicit conversion allows passing InputContext where StateContext is expected

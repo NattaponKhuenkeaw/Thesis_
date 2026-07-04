@@ -9,6 +9,8 @@ public class PeriodicHealRuntimeEffectDefinition : RuntimeEffectDefinition
     [Min(0f)] public float flatValue;
     public bool useSourceStats = true;
 
+    public override bool RequiresTicking => true;
+
     public override void OnUpdate(RuntimeEffectContext context)
     {
         if (context == null || context.instance == null)

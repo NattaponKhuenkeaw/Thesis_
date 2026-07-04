@@ -65,16 +65,18 @@ namespace Project.Combat
         Goenitz_Tornado = 112,
         Goenitz_Light = 113,
         Goenitz_Ultimate_Tornado = 114,
+        Goenitz_Ultimate_Tornado2 = 115,
+        Goenitz_Ultimate_slash = 116,
 
         // --- Main ---
-        Main_Basic1 = 115,
-        Main_Basic2 = 116,
-        Main_Basic3 = 117,
-        Main_Skill1 = 118,
-        Main_Skill2 = 119,
-        Main_Skill3 = 120,
-        Main_Ultimate = 121,
-        Main_Air_Attack1 = 122,
-        Main_Plunge_Impact = 123,
+        Main_Basic1 = 117,
+        Main_Basic2 = 118,
+        Main_Basic3 = 119,
+        Main_Skill1 = 120,
+        Main_Skill2 = 121,
+        Main_Skill3 = 122,
+        Main_Ultimate = 123,
+        Main_Air_Attack1 = 124,
+        Main_Plunge_Impact = 125,
     }
 }

@@ -9,6 +9,13 @@ public class PlayerMoveState : PlayerState
 
     public override PlayerStateId StateId => PlayerStateId.Running;
 
+    public override void Enter()
+    {
+        base.Enter();
+        if (player.Animator != null)
+            player.Animator.TriggerGrounded();
+    }
+
     // =========================================================
     // Capabilities — Moving accepts everything
     // =========================================================

@@ -41,6 +41,8 @@ MonoBehaviour:
     pitchSFX: 1
     voiceVariants:
     - {fileID: 8300000, guid: 9908b182647152c4da03ff78d47cb1e5, type: 3}
+    - {fileID: 8300000, guid: de93fccd79b57d74c9d4fd853ce4c368, type: 3}
+    - {fileID: 8300000, guid: 3acd8e23caa541247b3479013db1897f, type: 3}
     loopVoice: 0
     volumeVoice: 1
     pitchVoice: 1

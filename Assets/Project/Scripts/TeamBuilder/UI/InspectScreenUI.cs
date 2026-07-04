@@ -853,7 +853,7 @@ namespace Project.TeamBuilder.UI
         public CharacterStats ResolveCharacterRuntimeStats(CharacterObject character, Artifact[] equippedArtifacts = null)
         {
             if (character == null) return null;
-            if (teamLoader != null && teamLoader.ContainsCharacter(character))
+            if (equippedArtifacts == null && teamLoader != null && teamLoader.ContainsCharacter(character))
             {
                 return teamLoader.GetCharacterRuntimeStats(character);
             }
@@ -864,7 +864,17 @@ namespace Project.TeamBuilder.UI
                 return null;
             }
 
-            ApplyArtifactBonuses(stats, ResolveCharacterBaseStats(character), equippedArtifacts);
+            Artifact[] artifactsToApply = equippedArtifacts;
+            if (artifactsToApply == null && teamLoader != null && teamLoader.ContainsCharacter(character))
+            {
+                artifactsToApply = teamLoader.GetEquippedArtifactsFor(character);
+            }
+
+            if (artifactsToApply != null)
+            {
+                ApplyArtifactBonuses(stats, ResolveCharacterBaseStats(character), artifactsToApply);
+            }
+
             ResolveRunInventory()?.ApplyRuntimeEffectsToStats(character, stats);
             return stats;
         }

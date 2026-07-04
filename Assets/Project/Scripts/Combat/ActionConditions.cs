@@ -118,17 +118,68 @@ public class PotentialLevelActionCondition : ActionConditionBase
     }
 }
 
+public enum RuntimeTagType
+{
+    Custom,
+    StepName
+}
+
 [Serializable]
 public class RuntimeTagActionCondition : ActionConditionBase
 {
     public override ConditionCategory Category => ConditionCategory.Status;
+    public RuntimeTagType tagType = RuntimeTagType.Custom;
     public string tag;
     public bool shouldExist = true;
+    public bool applyOnActionStart = false;
 
     public override bool IsMet(InputContext context)
     {
-        bool hasTag = context.runtimeState != null && context.runtimeState.HasTag(tag);
+        string resolvedTag = GetResolvedTag(context, null);
+        if (string.IsNullOrEmpty(resolvedTag)) return true;
+        bool hasTag = context.runtimeState != null && context.runtimeState.HasTag(resolvedTag);
         return hasTag == shouldExist;
+    }
+
+    public override bool IsMet(StateContext context)
+    {
+        string resolvedTag = GetResolvedTag(context.input, context.stepName);
+        if (string.IsNullOrEmpty(resolvedTag)) return true;
+        bool hasTag = context.runtimeState != null && context.runtimeState.HasTag(resolvedTag);
+        return hasTag == shouldExist;
+    }
+
+    public override void OnActiveStart(StateContext context)
+    {
+        if (applyOnActionStart && context.runtimeState != null)
+        {
+            string resolvedTag = GetResolvedTag(context.input, context.stepName);
+            if (!string.IsNullOrEmpty(resolvedTag))
+            {
+                context.runtimeState.SetTag(resolvedTag);
+            }
+        }
+    }
+
+    public override void OnActiveEnd(StateContext context)
+    {
+        if (applyOnActionStart && context.runtimeState != null)
+        {
+            string resolvedTag = GetResolvedTag(context.input, context.stepName);
+            if (!string.IsNullOrEmpty(resolvedTag))
+            {
+                context.runtimeState.RemoveTag(resolvedTag);
+            }
+        }
+    }
+
+    private string GetResolvedTag(InputContext context, string contextStepName)
+    {
+        if (tagType == RuntimeTagType.StepName)
+        {
+            return contextStepName;
+        }
+        return tag;
     }
 }
 

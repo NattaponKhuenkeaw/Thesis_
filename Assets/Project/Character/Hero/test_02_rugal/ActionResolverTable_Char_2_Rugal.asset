@@ -40,7 +40,7 @@ MonoBehaviour:
       rootNode:
         rid: 1588256162561392740
   skillActions:
-  - actionId: 
+  - actionId: rugal.skill
     actionName: Genocide Cutter
     context: 2
     priority: 0
@@ -68,7 +68,7 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588255929706480004
-    cooldown: 0
+    cooldown: 7
     energyCost: 100
     activationVFXType: 40
     activationVFXPrefab: {fileID: 0}
@@ -159,7 +159,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -193,7 +192,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -278,7 +276,6 @@ MonoBehaviour:
         snapOffset: {x: 1.5, y: -1}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -363,7 +360,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -458,7 +454,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 20
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -492,7 +487,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -526,7 +520,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -560,7 +553,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -652,7 +644,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 20
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -745,7 +736,6 @@ MonoBehaviour:
         snapOffset: {x: 1, y: 1}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 20
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -779,7 +769,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -854,7 +843,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 3
         activeFrames: 3
-        elementType: 0
+        elementType: 1
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.5950986, y: 0.96649176}
         size: {x: 1.4098027, y: 1.9329835}
@@ -873,7 +862,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 20
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -888,7 +876,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 8
         activeFrames: 4
-        elementType: 0
+        elementType: 1
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.90847754, y: 2.3834577}
         size: {x: 3.2177553, y: 1.268593}
@@ -907,7 +895,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -922,7 +909,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 12
         activeFrames: 3
-        elementType: 0
+        elementType: 1
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.15666091, y: 2.9375181}
         size: {x: 3.9332266, y: 1.877712}
@@ -941,7 +928,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -1159,7 +1145,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 2
         activeFrames: 15
-        elementType: 0
+        elementType: 1
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.544281, y: 1.8981042}
         size: {x: 2.603067, y: 2.5366564}
@@ -1178,7 +1164,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -1205,6 +1190,7 @@ MonoBehaviour:
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
           freezeWorld: 1
+          freezeDurationOverride: 0
           timelineMode: 0
           activationVFXType: 40
           activationVFXPrefab: {fileID: 0}
@@ -1242,6 +1228,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          enableUltimateZoom: 1
+          ultimateZoomSize: 5.5
     - rid: 1588256162561392740
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -1306,7 +1294,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: -0.5}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -1437,7 +1424,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: -0.5}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -1488,7 +1474,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: -1}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -1522,7 +1507,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}

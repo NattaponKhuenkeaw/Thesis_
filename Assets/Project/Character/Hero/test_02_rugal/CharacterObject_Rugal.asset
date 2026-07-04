@@ -27,6 +27,7 @@ MonoBehaviour:
     critDamage: 150
     cooldownRate: 0
     impact: 0
+    damageReduction: 0
     aeRecharge: 1
   metaData:
     displayName: Rugal
@@ -68,24 +69,101 @@ MonoBehaviour:
       abilityId: 
       abilityName: Passive
     basePassiveNode:
-      statModifiers: []
+      statModifiers:
+      - target: 1
+        operation: 1
+        value: 1.2
+        scope: 0
+        requiredTags: []
+        requiredCounters: []
+      - target: 9
+        operation: 1
+        value: 1.2
+        scope: 0
+        requiredTags: []
+        requiredCounters: []
+      - target: 11
+        operation: 1
+        value: 1.2
+        scope: 0
+        requiredTags: []
+        requiredCounters: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
+      runtimeEffects: []
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
       additionalDamageEffects: []
+      dashThroughDamageEffects: []
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []
       passiveHookTypeName: 
       nodeId: base.passive
       nodeName: Base Passive
-      description: 
+      description: Increase Basic Stats by +20%
       track: 2
       level: 0
       fragmentCost: 0
       unlockedByDefault: 1
-    potentialNodes: []
+    potentialNodes:
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 1
+          filterByActionId: 1
+          actionId: rugal.skill
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          requireRuntimeTag: 0
+          runtimeTag: 
+        effect: {fileID: 11400000, guid: 7a75fa011a4965f4ca29fb03064ea84a, type: 2}
+        scope: 0
+        durationOverride: -1
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: rugal.skill.lv1
+      nodeName: Cutter Strom
+      description: 'Increase ATK Self +7% for 14 seconds '
+      track: 0
+      level: 1
+      fragmentCost: 1
+      unlockedByDefault: 1
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: rugal.skill.lv2
+      nodeName: Cutter Strom
+      description: 'Increase ATK Self +7% for 14 seconds '
+      track: 0
+      level: 1
+      fragmentCost: 1
+      unlockedByDefault: 1
   actionResolverTable: {fileID: 11400000, guid: 24c1f4b36af412b4ebbeeb757fac41ef, type: 2}

@@ -11,6 +11,7 @@ public class CombatRuntimeState
         public string tag;
         public bool hasExpiry;
         public float expiresAt;
+        public float durationSeconds;
     }
 
     [Serializable]
@@ -81,6 +82,28 @@ public class CombatRuntimeState
         return FindTagEntry(tag) != null;
     }
 
+    public bool TryGetTagTiming(string tag, out float remainingSeconds, out float durationSeconds)
+    {
+        remainingSeconds = 0f;
+        durationSeconds = 0f;
+
+        if (string.IsNullOrEmpty(tag))
+        {
+            return false;
+        }
+
+        PruneExpiredTags();
+        RuntimeTagEntry entry = FindTagEntry(tag);
+        if (entry == null || !entry.hasExpiry)
+        {
+            return false;
+        }
+
+        remainingSeconds = Mathf.Max(entry.expiresAt - Time.time, 0f);
+        durationSeconds = Mathf.Max(entry.durationSeconds, remainingSeconds);
+        return remainingSeconds > 0f;
+    }
+
     public void SetTag(string tag, float duration = 0f)
     {
         if (string.IsNullOrEmpty(tag))
@@ -97,6 +120,7 @@ public class CombatRuntimeState
 
         entry.hasExpiry = duration > 0f;
         entry.expiresAt = entry.hasExpiry ? Time.time + duration : 0f;
+        entry.durationSeconds = entry.hasExpiry ? duration : 0f;
         OnStateChanged?.Invoke();
     }
 

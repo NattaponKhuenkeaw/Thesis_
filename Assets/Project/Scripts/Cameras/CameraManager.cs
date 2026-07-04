@@ -39,6 +39,9 @@ public class CameraManager : MonoBehaviour
     [Tooltip("The static virtual camera (no follow / fixed transform).")]
     [SerializeField] private CinemachineCamera _staticCam;
 
+    [Tooltip("The ultimate virtual camera (focuses on player during ultimate).")]
+    [SerializeField] private CinemachineCamera _ultimateCam;
+
     [Header("Zone State")]
     [Tooltip("The ZoneStateProvider that manages room state changes.")]
     [SerializeField] private ZoneStateProvider _zoneStateProvider;
@@ -113,6 +116,13 @@ public class CameraManager : MonoBehaviour
     [SerializeField] private float _ultimateShake = 1.0f;
 
     // =========================================================
+    // Ultimate Camera Settings
+    // =========================================================
+    [Header("Ultimate Zoom Transition")]
+    [Tooltip("Duration (seconds) for the blend into/out of the ultimate camera.")]
+    [SerializeField] private float _ultimateTransitionDuration = 0.35f;
+
+    // =========================================================
     // Runtime State
     // =========================================================
     private class EngagedEnemyContext
@@ -133,6 +143,12 @@ public class CameraManager : MonoBehaviour
     private CinemachineBlendDefinition _cachedBrainBlend;
     private Vector3 _cachedExploreDamping;
     private bool _isTemporarilySnappedToPlayer;
+    private float _originalExploreSize = -1f;
+    private float _originalCombatSize = -1f;
+    private float _originalStaticSize = -1f;
+    private float _originalUltimateSize = -1f;
+    private bool _hasCachedBrainBlend = false;
+    private Coroutine _ultimateZoomCoroutine;
 
     public bool IsInCombat => _isInCombat;
     public bool IsLerpingYDamping { get; private set; }
@@ -204,6 +220,28 @@ public class CameraManager : MonoBehaviour
                     if (cam.gameObject.name.Contains("Static"))
                     {
                         _staticCam = cam;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Auto-find ultimate camera
+        if (_ultimateCam == null)
+        {
+            Transform ultimateCamTransform = transform.Find("CinemachineCamera_Ultimate");
+            if (ultimateCamTransform != null)
+            {
+                _ultimateCam = ultimateCamTransform.GetComponent<CinemachineCamera>();
+            }
+            else
+            {
+                CinemachineCamera[] cams = GetComponentsInChildren<CinemachineCamera>(true);
+                foreach (var cam in cams)
+                {
+                    if (cam.gameObject.name.Contains("Ultimate"))
+                    {
+                        _ultimateCam = cam;
                         break;
                     }
                 }
@@ -504,7 +542,7 @@ public class CameraManager : MonoBehaviour
         }
     }
 
-    public void BeginTemporaryPlayerSnap(float duration)
+    public void BeginTemporaryPlayerSnap(float duration, bool smoothTransition = false, float smoothTime = 0.15f)
     {
         if (_exploreCam == null || _playerTransform == null)
         {
@@ -530,12 +568,14 @@ public class CameraManager : MonoBehaviour
 
         if (_explorePositionComposer != null)
         {
-            _explorePositionComposer.Damping = Vector3.zero;
+            _explorePositionComposer.Damping = smoothTransition ? new Vector3(0.25f, 0.25f, 0.25f) : Vector3.zero;
         }
 
         if (_brain != null)
         {
-            _brain.DefaultBlend = new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.Cut, 0f);
+            _brain.DefaultBlend = smoothTransition 
+                ? new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.EaseInOut, smoothTime) 
+                : new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.Cut, 0f);
         }
 
         _exploreCam.Priority = _activePriority + 100;
@@ -546,6 +586,10 @@ public class CameraManager : MonoBehaviour
         if (_staticCam != null)
         {
             _staticCam.Priority = _inactivePriority;
+        }
+        if (_ultimateCam != null)
+        {
+            _ultimateCam.Priority = _inactivePriority;
         }
 
         NotifyPlayerWarp(Vector3.zero);
@@ -636,6 +680,138 @@ public class CameraManager : MonoBehaviour
     }
 
     // =========================================================
+    // Public API — Ultimate Zoom
+    // =========================================================
+
+    public void SetUltimateZoom(bool enable, float size = 5f)
+    {
+        // Stop any in-progress zoom coroutine
+        if (_ultimateZoomCoroutine != null)
+        {
+            StopCoroutine(_ultimateZoomCoroutine);
+            _ultimateZoomCoroutine = null;
+        }
+
+        if (enable)
+        {
+            if (_brain != null && !_hasCachedBrainBlend)
+            {
+                _cachedBrainBlend = _brain.DefaultBlend;
+                _hasCachedBrainBlend = true;
+            }
+
+            if (_ultimateCam != null)
+            {
+                // Cache original sizes
+                if (_originalUltimateSize < 0f)
+                    _originalUltimateSize = _ultimateCam.Lens.OrthographicSize;
+
+                // Set ultimate cam lens to target size, then let the brain blend
+                // smoothly transition FROM the current active camera TO this one.
+                // Do NOT change the current active camera's size — that would cause an instant jump.
+                SetCameraSize(_ultimateCam, size);
+
+                if (_brain != null)
+                {
+                    _brain.DefaultBlend = new CinemachineBlendDefinition(
+                        CinemachineBlendDefinition.Styles.EaseInOut, _ultimateTransitionDuration);
+                }
+                _ultimateCam.Priority = _activePriority + 20;
+            }
+            else
+            {
+                // Fallback: lerp the currently active cam's OrthographicSize
+                CinemachineCamera activeCam = _isInCombat ? _combatCam : _exploreCam;
+                if (activeCam != null)
+                {
+                    if (_isInCombat)
+                    {
+                        if (_originalCombatSize < 0f) _originalCombatSize = activeCam.Lens.OrthographicSize;
+                    }
+                    else
+                    {
+                        if (_originalExploreSize < 0f) _originalExploreSize = activeCam.Lens.OrthographicSize;
+                    }
+                    _ultimateZoomCoroutine = StartCoroutine(LerpCameraSize(activeCam, size, _ultimateTransitionDuration));
+                }
+            }
+        }
+        else
+        {
+            if (_ultimateCam != null)
+            {
+                // Let the brain blend back to the normal active camera
+                if (_brain != null && _hasCachedBrainBlend)
+                {
+                    _brain.DefaultBlend = new CinemachineBlendDefinition(
+                        CinemachineBlendDefinition.Styles.EaseInOut, _ultimateTransitionDuration);
+                }
+                _ultimateCam.Priority = _inactivePriority;
+
+                // After blend completes, restore brain blend and ultimate cam size
+                _ultimateZoomCoroutine = StartCoroutine(RestoreAfterUltimateBlend());
+            }
+            else
+            {
+                // Fallback: lerp the active cam back to its original size
+                CinemachineCamera activeCam = _isInCombat ? _combatCam : _exploreCam;
+                float originalSize = _isInCombat ? _originalCombatSize : _originalExploreSize;
+                if (activeCam != null && originalSize > 0f)
+                {
+                    _ultimateZoomCoroutine = StartCoroutine(LerpCameraSize(activeCam, originalSize, _ultimateTransitionDuration));
+                }
+
+                if (_brain != null && _hasCachedBrainBlend)
+                {
+                    _brain.DefaultBlend = _cachedBrainBlend;
+                    _hasCachedBrainBlend = false;
+                }
+            }
+        }
+    }
+
+    private System.Collections.IEnumerator LerpCameraSize(CinemachineCamera cam, float targetSize, float duration)
+    {
+        if (cam == null) yield break;
+        float startSize = cam.Lens.OrthographicSize;
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
+            SetCameraSize(cam, Mathf.Lerp(startSize, targetSize, t));
+            yield return null;
+        }
+        SetCameraSize(cam, targetSize);
+        _ultimateZoomCoroutine = null;
+    }
+
+    private System.Collections.IEnumerator RestoreAfterUltimateBlend()
+    {
+        // Wait for the brain blend to finish before resetting
+        yield return new WaitForSecondsRealtime(_ultimateTransitionDuration);
+
+        if (_originalUltimateSize > 0f)
+            SetCameraSize(_ultimateCam, _originalUltimateSize);
+
+        if (_brain != null && _hasCachedBrainBlend)
+        {
+            _brain.DefaultBlend = _cachedBrainBlend;
+            _hasCachedBrainBlend = false;
+        }
+
+        _ultimateZoomCoroutine = null;
+    }
+
+    private void SetCameraSize(CinemachineCamera cam, float size)
+    {
+        if (cam == null) return;
+        var lens = cam.Lens;
+        lens.OrthographicSize = size;
+        cam.Lens = lens;
+    }
+
+    // =========================================================
     // Public API — Y Damping (Explore cam only)
     // =========================================================
 
@@ -668,6 +844,9 @@ public class CameraManager : MonoBehaviour
 
         if (_staticCam != null)
             _staticCam.Priority = _inactivePriority;
+
+        if (_ultimateCam != null)
+            _ultimateCam.Priority = _inactivePriority;
     }
 
     private void SetCombatMode()
@@ -686,6 +865,9 @@ public class CameraManager : MonoBehaviour
 
         if (_staticCam != null)
             _staticCam.Priority = _inactivePriority;
+
+        if (_ultimateCam != null)
+            _ultimateCam.Priority = _inactivePriority;
     }
 
     private void SetStaticMode()
@@ -703,6 +885,11 @@ public class CameraManager : MonoBehaviour
         if (_combatCam != null)
         {
             _combatCam.Priority = _inactivePriority;
+        }
+
+        if (_ultimateCam != null)
+        {
+            _ultimateCam.Priority = _inactivePriority;
         }
     }
 

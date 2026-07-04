@@ -26,6 +26,7 @@ namespace Project.ShopSystem
         public float currentHP = -1f;
         public float currentAE = -1f;
         [SerializeField] private List<RuntimeEffectInstance> activeEffects = new List<RuntimeEffectInstance>();
+        [SerializeField] private bool hasTickingEffects;
 
         public IReadOnlyList<RuntimeEffectInstance> ActiveEffects
         {
@@ -45,9 +46,30 @@ namespace Project.ShopSystem
             }
         }
 
+        internal bool HasTickingEffects
+        {
+            get => hasTickingEffects;
+            set => hasTickingEffects = value;
+        }
+
         internal void EnsureEffectList()
         {
             activeEffects ??= new List<RuntimeEffectInstance>();
+        }
+
+        internal void RecalculateTickingEffects()
+        {
+            EnsureEffectList();
+            hasTickingEffects = false;
+            for (int i = 0; i < activeEffects.Count; i++)
+            {
+                RuntimeEffectInstance effect = activeEffects[i];
+                if (effect != null && effect.definition != null && effect.definition.RequiresTicking)
+                {
+                    hasTickingEffects = true;
+                    return;
+                }
+            }
         }
     }
 
@@ -561,6 +583,40 @@ namespace Project.ShopSystem
         public CharacterStats GetCharacterStats(CharacterObject character)
         {
             CharacterStats stats = GetCharacterBaseStats(character);
+            int slotIndex = FindTeamSlot(character);
+            if (slotIndex >= 0)
+            {
+                Artifact[] artifacts = GetEquippedArtifactsAt(slotIndex);
+                float hpPercentBonus = 0f;
+                float atkPercentBonus = 0f;
+                float defPercentBonus = 0f;
+
+                for (int i = 0; i < artifacts.Length; i++)
+                {
+                    Artifact artifact = artifacts[i];
+                    if (artifact == null || artifact.bonusStats == null)
+                    {
+                        continue;
+                    }
+
+                    hpPercentBonus += artifact.bonusStats.maxHP;
+                    atkPercentBonus += artifact.bonusStats.attack;
+                    defPercentBonus += artifact.bonusStats.defense;
+
+                    stats.speed += artifact.bonusStats.speed;
+                    stats.elementalMastery += artifact.bonusStats.elementalMastery;
+                    stats.critRate += artifact.bonusStats.critRate;
+                    stats.critDamage += artifact.bonusStats.critDamage;
+                    stats.cooldownRate += artifact.bonusStats.cooldownRate;
+                    stats.impact += artifact.bonusStats.impact;
+                    stats.damageReduction += artifact.bonusStats.damageReduction;
+                    stats.aeRecharge += artifact.bonusStats.aeRecharge;
+                }
+
+                stats.maxHP = stats.maxHP * (1f + hpPercentBonus / 100f);
+                stats.attack = stats.attack * (1f + atkPercentBonus / 100f);
+                stats.defense = stats.defense * (1f + defPercentBonus / 100f);
+            }
             ApplyRuntimeEffectsToStats(character, stats);
             return stats;
         }
@@ -628,6 +684,11 @@ namespace Project.ShopSystem
                     instance.Refresh(durationOverride);
                 }
 
+                if (effectDefinition.RequiresTicking)
+                {
+                    state.HasTickingEffects = true;
+                }
+
                 RaiseRuntimeEffectsChanged(targetCharacter, effectDefinition.AffectsStats);
                 return true;
             }
@@ -635,6 +696,10 @@ namespace Project.ShopSystem
             instance = new RuntimeEffectInstance();
             instance.Initialize(effectDefinition, sourceCharacter, resolvedSourceStats, durationOverride);
             activeEffects.Add(instance);
+            if (effectDefinition.RequiresTicking)
+            {
+                state.HasTickingEffects = true;
+            }
             effectDefinition.OnApply(BuildRuntimeEffectContext(targetCharacter, state, instance, 0f));
             RaiseRuntimeEffectsChanged(targetCharacter, effectDefinition.AffectsStats);
 
@@ -662,7 +727,47 @@ namespace Project.ShopSystem
             }
 
             state.MutableActiveEffects.Clear();
+            state.HasTickingEffects = false;
             RaiseRuntimeEffectsChanged(character, affectedStats);
+        }
+
+        public void RemoveRuntimeEffectsOnOwnerDamaged(CharacterObject character)
+        {
+            RunCharacterState state = GetRunCharacter(character);
+            if (state == null || state.MutableActiveEffects.Count == 0)
+            {
+                return;
+            }
+
+            bool affectedStats = false;
+            bool changed = false;
+            for (int i = state.MutableActiveEffects.Count - 1; i >= 0; i--)
+            {
+                RuntimeEffectInstance instance = state.MutableActiveEffects[i];
+                if (instance == null || instance.definition == null)
+                {
+                    state.MutableActiveEffects.RemoveAt(i);
+                    changed = true;
+                    affectedStats = true;
+                    continue;
+                }
+
+                if (!instance.definition.removeOnOwnerDamaged)
+                {
+                    continue;
+                }
+
+                affectedStats |= instance.definition.AffectsStats;
+                instance.definition.OnExpired(BuildRuntimeEffectContext(character, state, instance, 0f));
+                state.MutableActiveEffects.RemoveAt(i);
+                changed = true;
+            }
+
+            if (changed)
+            {
+                state.RecalculateTickingEffects();
+                RaiseRuntimeEffectsChanged(character, affectedStats);
+            }
         }
 
         public void TickRuntimeEffects(float deltaTime)
@@ -680,6 +785,12 @@ namespace Project.ShopSystem
 
                 state.EnsureEffectList();
                 List<RuntimeEffectInstance> activeEffects = state.MutableActiveEffects;
+                if (!state.HasTickingEffects)
+                {
+                    continue;
+                }
+
+                CharacterStats targetStatsSnapshot = null;
                 for (int effectIndex = activeEffects.Count - 1; effectIndex >= 0; effectIndex--)
                 {
                     RuntimeEffectInstance instance = activeEffects[effectIndex];
@@ -690,13 +801,24 @@ namespace Project.ShopSystem
                         continue;
                     }
 
+                    if (!instance.definition.RequiresTicking)
+                    {
+                        continue;
+                    }
+
                     if (instance.UsesTimer)
                     {
                         instance.remainingSeconds -= resolvedDelta;
                     }
 
                     instance.elapsedSeconds += resolvedDelta;
-                    instance.definition.OnUpdate(BuildRuntimeEffectContext(state.character, state, instance, resolvedDelta));
+                    targetStatsSnapshot ??= GetCharacterStats(state.character);
+                    instance.definition.OnUpdate(BuildRuntimeEffectContext(
+                        state.character,
+                        state,
+                        instance,
+                        resolvedDelta,
+                        targetStatsSnapshot));
                     if (!instance.IsExpired)
                     {
                         continue;
@@ -720,6 +842,9 @@ namespace Project.ShopSystem
                 return;
             }
 
+            int statTargetCount = System.Enum.GetValues(typeof(RuntimeEffectStatTarget)).Length;
+            float[] multiplierSums = new float[statTargetCount];
+
             List<RuntimeEffectInstance> activeEffects = state.MutableActiveEffects;
             for (int i = 0; i < activeEffects.Count; i++)
             {
@@ -729,7 +854,22 @@ namespace Project.ShopSystem
                     continue;
                 }
 
-                instance.definition.ModifyStats(BuildRuntimeEffectContext(character, state, instance, 0f, stats), stats);
+                RuntimeEffectContext context = BuildRuntimeEffectContext(character, state, instance, 0f, stats);
+                context.multiplierSums = multiplierSums;
+
+                instance.definition.ModifyStats(context, stats);
+            }
+
+            for (int i = 0; i < multiplierSums.Length; i++)
+            {
+                float sum = multiplierSums[i];
+                if (Mathf.Abs(sum) > 0.0001f)
+                {
+                    RuntimeEffectStatTarget targetStat = (RuntimeEffectStatTarget)i;
+                    float currentVal = RuntimeEffectDefinition.GetStat(stats, targetStat);
+                    float multipliedVal = currentVal * (1f + sum);
+                    RuntimeEffectDefinition.SetStat(stats, targetStat, multipliedVal);
+                }
             }
         }
 
@@ -980,6 +1120,10 @@ namespace Project.ShopSystem
             bool affectsStats = instance.definition != null && instance.definition.AffectsStats;
             instance.definition?.OnExpired(BuildRuntimeEffectContext(targetCharacter, state, instance, 0f));
             state.MutableActiveEffects.Remove(instance);
+            if (instance.definition != null && instance.definition.RequiresTicking)
+            {
+                state.RecalculateTickingEffects();
+            }
             RaiseRuntimeEffectsChanged(targetCharacter, affectsStats);
         }
 

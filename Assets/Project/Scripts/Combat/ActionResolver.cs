@@ -42,6 +42,7 @@ public class ActionResolver
     public int TreeDepth => treeDepth;
     public bool IsActive => currentNode != null || activeStandalone != null;
     public CombatAction ActiveCombatAction { get; private set; }
+    public List<ActionConditionBase> LastMatchedConditions { get; private set; }
 
     // =========================================================
     // Resolve - First Attack Input (no active combo)
@@ -66,6 +67,7 @@ public class ActionResolver
             activeStandalone = standalone;
             ActiveCombatAction = standalone;
             activeTree = standalone.comboTree;
+            LastMatchedConditions = standalone.conditions;
 
             if (standalone.GetEntryNode() != null)
             {
@@ -124,15 +126,21 @@ public class ActionResolver
 
         // 3. Check if the root node itself has a matching route for the initial input
         currentNode = activeTree.rootNode;
-        ComboNode resolved = ComboRouter.ResolveRoute(currentNode, ctx, false);
+        ComboRoute rootRoute = ComboRouter.FindMatchedRoute(currentNode, ctx);
 
-        if (resolved != null && resolved != currentNode)
+        if (rootRoute != null)
         {
-            Log($"Root Route matched! -> '{resolved.stepData?.stepName}'");
-            currentNode = resolved;
+            Log($"Root Route matched! -> '{rootRoute.targetNode.stepData?.stepName}'");
+            currentNode = rootRoute.targetNode;
+            LastMatchedConditions = rootRoute.conditions;
+        }
+        else
+        {
+            LastMatchedConditions = bestAction.conditions;
         }
 
         treeDepth = 1;
+        ApplyStartingComboDepthOverride(ctx, bestAction);
         return currentNode.stepData;
     }
 
@@ -166,12 +174,13 @@ public class ActionResolver
 
         string prevNodeName = currentNode.stepData?.stepName ?? "Unknown";
 
-        ComboNode nextNode = ComboRouter.ResolveRoute(currentNode, ctx, allowDefault: false);
+        ComboRoute matchedRoute = ComboRouter.FindMatchedRoute(currentNode, ctx);
 
-        if (nextNode != null)
+        if (matchedRoute != null)
         {
-            Log($"Route Match! [{prevNodeName}] -> '{nextNode.stepData?.stepName}'", Color.green);
-            currentNode = nextNode;
+            Log($"Route Match! [{prevNodeName}] -> '{matchedRoute.targetNode.stepData?.stepName}'", Color.green);
+            currentNode = matchedRoute.targetNode;
+            LastMatchedConditions = matchedRoute.conditions;
         }
         else
         {
@@ -180,6 +189,7 @@ public class ActionResolver
             {
                 Log($"Default Chain: [{prevNodeName}] -> '{defaultNext.stepData?.stepName}'");
                 currentNode = defaultNext;
+                LastMatchedConditions = null;
             }
             else
             {
@@ -208,6 +218,7 @@ public class ActionResolver
             string prevNodeName = currentNode.stepData?.stepName ?? "Unknown";
             Log($"Grab Success (Legacy) Match! [{prevNodeName}] -> '{currentNode.onGrabSuccessNode.stepData?.stepName}'", Color.green);
             currentNode = currentNode.onGrabSuccessNode;
+            LastMatchedConditions = null;
             treeDepth++;
             return currentNode.stepData;
         }
@@ -249,6 +260,7 @@ public class ActionResolver
 
                 Log($"Grab Route Match ({matchType})! [{prevNodeName}] -> '{bestMatch.targetNode.stepData?.stepName}'", Color.green);
                 currentNode = bestMatch.targetNode;
+                LastMatchedConditions = bestMatch.conditions;
                 treeDepth++;
                 return currentNode.stepData;
             }
@@ -274,7 +286,12 @@ public class ActionResolver
             if (trigger == null || trigger.targetNode == null) continue;
 
             bool inWindow = trigger.IsInWindow(activeFrame);
-            bool conditionsMet = ActionConditionUtility.AllMet(trigger.triggerConditions, ctx);
+            StateContext triggerCtx = ctx;
+            if (trigger.targetNode != null && trigger.targetNode.stepData != null)
+            {
+                triggerCtx.stepName = trigger.targetNode.stepData.stepName;
+            }
+            bool conditionsMet = ActionConditionUtility.AllMet(trigger.triggerConditions, triggerCtx);
 
             if (!inWindow) continue;
 
@@ -299,8 +316,9 @@ public class ActionResolver
                 return null;
             }
 
-            Log($"Trigger Window Matched! [{currentStep.stepName}] -> '{(bestMatch.targetNode.stepData != null ? bestMatch.targetNode.stepData.stepName : "???")}'", Color.green);
+            Log($"Trigger Window Matched! [{currentStep.stepName}] -> '{(bestMatch.targetNode.stepData != null ? bestMatch.targetNode.stepData.stepName : "???")}' ", Color.green);
             currentNode = bestMatch.targetNode;
+            LastMatchedConditions = bestMatch.triggerConditions;
             treeDepth++;
             return currentNode.stepData;
         }
@@ -385,6 +403,7 @@ public class ActionResolver
         activeTree = null;
         activeStandalone = null;
         ActiveCombatAction = null;
+        LastMatchedConditions = null;
         treeDepth = 0;
     }
 
@@ -440,24 +459,33 @@ public class ActionResolver
 
         if (ctx.passiveController == null)
         {
-            return true;
+            // Skip passive-controller-dependent checks, but still run the availability check below.
         }
-
-        if (!ctx.passiveController.IsActionUnlocked(action.Category, action.actionId, action.actionName))
+        else
         {
-            return false;
+            if (!ctx.passiveController.IsActionUnlocked(action.Category, action.actionId, action.actionName))
+            {
+                return false;
+            }
+
+            if (ctx.passiveController.TryGetReplacementActionKey(
+                    action.Category,
+                    action.actionId,
+                    action.actionName,
+                    out string replacementActionId,
+                    out string replacementActionName)
+                && ((!string.IsNullOrEmpty(replacementActionId)
+                     && !string.Equals(replacementActionId, action.actionId))
+                    || (!string.IsNullOrEmpty(replacementActionName)
+                        && !string.Equals(replacementActionName, action.actionName))))
+            {
+                return false;
+            }
         }
 
-        if (ctx.passiveController.TryGetReplacementActionKey(
-                action.Category,
-                action.actionId,
-                action.actionName,
-                out string replacementActionId,
-                out string replacementActionName)
-            && ((!string.IsNullOrEmpty(replacementActionId)
-                 && !string.Equals(replacementActionId, action.actionId))
-                || (!string.IsNullOrEmpty(replacementActionName)
-                    && !string.Equals(replacementActionName, action.actionName))))
+        // Cooldown / availability gate: checked last so cheaper conditions fail-fast first.
+        if (ctx.actionAvailabilityProvider != null
+            && !ctx.actionAvailabilityProvider.IsActionAvailable(action))
         {
             return false;
         }
@@ -477,5 +505,52 @@ public class ActionResolver
             : 0;
 
         return action.priority + bonus;
+    }
+
+    private void ApplyStartingComboDepthOverride(InputContext ctx, CombatAction action)
+    {
+        if (ctx.passiveController == null || action == null || currentNode == null)
+        {
+            return;
+        }
+
+        int targetDepth = ctx.passiveController.GetStartingComboDepthOverride(
+            action.Category,
+            action.actionId,
+            action.actionName);
+        if (targetDepth <= treeDepth)
+        {
+            return;
+        }
+
+        while (treeDepth < targetDepth && currentNode != null)
+        {
+            ComboNode nextNode = ResolveDepthOverrideNextNode(ctx);
+            if (nextNode == null || nextNode == currentNode)
+            {
+                break;
+            }
+
+            currentNode = nextNode;
+            treeDepth++;
+        }
+    }
+
+    private ComboNode ResolveDepthOverrideNextNode(InputContext ctx)
+    {
+        ComboRoute route = ComboRouter.FindMatchedRoute(currentNode, ctx);
+        if (route?.targetNode != null)
+        {
+            LastMatchedConditions = route.conditions;
+            return route.targetNode;
+        }
+
+        if (currentNode.defaultNext != null)
+        {
+            LastMatchedConditions = null;
+            return currentNode.defaultNext;
+        }
+
+        return null;
     }
 }

@@ -83,7 +83,7 @@ public class TeamRuntimeStatFeedbackTests
     }
 
     [Test]
-    public void TeamLoader_AppliesTeamScopePotentialStatModifiers()
+    public void TeamLoader_AppliesAlliesScopePotentialStatModifiersToEntireTeam()
     {
         GameObject playerObject = new GameObject("Potential Stat Test Player");
         GameObject loaderObject = new GameObject("Potential Stat Test Loader");
@@ -102,7 +102,7 @@ public class TeamRuntimeStatFeedbackTests
                 target = PassiveModifierTarget.AttackStat,
                 operation = PassiveNumericOperation.Add,
                 value = 10f,
-                scope = PassiveEffectScope.Team
+                scope = PassiveEffectScope.Allies
             });
 
             PlayerCharacter playerCharacter = playerObject.AddComponent<PlayerCharacter>();

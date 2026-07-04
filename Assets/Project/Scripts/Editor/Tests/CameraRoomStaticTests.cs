@@ -85,4 +85,38 @@ public class CameraRoomStaticTests
         UnityEngine.Object.DestroyImmediate(cameraSetupObj);
         UnityEngine.Object.DestroyImmediate(dummyTarget);
     }
+
+    [Test]
+    public void CameraManager_SetUltimateZoom_CachesAndChangesSizes()
+    {
+        GameObject cameraSetupObj = new GameObject("CameraSetUp");
+        CameraManager cameraManager = cameraSetupObj.AddComponent<CameraManager>();
+
+        GameObject exploreCamObj = new GameObject("CinemachineCamera_Explore");
+        exploreCamObj.transform.SetParent(cameraSetupObj.transform);
+        CinemachineCamera exploreCam = exploreCamObj.AddComponent<CinemachineCamera>();
+
+        // Set initial sizes
+        var lens = exploreCam.Lens;
+        lens.OrthographicSize = 7f;
+        exploreCam.Lens = lens;
+
+        // Use reflection to set private fields on CameraManager
+        Type type = typeof(CameraManager);
+        type.GetField("_exploreCam", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(cameraManager, exploreCam);
+
+        // Check initialization value
+        Assert.AreEqual(7f, exploreCam.Lens.OrthographicSize);
+
+        // Enable zoom
+        cameraManager.SetUltimateZoom(true, 4f);
+        Assert.AreEqual(4f, exploreCam.Lens.OrthographicSize);
+
+        // Disable zoom - should restore to cached size (7f)
+        cameraManager.SetUltimateZoom(false);
+        Assert.AreEqual(7f, exploreCam.Lens.OrthographicSize);
+
+        // Clean up
+        UnityEngine.Object.DestroyImmediate(cameraSetupObj);
+    }
 }

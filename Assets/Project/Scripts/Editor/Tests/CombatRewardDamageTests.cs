@@ -144,6 +144,55 @@ public class CombatRewardDamageTests
     }
 
     [Test]
+    public void PassiveController_FinalDamageModifierAppliesAfterCriticalDamage()
+    {
+        GameObject playerObject = new GameObject("Final Damage Test Player");
+        CharacterObject character = ScriptableObject.CreateInstance<CharacterObject>();
+
+        try
+        {
+            character.characterId = "final-damage-character";
+            character.kitDefinition.basePassiveNode.actionModifiers.Add(new PassiveActionModifierDefinition
+            {
+                category = AttackCategory.Skill,
+                actionId = "goenitz.skill.yonokaze",
+                finalDamageOperation = PassiveValueModifierOperation.Multiply,
+                finalDamageValue = 2.5f,
+                finalDamageRequiresCriticalHit = true
+            });
+
+            PlayerCharacter player = playerObject.AddComponent<PlayerCharacter>();
+            CharacterPassiveController passiveController = playerObject.AddComponent<CharacterPassiveController>();
+            player.characterObject = character;
+            player.PassiveController = passiveController;
+            passiveController.playerCharacter = player;
+            passiveController.InitializeFromCharacterData();
+
+            float criticalDamage = passiveController.ModifyActionFinalDamage(
+                AttackCategory.Skill,
+                "goenitz.skill.yonokaze",
+                "Yonokaze",
+                112.5f,
+                true);
+
+            float normalDamage = passiveController.ModifyActionFinalDamage(
+                AttackCategory.Skill,
+                "goenitz.skill.yonokaze",
+                "Yonokaze",
+                50f,
+                false);
+
+            Assert.That(criticalDamage, Is.EqualTo(281.25f).Within(0.001f));
+            Assert.That(normalDamage, Is.EqualTo(50f).Within(0.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(character);
+            Object.DestroyImmediate(playerObject);
+        }
+    }
+
+    [Test]
     public void PassiveController_UsesHighestEvasionChance()
     {
         GameObject playerObject = new GameObject("Potential Evasion Test Player");
@@ -254,6 +303,65 @@ public class CombatRewardDamageTests
         }
         finally
         {
+            Object.DestroyImmediate(enemyObject);
+        }
+    }
+
+    [Test]
+    public void EnemyElementalProfile_LegacyStrengthMapsToResistanceAndMastery()
+    {
+        EnemyElementalProfile profile = ScriptableObject.CreateInstance<EnemyElementalProfile>();
+
+        try
+        {
+            profile.resistances.Add(new ElementResistance
+            {
+                elementType = ElementType.Echo,
+                strength = ElementStrength.Strong
+            });
+            profile.resistances.Add(new ElementResistance
+            {
+                elementType = ElementType.Ash,
+                strength = ElementStrength.Weak
+            });
+
+            Assert.That(profile.GetResistancePercent(ElementType.Echo), Is.EqualTo(30f).Within(0.001f));
+            Assert.That(profile.GetMasteryPercent(ElementType.Echo), Is.EqualTo(30f).Within(0.001f));
+            Assert.That(profile.GetResistancePercent(ElementType.Ash), Is.EqualTo(-30f).Within(0.001f));
+            Assert.That(profile.GetMasteryPercent(ElementType.Ash), Is.EqualTo(-30f).Within(0.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(profile);
+        }
+    }
+
+    [Test]
+    public void EnemyElementalState_UsesProfileResistanceAndMastery()
+    {
+        GameObject enemyObject = new GameObject("Profile Element Test Enemy");
+        EnemyElementalState elementalState = enemyObject.AddComponent<EnemyElementalState>();
+        EnemyElementalProfile profile = ScriptableObject.CreateInstance<EnemyElementalProfile>();
+
+        try
+        {
+            profile.resistances.Add(new ElementResistance
+            {
+                elementType = ElementType.Echo,
+                useLegacyStrengthForResistance = false,
+                resistancePercent = 25f,
+                useLegacyStrengthForMastery = false,
+                masteryPercent = 40f
+            });
+
+            elementalState.Initialize(profile);
+
+            Assert.That(elementalState.ModifyIncomingDamage(ElementType.Echo, 100f), Is.EqualTo(75f).Within(0.001f));
+            Assert.That(elementalState.ModifyOutgoingDamageAgainst(ElementType.Echo, 100f), Is.EqualTo(140f).Within(0.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(profile);
             Object.DestroyImmediate(enemyObject);
         }
     }

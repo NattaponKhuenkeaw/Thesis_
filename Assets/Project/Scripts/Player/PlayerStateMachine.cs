@@ -415,6 +415,18 @@ public class PlayerStateMachine : MonoBehaviour
 
         InputBuffer.BufferSkill();
 
+        if (HasActiveActionWindow(AttackCategory.Skill))
+        {
+            if (CurrentState.HandleSkillInput()) return;
+
+            if (CurrentState.AcceptsSkillInput)
+            {
+                ChangeState(SkillState);
+                CurrentState.OnSkillInput();
+                return;
+            }
+        }
+
         // Centralized check for FrameData states: ignore interrupts if state says so
         if (CurrentState is FrameDataPlayerState fdState
             && !fdState.CanBeInterruptedBy(ActionCategory.Skill))
@@ -442,6 +454,18 @@ public class PlayerStateMachine : MonoBehaviour
         if (CurrentState == null) return;
 
         InputBuffer.BufferUltimate();
+
+        if (HasActiveActionWindow(AttackCategory.Ultimate))
+        {
+            if (CurrentState.HandleUltimateInput()) return;
+
+            if (CurrentState.AcceptsUltimateInput)
+            {
+                ChangeState(UltimateState);
+                CurrentState.OnUltimateInput();
+                return;
+            }
+        }
 
         // Centralized check for FrameData states: ignore interrupts if state says so
         if (CurrentState is FrameDataPlayerState fdState
@@ -472,14 +496,8 @@ public class PlayerStateMachine : MonoBehaviour
             return false;
         }
 
-        if (action is SkillAction skillAction
-            && playerCharacter != null
-            && playerCharacter.Combat != null
-            && playerCharacter.Combat.IsOnCooldown(AttackCategory.Skill, skillAction.cooldown, skillAction.actionName, skillAction.actionId))
+        if (!(action is SkillAction))
         {
-            if (showFsmLogs)
-                Log("Skill", "Rejected before state entry: skill is on cooldown", Color.yellow);
-
             if (playFeedback)
                 PlayAbilityRejectedFeedback(AbilityUIManager.AbilityType.Skill);
 
@@ -499,29 +517,8 @@ public class PlayerStateMachine : MonoBehaviour
             return false;
         }
 
-        if (!(action is UltimateAction ultimateAction))
+        if (!(action is UltimateAction))
         {
-            if (playFeedback)
-                PlayAbilityRejectedFeedback(AbilityUIManager.AbilityType.Ultimate);
-
-            return false;
-        }
-
-        if (teamLoader == null)
-            teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
-
-        float currentAE = teamLoader != null && playerCharacter != null
-            ? teamLoader.GetCharacterCurrentAE(playerCharacter.characterObject)
-            : 0f;
-        float requiredAE = teamLoader != null && playerCharacter != null
-            ? teamLoader.GetUltimateCost(playerCharacter.characterObject, ultimateAction)
-            : TeamLoader.DefaultUltimateAuraEnergyCost;
-
-        if (currentAE < requiredAE)
-        {
-            if (showFsmLogs)
-                Log("Ultimate", "Rejected before state entry: Aura Energy stack is not full", Color.yellow);
-
             if (playFeedback)
                 PlayAbilityRejectedFeedback(AbilityUIManager.AbilityType.Ultimate);
 
@@ -540,7 +537,30 @@ public class PlayerStateMachine : MonoBehaviour
         step = null;
 
         return playerCharacter != null
-            && playerCharacter.TryResolveActionForContext(category, out action, out step);
+            && playerCharacter.TryResolveActionForContext(category, out action, out step, requireAvailability: true);
+    }
+
+    private bool HasActiveActionWindow(AttackCategory category)
+    {
+        if (playerCharacter == null
+            || playerCharacter.PassiveController == null
+            || !playerCharacter.TryResolveActionForContext(
+                category,
+                out CombatAction action,
+                out _,
+                requireAvailability: true)
+            || action == null)
+        {
+            return false;
+        }
+
+        return playerCharacter.PassiveController.TryGetActionAvailabilityWindow(
+            category,
+            action.actionId,
+            action.actionName,
+            out float remainingSeconds,
+            out _)
+            && remainingSeconds > 0.01f;
     }
 
     private void PlayAbilityRejectedFeedback(AbilityUIManager.AbilityType abilityType)

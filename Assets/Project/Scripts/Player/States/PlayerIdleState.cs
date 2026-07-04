@@ -23,6 +23,9 @@ public class PlayerIdleState : PlayerState
     {
         if (player.Movement != null)
             player.Movement.Move(Vector2.zero);
+
+        if (player.Animator != null)
+            player.Animator.TriggerGrounded();
     }
 
     public override void Update()

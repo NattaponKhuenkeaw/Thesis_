@@ -145,6 +145,8 @@ MonoBehaviour:
   hotkeyText: {fileID: 2422601939702793267}
   hpSlider: {fileID: 5826817040868791482}
   hpFill: {fileID: 8865030432881775758}
+  aeSlider: {fileID: 0}
+  aeFill: {fileID: 0}
   cooldownFill: {fileID: 7501523047428410697}
   cooldownText: {fileID: 3512159424912331975}
 --- !u!1 &732198786136956958

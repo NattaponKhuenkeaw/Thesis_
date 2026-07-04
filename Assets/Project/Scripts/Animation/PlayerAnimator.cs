@@ -26,6 +26,7 @@ public class PlayerAnimator : MonoBehaviour
     private readonly int landingHash = Animator.StringToHash("Landing");
     private readonly int isLandingHash = Animator.StringToHash("IsLanding");
     private readonly int fallHash = Animator.StringToHash("Fall");
+    private readonly int groundedHash = Animator.StringToHash("Grounded");
 
     // =========================================================
     // Private Runtime Data
@@ -155,6 +156,20 @@ public class PlayerAnimator : MonoBehaviour
             return;
 
         SafeSetTrigger(landingHash);
+    }
+
+    public void TriggerGrounded()
+    {
+        if (anim != null)
+        {
+            var stateInfo = anim.GetCurrentAnimatorStateInfo(0);
+            var nextStateInfo = anim.GetNextAnimatorStateInfo(0);
+            if (stateInfo.shortNameHash == groundedHash || nextStateInfo.shortNameHash == groundedHash)
+            {
+                return;
+            }
+            anim.Play(groundedHash, 0, 0f);
+        }
     }
 
     public void TriggerTakeDamage()

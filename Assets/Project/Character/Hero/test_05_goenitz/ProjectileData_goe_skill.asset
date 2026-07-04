@@ -36,7 +36,7 @@ MonoBehaviour:
   trackingRadius: 20
   speed: 0.1
   lifetime: 1
-  maxHits: 16
+  maxHits: 10
   hitCountMode: 1
   routineHitbox:
     enabled: 1
@@ -93,9 +93,8 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 10
-        juggleLaunchScale: 0.9
-        juggleStunScale: 0.9
+        juggleLaunchScale: 0.98
+        juggleStunScale: 1
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 0}

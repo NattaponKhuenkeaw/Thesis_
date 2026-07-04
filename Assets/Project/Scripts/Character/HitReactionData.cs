@@ -120,6 +120,16 @@ public struct HitReactionData
     public ElementType elementType;
     public DamageRoutine damageRoutine;
 
+    // =========================================================
+    // Runtime Effect Source Context
+    // =========================================================
+    public CharacterObject sourceCharacter;
+    public CharacterStats sourceStats;
+    public AttackCategory sourceCategory;
+    public string sourceActionId;
+    public string sourceActionName;
+    public AttackStepData sourceStepData;
+
     public int ImpactFreezeFrames => reactionTiming != null ? Mathf.Max(0, reactionTiming.startupFrames) : Mathf.Max(0, hitstunFrames);
     public int ActiveReactionFrames => reactionTiming != null ? Mathf.Max(0, reactionTiming.activeFrames) : Mathf.Max(0, knockbackFrames);
     public int RecoveryFrames => reactionTiming != null ? Mathf.Max(0, reactionTiming.recoveryFrames) : 0;
@@ -219,7 +229,8 @@ public struct HitReactionData
             flashFrames = 6,
             impactTier = DamageImpactTier.Low,
             elementType = ElementType.None,
-            damageRoutine = DamageRoutine.Normal
+            damageRoutine = DamageRoutine.Normal,
+            sourceCategory = AttackCategory.Normal
         };
     }
 }

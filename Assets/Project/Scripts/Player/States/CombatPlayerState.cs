@@ -382,7 +382,8 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             wasAirborne = !prevFrameGrounded && logicallyGrounded,
             isAirCombo = player.Combat != null && player.Combat.IsAirCombo,
             passiveController = player.PassiveController,
-            runtimeState = player.PassiveController != null ? player.PassiveController.RuntimeState : null
+            runtimeState = player.PassiveController != null ? player.PassiveController.RuntimeState : null,
+            actionAvailabilityProvider = player
         };
     }
 
@@ -517,6 +518,11 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         activeActionSequence = entry;
         pauseCurrentNodeForSequence = false;
         advanceCurrentNodeWithUnscaledTime = false;
+
+        if (entry.enableUltimateZoom && CameraManager.instance != null)
+        {
+            CameraManager.instance.SetUltimateZoom(true, entry.ultimateZoomSize);
+        }
 
         if (entry.freezeWorld && GameFreezeManager.Instance != null)
         {
@@ -758,6 +764,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         if (CameraManager.instance != null)
         {
             CameraManager.instance.EndTemporaryPlayerSnap();
+            CameraManager.instance.SetUltimateZoom(false);
         }
 
         // Restore animator update mode to normal after the sequence finishes
@@ -794,6 +801,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         if (CameraManager.instance != null)
         {
             CameraManager.instance.EndTemporaryPlayerSnap();
+            CameraManager.instance.SetUltimateZoom(false);
         }
 
         // Restore animator update mode to normal if we were in an unscaled sequence
@@ -823,6 +831,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         if (CameraManager.instance != null)
         {
             CameraManager.instance.EndTemporaryPlayerSnap();
+            CameraManager.instance.SetUltimateZoom(false);
         }
 
         // Safety reset for animator update mode

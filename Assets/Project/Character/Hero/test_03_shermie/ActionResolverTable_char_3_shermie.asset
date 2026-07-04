@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: ActionResolverTable_char_3_shermie
   m_EditorClassIdentifier: Assembly-CSharp::ActionResolverTable
   comboActions:
-  - actionName: Ground Combo
+  - actionId: 
+    actionName: Ground Combo
     context: 0
     priority: 0
     conditions: []
@@ -25,7 +26,8 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588255929706479861
-  - actionName: Air Combo
+  - actionId: 
+    actionName: Air Combo
     context: 1
     priority: 0
     conditions: []
@@ -38,7 +40,8 @@ MonoBehaviour:
       rootNode:
         rid: 1588256145469341882
   skillActions:
-  - actionName: Diamod Dust
+  - actionId: 
+    actionName: Diamod Dust
     context: 0
     priority: 10
     conditions: []
@@ -52,7 +55,8 @@ MonoBehaviour:
         rid: 3251577378342174820
     cooldown: 7
   ultimateActions:
-  - actionName: Shermie Carnival
+  - actionId: 
+    actionName: Shermie Carnival
     context: 0
     priority: 0
     conditions: []
@@ -64,7 +68,7 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 3251577386225893517
-    cooldown: 0
+    cooldown: 4
     energyCost: 50
     activationVFXType: 0
     activationVFXPrefab: {fileID: 0}
@@ -154,7 +158,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -247,7 +250,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -281,7 +283,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -375,7 +376,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -409,7 +409,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -443,7 +442,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -517,7 +515,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -696,7 +693,6 @@ MonoBehaviour:
           launchSpeed: 0
           landingBehavior: 0
           canAirJuggle: 1
-          maxJuggleCount: 2
           juggleLaunchScale: 0.85
           juggleStunScale: 0.9
           knockupFrames: 0
@@ -721,6 +717,49 @@ MonoBehaviour:
           impactTier: 0
           elementType: 0
           damageRoutine: 0
+          sourceCharacter: {fileID: 0}
+          sourceStats:
+            maxHP: 100
+            attack: 10
+            defense: 5
+            speed: 10
+            elementalMastery: 0
+            critRate: 5
+            critDamage: 150
+            cooldownRate: 0
+            impact: 0
+            damageReduction: 0
+            aeRecharge: 1
+          sourceCategory: 0
+          sourceActionId: 
+          sourceActionName: 
+          sourceStepData:
+            startupFrames: 10
+            activeFrames: 15
+            recoveryFrames: 20
+            cancelWindowStartFrame: 35
+            loopActivePhase: 0
+            stepName: Attack
+            animationClip: {fileID: 0}
+            lockAirPosition: 1
+            autoChainToNext: 0
+            triggerWindows: []
+            motionData:
+              rid: -2
+            vfxData:
+              rid: -2
+            audioData:
+              rid: -2
+            hitData:
+              rid: -2
+            eventData:
+              rid: -2
+            componentOrder:
+            - motion
+            - vfx
+            - audio
+            - hitbox
+            - events
     - rid: 1588256136747024488
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -814,7 +853,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -910,7 +948,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -1057,7 +1094,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -1153,7 +1189,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 2
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -1180,6 +1215,7 @@ MonoBehaviour:
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
           freezeWorld: 1
+          freezeDurationOverride: 0
           timelineMode: 1
           activationVFXType: 40
           activationVFXPrefab: {fileID: 0}
@@ -1217,6 +1253,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          enableUltimateZoom: 0
+          ultimateZoomSize: 5
     - rid: 1588256145469341830
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -1398,7 +1436,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 2
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -1752,7 +1789,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -1828,7 +1864,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -2025,7 +2060,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}

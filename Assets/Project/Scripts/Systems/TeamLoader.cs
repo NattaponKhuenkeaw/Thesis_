@@ -718,15 +718,11 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             }
 
             bool isSelf = sourceCharacter == targetCharacter;
-            ApplyPotentialStatModifiersFrom(stats, sourceCharacter, PassiveEffectScope.Team);
+            ApplyPotentialStatModifiersFrom(stats, sourceCharacter, PassiveEffectScope.Allies);
 
             if (isSelf)
             {
                 ApplyPotentialStatModifiersFrom(stats, sourceCharacter, PassiveEffectScope.Self);
-            }
-            else
-            {
-                ApplyPotentialStatModifiersFrom(stats, sourceCharacter, PassiveEffectScope.Allies);
             }
         }
     }

@@ -78,6 +78,7 @@ public class EnemyController : MonoBehaviour
     private Coroutine flashCoroutine;
     private Coroutine priorityResetCoroutine;
     private RuntimeEffectReceiver runtimeEffects;
+    private EnemyElementalState elementalState;
 
     /// <summary>Child hitbox collider used by AttackAction.</summary>
     public Collider2D attackHitbox;
@@ -116,6 +117,8 @@ public class EnemyController : MonoBehaviour
         runtimeEffects = GetComponent<RuntimeEffectReceiver>();
         if (runtimeEffects == null)
             runtimeEffects = gameObject.AddComponent<RuntimeEffectReceiver>();
+
+        elementalState = GetComponent<EnemyElementalState>();
 
         // Start with hitbox disabled
         if (attackHitbox != null)
@@ -204,13 +207,25 @@ public class EnemyController : MonoBehaviour
         float finalIncomingDamage = reactionData.damageIsFinal
             ? reactionData.damage
             : CombatFormula.CalculateIncomingDamage(reactionData.damage, defense, damageRes);
+        if (elementalState != null)
+        {
+            finalIncomingDamage = elementalState.ModifyIncomingDamage(reactionData.elementType, finalIncomingDamage);
+        }
+
         if (runtimeEffects != null)
         {
             RuntimeEffectDamageContext effectContext = new RuntimeEffectDamageContext
             {
+                sourceCharacter = reactionData.sourceCharacter,
+                sourceStats = reactionData.sourceStats,
                 targetEnemy = this,
+                category = reactionData.sourceCategory,
+                actionId = reactionData.sourceActionId,
+                actionName = reactionData.sourceActionName,
+                stepData = reactionData.sourceStepData,
                 elementType = reactionData.elementType,
                 damageRoutine = reactionData.damageRoutine,
+                isCriticalHit = reactionData.isCriticalHit,
                 damage = finalIncomingDamage
             };
             finalIncomingDamage = runtimeEffects.ModifyIncomingDamage(effectContext, finalIncomingDamage);
@@ -304,6 +319,19 @@ public class EnemyController : MonoBehaviour
     public void ApplyStatus(StatusEffectType statusEffect, bool enabled = true)
     {
         runtimeEffects?.ApplyStatus(statusEffect, enabled);
+    }
+
+    public EnemyElementalState ElementalState
+    {
+        get
+        {
+            if (elementalState == null)
+            {
+                elementalState = GetComponent<EnemyElementalState>();
+            }
+
+            return elementalState;
+        }
     }
 
     /// <summary>

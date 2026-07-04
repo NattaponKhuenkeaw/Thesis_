@@ -40,6 +40,7 @@ public class EnemyElementalState : MonoBehaviour
         public ElementType elementType;
         public float incomingDamagePercentAdd;
         public float resistancePercentAdd;
+        public float masteryPercentAdd;
         public float gaugeBuildPercentAdd;
         public bool permanent;
         public float expiresAt;
@@ -160,7 +161,6 @@ public class EnemyElementalState : MonoBehaviour
 
     public float ModifyIncomingDamage(ElementType elementType, float damage)
     {
-        // GDD: Enemy takes 50% increased damage from specific Element for 20s during reaction
         float result = damage;
         foreach (var reaction in activeReactions)
         {
@@ -171,13 +171,35 @@ public class EnemyElementalState : MonoBehaviour
             }
         }
 
-        float modifier = GetIncomingDamagePercentAdd(elementType);
-        if (Mathf.Abs(modifier) > 0.0001f)
+        float resistancePercent = GetResistancePercent(elementType);
+        if (Mathf.Abs(resistancePercent) > 0.0001f)
         {
-            result *= Mathf.Max(0f, 1f + modifier);
+            result *= Mathf.Max(0f, 1f - resistancePercent);
+        }
+
+        float incomingPercent = GetIncomingDamagePercentAdd(elementType);
+        if (Mathf.Abs(incomingPercent) > 0.0001f)
+        {
+            result *= Mathf.Max(0f, 1f + incomingPercent);
         }
 
         return result;
+    }
+
+    public float ModifyOutgoingDamageAgainst(ElementType targetCharacterElement, float damage)
+    {
+        if (targetCharacterElement == ElementType.None)
+        {
+            return damage;
+        }
+
+        float masteryPercent = GetMasteryPercent(targetCharacterElement);
+        if (Mathf.Abs(masteryPercent) <= 0.0001f)
+        {
+            return damage;
+        }
+
+        return Mathf.Max(0f, damage * (1f + masteryPercent));
     }
 
     public void RecordDamageTaken(float damage)
@@ -317,6 +339,7 @@ public class EnemyElementalState : MonoBehaviour
         modifierToApply.elementType = effect.elementType;
         modifierToApply.incomingDamagePercentAdd = NormalizePercent(effect.incomingDamagePercentAdd);
         modifierToApply.resistancePercentAdd = NormalizePercent(effect.resistancePercentAdd);
+        modifierToApply.masteryPercentAdd = NormalizePercent(effect.masteryPercentAdd);
         modifierToApply.gaugeBuildPercentAdd = NormalizePercent(effect.gaugeBuildPercentAdd);
         modifierToApply.permanent = effect.permanent || effect.duration <= 0f;
         modifierToApply.expiresAt = modifierToApply.permanent ? float.PositiveInfinity : Time.time + Mathf.Max(0f, effect.duration);
@@ -345,7 +368,39 @@ public class EnemyElementalState : MonoBehaviour
             ActiveRuntimeElementModifier modifier = runtimeModifiers[i];
             if (modifier != null && modifier.elementType == element)
             {
-                total += modifier.incomingDamagePercentAdd - modifier.resistancePercentAdd;
+                total += modifier.incomingDamagePercentAdd;
+            }
+        }
+
+        return total;
+    }
+
+    private float GetResistancePercent(ElementType element)
+    {
+        PruneExpiredRuntimeModifiers();
+        float total = profile != null ? NormalizePercent(profile.GetResistancePercent(element)) : 0f;
+        for (int i = 0; i < runtimeModifiers.Count; i++)
+        {
+            ActiveRuntimeElementModifier modifier = runtimeModifiers[i];
+            if (modifier != null && modifier.elementType == element)
+            {
+                total += modifier.resistancePercentAdd;
+            }
+        }
+
+        return total;
+    }
+
+    private float GetMasteryPercent(ElementType element)
+    {
+        PruneExpiredRuntimeModifiers();
+        float total = profile != null ? NormalizePercent(profile.GetMasteryPercent(element)) : 0f;
+        for (int i = 0; i < runtimeModifiers.Count; i++)
+        {
+            ActiveRuntimeElementModifier modifier = runtimeModifiers[i];
+            if (modifier != null && modifier.elementType == element)
+            {
+                total += modifier.masteryPercentAdd;
             }
         }
 

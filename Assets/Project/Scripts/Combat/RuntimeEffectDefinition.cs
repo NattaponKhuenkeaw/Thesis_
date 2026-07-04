@@ -19,8 +19,7 @@ public enum RuntimeEffectApplyTarget
 {
     Self,
     Enemy,
-    Allies,
-    Team
+    Allies
 }
 
 public enum RuntimeEffectStatTarget
@@ -63,6 +62,7 @@ public class RuntimeEffectInstance
     public CharacterObject sourceCharacter;
     public CharacterStats sourceStatsSnapshot;
     public float remainingSeconds;
+    public float appliedDurationSeconds;
     public float elapsedSeconds;
     public float nextTickAt;
 
@@ -82,6 +82,7 @@ public class RuntimeEffectInstance
         sourceCharacter = source;
         sourceStatsSnapshot = sourceStats != null ? sourceStats.Clone() : null;
         remainingSeconds = effectDefinition != null ? effectDefinition.ResolveDuration(durationOverride) : 0f;
+        appliedDurationSeconds = remainingSeconds;
         elapsedSeconds = 0f;
         nextTickAt = 0f;
         lastTriggeredAt = -999f;
@@ -95,6 +96,7 @@ public class RuntimeEffectInstance
         }
 
         remainingSeconds = definition.ResolveDuration(durationOverride);
+        appliedDurationSeconds = remainingSeconds;
         elapsedSeconds = 0f;
         nextTickAt = 0f;
     }
@@ -111,6 +113,7 @@ public sealed class RuntimeEffectContext
     public PlayerCharacter targetPlayer;
     public EnemyController targetEnemy;
     public float deltaTime;
+    public float[] multiplierSums;
 }
 
 public sealed class RuntimeEffectDamageContext
@@ -148,8 +151,11 @@ public abstract class RuntimeEffectDefinition : ScriptableObject
     [Min(0f)] public float durationSeconds = 10f;
     public bool refreshDurationOnReapply = true;
     public bool stackable = false;
+    [Tooltip("If true, this runtime effect is removed when the owner takes HP damage.")]
+    public bool removeOnOwnerDamaged = false;
 
     public virtual bool AffectsStats => false;
+    public virtual bool RequiresTicking => durationType == RuntimeEffectDurationType.Seconds;
 
     public string StableId => !string.IsNullOrWhiteSpace(effectId) ? effectId : name;
 
@@ -176,7 +182,7 @@ public abstract class RuntimeEffectDefinition : ScriptableObject
     public virtual float ModifyIncomingDamage(RuntimeEffectDamageContext context, float currentDamage) => currentDamage;
     public virtual void OnHitDealt(RuntimeEffectDamageContext context) { }
 
-    protected static float GetStat(CharacterStats stats, RuntimeEffectStatTarget stat)
+    public static float GetStat(CharacterStats stats, RuntimeEffectStatTarget stat)
     {
         if (stats == null)
         {
@@ -200,7 +206,7 @@ public abstract class RuntimeEffectDefinition : ScriptableObject
         };
     }
 
-    protected static void SetStat(CharacterStats stats, RuntimeEffectStatTarget stat, float value)
+    public static void SetStat(CharacterStats stats, RuntimeEffectStatTarget stat, float value)
     {
         if (stats == null)
         {

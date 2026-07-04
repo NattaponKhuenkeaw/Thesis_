@@ -127,6 +127,30 @@ namespace Project.TeamBuilder.UI.Panels
                 }
             }
 
+            if (effects.actionModifiers != null)
+            {
+                for (int i = 0; i < effects.actionModifiers.Count; i++)
+                {
+                    PassiveActionModifierDefinition modifier = effects.actionModifiers[i];
+                    if (modifier == null) continue;
+
+                    string actionLabel = !string.IsNullOrWhiteSpace(modifier.actionName)
+                        ? modifier.actionName
+                        : (!string.IsNullOrWhiteSpace(modifier.actionId) ? modifier.actionId : modifier.category.ToString());
+
+                    if (modifier.finalDamageOperation != PassiveValueModifierOperation.None)
+                    {
+                        string critPrefix = modifier.finalDamageRequiresCriticalHit ? "Critical " : string.Empty;
+                        yield return $"{critPrefix}{actionLabel} final damage {FormatValueModifier(modifier.finalDamageOperation, modifier.finalDamageValue)}.";
+                    }
+
+                    if (modifier.criticalDamageOperation != PassiveValueModifierOperation.None)
+                    {
+                        yield return $"{actionLabel} CRIT DMG {FormatValueModifier(modifier.criticalDamageOperation, modifier.criticalDamageValue)}.";
+                    }
+                }
+            }
+
             if (effects.additionalDamageEffects != null)
             {
                 for (int i = 0; i < effects.additionalDamageEffects.Count; i++)
@@ -152,6 +176,17 @@ namespace Project.TeamBuilder.UI.Panels
             return modifier.value.ToString("0.##");
         }
 
+        private static string FormatValueModifier(PassiveValueModifierOperation operation, float value)
+        {
+            return operation switch
+            {
+                PassiveValueModifierOperation.Add => $"+{value:0.##}",
+                PassiveValueModifierOperation.Multiply => $"x{value:0.##}",
+                PassiveValueModifierOperation.Override => $"={value:0.##}",
+                _ => value.ToString("0.##")
+            };
+        }
+
         private static CombatAction ResolvePrimaryAction(CharacterObject data, PotentialTrack track)
         {
             ActionResolverTable table = data != null ? data.actionResolverTable : null;
@@ -169,25 +204,6 @@ namespace Project.TeamBuilder.UI.Panels
             };
 
             if (actions == null || actions.Count == 0) return null;
-
-            string abilityId = track switch
-            {
-                PotentialTrack.Skill => data.kitDefinition?.skill?.abilityId,
-                PotentialTrack.Ultimate => data.kitDefinition?.ultimate?.abilityId,
-                _ => null
-            };
-
-            if (!string.IsNullOrWhiteSpace(abilityId))
-            {
-                for (int i = 0; i < actions.Count; i++)
-                {
-                    CombatAction action = actions[i];
-                    if (action != null && string.Equals(action.ActionKey, abilityId, System.StringComparison.Ordinal))
-                    {
-                        return action;
-                    }
-                }
-            }
 
             return actions[0];
         }

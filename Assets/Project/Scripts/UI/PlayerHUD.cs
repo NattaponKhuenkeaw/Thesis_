@@ -10,6 +10,13 @@ using Project.ShopSystem;
 public class PlayerHUD : MonoBehaviour
 {
     private static readonly string[] HudRootNames = { "PlayerHP_UI", "PlayerUI" };
+    private static readonly Dictionary<Transform, PlayerHUD> RuntimeEffectOwners = new Dictionary<Transform, PlayerHUD>();
+
+    private struct RuntimeEffectDisplayEntry
+    {
+        public RuntimeEffectInstance effect;
+        public int stackCount;
+    }
 
     [Header("References")]
     [SerializeField] private PlayerCharacter playerCharacter;
@@ -26,7 +33,10 @@ public class PlayerHUD : MonoBehaviour
     private PlayerCharacter subscribedPlayer;
     private PlayerRunInventory subscribedEffectInventory;
     private readonly List<RuntimeEffectIconUI> runtimeEffectIcons = new List<RuntimeEffectIconUI>();
+    private readonly List<RuntimeEffectDisplayEntry> runtimeEffectDisplayEntries = new List<RuntimeEffectDisplayEntry>();
     private string lastCharacterKey = string.Empty;
+    private bool runtimeEffectsDirty = true;
+    private bool hasTimedRuntimeEffectIcons;
 
     private void Reset()
     {
@@ -45,6 +55,7 @@ public class PlayerHUD : MonoBehaviour
 
     private void OnEnable()
     {
+        runtimeEffectsDirty = true;
         RebindEvents();
         RebindRuntimeEffectEvents();
         RefreshHUD();
@@ -52,6 +63,8 @@ public class PlayerHUD : MonoBehaviour
 
     private void OnDisable()
     {
+        ReleaseRuntimeEffectOwnership();
+
         if (subscribedPlayer != null)
         {
             subscribedPlayer.OnHealthChanged -= HandleHealthChanged;
@@ -81,7 +94,15 @@ public class PlayerHUD : MonoBehaviour
         if (currentCharacterKey != lastCharacterKey)
             RefreshHUD();
 
-        RefreshRuntimeEffects();
+        if (runtimeEffectsDirty)
+        {
+            RebuildRuntimeEffects();
+        }
+
+        if (hasTimedRuntimeEffectIcons)
+        {
+            RefreshRuntimeEffectTimers();
+        }
     }
 
     private void CacheReferences()
@@ -157,6 +178,7 @@ public class PlayerHUD : MonoBehaviour
     private void HandleCharacterChanged(CharacterObject newCharacter)
     {
         lastCharacterKey = string.Empty;
+        runtimeEffectsDirty = true;
         EnsureHudReady();
     }
 
@@ -222,7 +244,6 @@ public class PlayerHUD : MonoBehaviour
             hpText.text = $"{Mathf.CeilToInt(currentHp)} / {Mathf.CeilToInt(maxHp)}";
 
         lastCharacterKey = GetCharacterKey();
-        RefreshRuntimeEffects();
     }
 
     private void RebindRuntimeEffectEvents()
@@ -259,15 +280,18 @@ public class PlayerHUD : MonoBehaviour
     {
         if (playerCharacter == null || changedCharacter == playerCharacter.characterObject)
         {
-            RefreshRuntimeEffects();
+            runtimeEffectsDirty = true;
         }
     }
 
-    private void RefreshRuntimeEffects()
+    private void RebuildRuntimeEffects()
     {
         if (playerCharacter == null || playerCharacter.characterObject == null)
         {
             SetRuntimeEffectIconCount(0);
+            runtimeEffectDisplayEntries.Clear();
+            hasTimedRuntimeEffectIcons = false;
+            runtimeEffectsDirty = false;
             return;
         }
 
@@ -283,23 +307,104 @@ public class PlayerHUD : MonoBehaviour
             return;
         }
 
+        if (!TryClaimRuntimeEffectOwnership())
+        {
+            return;
+        }
+
+        runtimeEffectsDirty = false;
         RebindRuntimeEffectEvents();
         IReadOnlyList<RuntimeEffectInstance> effects = subscribedEffectInventory != null
             ? subscribedEffectInventory.GetActiveRuntimeEffects(playerCharacter.characterObject)
             : playerCharacter.RuntimeEffects != null ? playerCharacter.RuntimeEffects.ActiveEffects : null;
 
-        int count = effects != null ? effects.Count : 0;
+        BuildDisplayEntries(effects);
+
+        int count = runtimeEffectDisplayEntries.Count;
         SetRuntimeEffectIconCount(count);
+        hasTimedRuntimeEffectIcons = false;
         for (int i = 0; i < count; i++)
         {
-            runtimeEffectIcons[i].Bind(effects[i]);
+            RuntimeEffectDisplayEntry entry = runtimeEffectDisplayEntries[i];
+            runtimeEffectIcons[i].Bind(entry.effect, entry.stackCount);
+            hasTimedRuntimeEffectIcons |= runtimeEffectIcons[i].RequiresTimerRefresh;
         }
 
         playerCharacter.RuntimeEffects?.SyncVisuals(effects);
     }
 
+    private void RefreshRuntimeEffectTimers()
+    {
+        hasTimedRuntimeEffectIcons = false;
+        for (int i = 0; i < runtimeEffectDisplayEntries.Count && i < runtimeEffectIcons.Count; i++)
+        {
+            RuntimeEffectIconUI icon = runtimeEffectIcons[i];
+            if (icon == null)
+            {
+                continue;
+            }
+
+            if (!icon.RequiresTimerRefresh)
+            {
+                continue;
+            }
+
+            icon.RefreshPresentation();
+            hasTimedRuntimeEffectIcons |= icon.RequiresTimerRefresh;
+        }
+    }
+
+    private void BuildDisplayEntries(IReadOnlyList<RuntimeEffectInstance> effects)
+    {
+        runtimeEffectDisplayEntries.Clear();
+        if (effects == null || effects.Count == 0)
+        {
+            return;
+        }
+
+        Dictionary<RuntimeEffectDefinition, int> foreverStackIndexes = new Dictionary<RuntimeEffectDefinition, int>();
+        for (int i = 0; i < effects.Count; i++)
+        {
+            RuntimeEffectInstance effect = effects[i];
+            if (effect == null || effect.definition == null)
+            {
+                continue;
+            }
+
+            RuntimeEffectDefinition definition = effect.definition;
+            bool aggregateIntoStack = definition.stackable
+                && definition.durationType == RuntimeEffectDurationType.Forever;
+            if (!aggregateIntoStack)
+            {
+                runtimeEffectDisplayEntries.Add(new RuntimeEffectDisplayEntry
+                {
+                    effect = effect,
+                    stackCount = 1
+                });
+                continue;
+            }
+
+            if (foreverStackIndexes.TryGetValue(definition, out int existingIndex))
+            {
+                RuntimeEffectDisplayEntry entry = runtimeEffectDisplayEntries[existingIndex];
+                entry.stackCount++;
+                runtimeEffectDisplayEntries[existingIndex] = entry;
+                continue;
+            }
+
+            foreverStackIndexes.Add(definition, runtimeEffectDisplayEntries.Count);
+            runtimeEffectDisplayEntries.Add(new RuntimeEffectDisplayEntry
+            {
+                effect = effect,
+                stackCount = 1
+            });
+        }
+    }
+
     private void SetRuntimeEffectIconCount(int count)
     {
+        RemoveUntrackedRuntimeEffectIcons();
+
         for (int i = runtimeEffectIcons.Count; i < count; i++)
         {
             runtimeEffectIcons.Add(CreateRuntimeEffectIcon());
@@ -331,6 +436,65 @@ public class PlayerHUD : MonoBehaviour
         RectTransform rect = iconObject.GetComponent<RectTransform>();
         rect.sizeDelta = new Vector2(28f, 28f);
         return iconObject.GetComponent<RuntimeEffectIconUI>();
+    }
+
+    private bool TryClaimRuntimeEffectOwnership()
+    {
+        if (runtimeEffectContainer == null)
+        {
+            return false;
+        }
+
+        if (RuntimeEffectOwners.TryGetValue(runtimeEffectContainer, out PlayerHUD owner)
+            && owner != null
+            && owner != this
+            && owner.isActiveAndEnabled)
+        {
+            return false;
+        }
+
+        RuntimeEffectOwners[runtimeEffectContainer] = this;
+        return true;
+    }
+
+    private void ReleaseRuntimeEffectOwnership()
+    {
+        if (runtimeEffectContainer == null)
+        {
+            return;
+        }
+
+        if (RuntimeEffectOwners.TryGetValue(runtimeEffectContainer, out PlayerHUD owner) && owner == this)
+        {
+            RuntimeEffectOwners.Remove(runtimeEffectContainer);
+        }
+    }
+
+    private void RemoveUntrackedRuntimeEffectIcons()
+    {
+        if (runtimeEffectContainer == null)
+        {
+            return;
+        }
+
+        RuntimeEffectIconUI[] existingIcons = runtimeEffectContainer.GetComponentsInChildren<RuntimeEffectIconUI>(true);
+        for (int i = 0; i < existingIcons.Length; i++)
+        {
+            RuntimeEffectIconUI existingIcon = existingIcons[i];
+            if (existingIcon == null || runtimeEffectIcons.Contains(existingIcon))
+            {
+                continue;
+            }
+
+            if (Application.isPlaying)
+            {
+                Destroy(existingIcon.gameObject);
+            }
+            else
+            {
+                DestroyImmediate(existingIcon.gameObject);
+            }
+        }
     }
 
     private Transform FindRuntimeEffectContainer(Transform parent)

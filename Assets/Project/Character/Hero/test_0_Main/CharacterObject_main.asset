@@ -27,6 +27,7 @@ MonoBehaviour:
     critDamage: 150
     cooldownRate: 0
     impact: 0
+    damageReduction: 0
     aeRecharge: 1
   metaData:
     displayName: Main
@@ -54,8 +55,37 @@ MonoBehaviour:
     cancelWindowStartFrame: 25
     dashSpeed: 60
     cooldownFrames: 24
-  progressionDefinition:
-    maxConstellationRank: 6
-    constellationNodes: []
-    passiveNodes: []
+  kitDefinition:
+    skill:
+      abilityId: 
+      abilityName: Skill
+    ultimate:
+      abilityId: 
+      abilityName: Ultimate
+    passive:
+      abilityId: 
+      abilityName: Passive
+    basePassiveNode:
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: base.passive
+      nodeName: Base Passive
+      description: 
+      track: 2
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
+    potentialNodes: []
   actionResolverTable: {fileID: 11400000, guid: 4c22d52c4e028734cbd3294422a85e5b, type: 2}

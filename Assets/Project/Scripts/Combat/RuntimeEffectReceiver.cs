@@ -13,6 +13,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
 
     private PlayerCharacter playerCharacter;
     private EnemyController enemyController;
+    private bool hasTickingEffects;
 
     public event Action OnEffectsChanged;
 
@@ -25,6 +26,11 @@ public class RuntimeEffectReceiver : MonoBehaviour
 
     private void Update()
     {
+        if (!hasTickingEffects)
+        {
+            return;
+        }
+
         Tick(Time.deltaTime);
     }
 
@@ -59,7 +65,12 @@ public class RuntimeEffectReceiver : MonoBehaviour
         RuntimeEffectInstance instance = new RuntimeEffectInstance();
         instance.Initialize(definition, sourceCharacter, sourceStats, durationOverride);
         activeEffects.Add(instance);
+        if (definition.RequiresTicking)
+        {
+            hasTickingEffects = true;
+        }
         definition.OnApply(BuildContext(instance, 0f));
+        EnsureVisual(instance);
         RaiseEffectsChanged();
 
         if (definition.durationType == RuntimeEffectDurationType.Instant)
@@ -89,6 +100,37 @@ public class RuntimeEffectReceiver : MonoBehaviour
         }
     }
 
+    public void RemoveEffectsOnOwnerDamaged()
+    {
+        bool changed = false;
+        for (int i = activeEffects.Count - 1; i >= 0; i--)
+        {
+            RuntimeEffectInstance instance = activeEffects[i];
+            if (instance == null || instance.definition == null)
+            {
+                activeEffects.RemoveAt(i);
+                changed = true;
+                continue;
+            }
+
+            if (!instance.definition.removeOnOwnerDamaged)
+            {
+                continue;
+            }
+
+            instance.definition.OnExpired(BuildContext(instance, 0f));
+            DestroyVisual(instance);
+            activeEffects.RemoveAt(i);
+            changed = true;
+        }
+
+        if (changed)
+        {
+            RecalculateTickingState();
+            RaiseEffectsChanged();
+        }
+    }
+
     public bool HasStatus(StatusEffectType status)
     {
         return activeStatusFlags.Contains(status);
@@ -105,9 +147,11 @@ public class RuntimeEffectReceiver : MonoBehaviour
                 continue;
             }
 
+            context.instance = instance;
             result = instance.definition.ModifyIncomingDamage(context, result);
         }
 
+        context.instance = null;
         return Mathf.Max(0f, result);
     }
 
@@ -122,9 +166,11 @@ public class RuntimeEffectReceiver : MonoBehaviour
                 continue;
             }
 
+            context.instance = instance;
             result = instance.definition.ModifyOutgoingDamage(context, result);
         }
 
+        context.instance = null;
         return Mathf.Max(0f, result);
     }
 
@@ -200,6 +246,11 @@ public class RuntimeEffectReceiver : MonoBehaviour
                 continue;
             }
 
+            if (!instance.definition.RequiresTicking)
+            {
+                continue;
+            }
+
             if (instance.UsesTimer)
             {
                 instance.remainingSeconds -= Mathf.Max(0f, deltaTime);
@@ -213,7 +264,6 @@ public class RuntimeEffectReceiver : MonoBehaviour
             instance.definition.OnUpdate(BuildContext(instance, deltaTime));
             if (!instance.IsExpired)
             {
-                EnsureVisual(instance);
                 continue;
             }
 
@@ -225,6 +275,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
 
         if (changed)
         {
+            RecalculateTickingState();
             RaiseEffectsChanged();
         }
     }
@@ -269,6 +320,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
         instance.definition?.OnExpired(BuildContext(instance, 0f));
         DestroyVisual(instance);
         activeEffects.Remove(instance);
+        RecalculateTickingState();
         RaiseEffectsChanged();
     }
 
@@ -317,5 +369,19 @@ public class RuntimeEffectReceiver : MonoBehaviour
     {
         SyncVisuals(activeEffects);
         OnEffectsChanged?.Invoke();
+    }
+
+    private void RecalculateTickingState()
+    {
+        hasTickingEffects = false;
+        for (int i = 0; i < activeEffects.Count; i++)
+        {
+            RuntimeEffectInstance instance = activeEffects[i];
+            if (instance != null && instance.definition != null && instance.definition.RequiresTicking)
+            {
+                hasTickingEffects = true;
+                return;
+            }
+        }
     }
 }

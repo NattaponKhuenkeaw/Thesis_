@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using CombatCore;
 using UnityEngine;
@@ -57,6 +58,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     [Header("Detection")]
     public LayerMask enemyLayerMask;
+    [SerializeField] private Vector2 dashThroughDamageBoxSize = new Vector2(1.8f, 2.4f);
 
     [Header("Air Combo")]
     public float airAttackComboResetCooldown = 0.5f;
@@ -88,6 +90,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     private int hitboxActiveCount;
     private ActionPhase currentPhase = ActionPhase.None;
     private bool isAirCombo;
+    private Coroutine dashThroughDamageRoutine;
     private bool currentActionStartedGrounded;
     private bool currentActionAllowsGroundToAirTransition;
     private bool isExecutingAutoChainStep;
@@ -500,10 +503,16 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             return false;
         }
 
+        bool hasSpecificAction = !string.IsNullOrWhiteSpace(actionName) || !string.IsNullOrWhiteSpace(actionId);
         string actionKey = BuildActionCooldownKey(category, actionName, actionId);
         if (lastActionUseTime.TryGetValue(actionKey, out float actionUseTime))
         {
             return Time.time < actionUseTime + GetFinalCooldown(category, cooldown, actionName, actionId);
+        }
+
+        if (hasSpecificAction)
+        {
+            return false;
         }
 
         string categoryKey = BuildCategoryCooldownKey(category);
@@ -517,10 +526,16 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     public float GetRemainingCooldown(AttackCategory category, float cooldown, string actionName = null, string actionId = null)
     {
+        bool hasSpecificAction = !string.IsNullOrWhiteSpace(actionName) || !string.IsNullOrWhiteSpace(actionId);
         string actionKey = BuildActionCooldownKey(category, actionName, actionId);
         if (lastActionUseTime.TryGetValue(actionKey, out float actionUseTime))
         {
             return Mathf.Max(actionUseTime + GetFinalCooldown(category, cooldown, actionName, actionId) - Time.time, 0f);
+        }
+
+        if (hasSpecificAction)
+        {
+            return 0f;
         }
 
         string categoryKey = BuildCategoryCooldownKey(category);
@@ -541,7 +556,28 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     {
         if (string.IsNullOrWhiteSpace(actionName) && string.IsNullOrWhiteSpace(actionId))
         {
-            lastCategoryUseTime.Remove(BuildCategoryCooldownKey(category));
+            string categoryKey = BuildCategoryCooldownKey(category);
+            lastCategoryUseTime.Remove(categoryKey);
+
+            string actionKeyPrefix = categoryKey + "::";
+            List<string> actionKeysToRemove = null;
+            foreach (string key in lastActionUseTime.Keys)
+            {
+                if (key.StartsWith(actionKeyPrefix, System.StringComparison.Ordinal))
+                {
+                    actionKeysToRemove ??= new List<string>();
+                    actionKeysToRemove.Add(key);
+                }
+            }
+
+            if (actionKeysToRemove != null)
+            {
+                for (int i = 0; i < actionKeysToRemove.Count; i++)
+                {
+                    lastActionUseTime.Remove(actionKeysToRemove[i]);
+                }
+            }
+
             return;
         }
 
@@ -887,15 +923,30 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         float currentDamage)
     {
         PlayerRunInventory inventory = ResolveRunInventory();
-        return inventory != null
+        float result = inventory != null
             ? inventory.ModifyOutgoingDamage(character, context, currentDamage)
             : currentDamage;
+
+        if (playerCharacter != null
+            && playerCharacter.characterObject == character
+            && playerCharacter.RuntimeEffects != null)
+        {
+            result = playerCharacter.RuntimeEffects.ModifyOutgoingDamage(context, result);
+        }
+
+        return result;
     }
 
     public void NotifyRuntimeHitDealt(CharacterObject character, RuntimeEffectDamageContext context)
     {
         PlayerRunInventory inventory = ResolveRunInventory();
         inventory?.NotifyRuntimeHitDealt(character, context);
+        if (playerCharacter != null
+            && playerCharacter.characterObject == character
+            && playerCharacter.RuntimeEffects != null)
+        {
+            playerCharacter.RuntimeEffects.NotifyHitDealt(context);
+        }
     }
 
     private PlayerRunInventory ResolveRunInventory()
@@ -940,7 +991,30 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     {
         ProjectileData data = projectileHitbox != null ? projectileHitbox.projectileData : null;
         ProjectileType projectileType = projectileHitbox != null ? projectileHitbox.ResolveProjectileType() : ProjectileType.None;
-        Vector2 resolvedSpawnOffset = projectileHitbox != null
+        if (passiveController != null
+            && passiveController.TryGetProjectileReplacement(
+                currentAttackCategory,
+                currentActionId,
+                currentActionName,
+                out ProjectileType replacementProjectileType,
+                out ProjectileData replacementProjectileData))
+        {
+            if (replacementProjectileData != null)
+            {
+                data = replacementProjectileData;
+            }
+
+            if (replacementProjectileType != ProjectileType.None)
+            {
+                projectileType = replacementProjectileType;
+            }
+            else if (data != null)
+            {
+                projectileType = data.projectileType;
+            }
+        }
+
+        Vector2 resolvedSpawnOffset = projectileHitbox != null && projectileHitbox.HasAuthoredSpawnOffset
             ? projectileHitbox.ResolveSpawnOffset()
             : data != null ? data.spawnOffset : Vector2.zero;
         Vector2 origin = GetSpawnPosition(resolvedSpawnOffset);
@@ -1336,11 +1410,118 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     private void HandleDashStart()
     {
         passiveController?.NotifyAfterDash();
+        StartDashThroughDamageRoutine();
 
         if (isAirCombo && comboDepth > 0 && movement != null && !movement.IsGrounded())
             CancelCurrentAttackButKeepComboProgress();
         else
             ResetCombo();
+    }
+
+    private void StartDashThroughDamageRoutine()
+    {
+        if (dashThroughDamageRoutine != null)
+        {
+            StopCoroutine(dashThroughDamageRoutine);
+            dashThroughDamageRoutine = null;
+        }
+
+        PassiveDashThroughDamageDefinition[] effects = passiveController != null
+            ? passiveController.BuildDashThroughDamageEffectSnapshot()
+            : System.Array.Empty<PassiveDashThroughDamageDefinition>();
+        if (effects.Length == 0)
+        {
+            return;
+        }
+
+        dashThroughDamageRoutine = StartCoroutine(ResolveDashThroughDamage(effects));
+    }
+
+    private IEnumerator ResolveDashThroughDamage(PassiveDashThroughDamageDefinition[] effects)
+    {
+        yield return null;
+
+        HashSet<EnemyController> damagedEnemies = new HashSet<EnemyController>();
+        while (movement != null && movement.IsDashing && movement.IsInvincible())
+        {
+            Vector2 origin = transform.position;
+            Collider2D[] hits = Physics2D.OverlapBoxAll(origin, dashThroughDamageBoxSize, 0f, enemyLayerMask);
+            for (int i = 0; i < hits.Length; i++)
+            {
+                EnemyController enemy = hits[i] != null ? hits[i].GetComponentInParent<EnemyController>() : null;
+                if (enemy == null || !enemy.IsAlive || damagedEnemies.Contains(enemy))
+                {
+                    continue;
+                }
+
+                if (TryApplyDashThroughDamage(enemy, effects))
+                {
+                    damagedEnemies.Add(enemy);
+                }
+            }
+
+            yield return null;
+        }
+
+        dashThroughDamageRoutine = null;
+    }
+
+    private bool TryApplyDashThroughDamage(EnemyController enemy, PassiveDashThroughDamageDefinition[] effects)
+    {
+        bool dealtDamage = false;
+        float sourceAttack = GetModifiedAttackStat();
+        CharacterStats stats = playerCharacter != null ? playerCharacter.Stats : null;
+        CharacterObject character = playerCharacter != null ? playerCharacter.characterObject : null;
+        PassiveEventContext context = new PassiveEventContext
+        {
+            category = AttackCategory.Normal,
+            actionId = "dash",
+            actionName = "Dash",
+            runtimeState = passiveController != null ? passiveController.RuntimeState : null,
+            enemy = enemy,
+            enemyMaxHp = enemy != null ? enemy.maxHP : 0f
+        };
+
+        for (int i = 0; i < effects.Length; i++)
+        {
+            PassiveDashThroughDamageDefinition effect = effects[i];
+            if (effect == null || !effect.CanTrigger(context))
+            {
+                continue;
+            }
+
+            float baseDamage = effect.CalculateBaseDamage(sourceAttack, context);
+            float resolvedDamage = CombatFormula.CalculateResolvedDamage(
+                baseDamage,
+                DamageRoutine.Additional,
+                effect.elementType,
+                stats,
+                enemy.defense,
+                AttackCategory.Normal,
+                out _,
+                enemy.damageRes);
+            if (resolvedDamage <= 0f)
+            {
+                continue;
+            }
+
+            Vector2 direction = GetFacingDirection();
+            HitReactionData reactionData = HitReactionData.Default(resolvedDamage, direction, 0f);
+            reactionData.damageIsFinal = true;
+            reactionData.damageRoutine = DamageRoutine.Additional;
+            reactionData.elementType = effect.elementType;
+            reactionData.isCriticalHit = false;
+            reactionData.sourceCharacter = character;
+            reactionData.sourceStats = stats;
+            reactionData.sourceCategory = AttackCategory.Normal;
+            reactionData.sourceActionId = "dash";
+            reactionData.sourceActionName = "Dash";
+
+            float damageDealt = enemy.TakeHit(reactionData, transform.position);
+            dealtDamage |= damageDealt > 0f;
+        }
+
+        return dealtDamage;
     }
 
     private void HandleJumpStart()

@@ -152,4 +152,67 @@ public class RunCharacterStateTests
             Object.DestroyImmediate(inventory);
         }
     }
+
+    [Test]
+    public void RuntimeEffectTimerTicksForOffFieldTeamMembers()
+    {
+        PlayerRunInventory inventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        CharacterObject activeCharacter = ScriptableObject.CreateInstance<CharacterObject>();
+        CharacterObject offFieldCharacter = ScriptableObject.CreateInstance<CharacterObject>();
+        StatRuntimeEffectDefinition effect = ScriptableObject.CreateInstance<StatRuntimeEffectDefinition>();
+
+        try
+        {
+            effect.durationType = RuntimeEffectDurationType.Seconds;
+            effect.durationSeconds = 1f;
+
+            inventory.DeployTeam(new[] { activeCharacter, offFieldCharacter }, 0);
+            inventory.ApplyRuntimeEffect(activeCharacter, effect, activeCharacter, activeCharacter.stats);
+            inventory.ApplyRuntimeEffect(offFieldCharacter, effect, activeCharacter, activeCharacter.stats);
+
+            Assert.That(inventory.GetActiveRuntimeEffects(activeCharacter).Count, Is.EqualTo(1));
+            Assert.That(inventory.GetActiveRuntimeEffects(offFieldCharacter).Count, Is.EqualTo(1));
+
+            inventory.TickRuntimeEffects(1.1f);
+
+            Assert.That(inventory.GetActiveRuntimeEffects(activeCharacter).Count, Is.EqualTo(0));
+            Assert.That(inventory.GetActiveRuntimeEffects(offFieldCharacter).Count, Is.EqualTo(0));
+        }
+        finally
+        {
+            Object.DestroyImmediate(effect);
+            Object.DestroyImmediate(offFieldCharacter);
+            Object.DestroyImmediate(activeCharacter);
+            Object.DestroyImmediate(inventory);
+        }
+    }
+
+    [Test]
+    public void RuntimeEffectInstance_TracksAppliedDurationOverrideForUiFill()
+    {
+        StatRuntimeEffectDefinition effect = ScriptableObject.CreateInstance<StatRuntimeEffectDefinition>();
+        CharacterObject character = ScriptableObject.CreateInstance<CharacterObject>();
+        RuntimeEffectInstance instance = new RuntimeEffectInstance();
+
+        try
+        {
+            effect.durationType = RuntimeEffectDurationType.Seconds;
+            effect.durationSeconds = 10f;
+
+            instance.Initialize(effect, character, null, 5f);
+
+            Assert.That(instance.remainingSeconds, Is.EqualTo(5f).Within(0.001f));
+            Assert.That(instance.appliedDurationSeconds, Is.EqualTo(5f).Within(0.001f));
+
+            instance.Refresh(2.5f);
+
+            Assert.That(instance.remainingSeconds, Is.EqualTo(2.5f).Within(0.001f));
+            Assert.That(instance.appliedDurationSeconds, Is.EqualTo(2.5f).Within(0.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(character);
+            Object.DestroyImmediate(effect);
+        }
+    }
 }

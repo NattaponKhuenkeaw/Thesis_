@@ -113,6 +113,16 @@ public class PlayerUltimateState : CombatPlayerState
 
             ExecuteCombatStep(step, ctx, false);
 
+            if (player.PassiveController != null && activeUltimateAction != null)
+            {
+                player.PassiveController.ClearActionAvailabilityWindow(
+                    AttackCategory.Ultimate,
+                    activeUltimateAction.actionId,
+                    activeUltimateAction.actionName);
+            }
+
+            TryStartCooldown();
+
             if (activeUltimateAction != null && activeUltimateAction.useDashAfterImage && player.Movement != null)
             {
                 player.Movement.SpawnUltimateBurst(3, 0.08f);

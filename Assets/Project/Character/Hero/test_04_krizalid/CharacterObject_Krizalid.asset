@@ -27,6 +27,7 @@ MonoBehaviour:
     critDamage: 150
     cooldownRate: 0
     impact: 0
+    damageReduction: 0
     aeRecharge: 1
   metaData:
     displayName: Krizalid
@@ -73,10 +74,12 @@ MonoBehaviour:
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
+      runtimeEffects: []
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
       additionalDamageEffects: []
+      dashThroughDamageEffects: []
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []

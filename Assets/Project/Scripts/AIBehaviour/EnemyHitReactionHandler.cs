@@ -138,7 +138,8 @@ public class EnemyHitReactionHandler : MonoBehaviour
         //
         // EXCEPTION: If the hitbox is explicitly marked as 'breaksGrab' (e.g. a slam/finisher),
         // we DO NOT absorb it so the enemy can play the correct finisher reaction.
-        bool isGrabbedAbsorption = currentState == EnemyReactionState.Grabbed &&
+        bool isGrabbedAbsorption = (currentState == EnemyReactionState.Grabbed || 
+                                    (currentState == EnemyReactionState.ImpactFreeze && currentReaction.reactionKind == EnemyReactionKind.Grab)) &&
                                    data.reactionKind != EnemyReactionKind.Grab &&
                                    !data.breaksGrab &&
                                    currentReaction.reactionOwnerId != 0 &&

@@ -9,19 +9,12 @@ using UnityEngine;
 
 public static class ComboRouter
 {
-    /// <summary>
-    /// Evaluates all routes on a node against the current StateContext.
-    /// Priority order: Immediate triggers > Directional > Fallback/Default.
-    /// </summary>
-    public static ComboNode ResolveRoute(ComboNode node, StateContext ctx, bool allowDefault = true)
+    public static ComboRoute FindMatchedRoute(ComboNode node, StateContext ctx)
     {
-        if (node == null) return null;
-
-        if (node.routes == null || node.routes.Count == 0)
-            return allowDefault ? node.defaultNext : null;
+        if (node == null || node.routes == null || node.routes.Count == 0)
+            return null;
 
         ComboRoute bestMatch = null;
-
         for (int i = 0; i < node.routes.Count; i++)
         {
             ComboRoute route = node.routes[i];
@@ -35,10 +28,19 @@ public static class ComboRouter
                 }
             }
         }
+        return bestMatch;
+    }
 
-        if (bestMatch != null)
-            return bestMatch.targetNode;
-
+    /// <summary>
+    /// Evaluates all routes on a node against the current StateContext.
+    /// Priority order: Immediate triggers > Directional > Fallback/Default.
+    /// </summary>
+    public static ComboNode ResolveRoute(ComboNode node, StateContext ctx, bool allowDefault = true)
+    {
+        if (node == null) return null;
+        ComboRoute matchedRoute = FindMatchedRoute(node, ctx);
+        if (matchedRoute != null)
+            return matchedRoute.targetNode;
         return allowDefault ? node.defaultNext : null;
     }
 
@@ -75,6 +77,10 @@ public static class ComboRouter
         #pragma warning restore 618
 
         // 2. Check the unified conditions list
+        if (route.targetNode != null && route.targetNode.stepData != null)
+        {
+            ctx.stepName = route.targetNode.stepData.stepName;
+        }
         return ActionConditionUtility.AllMet(route.conditions, ctx);
     }
 }

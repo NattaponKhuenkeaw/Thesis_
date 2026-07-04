@@ -5,7 +5,7 @@ using Project.InventorySystem.Items;
 /// Central player facade. Holds CharacterObject data, runtime HP,
 /// and references to all player sub-systems.
 /// </summary>
-public class PlayerCharacter : MonoBehaviour
+public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
 {
     // =========================================================
     // Character Data
@@ -202,6 +202,9 @@ public class PlayerCharacter : MonoBehaviour
 
         OnDamaged?.Invoke(actualDamage);
         NotifyHealthChanged();
+        RuntimeEffects?.RemoveEffectsOnOwnerDamaged();
+        TeamLoader teamLoader = Object.FindFirstObjectByType<TeamLoader>();
+        teamLoader?.RunInventory?.RemoveRuntimeEffectsOnOwnerDamaged(characterObject);
 
         if (Combat != null && Combat.activeThrowContext != null)
         {
@@ -271,7 +274,7 @@ public class PlayerCharacter : MonoBehaviour
         return TryResolveActionForContext(category, out _, out _);
     }
 
-    public bool TryResolveActionForContext(AttackCategory category, out CombatAction action, out AttackStepData step)
+    public bool TryResolveActionForContext(AttackCategory category, out CombatAction action, out AttackStepData step, bool requireAvailability = false)
     {
         action = null;
         step = null;
@@ -279,8 +282,52 @@ public class PlayerCharacter : MonoBehaviour
         if (characterObject == null || characterObject.actionResolverTable == null)
             return false;
 
+        InputContext ctx = BuildActionInputContext(requireAvailability);
+
+        // Standard ActionResolver used for one-off validation
+        ActionResolver resolver = new ActionResolver();
+        step = resolver.ResolveInitial(ctx, characterObject.actionResolverTable, category);
+        action = resolver.ActiveCombatAction;
+        return step != null;
+    }
+
+    public bool IsActionAvailable(CombatAction action)
+    {
+        if (action == null)
+        {
+            return false;
+        }
+
+        if (action is SkillAction skillAction
+            && Combat != null
+            && Combat.IsOnCooldown(action.Category, skillAction.cooldown, skillAction.actionName, skillAction.actionId))
+        {
+            return false;
+        }
+
+        if (action is UltimateAction ultimateAction)
+        {
+            TeamLoader loader = FindFirstObjectByType<TeamLoader>();
+            float currentAE = loader != null && characterObject != null
+                ? loader.GetCharacterCurrentAE(characterObject)
+                : 0f;
+            float requiredAE = loader != null && characterObject != null
+                ? loader.GetUltimateCost(characterObject, ultimateAction)
+                : TeamLoader.DefaultUltimateAuraEnergyCost;
+
+            return requiredAE <= 0.01f || currentAE + 0.01f >= requiredAE;
+        }
+
+        return true;
+    }
+
+    // =========================================================
+    // Private Methods
+    // =========================================================
+    private InputContext BuildActionInputContext(bool includeAvailability)
+    {
         bool actionGrounded = Movement != null && Movement.IsGroundedForActionSelection();
-        InputContext ctx = new InputContext
+        return new InputContext
         {
             isGrounded = actionGrounded,
             directionalInput = StateMachine != null && StateMachine.InputBuffer != null
@@ -290,19 +337,11 @@ public class PlayerCharacter : MonoBehaviour
             hasGrabbedEnemy = Combat != null && Combat.HasGrabbedEnemy(),
             isAgainstWall = Movement != null && Movement.IsAgainstWall(),
             passiveController = PassiveController,
-            runtimeState = PassiveController != null ? PassiveController.RuntimeState : null
+            runtimeState = PassiveController != null ? PassiveController.RuntimeState : null,
+            actionAvailabilityProvider = includeAvailability ? this : null
         };
-
-        // Standard ActionResolver used for one-off validation
-        ActionResolver resolver = new ActionResolver();
-        step = resolver.ResolveInitial(ctx, characterObject.actionResolverTable, category);
-        action = resolver.ActiveCombatAction;
-        return step != null;
     }
 
-    // =========================================================
-    // Private Methods
-    // =========================================================
     private void CacheSubSystems()
     {
         if (StateMachine == null)

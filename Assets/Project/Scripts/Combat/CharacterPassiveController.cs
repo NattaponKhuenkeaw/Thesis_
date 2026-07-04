@@ -250,7 +250,7 @@ public class CharacterPassiveController : MonoBehaviour
             for (int i = 0; i < actionModifiers.Count; i++)
             {
                 PassiveActionModifierDefinition modifier = actionModifiers[i];
-                if (modifier != null && modifier.Matches(category, actionId, actionName))
+                if (modifier != null && modifier.Matches(category, actionId, actionName, runtimeState))
                 {
                     result = ApplyValueModifier(result, modifier.cooldownOperation, modifier.cooldownValue);
                 }
@@ -274,10 +274,67 @@ public class CharacterPassiveController : MonoBehaviour
             for (int i = 0; i < modifiers.Count; i++)
             {
                 PassiveActionModifierDefinition modifier = modifiers[i];
-                if (modifier != null && modifier.Matches(category, actionId, actionName))
+                if (modifier != null && modifier.Matches(category, actionId, actionName, runtimeState))
                 {
                     result = ApplyValueModifier(result, modifier.damageMultiplierOperation, modifier.damageMultiplierValue);
                 }
+            }
+        }
+
+        return Mathf.Max(0f, result);
+    }
+
+    public float ModifyActionCriticalDamage(AttackCategory category, string actionId, string actionName, float baseValue)
+    {
+        float result = baseValue;
+        foreach (PotentialNodeDefinition node in GetActiveNodes())
+        {
+            List<PassiveActionModifierDefinition> modifiers = node != null ? node.actionModifiers : null;
+            if (modifiers == null)
+            {
+                continue;
+            }
+
+            for (int i = 0; i < modifiers.Count; i++)
+            {
+                PassiveActionModifierDefinition modifier = modifiers[i];
+                if (modifier != null && modifier.Matches(category, actionId, actionName, runtimeState))
+                {
+                    result = ApplyValueModifier(result, modifier.criticalDamageOperation, modifier.criticalDamageValue);
+                }
+            }
+        }
+
+        return Mathf.Max(0f, result);
+    }
+
+    public float ModifyActionFinalDamage(
+        AttackCategory category,
+        string actionId,
+        string actionName,
+        float baseValue,
+        bool isCriticalHit)
+    {
+        float result = baseValue;
+        foreach (PotentialNodeDefinition node in GetActiveNodes())
+        {
+            List<PassiveActionModifierDefinition> modifiers = node != null ? node.actionModifiers : null;
+            if (modifiers == null)
+            {
+                continue;
+            }
+
+            for (int i = 0; i < modifiers.Count; i++)
+            {
+                PassiveActionModifierDefinition modifier = modifiers[i];
+                if (modifier == null
+                    || !modifier.Matches(category, actionId, actionName, runtimeState)
+                    || (modifier.finalDamageRequiresCriticalHit && !isCriticalHit))
+                {
+                    continue;
+                }
+
+                result = ApplyValueModifier(result, modifier.finalDamageOperation, modifier.finalDamageValue);
             }
         }
 
@@ -298,7 +355,7 @@ public class CharacterPassiveController : MonoBehaviour
             for (int i = 0; i < modifiers.Count; i++)
             {
                 PassiveActionModifierDefinition modifier = modifiers[i];
-                if (modifier != null && modifier.Matches(category, actionId, actionName))
+                if (modifier != null && modifier.Matches(category, actionId, actionName, runtimeState))
                 {
                     result += modifier.auraEnergyRewardAdd;
                 }
@@ -310,11 +367,6 @@ public class CharacterPassiveController : MonoBehaviour
 
     public float ModifyUltimateEnergyCost(string actionId, string actionName, float baseValue)
     {
-        if (runtimeState != null && runtimeState.HasTag("waive_next_ultimate_cost"))
-        {
-            return 0f;
-        }
-
         float result = baseValue;
         foreach (PotentialNodeDefinition node in GetActiveNodes())
         {
@@ -327,7 +379,7 @@ public class CharacterPassiveController : MonoBehaviour
             for (int i = 0; i < modifiers.Count; i++)
             {
                 PassiveActionModifierDefinition modifier = modifiers[i];
-                if (modifier != null && modifier.Matches(AttackCategory.Ultimate, actionId, actionName))
+                if (modifier != null && modifier.Matches(AttackCategory.Ultimate, actionId, actionName, runtimeState))
                 {
                     result = ApplyValueModifier(result, modifier.energyCostOperation, modifier.energyCostValue);
                 }
@@ -356,7 +408,7 @@ public class CharacterPassiveController : MonoBehaviour
             for (int i = 0; i < modifiers.Count; i++)
             {
                 PassiveActionModifierDefinition modifier = modifiers[i];
-                if (modifier != null && modifier.Matches(category, actionId, actionName))
+                if (modifier != null && modifier.Matches(category, actionId, actionName, runtimeState))
                 {
                     isUnlocked = modifier.unlocked;
                 }
@@ -364,6 +416,81 @@ public class CharacterPassiveController : MonoBehaviour
         }
 
         return isUnlocked;
+    }
+
+    public bool TryGetActionAvailabilityWindow(
+        AttackCategory category,
+        string actionId,
+        string actionName,
+        out float remainingSeconds,
+        out float durationSeconds,
+        bool ignoreRuntimeRequirements = false)
+    {
+        remainingSeconds = 0f;
+        durationSeconds = 0f;
+
+        if (runtimeState == null)
+        {
+            return false;
+        }
+
+        bool foundWindow = false;
+        foreach (PotentialNodeDefinition node in GetActiveNodes())
+        {
+            List<PassiveActionModifierDefinition> modifiers = node != null ? node.actionModifiers : null;
+            if (modifiers == null)
+            {
+                continue;
+            }
+
+            for (int i = 0; i < modifiers.Count; i++)
+            {
+                PassiveActionModifierDefinition modifier = modifiers[i];
+                if (modifier == null
+                    || !modifier.unlocked
+                    || !modifier.Matches(category, actionId, actionName, runtimeState, ignoreRuntimeRequirements)
+                    || modifier.requiredTags == null
+                    || modifier.requiredTags.Count == 0)
+                {
+                    continue;
+                }
+
+                float candidateRemaining = 0f;
+                float candidateDuration = 0f;
+                bool hasTimedRequirement = false;
+
+                for (int requirementIndex = 0; requirementIndex < modifier.requiredTags.Count; requirementIndex++)
+                {
+                    RuntimeTagRequirement requirement = modifier.requiredTags[requirementIndex];
+                    if (requirement == null
+                        || !requirement.expectedValue
+                        || string.IsNullOrWhiteSpace(requirement.tag)
+                        || !runtimeState.TryGetTagTiming(requirement.tag, out float tagRemaining, out float tagDuration))
+                    {
+                        continue;
+                    }
+
+                    if (!hasTimedRequirement || tagRemaining < candidateRemaining)
+                    {
+                        candidateRemaining = tagRemaining;
+                        candidateDuration = tagDuration;
+                    }
+
+                    hasTimedRequirement = true;
+                }
+
+                if (!hasTimedRequirement || candidateRemaining <= remainingSeconds)
+                {
+                    continue;
+                }
+
+                remainingSeconds = candidateRemaining;
+                durationSeconds = Mathf.Max(candidateDuration, candidateRemaining);
+                foundWindow = true;
+            }
+        }
+
+        return foundWindow;
     }
 
     public int GetActionPriorityModifier(string actionName)
@@ -385,7 +512,7 @@ public class CharacterPassiveController : MonoBehaviour
             for (int i = 0; i < modifiers.Count; i++)
             {
                 PassiveActionModifierDefinition modifier = modifiers[i];
-                if (modifier != null && modifier.Matches(category, actionId, actionName))
+                if (modifier != null && modifier.Matches(category, actionId, actionName, runtimeState))
                 {
                     total += modifier.priorityBonus;
                 }
@@ -421,7 +548,7 @@ public class CharacterPassiveController : MonoBehaviour
             for (int i = 0; i < modifiers.Count; i++)
             {
                 PassiveActionModifierDefinition modifier = modifiers[i];
-                if (modifier == null || !modifier.Matches(category, actionId, actionName))
+                if (modifier == null || !modifier.Matches(category, actionId, actionName, runtimeState))
                 {
                     continue;
                 }
@@ -441,9 +568,76 @@ public class CharacterPassiveController : MonoBehaviour
         return !string.IsNullOrWhiteSpace(replacementActionId) || !string.IsNullOrWhiteSpace(replacementActionName);
     }
 
+    public bool TryGetProjectileReplacement(
+        AttackCategory category,
+        string actionId,
+        string actionName,
+        out ProjectileType replacementProjectileType,
+        out ProjectileData replacementProjectileData)
+    {
+        replacementProjectileType = ProjectileType.None;
+        replacementProjectileData = null;
+
+        foreach (PotentialNodeDefinition node in GetActiveNodes())
+        {
+            List<PassiveActionModifierDefinition> modifiers = node != null ? node.actionModifiers : null;
+            if (modifiers == null)
+            {
+                continue;
+            }
+
+            for (int i = 0; i < modifiers.Count; i++)
+            {
+                PassiveActionModifierDefinition modifier = modifiers[i];
+                if (modifier == null || !modifier.Matches(category, actionId, actionName, runtimeState))
+                {
+                    continue;
+                }
+
+                if (modifier.replacementProjectileType != ProjectileType.None)
+                {
+                    replacementProjectileType = modifier.replacementProjectileType;
+                }
+
+                if (modifier.replacementProjectileData != null)
+                {
+                    replacementProjectileData = modifier.replacementProjectileData;
+                }
+            }
+        }
+
+        return replacementProjectileType != ProjectileType.None || replacementProjectileData != null;
+    }
+
+    public int GetStartingComboDepthOverride(AttackCategory category, string actionId, string actionName)
+    {
+        int result = 0;
+        foreach (PotentialNodeDefinition node in GetActiveNodes())
+        {
+            List<PassiveActionModifierDefinition> modifiers = node != null ? node.actionModifiers : null;
+            if (modifiers == null)
+            {
+                continue;
+            }
+
+            for (int i = 0; i < modifiers.Count; i++)
+            {
+                PassiveActionModifierDefinition modifier = modifiers[i];
+                if (modifier != null
+                    && modifier.startingComboDepthOverride > result
+                    && modifier.Matches(category, actionId, actionName, runtimeState))
+                {
+                    result = modifier.startingComboDepthOverride;
+                }
+            }
+        }
+
+        return result;
+    }
+
     public float GetTeamModifierValue(PassiveModifierTarget target)
     {
-        return ModifyValue(target, 0f, PassiveEffectScope.Team);
+        return ModifyValue(target, 0f, PassiveEffectScope.Allies);
     }
 
     public void NotifyActionStarted(AttackCategory category, string actionName, AttackStepData stepData)
@@ -626,6 +820,36 @@ public class CharacterPassiveController : MonoBehaviour
             : Array.Empty<AdditionalDamageEffectDefinition>();
     }
 
+    public PassiveDashThroughDamageDefinition[] BuildDashThroughDamageEffectSnapshot()
+    {
+        List<PassiveDashThroughDamageDefinition> effects = null;
+
+        foreach (PotentialNodeDefinition node in GetActiveNodes())
+        {
+            List<PassiveDashThroughDamageDefinition> source = node != null ? node.dashThroughDamageEffects : null;
+            if (source == null)
+            {
+                continue;
+            }
+
+            for (int i = 0; i < source.Count; i++)
+            {
+                PassiveDashThroughDamageDefinition effect = source[i];
+                if (effect == null)
+                {
+                    continue;
+                }
+
+                effects ??= new List<PassiveDashThroughDamageDefinition>();
+                effects.Add(effect);
+            }
+        }
+
+        return effects != null
+            ? effects.ToArray()
+            : Array.Empty<PassiveDashThroughDamageDefinition>();
+    }
+
     private void ResolveMetaProgression()
     {
         if (metaProgression == null)
@@ -752,8 +976,7 @@ public class CharacterPassiveController : MonoBehaviour
             bool shouldApply = effect.scope switch
             {
                 PassiveEffectScope.Self => target == sourceCharacter,
-                PassiveEffectScope.Allies => target != sourceCharacter,
-                PassiveEffectScope.Team => true,
+                PassiveEffectScope.Allies => true,
                 _ => false
             };
 
@@ -1056,6 +1279,7 @@ public class CharacterPassiveController : MonoBehaviour
             actionId = actionId,
             actionName = actionName,
             stepData = stepData,
+            stepName = stepData != null ? stepData.stepName : null,
             runtimeState = runtimeState,
             enemy = enemy,
             source = playerCharacter
@@ -1165,6 +1389,50 @@ public class CharacterPassiveController : MonoBehaviour
             case PassiveCounterOperation.Reset:
                 runtimeState.SetCounter(effect.counterId, 0);
                 break;
+        }
+    }
+
+    public void ClearActionAvailabilityWindow(AttackCategory category, string actionId, string actionName)
+    {
+        if (runtimeState == null)
+        {
+            return;
+        }
+
+        foreach (PotentialNodeDefinition node in GetActiveNodes())
+        {
+            List<PassiveActionModifierDefinition> modifiers = node != null ? node.actionModifiers : null;
+            if (modifiers == null)
+            {
+                continue;
+            }
+
+            for (int i = 0; i < modifiers.Count; i++)
+            {
+                PassiveActionModifierDefinition modifier = modifiers[i];
+                if (modifier == null || !modifier.unlocked)
+                {
+                    continue;
+                }
+
+                bool matchesOriginal = modifier.Matches(category, actionId, actionName, runtimeState, ignoreRuntimeRequirements: true);
+                bool matchesReplacement = string.Equals(modifier.replacementActionId, actionId, StringComparison.Ordinal)
+                    || string.Equals(modifier.replacementActionName, actionName, StringComparison.Ordinal);
+
+                if ((!matchesOriginal && !matchesReplacement) || modifier.requiredTags == null)
+                {
+                    continue;
+                }
+
+                for (int requirementIndex = 0; requirementIndex < modifier.requiredTags.Count; requirementIndex++)
+                {
+                    RuntimeTagRequirement requirement = modifier.requiredTags[requirementIndex];
+                    if (requirement != null && !string.IsNullOrWhiteSpace(requirement.tag))
+                    {
+                        runtimeState.RemoveTag(requirement.tag);
+                    }
+                }
+            }
         }
     }
 }

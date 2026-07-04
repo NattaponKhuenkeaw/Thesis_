@@ -36,7 +36,6 @@ public enum PassiveEffectScope
 {
     Self,
     Allies,
-    Team,
     Enemy
 }
 
@@ -97,6 +96,9 @@ public class PassiveTriggerFilter
     [Tooltip("Fallback for older actions without actionId. Prefer actionId for new kit data.")]
     public bool filterByActionName = false;
     public string actionName;
+    [Tooltip("When enabled, this effect only applies while the resolved action step has this exact stepName.")]
+    public bool filterByStepName = false;
+    public string stepName;
     [Tooltip("When enabled, this effect only applies while the source runtime state has this tag.")]
     public bool requireRuntimeTag = false;
     public string runtimeTag;
@@ -114,6 +116,11 @@ public class PassiveTriggerFilter
         }
 
         if (filterByActionName && !string.Equals(context.actionName, actionName, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        if (filterByStepName && !string.Equals(context.stepName, stepName, StringComparison.Ordinal))
         {
             return false;
         }
@@ -237,17 +244,35 @@ public class PassiveActionModifierDefinition
     public int priorityBonus = 0;
     public string replacementActionId;
     public string replacementActionName;
+    [Min(0)] public int startingComboDepthOverride = 0;
+    public List<RuntimeTagRequirement> requiredTags = new List<RuntimeTagRequirement>();
+    public List<RuntimeCounterRequirement> requiredCounters = new List<RuntimeCounterRequirement>();
 
     [Header("Action Runtime Values")]
     public PassiveValueModifierOperation damageMultiplierOperation = PassiveValueModifierOperation.None;
     public float damageMultiplierValue = 0f;
+    public PassiveValueModifierOperation criticalDamageOperation = PassiveValueModifierOperation.None;
+    public float criticalDamageValue = 0f;
+    [Tooltip("Applied after base damage, defense, crit, elemental mastery, and impact are resolved.")]
+    public PassiveValueModifierOperation finalDamageOperation = PassiveValueModifierOperation.None;
+    public float finalDamageValue = 0f;
+    public bool finalDamageRequiresCriticalHit = false;
     public float auraEnergyRewardAdd = 0f;
     public PassiveValueModifierOperation cooldownOperation = PassiveValueModifierOperation.None;
     public float cooldownValue = 0f;
     public PassiveValueModifierOperation energyCostOperation = PassiveValueModifierOperation.None;
     public float energyCostValue = 0f;
 
+    [Header("Projectile Replacement")]
+    public ProjectileType replacementProjectileType = ProjectileType.None;
+    public ProjectileData replacementProjectileData;
+
     public bool Matches(AttackCategory targetCategory, string targetActionId, string targetActionName)
+    {
+        return Matches(targetCategory, targetActionId, targetActionName, null);
+    }
+
+    public bool Matches(AttackCategory targetCategory, string targetActionId, string targetActionName, CombatRuntimeState runtimeState, bool ignoreRuntimeRequirements = false)
     {
         if (category != targetCategory)
         {
@@ -257,17 +282,55 @@ public class PassiveActionModifierDefinition
         bool hasActionId = !string.IsNullOrWhiteSpace(actionId);
         bool hasActionName = !string.IsNullOrWhiteSpace(actionName);
 
+        bool actionMatches;
         if (!hasActionId && !hasActionName)
         {
-            return true;
+            actionMatches = true;
+        }
+        else if (hasActionId && string.Equals(actionId, targetActionId, StringComparison.Ordinal))
+        {
+            actionMatches = true;
+        }
+        else
+        {
+            actionMatches = hasActionName && string.Equals(actionName, targetActionName, StringComparison.Ordinal);
         }
 
-        if (hasActionId && string.Equals(actionId, targetActionId, StringComparison.Ordinal))
+        if (!actionMatches)
+        {
+            return false;
+        }
+
+        if (ignoreRuntimeRequirements)
         {
             return true;
         }
 
-        return hasActionName && string.Equals(actionName, targetActionName, StringComparison.Ordinal);
+        if (requiredTags != null)
+        {
+            for (int i = 0; i < requiredTags.Count; i++)
+            {
+                RuntimeTagRequirement requirement = requiredTags[i];
+                if (requirement != null && !requirement.Matches(runtimeState))
+                {
+                    return false;
+                }
+            }
+        }
+
+        if (requiredCounters != null)
+        {
+            for (int i = 0; i < requiredCounters.Count; i++)
+            {
+                RuntimeCounterRequirement requirement = requiredCounters[i];
+                if (requirement != null && !requirement.Matches(runtimeState))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 }
 
@@ -349,6 +412,11 @@ public class PassiveOnHitStatusEffectDefinition
 }
 
 [Serializable]
+public class PassiveDashThroughDamageDefinition : AdditionalDamageEffectDefinition
+{
+}
+
+[Serializable]
 public class PassiveDefensiveEffectDefinition
 {
     public PassiveTriggerFilter filter = new PassiveTriggerFilter();
@@ -388,6 +456,7 @@ public class PassiveEnemyElementModifierDefinition
     public ElementType elementType = ElementType.None;
     public float incomingDamagePercentAdd = 0f;
     public float resistancePercentAdd = 0f;
+    public float masteryPercentAdd = 0f;
     public float gaugeBuildPercentAdd = 0f;
     public bool permanent = true;
     public bool stacks = false;
@@ -407,6 +476,7 @@ public class CharacterEffectSetDefinition
     public List<PassiveConditionalStateEffectDefinition> conditionalStateEffects = new List<PassiveConditionalStateEffectDefinition>();
     public List<PassiveOnHitStatusEffectDefinition> onHitStatusEffects = new List<PassiveOnHitStatusEffectDefinition>();
     public List<AdditionalDamageEffectDefinition> additionalDamageEffects = new List<AdditionalDamageEffectDefinition>();
+    public List<PassiveDashThroughDamageDefinition> dashThroughDamageEffects = new List<PassiveDashThroughDamageDefinition>();
     public List<PassiveDefensiveEffectDefinition> defensiveEffects = new List<PassiveDefensiveEffectDefinition>();
     public List<PassiveResourceEffectDefinition> resourceEffects = new List<PassiveResourceEffectDefinition>();
     public List<PassiveEnemyElementModifierDefinition> enemyElementModifiers = new List<PassiveEnemyElementModifierDefinition>();
@@ -429,7 +499,7 @@ public class PotentialNodeDefinition : CharacterEffectSetDefinition
 [Serializable]
 public class CharacterAbilityDefinition
 {
-    [Tooltip("Stable action id in the character ActionResolverTable. Used to resolve the authored Skill/Ultimate action.")]
+    [Tooltip("Optional presentation id for legacy/editor labels only. Runtime Skill/Ultimate routing is resolved by ActionResolverTable category, conditions, priority, cooldown, AE, and runtime tags.")]
     public string abilityId;
     [Tooltip("Display label only. Damage and runtime behavior are resolved from ActionResolverTable and effect payloads.")]
     public string abilityName;
@@ -511,6 +581,7 @@ public struct PassiveEventContext
     public bool killedEnemy;
     public float enemyMaxHp;
     public AttackStepData stepData;
+    public string stepName;
     public CombatRuntimeState runtimeState;
     public EnemyController enemy;
     public PlayerCharacter source;

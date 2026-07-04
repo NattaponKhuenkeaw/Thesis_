@@ -280,7 +280,29 @@ public class HitBoxDamage : MonoBehaviour
         bool dealtDamage = primaryDamageDealt > 0f;
         if (dealtDamage)
         {
-            passiveController?.NotifyHitDealt(sourceCategory, sourceActionName, sourceStepData, enemy);
+            bool killedEnemy = !enemy.IsAlive;
+            passiveController?.NotifyHitDealt(
+                sourceCategory,
+                sourceActionId,
+                sourceActionName,
+                sourceStepData,
+                enemy,
+                reactionData.elementType,
+                reactionData.isCriticalHit,
+                primaryDamageDealt,
+                killedEnemy);
+
+            if (rewardOwner != null && rewardCharacter != null)
+            {
+                RuntimeEffectDamageContext runtimeHitContext = BuildRuntimeDamageContext(enemy, primaryDamageDealt, direction);
+                runtimeHitContext.elementType = reactionData.elementType;
+                runtimeHitContext.damageRoutine = reactionData.damageRoutine;
+                runtimeHitContext.isCriticalHit = reactionData.isCriticalHit;
+                runtimeHitContext.damageDealt = primaryDamageDealt;
+                runtimeHitContext.killedEnemy = killedEnemy;
+                rewardOwner.NotifyRuntimeHitDealt(rewardCharacter, runtimeHitContext);
+            }
+
             rewardOwner?.NotifyResolvedEnemyHit(
                 rewardCharacter,
                 auraEnergyRewardClaim);
@@ -301,20 +323,34 @@ public class HitBoxDamage : MonoBehaviour
         }
 
         DamageRoutine routine = ResolvePrimaryDamageRoutine();
+        CharacterStats resolvedAttackerStats = ResolveActionSpecificAttackerStats();
         float finalDamage = CombatFormula.CalculateResolvedDamage(
             currentDamage,
             routine,
             ResolveElementType(),
-            currentAttackerStats,
+            resolvedAttackerStats,
             enemy.defense,
             sourceCategory,
-            out currentIsCrit);
+            out currentIsCrit,
+            enemy.damageRes);
 
-        var elementalState = enemy.GetComponent<EnemyElementalState>();
-        if (elementalState != null)
+        RuntimeEffectDamageContext runtimeContext = BuildRuntimeDamageContext(enemy, finalDamage, Vector2.zero);
+        runtimeContext.damageRoutine = routine;
+        runtimeContext.isCriticalHit = currentIsCrit;
+        if (passiveController != null)
         {
-            finalDamage = elementalState.ModifyIncomingDamage(ResolveElementType(), finalDamage);
+            finalDamage = passiveController.ModifyActionFinalDamage(
+                sourceCategory,
+                sourceActionId,
+                sourceActionName,
+                finalDamage,
+                currentIsCrit);
+            runtimeContext.damage = finalDamage;
         }
+
+        finalDamage = rewardOwner != null && rewardCharacter != null
+            ? rewardOwner.ModifyRuntimeOutgoingDamage(rewardCharacter, runtimeContext, finalDamage)
+            : finalDamage;
 
         if (passiveController != null)
         {
@@ -346,10 +382,12 @@ public class HitBoxDamage : MonoBehaviour
         PassiveEventContext context = new PassiveEventContext
         {
             category = sourceCategory,
+            actionId = sourceActionId,
             actionName = sourceActionName,
             stepData = sourceStepData,
             runtimeState = passiveController != null ? passiveController.RuntimeState : null,
-            enemy = enemy
+            enemy = enemy,
+            enemyMaxHp = enemy.maxHP
         };
 
         for (int i = 0; i < currentAdditionalDamageEffects.Length; i++)
@@ -358,15 +396,16 @@ public class HitBoxDamage : MonoBehaviour
             if (effect == null || !enemy.IsAlive || !effect.CanTrigger(context))
                 continue;
 
-            float baseDamage = currentSourceAttack * Mathf.Max(0f, effect.attackRatio);
+            float baseDamage = effect.CalculateBaseDamage(currentSourceAttack, context);
             float resolvedDamage = CombatFormula.CalculateResolvedDamage(
                 baseDamage,
                 DamageRoutine.Additional,
                 effect.elementType,
-                currentAttackerStats,
+                ResolveActionSpecificAttackerStats(),
                 enemy.defense,
                 AttackCategory.Normal,
-                out _);
+                out _,
+                enemy.damageRes);
 
             if (resolvedDamage <= 0f)
                 continue;
@@ -406,6 +445,29 @@ public class HitBoxDamage : MonoBehaviour
             : DamageRoutine.Elemental;
     }
 
+    private CharacterStats ResolveActionSpecificAttackerStats()
+    {
+        if (currentAttackerStats == null || passiveController == null)
+        {
+            return currentAttackerStats;
+        }
+
+        float resolvedCritDamage = passiveController.ModifyActionCriticalDamage(
+            sourceCategory,
+            sourceActionId,
+            sourceActionName,
+            currentAttackerStats.critDamage);
+
+        if (Mathf.Approximately(resolvedCritDamage, currentAttackerStats.critDamage))
+        {
+            return currentAttackerStats;
+        }
+
+        CharacterStats resolvedStats = currentAttackerStats.Clone();
+        resolvedStats.critDamage = resolvedCritDamage;
+        return resolvedStats;
+    }
+
     private ElementType ResolveElementType()
     {
         if (currentGrabHitbox != null)
@@ -423,6 +485,7 @@ public class HitBoxDamage : MonoBehaviour
         data.damageIsFinal = usePerEnemyDamageCalculation;
         data.damageRoutine = ResolvePrimaryDamageRoutine();
         PopulateRuntimeContext(ref data);
+        PopulateRuntimeEffectSourceContext(ref data);
 
         if (currentNormalHitbox != null)
         {
@@ -471,6 +534,7 @@ public class HitBoxDamage : MonoBehaviour
         data.damageIsFinal = usePerEnemyDamageCalculation;
         data.damageRoutine = ResolvePrimaryDamageRoutine();
         PopulateRuntimeContext(ref data);
+        PopulateRuntimeEffectSourceContext(ref data);
 
         if (currentGrabHitbox == null)
         {
@@ -533,6 +597,41 @@ public class HitBoxDamage : MonoBehaviour
         data.hasSnapWorldPosition = false;
         data.snapWorldPosition = Vector2.zero;
         data.forceFaceAttacker = projectileOwner == null;
+    }
+
+    private void PopulateRuntimeEffectSourceContext(ref HitReactionData data)
+    {
+        data.sourceCharacter = rewardCharacter;
+        data.sourceStats = currentAttackerStats;
+        data.sourceCategory = sourceCategory;
+        data.sourceActionId = sourceActionId;
+        data.sourceActionName = sourceActionName;
+        data.sourceStepData = sourceStepData;
+    }
+
+    private RuntimeEffectDamageContext BuildRuntimeDamageContext(
+        EnemyController enemy,
+        float damage,
+        Vector2 hitDirection)
+    {
+        return new RuntimeEffectDamageContext
+        {
+            sourceCharacter = rewardCharacter,
+            sourceStats = currentAttackerStats,
+            targetEnemy = enemy,
+            category = sourceCategory,
+            actionId = sourceActionId,
+            actionName = sourceActionName,
+            stepData = sourceStepData,
+            elementType = ResolveElementType(),
+            damageRoutine = ResolvePrimaryDamageRoutine(),
+            isCriticalHit = currentIsCrit,
+            damage = damage,
+            attackerPosition = projectileOwner != null
+                ? projectileOwner.AttackerPosition
+                : movement != null ? (Vector2)movement.transform.position : (Vector2)transform.root.position,
+            hitDirection = hitDirection
+        };
     }
 
     private void ApplyDeterministicReaction(

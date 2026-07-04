@@ -1570,10 +1570,30 @@ namespace CombatEditor.UI
                 entry.freezeWorld = value;
                 MarkDirty();
             });
+            AddFloatField(inner, "Freeze Duration Override", entry.freezeDurationOverride, value =>
+            {
+                RecordUndo("Edit Event Freeze Duration");
+                entry.freezeDurationOverride = value;
+                MarkDirty();
+            });
             AddEnumField(inner, "Timeline Mode", entry.timelineMode, value =>
             {
                 RecordUndo("Edit Event Timeline Mode");
                 entry.timelineMode = (UltimateFreezeTimelineMode)value;
+                MarkDirty();
+            });
+
+            AddSeparator(inner, "Ultimate Zoom Settings");
+            AddToggleField(inner, "Enable Zoom", entry.enableUltimateZoom, value =>
+            {
+                RecordUndo("Edit Event Enable Zoom");
+                entry.enableUltimateZoom = value;
+                MarkDirty();
+            });
+            AddFloatField(inner, "Zoom Target Size", entry.ultimateZoomSize, value =>
+            {
+                RecordUndo("Edit Event Zoom Size");
+                entry.ultimateZoomSize = Mathf.Max(0.1f, value);
                 MarkDirty();
             });
 
@@ -2814,6 +2834,11 @@ namespace CombatEditor.UI
                     });
                     break;
                 case RuntimeTagActionCondition tagCondition:
+                    AddEnumField(parent, "Tag Type", tagCondition.tagType, value => {
+                        RecordUndo("Edit Condition Tag Type");
+                        tagCondition.tagType = (RuntimeTagType)value;
+                        MarkDirty();
+                    });
                     AddTextField(parent, "Tag", tagCondition.tag, value => {
                         RecordUndo("Edit Condition Tag");
                         tagCondition.tag = value;
@@ -2822,6 +2847,11 @@ namespace CombatEditor.UI
                     AddToggleField(parent, "Should Exist", tagCondition.shouldExist, value => {
                         RecordUndo("Edit Condition Tag Exists");
                         tagCondition.shouldExist = value;
+                        MarkDirty();
+                    });
+                    AddToggleField(parent, "Apply On Action Start", tagCondition.applyOnActionStart, value => {
+                        RecordUndo("Edit Condition Tag Apply On Start");
+                        tagCondition.applyOnActionStart = value;
                         MarkDirty();
                     });
                     break;
@@ -3157,3 +3187,4 @@ namespace CombatEditor.UI
         }
     }
 }
+

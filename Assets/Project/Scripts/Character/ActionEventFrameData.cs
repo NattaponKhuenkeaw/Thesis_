@@ -64,6 +64,8 @@ public class ActionEventEntry
 
     [Header("Freeze Behavior")]
     public bool freezeWorld = true;
+    [Tooltip("If greater than 0, overrides the freeze duration. Otherwise, the freeze lasts for the duration of the event sequence.")]
+    public float freezeDurationOverride = 0f;
     public UltimateFreezeTimelineMode timelineMode = UltimateFreezeTimelineMode.PauseNodeDuringFreeze;
 
     [Header("Activation Payload")]
@@ -82,6 +84,12 @@ public class ActionEventEntry
 
     [Header("After Image")]
     public AfterImageEventSettings afterImageSettings = new AfterImageEventSettings();
+
+    [Header("Ultimate Zoom Settings")]
+    [Tooltip("If true, the camera will instantly zoom in on the player during the sequence.")]
+    public bool enableUltimateZoom = false;
+    [Tooltip("The orthographic size target for the ultimate zoom.")]
+    public float ultimateZoomSize = 5f;
 
     public int GetTimelineDurationFrames(int actionTotalFrames = -1)
     {

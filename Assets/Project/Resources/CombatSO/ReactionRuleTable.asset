@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: ReactionRuleTable
   m_EditorClassIdentifier: Assembly-CSharp::ReactionRuleTable
   rules:
-  - targetState: 4
+  - targetState: 3
     reactionKind: 2
     landingBehavior: 0
     canAirJuggle: 1
@@ -22,11 +22,11 @@ MonoBehaviour:
     knockupFrames: 15
     knockfallFrames: 15
     recoveryFrames: 7
-  - targetState: 3
+  - targetState: 4
     reactionKind: 2
     landingBehavior: 0
     canAirJuggle: 1
-    minimumLaunchSpeed: 4
+    minimumLaunchSpeed: 2
     knockbackFrames: 10
     knockupFrames: 15
     knockfallFrames: 15

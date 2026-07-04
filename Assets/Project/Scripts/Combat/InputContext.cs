@@ -1,5 +1,10 @@
 using UnityEngine;
 
+public interface ICombatActionAvailabilityProvider
+{
+    bool IsActionAvailable(CombatAction action);
+}
+
 // =========================================================
 // InputContext — Snapshot of game state at the moment attack input occurs.
 // Built by PlayerAttackState, consumed by ActionResolver.
@@ -19,6 +24,7 @@ public struct InputContext
     public bool isAirCombo;
     public CharacterPassiveController passiveController;
     public CombatRuntimeState runtimeState;
+    public ICombatActionAvailabilityProvider actionAvailabilityProvider;
 
     // =========================================================
     // Computed — resolve directional input to a cardinal direction

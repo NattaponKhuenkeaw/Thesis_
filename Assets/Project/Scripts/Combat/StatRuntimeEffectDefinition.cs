@@ -23,6 +23,16 @@ public class StatRuntimeEffectDefinition : RuntimeEffectDefinition
                 continue;
             }
 
+            if (modifier.operation == RuntimeEffectStatOperation.Multiply && context != null && context.multiplierSums != null)
+            {
+                int statIndex = (int)modifier.target;
+                if (statIndex >= 0 && statIndex < context.multiplierSums.Length)
+                {
+                    context.multiplierSums[statIndex] += modifier.value - 1f;
+                }
+                continue;
+            }
+
             float current = GetStat(stats, modifier.target);
             float resolved = ResolveModifiedValue(context, stats, current, modifier);
             SetStat(stats, modifier.target, resolved);
