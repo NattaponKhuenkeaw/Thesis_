@@ -144,6 +144,65 @@ public class CombatRewardDamageTests
     }
 
     [Test]
+    public void PlayerCombat_DoesNotReapplyStaticAttackStatModifiersToResolvedStats()
+    {
+        GameObject playerObject = new GameObject("Static Attack Stat Test Player");
+        CharacterObject character = ScriptableObject.CreateInstance<CharacterObject>();
+
+        try
+        {
+            character.characterId = "static-attack-stat-character";
+            character.kitDefinition.basePassiveNode.statModifiers.Add(new PassiveStatModifierDefinition
+            {
+                target = PassiveModifierTarget.AttackStat,
+                operation = PassiveNumericOperation.Multiply,
+                value = 1.2f,
+                scope = PassiveEffectScope.Self
+            });
+            character.kitDefinition.basePassiveNode.statModifiers.Add(new PassiveStatModifierDefinition
+            {
+                target = PassiveModifierTarget.AttackStat,
+                operation = PassiveNumericOperation.Add,
+                value = 10f,
+                scope = PassiveEffectScope.Self,
+                requiredTags =
+                {
+                    new RuntimeTagRequirement
+                    {
+                        tag = "attack_window",
+                        expectedValue = true
+                    }
+                }
+            });
+
+            PlayerCharacter player = playerObject.AddComponent<PlayerCharacter>();
+            CharacterPassiveController passiveController = playerObject.AddComponent<CharacterPassiveController>();
+            PlayerCombat combat = playerObject.AddComponent<PlayerCombat>();
+            player.PassiveController = passiveController;
+            passiveController.playerCharacter = player;
+            combat.playerCharacter = player;
+            combat.passiveController = passiveController;
+            player.SetCharacter(character, 100f, new CharacterStats
+            {
+                maxHP = 100f,
+                attack = 120f,
+                defense = 0f
+            });
+
+            Assert.That(combat.CurrentSourceAttack, Is.EqualTo(120f).Within(0.001f));
+
+            passiveController.RuntimeState.SetTag("attack_window", 5f);
+
+            Assert.That(combat.CurrentSourceAttack, Is.EqualTo(130f).Within(0.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(character);
+            Object.DestroyImmediate(playerObject);
+        }
+    }
+
+    [Test]
     public void PassiveController_FinalDamageModifierAppliesAfterCriticalDamage()
     {
         GameObject playerObject = new GameObject("Final Damage Test Player");
@@ -281,6 +340,29 @@ public class CombatRewardDamageTests
         };
 
         Assert.That(effect.CalculateBaseDamage(500f, context), Is.EqualTo(140f).Within(0.001f));
+    }
+
+    [Test]
+    public void AdditionalDamage_CapsTargetMaxHpDamageBySelfValue()
+    {
+        AdditionalDamageEffectDefinition effect = new AdditionalDamageEffectDefinition
+        {
+            attackRatio = 0.2f,
+            targetMaxHpRatio = 0.2f,
+            capTargetMaxHpDamage = true,
+            targetMaxHpDamageCapSource = PassiveModifierTarget.AttackStat,
+            targetMaxHpDamageCapRatio = 0.5f
+        };
+        PassiveEventContext context = new PassiveEventContext
+        {
+            enemyMaxHp = 1000f
+        };
+        CharacterStats sourceStats = new CharacterStats
+        {
+            attack = 100f
+        };
+
+        Assert.That(effect.CalculateBaseDamage(100f, context, sourceStats), Is.EqualTo(70f).Within(0.001f));
     }
 
     [Test]

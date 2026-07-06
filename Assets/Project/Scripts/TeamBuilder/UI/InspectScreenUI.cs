@@ -46,6 +46,11 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private float slideOffset = 480f;
         [SerializeField] private float slideDuration = 0.25f;
 
+        [Header("Page Transition")]
+        [SerializeField] private Image pageTransitionFadeImage;
+        [SerializeField] private float pageTransitionFadeDuration = 0.16f;
+        [SerializeField] private Color pageTransitionFadeColor = Color.black;
+
         private CharacterItem currentCharacter;
         private Artifact[] currentArtifacts = new Artifact[0];
         private readonly List<CharacterItem> availableCharacters = new List<CharacterItem>();
@@ -53,12 +58,16 @@ namespace Project.TeamBuilder.UI
         private RectTransform panelRectTransform;
         private CanvasGroup panelCanvasGroup;
         private CanvasGroup rootCanvasGroup;
+        private CanvasGroup pageTransitionCanvasGroup;
         private Coroutine fadeCoroutine;
         private Coroutine slideCoroutine;
+        private Coroutine pageTransitionCoroutine;
         private Vector2 openAnchoredPosition;
         private int selectedCharacterIndex = -1;
         private UIFeedbackDriver cachedDriver;
         private InspectPage activePage = InspectPage.Info;
+
+        public CharacterItem CurrentCharacter => currentCharacter;
         
         [Header("Mode Settings")]
         [SerializeField] private ZoneStateProvider zoneStateProvider;
@@ -136,6 +145,8 @@ namespace Project.TeamBuilder.UI
             {
                 equipmentTabButton.onClick.RemoveListener(ShowEquipmentPage);
             }
+
+            StopPageTransition();
         }
 
         private void HandleZoneChanged(ZoneMode newMode)
@@ -181,14 +192,13 @@ namespace Project.TeamBuilder.UI
                 openAnchoredPosition = panelRectTransform.anchoredPosition;
             }
 
-            // Gather all sub-panels
-            subPanels = targetPanel.GetComponentsInChildren<IInspectSubPanel>(true);
             infoPanel = targetPanel.GetComponentInChildren<CharacterInfoPanel>(true);
             skillPanel = targetPanel.GetComponentInChildren<CharacterSkillPanel>(true);
             equipmentPanel = targetPanel.GetComponentInChildren<EquipmentPanel>(true);
             levelPanel = targetPanel.GetComponentInChildren<CharacterLevelPanel>(true);
-            potentialPanel = targetPanel.GetComponentInChildren<CharacterPotentialPanel>(true);
+            potentialPanel = ResolvePotentialPanel(targetPanel);
             visualPanel = targetPanel.GetComponentInChildren<CharacterVisualPanel>(true);
+            subPanels = BuildSubPanelList();
 
             // Cache driver once — coroutines must be stopped on the same component that started them.
             cachedDriver = UIFeedbackDriver.GetOrAdd(gameObject);
@@ -231,7 +241,7 @@ namespace Project.TeamBuilder.UI
 
         public bool TryRequestClose(System.Action closeAction)
         {
-            return false;
+            return true;
         }
 
         public void OpenFirstAvailableCharacter()
@@ -362,6 +372,15 @@ namespace Project.TeamBuilder.UI
             Open(character, null);
         }
 
+        public void RefreshCurrentArtifacts(Artifact[] equippedArtifacts)
+        {
+            currentArtifacts = equippedArtifacts ?? new Artifact[0];
+            if (gameObject.activeSelf)
+            {
+                PopulateData();
+            }
+        }
+
         public void Close()
         {
             bool isVisuallyOpen = gameObject.activeSelf && rootCanvasGroup != null && rootCanvasGroup.alpha > 0.01f;
@@ -373,6 +392,8 @@ namespace Project.TeamBuilder.UI
                 owningTeamUI?.UnregisterActivePanel(this);
                 return;
             }
+
+            StopPageTransition();
 
             if (rootCanvasGroup != null)
             {
@@ -459,6 +480,8 @@ namespace Project.TeamBuilder.UI
 
         private void PopulateData()
         {
+            ResolveSubPanelsIfNeeded();
+
             bool hasCharacter = currentCharacter != null && currentCharacter.characterObjectData != null;
             if (emptyStatePanel != null)
             {
@@ -519,6 +542,68 @@ namespace Project.TeamBuilder.UI
             };
         }
 
+        private void ResolveSubPanelsIfNeeded()
+        {
+            GameObject targetPanel = contentPanel != null ? contentPanel : gameObject;
+            bool missingRequiredPanel = infoPanel == null
+                || skillPanel == null
+                || equipmentPanel == null
+                || levelPanel == null
+                || potentialPanel == null;
+            if (!missingRequiredPanel && subPanels != null && subPanels.Length > 0)
+            {
+                return;
+            }
+
+            infoPanel = targetPanel.GetComponentInChildren<CharacterInfoPanel>(true);
+            skillPanel = targetPanel.GetComponentInChildren<CharacterSkillPanel>(true);
+            equipmentPanel = targetPanel.GetComponentInChildren<EquipmentPanel>(true);
+            levelPanel = targetPanel.GetComponentInChildren<CharacterLevelPanel>(true);
+            potentialPanel = ResolvePotentialPanel(targetPanel);
+            visualPanel = targetPanel.GetComponentInChildren<CharacterVisualPanel>(true);
+            subPanels = BuildSubPanelList();
+        }
+
+        private CharacterPotentialPanel ResolvePotentialPanel(GameObject targetPanel)
+        {
+            CharacterPotentialPanel panel = targetPanel != null
+                ? targetPanel.GetComponentInChildren<CharacterPotentialPanel>(true)
+                : null;
+            if (panel != null)
+            {
+                return panel;
+            }
+
+            panel = GetComponentInChildren<CharacterPotentialPanel>(true);
+            if (panel != null)
+            {
+                return panel;
+            }
+
+            Transform parent = transform.parent;
+            return parent != null ? parent.GetComponentInChildren<CharacterPotentialPanel>(true) : null;
+        }
+
+        private IInspectSubPanel[] BuildSubPanelList()
+        {
+            List<IInspectSubPanel> panels = new List<IInspectSubPanel>(6);
+            AddSubPanel(panels, visualPanel);
+            AddSubPanel(panels, infoPanel);
+            AddSubPanel(panels, skillPanel);
+            AddSubPanel(panels, equipmentPanel);
+            AddSubPanel(panels, levelPanel);
+            AddSubPanel(panels, potentialPanel);
+            return panels.ToArray();
+        }
+
+        private static void AddSubPanel(List<IInspectSubPanel> panels, IInspectSubPanel panel)
+        {
+            if (panel != null && !panels.Contains(panel))
+            {
+                panels.Add(panel);
+            }
+        }
+
         private void RefreshAvailableCharacters()
         {
             ResolveRunInventory();
@@ -572,13 +657,126 @@ namespace Project.TeamBuilder.UI
 
         public void ShowPotentialPage()
         {
-            SetActivePage(InspectPage.Potential);
+            StopPageTransition();
+            activePage = InspectPage.Potential;
+            PopulateData();
         }
 
         private void SetActivePage(InspectPage page)
         {
+            if (activePage == page)
+            {
+                PopulateData();
+                return;
+            }
+
             activePage = page;
             PopulateData();
+        }
+
+        private void PlayPageTransition(InspectPage page)
+        {
+            StopPageTransition();
+            pageTransitionCoroutine = StartCoroutine(PageTransitionRoutine(page));
+        }
+
+        private IEnumerator PageTransitionRoutine(InspectPage page)
+        {
+            CanvasGroup transitionGroup = EnsurePageTransitionCanvasGroup();
+            if (transitionGroup == null)
+            {
+                activePage = page;
+                PopulateData();
+                pageTransitionCoroutine = null;
+                yield break;
+            }
+
+            transitionGroup.gameObject.SetActive(true);
+            transitionGroup.alpha = 0f;
+            transitionGroup.interactable = true;
+            transitionGroup.blocksRaycasts = true;
+            transitionGroup.transform.SetAsLastSibling();
+
+            yield return FadePageTransition(transitionGroup, 0f, 1f);
+
+            activePage = page;
+            PopulateData();
+
+            yield return FadePageTransition(transitionGroup, 1f, 0f);
+
+            transitionGroup.interactable = false;
+            transitionGroup.blocksRaycasts = false;
+            transitionGroup.gameObject.SetActive(false);
+            pageTransitionCoroutine = null;
+        }
+
+        private IEnumerator FadePageTransition(CanvasGroup transitionGroup, float startAlpha, float targetAlpha)
+        {
+            float duration = Mathf.Max(0.01f, pageTransitionFadeDuration);
+            float elapsed = 0f;
+            transitionGroup.alpha = startAlpha;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                transitionGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, t);
+                yield return null;
+            }
+
+            transitionGroup.alpha = targetAlpha;
+        }
+
+        private CanvasGroup EnsurePageTransitionCanvasGroup()
+        {
+            if (pageTransitionCanvasGroup != null)
+            {
+                return pageTransitionCanvasGroup;
+            }
+
+            if (pageTransitionFadeImage == null)
+            {
+                GameObject overlay = new GameObject("PageTransitionFade", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(CanvasGroup));
+                overlay.transform.SetParent(transform, false);
+
+                RectTransform rectTransform = overlay.GetComponent<RectTransform>();
+                rectTransform.anchorMin = Vector2.zero;
+                rectTransform.anchorMax = Vector2.one;
+                rectTransform.offsetMin = Vector2.zero;
+                rectTransform.offsetMax = Vector2.zero;
+
+                pageTransitionFadeImage = overlay.GetComponent<Image>();
+            }
+
+            pageTransitionFadeImage.color = pageTransitionFadeColor;
+            pageTransitionCanvasGroup = pageTransitionFadeImage.GetComponent<CanvasGroup>();
+            if (pageTransitionCanvasGroup == null)
+            {
+                pageTransitionCanvasGroup = pageTransitionFadeImage.gameObject.AddComponent<CanvasGroup>();
+            }
+
+            pageTransitionCanvasGroup.alpha = 0f;
+            pageTransitionCanvasGroup.interactable = false;
+            pageTransitionCanvasGroup.blocksRaycasts = false;
+            pageTransitionCanvasGroup.gameObject.SetActive(false);
+            return pageTransitionCanvasGroup;
+        }
+
+        private void StopPageTransition()
+        {
+            if (pageTransitionCoroutine != null)
+            {
+                StopCoroutine(pageTransitionCoroutine);
+                pageTransitionCoroutine = null;
+            }
+
+            if (pageTransitionCanvasGroup != null)
+            {
+                pageTransitionCanvasGroup.alpha = 0f;
+                pageTransitionCanvasGroup.interactable = false;
+                pageTransitionCanvasGroup.blocksRaycasts = false;
+                pageTransitionCanvasGroup.gameObject.SetActive(false);
+            }
         }
 
         private void PopulateCharacterSlider()
@@ -858,24 +1056,35 @@ namespace Project.TeamBuilder.UI
                 return teamLoader.GetCharacterRuntimeStats(character);
             }
 
+            CharacterStats stats = ResolveCharacterPermanentStats(character, equippedArtifacts);
+            if (stats == null)
+            {
+                return null;
+            }
+
+            if (equippedArtifacts != null)
+            {
+                ApplyArtifactBonuses(stats, ResolveCharacterBaseStats(character), equippedArtifacts);
+            }
+
+            ResolveRunInventory()?.ApplyRuntimeEffectsToStats(character, stats);
+            return stats;
+        }
+
+        public CharacterStats ResolveCharacterPermanentStats(CharacterObject character, Artifact[] equippedArtifacts = null)
+        {
+            if (character == null) return null;
+            if (teamLoader != null && teamLoader.ContainsCharacter(character))
+            {
+                return teamLoader.GetCharacterPermanentStats(character);
+            }
+
             CharacterStats stats = ResolveCharacterBaseStats(character);
             if (stats == null)
             {
                 return null;
             }
 
-            Artifact[] artifactsToApply = equippedArtifacts;
-            if (artifactsToApply == null && teamLoader != null && teamLoader.ContainsCharacter(character))
-            {
-                artifactsToApply = teamLoader.GetEquippedArtifactsFor(character);
-            }
-
-            if (artifactsToApply != null)
-            {
-                ApplyArtifactBonuses(stats, ResolveCharacterBaseStats(character), artifactsToApply);
-            }
-
-            ResolveRunInventory()?.ApplyRuntimeEffectsToStats(character, stats);
             return stats;
         }
 

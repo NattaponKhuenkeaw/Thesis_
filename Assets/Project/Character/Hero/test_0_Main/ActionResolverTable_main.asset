@@ -40,7 +40,7 @@ MonoBehaviour:
       rootNode:
         rid: 1588256193077837991
   skillActions:
-  - actionId: 
+  - actionId: main.skill.dark_chain
     actionName: Dark Chain
     context: 0
     priority: 0
@@ -53,9 +53,9 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588256193077837992
-    cooldown: 7
+    cooldown: 11
   ultimateActions:
-  - actionId: 
+  - actionId: main.ultimate.jailbreak_punisher
     actionName: Jailbreak Punisher
     context: 0
     priority: 0
@@ -68,7 +68,7 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588256193077837993
-    cooldown: 15
+    cooldown: 24
     energyCost: 100
     activationVFXType: 0
     activationVFXPrefab: {fileID: 0}
@@ -197,9 +197,10 @@ MonoBehaviour:
           - audio
           - hitbox
           - events
-        routes: []
+        routes:
+        - rid: 3612912864477839460
         defaultNext:
-          rid: 1588256193077837988
+          rid: -2
         onGrabSuccessNode:
           rid: -2
     - rid: 1588256136747024578
@@ -1040,7 +1041,7 @@ MonoBehaviour:
           activationVFXPrefab: {fileID: 0}
           activationVFXOffset: {x: 0, y: 2, z: 0}
           activationVoice: {fileID: 0}
-          activationSFX: {fileID: 8300000, guid: a17ff62340838794aa61bcc8b4602cb1, type: 3}
+          activationSFX: {fileID: 8300000, guid: c3bf06b75cc2e304391b4a46ca4fad18, type: 3}
           voiceDelay: 0.1
           teleportSettings:
             targetRadius: 8
@@ -1114,7 +1115,8 @@ MonoBehaviour:
           - audio
           - hitbox
           - events
-        routes: []
+        routes:
+        - rid: 3612912864477839450
         defaultNext:
           rid: -2
         onGrabSuccessNode:
@@ -1894,3 +1896,95 @@ MonoBehaviour:
           volume: 1
           pitchVariation: 0.9
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 3612912864477839450
+      type: {class: ComboRoute, ns: , asm: Assembly-CSharp}
+      data:
+        direction: 1
+        requireGrounded: 0
+        requireAirborne: 0
+        requireGrabbedEnemy: 0
+        requiredPreviousState: 0
+        conditions:
+        - rid: 3612912864477839451
+        targetNode:
+          rid: 3612912864477839452
+        priority: 0
+        allowImmediateInterrupt: 0
+    - rid: 3612912864477839451
+      type: {class: RuntimeTagActionCondition, ns: , asm: Assembly-CSharp}
+      data:
+        tagType: 0
+        tag: main.void_area
+        shouldExist: 1
+        applyOnActionStart: 0
+    - rid: 3612912864477839452
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 19
+          activeFrames: 5
+          recoveryFrames: 28
+          cancelWindowStartFrame: 28
+          loopActivePhase: 0
+          stepName: Void Area
+          animationClip: {fileID: 7400000, guid: 851df54155449ce448a03fb6be4e1dce, type: 2}
+          lockAirPosition: 1
+          autoChainToNext: 0
+          triggerWindows: []
+          motionData:
+            rid: -2
+          vfxData:
+            rid: -2
+          audioData:
+            rid: -2
+          hitData:
+            rid: 3612912864477839456
+          eventData:
+            rid: -2
+          componentOrder:
+          - motion
+          - vfx
+          - audio
+          - hitbox
+          - events
+        routes: []
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 3612912864477839456
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 3612912864477839457
+    - rid: 3612912864477839457
+      type: {class: ProjectileSpawnHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 0
+        activeFrames: 3
+        elementType: 0
+        debugColor: {r: 0.42, g: 0.81, b: 1, a: 1}
+        projectileType: 0
+        projectileData: {fileID: 11400000, guid: 49d3647b3676e0d4d99e38ed5d4cfc84, type: 2}
+        overrideSpawnOffset: 0
+        spawnOffset: {x: 0, y: 0}
+    - rid: 3612912864477839460
+      type: {class: ComboRoute, ns: , asm: Assembly-CSharp}
+      data:
+        direction: 1
+        requireGrounded: 0
+        requireAirborne: 0
+        requireGrabbedEnemy: 0
+        requiredPreviousState: 0
+        conditions:
+        - rid: 3612912864477839461
+        targetNode:
+          rid: 1588256193077837988
+        priority: 0
+        allowImmediateInterrupt: 0
+    - rid: 3612912864477839461
+      type: {class: PotentialLevelActionCondition, ns: , asm: Assembly-CSharp}
+      data:
+        track: 2
+        comparison: 3
+        level: 2

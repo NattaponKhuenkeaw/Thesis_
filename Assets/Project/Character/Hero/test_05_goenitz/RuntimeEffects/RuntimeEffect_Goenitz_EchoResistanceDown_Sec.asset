@@ -12,14 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c39dae9e93d41dcba9bb425d4615c51, type: 3}
   m_Name: RuntimeEffect_Goenitz_EchoResistanceDown_Sec
   m_EditorClassIdentifier: 
-  effectId: goenitz.debuff.echo_resistance_down
+  effectId: goenitz.debuff.echo_resistance_down_sec
   displayName: Echo Resistance Down
   icon: {fileID: 0}
   fieldVisualPrefab: {fileID: 0}
   kind: 1
   appliesOn: 1
-  durationType: 1
-  durationSeconds: 0
+  durationType: 0
+  durationSeconds: 10
   refreshDurationOnReapply: 1
   stackable: 0
   removeOnOwnerDamaged: 0

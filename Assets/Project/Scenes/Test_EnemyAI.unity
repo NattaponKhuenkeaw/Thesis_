@@ -952,17 +952,6 @@ PlatformEffector2D:
   m_UseSideFriction: 0
   m_UseSideBounce: 0
   m_SideArc: 1
---- !u!114 &1233957975 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5987486934514239479, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
-  m_PrefabInstance: {fileID: 962912716}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2fab8a9e978ecec4c9e4572b6319438b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SkillTreeController
 --- !u!114 &1233957978 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 729008942358398209, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
@@ -1273,10 +1262,6 @@ PrefabInstance:
       propertyPath: playerCharacter
       value: 
       objectReference: {fileID: 1233957978}
-    - target: {fileID: 493616415103528964, guid: ad344c037067bc046b7efda449c32141, type: 3}
-      propertyPath: skillTreeController
-      value: 
-      objectReference: {fileID: 1233957975}
     - target: {fileID: 685766388056269198, guid: ad344c037067bc046b7efda449c32141, type: 3}
       propertyPath: m_Pivot.x
       value: 0

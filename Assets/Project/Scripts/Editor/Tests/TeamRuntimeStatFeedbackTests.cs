@@ -125,6 +125,187 @@ public class TeamRuntimeStatFeedbackTests
         }
     }
 
+    [Test]
+    public void TeamLoader_AppliesSelfPotentialStatSourceRatio()
+    {
+        GameObject playerObject = new GameObject("Potential Source Ratio Test Player");
+        GameObject loaderObject = new GameObject("Potential Source Ratio Test Loader");
+        PlayerRunInventory runInventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        CharacterObject character = ScriptableObject.CreateInstance<CharacterObject>();
+
+        try
+        {
+            character.characterId = "source-ratio-character";
+            character.stats.attack = 100f;
+            character.stats.defense = 40f;
+            character.kitDefinition.basePassiveNode.statModifiers.Add(new PassiveStatModifierDefinition
+            {
+                target = PassiveModifierTarget.AttackStat,
+                operation = PassiveNumericOperation.Add,
+                valueSource = PassiveModifierValueSource.SourceStatRatio,
+                value = 0.5f,
+                sourceStat = PassiveModifierTarget.Defense,
+                scope = PassiveEffectScope.Self
+            });
+
+            PlayerCharacter playerCharacter = playerObject.AddComponent<PlayerCharacter>();
+            TeamLoader teamLoader = loaderObject.AddComponent<TeamLoader>();
+            teamLoader.playerCharacter = playerCharacter;
+            teamLoader.SetRunInventory(runInventory);
+
+            teamLoader.DeployLoadout(new[] { character }, 0);
+
+            Assert.That(teamLoader.GetCharacterRuntimeStats(character).attack, Is.EqualTo(120f).Within(0.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(character);
+            Object.DestroyImmediate(runInventory);
+            Object.DestroyImmediate(loaderObject);
+            Object.DestroyImmediate(playerObject);
+        }
+    }
+
+    [Test]
+    public void TeamLoader_AppliesSourceRatioWithSelectedOperation()
+    {
+        GameObject playerObject = new GameObject("Potential Source Ratio Operation Test Player");
+        GameObject loaderObject = new GameObject("Potential Source Ratio Operation Test Loader");
+        PlayerRunInventory runInventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        CharacterObject character = ScriptableObject.CreateInstance<CharacterObject>();
+
+        try
+        {
+            character.characterId = "source-ratio-operation-character";
+            character.stats.attack = 10f;
+            character.stats.defense = 4f;
+            character.kitDefinition.basePassiveNode.statModifiers.Add(new PassiveStatModifierDefinition
+            {
+                target = PassiveModifierTarget.AttackStat,
+                operation = PassiveNumericOperation.Multiply,
+                valueSource = PassiveModifierValueSource.SourceStatRatio,
+                value = 0.5f,
+                sourceStat = PassiveModifierTarget.Defense,
+                scope = PassiveEffectScope.Self
+            });
+
+            PlayerCharacter playerCharacter = playerObject.AddComponent<PlayerCharacter>();
+            TeamLoader teamLoader = loaderObject.AddComponent<TeamLoader>();
+            teamLoader.playerCharacter = playerCharacter;
+            teamLoader.SetRunInventory(runInventory);
+
+            teamLoader.DeployLoadout(new[] { character }, 0);
+
+            Assert.That(teamLoader.GetCharacterRuntimeStats(character).attack, Is.EqualTo(20f).Within(0.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(character);
+            Object.DestroyImmediate(runInventory);
+            Object.DestroyImmediate(loaderObject);
+            Object.DestroyImmediate(playerObject);
+        }
+    }
+
+    [Test]
+    public void TeamLoader_PermanentStatsExcludeRuntimeEffects()
+    {
+        GameObject playerObject = new GameObject("Permanent Stat Test Player");
+        GameObject loaderObject = new GameObject("Permanent Stat Test Loader");
+        PlayerRunInventory runInventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        CharacterObject character = ScriptableObject.CreateInstance<CharacterObject>();
+        Artifact artifact = ScriptableObject.CreateInstance<Artifact>();
+        StatRuntimeEffectDefinition runtimeEffect = ScriptableObject.CreateInstance<StatRuntimeEffectDefinition>();
+
+        try
+        {
+            character.characterId = "permanent-stat-character";
+            character.stats.attack = 100f;
+            artifact.bonusStats = CreateZeroBonusStats();
+            artifact.bonusStats.attack = 50f;
+            character.kitDefinition.basePassiveNode.statModifiers.Add(new PassiveStatModifierDefinition
+            {
+                target = PassiveModifierTarget.AttackStat,
+                operation = PassiveNumericOperation.Multiply,
+                value = 1.2f,
+                scope = PassiveEffectScope.Self
+            });
+
+            runtimeEffect.kind = RuntimeEffectKind.Effect;
+            runtimeEffect.durationType = RuntimeEffectDurationType.Forever;
+            runtimeEffect.statModifiers.Add(new RuntimeEffectStatModifier
+            {
+                target = RuntimeEffectStatTarget.Attack,
+                operation = RuntimeEffectStatOperation.Add,
+                value = 30f
+            });
+
+            PlayerCharacter playerCharacter = playerObject.AddComponent<PlayerCharacter>();
+            TeamLoader teamLoader = loaderObject.AddComponent<TeamLoader>();
+            teamLoader.playerCharacter = playerCharacter;
+            teamLoader.SetRunInventory(runInventory);
+            teamLoader.DeployLoadout(
+                new[] { character },
+                0,
+                new[] { new[] { artifact } });
+
+            Assert.That(teamLoader.GetCharacterPermanentStats(character).attack, Is.EqualTo(120f).Within(0.001f));
+            Assert.That(teamLoader.GetCharacterRuntimeStats(character).attack, Is.EqualTo(180f).Within(0.001f));
+
+            runInventory.ApplyRuntimeEffect(character, runtimeEffect, character, character.stats);
+
+            Assert.That(teamLoader.GetCharacterPermanentStats(character).attack, Is.EqualTo(120f).Within(0.001f));
+            Assert.That(teamLoader.GetCharacterRuntimeStats(character).attack, Is.EqualTo(210f).Within(0.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(runtimeEffect);
+            Object.DestroyImmediate(artifact);
+            Object.DestroyImmediate(character);
+            Object.DestroyImmediate(runInventory);
+            Object.DestroyImmediate(loaderObject);
+            Object.DestroyImmediate(playerObject);
+        }
+    }
+
+    [Test]
+    public void TeamLoader_StatsResourceRefreshPreservesPassiveRuntimeState()
+    {
+        GameObject playerObject = new GameObject("Passive Runtime State Test Player");
+        GameObject loaderObject = new GameObject("Passive Runtime State Test Loader");
+        PlayerRunInventory runInventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        CharacterObject character = ScriptableObject.CreateInstance<CharacterObject>();
+
+        try
+        {
+            character.characterId = "passive-runtime-state-character";
+            character.stats.attack = 100f;
+
+            PlayerCharacter playerCharacter = playerObject.AddComponent<PlayerCharacter>();
+            CharacterPassiveController passiveController = playerObject.AddComponent<CharacterPassiveController>();
+            passiveController.playerCharacter = playerCharacter;
+            playerCharacter.PassiveController = passiveController;
+
+            TeamLoader teamLoader = loaderObject.AddComponent<TeamLoader>();
+            teamLoader.playerCharacter = playerCharacter;
+            teamLoader.SetRunInventory(runInventory);
+            teamLoader.DeployLoadout(new[] { character }, 0);
+
+            passiveController.RuntimeState.SetTag("follow_up_window", 5f);
+
+            teamLoader.RefreshRuntimeStatsAndResources();
+
+            Assert.That(passiveController.RuntimeState.HasTag("follow_up_window"), Is.True);
+        }
+        finally
+        {
+            Object.DestroyImmediate(character);
+            Object.DestroyImmediate(runInventory);
+            Object.DestroyImmediate(loaderObject);
+            Object.DestroyImmediate(playerObject);
+        }
+    }
+
     [UnityTest]
     public IEnumerator TeamSlot_CdrOnlyArtifactFlashesGreenThenRed()
     {

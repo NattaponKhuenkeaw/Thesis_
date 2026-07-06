@@ -45,6 +45,12 @@ public enum PassiveNumericOperation
     Multiply
 }
 
+public enum PassiveModifierValueSource
+{
+    FlatValue,
+    SourceStatRatio
+}
+
 public enum PassiveValueModifierOperation
 {
     None,
@@ -99,6 +105,9 @@ public class PassiveTriggerFilter
     [Tooltip("When enabled, this effect only applies while the resolved action step has this exact stepName.")]
     public bool filterByStepName = false;
     public string stepName;
+    [Tooltip("When enabled, this effect only applies to the resolved hit element.")]
+    public bool filterByElement = false;
+    public ElementType elementType = ElementType.None;
     [Tooltip("When enabled, this effect only applies while the source runtime state has this tag.")]
     public bool requireRuntimeTag = false;
     public string runtimeTag;
@@ -121,6 +130,11 @@ public class PassiveTriggerFilter
         }
 
         if (filterByStepName && !string.Equals(context.stepName, stepName, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        if (filterByElement && context.elementType != elementType)
         {
             return false;
         }
@@ -185,7 +199,9 @@ public class PassiveStatModifierDefinition
 {
     public PassiveModifierTarget target = PassiveModifierTarget.AttackStat;
     public PassiveNumericOperation operation = PassiveNumericOperation.Add;
+    public PassiveModifierValueSource valueSource = PassiveModifierValueSource.FlatValue;
     public float value = 0f;
+    public PassiveModifierTarget sourceStat = PassiveModifierTarget.AttackStat;
     public PassiveEffectScope scope = PassiveEffectScope.Self;
     public List<RuntimeTagRequirement> requiredTags = new List<RuntimeTagRequirement>();
     public List<RuntimeCounterRequirement> requiredCounters = new List<RuntimeCounterRequirement>();
@@ -240,6 +256,8 @@ public class PassiveActionModifierDefinition
     public AttackCategory category = AttackCategory.Normal;
     public string actionId;
     public string actionName;
+    [Tooltip("Optional step name filter. Leave empty to match every step in the action.")]
+    public string stepName;
     public bool unlocked = true;
     public int priorityBonus = 0;
     public string replacementActionId;
@@ -269,10 +287,21 @@ public class PassiveActionModifierDefinition
 
     public bool Matches(AttackCategory targetCategory, string targetActionId, string targetActionName)
     {
-        return Matches(targetCategory, targetActionId, targetActionName, null);
+        return Matches(targetCategory, targetActionId, targetActionName, null, null);
     }
 
     public bool Matches(AttackCategory targetCategory, string targetActionId, string targetActionName, CombatRuntimeState runtimeState, bool ignoreRuntimeRequirements = false)
+    {
+        return Matches(targetCategory, targetActionId, targetActionName, null, runtimeState, ignoreRuntimeRequirements);
+    }
+
+    public bool Matches(
+        AttackCategory targetCategory,
+        string targetActionId,
+        string targetActionName,
+        string targetStepName,
+        CombatRuntimeState runtimeState,
+        bool ignoreRuntimeRequirements = false)
     {
         if (category != targetCategory)
         {
@@ -297,6 +326,12 @@ public class PassiveActionModifierDefinition
         }
 
         if (!actionMatches)
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(stepName)
+            && !string.Equals(stepName, targetStepName, StringComparison.Ordinal))
         {
             return false;
         }
@@ -351,8 +386,16 @@ public class PassiveRuntimeEffectDefinition
     public PassiveTriggerFilter filter = new PassiveTriggerFilter();
     public RuntimeEffectDefinition effect;
     public PassiveEffectScope scope = PassiveEffectScope.Self;
+    [Header("Stack Policy")]
+    public RuntimeEffectStackMode stackMode = RuntimeEffectStackMode.UseDefinition;
+    [Min(1)] public int stackLimit = 1;
+    [Tooltip("If true, reapplying an existing stack refreshes that stack's duration.")]
+    public bool refreshDurationOnReapply = true;
     [Tooltip("Use -1 to use the RuntimeEffectDefinition duration.")]
     public float durationOverride = -1f;
+    [Header("Target Filter")]
+    public bool filterByTargetElement = false;
+    public ElementType targetElement = ElementType.None;
 }
 
 [Serializable]
@@ -439,6 +482,7 @@ public class PassiveResourceEffectDefinition
 {
     public PassiveTriggerType trigger = PassiveTriggerType.OnHitDealt;
     public PassiveTriggerFilter filter = new PassiveTriggerFilter();
+    [Range(0f, 1f)] public float chance = 1f;
     public PassiveResourceEffectType effectType = PassiveResourceEffectType.Heal;
     public PassiveEffectScope scope = PassiveEffectScope.Self;
     public PassiveModifierTarget valueSource = PassiveModifierTarget.AttackStat;
@@ -446,6 +490,19 @@ public class PassiveResourceEffectDefinition
     public float flatValue = 0f;
     public string runtimeTag = "waive_next_ultimate_cost";
     public float runtimeTagDuration = 0f;
+}
+
+[Serializable]
+public class RuntimeAreaEffectApplication
+{
+    public RuntimeEffectDefinition effect;
+    [Tooltip("Optional potential node id that must be active on the source character before this area effect can apply.")]
+    public string requiredNodeId;
+    public PassiveEffectScope scope = PassiveEffectScope.Self;
+    public RuntimeEffectStackMode stackMode = RuntimeEffectStackMode.UseDefinition;
+    [Min(1)] public int stackLimit = 1;
+    public bool refreshDurationOnReapply = true;
+    public float durationOverride = -1f;
 }
 
 [Serializable]
@@ -490,6 +547,9 @@ public class PotentialNodeDefinition : CharacterEffectSetDefinition
     public string nodeId;
     public string nodeName;
     [TextArea] public string description;
+    [TextArea]
+    [Tooltip("Optional rich-text copy used by CharacterSkillPanel when this node is unlocked. Leave empty to keep the base skill/ultimate/passive description.")]
+    public string skillPanelDescriptionOverride;
     public PotentialTrack track = PotentialTrack.Passive;
     [Range(0, CharacterKitDefinition.MaxPotentialLevel)] public int level = 1;
     [Min(0)] public int fragmentCost = 1;
@@ -503,6 +563,11 @@ public class CharacterAbilityDefinition
     public string abilityId;
     [Tooltip("Display label only. Damage and runtime behavior are resolved from ActionResolverTable and effect payloads.")]
     public string abilityName;
+    [Tooltip("Optional icon for inspector/player skill presentation. Runtime routing still comes from ActionResolverTable.")]
+    public Sprite icon;
+    [TextArea]
+    [Tooltip("Presentation copy for PlayerSkillPanel. Numbers should still be resolved from ActionResolverTable and potential nodes.")]
+    public string description;
 }
 
 [Serializable]

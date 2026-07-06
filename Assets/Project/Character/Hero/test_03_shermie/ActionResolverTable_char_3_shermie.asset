@@ -53,7 +53,7 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 3251577378342174820
-    cooldown: 7
+    cooldown: 9
   ultimateActions:
   - actionId: 
     actionName: Shermie Carnival
@@ -61,14 +61,14 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
-    actionDamageMultiplier: 8
+    actionDamageMultiplier: 8.5
     auraEnergyReward: 5
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
       rootNode:
         rid: 3251577386225893517
-    cooldown: 4
+    cooldown: 11
     energyCost: 50
     activationVFXType: 0
     activationVFXPrefab: {fileID: 0}
@@ -760,6 +760,7 @@ MonoBehaviour:
             - audio
             - hitbox
             - events
+          ignoreElementalIncomingModifiers: 0
     - rid: 1588256136747024488
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:

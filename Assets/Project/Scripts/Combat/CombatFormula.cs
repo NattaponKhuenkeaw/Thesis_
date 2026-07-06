@@ -72,6 +72,11 @@ public static class CombatFormula
 
     public static float CalculateIncomingDamage(float incomingDamage, float defense, float damageReductionPercent)
     {
+        if (incomingDamage <= 0f)
+        {
+            return 0f;
+        }
+
         // Defender Defense Mitigation
         float clampedDefense = Mathf.Max(0f, defense);
         float defMitigation = 100f / (100f + clampedDefense);

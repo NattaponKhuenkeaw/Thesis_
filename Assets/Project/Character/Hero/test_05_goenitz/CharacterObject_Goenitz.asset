@@ -63,12 +63,18 @@ MonoBehaviour:
     skill:
       abilityId: goenitz.skill.yonokaze
       abilityName: Yonokaze
+      icon: {fileID: 0}
+      description: 
     ultimate:
       abilityId: goenitz.ultimate.yamidokoku
       abilityName: Yamidokoku
+      icon: {fileID: 0}
+      description: 
     passive:
       abilityId: goenitz.passive
       abilityName: Passive
+      icon: {fileID: 0}
+      description: 
     basePassiveNode:
       statModifiers: []
       cooldownModifiers: []
@@ -76,6 +82,7 @@ MonoBehaviour:
       - category: 1
         actionId: goenitz.skill.yonokaze
         actionName: 
+        stepName: 
         unlocked: 1
         priorityBonus: 0
         replacementActionId: 
@@ -114,6 +121,8 @@ MonoBehaviour:
           actionName: 
           filterByStepName: 0
           stepName: 
+          filterByElement: 0
+          elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
         evasionChance: 0.35
@@ -126,6 +135,7 @@ MonoBehaviour:
       nodeName: Wind Evasion
       description: Yonokaze critical hits use 250% CRIT DMG. Also grants 35% chance
         to evade incoming enemy attacks.
+      skillPanelDescriptionOverride: 
       track: 2
       level: 0
       fragmentCost: 0
@@ -146,11 +156,18 @@ MonoBehaviour:
           actionName: 
           filterByStepName: 0
           stepName: 
+          filterByElement: 0
+          elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
         effect: {fileID: 11400000, guid: 262da460f8c14f18a892f72bc32f26d9, type: 2}
         scope: 0
+        stackMode: 0
+        stackLimit: 1
+        refreshDurationOnReapply: 1
         durationOverride: -1
+        filterByTargetElement: 0
+        targetElement: 0
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -163,10 +180,11 @@ MonoBehaviour:
       nodeId: goenitz.skill.lv1
       nodeName: Yonokaze Focus
       description: Increase CRIT Chance by 17% for 5 seconds after Yonokaze.
+      skillPanelDescriptionOverride: 
       track: 0
       level: 1
       fragmentCost: 1
-      unlockedByDefault: 1
+      unlockedByDefault: 0
     - statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
@@ -182,11 +200,18 @@ MonoBehaviour:
           actionName: 
           filterByStepName: 0
           stepName: 
+          filterByElement: 0
+          elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
         effect: {fileID: 11400000, guid: 02884ac6c9d748da8fb3bfe6e8753c9d, type: 2}
         scope: 0
+        stackMode: 0
+        stackLimit: 1
+        refreshDurationOnReapply: 1
         durationOverride: -1
+        filterByTargetElement: 0
+        targetElement: 0
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -199,16 +224,18 @@ MonoBehaviour:
       nodeId: goenitz.skill.lv2
       nodeName: Yonokaze Edge
       description: Increase CRIT Damage by 43% for 5 seconds after Yonokaze.
+      skillPanelDescriptionOverride: 
       track: 0
       level: 2
       fragmentCost: 1
-      unlockedByDefault: 1
+      unlockedByDefault: 0
     - statModifiers: []
       cooldownModifiers: []
       actionModifiers:
       - category: 1
         actionId: goenitz.skill.yonokaze
         actionName: 
+        stepName: 
         unlocked: 1
         priorityBonus: 0
         replacementActionId: 
@@ -246,16 +273,18 @@ MonoBehaviour:
       description: 'Increase Yonokaze damage multiplier to 450
 
         %.'
+      skillPanelDescriptionOverride: 
       track: 0
       level: 3
       fragmentCost: 1
-      unlockedByDefault: 1
+      unlockedByDefault: 0
     - statModifiers: []
       cooldownModifiers: []
       actionModifiers:
       - category: 1
         actionId: goenitz.skill.yonokaze
         actionName: 
+        stepName: 
         unlocked: 1
         priorityBonus: 0
         replacementActionId: 
@@ -292,10 +321,11 @@ MonoBehaviour:
       nodeName: Yonokaze Storm
       description: Yonokaze uses the upgraded tornado projectile with bigger coverage,
         longer lifespan, and more hits.
+      skillPanelDescriptionOverride: 
       track: 0
       level: 4
       fragmentCost: 1
-      unlockedByDefault: 1
+      unlockedByDefault: 0
     - statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
@@ -311,11 +341,18 @@ MonoBehaviour:
           actionName: 
           filterByStepName: 0
           stepName: 
+          filterByElement: 0
+          elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
-        effect: {fileID: 11400000, guid: 9b4481e2dad64716b7ec9de5e74ff12f, type: 2}
+        effect: {fileID: 11400000, guid: 6326b5e5749ab6b4c850497293bdf33b, type: 2}
         scope: 2
+        stackMode: 0
+        stackLimit: 1
+        refreshDurationOnReapply: 1
         durationOverride: -1
+        filterByTargetElement: 0
+        targetElement: 0
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -327,17 +364,19 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: goenitz.ultimate.lv1
       nodeName: Echo Rend
-      description: Yamidokoku hits reduce enemy Echo resistance by 15%.
+      description: Yamidokoku hits reduce enemy Echo resistance by 15% for 10 seconds.
+      skillPanelDescriptionOverride: 
       track: 1
       level: 1
       fragmentCost: 1
-      unlockedByDefault: 1
+      unlockedByDefault: 0
     - statModifiers: []
       cooldownModifiers: []
       actionModifiers:
       - category: 2
         actionId: goenitz.ultimate.yamidokoku
         actionName: 
+        stepName: 
         unlocked: 1
         priorityBonus: 0
         replacementActionId: 
@@ -374,16 +413,18 @@ MonoBehaviour:
       nodeName: Yamidokoku Force
       description: Increase Yamidokoku damage multiplier to 1000% and use the upgraded
         500% secondary tornado package.
+      skillPanelDescriptionOverride: 
       track: 1
       level: 2
       fragmentCost: 1
-      unlockedByDefault: 1
+      unlockedByDefault: 0
     - statModifiers: []
       cooldownModifiers: []
       actionModifiers:
       - category: 2
         actionId: goenitz.ultimate2.shin.yaotome
         actionName: 
+        stepName: 
         unlocked: 1
         priorityBonus: 10
         replacementActionId: 
@@ -408,7 +449,7 @@ MonoBehaviour:
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects:
-      - trigger: 6
+      - trigger: 2
         filter:
           filterByCategory: 1
           category: 2
@@ -418,6 +459,8 @@ MonoBehaviour:
           actionName: 
           filterByStepName: 0
           stepName: 
+          filterByElement: 0
+          elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
         tag: goenitz_followup_ultimate_window
@@ -436,10 +479,11 @@ MonoBehaviour:
       nodeId: goenitz.ultimate.lv3
       nodeName: Jissokoku Window
       description: 
+      skillPanelDescriptionOverride: 
       track: 1
       level: 3
       fragmentCost: 1
-      unlockedByDefault: 1
+      unlockedByDefault: 0
     - statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
@@ -454,6 +498,8 @@ MonoBehaviour:
           actionName: 
           filterByStepName: 0
           stepName: 
+          filterByElement: 0
+          elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
         tag: goenitz_ultimate_state
@@ -469,6 +515,8 @@ MonoBehaviour:
           actionName: 
           filterByStepName: 0
           stepName: 
+          filterByElement: 0
+          elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
         tag: goenitz_ultimate_state
@@ -485,11 +533,18 @@ MonoBehaviour:
           actionName: 
           filterByStepName: 0
           stepName: 
+          filterByElement: 0
+          elementType: 0
           requireRuntimeTag: 1
           runtimeTag: goenitz_ultimate_state
         effect: {fileID: 11400000, guid: 984a70af884b4a4a8ca6752c82ff3f65, type: 2}
         scope: 0
+        stackMode: 0
+        stackLimit: 99
+        refreshDurationOnReapply: 1
         durationOverride: -1
+        filterByTargetElement: 0
+        targetElement: 0
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -505,6 +560,8 @@ MonoBehaviour:
           actionName: 
           filterByStepName: 0
           stepName: 
+          filterByElement: 0
+          elementType: 0
           requireRuntimeTag: 1
           runtimeTag: goenitz_ultimate_state
         evasionChance: 0
@@ -517,10 +574,11 @@ MonoBehaviour:
       nodeName: Yamidokoku Ascension
       description: During either Ultimate, self is immune to damage and debuffs.
         Ultimate kills grant a stacking attack-related buff until hit.
+      skillPanelDescriptionOverride: 
       track: 1
       level: 4
       fragmentCost: 1
-      unlockedByDefault: 1
+      unlockedByDefault: 0
     - statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
@@ -536,11 +594,18 @@ MonoBehaviour:
           actionName: 
           filterByStepName: 0
           stepName: 
+          filterByElement: 0
+          elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
         effect: {fileID: 11400000, guid: 9b4481e2dad64716b7ec9de5e74ff12f, type: 2}
-        scope: 1
+        scope: 2
+        stackMode: 0
+        stackLimit: 1
+        refreshDurationOnReapply: 1
         durationOverride: -1
+        filterByTargetElement: 0
+        targetElement: 0
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -553,10 +618,11 @@ MonoBehaviour:
       nodeId: goenitz.passive.lv1
       nodeName: Echo Scar
       description: Critical hits reduce enemy Echo resistance by 15%.
+      skillPanelDescriptionOverride: 
       track: 2
       level: 1
       fragmentCost: 1
-      unlockedByDefault: 1
+      unlockedByDefault: 0
     - statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
@@ -576,12 +642,17 @@ MonoBehaviour:
           actionName: 
           filterByStepName: 0
           stepName: 
+          filterByElement: 0
+          elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
         chance: 1
         internalCooldown: 0
         attackRatio: 1
         targetMaxHpRatio: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
         elementType: 2
         consumeRuntimeTagOnTrigger: 0
       defensiveEffects: []
@@ -591,16 +662,18 @@ MonoBehaviour:
       nodeId: goenitz.passive.lv2
       nodeName: Dash Echo
       description: Dashing through enemies inflicts Echo damage equal to 100% ATK.
+      skillPanelDescriptionOverride: 
       track: 2
       level: 2
       fragmentCost: 1
-      unlockedByDefault: 1
+      unlockedByDefault: 0
     - statModifiers: []
       cooldownModifiers: []
       actionModifiers:
       - category: 0
         actionId: goenitz.basic.ground
         actionName: 
+        stepName: 
         unlocked: 1
         priorityBonus: 0
         replacementActionId: 
@@ -635,6 +708,8 @@ MonoBehaviour:
           actionName: 
           filterByStepName: 0
           stepName: 
+          filterByElement: 0
+          elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
         tag: goenitz_after_dash_bonus_action
@@ -650,6 +725,8 @@ MonoBehaviour:
           actionName: 
           filterByStepName: 0
           stepName: 
+          filterByElement: 0
+          elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
         tag: goenitz_after_dash_basic_depth4
@@ -665,6 +742,8 @@ MonoBehaviour:
           actionName: 
           filterByStepName: 0
           stepName: 
+          filterByElement: 0
+          elementType: 0
           requireRuntimeTag: 1
           runtimeTag: goenitz_after_dash_basic_depth4
         tag: goenitz_after_dash_basic_depth4
@@ -684,12 +763,17 @@ MonoBehaviour:
           actionName: 
           filterByStepName: 0
           stepName: 
+          filterByElement: 0
+          elementType: 0
           requireRuntimeTag: 1
           runtimeTag: goenitz_after_dash_bonus_action
         chance: 1
         internalCooldown: 0
         attackRatio: 0
         targetMaxHpRatio: 0.04
+        capTargetMaxHpDamage: 1
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 5
         elementType: 2
         consumeRuntimeTagOnTrigger: 1
       dashThroughDamageEffects: []
@@ -701,10 +785,11 @@ MonoBehaviour:
       nodeName: After Dash Echo
       description: After dash, first damaging action deals additional Echo DMG equal
         to 4% enemy Max HP.
+      skillPanelDescriptionOverride: 
       track: 2
       level: 3
       fragmentCost: 1
-      unlockedByDefault: 1
+      unlockedByDefault: 0
     - statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
@@ -725,6 +810,8 @@ MonoBehaviour:
           actionName: 
           filterByStepName: 0
           stepName: 
+          filterByElement: 0
+          elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
         evasionChance: 0.65
@@ -736,8 +823,9 @@ MonoBehaviour:
       nodeId: goenitz.passive.lv4
       nodeName: Wind Evasion Mastery
       description: Increase evasion chance to 65%.
+      skillPanelDescriptionOverride: 
       track: 2
       level: 4
       fragmentCost: 1
-      unlockedByDefault: 1
+      unlockedByDefault: 0
   actionResolverTable: {fileID: 11400000, guid: edfb0345aff2c904bae95d737bd41ce1, type: 2}

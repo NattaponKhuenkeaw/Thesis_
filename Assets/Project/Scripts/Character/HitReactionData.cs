@@ -129,6 +129,7 @@ public struct HitReactionData
     public string sourceActionId;
     public string sourceActionName;
     public AttackStepData sourceStepData;
+    public bool ignoreElementalIncomingModifiers;
 
     public int ImpactFreezeFrames => reactionTiming != null ? Mathf.Max(0, reactionTiming.startupFrames) : Mathf.Max(0, hitstunFrames);
     public int ActiveReactionFrames => reactionTiming != null ? Mathf.Max(0, reactionTiming.activeFrames) : Mathf.Max(0, knockbackFrames);

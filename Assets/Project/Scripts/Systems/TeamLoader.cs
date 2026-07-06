@@ -45,6 +45,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     private readonly Dictionary<CharacterObject, CharacterStats> characterRuntimeStats = new Dictionary<CharacterObject, CharacterStats>();
     private CharacterObject[] teamSnapshot = Array.Empty<CharacterObject>();
+    private PlayerRunInventory subscribedRuntimeEffectInventory;
 
     public PlayerRunInventory RunInventory => runInventory;
     public int CurrentIndex => currentIndex;
@@ -68,12 +69,14 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     private void OnEnable()
     {
         BindPlayerCharacter();
+        BindRunInventoryEvents();
         CharacterEvents.OnCharacterStatsChanged += HandleCharacterStatsChanged;
     }
 
     private void OnDisable()
     {
         UnbindPlayerCharacter();
+        UnbindRunInventoryEvents();
         CharacterEvents.OnCharacterStatsChanged -= HandleCharacterStatsChanged;
     }
 
@@ -101,7 +104,9 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     public void SetRunInventory(PlayerRunInventory inventory)
     {
+        UnbindRunInventoryEvents();
         runInventory = inventory;
+        BindRunInventoryEvents();
         BootstrapRunInventoryTeam();
         SyncTeamSnapshotFromInventory();
         if (runInventory != null && runInventory.HasDeployedTeam())
@@ -311,6 +316,22 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         ResetRuntimeTransientState();
     }
 
+    public void RefreshRuntimeStatsAndResources()
+    {
+        SyncTeamSnapshotFromInventory();
+        RebuildRuntimeStats();
+
+        if (playerCharacter != null && playerCharacter.characterObject != null)
+        {
+            CharacterStats activeStats = GetCharacterRuntimeStats(playerCharacter.characterObject);
+            playerCharacter.RefreshRuntimeStats(activeStats);
+            NotifyCharacterHealthUpdated(playerCharacter.characterObject);
+        }
+
+        OnTeamChanged?.Invoke();
+        NotifyAllCharacterResources();
+    }
+
     public CharacterStats GetCharacterRuntimeStats(CharacterObject character)
     {
         if (character == null)
@@ -326,6 +347,17 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         CharacterStats fallback = BuildRuntimeStats(character, FindCharacterIndex(character));
         characterRuntimeStats[character] = fallback;
         return fallback;
+    }
+
+    public CharacterStats GetCharacterPermanentStats(CharacterObject character)
+    {
+        if (character == null)
+        {
+            return null;
+        }
+
+        SyncTeamSnapshotFromInventory();
+        return BuildRuntimeStats(character, FindCharacterIndex(character), includeArtifacts: false, includeRuntimeEffects: false);
     }
 
     public float GetCharacterCurrentHP(CharacterObject character)
@@ -567,6 +599,44 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         }
     }
 
+    private void HandleRuntimeEffectsChanged(CharacterObject changedCharacter)
+    {
+        if (changedCharacter == null)
+        {
+            return;
+        }
+
+        SyncTeamSnapshotFromInventory();
+        if (FindCharacterIndex(changedCharacter) >= 0)
+        {
+            RefreshRuntimeStatsOnly(changedCharacter);
+        }
+    }
+
+    private void BindRunInventoryEvents()
+    {
+        if (subscribedRuntimeEffectInventory == runInventory)
+        {
+            return;
+        }
+
+        UnbindRunInventoryEvents();
+        subscribedRuntimeEffectInventory = runInventory;
+        if (subscribedRuntimeEffectInventory != null)
+        {
+            subscribedRuntimeEffectInventory.OnRuntimeEffectsChanged += HandleRuntimeEffectsChanged;
+        }
+    }
+
+    private void UnbindRunInventoryEvents()
+    {
+        if (subscribedRuntimeEffectInventory != null)
+        {
+            subscribedRuntimeEffectInventory.OnRuntimeEffectsChanged -= HandleRuntimeEffectsChanged;
+            subscribedRuntimeEffectInventory = null;
+        }
+    }
+
     private void RefreshRuntimeStatsOnly(CharacterObject changedCharacter)
     {
         RebuildRuntimeStats();
@@ -660,7 +730,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         }
     }
 
-    private CharacterStats BuildRuntimeStats(CharacterObject character, int slotIndex)
+    private CharacterStats BuildRuntimeStats(CharacterObject character, int slotIndex, bool includeArtifacts = true, bool includeRuntimeEffects = true)
     {
         CharacterStats stats = runInventory != null && character != null
             ? runInventory.GetCharacterBaseStats(character)
@@ -670,7 +740,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         float baseLeveledAtk = stats.attack;
         float baseLeveledDef = stats.defense;
 
-        Artifact[] slotArtifacts = runInventory != null && slotIndex >= 0
+        Artifact[] slotArtifacts = includeArtifacts && runInventory != null && slotIndex >= 0
             ? runInventory.GetEquippedArtifactsAt(slotIndex)
             : Array.Empty<Artifact>();
 
@@ -698,7 +768,11 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         stats.attack = baseLeveledAtk * (1f + atkPercentBonus / 100f);
         stats.defense = baseLeveledDef * (1f + defPercentBonus / 100f);
         ApplyPotentialStatModifiers(stats, character);
-        runInventory?.ApplyRuntimeEffectsToStats(character, stats);
+        if (includeRuntimeEffects)
+        {
+            runInventory?.ApplyRuntimeEffectsToStats(character, stats);
+        }
+
         return stats;
     }
 
@@ -718,17 +792,18 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             }
 
             bool isSelf = sourceCharacter == targetCharacter;
-            ApplyPotentialStatModifiersFrom(stats, sourceCharacter, PassiveEffectScope.Allies);
+            ApplyPotentialStatModifiersFrom(stats, targetCharacter, sourceCharacter, PassiveEffectScope.Allies);
 
             if (isSelf)
             {
-                ApplyPotentialStatModifiersFrom(stats, sourceCharacter, PassiveEffectScope.Self);
+                ApplyPotentialStatModifiersFrom(stats, targetCharacter, sourceCharacter, PassiveEffectScope.Self);
             }
         }
     }
 
     private void ApplyPotentialStatModifiersFrom(
         CharacterStats targetStats,
+        CharacterObject targetCharacter,
         CharacterObject sourceCharacter,
         PassiveEffectScope scope)
     {
@@ -753,7 +828,10 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
                     continue;
                 }
 
-                ApplyPotentialStatModifier(targetStats, modifier);
+                CharacterStats sourceStats = sourceCharacter == targetCharacter
+                    ? targetStats
+                    : sourceCharacter.GetLeveledStats();
+                ApplyPotentialStatModifier(targetStats, modifier, sourceStats);
             }
         }
     }
@@ -784,51 +862,102 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         }
     }
 
-    private static void ApplyPotentialStatModifier(CharacterStats targetStats, PassiveStatModifierDefinition modifier)
+    private static void ApplyPotentialStatModifier(
+        CharacterStats targetStats,
+        PassiveStatModifierDefinition modifier,
+        CharacterStats sourceStats)
     {
         switch (modifier.target)
         {
             case PassiveModifierTarget.MaxHP:
-                targetStats.maxHP = ApplyPotentialStatValue(targetStats.maxHP, modifier);
+                targetStats.maxHP = ApplyPotentialStatValue(targetStats.maxHP, modifier, sourceStats);
                 break;
             case PassiveModifierTarget.AttackStat:
-                targetStats.attack = ApplyPotentialStatValue(targetStats.attack, modifier);
+                targetStats.attack = ApplyPotentialStatValue(targetStats.attack, modifier, sourceStats);
                 break;
             case PassiveModifierTarget.Defense:
-                targetStats.defense = ApplyPotentialStatValue(targetStats.defense, modifier);
+                targetStats.defense = ApplyPotentialStatValue(targetStats.defense, modifier, sourceStats);
                 break;
             case PassiveModifierTarget.MoveSpeed:
-                targetStats.speed = ApplyPotentialStatValue(targetStats.speed, modifier);
+                targetStats.speed = ApplyPotentialStatValue(targetStats.speed, modifier, sourceStats);
                 break;
             case PassiveModifierTarget.ElementalMastery:
-                targetStats.elementalMastery = ApplyPotentialStatValue(targetStats.elementalMastery, modifier);
+                targetStats.elementalMastery = ApplyPotentialStatValue(targetStats.elementalMastery, modifier, sourceStats);
                 break;
             case PassiveModifierTarget.CritRate:
-                targetStats.critRate = ApplyPotentialStatValue(targetStats.critRate, modifier);
+                targetStats.critRate = ApplyPotentialStatValue(targetStats.critRate, modifier, sourceStats);
                 break;
             case PassiveModifierTarget.CritDamage:
-                targetStats.critDamage = ApplyPotentialStatValue(targetStats.critDamage, modifier);
+                targetStats.critDamage = ApplyPotentialStatValue(targetStats.critDamage, modifier, sourceStats);
                 break;
             case PassiveModifierTarget.CooldownRate:
-                targetStats.cooldownRate = ApplyPotentialStatValue(targetStats.cooldownRate, modifier);
+                targetStats.cooldownRate = ApplyPotentialStatValue(targetStats.cooldownRate, modifier, sourceStats);
                 break;
             case PassiveModifierTarget.Impact:
-                targetStats.impact = ApplyPotentialStatValue(targetStats.impact, modifier);
+                targetStats.impact = ApplyPotentialStatValue(targetStats.impact, modifier, sourceStats);
                 break;
             case PassiveModifierTarget.AuraEnergyRecharge:
-                targetStats.aeRecharge = ApplyPotentialStatValue(targetStats.aeRecharge, modifier);
+                targetStats.aeRecharge = ApplyPotentialStatValue(targetStats.aeRecharge, modifier, sourceStats);
                 break;
             case PassiveModifierTarget.IncomingDamageTaken:
-                targetStats.damageReduction = ApplyPotentialStatValue(targetStats.damageReduction, modifier);
+                targetStats.damageReduction = ApplyPotentialStatValue(targetStats.damageReduction, modifier, sourceStats);
                 break;
         }
     }
 
-    private static float ApplyPotentialStatValue(float currentValue, PassiveStatModifierDefinition modifier)
+    private static float ApplyPotentialStatValue(
+        float currentValue,
+        PassiveStatModifierDefinition modifier,
+        CharacterStats sourceStats)
     {
-        return modifier.operation == PassiveNumericOperation.Add
-            ? currentValue + modifier.value
-            : currentValue * modifier.value;
+        float modifierValue = ResolvePotentialModifierValue(modifier, sourceStats);
+        return modifier.operation switch
+        {
+            PassiveNumericOperation.Add => currentValue + modifierValue,
+            PassiveNumericOperation.Multiply => currentValue * modifierValue,
+            _ => currentValue
+        };
+    }
+
+    private static float ResolvePotentialModifierValue(
+        PassiveStatModifierDefinition modifier,
+        CharacterStats sourceStats)
+    {
+        if (modifier == null)
+        {
+            return 0f;
+        }
+
+        if (modifier.valueSource == PassiveModifierValueSource.SourceStatRatio)
+        {
+            float sourceValue = ResolvePotentialStatSource(sourceStats, modifier.sourceStat);
+            return sourceValue * modifier.value;
+        }
+
+        return modifier.value;
+    }
+
+    private static float ResolvePotentialStatSource(CharacterStats sourceStats, PassiveModifierTarget source)
+    {
+        if (sourceStats == null)
+        {
+            return 0f;
+        }
+
+        return source switch
+        {
+            PassiveModifierTarget.MaxHP => sourceStats.maxHP,
+            PassiveModifierTarget.MoveSpeed => sourceStats.speed,
+            PassiveModifierTarget.Defense => sourceStats.defense,
+            PassiveModifierTarget.CritRate => sourceStats.critRate,
+            PassiveModifierTarget.CritDamage => sourceStats.critDamage,
+            PassiveModifierTarget.ElementalMastery => sourceStats.elementalMastery,
+            PassiveModifierTarget.CooldownRate => sourceStats.cooldownRate,
+            PassiveModifierTarget.Impact => sourceStats.impact,
+            PassiveModifierTarget.AuraEnergyRecharge => sourceStats.aeRecharge,
+            PassiveModifierTarget.IncomingDamageTaken => sourceStats.damageReduction,
+            _ => sourceStats.attack
+        };
     }
 
 

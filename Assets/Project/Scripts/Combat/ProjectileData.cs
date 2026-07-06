@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum SpawnPositionMode
@@ -236,6 +237,11 @@ public class ProjectileData : ScriptableObject
     public bool stopOnImpact = true;
     public bool destroyWhenHitsExhausted = true;
     public bool destroyOnLifetimeExpire = true;
+
+    [Header("Area Effects")]
+    public bool trackAreaOccupants = false;
+    [Min(0.05f)] public float areaEffectRefreshInterval = 0.25f;
+    public List<RuntimeAreaEffectApplication> areaEffects = new List<RuntimeAreaEffectApplication>();
 
     [Header("Feedback Events")]
     public ProjectileFeedbackDefinition spawnFeedback = new ProjectileFeedbackDefinition();

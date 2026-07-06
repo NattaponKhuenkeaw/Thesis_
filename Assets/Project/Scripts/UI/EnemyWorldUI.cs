@@ -222,6 +222,11 @@ public class EnemyWorldUI : MonoBehaviour
     private void HandleDamaged(HitReactionData data)
     {
         UpdateHealthBar();
+        if (data.damage <= 0f)
+        {
+            return;
+        }
+
         ShowDamageText(data.damage, data.impactTier, data.elementType, data.isCriticalHit);
     }
 
@@ -314,7 +319,7 @@ public class EnemyWorldUI : MonoBehaviour
 
     private void ShowDamageText(float damage, DamageImpactTier impactTier, ElementType elementType, bool isCriticalHit)
     {
-        if (damage <= 1f) return;
+        if (damage <= 0f) return;
 
         TMP_Text t = GetPooledText(isCriticalHit);
         if (t == null) return;

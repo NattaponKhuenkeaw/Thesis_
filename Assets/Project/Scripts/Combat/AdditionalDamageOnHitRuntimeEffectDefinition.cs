@@ -10,6 +10,10 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
     [Header("Damage")]
     [Min(0f)] public float attackRatio = 0.2f;
     [Min(0f)] public float targetMaxHpRatio = 0f;
+    [Header("Target Max HP Cap")]
+    public bool capTargetMaxHpDamage = false;
+    public RuntimeEffectStatTarget targetMaxHpDamageCapSource = RuntimeEffectStatTarget.Attack;
+    [Min(0f)] public float targetMaxHpDamageCapRatio = 1f;
     public ElementType elementType = ElementType.None;
 
     public override void OnHitDealt(RuntimeEffectDamageContext context)
@@ -40,22 +44,54 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
         }
 
         float sourceAttack = context.sourceStats != null ? Mathf.Max(0f, context.sourceStats.attack) : 0f;
-        float baseDamage = sourceAttack * Mathf.Max(0f, attackRatio)
-            + Mathf.Max(0f, context.targetEnemy.maxHP) * Mathf.Max(0f, targetMaxHpRatio);
+        float maxHpDamage = Mathf.Max(0f, context.targetEnemy.maxHP) * Mathf.Max(0f, targetMaxHpRatio);
+        if (capTargetMaxHpDamage)
+        {
+            float cap = ResolveCapSourceValue(context.sourceStats) * Mathf.Max(0f, targetMaxHpDamageCapRatio);
+            maxHpDamage = Mathf.Min(maxHpDamage, Mathf.Max(0f, cap));
+        }
+
+        float baseDamage = sourceAttack * Mathf.Max(0f, attackRatio) + maxHpDamage;
         if (baseDamage <= 0f)
         {
             return;
         }
 
+        RuntimeEffectDamageContext additionalContext = new RuntimeEffectDamageContext
+        {
+            sourceCharacter = context.sourceCharacter,
+            sourceStats = context.sourceStats,
+            targetEnemy = context.targetEnemy,
+            category = context.category,
+            actionId = context.actionId,
+            actionName = context.actionName,
+            stepData = context.stepData,
+            elementType = elementType,
+            damageRoutine = DamageRoutine.Additional,
+            isCriticalHit = false,
+            damage = baseDamage,
+            attackerPosition = context.attackerPosition,
+            hitDirection = context.hitDirection
+        };
+        RuntimeEffectDamageInput damageInput = new RuntimeEffectDamageInput
+        {
+            context = additionalContext,
+            baseDamage = baseDamage,
+            defenderDefense = context.targetEnemy.defense,
+            defenderDamageResistance = context.targetEnemy.damageRes
+        };
+        ApplyRuntimeDamageInputModifiers(context.sourceCharacter, damageInput);
+        additionalContext.damage = damageInput.baseDamage;
+
         float resolvedDamage = CombatFormula.CalculateResolvedDamage(
-            baseDamage,
+            damageInput.baseDamage,
             DamageRoutine.Additional,
             elementType,
             context.sourceStats,
-            context.targetEnemy.defense,
+            damageInput.defenderDefense,
             AttackCategory.Normal,
             out _,
-            context.targetEnemy.damageRes);
+            damageInput.defenderDamageResistance);
 
         if (resolvedDamage <= 0f)
         {
@@ -64,11 +100,18 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
 
         HitReactionData additionalData = HitReactionData.Default(resolvedDamage, context.hitDirection, 0f);
         additionalData.damageIsFinal = true;
+        additionalData.ignoreElementalIncomingModifiers = damageInput.ignoreElementalIncomingModifiers;
         additionalData.damageRoutine = DamageRoutine.Additional;
         additionalData.elementType = elementType;
         additionalData.isCriticalHit = false;
         additionalData.flashFrames = 0;
         additionalData.impactTier = DamageImpactTier.Low;
+        additionalData.sourceCharacter = context.sourceCharacter;
+        additionalData.sourceStats = context.sourceStats;
+        additionalData.sourceCategory = context.category;
+        additionalData.sourceActionId = context.actionId;
+        additionalData.sourceActionName = context.actionName;
+        additionalData.sourceStepData = context.stepData;
 
         float damageDealt = context.targetEnemy.TakeHit(additionalData, context.attackerPosition);
         if (damageDealt <= 0f)
@@ -80,7 +123,49 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
         if (elementalState != null)
         {
             elementalState.RecordDamageTaken(damageDealt);
-            elementalState.ApplyElementalDamage(elementType, baseDamage, context.sourceStats, AttackCategory.Normal);
+            elementalState.ApplyElementalDamage(elementType, damageInput.baseDamage, context.sourceStats, AttackCategory.Normal);
         }
+    }
+
+    private static void ApplyRuntimeDamageInputModifiers(CharacterObject sourceCharacter, RuntimeEffectDamageInput input)
+    {
+        if (sourceCharacter == null || input == null)
+        {
+            return;
+        }
+
+        TeamLoader teamLoader = Object.FindFirstObjectByType<TeamLoader>();
+        teamLoader?.RunInventory?.ModifyDamageInput(sourceCharacter, input);
+
+        PlayerCharacter activePlayer = Object.FindFirstObjectByType<PlayerCharacter>();
+        if (activePlayer != null
+            && activePlayer.characterObject == sourceCharacter
+            && activePlayer.RuntimeEffects != null)
+        {
+            activePlayer.RuntimeEffects.ModifyDamageInput(input);
+        }
+    }
+
+    private float ResolveCapSourceValue(CharacterStats sourceStats)
+    {
+        if (sourceStats == null)
+        {
+            return 0f;
+        }
+
+        return targetMaxHpDamageCapSource switch
+        {
+            RuntimeEffectStatTarget.MaxHP => sourceStats.maxHP,
+            RuntimeEffectStatTarget.Speed => sourceStats.speed,
+            RuntimeEffectStatTarget.Defense => sourceStats.defense,
+            RuntimeEffectStatTarget.ElementalMastery => sourceStats.elementalMastery,
+            RuntimeEffectStatTarget.CritRate => sourceStats.critRate,
+            RuntimeEffectStatTarget.CritDamage => sourceStats.critDamage,
+            RuntimeEffectStatTarget.CooldownRate => sourceStats.cooldownRate,
+            RuntimeEffectStatTarget.Impact => sourceStats.impact,
+            RuntimeEffectStatTarget.AuraEnergyRecharge => sourceStats.aeRecharge,
+            RuntimeEffectStatTarget.DamageReduction => sourceStats.damageReduction,
+            _ => sourceStats.attack
+        };
     }
 }

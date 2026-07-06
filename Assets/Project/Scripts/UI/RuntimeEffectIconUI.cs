@@ -63,17 +63,16 @@ public class RuntimeEffectIconUI : MonoBehaviour
             : boundEffect.definition.durationSeconds;
         bool timed = boundEffect.definition.durationType == RuntimeEffectDurationType.Seconds
             && totalDuration > 0f;
-        bool showStackCount = boundEffect.definition.durationType == RuntimeEffectDurationType.Forever
-            && boundStackCount > 1;
+        bool showStackCount = boundStackCount > 1;
         float normalized = timed
             ? Mathf.Clamp01(boundEffect.remainingSeconds / totalDuration)
             : 0f;
 
-        RequiresTimerRefresh = timed;
+        RequiresTimerRefresh = false;
 
         if (durationFill != null)
         {
-            durationFill.gameObject.SetActive(timed);
+            durationFill.gameObject.SetActive(false);
             durationFill.fillAmount = timed ? (1f - normalized) : 0f;
         }
 
@@ -97,9 +96,14 @@ public class RuntimeEffectIconUI : MonoBehaviour
             durationFill = fillTransform != null ? fillTransform.GetComponent<Image>() : null;
         }
 
-        if (stackText == null)
+        TMP_Text namedStackText = FindTextByNames(StackTextNames);
+        if (namedStackText != null)
         {
-            stackText = FindTextByNames(StackTextNames);
+            stackText = namedStackText;
+        }
+        else if (stackText == null)
+        {
+            stackText = FindStackTextFallback();
         }
     }
 
@@ -120,5 +124,25 @@ public class RuntimeEffectIconUI : MonoBehaviour
         }
 
         return null;
+    }
+
+    private TMP_Text FindStackTextFallback()
+    {
+        TMP_Text[] texts = GetComponentsInChildren<TMP_Text>(true);
+        for (int i = 0; i < texts.Length; i++)
+        {
+            TMP_Text candidate = texts[i];
+            if (candidate == null)
+            {
+                continue;
+            }
+
+            if (candidate.name.Contains("(1)") || candidate.name.Contains("Quantity"))
+            {
+                return candidate;
+            }
+        }
+
+        return texts.Length > 0 ? texts[texts.Length - 1] : null;
     }
 }

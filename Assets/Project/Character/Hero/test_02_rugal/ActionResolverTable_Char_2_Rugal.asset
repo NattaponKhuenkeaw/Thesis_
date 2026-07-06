@@ -54,8 +54,23 @@ MonoBehaviour:
       rootNode:
         rid: 1588255929706479995
     cooldown: 2
+  - actionId: rugal.skill.ex
+    actionName: Genocide Cutter (EX)
+    context: 2
+    priority: 10
+    conditions:
+    - rid: 3612912868654055999
+    allowGroundToAirTransition: 0
+    actionDamageMultiplier: 12
+    auraEnergyReward: 10
+    comboTree:
+      treeName: Combo
+      comboResetDelay: 0.8
+      rootNode:
+        rid: 3612912868654055604
+    cooldown: 0
   ultimateActions:
-  - actionId: 
+  - actionId: rugal.ultimate
     actionName: Gigantic Pressure
     context: 0
     priority: 0
@@ -862,8 +877,8 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        juggleLaunchScale: 0.85
-        juggleStunScale: 0.9
+        juggleLaunchScale: 1
+        juggleStunScale: 1
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 8300000, guid: 8f6ab12021ff39d4c869a546e444aa27, type: 3}
@@ -895,8 +910,8 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        juggleLaunchScale: 0.85
-        juggleStunScale: 0.9
+        juggleLaunchScale: 1
+        juggleStunScale: 1
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 8300000, guid: 9c7433f026bbb6d42886e2c785629571, type: 3}
@@ -916,20 +931,20 @@ MonoBehaviour:
         damageRatio: 0.33333334
         impactTier: 1
         useDeterministicReaction: 1
-        reactionKind: 1
+        reactionKind: 2
         impactFreezeFrames: 10
         knockbackFrames: 15
         knockupFrames: 13
         knockfallFrames: 10
         recoveryFrames: 9
-        horizontalSpeed: 3
-        launchSpeed: 1
+        horizontalSpeed: 1
+        launchSpeed: 5.5
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        juggleLaunchScale: 0.85
-        juggleStunScale: 0.9
+        juggleLaunchScale: 1
+        juggleStunScale: 1
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 8300000, guid: 8f6ab12021ff39d4c869a546e444aa27, type: 3}
@@ -1536,14 +1551,6 @@ MonoBehaviour:
           volume: 1
           pitchVariation: 1
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
-        - label: Voice
-          clip: {fileID: 8300000, guid: a122b9b80fe30be47b2d0db90d87f6a6, type: 3}
-          triggerFrame: 32
-          duration: 37
-          channel: 0
-          volume: 1
-          pitchVariation: 1
-          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 3251577360560685183
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -1803,3 +1810,284 @@ MonoBehaviour:
       type: {class: WallActionCondition, ns: , asm: Assembly-CSharp}
       data:
         requireAgainstWall: 1
+    - rid: 3612912868654055604
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 13
+          activeFrames: 75
+          recoveryFrames: 49
+          cancelWindowStartFrame: 91
+          loopActivePhase: 0
+          stepName: Genocide Cutter (EX)
+          animationClip: {fileID: 7400000, guid: 2d5bdcb395be8d1479c6cfeb789dbde2, type: 2}
+          lockAirPosition: 1
+          autoChainToNext: 0
+          triggerWindows: []
+          motionData:
+            rid: 3612912868654055605
+          vfxData:
+            rid: 3612912868654055607
+          audioData:
+            rid: 3612912868654055608
+          hitData:
+            rid: 3612912868654055606
+          eventData:
+            rid: -2
+          componentOrder:
+          - motion
+          - vfx
+          - audio
+          - hitbox
+          - events
+        routes: []
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 3612912868654055605
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - startFrame: 19
+          endFrame: 27
+          taskType: 0
+          easing: 16
+          position: {x: 0, y: 1, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 49
+          endFrame: 55
+          taskType: 0
+          easing: 1
+          position: {x: 0, y: 1, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 87
+          endFrame: 115
+          taskType: 0
+          easing: 1
+          position: {x: 0, y: -1.2, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 3612912868654055606
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 3612912868654055609
+        - rid: 3612912868654055610
+        - rid: 3612912868654055611
+        - rid: 3612912868654055612
+    - rid: 3612912868654055607
+      type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: VFX
+          vfxType: 105
+          vfxClip: {fileID: 0}
+          vfxPrefab: {fileID: 0}
+          triggerFrame: 13
+          duration: 55
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 1
+            position: {x: 0, y: -1, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          - frame: 4
+            position: {x: 0, y: -0.5, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          - frame: 12
+            position: {x: 0, y: 1, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          loopDuringActive: 0
+        - label: VFX
+          vfxType: 125
+          vfxClip: {fileID: 0}
+          vfxPrefab: {fileID: 0}
+          triggerFrame: 49
+          duration: 49
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 0
+            position: {x: 0.3, y: 0.7, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          loopDuringActive: 0
+    - rid: 3612912868654055608
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: 05a53b0593a076c478a4978a09d8af0f, type: 3}
+          triggerFrame: 1
+          duration: 73
+          channel: 0
+          volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: 8f1fbecfcb907db4faede25c1428b90b, type: 3}
+          triggerFrame: 13
+          duration: 55
+          channel: 1
+          volume: 0.3
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: a122b9b80fe30be47b2d0db90d87f6a6, type: 3}
+          triggerFrame: 42
+          duration: 49
+          channel: 0
+          volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: 8f1fbecfcb907db4faede25c1428b90b, type: 3}
+          triggerFrame: 42
+          duration: 31
+          channel: 1
+          volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 3612912868654055609
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 0
+        activeFrames: 4
+        elementType: 1
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.4078778, y: 1.0895947}
+        size: {x: 1.4056439, y: 2.2603183}
+        damageRatio: 0.167
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 0
+        knockbackFrames: 19
+        knockupFrames: 15
+        knockfallFrames: 13
+        recoveryFrames: 12
+        horizontalSpeed: 1
+        launchSpeed: 5
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 1
+        juggleStunScale: 1
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 8
+        hitSFX: {fileID: 8300000, guid: 8f6ab12021ff39d4c869a546e444aa27, type: 3}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+    - rid: 3612912868654055610
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 4
+        activeFrames: 5
+        elementType: 1
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.8135214, y: 2.1104655}
+        size: {x: 3.163435, y: 1.7329817}
+        damageRatio: 0.167
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 5
+        knockbackFrames: 19
+        knockupFrames: 15
+        knockfallFrames: 13
+        recoveryFrames: 12
+        horizontalSpeed: 3
+        launchSpeed: 1
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 1
+        juggleStunScale: 1
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 8
+        hitSFX: {fileID: 8300000, guid: 8f6ab12021ff39d4c869a546e444aa27, type: 3}
+        hitVFXType: 15
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+    - rid: 3612912868654055611
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 9
+        activeFrames: 10
+        elementType: 1
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.38342285, y: 2.5349584}
+        size: {x: 4.374274, y: 2.528795}
+        damageRatio: 0.167
+        impactTier: 1
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 13
+        knockbackFrames: 19
+        knockupFrames: 15
+        knockfallFrames: 13
+        recoveryFrames: 12
+        horizontalSpeed: -1
+        launchSpeed: 5.5
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 1
+        juggleStunScale: 1
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 8
+        hitSFX: {fileID: 8300000, guid: 8f6ab12021ff39d4c869a546e444aa27, type: 3}
+        hitVFXType: 15
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+    - rid: 3612912868654055612
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 30
+        activeFrames: 10
+        elementType: 1
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.945802, y: 2.2121103}
+        size: {x: 4.7075343, y: 3.6743817}
+        damageRatio: 0.5
+        impactTier: 2
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 13
+        knockbackFrames: 19
+        knockupFrames: 15
+        knockfallFrames: 13
+        recoveryFrames: 12
+        horizontalSpeed: 1
+        launchSpeed: 7
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 1
+        juggleStunScale: 1
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 8
+        hitSFX: {fileID: 8300000, guid: 9c7433f026bbb6d42886e2c785629571, type: 3}
+        hitVFXType: 15
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+    - rid: 3612912868654055999
+      type: {class: RuntimeTagActionCondition, ns: , asm: Assembly-CSharp}
+      data:
+        tagType: 0
+        tag: rugal.omega_mode
+        shouldExist: 1
+        applyOnActionStart: 0

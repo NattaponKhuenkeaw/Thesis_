@@ -22,13 +22,14 @@ MonoBehaviour:
   playSpawnAnimation: 1
   spawnDuration: 0
   inheritFacingDirection: 1
+  applyOffsetToTarget: 0
   spawningHitbox:
     enabled: 0
     decrementsMaxHits: 0
     hitbox:
       rid: -2
   traversalMode: 0
-  trackingReferencePointMode: 0
+  trackingReferencePointMode: 2
   anchorReferencePointMode: 2
   homingTurnRate: 8
   trackDelaySeconds: 0
@@ -47,10 +48,13 @@ MonoBehaviour:
   enemyLayerMask:
     serializedVersion: 2
     m_Bits: 256
-  hitIntervalFrames: 17
+  hitIntervalFrames: 16
   stopOnImpact: 1
   destroyWhenHitsExhausted: 0
   destroyOnLifetimeExpire: 1
+  trackAreaOccupants: 0
+  areaEffectRefreshInterval: 0.25
+  areaEffects: []
   spawnFeedback:
     vfxType: 0
     vfxClip: {fileID: 0}
@@ -69,7 +73,7 @@ MonoBehaviour:
     - rid: -2
       type: {class: , ns: , asm: }
     - rid: 1588256193077838082
-      type: {class: GrabHitbox, ns: , asm: Assembly-CSharp}
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 0
         activeFrames: 3
@@ -77,15 +81,27 @@ MonoBehaviour:
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 0, y: 2}
         size: {x: 10, y: 5}
-        canGrabAirborne: 1
-        damageRatio: 0.15
+        damageRatio: 0.14285715
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 3
         impactFreezeFrames: 2
-        holdFrames: 500
-        recoveryFrames: 6
+        knockbackFrames: 70
+        knockupFrames: 70
+        knockfallFrames: 70
+        recoveryFrames: 70
+        horizontalSpeed: 0
+        launchSpeed: 0
+        useSnapToAnchor: 0
+        snapOffset: {x: 4, y: 2.5}
+        landingBehavior: 0
+        canAirJuggle: 1
+        juggleLaunchScale: 1
+        juggleStunScale: 1
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
-        hitSFX: {fileID: 0}
-        hitVFXType: 0
+        hitSFX: {fileID: 8300000, guid: 7c1b8c226596fc4498a647193d825b4d, type: 3}
+        hitVFXType: 15
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
-        impactTier: 2
+        breaksGrab: 0

@@ -207,7 +207,7 @@ public class EnemyController : MonoBehaviour
         float finalIncomingDamage = reactionData.damageIsFinal
             ? reactionData.damage
             : CombatFormula.CalculateIncomingDamage(reactionData.damage, defense, damageRes);
-        if (elementalState != null)
+        if (elementalState != null && !reactionData.ignoreElementalIncomingModifiers)
         {
             finalIncomingDamage = elementalState.ModifyIncomingDamage(reactionData.elementType, finalIncomingDamage);
         }

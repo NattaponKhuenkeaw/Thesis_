@@ -57,16 +57,556 @@ MonoBehaviour:
     cooldownFrames: 24
   kitDefinition:
     skill:
-      abilityId: 
-      abilityName: Skill
+      abilityId: main.skill.dark_chain
+      abilityName: Dark Chain
+      icon: {fileID: 0}
+      description: Unleash a chain across the field.
     ultimate:
-      abilityId: 
-      abilityName: Ultimate
+      abilityId: main.ultimate.jailbreak_punisher
+      abilityName: Jailbreak Punisher
+      icon: {fileID: 0}
+      description: Open a Void Area that deals periodic Void damage. Inflict <color=#8B3DFF>Void</color>
+        DMG 700% of ATK
     passive:
-      abilityId: 
+      abilityId: main.passive
       abilityName: Passive
+      icon: {fileID: 0}
+      description: When Hit an Enemy with <color=#8B3DFF>Void</color> Debuff, will
+        Increase own <b>Elemental Mastery +10%</b> <color=#C0C0C0>(Stackable 5 times)</color></i>.
     basePassiveNode:
       statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects:
+      - trigger: 3
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 1
+          elementType: 4
+          requireRuntimeTag: 0
+          runtimeTag: 
+        effect: {fileID: 11400000, guid: b3a6335221624b3db7dc22b468f4cf44, type: 2}
+        scope: 0
+        stackMode: 2
+        stackLimit: 5
+        refreshDurationOnReapply: 1
+        durationOverride: 3
+        filterByTargetElement: 0
+        targetElement: 0
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: base.passive
+      nodeName: Base Passive
+      description: When hitting an enemy with Void debuff, gain stackable Elemental
+        Mastery.
+      skillPanelDescriptionOverride: When Hit an Enemy with <color=#8B3DFF>Void</color>
+        Debuff, will Increase own <b>Elemental Mastery +10%</b> <color=#C0C0C0>(Stackable
+        5 times)</color></i>.
+      track: 2
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
+    potentialNodes:
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects:
+      - trigger: 3
+        filter:
+          filterByCategory: 1
+          category: 1
+          filterByActionId: 1
+          actionId: main.skill.dark_chain
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        effect: {fileID: 11400000, guid: ed848652288446588c806ab0c71f9758, type: 2}
+        scope: 2
+        stackMode: 1
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        durationOverride: -1
+        filterByTargetElement: 0
+        targetElement: 0
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: main.skill.base
+      nodeName: Dark Chain Void Scar
+      description: 
+      skillPanelDescriptionOverride: Unleash a chain across the field. Inflict <color=#8B3DFF>Void</color>
+        DMG <b>70%</b> of own ATK <b>5</b> Times, When <b>Hit</b> will Decrease <b>Enemy
+        <color=#8B3DFF>Void</color> DMG Res</b> by 15% for 16 seconds.
+      track: 0
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers:
+      - category: 1
+        actionId: main.skill.dark_chain
+        actionName: 
+        stepName: 
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags: []
+        requiredCounters: []
+        damageMultiplierOperation: 0
+        damageMultiplierValue: 0
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
+        auraEnergyRewardAdd: 5
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: main.skill.lv1
+      nodeName: Chain Reward
+      description: Increase Dark Chain AE Reward gain by 5.
+      skillPanelDescriptionOverride: 'Unleash a chain across the field. Inflict <color=#8B3DFF>Void</color>
+        DMG <b>70%</b> of own ATK <b>5</b> Times, When <b>Hit</b> will Decrease Enemy
+        <color=#8B3DFF>Void</color> DMG Res by 15% for 16 seconds.
+
+
+        - Increase
+        AE Reward gain by 5'
+      track: 0
+      level: 1
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers:
+      - category: 1
+        actionId: main.skill.dark_chain
+        actionName: 
+        stepName: 
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags: []
+        requiredCounters: []
+        damageMultiplierOperation: 0
+        damageMultiplierValue: 0
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 11400000, guid: 105d5c02a6338324293141794f01e1ed, type: 2}
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: main.skill.lv2
+      nodeName: Chain Echoes
+      description: Increase Dark Chain Projectile Hit by 2
+      skillPanelDescriptionOverride: 'Unleash a chain across the field. Inflict <color=#8B3DFF>Void</color>
+        DMG <b>80%</b> of own ATK <b>7</b> Times, When <b>Hit</b> will Decrease Enemy
+        <color=#8B3DFF>Void</color> DMG Res by 15% for 16 seconds.
+
+
+        - Increase
+        AE Reward gain by 5'
+      track: 0
+      level: 2
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers:
+      - category: 1
+        actionId: main.skill.dark_chain
+        actionName: 
+        stepName: 
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags: []
+        requiredCounters: []
+        damageMultiplierOperation: 3
+        damageMultiplierValue: 4
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: main.skill.lv3
+      nodeName: Chain Punishment
+      description: Increase Dark Chain multiplier to 400% of ATK.
+      skillPanelDescriptionOverride: 'Unleash a chain across the field. Inflict <color=#8B3DFF>Void</color>
+        DMG <b>80%</b> of own ATK <b>7</b> Times, When <b>Hit</b> will Decrease Enemy
+        <color=#8B3DFF>Void</color> DMG Res by 15% for 16 seconds.
+
+
+        - Increase
+        AE Reward gain by 5'
+      track: 0
+      level: 3
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers:
+      - category: 1
+        actionId: main.skill.dark_chain
+        actionName: 
+        stepName: 
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags: []
+        requiredCounters: []
+        damageMultiplierOperation: 0
+        damageMultiplierValue: 0
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 11400000, guid: a52aedf2b9dab6f44ad3f0980de374c1, type: 2}
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: main.skill.lv4
+      nodeName: Chain Magnetism
+      description: Projectile will gain little magnetism to pull enemy in
+      skillPanelDescriptionOverride: 'Unleash a chain across the field. Inflict <color=#8B3DFF>Void</color>
+        DMG <b>80%</b> of own ATK <b>7</b> Times, When <b>Hit</b> will Decrease Enemy
+        <color=#8B3DFF>Void</color> DMG Res by 15% for 16 seconds.
+
+
+        - Increase
+        AE Reward gain by 5
+
+        - Projectile will gain little magnetism to pull
+        enemy in'
+      track: 0
+      level: 4
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionId: 1
+          actionId: main.ultimate.jailbreak_punisher
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        tag: main.void_area
+        addTag: 1
+        duration: 20
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: main.ultimate.lv1
+      nodeName: Void Area
+      description: Jailbreak Punisher opens a 20 seconds Void Area timing window.
+      skillPanelDescriptionOverride: 'Open a Void Area that deals periodic Void damage,
+        Inflict <color=#8B3DFF>Void</color> DMG 700% of ATK
+
+
+        -AfterJailbreak
+        Punisher will open <color=#8B3DFF>Void Area</color> for 20 seconds .
+
+        -
+        <color=#8B3DFF>Void Area</color> : Deal <color=#8B3DFF>Void</color> DMG 100%
+        of ATK every 5 seconds'
+      track: 1
+      level: 1
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects:
+      - trigger: 3
+        filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionId: 1
+          actionId: main.ultimate.jailbreak_punisher
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        effect: {fileID: 11400000, guid: 9db62d5f786a405a8e3cfaed8582a9a3, type: 2}
+        scope: 2
+        stackMode: 1
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        durationOverride: 7
+        filterByTargetElement: 0
+        targetElement: 0
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: main.ultimate.lv2
+      nodeName: Void Area Break
+      description: Enemies damaged by Void Area take increased damage for 7 seconds,
+        unstackable.
+      skillPanelDescriptionOverride: 'Open a Void Area that deals periodic Void damage,
+        Inflict <color=#8B3DFF>Void</color> DMG 700% of ATK
+
+
+        -AfterJailbreak
+        Punisher will open <color=#8B3DFF>Void Area</color> for 20 seconds .
+
+        -
+        <color=#8B3DFF>Void Area</color> : Deal <color=#8B3DFF>Void</color> DMG 100%
+        of ATK every 5 seconds
+
+        - Enemies damaged by Void Area will <b>Their
+        Defense Decrease -15%</b> for 7 seconds, <i><color=#C0C0C0>(unstackable)</color></i>. '
+      track: 1
+      level: 2
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers:
+      - category: 2
+        actionId: main.ultimate.jailbreak_punisher
+        actionName: 
+        stepName: Void Area
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags: []
+        requiredCounters: []
+        damageMultiplierOperation: 0
+        damageMultiplierValue: 0
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 11400000, guid: b74c4e0c5df54290a0f8d610fd6fd7a1, type: 2}
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: main.ultimate.lv3
+      nodeName: Void Area Collapse
+      description: Void DMG from Void Area deals 500% of ATK.
+      skillPanelDescriptionOverride: 'Open a Void Area that deals periodic Void damage,
+        Inflict <color=#8B3DFF>Void</color> DMG 700% of ATK
+
+
+        -AfterJailbreak
+        Punisher will open <color=#8B3DFF>Void Area</color> for 20 seconds .
+
+        -
+        <color=#8B3DFF>Void Area</color> : Deal <color=#8B3DFF>Void</color> DMG 500%
+        of ATK every 5 seconds
+
+        - Enemies damaged by Void Area will <b>Their
+        Defense Decrease -15%</b> for 7 seconds, <i><color=#C0C0C0>(unstackable)</color></i>. '
+      track: 1
+      level: 3
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers:
+      - category: 2
+        actionId: main.ultimate.jailbreak_punisher
+        actionName: 
+        stepName: Void Area
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags: []
+        requiredCounters: []
+        damageMultiplierOperation: 0
+        damageMultiplierValue: 0
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 11400000, guid: 886ff6f25759d6747834ef2a7532fa16, type: 2}
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: main.ultimate.lv4
+      nodeName: Lasting Void Area
+      description: Void Area lasts for 40 seconds.
+      skillPanelDescriptionOverride: 'Open a Void Area that deals periodic Void damage,
+        Inflict <color=#8B3DFF>Void</color> DMG 700% of ATK
+
+
+        -AfterJailbreak
+        Punisher will open <color=#8B3DFF>Void Area</color> for 40 seconds .
+
+        -
+        <color=#8B3DFF>Void Area</color> : Deal <color=#8B3DFF>Void</color> DMG 500%
+        of ATK every 5 seconds
+
+        - Enemies damaged by Void Area will <b>Their
+        Defense Decrease -15%</b> for 7 seconds, <i><color=#C0C0C0>(unstackable)</color></i>. '
+      track: 1
+      level: 4
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
@@ -80,12 +620,122 @@ MonoBehaviour:
       resourceEffects: []
       enemyElementModifiers: []
       passiveHookTypeName: 
-      nodeId: base.passive
-      nodeName: Base Passive
-      description: 
+      nodeId: main.passive.lv1
+      nodeName: Void Area Tempo
+      description: While self is inside Void Area, own attack speed increases by
+        16%.
+      skillPanelDescriptionOverride: 'When Hit an Enemy with Void Debuff, will Increase
+        own <b>Elemental Mastery +10%</b> <color=#C0C0C0>(Stackable 5 times)</color></i>.
+
+
+
+        -
+        While Self within <color=#8B3DFF>Void Area</color>, Own <b>attack Speed Increase</b>
+        +16%.'
       track: 2
-      level: 0
-      fragmentCost: 0
-      unlockedByDefault: 1
-    potentialNodes: []
+      level: 1
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: main.passive.lv2
+      nodeName: Chain Release
+      description: Unlock State 4-6 of Basic Attack.
+      skillPanelDescriptionOverride: 'When Hit an Enemy with Void Debuff, will Increase
+        own <b>Elemental Mastery +10%</b> <color=#C0C0C0>(Stackable 5 times)</color></i>.
+
+
+
+        -
+        While Self within <color=#8B3DFF>Void Area</color>, Own <b>attack Speed Increase</b>
+        +16%.
+
+        - Unlock the Basic Attack <i>State 4 - 6</i>'
+      track: 2
+      level: 2
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: main.passive.lv3
+      nodeName: Void Area Formation
+      description: Allies inside Void Area gain Elemental Mastery +20.
+      skillPanelDescriptionOverride: 'When Hit an Enemy with Void Debuff, will Increase
+        own <b>Elemental Mastery +10%</b> <color=#C0C0C0>(Stackable 5 times)</color></i>.
+
+
+
+        -
+        While Self within <color=#8B3DFF>Void Area</color>, Own <b>attack Speed Increase</b>
+        +16%.
+
+        - Unlock the Basic Attack <i>State 4 - 6</i>
+
+        - Allies
+        inside <color=#8B3DFF>Void Area</color> gain <b>Elemental Mastery +20.'
+      track: 2
+      level: 3
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: main.passive.lv4
+      nodeName: Void Slow
+      description: Enemies inside Void Area are slowed by 30% via SlowAction status.
+      skillPanelDescriptionOverride: 'When Hit an Enemy with Void Debuff, will Increase
+        own <b>Elemental Mastery +10%</b> <color=#C0C0C0>(Stackable 5 times)</color></i>.
+
+
+
+        -
+        While Self within <color=#8B3DFF>Void Area</color>, Own <b>attack Speed Increase</b>
+        +16%.
+
+        - Unlock the Basic Attack <i>State 4 - 6</i>
+
+        - Allies
+        inside <color=#8B3DFF>Void Area</color> gain <b>Elemental Mastery +20.
+
+        -
+        Enemies inside <color=#8B3DFF>Void Area</color> are Slowed by -30%.'
+      track: 2
+      level: 4
+      fragmentCost: 1
+      unlockedByDefault: 0
   actionResolverTable: {fileID: 11400000, guid: 4c22d52c4e028734cbd3294422a85e5b, type: 2}

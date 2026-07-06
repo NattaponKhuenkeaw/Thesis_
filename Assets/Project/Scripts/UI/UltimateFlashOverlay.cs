@@ -82,13 +82,16 @@ public class UltimateFlashOverlay : MonoBehaviour
             return;
         }
 
-        float cameraHeight = targetCamera.orthographicSize * 2f;
+        // Ensure the overlay stays super large by basing the size on a large value (minimum 15f)
+        // or a large multiplier of the current orthographic size, so it covers everything even when zoomed.
+        float baseSize = Mathf.Max(targetCamera.orthographicSize * 2.5f, 15f);
+        float cameraHeight = baseSize * 2f;
         float cameraWidth = cameraHeight * targetCamera.aspect;
 
         Vector2 spriteSize = flashRenderer.sprite.bounds.size;
         transform.localScale = new Vector3(
-            cameraWidth / spriteSize.x * 1.2f,
-            cameraHeight / spriteSize.y * 1.2f,
+            cameraWidth / spriteSize.x,
+            cameraHeight / spriteSize.y,
             1f);
     }
 
@@ -129,6 +132,10 @@ public class UltimateFlashOverlay : MonoBehaviour
 
         blackScreenStartedCallback = onBlackScreenStarted;
         sequenceEndedCallback = onSequenceEnded;
+        
+        // Fit to camera at the start of the sequence using the super large calculation
+        FitToCamera();
+        
         activationCoroutine = StartCoroutine(ActivationFlashRoutine(resolvedSettings));
     }
 

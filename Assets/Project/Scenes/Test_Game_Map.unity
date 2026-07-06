@@ -2795,10 +2795,6 @@ PrefabInstance:
       propertyPath: playerCharacter
       value: 
       objectReference: {fileID: 729008943279367373}
-    - target: {fileID: 493616415103528964, guid: ad344c037067bc046b7efda449c32141, type: 3}
-      propertyPath: skillTreeController
-      value: 
-      objectReference: {fileID: 5987486934906660411}
     - target: {fileID: 685766388056269198, guid: ad344c037067bc046b7efda449c32141, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -6097,17 +6093,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
---- !u!114 &5987486934906660411 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5987486934514239479, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
-  m_PrefabInstance: {fileID: 962912716}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2fab8a9e978ecec4c9e4572b6319438b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SkillTreeController
 --- !u!114 &5987486934906660413 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6196953050443969776, guid: c978a591a8f8184478b0d576d8f51576, type: 3}

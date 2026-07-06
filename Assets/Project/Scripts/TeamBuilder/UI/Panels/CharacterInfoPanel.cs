@@ -35,6 +35,9 @@ namespace Project.TeamBuilder.UI.Panels
         [Header("Equipped Artifacts")]
         [SerializeField] private ArtifactSlotUI[] equippedArtifactSlots = new ArtifactSlotUI[3];
 
+        private CharacterItem currentCharacterItem;
+        private Artifact[] currentEquippedArtifacts;
+
         private void OnEnable()
         {
             ResolveMissingReferences();
@@ -68,6 +71,9 @@ namespace Project.TeamBuilder.UI.Panels
         public void PopulateData(CharacterItem character, Artifact[] equippedArtifacts)
         {
             if (character == null || character.characterObjectData == null) return;
+            currentCharacterItem = character;
+            currentEquippedArtifacts = equippedArtifacts;
+
             var data = character.characterObjectData;
             var upgrade = inspectScreenUI != null ? inspectScreenUI.ResolveCharacterUpgrade(data) : data.upgrade;
 
@@ -92,7 +98,9 @@ namespace Project.TeamBuilder.UI.Panels
 
             PopulateEquippedArtifactSlots(equippedArtifacts);
 
-            CharacterStats baseStats = inspectScreenUI != null ? inspectScreenUI.ResolveCharacterBaseStats(data) : data.GetLeveledStats();
+            CharacterStats baseStats = inspectScreenUI != null
+                ? inspectScreenUI.ResolveCharacterPermanentStats(data, equippedArtifacts)
+                : data.GetLeveledStats();
             CharacterStats runtimeStats = inspectScreenUI != null
                 ? inspectScreenUI.ResolveCharacterRuntimeStats(data, equippedArtifacts)
                 : baseStats;
@@ -156,6 +164,14 @@ namespace Project.TeamBuilder.UI.Panels
 
             if (characterPotentialPanel != null)
             {
+                CharacterPotentialPanel panel = characterPotentialPanel.GetComponent<CharacterPotentialPanel>();
+                if (panel != null)
+                {
+                    panel.PopulateData(currentCharacterItem, currentEquippedArtifacts);
+                    panel.Show();
+                    return;
+                }
+
                 characterPotentialPanel.SetActive(true);
             }
         }

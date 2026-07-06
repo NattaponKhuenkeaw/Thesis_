@@ -33,14 +33,14 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
-    actionDamageMultiplier: 4.5
+    actionDamageMultiplier: 5.5
     auraEnergyReward: 15
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
       rootNode:
         rid: 3612912801090633812
-    cooldown: 0
+    cooldown: 15
   ultimateActions: []
   standaloneActions: []
   references:

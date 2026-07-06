@@ -12,7 +12,6 @@ public class InputHandler_Player : MonoBehaviour
     public PlayerInput playerInput;
     public PlayerStateMachine stateMachine;
     public TeamLoader teamLoader;
-    public SkillTreeController skillTreeController;
 
     [Header("Buffer Settings")]
     public float attackBufferTime = 0.12f;
@@ -30,9 +29,6 @@ public class InputHandler_Player : MonoBehaviour
 
         if (teamLoader == null)
             teamLoader = Object.FindFirstObjectByType<TeamLoader>();
-
-        if (skillTreeController == null)
-            skillTreeController = GetComponent<SkillTreeController>();
     }
 
     void OnEnable()
@@ -87,19 +83,6 @@ public class InputHandler_Player : MonoBehaviour
         }
 
         HandleTeamSwitchInput();
-
-        // Skill tree debug shortcuts
-        if (Keyboard.current != null && skillTreeController != null)
-        {
-            if (Keyboard.current.digit7Key.wasPressedThisFrame)
-                skillTreeController.UnlockNodeById("AERO_SKILL_01");
-            if (Keyboard.current.digit8Key.wasPressedThisFrame)
-                skillTreeController.UnlockNodeById("AERO_SKILL_02");
-            if (Keyboard.current.digit9Key.wasPressedThisFrame)
-                skillTreeController.UnlockNodeById("AERO_ULT_01");
-            if (Keyboard.current.digit0Key.wasPressedThisFrame)
-                skillTreeController.ResetAllNodes();
-        }
     }
 
     // =========================================================

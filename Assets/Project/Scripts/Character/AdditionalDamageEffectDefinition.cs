@@ -14,6 +14,10 @@ public class AdditionalDamageEffectDefinition
     [Header("Damage")]
     [Min(0f)] public float attackRatio = 0.3f;
     [Min(0f)] public float targetMaxHpRatio = 0f;
+    [Header("Target Max HP Cap")]
+    public bool capTargetMaxHpDamage = false;
+    public PassiveModifierTarget targetMaxHpDamageCapSource = PassiveModifierTarget.AttackStat;
+    [Min(0f)] public float targetMaxHpDamageCapRatio = 1f;
     public ElementType elementType = ElementType.None;
     public bool consumeRuntimeTagOnTrigger = false;
 
@@ -53,8 +57,42 @@ public class AdditionalDamageEffectDefinition
 
     public float CalculateBaseDamage(float sourceAttack, PassiveEventContext context)
     {
+        return CalculateBaseDamage(sourceAttack, context, null);
+    }
+
+    public float CalculateBaseDamage(float sourceAttack, PassiveEventContext context, CharacterStats sourceStats)
+    {
         float attackDamage = Mathf.Max(0f, sourceAttack) * Mathf.Max(0f, attackRatio);
         float maxHpDamage = Mathf.Max(0f, context.enemyMaxHp) * Mathf.Max(0f, targetMaxHpRatio);
+        if (capTargetMaxHpDamage)
+        {
+            float cap = ResolveCapSourceValue(sourceStats, sourceAttack) * Mathf.Max(0f, targetMaxHpDamageCapRatio);
+            maxHpDamage = Mathf.Min(maxHpDamage, Mathf.Max(0f, cap));
+        }
+
         return attackDamage + maxHpDamage;
+    }
+
+    private float ResolveCapSourceValue(CharacterStats sourceStats, float sourceAttack)
+    {
+        if (sourceStats == null)
+        {
+            return Mathf.Max(0f, sourceAttack);
+        }
+
+        return targetMaxHpDamageCapSource switch
+        {
+            PassiveModifierTarget.MaxHP => sourceStats.maxHP,
+            PassiveModifierTarget.MoveSpeed => sourceStats.speed,
+            PassiveModifierTarget.Defense => sourceStats.defense,
+            PassiveModifierTarget.CritRate => sourceStats.critRate,
+            PassiveModifierTarget.CritDamage => sourceStats.critDamage,
+            PassiveModifierTarget.ElementalMastery => sourceStats.elementalMastery,
+            PassiveModifierTarget.CooldownRate => sourceStats.cooldownRate,
+            PassiveModifierTarget.Impact => sourceStats.impact,
+            PassiveModifierTarget.AuraEnergyRecharge => sourceStats.aeRecharge,
+            PassiveModifierTarget.IncomingDamageTaken => sourceStats.damageReduction,
+            _ => sourceStats.attack
+        };
     }
 }

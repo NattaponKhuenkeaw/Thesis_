@@ -156,9 +156,9 @@ MonoBehaviour:
       flipWithCharacter: 1
       isLocalSpace: 0
       obeyHitstop: 0
-    - type: 103
-      clip: {fileID: 7400000, guid: d9c4375675a42334890b5d17edfe17a7, type: 2}
-      localScale: {x: 2, y: 2, z: 2}
+    - type: 125
+      clip: {fileID: 7400000, guid: dab13dfbc9e6a804f9d37f343f6e030a, type: 2}
+      localScale: {x: 2.2, y: 2.2, z: 2.2}
       tint: {r: 1, g: 1, b: 1, a: 1}
       flipWithCharacter: 1
       isLocalSpace: 1

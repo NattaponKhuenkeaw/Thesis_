@@ -1,11 +1,13 @@
 using System;
+using System.Collections.Generic;
 using Project.ShopSystem;
 using UnityEngine;
 
 public enum RuntimeEffectKind
 {
     Buff,
-    Debuff
+    Debuff,
+    Effect
 }
 
 public enum RuntimeEffectDurationType
@@ -46,6 +48,13 @@ public enum RuntimeEffectStatOperation
     AddTargetStatRatio
 }
 
+public enum RuntimeEffectStackMode
+{
+    UseDefinition,
+    Override,
+    Stack
+}
+
 [Serializable]
 public class RuntimeEffectStatModifier
 {
@@ -65,12 +74,15 @@ public class RuntimeEffectInstance
     public float appliedDurationSeconds;
     public float elapsedSeconds;
     public float nextTickAt;
+    [Min(1)] public int stackCount = 1;
 
     [NonSerialized] public float lastTriggeredAt = -999f;
+    [NonSerialized] private Dictionary<RuntimeEffectDefinition, RuntimeEffectInstance> childInstances;
 
     public bool IsValid => definition != null;
     public bool UsesTimer => definition != null && definition.durationType == RuntimeEffectDurationType.Seconds;
     public bool IsExpired => UsesTimer && remainingSeconds <= 0f;
+    public string StackKey => definition != null ? definition.StackKey : string.Empty;
 
     public void Initialize(
         RuntimeEffectDefinition effectDefinition,
@@ -85,7 +97,9 @@ public class RuntimeEffectInstance
         appliedDurationSeconds = remainingSeconds;
         elapsedSeconds = 0f;
         nextTickAt = 0f;
+        stackCount = 1;
         lastTriggeredAt = -999f;
+        childInstances?.Clear();
     }
 
     public void Refresh(float durationOverride = -1f)
@@ -99,6 +113,74 @@ public class RuntimeEffectInstance
         appliedDurationSeconds = remainingSeconds;
         elapsedSeconds = 0f;
         nextTickAt = 0f;
+        SyncChildInstances(resetElapsed: true);
+    }
+
+    public void AddStack(float durationOverride = -1f, bool refreshDuration = false)
+    {
+        stackCount = Mathf.Max(1, stackCount + 1);
+        if (refreshDuration)
+        {
+            Refresh(durationOverride);
+            return;
+        }
+
+        SyncChildInstances(resetElapsed: false);
+    }
+
+    public RuntimeEffectInstance GetChildInstance(RuntimeEffectDefinition childDefinition)
+    {
+        if (childDefinition == null || childDefinition == definition)
+        {
+            return this;
+        }
+
+        childInstances ??= new Dictionary<RuntimeEffectDefinition, RuntimeEffectInstance>();
+        if (!childInstances.TryGetValue(childDefinition, out RuntimeEffectInstance childInstance) || childInstance == null)
+        {
+            childInstance = new RuntimeEffectInstance();
+            childInstance.Initialize(childDefinition, sourceCharacter, sourceStatsSnapshot, appliedDurationSeconds);
+            childInstances[childDefinition] = childInstance;
+        }
+
+        SyncChildInstance(childInstance, resetElapsed: false);
+        return childInstance;
+    }
+
+    private void SyncChildInstances(bool resetElapsed)
+    {
+        if (childInstances == null)
+        {
+            return;
+        }
+
+        foreach (RuntimeEffectInstance childInstance in childInstances.Values)
+        {
+            SyncChildInstance(childInstance, resetElapsed);
+        }
+    }
+
+    private void SyncChildInstance(RuntimeEffectInstance childInstance, bool resetElapsed)
+    {
+        if (childInstance == null)
+        {
+            return;
+        }
+
+        childInstance.sourceCharacter = sourceCharacter;
+        childInstance.sourceStatsSnapshot = sourceStatsSnapshot;
+        childInstance.remainingSeconds = remainingSeconds;
+        childInstance.appliedDurationSeconds = appliedDurationSeconds;
+        childInstance.stackCount = stackCount;
+
+        if (resetElapsed)
+        {
+            childInstance.elapsedSeconds = 0f;
+            childInstance.nextTickAt = 0f;
+            return;
+        }
+
+        childInstance.elapsedSeconds = elapsedSeconds;
     }
 }
 
@@ -136,6 +218,15 @@ public sealed class RuntimeEffectDamageContext
     public Vector2 hitDirection;
 }
 
+public sealed class RuntimeEffectDamageInput
+{
+    public RuntimeEffectDamageContext context;
+    public float baseDamage;
+    public float defenderDefense;
+    public float defenderDamageResistance;
+    public bool ignoreElementalIncomingModifiers;
+}
+
 public abstract class RuntimeEffectDefinition : ScriptableObject
 {
     [Header("Identity")]
@@ -156,8 +247,10 @@ public abstract class RuntimeEffectDefinition : ScriptableObject
 
     public virtual bool AffectsStats => false;
     public virtual bool RequiresTicking => durationType == RuntimeEffectDurationType.Seconds;
+    public virtual bool SupportsStackMerging => false;
 
     public string StableId => !string.IsNullOrWhiteSpace(effectId) ? effectId : name;
+    public virtual string StackKey => StableId;
 
     public float ResolveDuration(float durationOverride = -1f)
     {
@@ -178,6 +271,7 @@ public abstract class RuntimeEffectDefinition : ScriptableObject
     public virtual void OnUpdate(RuntimeEffectContext context) { }
     public virtual void OnExpired(RuntimeEffectContext context) { }
     public virtual void ModifyStats(RuntimeEffectContext context, CharacterStats stats) { }
+    public virtual void ModifyDamageInput(RuntimeEffectDamageInput input) { }
     public virtual float ModifyOutgoingDamage(RuntimeEffectDamageContext context, float currentDamage) => currentDamage;
     public virtual float ModifyIncomingDamage(RuntimeEffectDamageContext context, float currentDamage) => currentDamage;
     public virtual void OnHitDealt(RuntimeEffectDamageContext context) { }

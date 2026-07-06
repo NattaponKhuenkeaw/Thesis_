@@ -13,4 +13,8 @@ MonoBehaviour:
   m_Name: PlayerMetaProgression
   m_EditorClassIdentifier: Assembly-CSharp::Project.Progression.PlayerMetaProgression
   fragments: []
-  characterPotentials: []
+  characterPotentials:
+  - characterId: char-0-main
+    skillLevel: 4
+    ultimateLevel: 4
+    passiveLevel: 4

@@ -772,4 +772,104 @@ public class AbilityUIManager : MonoBehaviour
             ? seconds.ToString("0.0")
             : Mathf.CeilToInt(seconds).ToString();
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Gameplay UI Fading
+    // ─────────────────────────────────────────────────────────────────────────
+    private static Coroutine _fadeCoroutine;
+
+    public static void FadeGameplayUI(float targetAlpha, float duration)
+    {
+        if (Instance == null) return;
+
+        if (_fadeCoroutine != null)
+        {
+            Instance.StopCoroutine(_fadeCoroutine);
+            _fadeCoroutine = null;
+        }
+
+        _fadeCoroutine = Instance.StartCoroutine(FadeGameplayUICoroutine(targetAlpha, duration));
+    }
+
+    private static System.Collections.IEnumerator FadeGameplayUICoroutine(float targetAlpha, float duration)
+    {
+        List<CanvasGroup> canvasGroups = new List<CanvasGroup>();
+
+        // 1. AbilityUIManager Canvas Group
+        CanvasGroup abilityCG = Instance.GetComponentInParent<CanvasGroup>();
+        if (abilityCG == null && Instance.transform.parent != null)
+        {
+            Canvas canvas = Instance.GetComponentInParent<Canvas>();
+            if (canvas != null)
+            {
+                abilityCG = canvas.GetComponent<CanvasGroup>();
+                if (abilityCG == null)
+                {
+                    abilityCG = canvas.gameObject.AddComponent<CanvasGroup>();
+                }
+            }
+        }
+        if (abilityCG != null) canvasGroups.Add(abilityCG);
+
+        // 2. PlayerHUD Canvas Groups
+        PlayerHUD[] huds = Object.FindObjectsByType<PlayerHUD>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+        foreach (var hud in huds)
+        {
+            CanvasGroup hudCG = hud.GetComponentInParent<CanvasGroup>();
+            if (hudCG == null)
+            {
+                Canvas canvas = hud.GetComponentInParent<Canvas>();
+                if (canvas != null)
+                {
+                    hudCG = canvas.GetComponent<CanvasGroup>();
+                    if (hudCG == null)
+                    {
+                        hudCG = canvas.gameObject.AddComponent<CanvasGroup>();
+                    }
+                }
+            }
+            if (hudCG != null && !canvasGroups.Contains(hudCG))
+            {
+                canvasGroups.Add(hudCG);
+            }
+        }
+
+        if (canvasGroups.Count == 0) yield break;
+
+        float startAlpha = canvasGroups[0].alpha;
+        float elapsed = 0f;
+
+        if (duration <= 0f)
+        {
+            foreach (var cg in canvasGroups)
+            {
+                cg.alpha = targetAlpha;
+                cg.interactable = targetAlpha > 0.01f;
+                cg.blocksRaycasts = targetAlpha > 0.01f;
+            }
+        }
+        else
+        {
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = elapsed / duration;
+                float currentAlpha = Mathf.Lerp(startAlpha, targetAlpha, t);
+                foreach (var cg in canvasGroups)
+                {
+                    cg.alpha = currentAlpha;
+                }
+                yield return null;
+            }
+
+            foreach (var cg in canvasGroups)
+            {
+                cg.alpha = targetAlpha;
+                cg.interactable = targetAlpha > 0.01f;
+                cg.blocksRaycasts = targetAlpha > 0.01f;
+            }
+        }
+
+        _fadeCoroutine = null;
+    }
 }

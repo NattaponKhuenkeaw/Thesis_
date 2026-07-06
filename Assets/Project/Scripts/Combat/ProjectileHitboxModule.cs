@@ -139,6 +139,8 @@ public sealed class ProjectileHitboxModule
 
     private void RefreshActiveHitData()
     {
+        RefreshLiveDamageContext();
+
         switch (activeHitbox)
         {
             case NormalHitbox normalHitbox:
@@ -149,6 +151,11 @@ public sealed class ProjectileHitboxModule
                 ApplyGrabHitData(grabHitbox, activeContext);
                 break;
         }
+    }
+
+    private void RefreshLiveDamageContext()
+    {
+        activeContext.sourceCombat?.RefreshProjectileDamageContext(ref activeContext);
     }
 
     private void ApplyNormalHitData(NormalHitbox normalHitbox, ProjectileSpawnContext context)

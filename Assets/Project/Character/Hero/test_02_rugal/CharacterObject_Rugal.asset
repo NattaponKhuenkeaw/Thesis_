@@ -60,34 +60,22 @@ MonoBehaviour:
     cooldownFrames: 24
   kitDefinition:
     skill:
-      abilityId: 
-      abilityName: Skill
+      abilityId: rugal.skill
+      abilityName: Genocide Cutter
+      icon: {fileID: 0}
+      description: 
     ultimate:
-      abilityId: 
-      abilityName: Ultimate
+      abilityId: rugal.ultimate
+      abilityName: Gigantic Pressure
+      icon: {fileID: 0}
+      description: 
     passive:
-      abilityId: 
+      abilityId: rugal.passive
       abilityName: Passive
+      icon: {fileID: 0}
+      description: Increase Basic Stats by +20%
     basePassiveNode:
-      statModifiers:
-      - target: 1
-        operation: 1
-        value: 1.2
-        scope: 0
-        requiredTags: []
-        requiredCounters: []
-      - target: 9
-        operation: 1
-        value: 1.2
-        scope: 0
-        requiredTags: []
-        requiredCounters: []
-      - target: 11
-        operation: 1
-        value: 1.2
-        scope: 0
-        requiredTags: []
-        requiredCounters: []
+      statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
@@ -104,10 +92,11 @@ MonoBehaviour:
       nodeId: base.passive
       nodeName: Base Passive
       description: Increase Basic Stats by +20%
+      skillPanelDescriptionOverride: Increase Basic Stats by +20%
       track: 2
       level: 0
       fragmentCost: 0
-      unlockedByDefault: 1
+      unlockedByDefault: 0
     potentialNodes:
     - statModifiers: []
       cooldownModifiers: []
@@ -124,11 +113,18 @@ MonoBehaviour:
           actionName: 
           filterByStepName: 0
           stepName: 
+          filterByElement: 0
+          elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
-        effect: {fileID: 11400000, guid: 7a75fa011a4965f4ca29fb03064ea84a, type: 2}
+        effect: {fileID: 11400000, guid: 9a2e4ed3e8b04f9db6f5fce34048f4b7, type: 2}
         scope: 0
+        stackMode: 0
+        stackLimit: 99
+        refreshDurationOnReapply: 1
         durationOverride: -1
+        filterByTargetElement: 0
+        targetElement: 0
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -139,13 +135,360 @@ MonoBehaviour:
       enemyElementModifiers: []
       passiveHookTypeName: 
       nodeId: rugal.skill.lv1
-      nodeName: Cutter Strom
-      description: 'Increase ATK Self +7% for 14 seconds '
+      nodeName: Cutter Storm
+      description: Increase own ATK by 7% for 10 seconds.
+      skillPanelDescriptionOverride: 
       track: 0
       level: 1
       fragmentCost: 1
-      unlockedByDefault: 1
+      unlockedByDefault: 0
     - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers:
+      - category: 1
+        actionId: rugal.skill
+        actionName: 
+        stepName: 
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags: []
+        requiredCounters: []
+        damageMultiplierOperation: 3
+        damageMultiplierValue: 0
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: rugal.skill.lv2
+      nodeName: Cutter Break
+      description: Increase Genocide Cutter multiplier to 500% of ATK.
+      skillPanelDescriptionOverride: 
+      track: 0
+      level: 2
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 1
+          filterByActionId: 1
+          actionId: rugal.skill
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        effect: {fileID: 11400000, guid: 9a2e4ed3e8b04f9db6f5fce34048f4b7, type: 2}
+        scope: 1
+        stackMode: 1
+        stackLimit: 99
+        refreshDurationOnReapply: 1
+        durationOverride: -1
+        filterByTargetElement: 0
+        targetElement: 0
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: rugal.skill.lv3
+      nodeName: Cutter Command
+      description: Increase all allies ATK by 7% for 10 seconds.
+      skillPanelDescriptionOverride: 
+      track: 0
+      level: 3
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers:
+      - category: 1
+        actionId: rugal.skill
+        actionName: 
+        stepName: 
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags: []
+        requiredCounters: []
+        damageMultiplierOperation: 3
+        damageMultiplierValue: 5
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: rugal.skill.lv4
+      nodeName: Cutter Execution
+      description: Increase Genocide Cutter multiplier to 600% of ATK.
+      skillPanelDescriptionOverride: 
+      track: 0
+      level: 4
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects:
+      - filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionId: 1
+          actionId: rugal.ultimate
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        chance: 1
+        internalCooldown: 0
+        attackRatio: 0
+        targetMaxHpRatio: 0.08
+        capTargetMaxHpDamage: 1
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 500
+        elementType: 1
+        consumeRuntimeTagOnTrigger: 0
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: rugal.ultimate.lv1
+      nodeName: Gigantic Crush
+      description: Gigantic Pressure deals additional Memory DMG equal to 8% of enemy
+        Max HP.
+      skillPanelDescriptionOverride: 
+      track: 1
+      level: 1
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers:
+      - category: 2
+        actionId: rugal.ultimate
+        actionName: 
+        stepName: 
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags: []
+        requiredCounters: []
+        damageMultiplierOperation: 3
+        damageMultiplierValue: 10
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: rugal.ultimate.lv2
+      nodeName: Gigantic Force
+      description: Increase Gigantic Pressure multiplier to 1000% of ATK.
+      skillPanelDescriptionOverride: 
+      track: 1
+      level: 2
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionId: 1
+          actionId: rugal.ultimate
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        effect: {fileID: 11400000, guid: 878b38008899431fbf1f80acbfcd7e8a, type: 2}
+        scope: 0
+        stackMode: 0
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        durationOverride: -1
+        filterByTargetElement: 0
+        targetElement: 0
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: rugal.ultimate.lv3
+      nodeName: Gigantic Drain
+      description: Gigantic Pressure regenerates HP equal to 50% of damage dealt,
+        doubled below 30% HP.
+      skillPanelDescriptionOverride: 
+      track: 1
+      level: 3
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers:
+      - category: 2
+        actionId: rugal.ultimate
+        actionName: 
+        stepName: 
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags: []
+        requiredCounters: []
+        damageMultiplierOperation: 3
+        damageMultiplierValue: 13
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: rugal.ultimate.lv4
+      nodeName: Gigantic Tyrant
+      description: Increase Gigantic Pressure multiplier to 1300% of ATK.
+      skillPanelDescriptionOverride: 
+      track: 1
+      level: 4
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers:
+      - target: 0
+        operation: 1
+        valueSource: 0
+        value: 1.2
+        sourceStat: 0
+        scope: 0
+        requiredTags: []
+        requiredCounters: []
+      - target: 11
+        operation: 1
+        valueSource: 0
+        value: 1.2
+        sourceStat: 11
+        scope: 0
+        requiredTags: []
+        requiredCounters: []
+      - target: 9
+        operation: 1
+        valueSource: 0
+        value: 1.2
+        sourceStat: 9
+        scope: 0
+        requiredTags: []
+        requiredCounters: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
@@ -159,11 +502,318 @@ MonoBehaviour:
       resourceEffects: []
       enemyElementModifiers: []
       passiveHookTypeName: 
-      nodeId: rugal.skill.lv2
-      nodeName: Cutter Strom
-      description: 'Increase ATK Self +7% for 14 seconds '
-      track: 0
+      nodeId: rugal.passive.lv0
+      nodeName: Omega Mode
+      description: 
+      skillPanelDescriptionOverride: 
+      track: 2
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects:
+      - trigger: 3
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        effect: {fileID: 11400000, guid: 9b32662d73734c1389701d17da2579bd, type: 2}
+        scope: 0
+        stackMode: 0
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        durationOverride: -1
+        filterByTargetElement: 0
+        targetElement: 0
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: rugal.passive.lv1
+      nodeName: Merciless Blow
+      description: Every self attack ignores enemy Defense.
+      skillPanelDescriptionOverride: 
+      track: 2
       level: 1
       fragmentCost: 1
-      unlockedByDefault: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 1
+          filterByActionId: 1
+          actionId: rugal.skill
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        chance: 0.35
+        effectType: 3
+        scope: 0
+        valueSource: 0
+        valueRatio: 0
+        flatValue: 0
+        runtimeTag: 
+        runtimeTagDuration: 0
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: rugal.passive.lv2
+      nodeName: Cutter Loop
+      description: Genocide Cutter has a 35% chance to reset its cooldown when used.
+      skillPanelDescriptionOverride: 
+      track: 2
+      level: 2
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers:
+      - target: 0
+        operation: 0
+        valueSource: 1
+        value: 0.5
+        sourceStat: 11
+        scope: 0
+        requiredTags: []
+        requiredCounters: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: rugal.passive.lv3
+      nodeName: Defense Conversion
+      description: Increase own ATK based on 50% of own DEF.
+      skillPanelDescriptionOverride: 
+      track: 2
+      level: 3
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers:
+      - category: 1
+        actionId: rugal.skill.ex
+        actionName: 
+        stepName: 
+        unlocked: 1
+        priorityBonus: 100
+        replacementActionId: rugal.skill.ex
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags:
+        - tag: rugal.omega_mode
+          expectedValue: 1
+        requiredCounters: []
+        damageMultiplierOperation: 0
+        damageMultiplierValue: 0
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
+      - category: 2
+        actionId: rugal.ultimate.ex
+        actionName: 
+        stepName: 
+        unlocked: 1
+        priorityBonus: 100
+        replacementActionId: rugal.ultimate.ex
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags:
+        - tag: rugal.omega_mode
+          expectedValue: 1
+        requiredCounters: []
+        damageMultiplierOperation: 0
+        damageMultiplierValue: 0
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
+      runtimeTagEffects: []
+      runtimeEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 1
+          runtimeTag: rugal.omega_mode
+        effect: {fileID: 11400000, guid: 50b57c5b2d2746d2aa763764f7f8b6cf, type: 2}
+        scope: 0
+        stackMode: 1
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        durationOverride: 20
+        filterByTargetElement: 0
+        targetElement: 0
+      counterEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 1
+          filterByActionId: 1
+          actionId: rugal.skill
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        counterId: rugal.skill_ult_used
+        operation: 1
+        value: 1
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionId: 1
+          actionId: rugal.ultimate
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        counterId: rugal.skill_ult_used
+        operation: 1
+        value: 1
+      conditionalStateEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        requiredTags: []
+        requiredCounters:
+        - counterId: rugal.skill_ult_used
+          comparison: 3
+          value: 5
+        runtimeTagEffects:
+        - trigger: 0
+          filter:
+            filterByCategory: 0
+            category: 0
+            filterByActionId: 0
+            actionId: 
+            filterByActionName: 0
+            actionName: 
+            filterByStepName: 0
+            stepName: 
+            filterByElement: 0
+            elementType: 0
+            requireRuntimeTag: 0
+            runtimeTag: 
+          tag: rugal.omega_mode
+          addTag: 1
+          duration: 1e+15
+        counterEffects:
+        - trigger: 1
+          filter:
+            filterByCategory: 0
+            category: 0
+            filterByActionId: 0
+            actionId: 
+            filterByActionName: 0
+            actionName: 
+            filterByStepName: 0
+            stepName: 
+            filterByElement: 0
+            elementType: 0
+            requireRuntimeTag: 0
+            runtimeTag: 
+          counterId: rugal.skill_ult_used
+          operation: 0
+          value: 0
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: rugal.passive.lv4
+      nodeName: Omega Mode
+      description: After five skill/ultimate uses, enter omega mode. Omega mode buffs
+        ATK/DEF, ignores resistance, and marks Ex follow-up routing.
+      skillPanelDescriptionOverride: 
+      track: 2
+      level: 4
+      fragmentCost: 1
+      unlockedByDefault: 0
   actionResolverTable: {fileID: 11400000, guid: 24c1f4b36af412b4ebbeeb757fac41ef, type: 2}

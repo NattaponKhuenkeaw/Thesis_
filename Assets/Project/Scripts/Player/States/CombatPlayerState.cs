@@ -521,8 +521,11 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
         if (entry.enableUltimateZoom && CameraManager.instance != null)
         {
-            CameraManager.instance.SetUltimateZoom(true, entry.ultimateZoomSize);
+            float zoomSize = entry.ultimateZoomSize > 0.1f ? entry.ultimateZoomSize : 5f;
+            CameraManager.instance.SetUltimateZoom(true, zoomSize);
         }
+
+        AbilityUIManager.FadeGameplayUI(0f, 0.25f);
 
         if (entry.freezeWorld && GameFreezeManager.Instance != null)
         {
@@ -767,6 +770,8 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             CameraManager.instance.SetUltimateZoom(false);
         }
 
+        AbilityUIManager.FadeGameplayUI(1f, 0.25f);
+
         // Restore animator update mode to normal after the sequence finishes
         if (player.Animator != null && player.Animator.anim != null)
         {
@@ -804,6 +809,8 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             CameraManager.instance.SetUltimateZoom(false);
         }
 
+        AbilityUIManager.FadeGameplayUI(1f, 0.25f);
+
         // Restore animator update mode to normal if we were in an unscaled sequence
         if (player.Animator != null && player.Animator.anim != null)
         {
@@ -833,6 +840,8 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             CameraManager.instance.EndTemporaryPlayerSnap();
             CameraManager.instance.SetUltimateZoom(false);
         }
+
+        AbilityUIManager.FadeGameplayUI(1f, 0.25f);
 
         // Safety reset for animator update mode
         if (player.Animator != null && player.Animator.anim != null)

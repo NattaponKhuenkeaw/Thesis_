@@ -191,6 +191,20 @@ public class CharacterPassiveController : MonoBehaviour
 
     public float ModifyValue(PassiveModifierTarget target, float baseValue, PassiveEffectScope scope = PassiveEffectScope.Self)
     {
+        return ModifyValueInternal(target, baseValue, scope, runtimeOnly: false);
+    }
+
+    public float ModifyRuntimeValue(PassiveModifierTarget target, float baseValue, PassiveEffectScope scope = PassiveEffectScope.Self)
+    {
+        return ModifyValueInternal(target, baseValue, scope, runtimeOnly: true);
+    }
+
+    private float ModifyValueInternal(
+        PassiveModifierTarget target,
+        float baseValue,
+        PassiveEffectScope scope,
+        bool runtimeOnly)
+    {
         float additive = 0f;
         float multiplier = 1f;
 
@@ -210,23 +224,45 @@ public class CharacterPassiveController : MonoBehaviour
                     continue;
                 }
 
+                if (runtimeOnly && !modifier.HasRuntimeRequirements)
+                {
+                    continue;
+                }
+
                 if (!modifier.RuntimeRequirementsMet(runtimeState))
                 {
                     continue;
                 }
 
-                if (modifier.operation == PassiveNumericOperation.Add)
+                switch (modifier.operation)
                 {
-                    additive += modifier.value;
-                }
-                else
-                {
-                    multiplier *= modifier.value;
+                    case PassiveNumericOperation.Add:
+                        additive += ResolveStatModifierValue(modifier);
+                        break;
+                    case PassiveNumericOperation.Multiply:
+                        multiplier *= ResolveStatModifierValue(modifier);
+                        break;
                 }
             }
         }
 
         return (baseValue + additive) * multiplier;
+    }
+
+    private float ResolveStatModifierValue(PassiveStatModifierDefinition modifier)
+    {
+        if (modifier == null)
+        {
+            return 0f;
+        }
+
+        if (modifier.valueSource == PassiveModifierValueSource.SourceStatRatio)
+        {
+            float sourceValue = ResolveResourceValue(modifier.sourceStat);
+            return sourceValue * modifier.value;
+        }
+
+        return modifier.value;
     }
 
     public float ModifyCooldown(AttackCategory category, string actionName, float baseValue)
@@ -572,6 +608,7 @@ public class CharacterPassiveController : MonoBehaviour
         AttackCategory category,
         string actionId,
         string actionName,
+        string stepName,
         out ProjectileType replacementProjectileType,
         out ProjectileData replacementProjectileData)
     {
@@ -589,7 +626,7 @@ public class CharacterPassiveController : MonoBehaviour
             for (int i = 0; i < modifiers.Count; i++)
             {
                 PassiveActionModifierDefinition modifier = modifiers[i];
-                if (modifier == null || !modifier.Matches(category, actionId, actionName, runtimeState))
+                if (modifier == null || !modifier.Matches(category, actionId, actionName, stepName, runtimeState))
                 {
                     continue;
                 }
@@ -607,6 +644,22 @@ public class CharacterPassiveController : MonoBehaviour
         }
 
         return replacementProjectileType != ProjectileType.None || replacementProjectileData != null;
+    }
+
+    public bool TryGetProjectileReplacement(
+        AttackCategory category,
+        string actionId,
+        string actionName,
+        out ProjectileType replacementProjectileType,
+        out ProjectileData replacementProjectileData)
+    {
+        return TryGetProjectileReplacement(
+            category,
+            actionId,
+            actionName,
+            null,
+            out replacementProjectileType,
+            out replacementProjectileData);
     }
 
     public int GetStartingComboDepthOverride(AttackCategory category, string actionId, string actionName)
@@ -948,7 +1001,14 @@ public class CharacterPassiveController : MonoBehaviour
         if (effect.scope == PassiveEffectScope.Enemy)
         {
             RuntimeEffectReceiver enemyReceiver = context.enemy != null ? context.enemy.RuntimeEffects : null;
-            enemyReceiver?.ApplyEffect(effect.effect, sourceCharacter, sourceStats, effect.durationOverride);
+            enemyReceiver?.ApplyEffect(
+                effect.effect,
+                sourceCharacter,
+                sourceStats,
+                effect.durationOverride,
+                effect.stackMode,
+                effect.stackLimit,
+                effect.refreshDurationOnReapply);
             return;
         }
 
@@ -956,9 +1016,17 @@ public class CharacterPassiveController : MonoBehaviour
         Project.ShopSystem.PlayerRunInventory inventory = teamLoader != null ? teamLoader.RunInventory : null;
         if (inventory == null)
         {
-            if (effect.scope == PassiveEffectScope.Self)
+            if (effect.scope == PassiveEffectScope.Self
+                && MatchesRuntimeEffectTarget(effect, sourceCharacter))
             {
-                playerCharacter.RuntimeEffects?.ApplyEffect(effect.effect, sourceCharacter, sourceStats, effect.durationOverride);
+                playerCharacter.RuntimeEffects?.ApplyEffect(
+                    effect.effect,
+                    sourceCharacter,
+                    sourceStats,
+                    effect.durationOverride,
+                    effect.stackMode,
+                    effect.stackLimit,
+                    effect.refreshDurationOnReapply);
             }
 
             return;
@@ -980,11 +1048,34 @@ public class CharacterPassiveController : MonoBehaviour
                 _ => false
             };
 
-            if (shouldApply)
+            if (shouldApply && MatchesRuntimeEffectTarget(effect, target))
             {
-                inventory.ApplyRuntimeEffect(target, effect.effect, sourceCharacter, sourceStats, effect.durationOverride);
+                inventory.ApplyRuntimeEffect(
+                    target,
+                    effect.effect,
+                    sourceCharacter,
+                    sourceStats,
+                    effect.durationOverride,
+                    effect.stackMode,
+                    effect.stackLimit,
+                    effect.refreshDurationOnReapply);
             }
         }
+    }
+
+    private static bool MatchesRuntimeEffectTarget(PassiveRuntimeEffectDefinition effect, CharacterObject target)
+    {
+        if (effect == null || target == null)
+        {
+            return false;
+        }
+
+        if (effect.filterByTargetElement && target.elementType != effect.targetElement)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     private void ApplyCounterEffects(
@@ -1087,7 +1178,11 @@ public class CharacterPassiveController : MonoBehaviour
         for (int i = 0; i < effects.Count; i++)
         {
             PassiveResourceEffectDefinition effect = effects[i];
-            if (effect == null || effect.trigger != trigger || effect.filter == null || !effect.filter.Matches(context))
+            if (effect == null
+                || effect.trigger != trigger
+                || effect.filter == null
+                || !effect.filter.Matches(context)
+                || UnityEngine.Random.value > Mathf.Clamp01(effect.chance))
             {
                 continue;
             }
@@ -1181,6 +1276,12 @@ public class CharacterPassiveController : MonoBehaviour
             CharacterObject character = team[i];
             if (character == null)
             {
+                continue;
+            }
+
+            if (character == playerCharacter.characterObject)
+            {
+                playerCharacter.Heal(value);
                 continue;
             }
 

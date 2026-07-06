@@ -2575,7 +2575,7 @@ MonoBehaviour:
           activationVFXPrefab: {fileID: 0}
           activationVFXOffset: {x: -0.5, y: 1, z: 0}
           activationVoice: {fileID: 8300000, guid: 367fc337de3bc9d44b6fbf4d782ba5c4, type: 3}
-          activationSFX: {fileID: 8300000, guid: 62219625afbb49f41ac5d61585ec99b8, type: 3}
+          activationSFX: {fileID: 8300000, guid: 6047e38506eb20347b9750b41ccfda17, type: 3}
           voiceDelay: 0.1
           teleportSettings:
             targetRadius: 8
@@ -2612,6 +2612,59 @@ MonoBehaviour:
         - label: Ultimate Sequence
           eventType: 3
           triggerFrame: 0
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          freezeWorld: 1
+          freezeDurationOverride: 0
+          timelineMode: 0
+          activationVFXType: 0
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 0, z: 0}
+          activationVoice: {fileID: 0}
+          activationSFX: {fileID: 0}
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0.4
+              endStrength: 0.08
+              duration: 0.14
+              pulseInterval: 0.025
+              slowMotion:
+                enabled: 0
+                timeScale: 0.35
+                duration: 0.08
+                delaySeconds: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          enableUltimateZoom: 0
+          ultimateZoomSize: 5
+        - label: Ultimate Sequence
+          eventType: 4
+          triggerFrame: 1
           trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
           overlaySettings:
             fadeInDuration: 0.03

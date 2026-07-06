@@ -53,6 +53,7 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
     public event System.Action<float, float> OnHealthChanged;
     public event System.Action<float> OnDamaged;
     public event System.Action<float> OnHealed;
+    public event System.Action OnDamageMissed;
     public event System.Action OnDied;
     public event System.Action<CharacterObject> OnCharacterChanged;
 
@@ -79,6 +80,11 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         if (GetComponent<PlayerSpeedFallbackFeedback>() == null)
         {
             gameObject.AddComponent<PlayerSpeedFallbackFeedback>();
+        }
+
+        if (GetComponentInChildren<PlayerWorldUI>(true) == null)
+        {
+            gameObject.AddComponent<PlayerWorldUI>();
         }
     }
 
@@ -164,10 +170,16 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
             return false;
 
         if (IsDamageInvulnerable || (Movement != null && Movement.IsInvincible()) || IsUltimateInvulnerable)
+        {
+            OnDamageMissed?.Invoke();
             return false;
+        }
 
         if (PassiveController != null && PassiveController.TryEvadeIncomingDamage(value))
+        {
+            OnDamageMissed?.Invoke();
             return false;
+        }
 
         float finalDamage = value;
         if (Stats != null)
@@ -196,7 +208,10 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
 
         float actualDamage = previousHP - currentHP;
         if (actualDamage <= 0f)
+        {
+            OnDamageMissed?.Invoke();
             return false;
+        }
 
         damageInvulnerableUntil = Time.time + Mathf.Max(0f, postHitInvulnerabilityDuration);
 
@@ -245,15 +260,10 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         if (characterObject == null || value <= 0f || IsDead)
             return;
 
-        float previousHP = currentHP;
         currentHP += value;
         currentHP = Mathf.Min(currentHP, MaxHP);
 
-        float actualHeal = currentHP - previousHP;
-        if (actualHeal <= 0f)
-            return;
-
-        OnHealed?.Invoke(actualHeal);
+        OnHealed?.Invoke(value);
         NotifyHealthChanged();
     }
 

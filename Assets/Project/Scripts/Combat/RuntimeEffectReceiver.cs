@@ -38,7 +38,10 @@ public class RuntimeEffectReceiver : MonoBehaviour
         RuntimeEffectDefinition definition,
         CharacterObject sourceCharacter,
         CharacterStats sourceStats,
-        float durationOverride = -1f)
+        float durationOverride = -1f,
+        RuntimeEffectStackMode stackMode = RuntimeEffectStackMode.UseDefinition,
+        int stackLimit = 1,
+        bool refreshDurationOnReapply = true)
     {
         if (definition == null)
         {
@@ -47,19 +50,72 @@ public class RuntimeEffectReceiver : MonoBehaviour
 
         CacheTargets();
 
-        RuntimeEffectInstance existing = !definition.stackable
-            ? FindEffect(definition)
-            : null;
+        bool shouldStack = ResolveShouldStack(definition, stackMode);
+        RuntimeEffectInstance existing = !shouldStack ? FindEffect(definition) : null;
+
+        if (shouldStack && definition.SupportsStackMerging)
+        {
+            RuntimeEffectInstance stackTarget = FindMergeableEffect(
+                definition,
+                sourceCharacter,
+                sourceStats,
+                definition.ResolveDuration(durationOverride));
+            if (stackTarget != null)
+            {
+                if (stackTarget.stackCount < Mathf.Max(1, stackLimit))
+                {
+                    stackTarget.AddStack(durationOverride, refreshDurationOnReapply);
+                }
+                else if (refreshDurationOnReapply)
+                {
+                    stackTarget.Refresh(durationOverride);
+                }
+
+                if (definition.RequiresTicking)
+                {
+                    hasTickingEffects = true;
+                }
+
+                EnsureVisual(stackTarget);
+                RaiseEffectsChanged();
+                return stackTarget;
+            }
+        }
 
         if (existing != null)
         {
-            if (definition.refreshDurationOnReapply)
+            if (existing.definition != definition)
+            {
+                existing.definition?.OnExpired(BuildContext(existing, 0f));
+                DestroyVisual(existing);
+                existing.Initialize(definition, sourceCharacter, sourceStats, durationOverride);
+                if (definition.RequiresTicking)
+                {
+                    hasTickingEffects = true;
+                }
+
+                definition.OnApply(BuildContext(existing, 0f));
+                EnsureVisual(existing);
+            }
+            else if (refreshDurationOnReapply)
             {
                 existing.Refresh(durationOverride);
             }
 
             RaiseEffectsChanged();
             return existing;
+        }
+
+        if (shouldStack && CountEffects(definition) >= Mathf.Max(1, stackLimit))
+        {
+            RuntimeEffectInstance refreshTarget = FindOldestEffect(definition);
+            if (refreshTarget != null && refreshDurationOnReapply)
+            {
+                refreshTarget.Refresh(durationOverride);
+            }
+
+            RaiseEffectsChanged();
+            return refreshTarget;
         }
 
         RuntimeEffectInstance instance = new RuntimeEffectInstance();
@@ -79,6 +135,16 @@ public class RuntimeEffectReceiver : MonoBehaviour
         }
 
         return instance;
+    }
+
+    private static bool ResolveShouldStack(RuntimeEffectDefinition definition, RuntimeEffectStackMode stackMode)
+    {
+        return stackMode switch
+        {
+            RuntimeEffectStackMode.Override => false,
+            RuntimeEffectStackMode.Stack => true,
+            _ => definition != null && definition.stackable
+        };
     }
 
     public void ApplyStatus(StatusEffectType status, bool enabled = true)
@@ -134,6 +200,31 @@ public class RuntimeEffectReceiver : MonoBehaviour
     public bool HasStatus(StatusEffectType status)
     {
         return activeStatusFlags.Contains(status);
+    }
+
+    public void ModifyDamageInput(RuntimeEffectDamageInput input)
+    {
+        if (input == null || input.context == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < activeEffects.Count; i++)
+        {
+            RuntimeEffectInstance instance = activeEffects[i];
+            if (instance == null || instance.definition == null)
+            {
+                continue;
+            }
+
+            input.context.instance = instance;
+            instance.definition.ModifyDamageInput(input);
+        }
+
+        input.context.instance = null;
+        input.baseDamage = Mathf.Max(0f, input.baseDamage);
+        input.defenderDefense = Mathf.Max(0f, input.defenderDefense);
+        input.defenderDamageResistance = Mathf.Clamp(input.defenderDamageResistance, -95f, 95f);
     }
 
     public float ModifyIncomingDamage(RuntimeEffectDamageContext context, float currentDamage)
@@ -301,13 +392,123 @@ public class RuntimeEffectReceiver : MonoBehaviour
         for (int i = 0; i < activeEffects.Count; i++)
         {
             RuntimeEffectInstance instance = activeEffects[i];
-            if (instance != null && instance.definition == definition)
+            if (MatchesEffect(instance, definition))
             {
                 return instance;
             }
         }
 
         return null;
+    }
+
+    private int CountEffects(RuntimeEffectDefinition definition)
+    {
+        int count = 0;
+        for (int i = 0; i < activeEffects.Count; i++)
+        {
+            RuntimeEffectInstance instance = activeEffects[i];
+            if (MatchesEffect(instance, definition))
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private RuntimeEffectInstance FindOldestEffect(RuntimeEffectDefinition definition)
+    {
+        RuntimeEffectInstance oldest = null;
+        for (int i = 0; i < activeEffects.Count; i++)
+        {
+            RuntimeEffectInstance instance = activeEffects[i];
+            if (!MatchesEffect(instance, definition))
+            {
+                continue;
+            }
+
+            if (oldest == null || instance.elapsedSeconds > oldest.elapsedSeconds)
+            {
+                oldest = instance;
+            }
+        }
+
+        return oldest;
+    }
+
+    private RuntimeEffectInstance FindMergeableEffect(
+        RuntimeEffectDefinition definition,
+        CharacterObject sourceCharacter,
+        CharacterStats sourceStats,
+        float resolvedDuration)
+    {
+        for (int i = 0; i < activeEffects.Count; i++)
+        {
+            RuntimeEffectInstance instance = activeEffects[i];
+            if (!MatchesEffect(instance, definition))
+            {
+                continue;
+            }
+
+            if (instance.sourceCharacter != sourceCharacter)
+            {
+                continue;
+            }
+
+            if (!StatsApproximatelyEqual(instance.sourceStatsSnapshot, sourceStats))
+            {
+                continue;
+            }
+
+            if (!Mathf.Approximately(instance.appliedDurationSeconds, resolvedDuration))
+            {
+                continue;
+            }
+
+            return instance;
+        }
+
+        return null;
+    }
+
+    private static bool StatsApproximatelyEqual(CharacterStats a, CharacterStats b)
+    {
+        if (ReferenceEquals(a, b))
+        {
+            return true;
+        }
+
+        if (a == null || b == null)
+        {
+            return a == null && b == null;
+        }
+
+        return Approximately(a.maxHP, b.maxHP)
+            && Approximately(a.attack, b.attack)
+            && Approximately(a.defense, b.defense)
+            && Approximately(a.speed, b.speed)
+            && Approximately(a.elementalMastery, b.elementalMastery)
+            && Approximately(a.critRate, b.critRate)
+            && Approximately(a.critDamage, b.critDamage)
+            && Approximately(a.cooldownRate, b.cooldownRate)
+            && Approximately(a.impact, b.impact)
+            && Approximately(a.damageReduction, b.damageReduction)
+            && Approximately(a.aeRecharge, b.aeRecharge);
+    }
+
+    private static bool Approximately(float a, float b)
+    {
+        return Mathf.Abs(a - b) <= 0.0001f;
+    }
+
+    private static bool MatchesEffect(RuntimeEffectInstance instance, RuntimeEffectDefinition definition)
+    {
+        if (instance == null || instance.definition == null || definition == null)
+        {
+            return false;
+        }
+
+        return string.Equals(instance.definition.StableId, definition.StableId, StringComparison.Ordinal);
     }
 
     private void RemoveEffect(RuntimeEffectInstance instance)

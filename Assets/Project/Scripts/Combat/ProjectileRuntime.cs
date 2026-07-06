@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Project.Combat;
+using Project.ShopSystem;
 
 public class ProjectileRuntime : MonoBehaviour
 {
@@ -110,6 +111,7 @@ public class ProjectileRuntime : MonoBehaviour
             runtime.traversalStrategy.Tick(runtime, runtime.ProjectileData, runtime.spawnContext, deltaTime);
             runtime.ApplyFacingVisual();
             runtime.ProcessTrackedEnemiesIfReady();
+            runtime.ApplyAreaEffectsIfReady(deltaTime);
         }
 
         public void HandleTrigger(Collider2D other)
@@ -172,6 +174,7 @@ public class ProjectileRuntime : MonoBehaviour
 
     private Vector2 currentDirection = Vector2.right;
     private float lifeTimer;
+    private float areaEffectTimer;
     private bool currentHitConsumesMaxHits = true;
     private bool processedHitsThisFrame;
     private bool releaseQueued;
@@ -205,6 +208,7 @@ public class ProjectileRuntime : MonoBehaviour
         isExpired = false;
         processedHitsThisFrame = false;
         hitOccurredInCurrentBatch = false;
+        areaEffectTimer = 0f;
         trackedTargetTransform = null;
         targetSamples.Clear();
         trackedEnemies.Clear();
@@ -241,6 +245,7 @@ public class ProjectileRuntime : MonoBehaviour
         currentHitConsumesMaxHits = true;
         processedHitsThisFrame = false;
         hitOccurredInCurrentBatch = false;
+        areaEffectTimer = 0f;
         ProjectileData = null;
         trackedTargetTransform = null;
         targetSamples.Clear();
@@ -662,6 +667,163 @@ public class ProjectileRuntime : MonoBehaviour
         }
     }
 
+    private void ApplyAreaEffectsIfReady(float deltaTime)
+    {
+        if (ProjectileData == null
+            || !ProjectileData.trackAreaOccupants
+            || ProjectileData.areaEffects == null
+            || ProjectileData.areaEffects.Count == 0
+            || triggerCollider == null
+            || !triggerCollider.enabled)
+        {
+            return;
+        }
+
+        areaEffectTimer -= Mathf.Max(0f, deltaTime);
+        if (areaEffectTimer > 0f)
+        {
+            return;
+        }
+
+        areaEffectTimer = Mathf.Max(0.05f, ProjectileData.areaEffectRefreshInterval);
+        ApplyAreaEffectsToActivePlayer();
+        ApplyAreaEffectsToTrackedEnemies();
+    }
+
+    private void ApplyAreaEffectsToActivePlayer()
+    {
+        PlayerCharacter activePlayer = UnityEngine.Object.FindFirstObjectByType<PlayerCharacter>();
+        if (activePlayer == null || !IsPlayerTouchingTrigger(activePlayer))
+        {
+            return;
+        }
+
+        CharacterObject sourceCharacter = spawnContext.sourceCharacter;
+        CharacterStats sourceStats = spawnContext.attackerStats;
+        TeamLoader teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
+        PlayerRunInventory inventory = teamLoader != null ? teamLoader.RunInventory : null;
+        CharacterObject[] team = teamLoader != null
+            ? teamLoader.GetTeamSnapshot()
+            : new[] { activePlayer.characterObject };
+
+        for (int i = 0; i < ProjectileData.areaEffects.Count; i++)
+        {
+            RuntimeAreaEffectApplication application = ProjectileData.areaEffects[i];
+            if (application == null
+                || application.effect == null
+                || application.scope == PassiveEffectScope.Enemy
+                || !IsAreaEffectUnlocked(application, activePlayer))
+            {
+                continue;
+            }
+
+            for (int teamIndex = 0; teamIndex < team.Length; teamIndex++)
+            {
+                CharacterObject target = team[teamIndex];
+                if (target == null)
+                {
+                    continue;
+                }
+
+                bool shouldApply = application.scope switch
+                {
+                    PassiveEffectScope.Self => target == activePlayer.characterObject,
+                    PassiveEffectScope.Allies => true,
+                    _ => false
+                };
+
+                if (!shouldApply)
+                {
+                    continue;
+                }
+
+                if (inventory != null)
+                {
+                    inventory.ApplyRuntimeEffect(
+                        target,
+                        application.effect,
+                        sourceCharacter,
+                        sourceStats,
+                        application.durationOverride,
+                        application.stackMode,
+                        application.stackLimit,
+                        application.refreshDurationOnReapply);
+                    continue;
+                }
+
+                if (target == activePlayer.characterObject)
+                {
+                    activePlayer.RuntimeEffects?.ApplyEffect(
+                        application.effect,
+                        sourceCharacter,
+                        sourceStats,
+                        application.durationOverride,
+                        application.stackMode,
+                        application.stackLimit,
+                        application.refreshDurationOnReapply);
+                }
+            }
+        }
+    }
+
+    private void ApplyAreaEffectsToTrackedEnemies()
+    {
+        PlayerCharacter activePlayer = UnityEngine.Object.FindFirstObjectByType<PlayerCharacter>();
+        trackedEnemyBuffer.Clear();
+        foreach (EnemyController enemy in trackedEnemies)
+        {
+            if (enemy != null && enemy.IsAlive && IsEnemyTouchingTrigger(enemy))
+            {
+                trackedEnemyBuffer.Add(enemy);
+            }
+        }
+
+        for (int i = 0; i < trackedEnemyBuffer.Count; i++)
+        {
+            EnemyController enemy = trackedEnemyBuffer[i];
+            for (int effectIndex = 0; effectIndex < ProjectileData.areaEffects.Count; effectIndex++)
+            {
+                RuntimeAreaEffectApplication application = ProjectileData.areaEffects[effectIndex];
+                if (application == null
+                    || application.effect == null
+                    || application.scope != PassiveEffectScope.Enemy
+                    || !IsAreaEffectUnlocked(application, activePlayer))
+                {
+                    continue;
+                }
+
+                enemy.RuntimeEffects?.ApplyEffect(
+                    application.effect,
+                    spawnContext.sourceCharacter,
+                    spawnContext.attackerStats,
+                    application.durationOverride,
+                    application.stackMode,
+                    application.stackLimit,
+                    application.refreshDurationOnReapply);
+            }
+        }
+
+        trackedEnemyBuffer.Clear();
+    }
+
+    private bool IsAreaEffectUnlocked(RuntimeAreaEffectApplication application, PlayerCharacter activePlayer)
+    {
+        if (application == null || string.IsNullOrWhiteSpace(application.requiredNodeId))
+        {
+            return true;
+        }
+
+        CharacterPassiveController passiveController = activePlayer != null
+            ? activePlayer.PassiveController
+            : null;
+        if (passiveController == null)
+        {
+            passiveController = UnityEngine.Object.FindFirstObjectByType<CharacterPassiveController>();
+        }
+
+        return passiveController != null && passiveController.IsNodeUnlocked(application.requiredNodeId);
+    }
+
     private bool HasHittableTrackedEnemy()
     {
         foreach (EnemyController enemy in trackedEnemies)
@@ -722,14 +884,41 @@ public class ProjectileRuntime : MonoBehaviour
 
         if (enemy.bodyCollider != null)
         {
-            return enemy.bodyCollider.IsTouching(triggerCollider);
+            return enemy.bodyCollider.IsTouching(triggerCollider)
+                || enemy.bodyCollider.bounds.Intersects(triggerCollider.bounds);
         }
 
         Collider2D[] colliders = enemy.GetComponentsInChildren<Collider2D>(true);
         for (int i = 0; i < colliders.Length; i++)
         {
             Collider2D collider = colliders[i];
-            if (collider != null && collider.IsTouching(triggerCollider))
+            if (collider != null
+                && (collider.IsTouching(triggerCollider) || collider.bounds.Intersects(triggerCollider.bounds)))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool IsPlayerTouchingTrigger(PlayerCharacter player)
+    {
+        if (player == null || triggerCollider == null || !triggerCollider.enabled)
+        {
+            return false;
+        }
+
+        Collider2D[] colliders = player.GetComponentsInChildren<Collider2D>(false);
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            Collider2D collider = colliders[i];
+            if (collider == null)
+            {
+                continue;
+            }
+
+            if (collider.IsTouching(triggerCollider) || collider.bounds.Intersects(triggerCollider.bounds))
             {
                 return true;
             }

@@ -283,7 +283,7 @@ namespace Project.TeamBuilder.UI
 
             if (teamLoader != null)
             {
-                teamLoader.RefreshRuntimeState();
+                teamLoader.RefreshRuntimeStatsAndResources();
             }
 
             ApplyModeVisualState();
@@ -589,10 +589,40 @@ namespace Project.TeamBuilder.UI
                 : character.GetLeveledStats();
         }
 
-        public void ApplyRuntimeEffectsToStats(CharacterObject character, CharacterStats stats)
+        public CharacterStats ResolveCharacterPermanentStats(CharacterObject character)
         {
-            PlayerRunInventory inventory = ResolveRunInventoryReference();
-            inventory?.ApplyRuntimeEffectsToStats(character, stats);
+            if (character == null)
+            {
+                return new CharacterStats();
+            }
+
+            TeamLoader loader = ResolveTeamLoaderReference();
+            if (loader != null && loader.ContainsCharacter(character))
+            {
+                return loader.GetCharacterPermanentStats(character);
+            }
+
+            return ResolveCharacterBaseStats(character);
+        }
+
+        public CharacterStats ResolveCharacterRuntimeStats(CharacterObject character, Artifact[] equippedArtifacts = null)
+        {
+            if (character == null)
+            {
+                return new CharacterStats();
+            }
+
+            TeamLoader loader = ResolveTeamLoaderReference();
+            if (equippedArtifacts == null && loader != null && loader.ContainsCharacter(character))
+            {
+                return loader.GetCharacterRuntimeStats(character);
+            }
+
+            CharacterStats stats = ResolveCharacterPermanentStats(character);
+            CharacterStats baseStats = ResolveCharacterBaseStats(character);
+            ApplyArtifactBonuses(stats, baseStats, equippedArtifacts);
+            ResolveRunInventoryReference()?.ApplyRuntimeEffectsToStats(character, stats);
+            return stats;
         }
 
         public TeamSlotUI FindSlotWithArtifact(Artifact artifact)
@@ -607,6 +637,20 @@ namespace Project.TeamBuilder.UI
                 }
             }
             return null;
+        }
+
+        private void RefreshOpenInspectorArtifacts()
+        {
+            if (inspectScreenUI == null || !inspectScreenUI.gameObject.activeSelf || inspectScreenUI.CurrentCharacter == null)
+            {
+                return;
+            }
+
+            TeamSlotUI slot = FindSlotWithCharacter(inspectScreenUI.CurrentCharacter);
+            if (slot != null)
+            {
+                inspectScreenUI.RefreshCurrentArtifacts(slot.GetEquippedArtifacts());
+            }
         }
 
         private PlayerRunInventory ResolveRunInventoryReference()
@@ -634,6 +678,45 @@ namespace Project.TeamBuilder.UI
             return playerInventory;
         }
 
+        private TeamLoader ResolveTeamLoaderReference()
+        {
+            if (teamLoader == null)
+            {
+                teamLoader = FindFirstObjectByType<TeamLoader>(FindObjectsInactive.Include);
+            }
+
+            return teamLoader;
+        }
+
+        private static void ApplyArtifactBonuses(CharacterStats stats, CharacterStats baseStats, Artifact[] equippedArtifacts)
+        {
+            if (stats == null || baseStats == null || equippedArtifacts == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < equippedArtifacts.Length; i++)
+            {
+                Artifact artifact = equippedArtifacts[i];
+                if (artifact == null || artifact.bonusStats == null)
+                {
+                    continue;
+                }
+
+                stats.maxHP += baseStats.maxHP * (artifact.bonusStats.maxHP / 100f);
+                stats.attack += baseStats.attack * (artifact.bonusStats.attack / 100f);
+                stats.defense += baseStats.defense * (artifact.bonusStats.defense / 100f);
+                stats.speed += artifact.bonusStats.speed;
+                stats.elementalMastery += artifact.bonusStats.elementalMastery;
+                stats.critRate += artifact.bonusStats.critRate;
+                stats.critDamage += artifact.bonusStats.critDamage;
+                stats.cooldownRate += artifact.bonusStats.cooldownRate;
+                stats.impact += artifact.bonusStats.impact;
+                stats.damageReduction += artifact.bonusStats.damageReduction;
+                stats.aeRecharge += artifact.bonusStats.aeRecharge;
+            }
+        }
+
         // =========================================================
         // Team Slot Actions & Callbacks
         // =========================================================
@@ -649,6 +732,7 @@ namespace Project.TeamBuilder.UI
 
             deployController.Hide();
             RefreshActiveIndex();
+            RefreshOpenInspectorArtifacts();
             ApplyModeVisualState();
         }
 

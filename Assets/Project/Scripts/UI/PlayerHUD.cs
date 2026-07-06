@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -24,19 +25,22 @@ public class PlayerHUD : MonoBehaviour
     [SerializeField] private Canvas targetCanvas;
     [SerializeField] private Transform runtimeEffectContainer;
     [SerializeField] private RuntimeEffectIconUI runtimeEffectIconPrefab;
+    [SerializeField] private float healthLerpDelay = 0.25f;
+    [SerializeField] private float healthLerpDuration = 0.5f;
 
     private RectTransform hudRoot;
     private Slider healthSlider;
-    private Image healthFillImage;
+    private Slider healthLerpSlider;
     private TMP_Text nameText;
     private TMP_Text hpText;
+    private Coroutine healthLerpCoroutine;
     private PlayerCharacter subscribedPlayer;
     private PlayerRunInventory subscribedEffectInventory;
     private readonly List<RuntimeEffectIconUI> runtimeEffectIcons = new List<RuntimeEffectIconUI>();
     private readonly List<RuntimeEffectDisplayEntry> runtimeEffectDisplayEntries = new List<RuntimeEffectDisplayEntry>();
     private string lastCharacterKey = string.Empty;
     private bool runtimeEffectsDirty = true;
-    private bool hasTimedRuntimeEffectIcons;
+    private bool healthDisplayInitialized;
 
     private void Reset()
     {
@@ -64,6 +68,7 @@ public class PlayerHUD : MonoBehaviour
     private void OnDisable()
     {
         ReleaseRuntimeEffectOwnership();
+        StopHealthLerp();
 
         if (subscribedPlayer != null)
         {
@@ -99,10 +104,6 @@ public class PlayerHUD : MonoBehaviour
             RebuildRuntimeEffects();
         }
 
-        if (hasTimedRuntimeEffectIcons)
-        {
-            RefreshRuntimeEffectTimers();
-        }
     }
 
     private void CacheReferences()
@@ -208,9 +209,10 @@ public class PlayerHUD : MonoBehaviour
             if (healthSlider != null)
                 healthSlider.value = 0f;
 
-            if (healthFillImage != null)
-                healthFillImage.fillAmount = 0f;
+            if (healthLerpSlider != null)
+                healthLerpSlider.value = 0f;
 
+            healthDisplayInitialized = false;
             lastCharacterKey = GetCharacterKey();
             return;
         }
@@ -230,6 +232,36 @@ public class PlayerHUD : MonoBehaviour
 
         float normalizedHp = Mathf.Clamp01(currentHp / maxHp);
 
+        ApplyHealthTarget(normalizedHp);
+
+        if (hpText != null)
+            hpText.text = $"{Mathf.CeilToInt(currentHp)} / {Mathf.CeilToInt(maxHp)}";
+
+        lastCharacterKey = GetCharacterKey();
+    }
+
+    private void ApplyHealthTarget(float normalizedHp)
+    {
+        normalizedHp = Mathf.Clamp01(normalizedHp);
+        if (!healthDisplayInitialized || !Application.isPlaying)
+        {
+            healthDisplayInitialized = true;
+            SetHealthVisual(normalizedHp, true);
+            return;
+        }
+
+        SetHealthVisual(normalizedHp, false);
+        if (healthLerpSlider != null)
+        {
+            StopHealthLerp();
+            healthLerpCoroutine = StartCoroutine(HealthLerpRoutine(normalizedHp));
+        }
+    }
+
+    private void SetHealthVisual(float normalizedHp, bool includeLerpSlider)
+    {
+        normalizedHp = Mathf.Clamp01(normalizedHp);
+
         if (healthSlider != null)
         {
             healthSlider.minValue = 0f;
@@ -237,13 +269,50 @@ public class PlayerHUD : MonoBehaviour
             healthSlider.value = normalizedHp;
         }
 
-        if (healthFillImage != null)
-            healthFillImage.fillAmount = normalizedHp;
+        if (healthLerpSlider != null)
+        {
+            healthLerpSlider.minValue = 0f;
+            healthLerpSlider.maxValue = 1f;
+            if (includeLerpSlider)
+            {
+                healthLerpSlider.value = normalizedHp;
+            }
+        }
+    }
 
-        if (hpText != null)
-            hpText.text = $"{Mathf.CeilToInt(currentHp)} / {Mathf.CeilToInt(maxHp)}";
+    private IEnumerator HealthLerpRoutine(float targetValue)
+    {
+        yield return new WaitForSeconds(healthLerpDelay);
 
-        lastCharacterKey = GetCharacterKey();
+        if (healthLerpSlider == null)
+        {
+            healthLerpCoroutine = null;
+            yield break;
+        }
+
+        float elapsed = 0f;
+        float startValue = healthLerpSlider.value;
+        float duration = Mathf.Max(0.01f, healthLerpDuration);
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            healthLerpSlider.value = Mathf.Lerp(startValue, targetValue, Mathf.Clamp01(elapsed / duration));
+            yield return null;
+        }
+
+        healthLerpSlider.value = targetValue;
+        healthLerpCoroutine = null;
+    }
+
+    private void StopHealthLerp()
+    {
+        if (healthLerpCoroutine == null)
+        {
+            return;
+        }
+
+        StopCoroutine(healthLerpCoroutine);
+        healthLerpCoroutine = null;
     }
 
     private void RebindRuntimeEffectEvents()
@@ -290,7 +359,6 @@ public class PlayerHUD : MonoBehaviour
         {
             SetRuntimeEffectIconCount(0);
             runtimeEffectDisplayEntries.Clear();
-            hasTimedRuntimeEffectIcons = false;
             runtimeEffectsDirty = false;
             return;
         }
@@ -322,36 +390,13 @@ public class PlayerHUD : MonoBehaviour
 
         int count = runtimeEffectDisplayEntries.Count;
         SetRuntimeEffectIconCount(count);
-        hasTimedRuntimeEffectIcons = false;
         for (int i = 0; i < count; i++)
         {
             RuntimeEffectDisplayEntry entry = runtimeEffectDisplayEntries[i];
             runtimeEffectIcons[i].Bind(entry.effect, entry.stackCount);
-            hasTimedRuntimeEffectIcons |= runtimeEffectIcons[i].RequiresTimerRefresh;
         }
 
         playerCharacter.RuntimeEffects?.SyncVisuals(effects);
-    }
-
-    private void RefreshRuntimeEffectTimers()
-    {
-        hasTimedRuntimeEffectIcons = false;
-        for (int i = 0; i < runtimeEffectDisplayEntries.Count && i < runtimeEffectIcons.Count; i++)
-        {
-            RuntimeEffectIconUI icon = runtimeEffectIcons[i];
-            if (icon == null)
-            {
-                continue;
-            }
-
-            if (!icon.RequiresTimerRefresh)
-            {
-                continue;
-            }
-
-            icon.RefreshPresentation();
-            hasTimedRuntimeEffectIcons |= icon.RequiresTimerRefresh;
-        }
     }
 
     private void BuildDisplayEntries(IReadOnlyList<RuntimeEffectInstance> effects)
@@ -362,7 +407,7 @@ public class PlayerHUD : MonoBehaviour
             return;
         }
 
-        Dictionary<RuntimeEffectDefinition, int> foreverStackIndexes = new Dictionary<RuntimeEffectDefinition, int>();
+        Dictionary<string, int> stackIndexes = new Dictionary<string, int>();
         for (int i = 0; i < effects.Count; i++)
         {
             RuntimeEffectInstance effect = effects[i];
@@ -372,33 +417,64 @@ public class PlayerHUD : MonoBehaviour
             }
 
             RuntimeEffectDefinition definition = effect.definition;
-            bool aggregateIntoStack = definition.stackable
-                && definition.durationType == RuntimeEffectDurationType.Forever;
+            if (definition.kind == RuntimeEffectKind.Effect)
+            {
+                continue;
+            }
+
+            string stackKey = effect.StackKey;
+            bool aggregateIntoStack = definition.stackable || CountDisplayableEffectsWithStackKey(effects, stackKey) > 1;
             if (!aggregateIntoStack)
             {
                 runtimeEffectDisplayEntries.Add(new RuntimeEffectDisplayEntry
                 {
                     effect = effect,
-                    stackCount = 1
+                    stackCount = Mathf.Max(1, effect.stackCount)
                 });
                 continue;
             }
 
-            if (foreverStackIndexes.TryGetValue(definition, out int existingIndex))
+            if (stackIndexes.TryGetValue(stackKey, out int existingIndex))
             {
                 RuntimeEffectDisplayEntry entry = runtimeEffectDisplayEntries[existingIndex];
-                entry.stackCount++;
+                entry.stackCount += Mathf.Max(1, effect.stackCount);
                 runtimeEffectDisplayEntries[existingIndex] = entry;
                 continue;
             }
 
-            foreverStackIndexes.Add(definition, runtimeEffectDisplayEntries.Count);
+            stackIndexes.Add(stackKey, runtimeEffectDisplayEntries.Count);
             runtimeEffectDisplayEntries.Add(new RuntimeEffectDisplayEntry
             {
                 effect = effect,
-                stackCount = 1
+                stackCount = Mathf.Max(1, effect.stackCount)
             });
         }
+    }
+
+    private static int CountDisplayableEffectsWithStackKey(IReadOnlyList<RuntimeEffectInstance> effects, string stackKey)
+    {
+        if (effects == null || string.IsNullOrEmpty(stackKey))
+        {
+            return 0;
+        }
+
+        int count = 0;
+        for (int i = 0; i < effects.Count; i++)
+        {
+            RuntimeEffectInstance effect = effects[i];
+            RuntimeEffectDefinition definition = effect != null ? effect.definition : null;
+            if (definition == null || definition.kind == RuntimeEffectKind.Effect)
+            {
+                continue;
+            }
+
+            if (effect.StackKey == stackKey)
+            {
+                count++;
+            }
+        }
+
+        return count;
     }
 
     private void SetRuntimeEffectIconCount(int count)
@@ -552,8 +628,13 @@ public class PlayerHUD : MonoBehaviour
         if (hpSlideTransform != null)
         {
             healthSlider = hpSlideTransform.GetComponent<Slider>();
-            if (healthSlider != null && healthSlider.fillRect != null)
-                healthFillImage = healthSlider.fillRect.GetComponent<Image>();
+        }
+
+        healthLerpSlider = FindHealthLerpSlider(root, healthSlider);
+        if (healthLerpSlider != null && healthSlider != null)
+        {
+            healthLerpSlider.minValue = healthSlider.minValue;
+            healthLerpSlider.maxValue = healthSlider.maxValue;
         }
 
         Transform heroNameTransform = FindChildRecursive(root, "HeroName");
@@ -564,10 +645,10 @@ public class PlayerHUD : MonoBehaviour
         if (hpTextTransform != null)
             hpText = hpTextTransform.GetComponent<TMP_Text>();
 
-        if (nameText == null || hpText == null || (healthSlider == null && healthFillImage == null))
+        if (nameText == null || hpText == null || healthSlider == null)
         {
             healthSlider = null;
-            healthFillImage = null;
+            healthLerpSlider = null;
             nameText = null;
             hpText = null;
             hudRoot = null;
@@ -605,5 +686,26 @@ public class PlayerHUD : MonoBehaviour
         }
 
         return null;
+    }
+
+    private Slider FindHealthLerpSlider(Transform root, Slider mainSlider)
+    {
+        Slider[] sliders = root.GetComponentsInChildren<Slider>(true);
+        for (int i = 0; i < sliders.Length; i++)
+        {
+            Slider slider = sliders[i];
+            if (slider == null || slider == mainSlider)
+            {
+                continue;
+            }
+
+            string sliderName = slider.name;
+            if (sliderName.Contains("Lerp") || sliderName.Contains("Ghost") || sliderName.Contains("Back"))
+            {
+                return slider;
+            }
+        }
+
+        return sliders.Length > 1 ? sliders[1] : null;
     }
 }

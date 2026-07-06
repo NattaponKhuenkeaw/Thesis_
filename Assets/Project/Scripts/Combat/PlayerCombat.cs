@@ -91,6 +91,9 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     private ActionPhase currentPhase = ActionPhase.None;
     private bool isAirCombo;
     private Coroutine dashThroughDamageRoutine;
+
+    public PlayerCharacter PlayerCharacter => playerCharacter;
+    public Vector2 FacingDirection => GetFacingDirection();
     private bool currentActionStartedGrounded;
     private bool currentActionAllowsGroundToAirTransition;
     private bool isExecutingAutoChainStep;
@@ -949,6 +952,11 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         }
     }
 
+    public PlayerRunInventory ResolveRunInventoryForEffects()
+    {
+        return ResolveRunInventory();
+    }
+
     private PlayerRunInventory ResolveRunInventory()
     {
         if (teamLoader == null)
@@ -996,6 +1004,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
                 currentAttackCategory,
                 currentActionId,
                 currentActionName,
+                currentStepData != null ? currentStepData.stepName : null,
                 out ProjectileType replacementProjectileType,
                 out ProjectileData replacementProjectileData))
         {
@@ -1490,16 +1499,42 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
                 continue;
             }
 
-            float baseDamage = effect.CalculateBaseDamage(sourceAttack, context);
+            float baseDamage = effect.CalculateBaseDamage(sourceAttack, context, stats);
+            RuntimeEffectDamageContext damageContext = new RuntimeEffectDamageContext
+            {
+                sourceCharacter = character,
+                sourceStats = stats,
+                targetEnemy = enemy,
+                category = AttackCategory.Normal,
+                actionId = "dash",
+                actionName = "Dash",
+                elementType = effect.elementType,
+                damageRoutine = DamageRoutine.Additional,
+                damage = baseDamage
+            };
+            RuntimeEffectDamageInput damageInput = new RuntimeEffectDamageInput
+            {
+                context = damageContext,
+                baseDamage = baseDamage,
+                defenderDefense = enemy.defense,
+                defenderDamageResistance = enemy.damageRes
+            };
+            PlayerRunInventory inventory = ResolveRunInventory();
+            inventory?.ModifyDamageInput(character, damageInput);
+            if (playerCharacter != null && playerCharacter.RuntimeEffects != null)
+            {
+                playerCharacter.RuntimeEffects.ModifyDamageInput(damageInput);
+            }
+
             float resolvedDamage = CombatFormula.CalculateResolvedDamage(
-                baseDamage,
+                damageInput.baseDamage,
                 DamageRoutine.Additional,
                 effect.elementType,
                 stats,
-                enemy.defense,
+                damageInput.defenderDefense,
                 AttackCategory.Normal,
                 out _,
-                enemy.damageRes);
+                damageInput.defenderDamageResistance);
             if (resolvedDamage <= 0f)
             {
                 continue;
@@ -1511,6 +1546,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             reactionData.damageRoutine = DamageRoutine.Additional;
             reactionData.elementType = effect.elementType;
             reactionData.isCriticalHit = false;
+            reactionData.ignoreElementalIncomingModifiers = damageInput.ignoreElementalIncomingModifiers;
             reactionData.sourceCharacter = character;
             reactionData.sourceStats = stats;
             reactionData.sourceCategory = AttackCategory.Normal;
@@ -1550,10 +1586,21 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         float attackStat = stats != null ? stats.attack : 1f;
         if (passiveController != null)
         {
-            attackStat = passiveController.ModifyValue(PassiveModifierTarget.AttackStat, attackStat);
+            attackStat = passiveController.ModifyRuntimeValue(PassiveModifierTarget.AttackStat, attackStat);
         }
 
         return Mathf.Max(0f, attackStat);
+    }
+
+    public void RefreshProjectileDamageContext(ref ProjectileSpawnContext context)
+    {
+        if (playerCharacter == null)
+        {
+            return;
+        }
+
+        context.attackerStats = playerCharacter.Stats;
+        context.sourceAttack = GetModifiedAttackStat();
     }
 
     private float ResolveHitDamageMultiplier(float damageRatio)

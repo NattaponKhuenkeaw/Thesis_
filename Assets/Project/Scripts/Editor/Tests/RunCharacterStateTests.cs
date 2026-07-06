@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using Project.InventorySystem.Items;
 using Project.ShopSystem;
+using TMPro;
 using UnityEngine;
 
 public class RunCharacterStateTests
@@ -154,6 +155,93 @@ public class RunCharacterStateTests
     }
 
     [Test]
+    public void RuntimeEffectContainerAppliesChildEffectsAsSingleRunState()
+    {
+        PlayerRunInventory inventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        CharacterObject character = ScriptableObject.CreateInstance<CharacterObject>();
+        RuntimeEffectContainerDefinition container = ScriptableObject.CreateInstance<RuntimeEffectContainerDefinition>();
+        StatRuntimeEffectDefinition attackEffect = ScriptableObject.CreateInstance<StatRuntimeEffectDefinition>();
+        StatRuntimeEffectDefinition defenseEffect = ScriptableObject.CreateInstance<StatRuntimeEffectDefinition>();
+
+        try
+        {
+            character.stats.attack = 100f;
+            character.stats.defense = 50f;
+            container.durationType = RuntimeEffectDurationType.Seconds;
+            container.durationSeconds = 1f;
+            container.effects.Add(attackEffect);
+            container.effects.Add(defenseEffect);
+
+            attackEffect.kind = RuntimeEffectKind.Effect;
+            attackEffect.statModifiers.Add(new RuntimeEffectStatModifier
+            {
+                target = RuntimeEffectStatTarget.Attack,
+                operation = RuntimeEffectStatOperation.AddSourceStatRatio,
+                sourceStat = RuntimeEffectStatTarget.Attack,
+                value = 0.2f
+            });
+
+            defenseEffect.kind = RuntimeEffectKind.Effect;
+            defenseEffect.statModifiers.Add(new RuntimeEffectStatModifier
+            {
+                target = RuntimeEffectStatTarget.Defense,
+                operation = RuntimeEffectStatOperation.Multiply,
+                value = 1.1f
+            });
+
+            inventory.DeployTeam(new[] { character }, 0);
+            inventory.ApplyRuntimeEffect(character, container, character, character.stats);
+
+            CharacterStats boostedStats = inventory.GetCharacterStats(character);
+            Assert.That(boostedStats.attack, Is.EqualTo(120f).Within(0.001f));
+            Assert.That(boostedStats.defense, Is.EqualTo(55f).Within(0.001f));
+            Assert.That(inventory.GetActiveRuntimeEffects(character).Count, Is.EqualTo(1));
+
+            inventory.TickRuntimeEffects(1.1f);
+
+            CharacterStats expiredStats = inventory.GetCharacterStats(character);
+            Assert.That(expiredStats.attack, Is.EqualTo(100f).Within(0.001f));
+            Assert.That(expiredStats.defense, Is.EqualTo(50f).Within(0.001f));
+            Assert.That(inventory.GetActiveRuntimeEffects(character).Count, Is.EqualTo(0));
+        }
+        finally
+        {
+            Object.DestroyImmediate(defenseEffect);
+            Object.DestroyImmediate(attackEffect);
+            Object.DestroyImmediate(container);
+            Object.DestroyImmediate(character);
+            Object.DestroyImmediate(inventory);
+        }
+    }
+
+    [Test]
+    public void RuntimeEffectIconUI_BindsStackCountToQuantityText()
+    {
+        GameObject iconObject = new GameObject("RuntimeEffectIcon");
+        GameObject quantityObject = new GameObject("QuantityText");
+        RuntimeEffectIconUI icon = iconObject.AddComponent<RuntimeEffectIconUI>();
+        RuntimeEffectDefinition effect = ScriptableObject.CreateInstance<StatRuntimeEffectDefinition>();
+        RuntimeEffectInstance instance = new RuntimeEffectInstance();
+
+        try
+        {
+            quantityObject.transform.SetParent(iconObject.transform, false);
+            TMP_Text quantityText = quantityObject.AddComponent<TextMeshProUGUI>();
+            instance.Initialize(effect, null, null);
+
+            icon.Bind(instance, 3);
+
+            Assert.That(quantityObject.activeSelf, Is.True);
+            Assert.That(quantityText.text, Is.EqualTo("x3"));
+        }
+        finally
+        {
+            Object.DestroyImmediate(effect);
+            Object.DestroyImmediate(iconObject);
+        }
+    }
+
+    [Test]
     public void RuntimeEffectTimerTicksForOffFieldTeamMembers()
     {
         PlayerRunInventory inventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
@@ -177,6 +265,44 @@ public class RunCharacterStateTests
 
             Assert.That(inventory.GetActiveRuntimeEffects(activeCharacter).Count, Is.EqualTo(0));
             Assert.That(inventory.GetActiveRuntimeEffects(offFieldCharacter).Count, Is.EqualTo(0));
+        }
+        finally
+        {
+            Object.DestroyImmediate(effect);
+            Object.DestroyImmediate(offFieldCharacter);
+            Object.DestroyImmediate(activeCharacter);
+            Object.DestroyImmediate(inventory);
+        }
+    }
+
+    [Test]
+    public void RuntimeEffectStacksIndependentlyForEachTeamTarget()
+    {
+        PlayerRunInventory inventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        CharacterObject activeCharacter = ScriptableObject.CreateInstance<CharacterObject>();
+        CharacterObject offFieldCharacter = ScriptableObject.CreateInstance<CharacterObject>();
+        StatRuntimeEffectDefinition effect = ScriptableObject.CreateInstance<StatRuntimeEffectDefinition>();
+
+        try
+        {
+            effect.durationType = RuntimeEffectDurationType.Seconds;
+            effect.durationSeconds = 10f;
+            effect.stackable = true;
+            effect.statModifiers.Add(new RuntimeEffectStatModifier
+            {
+                target = RuntimeEffectStatTarget.Attack,
+                operation = RuntimeEffectStatOperation.Multiply,
+                value = 1.07f
+            });
+
+            inventory.DeployTeam(new[] { activeCharacter, offFieldCharacter }, 0);
+            inventory.ApplyRuntimeEffect(activeCharacter, effect, activeCharacter, activeCharacter.stats, -1f, RuntimeEffectStackMode.Stack, 99);
+            inventory.ApplyRuntimeEffect(offFieldCharacter, effect, activeCharacter, activeCharacter.stats, -1f, RuntimeEffectStackMode.Stack, 99);
+            inventory.ApplyRuntimeEffect(activeCharacter, effect, activeCharacter, activeCharacter.stats, -1f, RuntimeEffectStackMode.Stack, 99);
+            inventory.ApplyRuntimeEffect(offFieldCharacter, effect, activeCharacter, activeCharacter.stats, -1f, RuntimeEffectStackMode.Stack, 99);
+
+            Assert.That(inventory.GetActiveRuntimeEffects(activeCharacter)[0].stackCount, Is.EqualTo(2));
+            Assert.That(inventory.GetActiveRuntimeEffects(offFieldCharacter)[0].stackCount, Is.EqualTo(2));
         }
         finally
         {

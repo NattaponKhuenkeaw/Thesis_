@@ -269,22 +269,11 @@ namespace Project.TeamBuilder.UI
 
             CharacterObject charObj = currentCharacter.characterObjectData;
             CharacterStats baseStats = parentBuilder != null
-                ? parentBuilder.ResolveCharacterBaseStats(charObj)
+                ? parentBuilder.ResolveCharacterPermanentStats(charObj)
                 : charObj.GetLeveledStats();
-            CharacterStats effectiveStats = baseStats.Clone();
-
-            for (int i = 0; i < artifactSlots.Length; i++)
-            {
-                ArtifactSlotUI slot = artifactSlots[i];
-                if (slot == null || slot.CurrentArtifact == null || slot.CurrentArtifact.bonusStats == null)
-                {
-                    continue;
-                }
-
-                ApplyArtifactBonus(effectiveStats, baseStats, slot.CurrentArtifact.bonusStats);
-            }
-
-            parentBuilder?.ApplyRuntimeEffectsToStats(charObj, effectiveStats);
+            CharacterStats effectiveStats = parentBuilder != null
+                ? parentBuilder.ResolveCharacterRuntimeStats(charObj, GetEquippedArtifacts())
+                : baseStats.Clone();
 
             UpdateStatFeedback(atkText, ref atkFeedbackCoroutine, ref lastAttackBase, ref lastAttackBonus, baseStats.attack, effectiveStats.attack, "atk");
             UpdateStatFeedback(defText, ref defFeedbackCoroutine, ref lastDefenseBase, ref lastDefenseBonus, baseStats.defense, effectiveStats.defense, "def");
@@ -663,33 +652,6 @@ namespace Project.TeamBuilder.UI
         private static string FormatStatValue(float baseValue, float bonusValue, string statName)
         {
             return StatFormatHelper.FormatResolved(baseValue, bonusValue, statName, true);
-        }
-
-        private static void ApplyArtifactBonus(
-            CharacterStats effectiveStats,
-            CharacterStats baseStats,
-            CharacterStats bonusStats)
-        {
-            if (effectiveStats == null || bonusStats == null)
-            {
-                return;
-            }
-
-            if (baseStats != null)
-            {
-                effectiveStats.maxHP += baseStats.maxHP * (bonusStats.maxHP / 100f);
-                effectiveStats.attack += baseStats.attack * (bonusStats.attack / 100f);
-                effectiveStats.defense += baseStats.defense * (bonusStats.defense / 100f);
-            }
-
-            effectiveStats.speed += bonusStats.speed;
-            effectiveStats.elementalMastery += bonusStats.elementalMastery;
-            effectiveStats.critRate += bonusStats.critRate;
-            effectiveStats.critDamage += bonusStats.critDamage;
-            effectiveStats.cooldownRate += bonusStats.cooldownRate;
-            effectiveStats.impact += bonusStats.impact;
-            effectiveStats.damageReduction += bonusStats.damageReduction;
-            effectiveStats.aeRecharge += bonusStats.aeRecharge;
         }
 
         private void UpdateStatFeedback(

@@ -27,6 +27,7 @@ MonoBehaviour:
     critDamage: 150
     cooldownRate: 0
     impact: 0
+    damageReduction: 0
     aeRecharge: 1
   metaData:
     displayName: Kyo
@@ -62,32 +63,67 @@ MonoBehaviour:
     skill:
       abilityId: kyo.skill
       abilityName: Skill
+      icon: {fileID: 0}
+      description: 
     ultimate:
       abilityId: kyo.ultimate
       abilityName: Ultimate
+      icon: {fileID: 0}
+      description: 
     passive:
       abilityId: kyo.passive
       abilityName: Passive
+      icon: {fileID: 0}
+      description: 
     basePassiveNode:
       statModifiers:
       - target: 8
         operation: 0
+        valueSource: 0
         value: 15
+        sourceStat: 0
         scope: 2
+        requiredTags: []
+        requiredCounters: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
+      runtimeEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 1
+          elementType: 3
+          requireRuntimeTag: 0
+          runtimeTag: 
+        effect: {fileID: 11400000, guid: 00da1aa28352498a8dafeeed467406e6, type: 2}
+        scope: 1
+        stackMode: 0
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        durationOverride: -1
+        filterByTargetElement: 0
+        targetElement: 0
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
       additionalDamageEffects: []
+      dashThroughDamageEffects: []
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []
-      passiveHookTypeName:
+      passiveHookTypeName: 
       nodeId: kyo.passive.base
       nodeName: Kusanagi Lineage
       description: Increase allies Ash DMG by 15%.
+      skillPanelDescriptionOverride: 
       track: 2
       level: 0
       fragmentCost: 0
@@ -98,30 +134,44 @@ MonoBehaviour:
       actionModifiers:
       - category: 1
         actionId: kyo.skill
-        actionName:
+        actionName: 
+        stepName: 
         unlocked: 1
         priorityBonus: 0
-        replacementActionId:
-        replacementActionName:
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags: []
+        requiredCounters: []
         damageMultiplierOperation: 3
         damageMultiplierValue: 4.5
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
         auraEnergyRewardAdd: 0
         cooldownOperation: 0
         cooldownValue: 0
         energyCostOperation: 0
         energyCostValue: 0
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
+      runtimeEffects: []
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
       additionalDamageEffects: []
+      dashThroughDamageEffects: []
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []
-      passiveHookTypeName:
+      passiveHookTypeName: 
       nodeId: kyo.skill.lv1
       nodeName: Skill Multiplier
       description: Increase Skill multiplier to 450% of ATK.
+      skillPanelDescriptionOverride: 
       track: 0
       level: 1
       fragmentCost: 1
@@ -130,10 +180,12 @@ MonoBehaviour:
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
+      runtimeEffects: []
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
       additionalDamageEffects: []
+      dashThroughDamageEffects: []
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers:
@@ -144,20 +196,26 @@ MonoBehaviour:
           filterByActionId: 1
           actionId: kyo.skill
           filterByActionName: 0
-          actionName:
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
           requireRuntimeTag: 0
-          runtimeTag:
+          runtimeTag: 
         elementType: 3
         incomingDamagePercentAdd: 0
         resistancePercentAdd: 0
+        masteryPercentAdd: 0
         gaugeBuildPercentAdd: 25
         permanent: 0
         stacks: 0
         duration: 0
-      passiveHookTypeName:
+      passiveHookTypeName: 
       nodeId: kyo.skill.lv2
       nodeName: Ash Daze Pressure
       description: Skill hits increase Ash gauge build by 25%.
+      skillPanelDescriptionOverride: 
       track: 0
       level: 2
       fragmentCost: 1
@@ -167,30 +225,44 @@ MonoBehaviour:
       actionModifiers:
       - category: 1
         actionId: kyo.skill
-        actionName:
+        actionName: 
+        stepName: 
         unlocked: 1
         priorityBonus: 0
-        replacementActionId:
-        replacementActionName:
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags: []
+        requiredCounters: []
         damageMultiplierOperation: 0
         damageMultiplierValue: 0
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
         auraEnergyRewardAdd: 1
         cooldownOperation: 0
         cooldownValue: 0
         energyCostOperation: 0
         energyCostValue: 0
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
+      runtimeEffects: []
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
       additionalDamageEffects: []
+      dashThroughDamageEffects: []
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []
-      passiveHookTypeName:
+      passiveHookTypeName: 
       nodeId: kyo.skill.lv3
       nodeName: AE Reward
       description: Increase Skill AE reward by 1.
+      skillPanelDescriptionOverride: 
       track: 0
       level: 3
       fragmentCost: 1
@@ -199,10 +271,12 @@ MonoBehaviour:
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
+      runtimeEffects: []
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
       additionalDamageEffects: []
+      dashThroughDamageEffects: []
       defensiveEffects: []
       resourceEffects:
       - trigger: 1
@@ -212,23 +286,73 @@ MonoBehaviour:
           filterByActionId: 1
           actionId: kyo.skill
           filterByActionName: 0
-          actionName:
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
           requireRuntimeTag: 0
-          runtimeTag:
+          runtimeTag: 
+        chance: 1
         effectType: 0
         scope: 2
         valueSource: 0
-        valueRatio: 0.08
+        valueRatio: 0.4
         flatValue: 0
         runtimeTag: waive_next_ultimate_cost
         runtimeTagDuration: 0
       enemyElementModifiers: []
-      passiveHookTypeName:
+      passiveHookTypeName: 
       nodeId: kyo.skill.lv4
       nodeName: Allied Flame Mend
       description: Skill use heals all allies for 8% of Kyo ATK.
+      skillPanelDescriptionOverride: 
       track: 0
       level: 4
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects:
+      - trigger: 2
+        filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionId: 1
+          actionId: kyo.ultimate
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        effect: {fileID: 11400000, guid: d3074b8ce9a64d9ea942df44e527890a, type: 2}
+        scope: 0
+        stackMode: 0
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        durationOverride: -1
+        filterByTargetElement: 0
+        targetElement: 0
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: kyo.ultimate.lv1
+      nodeName: Kusanagi Blessing
+      description: After Ultimate ends, self gains Kusanagi Blessing for 20 seconds.
+      skillPanelDescriptionOverride: 
+      track: 1
+      level: 1
       fragmentCost: 1
       unlockedByDefault: 0
     - statModifiers: []
@@ -236,38 +360,187 @@ MonoBehaviour:
       actionModifiers:
       - category: 2
         actionId: kyo.ultimate
-        actionName:
+        actionName: 
+        stepName: 
         unlocked: 1
         priorityBonus: 0
-        replacementActionId:
-        replacementActionName:
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags: []
+        requiredCounters: []
         damageMultiplierOperation: 3
         damageMultiplierValue: 8
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
         auraEnergyRewardAdd: 0
         cooldownOperation: 0
         cooldownValue: 0
         energyCostOperation: 0
         energyCostValue: 0
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
+      runtimeEffects: []
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
       additionalDamageEffects: []
+      dashThroughDamageEffects: []
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []
-      passiveHookTypeName:
+      passiveHookTypeName: 
       nodeId: kyo.ultimate.lv2
       nodeName: Ultimate Multiplier
       description: Increase Ultimate multiplier to 800% of ATK.
+      skillPanelDescriptionOverride: 
       track: 1
       level: 2
       fragmentCost: 1
       unlockedByDefault: 0
     - statModifiers: []
       cooldownModifiers: []
+      actionModifiers:
+      - category: 2
+        actionId: kyo.ultimate
+        actionName: 
+        stepName: 
+        unlocked: 1
+        priorityBonus: 100
+        replacementActionId: kyo.ultimate.kusanagi
+        replacementActionName: Kusanagi
+        startingComboDepthOverride: 0
+        requiredTags:
+        - tag: kyo.ultimate_followup
+          expectedValue: 1
+        requiredCounters: []
+        damageMultiplierOperation: 0
+        damageMultiplierValue: 0
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
+      runtimeTagEffects:
+      - trigger: 2
+        filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionId: 1
+          actionId: kyo.ultimate
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        tag: kyo.ultimate_followup
+        addTag: 1
+        duration: 4
+      runtimeEffects:
+      - trigger: 2
+        filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionId: 1
+          actionId: kyo.ultimate
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        effect: {fileID: 11400000, guid: dc6f6101232660b46ae7cec35d20ca7a, type: 2}
+        scope: 1
+        stackMode: 0
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        durationOverride: -1
+        filterByTargetElement: 0
+        targetElement: 0
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: kyo.ultimate.lv3
+      nodeName: Kusanagi Follow-up
+      description: After Ultimate, open a follow-up window and apply Orochiyagi support
+        buffs to allies.
+      skillPanelDescriptionOverride: 
+      track: 1
+      level: 3
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
+      runtimeEffects:
+      - trigger: 2
+        filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionId: 1
+          actionId: kyo.ultimate
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        effect: {fileID: 11400000, guid: d3074b8ce9a64d9ea942df44e527890a, type: 2}
+        scope: 1
+        stackMode: 0
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        durationOverride: -1
+        filterByTargetElement: 0
+        targetElement: 0
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: kyo.ultimate.lv4
+      nodeName: Team Kusanagi Blessing
+      description: After Ultimate ends, all allies gain Kusanagi Blessing for 20
+        seconds.
+      skillPanelDescriptionOverride: 
+      track: 1
+      level: 4
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -276,25 +549,146 @@ MonoBehaviour:
           filterByCategory: 0
           category: 0
           filterByActionId: 0
-          actionId:
+          actionId: 
           filterByActionName: 0
-          actionName:
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
           requireRuntimeTag: 0
-          runtimeTag:
+          runtimeTag: 
         chance: 0.2
         internalCooldown: 0
         attackRatio: 0.2
         targetMaxHpRatio: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 1
         elementType: 3
+        consumeRuntimeTagOnTrigger: 0
+      dashThroughDamageEffects: []
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []
-      passiveHookTypeName:
+      passiveHookTypeName: 
       nodeId: kyo.passive.lv1
       nodeName: Ash Spark
-      description: When dealing damage, 20% chance to deal additional Ash DMG based on 20% ATK.
+      description: When dealing damage, 20% chance to deal additional Ash DMG based
+        on 20% ATK.
+      skillPanelDescriptionOverride: 
       track: 2
       level: 1
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: kyo.passive.lv2
+      nodeName: Basic Attack State 3
+      description: Unlock State(3) on Basic Attack.
+      skillPanelDescriptionOverride: 
+      track: 2
+      level: 2
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        effect: {fileID: 11400000, guid: 897e040d21704bb381204fce6827c278, type: 2}
+        scope: 0
+        stackMode: 0
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        durationOverride: -1
+        filterByTargetElement: 0
+        targetElement: 0
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: kyo.passive.lv3
+      nodeName: Burning Momentum
+      description: When HP is above 70%, own AE Recharge increases by 25%
+      skillPanelDescriptionOverride: 
+      track: 2
+      level: 3
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        effect: {fileID: 11400000, guid: 3fa91416c22543d8bb9d017053c988bb, type: 2}
+        scope: 1
+        stackMode: 0
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        durationOverride: -1
+        filterByTargetElement: 1
+        targetElement: 3
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: kyo.passive.lv4
+      nodeName: Ash Team Attack
+      description: Increase Ash allies ATK based on 20% of Kyo ATK.
+      skillPanelDescriptionOverride: 
+      track: 2
+      level: 4
       fragmentCost: 1
       unlockedByDefault: 0
   actionResolverTable: {fileID: 11400000, guid: 93ffc437bab6ea2449e90ba52b119527, type: 2}
