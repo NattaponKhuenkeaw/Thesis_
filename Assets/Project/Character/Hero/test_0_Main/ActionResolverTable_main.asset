@@ -19,7 +19,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
-    actionDamageMultiplier: 7
+    actionDamageMultiplier: 5
     auraEnergyReward: 0
     comboTree:
       treeName: Combo
@@ -100,7 +100,7 @@ MonoBehaviour:
           motionData:
             rid: 1588256136747024574
           vfxData:
-            rid: 1588256193077837983
+            rid: -2
           audioData:
             rid: 1588256211525697650
           hitData:
@@ -147,7 +147,7 @@ MonoBehaviour:
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
-        impactFreezeFrames: 3
+        impactFreezeFrames: 0
         knockbackFrames: 24
         knockupFrames: 18
         knockfallFrames: 15
@@ -171,10 +171,10 @@ MonoBehaviour:
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
         stepData:
-          startupFrames: 16
-          activeFrames: 19
-          recoveryFrames: 17
-          cancelWindowStartFrame: 49
+          startupFrames: 11
+          activeFrames: 12
+          recoveryFrames: 12
+          cancelWindowStartFrame: 33
           loopActivePhase: 0
           stepName: Attack3
           animationClip: {fileID: 7400000, guid: 851df54155449ce448a03fb6be4e1dce, type: 2}
@@ -208,7 +208,7 @@ MonoBehaviour:
       data:
         keyframes:
         - startFrame: 1
-          endFrame: 10
+          endFrame: 7
           taskType: 0
           easing: 1
           position: {x: 1.5, y: 0, z: 0}
@@ -222,8 +222,8 @@ MonoBehaviour:
     - rid: 1588256136747024580
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
-        startFrameOffset: 4
-        activeFrames: 7
+        startFrameOffset: 3
+        activeFrames: 5
         elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.3791339, y: 1.0363575}
@@ -232,21 +232,21 @@ MonoBehaviour:
         impactTier: 1
         useDeterministicReaction: 1
         reactionKind: 2
-        impactFreezeFrames: 10
-        knockbackFrames: 19
-        knockupFrames: 16
-        knockfallFrames: 13
-        recoveryFrames: 12
+        impactFreezeFrames: 7
+        knockbackFrames: 12
+        knockupFrames: 11
+        knockfallFrames: 9
+        recoveryFrames: 8
         horizontalSpeed: 3
         launchSpeed: 5
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        juggleLaunchScale: 0.85
-        juggleStunScale: 0.9
+        juggleLaunchScale: 1
+        juggleStunScale: 1
         flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 8
+        flashFrames: 6
         hitSFX: {fileID: 0}
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
@@ -260,8 +260,8 @@ MonoBehaviour:
           vfxType: 18
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
-          triggerFrame: 20
-          duration: 20
+          triggerFrame: 14
+          duration: 14
           trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
           transformKeys:
           - frame: 0
@@ -273,10 +273,10 @@ MonoBehaviour:
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
         stepData:
-          startupFrames: 7
-          activeFrames: 26
-          recoveryFrames: 17
-          cancelWindowStartFrame: 49
+          startupFrames: 6
+          activeFrames: 21
+          recoveryFrames: 13
+          cancelWindowStartFrame: 39
           loopActivePhase: 0
           stepName: Attack2
           animationClip: {fileID: 7400000, guid: 16980d03d7e2f824ba2af7a0b368a8f0, type: 2}
@@ -309,16 +309,16 @@ MonoBehaviour:
       data:
         keyframes:
         - startFrame: 0
-          endFrame: 4
+          endFrame: 3
           taskType: 0
-          easing: 34
+          easing: 1
           position: {x: 1, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
-        - startFrame: 24
-          endFrame: 27
+        - startFrame: 19
+          endFrame: 22
           taskType: 0
-          easing: 34
+          easing: 1
           position: {x: 0.5, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
@@ -331,7 +331,7 @@ MonoBehaviour:
     - rid: 1588256162561392762
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
-        startFrameOffset: 0
+        startFrameOffset: 3
         activeFrames: 2
         elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
@@ -342,10 +342,10 @@ MonoBehaviour:
         useDeterministicReaction: 1
         reactionKind: 1
         impactFreezeFrames: 0
-        knockbackFrames: 13
-        knockupFrames: 10
-        knockfallFrames: 8
-        recoveryFrames: 7
+        knockbackFrames: 10
+        knockupFrames: 8
+        knockfallFrames: 6
+        recoveryFrames: 6
         horizontalSpeed: 5
         launchSpeed: 1
         useSnapToAnchor: 0
@@ -355,7 +355,7 @@ MonoBehaviour:
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
+        flashFrames: 5
         hitSFX: {fileID: 0}
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
@@ -364,7 +364,7 @@ MonoBehaviour:
     - rid: 1588256162561392763
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
-        startFrameOffset: 22
+        startFrameOffset: 16
         activeFrames: 2
         elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
@@ -375,10 +375,10 @@ MonoBehaviour:
         useDeterministicReaction: 1
         reactionKind: 1
         impactFreezeFrames: 0
-        knockbackFrames: 13
-        knockupFrames: 10
-        knockfallFrames: 8
-        recoveryFrames: 7
+        knockbackFrames: 10
+        knockupFrames: 8
+        knockfallFrames: 6
+        recoveryFrames: 6
         horizontalSpeed: 5
         launchSpeed: 1
         useSnapToAnchor: 0
@@ -388,29 +388,12 @@ MonoBehaviour:
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
+        flashFrames: 5
         hitSFX: {fileID: 0}
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
-    - rid: 1588256193077837983
-      type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
-      data:
-        entries:
-        - label: VFX
-          vfxType: 115
-          vfxClip: {fileID: 0}
-          vfxPrefab: {fileID: 0}
-          triggerFrame: 6
-          duration: 4
-          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
-          transformKeys:
-          - frame: 0
-            position: {x: 1.5, y: 0, z: 0}
-            rotation: {x: 0, y: 0, z: 0}
-            scale: {x: 1, y: 1, z: 1}
-          loopDuringActive: 0
     - rid: 1588256193077837988
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -753,7 +736,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 3
-        elementType: 0
+        elementType: 4
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.7068697, y: 1.5693027}
         size: {x: 2.1382587, y: 3.4697359}
@@ -776,8 +759,8 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
-        hitSFX: {fileID: 0}
-        hitVFXType: 0
+        hitSFX: {fileID: 8300000, guid: 9c7433f026bbb6d42886e2c785629571, type: 3}
+        hitVFXType: 15
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -990,10 +973,10 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 3
-        elementType: 0
+        elementType: 4
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 1.63467, y: 1.4461191}
-        size: {x: 3.3815913, y: 2.8922381}
+        offset: {x: 1.8445871, y: 1.4708161}
+        size: {x: 3.7026415, y: 2.8922381}
         damageRatio: 0.15
         impactTier: 0
         useDeterministicReaction: 1
@@ -1013,8 +996,8 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
-        hitSFX: {fileID: 0}
-        hitVFXType: 0
+        hitSFX: {fileID: 8300000, guid: be42944712cebd14a9f9a6b13cb00fe6, type: 3}
+        hitVFXType: 15
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -1549,16 +1532,16 @@ MonoBehaviour:
         entries:
         - label: SFX
           clip: {fileID: 8300000, guid: 60fea6f9cd755924ea53ea4a5b381699, type: 3}
-          triggerFrame: 6
-          duration: 9
+          triggerFrame: 5
+          duration: 7
           channel: 1
           volume: 0.7
           pitchVariation: 1
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
         - label: SFX
           clip: {fileID: 8300000, guid: 60fea6f9cd755924ea53ea4a5b381699, type: 3}
-          triggerFrame: 25
-          duration: 9
+          triggerFrame: 20
+          duration: 7
           channel: 1
           volume: 0.7
           pitchVariation: 1.5
@@ -1570,15 +1553,15 @@ MonoBehaviour:
         - label: SFX
           clip: {fileID: 8300000, guid: b4510c977ef2ada49a77f5984d6eeacc, type: 3}
           triggerFrame: 0
-          duration: 35
+          duration: 24
           channel: 1
           volume: 0.5
           pitchVariation: 1.5
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
         - label: SFX
           clip: {fileID: 8300000, guid: da11725bf561b82409ba1e5b6f58fff2, type: 3}
-          triggerFrame: 21
-          duration: 20
+          triggerFrame: 15
+          duration: 14
           channel: 1
           volume: 1
           pitchVariation: 1
@@ -1601,7 +1584,7 @@ MonoBehaviour:
         entries:
         - label: Ultimate Sequence
           eventType: 2
-          triggerFrame: 7
+          triggerFrame: 5
           trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
           overlaySettings:
             fadeInDuration: 0.03

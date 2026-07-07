@@ -75,21 +75,62 @@ MonoBehaviour:
       abilityName: Passive
       icon: {fileID: 0}
       description: 
+    baseSkillNode:
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: base.skill
+      nodeName: Base Skill
+      description: 
+      skillPanelDescriptionOverride: Inflict <b><color=#FF0000>Ash</color></b> DMG
+        350% of own ATK, <color=#C0C0C0>When Hit will build a <b><color=#FF0000>Ash</color></b>
+        <b>Elemenetal Daze Gauge</b> by +25% of it original</color>
+      track: 0
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
+    baseUltimateNode:
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: base.ultimate
+      nodeName: Base Ultimate
+      description: 
+      skillPanelDescriptionOverride: Inflict <b><color=#FF0000>Ash</color></b> DMG
+        700% of own ATK
+      track: 1
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
     basePassiveNode:
-      statModifiers:
-      - target: 8
-        operation: 0
-        valueSource: 0
-        value: 15
-        sourceStat: 0
-        scope: 2
-        requiredTags: []
-        requiredCounters: []
+      statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
       runtimeEffects:
-      - trigger: 1
+      - trigger: 0
         filter:
           filterByCategory: 0
           category: 0
@@ -99,18 +140,96 @@ MonoBehaviour:
           actionName: 
           filterByStepName: 0
           stepName: 
-          filterByElement: 1
-          elementType: 3
+          filterByElement: 0
+          elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
-        effect: {fileID: 11400000, guid: 00da1aa28352498a8dafeeed467406e6, type: 2}
+        recipe:
+          recipeId: 
+          definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
+          presentation:
+            effectId: 
+            displayName: Kyo Allies Damage
+            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 2
+            appliesOn: 2
+            durationType: 1
+            durationSeconds: 1
+            stackMode: 0
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: 
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 1
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 15
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreElementalIncomingModifiers: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              tickInterval: 1
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+          childRecipes: []
+        effect: {fileID: 0}
         scope: 1
         stackMode: 0
         stackLimit: 1
         refreshDurationOnReapply: 1
         durationOverride: -1
-        filterByTargetElement: 0
-        targetElement: 0
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
+        filterByTargetElement: 1
+        targetElement: 3
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -123,7 +242,8 @@ MonoBehaviour:
       nodeId: kyo.passive.base
       nodeName: Kusanagi Lineage
       description: Increase allies Ash DMG by 15%.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: Increase <b><color=#FF0000>Ash Allies</color></b>
+        DMG by 15%
       track: 2
       level: 0
       fragmentCost: 0
@@ -133,7 +253,7 @@ MonoBehaviour:
       cooldownModifiers: []
       actionModifiers:
       - category: 1
-        actionId: kyo.skill
+        actionId: 
         actionName: 
         stepName: 
         unlocked: 1
@@ -144,7 +264,7 @@ MonoBehaviour:
         requiredTags: []
         requiredCounters: []
         damageMultiplierOperation: 3
-        damageMultiplierValue: 4.5
+        damageMultiplierValue: 4
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 0
@@ -170,8 +290,11 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: kyo.skill.lv1
       nodeName: Skill Multiplier
-      description: Increase Skill multiplier to 450% of ATK.
-      skillPanelDescriptionOverride: 
+      description: Increase Skill multiplier to 400% of ATK.
+      skillPanelDescriptionOverride: Inflict <b><color=#FF0000>Ash</color></b> DMG
+        <b><color=#FFA500>400%</color></b> of own ATK, <color=#C0C0C0>When Hit will
+        build a <b><color=#FF0000>Ash</color></b> <b>Elemenetal Daze Gauge</b> by
+        +25% of it original</color>
       track: 0
       level: 1
       fragmentCost: 1
@@ -193,8 +316,8 @@ MonoBehaviour:
         filter:
           filterByCategory: 1
           category: 1
-          filterByActionId: 1
-          actionId: kyo.skill
+          filterByActionId: 0
+          actionId: 
           filterByActionName: 0
           actionName: 
           filterByStepName: 0
@@ -207,7 +330,7 @@ MonoBehaviour:
         incomingDamagePercentAdd: 0
         resistancePercentAdd: 0
         masteryPercentAdd: 0
-        gaugeBuildPercentAdd: 25
+        gaugeBuildPercentAdd: 50
         permanent: 0
         stacks: 0
         duration: 0
@@ -215,7 +338,10 @@ MonoBehaviour:
       nodeId: kyo.skill.lv2
       nodeName: Ash Daze Pressure
       description: Skill hits increase Ash gauge build by 25%.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: Inflict <b><color=#FF0000>Ash</color></b> DMG
+        <b><color=#FFA500>400%</color></b> of own ATK, <color=#C0C0C0>When Hit will
+        build a <b><color=#FF0000>Ash</color></b> <b>Elemenetal Daze Gauge</b> by
+        <b><color=#FFA500>+50%</color></b> of it original</color>
       track: 0
       level: 2
       fragmentCost: 1
@@ -262,7 +388,11 @@ MonoBehaviour:
       nodeId: kyo.skill.lv3
       nodeName: AE Reward
       description: Increase Skill AE reward by 1.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: Inflict <b><color=#FF0000>Ash</color></b> DMG
+        <b><color=#FFA500>400%</color></b> of own ATK, <color=#C0C0C0>When Hit will
+        build a <b><color=#FF0000>Ash</color></b> <b>Elemenetal Daze Gauge</b> by
+        <b><color=#FFA500>+50%</color></b> of it original</color>  <size=20><color=#C0C0C0>-
+        Increase Skill AE reward by 1</color></size>
       track: 0
       level: 3
       fragmentCost: 1
@@ -283,8 +413,8 @@ MonoBehaviour:
         filter:
           filterByCategory: 1
           category: 1
-          filterByActionId: 1
-          actionId: kyo.skill
+          filterByActionId: 0
+          actionId: 0
           filterByActionName: 0
           actionName: 
           filterByStepName: 0
@@ -295,18 +425,29 @@ MonoBehaviour:
           runtimeTag: 
         chance: 1
         effectType: 0
-        scope: 2
+        scope: 0
         valueSource: 0
-        valueRatio: 0.4
+        valueRatio: 0.1
         flatValue: 0
-        runtimeTag: waive_next_ultimate_cost
+        runtimeTag: 0
         runtimeTagDuration: 0
       enemyElementModifiers: []
       passiveHookTypeName: 
       nodeId: kyo.skill.lv4
       nodeName: Allied Flame Mend
-      description: Skill use heals all allies for 8% of Kyo ATK.
-      skillPanelDescriptionOverride: 
+      description: Skill use heals all allies for 10% of Kyo ATK.
+      skillPanelDescriptionOverride: 'Inflict <b><color=#FF0000>Ash</color></b> DMG
+        <b><color=#FFA500>400%</color></b> of own ATK, <color=#C0C0C0>When Hit will
+        build a <b><color=#FF0000>Ash</color></b> <b>Elemenetal Daze Gauge</b> by
+        <b><color=#FFA500>+50%</color></b> of it original</color>
+
+
+
+        <size=20><color=#C0C0C0>-
+        Increase Skill AE reward by 1</color></size>
+
+        <size=20><color=#C0C0C0>Upon
+        Use,<b><color=#74C365>Regenerate all allies for 10% of Kyo ATK</color></b></color></size>'
       track: 0
       level: 4
       fragmentCost: 1
@@ -320,8 +461,8 @@ MonoBehaviour:
         filter:
           filterByCategory: 1
           category: 2
-          filterByActionId: 1
-          actionId: kyo.ultimate
+          filterByActionId: 0
+          actionId: 
           filterByActionName: 0
           actionName: 
           filterByStepName: 0
@@ -330,12 +471,242 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
-        effect: {fileID: 11400000, guid: d3074b8ce9a64d9ea942df44e527890a, type: 2}
+        recipe:
+          recipeId: 
+          definition: {fileID: 11400000, guid: b7c3e4d5a6f147f18d29c30b45a6e7f8, type: 2}
+          presentation:
+            effectId: 
+            displayName: Kusanagi Blessing
+            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 0
+            appliesOn: 0
+            durationType: 0
+            durationSeconds: 20
+            stackMode: 0
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: 
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreElementalIncomingModifiers: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              tickInterval: 1
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              chance: 1
+              internalCooldown: 2
+              attackRatio: 0
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0.04
+              targetMaxHpRatio: 0
+              capTargetMaxHpDamage: 1
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 5
+              elementType: 3
+            overrideStatus: 0
+            status:
+              status: 5
+          childRecipes:
+          - recipeId: kyo.kusanagi_blessing.atk
+            definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
+            presentation:
+              effectId: 
+              displayName: 
+              icon: {fileID: 0}
+              fieldVisualPrefab: {fileID: 0}
+            policy:
+              kind: 2
+              appliesOn: 0
+              durationType: 0
+              durationSeconds: 20
+              stackMode: 0
+              stackLimit: 1
+              refreshDurationOnReapply: 1
+              stackable: 0
+              removeOnOwnerDamaged: 0
+              stackKey: 
+            parameters:
+              overrideStatModifiers: 1
+              statModifiers:
+              - target: 1
+                operation: 3
+                sourceStat: 1
+                value: 0.2
+              overrideDamageModifier: 0
+              damageModifier:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                outgoingDamagePercentAdd: 0
+                incomingDamageTakenPercentAdd: 0
+              overrideDamageInput: 0
+              damageInput:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                defenderDefensePercentAdd: 0
+                defenderDamageResistancePercentAdd: 0
+                ignoreDefense: 0
+                ignoreDamageResistance: 0
+                ignoreElementalIncomingModifiers: 0
+              overridePeriodicHeal: 0
+              periodicHeal:
+                tickInterval: 0
+                valueSource: 0
+                valueRatio: 0
+                flatValue: 0
+                useSourceStats: 0
+              overrideLifesteal: 0
+              lifesteal:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                damageDealtRatio: 0
+                lowHpThreshold: 0
+                lowHpMultiplier: 0
+              overrideAdditionalDamage: 0
+              additionalDamage:
+                chance: 1
+                internalCooldown: 0
+                attackRatio: 0
+                sourceStatDamageSource: 0
+                sourceStatRatio: 0
+                targetMaxHpRatio: 0
+                capTargetMaxHpDamage: 0
+                targetMaxHpDamageCapSource: 0
+                targetMaxHpDamageCapRatio: 0
+                elementType: 0
+              overrideStatus: 0
+              status:
+                status: 5
+          - recipeId: kyo.kusanagi_blessing.ash_damage
+            definition: {fileID: 11400000, guid: 415918be4bdded440914c0232e1022fa, type: 2}
+            presentation:
+              effectId: 
+              displayName: 
+              icon: {fileID: 0}
+              fieldVisualPrefab: {fileID: 0}
+            policy:
+              kind: 2
+              appliesOn: 0
+              durationType: 0
+              durationSeconds: 20
+              stackMode: 0
+              stackLimit: 0
+              refreshDurationOnReapply: 1
+              stackable: 0
+              removeOnOwnerDamaged: 0
+              stackKey: 
+            parameters:
+              overrideStatModifiers: 0
+              statModifiers: []
+              overrideDamageModifier: 0
+              damageModifier:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                outgoingDamagePercentAdd: 0
+                incomingDamageTakenPercentAdd: 0
+              overrideDamageInput: 0
+              damageInput:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                defenderDefensePercentAdd: 0
+                defenderDamageResistancePercentAdd: 0
+                ignoreDefense: 0
+                ignoreDamageResistance: 0
+                ignoreElementalIncomingModifiers: 0
+              overridePeriodicHeal: 0
+              periodicHeal:
+                tickInterval: 0
+                valueSource: 0
+                valueRatio: 0
+                flatValue: 0
+                useSourceStats: 0
+              overrideLifesteal: 0
+              lifesteal:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                damageDealtRatio: 0
+                lowHpThreshold: 0
+                lowHpMultiplier: 0
+              overrideAdditionalDamage: 1
+              additionalDamage:
+                chance: 1
+                internalCooldown: 2
+                attackRatio: 0
+                sourceStatDamageSource: 0
+                sourceStatRatio: 0.04
+                targetMaxHpRatio: 0
+                capTargetMaxHpDamage: 1
+                targetMaxHpDamageCapSource: 0
+                targetMaxHpDamageCapRatio: 5
+                elementType: 3
+              overrideStatus: 1
+              status:
+                status: 0
+        effect: {fileID: 11400000, guid: b7c3e4d5a6f147f18d29c30b45a6e7f8, type: 2}
         scope: 0
         stackMode: 0
         stackLimit: 1
         refreshDurationOnReapply: 1
         durationOverride: -1
+        overrideSourceCharacter: 1
+        sourceCharacterId: char_1_kyo
         filterByTargetElement: 0
         targetElement: 0
       counterEffects: []
@@ -350,7 +721,12 @@ MonoBehaviour:
       nodeId: kyo.ultimate.lv1
       nodeName: Kusanagi Blessing
       description: After Ultimate ends, self gains Kusanagi Blessing for 20 seconds.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: "Inflict <b><color=#FF0000>Ash</color></b> DMG
+        700% of own ATK\r\n\r\n<size=20><color=#C0C0C0>- After Ultimate ends, self
+        gains <b><color=#FF0000>Kusanagi Blessing</color></b> for 20 seconds</color></size>\r\n<size=19><color=#00ffff>
+        \u2022 Kusanagi Blessing: Increase own ATK based on 20% Kyo ATK, Every time
+        land a dmg will deal additional <b><color=#FF0000>Ash</color></b> dmg to
+        4% of Kyo Max HP<color=#C0C0C0>(cooldown 2 sc)</color> 20 seconds</color></size>"
       track: 1
       level: 1
       fragmentCost: 1
@@ -397,7 +773,13 @@ MonoBehaviour:
       nodeId: kyo.ultimate.lv2
       nodeName: Ultimate Multiplier
       description: Increase Ultimate multiplier to 800% of ATK.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: "Inflict <b><color=#FF0000>Ash</color></b> DMG
+        <b><color=#FFA500>800%</color></b> of own ATK\r\n\r\n<size=20><color=#C0C0C0>-
+        After Ultimate ends, self gains <b><color=#FF0000>Kusanagi Blessing</color></b>
+        for 20 seconds</color></size>\r\n<size=19><color=#00ffff> \u2022 Kusanagi
+        Blessing: Increase own ATK based on 20% Kyo ATK, Every time land a dmg will
+        deal additional <b><color=#FF0000>Ash</color></b> dmg to 4% of Kyo Max HP<color=#C0C0C0>(cooldown
+        2 sc)</color> 20 seconds</color></size>"
       track: 1
       level: 2
       fragmentCost: 1
@@ -406,16 +788,16 @@ MonoBehaviour:
       cooldownModifiers: []
       actionModifiers:
       - category: 2
-        actionId: kyo.ultimate
+        actionId: kyo.ultimate.ex
         actionName: 
         stepName: 
         unlocked: 1
         priorityBonus: 100
-        replacementActionId: kyo.ultimate.kusanagi
-        replacementActionName: Kusanagi
+        replacementActionId: 
+        replacementActionName: 
         startingComboDepthOverride: 0
         requiredTags:
-        - tag: kyo.ultimate_followup
+        - tag: kyo.ultimate.followup
           expectedValue: 1
         requiredCounters: []
         damageMultiplierOperation: 0
@@ -425,7 +807,7 @@ MonoBehaviour:
         finalDamageOperation: 0
         finalDamageValue: 0
         finalDamageRequiresCriticalHit: 0
-        auraEnergyRewardAdd: 0
+        auraEnergyRewardAdd: 25
         cooldownOperation: 0
         cooldownValue: 0
         energyCostOperation: 0
@@ -447,16 +829,16 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
-        tag: kyo.ultimate_followup
+        tag: kyo.ultimate.followup
         addTag: 1
-        duration: 4
+        duration: 20
       runtimeEffects:
       - trigger: 2
         filter:
           filterByCategory: 1
           category: 2
           filterByActionId: 1
-          actionId: kyo.ultimate
+          actionId: kyo.ultimate.ex
           filterByActionName: 0
           actionName: 
           filterByStepName: 0
@@ -465,14 +847,240 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
-        effect: {fileID: 11400000, guid: dc6f6101232660b46ae7cec35d20ca7a, type: 2}
+        recipe:
+          recipeId: 
+          definition: {fileID: 11400000, guid: 685a25a9797d09e489170a3c6a5b2360, type: 2}
+          presentation:
+            effectId: 
+            displayName: Yamata Orochi
+            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 0
+            appliesOn: 0
+            durationType: 0
+            durationSeconds: 20
+            stackMode: 0
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: 
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreElementalIncomingModifiers: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              tickInterval: 1
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+          childRecipes:
+          - recipeId: allie.damage
+            definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
+            presentation:
+              effectId: 
+              displayName: 
+              icon: {fileID: 0}
+              fieldVisualPrefab: {fileID: 0}
+            policy:
+              kind: 2
+              appliesOn: 2
+              durationType: 0
+              durationSeconds: 20
+              stackMode: 0
+              stackLimit: 0
+              refreshDurationOnReapply: 0
+              stackable: 0
+              removeOnOwnerDamaged: 0
+              stackKey: 
+            parameters:
+              overrideStatModifiers: 0
+              statModifiers: []
+              overrideDamageModifier: 1
+              damageModifier:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                outgoingDamagePercentAdd: 15
+                incomingDamageTakenPercentAdd: 0
+              overrideDamageInput: 0
+              damageInput:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                defenderDefensePercentAdd: 0
+                defenderDamageResistancePercentAdd: 0
+                ignoreDefense: 0
+                ignoreDamageResistance: 0
+                ignoreElementalIncomingModifiers: 0
+              overridePeriodicHeal: 0
+              periodicHeal:
+                tickInterval: 0
+                valueSource: 0
+                valueRatio: 0
+                flatValue: 0
+                useSourceStats: 0
+              overrideLifesteal: 0
+              lifesteal:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                damageDealtRatio: 0
+                lowHpThreshold: 0
+                lowHpMultiplier: 0
+              overrideAdditionalDamage: 0
+              additionalDamage:
+                chance: 0
+                internalCooldown: 0
+                attackRatio: 0
+                sourceStatDamageSource: 0
+                sourceStatRatio: 0
+                targetMaxHpRatio: 0
+                capTargetMaxHpDamage: 0
+                targetMaxHpDamageCapSource: 0
+                targetMaxHpDamageCapRatio: 0
+                elementType: 0
+              overrideStatus: 0
+              status:
+                status: 0
+          - recipeId: heal
+            definition: {fileID: 11400000, guid: dd9bfc3c18ffc3545b744c12ccf0ada4, type: 2}
+            presentation:
+              effectId: 
+              displayName: 
+              icon: {fileID: 0}
+              fieldVisualPrefab: {fileID: 0}
+            policy:
+              kind: 2
+              appliesOn: 2
+              durationType: 0
+              durationSeconds: 20
+              stackMode: 0
+              stackLimit: 0
+              refreshDurationOnReapply: 0
+              stackable: 0
+              removeOnOwnerDamaged: 0
+              stackKey: 
+            parameters:
+              overrideStatModifiers: 0
+              statModifiers: []
+              overrideDamageModifier: 0
+              damageModifier:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                outgoingDamagePercentAdd: 15
+                incomingDamageTakenPercentAdd: 0
+              overrideDamageInput: 0
+              damageInput:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                defenderDefensePercentAdd: 0
+                defenderDamageResistancePercentAdd: 0
+                ignoreDefense: 0
+                ignoreDamageResistance: 0
+                ignoreElementalIncomingModifiers: 0
+              overridePeriodicHeal: 1
+              periodicHeal:
+                tickInterval: 4
+                valueSource: 1
+                valueRatio: 0.4
+                flatValue: 0
+                useSourceStats: 1
+              overrideLifesteal: 0
+              lifesteal:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                damageDealtRatio: 0
+                lowHpThreshold: 0
+                lowHpMultiplier: 0
+              overrideAdditionalDamage: 0
+              additionalDamage:
+                chance: 0
+                internalCooldown: 0
+                attackRatio: 0
+                sourceStatDamageSource: 0
+                sourceStatRatio: 0
+                targetMaxHpRatio: 0
+                capTargetMaxHpDamage: 0
+                targetMaxHpDamageCapSource: 0
+                targetMaxHpDamageCapRatio: 0
+                elementType: 0
+              overrideStatus: 0
+              status:
+                status: 0
+        effect: {fileID: 0}
         scope: 1
         stackMode: 0
         stackLimit: 1
         refreshDurationOnReapply: 1
         durationOverride: -1
-        filterByTargetElement: 0
-        targetElement: 0
+        overrideSourceCharacter: 1
+        sourceCharacterId: char_1_kyo
+        filterByTargetElement: 1
+        targetElement: 3
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -486,7 +1094,20 @@ MonoBehaviour:
       nodeName: Kusanagi Follow-up
       description: After Ultimate, open a follow-up window and apply Orochiyagi support
         buffs to allies.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: "Inflict <b><color=#FF0000>Ash</color></b> DMG
+        <b><color=#FFA500>800%</color></b> of own ATK\r\n\r\n<size=20><color=#C0C0C0>-
+        After Ultimate ends, self gains <b><color=#FF0000>Kusanagi Blessing</color></b>
+        for 20 seconds</color></size>\r\n<size=20><color=#C0C0C0>- After Ultimate
+        ends, Self can perform a Follow-up Attack(within 20 second TIME WINDOW) a
+        CLICK will perform \"ESAKA\" that can do constructive 3 follow-up and Final
+        EX \"Serpant Wave\" and a HOLD \"Orochiyagi\" After Follow-up Ultimate ends,
+        All allies gain <b><color=#FF0000>Yamata Orochi</color> for 20 seconds</b></color></size>\r\n\r\n<size=19><color=#00ffff>
+        \u2022 Kusanagi Blessing: Increase own ATK based on 20% Kyo ATK, Every time
+        land a dmg will deal additional <b><color=#FF0000>Ash</color></b> dmg to
+        4% of Max HP(Capped 500% of own ATK)<color=#C0C0C0>(cooldown 2 sc)</color>
+        20 seconds</color></size>\r\n<size=19><color=#00ffff>\u2022 Yamata Orochi:
+        Increase <b><color=#FF0000>Ash</color></b> Allies DMG by +20%, <b><color=#74C365>Regenerate
+        Allies HP based on 40% of Kyo ATK every 4 seconds</color></b></color></size>"
       track: 1
       level: 3
       fragmentCost: 1
@@ -500,8 +1121,8 @@ MonoBehaviour:
         filter:
           filterByCategory: 1
           category: 2
-          filterByActionId: 1
-          actionId: kyo.ultimate
+          filterByActionId: 0
+          actionId: 
           filterByActionName: 0
           actionName: 
           filterByStepName: 0
@@ -510,12 +1131,242 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
-        effect: {fileID: 11400000, guid: d3074b8ce9a64d9ea942df44e527890a, type: 2}
-        scope: 1
+        recipe:
+          recipeId: 
+          definition: {fileID: 11400000, guid: b7c3e4d5a6f147f18d29c30b45a6e7f8, type: 2}
+          presentation:
+            effectId: 
+            displayName: Kusanagi Blessing
+            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 0
+            appliesOn: 2
+            durationType: 0
+            durationSeconds: 20
+            stackMode: 0
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: 
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreElementalIncomingModifiers: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              tickInterval: 1
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+          childRecipes:
+          - recipeId: kyo.kusanagi_blessing.atk
+            definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
+            presentation:
+              effectId: 
+              displayName: 
+              icon: {fileID: 0}
+              fieldVisualPrefab: {fileID: 0}
+            policy:
+              kind: 2
+              appliesOn: 0
+              durationType: 0
+              durationSeconds: 20
+              stackMode: 0
+              stackLimit: 1
+              refreshDurationOnReapply: 1
+              stackable: 0
+              removeOnOwnerDamaged: 0
+              stackKey: 
+            parameters:
+              overrideStatModifiers: 1
+              statModifiers:
+              - target: 1
+                operation: 3
+                sourceStat: 1
+                value: 0.2
+              overrideDamageModifier: 0
+              damageModifier:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                outgoingDamagePercentAdd: 0
+                incomingDamageTakenPercentAdd: 0
+              overrideDamageInput: 0
+              damageInput:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                defenderDefensePercentAdd: 0
+                defenderDamageResistancePercentAdd: 0
+                ignoreDefense: 0
+                ignoreDamageResistance: 0
+                ignoreElementalIncomingModifiers: 0
+              overridePeriodicHeal: 0
+              periodicHeal:
+                tickInterval: 0
+                valueSource: 0
+                valueRatio: 0
+                flatValue: 0
+                useSourceStats: 0
+              overrideLifesteal: 0
+              lifesteal:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                damageDealtRatio: 0
+                lowHpThreshold: 0
+                lowHpMultiplier: 0
+              overrideAdditionalDamage: 0
+              additionalDamage:
+                chance: 1
+                internalCooldown: 0
+                attackRatio: 0
+                sourceStatDamageSource: 0
+                sourceStatRatio: 0
+                targetMaxHpRatio: 0
+                capTargetMaxHpDamage: 0
+                targetMaxHpDamageCapSource: 0
+                targetMaxHpDamageCapRatio: 0
+                elementType: 0
+              overrideStatus: 0
+              status:
+                status: 5
+          - recipeId: kyo.kusanagi_blessing.ash_damage
+            definition: {fileID: 11400000, guid: 415918be4bdded440914c0232e1022fa, type: 2}
+            presentation:
+              effectId: 
+              displayName: 
+              icon: {fileID: 0}
+              fieldVisualPrefab: {fileID: 0}
+            policy:
+              kind: 2
+              appliesOn: 0
+              durationType: 0
+              durationSeconds: 20
+              stackMode: 0
+              stackLimit: 0
+              refreshDurationOnReapply: 1
+              stackable: 0
+              removeOnOwnerDamaged: 0
+              stackKey: 
+            parameters:
+              overrideStatModifiers: 0
+              statModifiers: []
+              overrideDamageModifier: 0
+              damageModifier:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                outgoingDamagePercentAdd: 0
+                incomingDamageTakenPercentAdd: 0
+              overrideDamageInput: 0
+              damageInput:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                defenderDefensePercentAdd: 0
+                defenderDamageResistancePercentAdd: 0
+                ignoreDefense: 0
+                ignoreDamageResistance: 0
+                ignoreElementalIncomingModifiers: 0
+              overridePeriodicHeal: 0
+              periodicHeal:
+                tickInterval: 0
+                valueSource: 0
+                valueRatio: 0
+                flatValue: 0
+                useSourceStats: 0
+              overrideLifesteal: 0
+              lifesteal:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                damageDealtRatio: 0
+                lowHpThreshold: 0
+                lowHpMultiplier: 0
+              overrideAdditionalDamage: 1
+              additionalDamage:
+                chance: 1
+                internalCooldown: 2
+                attackRatio: 0
+                sourceStatDamageSource: 0
+                sourceStatRatio: 0.04
+                targetMaxHpRatio: 0
+                capTargetMaxHpDamage: 1
+                targetMaxHpDamageCapSource: 0
+                targetMaxHpDamageCapRatio: 5
+                elementType: 3
+              overrideStatus: 1
+              status:
+                status: 0
+        effect: {fileID: 11400000, guid: b7c3e4d5a6f147f18d29c30b45a6e7f8, type: 2}
+        scope: 0
         stackMode: 0
         stackLimit: 1
         refreshDurationOnReapply: 1
         durationOverride: -1
+        overrideSourceCharacter: 1
+        sourceCharacterId: char_1_kyo
         filterByTargetElement: 0
         targetElement: 0
       counterEffects: []
@@ -531,7 +1382,20 @@ MonoBehaviour:
       nodeName: Team Kusanagi Blessing
       description: After Ultimate ends, all allies gain Kusanagi Blessing for 20
         seconds.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: "Inflict <b><color=#FF0000>Ash</color></b> DMG
+        <b><color=#FFA500>800%</color></b> of own ATK\r\n\r\n<size=20><color=#C0C0C0>-
+        After Ultimate ends, <b><color=#FFA500>Allies</color></b> gains <b><color=#FF0000>Kusanagi
+        Blessing</color></b> for 20 seconds</color></size>\r\n<size=20><color=#C0C0C0>-
+        After Ultimate ends, Self can perform a Follow-up Attack(within 20 second
+        TIME WINDOW) a CLICK will perform \"ESAKA\" that can do constructive 3 follow-up
+        and Final EX \"Serpant Wave\" and a HOLD \"Orochiyagi\" After Follow-up Ultimate
+        ends, All allies gain <b><color=#FF0000>Yamata Orochi</color> for 20 seconds</b></color></size>\r\n\r\n<size=19><color=#00ffff>
+        \u2022 Kusanagi Blessing: Increase own ATK based on 20% Kyo ATK, Every time
+        land a dmg will deal additional <b><color=#FF0000>Ash</color></b> dmg to
+        4% of Max HP(Capped 500% of own ATK)<color=#C0C0C0>(cooldown 2 sc)</color>
+        20 seconds</color></size>\r\n<size=19><color=#00ffff>\u2022 Yamata Orochi:
+        Increase <b><color=#FF0000>Ash</color></b> Allies DMG by +20%, <b><color=#74C365>Regenerate
+        Allies HP based on 40% of Kyo ATK</color></b></color></size>"
       track: 1
       level: 4
       fragmentCost: 1
@@ -576,7 +1440,16 @@ MonoBehaviour:
       nodeName: Ash Spark
       description: When dealing damage, 20% chance to deal additional Ash DMG based
         on 20% ATK.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: 'Increase <b><color=#FF0000>Ash Allies</color></b>
+        DMG by 15%
+
+
+
+        <size=20><color=#C0C0C0>- When dealing damage, 20%
+        chance to deal additional <b><color=#FF0000>Ash</color></b> DMG based on
+        20% of own ATK.
+
+        </color></size>'
       track: 2
       level: 1
       fragmentCost: 1
@@ -598,7 +1471,19 @@ MonoBehaviour:
       nodeId: kyo.passive.lv2
       nodeName: Basic Attack State 3
       description: Unlock State(3) on Basic Attack.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: 'Increase <b><color=#FF0000>Ash Allies</color></b>
+        DMG by 15%
+
+
+
+        <size=20><color=#C0C0C0>- When dealing damage, 20%
+        chance to deal additional <b><color=#FF0000>Ash</color></b> DMG based on
+        20% of own ATK.
+
+        </color></size>
+
+        <size=20><color=#C0C0C0>-
+        Unlock <i>State3</i> on Basic Attack</color></size>'
       track: 2
       level: 2
       fragmentCost: 1
@@ -608,7 +1493,113 @@ MonoBehaviour:
       actionModifiers: []
       runtimeTagEffects: []
       runtimeEffects:
-      - trigger: 1
+      - trigger: 0
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 1
+          runtimeTag: kyo.hp.above.70
+        recipe:
+          recipeId: 
+          definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
+          presentation:
+            effectId: 
+            displayName: AE Recharge
+            icon: {fileID: 0}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 2
+            appliesOn: 0
+            durationType: 1
+            durationSeconds: 10
+            stackMode: 0
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: 
+          parameters:
+            overrideStatModifiers: 1
+            statModifiers:
+            - target: 9
+              operation: 0
+              sourceStat: 9
+              value: 0.25
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreElementalIncomingModifiers: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              tickInterval: 1
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+          childRecipes: []
+        effect: {fileID: 0}
+        scope: 0
+        stackMode: 0
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        durationOverride: -1
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
+        filterByTargetElement: 0
+        targetElement: 0
+      counterEffects: []
+      conditionalStateEffects:
+      - trigger: 0
         filter:
           filterByCategory: 0
           category: 0
@@ -622,16 +1613,72 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
-        effect: {fileID: 11400000, guid: 897e040d21704bb381204fce6827c278, type: 2}
-        scope: 0
-        stackMode: 0
-        stackLimit: 1
-        refreshDurationOnReapply: 1
-        durationOverride: -1
-        filterByTargetElement: 0
-        targetElement: 0
-      counterEffects: []
-      conditionalStateEffects: []
+        requiredTags: []
+        requiredCounters: []
+        requiredValues:
+        - subject: 0
+          metric: 0
+          comparison: 3
+          value: 70
+        runtimeTagEffects:
+        - trigger: 0
+          filter:
+            filterByCategory: 0
+            category: 0
+            filterByActionId: 0
+            actionId: 
+            filterByActionName: 0
+            actionName: 
+            filterByStepName: 0
+            stepName: 
+            filterByElement: 0
+            elementType: 0
+            requireRuntimeTag: 0
+            runtimeTag: 
+          tag: kyo.hp.above.70
+          addTag: 1
+          duration: 9999
+        counterEffects: []
+      - trigger: 0
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredValues:
+        - subject: 0
+          metric: 0
+          comparison: 4
+          value: 69
+        runtimeTagEffects:
+        - trigger: 0
+          filter:
+            filterByCategory: 0
+            category: 0
+            filterByActionId: 0
+            actionId: 
+            filterByActionName: 0
+            actionName: 
+            filterByStepName: 0
+            stepName: 
+            filterByElement: 0
+            elementType: 0
+            requireRuntimeTag: 0
+            runtimeTag: 
+          tag: kyo.hp.above.70
+          addTag: 0
+          duration: 9999
+        counterEffects: []
       onHitStatusEffects: []
       additionalDamageEffects: []
       dashThroughDamageEffects: []
@@ -642,7 +1689,20 @@ MonoBehaviour:
       nodeId: kyo.passive.lv3
       nodeName: Burning Momentum
       description: When HP is above 70%, own AE Recharge increases by 25%
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: 'Increase <b><color=#FF0000>Ash Allies</color></b>
+        DMG by 15%
+
+
+
+        <size=20><color=#C0C0C0>- When dealing damage, 20%
+        chance to deal additional <b><color=#FF0000>Ash</color></b> DMG based on
+        20% of own ATK</color></size>
+
+        <size=20><color=#C0C0C0>- Unlock <i>State3</i>
+        on Basic Attack</color></size>
+
+        <size=20><color=#C0C0C0>- When HP
+        is above 70%, own AE Recharge increases by 25%</color></size>'
       track: 2
       level: 3
       fragmentCost: 1
@@ -666,12 +1726,90 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
-        effect: {fileID: 11400000, guid: 3fa91416c22543d8bb9d017053c988bb, type: 2}
+        recipe:
+          recipeId: 
+          definition: {fileID: 0}
+          presentation:
+            effectId: 
+            displayName: 
+            icon: {fileID: 0}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 0
+            appliesOn: 0
+            durationType: 0
+            durationSeconds: 10
+            stackMode: 0
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: 
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreElementalIncomingModifiers: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              tickInterval: 1
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+          childRecipes: []
+        effect: {fileID: 0}
         scope: 1
         stackMode: 0
         stackLimit: 1
         refreshDurationOnReapply: 1
         durationOverride: -1
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
         filterByTargetElement: 1
         targetElement: 3
       counterEffects: []

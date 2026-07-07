@@ -308,7 +308,7 @@ MonoBehaviour:
         targetMaxHpRatio: 0.08
         capTargetMaxHpDamage: 1
         targetMaxHpDamageCapSource: 0
-        targetMaxHpDamageCapRatio: 500
+        targetMaxHpDamageCapRatio: 5
         elementType: 1
         consumeRuntimeTagOnTrigger: 0
       dashThroughDamageEffects: []

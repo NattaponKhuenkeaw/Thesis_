@@ -3,13 +3,18 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "RuntimeEffect_PeriodicHeal", menuName = "Game/Runtime Effects/Periodic Heal", order = 12)]
 public class PeriodicHealRuntimeEffectDefinition : RuntimeEffectDefinition
 {
+    [HideInInspector]
     [Min(0.05f)] public float tickInterval = 1f;
+    [HideInInspector]
     public RuntimeEffectStatTarget valueSource = RuntimeEffectStatTarget.Attack;
+    [HideInInspector]
     [Min(0f)] public float valueRatio = 0.1f;
+    [HideInInspector]
     [Min(0f)] public float flatValue;
+    [HideInInspector]
     public bool useSourceStats = true;
 
-    public override bool RequiresTicking => true;
+    public override bool RequiresFormulaTicking => true;
 
     public override void OnUpdate(RuntimeEffectContext context)
     {
@@ -18,22 +23,41 @@ public class PeriodicHealRuntimeEffectDefinition : RuntimeEffectDefinition
             return;
         }
 
+        RuntimeEffectPeriodicHealParameters parameters = ResolveParameters(context);
         if (context.instance.nextTickAt <= 0f)
         {
-            context.instance.nextTickAt = Mathf.Max(0.05f, tickInterval);
+            context.instance.nextTickAt = Mathf.Max(0.05f, parameters.tickInterval);
         }
 
         while (context.instance.elapsedSeconds >= context.instance.nextTickAt)
         {
-            ApplyTickHeal(context);
-            context.instance.nextTickAt += Mathf.Max(0.05f, tickInterval);
+            ApplyTickHeal(context, parameters);
+            context.instance.nextTickAt += Mathf.Max(0.05f, parameters.tickInterval);
         }
     }
 
-    private void ApplyTickHeal(RuntimeEffectContext context)
+    private RuntimeEffectPeriodicHealParameters ResolveParameters(RuntimeEffectContext context)
     {
-        CharacterStats stats = useSourceStats ? context.sourceStats : context.targetStats;
-        float amount = Mathf.Max(0f, flatValue + GetStat(stats, valueSource) * Mathf.Max(0f, valueRatio));
+        RuntimeEffectParameterSet parameters = RuntimeEffectRuntimeUtility.GetParameters(context?.instance);
+        if (parameters != null && parameters.overridePeriodicHeal && parameters.periodicHeal != null)
+        {
+            return parameters.periodicHeal;
+        }
+
+        return new RuntimeEffectPeriodicHealParameters
+        {
+            tickInterval = tickInterval,
+            valueSource = valueSource,
+            valueRatio = valueRatio,
+            flatValue = flatValue,
+            useSourceStats = useSourceStats
+        };
+    }
+
+    private void ApplyTickHeal(RuntimeEffectContext context, RuntimeEffectPeriodicHealParameters parameters)
+    {
+        CharacterStats stats = parameters.useSourceStats ? context.sourceStats : context.targetStats;
+        float amount = Mathf.Max(0f, parameters.flatValue + GetStat(stats, parameters.valueSource) * Mathf.Max(0f, parameters.valueRatio));
         if (amount <= 0f)
         {
             return;

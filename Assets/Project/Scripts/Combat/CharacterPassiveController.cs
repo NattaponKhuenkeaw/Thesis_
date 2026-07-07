@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Project.InventorySystem.Items;
 using Project.Progression;
+using Project.ShopSystem;
 using UnityEngine;
 
 public interface IPassiveEffectHook
@@ -53,6 +54,7 @@ public class CharacterPassiveController : MonoBehaviour
         ResolveMetaProgression();
         runtimeState.Reset();
         RebuildHooks();
+        RefreshConditionalStateEffects();
     }
 
     public CharacterKitDefinition GetKitDefinition()
@@ -714,6 +716,14 @@ public class CharacterPassiveController : MonoBehaviour
         ApplyTriggeredEffects(PassiveTriggerType.OnActionEnded, BuildContext(category, actionId, actionName, stepData, null));
     }
 
+    public void RefreshConditionalStateEffects()
+    {
+        ApplyConditionalEffects(
+            GetActiveNodes(),
+            PassiveTriggerType.Always,
+            BuildContext(AttackCategory.Normal, null, "Runtime State Refresh", null, null));
+    }
+
     public void NotifyAfterDash()
     {
         ApplyTriggeredEffects(PassiveTriggerType.OnAfterDash, BuildContext(AttackCategory.Normal, null, "Dash", null, null));
@@ -928,15 +938,33 @@ public class CharacterPassiveController : MonoBehaviour
 
     private void ApplyTriggeredEffects(PassiveTriggerType trigger, PassiveEventContext context)
     {
-        foreach (PotentialNodeDefinition node in GetActiveNodes())
+        ApplyTriggeredEffects(GetActiveNodes(), trigger, context);
+    }
+
+    private void ApplyTriggeredEffects(IEnumerable<PotentialNodeDefinition> nodes, PassiveTriggerType trigger, PassiveEventContext context)
+    {
+        foreach (PotentialNodeDefinition node in nodes)
         {
+            if (node == null)
+            {
+                continue;
+            }
+
             ApplyRuntimeTagEffects(node.runtimeTagEffects, trigger, context);
-            ApplyRuntimeEffects(node.runtimeEffects, trigger, context);
+            ApplyRuntimeEffects(node, node.runtimeEffects, trigger, context);
             ApplyCounterEffects(node.counterEffects, trigger, context);
             ApplyConditionalEffects(node.conditionalStateEffects, trigger, context);
             ApplyOnHitEffects(node.onHitStatusEffects, trigger, context);
             ApplyResourceEffects(node.resourceEffects, trigger, context);
             ApplyEnemyElementModifiers(node.enemyElementModifiers, trigger, context);
+        }
+    }
+
+    private void ApplyConditionalEffects(IEnumerable<PotentialNodeDefinition> nodes, PassiveTriggerType trigger, PassiveEventContext context)
+    {
+        foreach (PotentialNodeDefinition node in nodes)
+        {
+            ApplyConditionalEffects(node != null ? node.conditionalStateEffects : null, trigger, context);
         }
     }
 
@@ -963,6 +991,7 @@ public class CharacterPassiveController : MonoBehaviour
     }
 
     private void ApplyRuntimeEffects(
+        PotentialNodeDefinition ownerNode,
         List<PassiveRuntimeEffectDefinition> effects,
         PassiveTriggerType trigger,
         PassiveEventContext context)
@@ -976,10 +1005,15 @@ public class CharacterPassiveController : MonoBehaviour
         {
             PassiveRuntimeEffectDefinition effect = effects[i];
             if (effect == null
-                || effect.effect == null
+                || effect.ResolvedEffect == null
                 || effect.trigger != trigger
                 || effect.filter == null
                 || !effect.filter.Matches(context))
+            {
+                continue;
+            }
+
+            if (IsRuntimeEffectSuperseded(ownerNode, effect, trigger, context))
             {
                 continue;
             }
@@ -988,39 +1022,81 @@ public class CharacterPassiveController : MonoBehaviour
         }
     }
 
+    private bool IsRuntimeEffectSuperseded(
+        PotentialNodeDefinition ownerNode,
+        PassiveRuntimeEffectDefinition effect,
+        PassiveTriggerType trigger,
+        PassiveEventContext context)
+    {
+        RuntimeEffectDefinition resolvedEffect = effect != null ? effect.ResolvedEffect : null;
+        if (ownerNode == null || ownerNode.level <= 0 || resolvedEffect == null)
+        {
+            return false;
+        }
+
+        foreach (PotentialNodeDefinition candidateNode in GetActiveNodes())
+        {
+            if (candidateNode == null
+                || candidateNode == ownerNode
+                || candidateNode.track != ownerNode.track
+                || candidateNode.level <= ownerNode.level
+                || candidateNode.runtimeEffects == null)
+            {
+                continue;
+            }
+
+            for (int i = 0; i < candidateNode.runtimeEffects.Count; i++)
+            {
+                PassiveRuntimeEffectDefinition candidate = candidateNode.runtimeEffects[i];
+                if (candidate == null
+                    || candidate.trigger != trigger
+                    || candidate.ResolvedEffect == null
+                    || candidate.filter == null
+                    || !candidate.filter.Matches(context))
+                {
+                    continue;
+                }
+
+                if (string.Equals(
+                    candidate.ResolvedEffect.StableId,
+                    resolvedEffect.StableId,
+                    StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private void ApplyRuntimeEffect(PassiveRuntimeEffectDefinition effect, PassiveEventContext context)
     {
-        if (effect == null || effect.effect == null || playerCharacter == null)
+        RuntimeEffectDefinition resolvedEffect = effect != null ? effect.ResolvedEffect : null;
+        RuntimeEffectRecipe resolvedRecipe = effect != null ? effect.ResolvedRecipe : null;
+        if (effect == null || resolvedEffect == null || playerCharacter == null)
         {
             return;
         }
 
-        CharacterObject sourceCharacter = playerCharacter.characterObject;
-        CharacterStats sourceStats = playerCharacter.Stats != null ? playerCharacter.Stats.Clone() : null;
+        RuntimeEffectApplyTarget applyTarget = resolvedRecipe != null && resolvedRecipe.policy != null
+            ? resolvedRecipe.policy.appliesOn
+            : ScopeToApplyTarget(effect.scope);
+        TeamLoader teamLoader = ResolveTeamLoader();
+        PlayerRunInventory inventory = ResolveRunInventory(teamLoader);
+        ResolveRuntimeEffectSource(effect, teamLoader, inventory, out CharacterObject sourceCharacter, out CharacterStats sourceStats);
 
-        if (effect.scope == PassiveEffectScope.Enemy)
+        if (applyTarget == RuntimeEffectApplyTarget.Enemy)
         {
             RuntimeEffectReceiver enemyReceiver = context.enemy != null ? context.enemy.RuntimeEffects : null;
-            enemyReceiver?.ApplyEffect(
-                effect.effect,
-                sourceCharacter,
-                sourceStats,
-                effect.durationOverride,
-                effect.stackMode,
-                effect.stackLimit,
-                effect.refreshDurationOnReapply);
-            return;
-        }
-
-        TeamLoader teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
-        Project.ShopSystem.PlayerRunInventory inventory = teamLoader != null ? teamLoader.RunInventory : null;
-        if (inventory == null)
-        {
-            if (effect.scope == PassiveEffectScope.Self
-                && MatchesRuntimeEffectTarget(effect, sourceCharacter))
+            if (resolvedRecipe != null)
             {
-                playerCharacter.RuntimeEffects?.ApplyEffect(
-                    effect.effect,
+                enemyReceiver?.ApplyEffect(resolvedRecipe, sourceCharacter, sourceStats);
+            }
+            else
+            {
+                enemyReceiver?.ApplyEffect(
+                    resolvedEffect,
                     sourceCharacter,
                     sourceStats,
                     effect.durationOverride,
@@ -1028,11 +1104,35 @@ public class CharacterPassiveController : MonoBehaviour
                     effect.stackLimit,
                     effect.refreshDurationOnReapply);
             }
+            return;
+        }
+
+        if (inventory == null)
+        {
+            if (applyTarget == RuntimeEffectApplyTarget.Self
+                && MatchesRuntimeEffectTarget(effect, sourceCharacter))
+            {
+                if (resolvedRecipe != null)
+                {
+                    playerCharacter.RuntimeEffects?.ApplyEffect(resolvedRecipe, sourceCharacter, sourceStats);
+                }
+                else
+                {
+                    playerCharacter.RuntimeEffects?.ApplyEffect(
+                        resolvedEffect,
+                        sourceCharacter,
+                        sourceStats,
+                        effect.durationOverride,
+                        effect.stackMode,
+                        effect.stackLimit,
+                        effect.refreshDurationOnReapply);
+                }
+            }
 
             return;
         }
 
-        CharacterObject[] team = teamLoader.GetTeamSnapshot();
+        CharacterObject[] team = ResolveRuntimeEffectTargets(teamLoader, inventory);
         for (int i = 0; i < team.Length; i++)
         {
             CharacterObject target = team[i];
@@ -1041,26 +1141,166 @@ public class CharacterPassiveController : MonoBehaviour
                 continue;
             }
 
-            bool shouldApply = effect.scope switch
+            bool shouldApply = applyTarget switch
             {
-                PassiveEffectScope.Self => target == sourceCharacter,
-                PassiveEffectScope.Allies => true,
+                RuntimeEffectApplyTarget.Self => target == sourceCharacter,
+                RuntimeEffectApplyTarget.Allies => true,
                 _ => false
             };
 
             if (shouldApply && MatchesRuntimeEffectTarget(effect, target))
             {
-                inventory.ApplyRuntimeEffect(
-                    target,
-                    effect.effect,
-                    sourceCharacter,
-                    sourceStats,
-                    effect.durationOverride,
-                    effect.stackMode,
-                    effect.stackLimit,
-                    effect.refreshDurationOnReapply);
+                if (resolvedRecipe != null)
+                {
+                    inventory.ApplyRuntimeEffect(target, resolvedRecipe, sourceCharacter, sourceStats);
+                }
+                else
+                {
+                    inventory.ApplyRuntimeEffect(
+                        target,
+                        resolvedEffect,
+                        sourceCharacter,
+                        sourceStats,
+                        effect.durationOverride,
+                        effect.stackMode,
+                        effect.stackLimit,
+                        effect.refreshDurationOnReapply);
+                }
             }
         }
+    }
+
+    private void ResolveRuntimeEffectSource(
+        PassiveRuntimeEffectDefinition effect,
+        TeamLoader teamLoader,
+        PlayerRunInventory inventory,
+        out CharacterObject sourceCharacter,
+        out CharacterStats sourceStats)
+    {
+        sourceCharacter = playerCharacter != null ? playerCharacter.characterObject : null;
+        sourceStats = playerCharacter != null && playerCharacter.Stats != null
+            ? playerCharacter.Stats.Clone()
+            : null;
+
+        if (effect == null
+            || !effect.overrideSourceCharacter
+            || string.IsNullOrWhiteSpace(effect.sourceCharacterId))
+        {
+            return;
+        }
+
+        CharacterObject overrideCharacter = ResolveTeamCharacterById(teamLoader, inventory, effect.sourceCharacterId);
+        if (overrideCharacter == null)
+        {
+            return;
+        }
+
+        sourceCharacter = overrideCharacter;
+        if (playerCharacter != null && playerCharacter.characterObject == overrideCharacter && playerCharacter.Stats != null)
+        {
+            sourceStats = playerCharacter.Stats.Clone();
+            return;
+        }
+
+        sourceStats = teamLoader != null
+            ? teamLoader.GetCharacterRuntimeStats(overrideCharacter)
+            : inventory != null
+                ? inventory.GetCharacterStats(overrideCharacter)
+            : overrideCharacter.GetLeveledStats();
+    }
+
+    private static PlayerRunInventory ResolveRunInventory(TeamLoader teamLoader)
+    {
+        if (teamLoader != null && teamLoader.RunInventory != null)
+        {
+            return teamLoader.RunInventory;
+        }
+
+        return Resources.Load<PlayerRunInventory>("InventorySO/PlayerRunInventory");
+    }
+
+    private TeamLoader ResolveTeamLoader()
+    {
+        TeamLoader[] loaders = UnityEngine.Object.FindObjectsByType<TeamLoader>(FindObjectsSortMode.None);
+        if (loaders == null || loaders.Length == 0)
+        {
+            return null;
+        }
+
+        for (int i = 0; i < loaders.Length; i++)
+        {
+            TeamLoader loader = loaders[i];
+            if (loader != null && loader.playerCharacter == playerCharacter)
+            {
+                return loader;
+            }
+        }
+
+        CharacterObject currentCharacter = playerCharacter != null ? playerCharacter.characterObject : null;
+        if (currentCharacter != null)
+        {
+            for (int i = 0; i < loaders.Length; i++)
+            {
+                TeamLoader loader = loaders[i];
+                if (loader != null && loader.ContainsCharacter(currentCharacter))
+                {
+                    return loader;
+                }
+            }
+        }
+
+        return loaders[0];
+    }
+
+    private static CharacterObject[] ResolveRuntimeEffectTargets(TeamLoader teamLoader, PlayerRunInventory inventory)
+    {
+        if (teamLoader != null)
+        {
+            CharacterObject[] team = teamLoader.GetTeamSnapshot();
+            if (team != null && team.Length > 0)
+            {
+                return team;
+            }
+        }
+
+        return inventory != null
+            ? inventory.GetTeamSnapshot()
+            : Array.Empty<CharacterObject>();
+    }
+
+    private static CharacterObject ResolveTeamCharacterById(TeamLoader teamLoader, PlayerRunInventory inventory, string characterId)
+    {
+        if (string.IsNullOrWhiteSpace(characterId))
+        {
+            return null;
+        }
+
+        CharacterObject[] team = ResolveRuntimeEffectTargets(teamLoader, inventory);
+        if (team == null)
+        {
+            return null;
+        }
+
+        for (int i = 0; i < team.Length; i++)
+        {
+            CharacterObject character = team[i];
+            if (character != null && string.Equals(character.characterId, characterId, System.StringComparison.Ordinal))
+            {
+                return character;
+            }
+        }
+
+        return null;
+    }
+
+    private static RuntimeEffectApplyTarget ScopeToApplyTarget(PassiveEffectScope scope)
+    {
+        return scope switch
+        {
+            PassiveEffectScope.Enemy => RuntimeEffectApplyTarget.Enemy,
+            PassiveEffectScope.Allies => RuntimeEffectApplyTarget.Allies,
+            _ => RuntimeEffectApplyTarget.Self
+        };
     }
 
     private static bool MatchesRuntimeEffectTarget(PassiveRuntimeEffectDefinition effect, CharacterObject target)
@@ -1464,13 +1704,19 @@ public class CharacterPassiveController : MonoBehaviour
 
     private void ApplyRuntimeTagEffect(PassiveRuntimeTagEffectDefinition effect)
     {
+        bool changed;
         if (effect.addTag)
         {
-            runtimeState.SetTag(effect.tag, effect.duration);
+            changed = runtimeState.SetTag(effect.tag, effect.duration);
         }
         else
         {
-            runtimeState.RemoveTag(effect.tag);
+            changed = runtimeState.RemoveTag(effect.tag);
+        }
+
+        if (changed && playerCharacter != null && playerCharacter.characterObject != null)
+        {
+            CharacterEvents.NotifyStatsChanged(playerCharacter.characterObject);
         }
     }
 

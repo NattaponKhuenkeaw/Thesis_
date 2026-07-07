@@ -46,6 +46,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     private readonly Dictionary<CharacterObject, CharacterStats> characterRuntimeStats = new Dictionary<CharacterObject, CharacterStats>();
     private CharacterObject[] teamSnapshot = Array.Empty<CharacterObject>();
     private PlayerRunInventory subscribedRuntimeEffectInventory;
+    private bool isReconcilingAlwaysRuntimeEffects;
+    private bool isRefreshingFromHealthChange;
 
     public PlayerRunInventory RunInventory => runInventory;
     public int CurrentIndex => currentIndex;
@@ -85,6 +87,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         ResolveDependencies();
         BootstrapRunInventoryTeam();
         SyncTeamSnapshotFromInventory();
+        ReconcileAlwaysRuntimeEffects();
         RebuildRuntimeStats();
         LoadCurrentCharacter(forceReload: true);
     }
@@ -109,6 +112,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         BindRunInventoryEvents();
         BootstrapRunInventoryTeam();
         SyncTeamSnapshotFromInventory();
+        ReconcileAlwaysRuntimeEffects();
         if (runInventory != null && runInventory.HasDeployedTeam())
         {
             RefreshRuntimeState();
@@ -279,6 +283,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         currentIndex = runInventory.ActiveTeamSlotIndex;
         lastSwitchTime = -999f;
 
+        ReconcileAlwaysRuntimeEffects();
         RebuildRuntimeStats();
 
 
@@ -308,6 +313,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     public void RefreshRuntimeState()
     {
         SyncTeamSnapshotFromInventory();
+        ReconcileAlwaysRuntimeEffects();
         RebuildRuntimeStats();
 
         OnTeamChanged?.Invoke();
@@ -319,6 +325,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     public void RefreshRuntimeStatsAndResources()
     {
         SyncTeamSnapshotFromInventory();
+        ReconcileAlwaysRuntimeEffects();
         RebuildRuntimeStats();
 
         if (playerCharacter != null && playerCharacter.characterObject != null)
@@ -394,6 +401,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         if (playerCharacter != null && playerCharacter.characterObject == character)
         {
             playerCharacter.ApplyCharacterData(clampedHp);
+            RefreshActiveConditionalStateEffects();
+            RefreshRuntimeStatsFromHealthChange(character);
         }
         
         NotifyCharacterHealthUpdated(character);
@@ -601,6 +610,11 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     private void HandleRuntimeEffectsChanged(CharacterObject changedCharacter)
     {
+        if (isReconcilingAlwaysRuntimeEffects)
+        {
+            return;
+        }
+
         if (changedCharacter == null)
         {
             return;
@@ -639,6 +653,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     private void RefreshRuntimeStatsOnly(CharacterObject changedCharacter)
     {
+        ReconcileAlwaysRuntimeEffects();
         RebuildRuntimeStats();
 
         if (playerCharacter != null && playerCharacter.characterObject != null)
@@ -728,6 +743,145 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
                 characterRuntimeStats[character] = BuildRuntimeStats(character, i);
             }
         }
+    }
+
+    private void ReconcileAlwaysRuntimeEffects()
+    {
+        if (runInventory == null || teamSnapshot == null || isReconcilingAlwaysRuntimeEffects)
+        {
+            return;
+        }
+
+        isReconcilingAlwaysRuntimeEffects = true;
+        try
+        {
+            for (int sourceIndex = 0; sourceIndex < teamSnapshot.Length; sourceIndex++)
+            {
+                CharacterObject sourceCharacter = teamSnapshot[sourceIndex];
+                if (sourceCharacter == null || sourceCharacter.kitDefinition == null)
+                {
+                    continue;
+                }
+
+                CharacterStats sourceStats = BuildRuntimeStats(sourceCharacter, sourceIndex, includeArtifacts: true, includeRuntimeEffects: false);
+                foreach (PotentialNodeDefinition node in EnumerateUnlockedPotentialNodes(sourceCharacter))
+                {
+                    List<PassiveRuntimeEffectDefinition> effects = node != null ? node.runtimeEffects : null;
+                    if (effects == null)
+                    {
+                        continue;
+                    }
+
+                    for (int effectIndex = 0; effectIndex < effects.Count; effectIndex++)
+                    {
+                        PassiveRuntimeEffectDefinition effect = effects[effectIndex];
+                        if (effect == null || effect.trigger != PassiveTriggerType.Always || effect.ResolvedEffect == null)
+                        {
+                            continue;
+                        }
+
+                        ApplyAlwaysRuntimeEffect(effect, sourceCharacter, sourceStats);
+                    }
+                }
+            }
+        }
+        finally
+        {
+            isReconcilingAlwaysRuntimeEffects = false;
+        }
+    }
+
+    private void ApplyAlwaysRuntimeEffect(
+        PassiveRuntimeEffectDefinition effect,
+        CharacterObject sourceCharacter,
+        CharacterStats sourceStats)
+    {
+        RuntimeEffectDefinition resolvedEffect = effect.ResolvedEffect;
+        RuntimeEffectRecipe resolvedRecipe = effect.ResolvedRecipe;
+        RuntimeEffectApplyTarget applyTarget = resolvedRecipe != null && resolvedRecipe.policy != null
+            ? resolvedRecipe.policy.appliesOn
+            : ScopeToApplyTarget(effect.scope);
+        PassiveEventContext context = BuildAlwaysRuntimeEffectContext(sourceCharacter);
+        bool sourceFilterMatches = effect.filter == null || effect.filter.Matches(context);
+
+        for (int targetIndex = 0; targetIndex < teamSnapshot.Length; targetIndex++)
+        {
+            CharacterObject targetCharacter = teamSnapshot[targetIndex];
+            if (targetCharacter == null)
+            {
+                continue;
+            }
+
+            bool shouldApply = applyTarget switch
+            {
+                RuntimeEffectApplyTarget.Self => targetCharacter == sourceCharacter,
+                RuntimeEffectApplyTarget.Allies => true,
+                _ => false
+            };
+
+            if (!sourceFilterMatches || !shouldApply || !MatchesRuntimeEffectTarget(effect, targetCharacter))
+            {
+                runInventory.RemoveRuntimeEffect(targetCharacter, resolvedEffect, resolvedRecipe, sourceCharacter);
+                continue;
+            }
+
+            if (resolvedRecipe != null)
+            {
+                runInventory.ApplyRuntimeEffect(targetCharacter, resolvedRecipe, sourceCharacter, sourceStats);
+            }
+            else
+            {
+                runInventory.ApplyRuntimeEffect(
+                    targetCharacter,
+                    resolvedEffect,
+                    sourceCharacter,
+                    sourceStats,
+                    effect.durationOverride,
+                    effect.stackMode,
+                    effect.stackLimit,
+                    effect.refreshDurationOnReapply);
+            }
+        }
+    }
+
+    private PassiveEventContext BuildAlwaysRuntimeEffectContext(CharacterObject sourceCharacter)
+    {
+        PlayerCharacter sourcePlayer = playerCharacter != null && playerCharacter.characterObject == sourceCharacter
+            ? playerCharacter
+            : null;
+
+        return new PassiveEventContext
+        {
+            category = AttackCategory.Normal,
+            actionName = "Always",
+            runtimeState = ResolveRuntimeState(sourceCharacter),
+            source = sourcePlayer
+        };
+    }
+
+    private static RuntimeEffectApplyTarget ScopeToApplyTarget(PassiveEffectScope scope)
+    {
+        return scope switch
+        {
+            PassiveEffectScope.Enemy => RuntimeEffectApplyTarget.Enemy,
+            PassiveEffectScope.Allies => RuntimeEffectApplyTarget.Allies,
+            _ => RuntimeEffectApplyTarget.Self
+        };
+    }
+
+    private static bool MatchesRuntimeEffectTarget(PassiveRuntimeEffectDefinition effect, CharacterObject target)
+    {
+        if (effect == null || target == null)
+        {
+            return false;
+        }
+
+        if (effect.filterByTargetElement && target.elementType != effect.targetElement)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     private CharacterStats BuildRuntimeStats(CharacterObject character, int slotIndex, bool includeArtifacts = true, bool includeRuntimeEffects = true)
@@ -823,7 +977,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
                     continue;
                 }
 
-                if (modifier.HasRuntimeRequirements)
+                CombatRuntimeState sourceRuntimeState = ResolveRuntimeState(sourceCharacter);
+                if (!modifier.RuntimeRequirementsMet(sourceRuntimeState))
                 {
                     continue;
                 }
@@ -960,6 +1115,19 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         };
     }
 
+    private CombatRuntimeState ResolveRuntimeState(CharacterObject sourceCharacter)
+    {
+        if (sourceCharacter == null
+            || playerCharacter == null
+            || playerCharacter.characterObject != sourceCharacter
+            || playerCharacter.PassiveController == null)
+        {
+            return null;
+        }
+
+        return playerCharacter.PassiveController.RuntimeState;
+    }
+
 
     private void NotifyAllCharacterResources()
     {
@@ -1037,7 +1205,9 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         {
             state.currentHP = Mathf.Clamp(currentHp, 0f, maxHp);
         }
-        
+
+        RefreshActiveConditionalStateEffects();
+        RefreshRuntimeStatsFromHealthChange(playerCharacter.characterObject);
         NotifyCharacterHealthUpdated(playerCharacter.characterObject);
     }
 
@@ -1055,6 +1225,29 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         }
         
         NotifyCharacterHealthUpdated(character);
+    }
+
+    private void RefreshActiveConditionalStateEffects()
+    {
+        playerCharacter?.PassiveController?.RefreshConditionalStateEffects();
+    }
+
+    private void RefreshRuntimeStatsFromHealthChange(CharacterObject character)
+    {
+        if (isRefreshingFromHealthChange || character == null)
+        {
+            return;
+        }
+
+        isRefreshingFromHealthChange = true;
+        try
+        {
+            RefreshRuntimeStatsOnly(character);
+        }
+        finally
+        {
+            isRefreshingFromHealthChange = false;
+        }
     }
 
     private void CleanUpStoredData()

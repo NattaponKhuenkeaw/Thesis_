@@ -171,6 +171,16 @@ public enum CounterComparison
     LessThanOrEqual
 }
 
+public enum PassiveRuntimeValueSubject
+{
+    Source
+}
+
+public enum PassiveRuntimeValueMetric
+{
+    CurrentHpRatio
+}
+
 [Serializable]
 public class RuntimeCounterRequirement
 {
@@ -191,6 +201,65 @@ public class RuntimeCounterRequirement
             CounterComparison.LessThanOrEqual => currentValue <= value,
             _ => false
         };
+    }
+}
+
+[Serializable]
+public class PassiveRuntimeValueRequirement
+{
+    public PassiveRuntimeValueSubject subject = PassiveRuntimeValueSubject.Source;
+    public PassiveRuntimeValueMetric metric = PassiveRuntimeValueMetric.CurrentHpRatio;
+    public CounterComparison comparison = CounterComparison.GreaterThanOrEqual;
+    public float value = 0f;
+
+    public bool Matches(PassiveEventContext context)
+    {
+        float currentValue = ResolveValue(context);
+        float comparisonValue = ResolveComparisonValue();
+        return comparison switch
+        {
+            CounterComparison.Equal => Mathf.Approximately(currentValue, comparisonValue),
+            CounterComparison.NotEqual => !Mathf.Approximately(currentValue, comparisonValue),
+            CounterComparison.GreaterThan => currentValue > comparisonValue,
+            CounterComparison.GreaterThanOrEqual => currentValue >= comparisonValue,
+            CounterComparison.LessThan => currentValue < comparisonValue,
+            CounterComparison.LessThanOrEqual => currentValue <= comparisonValue,
+            _ => false
+        };
+    }
+
+    private float ResolveComparisonValue()
+    {
+        return metric switch
+        {
+            PassiveRuntimeValueMetric.CurrentHpRatio => value > 1f ? value / 100f : value,
+            _ => value
+        };
+    }
+
+    private float ResolveValue(PassiveEventContext context)
+    {
+        return metric switch
+        {
+            PassiveRuntimeValueMetric.CurrentHpRatio => ResolveCurrentHpRatio(context),
+            _ => 0f
+        };
+    }
+
+    private float ResolveCurrentHpRatio(PassiveEventContext context)
+    {
+        PlayerCharacter source = subject switch
+        {
+            PassiveRuntimeValueSubject.Source => context.source,
+            _ => context.source
+        };
+
+        if (source == null || source.MaxHP <= 0f)
+        {
+            return 0f;
+        }
+
+        return Mathf.Clamp01(source.CurrentHP / source.MaxHP);
     }
 }
 
@@ -380,22 +449,122 @@ public class PassiveRuntimeTagEffectDefinition
 }
 
 [Serializable]
-public class PassiveRuntimeEffectDefinition
+public class PassiveRuntimeEffectDefinition : ISerializationCallbackReceiver
 {
     public PassiveTriggerType trigger = PassiveTriggerType.OnActionEnded;
     public PassiveTriggerFilter filter = new PassiveTriggerFilter();
+    [Header("Recipe")]
+    [Tooltip("Formula plus this kit node's values, duration, stack, display, and remove policy.")]
+    public RuntimeEffectRecipe recipe = new RuntimeEffectRecipe();
+
+    [HideInInspector]
     public RuntimeEffectDefinition effect;
+
+    [HideInInspector]
     public PassiveEffectScope scope = PassiveEffectScope.Self;
-    [Header("Stack Policy")]
+
+    [HideInInspector]
     public RuntimeEffectStackMode stackMode = RuntimeEffectStackMode.UseDefinition;
+
+    [HideInInspector]
     [Min(1)] public int stackLimit = 1;
-    [Tooltip("If true, reapplying an existing stack refreshes that stack's duration.")]
+
+    [HideInInspector]
     public bool refreshDurationOnReapply = true;
-    [Tooltip("Use -1 to use the RuntimeEffectDefinition duration.")]
+
+    [HideInInspector]
     public float durationOverride = -1f;
+
+    [Header("Source Override")]
+    [Tooltip("When enabled, sourceCharacterId provides the source stat snapshot for source-stat formulas even when the effect is applied to another target.")]
+    public bool overrideSourceCharacter = false;
+    public string sourceCharacterId;
+
     [Header("Target Filter")]
     public bool filterByTargetElement = false;
     public ElementType targetElement = ElementType.None;
+
+    public RuntimeEffectDefinition ResolvedEffect => recipe != null && recipe.definition != null
+        ? recipe.definition
+        : effect;
+
+    public RuntimeEffectRecipe ResolvedRecipe => recipe != null && recipe.definition != null
+        ? recipe
+        : null;
+
+    public void OnBeforeSerialize()
+    {
+        NormalizeRecipe();
+    }
+
+    public void OnAfterDeserialize()
+    {
+        NormalizeRecipe();
+    }
+
+    public void NormalizeRecipe()
+    {
+        if (recipe == null)
+        {
+            recipe = new RuntimeEffectRecipe();
+        }
+
+        if (recipe.definition != null || effect == null)
+        {
+            return;
+        }
+
+        recipe.definition = effect;
+        if (string.IsNullOrWhiteSpace(recipe.recipeId))
+        {
+            recipe.recipeId = effect.StableId;
+        }
+
+        RuntimeEffectPresentation presentation = recipe.presentation ??= new RuntimeEffectPresentation();
+        if (string.IsNullOrWhiteSpace(presentation.effectId))
+        {
+            presentation.effectId = effect.StableId;
+        }
+
+        if (string.IsNullOrWhiteSpace(presentation.displayName))
+        {
+            presentation.displayName = !string.IsNullOrWhiteSpace(effect.displayName) ? effect.displayName : effect.name;
+        }
+
+        if (presentation.icon == null)
+        {
+            presentation.icon = effect.icon;
+        }
+
+        if (presentation.fieldVisualPrefab == null)
+        {
+            presentation.fieldVisualPrefab = effect.fieldVisualPrefab;
+        }
+
+        RuntimeEffectApplicationPolicy policy = recipe.policy ??= new RuntimeEffectApplicationPolicy();
+        policy.kind = effect.kind;
+        policy.appliesOn = ScopeToApplyTarget(scope);
+        policy.durationType = effect.durationType;
+        policy.durationSeconds = durationOverride >= 0f ? durationOverride : effect.durationSeconds;
+        policy.stackMode = stackMode;
+        policy.stackLimit = Mathf.Max(1, stackLimit);
+        policy.refreshDurationOnReapply = refreshDurationOnReapply;
+        policy.stackable = stackMode == RuntimeEffectStackMode.Stack || effect.stackable;
+        policy.removeOnOwnerDamaged = effect.removeOnOwnerDamaged;
+
+        recipe.parameters ??= new RuntimeEffectParameterSet();
+        RuntimeEffectRuntimeUtility.CopyLegacyDefinitionParameters(effect, recipe.parameters);
+    }
+
+    private static RuntimeEffectApplyTarget ScopeToApplyTarget(PassiveEffectScope effectScope)
+    {
+        return effectScope switch
+        {
+            PassiveEffectScope.Enemy => RuntimeEffectApplyTarget.Enemy,
+            PassiveEffectScope.Allies => RuntimeEffectApplyTarget.Allies,
+            _ => RuntimeEffectApplyTarget.Self
+        };
+    }
 }
 
 [Serializable]
@@ -415,6 +584,7 @@ public class PassiveConditionalStateEffectDefinition
     public PassiveTriggerFilter filter = new PassiveTriggerFilter();
     public List<RuntimeTagRequirement> requiredTags = new List<RuntimeTagRequirement>();
     public List<RuntimeCounterRequirement> requiredCounters = new List<RuntimeCounterRequirement>();
+    public List<PassiveRuntimeValueRequirement> requiredValues = new List<PassiveRuntimeValueRequirement>();
     public List<PassiveRuntimeTagEffectDefinition> runtimeTagEffects = new List<PassiveRuntimeTagEffectDefinition>();
     public List<PassiveCounterEffectDefinition> counterEffects = new List<PassiveCounterEffectDefinition>();
 
@@ -425,19 +595,36 @@ public class PassiveConditionalStateEffectDefinition
             return false;
         }
 
-        for (int i = 0; i < requiredTags.Count; i++)
+        if (requiredTags != null)
         {
-            if (!requiredTags[i].Matches(context.runtimeState))
+            for (int i = 0; i < requiredTags.Count; i++)
             {
-                return false;
+                if (requiredTags[i] != null && !requiredTags[i].Matches(context.runtimeState))
+                {
+                    return false;
+                }
             }
         }
 
-        for (int i = 0; i < requiredCounters.Count; i++)
+        if (requiredCounters != null)
         {
-            if (!requiredCounters[i].Matches(context.runtimeState))
+            for (int i = 0; i < requiredCounters.Count; i++)
             {
-                return false;
+                if (requiredCounters[i] != null && !requiredCounters[i].Matches(context.runtimeState))
+                {
+                    return false;
+                }
+            }
+        }
+
+        if (requiredValues != null)
+        {
+            for (int i = 0; i < requiredValues.Count; i++)
+            {
+                if (requiredValues[i] != null && !requiredValues[i].Matches(context))
+                {
+                    return false;
+                }
             }
         }
 
@@ -493,16 +680,114 @@ public class PassiveResourceEffectDefinition
 }
 
 [Serializable]
-public class RuntimeAreaEffectApplication
+public class RuntimeAreaEffectApplication : ISerializationCallbackReceiver
 {
+    [Header("Recipe")]
+    [Tooltip("Formula plus this area application's values, duration, stack, display, and remove policy.")]
+    public RuntimeEffectRecipe recipe = new RuntimeEffectRecipe();
+
+    [HideInInspector]
     public RuntimeEffectDefinition effect;
+
     [Tooltip("Optional potential node id that must be active on the source character before this area effect can apply.")]
     public string requiredNodeId;
+
+    [HideInInspector]
     public PassiveEffectScope scope = PassiveEffectScope.Self;
+
+    [HideInInspector]
     public RuntimeEffectStackMode stackMode = RuntimeEffectStackMode.UseDefinition;
+
+    [HideInInspector]
     [Min(1)] public int stackLimit = 1;
+
+    [HideInInspector]
     public bool refreshDurationOnReapply = true;
+
+    [HideInInspector]
     public float durationOverride = -1f;
+
+    public RuntimeEffectDefinition ResolvedEffect => recipe != null && recipe.definition != null
+        ? recipe.definition
+        : effect;
+
+    public RuntimeEffectRecipe ResolvedRecipe => recipe != null && recipe.definition != null
+        ? recipe
+        : null;
+
+    public void OnBeforeSerialize()
+    {
+        NormalizeRecipe();
+    }
+
+    public void OnAfterDeserialize()
+    {
+        NormalizeRecipe();
+    }
+
+    public void NormalizeRecipe()
+    {
+        if (recipe == null)
+        {
+            recipe = new RuntimeEffectRecipe();
+        }
+
+        if (recipe.definition != null || effect == null)
+        {
+            return;
+        }
+
+        recipe.definition = effect;
+        if (string.IsNullOrWhiteSpace(recipe.recipeId))
+        {
+            recipe.recipeId = effect.StableId;
+        }
+
+        RuntimeEffectPresentation presentation = recipe.presentation ??= new RuntimeEffectPresentation();
+        if (string.IsNullOrWhiteSpace(presentation.effectId))
+        {
+            presentation.effectId = effect.StableId;
+        }
+
+        if (string.IsNullOrWhiteSpace(presentation.displayName))
+        {
+            presentation.displayName = !string.IsNullOrWhiteSpace(effect.displayName) ? effect.displayName : effect.name;
+        }
+
+        if (presentation.icon == null)
+        {
+            presentation.icon = effect.icon;
+        }
+
+        if (presentation.fieldVisualPrefab == null)
+        {
+            presentation.fieldVisualPrefab = effect.fieldVisualPrefab;
+        }
+
+        RuntimeEffectApplicationPolicy policy = recipe.policy ??= new RuntimeEffectApplicationPolicy();
+        policy.kind = effect.kind;
+        policy.appliesOn = ScopeToApplyTarget(scope);
+        policy.durationType = effect.durationType;
+        policy.durationSeconds = durationOverride >= 0f ? durationOverride : effect.durationSeconds;
+        policy.stackMode = stackMode;
+        policy.stackLimit = Mathf.Max(1, stackLimit);
+        policy.refreshDurationOnReapply = refreshDurationOnReapply;
+        policy.stackable = stackMode == RuntimeEffectStackMode.Stack || effect.stackable;
+        policy.removeOnOwnerDamaged = effect.removeOnOwnerDamaged;
+
+        recipe.parameters ??= new RuntimeEffectParameterSet();
+        RuntimeEffectRuntimeUtility.CopyLegacyDefinitionParameters(effect, recipe.parameters);
+    }
+
+    private static RuntimeEffectApplyTarget ScopeToApplyTarget(PassiveEffectScope effectScope)
+    {
+        return effectScope switch
+        {
+            PassiveEffectScope.Enemy => RuntimeEffectApplyTarget.Enemy,
+            PassiveEffectScope.Allies => RuntimeEffectApplyTarget.Allies,
+            _ => RuntimeEffectApplyTarget.Self
+        };
+    }
 }
 
 [Serializable]
@@ -571,7 +856,7 @@ public class CharacterAbilityDefinition
 }
 
 [Serializable]
-public class CharacterKitDefinition
+public class CharacterKitDefinition : ISerializationCallbackReceiver
 {
     public const int MaxPotentialLevel = 4;
 
@@ -579,6 +864,28 @@ public class CharacterKitDefinition
     public CharacterAbilityDefinition skill = new CharacterAbilityDefinition { abilityName = "Skill" };
     public CharacterAbilityDefinition ultimate = new CharacterAbilityDefinition { abilityName = "Ultimate" };
     public CharacterAbilityDefinition passive = new CharacterAbilityDefinition { abilityName = "Passive" };
+
+    [Header("Base Skill Runtime Effects")]
+    public PotentialNodeDefinition baseSkillNode = new PotentialNodeDefinition
+    {
+        nodeId = "base.skill",
+        nodeName = "Base Skill",
+        track = PotentialTrack.Skill,
+        level = 0,
+        fragmentCost = 0,
+        unlockedByDefault = true
+    };
+
+    [Header("Base Ultimate Runtime Effects")]
+    public PotentialNodeDefinition baseUltimateNode = new PotentialNodeDefinition
+    {
+        nodeId = "base.ultimate",
+        nodeName = "Base Ultimate",
+        track = PotentialTrack.Ultimate,
+        level = 0,
+        fragmentCost = 0,
+        unlockedByDefault = true
+    };
 
     [Header("Base Passive Runtime Effects")]
     public PotentialNodeDefinition basePassiveNode = new PotentialNodeDefinition
@@ -594,8 +901,99 @@ public class CharacterKitDefinition
     [Header("Potential Nodes")]
     public List<PotentialNodeDefinition> potentialNodes = new List<PotentialNodeDefinition>();
 
-    public IEnumerable<PotentialNodeDefinition> EnumerateAllNodes(bool includeBasePassive = true)
+    public void OnBeforeSerialize()
     {
+        EnsureBaseNodes();
+    }
+
+    public void OnAfterDeserialize()
+    {
+        EnsureBaseNodes();
+    }
+
+    private void EnsureBaseNodes()
+    {
+        EnsureBaseNode(ref baseSkillNode, PotentialTrack.Skill, "base.skill", "Base Skill", skill);
+        EnsureBaseNode(ref baseUltimateNode, PotentialTrack.Ultimate, "base.ultimate", "Base Ultimate", ultimate);
+        EnsureBaseNode(ref basePassiveNode, PotentialTrack.Passive, "base.passive", "Base Passive", passive);
+        NormalizeRuntimeEffectRecipes(baseSkillNode);
+        NormalizeRuntimeEffectRecipes(baseUltimateNode);
+        NormalizeRuntimeEffectRecipes(basePassiveNode);
+
+        if (potentialNodes == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < potentialNodes.Count; i++)
+        {
+            NormalizeRuntimeEffectRecipes(potentialNodes[i]);
+        }
+    }
+
+    private static void EnsureBaseNode(
+        ref PotentialNodeDefinition node,
+        PotentialTrack track,
+        string defaultNodeId,
+        string defaultNodeName,
+        CharacterAbilityDefinition legacyAbility)
+    {
+        node ??= new PotentialNodeDefinition();
+        if (string.IsNullOrWhiteSpace(node.nodeId))
+        {
+            node.nodeId = defaultNodeId;
+        }
+
+        if (string.IsNullOrWhiteSpace(node.nodeName))
+        {
+            node.nodeName = defaultNodeName;
+        }
+
+        node.track = track;
+        node.level = 0;
+        node.fragmentCost = 0;
+        node.unlockedByDefault = true;
+
+        if (legacyAbility != null
+            && !string.IsNullOrWhiteSpace(legacyAbility.description)
+            && string.IsNullOrWhiteSpace(node.description)
+            && string.IsNullOrWhiteSpace(node.skillPanelDescriptionOverride))
+        {
+            node.description = legacyAbility.description;
+            node.skillPanelDescriptionOverride = legacyAbility.description;
+        }
+    }
+
+    private static void NormalizeRuntimeEffectRecipes(CharacterEffectSetDefinition effectSet)
+    {
+        if (effectSet == null || effectSet.runtimeEffects == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < effectSet.runtimeEffects.Count; i++)
+        {
+            effectSet.runtimeEffects[i]?.NormalizeRecipe();
+        }
+    }
+
+    public IEnumerable<PotentialNodeDefinition> EnumerateAllNodes(
+        bool includeBasePassive = true,
+        bool includeBaseSkill = true,
+        bool includeBaseUltimate = true)
+    {
+        EnsureBaseNodes();
+
+        if (includeBaseSkill && baseSkillNode != null)
+        {
+            yield return baseSkillNode;
+        }
+
+        if (includeBaseUltimate && baseUltimateNode != null)
+        {
+            yield return baseUltimateNode;
+        }
+
         if (includeBasePassive && basePassiveNode != null)
         {
             yield return basePassiveNode;

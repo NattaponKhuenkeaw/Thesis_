@@ -286,7 +286,10 @@ namespace Project.Progression
 
             int nextLevel = Mathf.Clamp(currentLevel + 1, 1, CharacterKitDefinition.MaxPotentialLevel);
             PotentialNodeDefinition bestNode = null;
-            foreach (PotentialNodeDefinition node in character.kitDefinition.EnumerateAllNodes(includeBasePassive: false))
+            foreach (PotentialNodeDefinition node in character.kitDefinition.EnumerateAllNodes(
+                includeBasePassive: false,
+                includeBaseSkill: false,
+                includeBaseUltimate: false))
             {
                 if (node == null || node.track != track || node.level != nextLevel)
                 {

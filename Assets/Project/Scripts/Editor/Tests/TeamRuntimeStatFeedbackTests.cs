@@ -269,6 +269,402 @@ public class TeamRuntimeStatFeedbackTests
     }
 
     [Test]
+    public void TeamLoader_AppliesAlwaysForeverRuntimeRecipeToAllies()
+    {
+        GameObject playerObject = new GameObject("Always Runtime Effect Test Player");
+        GameObject loaderObject = new GameObject("Always Runtime Effect Test Loader");
+        PlayerRunInventory runInventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        CharacterObject source = ScriptableObject.CreateInstance<CharacterObject>();
+        CharacterObject ally = ScriptableObject.CreateInstance<CharacterObject>();
+        DamageModifierRuntimeEffectDefinition damageEffect = ScriptableObject.CreateInstance<DamageModifierRuntimeEffectDefinition>();
+
+        try
+        {
+            source.characterId = "always-source";
+            source.elementType = ElementType.Ash;
+            ally.characterId = "always-ally";
+            ally.elementType = ElementType.Ash;
+            damageEffect.effectId = "test.always_ash_damage";
+
+            source.kitDefinition.basePassiveNode.runtimeEffects.Add(new PassiveRuntimeEffectDefinition
+            {
+                trigger = PassiveTriggerType.Always,
+                recipe = new RuntimeEffectRecipe
+                {
+                    recipeId = "test.always_ash_damage.recipe",
+                    definition = damageEffect,
+                    policy = new RuntimeEffectApplicationPolicy
+                    {
+                        kind = RuntimeEffectKind.Effect,
+                        appliesOn = RuntimeEffectApplyTarget.Allies,
+                        durationType = RuntimeEffectDurationType.Forever,
+                        stackMode = RuntimeEffectStackMode.Override
+                    },
+                    parameters = new RuntimeEffectParameterSet
+                    {
+                        overrideDamageModifier = true,
+                        damageModifier = new RuntimeEffectDamageModifierParameters
+                        {
+                            filter = new RuntimeEffectDamageFilter
+                            {
+                                filterByElement = true,
+                                elementType = ElementType.Ash
+                            },
+                            outgoingDamagePercentAdd = 15f
+                        }
+                    }
+                }
+            });
+
+            PlayerCharacter playerCharacter = playerObject.AddComponent<PlayerCharacter>();
+            TeamLoader teamLoader = loaderObject.AddComponent<TeamLoader>();
+            teamLoader.playerCharacter = playerCharacter;
+            teamLoader.SetRunInventory(runInventory);
+            teamLoader.DeployLoadout(new[] { source, ally }, 0);
+
+            RuntimeEffectDamageContext context = new RuntimeEffectDamageContext
+            {
+                sourceCharacter = ally,
+                elementType = ElementType.Ash,
+                category = AttackCategory.Normal
+            };
+
+            Assert.That(runInventory.GetActiveRuntimeEffects(source).Count, Is.EqualTo(1));
+            Assert.That(runInventory.GetActiveRuntimeEffects(ally).Count, Is.EqualTo(1));
+            Assert.That(runInventory.ModifyOutgoingDamage(ally, context, 100f), Is.EqualTo(115f).Within(0.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(damageEffect);
+            Object.DestroyImmediate(ally);
+            Object.DestroyImmediate(source);
+            Object.DestroyImmediate(runInventory);
+            Object.DestroyImmediate(loaderObject);
+            Object.DestroyImmediate(playerObject);
+        }
+    }
+
+    [Test]
+    public void PassiveController_ActionEndedRuntimeRecipeAppliesToAllies()
+    {
+        GameObject playerObject = new GameObject("Triggered Runtime Effect Test Player");
+        GameObject loaderObject = new GameObject("Triggered Runtime Effect Test Loader");
+        PlayerRunInventory runInventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        CharacterObject source = ScriptableObject.CreateInstance<CharacterObject>();
+        CharacterObject ally = ScriptableObject.CreateInstance<CharacterObject>();
+        StatRuntimeEffectDefinition statEffect = ScriptableObject.CreateInstance<StatRuntimeEffectDefinition>();
+
+        try
+        {
+            source.characterId = "trigger-source";
+            source.stats.attack = 100f;
+            ally.characterId = "trigger-ally";
+            ally.stats.attack = 100f;
+            statEffect.effectId = "test.triggered_allies_attack";
+
+            source.kitDefinition.baseUltimateNode.runtimeEffects.Add(new PassiveRuntimeEffectDefinition
+            {
+                trigger = PassiveTriggerType.OnActionEnded,
+                filter = new PassiveTriggerFilter
+                {
+                    filterByCategory = true,
+                    category = AttackCategory.Ultimate
+                },
+                recipe = new RuntimeEffectRecipe
+                {
+                    recipeId = "test.triggered_allies_attack.recipe",
+                    definition = statEffect,
+                    policy = new RuntimeEffectApplicationPolicy
+                    {
+                        kind = RuntimeEffectKind.Buff,
+                        appliesOn = RuntimeEffectApplyTarget.Allies,
+                        durationType = RuntimeEffectDurationType.Seconds,
+                        durationSeconds = 20f,
+                        stackMode = RuntimeEffectStackMode.Override
+                    },
+                    parameters = new RuntimeEffectParameterSet
+                    {
+                        overrideStatModifiers = true,
+                        statModifiers = new System.Collections.Generic.List<RuntimeEffectStatModifier>
+                        {
+                            new RuntimeEffectStatModifier
+                            {
+                                target = RuntimeEffectStatTarget.Attack,
+                                operation = RuntimeEffectStatOperation.Add,
+                                value = 25f
+                            }
+                        }
+                    }
+                }
+            });
+
+            PlayerCharacter playerCharacter = playerObject.AddComponent<PlayerCharacter>();
+            CharacterPassiveController passiveController = playerObject.AddComponent<CharacterPassiveController>();
+            playerCharacter.PassiveController = passiveController;
+            passiveController.playerCharacter = playerCharacter;
+            playerCharacter.characterObject = source;
+
+            TeamLoader teamLoader = loaderObject.AddComponent<TeamLoader>();
+            teamLoader.playerCharacter = playerCharacter;
+            teamLoader.SetRunInventory(runInventory);
+            teamLoader.DeployLoadout(new[] { source, ally }, 0);
+
+            passiveController.InitializeFromCharacterData();
+            passiveController.NotifyActionEnded(AttackCategory.Ultimate, "test.ultimate", "Test Ultimate", null);
+
+            Assert.That(runInventory.GetActiveRuntimeEffects(source).Count, Is.EqualTo(1));
+            Assert.That(runInventory.GetActiveRuntimeEffects(ally).Count, Is.EqualTo(1));
+            Assert.That(teamLoader.GetCharacterRuntimeStats(ally).attack, Is.EqualTo(125f).Within(0.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(statEffect);
+            Object.DestroyImmediate(ally);
+            Object.DestroyImmediate(source);
+            Object.DestroyImmediate(runInventory);
+            Object.DestroyImmediate(loaderObject);
+            Object.DestroyImmediate(playerObject);
+        }
+    }
+
+    [Test]
+    public void TeamLoader_ConditionalHpTagGatesPotentialStatModifier()
+    {
+        GameObject playerObject = new GameObject("HP Tag Runtime Stat Test Player");
+        GameObject loaderObject = new GameObject("HP Tag Runtime Stat Test Loader");
+        PlayerRunInventory runInventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        CharacterObject character = ScriptableObject.CreateInstance<CharacterObject>();
+
+        try
+        {
+            const string highHpTag = "kyo_high_hp_ae_recharge";
+
+            character.characterId = "hp-tag-character";
+            character.stats.maxHP = 100f;
+            character.stats.aeRecharge = 1f;
+            character.kitDefinition.basePassiveNode.statModifiers.Add(new PassiveStatModifierDefinition
+            {
+                target = PassiveModifierTarget.AuraEnergyRecharge,
+                operation = PassiveNumericOperation.Add,
+                value = 0.25f,
+                scope = PassiveEffectScope.Self,
+                requiredTags = new System.Collections.Generic.List<RuntimeTagRequirement>
+                {
+                    new RuntimeTagRequirement { tag = highHpTag, expectedValue = true }
+                }
+            });
+            character.kitDefinition.basePassiveNode.conditionalStateEffects.Add(new PassiveConditionalStateEffectDefinition
+            {
+                trigger = PassiveTriggerType.Always,
+                requiredValues = new System.Collections.Generic.List<PassiveRuntimeValueRequirement>
+                {
+                    new PassiveRuntimeValueRequirement
+                    {
+                        metric = PassiveRuntimeValueMetric.CurrentHpRatio,
+                        comparison = CounterComparison.GreaterThanOrEqual,
+                        value = 0.7f
+                    }
+                },
+                runtimeTagEffects = new System.Collections.Generic.List<PassiveRuntimeTagEffectDefinition>
+                {
+                    new PassiveRuntimeTagEffectDefinition { tag = highHpTag, addTag = true }
+                }
+            });
+            character.kitDefinition.basePassiveNode.conditionalStateEffects.Add(new PassiveConditionalStateEffectDefinition
+            {
+                trigger = PassiveTriggerType.Always,
+                requiredValues = new System.Collections.Generic.List<PassiveRuntimeValueRequirement>
+                {
+                    new PassiveRuntimeValueRequirement
+                    {
+                        metric = PassiveRuntimeValueMetric.CurrentHpRatio,
+                        comparison = CounterComparison.LessThan,
+                        value = 0.7f
+                    }
+                },
+                runtimeTagEffects = new System.Collections.Generic.List<PassiveRuntimeTagEffectDefinition>
+                {
+                    new PassiveRuntimeTagEffectDefinition { tag = highHpTag, addTag = false }
+                }
+            });
+
+            PlayerCharacter playerCharacter = playerObject.AddComponent<PlayerCharacter>();
+            CharacterPassiveController passiveController = playerObject.AddComponent<CharacterPassiveController>();
+            playerCharacter.PassiveController = passiveController;
+            passiveController.playerCharacter = playerCharacter;
+
+            TeamLoader teamLoader = loaderObject.AddComponent<TeamLoader>();
+            teamLoader.playerCharacter = playerCharacter;
+            teamLoader.SetRunInventory(runInventory);
+            teamLoader.DeployLoadout(new[] { character }, 0);
+
+            passiveController.RefreshConditionalStateEffects();
+            teamLoader.RefreshRuntimeStatsAndResources();
+
+            Assert.That(passiveController.RuntimeState.HasTag(highHpTag), Is.True);
+            Assert.That(teamLoader.GetCharacterRuntimeStats(character).aeRecharge, Is.EqualTo(1.25f).Within(0.001f));
+
+            teamLoader.SetCharacterCurrentHP(character, 60f);
+
+            Assert.That(passiveController.RuntimeState.HasTag(highHpTag), Is.False);
+            Assert.That(teamLoader.GetCharacterRuntimeStats(character).aeRecharge, Is.EqualTo(1f).Within(0.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(character);
+            Object.DestroyImmediate(runInventory);
+            Object.DestroyImmediate(loaderObject);
+            Object.DestroyImmediate(playerObject);
+        }
+    }
+
+    [Test]
+    public void TeamLoader_AlwaysRuntimeRecipeFilterRemovesEffectWhenTagMissing()
+    {
+        GameObject playerObject = new GameObject("Always Filter Runtime Effect Test Player");
+        GameObject loaderObject = new GameObject("Always Filter Runtime Effect Test Loader");
+        PlayerRunInventory runInventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        CharacterObject character = ScriptableObject.CreateInstance<CharacterObject>();
+        StatRuntimeEffectDefinition statEffect = ScriptableObject.CreateInstance<StatRuntimeEffectDefinition>();
+
+        try
+        {
+            const string tag = "test.hp.above.70";
+
+            character.characterId = "always-filter-character";
+            character.stats.aeRecharge = 1f;
+            statEffect.effectId = "test.always_filtered_ae_recharge";
+
+            character.kitDefinition.basePassiveNode.runtimeEffects.Add(new PassiveRuntimeEffectDefinition
+            {
+                trigger = PassiveTriggerType.Always,
+                filter = new PassiveTriggerFilter
+                {
+                    requireRuntimeTag = true,
+                    runtimeTag = tag
+                },
+                recipe = new RuntimeEffectRecipe
+                {
+                    recipeId = "test.always_filtered_ae_recharge.recipe",
+                    definition = statEffect,
+                    policy = new RuntimeEffectApplicationPolicy
+                    {
+                        kind = RuntimeEffectKind.Effect,
+                        appliesOn = RuntimeEffectApplyTarget.Self,
+                        durationType = RuntimeEffectDurationType.Forever,
+                        stackMode = RuntimeEffectStackMode.Override
+                    },
+                    parameters = new RuntimeEffectParameterSet
+                    {
+                        overrideStatModifiers = true,
+                        statModifiers = new System.Collections.Generic.List<RuntimeEffectStatModifier>
+                        {
+                            new RuntimeEffectStatModifier
+                            {
+                                target = RuntimeEffectStatTarget.AuraEnergyRecharge,
+                                operation = RuntimeEffectStatOperation.Add,
+                                value = 0.25f
+                            }
+                        }
+                    }
+                }
+            });
+
+            PlayerCharacter playerCharacter = playerObject.AddComponent<PlayerCharacter>();
+            CharacterPassiveController passiveController = playerObject.AddComponent<CharacterPassiveController>();
+            playerCharacter.PassiveController = passiveController;
+            passiveController.playerCharacter = playerCharacter;
+
+            TeamLoader teamLoader = loaderObject.AddComponent<TeamLoader>();
+            teamLoader.playerCharacter = playerCharacter;
+            teamLoader.SetRunInventory(runInventory);
+            teamLoader.DeployLoadout(new[] { character }, 0);
+
+            passiveController.RuntimeState.SetTag(tag);
+            teamLoader.RefreshRuntimeStatsAndResources();
+
+            Assert.That(runInventory.GetActiveRuntimeEffects(character).Count, Is.EqualTo(1));
+            Assert.That(teamLoader.GetCharacterRuntimeStats(character).aeRecharge, Is.EqualTo(1.25f).Within(0.001f));
+
+            passiveController.RuntimeState.RemoveTag(tag);
+            teamLoader.RefreshRuntimeStatsAndResources();
+
+            Assert.That(runInventory.GetActiveRuntimeEffects(character).Count, Is.EqualTo(0));
+            Assert.That(teamLoader.GetCharacterRuntimeStats(character).aeRecharge, Is.EqualTo(1f).Within(0.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(statEffect);
+            Object.DestroyImmediate(character);
+            Object.DestroyImmediate(runInventory);
+            Object.DestroyImmediate(loaderObject);
+            Object.DestroyImmediate(playerObject);
+        }
+    }
+
+    [Test]
+    public void ActionResolver_TaggedUltimateFollowUpSelectsExActionOnlyWhenTagExists()
+    {
+        GameObject playerObject = new GameObject("Tagged Ultimate Follow Up Test Player");
+        CharacterObject character = ScriptableObject.CreateInstance<CharacterObject>();
+        ActionResolverTable table = ScriptableObject.CreateInstance<ActionResolverTable>();
+
+        try
+        {
+            const string followUpTag = "kyo.ultimate.follow_up";
+
+            character.characterId = "tagged-ultimate-follow-up-character";
+            character.kitDefinition.basePassiveNode.actionModifiers.Add(new PassiveActionModifierDefinition
+            {
+                category = AttackCategory.Ultimate,
+                actionId = "kyo.ultimate.ex",
+                unlocked = true,
+                priorityBonus = 100,
+                requiredTags = new System.Collections.Generic.List<RuntimeTagRequirement>
+                {
+                    new RuntimeTagRequirement { tag = followUpTag, expectedValue = true }
+                }
+            });
+
+            PlayerCharacter playerCharacter = playerObject.AddComponent<PlayerCharacter>();
+            CharacterPassiveController passiveController = playerObject.AddComponent<CharacterPassiveController>();
+            playerCharacter.PassiveController = passiveController;
+            passiveController.playerCharacter = playerCharacter;
+            playerCharacter.characterObject = character;
+            passiveController.InitializeFromCharacterData();
+
+            table.ultimateActions.Add(CreateTestUltimateAction("kyo.ultimate", "Base Ultimate", 1, null));
+            table.ultimateActions.Add(CreateTestUltimateAction(
+                "kyo.ultimate.ex",
+                "Follow Up",
+                0,
+                new RuntimeTagActionCondition { tag = followUpTag, shouldExist = true }));
+
+            InputContext context = new InputContext
+            {
+                isGrounded = true,
+                facingDirection = 1,
+                passiveController = passiveController,
+                runtimeState = passiveController.RuntimeState
+            };
+
+            ActionResolver resolver = new ActionResolver();
+            resolver.ResolveInitial(context, table, AttackCategory.Ultimate);
+            Assert.That(resolver.ActiveCombatAction?.actionId, Is.EqualTo("kyo.ultimate"));
+
+            passiveController.RuntimeState.SetTag(followUpTag, 20f);
+            resolver.ResolveInitial(context, table, AttackCategory.Ultimate);
+            Assert.That(resolver.ActiveCombatAction?.actionId, Is.EqualTo("kyo.ultimate.ex"));
+        }
+        finally
+        {
+            Object.DestroyImmediate(table);
+            Object.DestroyImmediate(character);
+            Object.DestroyImmediate(playerObject);
+        }
+    }
+
+    [Test]
     public void TeamLoader_StatsResourceRefreshPreservesPassiveRuntimeState()
     {
         GameObject playerObject = new GameObject("Passive Runtime State Test Player");
@@ -396,5 +792,34 @@ public class TeamRuntimeStatFeedbackTests
 
         Assert.That(field, Is.Not.Null);
         field.SetValue(target, value);
+    }
+
+    private static UltimateAction CreateTestUltimateAction(
+        string actionId,
+        string actionName,
+        int priority,
+        ActionConditionBase condition)
+    {
+        UltimateAction action = new UltimateAction
+        {
+            actionId = actionId,
+            actionName = actionName,
+            context = CombatActionContext.Ground,
+            priority = priority,
+            comboTree = new ComboTree
+            {
+                rootNode = new ComboNode
+                {
+                    stepData = new AttackStepData { stepName = actionName }
+                }
+            }
+        };
+
+        if (condition != null)
+        {
+            action.conditions.Add(condition);
+        }
+
+        return action;
     }
 }

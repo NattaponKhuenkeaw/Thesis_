@@ -13,6 +13,7 @@ namespace CombatCore
         private GUIStyle barBackgroundStyle;
         private GUIStyle barForegroundStyle;
         private bool stylesInitialized = false;
+        private float cachedHeight = 160f;
 
         private void InitializeStyles()
         {
@@ -50,20 +51,22 @@ namespace CombatCore
             var stats = TrainingDebugStats.Instance;
             if (stats == null) return;
 
-            float width = 220;
-            float height = 160;
+            var activeStatuses = stats.GetActiveStatusEffects();
+            float width = 300;
             float margin = 10;
-            Rect windowRect = new Rect(Screen.width - width - margin, margin, width, height);
+            Rect windowRect = new Rect(Screen.width - width - margin, margin, width, cachedHeight);
 
             GUI.Box(windowRect, ""); // Semi-transparent box background
-            GUILayout.BeginArea(new Rect(windowRect.x + 10, windowRect.y + 5, width - 20, height - 10));
+            GUILayout.BeginArea(new Rect(windowRect.x + 10, windowRect.y + 5, width - 20, cachedHeight - 10));
+
+            GUILayout.BeginVertical();
 
             GUILayout.Label("⚔ TRAINING DEBUG", headerStyle);
             GUILayout.Space(5);
 
             string enemyName = stats.lastAttackedEnemy != null ? stats.lastAttackedEnemy.name : "None";
             GUILayout.Label($"Target: {enemyName}", labelStyle);
-            GUILayout.Label($"Damage/Hit: {stats.lastDamagePerHit:F1}", labelStyle);
+            GUILayout.Label($"DPS: {stats.GetDPS():F1}", labelStyle);
             GUILayout.Label($"Total Damage: {stats.totalDamageOnCurrentTarget:F1}", labelStyle);
 
             GUILayout.Space(10);
@@ -89,6 +92,28 @@ namespace CombatCore
             GUILayout.Space(5);
             GUILayout.Label($"{stunSeconds:F1}s", labelStyle);
             GUILayout.EndHorizontal();
+
+            if (activeStatuses.Count > 0)
+            {
+                GUILayout.Space(10);
+                GUILayout.Label("Status:", headerStyle);
+                for (int i = 0; i < activeStatuses.Count; i++)
+                {
+                    var status = activeStatuses[i];
+                    string details = !string.IsNullOrEmpty(status.modifierDetails) ? $" ({status.modifierDetails})" : "";
+                    string duration = status.isInfinite ? "∞" : $"{status.remainingDuration:F1}s";
+                    string stack = status.stackCount > 1 ? $" x{status.stackCount}" : "";
+                    GUILayout.Label($"• {status.displayName}{stack}{details}: {duration}", labelStyle);
+                }
+            }
+
+            GUILayout.EndVertical();
+
+            if (Event.current.type == EventType.Repaint)
+            {
+                // Set height based on layout content + bottom/top padding
+                cachedHeight = GUILayoutUtility.GetLastRect().height + 20f;
+            }
 
             GUILayout.EndArea();
         }

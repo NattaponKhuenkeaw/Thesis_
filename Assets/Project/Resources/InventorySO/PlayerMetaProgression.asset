@@ -12,9 +12,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49a8e553d4c07b3459651c53e66b2fde, type: 3}
   m_Name: PlayerMetaProgression
   m_EditorClassIdentifier: Assembly-CSharp::Project.Progression.PlayerMetaProgression
-  fragments: []
+  fragments:
+  - sourceItemId: Char_2_Rugal
+    displayName: Rugal Fragment
+    fragmentType: 0
+    quantity: 1
   characterPotentials:
   - characterId: char-0-main
+    skillLevel: 4
+    ultimateLevel: 4
+    passiveLevel: 4
+  - characterId: char_1_kyo
+    skillLevel: 4
+    ultimateLevel: 4
+    passiveLevel: 4
+  - characterId: Char_2_Rugal
+    skillLevel: 4
+    ultimateLevel: 4
+    passiveLevel: 4
+  - characterId: char_5_goenitz
     skillLevel: 4
     ultimateLevel: 4
     passiveLevel: 4

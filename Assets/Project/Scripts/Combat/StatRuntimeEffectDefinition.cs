@@ -4,6 +4,7 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "RuntimeEffect_Stat", menuName = "Game/Runtime Effects/Stat Modifier", order = 10)]
 public class StatRuntimeEffectDefinition : RuntimeEffectDefinition
 {
+    [HideInInspector]
     public List<RuntimeEffectStatModifier> statModifiers = new List<RuntimeEffectStatModifier>();
 
     public override bool AffectsStats => true;
@@ -11,14 +12,15 @@ public class StatRuntimeEffectDefinition : RuntimeEffectDefinition
 
     public override void ModifyStats(RuntimeEffectContext context, CharacterStats stats)
     {
-        if (stats == null || statModifiers == null)
+        List<RuntimeEffectStatModifier> resolvedModifiers = ResolveStatModifiers(context);
+        if (stats == null || resolvedModifiers == null)
         {
             return;
         }
 
-        for (int i = 0; i < statModifiers.Count; i++)
+        for (int i = 0; i < resolvedModifiers.Count; i++)
         {
-            RuntimeEffectStatModifier modifier = statModifiers[i];
+            RuntimeEffectStatModifier modifier = resolvedModifiers[i];
             if (modifier == null)
             {
                 continue;
@@ -38,6 +40,14 @@ public class StatRuntimeEffectDefinition : RuntimeEffectDefinition
             float resolved = ResolveModifiedValue(context, stats, current, modifier);
             SetStat(stats, modifier.target, resolved);
         }
+    }
+
+    private List<RuntimeEffectStatModifier> ResolveStatModifiers(RuntimeEffectContext context)
+    {
+        RuntimeEffectParameterSet parameters = RuntimeEffectRuntimeUtility.GetParameters(context?.instance);
+        return parameters != null && parameters.overrideStatModifiers
+            ? parameters.statModifiers
+            : statModifiers;
     }
 
     private static int ResolveStackCount(RuntimeEffectContext context)

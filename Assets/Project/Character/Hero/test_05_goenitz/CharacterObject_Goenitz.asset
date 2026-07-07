@@ -75,6 +75,52 @@ MonoBehaviour:
       abilityName: Passive
       icon: {fileID: 0}
       description: 
+    baseSkillNode:
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: base.skill
+      nodeName: Base Skill
+      description: 
+      skillPanelDescriptionOverride: 
+      track: 0
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
+    baseUltimateNode:
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: base.ultimate
+      nodeName: Base Ultimate
+      description: 
+      skillPanelDescriptionOverride: 
+      track: 1
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
     basePassiveNode:
       statModifiers: []
       cooldownModifiers: []
@@ -160,12 +206,90 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+        recipe:
+          recipeId: 
+          definition: {fileID: 0}
+          presentation:
+            effectId: 
+            displayName: 
+            icon: {fileID: 0}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 0
+            appliesOn: 0
+            durationType: 0
+            durationSeconds: 10
+            stackMode: 0
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: 
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreElementalIncomingModifiers: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              tickInterval: 1
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+          childRecipes: []
         effect: {fileID: 11400000, guid: 262da460f8c14f18a892f72bc32f26d9, type: 2}
         scope: 0
         stackMode: 0
         stackLimit: 1
         refreshDurationOnReapply: 1
         durationOverride: -1
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
         filterByTargetElement: 0
         targetElement: 0
       counterEffects: []
@@ -204,12 +328,90 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+        recipe:
+          recipeId: 
+          definition: {fileID: 0}
+          presentation:
+            effectId: 
+            displayName: 
+            icon: {fileID: 0}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 0
+            appliesOn: 0
+            durationType: 0
+            durationSeconds: 10
+            stackMode: 0
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: 
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreElementalIncomingModifiers: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              tickInterval: 1
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+          childRecipes: []
         effect: {fileID: 11400000, guid: 02884ac6c9d748da8fb3bfe6e8753c9d, type: 2}
         scope: 0
         stackMode: 0
         stackLimit: 1
         refreshDurationOnReapply: 1
         durationOverride: -1
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
         filterByTargetElement: 0
         targetElement: 0
       counterEffects: []
@@ -345,12 +547,90 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+        recipe:
+          recipeId: 
+          definition: {fileID: 0}
+          presentation:
+            effectId: 
+            displayName: 
+            icon: {fileID: 0}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 0
+            appliesOn: 0
+            durationType: 0
+            durationSeconds: 10
+            stackMode: 0
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: 
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreElementalIncomingModifiers: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              tickInterval: 1
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+          childRecipes: []
         effect: {fileID: 11400000, guid: 6326b5e5749ab6b4c850497293bdf33b, type: 2}
         scope: 2
         stackMode: 0
         stackLimit: 1
         refreshDurationOnReapply: 1
         durationOverride: -1
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
         filterByTargetElement: 0
         targetElement: 0
       counterEffects: []
@@ -426,7 +706,7 @@ MonoBehaviour:
         actionName: 
         stepName: 
         unlocked: 1
-        priorityBonus: 10
+        priorityBonus: 100
         replacementActionId: 
         replacementActionName: 
         startingComboDepthOverride: 0
@@ -537,12 +817,90 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 1
           runtimeTag: goenitz_ultimate_state
+        recipe:
+          recipeId: 
+          definition: {fileID: 0}
+          presentation:
+            effectId: 
+            displayName: 
+            icon: {fileID: 0}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 0
+            appliesOn: 0
+            durationType: 0
+            durationSeconds: 10
+            stackMode: 0
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: 
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreElementalIncomingModifiers: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              tickInterval: 1
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+          childRecipes: []
         effect: {fileID: 11400000, guid: 984a70af884b4a4a8ca6752c82ff3f65, type: 2}
         scope: 0
         stackMode: 0
         stackLimit: 99
         refreshDurationOnReapply: 1
         durationOverride: -1
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
         filterByTargetElement: 0
         targetElement: 0
       counterEffects: []
@@ -598,12 +956,90 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+        recipe:
+          recipeId: 
+          definition: {fileID: 0}
+          presentation:
+            effectId: 
+            displayName: 
+            icon: {fileID: 0}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 0
+            appliesOn: 0
+            durationType: 0
+            durationSeconds: 10
+            stackMode: 0
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: 
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreElementalIncomingModifiers: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              tickInterval: 1
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+          childRecipes: []
         effect: {fileID: 11400000, guid: 9b4481e2dad64716b7ec9de5e74ff12f, type: 2}
         scope: 2
         stackMode: 0
         stackLimit: 1
         refreshDurationOnReapply: 1
         durationOverride: -1
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
         filterByTargetElement: 0
         targetElement: 0
       counterEffects: []

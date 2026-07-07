@@ -709,9 +709,10 @@ public class ProjectileRuntime : MonoBehaviour
         for (int i = 0; i < ProjectileData.areaEffects.Count; i++)
         {
             RuntimeAreaEffectApplication application = ProjectileData.areaEffects[i];
+            RuntimeEffectApplyTarget applyTarget = GetAreaApplyTarget(application);
             if (application == null
-                || application.effect == null
-                || application.scope == PassiveEffectScope.Enemy
+                || application.ResolvedEffect == null
+                || applyTarget == RuntimeEffectApplyTarget.Enemy
                 || !IsAreaEffectUnlocked(application, activePlayer))
             {
                 continue;
@@ -725,10 +726,10 @@ public class ProjectileRuntime : MonoBehaviour
                     continue;
                 }
 
-                bool shouldApply = application.scope switch
+                bool shouldApply = applyTarget switch
                 {
-                    PassiveEffectScope.Self => target == activePlayer.characterObject,
-                    PassiveEffectScope.Allies => true,
+                    RuntimeEffectApplyTarget.Self => target == activePlayer.characterObject,
+                    RuntimeEffectApplyTarget.Allies => true,
                     _ => false
                 };
 
@@ -739,28 +740,44 @@ public class ProjectileRuntime : MonoBehaviour
 
                 if (inventory != null)
                 {
-                    inventory.ApplyRuntimeEffect(
-                        target,
-                        application.effect,
-                        sourceCharacter,
-                        sourceStats,
-                        application.durationOverride,
-                        application.stackMode,
-                        application.stackLimit,
-                        application.refreshDurationOnReapply);
+                    RuntimeEffectRecipe recipe = application.ResolvedRecipe;
+                    if (recipe != null)
+                    {
+                        inventory.ApplyRuntimeEffect(target, recipe, sourceCharacter, sourceStats);
+                    }
+                    else
+                    {
+                        inventory.ApplyRuntimeEffect(
+                            target,
+                            application.ResolvedEffect,
+                            sourceCharacter,
+                            sourceStats,
+                            application.durationOverride,
+                            application.stackMode,
+                            application.stackLimit,
+                            application.refreshDurationOnReapply);
+                    }
                     continue;
                 }
 
                 if (target == activePlayer.characterObject)
                 {
-                    activePlayer.RuntimeEffects?.ApplyEffect(
-                        application.effect,
-                        sourceCharacter,
-                        sourceStats,
-                        application.durationOverride,
-                        application.stackMode,
-                        application.stackLimit,
-                        application.refreshDurationOnReapply);
+                    RuntimeEffectRecipe recipe = application.ResolvedRecipe;
+                    if (recipe != null)
+                    {
+                        activePlayer.RuntimeEffects?.ApplyEffect(recipe, sourceCharacter, sourceStats);
+                    }
+                    else
+                    {
+                        activePlayer.RuntimeEffects?.ApplyEffect(
+                            application.ResolvedEffect,
+                            sourceCharacter,
+                            sourceStats,
+                            application.durationOverride,
+                            application.stackMode,
+                            application.stackLimit,
+                            application.refreshDurationOnReapply);
+                    }
                 }
             }
         }
@@ -784,26 +801,52 @@ public class ProjectileRuntime : MonoBehaviour
             for (int effectIndex = 0; effectIndex < ProjectileData.areaEffects.Count; effectIndex++)
             {
                 RuntimeAreaEffectApplication application = ProjectileData.areaEffects[effectIndex];
+                RuntimeEffectApplyTarget applyTarget = GetAreaApplyTarget(application);
                 if (application == null
-                    || application.effect == null
-                    || application.scope != PassiveEffectScope.Enemy
+                    || application.ResolvedEffect == null
+                    || applyTarget != RuntimeEffectApplyTarget.Enemy
                     || !IsAreaEffectUnlocked(application, activePlayer))
                 {
                     continue;
                 }
 
-                enemy.RuntimeEffects?.ApplyEffect(
-                    application.effect,
-                    spawnContext.sourceCharacter,
-                    spawnContext.attackerStats,
-                    application.durationOverride,
-                    application.stackMode,
-                    application.stackLimit,
-                    application.refreshDurationOnReapply);
+                RuntimeEffectRecipe recipe = application.ResolvedRecipe;
+                if (recipe != null)
+                {
+                    enemy.RuntimeEffects?.ApplyEffect(recipe, spawnContext.sourceCharacter, spawnContext.attackerStats);
+                }
+                else
+                {
+                    enemy.RuntimeEffects?.ApplyEffect(
+                        application.ResolvedEffect,
+                        spawnContext.sourceCharacter,
+                        spawnContext.attackerStats,
+                        application.durationOverride,
+                        application.stackMode,
+                        application.stackLimit,
+                        application.refreshDurationOnReapply);
+                }
             }
         }
 
         trackedEnemyBuffer.Clear();
+    }
+
+    private static RuntimeEffectApplyTarget GetAreaApplyTarget(RuntimeAreaEffectApplication application)
+    {
+        if (application != null && application.ResolvedRecipe != null && application.ResolvedRecipe.policy != null)
+        {
+            return application.ResolvedRecipe.policy.appliesOn;
+        }
+
+        return application != null
+            ? application.scope switch
+            {
+                PassiveEffectScope.Enemy => RuntimeEffectApplyTarget.Enemy,
+                PassiveEffectScope.Allies => RuntimeEffectApplyTarget.Allies,
+                _ => RuntimeEffectApplyTarget.Self
+            }
+            : RuntimeEffectApplyTarget.Self;
     }
 
     private bool IsAreaEffectUnlocked(RuntimeAreaEffectApplication application, PlayerCharacter activePlayer)

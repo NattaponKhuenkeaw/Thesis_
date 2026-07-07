@@ -1,3 +1,4 @@
+// Force Unity compilation refresh
 using UnityEngine;
 using UnityEngine.InputSystem;
 

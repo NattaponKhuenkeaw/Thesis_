@@ -123,7 +123,13 @@ namespace Project.TeamBuilder.UI.Panels
                 if (active)
                 {
                     entryViews[i].Bind(entries[i]);
+                    entryViews[i].RefreshLayout();
                 }
+            }
+
+            if (entryContainer is RectTransform containerRect)
+            {
+                LayoutRebuilder.ForceRebuildLayoutImmediate(containerRect);
             }
         }
 
@@ -633,6 +639,51 @@ namespace Project.TeamBuilder.UI.Panels
                 {
                     DescriptionText.richText = true;
                     DescriptionText.text = entry.description;
+                }
+            }
+
+            public void RefreshLayout()
+            {
+                if (Root == null)
+                {
+                    return;
+                }
+
+                if (LevelText != null && LevelText.gameObject.activeSelf)
+                {
+                    LevelText.ForceMeshUpdate();
+                }
+                if (TitleText != null && TitleText.gameObject.activeSelf)
+                {
+                    TitleText.ForceMeshUpdate();
+                }
+                if (MetadataText != null && MetadataText.gameObject.activeSelf)
+                {
+                    MetadataText.ForceMeshUpdate();
+                }
+                if (DescriptionText != null && DescriptionText.gameObject.activeSelf)
+                {
+                    DescriptionText.ForceMeshUpdate();
+                }
+
+                VerticalLayoutGroup[] layouts = Root.GetComponentsInChildren<VerticalLayoutGroup>(true);
+                for (int i = 0; i < layouts.Length; i++)
+                {
+                    VerticalLayoutGroup layout = layouts[i];
+                    if (layout != null)
+                    {
+                        RectTransform rectTransform = layout.GetComponent<RectTransform>();
+                        if (rectTransform != null)
+                        {
+                            layout.childControlWidth = true;
+                            layout.childControlHeight = true;
+
+                            LayoutRebuilder.ForceRebuildLayoutImmediate(rectTransform);
+
+                            layout.childControlWidth = false;
+                            layout.childControlHeight = false;
+                        }
+                    }
                 }
             }
 

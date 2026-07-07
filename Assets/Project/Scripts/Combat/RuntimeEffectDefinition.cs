@@ -1,3 +1,4 @@
+// Force Unity compilation refresh
 using System;
 using System.Collections.Generic;
 using Project.ShopSystem;
@@ -68,6 +69,7 @@ public class RuntimeEffectStatModifier
 public class RuntimeEffectInstance
 {
     public RuntimeEffectDefinition definition;
+    [NonSerialized] public RuntimeEffectRecipeData recipe;
     public CharacterObject sourceCharacter;
     public CharacterStats sourceStatsSnapshot;
     public float remainingSeconds;
@@ -78,11 +80,15 @@ public class RuntimeEffectInstance
 
     [NonSerialized] public float lastTriggeredAt = -999f;
     [NonSerialized] private Dictionary<RuntimeEffectDefinition, RuntimeEffectInstance> childInstances;
+    [NonSerialized] private Dictionary<RuntimeEffectRecipeData, RuntimeEffectInstance> childRecipeInstances;
 
     public bool IsValid => definition != null;
-    public bool UsesTimer => definition != null && definition.durationType == RuntimeEffectDurationType.Seconds;
+    public bool UsesTimer => definition != null
+        && RuntimeEffectRuntimeUtility.GetDurationType(definition, recipe) == RuntimeEffectDurationType.Seconds;
     public bool IsExpired => UsesTimer && remainingSeconds <= 0f;
-    public string StackKey => definition != null ? definition.StackKey : string.Empty;
+    public string StackKey => RuntimeEffectRuntimeUtility.GetStackKey(definition, recipe);
+    public bool RequiresTicking => RuntimeEffectRuntimeUtility.RequiresTicking(this);
+    public bool AffectsStats => RuntimeEffectRuntimeUtility.AffectsStats(this);
 
     public void Initialize(
         RuntimeEffectDefinition effectDefinition,
@@ -90,16 +96,39 @@ public class RuntimeEffectInstance
         CharacterStats sourceStats,
         float durationOverride = -1f)
     {
+        Initialize(null, effectDefinition, source, sourceStats, durationOverride);
+    }
+
+    public void Initialize(
+        RuntimeEffectRecipeData effectRecipe,
+        CharacterObject source,
+        CharacterStats sourceStats,
+        float durationOverride = -1f)
+    {
+        Initialize(effectRecipe, effectRecipe != null ? effectRecipe.definition : null, source, sourceStats, durationOverride);
+    }
+
+    private void Initialize(
+        RuntimeEffectRecipeData effectRecipe,
+        RuntimeEffectDefinition effectDefinition,
+        CharacterObject source,
+        CharacterStats sourceStats,
+        float durationOverride = -1f)
+    {
         definition = effectDefinition;
+        recipe = effectRecipe;
         sourceCharacter = source;
         sourceStatsSnapshot = sourceStats != null ? sourceStats.Clone() : null;
-        remainingSeconds = effectDefinition != null ? effectDefinition.ResolveDuration(durationOverride) : 0f;
+        remainingSeconds = effectDefinition != null
+            ? RuntimeEffectRuntimeUtility.ResolveDuration(effectDefinition, effectRecipe, durationOverride)
+            : 0f;
         appliedDurationSeconds = remainingSeconds;
         elapsedSeconds = 0f;
         nextTickAt = 0f;
         stackCount = 1;
         lastTriggeredAt = -999f;
         childInstances?.Clear();
+        childRecipeInstances?.Clear();
     }
 
     public void Refresh(float durationOverride = -1f)
@@ -109,7 +138,7 @@ public class RuntimeEffectInstance
             return;
         }
 
-        remainingSeconds = definition.ResolveDuration(durationOverride);
+        remainingSeconds = RuntimeEffectRuntimeUtility.ResolveDuration(definition, recipe, durationOverride);
         appliedDurationSeconds = remainingSeconds;
         elapsedSeconds = 0f;
         nextTickAt = 0f;
@@ -147,16 +176,46 @@ public class RuntimeEffectInstance
         return childInstance;
     }
 
+    public RuntimeEffectInstance GetChildInstance(RuntimeEffectRecipeData childRecipe)
+    {
+        if (childRecipe == null || childRecipe.definition == null || childRecipe == recipe)
+        {
+            return this;
+        }
+
+        childRecipeInstances ??= new Dictionary<RuntimeEffectRecipeData, RuntimeEffectInstance>();
+        if (!childRecipeInstances.TryGetValue(childRecipe, out RuntimeEffectInstance childInstance) || childInstance == null)
+        {
+            childInstance = new RuntimeEffectInstance();
+            childInstance.Initialize(childRecipe, sourceCharacter, sourceStatsSnapshot, appliedDurationSeconds);
+            childRecipeInstances[childRecipe] = childInstance;
+        }
+
+        SyncChildInstance(childInstance, resetElapsed: false);
+        return childInstance;
+    }
+
     private void SyncChildInstances(bool resetElapsed)
     {
-        if (childInstances == null)
+        if (childInstances == null && childRecipeInstances == null)
         {
             return;
         }
 
-        foreach (RuntimeEffectInstance childInstance in childInstances.Values)
+        if (childInstances != null)
         {
-            SyncChildInstance(childInstance, resetElapsed);
+            foreach (RuntimeEffectInstance childInstance in childInstances.Values)
+            {
+                SyncChildInstance(childInstance, resetElapsed);
+            }
+        }
+
+        if (childRecipeInstances != null)
+        {
+            foreach (RuntimeEffectInstance childInstance in childRecipeInstances.Values)
+            {
+                SyncChildInstance(childInstance, resetElapsed);
+            }
         }
     }
 
@@ -229,24 +288,42 @@ public sealed class RuntimeEffectDamageInput
 
 public abstract class RuntimeEffectDefinition : ScriptableObject
 {
-    [Header("Identity")]
+    [HideInInspector]
     public string effectId;
+
+    [HideInInspector]
     public string displayName;
+
+    [HideInInspector]
     public Sprite icon;
+
+    [HideInInspector]
     public GameObject fieldVisualPrefab;
 
-    [Header("Behavior")]
+    [HideInInspector]
     public RuntimeEffectKind kind = RuntimeEffectKind.Buff;
+
+    [HideInInspector]
     public RuntimeEffectApplyTarget appliesOn = RuntimeEffectApplyTarget.Self;
+
+    [HideInInspector]
     public RuntimeEffectDurationType durationType = RuntimeEffectDurationType.Seconds;
+
+    [HideInInspector]
     [Min(0f)] public float durationSeconds = 10f;
+
+    [HideInInspector]
     public bool refreshDurationOnReapply = true;
+
+    [HideInInspector]
     public bool stackable = false;
-    [Tooltip("If true, this runtime effect is removed when the owner takes HP damage.")]
+
+    [HideInInspector]
     public bool removeOnOwnerDamaged = false;
 
     public virtual bool AffectsStats => false;
-    public virtual bool RequiresTicking => durationType == RuntimeEffectDurationType.Seconds;
+    public virtual bool RequiresFormulaTicking => false;
+    public virtual bool RequiresTicking => durationType == RuntimeEffectDurationType.Seconds || RequiresFormulaTicking;
     public virtual bool SupportsStackMerging => false;
 
     public string StableId => !string.IsNullOrWhiteSpace(effectId) ? effectId : name;

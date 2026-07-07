@@ -104,24 +104,39 @@ public class CombatRuntimeState
         return remainingSeconds > 0f;
     }
 
-    public void SetTag(string tag, float duration = 0f)
+    public bool SetTag(string tag, float duration = 0f)
     {
         if (string.IsNullOrEmpty(tag))
         {
-            return;
+            return false;
         }
 
         RuntimeTagEntry entry = FindTagEntry(tag);
+        bool isNew = entry == null;
         if (entry == null)
         {
             entry = new RuntimeTagEntry { tag = tag };
             runtimeTags.Add(entry);
         }
 
-        entry.hasExpiry = duration > 0f;
-        entry.expiresAt = entry.hasExpiry ? Time.time + duration : 0f;
-        entry.durationSeconds = entry.hasExpiry ? duration : 0f;
-        OnStateChanged?.Invoke();
+        bool nextHasExpiry = duration > 0f;
+        float nextExpiresAt = nextHasExpiry ? Time.time + duration : 0f;
+        float nextDurationSeconds = nextHasExpiry ? duration : 0f;
+        bool changed = isNew
+            || entry.hasExpiry != nextHasExpiry
+            || !Mathf.Approximately(entry.durationSeconds, nextDurationSeconds)
+            || (nextHasExpiry && !Mathf.Approximately(entry.expiresAt, nextExpiresAt));
+
+        entry.hasExpiry = nextHasExpiry;
+        entry.expiresAt = nextExpiresAt;
+        entry.durationSeconds = nextDurationSeconds;
+
+        if (changed)
+        {
+            OnStateChanged?.Invoke();
+        }
+
+        return changed;
     }
 
     public bool RemoveTag(string tag)

@@ -3,37 +3,49 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "RuntimeEffect_AdditionalDamage", menuName = "Game/Runtime Effects/Additional Damage On Hit", order = 13)]
 public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinition
 {
-    [Header("Trigger")]
+    [HideInInspector]
     [Range(0f, 1f)] public float chance = 1f;
+    [HideInInspector]
     [Min(0f)] public float internalCooldown = 0f;
 
-    [Header("Damage")]
+    [HideInInspector]
     [Min(0f)] public float attackRatio = 0.2f;
+    [HideInInspector]
+    public RuntimeEffectStatTarget sourceStatDamageSource = RuntimeEffectStatTarget.MaxHP;
+    [HideInInspector]
+    [Min(0f)] public float sourceStatRatio = 0f;
+    [HideInInspector]
     [Min(0f)] public float targetMaxHpRatio = 0f;
-    [Header("Target Max HP Cap")]
+    [HideInInspector]
     public bool capTargetMaxHpDamage = false;
+    [HideInInspector]
     public RuntimeEffectStatTarget targetMaxHpDamageCapSource = RuntimeEffectStatTarget.Attack;
+    [HideInInspector]
     [Min(0f)] public float targetMaxHpDamageCapRatio = 1f;
+    [HideInInspector]
     public ElementType elementType = ElementType.None;
 
     public override void OnHitDealt(RuntimeEffectDamageContext context)
     {
+        RuntimeEffectAdditionalDamageParameters parameters = ResolveParameters(context);
         if (context == null
             || context.targetEnemy == null
             || !context.targetEnemy.IsAlive
-            || (attackRatio <= 0f && targetMaxHpRatio <= 0f))
+            || (parameters.attackRatio <= 0f
+                && parameters.sourceStatRatio <= 0f
+                && parameters.targetMaxHpRatio <= 0f))
         {
             return;
         }
 
         RuntimeEffectInstance instance = context.instance;
         float lastTriggeredAt = instance != null ? instance.lastTriggeredAt : -999f;
-        if (internalCooldown > 0f && Time.time < lastTriggeredAt + internalCooldown)
+        if (parameters.internalCooldown > 0f && Time.time < lastTriggeredAt + parameters.internalCooldown)
         {
             return;
         }
 
-        if (Random.value > Mathf.Clamp01(chance))
+        if (Random.value > Mathf.Clamp01(parameters.chance))
         {
             return;
         }
@@ -44,14 +56,17 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
         }
 
         float sourceAttack = context.sourceStats != null ? Mathf.Max(0f, context.sourceStats.attack) : 0f;
-        float maxHpDamage = Mathf.Max(0f, context.targetEnemy.maxHP) * Mathf.Max(0f, targetMaxHpRatio);
-        if (capTargetMaxHpDamage)
+        float sourceStatDamage = ResolveSourceStatValue(context.sourceStats, parameters.sourceStatDamageSource)
+            * Mathf.Max(0f, parameters.sourceStatRatio);
+        float maxHpDamage = Mathf.Max(0f, context.targetEnemy.maxHP) * Mathf.Max(0f, parameters.targetMaxHpRatio);
+        if (parameters.capTargetMaxHpDamage)
         {
-            float cap = ResolveCapSourceValue(context.sourceStats) * Mathf.Max(0f, targetMaxHpDamageCapRatio);
+            float cap = ResolveCapSourceValue(context.sourceStats, parameters.targetMaxHpDamageCapSource)
+                * Mathf.Max(0f, parameters.targetMaxHpDamageCapRatio);
             maxHpDamage = Mathf.Min(maxHpDamage, Mathf.Max(0f, cap));
         }
 
-        float baseDamage = sourceAttack * Mathf.Max(0f, attackRatio) + maxHpDamage;
+        float baseDamage = sourceAttack * Mathf.Max(0f, parameters.attackRatio) + sourceStatDamage + maxHpDamage;
         if (baseDamage <= 0f)
         {
             return;
@@ -66,7 +81,7 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
             actionId = context.actionId,
             actionName = context.actionName,
             stepData = context.stepData,
-            elementType = elementType,
+            elementType = parameters.elementType,
             damageRoutine = DamageRoutine.Additional,
             isCriticalHit = false,
             damage = baseDamage,
@@ -86,7 +101,7 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
         float resolvedDamage = CombatFormula.CalculateResolvedDamage(
             damageInput.baseDamage,
             DamageRoutine.Additional,
-            elementType,
+            parameters.elementType,
             context.sourceStats,
             damageInput.defenderDefense,
             AttackCategory.Normal,
@@ -102,7 +117,7 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
         additionalData.damageIsFinal = true;
         additionalData.ignoreElementalIncomingModifiers = damageInput.ignoreElementalIncomingModifiers;
         additionalData.damageRoutine = DamageRoutine.Additional;
-        additionalData.elementType = elementType;
+        additionalData.elementType = parameters.elementType;
         additionalData.isCriticalHit = false;
         additionalData.flashFrames = 0;
         additionalData.impactTier = DamageImpactTier.Low;
@@ -123,8 +138,36 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
         if (elementalState != null)
         {
             elementalState.RecordDamageTaken(damageDealt);
-            elementalState.ApplyElementalDamage(elementType, damageInput.baseDamage, context.sourceStats, AttackCategory.Normal);
+            elementalState.ApplyElementalDamage(parameters.elementType, damageInput.baseDamage, context.sourceStats, AttackCategory.Normal);
         }
+    }
+
+    private RuntimeEffectAdditionalDamageParameters ResolveParameters(RuntimeEffectDamageContext context)
+    {
+        RuntimeEffectParameterSet parameters = RuntimeEffectRuntimeUtility.GetParameters(context?.instance);
+        if (parameters != null && parameters.overrideAdditionalDamage && parameters.additionalDamage != null)
+        {
+            return parameters.additionalDamage;
+        }
+
+        return new RuntimeEffectAdditionalDamageParameters
+        {
+            chance = chance,
+            internalCooldown = internalCooldown,
+            attackRatio = attackRatio,
+            sourceStatDamageSource = sourceStatDamageSource,
+            sourceStatRatio = sourceStatRatio,
+            targetMaxHpRatio = targetMaxHpRatio,
+            capTargetMaxHpDamage = capTargetMaxHpDamage,
+            targetMaxHpDamageCapSource = targetMaxHpDamageCapSource,
+            targetMaxHpDamageCapRatio = targetMaxHpDamageCapRatio,
+            elementType = elementType
+        };
+    }
+
+    private float ResolveSourceStatValue(CharacterStats sourceStats, RuntimeEffectStatTarget source)
+    {
+        return ResolveCapSourceValue(sourceStats, source);
     }
 
     private static void ApplyRuntimeDamageInputModifiers(CharacterObject sourceCharacter, RuntimeEffectDamageInput input)
@@ -146,14 +189,14 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
         }
     }
 
-    private float ResolveCapSourceValue(CharacterStats sourceStats)
+    private float ResolveCapSourceValue(CharacterStats sourceStats, RuntimeEffectStatTarget capSource)
     {
         if (sourceStats == null)
         {
             return 0f;
         }
 
-        return targetMaxHpDamageCapSource switch
+        return capSource switch
         {
             RuntimeEffectStatTarget.MaxHP => sourceStats.maxHP,
             RuntimeEffectStatTarget.Speed => sourceStats.speed,

@@ -235,6 +235,11 @@ public class EnemyController : MonoBehaviour
         currentHP -= finalIncomingDamage;
         currentHP  = Mathf.Max(currentHP, 0f);
 
+        if (CombatCore.TrainingDebugStats.Instance != null && CombatCore.TrainingDebugManager.IsActive)
+        {
+            CombatCore.TrainingDebugStats.Instance.RecordHit(this, finalIncomingDamage);
+        }
+
         bool shouldApplyReaction = !isAdditionalDamage && ShouldApplyHitReaction();
         LastHitAppliedReaction = shouldApplyReaction;
 

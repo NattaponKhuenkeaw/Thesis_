@@ -43,6 +43,49 @@ public class RuntimeEffectReceiver : MonoBehaviour
         int stackLimit = 1,
         bool refreshDurationOnReapply = true)
     {
+        return ApplyEffectInternal(
+            definition,
+            null,
+            sourceCharacter,
+            sourceStats,
+            durationOverride,
+            stackMode,
+            stackLimit,
+            refreshDurationOnReapply);
+    }
+
+    public RuntimeEffectInstance ApplyEffect(
+        RuntimeEffectRecipe recipe,
+        CharacterObject sourceCharacter,
+        CharacterStats sourceStats,
+        float durationOverride = -1f)
+    {
+        if (recipe == null || recipe.definition == null)
+        {
+            return null;
+        }
+
+        return ApplyEffectInternal(
+            recipe.definition,
+            recipe,
+            sourceCharacter,
+            sourceStats,
+            durationOverride,
+            RuntimeEffectRuntimeUtility.GetStackMode(recipe.definition, recipe),
+            RuntimeEffectRuntimeUtility.GetStackLimit(recipe, 1),
+            RuntimeEffectRuntimeUtility.GetRefreshDurationOnReapply(recipe, true));
+    }
+
+    private RuntimeEffectInstance ApplyEffectInternal(
+        RuntimeEffectDefinition definition,
+        RuntimeEffectRecipe recipe,
+        CharacterObject sourceCharacter,
+        CharacterStats sourceStats,
+        float durationOverride,
+        RuntimeEffectStackMode stackMode,
+        int stackLimit,
+        bool refreshDurationOnReapply)
+    {
         if (definition == null)
         {
             return null;
@@ -50,28 +93,33 @@ public class RuntimeEffectReceiver : MonoBehaviour
 
         CacheTargets();
 
-        bool shouldStack = ResolveShouldStack(definition, stackMode);
-        RuntimeEffectInstance existing = !shouldStack ? FindEffect(definition) : null;
+        int resolvedStackLimit = RuntimeEffectRuntimeUtility.GetStackLimit(recipe, stackLimit);
+        bool resolvedRefreshDuration = RuntimeEffectRuntimeUtility.GetRefreshDurationOnReapply(recipe, refreshDurationOnReapply);
+        bool effectRequiresTicking = RuntimeEffectRuntimeUtility.RequiresTicking(definition, recipe);
+        float resolvedDuration = RuntimeEffectRuntimeUtility.ResolveDuration(definition, recipe, durationOverride);
+        bool shouldStack = ResolveShouldStack(definition, recipe, stackMode);
+        RuntimeEffectInstance existing = !shouldStack ? FindEffect(definition, recipe) : null;
 
         if (shouldStack && definition.SupportsStackMerging)
         {
             RuntimeEffectInstance stackTarget = FindMergeableEffect(
                 definition,
+                recipe,
                 sourceCharacter,
                 sourceStats,
-                definition.ResolveDuration(durationOverride));
+                resolvedDuration);
             if (stackTarget != null)
             {
-                if (stackTarget.stackCount < Mathf.Max(1, stackLimit))
+                if (stackTarget.stackCount < resolvedStackLimit)
                 {
-                    stackTarget.AddStack(durationOverride, refreshDurationOnReapply);
+                    stackTarget.AddStack(durationOverride, resolvedRefreshDuration);
                 }
-                else if (refreshDurationOnReapply)
+                else if (resolvedRefreshDuration)
                 {
                     stackTarget.Refresh(durationOverride);
                 }
 
-                if (definition.RequiresTicking)
+                if (effectRequiresTicking)
                 {
                     hasTickingEffects = true;
                 }
@@ -84,12 +132,19 @@ public class RuntimeEffectReceiver : MonoBehaviour
 
         if (existing != null)
         {
-            if (existing.definition != definition)
+            if (existing.definition != definition || existing.recipe != recipe)
             {
                 existing.definition?.OnExpired(BuildContext(existing, 0f));
                 DestroyVisual(existing);
-                existing.Initialize(definition, sourceCharacter, sourceStats, durationOverride);
-                if (definition.RequiresTicking)
+                if (recipe != null)
+                {
+                    existing.Initialize(recipe, sourceCharacter, sourceStats, durationOverride);
+                }
+                else
+                {
+                    existing.Initialize(definition, sourceCharacter, sourceStats, durationOverride);
+                }
+                if (effectRequiresTicking)
                 {
                     hasTickingEffects = true;
                 }
@@ -97,7 +152,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
                 definition.OnApply(BuildContext(existing, 0f));
                 EnsureVisual(existing);
             }
-            else if (refreshDurationOnReapply)
+            else if (resolvedRefreshDuration)
             {
                 existing.Refresh(durationOverride);
             }
@@ -106,10 +161,10 @@ public class RuntimeEffectReceiver : MonoBehaviour
             return existing;
         }
 
-        if (shouldStack && CountEffects(definition) >= Mathf.Max(1, stackLimit))
+        if (shouldStack && CountEffects(definition, recipe) >= resolvedStackLimit)
         {
-            RuntimeEffectInstance refreshTarget = FindOldestEffect(definition);
-            if (refreshTarget != null && refreshDurationOnReapply)
+            RuntimeEffectInstance refreshTarget = FindOldestEffect(definition, recipe);
+            if (refreshTarget != null && resolvedRefreshDuration)
             {
                 refreshTarget.Refresh(durationOverride);
             }
@@ -119,9 +174,16 @@ public class RuntimeEffectReceiver : MonoBehaviour
         }
 
         RuntimeEffectInstance instance = new RuntimeEffectInstance();
-        instance.Initialize(definition, sourceCharacter, sourceStats, durationOverride);
+        if (recipe != null)
+        {
+            instance.Initialize(recipe, sourceCharacter, sourceStats, durationOverride);
+        }
+        else
+        {
+            instance.Initialize(definition, sourceCharacter, sourceStats, durationOverride);
+        }
         activeEffects.Add(instance);
-        if (definition.RequiresTicking)
+        if (effectRequiresTicking)
         {
             hasTickingEffects = true;
         }
@@ -129,7 +191,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
         EnsureVisual(instance);
         RaiseEffectsChanged();
 
-        if (definition.durationType == RuntimeEffectDurationType.Instant)
+        if (RuntimeEffectRuntimeUtility.GetDurationType(definition, recipe) == RuntimeEffectDurationType.Instant)
         {
             RemoveEffect(instance);
         }
@@ -137,13 +199,16 @@ public class RuntimeEffectReceiver : MonoBehaviour
         return instance;
     }
 
-    private static bool ResolveShouldStack(RuntimeEffectDefinition definition, RuntimeEffectStackMode stackMode)
+    private static bool ResolveShouldStack(
+        RuntimeEffectDefinition definition,
+        RuntimeEffectRecipe recipe,
+        RuntimeEffectStackMode stackMode)
     {
         return stackMode switch
         {
             RuntimeEffectStackMode.Override => false,
             RuntimeEffectStackMode.Stack => true,
-            _ => definition != null && definition.stackable
+            _ => RuntimeEffectRuntimeUtility.IsStackable(definition, recipe)
         };
     }
 
@@ -179,7 +244,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
                 continue;
             }
 
-            if (!instance.definition.removeOnOwnerDamaged)
+            if (!RuntimeEffectRuntimeUtility.RemoveOnOwnerDamaged(instance))
             {
                 continue;
             }
@@ -217,8 +282,18 @@ public class RuntimeEffectReceiver : MonoBehaviour
                 continue;
             }
 
-            input.context.instance = instance;
+            RuntimeEffectRuntimeUtility.BindDamageContextToInstance(
+                input.context,
+                instance,
+                out RuntimeEffectInstance previousInstance,
+                out CharacterObject previousSourceCharacter,
+                out CharacterStats previousSourceStats);
             instance.definition.ModifyDamageInput(input);
+            RuntimeEffectRuntimeUtility.RestoreDamageContext(
+                input.context,
+                previousInstance,
+                previousSourceCharacter,
+                previousSourceStats);
         }
 
         input.context.instance = null;
@@ -238,8 +313,18 @@ public class RuntimeEffectReceiver : MonoBehaviour
                 continue;
             }
 
-            context.instance = instance;
+            RuntimeEffectRuntimeUtility.BindDamageContextToInstance(
+                context,
+                instance,
+                out RuntimeEffectInstance previousInstance,
+                out CharacterObject previousSourceCharacter,
+                out CharacterStats previousSourceStats);
             result = instance.definition.ModifyIncomingDamage(context, result);
+            RuntimeEffectRuntimeUtility.RestoreDamageContext(
+                context,
+                previousInstance,
+                previousSourceCharacter,
+                previousSourceStats);
         }
 
         context.instance = null;
@@ -257,8 +342,18 @@ public class RuntimeEffectReceiver : MonoBehaviour
                 continue;
             }
 
-            context.instance = instance;
+            RuntimeEffectRuntimeUtility.BindDamageContextToInstance(
+                context,
+                instance,
+                out RuntimeEffectInstance previousInstance,
+                out CharacterObject previousSourceCharacter,
+                out CharacterStats previousSourceStats);
             result = instance.definition.ModifyOutgoingDamage(context, result);
+            RuntimeEffectRuntimeUtility.RestoreDamageContext(
+                context,
+                previousInstance,
+                previousSourceCharacter,
+                previousSourceStats);
         }
 
         context.instance = null;
@@ -275,8 +370,18 @@ public class RuntimeEffectReceiver : MonoBehaviour
                 continue;
             }
 
-            context.instance = instance;
+            RuntimeEffectRuntimeUtility.BindDamageContextToInstance(
+                context,
+                instance,
+                out RuntimeEffectInstance previousInstance,
+                out CharacterObject previousSourceCharacter,
+                out CharacterStats previousSourceStats);
             instance.definition.OnHitDealt(context);
+            RuntimeEffectRuntimeUtility.RestoreDamageContext(
+                context,
+                previousInstance,
+                previousSourceCharacter,
+                previousSourceStats);
         }
 
         context.instance = null;
@@ -337,7 +442,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
                 continue;
             }
 
-            if (!instance.definition.RequiresTicking)
+            if (!instance.RequiresTicking)
             {
                 continue;
             }
@@ -387,12 +492,12 @@ public class RuntimeEffectReceiver : MonoBehaviour
         };
     }
 
-    private RuntimeEffectInstance FindEffect(RuntimeEffectDefinition definition)
+    private RuntimeEffectInstance FindEffect(RuntimeEffectDefinition definition, RuntimeEffectRecipe recipe)
     {
         for (int i = 0; i < activeEffects.Count; i++)
         {
             RuntimeEffectInstance instance = activeEffects[i];
-            if (MatchesEffect(instance, definition))
+            if (MatchesEffect(instance, definition, recipe))
             {
                 return instance;
             }
@@ -401,13 +506,13 @@ public class RuntimeEffectReceiver : MonoBehaviour
         return null;
     }
 
-    private int CountEffects(RuntimeEffectDefinition definition)
+    private int CountEffects(RuntimeEffectDefinition definition, RuntimeEffectRecipe recipe)
     {
         int count = 0;
         for (int i = 0; i < activeEffects.Count; i++)
         {
             RuntimeEffectInstance instance = activeEffects[i];
-            if (MatchesEffect(instance, definition))
+            if (MatchesEffect(instance, definition, recipe))
             {
                 count++;
             }
@@ -416,13 +521,13 @@ public class RuntimeEffectReceiver : MonoBehaviour
         return count;
     }
 
-    private RuntimeEffectInstance FindOldestEffect(RuntimeEffectDefinition definition)
+    private RuntimeEffectInstance FindOldestEffect(RuntimeEffectDefinition definition, RuntimeEffectRecipe recipe)
     {
         RuntimeEffectInstance oldest = null;
         for (int i = 0; i < activeEffects.Count; i++)
         {
             RuntimeEffectInstance instance = activeEffects[i];
-            if (!MatchesEffect(instance, definition))
+            if (!MatchesEffect(instance, definition, recipe))
             {
                 continue;
             }
@@ -438,6 +543,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
 
     private RuntimeEffectInstance FindMergeableEffect(
         RuntimeEffectDefinition definition,
+        RuntimeEffectRecipe recipe,
         CharacterObject sourceCharacter,
         CharacterStats sourceStats,
         float resolvedDuration)
@@ -445,7 +551,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
         for (int i = 0; i < activeEffects.Count; i++)
         {
             RuntimeEffectInstance instance = activeEffects[i];
-            if (!MatchesEffect(instance, definition))
+            if (!MatchesEffect(instance, definition, recipe))
             {
                 continue;
             }
@@ -501,14 +607,15 @@ public class RuntimeEffectReceiver : MonoBehaviour
         return Mathf.Abs(a - b) <= 0.0001f;
     }
 
-    private static bool MatchesEffect(RuntimeEffectInstance instance, RuntimeEffectDefinition definition)
+    private static bool MatchesEffect(RuntimeEffectInstance instance, RuntimeEffectDefinition definition, RuntimeEffectRecipe recipe)
     {
         if (instance == null || instance.definition == null || definition == null)
         {
             return false;
         }
 
-        return string.Equals(instance.definition.StableId, definition.StableId, StringComparison.Ordinal);
+        return string.Equals(instance.definition.StableId, definition.StableId, StringComparison.Ordinal)
+            && string.Equals(instance.StackKey, RuntimeEffectRuntimeUtility.GetStackKey(definition, recipe), StringComparison.Ordinal);
     }
 
     private void RemoveEffect(RuntimeEffectInstance instance)
@@ -529,13 +636,13 @@ public class RuntimeEffectReceiver : MonoBehaviour
     {
         if (instance == null
             || instance.definition == null
-            || instance.definition.fieldVisualPrefab == null
+            || RuntimeEffectRuntimeUtility.GetFieldVisualPrefab(instance) == null
             || activeVisuals.ContainsKey(instance))
         {
             return;
         }
 
-        GameObject visual = Instantiate(instance.definition.fieldVisualPrefab, transform);
+        GameObject visual = Instantiate(RuntimeEffectRuntimeUtility.GetFieldVisualPrefab(instance), transform);
         activeVisuals[instance] = visual;
     }
 
@@ -578,7 +685,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
         for (int i = 0; i < activeEffects.Count; i++)
         {
             RuntimeEffectInstance instance = activeEffects[i];
-            if (instance != null && instance.definition != null && instance.definition.RequiresTicking)
+            if (instance != null && instance.RequiresTicking)
             {
                 hasTickingEffects = true;
                 return;

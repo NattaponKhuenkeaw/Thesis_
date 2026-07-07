@@ -1,66 +1,93 @@
+// Force Unity compilation refresh
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "RuntimeEffect_DamageInput", menuName = "Game/Runtime Effects/Damage Input Modifier", order = 14)]
 public class DamageInputRuntimeEffectDefinition : RuntimeEffectDefinition
 {
-    [Header("Filters")]
+    [HideInInspector]
     public bool filterByElement;
+    [HideInInspector]
     public ElementType elementType = ElementType.None;
+    [HideInInspector]
     public bool filterByCategory;
+    [HideInInspector]
     public AttackCategory category = AttackCategory.Normal;
 
-    [Header("Mitigation")]
-    [Tooltip("Positive values increase defender defense before mitigation. Negative values reduce it.")]
+    [HideInInspector]
     public float defenderDefensePercentAdd;
-    [Tooltip("Positive values increase defender damage resistance. Negative values reduce it.")]
+    [HideInInspector]
     public float defenderDamageResistancePercentAdd;
+    [HideInInspector]
     public bool ignoreDefense;
+    [HideInInspector]
     public bool ignoreDamageResistance;
+    [HideInInspector]
     public bool ignoreElementalIncomingModifiers;
 
     public override void ModifyDamageInput(RuntimeEffectDamageInput input)
     {
-        if (input == null || !Matches(input.context))
+        RuntimeEffectDamageInputParameters parameters = ResolveParameters(input?.context);
+        if (input == null || !Matches(input.context, parameters))
         {
             return;
         }
 
-        if (ignoreDefense)
+        if (parameters.ignoreDefense)
         {
             input.defenderDefense = 0f;
         }
-        else if (Mathf.Abs(defenderDefensePercentAdd) > 0.0001f)
+        else if (Mathf.Abs(parameters.defenderDefensePercentAdd) > 0.0001f)
         {
-            input.defenderDefense = Mathf.Max(0f, input.defenderDefense * (1f + defenderDefensePercentAdd / 100f));
+            input.defenderDefense = Mathf.Max(0f, input.defenderDefense * (1f + parameters.defenderDefensePercentAdd / 100f));
         }
 
-        if (ignoreDamageResistance)
+        if (parameters.ignoreDamageResistance)
         {
             input.defenderDamageResistance = 0f;
         }
-        else if (Mathf.Abs(defenderDamageResistancePercentAdd) > 0.0001f)
+        else if (Mathf.Abs(parameters.defenderDamageResistancePercentAdd) > 0.0001f)
         {
-            input.defenderDamageResistance += defenderDamageResistancePercentAdd;
+            input.defenderDamageResistance += parameters.defenderDamageResistancePercentAdd;
         }
 
-        if (ignoreElementalIncomingModifiers)
+        if (parameters.ignoreElementalIncomingModifiers)
         {
             input.ignoreElementalIncomingModifiers = true;
         }
     }
 
-    private bool Matches(RuntimeEffectDamageContext context)
+    private RuntimeEffectDamageInputParameters ResolveParameters(RuntimeEffectDamageContext context)
     {
-        if (context == null)
+        RuntimeEffectParameterSet parameters = RuntimeEffectRuntimeUtility.GetParameters(context?.instance);
+        if (parameters != null && parameters.overrideDamageInput && parameters.damageInput != null)
+        {
+            return parameters.damageInput;
+        }
+
+        return new RuntimeEffectDamageInputParameters
+        {
+            filter = new RuntimeEffectDamageFilter
+            {
+                filterByElement = filterByElement,
+                elementType = elementType,
+                filterByCategory = filterByCategory,
+                category = category
+            },
+            defenderDefensePercentAdd = defenderDefensePercentAdd,
+            defenderDamageResistancePercentAdd = defenderDamageResistancePercentAdd,
+            ignoreDefense = ignoreDefense,
+            ignoreDamageResistance = ignoreDamageResistance,
+            ignoreElementalIncomingModifiers = ignoreElementalIncomingModifiers
+        };
+    }
+
+    private static bool Matches(RuntimeEffectDamageContext context, RuntimeEffectDamageInputParameters parameters)
+    {
+        if (context == null || parameters == null)
         {
             return false;
         }
 
-        if (filterByElement && context.elementType != elementType)
-        {
-            return false;
-        }
-
-        return !filterByCategory || context.category == category;
+        return parameters.filter == null || parameters.filter.Matches(context);
     }
 }

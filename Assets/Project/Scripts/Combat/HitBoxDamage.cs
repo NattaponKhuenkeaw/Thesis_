@@ -313,8 +313,6 @@ public class HitBoxDamage : MonoBehaviour
                 auraEnergyRewardClaim);
         }
 
-        if (CombatCore.TrainingDebugStats.Instance != null)
-            CombatCore.TrainingDebugStats.Instance.RecordHit(enemy, primaryDamageDealt);
 
         projectileOwner?.RegisterSuccessfulHit(enemy);
     }
@@ -455,10 +453,6 @@ public class HitBoxDamage : MonoBehaviour
                     elementalState.ApplyElementalDamage(additionalData.elementType, baseDamage, currentAttackerStats, AttackCategory.Normal);
                 }
 
-                if (CombatCore.TrainingDebugStats.Instance != null)
-                {
-                    CombatCore.TrainingDebugStats.Instance.RecordHit(enemy, damageDealt);
-                }
             }
         }
     }

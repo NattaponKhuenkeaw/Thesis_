@@ -3,50 +3,71 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "RuntimeEffect_DamageModifier", menuName = "Game/Runtime Effects/Damage Modifier", order = 11)]
 public class DamageModifierRuntimeEffectDefinition : RuntimeEffectDefinition
 {
-    [Header("Filters")]
+    [HideInInspector]
     public bool filterByElement;
+    [HideInInspector]
     public ElementType elementType = ElementType.None;
+    [HideInInspector]
     public bool filterByCategory;
+    [HideInInspector]
     public AttackCategory category = AttackCategory.Normal;
 
-    [Header("Damage Percent")]
-    [Tooltip("Positive values increase outgoing damage. -20 means outgoing damage is reduced by 20%.")]
+    [HideInInspector]
     public float outgoingDamagePercentAdd;
-    [Tooltip("Positive values increase incoming damage taken. -20 means incoming damage is reduced by 20%.")]
+    [HideInInspector]
     public float incomingDamageTakenPercentAdd;
 
     public override float ModifyOutgoingDamage(RuntimeEffectDamageContext context, float currentDamage)
     {
-        if (!Matches(context) || Mathf.Abs(outgoingDamagePercentAdd) <= Mathf.Epsilon)
+        RuntimeEffectDamageModifierParameters parameters = ResolveParameters(context);
+        if (!Matches(context, parameters) || Mathf.Abs(parameters.outgoingDamagePercentAdd) <= Mathf.Epsilon)
         {
             return currentDamage;
         }
 
-        return Mathf.Max(0f, currentDamage * (1f + outgoingDamagePercentAdd / 100f));
+        return Mathf.Max(0f, currentDamage * (1f + parameters.outgoingDamagePercentAdd / 100f));
     }
 
     public override float ModifyIncomingDamage(RuntimeEffectDamageContext context, float currentDamage)
     {
-        if (!Matches(context) || Mathf.Abs(incomingDamageTakenPercentAdd) <= Mathf.Epsilon)
+        RuntimeEffectDamageModifierParameters parameters = ResolveParameters(context);
+        if (!Matches(context, parameters) || Mathf.Abs(parameters.incomingDamageTakenPercentAdd) <= Mathf.Epsilon)
         {
             return currentDamage;
         }
 
-        return Mathf.Max(0f, currentDamage * (1f + incomingDamageTakenPercentAdd / 100f));
+        return Mathf.Max(0f, currentDamage * (1f + parameters.incomingDamageTakenPercentAdd / 100f));
     }
 
-    private bool Matches(RuntimeEffectDamageContext context)
+    private RuntimeEffectDamageModifierParameters ResolveParameters(RuntimeEffectDamageContext context)
     {
-        if (context == null)
+        RuntimeEffectParameterSet parameters = RuntimeEffectRuntimeUtility.GetParameters(context?.instance);
+        if (parameters != null && parameters.overrideDamageModifier && parameters.damageModifier != null)
+        {
+            return parameters.damageModifier;
+        }
+
+        return new RuntimeEffectDamageModifierParameters
+        {
+            filter = new RuntimeEffectDamageFilter
+            {
+                filterByElement = filterByElement,
+                elementType = elementType,
+                filterByCategory = filterByCategory,
+                category = category
+            },
+            outgoingDamagePercentAdd = outgoingDamagePercentAdd,
+            incomingDamageTakenPercentAdd = incomingDamageTakenPercentAdd
+        };
+    }
+
+    private static bool Matches(RuntimeEffectDamageContext context, RuntimeEffectDamageModifierParameters parameters)
+    {
+        if (context == null || parameters == null)
         {
             return false;
         }
 
-        if (filterByElement && context.elementType != elementType)
-        {
-            return false;
-        }
-
-        return !filterByCategory || context.category == category;
+        return parameters.filter == null || parameters.filter.Matches(context);
     }
 }

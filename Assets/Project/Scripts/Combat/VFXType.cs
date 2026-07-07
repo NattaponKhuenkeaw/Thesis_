@@ -48,35 +48,38 @@ namespace Project.Combat
         Kyo_Skill2 = 102,
         Kyo_Skill2_Fire = 103,
         Kyo_Skill3 = 104,
+        Kyo_Ultimate_loop = 105,
+        Kyo_Ultimate_flash = 106,
+        Kyo_Ultimate_flash2 = 107,
 
 
         // --- Rugal ---
-        Rugal_Skill = 105,
-        Rugal_Ultimate_Aura = 106,
-        Rugal_Ultimate_Explosion = 107,
+        Rugal_Skill = 108,
+        Rugal_Ultimate_Aura = 109,
+        Rugal_Ultimate_Explosion = 110,
 
         // --- Krizalid ---
-        Krizalid_Projectile_Hit = 108,
+        Krizalid_Projectile_Hit = 111,
 
         // --- Goenitz ---
-        Goenitz_Basic = 109,
-        Goenitz_Basic2 = 110,
-        Goenitz_Basic3 = 111,
-        Goenitz_Tornado = 112,
-        Goenitz_Light = 113,
-        Goenitz_Ultimate_Tornado = 114,
-        Goenitz_Ultimate_Tornado2 = 115,
-        Goenitz_Ultimate_slash = 116,
+        Goenitz_Basic = 112,
+        Goenitz_Basic2 = 113,
+        Goenitz_Basic3 = 114,
+        Goenitz_Tornado = 115,
+        Goenitz_Light = 116,
+        Goenitz_Ultimate_Tornado = 117,
+        Goenitz_Ultimate_Tornado2 = 118,
+        Goenitz_Ultimate_slash = 119,
 
         // --- Main ---
-        Main_Basic1 = 117,
-        Main_Basic2 = 118,
-        Main_Basic3 = 119,
-        Main_Skill1 = 120,
-        Main_Skill2 = 121,
-        Main_Skill3 = 122,
-        Main_Ultimate = 123,
-        Main_Air_Attack1 = 124,
-        Main_Plunge_Impact = 125,
+        Main_Basic1 = 120,
+        Main_Basic2 = 121,
+        Main_Basic3 = 122,
+        Main_Skill1 = 123,
+        Main_Skill2 = 124,
+        Main_Skill3 = 125,
+        Main_Ultimate = 126,
+        Main_Air_Attack1 = 127,
+        Main_Plunge_Impact = 128,
     }
 }

@@ -80,61 +80,124 @@ public class PlayerUltimateState : CombatPlayerState
 
         if (currentPhase == ActionPhase.None)
         {
-            if (ShouldAbortBeforeExecution())
-            {
-                resolver.Reset();
-                return;
-            }
-
-            InputContext ctx = BuildInputContext();
-            AttackStepData step = resolver.ResolveInitial(ctx, resolverTable, AttackCategory.Ultimate);
-
-            if (step == null)
-            {
-                ExitToAppropriateMovementState();
-                return;
-            }
-
-            TeamLoader teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
-            activeUltimateAction = resolver.ActiveCombatAction as UltimateAction;
-            float currentAE = teamLoader != null ? teamLoader.GetCharacterCurrentAE(player.characterObject) : 0f;
-            float requiredAE = teamLoader != null
-                ? teamLoader.GetUltimateCost(player.characterObject, activeUltimateAction)
-                : TeamLoader.DefaultUltimateAuraEnergyCost;
-
-            if (currentAE < requiredAE)
-            {
-                fsm.Log("Ultimate", "Aura Energy stack is not full", Color.yellow);
-                AbilityUIManager.Instance?.PlayAbilityRejectedFeedback(AbilityUIManager.AbilityType.Ultimate);
-                resolver.Reset();
-                ExitToAppropriateMovementState();
-                return;
-            }
-
-            ExecuteCombatStep(step, ctx, false);
-
-            if (player.PassiveController != null && activeUltimateAction != null)
-            {
-                player.PassiveController.ClearActionAvailabilityWindow(
-                    AttackCategory.Ultimate,
-                    activeUltimateAction.actionId,
-                    activeUltimateAction.actionName);
-            }
-
-            TryStartCooldown();
-
-            if (activeUltimateAction != null && activeUltimateAction.useDashAfterImage && player.Movement != null)
-            {
-                player.Movement.SpawnUltimateBurst(3, 0.08f);
-            }
-
+            TryStartFreshUltimateAction(exitOnFailure: true, requireDifferentAction: false, endCurrentActionBeforePreview: false);
             return;
         }
 
-        if (currentPhase == ActionPhase.Cancel)
+        if (currentPhase == ActionPhase.Recovery || currentPhase == ActionPhase.Cancel)
         {
-            TryResolveNextUltimateStep();
+            if (TryStartFreshUltimateAction(exitOnFailure: false, requireDifferentAction: true, endCurrentActionBeforePreview: true))
+            {
+                return;
+            }
+
+            if (currentPhase == ActionPhase.Cancel && player.Combat != null && player.Combat.IsAttacking())
+            {
+                TryResolveNextUltimateStep();
+            }
         }
+    }
+
+    private bool TryStartFreshUltimateAction(bool exitOnFailure, bool requireDifferentAction, bool endCurrentActionBeforePreview)
+    {
+        if (ShouldAbortBeforeExecution())
+        {
+            resolver.Reset();
+            return false;
+        }
+
+        UltimateAction previousAction = activeUltimateAction;
+        if (requireDifferentAction && endCurrentActionBeforePreview && player.Combat != null && player.Combat.IsAttacking())
+        {
+            player.Combat.ResetCombo();
+        }
+
+        InputContext ctx = BuildInputContext();
+        ActionResolver previewResolver = new ActionResolver();
+        AttackStepData previewStep = previewResolver.ResolveInitial(ctx, resolverTable, AttackCategory.Ultimate);
+        UltimateAction previewUltimateAction = previewResolver.ActiveCombatAction as UltimateAction;
+        if (previewStep == null || previewUltimateAction == null)
+        {
+            if (exitOnFailure)
+            {
+                ExitToAppropriateMovementState();
+            }
+
+            return false;
+        }
+
+        if (requireDifferentAction && IsSameUltimateAction(previewUltimateAction, previousAction))
+        {
+            return false;
+        }
+
+        TeamLoader teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
+        float currentAE = teamLoader != null ? teamLoader.GetCharacterCurrentAE(player.characterObject) : 0f;
+        float requiredAE = teamLoader != null
+            ? teamLoader.GetUltimateCost(player.characterObject, previewUltimateAction)
+            : TeamLoader.DefaultUltimateAuraEnergyCost;
+
+        if (currentAE < requiredAE)
+        {
+            if (exitOnFailure)
+            {
+                fsm.Log("Ultimate", "Aura Energy stack is not full", Color.yellow);
+                AbilityUIManager.Instance?.PlayAbilityRejectedFeedback(AbilityUIManager.AbilityType.Ultimate);
+                ExitToAppropriateMovementState();
+            }
+
+            resolver.Reset();
+            return false;
+        }
+
+        resolver.Reset();
+        AttackStepData step = resolver.ResolveInitial(ctx, resolverTable, AttackCategory.Ultimate);
+        activeUltimateAction = resolver.ActiveCombatAction as UltimateAction;
+        if (step == null || activeUltimateAction == null)
+        {
+            if (exitOnFailure)
+            {
+                ExitToAppropriateMovementState();
+            }
+
+            return false;
+        }
+
+        energyConsumed = false;
+        hasStartedCooldown = false;
+        ExecuteCombatStep(step, ctx, false);
+
+        if (player.PassiveController != null && activeUltimateAction != null)
+        {
+            player.PassiveController.ClearActionAvailabilityWindow(
+                AttackCategory.Ultimate,
+                activeUltimateAction.actionId,
+                activeUltimateAction.actionName);
+        }
+
+        TryStartCooldown();
+
+        if (activeUltimateAction != null && activeUltimateAction.useDashAfterImage && player.Movement != null)
+        {
+            player.Movement.SpawnUltimateBurst(3, 0.08f);
+        }
+
+        return true;
+    }
+
+    private static bool IsSameUltimateAction(UltimateAction left, UltimateAction right)
+    {
+        if (left == null || right == null)
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(left.actionId) || !string.IsNullOrWhiteSpace(right.actionId))
+        {
+            return string.Equals(left.actionId, right.actionId, System.StringComparison.Ordinal);
+        }
+
+        return string.Equals(left.actionName, right.actionName, System.StringComparison.Ordinal);
     }
 
     private bool TryResolveNextUltimateStep(bool isAutoChain = false)

@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bdf08d063e841dbb4ae1c7506a33134, type: 3}
+  m_Name: RuntimeEffect_AdditionalDamage
+  m_EditorClassIdentifier: Assembly-CSharp::AdditionalDamageOnHitRuntimeEffectDefinition
+  effectId: 
+  displayName: 
+  icon: {fileID: 0}
+  fieldVisualPrefab: {fileID: 0}
+  kind: 0
+  appliesOn: 0
+  durationType: 0
+  durationSeconds: 10
+  refreshDurationOnReapply: 1
+  stackable: 0
+  removeOnOwnerDamaged: 0
+  chance: 1
+  internalCooldown: 0
+  attackRatio: 0.2
+  targetMaxHpRatio: 0
+  capTargetMaxHpDamage: 0
+  targetMaxHpDamageCapSource: 1
+  targetMaxHpDamageCapRatio: 1
+  elementType: 0

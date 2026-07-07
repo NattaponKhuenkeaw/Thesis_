@@ -33,14 +33,14 @@ MonoBehaviour:
     loopVoice: 0
     volumeVoice: 0
     pitchVoice: 0
-  - stateId: 6
+  - stateId: 7
     sfxVariants:
     - {fileID: 8300000, guid: 593a0d385b8e842458eec6a9c0b82630, type: 3}
     loopSFX: 0
     volumeSFX: 0.7
     pitchSFX: 2
     voiceVariants:
-    - {fileID: 8300000, guid: 0f6656edf09cc1a458fb97f72f498522, type: 3}
+    - {fileID: 8300000, guid: a29df272d0d4d7b41b2f21354a41e0d9, type: 3}
     loopVoice: 0
-    volumeVoice: 1
+    volumeVoice: 0.5
     pitchVoice: 1

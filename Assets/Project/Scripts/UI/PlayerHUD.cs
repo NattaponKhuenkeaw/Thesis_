@@ -416,14 +416,13 @@ public class PlayerHUD : MonoBehaviour
                 continue;
             }
 
-            RuntimeEffectDefinition definition = effect.definition;
-            if (definition.kind == RuntimeEffectKind.Effect)
+            if (RuntimeEffectRuntimeUtility.GetKind(effect) == RuntimeEffectKind.Effect)
             {
                 continue;
             }
 
             string stackKey = effect.StackKey;
-            bool aggregateIntoStack = definition.stackable || CountDisplayableEffectsWithStackKey(effects, stackKey) > 1;
+            bool aggregateIntoStack = RuntimeEffectRuntimeUtility.IsStackable(effect) || CountDisplayableEffectsWithStackKey(effects, stackKey) > 1;
             if (!aggregateIntoStack)
             {
                 runtimeEffectDisplayEntries.Add(new RuntimeEffectDisplayEntry
@@ -463,7 +462,7 @@ public class PlayerHUD : MonoBehaviour
         {
             RuntimeEffectInstance effect = effects[i];
             RuntimeEffectDefinition definition = effect != null ? effect.definition : null;
-            if (definition == null || definition.kind == RuntimeEffectKind.Effect)
+            if (definition == null || RuntimeEffectRuntimeUtility.GetKind(effect) == RuntimeEffectKind.Effect)
             {
                 continue;
             }

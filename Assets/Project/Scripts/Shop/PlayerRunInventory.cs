@@ -64,7 +64,7 @@ namespace Project.ShopSystem
             for (int i = 0; i < activeEffects.Count; i++)
             {
                 RuntimeEffectInstance effect = activeEffects[i];
-                if (effect != null && effect.definition != null && effect.definition.RequiresTicking)
+                if (effect != null && effect.RequiresTicking)
                 {
                     hasTickingEffects = true;
                     return;
@@ -661,6 +661,53 @@ namespace Project.ShopSystem
             int stackLimit = 1,
             bool refreshDurationOnReapply = true)
         {
+            return ApplyRuntimeEffectInternal(
+                targetCharacter,
+                effectDefinition,
+                null,
+                sourceCharacter,
+                sourceStats,
+                durationOverride,
+                stackMode,
+                stackLimit,
+                refreshDurationOnReapply);
+        }
+
+        public bool ApplyRuntimeEffect(
+            CharacterObject targetCharacter,
+            RuntimeEffectRecipe recipe,
+            CharacterObject sourceCharacter = null,
+            CharacterStats sourceStats = null,
+            float durationOverride = -1f)
+        {
+            if (recipe == null || recipe.definition == null)
+            {
+                return false;
+            }
+
+            return ApplyRuntimeEffectInternal(
+                targetCharacter,
+                recipe.definition,
+                recipe,
+                sourceCharacter,
+                sourceStats,
+                durationOverride,
+                RuntimeEffectRuntimeUtility.GetStackMode(recipe.definition, recipe),
+                RuntimeEffectRuntimeUtility.GetStackLimit(recipe, 1),
+                RuntimeEffectRuntimeUtility.GetRefreshDurationOnReapply(recipe, true));
+        }
+
+        private bool ApplyRuntimeEffectInternal(
+            CharacterObject targetCharacter,
+            RuntimeEffectDefinition effectDefinition,
+            RuntimeEffectRecipe recipe,
+            CharacterObject sourceCharacter,
+            CharacterStats sourceStats,
+            float durationOverride,
+            RuntimeEffectStackMode stackMode,
+            int stackLimit,
+            bool refreshDurationOnReapply)
+        {
             if (targetCharacter == null || effectDefinition == null)
             {
                 return false;
@@ -674,9 +721,14 @@ namespace Project.ShopSystem
 
             state.EnsureEffectList();
             List<RuntimeEffectInstance> activeEffects = state.MutableActiveEffects;
-            bool shouldStack = ResolveShouldStack(effectDefinition, stackMode);
+            int resolvedStackLimit = RuntimeEffectRuntimeUtility.GetStackLimit(recipe, stackLimit);
+            bool resolvedRefreshDuration = RuntimeEffectRuntimeUtility.GetRefreshDurationOnReapply(recipe, refreshDurationOnReapply);
+            bool effectRequiresTicking = RuntimeEffectRuntimeUtility.RequiresTicking(effectDefinition, recipe);
+            bool effectAffectsStats = RuntimeEffectRuntimeUtility.AffectsStats(effectDefinition, recipe);
+            float resolvedDuration = RuntimeEffectRuntimeUtility.ResolveDuration(effectDefinition, recipe, durationOverride);
+            bool shouldStack = ResolveShouldStack(effectDefinition, recipe, stackMode);
             RuntimeEffectInstance instance = !shouldStack
-                ? FindRuntimeEffect(activeEffects, effectDefinition)
+                ? FindRuntimeEffect(activeEffects, effectDefinition, recipe)
                 : null;
 
             CharacterStats resolvedSourceStats = sourceStats != null
@@ -688,48 +740,54 @@ namespace Project.ShopSystem
                 RuntimeEffectInstance stackTarget = FindMergeableRuntimeEffect(
                     activeEffects,
                     effectDefinition,
+                    recipe,
                     sourceCharacter,
                     resolvedSourceStats,
-                    effectDefinition.ResolveDuration(durationOverride));
+                    resolvedDuration);
                 if (stackTarget != null)
                 {
-                    int resolvedStackLimit = Mathf.Max(1, stackLimit);
                     if (stackTarget.stackCount < resolvedStackLimit)
                     {
-                        stackTarget.AddStack(durationOverride, refreshDurationOnReapply);
+                        stackTarget.AddStack(durationOverride, resolvedRefreshDuration);
                     }
-                    else if (refreshDurationOnReapply)
+                    else if (resolvedRefreshDuration)
                     {
                         stackTarget.Refresh(durationOverride);
                     }
 
-                    if (effectDefinition.RequiresTicking)
+                    if (effectRequiresTicking)
                     {
                         state.HasTickingEffects = true;
                     }
 
-                    RaiseRuntimeEffectsChanged(targetCharacter, effectDefinition.AffectsStats);
+                    RaiseRuntimeEffectsChanged(targetCharacter, effectAffectsStats);
                     return true;
                 }
             }
 
             if (instance != null)
             {
-                bool affectsStats = effectDefinition.AffectsStats
-                    || (instance.definition != null && instance.definition.AffectsStats);
+                bool affectsStats = effectAffectsStats || instance.AffectsStats;
 
-                if (instance.definition != effectDefinition)
+                if (instance.definition != effectDefinition || instance.recipe != recipe)
                 {
                     instance.definition?.OnExpired(BuildRuntimeEffectContext(targetCharacter, state, instance, 0f));
-                    instance.Initialize(effectDefinition, sourceCharacter, resolvedSourceStats, durationOverride);
+                    if (recipe != null)
+                    {
+                        instance.Initialize(recipe, sourceCharacter, resolvedSourceStats, durationOverride);
+                    }
+                    else
+                    {
+                        instance.Initialize(effectDefinition, sourceCharacter, resolvedSourceStats, durationOverride);
+                    }
                     effectDefinition.OnApply(BuildRuntimeEffectContext(targetCharacter, state, instance, 0f));
                 }
-                else if (refreshDurationOnReapply)
+                else if (resolvedRefreshDuration)
                 {
                     instance.Refresh(durationOverride);
                 }
 
-                if (effectDefinition.RequiresTicking)
+                if (effectRequiresTicking)
                 {
                     state.HasTickingEffects = true;
                 }
@@ -738,34 +796,41 @@ namespace Project.ShopSystem
                 return true;
             }
 
-            if (shouldStack && CountRuntimeEffects(activeEffects, effectDefinition) >= Mathf.Max(1, stackLimit))
+            if (shouldStack && CountRuntimeEffects(activeEffects, effectDefinition, recipe) >= resolvedStackLimit)
             {
-                RuntimeEffectInstance refreshTarget = FindOldestRuntimeEffect(activeEffects, effectDefinition);
-                if (refreshTarget != null && refreshDurationOnReapply)
+                RuntimeEffectInstance refreshTarget = FindOldestRuntimeEffect(activeEffects, effectDefinition, recipe);
+                if (refreshTarget != null && resolvedRefreshDuration)
                 {
                     refreshTarget.Refresh(durationOverride);
                 }
 
-                if (effectDefinition.RequiresTicking)
+                if (effectRequiresTicking)
                 {
                     state.HasTickingEffects = true;
                 }
 
-                RaiseRuntimeEffectsChanged(targetCharacter, effectDefinition.AffectsStats);
+                RaiseRuntimeEffectsChanged(targetCharacter, effectAffectsStats);
                 return refreshTarget != null;
             }
 
             instance = new RuntimeEffectInstance();
-            instance.Initialize(effectDefinition, sourceCharacter, resolvedSourceStats, durationOverride);
+            if (recipe != null)
+            {
+                instance.Initialize(recipe, sourceCharacter, resolvedSourceStats, durationOverride);
+            }
+            else
+            {
+                instance.Initialize(effectDefinition, sourceCharacter, resolvedSourceStats, durationOverride);
+            }
             activeEffects.Add(instance);
-            if (effectDefinition.RequiresTicking)
+            if (effectRequiresTicking)
             {
                 state.HasTickingEffects = true;
             }
             effectDefinition.OnApply(BuildRuntimeEffectContext(targetCharacter, state, instance, 0f));
-            RaiseRuntimeEffectsChanged(targetCharacter, effectDefinition.AffectsStats);
+            RaiseRuntimeEffectsChanged(targetCharacter, effectAffectsStats);
 
-            if (effectDefinition.durationType == RuntimeEffectDurationType.Instant)
+            if (RuntimeEffectRuntimeUtility.GetDurationType(effectDefinition, recipe) == RuntimeEffectDurationType.Instant)
             {
                 RemoveRuntimeEffect(targetCharacter, state, instance);
             }
@@ -773,13 +838,16 @@ namespace Project.ShopSystem
             return true;
         }
 
-        private static bool ResolveShouldStack(RuntimeEffectDefinition definition, RuntimeEffectStackMode stackMode)
+        private static bool ResolveShouldStack(
+            RuntimeEffectDefinition definition,
+            RuntimeEffectRecipe recipe,
+            RuntimeEffectStackMode stackMode)
         {
             return stackMode switch
             {
                 RuntimeEffectStackMode.Override => false,
                 RuntimeEffectStackMode.Stack => true,
-                _ => definition != null && definition.stackable
+                _ => RuntimeEffectRuntimeUtility.IsStackable(definition, recipe)
             };
         }
 
@@ -795,12 +863,52 @@ namespace Project.ShopSystem
             for (int i = 0; i < state.MutableActiveEffects.Count; i++)
             {
                 RuntimeEffectInstance instance = state.MutableActiveEffects[i];
-                affectedStats |= instance != null && instance.definition != null && instance.definition.AffectsStats;
+                affectedStats |= instance != null && instance.AffectsStats;
             }
 
             state.MutableActiveEffects.Clear();
             state.HasTickingEffects = false;
             RaiseRuntimeEffectsChanged(character, affectedStats);
+        }
+
+        public bool RemoveRuntimeEffect(
+            CharacterObject targetCharacter,
+            RuntimeEffectDefinition effectDefinition,
+            RuntimeEffectRecipe recipe,
+            CharacterObject sourceCharacter = null)
+        {
+            RunCharacterState state = GetRunCharacter(targetCharacter);
+            if (state == null || effectDefinition == null || state.MutableActiveEffects.Count == 0)
+            {
+                return false;
+            }
+
+            string expectedStackKey = RuntimeEffectRuntimeUtility.GetStackKey(effectDefinition, recipe);
+            bool changed = false;
+            for (int i = state.MutableActiveEffects.Count - 1; i >= 0; i--)
+            {
+                RuntimeEffectInstance instance = state.MutableActiveEffects[i];
+                if (instance == null || instance.definition == null)
+                {
+                    continue;
+                }
+
+                if (!string.Equals(instance.definition.StableId, effectDefinition.StableId, StringComparison.Ordinal)
+                    || !string.Equals(instance.StackKey, expectedStackKey, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (sourceCharacter != null && instance.sourceCharacter != sourceCharacter)
+                {
+                    continue;
+                }
+
+                RemoveRuntimeEffect(targetCharacter, state, instance);
+                changed = true;
+            }
+
+            return changed;
         }
 
         public void RemoveRuntimeEffectsOnOwnerDamaged(CharacterObject character)
@@ -824,12 +932,12 @@ namespace Project.ShopSystem
                     continue;
                 }
 
-                if (!instance.definition.removeOnOwnerDamaged)
+                if (!RuntimeEffectRuntimeUtility.RemoveOnOwnerDamaged(instance))
                 {
                     continue;
                 }
 
-                affectedStats |= instance.definition.AffectsStats;
+                affectedStats |= instance.AffectsStats;
                 instance.definition.OnExpired(BuildRuntimeEffectContext(character, state, instance, 0f));
                 state.MutableActiveEffects.RemoveAt(i);
                 changed = true;
@@ -873,7 +981,7 @@ namespace Project.ShopSystem
                         continue;
                     }
 
-                    if (!instance.definition.RequiresTicking)
+                    if (!instance.RequiresTicking)
                     {
                         continue;
                     }
@@ -991,8 +1099,18 @@ namespace Project.ShopSystem
                     continue;
                 }
 
-                context.instance = instance;
+                RuntimeEffectRuntimeUtility.BindDamageContextToInstance(
+                    context,
+                    instance,
+                    out RuntimeEffectInstance previousInstance,
+                    out CharacterObject previousSourceCharacter,
+                    out CharacterStats previousSourceStats);
                 instance.definition.OnHitDealt(context);
+                RuntimeEffectRuntimeUtility.RestoreDamageContext(
+                    context,
+                    previousInstance,
+                    previousSourceCharacter,
+                    previousSourceStats);
             }
 
             context.instance = null;
@@ -1182,10 +1300,20 @@ namespace Project.ShopSystem
                     continue;
                 }
 
-                context.instance = instance;
+                RuntimeEffectRuntimeUtility.BindDamageContextToInstance(
+                    context,
+                    instance,
+                    out RuntimeEffectInstance previousInstance,
+                    out CharacterObject previousSourceCharacter,
+                    out CharacterStats previousSourceStats);
                 result = outgoing
                     ? instance.definition.ModifyOutgoingDamage(context, result)
                     : instance.definition.ModifyIncomingDamage(context, result);
+                RuntimeEffectRuntimeUtility.RestoreDamageContext(
+                    context,
+                    previousInstance,
+                    previousSourceCharacter,
+                    previousSourceStats);
             }
 
             context.instance = null;
@@ -1209,8 +1337,18 @@ namespace Project.ShopSystem
                     continue;
                 }
 
-                input.context.instance = instance;
+                RuntimeEffectRuntimeUtility.BindDamageContextToInstance(
+                    input.context,
+                    instance,
+                    out RuntimeEffectInstance previousInstance,
+                    out CharacterObject previousSourceCharacter,
+                    out CharacterStats previousSourceStats);
                 instance.definition.ModifyDamageInput(input);
+                RuntimeEffectRuntimeUtility.RestoreDamageContext(
+                    input.context,
+                    previousInstance,
+                    previousSourceCharacter,
+                    previousSourceStats);
             }
 
             input.context.instance = null;
@@ -1229,10 +1367,10 @@ namespace Project.ShopSystem
                 return;
             }
 
-            bool affectsStats = instance.definition != null && instance.definition.AffectsStats;
+            bool affectsStats = instance.AffectsStats;
             instance.definition?.OnExpired(BuildRuntimeEffectContext(targetCharacter, state, instance, 0f));
             state.MutableActiveEffects.Remove(instance);
-            if (instance.definition != null && instance.definition.RequiresTicking)
+            if (instance.RequiresTicking)
             {
                 state.RecalculateTickingEffects();
             }
@@ -1250,7 +1388,8 @@ namespace Project.ShopSystem
 
         private static RuntimeEffectInstance FindRuntimeEffect(
             List<RuntimeEffectInstance> activeEffects,
-            RuntimeEffectDefinition effectDefinition)
+            RuntimeEffectDefinition effectDefinition,
+            RuntimeEffectRecipe recipe)
         {
             if (activeEffects == null || effectDefinition == null)
             {
@@ -1260,7 +1399,7 @@ namespace Project.ShopSystem
             for (int i = 0; i < activeEffects.Count; i++)
             {
                 RuntimeEffectInstance instance = activeEffects[i];
-                if (MatchesRuntimeEffect(instance, effectDefinition))
+                if (MatchesRuntimeEffect(instance, effectDefinition, recipe))
                 {
                     return instance;
                 }
@@ -1271,7 +1410,8 @@ namespace Project.ShopSystem
 
         private static int CountRuntimeEffects(
             List<RuntimeEffectInstance> activeEffects,
-            RuntimeEffectDefinition effectDefinition)
+            RuntimeEffectDefinition effectDefinition,
+            RuntimeEffectRecipe recipe)
         {
             if (activeEffects == null || effectDefinition == null)
             {
@@ -1282,7 +1422,7 @@ namespace Project.ShopSystem
             for (int i = 0; i < activeEffects.Count; i++)
             {
                 RuntimeEffectInstance instance = activeEffects[i];
-                if (MatchesRuntimeEffect(instance, effectDefinition))
+                if (MatchesRuntimeEffect(instance, effectDefinition, recipe))
                 {
                     count++;
                 }
@@ -1293,7 +1433,8 @@ namespace Project.ShopSystem
 
         private static RuntimeEffectInstance FindOldestRuntimeEffect(
             List<RuntimeEffectInstance> activeEffects,
-            RuntimeEffectDefinition effectDefinition)
+            RuntimeEffectDefinition effectDefinition,
+            RuntimeEffectRecipe recipe)
         {
             if (activeEffects == null || effectDefinition == null)
             {
@@ -1304,7 +1445,7 @@ namespace Project.ShopSystem
             for (int i = 0; i < activeEffects.Count; i++)
             {
                 RuntimeEffectInstance instance = activeEffects[i];
-                if (!MatchesRuntimeEffect(instance, effectDefinition))
+                if (!MatchesRuntimeEffect(instance, effectDefinition, recipe))
                 {
                     continue;
                 }
@@ -1321,6 +1462,7 @@ namespace Project.ShopSystem
         private static RuntimeEffectInstance FindMergeableRuntimeEffect(
             List<RuntimeEffectInstance> activeEffects,
             RuntimeEffectDefinition effectDefinition,
+            RuntimeEffectRecipe recipe,
             CharacterObject sourceCharacter,
             CharacterStats sourceStats,
             float resolvedDuration)
@@ -1333,7 +1475,7 @@ namespace Project.ShopSystem
             for (int i = 0; i < activeEffects.Count; i++)
             {
                 RuntimeEffectInstance instance = activeEffects[i];
-                if (!MatchesRuntimeEffect(instance, effectDefinition))
+                if (!MatchesRuntimeEffect(instance, effectDefinition, recipe))
                 {
                     continue;
                 }
@@ -1391,14 +1533,16 @@ namespace Project.ShopSystem
 
         private static bool MatchesRuntimeEffect(
             RuntimeEffectInstance instance,
-            RuntimeEffectDefinition effectDefinition)
+            RuntimeEffectDefinition effectDefinition,
+            RuntimeEffectRecipe recipe)
         {
             if (instance == null || instance.definition == null || effectDefinition == null)
             {
                 return false;
             }
 
-            return string.Equals(instance.definition.StableId, effectDefinition.StableId, StringComparison.Ordinal);
+            return string.Equals(instance.definition.StableId, effectDefinition.StableId, StringComparison.Ordinal)
+                && string.Equals(instance.StackKey, RuntimeEffectRuntimeUtility.GetStackKey(effectDefinition, recipe), StringComparison.Ordinal);
         }
 
         private static PlayerCharacter FindActivePlayerFor(CharacterObject character)

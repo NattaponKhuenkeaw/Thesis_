@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,7 +11,7 @@ public class RuntimeEffectIconUI : MonoBehaviour
     [SerializeField] private Image durationFill;
     [SerializeField] private TMP_Text stackText;
 
-    private RuntimeEffectInstance boundEffect;
+    [NonSerialized] private RuntimeEffectInstance boundEffect;
     private int boundStackCount = 1;
     public bool RequiresTimerRefresh { get; private set; }
 
@@ -32,7 +33,7 @@ public class RuntimeEffectIconUI : MonoBehaviour
 
         if (iconImage != null)
         {
-            iconImage.sprite = effect != null && effect.definition != null ? effect.definition.icon : null;
+            iconImage.sprite = RuntimeEffectRuntimeUtility.GetIcon(effect);
             iconImage.enabled = iconImage.sprite != null;
         }
 
@@ -60,8 +61,8 @@ public class RuntimeEffectIconUI : MonoBehaviour
 
         float totalDuration = boundEffect.appliedDurationSeconds > 0f
             ? boundEffect.appliedDurationSeconds
-            : boundEffect.definition.durationSeconds;
-        bool timed = boundEffect.definition.durationType == RuntimeEffectDurationType.Seconds
+            : RuntimeEffectRuntimeUtility.ResolveDuration(boundEffect.definition, boundEffect.recipe);
+        bool timed = RuntimeEffectRuntimeUtility.GetDurationType(boundEffect.definition, boundEffect.recipe) == RuntimeEffectDurationType.Seconds
             && totalDuration > 0f;
         bool showStackCount = boundStackCount > 1;
         float normalized = timed

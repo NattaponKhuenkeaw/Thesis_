@@ -133,6 +133,27 @@ MonoBehaviour:
       flipWithCharacter: 1
       isLocalSpace: 1
       obeyHitstop: 1
+    - type: 105
+      clip: {fileID: 7400000, guid: dd7d2bdc8e181b74faeaebbe6ad8759e, type: 2}
+      localScale: {x: 1.25, y: 1.25, z: 1.25}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 1
+    - type: 106
+      clip: {fileID: 7400000, guid: a5db11cfee5d34c489d46d960f5d4449, type: 2}
+      localScale: {x: 1.5, y: 1.5, z: 1.5}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 1
+    - type: 107
+      clip: {fileID: 7400000, guid: a18f74a8224ad264f95d703d0c256f5f, type: 2}
+      localScale: {x: 1, y: 1, z: 1}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 1
   - categoryName: char-Rugal
     entries:
     - type: 105
