@@ -98,13 +98,14 @@ public class RuntimeEffectReceiver : MonoBehaviour
         bool effectRequiresTicking = RuntimeEffectRuntimeUtility.RequiresTicking(definition, recipe);
         float resolvedDuration = RuntimeEffectRuntimeUtility.ResolveDuration(definition, recipe, durationOverride);
         bool shouldStack = ResolveShouldStack(definition, recipe, stackMode);
-        RuntimeEffectInstance existing = !shouldStack ? FindEffect(definition, recipe) : null;
+        string resolvedStackKey = RuntimeEffectRuntimeUtility.GetStackKey(definition, recipe);
+        RuntimeEffectInstance existing = !shouldStack ? FindEffect(definition, resolvedStackKey) : null;
 
         if (shouldStack && definition.SupportsStackMerging)
         {
             RuntimeEffectInstance stackTarget = FindMergeableEffect(
                 definition,
-                recipe,
+                resolvedStackKey,
                 sourceCharacter,
                 sourceStats,
                 resolvedDuration);
@@ -161,9 +162,9 @@ public class RuntimeEffectReceiver : MonoBehaviour
             return existing;
         }
 
-        if (shouldStack && CountEffects(definition, recipe) >= resolvedStackLimit)
+        if (shouldStack && CountEffects(definition, resolvedStackKey) >= resolvedStackLimit)
         {
-            RuntimeEffectInstance refreshTarget = FindOldestEffect(definition, recipe);
+            RuntimeEffectInstance refreshTarget = FindOldestEffect(definition, resolvedStackKey);
             if (refreshTarget != null && resolvedRefreshDuration)
             {
                 refreshTarget.Refresh(durationOverride);
@@ -492,12 +493,12 @@ public class RuntimeEffectReceiver : MonoBehaviour
         };
     }
 
-    private RuntimeEffectInstance FindEffect(RuntimeEffectDefinition definition, RuntimeEffectRecipe recipe)
+    private RuntimeEffectInstance FindEffect(RuntimeEffectDefinition definition, string resolvedStackKey)
     {
         for (int i = 0; i < activeEffects.Count; i++)
         {
             RuntimeEffectInstance instance = activeEffects[i];
-            if (MatchesEffect(instance, definition, recipe))
+            if (MatchesEffect(instance, definition, resolvedStackKey))
             {
                 return instance;
             }
@@ -506,13 +507,13 @@ public class RuntimeEffectReceiver : MonoBehaviour
         return null;
     }
 
-    private int CountEffects(RuntimeEffectDefinition definition, RuntimeEffectRecipe recipe)
+    private int CountEffects(RuntimeEffectDefinition definition, string resolvedStackKey)
     {
         int count = 0;
         for (int i = 0; i < activeEffects.Count; i++)
         {
             RuntimeEffectInstance instance = activeEffects[i];
-            if (MatchesEffect(instance, definition, recipe))
+            if (MatchesEffect(instance, definition, resolvedStackKey))
             {
                 count++;
             }
@@ -521,13 +522,13 @@ public class RuntimeEffectReceiver : MonoBehaviour
         return count;
     }
 
-    private RuntimeEffectInstance FindOldestEffect(RuntimeEffectDefinition definition, RuntimeEffectRecipe recipe)
+    private RuntimeEffectInstance FindOldestEffect(RuntimeEffectDefinition definition, string resolvedStackKey)
     {
         RuntimeEffectInstance oldest = null;
         for (int i = 0; i < activeEffects.Count; i++)
         {
             RuntimeEffectInstance instance = activeEffects[i];
-            if (!MatchesEffect(instance, definition, recipe))
+            if (!MatchesEffect(instance, definition, resolvedStackKey))
             {
                 continue;
             }
@@ -543,7 +544,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
 
     private RuntimeEffectInstance FindMergeableEffect(
         RuntimeEffectDefinition definition,
-        RuntimeEffectRecipe recipe,
+        string resolvedStackKey,
         CharacterObject sourceCharacter,
         CharacterStats sourceStats,
         float resolvedDuration)
@@ -551,7 +552,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
         for (int i = 0; i < activeEffects.Count; i++)
         {
             RuntimeEffectInstance instance = activeEffects[i];
-            if (!MatchesEffect(instance, definition, recipe))
+            if (!MatchesEffect(instance, definition, resolvedStackKey))
             {
                 continue;
             }
@@ -607,7 +608,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
         return Mathf.Abs(a - b) <= 0.0001f;
     }
 
-    private static bool MatchesEffect(RuntimeEffectInstance instance, RuntimeEffectDefinition definition, RuntimeEffectRecipe recipe)
+    private static bool MatchesEffect(RuntimeEffectInstance instance, RuntimeEffectDefinition definition, string resolvedStackKey)
     {
         if (instance == null || instance.definition == null || definition == null)
         {
@@ -615,7 +616,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
         }
 
         return string.Equals(instance.definition.StableId, definition.StableId, StringComparison.Ordinal)
-            && string.Equals(instance.StackKey, RuntimeEffectRuntimeUtility.GetStackKey(definition, recipe), StringComparison.Ordinal);
+            && string.Equals(instance.StackKey, resolvedStackKey, StringComparison.Ordinal);
     }
 
     private void RemoveEffect(RuntimeEffectInstance instance)

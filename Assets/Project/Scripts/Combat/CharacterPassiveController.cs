@@ -861,7 +861,7 @@ public class CharacterPassiveController : MonoBehaviour
 
         if (playerCharacter != null && playerCharacter.characterObject != null)
         {
-            TeamLoader teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
+            TeamLoader teamLoader = TeamLoader.Instance;
             if (teamLoader != null)
             {
                 Artifact[] artifacts = teamLoader.GetEquippedArtifactsFor(playerCharacter.characterObject);
@@ -1503,7 +1503,7 @@ public class CharacterPassiveController : MonoBehaviour
             return;
         }
 
-        TeamLoader teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
+        TeamLoader teamLoader = TeamLoader.Instance;
         if (teamLoader == null || playerCharacter.characterObject == null)
         {
             playerCharacter.Heal(value);
@@ -1538,7 +1538,7 @@ public class CharacterPassiveController : MonoBehaviour
             return;
         }
 
-        TeamLoader teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
+        TeamLoader teamLoader = TeamLoader.Instance;
         if (teamLoader == null || playerCharacter.characterObject == null)
         {
             return;

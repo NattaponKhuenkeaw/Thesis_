@@ -29,7 +29,7 @@ public class InputHandler_Player : MonoBehaviour
             stateMachine = GetComponent<PlayerStateMachine>();
 
         if (teamLoader == null)
-            teamLoader = Object.FindFirstObjectByType<TeamLoader>();
+            teamLoader = TeamLoader.Instance;
     }
 
     void OnEnable()

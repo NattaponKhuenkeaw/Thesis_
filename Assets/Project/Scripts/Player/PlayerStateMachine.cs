@@ -78,7 +78,7 @@ public class PlayerStateMachine : MonoBehaviour
             playerCharacter = GetComponent<PlayerCharacter>();
 
         if (teamLoader == null)
-            teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
+            teamLoader = TeamLoader.Instance;
             
         InitializeStates();
     }

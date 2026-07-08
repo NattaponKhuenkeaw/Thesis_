@@ -220,6 +220,24 @@ public class AbilityUIManager : MonoBehaviour
         RefreshActiveCharacterUI();
     }
 
+    public void ResetCooldown(AbilityType type)
+    {
+        string characterKey = GetCurrentCharacterKey();
+        if (string.IsNullOrEmpty(characterKey)) return;
+
+        Dictionary<string, CooldownDisplayState> targetDictionary =
+            type == AbilityType.Skill ? skillCooldowns : ultimateCooldowns;
+
+        targetDictionary.Remove(characterKey);
+
+        if (type == AbilityType.Skill)
+            skillRush = default;
+        else
+            ultRush = default;
+
+        RefreshActiveCharacterUI();
+    }
+
     public void PlayAbilityRejectedFeedback(AbilityType type)
     {
         RectTransform targetRect = ResolveFeedbackRoot(type);

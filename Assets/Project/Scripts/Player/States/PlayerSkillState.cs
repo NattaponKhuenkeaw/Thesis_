@@ -151,6 +151,7 @@ public class PlayerSkillState : CombatPlayerState
         }
 
         cooldownStartedForCurrentAction = false;
+        TryStartCooldown();
         ExecuteCombatStep(step, ctx, false);
 
         if (player.PassiveController != null && activeSkillAction != null)
@@ -161,7 +162,6 @@ public class PlayerSkillState : CombatPlayerState
                 activeSkillAction.actionName);
         }
 
-        TryStartCooldown();
         return true;
     }
 

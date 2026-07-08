@@ -75,53 +75,248 @@ public class RuntimeEffectContainerDefinition : RuntimeEffectDefinition
 
     public override void OnApply(RuntimeEffectContext context)
     {
-        ForEachContext(context, static (effect, effectContext) => effect.OnApply(effectContext));
+        RuntimeEffectInstance parentInstance = context.instance;
+        RuntimeEffectRecipe parentRecipe = parentInstance != null ? parentInstance.recipe as RuntimeEffectRecipe : null;
+        List<RuntimeEffectRecipeData> childRecipes = parentRecipe != null ? parentRecipe.childRecipes : null;
+
+        if (childRecipes != null && childRecipes.Count > 0)
+        {
+            for (int i = 0; i < childRecipes.Count; i++)
+            {
+                RuntimeEffectRecipeData childRecipe = childRecipes[i];
+                RuntimeEffectDefinition effect = childRecipe != null ? childRecipe.definition : null;
+                if (effect == null) continue;
+                if (parentInstance != null) context.instance = parentInstance.GetChildInstance(childRecipe);
+                effect.OnApply(context);
+            }
+            context.instance = parentInstance;
+            return;
+        }
+
+        for (int i = 0; i < EffectCount; i++)
+        {
+            RuntimeEffectDefinition effect = GetEffect(i);
+            if (effect == null) continue;
+            if (parentInstance != null) context.instance = parentInstance.GetChildInstance(effect);
+            effect.OnApply(context);
+        }
+        context.instance = parentInstance;
     }
 
     public override void OnUpdate(RuntimeEffectContext context)
     {
-        ForEachContext(context, static (effect, effectContext) => effect.OnUpdate(effectContext));
+        RuntimeEffectInstance parentInstance = context.instance;
+        RuntimeEffectRecipe parentRecipe = parentInstance != null ? parentInstance.recipe as RuntimeEffectRecipe : null;
+        List<RuntimeEffectRecipeData> childRecipes = parentRecipe != null ? parentRecipe.childRecipes : null;
+
+        if (childRecipes != null && childRecipes.Count > 0)
+        {
+            for (int i = 0; i < childRecipes.Count; i++)
+            {
+                RuntimeEffectRecipeData childRecipe = childRecipes[i];
+                RuntimeEffectDefinition effect = childRecipe != null ? childRecipe.definition : null;
+                if (effect == null) continue;
+                if (parentInstance != null) context.instance = parentInstance.GetChildInstance(childRecipe);
+                effect.OnUpdate(context);
+            }
+            context.instance = parentInstance;
+            return;
+        }
+
+        for (int i = 0; i < EffectCount; i++)
+        {
+            RuntimeEffectDefinition effect = GetEffect(i);
+            if (effect == null) continue;
+            if (parentInstance != null) context.instance = parentInstance.GetChildInstance(effect);
+            effect.OnUpdate(context);
+        }
+        context.instance = parentInstance;
     }
 
     public override void OnExpired(RuntimeEffectContext context)
     {
-        ForEachContext(context, static (effect, effectContext) => effect.OnExpired(effectContext));
+        RuntimeEffectInstance parentInstance = context.instance;
+        RuntimeEffectRecipe parentRecipe = parentInstance != null ? parentInstance.recipe as RuntimeEffectRecipe : null;
+        List<RuntimeEffectRecipeData> childRecipes = parentRecipe != null ? parentRecipe.childRecipes : null;
+
+        if (childRecipes != null && childRecipes.Count > 0)
+        {
+            for (int i = 0; i < childRecipes.Count; i++)
+            {
+                RuntimeEffectRecipeData childRecipe = childRecipes[i];
+                RuntimeEffectDefinition effect = childRecipe != null ? childRecipe.definition : null;
+                if (effect == null) continue;
+                if (parentInstance != null) context.instance = parentInstance.GetChildInstance(childRecipe);
+                effect.OnExpired(context);
+            }
+            context.instance = parentInstance;
+            return;
+        }
+
+        for (int i = 0; i < EffectCount; i++)
+        {
+            RuntimeEffectDefinition effect = GetEffect(i);
+            if (effect == null) continue;
+            if (parentInstance != null) context.instance = parentInstance.GetChildInstance(effect);
+            effect.OnExpired(context);
+        }
+        context.instance = parentInstance;
     }
 
     public override void ModifyStats(RuntimeEffectContext context, CharacterStats stats)
     {
-        ForEachContext(context, (effect, effectContext) => effect.ModifyStats(effectContext, stats));
+        RuntimeEffectInstance parentInstance = context.instance;
+        RuntimeEffectRecipe parentRecipe = parentInstance != null ? parentInstance.recipe as RuntimeEffectRecipe : null;
+        List<RuntimeEffectRecipeData> childRecipes = parentRecipe != null ? parentRecipe.childRecipes : null;
+
+        if (childRecipes != null && childRecipes.Count > 0)
+        {
+            for (int i = 0; i < childRecipes.Count; i++)
+            {
+                RuntimeEffectRecipeData childRecipe = childRecipes[i];
+                RuntimeEffectDefinition effect = childRecipe != null ? childRecipe.definition : null;
+                if (effect == null) continue;
+                if (parentInstance != null) context.instance = parentInstance.GetChildInstance(childRecipe);
+                effect.ModifyStats(context, stats);
+            }
+            context.instance = parentInstance;
+            return;
+        }
+
+        for (int i = 0; i < EffectCount; i++)
+        {
+            RuntimeEffectDefinition effect = GetEffect(i);
+            if (effect == null) continue;
+            if (parentInstance != null) context.instance = parentInstance.GetChildInstance(effect);
+            effect.ModifyStats(context, stats);
+        }
+        context.instance = parentInstance;
     }
 
     public override void ModifyDamageInput(RuntimeEffectDamageInput input)
     {
-        RuntimeEffectDamageContext damageContext = input != null ? input.context : null;
-        ForEachDamageContext(damageContext, (effect, effectContext) => effect.ModifyDamageInput(input));
+        if (input == null) return;
+        RuntimeEffectDamageContext context = input.context;
+        RuntimeEffectInstance parentInstance = context != null ? context.instance : null;
+        RuntimeEffectRecipe parentRecipe = parentInstance != null ? parentInstance.recipe as RuntimeEffectRecipe : null;
+        List<RuntimeEffectRecipeData> childRecipes = parentRecipe != null ? parentRecipe.childRecipes : null;
+
+        if (childRecipes != null && childRecipes.Count > 0)
+        {
+            for (int i = 0; i < childRecipes.Count; i++)
+            {
+                RuntimeEffectRecipeData childRecipe = childRecipes[i];
+                RuntimeEffectDefinition effect = childRecipe != null ? childRecipe.definition : null;
+                if (effect == null) continue;
+                if (context != null && parentInstance != null) context.instance = parentInstance.GetChildInstance(childRecipe);
+                effect.ModifyDamageInput(input);
+            }
+            if (context != null) context.instance = parentInstance;
+            return;
+        }
+
+        for (int i = 0; i < EffectCount; i++)
+        {
+            RuntimeEffectDefinition effect = GetEffect(i);
+            if (effect == null) continue;
+            if (context != null && parentInstance != null) context.instance = parentInstance.GetChildInstance(effect);
+            effect.ModifyDamageInput(input);
+        }
+        if (context != null) context.instance = parentInstance;
     }
 
     public override float ModifyOutgoingDamage(RuntimeEffectDamageContext context, float currentDamage)
     {
         float result = currentDamage;
-        ForEachDamageContext(context, (effect, effectContext) =>
+        RuntimeEffectInstance parentInstance = context != null ? context.instance : null;
+        RuntimeEffectRecipe parentRecipe = parentInstance != null ? parentInstance.recipe as RuntimeEffectRecipe : null;
+        List<RuntimeEffectRecipeData> childRecipes = parentRecipe != null ? parentRecipe.childRecipes : null;
+
+        if (childRecipes != null && childRecipes.Count > 0)
         {
-            result = effect.ModifyOutgoingDamage(effectContext, result);
-        });
+            for (int i = 0; i < childRecipes.Count; i++)
+            {
+                RuntimeEffectRecipeData childRecipe = childRecipes[i];
+                RuntimeEffectDefinition effect = childRecipe != null ? childRecipe.definition : null;
+                if (effect == null) continue;
+                if (context != null && parentInstance != null) context.instance = parentInstance.GetChildInstance(childRecipe);
+                result = effect.ModifyOutgoingDamage(context, result);
+            }
+            if (context != null) context.instance = parentInstance;
+            return result;
+        }
+
+        for (int i = 0; i < EffectCount; i++)
+        {
+            RuntimeEffectDefinition effect = GetEffect(i);
+            if (effect == null) continue;
+            if (context != null && parentInstance != null) context.instance = parentInstance.GetChildInstance(effect);
+            result = effect.ModifyOutgoingDamage(context, result);
+        }
+        if (context != null) context.instance = parentInstance;
         return result;
     }
 
     public override float ModifyIncomingDamage(RuntimeEffectDamageContext context, float currentDamage)
     {
         float result = currentDamage;
-        ForEachDamageContext(context, (effect, effectContext) =>
+        RuntimeEffectInstance parentInstance = context != null ? context.instance : null;
+        RuntimeEffectRecipe parentRecipe = parentInstance != null ? parentInstance.recipe as RuntimeEffectRecipe : null;
+        List<RuntimeEffectRecipeData> childRecipes = parentRecipe != null ? parentRecipe.childRecipes : null;
+
+        if (childRecipes != null && childRecipes.Count > 0)
         {
-            result = effect.ModifyIncomingDamage(effectContext, result);
-        });
+            for (int i = 0; i < childRecipes.Count; i++)
+            {
+                RuntimeEffectRecipeData childRecipe = childRecipes[i];
+                RuntimeEffectDefinition effect = childRecipe != null ? childRecipe.definition : null;
+                if (effect == null) continue;
+                if (context != null && parentInstance != null) context.instance = parentInstance.GetChildInstance(childRecipe);
+                result = effect.ModifyIncomingDamage(context, result);
+            }
+            if (context != null) context.instance = parentInstance;
+            return result;
+        }
+
+        for (int i = 0; i < EffectCount; i++)
+        {
+            RuntimeEffectDefinition effect = GetEffect(i);
+            if (effect == null) continue;
+            if (context != null && parentInstance != null) context.instance = parentInstance.GetChildInstance(effect);
+            result = effect.ModifyIncomingDamage(context, result);
+        }
+        if (context != null) context.instance = parentInstance;
         return result;
     }
 
     public override void OnHitDealt(RuntimeEffectDamageContext context)
     {
-        ForEachDamageContext(context, static (effect, effectContext) => effect.OnHitDealt(effectContext));
+        RuntimeEffectInstance parentInstance = context != null ? context.instance : null;
+        RuntimeEffectRecipe parentRecipe = parentInstance != null ? parentInstance.recipe as RuntimeEffectRecipe : null;
+        List<RuntimeEffectRecipeData> childRecipes = parentRecipe != null ? parentRecipe.childRecipes : null;
+
+        if (childRecipes != null && childRecipes.Count > 0)
+        {
+            for (int i = 0; i < childRecipes.Count; i++)
+            {
+                RuntimeEffectRecipeData childRecipe = childRecipes[i];
+                RuntimeEffectDefinition effect = childRecipe != null ? childRecipe.definition : null;
+                if (effect == null) continue;
+                if (context != null && parentInstance != null) context.instance = parentInstance.GetChildInstance(childRecipe);
+                effect.OnHitDealt(context);
+            }
+            if (context != null) context.instance = parentInstance;
+            return;
+        }
+
+        for (int i = 0; i < EffectCount; i++)
+        {
+            RuntimeEffectDefinition effect = GetEffect(i);
+            if (effect == null) continue;
+            if (context != null && parentInstance != null) context.instance = parentInstance.GetChildInstance(effect);
+            effect.OnHitDealt(context);
+        }
+        if (context != null) context.instance = parentInstance;
     }
 
     private RuntimeEffectDefinition GetEffect(int index)
@@ -129,115 +324,4 @@ public class RuntimeEffectContainerDefinition : RuntimeEffectDefinition
         RuntimeEffectDefinition effect = effects[index];
         return effect != this ? effect : null;
     }
-
-    private void ForEachContext(RuntimeEffectContext context, RuntimeEffectContextHandler handler)
-    {
-        RuntimeEffectInstance parentInstance = context != null ? context.instance : null;
-        RuntimeEffectRecipe parentRecipe = parentInstance != null ? parentInstance.recipe as RuntimeEffectRecipe : null;
-        List<RuntimeEffectRecipeData> childRecipes = parentRecipe != null ? parentRecipe.childRecipes : null;
-        if (childRecipes != null && childRecipes.Count > 0)
-        {
-            for (int i = 0; i < childRecipes.Count; i++)
-            {
-                RuntimeEffectRecipeData childRecipe = childRecipes[i];
-                RuntimeEffectDefinition effect = childRecipe != null ? childRecipe.definition : null;
-                if (effect == null)
-                {
-                    continue;
-                }
-
-                if (context != null && parentInstance != null)
-                {
-                    context.instance = parentInstance.GetChildInstance(childRecipe);
-                }
-
-                handler(effect, context);
-            }
-
-            if (context != null)
-            {
-                context.instance = parentInstance;
-            }
-
-            return;
-        }
-
-        for (int i = 0; i < EffectCount; i++)
-        {
-            RuntimeEffectDefinition effect = GetEffect(i);
-            if (effect == null)
-            {
-                continue;
-            }
-
-            if (context != null && parentInstance != null)
-            {
-                context.instance = parentInstance.GetChildInstance(effect);
-            }
-
-            handler(effect, context);
-        }
-
-        if (context != null)
-        {
-            context.instance = parentInstance;
-        }
-    }
-
-    private void ForEachDamageContext(RuntimeEffectDamageContext context, RuntimeEffectDamageContextHandler handler)
-    {
-        RuntimeEffectInstance parentInstance = context != null ? context.instance : null;
-        RuntimeEffectRecipe parentRecipe = parentInstance != null ? parentInstance.recipe as RuntimeEffectRecipe : null;
-        List<RuntimeEffectRecipeData> childRecipes = parentRecipe != null ? parentRecipe.childRecipes : null;
-        if (childRecipes != null && childRecipes.Count > 0)
-        {
-            for (int i = 0; i < childRecipes.Count; i++)
-            {
-                RuntimeEffectRecipeData childRecipe = childRecipes[i];
-                RuntimeEffectDefinition effect = childRecipe != null ? childRecipe.definition : null;
-                if (effect == null)
-                {
-                    continue;
-                }
-
-                if (context != null && parentInstance != null)
-                {
-                    context.instance = parentInstance.GetChildInstance(childRecipe);
-                }
-
-                handler(effect, context);
-            }
-
-            if (context != null)
-            {
-                context.instance = parentInstance;
-            }
-
-            return;
-        }
-
-        for (int i = 0; i < EffectCount; i++)
-        {
-            RuntimeEffectDefinition effect = GetEffect(i);
-            if (effect == null)
-            {
-                continue;
-            }
-
-            if (context != null && parentInstance != null)
-            {
-                context.instance = parentInstance.GetChildInstance(effect);
-            }
-
-            handler(effect, context);
-        }
-
-        if (context != null)
-        {
-            context.instance = parentInstance;
-        }
-    }
-
-    private delegate void RuntimeEffectContextHandler(RuntimeEffectDefinition effect, RuntimeEffectContext context);
-    private delegate void RuntimeEffectDamageContextHandler(RuntimeEffectDefinition effect, RuntimeEffectDamageContext context);
 }

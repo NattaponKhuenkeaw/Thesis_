@@ -71,10 +71,10 @@ MonoBehaviour:
       description: 
     passive:
       abilityId: rugal.passive
-      abilityName: Passive
+      abilityName: Omega Mode
       icon: {fileID: 0}
       description: Increase Basic Stats by +20%
-    basePassiveNode:
+    baseSkillNode:
       statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
@@ -89,14 +89,86 @@ MonoBehaviour:
       resourceEffects: []
       enemyElementModifiers: []
       passiveHookTypeName: 
+      nodeId: base.skill
+      nodeName: Base Skill
+      description: 
+      skillPanelDescriptionOverride: Inflict <b><color=#FFEF39>Memory</color></b>
+        DMG 350% of own ATK
+      track: 0
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
+    baseUltimateNode:
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: base.ultimate
+      nodeName: Base Ultimate
+      description: 
+      skillPanelDescriptionOverride: Inflict <b><color=#FFEF39>Memory</color></b>
+        DMG 800% of own ATK
+      track: 1
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
+    basePassiveNode:
+      statModifiers:
+      - target: 0
+        operation: 1
+        valueSource: 0
+        value: 1.2
+        sourceStat: 0
+        scope: 0
+        requiredTags: []
+        requiredCounters: []
+      - target: 11
+        operation: 1
+        valueSource: 0
+        value: 1.2
+        sourceStat: 0
+        scope: 0
+        requiredTags: []
+        requiredCounters: []
+      - target: 9
+        operation: 1
+        valueSource: 0
+        value: 1.2
+        sourceStat: 0
+        scope: 0
+        requiredTags: []
+        requiredCounters: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
       nodeId: base.passive
-      nodeName: Base Passive
+      nodeName: Omega Mode
       description: Increase Basic Stats by +20%
-      skillPanelDescriptionOverride: Increase Basic Stats by +20%
+      skillPanelDescriptionOverride: Increase <b>Basic Stats</b> by +20%
       track: 2
       level: 0
       fragmentCost: 0
-      unlockedByDefault: 0
+      unlockedByDefault: 1
     potentialNodes:
     - statModifiers: []
       cooldownModifiers: []
@@ -107,8 +179,8 @@ MonoBehaviour:
         filter:
           filterByCategory: 1
           category: 1
-          filterByActionId: 1
-          actionId: rugal.skill
+          filterByActionId: 0
+          actionId: 
           filterByActionName: 0
           actionName: 
           filterByStepName: 0
@@ -117,12 +189,94 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
-        effect: {fileID: 11400000, guid: 9a2e4ed3e8b04f9db6f5fce34048f4b7, type: 2}
+        recipe:
+          recipeId: 
+          definition: {fileID: 11400000, guid: c9327ae439bedea43846b237a7449754, type: 2}
+          presentation:
+            effectId: 
+            displayName: Increase ATK
+            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 0
+            appliesOn: 0
+            durationType: 0
+            durationSeconds: 10
+            stackMode: 0
+            stackLimit: 5
+            refreshDurationOnReapply: 1
+            stackable: 1
+            removeOnOwnerDamaged: 0
+            stackKey: 
+          parameters:
+            overrideStatModifiers: 1
+            statModifiers:
+            - target: 1
+              operation: 1
+              sourceStat: 1
+              value: 1.07
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreElementalIncomingModifiers: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              tickInterval: 1
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+          childRecipes: []
+        effect: {fileID: 0}
         scope: 0
         stackMode: 0
         stackLimit: 99
         refreshDurationOnReapply: 1
         durationOverride: -1
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
         filterByTargetElement: 0
         targetElement: 0
       counterEffects: []
@@ -137,7 +291,13 @@ MonoBehaviour:
       nodeId: rugal.skill.lv1
       nodeName: Cutter Storm
       description: Increase own ATK by 7% for 10 seconds.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: 'Inflict <b><color=#FFEF39>Memory</color></b>
+        DMG 350% of own ATK
+
+        
+
+        <size=20><color=#C0C0C0>- Increase
+        own ATK by 7% for 10 seconds<i>(Max 5 Stackable)</i></color></size>'
       track: 0
       level: 1
       fragmentCost: 1
@@ -157,7 +317,7 @@ MonoBehaviour:
         requiredTags: []
         requiredCounters: []
         damageMultiplierOperation: 3
-        damageMultiplierValue: 0
+        damageMultiplierValue: 4.5
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 0
@@ -183,8 +343,14 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: rugal.skill.lv2
       nodeName: Cutter Break
-      description: Increase Genocide Cutter multiplier to 500% of ATK.
-      skillPanelDescriptionOverride: 
+      description: Increase Genocide Cutter multiplier to 450% of ATK
+      skillPanelDescriptionOverride: 'Inflict <b><color=#FFEF39>Memory</color></b>
+        DMG <b><color=#FFA500>450%</color></b> of own ATK
+
+        
+
+        <size=20><color=#C0C0C0>-
+        Increase own ATK by 7% for 10 seconds<i>(Max 5 Stackable)</i></color></size>'
       track: 0
       level: 2
       fragmentCost: 1
@@ -198,8 +364,8 @@ MonoBehaviour:
         filter:
           filterByCategory: 1
           category: 1
-          filterByActionId: 1
-          actionId: rugal.skill
+          filterByActionId: 0
+          actionId: 
           filterByActionName: 0
           actionName: 
           filterByStepName: 0
@@ -208,12 +374,94 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
-        effect: {fileID: 11400000, guid: 9a2e4ed3e8b04f9db6f5fce34048f4b7, type: 2}
+        recipe:
+          recipeId: 
+          definition: {fileID: 11400000, guid: c9327ae439bedea43846b237a7449754, type: 2}
+          presentation:
+            effectId: 
+            displayName: Increase ATK
+            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 0
+            appliesOn: 2
+            durationType: 0
+            durationSeconds: 10
+            stackMode: 0
+            stackLimit: 5
+            refreshDurationOnReapply: 1
+            stackable: 1
+            removeOnOwnerDamaged: 0
+            stackKey: 
+          parameters:
+            overrideStatModifiers: 1
+            statModifiers:
+            - target: 1
+              operation: 1
+              sourceStat: 1
+              value: 1.07
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreElementalIncomingModifiers: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              tickInterval: 1
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+          childRecipes: []
+        effect: {fileID: 0}
         scope: 1
         stackMode: 1
         stackLimit: 99
         refreshDurationOnReapply: 1
         durationOverride: -1
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
         filterByTargetElement: 0
         targetElement: 0
       counterEffects: []
@@ -228,7 +476,14 @@ MonoBehaviour:
       nodeId: rugal.skill.lv3
       nodeName: Cutter Command
       description: Increase all allies ATK by 7% for 10 seconds.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: 'Inflict <b><color=#FFEF39>Memory</color></b>
+        DMG <b><color=#FFA500>450%</color></b> of own ATK
+
+        
+
+        <size=20><color=#C0C0C0>-
+        Increase <b><color=#FFA500>Allies</color></b> ATK by 7% for 10 seconds<i>(Max
+        5 Stackable)</i></color></size>'
       track: 0
       level: 3
       fragmentCost: 1
@@ -237,7 +492,7 @@ MonoBehaviour:
       cooldownModifiers: []
       actionModifiers:
       - category: 1
-        actionId: rugal.skill
+        actionId: 
         actionName: 
         stepName: 
         unlocked: 1
@@ -248,7 +503,7 @@ MonoBehaviour:
         requiredTags: []
         requiredCounters: []
         damageMultiplierOperation: 3
-        damageMultiplierValue: 5
+        damageMultiplierValue: 5.5
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 0
@@ -274,8 +529,15 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: rugal.skill.lv4
       nodeName: Cutter Execution
-      description: Increase Genocide Cutter multiplier to 600% of ATK.
-      skillPanelDescriptionOverride: 
+      description: Increase Genocide Cutter multiplier to 550% of ATK
+      skillPanelDescriptionOverride: 'Inflict <b><color=#FFEF39>Memory</color></b>
+        DMG <b><color=#FFA500>550%</color></b> of own ATK
+
+        
+
+        <size=20><color=#C0C0C0>-
+        Increase <b><color=#FFA500>Allies</color></b> ATK by 7% for 10 seconds<i>(Max
+        5 Stackable)</i></color></size>'
       track: 0
       level: 4
       fragmentCost: 1
@@ -293,7 +555,7 @@ MonoBehaviour:
           filterByCategory: 1
           category: 2
           filterByActionId: 1
-          actionId: rugal.ultimate
+          actionId: 
           filterByActionName: 0
           actionName: 
           filterByStepName: 0
@@ -320,7 +582,14 @@ MonoBehaviour:
       nodeName: Gigantic Crush
       description: Gigantic Pressure deals additional Memory DMG equal to 8% of enemy
         Max HP.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: 'Inflict <b><color=#FFEF39>Memory</color></b>
+        DMG 800% of own ATK
+
+        
+
+        <size=20><color=#C0C0C0>- Ultimate
+        deals additional <b><color=#FFEF39>Memory</color></b> DMG equal to 8% of
+        enemy Max HP<i>(Capped at 500% of own ATK)</i></color></size>'
       track: 1
       level: 1
       fragmentCost: 1
@@ -329,7 +598,7 @@ MonoBehaviour:
       cooldownModifiers: []
       actionModifiers:
       - category: 2
-        actionId: rugal.ultimate
+        actionId: 
         actionName: 
         stepName: 
         unlocked: 1
@@ -366,8 +635,15 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: rugal.ultimate.lv2
       nodeName: Gigantic Force
-      description: Increase Gigantic Pressure multiplier to 1000% of ATK.
-      skillPanelDescriptionOverride: 
+      description: Increase Gigantic Pressure multiplier to 1000% of ATK
+      skillPanelDescriptionOverride: 'Inflict <b><color=#FFEF39>Memory</color></b>
+        DMG <b><color=#FFA500>1000%</color></b> of own ATK
+
+        
+
+        <size=20><color=#C0C0C0>-
+        Ultimate deals additional <b><color=#FFEF39>Memory</color></b> DMG equal
+        to 8% of enemy Max HP<i>(Capped at 500% of own ATK)</i></color></size>'
       track: 1
       level: 2
       fragmentCost: 1
@@ -377,12 +653,12 @@ MonoBehaviour:
       actionModifiers: []
       runtimeTagEffects: []
       runtimeEffects:
-      - trigger: 1
+      - trigger: 2
         filter:
           filterByCategory: 1
           category: 2
-          filterByActionId: 1
-          actionId: rugal.ultimate
+          filterByActionId: 0
+          actionId: 
           filterByActionName: 0
           actionName: 
           filterByStepName: 0
@@ -391,12 +667,90 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
-        effect: {fileID: 11400000, guid: 878b38008899431fbf1f80acbfcd7e8a, type: 2}
+        recipe:
+          recipeId: 
+          definition: {fileID: 11400000, guid: 0a97ed468387ee64a87baff9532c7fe7, type: 2}
+          presentation:
+            effectId: 
+            displayName: Heal
+            icon: {fileID: 0}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 2
+            appliesOn: 0
+            durationType: 0
+            durationSeconds: 1
+            stackMode: 0
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: 
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreElementalIncomingModifiers: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              tickInterval: 1
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 1
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 1
+                category: 2
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+          childRecipes: []
+        effect: {fileID: 0}
         scope: 0
         stackMode: 0
         stackLimit: 1
         refreshDurationOnReapply: 1
         durationOverride: -1
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
         filterByTargetElement: 0
         targetElement: 0
       counterEffects: []
@@ -411,8 +765,20 @@ MonoBehaviour:
       nodeId: rugal.ultimate.lv3
       nodeName: Gigantic Drain
       description: Gigantic Pressure regenerates HP equal to 50% of damage dealt,
-        doubled below 30% HP.
-      skillPanelDescriptionOverride: 
+        doubled below 30% HP
+      skillPanelDescriptionOverride: 'Inflict <b><color=#FFEF39>Memory</color></b>
+        DMG <b><color=#FFA500>1000%</color></b> of own ATK
+
+        
+
+        <size=20><color=#C0C0C0>-
+        Ultimate deals additional <b><color=#FFEF39>Memory</color></b> DMG equal
+        to 8% of enemy Max HP<i>(Capped at 500% of own ATK)</i></color></size>
+
+        <size=20><b><color=#74C365>-
+        Regenerates HP equal to 50% of damage dealt, doubled if below 30% HP
+
+        </color></b></size>'
       track: 1
       level: 3
       fragmentCost: 1
@@ -458,58 +824,24 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: rugal.ultimate.lv4
       nodeName: Gigantic Tyrant
-      description: Increase Gigantic Pressure multiplier to 1300% of ATK.
-      skillPanelDescriptionOverride: 
+      description: Increase Gigantic Pressure multiplier to 1300% of ATK
+      skillPanelDescriptionOverride: 'Inflict <b><color=#FFEF39>Memory</color></b>
+        DMG <b><color=#FFA500>1300%</color></b> of own ATK
+
+        
+
+        <size=20><color=#C0C0C0>-
+        Ultimate deals additional <b><color=#FFEF39>Memory</color></b> DMG equal
+        to 8% of enemy Max HP<i>(Capped at 500% of own ATK)</i></color></size>
+
+        <size=20><b><color=#74C365>-
+        Regenerates HP equal to 50% of damage dealt, doubled if below 30% HP
+
+        </color></b></size>'
       track: 1
       level: 4
       fragmentCost: 1
       unlockedByDefault: 0
-    - statModifiers:
-      - target: 0
-        operation: 1
-        valueSource: 0
-        value: 1.2
-        sourceStat: 0
-        scope: 0
-        requiredTags: []
-        requiredCounters: []
-      - target: 11
-        operation: 1
-        valueSource: 0
-        value: 1.2
-        sourceStat: 11
-        scope: 0
-        requiredTags: []
-        requiredCounters: []
-      - target: 9
-        operation: 1
-        valueSource: 0
-        value: 1.2
-        sourceStat: 9
-        scope: 0
-        requiredTags: []
-        requiredCounters: []
-      cooldownModifiers: []
-      actionModifiers: []
-      runtimeTagEffects: []
-      runtimeEffects: []
-      counterEffects: []
-      conditionalStateEffects: []
-      onHitStatusEffects: []
-      additionalDamageEffects: []
-      dashThroughDamageEffects: []
-      defensiveEffects: []
-      resourceEffects: []
-      enemyElementModifiers: []
-      passiveHookTypeName: 
-      nodeId: rugal.passive.lv0
-      nodeName: Omega Mode
-      description: 
-      skillPanelDescriptionOverride: 
-      track: 2
-      level: 0
-      fragmentCost: 0
-      unlockedByDefault: 1
     - statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
@@ -529,12 +861,90 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
-        effect: {fileID: 11400000, guid: 9b32662d73734c1389701d17da2579bd, type: 2}
+        recipe:
+          recipeId: 
+          definition: {fileID: 11400000, guid: 8dbbb82e715344145810d466b3014c99, type: 2}
+          presentation:
+            effectId: 
+            displayName: 
+            icon: {fileID: 0}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 2
+            appliesOn: 0
+            durationType: 0
+            durationSeconds: 1
+            stackMode: 0
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: 
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 1
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 1
+              ignoreDamageResistance: 0
+              ignoreElementalIncomingModifiers: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              tickInterval: 1
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+          childRecipes: []
+        effect: {fileID: 0}
         scope: 0
         stackMode: 0
         stackLimit: 1
         refreshDurationOnReapply: 1
         durationOverride: -1
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
         filterByTargetElement: 0
         targetElement: 0
       counterEffects: []
@@ -549,7 +959,12 @@ MonoBehaviour:
       nodeId: rugal.passive.lv1
       nodeName: Merciless Blow
       description: Every self attack ignores enemy Defense.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: 'Increase <b>Basic Stats</b> by +20%
+
+        
+
+        -
+        <size=20><color=#C0C0C0>Every own attack will <n>Ignore enemy Defense</b></color></size>'
       track: 2
       level: 1
       fragmentCost: 1
@@ -593,7 +1008,17 @@ MonoBehaviour:
       nodeId: rugal.passive.lv2
       nodeName: Cutter Loop
       description: Genocide Cutter has a 35% chance to reset its cooldown when used.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: 'Increase <b>Basic Stats</b> by +20%
+
+        
+
+        <size=20><color=#C0C0C0>-
+        Every own attack will <b>Ignore enemy Defense</b></color></size>
+
+        <size=20><color=#C0C0C0>-
+        Genocide Cutter has a 35% chance to reset its cooldown when used</color></size>
+
+'
       track: 2
       level: 2
       fragmentCost: 1
@@ -622,8 +1047,19 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: rugal.passive.lv3
       nodeName: Defense Conversion
-      description: Increase own ATK based on 50% of own DEF.
-      skillPanelDescriptionOverride: 
+      description: Increase own ATK based on 50% of own DEF
+      skillPanelDescriptionOverride: 'Increase <b>Basic Stats</b> by +20%
+
+        
+
+        <size=20><color=#C0C0C0>-
+        Every own attack will <b>Ignore enemy Defense</b></color></size>
+
+        <size=20><color=#C0C0C0>-
+        Genocide Cutter has a 35% chance to reset its cooldown when used</color></size>
+
+        <size=20><color=#C0C0C0>-
+        Increase own ATK based on 50% of own DEF</color></size>'
       track: 2
       level: 3
       fragmentCost: 1
@@ -687,7 +1123,7 @@ MonoBehaviour:
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
       runtimeEffects:
-      - trigger: 1
+      - trigger: 0
         filter:
           filterByCategory: 0
           category: 0
@@ -701,12 +1137,254 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 1
           runtimeTag: rugal.omega_mode
-        effect: {fileID: 11400000, guid: 50b57c5b2d2746d2aa763764f7f8b6cf, type: 2}
+        recipe:
+          recipeId: 
+          definition: {fileID: 11400000, guid: 269b285972ac0304a861e7b7a9b4f1bc, type: 2}
+          presentation:
+            effectId: 
+            displayName: Omega Mode
+            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 0
+            appliesOn: 0
+            durationType: 1
+            durationSeconds: 1
+            stackMode: 0
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: 
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreElementalIncomingModifiers: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              tickInterval: 1
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+          childRecipes:
+          - recipeId: increase.stat
+            definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
+            presentation:
+              effectId: 
+              displayName: 
+              icon: {fileID: 0}
+              fieldVisualPrefab: {fileID: 0}
+            policy:
+              kind: 2
+              appliesOn: 0
+              durationType: 1
+              durationSeconds: 1
+              stackMode: 0
+              stackLimit: 0
+              refreshDurationOnReapply: 0
+              stackable: 0
+              removeOnOwnerDamaged: 0
+              stackKey: 
+            parameters:
+              overrideStatModifiers: 1
+              statModifiers:
+              - target: 1
+                operation: 1
+                sourceStat: 1
+                value: 1.2
+              - target: 2
+                operation: 1
+                sourceStat: 2
+                value: 1.2
+              overrideDamageModifier: 0
+              damageModifier:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                outgoingDamagePercentAdd: 0
+                incomingDamageTakenPercentAdd: 0
+              overrideDamageInput: 0
+              damageInput:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                defenderDefensePercentAdd: 0
+                defenderDamageResistancePercentAdd: 0
+                ignoreDefense: 0
+                ignoreDamageResistance: 0
+                ignoreElementalIncomingModifiers: 0
+              overridePeriodicHeal: 0
+              periodicHeal:
+                tickInterval: 0
+                valueSource: 0
+                valueRatio: 0
+                flatValue: 0
+                useSourceStats: 0
+              overrideLifesteal: 0
+              lifesteal:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                damageDealtRatio: 0
+                lowHpThreshold: 0
+                lowHpMultiplier: 0
+              overrideAdditionalDamage: 0
+              additionalDamage:
+                chance: 0
+                internalCooldown: 0
+                attackRatio: 0
+                sourceStatDamageSource: 0
+                sourceStatRatio: 0
+                targetMaxHpRatio: 0
+                capTargetMaxHpDamage: 0
+                targetMaxHpDamageCapSource: 0
+                targetMaxHpDamageCapRatio: 0
+                elementType: 0
+              overrideStatus: 0
+              status:
+                status: 0
+          - recipeId: ignore.res
+            definition: {fileID: 11400000, guid: ee78f874a074eed40987d4df2ee4baeb, type: 2}
+            presentation:
+              effectId: 
+              displayName: 
+              icon: {fileID: 0}
+              fieldVisualPrefab: {fileID: 0}
+            policy:
+              kind: 2
+              appliesOn: 0
+              durationType: 1
+              durationSeconds: 1
+              stackMode: 0
+              stackLimit: 0
+              refreshDurationOnReapply: 0
+              stackable: 0
+              removeOnOwnerDamaged: 0
+              stackKey: 
+            parameters:
+              overrideStatModifiers: 0
+              statModifiers:
+              - target: 1
+                operation: 1
+                sourceStat: 1
+                value: 1.2
+              - target: 2
+                operation: 1
+                sourceStat: 2
+                value: 1.2
+              overrideDamageModifier: 0
+              damageModifier:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                outgoingDamagePercentAdd: 0
+                incomingDamageTakenPercentAdd: 0
+              overrideDamageInput: 1
+              damageInput:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                defenderDefensePercentAdd: 0
+                defenderDamageResistancePercentAdd: 0
+                ignoreDefense: 0
+                ignoreDamageResistance: 1
+                ignoreElementalIncomingModifiers: 1
+              overridePeriodicHeal: 0
+              periodicHeal:
+                tickInterval: 0
+                valueSource: 0
+                valueRatio: 0
+                flatValue: 0
+                useSourceStats: 0
+              overrideLifesteal: 0
+              lifesteal:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                damageDealtRatio: 0
+                lowHpThreshold: 0
+                lowHpMultiplier: 0
+              overrideAdditionalDamage: 0
+              additionalDamage:
+                chance: 0
+                internalCooldown: 0
+                attackRatio: 0
+                sourceStatDamageSource: 0
+                sourceStatRatio: 0
+                targetMaxHpRatio: 0
+                capTargetMaxHpDamage: 0
+                targetMaxHpDamageCapSource: 0
+                targetMaxHpDamageCapRatio: 0
+                elementType: 0
+              overrideStatus: 0
+              status:
+                status: 0
+        effect: {fileID: 0}
         scope: 0
         stackMode: 1
         stackLimit: 1
         refreshDurationOnReapply: 1
         durationOverride: 20
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
         filterByTargetElement: 0
         targetElement: 0
       counterEffects:
@@ -744,8 +1422,42 @@ MonoBehaviour:
         counterId: rugal.skill_ult_used
         operation: 1
         value: 1
+      - trigger: 2
+        filter:
+          filterByCategory: 1
+          category: 1
+          filterByActionId: 1
+          actionId: rugal.skill.ex
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        counterId: rugal.omega_mode.removeal
+        operation: 0
+        value: 1
+      - trigger: 2
+        filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionId: 1
+          actionId: rugal.ultimate.ex
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        counterId: rugal.omega_mode.removeal
+        operation: 0
+        value: 1
       conditionalStateEffects:
-      - trigger: 1
+      - trigger: 0
         filter:
           filterByCategory: 0
           category: 0
@@ -764,6 +1476,7 @@ MonoBehaviour:
         - counterId: rugal.skill_ult_used
           comparison: 3
           value: 5
+        requiredValues: []
         runtimeTagEffects:
         - trigger: 0
           filter:
@@ -800,6 +1513,62 @@ MonoBehaviour:
           counterId: rugal.skill_ult_used
           operation: 0
           value: 0
+      - trigger: 0
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        requiredTags: []
+        requiredCounters:
+        - counterId: rugal.omega_mode.removeal
+          comparison: 3
+          value: 1
+        requiredValues: []
+        runtimeTagEffects:
+        - trigger: 0
+          filter:
+            filterByCategory: 0
+            category: 0
+            filterByActionId: 0
+            actionId: 
+            filterByActionName: 0
+            actionName: 
+            filterByStepName: 0
+            stepName: 
+            filterByElement: 0
+            elementType: 0
+            requireRuntimeTag: 0
+            runtimeTag: 
+          tag: rugal.omega_mode
+          addTag: 0
+          duration: 1e+15
+        counterEffects:
+        - trigger: 1
+          filter:
+            filterByCategory: 0
+            category: 0
+            filterByActionId: 0
+            actionId: 
+            filterByActionName: 0
+            actionName: 
+            filterByStepName: 0
+            stepName: 
+            filterByElement: 0
+            elementType: 0
+            requireRuntimeTag: 0
+            runtimeTag: 
+          counterId: rugal.omega_mode.removeal
+          operation: 0
+          value: 0
       onHitStatusEffects: []
       additionalDamageEffects: []
       dashThroughDamageEffects: []
@@ -811,7 +1580,14 @@ MonoBehaviour:
       nodeName: Omega Mode
       description: After five skill/ultimate uses, enter omega mode. Omega mode buffs
         ATK/DEF, ignores resistance, and marks Ex follow-up routing.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: "Increase <b>Basic Stats</b> by +20%\r\n\r\n<size=20><color=#C0C0C0>-
+        Every own attack will <b>Ignore enemy Defense</b></color></size>\r\n<size=20><color=#C0C0C0>-
+        Genocide Cutter has a 35% chance to reset its cooldown when used</color></size>\r\n<size=20><color=#C0C0C0>-
+        Increase own ATK based on 50% of own DEF</color></size>\r\n<size=20><color=#C0C0C0>-
+        After used 'Skill' or 'Ultimate' 5 times will enter \"Omega Mode\"</color></size>\r\n<size=19><color=#00ffff>\u2022
+        Omega Mode: Increase ATK and DEF by +20% and own attack will <b>Ignore Enemy
+        RES</b>, Unlock EX Action Follow-up. Once used EX Action, Omega Mode will
+        be removed</color></size>"
       track: 2
       level: 4
       fragmentCost: 1

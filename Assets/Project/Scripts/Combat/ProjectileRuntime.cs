@@ -692,7 +692,7 @@ public class ProjectileRuntime : MonoBehaviour
 
     private void ApplyAreaEffectsToActivePlayer()
     {
-        PlayerCharacter activePlayer = UnityEngine.Object.FindFirstObjectByType<PlayerCharacter>();
+        PlayerCharacter activePlayer = PlayerCharacter.Instance;
         if (activePlayer == null || !IsPlayerTouchingTrigger(activePlayer))
         {
             return;
@@ -700,7 +700,7 @@ public class ProjectileRuntime : MonoBehaviour
 
         CharacterObject sourceCharacter = spawnContext.sourceCharacter;
         CharacterStats sourceStats = spawnContext.attackerStats;
-        TeamLoader teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
+        TeamLoader teamLoader = TeamLoader.Instance;
         PlayerRunInventory inventory = teamLoader != null ? teamLoader.RunInventory : null;
         CharacterObject[] team = teamLoader != null
             ? teamLoader.GetTeamSnapshot()
@@ -785,7 +785,7 @@ public class ProjectileRuntime : MonoBehaviour
 
     private void ApplyAreaEffectsToTrackedEnemies()
     {
-        PlayerCharacter activePlayer = UnityEngine.Object.FindFirstObjectByType<PlayerCharacter>();
+        PlayerCharacter activePlayer = PlayerCharacter.Instance;
         trackedEnemyBuffer.Clear();
         foreach (EnemyController enemy in trackedEnemies)
         {
@@ -858,11 +858,7 @@ public class ProjectileRuntime : MonoBehaviour
 
         CharacterPassiveController passiveController = activePlayer != null
             ? activePlayer.PassiveController
-            : null;
-        if (passiveController == null)
-        {
-            passiveController = UnityEngine.Object.FindFirstObjectByType<CharacterPassiveController>();
-        }
+            : (PlayerCharacter.Instance != null ? PlayerCharacter.Instance.PassiveController : null);
 
         return passiveController != null && passiveController.IsNodeUnlocked(application.requiredNodeId);
     }
@@ -931,7 +927,7 @@ public class ProjectileRuntime : MonoBehaviour
                 || enemy.bodyCollider.bounds.Intersects(triggerCollider.bounds);
         }
 
-        Collider2D[] colliders = enemy.GetComponentsInChildren<Collider2D>(true);
+        Collider2D[] colliders = enemy.GetCachedColliders();
         for (int i = 0; i < colliders.Length; i++)
         {
             Collider2D collider = colliders[i];
@@ -952,7 +948,7 @@ public class ProjectileRuntime : MonoBehaviour
             return false;
         }
 
-        Collider2D[] colliders = player.GetComponentsInChildren<Collider2D>(false);
+        Collider2D[] colliders = player.GetCachedColliders();
         for (int i = 0; i < colliders.Length; i++)
         {
             Collider2D collider = colliders[i];

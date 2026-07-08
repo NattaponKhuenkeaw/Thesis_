@@ -1400,7 +1400,7 @@ MonoBehaviour:
       data:
         entries:
         - label: VFX
-          vfxType: 121
+          vfxType: 146
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 39

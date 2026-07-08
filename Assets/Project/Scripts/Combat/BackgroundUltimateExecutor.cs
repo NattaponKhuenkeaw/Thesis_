@@ -112,7 +112,7 @@ public class BackgroundUltimateExecutor : MonoBehaviour
             Animator anim = visualClone.AddComponent<Animator>();
             anim.runtimeAnimatorController = animatorController;
 
-            PlayerCharacter player = Object.FindFirstObjectByType<PlayerCharacter>();
+            PlayerCharacter player = PlayerCharacter.Instance;
             if (player != null && player.Animator != null && player.Animator.anim != null)
             {
                 Animator playerAnim = player.Animator.anim;
@@ -128,7 +128,7 @@ public class BackgroundUltimateExecutor : MonoBehaviour
 
     private void SetupHitbox()
     {
-        PlayerCharacter player = Object.FindFirstObjectByType<PlayerCharacter>();
+        PlayerCharacter player = PlayerCharacter.Instance;
         if (player != null && player.Combat != null && player.Combat.hitboxObject != null)
         {
             enemyLayerMask = player.Combat.enemyLayerMask;

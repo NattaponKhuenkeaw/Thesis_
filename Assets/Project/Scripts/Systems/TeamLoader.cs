@@ -19,6 +19,8 @@ public interface ITeamEnergySystem
 
 public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 {
+    public static TeamLoader Instance { get; private set; }
+
     public const float DefaultUltimateAuraEnergyCost = 100f;
     private const int DefaultTeamSize = 3;
 
@@ -63,6 +65,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     private void Awake()
     {
+        Instance = this;
         ResolveDependencies();
         BootstrapRunInventoryTeam();
         SyncTeamSnapshotFromInventory();
@@ -481,10 +484,9 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     public float GetUltimateCost(CharacterObject character, UltimateAction ultimateAction)
     {
-        float baseCost = ultimateAction != null && ultimateAction.energyCost > 0f
-            ? ultimateAction.energyCost
+        float cost = ultimateAction != null
+            ? Mathf.Max(0f, ultimateAction.energyCost)
             : DefaultUltimateAuraEnergyCost;
-        float cost = CalculateReducedCost(character, baseCost);
         if (playerCharacter != null
             && playerCharacter.characterObject == character
             && playerCharacter.PassiveController != null)
@@ -502,7 +504,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     {
         if (playerCharacter == null)
         {
-            playerCharacter = UnityEngine.Object.FindFirstObjectByType<PlayerCharacter>();
+            playerCharacter = PlayerCharacter.Instance;
         }
 
         if (runInventory == null && Application.isPlaying)
@@ -1168,7 +1170,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     {
         if (playerCharacter == null)
         {
-            playerCharacter = UnityEngine.Object.FindFirstObjectByType<PlayerCharacter>();
+            playerCharacter = PlayerCharacter.Instance;
         }
 
         if (playerCharacter == null)
@@ -1273,30 +1275,16 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     {
         if (character?.actionResolverTable?.ultimateActions == null)
         {
-            return CalculateReducedCost(character, DefaultUltimateAuraEnergyCost);
+            return DefaultUltimateAuraEnergyCost;
         }
 
         float highestCost = character.actionResolverTable.ultimateActions
             .Where(a => a != null)
-            .Select(a => CalculateReducedCost(character, a.energyCost > 0f ? a.energyCost : DefaultUltimateAuraEnergyCost))
+            .Select(a => Mathf.Max(0f, a.energyCost))
             .DefaultIfEmpty(0f)
             .Max();
 
-        return highestCost > 0f ? highestCost : CalculateReducedCost(character, DefaultUltimateAuraEnergyCost);
-    }
-
-    private float CalculateReducedCost(CharacterObject character, float baseCost)
-    {
-        float resolvedBaseCost = Mathf.Max(0f, baseCost);
-        CharacterStats stats = GetCharacterRuntimeStats(character);
-        if (stats == null)
-        {
-            return resolvedBaseCost;
-        }
-
-        float cdr = stats.cooldownRate / 100f;
-        float reduction = Mathf.Min(0.50f, cdr * 0.50f);
-        return resolvedBaseCost * (1f - reduction);
+        return highestCost > 0f ? highestCost : DefaultUltimateAuraEnergyCost;
     }
 
     private void SpawnBackgroundUltimateExecutor()
@@ -1359,4 +1347,11 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             animController);
     }
 
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+    }
 }

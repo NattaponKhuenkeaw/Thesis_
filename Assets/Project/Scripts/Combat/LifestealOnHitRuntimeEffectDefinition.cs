@@ -36,8 +36,8 @@ public class LifestealOnHitRuntimeEffectDefinition : RuntimeEffectDefinition
             return;
         }
 
-        TeamLoader teamLoader = Object.FindFirstObjectByType<TeamLoader>();
-        PlayerCharacter activePlayer = Object.FindFirstObjectByType<PlayerCharacter>();
+        TeamLoader teamLoader = TeamLoader.Instance;
+        PlayerCharacter activePlayer = PlayerCharacter.Instance;
         bool activeSource = activePlayer != null && activePlayer.characterObject == context.sourceCharacter;
 
         float maxHp = activeSource && activePlayer != null

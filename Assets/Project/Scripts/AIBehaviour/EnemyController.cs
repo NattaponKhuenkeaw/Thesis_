@@ -79,6 +79,8 @@ public class EnemyController : MonoBehaviour
     private Coroutine priorityResetCoroutine;
     private RuntimeEffectReceiver runtimeEffects;
     private EnemyElementalState elementalState;
+    private SpriteRenderer attackHitboxSR;
+    private LineRenderer attackHitboxLR;
 
     /// <summary>Child hitbox collider used by AttackAction.</summary>
     public Collider2D attackHitbox;
@@ -120,7 +122,7 @@ public class EnemyController : MonoBehaviour
 
         elementalState = GetComponent<EnemyElementalState>();
 
-        // Start with hitbox disabled
+        // Start with hitbox disabled and cache debug renderers
         if (attackHitbox != null)
         {
             EnemyAttackHitbox damageHitbox = attackHitbox.GetComponent<EnemyAttackHitbox>();
@@ -129,6 +131,9 @@ public class EnemyController : MonoBehaviour
 
             damageHitbox.SetHitboxWindowActive(false);
             attackHitbox.enabled = false;
+
+            attackHitboxSR = attackHitbox.GetComponent<SpriteRenderer>();
+            attackHitboxLR = attackHitbox.GetComponent<LineRenderer>();
         }
 
         // Auto-attach hurtbox drawer to main body
@@ -146,29 +151,26 @@ public class EnemyController : MonoBehaviour
         // Runtime visualization for Game View
         if (attackHitbox != null && attackHitbox.enabled)
         {
-            var sr = attackHitbox.GetComponent<SpriteRenderer>();
-            var lr = attackHitbox.GetComponent<LineRenderer>();
-
-            // Toggle visibility based on debug mode
-            if (sr != null) sr.enabled = isDebugActive;
-            if (lr != null) lr.enabled = isDebugActive;
+            // Toggle visibility based on debug mode (using cached references)
+            if (attackHitboxSR != null) attackHitboxSR.enabled = isDebugActive;
+            if (attackHitboxLR != null) attackHitboxLR.enabled = isDebugActive;
 
             if (isDebugActive)
             {
                 // 1. Auto-scale SpriteRenderer to match Collider size
-                if (sr != null)
+                if (attackHitboxSR != null)
                 {
                     if (attackHitbox is BoxCollider2D box)
                     {
-                        sr.drawMode = SpriteDrawMode.Sliced;
-                        sr.size = box.size;
+                        attackHitboxSR.drawMode = SpriteDrawMode.Sliced;
+                        attackHitboxSR.size = box.size;
                     }
                 }
 
                 // 2. Beautiful outline using LineRenderer
-                if (lr != null)
+                if (attackHitboxLR != null)
                 {
-                    DrawLineRenderer(lr);
+                    DrawLineRenderer(attackHitboxLR);
                 }
                 else
                 {
@@ -501,13 +503,10 @@ public class EnemyController : MonoBehaviour
             if (damageHitbox != null)
                 damageHitbox.SetHitboxWindowActive(active);
 
-            // Toggle SpriteRenderer if it exists for runtime visualization
-            var sr = attackHitbox.GetComponent<SpriteRenderer>();
-            var lr = attackHitbox.GetComponent<LineRenderer>();
-            
+            // Toggle cached debug renderers
             bool isDebugActive = CombatCore.TrainingDebugManager.IsActive;
-            if (sr != null) sr.enabled = active && isDebugActive;
-            if (lr != null) lr.enabled = active && isDebugActive;
+            if (attackHitboxSR != null) attackHitboxSR.enabled = active && isDebugActive;
+            if (attackHitboxLR != null) attackHitboxLR.enabled = active && isDebugActive;
         }
     }
 
@@ -636,5 +635,15 @@ public class EnemyController : MonoBehaviour
                 lr.SetPosition(i, t.TransformPoint(localPoint));
             }
         }
+    }
+
+    private Collider2D[] cachedColliders;
+    public Collider2D[] GetCachedColliders()
+    {
+        if (cachedColliders == null)
+        {
+            cachedColliders = GetComponentsInChildren<Collider2D>(true);
+        }
+        return cachedColliders;
     }
 }

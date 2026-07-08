@@ -18,46 +18,48 @@ public class PeriodicHealRuntimeEffectDefinition : RuntimeEffectDefinition
 
     public override void OnUpdate(RuntimeEffectContext context)
     {
-        if (context == null || context.instance == null)
+        if (context.instance == null)
         {
             return;
         }
 
-        RuntimeEffectPeriodicHealParameters parameters = ResolveParameters(context);
+        bool hasOverride = TryGetOverrideParameters(context, out var parameters);
+        float interval = hasOverride ? parameters.tickInterval : tickInterval;
+
         if (context.instance.nextTickAt <= 0f)
         {
-            context.instance.nextTickAt = Mathf.Max(0.05f, parameters.tickInterval);
+            context.instance.nextTickAt = Mathf.Max(0.05f, interval);
         }
 
         while (context.instance.elapsedSeconds >= context.instance.nextTickAt)
         {
-            ApplyTickHeal(context, parameters);
-            context.instance.nextTickAt += Mathf.Max(0.05f, parameters.tickInterval);
+            ApplyTickHeal(context, hasOverride, parameters);
+            context.instance.nextTickAt += Mathf.Max(0.05f, interval);
         }
     }
 
-    private RuntimeEffectPeriodicHealParameters ResolveParameters(RuntimeEffectContext context)
+    private bool TryGetOverrideParameters(RuntimeEffectContext context, out RuntimeEffectPeriodicHealParameters parameters)
     {
-        RuntimeEffectParameterSet parameters = RuntimeEffectRuntimeUtility.GetParameters(context?.instance);
-        if (parameters != null && parameters.overridePeriodicHeal && parameters.periodicHeal != null)
+        RuntimeEffectParameterSet parameterSet = RuntimeEffectRuntimeUtility.GetParameters(context.instance);
+        if (parameterSet != null && parameterSet.overridePeriodicHeal && parameterSet.periodicHeal != null)
         {
-            return parameters.periodicHeal;
+            parameters = parameterSet.periodicHeal;
+            return true;
         }
 
-        return new RuntimeEffectPeriodicHealParameters
-        {
-            tickInterval = tickInterval,
-            valueSource = valueSource,
-            valueRatio = valueRatio,
-            flatValue = flatValue,
-            useSourceStats = useSourceStats
-        };
+        parameters = null;
+        return false;
     }
 
-    private void ApplyTickHeal(RuntimeEffectContext context, RuntimeEffectPeriodicHealParameters parameters)
+    private void ApplyTickHeal(RuntimeEffectContext context, bool hasOverride, RuntimeEffectPeriodicHealParameters parameters)
     {
-        CharacterStats stats = parameters.useSourceStats ? context.sourceStats : context.targetStats;
-        float amount = Mathf.Max(0f, parameters.flatValue + GetStat(stats, parameters.valueSource) * Mathf.Max(0f, parameters.valueRatio));
+        bool useSource = hasOverride ? parameters.useSourceStats : useSourceStats;
+        RuntimeEffectStatTarget source = hasOverride ? parameters.valueSource : valueSource;
+        float ratio = hasOverride ? parameters.valueRatio : valueRatio;
+        float flat = hasOverride ? parameters.flatValue : flatValue;
+
+        CharacterStats stats = useSource ? context.sourceStats : context.targetStats;
+        float amount = Mathf.Max(0f, flat + GetStat(stats, source) * Mathf.Max(0f, ratio));
         if (amount <= 0f)
         {
             return;
@@ -69,7 +71,7 @@ public class PeriodicHealRuntimeEffectDefinition : RuntimeEffectDefinition
             return;
         }
 
-        TeamLoader teamLoader = Object.FindFirstObjectByType<TeamLoader>();
+        TeamLoader teamLoader = TeamLoader.Instance;
         if (teamLoader != null && context.targetCharacter != null)
         {
             float maxHp = teamLoader.GetCharacterMaxHP(context.targetCharacter);

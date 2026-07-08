@@ -135,7 +135,7 @@ MonoBehaviour:
       obeyHitstop: 1
     - type: 105
       clip: {fileID: 7400000, guid: dd7d2bdc8e181b74faeaebbe6ad8759e, type: 2}
-      localScale: {x: 1.25, y: 1.25, z: 1.25}
+      localScale: {x: 1.75, y: 1.75, z: 1.75}
       tint: {r: 1, g: 1, b: 1, a: 1}
       flipWithCharacter: 1
       isLocalSpace: 1
@@ -156,28 +156,28 @@ MonoBehaviour:
       obeyHitstop: 1
   - categoryName: char-Rugal
     entries:
-    - type: 105
+    - type: 110
       clip: {fileID: 7400000, guid: abfdfda6d414b1a4ea87ed13507a44e1, type: 2}
       localScale: {x: 2.2, y: 2.2, z: 2.2}
       tint: {r: 1, g: 1, b: 1, a: 1}
       flipWithCharacter: 1
       isLocalSpace: 1
       obeyHitstop: 1
-    - type: 106
+    - type: 111
       clip: {fileID: 7400000, guid: dc755c05f34c0364697e8434fcdbd3e7, type: 2}
       localScale: {x: 1, y: 1, z: 1}
       tint: {r: 1, g: 1, b: 1, a: 1}
       flipWithCharacter: 1
       isLocalSpace: 1
       obeyHitstop: 1
-    - type: 107
+    - type: 112
       clip: {fileID: 7400000, guid: 58eb934156de57843a43258d889d5cdf, type: 2}
       localScale: {x: 2, y: 2, z: 2}
       tint: {r: 1, g: 1, b: 1, a: 1}
       flipWithCharacter: 1
       isLocalSpace: 0
       obeyHitstop: 0
-    - type: 125
+    - type: 148
       clip: {fileID: 7400000, guid: dab13dfbc9e6a804f9d37f343f6e030a, type: 2}
       localScale: {x: 2.2, y: 2.2, z: 2.2}
       tint: {r: 1, g: 1, b: 1, a: 1}
@@ -186,7 +186,7 @@ MonoBehaviour:
       obeyHitstop: 1
   - categoryName: char-Krizalid
     entries:
-    - type: 108
+    - type: 120
       clip: {fileID: 7400000, guid: 5eb7e8d5094d66b4bae9d215acdeff7d, type: 2}
       localScale: {x: 1, y: 1, z: 1}
       tint: {r: 1, g: 1, b: 1, a: 1}
@@ -195,28 +195,28 @@ MonoBehaviour:
       obeyHitstop: 1
   - categoryName: char-Goenitz
     entries:
-    - type: 109
+    - type: 130
       clip: {fileID: 7400000, guid: 386f3045b20817f4bbf4a5c3cedfaa22, type: 2}
       localScale: {x: 1, y: 1, z: 1}
       tint: {r: 1, g: 1, b: 1, a: 1}
       flipWithCharacter: 1
       isLocalSpace: 1
       obeyHitstop: 1
-    - type: 110
+    - type: 131
       clip: {fileID: 7400000, guid: b470c927c40dce141a8a5e7889843213, type: 2}
       localScale: {x: 1, y: 1, z: 1}
       tint: {r: 1, g: 1, b: 1, a: 1}
       flipWithCharacter: 1
       isLocalSpace: 1
       obeyHitstop: 1
-    - type: 111
+    - type: 132
       clip: {fileID: 7400000, guid: 922e6cac0e22d264baa36e893def7f81, type: 2}
       localScale: {x: 1.75, y: 1.75, z: 1.75}
       tint: {r: 1, g: 1, b: 1, a: 1}
       flipWithCharacter: 1
       isLocalSpace: 1
       obeyHitstop: 1
-    - type: 112
+    - type: 133
       clip: {fileID: 7400000, guid: cd9258678d3ba8f4bbc3ba76c1484d19, type: 2}
       localScale: {x: 1.25, y: 1.25, z: 1.25}
       tint: {r: 1, g: 1, b: 1, a: 1}
@@ -267,7 +267,7 @@ MonoBehaviour:
       flipWithCharacter: 1
       isLocalSpace: 1
       obeyHitstop: 0
-    - type: 121
+    - type: 146
       clip: {fileID: 7400000, guid: 31fd220b922b09f43aa4ba105661c186, type: 2}
       localScale: {x: 1.3, y: 1.3, z: 1}
       tint: {r: 1, g: 1, b: 1, a: 1}

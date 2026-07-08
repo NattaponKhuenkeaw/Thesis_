@@ -144,14 +144,14 @@ MonoBehaviour:
     durationOverride: 0.5
   - recipe:
       recipeId: 
-      definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
+      definition: {fileID: 11400000, guid: a5426b7d2231ff647a53ad306f3281f8, type: 2}
       presentation:
         effectId: lv3.main.passive
         displayName: Element Mastery Increase
         icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
         fieldVisualPrefab: {fileID: 0}
       policy:
-        kind: 0
+        kind: 2
         appliesOn: 2
         durationType: 0
         durationSeconds: 0.3

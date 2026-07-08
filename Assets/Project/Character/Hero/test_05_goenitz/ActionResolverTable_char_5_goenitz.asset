@@ -1025,7 +1025,7 @@ MonoBehaviour:
       data:
         entries:
         - label: VFX
-          vfxType: 109
+          vfxType: 130
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 10
@@ -1038,7 +1038,7 @@ MonoBehaviour:
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
         - label: VFX
-          vfxType: 110
+          vfxType: 131
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 45
@@ -1055,7 +1055,7 @@ MonoBehaviour:
       data:
         entries:
         - label: VFX
-          vfxType: 111
+          vfxType: 132
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 14
@@ -1157,10 +1157,10 @@ MonoBehaviour:
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
         stepData:
-          startupFrames: 26
-          activeFrames: 21
-          recoveryFrames: 17
-          cancelWindowStartFrame: 61
+          startupFrames: 27
+          activeFrames: 24
+          recoveryFrames: 22
+          cancelWindowStartFrame: 70
           loopActivePhase: 0
           stepName: Yonokaze
           animationClip: {fileID: 7400000, guid: 6ae74e424f6da7541ac385765b953aca, type: 2}
@@ -1194,16 +1194,16 @@ MonoBehaviour:
         entries:
         - label: SFX
           clip: {fileID: 8300000, guid: 05e30b2677844e44090beb203a395426, type: 3}
-          triggerFrame: 7
-          duration: 36
+          triggerFrame: 8
+          duration: 41
           channel: 0
           volume: 1
           pitchVariation: 1
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
         - label: SFX
           clip: {fileID: 8300000, guid: f8b7ea09989c82a478645e674010a3c5, type: 3}
-          triggerFrame: 27
-          duration: 4
+          triggerFrame: 28
+          duration: 5
           channel: 1
           volume: 1
           pitchVariation: 1
@@ -3481,7 +3481,7 @@ MonoBehaviour:
       data:
         entries:
         - label: VFX
-          vfxType: 111
+          vfxType: 132
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 30
@@ -3498,7 +3498,7 @@ MonoBehaviour:
       data:
         entries:
         - label: VFX
-          vfxType: 109
+          vfxType: 130
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 3
@@ -3507,7 +3507,7 @@ MonoBehaviour:
           transformKeys: []
           loopDuringActive: 1
         - label: VFX
-          vfxType: 110
+          vfxType: 131
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 20
@@ -3524,7 +3524,7 @@ MonoBehaviour:
       data:
         entries:
         - label: VFX
-          vfxType: 112
+          vfxType: 133
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 14
@@ -3541,7 +3541,7 @@ MonoBehaviour:
       data:
         entries:
         - label: VFX
-          vfxType: 112
+          vfxType: 133
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 1

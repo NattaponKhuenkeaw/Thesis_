@@ -244,7 +244,7 @@ MonoBehaviour:
           runtimeTag: 
         recipe:
           recipeId: main.base.passive.effect
-          definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
+          definition: {fileID: 11400000, guid: a5426b7d2231ff647a53ad306f3281f8, type: 2}
           presentation:
             effectId: 
             displayName: Increase Elemental Mastery
@@ -399,7 +399,7 @@ MonoBehaviour:
         times, Inflict <b><color=#8B3DFF>Void</color></b> DMG 350% of ATK, <b><color=#C0C0C0>Decrease
         Enemy <color=#8B3DFF>Void</color> DMG Resistance -15%</b> for 16 seconds</color>
 
-        
+
 
         <size=20><color=#C0C0C0>-
         Increase AE Reward gain by 5</color></size>'
@@ -453,7 +453,7 @@ MonoBehaviour:
         times, Inflict <b><color=#8B3DFF>Void</color></b> DMG 350% of ATK, <b><color=#C0C0C0>Decrease
         Enemy <color=#8B3DFF>Void</color> DMG Resistance -15%</b> for 16 seconds</color>
 
-        
+
 
         <size=20><color=#C0C0C0>-
         Increase AE Reward gain by 5</color></size>'
@@ -508,7 +508,7 @@ MonoBehaviour:
         of ATK, <b><color=#C0C0C0>Decrease Enemy <color=#8B3DFF>Void</color> DMG
         Resistance -15%</b> for 16 seconds</color>
 
-        
+
 
         <size=20><color=#C0C0C0>-
         Increase AE Reward gain by 5</color></size>'
@@ -563,7 +563,7 @@ MonoBehaviour:
         of ATK, <b><color=#C0C0C0>Decrease Enemy <color=#8B3DFF>Void</color> DMG
         Resistance -15%</b> for 16 seconds</color>
 
-        
+
 
         <size=20><color=#C0C0C0>-
         Increase AE Reward gain by 5</color></size>
@@ -877,10 +877,10 @@ MonoBehaviour:
         Debuff, will Increase own <b>Elemental Mastery +10%</b> <color=#C0C0C0>(Stackable
         5 times)</color></i>
 
-        
 
-        <size=20><color=#C0C0C0>- While
-        Self within <color=#8B3DFF>Void Area</color>, Own <b> SPD Increase</b> +1</color></size>'
+
+        <size=20><color=#C0C0C0>- While Self within
+        <color=#8B3DFF>Void Area</color>, Own <b> SPD Increase</b> +1</color></size>'
       track: 2
       level: 1
       fragmentCost: 1
@@ -906,10 +906,10 @@ MonoBehaviour:
         Debuff, will Increase own <b>Elemental Mastery +10%</b> <color=#C0C0C0>(Stackable
         5 times)</color></i>
 
-        
 
-        <size=20><color=#C0C0C0>- While
-        Self within <color=#8B3DFF>Void Area</color>, Own <b> SPD Increase</b> +1</color></size>
+
+        <size=20><color=#C0C0C0>- While Self within
+        <color=#8B3DFF>Void Area</color>, Own <b> SPD Increase</b> +1</color></size>
 
         <size=20><color=#C0C0C0>-
         Unlock the Basic Attack <i>State 4 - 6</i></color></size>'
@@ -938,10 +938,10 @@ MonoBehaviour:
         Debuff, will Increase own <b>Elemental Mastery +10%</b> <color=#C0C0C0>(Stackable
         5 times)</color></i>
 
-        
 
-        <size=20><color=#C0C0C0>- While
-        Self within <color=#8B3DFF>Void Area</color>, Own <b> SPD Increase</b> +1</color></size>
+
+        <size=20><color=#C0C0C0>- While Self within
+        <color=#8B3DFF>Void Area</color>, Own <b> SPD Increase</b> +1</color></size>
 
         <size=20><color=#C0C0C0>-
         Unlock the Basic Attack <i>State 4 - 6</i></color></size>
@@ -974,10 +974,10 @@ MonoBehaviour:
         Debuff, will Increase own <b>Elemental Mastery +10%</b> <color=#C0C0C0>(Stackable
         5 times)</color></i>
 
-        
 
-        <size=20><color=#C0C0C0>- While
-        Self within <color=#8B3DFF>Void Area</color>, Own <b> SPD Increase</b> +1</color></size>
+
+        <size=20><color=#C0C0C0>- While Self within
+        <color=#8B3DFF>Void Area</color>, Own <b> SPD Increase</b> +1</color></size>
 
         <size=20><color=#C0C0C0>-
         Unlock the Basic Attack <i>State 4 - 6</i></color></size>

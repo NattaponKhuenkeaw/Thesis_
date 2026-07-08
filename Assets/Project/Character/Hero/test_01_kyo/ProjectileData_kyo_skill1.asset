@@ -52,6 +52,9 @@ MonoBehaviour:
   stopOnImpact: 1
   destroyWhenHitsExhausted: 1
   destroyOnLifetimeExpire: 1
+  trackAreaOccupants: 0
+  areaEffectRefreshInterval: 0.25
+  areaEffects: []
   spawnFeedback:
     vfxType: 0
     vfxClip: {fileID: 0}
@@ -91,7 +94,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
@@ -109,25 +111,24 @@ MonoBehaviour:
         elementType: 3
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0, y: 0.32}
-        size: {x: 1, y: 0.8}
+        size: {x: 1.5, y: 1.5}
         damageRatio: 0.25
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
-        impactFreezeFrames: 4
+        impactFreezeFrames: 2
         knockbackFrames: 15
         knockupFrames: 12
         knockfallFrames: 10
         recoveryFrames: 9
-        horizontalSpeed: 3
+        horizontalSpeed: 3.5
         launchSpeed: 1
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
-        juggleLaunchScale: 0.85
-        juggleStunScale: 0.9
+        juggleLaunchScale: 1
+        juggleStunScale: 1
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 0}

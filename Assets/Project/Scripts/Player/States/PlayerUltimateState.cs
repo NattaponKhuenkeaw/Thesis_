@@ -131,7 +131,7 @@ public class PlayerUltimateState : CombatPlayerState
             return false;
         }
 
-        TeamLoader teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
+        TeamLoader teamLoader = TeamLoader.Instance;
         float currentAE = teamLoader != null ? teamLoader.GetCharacterCurrentAE(player.characterObject) : 0f;
         float requiredAE = teamLoader != null
             ? teamLoader.GetUltimateCost(player.characterObject, previewUltimateAction)
@@ -165,6 +165,7 @@ public class PlayerUltimateState : CombatPlayerState
 
         energyConsumed = false;
         hasStartedCooldown = false;
+        TryStartCooldown();
         ExecuteCombatStep(step, ctx, false);
 
         if (player.PassiveController != null && activeUltimateAction != null)
@@ -174,8 +175,6 @@ public class PlayerUltimateState : CombatPlayerState
                 activeUltimateAction.actionId,
                 activeUltimateAction.actionName);
         }
-
-        TryStartCooldown();
 
         if (activeUltimateAction != null && activeUltimateAction.useDashAfterImage && player.Movement != null)
         {
@@ -233,7 +232,7 @@ public class PlayerUltimateState : CombatPlayerState
             if (!energyConsumed)
             {
                 energyConsumed = true;
-                TeamLoader teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
+                TeamLoader teamLoader = TeamLoader.Instance;
                 if (teamLoader != null && player.characterObject != null)
                 {
                     float cost = teamLoader.GetUltimateCost(player.characterObject, activeUltimateAction);

@@ -68,8 +68,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     [SerializeField, Min(1)] private int auraEnergyChanceGrantLimitPerWindow = 5;
     [SerializeField, Min(0.01f)] private float auraEnergyChanceGrantWindowSeconds = 1f;
 
-    private readonly Dictionary<string, float> lastCategoryUseTime = new Dictionary<string, float>();
-    private readonly Dictionary<string, float> lastActionUseTime = new Dictionary<string, float>();
+    private readonly Dictionary<CooldownKey, float> lastCategoryUseTime = new Dictionary<CooldownKey, float>();
+    private readonly Dictionary<CooldownKey, float> lastActionUseTime = new Dictionary<CooldownKey, float>();
     private readonly HashSet<EnemyController> hitEnemiesThisStep = new HashSet<EnemyController>();
     private readonly HashSet<EnemyController> grabTargetsThisStep = new HashSet<EnemyController>();
 
@@ -506,8 +506,14 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             return false;
         }
 
+        CharacterObject activeChar = playerCharacter != null ? playerCharacter.characterObject : null;
         bool hasSpecificAction = !string.IsNullOrWhiteSpace(actionName) || !string.IsNullOrWhiteSpace(actionId);
-        string actionKey = BuildActionCooldownKey(category, actionName, actionId);
+
+        string normalizedActionName = !string.IsNullOrWhiteSpace(actionId)
+            ? actionId
+            : string.IsNullOrWhiteSpace(actionName) ? "Default" : actionName;
+        CooldownKey actionKey = new CooldownKey(activeChar, category, normalizedActionName);
+
         if (lastActionUseTime.TryGetValue(actionKey, out float actionUseTime))
         {
             return Time.time < actionUseTime + GetFinalCooldown(category, cooldown, actionName, actionId);
@@ -518,7 +524,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             return false;
         }
 
-        string categoryKey = BuildCategoryCooldownKey(category);
+        CooldownKey categoryKey = new CooldownKey(activeChar, category);
         if (!lastCategoryUseTime.TryGetValue(categoryKey, out float useTime))
         {
             return false;
@@ -529,8 +535,14 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     public float GetRemainingCooldown(AttackCategory category, float cooldown, string actionName = null, string actionId = null)
     {
+        CharacterObject activeChar = playerCharacter != null ? playerCharacter.characterObject : null;
         bool hasSpecificAction = !string.IsNullOrWhiteSpace(actionName) || !string.IsNullOrWhiteSpace(actionId);
-        string actionKey = BuildActionCooldownKey(category, actionName, actionId);
+
+        string normalizedActionName = !string.IsNullOrWhiteSpace(actionId)
+            ? actionId
+            : string.IsNullOrWhiteSpace(actionName) ? "Default" : actionName;
+        CooldownKey actionKey = new CooldownKey(activeChar, category, normalizedActionName);
+
         if (lastActionUseTime.TryGetValue(actionKey, out float actionUseTime))
         {
             return Mathf.Max(actionUseTime + GetFinalCooldown(category, cooldown, actionName, actionId) - Time.time, 0f);
@@ -541,7 +553,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             return 0f;
         }
 
-        string categoryKey = BuildCategoryCooldownKey(category);
+        CooldownKey categoryKey = new CooldownKey(activeChar, category);
         if (!lastCategoryUseTime.TryGetValue(categoryKey, out float useTime))
         {
             return 0f;
@@ -557,18 +569,18 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     public void ResetActionCooldown(AttackCategory category, string actionName = null, string actionId = null)
     {
+        CharacterObject activeChar = playerCharacter != null ? playerCharacter.characterObject : null;
         if (string.IsNullOrWhiteSpace(actionName) && string.IsNullOrWhiteSpace(actionId))
         {
-            string categoryKey = BuildCategoryCooldownKey(category);
+            CooldownKey categoryKey = new CooldownKey(activeChar, category);
             lastCategoryUseTime.Remove(categoryKey);
 
-            string actionKeyPrefix = categoryKey + "::";
-            List<string> actionKeysToRemove = null;
-            foreach (string key in lastActionUseTime.Keys)
+            List<CooldownKey> actionKeysToRemove = null;
+            foreach (CooldownKey key in lastActionUseTime.Keys)
             {
-                if (key.StartsWith(actionKeyPrefix, System.StringComparison.Ordinal))
+                if (ReferenceEquals(key.character, activeChar) && key.category == category)
                 {
-                    actionKeysToRemove ??= new List<string>();
+                    actionKeysToRemove ??= new List<CooldownKey>();
                     actionKeysToRemove.Add(key);
                 }
             }
@@ -584,7 +596,11 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             return;
         }
 
-        lastActionUseTime.Remove(BuildActionCooldownKey(category, actionName, actionId));
+        string normalizedActionName = !string.IsNullOrWhiteSpace(actionId)
+            ? actionId
+            : string.IsNullOrWhiteSpace(actionName) ? "Default" : actionName;
+        CooldownKey actionKey = new CooldownKey(activeChar, category, normalizedActionName);
+        lastActionUseTime.Remove(actionKey);
     }
 
     public void BeginResolvedAction(
@@ -886,7 +902,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             return;
 
         if (teamLoader == null)
-            teamLoader = Object.FindFirstObjectByType<TeamLoader>();
+            teamLoader = TeamLoader.Instance;
         if (teamLoader == null)
             return;
 
@@ -961,7 +977,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     {
         if (teamLoader == null)
         {
-            teamLoader = Object.FindFirstObjectByType<TeamLoader>();
+            teamLoader = TeamLoader.Instance;
         }
 
         return teamLoader != null ? teamLoader.RunInventory : null;
@@ -1754,8 +1770,16 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     private void RecordActionUse(AttackCategory category, string actionName, string actionId = null)
     {
         float useTime = Time.time;
-        lastCategoryUseTime[BuildCategoryCooldownKey(category)] = useTime;
-        lastActionUseTime[BuildActionCooldownKey(category, actionName, actionId)] = useTime;
+        CharacterObject activeChar = playerCharacter != null ? playerCharacter.characterObject : null;
+
+        CooldownKey categoryKey = new CooldownKey(activeChar, category);
+        lastCategoryUseTime[categoryKey] = useTime;
+
+        string normalizedActionName = !string.IsNullOrWhiteSpace(actionId)
+            ? actionId
+            : string.IsNullOrWhiteSpace(actionName) ? "Default" : actionName;
+        CooldownKey actionKey = new CooldownKey(activeChar, category, normalizedActionName);
+        lastActionUseTime[actionKey] = useTime;
     }
 
     private bool IsStandaloneContextAction(string actionName)
@@ -1791,36 +1815,6 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         }
 
         return false;
-    }
-
-    private string BuildCategoryCooldownKey(AttackCategory category)
-    {
-        return $"{GetCooldownCharacterKey()}::{category}";
-    }
-
-    private string BuildActionCooldownKey(AttackCategory category, string actionName, string actionId = null)
-    {
-        string normalizedActionName = !string.IsNullOrWhiteSpace(actionId)
-            ? actionId
-            : string.IsNullOrWhiteSpace(actionName) ? "Default" : actionName;
-        return $"{BuildCategoryCooldownKey(category)}::{normalizedActionName}";
-    }
-
-    private string GetCooldownCharacterKey()
-    {
-        if (playerCharacter != null && playerCharacter.characterObject != null)
-        {
-            if (!string.IsNullOrWhiteSpace(playerCharacter.characterObject.characterId))
-                return playerCharacter.characterObject.characterId;
-
-            if (playerCharacter.characterObject.metaData != null
-                && !string.IsNullOrWhiteSpace(playerCharacter.characterObject.metaData.displayName))
-            {
-                return playerCharacter.characterObject.metaData.displayName;
-            }
-        }
-
-        return "UnknownCharacter";
     }
 
     /// <summary>
@@ -1906,5 +1900,43 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         yield return new WaitForSeconds(delay);
         ApplyPriority(false);
         priorityResetCoroutine = null;
+    }
+
+    private struct CooldownKey : System.IEquatable<CooldownKey>
+    {
+        public readonly CharacterObject character;
+        public readonly AttackCategory category;
+        public readonly string actionIdOrName;
+
+        public CooldownKey(CharacterObject character, AttackCategory category, string actionIdOrName = null)
+        {
+            this.character = character;
+            this.category = category;
+            this.actionIdOrName = actionIdOrName;
+        }
+
+        public bool Equals(CooldownKey other)
+        {
+            return ReferenceEquals(character, other.character)
+                && category == other.category
+                && string.Equals(actionIdOrName, other.actionIdOrName, System.StringComparison.Ordinal);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is CooldownKey other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int hash = 17;
+                hash = hash * 23 + (character != null ? character.GetHashCode() : 0);
+                hash = hash * 23 + (int)category;
+                hash = hash * 23 + (actionIdOrName != null ? actionIdOrName.GetHashCode(System.StringComparison.Ordinal) : 0);
+                return hash;
+            }
+        }
     }
 }

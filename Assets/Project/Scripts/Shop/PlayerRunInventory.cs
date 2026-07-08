@@ -1552,7 +1552,7 @@ namespace Project.ShopSystem
                 return null;
             }
 
-            PlayerCharacter player = UnityEngine.Object.FindFirstObjectByType<PlayerCharacter>();
+            PlayerCharacter player = PlayerCharacter.Instance;
             return player != null && player.characterObject == character ? player : null;
         }
 

@@ -86,9 +86,9 @@ public class RuntimeEffectInstance
     public bool UsesTimer => definition != null
         && RuntimeEffectRuntimeUtility.GetDurationType(definition, recipe) == RuntimeEffectDurationType.Seconds;
     public bool IsExpired => UsesTimer && remainingSeconds <= 0f;
-    public string StackKey => RuntimeEffectRuntimeUtility.GetStackKey(definition, recipe);
-    public bool RequiresTicking => RuntimeEffectRuntimeUtility.RequiresTicking(this);
-    public bool AffectsStats => RuntimeEffectRuntimeUtility.AffectsStats(this);
+    public string StackKey { get; private set; }
+    public bool RequiresTicking { get; private set; }
+    public bool AffectsStats { get; private set; }
 
     public void Initialize(
         RuntimeEffectDefinition effectDefinition,
@@ -129,6 +129,11 @@ public class RuntimeEffectInstance
         lastTriggeredAt = -999f;
         childInstances?.Clear();
         childRecipeInstances?.Clear();
+
+        // Cache properties to avoid dynamic re-evaluation
+        StackKey = RuntimeEffectRuntimeUtility.GetStackKey(definition, recipe);
+        RequiresTicking = RuntimeEffectRuntimeUtility.RequiresTicking(definition, recipe);
+        AffectsStats = RuntimeEffectRuntimeUtility.AffectsStats(definition, recipe);
     }
 
     public void Refresh(float durationOverride = -1f)
@@ -243,7 +248,7 @@ public class RuntimeEffectInstance
     }
 }
 
-public sealed class RuntimeEffectContext
+public struct RuntimeEffectContext
 {
     public PlayerRunInventory runInventory;
     public RuntimeEffectInstance instance;

@@ -78,7 +78,7 @@ public class UltimateAction : SkillAction
     public override AttackCategory Category => AttackCategory.Ultimate;
 
     [Header("Aura Energy Cost")]
-    [Tooltip("Base AE cost before CDR cost reduction. Values <= 0 fall back to the default 100 AE cost.")]
+    [Tooltip("Authored AE cost. Use 0 for free follow-up ultimates.")]
     public float energyCost = 100f;
 
     [Header("Activation VFX")]

@@ -25,7 +25,7 @@ MonoBehaviour:
     elementalMastery: 0
     critRate: 5
     critDamage: 150
-    cooldownRate: 0
+    cooldownRate: -0.03
     impact: 0
     damageReduction: 0
     aeRecharge: 1
@@ -690,10 +690,10 @@ MonoBehaviour:
                 internalCooldown: 2
                 attackRatio: 0
                 sourceStatDamageSource: 0
-                sourceStatRatio: 0.04
-                targetMaxHpRatio: 0
+                sourceStatRatio: 0
+                targetMaxHpRatio: 0.04
                 capTargetMaxHpDamage: 1
-                targetMaxHpDamageCapSource: 0
+                targetMaxHpDamageCapSource: 1
                 targetMaxHpDamageCapRatio: 5
                 elementType: 3
               overrideStatus: 1
@@ -857,7 +857,7 @@ MonoBehaviour:
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0
-            appliesOn: 0
+            appliesOn: 2
             durationType: 0
             durationSeconds: 20
             stackMode: 0
@@ -1350,13 +1350,13 @@ MonoBehaviour:
                 internalCooldown: 2
                 attackRatio: 0
                 sourceStatDamageSource: 0
-                sourceStatRatio: 0.04
-                targetMaxHpRatio: 0
+                sourceStatRatio: 0
+                targetMaxHpRatio: 0.04
                 capTargetMaxHpDamage: 1
-                targetMaxHpDamageCapSource: 0
+                targetMaxHpDamageCapSource: 1
                 targetMaxHpDamageCapRatio: 5
                 elementType: 3
-              overrideStatus: 1
+              overrideStatus: 0
               status:
                 status: 0
         effect: {fileID: 11400000, guid: b7c3e4d5a6f147f18d29c30b45a6e7f8, type: 2}
@@ -1712,7 +1712,7 @@ MonoBehaviour:
       actionModifiers: []
       runtimeTagEffects: []
       runtimeEffects:
-      - trigger: 1
+      - trigger: 0
         filter:
           filterByCategory: 0
           category: 0
@@ -1728,17 +1728,17 @@ MonoBehaviour:
           runtimeTag: 
         recipe:
           recipeId: 
-          definition: {fileID: 0}
+          definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
           presentation:
             effectId: 
             displayName: 
             icon: {fileID: 0}
             fieldVisualPrefab: {fileID: 0}
           policy:
-            kind: 0
-            appliesOn: 0
-            durationType: 0
-            durationSeconds: 10
+            kind: 2
+            appliesOn: 2
+            durationType: 1
+            durationSeconds: 1
             stackMode: 0
             stackLimit: 1
             refreshDurationOnReapply: 1
@@ -1746,8 +1746,12 @@ MonoBehaviour:
             removeOnOwnerDamaged: 0
             stackKey: 
           parameters:
-            overrideStatModifiers: 0
-            statModifiers: []
+            overrideStatModifiers: 1
+            statModifiers:
+            - target: 1
+              operation: 3
+              sourceStat: 1
+              value: 0.2
             overrideDamageModifier: 0
             damageModifier:
               filter:
@@ -1808,8 +1812,8 @@ MonoBehaviour:
         stackLimit: 1
         refreshDurationOnReapply: 1
         durationOverride: -1
-        overrideSourceCharacter: 0
-        sourceCharacterId: 
+        overrideSourceCharacter: 1
+        sourceCharacterId: char_1_kyo
         filterByTargetElement: 1
         targetElement: 3
       counterEffects: []
@@ -1823,8 +1827,25 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: kyo.passive.lv4
       nodeName: Ash Team Attack
-      description: Increase Ash allies ATK based on 20% of Kyo ATK.
-      skillPanelDescriptionOverride: 
+      description: Increase Ash allies ATK based on 20% of Kyo ATK
+      skillPanelDescriptionOverride: 'Increase <b><color=#FF0000>Ash Allies</color></b>
+        DMG by 15%
+
+        
+
+        <size=20><color=#C0C0C0>- When dealing damage,
+        20% chance to deal additional <b><color=#FF0000>Ash</color></b> DMG based
+        on 20% of own ATK</color></size>
+
+        <size=20><color=#C0C0C0>- Unlock
+        <i>State3</i> on Basic Attack</color></size>
+
+        <size=20><color=#C0C0C0>-
+        When HP is above 70%, own AE Recharge increases by 25%</color></size>
+
+        <size=20><color=#C0C0C0>-
+        Increase <b><color=#FF0000>Ash</color></b> allies ATK based on 20% of Kyo
+        ATK</color></size>'
       track: 2
       level: 4
       fragmentCost: 1

@@ -9,9 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a9c37d0632e9497b9729207a53bb8469, type: 3}
-  m_Name: RuntimeEffect_DamageInput
-  m_EditorClassIdentifier: Assembly-CSharp::DamageInputRuntimeEffectDefinition
+  m_Script: {fileID: 11500000, guid: da0b77c5fc6d4e85ac7bf7ebe4fd4e37, type: 3}
+  m_Name: IncreaseATK-Related
+  m_EditorClassIdentifier: Assembly-CSharp::StatRuntimeEffectDefinition
   effectId: 
   displayName: 
   icon: {fileID: 0}
@@ -23,12 +23,4 @@ MonoBehaviour:
   refreshDurationOnReapply: 1
   stackable: 0
   removeOnOwnerDamaged: 0
-  filterByElement: 0
-  elementType: 0
-  filterByCategory: 0
-  category: 0
-  defenderDefensePercentAdd: 0
-  defenderDamageResistancePercentAdd: 0
-  ignoreDefense: 0
-  ignoreDamageResistance: 0
-  ignoreElementalIncomingModifiers: 0
+  statModifiers: []

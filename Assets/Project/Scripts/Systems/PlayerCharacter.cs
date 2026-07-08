@@ -7,6 +7,8 @@ using Project.InventorySystem.Items;
 /// </summary>
 public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
 {
+    public static PlayerCharacter Instance { get; private set; }
+
     // =========================================================
     // Character Data
     // =========================================================
@@ -67,6 +69,7 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
     // =========================================================
     void Awake()
     {
+        Instance = this;
         CacheSubSystems();
 
         // Auto-attach hurtbox drawer to player body
@@ -90,7 +93,7 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
 
     void Start()
     {
-        if (FindFirstObjectByType<TeamLoader>() == null)
+        if (TeamLoader.Instance == null)
         {
             ApplyCharacterData();
         }
@@ -218,7 +221,7 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         OnDamaged?.Invoke(actualDamage);
         NotifyHealthChanged();
         RuntimeEffects?.RemoveEffectsOnOwnerDamaged();
-        TeamLoader teamLoader = Object.FindFirstObjectByType<TeamLoader>();
+        TeamLoader teamLoader = TeamLoader.Instance;
         teamLoader?.RunInventory?.RemoveRuntimeEffectsOnOwnerDamaged(characterObject);
 
         if (Combat != null && Combat.activeThrowContext != null)
@@ -317,7 +320,7 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
 
         if (action is UltimateAction ultimateAction)
         {
-            TeamLoader loader = FindFirstObjectByType<TeamLoader>();
+            TeamLoader loader = TeamLoader.Instance;
             float currentAE = loader != null && characterObject != null
                 ? loader.GetCharacterCurrentAE(characterObject)
                 : 0f;
@@ -439,6 +442,24 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         if (characterObject != null)
         {
             Audio.Initialize(this, characterObject.audioData);
+        }
+    }
+
+    private Collider2D[] cachedColliders;
+    public Collider2D[] GetCachedColliders()
+    {
+        if (cachedColliders == null)
+        {
+            cachedColliders = GetComponentsInChildren<Collider2D>(true);
+        }
+        return cachedColliders;
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
         }
     }
 }

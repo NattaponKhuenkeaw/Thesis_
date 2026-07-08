@@ -18,10 +18,6 @@ public class StatusRuntimeEffectDefinition : RuntimeEffectDefinition
 
     private void SetStatus(RuntimeEffectContext context, bool enabled)
     {
-        if (context == null)
-        {
-            return;
-        }
 
         StatusEffectType resolvedStatus = ResolveStatus(context);
         if (context.targetEnemy != null)
@@ -38,7 +34,7 @@ public class StatusRuntimeEffectDefinition : RuntimeEffectDefinition
 
     private StatusEffectType ResolveStatus(RuntimeEffectContext context)
     {
-        RuntimeEffectParameterSet parameters = RuntimeEffectRuntimeUtility.GetParameters(context?.instance);
+        RuntimeEffectParameterSet parameters = RuntimeEffectRuntimeUtility.GetParameters(context.instance);
         return parameters != null && parameters.overrideStatus && parameters.status != null
             ? parameters.status.status
             : status;

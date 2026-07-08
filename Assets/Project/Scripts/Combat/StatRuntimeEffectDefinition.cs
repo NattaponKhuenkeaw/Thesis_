@@ -26,7 +26,7 @@ public class StatRuntimeEffectDefinition : RuntimeEffectDefinition
                 continue;
             }
 
-            if (modifier.operation == RuntimeEffectStatOperation.Multiply && context != null && context.multiplierSums != null)
+            if (modifier.operation == RuntimeEffectStatOperation.Multiply && context.multiplierSums != null)
             {
                 int statIndex = (int)modifier.target;
                 if (statIndex >= 0 && statIndex < context.multiplierSums.Length)
@@ -44,7 +44,7 @@ public class StatRuntimeEffectDefinition : RuntimeEffectDefinition
 
     private List<RuntimeEffectStatModifier> ResolveStatModifiers(RuntimeEffectContext context)
     {
-        RuntimeEffectParameterSet parameters = RuntimeEffectRuntimeUtility.GetParameters(context?.instance);
+        RuntimeEffectParameterSet parameters = RuntimeEffectRuntimeUtility.GetParameters(context.instance);
         return parameters != null && parameters.overrideStatModifiers
             ? parameters.statModifiers
             : statModifiers;
@@ -52,7 +52,7 @@ public class StatRuntimeEffectDefinition : RuntimeEffectDefinition
 
     private static int ResolveStackCount(RuntimeEffectContext context)
     {
-        return Mathf.Max(1, context?.instance != null ? context.instance.stackCount : 1);
+        return Mathf.Max(1, context.instance != null ? context.instance.stackCount : 1);
     }
 
     private static float ResolveModifiedValue(
@@ -66,7 +66,7 @@ public class StatRuntimeEffectDefinition : RuntimeEffectDefinition
         {
             RuntimeEffectStatOperation.Multiply => current * Mathf.Pow(modifier.value, stackCount),
             RuntimeEffectStatOperation.Override => modifier.value,
-            RuntimeEffectStatOperation.AddSourceStatRatio => current + GetStat(context?.sourceStats, modifier.sourceStat) * modifier.value * stackCount,
+            RuntimeEffectStatOperation.AddSourceStatRatio => current + GetStat(context.sourceStats, modifier.sourceStat) * modifier.value * stackCount,
             RuntimeEffectStatOperation.AddTargetStatRatio => current + GetStat(targetStats, modifier.sourceStat) * modifier.value * stackCount,
             _ => current + modifier.value * stackCount
         };

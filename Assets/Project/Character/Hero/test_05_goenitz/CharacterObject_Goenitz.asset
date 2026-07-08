@@ -93,7 +93,9 @@ MonoBehaviour:
       nodeId: base.skill
       nodeName: Base Skill
       description: 
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: 'Summon Tornado hit 10 times, Inflict <b><color=#00FFED>Echo</color></b>
+        DMG 350% of own ATK,<color=#C0C0C0>When CRIT land will do 250% of critical
+        damage dealt</color> '
       track: 0
       level: 0
       fragmentCost: 0
@@ -116,7 +118,8 @@ MonoBehaviour:
       nodeId: base.ultimate
       nodeName: Base Ultimate
       description: 
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: Inflict <b><color=#00FFED>Echo</color></b> DMG
+        800%+300% of own ATK
       track: 1
       level: 0
       fragmentCost: 0
@@ -178,10 +181,10 @@ MonoBehaviour:
       enemyElementModifiers: []
       passiveHookTypeName: 
       nodeId: goenitz.passive.base
-      nodeName: Wind Evasion
-      description: Yonokaze critical hits use 250% CRIT DMG. Also grants 35% chance
-        to evade incoming enemy attacks.
-      skillPanelDescriptionOverride: 
+      nodeName: Wind God
+      description: Also grants 35% chance to evade incoming enemy attacks.
+      skillPanelDescriptionOverride: There 35% chance to <b>Evade</b> Incoming attack
+        from enemy
       track: 2
       level: 0
       fragmentCost: 0
@@ -196,8 +199,8 @@ MonoBehaviour:
         filter:
           filterByCategory: 1
           category: 1
-          filterByActionId: 1
-          actionId: goenitz.skill.yonokaze
+          filterByActionId: 0
+          actionId: 
           filterByActionName: 0
           actionName: 
           filterByStepName: 0
@@ -208,17 +211,17 @@ MonoBehaviour:
           runtimeTag: 
         recipe:
           recipeId: 
-          definition: {fileID: 0}
+          definition: {fileID: 11400000, guid: ad4fabc14e4967046a460f64619eaca3, type: 2}
           presentation:
             effectId: 
-            displayName: 
-            icon: {fileID: 0}
+            displayName: Increase CRIT Chance
+            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0
             appliesOn: 0
             durationType: 0
-            durationSeconds: 10
+            durationSeconds: 5
             stackMode: 0
             stackLimit: 1
             refreshDurationOnReapply: 1
@@ -226,8 +229,12 @@ MonoBehaviour:
             removeOnOwnerDamaged: 0
             stackKey: 
           parameters:
-            overrideStatModifiers: 0
-            statModifiers: []
+            overrideStatModifiers: 1
+            statModifiers:
+            - target: 5
+              operation: 0
+              sourceStat: 5
+              value: 17
             overrideDamageModifier: 0
             damageModifier:
               filter:
@@ -282,7 +289,7 @@ MonoBehaviour:
             status:
               status: 5
           childRecipes: []
-        effect: {fileID: 11400000, guid: 262da460f8c14f18a892f72bc32f26d9, type: 2}
+        effect: {fileID: 0}
         scope: 0
         stackMode: 0
         stackLimit: 1
@@ -304,7 +311,10 @@ MonoBehaviour:
       nodeId: goenitz.skill.lv1
       nodeName: Yonokaze Focus
       description: Increase CRIT Chance by 17% for 5 seconds after Yonokaze.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: "Summon Tornado hit 10 times, Inflict <b><color=#00FFED>Echo</color></b>
+        DMG 350% of own ATK,<color=#C0C0C0>When CRIT land will do 250% of critical
+        damage dealt</color> \r\n\r\n<size=20><color=#C0C0C0>- Increase <b>CRIT Chance</b>
+        by 17% for 5 seconds</color></size>"
       track: 0
       level: 1
       fragmentCost: 1
@@ -318,8 +328,8 @@ MonoBehaviour:
         filter:
           filterByCategory: 1
           category: 1
-          filterByActionId: 1
-          actionId: goenitz.skill.yonokaze
+          filterByActionId: 0
+          actionId: 
           filterByActionName: 0
           actionName: 
           filterByStepName: 0
@@ -330,17 +340,17 @@ MonoBehaviour:
           runtimeTag: 
         recipe:
           recipeId: 
-          definition: {fileID: 0}
+          definition: {fileID: 11400000, guid: 18cbcd66e506598448fbf7c3475802ae, type: 2}
           presentation:
             effectId: 
-            displayName: 
-            icon: {fileID: 0}
+            displayName: Increase CRIT Damage
+            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0
             appliesOn: 0
             durationType: 0
-            durationSeconds: 10
+            durationSeconds: 5
             stackMode: 0
             stackLimit: 1
             refreshDurationOnReapply: 1
@@ -348,8 +358,12 @@ MonoBehaviour:
             removeOnOwnerDamaged: 0
             stackKey: 
           parameters:
-            overrideStatModifiers: 0
-            statModifiers: []
+            overrideStatModifiers: 1
+            statModifiers:
+            - target: 6
+              operation: 0
+              sourceStat: 6
+              value: 43
             overrideDamageModifier: 0
             damageModifier:
               filter:
@@ -404,7 +418,7 @@ MonoBehaviour:
             status:
               status: 5
           childRecipes: []
-        effect: {fileID: 11400000, guid: 02884ac6c9d748da8fb3bfe6e8753c9d, type: 2}
+        effect: {fileID: 0}
         scope: 0
         stackMode: 0
         stackLimit: 1
@@ -426,7 +440,11 @@ MonoBehaviour:
       nodeId: goenitz.skill.lv2
       nodeName: Yonokaze Edge
       description: Increase CRIT Damage by 43% for 5 seconds after Yonokaze.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: "Summon Tornado hit 10 times, Inflict <b><color=#00FFED>Echo</color></b>
+        DMG 350% of own ATK,<color=#C0C0C0>When CRIT land will do 250% of critical
+        damage dealt</color> \r\n\r\n<size=20><color=#C0C0C0>- Increase <b>CRIT Chance</b>
+        by 17% for 5 seconds</color></size>\r\n<size=20><color=#C0C0C0>- Increase
+        CRIT Damage by 43% for 5 seconds</color></size>"
       track: 0
       level: 2
       fragmentCost: 1
@@ -472,10 +490,12 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: goenitz.skill.lv3
       nodeName: Yonokaze Force
-      description: 'Increase Yonokaze damage multiplier to 450
-
-        %.'
-      skillPanelDescriptionOverride: 
+      description: Increase Yonokaze damage multiplier to 450%.
+      skillPanelDescriptionOverride: "Summon Tornado hit 10 times, Inflict <b><color=#00FFED>Echo</color></b>
+        DMG <b><color=#FFA500>450%</color></b> of own ATK,<color=#C0C0C0>When CRIT
+        land will do 250% of critical damage dealt</color> \r\n\r\n<size=20><color=#C0C0C0>-
+        Increase <b>CRIT Chance</b> by 17% for 5 seconds</color></size>\r\n<size=20><color=#C0C0C0>-
+        Increase CRIT Damage by 43% for 5 seconds</color></size>"
       track: 0
       level: 3
       fragmentCost: 1
@@ -523,7 +543,12 @@ MonoBehaviour:
       nodeName: Yonokaze Storm
       description: Yonokaze uses the upgraded tornado projectile with bigger coverage,
         longer lifespan, and more hits.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: "Summon <b><color=#FFA500>Lethal</color></b>
+        Tornado hit <b><color=#FFA500>16</color></b> times, Inflict <b><color=#00FFED>Echo</color></b>
+        DMG <b><color=#FFA500>450%</color></b> of own ATK,<color=#C0C0C0>When CRIT
+        land will do 250% of critical damage dealt</color> \r\n\r\n<size=20><color=#C0C0C0>-
+        Increase <b>CRIT Chance</b> by 17% for 5 seconds</color></size>\r\n<size=20><color=#C0C0C0>-
+        Increase CRIT Damage by 43% for 5 seconds</color></size>"
       track: 0
       level: 4
       fragmentCost: 1
@@ -549,15 +574,15 @@ MonoBehaviour:
           runtimeTag: 
         recipe:
           recipeId: 
-          definition: {fileID: 0}
+          definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
           presentation:
             effectId: 
-            displayName: 
+            displayName: Decrease Echo DMG Resistence
             icon: {fileID: 0}
             fieldVisualPrefab: {fileID: 0}
           policy:
-            kind: 0
-            appliesOn: 0
+            kind: 1
+            appliesOn: 1
             durationType: 0
             durationSeconds: 10
             stackMode: 0
@@ -569,15 +594,15 @@ MonoBehaviour:
           parameters:
             overrideStatModifiers: 0
             statModifiers: []
-            overrideDamageModifier: 0
+            overrideDamageModifier: 1
             damageModifier:
               filter:
-                filterByElement: 0
-                elementType: 0
+                filterByElement: 1
+                elementType: 2
                 filterByCategory: 0
                 category: 0
               outgoingDamagePercentAdd: 0
-              incomingDamageTakenPercentAdd: 0
+              incomingDamageTakenPercentAdd: 15
             overrideDamageInput: 0
             damageInput:
               filter:
@@ -623,7 +648,7 @@ MonoBehaviour:
             status:
               status: 5
           childRecipes: []
-        effect: {fileID: 11400000, guid: 6326b5e5749ab6b4c850497293bdf33b, type: 2}
+        effect: {fileID: 0}
         scope: 2
         stackMode: 0
         stackLimit: 1
@@ -645,7 +670,14 @@ MonoBehaviour:
       nodeId: goenitz.ultimate.lv1
       nodeName: Echo Rend
       description: Yamidokoku hits reduce enemy Echo resistance by 15% for 10 seconds.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: 'Inflict <b><color=#00FFED>Echo</color></b>
+        DMG 800%+300% of own ATK
+
+        
+
+        <size=20><color=#C0C0C0>- When
+        Hit, Decrease Enemy <b><color=#00FFED>Echo</color></b>DMG Resistance -15%
+        for 10 seconds</color></size>'
       track: 1
       level: 1
       fragmentCost: 1
@@ -654,7 +686,7 @@ MonoBehaviour:
       cooldownModifiers: []
       actionModifiers:
       - category: 2
-        actionId: goenitz.ultimate.yamidokoku
+        actionId: 
         actionName: 
         stepName: 
         unlocked: 1
@@ -693,7 +725,14 @@ MonoBehaviour:
       nodeName: Yamidokoku Force
       description: Increase Yamidokoku damage multiplier to 1000% and use the upgraded
         500% secondary tornado package.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: 'Inflict <b><color=#00FFED>Echo</color></b>
+        DMG <b><color=#FFA500>1000%</color></b>+300% of own ATK
+
+        
+
+        <size=20><color=#C0C0C0>-
+        When Hit, Decrease Enemy <b><color=#00FFED>Echo</color></b>DMG Resistance
+        -15% for 10 seconds</color></size>'
       track: 1
       level: 2
       fragmentCost: 1
@@ -758,8 +797,18 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: goenitz.ultimate.lv3
       nodeName: Jissokoku Window
-      description: 
-      skillPanelDescriptionOverride: 
+      description: 'After Yamidokoku, Self can perform a Follow-up "Shin : Yaotome"'
+      skillPanelDescriptionOverride: 'Inflict <b><color=#00FFED>Echo</color></b>
+        DMG <b><color=#FFA500>1000%</color></b>+300% of own ATK
+
+        
+
+        <size=20><color=#C0C0C0>-
+        When Hit, Decrease Enemy <b><color=#00FFED>Echo</color></b>DMG Resistance
+        -15% for 10 seconds</color></size>
+
+        <size=20><color=#C0C0C0>- After
+        Yamidokoku, Self can perform a Follow-up "Shin : Yaotome"</color></size>'
       track: 1
       level: 3
       fragmentCost: 1
@@ -784,7 +833,7 @@ MonoBehaviour:
           runtimeTag: 
         tag: goenitz_ultimate_state
         addTag: 1
-        duration: 10
+        duration: 99999
       - trigger: 2
         filter:
           filterByCategory: 1
@@ -819,22 +868,22 @@ MonoBehaviour:
           runtimeTag: goenitz_ultimate_state
         recipe:
           recipeId: 
-          definition: {fileID: 0}
+          definition: {fileID: 11400000, guid: 5f0e9114d9634764c88b13d6b1fabf92, type: 2}
           presentation:
             effectId: 
-            displayName: 
-            icon: {fileID: 0}
+            displayName: Wind Frenzy
+            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0
             appliesOn: 0
-            durationType: 0
-            durationSeconds: 10
+            durationType: 1
+            durationSeconds: 1
             stackMode: 0
-            stackLimit: 1
+            stackLimit: 99
             refreshDurationOnReapply: 1
-            stackable: 0
-            removeOnOwnerDamaged: 0
+            stackable: 1
+            removeOnOwnerDamaged: 1
             stackKey: 
           parameters:
             overrideStatModifiers: 0
@@ -892,8 +941,94 @@ MonoBehaviour:
             overrideStatus: 0
             status:
               status: 5
-          childRecipes: []
-        effect: {fileID: 11400000, guid: 984a70af884b4a4a8ca6752c82ff3f65, type: 2}
+          childRecipes:
+          - recipeId: 
+            definition: {fileID: 11400000, guid: 360eb8d9c006c6040ad7e06eb679f8d9, type: 2}
+            presentation:
+              effectId: 
+              displayName: 
+              icon: {fileID: 0}
+              fieldVisualPrefab: {fileID: 0}
+            policy:
+              kind: 0
+              appliesOn: 0
+              durationType: 1
+              durationSeconds: 1
+              stackMode: 0
+              stackLimit: 99
+              refreshDurationOnReapply: 0
+              stackable: 0
+              removeOnOwnerDamaged: 0
+              stackKey: 
+            parameters:
+              overrideStatModifiers: 1
+              statModifiers:
+              - target: 1
+                operation: 1
+                sourceStat: 0
+                value: 1.05
+              - target: 5
+                operation: 0
+                sourceStat: 0
+                value: 5
+              - target: 6
+                operation: 0
+                sourceStat: 0
+                value: 5
+              overrideDamageModifier: 0
+              damageModifier:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                outgoingDamagePercentAdd: 0
+                incomingDamageTakenPercentAdd: 0
+              overrideDamageInput: 0
+              damageInput:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                defenderDefensePercentAdd: 0
+                defenderDamageResistancePercentAdd: 0
+                ignoreDefense: 0
+                ignoreDamageResistance: 0
+                ignoreElementalIncomingModifiers: 0
+              overridePeriodicHeal: 0
+              periodicHeal:
+                tickInterval: 0
+                valueSource: 0
+                valueRatio: 0
+                flatValue: 0
+                useSourceStats: 0
+              overrideLifesteal: 0
+              lifesteal:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                damageDealtRatio: 0
+                lowHpThreshold: 0
+                lowHpMultiplier: 0
+              overrideAdditionalDamage: 0
+              additionalDamage:
+                chance: 0
+                internalCooldown: 0
+                attackRatio: 0
+                sourceStatDamageSource: 0
+                sourceStatRatio: 0
+                targetMaxHpRatio: 0
+                capTargetMaxHpDamage: 0
+                targetMaxHpDamageCapSource: 0
+                targetMaxHpDamageCapRatio: 0
+                elementType: 0
+              overrideStatus: 0
+              status:
+                status: 0
+        effect: {fileID: 0}
         scope: 0
         stackMode: 0
         stackLimit: 99
@@ -932,7 +1067,15 @@ MonoBehaviour:
       nodeName: Yamidokoku Ascension
       description: During either Ultimate, self is immune to damage and debuffs.
         Ultimate kills grant a stacking attack-related buff until hit.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: "Inflict <b><color=#00FFED>Echo</color></b>
+        DMG <b><color=#FFA500>1000%</color></b>+300% of own ATK\r\n\r\n<size=20><color=#C0C0C0>-
+        When Hit, Decrease Enemy <b><color=#00FFED>Echo</color></b>DMG Resistance
+        -15% for 10 seconds</color></size>\r\n<size=20><color=#C0C0C0>- After Yamidokoku,
+        Self can perform a Follow-up \"Shin : Yaotome\"</color></size>\r\n<size=20><color=#C0C0C0>-
+        During Ultimate, self will become Immunity to all Damage / Debuff, if Ultimate
+        killed enemy, self will grant \"Wind Frenzy\" 1 stack per kill</color></size>\r\n<size=19><color=#00ffff>
+        \u2022 Wind Frenzy: Increase ATK-Related Stat by 7%, Remove if owner got
+        damaged</color></size>"
       track: 1
       level: 4
       fragmentCost: 1
@@ -958,17 +1101,17 @@ MonoBehaviour:
           runtimeTag: 
         recipe:
           recipeId: 
-          definition: {fileID: 0}
+          definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
           presentation:
             effectId: 
-            displayName: 
+            displayName: Decrease Echo Resistance
             icon: {fileID: 0}
             fieldVisualPrefab: {fileID: 0}
           policy:
-            kind: 0
-            appliesOn: 0
-            durationType: 0
-            durationSeconds: 10
+            kind: 1
+            appliesOn: 1
+            durationType: 1
+            durationSeconds: 1
             stackMode: 0
             stackLimit: 1
             refreshDurationOnReapply: 1
@@ -978,15 +1121,15 @@ MonoBehaviour:
           parameters:
             overrideStatModifiers: 0
             statModifiers: []
-            overrideDamageModifier: 0
+            overrideDamageModifier: 1
             damageModifier:
               filter:
-                filterByElement: 0
-                elementType: 0
+                filterByElement: 1
+                elementType: 2
                 filterByCategory: 0
                 category: 0
               outgoingDamagePercentAdd: 0
-              incomingDamageTakenPercentAdd: 0
+              incomingDamageTakenPercentAdd: 15
             overrideDamageInput: 0
             damageInput:
               filter:
@@ -1032,7 +1175,7 @@ MonoBehaviour:
             status:
               status: 5
           childRecipes: []
-        effect: {fileID: 11400000, guid: 9b4481e2dad64716b7ec9de5e74ff12f, type: 2}
+        effect: {fileID: 0}
         scope: 2
         stackMode: 0
         stackLimit: 1
@@ -1054,7 +1197,13 @@ MonoBehaviour:
       nodeId: goenitz.passive.lv1
       nodeName: Echo Scar
       description: Critical hits reduce enemy Echo resistance by 15%.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: 'There 35% chance to <b>Evade</b> Incoming attack
+        from enemy
+
+        
+
+        <size=20><color=#C0C0C0>- When self CRIT,
+        Reduce Enemy Echo Resistance by -15%<i>(permanent)(not stackable)</i></color></size>'
       track: 2
       level: 1
       fragmentCost: 1
@@ -1084,7 +1233,7 @@ MonoBehaviour:
           runtimeTag: 
         chance: 1
         internalCooldown: 0
-        attackRatio: 1
+        attackRatio: 2
         targetMaxHpRatio: 0
         capTargetMaxHpDamage: 0
         targetMaxHpDamageCapSource: 0
@@ -1098,7 +1247,17 @@ MonoBehaviour:
       nodeId: goenitz.passive.lv2
       nodeName: Dash Echo
       description: Dashing through enemies inflicts Echo damage equal to 100% ATK.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: 'There 35% chance to <b>Evade</b> Incoming attack
+        from enemy
+
+        
+
+        <size=20><color=#C0C0C0>- When self CRIT,
+        Reduce Enemy Echo Resistance by -15%<i>(permanent)(not stackable)</i></color></size>
+
+        <size=20><color=#C0C0C0>-
+        Dashing through enemies Inflicts <b><color=#00FFED>Echo</color></b> DMG 200%
+        of own ATK</color></size>'
       track: 2
       level: 2
       fragmentCost: 1
@@ -1221,7 +1380,22 @@ MonoBehaviour:
       nodeName: After Dash Echo
       description: After dash, first damaging action deals additional Echo DMG equal
         to 4% enemy Max HP.
-      skillPanelDescriptionOverride: 
+      skillPanelDescriptionOverride: 'There 35% chance to <b>Evade</b> Incoming attack
+        from enemy
+
+        
+
+        <size=20><color=#C0C0C0>- When self CRIT,
+        Reduce Enemy Echo Resistance by -15%<i>(permanent)(not stackable)</i></color></size>
+
+        <size=20><color=#C0C0C0>-
+        Dashing through enemies Inflicts <b><color=#00FFED>Echo</color></b> DMG 200%
+        of own ATK</color></size>
+
+        <size=20><color=#C0C0C0>- After dash,
+        First damaging action deals additional <b><color=#00FFED>Echo</color></b>
+        DMG to 4% enemy Max HP(capped at 500% own ATK), and After dash self will
+        start basic attack at <i> State4</i></color></size>'
       track: 2
       level: 3
       fragmentCost: 1
@@ -1258,8 +1432,25 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: goenitz.passive.lv4
       nodeName: Wind Evasion Mastery
-      description: Increase evasion chance to 65%.
-      skillPanelDescriptionOverride: 
+      description: Increase evasion chance to 65%
+      skillPanelDescriptionOverride: 'There <b><color=#FFA500>65%</color></b> chance
+        to <b>Evade</b> Incoming attack from enemy
+
+        
+
+        <size=20><color=#C0C0C0>-
+        When self CRIT, Reduce Enemy Echo Resistance by -15%<i>(permanent)(not stackable)</i></color></size>
+
+        <size=20><color=#C0C0C0>-
+        Dashing through enemies Inflicts <b><color=#00FFED>Echo</color></b> DMG 200%
+        of own ATK</color></size>
+
+        <size=20><color=#C0C0C0>- After dash,
+        First damaging action deals additional <b><color=#00FFED>Echo</color></b>
+        DMG to 4% enemy Max HP(capped at 500% own ATK), and After dash self will
+        start basic attack at <i> State4</i></color></size>
+
+'
       track: 2
       level: 4
       fragmentCost: 1

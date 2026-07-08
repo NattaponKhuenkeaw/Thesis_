@@ -957,7 +957,7 @@ MonoBehaviour:
       data:
         entries:
         - label: VFX
-          vfxType: 105
+          vfxType: 110
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 13
@@ -1184,7 +1184,7 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
         hitSFX: {fileID: 8300000, guid: 4bd6b8731ae78744395b02a901c49b23, type: 3}
-        hitVFXType: 107
+        hitVFXType: 112
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 1
@@ -1601,7 +1601,7 @@ MonoBehaviour:
       data:
         entries:
         - label: VFX
-          vfxType: 106
+          vfxType: 111
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 9
@@ -1631,7 +1631,7 @@ MonoBehaviour:
       data:
         entries:
         - label: VFX
-          vfxType: 106
+          vfxType: 111
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 0
@@ -1833,7 +1833,7 @@ MonoBehaviour:
           hitData:
             rid: 3612912868654055606
           eventData:
-            rid: -2
+            rid: 3612912935743783009
           componentOrder:
           - motion
           - vfx
@@ -1883,7 +1883,7 @@ MonoBehaviour:
       data:
         entries:
         - label: VFX
-          vfxType: 105
+          vfxType: 110
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 13
@@ -1904,7 +1904,7 @@ MonoBehaviour:
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
         - label: VFX
-          vfxType: 125
+          vfxType: 148
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
           triggerFrame: 49
@@ -1998,7 +1998,7 @@ MonoBehaviour:
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 2
-        impactFreezeFrames: 5
+        impactFreezeFrames: 1
         knockbackFrames: 19
         knockupFrames: 15
         knockfallFrames: 13
@@ -2064,7 +2064,7 @@ MonoBehaviour:
         impactTier: 2
         useDeterministicReaction: 1
         reactionKind: 2
-        impactFreezeFrames: 13
+        impactFreezeFrames: 20
         knockbackFrames: 19
         knockupFrames: 15
         knockfallFrames: 13
@@ -2091,3 +2091,60 @@ MonoBehaviour:
         tag: rugal.omega_mode
         shouldExist: 1
         applyOnActionStart: 0
+    - rid: 3612912935743783009
+      type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: Ultimate Sequence
+          eventType: 2
+          triggerFrame: 57
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          freezeWorld: 1
+          freezeDurationOverride: 0
+          timelineMode: 0
+          activationVFXType: 0
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 0, z: 0}
+          activationVoice: {fileID: 0}
+          activationSFX: {fileID: 0}
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0.4
+              endStrength: 0.08
+              duration: 0.14
+              pulseInterval: 0.025
+              slowMotion:
+                enabled: 1
+                timeScale: 0.5
+                duration: 0.8
+                delaySeconds: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          enableUltimateZoom: 0
+          ultimateZoomSize: 5

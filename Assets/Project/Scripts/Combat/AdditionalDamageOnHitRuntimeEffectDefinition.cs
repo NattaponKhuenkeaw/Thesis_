@@ -177,10 +177,10 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
             return;
         }
 
-        TeamLoader teamLoader = Object.FindFirstObjectByType<TeamLoader>();
+        TeamLoader teamLoader = TeamLoader.Instance;
         teamLoader?.RunInventory?.ModifyDamageInput(sourceCharacter, input);
 
-        PlayerCharacter activePlayer = Object.FindFirstObjectByType<PlayerCharacter>();
+        PlayerCharacter activePlayer = PlayerCharacter.Instance;
         if (activePlayer != null
             && activePlayer.characterObject == sourceCharacter
             && activePlayer.RuntimeEffects != null)
