@@ -17,7 +17,7 @@ public static class CombatFormula
             defenderDefense,
             defenderDamageResistance);
 
-        bool canCrit = routine != DamageRoutine.Additional;
+        bool canCrit = CanRoutineCrit(routine);
         float critRate = attackerStats != null ? Mathf.Max(0f, attackerStats.critRate) : 0f;
         float critDamage = attackerStats != null ? Mathf.Max(0f, attackerStats.critDamage) : 150f;
         isCrit = canCrit && Random.Range(0f, 100f) <= critRate;
@@ -26,7 +26,7 @@ public static class CombatFormula
             ? mitigatedDamage * (critDamage / 100f)
             : mitigatedDamage;
 
-        if (routine != DamageRoutine.Additional)
+        if (UsesPrimaryDamageScaling(routine))
         {
             if (elementType != ElementType.None)
             {
@@ -44,6 +44,16 @@ public static class CombatFormula
         }
 
         return Mathf.Max(0f, resolvedDamage);
+    }
+
+    private static bool CanRoutineCrit(DamageRoutine routine)
+    {
+        return routine != DamageRoutine.Additional && routine != DamageRoutine.Dot;
+    }
+
+    private static bool UsesPrimaryDamageScaling(DamageRoutine routine)
+    {
+        return routine == DamageRoutine.Normal || routine == DamageRoutine.Elemental;
     }
 
     public static float CalculateOutgoingDamage(float baseAttack, float actionMultiplier, float critRate, float critDmg, float impact, bool isUlt, out bool isCrit)

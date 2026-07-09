@@ -156,6 +156,7 @@ public class PlayerAnimator : MonoBehaviour
             return;
 
         SafeSetTrigger(landingHash);
+        TryPlayFirstExistingState(new[] { "Landed", "Landing", "Land" });
     }
 
     public void TriggerGrounded()

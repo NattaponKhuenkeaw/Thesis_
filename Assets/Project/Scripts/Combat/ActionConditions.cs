@@ -206,7 +206,7 @@ public class AirborneLandingActionCondition : ActionConditionBase
 
     public override bool IsMet(InputContext context)
     {
-        bool justLanded = context.wasAirborne && context.isGrounded;
+        bool justLanded = context.justLanded || (context.wasAirborne && context.isGrounded);
         return requireJustLanded ? justLanded : !justLanded;
     }
 }

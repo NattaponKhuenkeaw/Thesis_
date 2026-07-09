@@ -379,7 +379,7 @@ MonoBehaviour:
           hitData:
             rid: 1588255892939997285
           eventData:
-            rid: -2
+            rid: 3612912955328561274
           componentOrder:
           - motion
           - vfx
@@ -867,10 +867,10 @@ MonoBehaviour:
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
         - label: SFX
           clip: {fileID: 8300000, guid: c447de956826bf749985ff02ed393875, type: 3}
-          triggerFrame: 1
-          duration: 5
-          channel: 3
-          volume: 0.8
+          triggerFrame: 2
+          duration: 20
+          channel: 0
+          volume: 1
           pitchVariation: 1.025
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 1588255929706479721
@@ -899,9 +899,9 @@ MonoBehaviour:
         entries:
         - label: SFX
           clip: {fileID: 8300000, guid: e2db392aec607704d841a17fd9d613bb, type: 3}
-          triggerFrame: 5
+          triggerFrame: 0
           duration: 31
-          channel: 1
+          channel: 0
           volume: 1
           pitchVariation: 1
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
@@ -913,7 +913,7 @@ MonoBehaviour:
           clip: {fileID: 8300000, guid: a9fb943645ae73145b18a47e03c048ea, type: 3}
           triggerFrame: 3
           duration: 2
-          channel: 1
+          channel: 0
           volume: 1
           pitchVariation: 1
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
@@ -921,7 +921,7 @@ MonoBehaviour:
           clip: {fileID: 8300000, guid: a9fb943645ae73145b18a47e03c048ea, type: 3}
           triggerFrame: 23
           duration: 2
-          channel: 1
+          channel: 0
           volume: 1
           pitchVariation: 1
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
@@ -936,6 +936,14 @@ MonoBehaviour:
           channel: 1
           volume: 0.35
           pitchVariation: 1.5
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: a9fb943645ae73145b18a47e03c048ea, type: 3}
+          triggerFrame: 1
+          duration: 20
+          channel: 0
+          volume: 1
+          pitchVariation: 1
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 1588255929706479739
       type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
@@ -959,10 +967,10 @@ MonoBehaviour:
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
         - label: SFX
           clip: {fileID: 8300000, guid: aa2f17f3fd555b04cadabc9a4294673a, type: 3}
-          triggerFrame: 16
-          duration: 10
+          triggerFrame: 13
+          duration: 20
           channel: 0
-          volume: 0.5
+          volume: 1
           pitchVariation: 1
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 1588255929706479744
@@ -971,10 +979,10 @@ MonoBehaviour:
         entries:
         - label: SFX
           clip: {fileID: 8300000, guid: 11ffd8b0e2c923c4981911da30c11c84, type: 3}
-          triggerFrame: 1
-          duration: 11
-          channel: 1
-          volume: 0.7
+          triggerFrame: 0
+          duration: 20
+          channel: 0
+          volume: 1
           pitchVariation: 0.95
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 1588255929706479745
@@ -1627,7 +1635,7 @@ MonoBehaviour:
           vfxData:
             rid: -2
           audioData:
-            rid: -2
+            rid: 3612912955328561276
           hitData:
             rid: 3612912868654055576
           eventData:
@@ -1832,7 +1840,7 @@ MonoBehaviour:
           freezeWorld: 1
           freezeDurationOverride: 0
           timelineMode: 1
-          activationVFXType: 40
+          activationVFXType: 41
           activationVFXPrefab: {fileID: 0}
           activationVFXOffset: {x: 0, y: 1.2, z: 0}
           activationVoice: {fileID: 8300000, guid: ef43c36354e8b5646b82bad20297704c, type: 3}
@@ -2557,7 +2565,7 @@ MonoBehaviour:
               duration: 0.14
               pulseInterval: 0.025
               slowMotion:
-                enabled: 1
+                enabled: 0
                 timeScale: 0.2
                 duration: 0.1
                 delaySeconds: 0
@@ -2783,3 +2791,72 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
+    - rid: 3612912955328561274
+      type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: Ultimate Sequence
+          eventType: 0
+          triggerFrame: 0
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          freezeWorld: 1
+          freezeDurationOverride: 1.5
+          timelineMode: 0
+          activationVFXType: 40
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 1.5, z: 0}
+          activationVoice: {fileID: 8300000, guid: 57bd8ddfd659e374c9b31fa6943c3328, type: 3}
+          activationSFX: {fileID: 8300000, guid: ed0af5caac4022f4c863b2a5b665c05a, type: 3}
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0.4
+              endStrength: 0.08
+              duration: 0.14
+              pulseInterval: 0.025
+              slowMotion:
+                enabled: 0
+                timeScale: 0.35
+                duration: 0.08
+                delaySeconds: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          enableUltimateZoom: 1
+          ultimateZoomSize: 5
+    - rid: 3612912955328561276
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: 3def1468090c32d4b9fa53fbd17cbae4, type: 3}
+          triggerFrame: 11
+          duration: 20
+          channel: 0
+          volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}

@@ -13,31 +13,31 @@ MonoBehaviour:
   m_Name: MovementProfile_Slow
   m_EditorClassIdentifier: Assembly-CSharp::MovementProfile
   moveSpeed: 6.5
-  jumpForce: 20
-  maxJumpCount: 1
+  jumpForce: 22
+  maxJumpCount: 2
   maxAirDashCount: 1
   groundAcceleration: 110
-  groundDeceleration: 150
-  airAcceleration: 45
-  airDeceleration: 110
-  airSpeedMultiplier: 1
+  groundDeceleration: 140
+  airAcceleration: 110
+  airDeceleration: 140
+  airSpeedMultiplier: 1.1
   fastFallMultiplier: 10
-  riseGravityMultiplier: 2.5
+  riseGravityMultiplier: 3.5
   apexGravityMultiplier: 5
   apexVelocityThreshold: 1.6
   postAttackGravityGraceDuration: 0.1
   coyoteTime: 0.12
   jumpBufferTime: 0.15
-  fallGravityMultiplier: 2
+  fallGravityMultiplier: 3
   maxFallSpeed: 25
-  jumpStartupTime: 0.1
+  jumpStartupTime: 0.05
   landingLagTime: 0.1
   dropDownDuration: 0.2
   movementInputDeadZone: 0.7
   verticalSpeedPenalty: 0.5
   groundedActionProbeDistance: 0.35
   airborneActionVelocityThreshold: 0.15
-  enableAttackFacingLockOn: 1
+  enableAttackFacingLockOn: 0
   attackFacingCancelInputThreshold: 0.2
   airborneGravityPolicy:
     startupVelocityRetain: 0.05

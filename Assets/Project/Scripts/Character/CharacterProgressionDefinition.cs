@@ -69,7 +69,8 @@ public enum PassiveTriggerType
     OnKillDealt,
     OnGrabSuccess,
     OnAfterDash,
-    OnIncomingDamageCheck
+    OnIncomingDamageCheck,
+    OnDamageTaken
 }
 
 public enum PassiveCounterOperation
@@ -179,6 +180,12 @@ public enum PassiveRuntimeValueSubject
 public enum PassiveRuntimeValueMetric
 {
     CurrentHpRatio
+}
+
+public enum PassiveRuntimeEnemyTargetSource
+{
+    TriggerContext,
+    RuntimeTagHitTargets
 }
 
 [Serializable]
@@ -446,6 +453,8 @@ public class PassiveRuntimeTagEffectDefinition
     public string tag;
     public bool addTag = true;
     public float duration = 0f;
+    [Tooltip("When this tag is added from a hit event, remember the hit enemy so a later trigger can target it.")]
+    public bool rememberEnemyTarget = false;
 }
 
 [Serializable]
@@ -453,6 +462,18 @@ public class PassiveRuntimeEffectDefinition : ISerializationCallbackReceiver
 {
     public PassiveTriggerType trigger = PassiveTriggerType.OnActionEnded;
     public PassiveTriggerFilter filter = new PassiveTriggerFilter();
+    public List<RuntimeTagRequirement> requiredTags = new List<RuntimeTagRequirement>();
+    public List<RuntimeCounterRequirement> requiredCounters = new List<RuntimeCounterRequirement>();
+    public List<PassiveRuntimeValueRequirement> requiredValues = new List<PassiveRuntimeValueRequirement>();
+    [Range(0f, 1f)] public float chance = 1f;
+
+    [Header("Enemy Target Source")]
+    [Tooltip("Enemy runtime effects normally use the trigger context enemy. RuntimeTagHitTargets reuses enemies remembered by a runtime-tag effect.")]
+    public PassiveRuntimeEnemyTargetSource enemyTargetSource = PassiveRuntimeEnemyTargetSource.TriggerContext;
+    public string enemyTargetRuntimeTag;
+    [Tooltip("When enabled, removes the required/runtime target tag after a successful application.")]
+    public bool consumeRuntimeTagOnApply = false;
+
     [Header("Recipe")]
     [Tooltip("Formula plus this kit node's values, duration, stack, display, and remove policy.")]
     public RuntimeEffectRecipe recipe = new RuntimeEffectRecipe();
@@ -669,6 +690,9 @@ public class PassiveResourceEffectDefinition
 {
     public PassiveTriggerType trigger = PassiveTriggerType.OnHitDealt;
     public PassiveTriggerFilter filter = new PassiveTriggerFilter();
+    public List<RuntimeTagRequirement> requiredTags = new List<RuntimeTagRequirement>();
+    public List<RuntimeCounterRequirement> requiredCounters = new List<RuntimeCounterRequirement>();
+    public List<PassiveRuntimeValueRequirement> requiredValues = new List<PassiveRuntimeValueRequirement>();
     [Range(0f, 1f)] public float chance = 1f;
     public PassiveResourceEffectType effectType = PassiveResourceEffectType.Heal;
     public PassiveEffectScope scope = PassiveEffectScope.Self;
@@ -677,6 +701,10 @@ public class PassiveResourceEffectDefinition
     public float flatValue = 0f;
     public string runtimeTag = "waive_next_ultimate_cost";
     public float runtimeTagDuration = 0f;
+    [Header("Trigger Cooldown")]
+    [Tooltip("Optional runtime tag used to block this effect while it is cooling down.")]
+    public string cooldownTag;
+    [Min(0f)] public float cooldownDuration = 0f;
 }
 
 [Serializable]

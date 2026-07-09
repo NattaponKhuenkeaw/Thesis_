@@ -347,7 +347,7 @@ public class PlayerMovement : MonoBehaviour
         currentGroundCollider = GetBestGroundCollider(groundHitBuffer, hitCount);
         isGrounded = currentGroundCollider != null;
         if (isGrounded) coyoteUntil = Time.time + P.coyoteTime;
-        if (isGrounded && !wasGrounded) { jumpsUsed = 0; airDashesUsed = 0; combat?.ResetAirComboCooldown(); OnLand?.Invoke(); if (!ShouldSuppressLandingFeedback()) landingEndTime = Time.time + P.landingLagTime; }
+        if (isGrounded && !wasGrounded) { jumpsUsed = 0; airDashesUsed = 0; combat?.ResetAirComboCooldown(); if (!ShouldSuppressLandingFeedback()) landingEndTime = Time.time + P.landingLagTime; OnLand?.Invoke(); }
 
         GroundState.Tick(isGrounded, wasGrounded, rb.linearVelocity.y, IsJumping);
 

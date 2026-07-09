@@ -400,6 +400,7 @@ public class HitBoxDamage : MonoBehaviour
             actionId = sourceActionId,
             actionName = sourceActionName,
             stepData = sourceStepData,
+            stepName = sourceStepData != null ? sourceStepData.stepName : null,
             runtimeState = passiveController != null ? passiveController.RuntimeState : null,
             enemy = enemy,
             enemyMaxHp = enemy.maxHP
@@ -512,6 +513,7 @@ public class HitBoxDamage : MonoBehaviour
             data.flashColor = currentNormalHitbox.flashColor;
             data.flashFrames = currentNormalHitbox.flashFrames;
             data.impactTier = currentNormalHitbox.impactTier;
+            data.textImpactTier = currentNormalHitbox.impactTier;
             data.elementType = currentNormalHitbox.elementType;
 
             if (currentNormalHitbox.useDeterministicReaction)
@@ -600,6 +602,7 @@ public class HitBoxDamage : MonoBehaviour
         data.flashColor = currentGrabHitbox.flashColor;
         data.flashFrames = currentGrabHitbox.flashFrames;
         data.impactTier = currentGrabHitbox.impactTier;
+        data.textImpactTier = currentGrabHitbox.impactTier;
         data.elementType = currentGrabHitbox.elementType;
 
         return data;
@@ -774,8 +777,6 @@ public class HitBoxDamage : MonoBehaviour
         DamageImpactTier tier = DamageImpactTier.Low;
         if (currentGrabHitbox != null) tier = currentGrabHitbox.impactTier;
         else if (currentNormalHitbox != null) tier = currentNormalHitbox.impactTier;
-        if (currentIsCrit && tier < DamageImpactTier.Medium)
-            tier = DamageImpactTier.Medium;
 
         if (cameraShake != null)
             cameraShake.ShakeByImpact(tier);

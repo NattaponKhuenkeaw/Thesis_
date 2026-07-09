@@ -10,6 +10,9 @@ public class RuntimeEffectReceiver : MonoBehaviour
 
     private readonly Dictionary<RuntimeEffectInstance, GameObject> activeVisuals =
         new Dictionary<RuntimeEffectInstance, GameObject>();
+    private readonly HashSet<RuntimeEffectInstance> retainedVisuals = new HashSet<RuntimeEffectInstance>();
+    private readonly List<RuntimeEffectInstance> visualsToRemove = new List<RuntimeEffectInstance>();
+    private readonly List<RuntimeEffectInstance> expiredEffects = new List<RuntimeEffectInstance>();
 
     private PlayerCharacter playerCharacter;
     private EnemyController enemyController;
@@ -22,6 +25,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
     private void Awake()
     {
         CacheTargets();
+        RecalculateTickingState();
     }
 
     private void Update()
@@ -119,10 +123,11 @@ public class RuntimeEffectReceiver : MonoBehaviour
                 {
                     stackTarget.Refresh(durationOverride);
                 }
+                definition.OnReapplied(BuildContext(stackTarget, 0f));
 
                 if (effectRequiresTicking)
                 {
-                    hasTickingEffects = true;
+                    SetTickingState(true);
                 }
 
                 EnsureVisual(stackTarget);
@@ -135,27 +140,51 @@ public class RuntimeEffectReceiver : MonoBehaviour
         {
             if (existing.definition != definition || existing.recipe != recipe)
             {
-                existing.definition?.OnExpired(BuildContext(existing, 0f));
-                DestroyVisual(existing);
-                if (recipe != null)
+                if (existing.definition == definition && definition.ReapplyWhenRecipeChanges)
                 {
-                    existing.Initialize(recipe, sourceCharacter, sourceStats, durationOverride);
+                    existing.Rebind(recipe, sourceCharacter, sourceStats);
+                    if (resolvedRefreshDuration)
+                    {
+                        existing.Refresh(durationOverride);
+                    }
+                    definition.OnReapplied(BuildContext(existing, 0f));
                 }
                 else
                 {
-                    existing.Initialize(definition, sourceCharacter, sourceStats, durationOverride);
-                }
-                if (effectRequiresTicking)
-                {
-                    hasTickingEffects = true;
-                }
+                    existing.definition?.OnExpired(BuildContext(existing, 0f));
+                    DestroyVisual(existing);
+                    if (recipe != null)
+                    {
+                        existing.Initialize(recipe, sourceCharacter, sourceStats, durationOverride);
+                    }
+                    else
+                    {
+                        existing.Initialize(definition, sourceCharacter, sourceStats, durationOverride);
+                    }
+                    if (effectRequiresTicking)
+                    {
+                        SetTickingState(true);
+                    }
 
-                definition.OnApply(BuildContext(existing, 0f));
-                EnsureVisual(existing);
+                    definition.OnApply(BuildContext(existing, 0f));
+                    EnsureVisual(existing);
+                }
             }
             else if (resolvedRefreshDuration)
             {
                 existing.Refresh(durationOverride);
+                definition.OnReapplied(BuildContext(existing, 0f));
+            }
+            else
+            {
+                definition.OnReapplied(BuildContext(existing, 0f));
+            }
+
+            if (existing.IsExpired
+                || RuntimeEffectRuntimeUtility.GetDurationType(definition, recipe) == RuntimeEffectDurationType.Instant)
+            {
+                RemoveEffect(existing);
+                return existing;
             }
 
             RaiseEffectsChanged();
@@ -168,6 +197,10 @@ public class RuntimeEffectReceiver : MonoBehaviour
             if (refreshTarget != null && resolvedRefreshDuration)
             {
                 refreshTarget.Refresh(durationOverride);
+            }
+            if (refreshTarget != null)
+            {
+                definition.OnReapplied(BuildContext(refreshTarget, 0f));
             }
 
             RaiseEffectsChanged();
@@ -186,13 +219,14 @@ public class RuntimeEffectReceiver : MonoBehaviour
         activeEffects.Add(instance);
         if (effectRequiresTicking)
         {
-            hasTickingEffects = true;
+            SetTickingState(true);
         }
         definition.OnApply(BuildContext(instance, 0f));
         EnsureVisual(instance);
         RaiseEffectsChanged();
 
-        if (RuntimeEffectRuntimeUtility.GetDurationType(definition, recipe) == RuntimeEffectDurationType.Instant)
+        if (instance.IsExpired
+            || RuntimeEffectRuntimeUtility.GetDurationType(definition, recipe) == RuntimeEffectDurationType.Instant)
         {
             RemoveEffect(instance);
         }
@@ -306,6 +340,8 @@ public class RuntimeEffectReceiver : MonoBehaviour
     public float ModifyIncomingDamage(RuntimeEffectDamageContext context, float currentDamage)
     {
         float result = currentDamage;
+        expiredEffects.Clear();
+        bool shieldAmountChanged = false;
         for (int i = 0; i < activeEffects.Count; i++)
         {
             RuntimeEffectInstance instance = activeEffects[i];
@@ -320,12 +356,36 @@ public class RuntimeEffectReceiver : MonoBehaviour
                 out RuntimeEffectInstance previousInstance,
                 out CharacterObject previousSourceCharacter,
                 out CharacterStats previousSourceStats);
+            float previousShieldAmount = instance.remainingShieldAmount;
             result = instance.definition.ModifyIncomingDamage(context, result);
+            if (!Mathf.Approximately(previousShieldAmount, instance.remainingShieldAmount))
+            {
+                shieldAmountChanged = true;
+            }
             RuntimeEffectRuntimeUtility.RestoreDamageContext(
                 context,
                 previousInstance,
                 previousSourceCharacter,
                 previousSourceStats);
+            if (instance.IsExpired)
+            {
+                expiredEffects.Add(instance);
+            }
+        }
+
+        if (shieldAmountChanged)
+        {
+            RaiseEffectsChanged();
+        }
+
+        if (expiredEffects.Count > 0)
+        {
+            for (int i = 0; i < expiredEffects.Count; i++)
+            {
+                RemoveEffect(expiredEffects[i]);
+            }
+
+            expiredEffects.Clear();
         }
 
         context.instance = null;
@@ -390,7 +450,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
 
     public void SyncVisuals(IReadOnlyList<RuntimeEffectInstance> sourceEffects)
     {
-        HashSet<RuntimeEffectInstance> retained = new HashSet<RuntimeEffectInstance>();
+        retainedVisuals.Clear();
         if (sourceEffects != null)
         {
             for (int i = 0; i < sourceEffects.Count; i++)
@@ -398,31 +458,33 @@ public class RuntimeEffectReceiver : MonoBehaviour
                 RuntimeEffectInstance instance = sourceEffects[i];
                 if (instance != null && instance.definition != null)
                 {
-                    retained.Add(instance);
+                    retainedVisuals.Add(instance);
                     EnsureVisual(instance);
                 }
             }
         }
 
-        List<RuntimeEffectInstance> toRemove = null;
+        visualsToRemove.Clear();
         foreach (RuntimeEffectInstance instance in activeVisuals.Keys)
         {
-            if (!retained.Contains(instance))
+            if (!retainedVisuals.Contains(instance))
             {
-                toRemove ??= new List<RuntimeEffectInstance>();
-                toRemove.Add(instance);
+                visualsToRemove.Add(instance);
             }
         }
 
-        if (toRemove == null)
+        retainedVisuals.Clear();
+        if (visualsToRemove.Count == 0)
         {
             return;
         }
 
-        for (int i = 0; i < toRemove.Count; i++)
+        for (int i = 0; i < visualsToRemove.Count; i++)
         {
-            DestroyVisual(toRemove[i]);
+            DestroyVisual(visualsToRemove[i]);
         }
+
+        visualsToRemove.Clear();
     }
 
     private void Tick(float deltaTime)
@@ -432,6 +494,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
             return;
         }
 
+        float resolvedDelta = Mathf.Max(0f, deltaTime);
         bool changed = false;
         for (int i = activeEffects.Count - 1; i >= 0; i--)
         {
@@ -450,15 +513,15 @@ public class RuntimeEffectReceiver : MonoBehaviour
 
             if (instance.UsesTimer)
             {
-                instance.remainingSeconds -= Mathf.Max(0f, deltaTime);
-                instance.elapsedSeconds += Mathf.Max(0f, deltaTime);
-            }
-            else
-            {
-                instance.elapsedSeconds += Mathf.Max(0f, deltaTime);
+                instance.remainingSeconds -= resolvedDelta;
             }
 
-            instance.definition.OnUpdate(BuildContext(instance, deltaTime));
+            instance.elapsedSeconds += resolvedDelta;
+            if (instance.RequiresFormulaUpdate)
+            {
+                instance.definition.OnUpdate(BuildContext(instance, resolvedDelta));
+            }
+
             if (!instance.IsExpired)
             {
                 continue;
@@ -562,7 +625,8 @@ public class RuntimeEffectReceiver : MonoBehaviour
                 continue;
             }
 
-            if (!StatsApproximatelyEqual(instance.sourceStatsSnapshot, sourceStats))
+            if (RuntimeEffectRuntimeUtility.GetDurationType(instance.definition, instance.recipe) != RuntimeEffectDurationType.Forever
+                && !StatsApproximatelyEqual(instance.sourceStatsSnapshot, sourceStats))
             {
                 continue;
             }
@@ -682,15 +746,26 @@ public class RuntimeEffectReceiver : MonoBehaviour
 
     private void RecalculateTickingState()
     {
-        hasTickingEffects = false;
+        bool requiresTicking = false;
         for (int i = 0; i < activeEffects.Count; i++)
         {
             RuntimeEffectInstance instance = activeEffects[i];
             if (instance != null && instance.RequiresTicking)
             {
-                hasTickingEffects = true;
-                return;
+                requiresTicking = true;
+                break;
             }
+        }
+
+        SetTickingState(requiresTicking);
+    }
+
+    private void SetTickingState(bool value)
+    {
+        hasTickingEffects = value;
+        if (Application.isPlaying)
+        {
+            enabled = value;
         }
     }
 }

@@ -1,0 +1,147 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 255da7e6c6e2e0147ab812b7ed3943c0, type: 3}
+  m_Name: CharacterObject_6_Orochi
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterObject
+  characterId: char_6_orochi
+  characterType: 0
+  elementType: 4
+  characterRole: 1
+  previewPrefab: {fileID: 6597880524197938003, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
+  stats:
+    maxHP: 651
+    attack: 59
+    defense: 42
+    speed: 6.5
+    elementalMastery: 0
+    critRate: 5
+    critDamage: 150
+    cooldownRate: 0
+    impact: 0
+    damageReduction: 0
+    aeRecharge: 1
+  metaData:
+    displayName: Orochi
+    description: "Orochi is a deity whose purpose is to protect Gaia, considering
+      itself an extension of the earth itself. Unlike a typical antagonist, its actions
+      are driven by philosophy rather than malice\u2014it believes humanity\u2019s
+      destruction is a necessary step to restore natural balance, not an end in itself."
+    portrait: {fileID: 21300000, guid: f8d74717e28cf1a4ca6cefdda0df39a1, type: 3}
+    animatorController: {fileID: 9100000, guid: 03216d92fc41d234c91dfd2a036c96bb, type: 2}
+  auraEnergyRate: 2
+  audioData: {fileID: 11400000, guid: 4f6589c6e8086a44ba80bd359e29ad3b, type: 2}
+  movementProfile: {fileID: 11400000, guid: 475fcb4220eff1746b3aa7806eb8c0a1, type: 2}
+  maxJumpOverride: -1
+  maxAirDashOverride: -1
+  _authoredFPS: 24
+  upgrade:
+    level: 1
+    maxLevel: 30
+    currentExp: 0
+    attackPerLevel: 8
+    defensePerLevel: 4.5
+    maxHpPerLevel: 69.7
+  _dashData:
+    animationClip: {fileID: 0}
+    startupFrames: 5
+    activeFrames: 12
+    recoveryFrames: 12
+    cancelWindowStartFrame: 25
+    dashSpeed: 20
+    cooldownFrames: 24
+  kitDefinition:
+    skill:
+      abilityId: 
+      abilityName: Skill
+      icon: {fileID: 0}
+      description: 
+    ultimate:
+      abilityId: 
+      abilityName: Ultimate
+      icon: {fileID: 0}
+      description: 
+    passive:
+      abilityId: 
+      abilityName: Passive
+      icon: {fileID: 0}
+      description: 
+    baseSkillNode:
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: base.skill
+      nodeName: Base Skill
+      description: 
+      skillPanelDescriptionOverride: 
+      track: 0
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
+    baseUltimateNode:
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: base.ultimate
+      nodeName: Base Ultimate
+      description: 
+      skillPanelDescriptionOverride: 
+      track: 1
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
+    basePassiveNode:
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: base.passive
+      nodeName: Base Passive
+      description: 
+      skillPanelDescriptionOverride: 
+      track: 2
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
+    potentialNodes: []
+  actionResolverTable: {fileID: 11400000, guid: 5b403ba8df3f1534db0baabbcd139428, type: 2}

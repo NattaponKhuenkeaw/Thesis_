@@ -29,6 +29,7 @@ public class PlayerStateMachine : MonoBehaviour
     public PlayerJumpRisingState JumpRisingState { get; private set; }
     public PlayerAirborneState AirborneState { get; private set; }
     public PlayerFallingState FallingState { get; private set; }
+    public PlayerLandingState LandingState { get; private set; }
     public PlayerDashState DashState { get; private set; }
     public PlayerAttackState AttackState { get; private set; }
     public PlayerAirAttackState AirAttackState { get; private set; }
@@ -577,6 +578,7 @@ public class PlayerStateMachine : MonoBehaviour
         JumpRisingState = new PlayerJumpRisingState(playerCharacter, this);
         AirborneState = new PlayerAirborneState(playerCharacter, this);
         FallingState = new PlayerFallingState(playerCharacter, this);
+        LandingState = new PlayerLandingState(playerCharacter, this);
         DashState = new PlayerDashState(playerCharacter, this);
         AttackState = new PlayerAttackState(playerCharacter, this);
         AirAttackState = new PlayerAirAttackState(playerCharacter, this);
@@ -594,6 +596,9 @@ public class PlayerStateMachine : MonoBehaviour
 
         if (!playerCharacter.Movement.GroundState.IsEffectivelyGrounded)
             return AirborneState;
+
+        if (playerCharacter.Movement.IsLanding)
+            return LandingState;
 
         if (Mathf.Abs(playerCharacter.Movement.HorizontalInput) > 0.01f)
             return MoveState;
@@ -660,7 +665,7 @@ public class PlayerStateMachine : MonoBehaviour
         }
 
         // 2. ถ้าเป็น State เคลื่อนไหวปกติ อนุญาตให้เปลี่ยนตัวได้ทันที (Idle, Move, Jump)
-        if (CurrentState == IdleState || CurrentState == MoveState || CurrentState == AirborneState || CurrentState == FallingState || CurrentState == JumpStartupState)
+        if (CurrentState == IdleState || CurrentState == MoveState || CurrentState == AirborneState || CurrentState == FallingState || CurrentState == LandingState || CurrentState == JumpStartupState)
         {
             return true;
         }

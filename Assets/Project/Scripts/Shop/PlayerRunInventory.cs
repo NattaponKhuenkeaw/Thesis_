@@ -190,6 +190,7 @@ namespace Project.ShopSystem
         [NonSerialized] private bool isApplyingPersistentState;
         [NonSerialized] private Dictionary<string, BaseItem> itemIndexById;
         [NonSerialized] private float[] runtimeEffectMultiplierSums;
+        [NonSerialized] private readonly List<RuntimeEffectInstance> expiredRuntimeEffects = new List<RuntimeEffectInstance>();
         [NonSerialized] private Dictionary<string, CharacterItem> characterItemsByCharacterId;
 
         public event Action<CharacterObject> OnRuntimeEffectsChanged;
@@ -754,6 +755,7 @@ namespace Project.ShopSystem
                     {
                         stackTarget.Refresh(durationOverride);
                     }
+                    effectDefinition.OnReapplied(BuildRuntimeEffectContext(targetCharacter, state, stackTarget, 0f));
 
                     if (effectRequiresTicking)
                     {
@@ -771,25 +773,49 @@ namespace Project.ShopSystem
 
                 if (instance.definition != effectDefinition || instance.recipe != recipe)
                 {
-                    instance.definition?.OnExpired(BuildRuntimeEffectContext(targetCharacter, state, instance, 0f));
-                    if (recipe != null)
+                    if (instance.definition == effectDefinition && effectDefinition.ReapplyWhenRecipeChanges)
                     {
-                        instance.Initialize(recipe, sourceCharacter, resolvedSourceStats, durationOverride);
+                        instance.Rebind(recipe, sourceCharacter, resolvedSourceStats);
+                        if (resolvedRefreshDuration)
+                        {
+                            instance.Refresh(durationOverride);
+                        }
+                        effectDefinition.OnReapplied(BuildRuntimeEffectContext(targetCharacter, state, instance, 0f));
                     }
                     else
                     {
-                        instance.Initialize(effectDefinition, sourceCharacter, resolvedSourceStats, durationOverride);
+                        instance.definition?.OnExpired(BuildRuntimeEffectContext(targetCharacter, state, instance, 0f));
+                        if (recipe != null)
+                        {
+                            instance.Initialize(recipe, sourceCharacter, resolvedSourceStats, durationOverride);
+                        }
+                        else
+                        {
+                            instance.Initialize(effectDefinition, sourceCharacter, resolvedSourceStats, durationOverride);
+                        }
+                        effectDefinition.OnApply(BuildRuntimeEffectContext(targetCharacter, state, instance, 0f));
                     }
-                    effectDefinition.OnApply(BuildRuntimeEffectContext(targetCharacter, state, instance, 0f));
                 }
                 else if (resolvedRefreshDuration)
                 {
                     instance.Refresh(durationOverride);
+                    effectDefinition.OnReapplied(BuildRuntimeEffectContext(targetCharacter, state, instance, 0f));
+                }
+                else
+                {
+                    effectDefinition.OnReapplied(BuildRuntimeEffectContext(targetCharacter, state, instance, 0f));
                 }
 
                 if (effectRequiresTicking)
                 {
                     state.HasTickingEffects = true;
+                }
+
+                if (instance.IsExpired
+                    || RuntimeEffectRuntimeUtility.GetDurationType(effectDefinition, recipe) == RuntimeEffectDurationType.Instant)
+                {
+                    RemoveRuntimeEffect(targetCharacter, state, instance);
+                    return true;
                 }
 
                 RaiseRuntimeEffectsChanged(targetCharacter, affectsStats);
@@ -802,6 +828,10 @@ namespace Project.ShopSystem
                 if (refreshTarget != null && resolvedRefreshDuration)
                 {
                     refreshTarget.Refresh(durationOverride);
+                }
+                if (refreshTarget != null)
+                {
+                    effectDefinition.OnReapplied(BuildRuntimeEffectContext(targetCharacter, state, refreshTarget, 0f));
                 }
 
                 if (effectRequiresTicking)
@@ -830,7 +860,8 @@ namespace Project.ShopSystem
             effectDefinition.OnApply(BuildRuntimeEffectContext(targetCharacter, state, instance, 0f));
             RaiseRuntimeEffectsChanged(targetCharacter, effectAffectsStats);
 
-            if (RuntimeEffectRuntimeUtility.GetDurationType(effectDefinition, recipe) == RuntimeEffectDurationType.Instant)
+            if (instance.IsExpired
+                || RuntimeEffectRuntimeUtility.GetDurationType(effectDefinition, recipe) == RuntimeEffectDurationType.Instant)
             {
                 RemoveRuntimeEffect(targetCharacter, state, instance);
             }
@@ -971,13 +1002,16 @@ namespace Project.ShopSystem
                 }
 
                 CharacterStats targetStatsSnapshot = null;
+                bool changed = false;
+                bool affectedStats = false;
                 for (int effectIndex = activeEffects.Count - 1; effectIndex >= 0; effectIndex--)
                 {
                     RuntimeEffectInstance instance = activeEffects[effectIndex];
                     if (instance == null || instance.definition == null)
                     {
                         activeEffects.RemoveAt(effectIndex);
-                        RaiseRuntimeEffectsChanged(state.character, true);
+                        changed = true;
+                        affectedStats = true;
                         continue;
                     }
 
@@ -992,19 +1026,37 @@ namespace Project.ShopSystem
                     }
 
                     instance.elapsedSeconds += resolvedDelta;
-                    targetStatsSnapshot ??= GetCharacterStats(state.character);
-                    instance.definition.OnUpdate(BuildRuntimeEffectContext(
-                        state.character,
-                        state,
-                        instance,
-                        resolvedDelta,
-                        targetStatsSnapshot));
+                    if (instance.RequiresFormulaUpdate)
+                    {
+                        targetStatsSnapshot ??= GetCharacterStats(state.character);
+                        instance.definition.OnUpdate(BuildRuntimeEffectContext(
+                            state.character,
+                            state,
+                            instance,
+                            resolvedDelta,
+                            targetStatsSnapshot));
+                    }
+
                     if (!instance.IsExpired)
                     {
                         continue;
                     }
 
-                    RemoveRuntimeEffect(state.character, state, instance);
+                    affectedStats |= instance.AffectsStats;
+                    instance.definition.OnExpired(BuildRuntimeEffectContext(
+                        state.character,
+                        state,
+                        instance,
+                        0f,
+                        targetStatsSnapshot));
+                    activeEffects.RemoveAt(effectIndex);
+                    changed = true;
+                }
+
+                if (changed)
+                {
+                    state.RecalculateTickingEffects();
+                    RaiseRuntimeEffectsChanged(state.character, affectedStats);
                 }
             }
         }
@@ -1291,6 +1343,8 @@ namespace Project.ShopSystem
             }
 
             float result = currentDamage;
+            expiredRuntimeEffects.Clear();
+            bool shieldAmountChanged = false;
             List<RuntimeEffectInstance> activeEffects = state.MutableActiveEffects;
             for (int i = 0; i < activeEffects.Count; i++)
             {
@@ -1306,14 +1360,38 @@ namespace Project.ShopSystem
                     out RuntimeEffectInstance previousInstance,
                     out CharacterObject previousSourceCharacter,
                     out CharacterStats previousSourceStats);
+                float previousShieldAmount = instance.remainingShieldAmount;
                 result = outgoing
                     ? instance.definition.ModifyOutgoingDamage(context, result)
                     : instance.definition.ModifyIncomingDamage(context, result);
+                if (!outgoing && !Mathf.Approximately(previousShieldAmount, instance.remainingShieldAmount))
+                {
+                    shieldAmountChanged = true;
+                }
                 RuntimeEffectRuntimeUtility.RestoreDamageContext(
                     context,
                     previousInstance,
                     previousSourceCharacter,
                     previousSourceStats);
+                if (instance.IsExpired)
+                {
+                    expiredRuntimeEffects.Add(instance);
+                }
+            }
+
+            if (shieldAmountChanged)
+            {
+                RaiseRuntimeEffectsChanged(character, false);
+            }
+
+            if (expiredRuntimeEffects.Count > 0)
+            {
+                for (int i = 0; i < expiredRuntimeEffects.Count; i++)
+                {
+                    RemoveRuntimeEffect(character, state, expiredRuntimeEffects[i]);
+                }
+
+                expiredRuntimeEffects.Clear();
             }
 
             context.instance = null;
@@ -1485,7 +1563,8 @@ namespace Project.ShopSystem
                     continue;
                 }
 
-                if (!StatsApproximatelyEqual(instance.sourceStatsSnapshot, sourceStats))
+                if (RuntimeEffectRuntimeUtility.GetDurationType(effectDefinition, recipe) != RuntimeEffectDurationType.Forever
+                    && !StatsApproximatelyEqual(instance.sourceStatsSnapshot, sourceStats))
                 {
                     continue;
                 }

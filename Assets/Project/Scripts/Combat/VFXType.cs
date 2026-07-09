@@ -29,8 +29,9 @@ namespace Project.Combat
 
         // --- Character Status ---
         Ultimate_Flash = 40,
-        Buff_Aura = 41,
-        Stun_Stars = 42,
+        Ultimate_FlashEX = 41,
+        Buff_Aura = 42,
+        Stun_Stars = 43,
         
 
         // --- Environmental / Common ---

@@ -54,18 +54,11 @@ public class LifestealOnHitRuntimeEffectDefinition : RuntimeEffectDefinition
 
         if (activeSource && activePlayer != null)
         {
-            activePlayer.Heal(healAmount);
+            RuntimeEffectHealUtility.ApplyHeal(context.sourceCharacter, activePlayer, healAmount);
             return;
         }
 
-        if (teamLoader == null)
-        {
-            return;
-        }
-
-        teamLoader.SetCharacterCurrentHP(
-            context.sourceCharacter,
-            Mathf.Min(maxHp, currentHp + healAmount));
+        RuntimeEffectHealUtility.ApplyHeal(context.sourceCharacter, null, healAmount);
     }
 
     private RuntimeEffectLifestealParameters ResolveParameters(RuntimeEffectDamageContext context)

@@ -13,6 +13,7 @@ public class RuntimeEffectIconUI : MonoBehaviour
 
     [NonSerialized] private RuntimeEffectInstance boundEffect;
     private int boundStackCount = 1;
+    private bool referencesResolved;
     public bool RequiresTimerRefresh { get; private set; }
 
     private void Awake()
@@ -86,6 +87,11 @@ public class RuntimeEffectIconUI : MonoBehaviour
 
     private void ResolveReferences()
     {
+        if (referencesResolved)
+        {
+            return;
+        }
+
         if (iconImage == null)
         {
             iconImage = GetComponent<Image>();
@@ -106,6 +112,8 @@ public class RuntimeEffectIconUI : MonoBehaviour
         {
             stackText = FindStackTextFallback();
         }
+
+        referencesResolved = true;
     }
 
     private TMP_Text FindTextByNames(string[] names)

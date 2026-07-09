@@ -23,6 +23,8 @@ public class CharacterPassiveController : MonoBehaviour
 
     private readonly List<(PotentialNodeDefinition node, IPassiveEffectHook hook)> activeHooks =
         new List<(PotentialNodeDefinition node, IPassiveEffectHook hook)>();
+    private readonly Dictionary<string, List<EnemyController>> runtimeTagHitTargets =
+        new Dictionary<string, List<EnemyController>>();
 
     public CombatRuntimeState RuntimeState => runtimeState;
     public PlayerMetaProgression MetaProgression => metaProgression;
@@ -53,6 +55,7 @@ public class CharacterPassiveController : MonoBehaviour
     {
         ResolveMetaProgression();
         runtimeState.Reset();
+        runtimeTagHitTargets.Clear();
         RebuildHooks();
         RefreshConditionalStateEffects();
     }
@@ -811,6 +814,13 @@ public class CharacterPassiveController : MonoBehaviour
         return highestEvasionChance > 0f && UnityEngine.Random.value <= Mathf.Clamp01(highestEvasionChance);
     }
 
+    public void NotifyDamageTaken(float damageTaken)
+    {
+        PassiveEventContext context = BuildContext(AttackCategory.Normal, null, "DamageTaken", null, null);
+        context.damageDealt = damageTaken;
+        ApplyTriggeredEffects(PassiveTriggerType.OnDamageTaken, context);
+    }
+
     public bool HasDebuffImmunity()
     {
         PassiveEventContext context = BuildContext(AttackCategory.Normal, null, "DebuffCheck", null, null);
@@ -986,7 +996,7 @@ public class CharacterPassiveController : MonoBehaviour
                 continue;
             }
 
-            ApplyRuntimeTagEffect(effect);
+            ApplyRuntimeTagEffect(effect, context);
         }
     }
 
@@ -1008,7 +1018,9 @@ public class CharacterPassiveController : MonoBehaviour
                 || effect.ResolvedEffect == null
                 || effect.trigger != trigger
                 || effect.filter == null
-                || !effect.filter.Matches(context))
+                || !effect.filter.Matches(context)
+                || !PassiveRequirementsMet(effect.requiredTags, effect.requiredCounters, effect.requiredValues, context)
+                || UnityEngine.Random.value > Mathf.Clamp01(effect.chance))
             {
                 continue;
             }
@@ -1018,7 +1030,10 @@ public class CharacterPassiveController : MonoBehaviour
                 continue;
             }
 
-            ApplyRuntimeEffect(effect, context);
+            if (ApplyRuntimeEffect(effect, context) && effect.consumeRuntimeTagOnApply)
+            {
+                ConsumeRuntimeEffectTag(effect);
+            }
         }
     }
 
@@ -1070,13 +1085,13 @@ public class CharacterPassiveController : MonoBehaviour
         return false;
     }
 
-    private void ApplyRuntimeEffect(PassiveRuntimeEffectDefinition effect, PassiveEventContext context)
+    private bool ApplyRuntimeEffect(PassiveRuntimeEffectDefinition effect, PassiveEventContext context)
     {
         RuntimeEffectDefinition resolvedEffect = effect != null ? effect.ResolvedEffect : null;
         RuntimeEffectRecipe resolvedRecipe = effect != null ? effect.ResolvedRecipe : null;
         if (effect == null || resolvedEffect == null || playerCharacter == null)
         {
-            return;
+            return false;
         }
 
         RuntimeEffectApplyTarget applyTarget = resolvedRecipe != null && resolvedRecipe.policy != null
@@ -1088,23 +1103,7 @@ public class CharacterPassiveController : MonoBehaviour
 
         if (applyTarget == RuntimeEffectApplyTarget.Enemy)
         {
-            RuntimeEffectReceiver enemyReceiver = context.enemy != null ? context.enemy.RuntimeEffects : null;
-            if (resolvedRecipe != null)
-            {
-                enemyReceiver?.ApplyEffect(resolvedRecipe, sourceCharacter, sourceStats);
-            }
-            else
-            {
-                enemyReceiver?.ApplyEffect(
-                    resolvedEffect,
-                    sourceCharacter,
-                    sourceStats,
-                    effect.durationOverride,
-                    effect.stackMode,
-                    effect.stackLimit,
-                    effect.refreshDurationOnReapply);
-            }
-            return;
+            return ApplyRuntimeEffectToEnemyTargets(effect, context, resolvedEffect, resolvedRecipe, sourceCharacter, sourceStats);
         }
 
         if (inventory == null)
@@ -1127,11 +1126,14 @@ public class CharacterPassiveController : MonoBehaviour
                         effect.stackLimit,
                         effect.refreshDurationOnReapply);
                 }
+
+                return true;
             }
 
-            return;
+            return false;
         }
 
+        bool applied = false;
         CharacterObject[] team = ResolveRuntimeEffectTargets(teamLoader, inventory);
         for (int i = 0; i < team.Length; i++)
         {
@@ -1166,8 +1168,73 @@ public class CharacterPassiveController : MonoBehaviour
                         effect.stackLimit,
                         effect.refreshDurationOnReapply);
                 }
+
+                applied = true;
             }
         }
+
+        return applied;
+    }
+
+    private bool ApplyRuntimeEffectToEnemyTargets(
+        PassiveRuntimeEffectDefinition effect,
+        PassiveEventContext context,
+        RuntimeEffectDefinition resolvedEffect,
+        RuntimeEffectRecipe resolvedRecipe,
+        CharacterObject sourceCharacter,
+        CharacterStats sourceStats)
+    {
+        if (effect.enemyTargetSource == PassiveRuntimeEnemyTargetSource.RuntimeTagHitTargets)
+        {
+            List<EnemyController> targets = GetRememberedHitTargets(effect.enemyTargetRuntimeTag, effect.filter);
+            if (targets == null || targets.Count == 0)
+            {
+                return false;
+            }
+
+            bool appliedAny = false;
+            for (int i = 0; i < targets.Count; i++)
+            {
+                appliedAny |= ApplyRuntimeEffectToEnemy(targets[i], resolvedEffect, resolvedRecipe, effect, sourceCharacter, sourceStats);
+            }
+
+            return appliedAny;
+        }
+
+        return ApplyRuntimeEffectToEnemy(context.enemy, resolvedEffect, resolvedRecipe, effect, sourceCharacter, sourceStats);
+    }
+
+    private bool ApplyRuntimeEffectToEnemy(
+        EnemyController enemy,
+        RuntimeEffectDefinition resolvedEffect,
+        RuntimeEffectRecipe resolvedRecipe,
+        PassiveRuntimeEffectDefinition effect,
+        CharacterObject sourceCharacter,
+        CharacterStats sourceStats)
+    {
+        RuntimeEffectReceiver enemyReceiver = enemy != null ? enemy.RuntimeEffects : null;
+        if (enemyReceiver == null)
+        {
+            return false;
+        }
+
+        if (resolvedRecipe != null)
+        {
+            enemyReceiver.ApplyEffect(resolvedRecipe, sourceCharacter, sourceStats);
+        }
+        else
+        {
+            enemyReceiver.ApplyEffect(
+                resolvedEffect,
+                sourceCharacter,
+                sourceStats,
+                effect.durationOverride,
+                effect.stackMode,
+                effect.stackLimit,
+                effect.refreshDurationOnReapply);
+        }
+
+        return true;
     }
 
     private void ResolveRuntimeEffectSource(
@@ -1318,6 +1385,48 @@ public class CharacterPassiveController : MonoBehaviour
         return true;
     }
 
+    private static bool PassiveRequirementsMet(
+        List<RuntimeTagRequirement> requiredTags,
+        List<RuntimeCounterRequirement> requiredCounters,
+        List<PassiveRuntimeValueRequirement> requiredValues,
+        PassiveEventContext context)
+    {
+        if (requiredTags != null)
+        {
+            for (int i = 0; i < requiredTags.Count; i++)
+            {
+                if (requiredTags[i] != null && !requiredTags[i].Matches(context.runtimeState))
+                {
+                    return false;
+                }
+            }
+        }
+
+        if (requiredCounters != null)
+        {
+            for (int i = 0; i < requiredCounters.Count; i++)
+            {
+                if (requiredCounters[i] != null && !requiredCounters[i].Matches(context.runtimeState))
+                {
+                    return false;
+                }
+            }
+        }
+
+        if (requiredValues != null)
+        {
+            for (int i = 0; i < requiredValues.Count; i++)
+            {
+                if (requiredValues[i] != null && !requiredValues[i].Matches(context))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     private void ApplyCounterEffects(
         List<PassiveCounterEffectDefinition> effects,
         PassiveTriggerType trigger,
@@ -1362,7 +1471,7 @@ public class CharacterPassiveController : MonoBehaviour
             {
                 if (effect.runtimeTagEffects[tagIndex] != null)
                 {
-                    ApplyRuntimeTagEffect(effect.runtimeTagEffects[tagIndex]);
+                    ApplyRuntimeTagEffect(effect.runtimeTagEffects[tagIndex], context);
                 }
             }
 
@@ -1422,12 +1531,21 @@ public class CharacterPassiveController : MonoBehaviour
                 || effect.trigger != trigger
                 || effect.filter == null
                 || !effect.filter.Matches(context)
+                || !PassiveRequirementsMet(effect.requiredTags, effect.requiredCounters, effect.requiredValues, context)
                 || UnityEngine.Random.value > Mathf.Clamp01(effect.chance))
             {
                 continue;
             }
 
-            ApplyResourceEffect(effect);
+            if (IsResourceEffectOnCooldown(effect))
+            {
+                continue;
+            }
+
+            if (ApplyResourceEffect(effect))
+            {
+                StartResourceEffectCooldown(effect);
+            }
         }
     }
 
@@ -1459,11 +1577,11 @@ public class CharacterPassiveController : MonoBehaviour
         }
     }
 
-    private void ApplyResourceEffect(PassiveResourceEffectDefinition effect)
+    private bool ApplyResourceEffect(PassiveResourceEffectDefinition effect)
     {
         if (effect == null || playerCharacter == null)
         {
-            return;
+            return false;
         }
 
         float value = Mathf.Max(0f, effect.flatValue + ResolveResourceValue(effect.valueSource) * Mathf.Max(0f, effect.valueRatio));
@@ -1472,22 +1590,24 @@ public class CharacterPassiveController : MonoBehaviour
         {
             case PassiveResourceEffectType.Heal:
                 ApplyHeal(effect.scope, value);
-                break;
+                return value > 0f;
             case PassiveResourceEffectType.RefillUltimateAuraEnergy:
                 ApplyAuraEnergy(effect.scope, value);
-                break;
+                return value > 0f;
             case PassiveResourceEffectType.WaiveUltimateAuraEnergyCost:
                 runtimeState.SetTag(
                     string.IsNullOrWhiteSpace(effect.runtimeTag) ? "waive_next_ultimate_cost" : effect.runtimeTag,
                     effect.runtimeTagDuration);
-                break;
+                return true;
             case PassiveResourceEffectType.ResetSkillCooldown:
                 playerCharacter.Combat?.ResetActionCooldown(AttackCategory.Skill, null);
-                break;
+                return true;
             case PassiveResourceEffectType.ResetUltimateCooldown:
                 playerCharacter.Combat?.ResetActionCooldown(AttackCategory.Ultimate, null);
-                break;
+                return true;
         }
+
+        return false;
     }
 
     private void ApplyHeal(PassiveEffectScope scope, float value)
@@ -1702,22 +1822,114 @@ public class CharacterPassiveController : MonoBehaviour
         }
     }
 
-    private void ApplyRuntimeTagEffect(PassiveRuntimeTagEffectDefinition effect)
+    private void ApplyRuntimeTagEffect(PassiveRuntimeTagEffectDefinition effect, PassiveEventContext context)
     {
         bool changed;
         if (effect.addTag)
         {
             changed = runtimeState.SetTag(effect.tag, effect.duration);
+            RememberHitTarget(effect, context);
         }
         else
         {
             changed = runtimeState.RemoveTag(effect.tag);
+            runtimeTagHitTargets.Remove(effect.tag);
         }
 
         if (changed && playerCharacter != null && playerCharacter.characterObject != null)
         {
             CharacterEvents.NotifyStatsChanged(playerCharacter.characterObject);
         }
+    }
+
+    private void RememberHitTarget(PassiveRuntimeTagEffectDefinition effect, PassiveEventContext context)
+    {
+        if (effect == null
+            || !effect.rememberEnemyTarget
+            || context.enemy == null
+            || string.IsNullOrWhiteSpace(effect.tag))
+        {
+            return;
+        }
+
+        if (!runtimeTagHitTargets.TryGetValue(effect.tag, out List<EnemyController> targets) || targets == null)
+        {
+            targets = new List<EnemyController>();
+            runtimeTagHitTargets[effect.tag] = targets;
+        }
+
+        if (!targets.Contains(context.enemy))
+        {
+            targets.Add(context.enemy);
+        }
+    }
+
+    private List<EnemyController> GetRememberedHitTargets(string tag, PassiveTriggerFilter fallbackFilter)
+    {
+        string resolvedTag = !string.IsNullOrWhiteSpace(tag)
+            ? tag
+            : fallbackFilter != null && fallbackFilter.requireRuntimeTag ? fallbackFilter.runtimeTag : null;
+        if (string.IsNullOrWhiteSpace(resolvedTag))
+        {
+            return null;
+        }
+
+        if (runtimeState == null || !runtimeState.HasTag(resolvedTag))
+        {
+            runtimeTagHitTargets.Remove(resolvedTag);
+            return null;
+        }
+
+        if (!runtimeTagHitTargets.TryGetValue(resolvedTag, out List<EnemyController> targets) || targets == null)
+        {
+            return null;
+        }
+
+        for (int i = targets.Count - 1; i >= 0; i--)
+        {
+            EnemyController target = targets[i];
+            if (target == null || !target.IsAlive)
+            {
+                targets.RemoveAt(i);
+            }
+        }
+
+        return targets;
+    }
+
+    private void ConsumeRuntimeEffectTag(PassiveRuntimeEffectDefinition effect)
+    {
+        string tag = !string.IsNullOrWhiteSpace(effect.enemyTargetRuntimeTag)
+            ? effect.enemyTargetRuntimeTag
+            : effect.filter != null && effect.filter.requireRuntimeTag ? effect.filter.runtimeTag : null;
+        if (string.IsNullOrWhiteSpace(tag) || runtimeState == null)
+        {
+            return;
+        }
+
+        runtimeState.RemoveTag(tag);
+        runtimeTagHitTargets.Remove(tag);
+    }
+
+    private bool IsResourceEffectOnCooldown(PassiveResourceEffectDefinition effect)
+    {
+        return effect != null
+            && runtimeState != null
+            && !string.IsNullOrWhiteSpace(effect.cooldownTag)
+            && runtimeState.HasTag(effect.cooldownTag);
+    }
+
+    private void StartResourceEffectCooldown(PassiveResourceEffectDefinition effect)
+    {
+        if (effect == null
+            || runtimeState == null
+            || string.IsNullOrWhiteSpace(effect.cooldownTag)
+            || effect.cooldownDuration <= 0f)
+        {
+            return;
+        }
+
+        runtimeState.SetTag(effect.cooldownTag, effect.cooldownDuration);
     }
 
     private void ApplyCounterEffect(PassiveCounterEffectDefinition effect)

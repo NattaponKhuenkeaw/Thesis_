@@ -24,7 +24,8 @@ public enum PlayerStateId
     AirborneAttacking,
     Hitstun,
     Dead,
-    Intro
+    Intro,
+    Landing
 }
 
 /// <summary>
@@ -217,6 +218,11 @@ public abstract class PlayerState
                 player.Animator.RestoreAirborneState();
 
             fsm.ChangeState(fsm.AirborneState);
+        }
+        else if (player.Movement.IsLanding)
+        {
+            fsm.Log("FSM", "[Exit] Determined: Landing", Color.cyan);
+            fsm.ChangeState(fsm.LandingState);
         }
         else if (Mathf.Abs(player.Movement.HorizontalInput) > 0.01f)
         {

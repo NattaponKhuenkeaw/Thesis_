@@ -72,13 +72,18 @@ public class RuntimeEffectDamageInputParameters
 }
 
 [Serializable]
-public class RuntimeEffectPeriodicHealParameters
+public class RuntimeEffectHealParameters
 {
-    [Min(0.05f)] public float tickInterval = 1f;
     public RuntimeEffectStatTarget valueSource = RuntimeEffectStatTarget.Attack;
     [Min(0f)] public float valueRatio = 0.1f;
     [Min(0f)] public float flatValue;
     public bool useSourceStats = true;
+}
+
+[Serializable]
+public class RuntimeEffectPeriodicHealParameters : RuntimeEffectHealParameters
+{
+    [Min(0.05f)] public float tickInterval = 1f;
 }
 
 [Serializable]
@@ -112,6 +117,15 @@ public class RuntimeEffectStatusParameters
 }
 
 [Serializable]
+public class RuntimeEffectShieldParameters
+{
+    public RuntimeEffectStatTarget valueSource = RuntimeEffectStatTarget.MaxHP;
+    [Min(0f)] public float valueRatio = 0.1f;
+    [Min(0f)] public float flatValue;
+    public bool useSourceStats = true;
+}
+
+[Serializable]
 public class RuntimeEffectParameterSet
 {
     public bool overrideStatModifiers;
@@ -126,6 +140,9 @@ public class RuntimeEffectParameterSet
     public bool overridePeriodicHeal;
     public RuntimeEffectPeriodicHealParameters periodicHeal = new RuntimeEffectPeriodicHealParameters();
 
+    public bool overrideHeal;
+    public RuntimeEffectHealParameters heal = new RuntimeEffectHealParameters();
+
     public bool overrideLifesteal;
     public RuntimeEffectLifestealParameters lifesteal = new RuntimeEffectLifestealParameters();
 
@@ -135,14 +152,19 @@ public class RuntimeEffectParameterSet
     public bool overrideStatus;
     public RuntimeEffectStatusParameters status = new RuntimeEffectStatusParameters();
 
+    public bool overrideShield;
+    public RuntimeEffectShieldParameters shield = new RuntimeEffectShieldParameters();
+
     public bool HasAnyOverride =>
         overrideStatModifiers
         || overrideDamageModifier
         || overrideDamageInput
         || overridePeriodicHeal
+        || overrideHeal
         || overrideLifesteal
         || overrideAdditionalDamage
-        || overrideStatus;
+        || overrideStatus
+        || overrideShield;
 
     public string BuildStackSignature()
     {
@@ -200,7 +222,7 @@ public class RuntimeEffectParameterSet
 
         if (overridePeriodicHeal && periodicHeal != null)
         {
-            builder.Append("heal:")
+            builder.Append("periodic-heal:")
                 .Append(periodicHeal.tickInterval.ToString("R"))
                 .Append(',')
                 .Append((int)periodicHeal.valueSource)
@@ -210,6 +232,19 @@ public class RuntimeEffectParameterSet
                 .Append(periodicHeal.flatValue.ToString("R"))
                 .Append(',')
                 .Append(periodicHeal.useSourceStats ? '1' : '0')
+                .Append(';');
+        }
+
+        if (overrideHeal && heal != null)
+        {
+            builder.Append("heal:")
+                .Append((int)heal.valueSource)
+                .Append(',')
+                .Append(heal.valueRatio.ToString("R"))
+                .Append(',')
+                .Append(heal.flatValue.ToString("R"))
+                .Append(',')
+                .Append(heal.useSourceStats ? '1' : '0')
                 .Append(';');
         }
 
@@ -253,6 +288,19 @@ public class RuntimeEffectParameterSet
         {
             builder.Append("status:")
                 .Append((int)status.status)
+                .Append(';');
+        }
+
+        if (overrideShield && shield != null)
+        {
+            builder.Append("shield:")
+                .Append((int)shield.valueSource)
+                .Append(',')
+                .Append(shield.valueRatio.ToString("R"))
+                .Append(',')
+                .Append(shield.flatValue.ToString("R"))
+                .Append(',')
+                .Append(shield.useSourceStats ? '1' : '0')
                 .Append(';');
         }
 
@@ -483,8 +531,30 @@ public static class RuntimeEffectRuntimeUtility
             return false;
         }
 
-        if (GetDurationType(definition, recipe) == RuntimeEffectDurationType.Seconds
-            || definition.RequiresFormulaTicking)
+        return (recipe == null && definition.RequiresTicking)
+            || GetDurationType(definition, recipe) == RuntimeEffectDurationType.Seconds
+            || RequiresFormulaUpdate(definition, recipe)
+            || ChildRecipesRequireTicking(recipe);
+    }
+
+    public static bool RequiresFormulaUpdate(RuntimeEffectInstance instance)
+    {
+        if (instance == null || instance.definition == null)
+        {
+            return false;
+        }
+
+        return RequiresFormulaUpdate(instance.definition, instance.recipe);
+    }
+
+    public static bool RequiresFormulaUpdate(RuntimeEffectDefinition definition, RuntimeEffectRecipeData recipe)
+    {
+        if (definition == null)
+        {
+            return false;
+        }
+
+        if (definition.RequiresFormulaTicking)
         {
             return true;
         }
@@ -505,8 +575,29 @@ public static class RuntimeEffectRuntimeUtility
                 continue;
             }
 
-            if (GetDurationType(childDefinition, childRecipe) == RuntimeEffectDurationType.Seconds
-                || childDefinition.RequiresFormulaTicking)
+            if (RequiresFormulaUpdate(childDefinition, childRecipe))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool ChildRecipesRequireTicking(RuntimeEffectRecipeData recipe)
+    {
+        RuntimeEffectRecipe parentRecipe = recipe as RuntimeEffectRecipe;
+        List<RuntimeEffectRecipeData> childRecipes = parentRecipe != null ? parentRecipe.childRecipes : null;
+        if (childRecipes == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < childRecipes.Count; i++)
+        {
+            RuntimeEffectRecipeData childRecipe = childRecipes[i];
+            RuntimeEffectDefinition childDefinition = childRecipe != null ? childRecipe.definition : null;
+            if (childDefinition != null && RequiresTicking(childDefinition, childRecipe))
             {
                 return true;
             }
@@ -565,9 +656,12 @@ public static class RuntimeEffectRuntimeUtility
             return definition != null ? definition.StackKey : string.Empty;
         }
 
-        string baseKey = recipe.policy != null && !string.IsNullOrWhiteSpace(recipe.policy.stackKey)
-            ? recipe.policy.stackKey
-            : GetStableId(definition, recipe);
+        if (recipe.policy != null && !string.IsNullOrWhiteSpace(recipe.policy.stackKey))
+        {
+            return recipe.policy.stackKey;
+        }
+
+        string baseKey = GetStableId(definition, recipe);
         string parameterSignature = recipe.parameters != null ? recipe.parameters.BuildStackSignature() : string.Empty;
         return string.IsNullOrWhiteSpace(parameterSignature)
             ? baseKey
@@ -577,6 +671,68 @@ public static class RuntimeEffectRuntimeUtility
     public static RuntimeEffectParameterSet GetParameters(RuntimeEffectInstance instance)
     {
         return instance != null && instance.recipe != null ? instance.recipe.parameters : null;
+    }
+
+    public static CharacterStats ResolveFormulaSourceStats(RuntimeEffectContext context)
+    {
+        if (context.instance == null || GetDurationType(context.instance.definition, context.instance.recipe) != RuntimeEffectDurationType.Forever)
+        {
+            return context.sourceStats;
+        }
+
+        return ResolveLiveSourceStats(context.sourceCharacter, context.targetPlayer) ?? context.sourceStats;
+    }
+
+    public static CharacterStats ResolveFormulaSourceStats(RuntimeEffectDamageContext context)
+    {
+        if (context == null
+            || context.instance == null
+            || GetDurationType(context.instance.definition, context.instance.recipe) != RuntimeEffectDurationType.Forever)
+        {
+            return context != null ? context.sourceStats : null;
+        }
+
+        return ResolveLiveSourceStats(context.sourceCharacter, null) ?? context.sourceStats;
+    }
+
+    private static CharacterStats ResolveLiveSourceStats(CharacterObject sourceCharacter, PlayerCharacter contextPlayer)
+    {
+        if (sourceCharacter == null)
+        {
+            return null;
+        }
+
+        PlayerCharacter activePlayer = PlayerCharacter.Instance;
+        if (activePlayer != null && activePlayer.characterObject == sourceCharacter)
+        {
+            return activePlayer.Stats;
+        }
+
+        if (contextPlayer != null && contextPlayer.characterObject == sourceCharacter)
+        {
+            return contextPlayer.Stats;
+        }
+
+        TeamLoader teamLoader = TeamLoader.Instance;
+        if (teamLoader != null)
+        {
+            if (teamLoader.RunInventory != null)
+            {
+                CharacterStats runStats = teamLoader.RunInventory.GetCharacterStats(sourceCharacter);
+                if (runStats != null)
+                {
+                    return runStats;
+                }
+            }
+
+            CharacterStats runtimeStats = teamLoader.GetCharacterRuntimeStats(sourceCharacter);
+            if (runtimeStats != null)
+            {
+                return runtimeStats;
+            }
+        }
+
+        return sourceCharacter.GetLeveledStats();
     }
 
     public static void CopyLegacyDefinitionParameters(RuntimeEffectDefinition definition, RuntimeEffectParameterSet parameters)
@@ -646,6 +802,19 @@ public static class RuntimeEffectRuntimeUtility
             return;
         }
 
+        if (definition is InstantHealRuntimeEffectDefinition heal)
+        {
+            parameters.overrideHeal = true;
+            parameters.heal = new RuntimeEffectHealParameters
+            {
+                valueSource = heal.valueSource,
+                valueRatio = heal.valueRatio,
+                flatValue = heal.flatValue,
+                useSourceStats = heal.useSourceStats
+            };
+            return;
+        }
+
         if (definition is LifestealOnHitRuntimeEffectDefinition lifesteal)
         {
             parameters.overrideLifesteal = true;
@@ -690,6 +859,19 @@ public static class RuntimeEffectRuntimeUtility
             parameters.status = new RuntimeEffectStatusParameters
             {
                 status = status.status
+            };
+            return;
+        }
+
+        if (definition is ShieldRuntimeEffectDefinition shield)
+        {
+            parameters.overrideShield = true;
+            parameters.shield = new RuntimeEffectShieldParameters
+            {
+                valueSource = shield.valueSource,
+                valueRatio = shield.valueRatio,
+                flatValue = shield.flatValue,
+                useSourceStats = shield.useSourceStats
             };
         }
     }

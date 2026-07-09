@@ -47,6 +47,23 @@ public class RuntimeEffectContainerDefinition : RuntimeEffectDefinition
         }
     }
 
+    public override bool RequiresFormulaTicking
+    {
+        get
+        {
+            for (int i = 0; i < EffectCount; i++)
+            {
+                RuntimeEffectDefinition effect = GetEffect(i);
+                if (effect != null && effect.RequiresFormulaTicking)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+
     public override bool SupportsStackMerging
     {
         get
@@ -129,6 +146,36 @@ public class RuntimeEffectContainerDefinition : RuntimeEffectDefinition
             if (effect == null) continue;
             if (parentInstance != null) context.instance = parentInstance.GetChildInstance(effect);
             effect.OnUpdate(context);
+        }
+        context.instance = parentInstance;
+    }
+
+    public override void OnReapplied(RuntimeEffectContext context)
+    {
+        RuntimeEffectInstance parentInstance = context.instance;
+        RuntimeEffectRecipe parentRecipe = parentInstance != null ? parentInstance.recipe as RuntimeEffectRecipe : null;
+        List<RuntimeEffectRecipeData> childRecipes = parentRecipe != null ? parentRecipe.childRecipes : null;
+
+        if (childRecipes != null && childRecipes.Count > 0)
+        {
+            for (int i = 0; i < childRecipes.Count; i++)
+            {
+                RuntimeEffectRecipeData childRecipe = childRecipes[i];
+                RuntimeEffectDefinition effect = childRecipe != null ? childRecipe.definition : null;
+                if (effect == null) continue;
+                if (parentInstance != null) context.instance = parentInstance.GetChildInstance(childRecipe);
+                effect.OnReapplied(context);
+            }
+            context.instance = parentInstance;
+            return;
+        }
+
+        for (int i = 0; i < EffectCount; i++)
+        {
+            RuntimeEffectDefinition effect = GetEffect(i);
+            if (effect == null) continue;
+            if (parentInstance != null) context.instance = parentInstance.GetChildInstance(effect);
+            effect.OnReapplied(context);
         }
         context.instance = parentInstance;
     }

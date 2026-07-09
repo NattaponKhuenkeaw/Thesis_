@@ -55,6 +55,8 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
     public event System.Action<float, float> OnHealthChanged;
     public event System.Action<float> OnDamaged;
     public event System.Action<float> OnHealed;
+    public event System.Action<float> OnShieldGained;
+    public event System.Action<float> OnShieldAbsorbed;
     public event System.Action OnDamageMissed;
     public event System.Action OnDied;
     public event System.Action<CharacterObject> OnCharacterChanged;
@@ -193,7 +195,9 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
                 Stats.damageReduction);
         }
 
-        if (RuntimeEffects != null)
+        TeamLoader teamLoader = TeamLoader.Instance;
+        float shieldAbsorbedAmount = 0f;
+        if ((teamLoader != null && teamLoader.RunInventory != null && characterObject != null) || RuntimeEffects != null)
         {
             RuntimeEffectDamageContext context = new RuntimeEffectDamageContext
             {
@@ -202,7 +206,23 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
                 category = AttackCategory.Normal,
                 damage = finalDamage
             };
-            finalDamage = RuntimeEffects.ModifyIncomingDamage(context, finalDamage);
+
+            if (teamLoader != null && teamLoader.RunInventory != null && characterObject != null)
+            {
+                finalDamage = teamLoader.RunInventory.ModifyIncomingDamage(characterObject, context, finalDamage);
+                context.damage = finalDamage;
+            }
+
+            if (RuntimeEffects != null)
+            {
+                finalDamage = RuntimeEffects.ModifyIncomingDamage(context, finalDamage);
+            }
+
+            shieldAbsorbedAmount = context.shieldAbsorbedAmount;
+            if (shieldAbsorbedAmount > 0f)
+            {
+                OnShieldAbsorbed?.Invoke(shieldAbsorbedAmount);
+            }
         }
 
         float previousHP = currentHP;
@@ -212,7 +232,10 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         float actualDamage = previousHP - currentHP;
         if (actualDamage <= 0f)
         {
-            OnDamageMissed?.Invoke();
+            if (shieldAbsorbedAmount <= 0f)
+            {
+                OnDamageMissed?.Invoke();
+            }
             return false;
         }
 
@@ -220,8 +243,8 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
 
         OnDamaged?.Invoke(actualDamage);
         NotifyHealthChanged();
+        PassiveController?.NotifyDamageTaken(actualDamage);
         RuntimeEffects?.RemoveEffectsOnOwnerDamaged();
-        TeamLoader teamLoader = TeamLoader.Instance;
         teamLoader?.RunInventory?.RemoveRuntimeEffectsOnOwnerDamaged(characterObject);
 
         if (Combat != null && Combat.activeThrowContext != null)
@@ -268,6 +291,14 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
 
         OnHealed?.Invoke(value);
         NotifyHealthChanged();
+    }
+
+    public void NotifyShieldGained(float amount)
+    {
+        if (amount <= 0f || IsDead)
+            return;
+
+        OnShieldGained?.Invoke(amount);
     }
 
     public void ApplyStatus(StatusEffectType statusEffect, bool enabled = true)
@@ -340,6 +371,7 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
     private InputContext BuildActionInputContext(bool includeAvailability)
     {
         bool actionGrounded = Movement != null && Movement.IsGroundedForActionSelection();
+        bool justLanded = Movement != null && (Movement.GroundState.JustLanded || Movement.IsLanding);
         return new InputContext
         {
             isGrounded = actionGrounded,
@@ -349,6 +381,8 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
             facingDirection = Movement != null ? Movement.FacingDirection : 1,
             hasGrabbedEnemy = Combat != null && Combat.HasGrabbedEnemy(),
             isAgainstWall = Movement != null && Movement.IsAgainstWall(),
+            wasAirborne = justLanded,
+            justLanded = justLanded,
             passiveController = PassiveController,
             runtimeState = PassiveController != null ? PassiveController.RuntimeState : null,
             actionAvailabilityProvider = includeAvailability ? this : null

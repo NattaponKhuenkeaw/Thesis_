@@ -130,10 +130,9 @@ public class EnemyElementalState : MonoBehaviour
     {
         if (enemy == null || !enemy.IsAlive) return;
 
-        // Apply DOT damage as Additional damage type
         HitReactionData dotHit = HitReactionData.Default(dot.tickDamage, Vector2.zero, 0f);
         dotHit.damageIsFinal = true;
-        dotHit.damageRoutine = DamageRoutine.Additional;
+        dotHit.damageRoutine = DamageRoutine.Dot;
         dotHit.elementType = dot.elementType;
         dotHit.flashFrames = 0;
 

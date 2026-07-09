@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -25,12 +26,15 @@ public class PlayerHUD : MonoBehaviour
     [SerializeField] private Canvas targetCanvas;
     [SerializeField] private Transform runtimeEffectContainer;
     [SerializeField] private RuntimeEffectIconUI runtimeEffectIconPrefab;
+    [SerializeField] private Slider shieldSlider;
     [SerializeField] private float healthLerpDelay = 0.25f;
     [SerializeField] private float healthLerpDuration = 0.5f;
+    [SerializeField] private Color shieldFillColor = new Color(0.58f, 0.58f, 0.58f, 0.85f);
 
     private RectTransform hudRoot;
     private Slider healthSlider;
     private Slider healthLerpSlider;
+    private GameObject shieldSliderRoot;
     private TMP_Text nameText;
     private TMP_Text hpText;
     private Coroutine healthLerpCoroutine;
@@ -38,8 +42,11 @@ public class PlayerHUD : MonoBehaviour
     private PlayerRunInventory subscribedEffectInventory;
     private readonly List<RuntimeEffectIconUI> runtimeEffectIcons = new List<RuntimeEffectIconUI>();
     private readonly List<RuntimeEffectDisplayEntry> runtimeEffectDisplayEntries = new List<RuntimeEffectDisplayEntry>();
-    private string lastCharacterKey = string.Empty;
+    private readonly Dictionary<string, int> runtimeEffectStackIndexes = new Dictionary<string, int>(StringComparer.Ordinal);
+    private CharacterObject lastCharacterObject;
+    private float lastCharacterMaxHp = -1f;
     private bool runtimeEffectsDirty = true;
+    private bool runtimeEffectContainerSanitized;
     private bool healthDisplayInitialized;
 
     private void Reset()
@@ -95,15 +102,15 @@ public class PlayerHUD : MonoBehaviour
             return;
         }
 
-        string currentCharacterKey = GetCharacterKey();
-        if (currentCharacterKey != lastCharacterKey)
+        if (HasCharacterIdentityChanged())
+        {
             RefreshHUD();
+        }
 
         if (runtimeEffectsDirty)
         {
             RebuildRuntimeEffects();
         }
-
     }
 
     private void CacheReferences()
@@ -112,13 +119,18 @@ public class PlayerHUD : MonoBehaviour
             playerCharacter = GetComponent<PlayerCharacter>();
 
         if (teamLoader == null)
-            teamLoader = Object.FindFirstObjectByType<TeamLoader>();
+            teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
 
         if (targetCanvas == null || FindHudRoot(targetCanvas.transform) == null)
             targetCanvas = FindTargetCanvas();
 
         if (runtimeEffectContainer == null && hudRoot != null)
+        {
             runtimeEffectContainer = FindRuntimeEffectContainer(hudRoot);
+            runtimeEffectContainerSanitized = false;
+        }
+
+        EnsureShieldSlider();
     }
 
     private void EnsureHudReady()
@@ -178,7 +190,7 @@ public class PlayerHUD : MonoBehaviour
 
     private void HandleCharacterChanged(CharacterObject newCharacter)
     {
-        lastCharacterKey = string.Empty;
+        ResetCharacterIdentityCache();
         runtimeEffectsDirty = true;
         EnsureHudReady();
     }
@@ -212,8 +224,9 @@ public class PlayerHUD : MonoBehaviour
             if (healthLerpSlider != null)
                 healthLerpSlider.value = 0f;
 
+            SetShieldVisual(0f, 1f);
             healthDisplayInitialized = false;
-            lastCharacterKey = GetCharacterKey();
+            UpdateCharacterIdentityCache();
             return;
         }
 
@@ -237,7 +250,8 @@ public class PlayerHUD : MonoBehaviour
         if (hpText != null)
             hpText.text = $"{Mathf.CeilToInt(currentHp)} / {Mathf.CeilToInt(maxHp)}";
 
-        lastCharacterKey = GetCharacterKey();
+        UpdateShieldVisual(maxHp);
+        UpdateCharacterIdentityCache();
     }
 
     private void ApplyHealthTarget(float normalizedHp)
@@ -339,7 +353,7 @@ public class PlayerHUD : MonoBehaviour
     {
         if (teamLoader == null)
         {
-            teamLoader = Object.FindFirstObjectByType<TeamLoader>();
+            teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
         }
 
         return teamLoader != null ? teamLoader.RunInventory : null;
@@ -365,9 +379,14 @@ public class PlayerHUD : MonoBehaviour
 
         if (runtimeEffectContainer == null)
         {
-            runtimeEffectContainer = hudRoot != null
+            Transform resolvedContainer = hudRoot != null
                 ? FindRuntimeEffectContainer(hudRoot)
                 : targetCanvas != null ? FindRuntimeEffectContainer(targetCanvas.transform) : null;
+            if (resolvedContainer != runtimeEffectContainer)
+            {
+                runtimeEffectContainer = resolvedContainer;
+                runtimeEffectContainerSanitized = false;
+            }
         }
 
         if (runtimeEffectContainer == null)
@@ -387,6 +406,7 @@ public class PlayerHUD : MonoBehaviour
             : playerCharacter.RuntimeEffects != null ? playerCharacter.RuntimeEffects.ActiveEffects : null;
 
         BuildDisplayEntries(effects);
+        UpdateShieldVisual(effects);
 
         int count = runtimeEffectDisplayEntries.Count;
         SetRuntimeEffectIconCount(count);
@@ -407,7 +427,7 @@ public class PlayerHUD : MonoBehaviour
             return;
         }
 
-        Dictionary<string, int> stackIndexes = new Dictionary<string, int>();
+        runtimeEffectStackIndexes.Clear();
         for (int i = 0; i < effects.Count; i++)
         {
             RuntimeEffectInstance effect = effects[i];
@@ -421,19 +441,9 @@ public class PlayerHUD : MonoBehaviour
                 continue;
             }
 
-            string stackKey = effect.StackKey;
-            bool aggregateIntoStack = RuntimeEffectRuntimeUtility.IsStackable(effect) || CountDisplayableEffectsWithStackKey(effects, stackKey) > 1;
-            if (!aggregateIntoStack)
-            {
-                runtimeEffectDisplayEntries.Add(new RuntimeEffectDisplayEntry
-                {
-                    effect = effect,
-                    stackCount = Mathf.Max(1, effect.stackCount)
-                });
-                continue;
-            }
-
-            if (stackIndexes.TryGetValue(stackKey, out int existingIndex))
+            string stackKey = effect.StackKey ?? string.Empty;
+            bool canAggregate = RuntimeEffectRuntimeUtility.IsStackable(effect) || !string.IsNullOrEmpty(stackKey);
+            if (canAggregate && runtimeEffectStackIndexes.TryGetValue(stackKey, out int existingIndex))
             {
                 RuntimeEffectDisplayEntry entry = runtimeEffectDisplayEntries[existingIndex];
                 entry.stackCount += Mathf.Max(1, effect.stackCount);
@@ -441,44 +451,27 @@ public class PlayerHUD : MonoBehaviour
                 continue;
             }
 
-            stackIndexes.Add(stackKey, runtimeEffectDisplayEntries.Count);
+            if (canAggregate)
+            {
+                runtimeEffectStackIndexes.Add(stackKey, runtimeEffectDisplayEntries.Count);
+            }
+
             runtimeEffectDisplayEntries.Add(new RuntimeEffectDisplayEntry
             {
                 effect = effect,
                 stackCount = Mathf.Max(1, effect.stackCount)
             });
         }
-    }
-
-    private static int CountDisplayableEffectsWithStackKey(IReadOnlyList<RuntimeEffectInstance> effects, string stackKey)
-    {
-        if (effects == null || string.IsNullOrEmpty(stackKey))
-        {
-            return 0;
-        }
-
-        int count = 0;
-        for (int i = 0; i < effects.Count; i++)
-        {
-            RuntimeEffectInstance effect = effects[i];
-            RuntimeEffectDefinition definition = effect != null ? effect.definition : null;
-            if (definition == null || RuntimeEffectRuntimeUtility.GetKind(effect) == RuntimeEffectKind.Effect)
-            {
-                continue;
-            }
-
-            if (effect.StackKey == stackKey)
-            {
-                count++;
-            }
-        }
-
-        return count;
+        runtimeEffectStackIndexes.Clear();
     }
 
     private void SetRuntimeEffectIconCount(int count)
     {
-        RemoveUntrackedRuntimeEffectIcons();
+        if (!runtimeEffectContainerSanitized)
+        {
+            RemoveUntrackedRuntimeEffectIcons();
+            runtimeEffectContainerSanitized = true;
+        }
 
         for (int i = runtimeEffectIcons.Count; i < count; i++)
         {
@@ -581,13 +574,30 @@ public class PlayerHUD : MonoBehaviour
             ?? FindChildRecursive(parent, "EffectContainer");
     }
 
-    private string GetCharacterKey()
+    private bool HasCharacterIdentityChanged()
     {
         if (playerCharacter == null || playerCharacter.characterObject == null)
-            return string.Empty;
+        {
+            return lastCharacterObject != null;
+        }
 
         float maxHp = playerCharacter.Stats != null ? playerCharacter.Stats.maxHP : 0f;
-        return playerCharacter.characterObject.characterId + "|" + maxHp;
+        return lastCharacterObject != playerCharacter.characterObject
+            || !Mathf.Approximately(lastCharacterMaxHp, maxHp);
+    }
+
+    private void UpdateCharacterIdentityCache(float maxHpOverride = -1f)
+    {
+        lastCharacterObject = playerCharacter != null ? playerCharacter.characterObject : null;
+        lastCharacterMaxHp = maxHpOverride >= 0f
+            ? maxHpOverride
+            : playerCharacter != null && playerCharacter.Stats != null ? playerCharacter.Stats.maxHP : 0f;
+    }
+
+    private void ResetCharacterIdentityCache()
+    {
+        lastCharacterObject = null;
+        lastCharacterMaxHp = -1f;
     }
 
     private Canvas FindTargetCanvas()
@@ -629,6 +639,15 @@ public class PlayerHUD : MonoBehaviour
             healthSlider = hpSlideTransform.GetComponent<Slider>();
         }
 
+        Transform shieldSlideTransform = FindChildRecursive(root, "Shield_Slide")
+            ?? FindChildRecursive(root, "ShieldSlider")
+            ?? FindChildRecursive(root, "Shield_Slider");
+        if (shieldSlideTransform != null)
+        {
+            shieldSlider = shieldSlideTransform.GetComponent<Slider>();
+            shieldSliderRoot = shieldSlideTransform.gameObject;
+        }
+
         healthLerpSlider = FindHealthLerpSlider(root, healthSlider);
         if (healthLerpSlider != null && healthSlider != null)
         {
@@ -652,6 +671,182 @@ public class PlayerHUD : MonoBehaviour
             hpText = null;
             hudRoot = null;
         }
+        else
+        {
+            EnsureShieldSlider();
+        }
+    }
+
+    private void EnsureShieldSlider()
+    {
+        if (shieldSlider != null)
+        {
+            shieldSliderRoot = shieldSlider.gameObject;
+            return;
+        }
+
+        if (hudRoot != null)
+        {
+            Transform shieldSlideTransform = FindChildRecursive(hudRoot, "Shield_Slide")
+                ?? FindChildRecursive(hudRoot, "ShieldSlider")
+                ?? FindChildRecursive(hudRoot, "Shield_Slider");
+            if (shieldSlideTransform != null)
+            {
+                shieldSlider = shieldSlideTransform.GetComponent<Slider>();
+                shieldSliderRoot = shieldSlideTransform.gameObject;
+                return;
+            }
+        }
+
+        if (healthSlider == null || healthSlider.transform.parent == null)
+        {
+            return;
+        }
+
+        shieldSlider = CreateFallbackShieldSlider(healthSlider);
+        shieldSliderRoot = shieldSlider != null ? shieldSlider.gameObject : null;
+        SetShieldVisual(0f, 1f);
+    }
+
+    private Slider CreateFallbackShieldSlider(Slider sourceSlider)
+    {
+        RectTransform sourceRect = sourceSlider.transform as RectTransform;
+        Transform parent = sourceSlider.transform.parent;
+
+        GameObject sliderObject = new GameObject(
+            "Shield_Slide",
+            typeof(RectTransform),
+            typeof(CanvasRenderer),
+            typeof(Image),
+            typeof(Slider));
+        sliderObject.transform.SetParent(parent, false);
+
+        RectTransform rect = sliderObject.GetComponent<RectTransform>();
+        if (sourceRect != null)
+        {
+            rect.anchorMin = sourceRect.anchorMin;
+            rect.anchorMax = sourceRect.anchorMax;
+            rect.pivot = sourceRect.pivot;
+            rect.anchoredPosition = sourceRect.anchoredPosition;
+            rect.sizeDelta = sourceRect.sizeDelta;
+            rect.localScale = sourceRect.localScale;
+            sliderObject.transform.SetSiblingIndex(sourceSlider.transform.GetSiblingIndex() + 1);
+        }
+
+        Image backgroundImage = sliderObject.GetComponent<Image>();
+        backgroundImage.color = new Color(0f, 0f, 0f, 0f);
+        backgroundImage.raycastTarget = false;
+
+        GameObject fillAreaObject = new GameObject("Fill Area", typeof(RectTransform));
+        fillAreaObject.transform.SetParent(sliderObject.transform, false);
+        RectTransform fillArea = fillAreaObject.GetComponent<RectTransform>();
+        fillArea.anchorMin = Vector2.zero;
+        fillArea.anchorMax = Vector2.one;
+        fillArea.offsetMin = Vector2.zero;
+        fillArea.offsetMax = Vector2.zero;
+
+        GameObject fillObject = new GameObject("Fill", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+        fillObject.transform.SetParent(fillAreaObject.transform, false);
+        RectTransform fillRect = fillObject.GetComponent<RectTransform>();
+        fillRect.anchorMin = Vector2.zero;
+        fillRect.anchorMax = Vector2.one;
+        fillRect.offsetMin = Vector2.zero;
+        fillRect.offsetMax = Vector2.zero;
+
+        Image fillImage = fillObject.GetComponent<Image>();
+        fillImage.color = shieldFillColor;
+        fillImage.raycastTarget = false;
+
+        Slider slider = sliderObject.GetComponent<Slider>();
+        slider.transition = Selectable.Transition.None;
+        slider.interactable = false;
+        slider.targetGraphic = null;
+        slider.fillRect = fillRect;
+        slider.direction = Slider.Direction.LeftToRight;
+        slider.minValue = 0f;
+        slider.maxValue = 1f;
+        slider.value = 0f;
+        sliderObject.SetActive(false);
+        return slider;
+    }
+
+    private void UpdateShieldVisual(float maxHpOverride = -1f)
+    {
+        UpdateShieldVisual(null, maxHpOverride);
+    }
+
+    private void UpdateShieldVisual(IReadOnlyList<RuntimeEffectInstance> effects, float maxHpOverride = -1f)
+    {
+        EnsureShieldSlider();
+        if (shieldSlider == null || playerCharacter == null || playerCharacter.characterObject == null)
+        {
+            SetShieldVisual(0f, 1f);
+            return;
+        }
+
+        float maxHp = maxHpOverride > 0f ? maxHpOverride : ResolveCurrentMaxHp();
+        float shieldAmount = GetActiveShieldAmount(effects);
+        SetShieldVisual(shieldAmount, maxHp);
+    }
+
+    private void SetShieldVisual(float shieldAmount, float maxHp)
+    {
+        if (shieldSlider == null)
+        {
+            return;
+        }
+
+        float resolvedMaxHp = Mathf.Max(1f, maxHp);
+        float resolvedShield = Mathf.Max(0f, shieldAmount);
+        shieldSlider.minValue = 0f;
+        shieldSlider.maxValue = resolvedMaxHp;
+        shieldSlider.value = Mathf.Min(resolvedShield, resolvedMaxHp);
+
+        GameObject root = shieldSliderRoot != null ? shieldSliderRoot : shieldSlider.gameObject;
+        root.SetActive(resolvedShield > 0.01f);
+    }
+
+    private float ResolveCurrentMaxHp()
+    {
+        if (teamLoader != null && playerCharacter != null && playerCharacter.characterObject != null)
+        {
+            float trackedMaxHp = teamLoader.GetCharacterMaxHP(playerCharacter.characterObject);
+            if (trackedMaxHp > 0f)
+            {
+                return trackedMaxHp;
+            }
+        }
+
+        return playerCharacter != null ? Mathf.Max(1f, playerCharacter.MaxHP) : 1f;
+    }
+
+    private float GetActiveShieldAmount(IReadOnlyList<RuntimeEffectInstance> effects)
+    {
+        IReadOnlyList<RuntimeEffectInstance> resolvedEffects = effects;
+        if (resolvedEffects == null && playerCharacter != null && playerCharacter.characterObject != null)
+        {
+            RebindRuntimeEffectEvents();
+            resolvedEffects = subscribedEffectInventory != null
+                ? subscribedEffectInventory.GetActiveRuntimeEffects(playerCharacter.characterObject)
+                : playerCharacter.RuntimeEffects != null ? playerCharacter.RuntimeEffects.ActiveEffects : null;
+        }
+
+        if (resolvedEffects == null)
+        {
+            return 0f;
+        }
+
+        float total = 0f;
+        for (int i = 0; i < resolvedEffects.Count; i++)
+        {
+            RuntimeEffectInstance effect = resolvedEffects[i];
+            if (effect != null && effect.remainingShieldAmount > 0f)
+            {
+                total += effect.remainingShieldAmount;
+            }
+        }
+
+        return total;
     }
 
     private Transform FindHudRoot(Transform parent)

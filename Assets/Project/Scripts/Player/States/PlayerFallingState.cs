@@ -38,10 +38,7 @@ public class PlayerFallingState : PlayerState
         bool isMovingUp = player.Movement.VerticalVelocity > 0.1f;
         if (player.Movement.GroundState.IsEffectivelyGrounded && !isMovingUp)
         {
-            if (Mathf.Abs(player.Movement.HorizontalInput) > 0.01f)
-                fsm.ChangeState(fsm.MoveState);
-            else
-                fsm.ChangeState(fsm.IdleState);
+            fsm.ChangeState(fsm.LandingState);
         }
     }
 

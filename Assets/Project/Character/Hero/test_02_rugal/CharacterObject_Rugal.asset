@@ -39,8 +39,8 @@ MonoBehaviour:
     animatorController: {fileID: 9100000, guid: 815b33a35641994489dd122eacb4e98d, type: 2}
   auraEnergyRate: 0
   audioData: {fileID: 11400000, guid: a619867be2a28f642b09a359f46a8a6a, type: 2}
-  movementProfile: {fileID: 11400000, guid: cbbe7a07e1e23f24aa3f66dc18af9905, type: 2}
-  maxJumpOverride: 2
+  movementProfile: {fileID: 11400000, guid: 475fcb4220eff1746b3aa7806eb8c0a1, type: 2}
+  maxJumpOverride: -1
   maxAirDashOverride: -1
   _authoredFPS: 24
   upgrade:
@@ -238,7 +238,13 @@ MonoBehaviour:
               ignoreElementalIncomingModifiers: 0
             overridePeriodicHeal: 0
             periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
               tickInterval: 1
+            overrideHeal: 0
+            heal:
               valueSource: 1
               valueRatio: 0.1
               flatValue: 0
@@ -268,6 +274,12 @@ MonoBehaviour:
             overrideStatus: 0
             status:
               status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
           childRecipes: []
         effect: {fileID: 0}
         scope: 0
@@ -423,7 +435,13 @@ MonoBehaviour:
               ignoreElementalIncomingModifiers: 0
             overridePeriodicHeal: 0
             periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
               tickInterval: 1
+            overrideHeal: 0
+            heal:
               valueSource: 1
               valueRatio: 0.1
               flatValue: 0
@@ -453,6 +471,12 @@ MonoBehaviour:
             overrideStatus: 0
             status:
               status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
           childRecipes: []
         effect: {fileID: 0}
         scope: 1
@@ -492,7 +516,7 @@ MonoBehaviour:
       cooldownModifiers: []
       actionModifiers:
       - category: 1
-        actionId: 
+        actionId: rugal.skill
         actionName: 
         stepName: 
         unlocked: 1
@@ -554,7 +578,7 @@ MonoBehaviour:
       - filter:
           filterByCategory: 1
           category: 2
-          filterByActionId: 1
+          filterByActionId: 0
           actionId: 
           filterByActionName: 0
           actionName: 
@@ -570,7 +594,7 @@ MonoBehaviour:
         targetMaxHpRatio: 0.08
         capTargetMaxHpDamage: 1
         targetMaxHpDamageCapSource: 0
-        targetMaxHpDamageCapRatio: 5
+        targetMaxHpDamageCapRatio: 10
         elementType: 1
         consumeRuntimeTagOnTrigger: 0
       dashThroughDamageEffects: []
@@ -712,7 +736,13 @@ MonoBehaviour:
               ignoreElementalIncomingModifiers: 0
             overridePeriodicHeal: 0
             periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
               tickInterval: 1
+            overrideHeal: 0
+            heal:
               valueSource: 1
               valueRatio: 0.1
               flatValue: 0
@@ -742,6 +772,12 @@ MonoBehaviour:
             overrideStatus: 0
             status:
               status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
           childRecipes: []
         effect: {fileID: 0}
         scope: 0
@@ -906,7 +942,13 @@ MonoBehaviour:
               ignoreElementalIncomingModifiers: 0
             overridePeriodicHeal: 0
             periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
               tickInterval: 1
+            overrideHeal: 0
+            heal:
               valueSource: 1
               valueRatio: 0.1
               flatValue: 0
@@ -936,6 +978,12 @@ MonoBehaviour:
             overrideStatus: 0
             status:
               status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
           childRecipes: []
         effect: {fileID: 0}
         scope: 0
@@ -1182,7 +1230,13 @@ MonoBehaviour:
               ignoreElementalIncomingModifiers: 0
             overridePeriodicHeal: 0
             periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
               tickInterval: 1
+            overrideHeal: 0
+            heal:
               valueSource: 1
               valueRatio: 0.1
               flatValue: 0
@@ -1212,6 +1266,12 @@ MonoBehaviour:
             overrideStatus: 0
             status:
               status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
           childRecipes:
           - recipeId: increase.stat
             definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
@@ -1265,11 +1325,17 @@ MonoBehaviour:
                 ignoreElementalIncomingModifiers: 0
               overridePeriodicHeal: 0
               periodicHeal:
-                tickInterval: 0
                 valueSource: 0
                 valueRatio: 0
                 flatValue: 0
                 useSourceStats: 0
+                tickInterval: 0
+              overrideHeal: 0
+              heal:
+                valueSource: 1
+                valueRatio: 0.1
+                flatValue: 0
+                useSourceStats: 1
               overrideLifesteal: 0
               lifesteal:
                 filter:
@@ -1295,6 +1361,12 @@ MonoBehaviour:
               overrideStatus: 0
               status:
                 status: 0
+              overrideShield: 0
+              shield:
+                valueSource: 0
+                valueRatio: 0.1
+                flatValue: 0
+                useSourceStats: 1
           - recipeId: ignore.res
             definition: {fileID: 11400000, guid: ee78f874a074eed40987d4df2ee4baeb, type: 2}
             presentation:
@@ -1347,11 +1419,17 @@ MonoBehaviour:
                 ignoreElementalIncomingModifiers: 1
               overridePeriodicHeal: 0
               periodicHeal:
-                tickInterval: 0
                 valueSource: 0
                 valueRatio: 0
                 flatValue: 0
                 useSourceStats: 0
+                tickInterval: 0
+              overrideHeal: 0
+              heal:
+                valueSource: 1
+                valueRatio: 0.1
+                flatValue: 0
+                useSourceStats: 1
               overrideLifesteal: 0
               lifesteal:
                 filter:
@@ -1377,6 +1455,12 @@ MonoBehaviour:
               overrideStatus: 0
               status:
                 status: 0
+              overrideShield: 0
+              shield:
+                valueSource: 0
+                valueRatio: 0.1
+                flatValue: 0
+                useSourceStats: 1
         effect: {fileID: 0}
         scope: 0
         stackMode: 1

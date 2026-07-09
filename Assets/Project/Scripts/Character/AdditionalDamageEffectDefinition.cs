@@ -13,6 +13,8 @@ public class AdditionalDamageEffectDefinition
 
     [Header("Damage")]
     [Min(0f)] public float attackRatio = 0.3f;
+    public PassiveModifierTarget sourceStatDamageSource = PassiveModifierTarget.AttackStat;
+    [Min(0f)] public float sourceStatRatio = 0f;
     [Min(0f)] public float targetMaxHpRatio = 0f;
     [Header("Target Max HP Cap")]
     public bool capTargetMaxHpDamage = false;
@@ -23,7 +25,7 @@ public class AdditionalDamageEffectDefinition
 
     public bool CanTrigger(PassiveEventContext context)
     {
-        if (attackRatio <= 0f && targetMaxHpRatio <= 0f)
+        if (attackRatio <= 0f && sourceStatRatio <= 0f && targetMaxHpRatio <= 0f)
         {
             return false;
         }
@@ -63,6 +65,7 @@ public class AdditionalDamageEffectDefinition
     public float CalculateBaseDamage(float sourceAttack, PassiveEventContext context, CharacterStats sourceStats)
     {
         float attackDamage = Mathf.Max(0f, sourceAttack) * Mathf.Max(0f, attackRatio);
+        float sourceStatDamage = ResolveSourceValue(sourceStats, sourceAttack, sourceStatDamageSource) * Mathf.Max(0f, sourceStatRatio);
         float maxHpDamage = Mathf.Max(0f, context.enemyMaxHp) * Mathf.Max(0f, targetMaxHpRatio);
         if (capTargetMaxHpDamage)
         {
@@ -70,7 +73,30 @@ public class AdditionalDamageEffectDefinition
             maxHpDamage = Mathf.Min(maxHpDamage, Mathf.Max(0f, cap));
         }
 
-        return attackDamage + maxHpDamage;
+        return attackDamage + sourceStatDamage + maxHpDamage;
+    }
+
+    private static float ResolveSourceValue(CharacterStats sourceStats, float sourceAttack, PassiveModifierTarget source)
+    {
+        if (sourceStats == null)
+        {
+            return Mathf.Max(0f, sourceAttack);
+        }
+
+        return source switch
+        {
+            PassiveModifierTarget.MaxHP => sourceStats.maxHP,
+            PassiveModifierTarget.MoveSpeed => sourceStats.speed,
+            PassiveModifierTarget.Defense => sourceStats.defense,
+            PassiveModifierTarget.CritRate => sourceStats.critRate,
+            PassiveModifierTarget.CritDamage => sourceStats.critDamage,
+            PassiveModifierTarget.ElementalMastery => sourceStats.elementalMastery,
+            PassiveModifierTarget.CooldownRate => sourceStats.cooldownRate,
+            PassiveModifierTarget.Impact => sourceStats.impact,
+            PassiveModifierTarget.AuraEnergyRecharge => sourceStats.aeRecharge,
+            PassiveModifierTarget.IncomingDamageTaken => sourceStats.damageReduction,
+            _ => sourceStats.attack
+        };
     }
 
     private float ResolveCapSourceValue(CharacterStats sourceStats, float sourceAttack)

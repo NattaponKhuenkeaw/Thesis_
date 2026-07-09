@@ -40,7 +40,7 @@ MonoBehaviour:
     animatorController: {fileID: 9100000, guid: efb84dc297f28b2448da06b6d95f9b3b, type: 2}
   auraEnergyRate: 2
   audioData: {fileID: 11400000, guid: 59862e682f48ee94498de7b7a51bd3a0, type: 2}
-  movementProfile: {fileID: 11400000, guid: cbbe7a07e1e23f24aa3f66dc18af9905, type: 2}
+  movementProfile: {fileID: 11400000, guid: 475fcb4220eff1746b3aa7806eb8c0a1, type: 2}
   maxJumpOverride: 2
   maxAirDashOverride: 2
   _authoredFPS: 24
@@ -209,6 +209,13 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredValues: []
+        chance: 1
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
         recipe:
           recipeId: 
           definition: {fileID: 11400000, guid: ad4fabc14e4967046a460f64619eaca3, type: 2}
@@ -258,7 +265,13 @@ MonoBehaviour:
               ignoreElementalIncomingModifiers: 0
             overridePeriodicHeal: 0
             periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
               tickInterval: 1
+            overrideHeal: 0
+            heal:
               valueSource: 1
               valueRatio: 0.1
               flatValue: 0
@@ -288,6 +301,12 @@ MonoBehaviour:
             overrideStatus: 0
             status:
               status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
           childRecipes: []
         effect: {fileID: 0}
         scope: 0
@@ -338,6 +357,13 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredValues: []
+        chance: 1
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
         recipe:
           recipeId: 
           definition: {fileID: 11400000, guid: 18cbcd66e506598448fbf7c3475802ae, type: 2}
@@ -387,7 +413,13 @@ MonoBehaviour:
               ignoreElementalIncomingModifiers: 0
             overridePeriodicHeal: 0
             periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
               tickInterval: 1
+            overrideHeal: 0
+            heal:
               valueSource: 1
               valueRatio: 0.1
               flatValue: 0
@@ -417,6 +449,12 @@ MonoBehaviour:
             overrideStatus: 0
             status:
               status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
           childRecipes: []
         effect: {fileID: 0}
         scope: 0
@@ -572,6 +610,13 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredValues: []
+        chance: 1
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
         recipe:
           recipeId: 
           definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
@@ -617,7 +662,13 @@ MonoBehaviour:
               ignoreElementalIncomingModifiers: 0
             overridePeriodicHeal: 0
             periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
               tickInterval: 1
+            overrideHeal: 0
+            heal:
               valueSource: 1
               valueRatio: 0.1
               flatValue: 0
@@ -647,6 +698,12 @@ MonoBehaviour:
             overrideStatus: 0
             status:
               status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
           childRecipes: []
         effect: {fileID: 0}
         scope: 2
@@ -673,11 +730,10 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 'Inflict <b><color=#00FFED>Echo</color></b>
         DMG 800%+300% of own ATK
 
-        
 
-        <size=20><color=#C0C0C0>- When
-        Hit, Decrease Enemy <b><color=#00FFED>Echo</color></b>DMG Resistance -15%
-        for 10 seconds</color></size>'
+
+        <size=20><color=#C0C0C0>- When Hit, Decrease
+        Enemy <b><color=#00FFED>Echo</color></b>DMG Resistance -15% for 10 seconds</color></size>'
       track: 1
       level: 1
       fragmentCost: 1
@@ -728,7 +784,7 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 'Inflict <b><color=#00FFED>Echo</color></b>
         DMG <b><color=#FFA500>1000%</color></b>+300% of own ATK
 
-        
+
 
         <size=20><color=#C0C0C0>-
         When Hit, Decrease Enemy <b><color=#00FFED>Echo</color></b>DMG Resistance
@@ -785,6 +841,7 @@ MonoBehaviour:
         tag: goenitz_followup_ultimate_window
         addTag: 1
         duration: 20
+        rememberEnemyTarget: 0
       runtimeEffects: []
       counterEffects: []
       conditionalStateEffects: []
@@ -801,7 +858,7 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 'Inflict <b><color=#00FFED>Echo</color></b>
         DMG <b><color=#FFA500>1000%</color></b>+300% of own ATK
 
-        
+
 
         <size=20><color=#C0C0C0>-
         When Hit, Decrease Enemy <b><color=#00FFED>Echo</color></b>DMG Resistance
@@ -834,6 +891,7 @@ MonoBehaviour:
         tag: goenitz_ultimate_state
         addTag: 1
         duration: 99999
+        rememberEnemyTarget: 0
       - trigger: 2
         filter:
           filterByCategory: 1
@@ -851,6 +909,7 @@ MonoBehaviour:
         tag: goenitz_ultimate_state
         addTag: 0
         duration: 0
+        rememberEnemyTarget: 0
       runtimeEffects:
       - trigger: 5
         filter:
@@ -866,6 +925,13 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 1
           runtimeTag: goenitz_ultimate_state
+        requiredTags: []
+        requiredCounters: []
+        requiredValues: []
+        chance: 1
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
         recipe:
           recipeId: 
           definition: {fileID: 11400000, guid: 5f0e9114d9634764c88b13d6b1fabf92, type: 2}
@@ -911,7 +977,13 @@ MonoBehaviour:
               ignoreElementalIncomingModifiers: 0
             overridePeriodicHeal: 0
             periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
               tickInterval: 1
+            overrideHeal: 0
+            heal:
               valueSource: 1
               valueRatio: 0.1
               flatValue: 0
@@ -941,6 +1013,12 @@ MonoBehaviour:
             overrideStatus: 0
             status:
               status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
           childRecipes:
           - recipeId: 
             definition: {fileID: 11400000, guid: 360eb8d9c006c6040ad7e06eb679f8d9, type: 2}
@@ -998,11 +1076,17 @@ MonoBehaviour:
                 ignoreElementalIncomingModifiers: 0
               overridePeriodicHeal: 0
               periodicHeal:
-                tickInterval: 0
                 valueSource: 0
                 valueRatio: 0
                 flatValue: 0
                 useSourceStats: 0
+                tickInterval: 0
+              overrideHeal: 0
+              heal:
+                valueSource: 1
+                valueRatio: 0.1
+                flatValue: 0
+                useSourceStats: 1
               overrideLifesteal: 0
               lifesteal:
                 filter:
@@ -1028,6 +1112,12 @@ MonoBehaviour:
               overrideStatus: 0
               status:
                 status: 0
+              overrideShield: 0
+              shield:
+                valueSource: 0
+                valueRatio: 0.1
+                flatValue: 0
+                useSourceStats: 1
         effect: {fileID: 0}
         scope: 0
         stackMode: 0
@@ -1099,6 +1189,13 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredValues: []
+        chance: 1
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
         recipe:
           recipeId: 
           definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
@@ -1144,7 +1241,13 @@ MonoBehaviour:
               ignoreElementalIncomingModifiers: 0
             overridePeriodicHeal: 0
             periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
               tickInterval: 1
+            overrideHeal: 0
+            heal:
               valueSource: 1
               valueRatio: 0.1
               flatValue: 0
@@ -1174,6 +1277,12 @@ MonoBehaviour:
             overrideStatus: 0
             status:
               status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
           childRecipes: []
         effect: {fileID: 0}
         scope: 2
@@ -1200,10 +1309,10 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 'There 35% chance to <b>Evade</b> Incoming attack
         from enemy
 
-        
 
-        <size=20><color=#C0C0C0>- When self CRIT,
-        Reduce Enemy Echo Resistance by -15%<i>(permanent)(not stackable)</i></color></size>'
+
+        <size=20><color=#C0C0C0>- When self CRIT, Reduce Enemy
+        Echo Resistance by -15%<i>(permanent)(not stackable)</i></color></size>'
       track: 2
       level: 1
       fragmentCost: 1
@@ -1234,6 +1343,8 @@ MonoBehaviour:
         chance: 1
         internalCooldown: 0
         attackRatio: 2
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
         targetMaxHpRatio: 0
         capTargetMaxHpDamage: 0
         targetMaxHpDamageCapSource: 0
@@ -1250,10 +1361,10 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 'There 35% chance to <b>Evade</b> Incoming attack
         from enemy
 
-        
 
-        <size=20><color=#C0C0C0>- When self CRIT,
-        Reduce Enemy Echo Resistance by -15%<i>(permanent)(not stackable)</i></color></size>
+
+        <size=20><color=#C0C0C0>- When self CRIT, Reduce Enemy
+        Echo Resistance by -15%<i>(permanent)(not stackable)</i></color></size>
 
         <size=20><color=#C0C0C0>-
         Dashing through enemies Inflicts <b><color=#00FFED>Echo</color></b> DMG 200%
@@ -1310,6 +1421,7 @@ MonoBehaviour:
         tag: goenitz_after_dash_bonus_action
         addTag: 1
         duration: 10
+        rememberEnemyTarget: 0
       - trigger: 7
         filter:
           filterByCategory: 0
@@ -1327,6 +1439,7 @@ MonoBehaviour:
         tag: goenitz_after_dash_basic_depth4
         addTag: 1
         duration: 10
+        rememberEnemyTarget: 0
       - trigger: 1
         filter:
           filterByCategory: 1
@@ -1344,6 +1457,7 @@ MonoBehaviour:
         tag: goenitz_after_dash_basic_depth4
         addTag: 0
         duration: 0
+        rememberEnemyTarget: 0
       runtimeEffects: []
       counterEffects: []
       conditionalStateEffects: []
@@ -1365,6 +1479,8 @@ MonoBehaviour:
         chance: 1
         internalCooldown: 0
         attackRatio: 0
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
         targetMaxHpRatio: 0.04
         capTargetMaxHpDamage: 1
         targetMaxHpDamageCapSource: 0
@@ -1383,10 +1499,10 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 'There 35% chance to <b>Evade</b> Incoming attack
         from enemy
 
-        
 
-        <size=20><color=#C0C0C0>- When self CRIT,
-        Reduce Enemy Echo Resistance by -15%<i>(permanent)(not stackable)</i></color></size>
+
+        <size=20><color=#C0C0C0>- When self CRIT, Reduce Enemy
+        Echo Resistance by -15%<i>(permanent)(not stackable)</i></color></size>
 
         <size=20><color=#C0C0C0>-
         Dashing through enemies Inflicts <b><color=#00FFED>Echo</color></b> DMG 200%
@@ -1436,7 +1552,7 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 'There <b><color=#FFA500>65%</color></b> chance
         to <b>Evade</b> Incoming attack from enemy
 
-        
+
 
         <size=20><color=#C0C0C0>-
         When self CRIT, Reduce Enemy Echo Resistance by -15%<i>(permanent)(not stackable)</i></color></size>

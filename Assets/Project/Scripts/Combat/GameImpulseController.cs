@@ -101,6 +101,7 @@ public class GameImpulseController : MonoBehaviour
 
     [Header("Fallback")]
     [SerializeField] private CinemachineImpulseSource fallbackImpulseSource;
+    [SerializeField, Range(0f, 1f)] private float outputStrengthMultiplier = 0.2f;
 
     [Header("Impact Profiles")]
     [SerializeField] private ImpactImpulseProfile lowImpact = new ImpactImpulseProfile
@@ -194,7 +195,7 @@ public class GameImpulseController : MonoBehaviour
 
     public void PlayOneShot(float strength)
     {
-        EmitImpulse(strength);
+        EmitImpulse(strength * outputStrengthMultiplier);
     }
 
     public void PlayImpact(DamageImpactTier tier)
@@ -206,10 +207,11 @@ public class GameImpulseController : MonoBehaviour
     {
         float pulseDuration = Mathf.Max(0f, request.duration);
         float pulseInterval = Mathf.Max(0.01f, request.pulseInterval);
+        float strengthMultiplier = Mathf.Max(0f, outputStrengthMultiplier);
 
         if (pulseDuration <= 0f)
         {
-            EmitImpulse(Mathf.Max(request.startStrength, request.endStrength));
+            EmitImpulse(Mathf.Max(request.startStrength, request.endStrength) * strengthMultiplier);
         }
         else
         {
@@ -217,14 +219,14 @@ public class GameImpulseController : MonoBehaviour
             while (elapsed < pulseDuration)
             {
                 float normalized = pulseDuration <= 0f ? 1f : Mathf.Clamp01(elapsed / pulseDuration);
-                float strength = Mathf.Lerp(request.startStrength, request.endStrength, normalized);
+                float strength = Mathf.Lerp(request.startStrength, request.endStrength, normalized) * strengthMultiplier;
                 EmitImpulse(strength);
 
                 yield return new WaitForSecondsRealtime(pulseInterval);
                 elapsed += pulseInterval;
             }
 
-            EmitImpulse(request.endStrength);
+            EmitImpulse(request.endStrength * strengthMultiplier);
         }
 
         if (request.slowMotion != null

@@ -75,7 +75,14 @@ MonoBehaviour:
     entries:
     - type: 40
       clip: {fileID: 7400000, guid: b53fc5f11238cda4b9c6c3a50cbae232, type: 2}
-      localScale: {x: 1, y: 1, z: 1}
+      localScale: {x: 1.5, y: 1.5, z: 1.5}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 0
+    - type: 41
+      clip: {fileID: 7400000, guid: c9187e9d8b96796498db6fca5bf606e6, type: 2}
+      localScale: {x: 1.7, y: 1.7, z: 1.7}
       tint: {r: 1, g: 1, b: 1, a: 1}
       flipWithCharacter: 1
       isLocalSpace: 1

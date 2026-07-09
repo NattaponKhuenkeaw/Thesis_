@@ -77,17 +77,21 @@ public class RuntimeEffectInstance
     public float elapsedSeconds;
     public float nextTickAt;
     [Min(1)] public int stackCount = 1;
+    public float remainingShieldAmount;
+    public float appliedShieldAmount;
 
     [NonSerialized] public float lastTriggeredAt = -999f;
+    [NonSerialized] public bool forceExpired;
     [NonSerialized] private Dictionary<RuntimeEffectDefinition, RuntimeEffectInstance> childInstances;
     [NonSerialized] private Dictionary<RuntimeEffectRecipeData, RuntimeEffectInstance> childRecipeInstances;
 
     public bool IsValid => definition != null;
     public bool UsesTimer => definition != null
         && RuntimeEffectRuntimeUtility.GetDurationType(definition, recipe) == RuntimeEffectDurationType.Seconds;
-    public bool IsExpired => UsesTimer && remainingSeconds <= 0f;
+    public bool IsExpired => forceExpired || (UsesTimer && remainingSeconds <= 0f);
     public string StackKey { get; private set; }
     public bool RequiresTicking { get; private set; }
+    public bool RequiresFormulaUpdate { get; private set; }
     public bool AffectsStats { get; private set; }
 
     public void Initialize(
@@ -126,14 +130,31 @@ public class RuntimeEffectInstance
         elapsedSeconds = 0f;
         nextTickAt = 0f;
         stackCount = 1;
+        remainingShieldAmount = 0f;
+        appliedShieldAmount = 0f;
         lastTriggeredAt = -999f;
+        forceExpired = false;
         childInstances?.Clear();
         childRecipeInstances?.Clear();
 
         // Cache properties to avoid dynamic re-evaluation
         StackKey = RuntimeEffectRuntimeUtility.GetStackKey(definition, recipe);
         RequiresTicking = RuntimeEffectRuntimeUtility.RequiresTicking(definition, recipe);
+        RequiresFormulaUpdate = RuntimeEffectRuntimeUtility.RequiresFormulaUpdate(definition, recipe);
         AffectsStats = RuntimeEffectRuntimeUtility.AffectsStats(definition, recipe);
+    }
+
+    public void Rebind(RuntimeEffectRecipeData effectRecipe, CharacterObject source, CharacterStats sourceStats)
+    {
+        recipe = effectRecipe;
+        sourceCharacter = source;
+        sourceStatsSnapshot = sourceStats != null ? sourceStats.Clone() : null;
+
+        StackKey = RuntimeEffectRuntimeUtility.GetStackKey(definition, recipe);
+        RequiresTicking = RuntimeEffectRuntimeUtility.RequiresTicking(definition, recipe);
+        RequiresFormulaUpdate = RuntimeEffectRuntimeUtility.RequiresFormulaUpdate(definition, recipe);
+        AffectsStats = RuntimeEffectRuntimeUtility.AffectsStats(definition, recipe);
+        SyncChildInstances(resetElapsed: false);
     }
 
     public void Refresh(float durationOverride = -1f)
@@ -147,6 +168,7 @@ public class RuntimeEffectInstance
         appliedDurationSeconds = remainingSeconds;
         elapsedSeconds = 0f;
         nextTickAt = 0f;
+        forceExpired = false;
         SyncChildInstances(resetElapsed: true);
     }
 
@@ -277,6 +299,7 @@ public sealed class RuntimeEffectDamageContext
     public bool isCriticalHit;
     public float damage;
     public float damageDealt;
+    public float shieldAbsorbedAmount;
     public bool killedEnemy;
     public Vector2 attackerPosition;
     public Vector2 hitDirection;
@@ -330,6 +353,7 @@ public abstract class RuntimeEffectDefinition : ScriptableObject
     public virtual bool RequiresFormulaTicking => false;
     public virtual bool RequiresTicking => durationType == RuntimeEffectDurationType.Seconds || RequiresFormulaTicking;
     public virtual bool SupportsStackMerging => false;
+    public virtual bool ReapplyWhenRecipeChanges => false;
 
     public string StableId => !string.IsNullOrWhiteSpace(effectId) ? effectId : name;
     public virtual string StackKey => StableId;
@@ -350,6 +374,7 @@ public abstract class RuntimeEffectDefinition : ScriptableObject
     }
 
     public virtual void OnApply(RuntimeEffectContext context) { }
+    public virtual void OnReapplied(RuntimeEffectContext context) { }
     public virtual void OnUpdate(RuntimeEffectContext context) { }
     public virtual void OnExpired(RuntimeEffectContext context) { }
     public virtual void ModifyStats(RuntimeEffectContext context, CharacterStats stats) { }

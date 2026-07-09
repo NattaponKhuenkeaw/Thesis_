@@ -21,11 +21,11 @@ MonoBehaviour:
     maxHP: 892
     attack: 45
     defense: 37
-    speed: 9
+    speed: 10.5
     elementalMastery: 0
     critRate: 5
     critDamage: 150
-    cooldownRate: -0.03
+    cooldownRate: 0
     impact: 0
     damageReduction: 0
     aeRecharge: 1
@@ -40,7 +40,7 @@ MonoBehaviour:
     animatorController: {fileID: 9100000, guid: 3436f3bf41714a54391f36d8cfdd4294, type: 2}
   auraEnergyRate: 0
   audioData: {fileID: 11400000, guid: 2e1cc3b89704d09409a0f8d5b4c62631, type: 2}
-  movementProfile: {fileID: 11400000, guid: cd71e34e3ebc46d458f1965ef79c3daf, type: 2}
+  movementProfile: {fileID: 11400000, guid: 182e063ed72b563499107a91c543b9f4, type: 2}
   maxJumpOverride: -1
   maxAirDashOverride: -1
   _authoredFPS: 24
@@ -144,6 +144,13 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredValues: []
+        chance: 1
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
         recipe:
           recipeId: 
           definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
@@ -189,7 +196,13 @@ MonoBehaviour:
               ignoreElementalIncomingModifiers: 0
             overridePeriodicHeal: 0
             periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
               tickInterval: 1
+            overrideHeal: 0
+            heal:
               valueSource: 1
               valueRatio: 0.1
               flatValue: 0
@@ -219,6 +232,12 @@ MonoBehaviour:
             overrideStatus: 0
             status:
               status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
           childRecipes: []
         effect: {fileID: 0}
         scope: 1
@@ -423,6 +442,9 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredValues: []
         chance: 1
         effectType: 0
         scope: 0
@@ -431,6 +453,8 @@ MonoBehaviour:
         flatValue: 0
         runtimeTag: 0
         runtimeTagDuration: 0
+        cooldownTag: 
+        cooldownDuration: 0
       enemyElementModifiers: []
       passiveHookTypeName: 
       nodeId: kyo.skill.lv4
@@ -471,6 +495,13 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredValues: []
+        chance: 1
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
         recipe:
           recipeId: 
           definition: {fileID: 11400000, guid: b7c3e4d5a6f147f18d29c30b45a6e7f8, type: 2}
@@ -516,7 +547,13 @@ MonoBehaviour:
               ignoreElementalIncomingModifiers: 0
             overridePeriodicHeal: 0
             periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
               tickInterval: 1
+            overrideHeal: 0
+            heal:
               valueSource: 1
               valueRatio: 0.1
               flatValue: 0
@@ -546,6 +583,12 @@ MonoBehaviour:
             overrideStatus: 0
             status:
               status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
           childRecipes:
           - recipeId: kyo.kusanagi_blessing.atk
             definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
@@ -595,11 +638,17 @@ MonoBehaviour:
                 ignoreElementalIncomingModifiers: 0
               overridePeriodicHeal: 0
               periodicHeal:
-                tickInterval: 0
                 valueSource: 0
                 valueRatio: 0
                 flatValue: 0
                 useSourceStats: 0
+                tickInterval: 0
+              overrideHeal: 0
+              heal:
+                valueSource: 1
+                valueRatio: 0.1
+                flatValue: 0
+                useSourceStats: 1
               overrideLifesteal: 0
               lifesteal:
                 filter:
@@ -625,6 +674,12 @@ MonoBehaviour:
               overrideStatus: 0
               status:
                 status: 5
+              overrideShield: 0
+              shield:
+                valueSource: 0
+                valueRatio: 0.1
+                flatValue: 0
+                useSourceStats: 1
           - recipeId: kyo.kusanagi_blessing.ash_damage
             definition: {fileID: 11400000, guid: 415918be4bdded440914c0232e1022fa, type: 2}
             presentation:
@@ -669,11 +724,17 @@ MonoBehaviour:
                 ignoreElementalIncomingModifiers: 0
               overridePeriodicHeal: 0
               periodicHeal:
-                tickInterval: 0
                 valueSource: 0
                 valueRatio: 0
                 flatValue: 0
                 useSourceStats: 0
+                tickInterval: 0
+              overrideHeal: 0
+              heal:
+                valueSource: 1
+                valueRatio: 0.1
+                flatValue: 0
+                useSourceStats: 1
               overrideLifesteal: 0
               lifesteal:
                 filter:
@@ -699,6 +760,12 @@ MonoBehaviour:
               overrideStatus: 1
               status:
                 status: 0
+              overrideShield: 0
+              shield:
+                valueSource: 0
+                valueRatio: 0.1
+                flatValue: 0
+                useSourceStats: 1
         effect: {fileID: 11400000, guid: b7c3e4d5a6f147f18d29c30b45a6e7f8, type: 2}
         scope: 0
         stackMode: 0
@@ -832,6 +899,7 @@ MonoBehaviour:
         tag: kyo.ultimate.followup
         addTag: 1
         duration: 20
+        rememberEnemyTarget: 0
       runtimeEffects:
       - trigger: 2
         filter:
@@ -847,6 +915,13 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredValues: []
+        chance: 1
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
         recipe:
           recipeId: 
           definition: {fileID: 11400000, guid: 685a25a9797d09e489170a3c6a5b2360, type: 2}
@@ -892,7 +967,13 @@ MonoBehaviour:
               ignoreElementalIncomingModifiers: 0
             overridePeriodicHeal: 0
             periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
               tickInterval: 1
+            overrideHeal: 0
+            heal:
               valueSource: 1
               valueRatio: 0.1
               flatValue: 0
@@ -922,6 +1003,12 @@ MonoBehaviour:
             overrideStatus: 0
             status:
               status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
           childRecipes:
           - recipeId: allie.damage
             definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
@@ -967,11 +1054,17 @@ MonoBehaviour:
                 ignoreElementalIncomingModifiers: 0
               overridePeriodicHeal: 0
               periodicHeal:
-                tickInterval: 0
                 valueSource: 0
                 valueRatio: 0
                 flatValue: 0
                 useSourceStats: 0
+                tickInterval: 0
+              overrideHeal: 0
+              heal:
+                valueSource: 1
+                valueRatio: 0.1
+                flatValue: 0
+                useSourceStats: 1
               overrideLifesteal: 0
               lifesteal:
                 filter:
@@ -997,6 +1090,12 @@ MonoBehaviour:
               overrideStatus: 0
               status:
                 status: 0
+              overrideShield: 0
+              shield:
+                valueSource: 0
+                valueRatio: 0.1
+                flatValue: 0
+                useSourceStats: 1
           - recipeId: heal
             definition: {fileID: 11400000, guid: dd9bfc3c18ffc3545b744c12ccf0ada4, type: 2}
             presentation:
@@ -1041,9 +1140,15 @@ MonoBehaviour:
                 ignoreElementalIncomingModifiers: 0
               overridePeriodicHeal: 1
               periodicHeal:
-                tickInterval: 4
                 valueSource: 1
                 valueRatio: 0.4
+                flatValue: 0
+                useSourceStats: 1
+                tickInterval: 4
+              overrideHeal: 0
+              heal:
+                valueSource: 1
+                valueRatio: 0.1
                 flatValue: 0
                 useSourceStats: 1
               overrideLifesteal: 0
@@ -1071,6 +1176,12 @@ MonoBehaviour:
               overrideStatus: 0
               status:
                 status: 0
+              overrideShield: 0
+              shield:
+                valueSource: 0
+                valueRatio: 0.1
+                flatValue: 0
+                useSourceStats: 1
         effect: {fileID: 0}
         scope: 1
         stackMode: 0
@@ -1131,6 +1242,13 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredValues: []
+        chance: 1
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
         recipe:
           recipeId: 
           definition: {fileID: 11400000, guid: b7c3e4d5a6f147f18d29c30b45a6e7f8, type: 2}
@@ -1176,7 +1294,13 @@ MonoBehaviour:
               ignoreElementalIncomingModifiers: 0
             overridePeriodicHeal: 0
             periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
               tickInterval: 1
+            overrideHeal: 0
+            heal:
               valueSource: 1
               valueRatio: 0.1
               flatValue: 0
@@ -1206,6 +1330,12 @@ MonoBehaviour:
             overrideStatus: 0
             status:
               status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
           childRecipes:
           - recipeId: kyo.kusanagi_blessing.atk
             definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
@@ -1255,11 +1385,17 @@ MonoBehaviour:
                 ignoreElementalIncomingModifiers: 0
               overridePeriodicHeal: 0
               periodicHeal:
-                tickInterval: 0
                 valueSource: 0
                 valueRatio: 0
                 flatValue: 0
                 useSourceStats: 0
+                tickInterval: 0
+              overrideHeal: 0
+              heal:
+                valueSource: 1
+                valueRatio: 0.1
+                flatValue: 0
+                useSourceStats: 1
               overrideLifesteal: 0
               lifesteal:
                 filter:
@@ -1285,6 +1421,12 @@ MonoBehaviour:
               overrideStatus: 0
               status:
                 status: 5
+              overrideShield: 0
+              shield:
+                valueSource: 0
+                valueRatio: 0.1
+                flatValue: 0
+                useSourceStats: 1
           - recipeId: kyo.kusanagi_blessing.ash_damage
             definition: {fileID: 11400000, guid: 415918be4bdded440914c0232e1022fa, type: 2}
             presentation:
@@ -1329,11 +1471,17 @@ MonoBehaviour:
                 ignoreElementalIncomingModifiers: 0
               overridePeriodicHeal: 0
               periodicHeal:
-                tickInterval: 0
                 valueSource: 0
                 valueRatio: 0
                 flatValue: 0
                 useSourceStats: 0
+                tickInterval: 0
+              overrideHeal: 0
+              heal:
+                valueSource: 1
+                valueRatio: 0.1
+                flatValue: 0
+                useSourceStats: 1
               overrideLifesteal: 0
               lifesteal:
                 filter:
@@ -1359,6 +1507,12 @@ MonoBehaviour:
               overrideStatus: 0
               status:
                 status: 0
+              overrideShield: 0
+              shield:
+                valueSource: 0
+                valueRatio: 0.1
+                flatValue: 0
+                useSourceStats: 1
         effect: {fileID: 11400000, guid: b7c3e4d5a6f147f18d29c30b45a6e7f8, type: 2}
         scope: 0
         stackMode: 0
@@ -1425,6 +1579,8 @@ MonoBehaviour:
         chance: 0.2
         internalCooldown: 0
         attackRatio: 0.2
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
         targetMaxHpRatio: 0
         capTargetMaxHpDamage: 0
         targetMaxHpDamageCapSource: 0
@@ -1507,6 +1663,13 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 1
           runtimeTag: kyo.hp.above.70
+        requiredTags: []
+        requiredCounters: []
+        requiredValues: []
+        chance: 1
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
         recipe:
           recipeId: 
           definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
@@ -1556,7 +1719,13 @@ MonoBehaviour:
               ignoreElementalIncomingModifiers: 0
             overridePeriodicHeal: 0
             periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
               tickInterval: 1
+            overrideHeal: 0
+            heal:
               valueSource: 1
               valueRatio: 0.1
               flatValue: 0
@@ -1586,6 +1755,12 @@ MonoBehaviour:
             overrideStatus: 0
             status:
               status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
           childRecipes: []
         effect: {fileID: 0}
         scope: 0
@@ -1638,6 +1813,7 @@ MonoBehaviour:
           tag: kyo.hp.above.70
           addTag: 1
           duration: 9999
+          rememberEnemyTarget: 0
         counterEffects: []
       - trigger: 0
         filter:
@@ -1678,6 +1854,7 @@ MonoBehaviour:
           tag: kyo.hp.above.70
           addTag: 0
           duration: 9999
+          rememberEnemyTarget: 0
         counterEffects: []
       onHitStatusEffects: []
       additionalDamageEffects: []
@@ -1726,6 +1903,13 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredValues: []
+        chance: 1
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
         recipe:
           recipeId: 
           definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
@@ -1775,7 +1959,13 @@ MonoBehaviour:
               ignoreElementalIncomingModifiers: 0
             overridePeriodicHeal: 0
             periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
               tickInterval: 1
+            overrideHeal: 0
+            heal:
               valueSource: 1
               valueRatio: 0.1
               flatValue: 0
@@ -1805,6 +1995,12 @@ MonoBehaviour:
             overrideStatus: 0
             status:
               status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
           childRecipes: []
         effect: {fileID: 0}
         scope: 1
@@ -1831,17 +2027,17 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 'Increase <b><color=#FF0000>Ash Allies</color></b>
         DMG by 15%
 
-        
 
-        <size=20><color=#C0C0C0>- When dealing damage,
-        20% chance to deal additional <b><color=#FF0000>Ash</color></b> DMG based
-        on 20% of own ATK</color></size>
 
-        <size=20><color=#C0C0C0>- Unlock
-        <i>State3</i> on Basic Attack</color></size>
+        <size=20><color=#C0C0C0>- When dealing damage, 20%
+        chance to deal additional <b><color=#FF0000>Ash</color></b> DMG based on
+        20% of own ATK</color></size>
 
-        <size=20><color=#C0C0C0>-
-        When HP is above 70%, own AE Recharge increases by 25%</color></size>
+        <size=20><color=#C0C0C0>- Unlock <i>State3</i>
+        on Basic Attack</color></size>
+
+        <size=20><color=#C0C0C0>- When HP
+        is above 70%, own AE Recharge increases by 25%</color></size>
 
         <size=20><color=#C0C0C0>-
         Increase <b><color=#FF0000>Ash</color></b> allies ATK based on 20% of Kyo

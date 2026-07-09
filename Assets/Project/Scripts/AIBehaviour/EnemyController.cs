@@ -193,11 +193,11 @@ public class EnemyController : MonoBehaviour
     {
         if (!isAlive) return 0f;
 
-        bool isAdditionalDamage = reactionData.damageRoutine == DamageRoutine.Additional;
+        bool isSeparateDamage = IsSeparateDamageRoutine(reactionData.damageRoutine);
 
-        if (!isAdditionalDamage)
+        if (!isSeparateDamage)
         {
-            // Additional Damage is a separate number, not another combo impact.
+            // Separate damage ticks are numbers only, not another combo impact.
             currentComboHits++;
 
             if (currentComboHits >= 6 && reactionData.impactTier < DamageImpactTier.Heavy)
@@ -242,10 +242,10 @@ public class EnemyController : MonoBehaviour
             CombatCore.TrainingDebugStats.Instance.RecordHit(this, finalIncomingDamage);
         }
 
-        bool shouldApplyReaction = !isAdditionalDamage && ShouldApplyHitReaction();
+        bool shouldApplyReaction = !isSeparateDamage && ShouldApplyHitReaction();
         LastHitAppliedReaction = shouldApplyReaction;
 
-        if (!shouldApplyReaction && !isAdditionalDamage)
+        if (!shouldApplyReaction && !isSeparateDamage)
         {
             // Once the enemy successfully resists stagger, break the combo counter so
             // it does not immediately keep armoring through every following hit.
@@ -255,8 +255,8 @@ public class EnemyController : MonoBehaviour
         // Fire event (AnimationHandler_Enemy triggers TakeDamage anim via this)
         OnDamaged?.Invoke(reactionData);
 
-        // Additional Damage intentionally skips reaction, flash, and behavior interruption.
-        if (isAdditionalDamage)
+        // Separate damage intentionally skips reaction, flash, and behavior interruption.
+        if (isSeparateDamage)
         {
             if (currentHP <= 0f)
                 Die();
@@ -315,6 +315,11 @@ public class EnemyController : MonoBehaviour
             return true;
 
         return UnityEngine.Random.value > antiStunlockResistChance;
+    }
+
+    private static bool IsSeparateDamageRoutine(DamageRoutine routine)
+    {
+        return routine == DamageRoutine.Additional || routine == DamageRoutine.Dot;
     }
 
     public void ResetComboCount()

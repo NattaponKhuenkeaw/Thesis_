@@ -55,13 +55,14 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
             instance.lastTriggeredAt = Time.time;
         }
 
-        float sourceAttack = context.sourceStats != null ? Mathf.Max(0f, context.sourceStats.attack) : 0f;
-        float sourceStatDamage = ResolveSourceStatValue(context.sourceStats, parameters.sourceStatDamageSource)
+        CharacterStats formulaSourceStats = RuntimeEffectRuntimeUtility.ResolveFormulaSourceStats(context);
+        float sourceAttack = formulaSourceStats != null ? Mathf.Max(0f, formulaSourceStats.attack) : 0f;
+        float sourceStatDamage = ResolveSourceStatValue(formulaSourceStats, parameters.sourceStatDamageSource)
             * Mathf.Max(0f, parameters.sourceStatRatio);
         float maxHpDamage = Mathf.Max(0f, context.targetEnemy.maxHP) * Mathf.Max(0f, parameters.targetMaxHpRatio);
         if (parameters.capTargetMaxHpDamage)
         {
-            float cap = ResolveCapSourceValue(context.sourceStats, parameters.targetMaxHpDamageCapSource)
+            float cap = ResolveCapSourceValue(formulaSourceStats, parameters.targetMaxHpDamageCapSource)
                 * Mathf.Max(0f, parameters.targetMaxHpDamageCapRatio);
             maxHpDamage = Mathf.Min(maxHpDamage, Mathf.Max(0f, cap));
         }
@@ -75,7 +76,7 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
         RuntimeEffectDamageContext additionalContext = new RuntimeEffectDamageContext
         {
             sourceCharacter = context.sourceCharacter,
-            sourceStats = context.sourceStats,
+            sourceStats = formulaSourceStats,
             targetEnemy = context.targetEnemy,
             category = context.category,
             actionId = context.actionId,
@@ -102,7 +103,7 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
             damageInput.baseDamage,
             DamageRoutine.Additional,
             parameters.elementType,
-            context.sourceStats,
+            formulaSourceStats,
             damageInput.defenderDefense,
             AttackCategory.Normal,
             out _,
@@ -122,7 +123,7 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
         additionalData.flashFrames = 0;
         additionalData.impactTier = DamageImpactTier.Low;
         additionalData.sourceCharacter = context.sourceCharacter;
-        additionalData.sourceStats = context.sourceStats;
+        additionalData.sourceStats = formulaSourceStats;
         additionalData.sourceCategory = context.category;
         additionalData.sourceActionId = context.actionId;
         additionalData.sourceActionName = context.actionName;
@@ -138,7 +139,7 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
         if (elementalState != null)
         {
             elementalState.RecordDamageTaken(damageDealt);
-            elementalState.ApplyElementalDamage(parameters.elementType, damageInput.baseDamage, context.sourceStats, AttackCategory.Normal);
+            elementalState.ApplyElementalDamage(parameters.elementType, damageInput.baseDamage, formulaSourceStats, AttackCategory.Normal);
         }
     }
 

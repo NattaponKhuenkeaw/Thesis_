@@ -359,6 +359,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     {
         ActionInputBuffer buffer = fsm.InputBuffer;
         bool logicallyGrounded = player.Movement != null && player.Movement.GroundState.IsEffectivelyGrounded;
+        bool justLanded = player.Movement != null && (player.Movement.GroundState.JustLanded || player.Movement.IsLanding);
         
         bool actionGrounded;
         if (player.Combat != null && player.Combat.IsAttacking())
@@ -379,7 +380,8 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             hasGrabbedEnemy = player.Combat != null && player.Combat.HasGrabbedEnemy(),
             hasPreviouslyGrabbedEnemy = player.Combat != null && player.Combat.HadGrabAtStepStart,
             isAgainstWall = player.Movement != null && player.Movement.IsAgainstWall(),
-            wasAirborne = !prevFrameGrounded && logicallyGrounded,
+            wasAirborne = (!prevFrameGrounded && logicallyGrounded) || justLanded,
+            justLanded = justLanded,
             isAirCombo = player.Combat != null && player.Combat.IsAirCombo,
             passiveController = player.PassiveController,
             runtimeState = player.PassiveController != null ? player.PassiveController.RuntimeState : null,

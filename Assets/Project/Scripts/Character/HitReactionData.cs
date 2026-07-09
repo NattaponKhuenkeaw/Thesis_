@@ -18,7 +18,8 @@ public enum DamageRoutine
 {
     Normal,
     Elemental,
-    Additional
+    Additional,
+    Dot
 }
 
 public enum EnemyReactionKind
@@ -117,6 +118,7 @@ public struct HitReactionData
     // Damage Text Impact
     // =========================================================
     public DamageImpactTier impactTier;
+    public DamageImpactTier textImpactTier;
     public ElementType elementType;
     public DamageRoutine damageRoutine;
 
@@ -229,6 +231,7 @@ public struct HitReactionData
             flashColor = Color.red,
             flashFrames = 6,
             impactTier = DamageImpactTier.Low,
+            textImpactTier = DamageImpactTier.Low,
             elementType = ElementType.None,
             damageRoutine = DamageRoutine.Normal,
             sourceCategory = AttackCategory.Normal

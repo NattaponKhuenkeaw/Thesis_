@@ -53,30 +53,21 @@ public class PeriodicHealRuntimeEffectDefinition : RuntimeEffectDefinition
 
     private void ApplyTickHeal(RuntimeEffectContext context, bool hasOverride, RuntimeEffectPeriodicHealParameters parameters)
     {
-        bool useSource = hasOverride ? parameters.useSourceStats : useSourceStats;
-        RuntimeEffectStatTarget source = hasOverride ? parameters.valueSource : valueSource;
-        float ratio = hasOverride ? parameters.valueRatio : valueRatio;
-        float flat = hasOverride ? parameters.flatValue : flatValue;
-
-        CharacterStats stats = useSource ? context.sourceStats : context.targetStats;
-        float amount = Mathf.Max(0f, flat + GetStat(stats, source) * Mathf.Max(0f, ratio));
-        if (amount <= 0f)
+        RuntimeEffectHealParameters healParameters = hasOverride
+            ? parameters
+            : new RuntimeEffectHealParameters
         {
-            return;
-        }
+            valueSource = valueSource,
+            valueRatio = valueRatio,
+            flatValue = flatValue,
+            useSourceStats = useSourceStats
+        };
 
-        if (context.targetPlayer != null && context.targetPlayer.characterObject == context.targetCharacter)
-        {
-            context.targetPlayer.Heal(amount);
-            return;
-        }
-
-        TeamLoader teamLoader = TeamLoader.Instance;
-        if (teamLoader != null && context.targetCharacter != null)
-        {
-            float maxHp = teamLoader.GetCharacterMaxHP(context.targetCharacter);
-            float currentHp = teamLoader.GetCharacterCurrentHP(context.targetCharacter);
-            teamLoader.SetCharacterCurrentHP(context.targetCharacter, Mathf.Min(maxHp, currentHp + amount));
-        }
+        CharacterStats sourceStats = RuntimeEffectRuntimeUtility.ResolveFormulaSourceStats(context);
+        float amount = RuntimeEffectHealUtility.CalculateHealAmount(
+            healParameters,
+            sourceStats,
+            context.targetStats);
+        RuntimeEffectHealUtility.ApplyHeal(context.targetCharacter, context.targetPlayer, amount);
     }
 }
