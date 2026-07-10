@@ -33,6 +33,10 @@ MonoBehaviour:
     displayName: Main Fragment
     fragmentType: 0
     quantity: 998
+  - sourceItemId: char_6_orochi
+    displayName: Orochi Fragment
+    fragmentType: 0
+    quantity: 998
   characterPotentials:
   - characterId: char_3_shermie
     skillLevel: 4
@@ -43,14 +47,18 @@ MonoBehaviour:
     ultimateLevel: 4
     passiveLevel: 4
   - characterId: Char_2_Rugal
-    skillLevel: 0
-    ultimateLevel: 0
-    passiveLevel: 0
+    skillLevel: 4
+    ultimateLevel: 4
+    passiveLevel: 4
   - characterId: char_5_goenitz
-    skillLevel: 0
-    ultimateLevel: 0
-    passiveLevel: 0
+    skillLevel: 4
+    ultimateLevel: 4
+    passiveLevel: 4
   - characterId: char-0-main
     skillLevel: 4
     ultimateLevel: 4
+    passiveLevel: 4
+  - characterId: char_6_orochi
+    skillLevel: 0
+    ultimateLevel: 0
     passiveLevel: 4

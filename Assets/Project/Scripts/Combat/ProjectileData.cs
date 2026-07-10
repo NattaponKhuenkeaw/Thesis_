@@ -379,8 +379,10 @@ public struct ProjectileSpawnContext
     public Vector2 direction;
     public Vector2 resolvedSpawnOffset;
     public float sourceAttack;
+    public float actionDamageSourceValue;
     public CharacterStats attackerStats;
     public float actionDamageMultiplier;
+    public ActionDamageSourceStat actionDamageSourceStat;
     public float auraEnergyReward;
     public AuraEnergyRewardClaim auraEnergyRewardClaim;
     public AdditionalDamageEffectDefinition[] additionalDamageEffects;

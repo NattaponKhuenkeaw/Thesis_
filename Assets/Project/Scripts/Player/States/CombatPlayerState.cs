@@ -343,7 +343,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
                         ? AbilityUIManager.AbilityType.Ultimate
                         : AbilityUIManager.AbilityType.Skill;
 
-                float resolvedCooldown = player.Combat.GetFinalCooldown(
+                float resolvedCooldown = player.Combat.GetRemainingCooldown(
                     GetAttackCategory(),
                     skillAction.cooldown,
                     skillAction.actionName,

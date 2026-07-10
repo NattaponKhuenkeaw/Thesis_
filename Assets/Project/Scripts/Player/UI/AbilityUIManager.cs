@@ -360,19 +360,46 @@ public class AbilityUIManager : MonoBehaviour
         }
 
         // ── Cooldown ────────────────────────────────────────────────────────
-        bool onCooldown = skillCooldowns.TryGetValue(characterKey, out CooldownDisplayState cd)
-                          && cd.max > 0f && cd.current > 0f;
+        SkillAction resolvedAction = ResolveDisplayedActionContextFree(AttackCategory.Skill) as SkillAction;
+        float remainingCooldown = resolvedAction != null
+            && playerCharacter != null
+            && playerCharacter.Combat != null
+            ? playerCharacter.Combat.GetRemainingCooldown(
+                AttackCategory.Skill,
+                resolvedAction.cooldown,
+                resolvedAction.actionName,
+                resolvedAction.actionId)
+            : 0f;
+
+        bool hasDisplayState = skillCooldowns.TryGetValue(characterKey, out CooldownDisplayState cd);
+        float cooldownMax = hasDisplayState && cd.max > 0f
+            ? cd.max
+            : resolvedAction != null && playerCharacter != null && playerCharacter.Combat != null
+                ? playerCharacter.Combat.GetFinalCooldown(
+                    AttackCategory.Skill,
+                    resolvedAction.cooldown,
+                    resolvedAction.actionName,
+                    resolvedAction.actionId)
+                : 0f;
+        bool onCooldown = remainingCooldown > 0.01f;
 
         if (onCooldown)
         {
             // fillAmount 1 → 0  (full overlay, drains as time passes)
-            float ratio = Mathf.Clamp01(cd.current / cd.max);
+            float ratio = cooldownMax > 0f ? Mathf.Clamp01(remainingCooldown / cooldownMax) : 0f;
             SetOverlayFill(skillCooldownOverlay, ratio, active: true);
             SetIconAlpha(skillIcon, AlphaDimmed);
-            SetCountdownText(skillCountdownText, cd.current);
+            SetCountdownText(skillCountdownText, remainingCooldown);
+
+            skillCooldowns[characterKey] = new CooldownDisplayState
+            {
+                current = remainingCooldown,
+                max = Mathf.Max(cooldownMax, remainingCooldown)
+            };
         }
         else
         {
+            skillCooldowns.Remove(characterKey);
             SetOverlayFill(skillCooldownOverlay, 0f, active: false);
             SetIconAlpha(skillIcon, AlphaReady);
             SetTextActive(skillCountdownText, false);

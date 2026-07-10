@@ -126,6 +126,7 @@ MonoBehaviour:
             - target: 2
               operation: 1
               sourceStat: 1
+              sourceValue: 0
               value: 1.5
             overrideDamageModifier: 0
             damageModifier:
@@ -395,6 +396,7 @@ MonoBehaviour:
             - target: 0
               operation: 1
               sourceStat: 0
+              sourceValue: 0
               value: 1.5
             overrideDamageModifier: 0
             damageModifier:
@@ -1498,6 +1500,7 @@ MonoBehaviour:
         valueSource: 0
         value: 1.2
         sourceStat: 0
+        sourceValue: 0
         scope: 0
         requiredTags: []
         requiredCounters: []
@@ -1654,6 +1657,7 @@ MonoBehaviour:
         valueSource: 1
         value: 0.01
         sourceStat: 9
+        sourceValue: 0
         scope: 0
         requiredTags: []
         requiredCounters: []
@@ -1773,7 +1777,7 @@ MonoBehaviour:
             kind: 0
             appliesOn: 2
             durationType: 0
-            durationSeconds: 30
+            durationSeconds: 20
             stackMode: 1
             stackLimit: 1
             refreshDurationOnReapply: 1
@@ -1941,14 +1945,17 @@ MonoBehaviour:
             - target: 0
               operation: 1
               sourceStat: 1
+              sourceValue: 0
               value: 1.2
             - target: 1
               operation: 1
               sourceStat: 1
+              sourceValue: 0
               value: 1.2
             - target: 2
               operation: 1
               sourceStat: 1
+              sourceValue: 0
               value: 1.2
             overrideDamageModifier: 0
             damageModifier:

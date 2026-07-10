@@ -652,6 +652,28 @@ namespace Project.ShopSystem
                 : Array.Empty<RuntimeEffectInstance>();
         }
 
+        public int GetRuntimeEffectStackCount(CharacterObject character, string effectIdOrStackKey)
+        {
+            RunCharacterState state = GetRunCharacter(character);
+            if (state == null || string.IsNullOrWhiteSpace(effectIdOrStackKey))
+            {
+                return 0;
+            }
+
+            int count = 0;
+            List<RuntimeEffectInstance> activeEffects = state.MutableActiveEffects;
+            for (int i = 0; i < activeEffects.Count; i++)
+            {
+                RuntimeEffectInstance instance = activeEffects[i];
+                if (RuntimeEffectMatchesKey(instance, effectIdOrStackKey))
+                {
+                    count += Mathf.Max(1, instance.stackCount);
+                }
+            }
+
+            return count;
+        }
+
         public bool ApplyRuntimeEffect(
             CharacterObject targetCharacter,
             RuntimeEffectDefinition effectDefinition,
@@ -942,6 +964,55 @@ namespace Project.ShopSystem
             return changed;
         }
 
+        public bool RemoveRuntimeEffectStack(
+            CharacterObject targetCharacter,
+            RuntimeEffectDefinition effectDefinition,
+            RuntimeEffectRecipe recipe,
+            int count = 1,
+            CharacterObject sourceCharacter = null)
+        {
+            RunCharacterState state = GetRunCharacter(targetCharacter);
+            if (state == null || effectDefinition == null || state.MutableActiveEffects.Count == 0)
+            {
+                return false;
+            }
+
+            string expectedStackKey = RuntimeEffectRuntimeUtility.GetStackKey(effectDefinition, recipe);
+            for (int i = state.MutableActiveEffects.Count - 1; i >= 0; i--)
+            {
+                RuntimeEffectInstance instance = state.MutableActiveEffects[i];
+                if (instance == null || instance.definition == null)
+                {
+                    continue;
+                }
+
+                if (!string.Equals(instance.definition.StableId, effectDefinition.StableId, StringComparison.Ordinal)
+                    || !string.Equals(instance.StackKey, expectedStackKey, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (sourceCharacter != null && instance.sourceCharacter != sourceCharacter)
+                {
+                    continue;
+                }
+
+                bool affectsStats = instance.AffectsStats;
+                if (instance.RemoveStack(count))
+                {
+                    RemoveRuntimeEffect(targetCharacter, state, instance);
+                }
+                else
+                {
+                    RaiseRuntimeEffectsChanged(targetCharacter, affectsStats);
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
         public void RemoveRuntimeEffectsOnOwnerDamaged(CharacterObject character)
         {
             RunCharacterState state = GetRunCharacter(character);
@@ -1085,7 +1156,13 @@ namespace Project.ShopSystem
                     continue;
                 }
 
-                RuntimeEffectContext context = BuildRuntimeEffectContext(character, state, instance, 0f, stats);
+                RuntimeEffectContext context = BuildRuntimeEffectContext(
+                    character,
+                    state,
+                    instance,
+                    0f,
+                    stats,
+                    GetCharacterBaseStats(character));
                 context.multiplierSums = multiplierSums;
 
                 instance.definition.ModifyStats(context, stats);
@@ -1314,20 +1391,72 @@ namespace Project.ShopSystem
             RunCharacterState state,
             RuntimeEffectInstance instance,
             float deltaTime,
-            CharacterStats targetStatsOverride = null)
+            CharacterStats targetStatsOverride = null,
+            CharacterStats targetBaseStatsOverride = null)
         {
             PlayerCharacter activePlayer = FindActivePlayerFor(targetCharacter);
+            CharacterObject sourceCharacter = instance != null ? instance.sourceCharacter : null;
+            CharacterStats resolvedTargetStats = targetStatsOverride ?? (targetCharacter != null ? GetCharacterStats(targetCharacter) : null);
+            CharacterStats resolvedTargetBaseStats = targetBaseStatsOverride ?? (targetCharacter != null ? GetCharacterBaseStats(targetCharacter) : null);
+            CharacterStats resolvedSourceStats = ResolveRuntimeEffectSourceStats(
+                sourceCharacter,
+                targetCharacter,
+                resolvedTargetStats,
+                instance);
+            CharacterStats resolvedSourceBaseStats = ResolveRuntimeEffectSourceBaseStats(
+                sourceCharacter,
+                targetCharacter,
+                resolvedTargetBaseStats);
             return new RuntimeEffectContext
             {
                 runInventory = this,
                 instance = instance,
-                sourceCharacter = instance != null ? instance.sourceCharacter : null,
+                sourceCharacter = sourceCharacter,
                 targetCharacter = targetCharacter,
-                sourceStats = instance != null ? instance.sourceStatsSnapshot : null,
-                targetStats = targetStatsOverride ?? (targetCharacter != null ? GetCharacterStats(targetCharacter) : null),
+                sourceStats = resolvedSourceStats,
+                sourceBaseStats = resolvedSourceBaseStats,
+                targetStats = resolvedTargetStats,
+                targetBaseStats = resolvedTargetBaseStats,
                 targetPlayer = activePlayer,
                 deltaTime = deltaTime
             };
+        }
+
+        private CharacterStats ResolveRuntimeEffectSourceStats(
+            CharacterObject sourceCharacter,
+            CharacterObject targetCharacter,
+            CharacterStats targetStats,
+            RuntimeEffectInstance instance)
+        {
+            if (sourceCharacter == null)
+            {
+                return targetStats ?? (instance != null ? instance.sourceStatsSnapshot : null);
+            }
+
+            if (sourceCharacter == targetCharacter)
+            {
+                return targetStats ?? (instance != null ? instance.sourceStatsSnapshot : null);
+            }
+
+            return GetCharacterStats(sourceCharacter);
+        }
+
+        private CharacterStats ResolveRuntimeEffectSourceBaseStats(
+            CharacterObject sourceCharacter,
+            CharacterObject targetCharacter,
+            CharacterStats targetBaseStats)
+        {
+            if (sourceCharacter == null)
+            {
+                return targetBaseStats;
+            }
+
+            if (sourceCharacter == targetCharacter)
+            {
+                return targetBaseStats;
+            }
+
+            return GetCharacterBaseStats(sourceCharacter);
         }
 
         private float ModifyDamageWithRuntimeEffects(
@@ -1622,6 +1751,19 @@ namespace Project.ShopSystem
 
             return string.Equals(instance.definition.StableId, effectDefinition.StableId, StringComparison.Ordinal)
                 && string.Equals(instance.StackKey, RuntimeEffectRuntimeUtility.GetStackKey(effectDefinition, recipe), StringComparison.Ordinal);
+        }
+
+        private static bool RuntimeEffectMatchesKey(RuntimeEffectInstance instance, string effectIdOrStackKey)
+        {
+            if (instance == null || instance.definition == null || string.IsNullOrWhiteSpace(effectIdOrStackKey))
+            {
+                return false;
+            }
+
+            string stableId = RuntimeEffectRuntimeUtility.GetStableId(instance.definition, instance.recipe);
+            return string.Equals(stableId, effectIdOrStackKey, StringComparison.Ordinal)
+                || string.Equals(instance.StackKey, effectIdOrStackKey, StringComparison.Ordinal)
+                || string.Equals(instance.definition.StableId, effectIdOrStackKey, StringComparison.Ordinal);
         }
 
         private static PlayerCharacter FindActivePlayerFor(CharacterObject character)

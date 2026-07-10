@@ -76,7 +76,16 @@ MonoBehaviour:
       icon: {fileID: 0}
       description: 
     baseSkillNode:
-      statModifiers: []
+      statModifiers:
+      - target: 0
+        operation: 0
+        valueSource: 0
+        value: 0
+        sourceStat: 0
+        statRatioValueSource: 0
+        scope: 0
+        requiredTags: []
+        requiredCounters: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
@@ -614,6 +623,7 @@ MonoBehaviour:
               - target: 1
                 operation: 3
                 sourceStat: 1
+                statRatioValueSource: 0
                 value: 0.2
               overrideDamageModifier: 0
               damageModifier:
@@ -1361,6 +1371,7 @@ MonoBehaviour:
               - target: 1
                 operation: 3
                 sourceStat: 1
+                statRatioValueSource: 0
                 value: 0.2
               overrideDamageModifier: 0
               damageModifier:
@@ -1695,6 +1706,7 @@ MonoBehaviour:
             - target: 9
               operation: 0
               sourceStat: 9
+              statRatioValueSource: 0
               value: 0.25
             overrideDamageModifier: 0
             damageModifier:
@@ -1935,6 +1947,7 @@ MonoBehaviour:
             - target: 1
               operation: 3
               sourceStat: 1
+              statRatioValueSource: 0
               value: 0.2
             overrideDamageModifier: 0
             damageModifier:

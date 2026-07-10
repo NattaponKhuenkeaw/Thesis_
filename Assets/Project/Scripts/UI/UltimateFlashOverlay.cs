@@ -11,6 +11,7 @@ public class UltimateFlashOverlay : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private SpriteRenderer flashRenderer;
+    public SpriteRenderer FlashRenderer => flashRenderer;
     [SerializeField] private Camera targetCamera;
 
     [Header("Default Activation Sequence")]

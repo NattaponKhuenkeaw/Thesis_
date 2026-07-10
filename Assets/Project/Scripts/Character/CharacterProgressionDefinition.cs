@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public enum PotentialTrack
 {
@@ -49,6 +50,12 @@ public enum PassiveModifierValueSource
 {
     FlatValue,
     SourceStatRatio
+}
+
+public enum PassiveStatValueSource
+{
+    CurrentValue,
+    BaseValue
 }
 
 public enum PassiveValueModifierOperation
@@ -188,6 +195,13 @@ public enum PassiveRuntimeEnemyTargetSource
     RuntimeTagHitTargets
 }
 
+public enum PassiveRuntimeEffectApplicationMode
+{
+    Apply,
+    RemoveStack,
+    RemoveAll
+}
+
 [Serializable]
 public class RuntimeCounterRequirement
 {
@@ -212,6 +226,31 @@ public class RuntimeCounterRequirement
 }
 
 [Serializable]
+public class RuntimeEffectStackRequirement
+{
+    public string effectIdOrStackKey;
+    public CounterComparison comparison = CounterComparison.GreaterThanOrEqual;
+    public int value = 1;
+
+    public bool Matches(CharacterPassiveController passiveController)
+    {
+        int currentValue = passiveController != null
+            ? passiveController.GetRuntimeEffectStackCount(effectIdOrStackKey)
+            : 0;
+        return comparison switch
+        {
+            CounterComparison.Equal => currentValue == value,
+            CounterComparison.NotEqual => currentValue != value,
+            CounterComparison.GreaterThan => currentValue > value,
+            CounterComparison.GreaterThanOrEqual => currentValue >= value,
+            CounterComparison.LessThan => currentValue < value,
+            CounterComparison.LessThanOrEqual => currentValue <= value,
+            _ => false
+        };
+    }
+}
+
+[Serializable]
 public class PassiveRuntimeValueRequirement
 {
     public PassiveRuntimeValueSubject subject = PassiveRuntimeValueSubject.Source;
@@ -219,7 +258,7 @@ public class PassiveRuntimeValueRequirement
     public CounterComparison comparison = CounterComparison.GreaterThanOrEqual;
     public float value = 0f;
 
-    public bool Matches(PassiveEventContext context)
+    public bool Matches(PassiveEventContext context, CharacterPassiveController passiveController = null)
     {
         float currentValue = ResolveValue(context);
         float comparisonValue = ResolveComparisonValue();
@@ -278,6 +317,14 @@ public class PassiveStatModifierDefinition
     public PassiveModifierValueSource valueSource = PassiveModifierValueSource.FlatValue;
     public float value = 0f;
     public PassiveModifierTarget sourceStat = PassiveModifierTarget.AttackStat;
+    [FormerlySerializedAs("sourceValue")]
+    [Tooltip("Used only when Value Source is Source Stat Ratio. Current Value includes artifacts and runtime stat effects. Base Value uses clean leveled stats before artifacts and buffs.")]
+    public PassiveStatValueSource statRatioValueSource = PassiveStatValueSource.CurrentValue;
+    [Header("Runtime Counter Scaling")]
+    public bool scaleValueByCounter = false;
+    public string valueCounterId;
+    [Tooltip("Optional upper bound for counter scaling. 0 means uncapped.")]
+    [Min(0)] public int maxCounterScale = 0;
     public PassiveEffectScope scope = PassiveEffectScope.Self;
     public List<RuntimeTagRequirement> requiredTags = new List<RuntimeTagRequirement>();
     public List<RuntimeCounterRequirement> requiredCounters = new List<RuntimeCounterRequirement>();
@@ -464,6 +511,7 @@ public class PassiveRuntimeEffectDefinition : ISerializationCallbackReceiver
     public PassiveTriggerFilter filter = new PassiveTriggerFilter();
     public List<RuntimeTagRequirement> requiredTags = new List<RuntimeTagRequirement>();
     public List<RuntimeCounterRequirement> requiredCounters = new List<RuntimeCounterRequirement>();
+    public List<RuntimeEffectStackRequirement> requiredRuntimeEffectStacks = new List<RuntimeEffectStackRequirement>();
     public List<PassiveRuntimeValueRequirement> requiredValues = new List<PassiveRuntimeValueRequirement>();
     [Range(0f, 1f)] public float chance = 1f;
 
@@ -477,6 +525,8 @@ public class PassiveRuntimeEffectDefinition : ISerializationCallbackReceiver
     [Header("Recipe")]
     [Tooltip("Formula plus this kit node's values, duration, stack, display, and remove policy.")]
     public RuntimeEffectRecipe recipe = new RuntimeEffectRecipe();
+    public PassiveRuntimeEffectApplicationMode applicationMode = PassiveRuntimeEffectApplicationMode.Apply;
+    [Min(1)] public int applicationCount = 1;
 
     [HideInInspector]
     public RuntimeEffectDefinition effect;
@@ -605,11 +655,12 @@ public class PassiveConditionalStateEffectDefinition
     public PassiveTriggerFilter filter = new PassiveTriggerFilter();
     public List<RuntimeTagRequirement> requiredTags = new List<RuntimeTagRequirement>();
     public List<RuntimeCounterRequirement> requiredCounters = new List<RuntimeCounterRequirement>();
+    public List<RuntimeEffectStackRequirement> requiredRuntimeEffectStacks = new List<RuntimeEffectStackRequirement>();
     public List<PassiveRuntimeValueRequirement> requiredValues = new List<PassiveRuntimeValueRequirement>();
     public List<PassiveRuntimeTagEffectDefinition> runtimeTagEffects = new List<PassiveRuntimeTagEffectDefinition>();
     public List<PassiveCounterEffectDefinition> counterEffects = new List<PassiveCounterEffectDefinition>();
 
-    public bool Matches(PassiveEventContext context)
+    public bool Matches(PassiveEventContext context, CharacterPassiveController passiveController = null)
     {
         if (!filter.Matches(context))
         {
@@ -649,6 +700,18 @@ public class PassiveConditionalStateEffectDefinition
             }
         }
 
+        if (requiredRuntimeEffectStacks != null)
+        {
+            for (int i = 0; i < requiredRuntimeEffectStacks.Count; i++)
+            {
+                if (requiredRuntimeEffectStacks[i] != null
+                    && !requiredRuntimeEffectStacks[i].Matches(passiveController))
+                {
+                    return false;
+                }
+            }
+        }
+
         return true;
     }
 }
@@ -682,7 +745,9 @@ public enum PassiveResourceEffectType
     RefillUltimateAuraEnergy,
     WaiveUltimateAuraEnergyCost,
     ResetSkillCooldown,
-    ResetUltimateCooldown
+    ResetUltimateCooldown,
+    ReduceSkillCooldown,
+    ReduceUltimateCooldown
 }
 
 [Serializable]
@@ -692,6 +757,7 @@ public class PassiveResourceEffectDefinition
     public PassiveTriggerFilter filter = new PassiveTriggerFilter();
     public List<RuntimeTagRequirement> requiredTags = new List<RuntimeTagRequirement>();
     public List<RuntimeCounterRequirement> requiredCounters = new List<RuntimeCounterRequirement>();
+    public List<RuntimeEffectStackRequirement> requiredRuntimeEffectStacks = new List<RuntimeEffectStackRequirement>();
     public List<PassiveRuntimeValueRequirement> requiredValues = new List<PassiveRuntimeValueRequirement>();
     [Range(0f, 1f)] public float chance = 1f;
     public PassiveResourceEffectType effectType = PassiveResourceEffectType.Heal;
@@ -701,6 +767,9 @@ public class PassiveResourceEffectDefinition
     public float flatValue = 0f;
     public string runtimeTag = "waive_next_ultimate_cost";
     public float runtimeTagDuration = 0f;
+    [Header("Cooldown Target")]
+    public string cooldownActionId;
+    public string cooldownActionName;
     [Header("Trigger Cooldown")]
     [Tooltip("Optional runtime tag used to block this effect while it is cooling down.")]
     public string cooldownTag;

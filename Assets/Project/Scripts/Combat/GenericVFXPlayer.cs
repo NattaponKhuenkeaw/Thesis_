@@ -17,6 +17,20 @@ namespace Project.Combat
         private bool isFlipped;
         private bool flipTrajectoryX;
 
+        private struct RendererSortingInfo
+        {
+            public Renderer renderer;
+            public int originalLayerID;
+            public int originalOrder;
+        }
+
+        private List<RendererSortingInfo> originalSortingInfos = new List<RendererSortingInfo>();
+        private Camera targetCamera;
+        private bool fitScreenSize;
+        private bool adjustLayer;
+        private Vector3 currentKeyScale = Vector3.one;
+        private Vector3 currentKeyPositionOffset = Vector3.zero;
+
         private static readonly int PlayStateHash = Animator.StringToHash("Play");
 
         private void Awake()
@@ -43,9 +57,26 @@ namespace Project.Combat
                     Debug.LogError($"[GenericVFXPlayer] {gameObject.name}: Base Animator Controller doesn't have a clip named 'VFX_Default'.");
                 }
             }
+
+            CacheOriginalSorting();
         }
 
-        public void Play(VFXDefinition def, bool flipX, List<VFXTransformKey> keys = null, float lifespan = -1f)
+        private void CacheOriginalSorting()
+        {
+            originalSortingInfos.Clear();
+            Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
+            foreach (var r in renderers)
+            {
+                originalSortingInfos.Add(new RendererSortingInfo
+                {
+                    renderer = r,
+                    originalLayerID = r.sortingLayerID,
+                    originalOrder = r.sortingOrder
+                });
+            }
+        }
+
+        public void Play(VFXDefinition def, bool flipX, List<VFXTransformKey> keys = null, float lifespan = -1f, bool fitScreenSize = false, bool adjustLayer = false)
         {
             if (def == null || def.clip == null)
             {
@@ -53,13 +84,20 @@ namespace Project.Combat
                 return;
             }
 
-            activeKeys = keys;
-            spawnScale = (def.localScale == Vector3.zero) ? Vector3.one : def.localScale;
-            
-            // Store origin. If parented, this is the relative spawn point. 
-            // If world-space, this is the world position.
-            spawnOrigin = transform.localPosition;
+            this.fitScreenSize = fitScreenSize;
+            this.adjustLayer = adjustLayer;
+            currentKeyScale = Vector3.one;
+            currentKeyPositionOffset = Vector3.zero;
 
+            ResetSortingProperties();
+
+            if (adjustLayer)
+            {
+                ApplySortingProperties();
+            }
+
+            activeKeys = keys;
+            
             // Apply direction via Rotation Y (180 deg) as requested
             // This mirrors both visuals and any internal X-offsets in the Keyframes!
             isFlipped = flipX && def.flipWithCharacter;
@@ -67,7 +105,19 @@ namespace Project.Combat
             
             transform.localRotation = Quaternion.Euler(0, isFlipped ? 180f : 0f, 0f);
             
-            transform.localScale = spawnScale;
+            if (fitScreenSize)
+            {
+                targetCamera = Camera.main;
+                UpdateFullScreenScaleAndPosition();
+            }
+            else
+            {
+                spawnScale = (def.localScale == Vector3.zero) ? Vector3.one : def.localScale;
+                // Store origin. If parented, this is the relative spawn point. 
+                // If world-space, this is the world position.
+                spawnOrigin = transform.localPosition;
+                transform.localScale = spawnScale;
+            }
 
             spriteRenderer.flipX = false;
             spriteRenderer.flipY = false;
@@ -127,6 +177,82 @@ namespace Project.Combat
             OnAnimationComplete();
         }
 
+        private void LateUpdate()
+        {
+            if (fitScreenSize)
+            {
+                UpdateFullScreenScaleAndPosition();
+            }
+        }
+
+        private void UpdateFullScreenScaleAndPosition()
+        {
+            if (targetCamera == null) return;
+
+            // Follow camera + keyframe position offset
+            Vector3 camPos = targetCamera.transform.position;
+            Vector3 targetPos = camPos + currentKeyPositionOffset;
+            targetPos.z = transform.position.z;
+            transform.position = targetPos;
+            spawnOrigin = transform.localPosition;
+
+            // Fit scale
+            float baseSize = Mathf.Max(targetCamera.orthographicSize * 2.5f, 15f);
+            float cameraHeight = baseSize * 2f;
+            float cameraWidth = cameraHeight * targetCamera.aspect;
+
+            Vector2 spriteSize = Vector2.one;
+            if (spriteRenderer != null && spriteRenderer.sprite != null)
+            {
+                spriteSize = spriteRenderer.sprite.bounds.size;
+            }
+
+            if (spriteSize.x > 0.001f && spriteSize.y > 0.001f)
+            {
+                spawnScale = new Vector3(
+                    cameraWidth / spriteSize.x,
+                    cameraHeight / spriteSize.y,
+                    1f);
+            }
+            else
+            {
+                spawnScale = Vector3.one;
+            }
+            
+            transform.localScale = Vector3.Scale(spawnScale, currentKeyScale);
+        }
+
+        private void ApplySortingProperties()
+        {
+            int targetLayerID = 0;
+            int targetOrder = -9999;
+
+            if (UltimateFlashOverlay.Instance != null && UltimateFlashOverlay.Instance.FlashRenderer != null)
+            {
+                targetLayerID = UltimateFlashOverlay.Instance.FlashRenderer.sortingLayerID;
+                targetOrder = UltimateFlashOverlay.Instance.FlashRenderer.sortingOrder;
+            }
+
+            Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
+            foreach (var r in renderers)
+            {
+                r.sortingLayerID = targetLayerID;
+                r.sortingOrder = targetOrder;
+            }
+        }
+
+        private void ResetSortingProperties()
+        {
+            foreach (var info in originalSortingInfos)
+            {
+                if (info.renderer != null)
+                {
+                    info.renderer.sortingLayerID = info.originalLayerID;
+                    info.renderer.sortingOrder = info.originalOrder;
+                }
+            }
+        }
+
         private void UpdateTrajectory(float time)
         {
             float currentFrame = time * FrameDataConstants.LOGIC_FPS;
@@ -162,14 +288,26 @@ namespace Project.Combat
             Vector3 posOffset = key.position;
             if (flipTrajectoryX) posOffset.x = -posOffset.x;
 
-            // Position is an OFFSET relative to spawn origin
-            transform.localPosition = spawnOrigin + posOffset;
-            
-            // Apply flip-aware rotation
-            Quaternion flipRot = Quaternion.Euler(0, isFlipped ? 180f : 0f, 0f);
-            transform.localRotation = flipRot * Quaternion.Euler(key.rotation);
-            
-            transform.localScale = Vector3.Scale(spawnScale, key.scale);
+            if (fitScreenSize)
+            {
+                currentKeyPositionOffset = posOffset;
+                currentKeyScale = key.scale;
+
+                // Apply rotation immediately
+                Quaternion flipRot = Quaternion.Euler(0, isFlipped ? 180f : 0f, 0f);
+                transform.localRotation = flipRot * Quaternion.Euler(key.rotation);
+            }
+            else
+            {
+                // Position is an OFFSET relative to spawn origin
+                transform.localPosition = spawnOrigin + posOffset;
+                
+                // Apply flip-aware rotation
+                Quaternion flipRot = Quaternion.Euler(0, isFlipped ? 180f : 0f, 0f);
+                transform.localRotation = flipRot * Quaternion.Euler(key.rotation);
+                
+                transform.localScale = Vector3.Scale(spawnScale, key.scale);
+            }
         }
 
         private void ApplyKeyInterpolation(VFXTransformKey a, VFXTransformKey b, float t)
@@ -182,15 +320,28 @@ namespace Project.Combat
                 posB.x = -posB.x;
             }
 
-            // Position is an OFFSET relative to spawn origin
-            transform.localPosition = spawnOrigin + Vector3.Lerp(posA, posB, t);
-            
-            // Combine flipping with local rotation key
-            Quaternion flipRot = Quaternion.Euler(0, isFlipped ? 180f : 0f, 0f);
-            Quaternion keyRot = Quaternion.Euler(Vector3.Lerp(a.rotation, b.rotation, t));
-            transform.localRotation = flipRot * keyRot;
-            
-            transform.localScale = Vector3.Scale(spawnScale, Vector3.Lerp(a.scale, b.scale, t));
+            if (fitScreenSize)
+            {
+                currentKeyPositionOffset = Vector3.Lerp(posA, posB, t);
+                currentKeyScale = Vector3.Lerp(a.scale, b.scale, t);
+
+                // Combine flipping with local rotation key
+                Quaternion flipRot = Quaternion.Euler(0, isFlipped ? 180f : 0f, 0f);
+                Quaternion keyRot = Quaternion.Euler(Vector3.Lerp(a.rotation, b.rotation, t));
+                transform.localRotation = flipRot * keyRot;
+            }
+            else
+            {
+                // Position is an OFFSET relative to spawn origin
+                transform.localPosition = spawnOrigin + Vector3.Lerp(posA, posB, t);
+                
+                // Combine flipping with local rotation key
+                Quaternion flipRot = Quaternion.Euler(0, isFlipped ? 180f : 0f, 0f);
+                Quaternion keyRot = Quaternion.Euler(Vector3.Lerp(a.rotation, b.rotation, t));
+                transform.localRotation = flipRot * keyRot;
+                
+                transform.localScale = Vector3.Scale(spawnScale, Vector3.Lerp(a.scale, b.scale, t));
+            }
         }
 
         public void Stop()
@@ -206,6 +357,10 @@ namespace Project.Combat
             activeKeys = null;
             spriteRenderer.flipX = false;
             spriteRenderer.flipY = false;
+
+            ResetSortingProperties();
+            fitScreenSize = false;
+            adjustLayer = false;
 
             // Reset parenting before returning to pool
             if (VFXManager.Instance != null)

@@ -281,3 +281,47 @@ MonoBehaviour:
       flipWithCharacter: 1
       isLocalSpace: 0
       obeyHitstop: 0
+  - categoryName: char-Orochi
+    entries:
+    - type: 150
+      clip: {fileID: 7400000, guid: 6cce8ac198eab7944bdfb6b4e1f9f57e, type: 2}
+      localScale: {x: 1.25, y: 1.25, z: 1.25}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 1
+    - type: 151
+      clip: {fileID: 7400000, guid: cdde0c2cba3bb3745919cea7d5317a81, type: 2}
+      localScale: {x: 2, y: 2, z: 2}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 1
+    - type: 152
+      clip: {fileID: 7400000, guid: ab20a81cf02c72e48abdf0051349b4bc, type: 2}
+      localScale: {x: 2, y: 2, z: 2}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 1
+    - type: 153
+      clip: {fileID: 7400000, guid: 1839ec76c3e451a49a05407bf6b3e35e, type: 2}
+      localScale: {x: 5, y: 5, z: 5}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 1
+    - type: 154
+      clip: {fileID: 7400000, guid: fc25d5b63f7c33d449c1298150701210, type: 2}
+      localScale: {x: 5, y: 5, z: 5}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 1
+    - type: 155
+      clip: {fileID: 7400000, guid: f8fd0b834eab68f4588a5dde4c03a72a, type: 2}
+      localScale: {x: 5, y: 5, z: 5}
+      tint: {r: 1, g: 1, b: 1, a: 1}
+      flipWithCharacter: 1
+      isLocalSpace: 1
+      obeyHitstop: 1

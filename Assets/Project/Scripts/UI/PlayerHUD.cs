@@ -885,21 +885,83 @@ public class PlayerHUD : MonoBehaviour
     private Slider FindHealthLerpSlider(Transform root, Slider mainSlider)
     {
         Slider[] sliders = root.GetComponentsInChildren<Slider>(true);
+        Slider fallback = null;
         for (int i = 0; i < sliders.Length; i++)
         {
             Slider slider = sliders[i];
-            if (slider == null || slider == mainSlider)
+            if (slider == null || slider == mainSlider || IsShieldSlider(slider))
             {
                 continue;
             }
 
-            string sliderName = slider.name;
-            if (sliderName.Contains("Lerp") || sliderName.Contains("Ghost") || sliderName.Contains("Back"))
+            if (IsHealthLerpSlider(slider))
             {
                 return slider;
             }
+
+            fallback ??= slider;
         }
 
-        return sliders.Length > 1 ? sliders[1] : null;
+        return fallback;
+    }
+
+    private bool IsHealthLerpSlider(Slider slider)
+    {
+        if (slider == null)
+        {
+            return false;
+        }
+
+        if (NameLooksLikeHealthLerp(slider.name))
+        {
+            return true;
+        }
+
+        return slider.fillRect != null && NameLooksLikeHealthLerp(slider.fillRect.name);
+    }
+
+    private bool IsShieldSlider(Slider slider)
+    {
+        if (slider == null)
+        {
+            return false;
+        }
+
+        if (slider == shieldSlider)
+        {
+            return true;
+        }
+
+        if (NameLooksLikeShield(slider.name))
+        {
+            return true;
+        }
+
+        Transform current = slider.transform.parent;
+        while (current != null && current != hudRoot)
+        {
+            if (NameLooksLikeShield(current.name))
+            {
+                return true;
+            }
+
+            current = current.parent;
+        }
+
+        return false;
+    }
+
+    private static bool NameLooksLikeHealthLerp(string value)
+    {
+        return !string.IsNullOrEmpty(value)
+            && (value.Contains("Lerp")
+                || value.Contains("Ghost")
+                || value.Contains("Back"));
+    }
+
+    private static bool NameLooksLikeShield(string value)
+    {
+        return !string.IsNullOrEmpty(value)
+            && value.IndexOf("Shield", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 }

@@ -65,7 +65,7 @@ namespace Project.Combat
             SpawnResult(VFXType.None, position, flipX, rotationZ, keys, parent, lifespan, clip);
         }
 
-        public GenericVFXPlayer SpawnResult(VFXType type, Vector3 position, bool flipX = false, float rotationZ = 0f, List<VFXTransformKey> keys = null, Transform parent = null, float lifespan = -1f, AnimationClip clipOverride = null)
+        public GenericVFXPlayer SpawnResult(VFXType type, Vector3 position, bool flipX = false, float rotationZ = 0f, List<VFXTransformKey> keys = null, Transform parent = null, float lifespan = -1f, AnimationClip clipOverride = null, bool fitScreenSize = false, bool adjustLayer = false)
         {
             if (type == VFXType.None && clipOverride == null) return null;
             
@@ -110,7 +110,7 @@ namespace Project.Combat
             player.transform.localRotation = Quaternion.Euler(0, 0, rotationZ);
             
             player.gameObject.SetActive(true);
-            player.Play(def, flipX, keys, lifespan);
+            player.Play(def, flipX, keys, lifespan, fitScreenSize, adjustLayer);
             return player;
         }
 

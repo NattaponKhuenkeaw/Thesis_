@@ -161,7 +161,7 @@ public sealed class ProjectileHitboxModule
     private void ApplyNormalHitData(NormalHitbox normalHitbox, ProjectileSpawnContext context)
     {
         float ratio = normalHitbox != null ? normalHitbox.damageRatio : 1f;
-        float baseDamage = context.sourceAttack * ResolveHitDamageMultiplier(context, ratio);
+        float baseDamage = ResolveActionDamageSourceValue(context) * ResolveHitDamageMultiplier(context, ratio);
         hitBoxDamage.SetHitData(
             baseDamage,
             false,
@@ -180,7 +180,7 @@ public sealed class ProjectileHitboxModule
     private void ApplyGrabHitData(GrabHitbox grabHitbox, ProjectileSpawnContext context)
     {
         float ratio = grabHitbox != null ? grabHitbox.damageRatio : 1f;
-        float baseDamage = context.sourceAttack * ResolveHitDamageMultiplier(context, ratio);
+        float baseDamage = ResolveActionDamageSourceValue(context) * ResolveHitDamageMultiplier(context, ratio);
         hitBoxDamage.SetGrabData(
             baseDamage,
             false,
@@ -214,5 +214,25 @@ public sealed class ProjectileHitboxModule
         }
 
         return context.actionDamageMultiplier * Mathf.Clamp01(damageRatio);
+    }
+
+    private static float ResolveActionDamageSourceValue(ProjectileSpawnContext context)
+    {
+        if (context.actionDamageSourceValue > 0f)
+        {
+            return context.actionDamageSourceValue;
+        }
+
+        if (context.actionDamageSourceStat == ActionDamageSourceStat.MaxHP && context.attackerStats != null)
+        {
+            return Mathf.Max(0f, context.attackerStats.maxHP);
+        }
+
+        if (context.actionDamageSourceStat == ActionDamageSourceStat.Defense && context.attackerStats != null)
+        {
+            return Mathf.Max(0f, context.attackerStats.defense);
+        }
+
+        return Mathf.Max(0f, context.sourceAttack);
     }
 }

@@ -1,4 +1,5 @@
 using UnityEngine;
+using Project.Combat;
 
 public class VFXSpawner : MonoBehaviour
 {
@@ -57,7 +58,17 @@ public class VFXSpawner : MonoBehaviour
             float lifespan = entry.duration / CombatCore.FrameDataConstants.LOGIC_FPS;
             AnimationClip clipToPlay = entry.vfxClip;
 
-            return Project.Combat.VFXManager.Instance.SpawnResult(entry.vfxType, spawnPos, flipXForVFX, localRotation.z, entry.transformKeys, transform, lifespan, clipToPlay);
+            return Project.Combat.VFXManager.Instance.SpawnResult(
+                entry.vfxType, 
+                spawnPos, 
+                flipXForVFX, 
+                localRotation.z, 
+                entry.transformKeys, 
+                transform, 
+                lifespan, 
+                clipToPlay,
+                entry.fitScreenSize,
+                entry.adjustLayer);
         }
 
         // 2. Fallback to Prefab instantiation (Legacy path)
@@ -78,6 +89,32 @@ public class VFXSpawner : MonoBehaviour
 
             GameObject vfxInstance = Instantiate(entry.vfxPrefab, spawnPosition, rotation);
             vfxInstance.transform.localScale = localScale;
+
+            if (entry.adjustLayer)
+            {
+                int targetLayerID = 0;
+                int targetOrder = -9999;
+                if (UltimateFlashOverlay.Instance != null && UltimateFlashOverlay.Instance.FlashRenderer != null)
+                {
+                    targetLayerID = UltimateFlashOverlay.Instance.FlashRenderer.sortingLayerID;
+                    targetOrder = UltimateFlashOverlay.Instance.FlashRenderer.sortingOrder;
+                }
+                Renderer[] renderers = vfxInstance.GetComponentsInChildren<Renderer>(true);
+                foreach (var r in renderers)
+                {
+                    r.sortingLayerID = targetLayerID;
+                    r.sortingOrder = targetOrder;
+                }
+            }
+
+            if (entry.fitScreenSize)
+            {
+                FullScreenVFX fs = vfxInstance.GetComponent<FullScreenVFX>();
+                if (fs == null)
+                {
+                    fs = vfxInstance.AddComponent<FullScreenVFX>();
+                }
+            }
 
             var ps = vfxInstance.GetComponentInChildren<ParticleSystem>();
             if (ps != null)

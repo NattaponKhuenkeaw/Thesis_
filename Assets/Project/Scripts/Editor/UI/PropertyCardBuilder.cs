@@ -690,7 +690,12 @@ namespace CombatEditor.UI
                 });
 
                 AddSeparator(body, "Action Damage");
-                AddFloatField(body, "Total ATK Multiplier", action.actionDamageMultiplier, value => {
+                AddEnumField(body, "Damage Source", action.damageSourceStat, value => {
+                    RecordUndo("Edit Action Damage Source");
+                    action.damageSourceStat = (ActionDamageSourceStat)value;
+                    MarkDirty();
+                });
+                AddFloatField(body, "Total Source Multiplier", action.actionDamageMultiplier, value => {
                     RecordUndo("Edit Action Damage");
                     action.actionDamageMultiplier = Mathf.Max(0f, value);
                     MarkDirty();
@@ -1307,6 +1312,18 @@ namespace CombatEditor.UI
                     {
                         RecordUndo("Toggle VFX Looping");
                         entry.loopDuringActive = value;
+                        MarkDirty();
+                    });
+                    AddToggleField(inner, "Adjust Layer", entry.adjustLayer, value =>
+                    {
+                        RecordUndo("Toggle VFX Adjust Layer");
+                        entry.adjustLayer = value;
+                        MarkDirty();
+                    });
+                    AddToggleField(inner, "Fit Screen Size", entry.fitScreenSize, value =>
+                    {
+                        RecordUndo("Toggle VFX Fit Screen Size");
+                        entry.fitScreenSize = value;
                         MarkDirty();
                     });
 
@@ -2752,6 +2769,11 @@ namespace CombatEditor.UI
                     conditions.Add(new RuntimeCounterActionCondition());
                     MarkDirtyAndRebuild();
                 });
+                menu.AddItem(new GUIContent("Runtime Effect Stack"), false, () => {
+                    RecordUndo($"Add {undoLabelPrefix} Condition");
+                    conditions.Add(new RuntimeEffectStackActionCondition());
+                    MarkDirtyAndRebuild();
+                });
                 menu.AddSeparator("");
                 menu.AddItem(new GUIContent("Wait for Frame / Sec"), false, () => {
                     RecordUndo($"Add {undoLabelPrefix} Condition");
@@ -2872,6 +2894,23 @@ namespace CombatEditor.UI
                         MarkDirty();
                     });
                     break;
+                case RuntimeEffectStackActionCondition effectStackCondition:
+                    AddTextField(parent, "Effect Id / Stack Key", effectStackCondition.effectIdOrStackKey, value => {
+                        RecordUndo("Edit Condition Runtime Effect Stack Key");
+                        effectStackCondition.effectIdOrStackKey = value;
+                        MarkDirty();
+                    });
+                    AddEnumField(parent, "Comparison", effectStackCondition.comparison, value => {
+                        RecordUndo("Edit Condition Runtime Effect Stack Compare");
+                        effectStackCondition.comparison = (CounterComparison)value;
+                        MarkDirty();
+                    });
+                    AddIntField(parent, "Value", effectStackCondition.value, value => {
+                        RecordUndo("Edit Condition Runtime Effect Stack Value");
+                        effectStackCondition.value = value;
+                        MarkDirty();
+                    });
+                    break;
                 case WaitActionCondition waitCondition:
                     AddEnumField(parent, "Wait Unit", waitCondition.waitUnit, value => {
                         RecordUndo("Edit Wait Unit");
@@ -2923,6 +2962,7 @@ namespace CombatEditor.UI
                 PotentialLevelActionCondition => "Potential Level Condition",
                 RuntimeTagActionCondition => "Runtime Tag Condition",
                 RuntimeCounterActionCondition => "Runtime Counter Condition",
+                RuntimeEffectStackActionCondition => "Runtime Effect Stack Condition",
                 WaitActionCondition => "Wait Timer Condition",
                 PlayerGotHitCondition => "Counter Trigger Condition",
                 _ => "Condition"

@@ -58,6 +58,26 @@ public class RuntimeEffectReceiver : MonoBehaviour
             refreshDurationOnReapply);
     }
 
+    public int GetStackCount(string effectIdOrStackKey)
+    {
+        if (string.IsNullOrWhiteSpace(effectIdOrStackKey))
+        {
+            return 0;
+        }
+
+        int count = 0;
+        for (int i = 0; i < activeEffects.Count; i++)
+        {
+            RuntimeEffectInstance instance = activeEffects[i];
+            if (RuntimeEffectMatchesKey(instance, effectIdOrStackKey))
+            {
+                count += Mathf.Max(1, instance.stackCount);
+            }
+        }
+
+        return count;
+    }
+
     public RuntimeEffectInstance ApplyEffect(
         RuntimeEffectRecipe recipe,
         CharacterObject sourceCharacter,
@@ -570,6 +590,42 @@ public class RuntimeEffectReceiver : MonoBehaviour
         return null;
     }
 
+    public bool RemoveEffectStack(
+        RuntimeEffectDefinition definition,
+        RuntimeEffectRecipe recipe,
+        int count = 1,
+        CharacterObject sourceCharacter = null)
+    {
+        string resolvedStackKey = RuntimeEffectRuntimeUtility.GetStackKey(definition, recipe);
+        for (int i = activeEffects.Count - 1; i >= 0; i--)
+        {
+            RuntimeEffectInstance instance = activeEffects[i];
+            if (!MatchesEffect(instance, definition, resolvedStackKey))
+            {
+                continue;
+            }
+
+            if (sourceCharacter != null && instance.sourceCharacter != sourceCharacter)
+            {
+                continue;
+            }
+
+            if (instance.RemoveStack(count))
+            {
+                RemoveEffect(instance);
+            }
+            else
+            {
+                EnsureVisual(instance);
+                RaiseEffectsChanged();
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
     private int CountEffects(RuntimeEffectDefinition definition, string resolvedStackKey)
     {
         int count = 0;
@@ -681,6 +737,19 @@ public class RuntimeEffectReceiver : MonoBehaviour
 
         return string.Equals(instance.definition.StableId, definition.StableId, StringComparison.Ordinal)
             && string.Equals(instance.StackKey, resolvedStackKey, StringComparison.Ordinal);
+    }
+
+    private static bool RuntimeEffectMatchesKey(RuntimeEffectInstance instance, string effectIdOrStackKey)
+    {
+        if (instance == null || instance.definition == null || string.IsNullOrWhiteSpace(effectIdOrStackKey))
+        {
+            return false;
+        }
+
+        string stableId = RuntimeEffectRuntimeUtility.GetStableId(instance.definition, instance.recipe);
+        return string.Equals(stableId, effectIdOrStackKey, StringComparison.Ordinal)
+            || string.Equals(instance.StackKey, effectIdOrStackKey, StringComparison.Ordinal)
+            || string.Equals(instance.definition.StableId, effectIdOrStackKey, StringComparison.Ordinal);
     }
 
     private void RemoveEffect(RuntimeEffectInstance instance)

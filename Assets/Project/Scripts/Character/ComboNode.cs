@@ -13,6 +13,13 @@ public enum CombatActionContext
     Both
 }
 
+public enum ActionDamageSourceStat
+{
+    Attack,
+    MaxHP,
+    Defense
+}
+
 [System.Serializable]
 public abstract class CombatAction
 {
@@ -32,7 +39,9 @@ public abstract class CombatAction
     public bool allowGroundToAirTransition = false;
 
     [Header("Action Damage")]
-    [Tooltip("Total ATK multiplier shared by this action's hitboxes. Values <= 0 preserve legacy direct per-hit multipliers.")]
+    [Tooltip("Stat used by this action's multiplier. Existing actions default to Attack.")]
+    public ActionDamageSourceStat damageSourceStat = ActionDamageSourceStat.Attack;
+    [Tooltip("Total source-stat multiplier shared by this action's hitboxes. Values <= 0 preserve legacy direct per-hit multipliers.")]
     public float actionDamageMultiplier = 0f;
 
     [Header("Aura Energy Reward")]

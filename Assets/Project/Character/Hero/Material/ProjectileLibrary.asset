@@ -33,3 +33,7 @@ MonoBehaviour:
       data: {fileID: 11400000, guid: c7de229c6f7eb044682e28d12a70b7aa, type: 2}
     - type: 100
       data: {fileID: 11400000, guid: 39421ead371882444a4d9bc749e6471a, type: 2}
+  - categoryName: char-orochi
+    entries:
+    - type: 40
+      data: {fileID: 11400000, guid: dcb01dfbce35c5c4ba7fec22f037496e, type: 2}

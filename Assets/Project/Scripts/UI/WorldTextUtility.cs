@@ -86,12 +86,12 @@ public class WorldTextUtility : MonoBehaviour
     [Header("Motion")]
     [SerializeField] private Vector2 randomRangeX = new Vector2(-0.35f, 0.35f);
     [SerializeField] private Vector2 randomRangeY = new Vector2(-0.1f, 0.25f);
-    [SerializeField] private float popDownDistance = 0.28f;
     [SerializeField] private float slideUpDistance = 0.65f;
     [SerializeField] private float fadeInDuration = 0.12f;
+    [SerializeField] private float scaleDownDuration = 0.24f;
     [SerializeField] private float holdDuration = 0.28f;
     [SerializeField] private float fadeOutDuration = 0.45f;
-    [SerializeField] private float popStartScaleMultiplier = 1.2f;
+    [SerializeField] private float popStartScaleMultiplier = 1.85f;
     [SerializeField] private float fadeEndScaleMultiplier = 0.82f;
 
     [Header("Damage Scale")]
@@ -101,6 +101,8 @@ public class WorldTextUtility : MonoBehaviour
     [SerializeField] private float mediumTierScale = 1.15f;
     [SerializeField] private float heavyTierScale = 1.3f;
     [SerializeField] private float ultimateTierScale = 1.6f;
+    [SerializeField] private float damageAmountScaleReference = 1000f;
+    [SerializeField] private float maxDamageAmountScaleBonus = 1f;
 
     [Header("Styles")]
     [SerializeField] private WorldTextStyle damageStyle = new WorldTextStyle
@@ -191,12 +193,12 @@ public class WorldTextUtility : MonoBehaviour
 
         WorldTextStyle style = GetStyle(request.type);
         Color baseColor = ResolveColor(request, style);
-        float targetScale = ResolveScale(request, style);
+        float holdScale = ResolveHoldScale(request, style);
+        float popScale = ResolvePopScale(request, holdScale);
         Vector3 holdPosition = request.ResolveWorldPosition() + ResolveRandomOffset();
-        Vector3 startPosition = holdPosition + Vector3.up * Mathf.Max(0f, popDownDistance);
 
-        PrepareText(text, displayText, style, baseColor, startPosition, targetScale);
-        StartCoroutine(TextRoutine(text, startPosition, holdPosition, baseColor, targetScale));
+        PrepareText(text, displayText, style, baseColor, holdPosition, popScale);
+        StartCoroutine(TextRoutine(text, holdPosition, baseColor, holdScale, popScale));
         return true;
     }
 
@@ -303,7 +305,7 @@ public class WorldTextUtility : MonoBehaviour
         WorldTextStyle style,
         Color baseColor,
         Vector3 startPosition,
-        float targetScale)
+        float startScale)
     {
         RectTransform rect = text.rectTransform;
         text.text = displayText;
@@ -320,42 +322,46 @@ public class WorldTextUtility : MonoBehaviour
         rect.SetParent(ResolveTextRoot(), true);
         rect.position = startPosition;
         rect.rotation = Quaternion.identity;
-        rect.localScale = Vector3.one * targetScale * Mathf.Max(0.01f, popStartScaleMultiplier);
+        rect.localScale = Vector3.one * startScale;
         rect.SetAsLastSibling();
         text.gameObject.SetActive(true);
     }
 
     private IEnumerator TextRoutine(
         TMP_Text text,
-        Vector3 startPosition,
         Vector3 holdPosition,
         Color baseColor,
-        float targetScale)
+        float holdScale,
+        float popScale)
     {
         RectTransform rect = text.rectTransform;
         float elapsed = 0f;
         float fadeInTime = Mathf.Max(0.01f, fadeInDuration);
-        float startScale = targetScale * Mathf.Max(0.01f, popStartScaleMultiplier);
+        float scaleDownTime = Mathf.Max(0.01f, scaleDownDuration);
 
-        while (elapsed < fadeInTime)
+        rect.position = holdPosition;
+        rect.rotation = Quaternion.identity;
+        rect.localScale = Vector3.one * popScale;
+
+        while (elapsed < scaleDownTime)
         {
             elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / fadeInTime);
-            float eased = EaseOutCubic(t);
+            float scaleT = Mathf.Clamp01(elapsed / scaleDownTime);
+            float fadeT = Mathf.Clamp01(elapsed / fadeInTime);
 
-            rect.position = Vector3.Lerp(startPosition, holdPosition, eased);
+            rect.position = holdPosition;
             rect.rotation = Quaternion.identity;
-            rect.localScale = Vector3.one * Mathf.Lerp(startScale, targetScale, EaseOutBack(t));
+            rect.localScale = Vector3.one * Mathf.Lerp(popScale, holdScale, EaseOutBack(scaleT));
 
             Color color = baseColor;
-            color.a = t;
+            color.a = fadeT;
             text.color = color;
             yield return null;
         }
 
         rect.position = holdPosition;
         rect.rotation = Quaternion.identity;
-        rect.localScale = Vector3.one * targetScale;
+        rect.localScale = Vector3.one * holdScale;
         text.color = baseColor;
 
         float holdTime = Mathf.Max(0f, holdDuration);
@@ -367,7 +373,7 @@ public class WorldTextUtility : MonoBehaviour
         elapsed = 0f;
         float fadeTime = Mathf.Max(0.01f, fadeOutDuration);
         Vector3 endPosition = holdPosition + Vector3.up * Mathf.Max(0f, slideUpDistance);
-        float endScale = targetScale * Mathf.Max(0.01f, fadeEndScaleMultiplier);
+        float endScale = holdScale * Mathf.Max(0.01f, fadeEndScaleMultiplier);
 
         while (elapsed < fadeTime)
         {
@@ -377,7 +383,7 @@ public class WorldTextUtility : MonoBehaviour
 
             rect.position = Vector3.Lerp(holdPosition, endPosition, eased);
             rect.rotation = Quaternion.identity;
-            rect.localScale = Vector3.one * Mathf.Lerp(targetScale, endScale, t);
+            rect.localScale = Vector3.one * Mathf.Lerp(holdScale, endScale, t);
 
             Color color = baseColor;
             color.a = 1f - t;
@@ -425,9 +431,10 @@ public class WorldTextUtility : MonoBehaviour
         return style.color;
     }
 
-    private float ResolveScale(WorldTextRequest request, WorldTextStyle style)
+    private float ResolveHoldScale(WorldTextRequest request, WorldTextStyle style)
     {
         float scale = Mathf.Max(0.01f, style.scaleMultiplier);
+
         scale *= request.impactTier switch
         {
             DamageImpactTier.Medium => mediumTierScale,
@@ -446,7 +453,32 @@ public class WorldTextUtility : MonoBehaviour
             scale *= Mathf.Max(0.01f, criticalScaleMultiplier);
         }
 
+        scale *= ResolveDamageAmountScale(request);
         return scale;
+    }
+
+    private float ResolvePopScale(WorldTextRequest request, float holdScale)
+    {
+        return holdScale * Mathf.Max(0.01f, popStartScaleMultiplier);
+    }
+
+    private float ResolveDamageAmountScale(WorldTextRequest request)
+    {
+        if (!UsesDamageAmountScale(request.type) || request.amount <= 0f)
+        {
+            return 1f;
+        }
+
+        float reference = Mathf.Max(1f, damageAmountScaleReference);
+        float normalizedDamage = Mathf.Clamp01(request.amount / reference);
+        return 1f + Mathf.Max(0f, maxDamageAmountScaleBonus) * normalizedDamage;
+    }
+
+    private static bool UsesDamageAmountScale(WorldTextType type)
+    {
+        return type == WorldTextType.Damage
+            || type == WorldTextType.Dot
+            || type == WorldTextType.Additional;
     }
 
     private WorldTextStyle GetStyle(WorldTextType type)

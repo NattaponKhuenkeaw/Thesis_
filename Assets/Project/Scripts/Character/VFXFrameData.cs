@@ -44,6 +44,12 @@ public class VFXEntry
     
     [Tooltip("If true, the VFX will restart its animation when the parent ActionStep loops its Active Phase.")]
     public bool loopDuringActive = false;
+
+    [Tooltip("If true, adjusts sorting layer and order to match the Ultimate Flash Overlay (behind players/enemies, in front of background).")]
+    public bool adjustLayer = false;
+
+    [Tooltip("If true, scales the VFX to fit the screen size, similar to the Ultimate Flash Overlay.")]
+    public bool fitScreenSize = false;
 }
 
 /// <summary>

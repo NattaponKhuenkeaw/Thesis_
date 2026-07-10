@@ -70,6 +70,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     private readonly Dictionary<CooldownKey, float> lastCategoryUseTime = new Dictionary<CooldownKey, float>();
     private readonly Dictionary<CooldownKey, float> lastActionUseTime = new Dictionary<CooldownKey, float>();
+    private readonly Dictionary<CooldownKey, float> pendingCooldownReductions = new Dictionary<CooldownKey, float>();
     private readonly HashSet<EnemyController> hitEnemiesThisStep = new HashSet<EnemyController>();
     private readonly HashSet<EnemyController> grabTargetsThisStep = new HashSet<EnemyController>();
 
@@ -79,6 +80,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     private string currentActionName;
     private CombatAction currentResolvedCombatAction;
     private float currentActionDamageMultiplier;
+    private ActionDamageSourceStat currentActionDamageSourceStat = ActionDamageSourceStat.Attack;
     private float currentAuraEnergyReward;
     private AuraEnergyRewardClaim currentAuraEnergyRewardClaim;
     private AdditionalDamageEffectDefinition[] currentAdditionalDamageEffects =
@@ -130,6 +132,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public bool CurrentActionStartedGrounded => currentActionStartedGrounded;
     public bool CurrentActionAllowsGroundToAirTransition => currentActionAllowsGroundToAirTransition;
     public float CurrentActionDamageMultiplier => currentActionDamageMultiplier;
+    public ActionDamageSourceStat CurrentActionDamageSourceStat => currentActionDamageSourceStat;
+    public float CurrentActionDamageSourceValue => GetCurrentActionDamageSourceValue();
     public float CurrentAuraEnergyReward => currentAuraEnergyReward;
     public AuraEnergyRewardClaim CurrentAuraEnergyRewardClaim => currentAuraEnergyRewardClaim;
     public AdditionalDamageEffectDefinition[] CurrentAdditionalDamageEffects => currentAdditionalDamageEffects;
@@ -590,9 +594,12 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
                 for (int i = 0; i < actionKeysToRemove.Count; i++)
                 {
                     lastActionUseTime.Remove(actionKeysToRemove[i]);
+                    pendingCooldownReductions.Remove(actionKeysToRemove[i]);
                 }
             }
 
+            pendingCooldownReductions.Remove(categoryKey);
+            RemovePendingCooldownReductions(activeChar, category);
             return;
         }
 
@@ -601,6 +608,42 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             : string.IsNullOrWhiteSpace(actionName) ? "Default" : actionName;
         CooldownKey actionKey = new CooldownKey(activeChar, category, normalizedActionName);
         lastActionUseTime.Remove(actionKey);
+        pendingCooldownReductions.Remove(actionKey);
+        pendingCooldownReductions.Remove(new CooldownKey(activeChar, category));
+    }
+
+    public void ReduceActionCooldown(AttackCategory category, string actionName, string actionId, float seconds)
+    {
+        if (seconds <= 0f)
+        {
+            return;
+        }
+
+        CharacterObject activeChar = playerCharacter != null ? playerCharacter.characterObject : null;
+        if (!string.IsNullOrWhiteSpace(actionName) || !string.IsNullOrWhiteSpace(actionId))
+        {
+            string normalizedActionName = !string.IsNullOrWhiteSpace(actionId)
+                ? actionId
+                : string.IsNullOrWhiteSpace(actionName) ? "Default" : actionName;
+            CooldownKey actionKey = new CooldownKey(activeChar, category, normalizedActionName);
+            if (lastActionUseTime.ContainsKey(actionKey))
+            {
+                lastActionUseTime[actionKey] -= seconds;
+                return;
+            }
+
+            AddPendingCooldownReduction(actionKey, seconds);
+            return;
+        }
+
+        CooldownKey categoryKey = new CooldownKey(activeChar, category);
+        if (lastCategoryUseTime.ContainsKey(categoryKey))
+        {
+            lastCategoryUseTime[categoryKey] -= seconds;
+            return;
+        }
+
+        AddPendingCooldownReduction(categoryKey, seconds);
     }
 
     public void BeginResolvedAction(
@@ -618,6 +661,9 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
         currentResolvedCombatAction = action;
         currentActionId = action != null ? action.actionId : null;
+        currentActionDamageSourceStat = action != null
+            ? action.damageSourceStat
+            : ActionDamageSourceStat.Attack;
         currentActionDamageMultiplier = action != null
             ? Mathf.Max(0f, action.actionDamageMultiplier)
             : 0f;
@@ -668,6 +714,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         currentActionId = null;
         currentActionName = null;
         currentResolvedCombatAction = null;
+        currentActionDamageSourceStat = ActionDamageSourceStat.Attack;
         currentActionDamageMultiplier = 0f;
         currentAuraEnergyReward = 0f;
         currentAuraEnergyRewardClaim = null;
@@ -1048,6 +1095,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         bool needsTarget = data != null && data.RequiresTarget;
 
         float sourceAttack = GetModifiedAttackStat();
+        float actionDamageSourceValue = GetCurrentActionDamageSourceValue();
         CharacterObject sourceCharacter = playerCharacter != null ? playerCharacter.characterObject : null;
         CharacterStats stats = playerCharacter != null ? playerCharacter.Stats : null;
 
@@ -1067,8 +1115,10 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             direction = direction,
             resolvedSpawnOffset = resolvedSpawnOffset,
             sourceAttack = sourceAttack,
+            actionDamageSourceValue = actionDamageSourceValue,
             attackerStats = stats,
             actionDamageMultiplier = currentActionDamageMultiplier,
+            actionDamageSourceStat = currentActionDamageSourceStat,
             auraEnergyReward = currentAuraEnergyReward,
             auraEnergyRewardClaim = currentAuraEnergyRewardClaim,
             additionalDamageEffects = currentAdditionalDamageEffects,
@@ -1146,7 +1196,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             hitBoxController.ApplyHitbox(normalHitbox);
         }
 
-        float baseDamage = GetBaseAttackDamage(normalHitbox != null ? normalHitbox.damageRatio : 1f);
+        float baseDamage = GetBaseActionDamage(normalHitbox != null ? normalHitbox.damageRatio : 1f);
         hitBoxDamage?.SetHitData(
             baseDamage,
             false,
@@ -1182,7 +1232,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         };
         hitBoxController?.ApplyHitbox(grabHitbox);
 
-        float baseDamage = GetBaseAttackDamage(grabHitbox.damageRatio);
+        float baseDamage = GetBaseActionDamage(grabHitbox.damageRatio);
         hitBoxDamage?.SetGrabData(
             baseDamage,
             false,
@@ -1589,11 +1639,11 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         }
     }
 
-    private float GetBaseAttackDamage(float hitFrameMultiplier)
+    private float GetBaseActionDamage(float hitFrameMultiplier)
     {
-        float attackStat = GetModifiedAttackStat();
+        float sourceStat = GetCurrentActionDamageSourceValue();
         float resolvedMultiplier = ResolveHitDamageMultiplier(hitFrameMultiplier);
-        return Mathf.Max(0f, attackStat * resolvedMultiplier);
+        return Mathf.Max(0f, sourceStat * resolvedMultiplier);
     }
 
     private float GetModifiedAttackStat()
@@ -1608,6 +1658,40 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         return Mathf.Max(0f, attackStat);
     }
 
+    private float GetCurrentActionDamageSourceValue()
+    {
+        return GetModifiedActionDamageSourceValue(currentActionDamageSourceStat);
+    }
+
+    private float GetModifiedActionDamageSourceValue(ActionDamageSourceStat sourceStat)
+    {
+        CharacterStats stats = playerCharacter != null ? playerCharacter.Stats : null;
+        if (stats == null)
+        {
+            return sourceStat == ActionDamageSourceStat.Attack ? GetModifiedAttackStat() : 0f;
+        }
+
+        float value = sourceStat switch
+        {
+            ActionDamageSourceStat.MaxHP => stats.maxHP,
+            ActionDamageSourceStat.Defense => stats.defense,
+            _ => stats.attack
+        };
+
+        if (passiveController != null)
+        {
+            PassiveModifierTarget target = sourceStat switch
+            {
+                ActionDamageSourceStat.MaxHP => PassiveModifierTarget.MaxHP,
+                ActionDamageSourceStat.Defense => PassiveModifierTarget.Defense,
+                _ => PassiveModifierTarget.AttackStat
+            };
+            value = passiveController.ModifyRuntimeValue(target, value);
+        }
+
+        return Mathf.Max(0f, value);
+    }
+
     public void RefreshProjectileDamageContext(ref ProjectileSpawnContext context)
     {
         if (playerCharacter == null)
@@ -1617,6 +1701,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
         context.attackerStats = playerCharacter.Stats;
         context.sourceAttack = GetModifiedAttackStat();
+        context.actionDamageSourceValue = GetModifiedActionDamageSourceValue(context.actionDamageSourceStat);
     }
 
     private float ResolveHitDamageMultiplier(float damageRatio)
@@ -1774,12 +1859,54 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
         CooldownKey categoryKey = new CooldownKey(activeChar, category);
         lastCategoryUseTime[categoryKey] = useTime;
+        ApplyPendingCooldownReduction(categoryKey, lastCategoryUseTime);
 
         string normalizedActionName = !string.IsNullOrWhiteSpace(actionId)
             ? actionId
             : string.IsNullOrWhiteSpace(actionName) ? "Default" : actionName;
         CooldownKey actionKey = new CooldownKey(activeChar, category, normalizedActionName);
         lastActionUseTime[actionKey] = useTime;
+        ApplyPendingCooldownReduction(actionKey, lastActionUseTime);
+    }
+
+    private void AddPendingCooldownReduction(CooldownKey key, float seconds)
+    {
+        pendingCooldownReductions.TryGetValue(key, out float existing);
+        pendingCooldownReductions[key] = existing + seconds;
+    }
+
+    private void ApplyPendingCooldownReduction(CooldownKey key, Dictionary<CooldownKey, float> cooldowns)
+    {
+        if (!pendingCooldownReductions.TryGetValue(key, out float seconds) || seconds <= 0f)
+        {
+            return;
+        }
+
+        cooldowns[key] -= seconds;
+        pendingCooldownReductions.Remove(key);
+    }
+
+    private void RemovePendingCooldownReductions(CharacterObject character, AttackCategory category)
+    {
+        List<CooldownKey> keysToRemove = null;
+        foreach (CooldownKey key in pendingCooldownReductions.Keys)
+        {
+            if (ReferenceEquals(key.character, character) && key.category == category)
+            {
+                keysToRemove ??= new List<CooldownKey>();
+                keysToRemove.Add(key);
+            }
+        }
+
+        if (keysToRemove == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < keysToRemove.Count; i++)
+        {
+            pendingCooldownReductions.Remove(keysToRemove[i]);
+        }
     }
 
     private bool IsStandaloneContextAction(string actionName)

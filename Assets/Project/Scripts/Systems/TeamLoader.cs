@@ -886,7 +886,12 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         return true;
     }
 
-    private CharacterStats BuildRuntimeStats(CharacterObject character, int slotIndex, bool includeArtifacts = true, bool includeRuntimeEffects = true)
+    private CharacterStats BuildRuntimeStats(
+        CharacterObject character,
+        int slotIndex,
+        bool includeArtifacts = true,
+        bool includeRuntimeEffects = true,
+        bool includePotentialModifiers = true)
     {
         CharacterStats stats = runInventory != null && character != null
             ? runInventory.GetCharacterBaseStats(character)
@@ -923,7 +928,10 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         stats.maxHP = baseLeveledHp * (1f + hpPercentBonus / 100f);
         stats.attack = baseLeveledAtk * (1f + atkPercentBonus / 100f);
         stats.defense = baseLeveledDef * (1f + defPercentBonus / 100f);
-        ApplyPotentialStatModifiers(stats, character);
+        if (includePotentialModifiers)
+        {
+            ApplyPotentialStatModifiers(stats, character);
+        }
         if (includeRuntimeEffects)
         {
             runInventory?.ApplyRuntimeEffectsToStats(character, stats);
@@ -987,8 +995,14 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
                 CharacterStats sourceStats = sourceCharacter == targetCharacter
                     ? targetStats
-                    : sourceCharacter.GetLeveledStats();
-                ApplyPotentialStatModifier(targetStats, modifier, sourceStats);
+                    : BuildRuntimeStats(
+                        sourceCharacter,
+                        Array.IndexOf(teamSnapshot, sourceCharacter),
+                        includeArtifacts: true,
+                        includeRuntimeEffects: false,
+                        includePotentialModifiers: false);
+                CharacterStats sourceBaseStats = sourceCharacter.GetLeveledStats();
+                ApplyPotentialStatModifier(targetStats, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
             }
         }
     }
@@ -1022,42 +1036,44 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     private static void ApplyPotentialStatModifier(
         CharacterStats targetStats,
         PassiveStatModifierDefinition modifier,
-        CharacterStats sourceStats)
+        CharacterStats sourceStats,
+        CharacterStats sourceBaseStats,
+        CombatRuntimeState sourceRuntimeState)
     {
         switch (modifier.target)
         {
             case PassiveModifierTarget.MaxHP:
-                targetStats.maxHP = ApplyPotentialStatValue(targetStats.maxHP, modifier, sourceStats);
+                targetStats.maxHP = ApplyPotentialStatValue(targetStats.maxHP, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
                 break;
             case PassiveModifierTarget.AttackStat:
-                targetStats.attack = ApplyPotentialStatValue(targetStats.attack, modifier, sourceStats);
+                targetStats.attack = ApplyPotentialStatValue(targetStats.attack, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
                 break;
             case PassiveModifierTarget.Defense:
-                targetStats.defense = ApplyPotentialStatValue(targetStats.defense, modifier, sourceStats);
+                targetStats.defense = ApplyPotentialStatValue(targetStats.defense, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
                 break;
             case PassiveModifierTarget.MoveSpeed:
-                targetStats.speed = ApplyPotentialStatValue(targetStats.speed, modifier, sourceStats);
+                targetStats.speed = ApplyPotentialStatValue(targetStats.speed, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
                 break;
             case PassiveModifierTarget.ElementalMastery:
-                targetStats.elementalMastery = ApplyPotentialStatValue(targetStats.elementalMastery, modifier, sourceStats);
+                targetStats.elementalMastery = ApplyPotentialStatValue(targetStats.elementalMastery, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
                 break;
             case PassiveModifierTarget.CritRate:
-                targetStats.critRate = ApplyPotentialStatValue(targetStats.critRate, modifier, sourceStats);
+                targetStats.critRate = ApplyPotentialStatValue(targetStats.critRate, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
                 break;
             case PassiveModifierTarget.CritDamage:
-                targetStats.critDamage = ApplyPotentialStatValue(targetStats.critDamage, modifier, sourceStats);
+                targetStats.critDamage = ApplyPotentialStatValue(targetStats.critDamage, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
                 break;
             case PassiveModifierTarget.CooldownRate:
-                targetStats.cooldownRate = ApplyPotentialStatValue(targetStats.cooldownRate, modifier, sourceStats);
+                targetStats.cooldownRate = ApplyPotentialStatValue(targetStats.cooldownRate, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
                 break;
             case PassiveModifierTarget.Impact:
-                targetStats.impact = ApplyPotentialStatValue(targetStats.impact, modifier, sourceStats);
+                targetStats.impact = ApplyPotentialStatValue(targetStats.impact, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
                 break;
             case PassiveModifierTarget.AuraEnergyRecharge:
-                targetStats.aeRecharge = ApplyPotentialStatValue(targetStats.aeRecharge, modifier, sourceStats);
+                targetStats.aeRecharge = ApplyPotentialStatValue(targetStats.aeRecharge, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
                 break;
             case PassiveModifierTarget.IncomingDamageTaken:
-                targetStats.damageReduction = ApplyPotentialStatValue(targetStats.damageReduction, modifier, sourceStats);
+                targetStats.damageReduction = ApplyPotentialStatValue(targetStats.damageReduction, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
                 break;
         }
     }
@@ -1065,9 +1081,11 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     private static float ApplyPotentialStatValue(
         float currentValue,
         PassiveStatModifierDefinition modifier,
-        CharacterStats sourceStats)
+        CharacterStats sourceStats,
+        CharacterStats sourceBaseStats,
+        CombatRuntimeState sourceRuntimeState)
     {
-        float modifierValue = ResolvePotentialModifierValue(modifier, sourceStats);
+        float modifierValue = ResolvePotentialModifierValue(modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
         return modifier.operation switch
         {
             PassiveNumericOperation.Add => currentValue + modifierValue,
@@ -1078,7 +1096,9 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     private static float ResolvePotentialModifierValue(
         PassiveStatModifierDefinition modifier,
-        CharacterStats sourceStats)
+        CharacterStats sourceStats,
+        CharacterStats sourceBaseStats,
+        CombatRuntimeState sourceRuntimeState)
     {
         if (modifier == null)
         {
@@ -1087,11 +1107,34 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
         if (modifier.valueSource == PassiveModifierValueSource.SourceStatRatio)
         {
-            float sourceValue = ResolvePotentialStatSource(sourceStats, modifier.sourceStat);
-            return sourceValue * modifier.value;
+            CharacterStats selectedStats = modifier.statRatioValueSource == PassiveStatValueSource.BaseValue
+                ? sourceBaseStats ?? sourceStats
+                : sourceStats ?? sourceBaseStats;
+            float sourceValue = ResolvePotentialStatSource(selectedStats, modifier.sourceStat);
+            float resolvedValue = sourceValue * modifier.value;
+            return ApplyCounterScale(resolvedValue, modifier, sourceRuntimeState);
         }
 
-        return modifier.value;
+        return ApplyCounterScale(modifier.value, modifier, sourceRuntimeState);
+    }
+
+    private static float ApplyCounterScale(
+        float value,
+        PassiveStatModifierDefinition modifier,
+        CombatRuntimeState runtimeState)
+    {
+        if (modifier == null || !modifier.scaleValueByCounter)
+        {
+            return value;
+        }
+
+        int counterValue = runtimeState != null ? runtimeState.GetCounter(modifier.valueCounterId) : 0;
+        if (modifier.maxCounterScale > 0)
+        {
+            counterValue = Mathf.Min(counterValue, modifier.maxCounterScale);
+        }
+
+        return value * Mathf.Max(0, counterValue);
     }
 
     private static float ResolvePotentialStatSource(CharacterStats sourceStats, PassiveModifierTarget source)

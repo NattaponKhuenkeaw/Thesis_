@@ -66,9 +66,30 @@ public class StatRuntimeEffectDefinition : RuntimeEffectDefinition
         {
             RuntimeEffectStatOperation.Multiply => current * Mathf.Pow(modifier.value, stackCount),
             RuntimeEffectStatOperation.Override => modifier.value,
-            RuntimeEffectStatOperation.AddSourceStatRatio => current + GetStat(context.sourceStats, modifier.sourceStat) * modifier.value * stackCount,
-            RuntimeEffectStatOperation.AddTargetStatRatio => current + GetStat(targetStats, modifier.sourceStat) * modifier.value * stackCount,
+            RuntimeEffectStatOperation.AddSourceStatRatio => current + GetStat(
+                ResolveSourceStats(context, modifier.statRatioValueSource),
+                modifier.sourceStat) * modifier.value * stackCount,
+            RuntimeEffectStatOperation.AddTargetStatRatio => current + GetStat(
+                ResolveTargetStats(context, targetStats, modifier.statRatioValueSource),
+                modifier.sourceStat) * modifier.value * stackCount,
             _ => current + modifier.value * stackCount
         };
+    }
+
+    private static CharacterStats ResolveSourceStats(RuntimeEffectContext context, RuntimeEffectStatValueSource sourceValue)
+    {
+        return sourceValue == RuntimeEffectStatValueSource.BaseValue
+            ? context.sourceBaseStats ?? context.sourceStats
+            : context.sourceStats ?? context.sourceBaseStats;
+    }
+
+    private static CharacterStats ResolveTargetStats(
+        RuntimeEffectContext context,
+        CharacterStats currentTargetStats,
+        RuntimeEffectStatValueSource sourceValue)
+    {
+        return sourceValue == RuntimeEffectStatValueSource.BaseValue
+            ? context.targetBaseStats ?? context.targetStats ?? currentTargetStats
+            : currentTargetStats ?? context.targetStats ?? context.targetBaseStats;
     }
 }

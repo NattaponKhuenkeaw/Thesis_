@@ -14,7 +14,11 @@ public enum ProjectileType
     goenitz_tornado = 31,
     goenitz_light = 32,
     
-    
+    // --- Orochi ---
+    orochi_basic = 40,
+    orochi_skill = 41,
+    orochi_ult = 42,
+
     
     // --- custom ---
     Custom_01 = 100,

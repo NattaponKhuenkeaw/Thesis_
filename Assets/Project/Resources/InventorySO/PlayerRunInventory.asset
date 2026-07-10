@@ -27,10 +27,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: b1bb8bdcaab9a4c4c86350394a06d0ef, type: 2}
   - {fileID: 11400000, guid: 68ba37ce923f66e48a0239356de067a9, type: 2}
   - {fileID: 11400000, guid: 8dae9784a4112a44691459c99d1d3a64, type: 2}
+  - {fileID: 11400000, guid: 6811db41c79c43a41b3ff2f4a87eecb4, type: 2}
   itemStacks:
   - item: {fileID: 11400000, guid: bc26e0a53989a6d439beb924d07f61f8, type: 2}
     quantity: 10
-  currency: 239463
+  currency: 209223
   runCharacters:
   - character: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
     upgrade:
@@ -41,9 +42,72 @@ MonoBehaviour:
       defensePerLevel: 4.2
       maxHpPerLevel: 81
     currentHP: 813
-    currentAE: 100
-    activeEffects: []
-    hasTickingEffects: 0
+    currentAE: 10
+    activeEffects:
+    - definition: {fileID: 11400000, guid: b7c3e4d5a6f147f18d29c30b45a6e7f8, type: 2}
+      sourceCharacter: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
+      sourceStatsSnapshot:
+        maxHP: 892
+        attack: 54
+        defense: 37
+        speed: 10.5
+        elementalMastery: 0
+        critRate: 5
+        critDamage: 150
+        cooldownRate: 0
+        impact: 0
+        damageReduction: 0
+        aeRecharge: 1.25
+      remainingSeconds: 12.310967
+      appliedDurationSeconds: 20
+      elapsedSeconds: 7.689042
+      nextTickAt: 0
+      stackCount: 1
+      remainingShieldAmount: 0
+      appliedShieldAmount: 0
+    - definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
+      sourceCharacter: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
+      sourceStatsSnapshot:
+        maxHP: 813
+        attack: 50
+        defense: 38
+        speed: 9
+        elementalMastery: 30
+        critRate: 5
+        critDamage: 150
+        cooldownRate: 0
+        impact: 0
+        damageReduction: 0
+        aeRecharge: 1
+      remainingSeconds: 0.26172507
+      appliedDurationSeconds: 0.3
+      elapsedSeconds: 0.038274985
+      nextTickAt: 0
+      stackCount: 1
+      remainingShieldAmount: 0
+      appliedShieldAmount: 0
+    - definition: {fileID: 11400000, guid: a5426b7d2231ff647a53ad306f3281f8, type: 2}
+      sourceCharacter: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
+      sourceStatsSnapshot:
+        maxHP: 813
+        attack: 50
+        defense: 38
+        speed: 9
+        elementalMastery: 30
+        critRate: 5
+        critDamage: 150
+        cooldownRate: 0
+        impact: 0
+        damageReduction: 0
+        aeRecharge: 1
+      remainingSeconds: 0.26172507
+      appliedDurationSeconds: 0.3
+      elapsedSeconds: 0.038274985
+      nextTickAt: 0
+      stackCount: 1
+      remainingShieldAmount: 0
+      appliedShieldAmount: 0
+    hasTickingEffects: 1
   - character: {fileID: 11400000, guid: c9c99302d3f5d8a43b612bd108aa3f05, type: 2}
     upgrade:
       level: 1
@@ -52,9 +116,30 @@ MonoBehaviour:
       attackPerLevel: 4.7
       defensePerLevel: 5.5
       maxHpPerLevel: 95
-    currentHP: 1109.0728
-    currentAE: 50
-    activeEffects: []
+    currentHP: 1160.3971
+    currentAE: 30
+    activeEffects:
+    - definition: {fileID: 11400000, guid: 415918be4bdded440914c0232e1022fa, type: 2}
+      sourceCharacter: {fileID: 11400000, guid: c9c99302d3f5d8a43b612bd108aa3f05, type: 2}
+      sourceStatsSnapshot:
+        maxHP: 1500
+        attack: 26
+        defense: 51
+        speed: 6.5
+        elementalMastery: 15
+        critRate: 0
+        critDamage: 120
+        cooldownRate: 0
+        impact: 0
+        damageReduction: 0
+        aeRecharge: 1
+      remainingSeconds: -1
+      appliedDurationSeconds: -1
+      elapsedSeconds: 0
+      nextTickAt: 0
+      stackCount: 1
+      remainingShieldAmount: 0
+      appliedShieldAmount: 0
     hasTickingEffects: 0
   - character: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
     upgrade:
@@ -65,7 +150,7 @@ MonoBehaviour:
       defensePerLevel: 4.4
       maxHpPerLevel: 80
     currentHP: 892
-    currentAE: 92.5
+    currentAE: 63.75
     activeEffects:
     - definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
       sourceCharacter: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
@@ -109,7 +194,70 @@ MonoBehaviour:
       stackCount: 1
       remainingShieldAmount: 0
       appliedShieldAmount: 0
-    hasTickingEffects: 0
+    - definition: {fileID: 11400000, guid: b7c3e4d5a6f147f18d29c30b45a6e7f8, type: 2}
+      sourceCharacter: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
+      sourceStatsSnapshot:
+        maxHP: 892
+        attack: 54
+        defense: 37
+        speed: 10.5
+        elementalMastery: 0
+        critRate: 5
+        critDamage: 150
+        cooldownRate: 0
+        impact: 0
+        damageReduction: 0
+        aeRecharge: 1.25
+      remainingSeconds: 12.349243
+      appliedDurationSeconds: 20
+      elapsedSeconds: 7.650767
+      nextTickAt: 0
+      stackCount: 1
+      remainingShieldAmount: 0
+      appliedShieldAmount: 0
+    - definition: {fileID: 11400000, guid: 685a25a9797d09e489170a3c6a5b2360, type: 2}
+      sourceCharacter: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
+      sourceStatsSnapshot:
+        maxHP: 892
+        attack: 64.8
+        defense: 37
+        speed: 10.5
+        elementalMastery: 0
+        critRate: 5
+        critDamage: 150
+        cooldownRate: 0
+        impact: 0
+        damageReduction: 0
+        aeRecharge: 1.25
+      remainingSeconds: 12.310967
+      appliedDurationSeconds: 20
+      elapsedSeconds: 7.689042
+      nextTickAt: 0
+      stackCount: 1
+      remainingShieldAmount: 0
+      appliedShieldAmount: 0
+    - definition: {fileID: 11400000, guid: a5426b7d2231ff647a53ad306f3281f8, type: 2}
+      sourceCharacter: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
+      sourceStatsSnapshot:
+        maxHP: 813
+        attack: 50
+        defense: 38
+        speed: 9
+        elementalMastery: 30
+        critRate: 5
+        critDamage: 150
+        cooldownRate: 0
+        impact: 0
+        damageReduction: 0
+        aeRecharge: 1
+      remainingSeconds: 0.26172507
+      appliedDurationSeconds: 0.3
+      elapsedSeconds: 0.038274985
+      nextTickAt: 0
+      stackCount: 1
+      remainingShieldAmount: 0
+      appliedShieldAmount: 0
+    hasTickingEffects: 1
   - character: {fileID: 11400000, guid: a2f28494c803e0b49a390a31a390a787, type: 2}
     upgrade:
       level: 1
@@ -118,30 +266,9 @@ MonoBehaviour:
       attackPerLevel: 7
       defensePerLevel: 3.7
       maxHpPerLevel: 79.5
-    currentHP: 783
+    currentHP: 544.4328
     currentAE: 100
-    activeEffects:
-    - definition: {fileID: 11400000, guid: 5f0e9114d9634764c88b13d6b1fabf92, type: 2}
-      sourceCharacter: {fileID: 11400000, guid: a2f28494c803e0b49a390a31a390a787, type: 2}
-      sourceStatsSnapshot:
-        maxHP: 783
-        attack: 65
-        defense: 22
-        speed: 6.5
-        elementalMastery: 0
-        critRate: 22
-        critDamage: 268
-        cooldownRate: 0
-        impact: 0
-        damageReduction: 0
-        aeRecharge: 1
-      remainingSeconds: -1
-      appliedDurationSeconds: -1
-      elapsedSeconds: 0
-      nextTickAt: 0
-      stackCount: 17
-      remainingShieldAmount: 0
-      appliedShieldAmount: 0
+    activeEffects: []
     hasTickingEffects: 0
   - character: {fileID: 11400000, guid: 27891cf9824752045b475995e212e47e, type: 2}
     upgrade:
@@ -151,12 +278,92 @@ MonoBehaviour:
       attackPerLevel: 5.7
       defensePerLevel: 4.8
       maxHpPerLevel: 82.85
-    currentHP: 1093.2001
-    currentAE: 100
+    currentHP: 85.64343
+    currentAE: 10
     activeEffects: []
     hasTickingEffects: 0
+  - character: {fileID: 11400000, guid: 862c5f94563edd64bac74e8fbcce835c, type: 2}
+    upgrade:
+      level: 1
+      maxLevel: 30
+      currentExp: 0
+      attackPerLevel: 8
+      defensePerLevel: 4.5
+      maxHpPerLevel: 69.7
+    currentHP: 651
+    currentAE: 100
+    activeEffects:
+    - definition: {fileID: 11400000, guid: 6ed675cfdf0d458f93a3a18b9ea705db, type: 2}
+      sourceCharacter: {fileID: 11400000, guid: 862c5f94563edd64bac74e8fbcce835c, type: 2}
+      sourceStatsSnapshot:
+        maxHP: 651
+        attack: 71.96
+        defense: 42
+        speed: 6.5
+        elementalMastery: 0
+        critRate: 5
+        critDamage: 150
+        cooldownRate: 0
+        impact: 0
+        damageReduction: 0
+        aeRecharge: 1
+      remainingSeconds: -1
+      appliedDurationSeconds: -1
+      elapsedSeconds: 0
+      nextTickAt: 0
+      stackCount: 2
+      remainingShieldAmount: 0
+      appliedShieldAmount: 0
+    - definition: {fileID: 11400000, guid: b7c3e4d5a6f147f18d29c30b45a6e7f8, type: 2}
+      sourceCharacter: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
+      sourceStatsSnapshot:
+        maxHP: 892
+        attack: 54
+        defense: 37
+        speed: 10.5
+        elementalMastery: 0
+        critRate: 5
+        critDamage: 150
+        cooldownRate: 0
+        impact: 0
+        damageReduction: 0
+        aeRecharge: 1.25
+      remainingSeconds: 12.349243
+      appliedDurationSeconds: 20
+      elapsedSeconds: 7.650767
+      nextTickAt: 0
+      stackCount: 1
+      remainingShieldAmount: 0
+      appliedShieldAmount: 0
+    - definition: {fileID: 11400000, guid: a5426b7d2231ff647a53ad306f3281f8, type: 2}
+      sourceCharacter: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
+      sourceStatsSnapshot:
+        maxHP: 813
+        attack: 50
+        defense: 38
+        speed: 9
+        elementalMastery: 30
+        critRate: 5
+        critDamage: 150
+        cooldownRate: 0
+        impact: 0
+        damageReduction: 0
+        aeRecharge: 1
+      remainingSeconds: 0.3
+      appliedDurationSeconds: 0.3
+      elapsedSeconds: 0
+      nextTickAt: 0
+      stackCount: 1
+      remainingShieldAmount: 0
+      appliedShieldAmount: 0
+    hasTickingEffects: 1
   teamSlots:
-  - character: {fileID: 11400000, guid: a2f28494c803e0b49a390a31a390a787, type: 2}
+  - character: {fileID: 11400000, guid: 862c5f94563edd64bac74e8fbcce835c, type: 2}
+    artifacts:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+  - character: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
     artifacts:
     - {fileID: 0}
     - {fileID: 0}
@@ -166,9 +373,4 @@ MonoBehaviour:
     - {fileID: 0}
     - {fileID: 0}
     - {fileID: 0}
-  - character: {fileID: 11400000, guid: 27891cf9824752045b475995e212e47e, type: 2}
-    artifacts:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-  activeTeamSlotIndex: 0
+  activeTeamSlotIndex: 1

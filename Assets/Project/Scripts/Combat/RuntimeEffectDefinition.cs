@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Project.ShopSystem;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public enum RuntimeEffectKind
 {
@@ -49,6 +50,12 @@ public enum RuntimeEffectStatOperation
     AddTargetStatRatio
 }
 
+public enum RuntimeEffectStatValueSource
+{
+    CurrentValue,
+    BaseValue
+}
+
 public enum RuntimeEffectStackMode
 {
     UseDefinition,
@@ -62,6 +69,9 @@ public class RuntimeEffectStatModifier
     public RuntimeEffectStatTarget target = RuntimeEffectStatTarget.Attack;
     public RuntimeEffectStatOperation operation = RuntimeEffectStatOperation.Add;
     public RuntimeEffectStatTarget sourceStat = RuntimeEffectStatTarget.Attack;
+    [FormerlySerializedAs("sourceValue")]
+    [Tooltip("Used only by stat-ratio operations. Current Value includes artifacts and active runtime stat effects. Base Value uses clean leveled stats before artifacts and buffs.")]
+    public RuntimeEffectStatValueSource statRatioValueSource = RuntimeEffectStatValueSource.CurrentValue;
     public float value = 0f;
 }
 
@@ -184,6 +194,20 @@ public class RuntimeEffectInstance
         SyncChildInstances(resetElapsed: false);
     }
 
+    public bool RemoveStack(int count = 1)
+    {
+        int removeCount = Mathf.Max(1, count);
+        if (stackCount <= removeCount)
+        {
+            stackCount = 0;
+            return true;
+        }
+
+        stackCount -= removeCount;
+        SyncChildInstances(resetElapsed: false);
+        return false;
+    }
+
     public RuntimeEffectInstance GetChildInstance(RuntimeEffectDefinition childDefinition)
     {
         if (childDefinition == null || childDefinition == definition)
@@ -277,7 +301,9 @@ public struct RuntimeEffectContext
     public CharacterObject sourceCharacter;
     public CharacterObject targetCharacter;
     public CharacterStats sourceStats;
+    public CharacterStats sourceBaseStats;
     public CharacterStats targetStats;
+    public CharacterStats targetBaseStats;
     public PlayerCharacter targetPlayer;
     public EnemyController targetEnemy;
     public float deltaTime;

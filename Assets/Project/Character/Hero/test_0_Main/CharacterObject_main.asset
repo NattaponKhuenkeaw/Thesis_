@@ -93,9 +93,16 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredValues: []
+        chance: 1
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
         recipe:
           recipeId: main.base.skill.effect
-          definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
+          definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
           presentation:
             effectId: decrease.void.resistence
             displayName: Decrease Void Resistence
@@ -106,7 +113,7 @@ MonoBehaviour:
             appliesOn: 1
             durationType: 0
             durationSeconds: 16
-            stackMode: 0
+            stackMode: 1
             stackLimit: 1
             refreshDurationOnReapply: 1
             stackable: 0
@@ -138,11 +145,17 @@ MonoBehaviour:
               ignoreElementalIncomingModifiers: 0
             overridePeriodicHeal: 0
             periodicHeal:
-              tickInterval: 0
               valueSource: 0
               valueRatio: 0
               flatValue: 0
               useSourceStats: 0
+              tickInterval: 0
+            overrideHeal: 0
+            heal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
             overrideLifesteal: 0
             lifesteal:
               filter:
@@ -168,6 +181,12 @@ MonoBehaviour:
             overrideStatus: 0
             status:
               status: 0
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
           childRecipes: []
         effect: {fileID: 0}
         scope: 0
@@ -242,6 +261,13 @@ MonoBehaviour:
           elementType: 4
           requireRuntimeTag: 0
           runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredValues: []
+        chance: 1
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
         recipe:
           recipeId: main.base.passive.effect
           definition: {fileID: 11400000, guid: a5426b7d2231ff647a53ad306f3281f8, type: 2}
@@ -267,6 +293,7 @@ MonoBehaviour:
             - target: 4
               operation: 0
               sourceStat: 4
+              statRatioValueSource: 0
               value: 6
             overrideDamageModifier: 0
             damageModifier:
@@ -291,7 +318,13 @@ MonoBehaviour:
               ignoreElementalIncomingModifiers: 0
             overridePeriodicHeal: 0
             periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
               tickInterval: 1
+            overrideHeal: 0
+            heal:
               valueSource: 1
               valueRatio: 0.1
               flatValue: 0
@@ -321,6 +354,12 @@ MonoBehaviour:
             overrideStatus: 0
             status:
               status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
           childRecipes: []
         effect: {fileID: 0}
         scope: 0
@@ -595,6 +634,7 @@ MonoBehaviour:
         tag: main.void_area
         addTag: 1
         duration: 20
+        rememberEnemyTarget: 0
       runtimeEffects: []
       counterEffects: []
       conditionalStateEffects: []
@@ -636,6 +676,13 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredValues: []
+        chance: 1
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
         recipe:
           recipeId: lv2.main.ult
           definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
@@ -661,6 +708,7 @@ MonoBehaviour:
             - target: 2
               operation: 1
               sourceStat: 2
+              statRatioValueSource: 0
               value: 0.85
             overrideDamageModifier: 0
             damageModifier:
@@ -685,7 +733,13 @@ MonoBehaviour:
               ignoreElementalIncomingModifiers: 0
             overridePeriodicHeal: 0
             periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
               tickInterval: 1
+            overrideHeal: 0
+            heal:
               valueSource: 1
               valueRatio: 0.1
               flatValue: 0
@@ -715,6 +769,12 @@ MonoBehaviour:
             overrideStatus: 0
             status:
               status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
           childRecipes: []
         effect: {fileID: 0}
         scope: 2

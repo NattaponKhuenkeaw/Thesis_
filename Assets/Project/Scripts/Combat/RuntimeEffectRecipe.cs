@@ -191,6 +191,8 @@ public class RuntimeEffectParameterSet
                     .Append(',')
                     .Append((int)modifier.sourceStat)
                     .Append(',')
+                    .Append((int)modifier.statRatioValueSource)
+                    .Append(',')
                     .Append(modifier.value.ToString("R"))
                     .Append(';');
             }
@@ -897,6 +899,7 @@ public static class RuntimeEffectRuntimeUtility
                 target = modifier.target,
                 operation = modifier.operation,
                 sourceStat = modifier.sourceStat,
+                statRatioValueSource = modifier.statRatioValueSource,
                 value = modifier.value
             });
         }

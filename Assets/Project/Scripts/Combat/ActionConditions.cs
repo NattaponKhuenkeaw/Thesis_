@@ -199,6 +199,23 @@ public class RuntimeCounterActionCondition : ActionConditionBase
 }
 
 [Serializable]
+public class RuntimeEffectStackActionCondition : ActionConditionBase
+{
+    public override ConditionCategory Category => ConditionCategory.Status;
+    public string effectIdOrStackKey;
+    public CounterComparison comparison = CounterComparison.GreaterThanOrEqual;
+    public int value = 1;
+
+    public override bool IsMet(InputContext context)
+    {
+        int currentValue = context.passiveController != null
+            ? context.passiveController.GetRuntimeEffectStackCount(effectIdOrStackKey)
+            : 0;
+        return ActionConditionUtility.EvaluateComparison(currentValue, comparison, value);
+    }
+}
+
+[Serializable]
 public class AirborneLandingActionCondition : ActionConditionBase
 {
     public override ConditionCategory Category => ConditionCategory.Environmental;

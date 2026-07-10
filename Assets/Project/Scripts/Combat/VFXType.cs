@@ -82,5 +82,13 @@ namespace Project.Combat
         Main_Ultimate = 146,
         Main_Air_Attack1 = 147,
         Main_Plunge_Impact = 148,
+
+        // --- Orochi ---
+        Orochi_Basic = 150,
+        Orochi_Basic2 = 151,
+        Orochi_Skill_EX = 152,
+        Orochi_Ult_Start = 153,
+        Orochi_Ult_Loop = 154,
+        Orochi_Ult_End = 155,
     }
 }

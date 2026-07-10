@@ -19,6 +19,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
+    damageSourceStat: 0
     actionDamageMultiplier: 8
     auraEnergyReward: 0
     comboTree:
@@ -32,6 +33,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
+    damageSourceStat: 0
     actionDamageMultiplier: 3
     auraEnergyReward: 0
     comboTree:
@@ -46,6 +48,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
+    damageSourceStat: 0
     actionDamageMultiplier: 5.5
     auraEnergyReward: 7
     comboTree:
@@ -60,7 +63,8 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
-    actionDamageMultiplier: 6.2
+    damageSourceStat: 1
+    actionDamageMultiplier: 0.12
     auraEnergyReward: 10
     comboTree:
       treeName: Combo
@@ -75,6 +79,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
+    damageSourceStat: 0
     actionDamageMultiplier: 8.5
     auraEnergyReward: 5
     comboTree:
@@ -642,6 +647,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
     - rid: 1588256093655269502
       type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -671,6 +678,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
     - rid: 1588256093655269571
       type: {class: PlayerGotHitCondition, ns: , asm: Assembly-CSharp}
       data:
@@ -712,6 +721,7 @@ MonoBehaviour:
           flashFrames: 6
           breaksGrab: 0
           impactTier: 0
+          textImpactTier: 0
           elementType: 0
           damageRoutine: 0
           sourceCharacter: {fileID: 0}

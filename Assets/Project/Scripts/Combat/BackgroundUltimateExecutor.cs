@@ -8,7 +8,9 @@ public class BackgroundUltimateExecutor : MonoBehaviour
     private int facingDirection;
     private CharacterStats castingStats;
     private float sourceAttack;
+    private float actionDamageSourceValue;
     private float actionDamageMultiplier;
+    private ActionDamageSourceStat actionDamageSourceStat = ActionDamageSourceStat.Attack;
     private float auraEnergyReward;
     private AuraEnergyRewardClaim auraEnergyRewardClaim;
     private AdditionalDamageEffectDefinition[] additionalDamageEffects;
@@ -50,7 +52,9 @@ public class BackgroundUltimateExecutor : MonoBehaviour
             facing,
             stats,
             sourceCombat != null ? sourceCombat.CurrentSourceAttack : (stats != null ? stats.attack : 0f),
+            sourceCombat != null ? sourceCombat.CurrentActionDamageSourceValue : ResolveActionDamageSourceValue(stats, ActionDamageSourceStat.Attack),
             sourceCombat != null ? sourceCombat.CurrentActionDamageMultiplier : 0f,
+            sourceCombat != null ? sourceCombat.CurrentActionDamageSourceStat : ActionDamageSourceStat.Attack,
             sourceCombat != null ? sourceCombat.CurrentAuraEnergyReward : 0f,
             sourceCombat != null ? sourceCombat.CurrentAuraEnergyRewardClaim : null,
             sourceCombat != null ? sourceCombat.CurrentAdditionalDamageEffects : null,
@@ -70,7 +74,9 @@ public class BackgroundUltimateExecutor : MonoBehaviour
         int facing,
         CharacterStats stats,
         float resolvedSourceAttack,
+        float resolvedActionDamageSourceValue,
         float resolvedActionDamageMultiplier,
+        ActionDamageSourceStat resolvedActionDamageSourceStat,
         float resolvedAuraEnergyReward,
         AuraEnergyRewardClaim resolvedAuraEnergyRewardClaim,
         AdditionalDamageEffectDefinition[] resolvedAdditionalDamageEffects,
@@ -86,7 +92,9 @@ public class BackgroundUltimateExecutor : MonoBehaviour
         facingDirection = facing;
         castingStats = stats;
         sourceAttack = Mathf.Max(0f, resolvedSourceAttack);
+        actionDamageSourceValue = Mathf.Max(0f, resolvedActionDamageSourceValue);
         actionDamageMultiplier = Mathf.Max(0f, resolvedActionDamageMultiplier);
+        actionDamageSourceStat = resolvedActionDamageSourceStat;
         auraEnergyReward = Mathf.Max(0f, resolvedAuraEnergyReward);
         auraEnergyRewardClaim = resolvedAuraEnergyRewardClaim;
         additionalDamageEffects = resolvedAdditionalDamageEffects
@@ -220,7 +228,7 @@ public class BackgroundUltimateExecutor : MonoBehaviour
                 box.size = normalHitbox.size;
             }
 
-            float baseDamage = GetBaseAttackDamage(normalHitbox.damageRatio);
+            float baseDamage = GetBaseActionDamage(normalHitbox.damageRatio);
             if (cloneHitboxDamage != null)
             {
                 cloneHitboxDamage.SetHitData(
@@ -285,7 +293,7 @@ public class BackgroundUltimateExecutor : MonoBehaviour
         }
     }
 
-    private float GetBaseAttackDamage(float hitFrameMultiplier)
+    private float GetBaseActionDamage(float hitFrameMultiplier)
     {
         if (castingStats == null)
         {
@@ -295,7 +303,25 @@ public class BackgroundUltimateExecutor : MonoBehaviour
         float multiplier = actionDamageMultiplier > 0f
             ? actionDamageMultiplier * Mathf.Clamp01(hitFrameMultiplier)
             : Mathf.Max(0f, hitFrameMultiplier);
-        return Mathf.Max(0f, sourceAttack * multiplier);
+        float sourceValue = actionDamageSourceValue > 0f
+            ? actionDamageSourceValue
+            : ResolveActionDamageSourceValue(castingStats, actionDamageSourceStat);
+        return Mathf.Max(0f, sourceValue * multiplier);
+    }
+
+    private static float ResolveActionDamageSourceValue(CharacterStats stats, ActionDamageSourceStat sourceStat)
+    {
+        if (stats == null)
+        {
+            return 0f;
+        }
+
+        return sourceStat switch
+        {
+            ActionDamageSourceStat.MaxHP => Mathf.Max(0f, stats.maxHP),
+            ActionDamageSourceStat.Defense => Mathf.Max(0f, stats.defense),
+            _ => Mathf.Max(0f, stats.attack)
+        };
     }
 
     private void ConfigurePerEnemyDamageCalculation(HitBoxDamage targetHitBoxDamage)

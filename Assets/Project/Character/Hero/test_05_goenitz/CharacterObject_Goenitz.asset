@@ -78,55 +78,6 @@ MonoBehaviour:
     baseSkillNode:
       statModifiers: []
       cooldownModifiers: []
-      actionModifiers: []
-      runtimeTagEffects: []
-      runtimeEffects: []
-      counterEffects: []
-      conditionalStateEffects: []
-      onHitStatusEffects: []
-      additionalDamageEffects: []
-      dashThroughDamageEffects: []
-      defensiveEffects: []
-      resourceEffects: []
-      enemyElementModifiers: []
-      passiveHookTypeName: 
-      nodeId: base.skill
-      nodeName: Base Skill
-      description: 
-      skillPanelDescriptionOverride: 'Summon Tornado hit 10 times, Inflict <b><color=#00FFED>Echo</color></b>
-        DMG 350% of own ATK,<color=#C0C0C0>When CRIT land will do 250% of critical
-        damage dealt</color> '
-      track: 0
-      level: 0
-      fragmentCost: 0
-      unlockedByDefault: 1
-    baseUltimateNode:
-      statModifiers: []
-      cooldownModifiers: []
-      actionModifiers: []
-      runtimeTagEffects: []
-      runtimeEffects: []
-      counterEffects: []
-      conditionalStateEffects: []
-      onHitStatusEffects: []
-      additionalDamageEffects: []
-      dashThroughDamageEffects: []
-      defensiveEffects: []
-      resourceEffects: []
-      enemyElementModifiers: []
-      passiveHookTypeName: 
-      nodeId: base.ultimate
-      nodeName: Base Ultimate
-      description: 
-      skillPanelDescriptionOverride: Inflict <b><color=#00FFED>Echo</color></b> DMG
-        800%+300% of own ATK
-      track: 1
-      level: 0
-      fragmentCost: 0
-      unlockedByDefault: 1
-    basePassiveNode:
-      statModifiers: []
-      cooldownModifiers: []
       actionModifiers:
       - category: 1
         actionId: goenitz.skill.yonokaze
@@ -153,6 +104,80 @@ MonoBehaviour:
         energyCostValue: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: base.skill
+      nodeName: Base Skill
+      description: 
+      skillPanelDescriptionOverride: 'Summon Tornado hit 10 times, Inflict <b><color=#00FFED>Echo</color></b>
+        DMG 350% of own ATK,<color=#C0C0C0>When CRIT land will do 250% of critical
+        damage dealt</color> '
+      track: 0
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
+    baseUltimateNode:
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers:
+      - category: 2
+        actionId: 
+        actionName: 
+        stepName: 
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags: []
+        requiredCounters: []
+        damageMultiplierOperation: 0
+        damageMultiplierValue: 0
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 2
+        finalDamageValue: 2.5
+        finalDamageRequiresCriticalHit: 1
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
+      runtimeTagEffects: []
+      runtimeEffects: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: base.ultimate
+      nodeName: Base Ultimate
+      description: 
+      skillPanelDescriptionOverride: Inflict <b><color=#00FFED>Echo</color></b> DMG
+        800%+300% of own ATK
+      track: 1
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
+    basePassiveNode:
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
       runtimeTagEffects: []
       runtimeEffects: []
       counterEffects: []
@@ -211,6 +236,7 @@ MonoBehaviour:
           runtimeTag: 
         requiredTags: []
         requiredCounters: []
+        requiredRuntimeEffectStacks: []
         requiredValues: []
         chance: 1
         enemyTargetSource: 0
@@ -241,6 +267,7 @@ MonoBehaviour:
             - target: 5
               operation: 0
               sourceStat: 5
+              statRatioValueSource: 0
               value: 17
             overrideDamageModifier: 0
             damageModifier:
@@ -308,6 +335,8 @@ MonoBehaviour:
               flatValue: 0
               useSourceStats: 1
           childRecipes: []
+        applicationMode: 0
+        applicationCount: 1
         effect: {fileID: 0}
         scope: 0
         stackMode: 0
@@ -359,6 +388,7 @@ MonoBehaviour:
           runtimeTag: 
         requiredTags: []
         requiredCounters: []
+        requiredRuntimeEffectStacks: []
         requiredValues: []
         chance: 1
         enemyTargetSource: 0
@@ -389,6 +419,7 @@ MonoBehaviour:
             - target: 6
               operation: 0
               sourceStat: 6
+              statRatioValueSource: 0
               value: 43
             overrideDamageModifier: 0
             damageModifier:
@@ -456,6 +487,8 @@ MonoBehaviour:
               flatValue: 0
               useSourceStats: 1
           childRecipes: []
+        applicationMode: 0
+        applicationCount: 1
         effect: {fileID: 0}
         scope: 0
         stackMode: 0
@@ -612,6 +645,7 @@ MonoBehaviour:
           runtimeTag: 
         requiredTags: []
         requiredCounters: []
+        requiredRuntimeEffectStacks: []
         requiredValues: []
         chance: 1
         enemyTargetSource: 0
@@ -705,6 +739,8 @@ MonoBehaviour:
               flatValue: 0
               useSourceStats: 1
           childRecipes: []
+        applicationMode: 0
+        applicationCount: 1
         effect: {fileID: 0}
         scope: 2
         stackMode: 0
@@ -927,6 +963,7 @@ MonoBehaviour:
           runtimeTag: goenitz_ultimate_state
         requiredTags: []
         requiredCounters: []
+        requiredRuntimeEffectStacks: []
         requiredValues: []
         chance: 1
         enemyTargetSource: 0
@@ -1044,14 +1081,17 @@ MonoBehaviour:
               - target: 1
                 operation: 1
                 sourceStat: 0
+                statRatioValueSource: 0
                 value: 1.05
               - target: 5
                 operation: 0
                 sourceStat: 0
+                statRatioValueSource: 0
                 value: 5
               - target: 6
                 operation: 0
                 sourceStat: 0
+                statRatioValueSource: 0
                 value: 5
               overrideDamageModifier: 0
               damageModifier:
@@ -1118,6 +1158,8 @@ MonoBehaviour:
                 valueRatio: 0.1
                 flatValue: 0
                 useSourceStats: 1
+        applicationMode: 0
+        applicationCount: 1
         effect: {fileID: 0}
         scope: 0
         stackMode: 0
@@ -1191,6 +1233,7 @@ MonoBehaviour:
           runtimeTag: 
         requiredTags: []
         requiredCounters: []
+        requiredRuntimeEffectStacks: []
         requiredValues: []
         chance: 1
         enemyTargetSource: 0
@@ -1284,6 +1327,8 @@ MonoBehaviour:
               flatValue: 0
               useSourceStats: 1
           childRecipes: []
+        applicationMode: 0
+        applicationCount: 1
         effect: {fileID: 0}
         scope: 2
         stackMode: 0

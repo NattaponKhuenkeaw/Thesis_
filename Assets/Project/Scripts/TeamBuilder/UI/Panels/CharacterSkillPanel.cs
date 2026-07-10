@@ -65,7 +65,7 @@ namespace Project.TeamBuilder.UI.Panels
             CharacterAbilityDefinition ability = ResolveAbility(data != null ? data.kitDefinition : null, track);
 
             string description = ResolveAuthoredDescriptionOverride(data, track, level)
-                ?? BuildGeneratedActionDescription(ability, elementType, damagePercent, hitCount);
+                ?? BuildGeneratedActionDescription(ability, elementType, damagePercent, hitCount, values.damageSourceStat);
 
             string metadata = BuildActionMetadata(track, values);
             entries.Add(new SkillDisplayEntry
@@ -228,6 +228,7 @@ namespace Project.TeamBuilder.UI.Panels
             ActionDisplayValues values = new ActionDisplayValues
             {
                 damageMultiplier = action != null ? action.actionDamageMultiplier : 0f,
+                damageSourceStat = action != null ? action.damageSourceStat : ActionDamageSourceStat.Attack,
                 cooldown = action is SkillAction skillAction ? skillAction.cooldown
                     : action is UltimateAction ultimateAction ? ultimateAction.cooldown : 0f,
                 energyCost = action is UltimateAction ultimate ? ultimate.energyCost : 0f,
@@ -364,7 +365,8 @@ namespace Project.TeamBuilder.UI.Panels
             CharacterAbilityDefinition ability,
             ElementType elementType,
             float damagePercent,
-            int hitCount)
+            int hitCount,
+            ActionDamageSourceStat damageSourceStat)
         {
             StringBuilder description = new StringBuilder();
             string abilityDescription = ResolveAbilityDescription(ability);
@@ -390,7 +392,8 @@ namespace Project.TeamBuilder.UI.Panels
             }
 
             description.Append(Mathf.RoundToInt(damagePercent));
-            description.Append("% of ATK");
+            description.Append("% of ");
+            description.Append(FormatDamageSource(damageSourceStat));
             if (hitCount > 1)
             {
                 description.Append(" for ");
@@ -399,6 +402,16 @@ namespace Project.TeamBuilder.UI.Panels
             }
 
             return description.ToString();
+        }
+
+        private static string FormatDamageSource(ActionDamageSourceStat damageSourceStat)
+        {
+            return damageSourceStat switch
+            {
+                ActionDamageSourceStat.MaxHP => "Max HP",
+                ActionDamageSourceStat.Defense => "DEF",
+                _ => "ATK"
+            };
         }
 
         private static float ApplyValueModifier(float current, PassiveValueModifierOperation operation, float value)
@@ -560,6 +573,7 @@ namespace Project.TeamBuilder.UI.Panels
         private struct ActionDisplayValues
         {
             public float damageMultiplier;
+            public ActionDamageSourceStat damageSourceStat;
             public float cooldown;
             public float energyCost;
             public ProjectileData projectileData;

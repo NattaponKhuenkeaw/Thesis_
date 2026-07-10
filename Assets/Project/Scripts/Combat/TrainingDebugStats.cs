@@ -223,7 +223,8 @@ namespace CombatCore
                             float totalRatio = val * stackCount * 100f;
                             string sign = totalRatio >= 0f ? "+" : "";
                             string ratioType = mod.operation == RuntimeEffectStatOperation.AddSourceStatRatio ? "Src" : "Tgt";
-                            details.Add($"{statName} {sign}{totalRatio:F0}% of {mod.sourceStat} ({ratioType})");
+                            string valueType = mod.statRatioValueSource == RuntimeEffectStatValueSource.BaseValue ? "Base" : "Current";
+                            details.Add($"{statName} {sign}{totalRatio:F0}% of {mod.sourceStat} ({ratioType} {valueType})");
                         }
                     }
                 }

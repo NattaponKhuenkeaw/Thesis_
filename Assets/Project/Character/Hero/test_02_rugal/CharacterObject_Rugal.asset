@@ -129,6 +129,7 @@ MonoBehaviour:
         valueSource: 0
         value: 1.2
         sourceStat: 0
+        sourceValue: 1
         scope: 0
         requiredTags: []
         requiredCounters: []
@@ -137,6 +138,7 @@ MonoBehaviour:
         valueSource: 0
         value: 1.2
         sourceStat: 0
+        sourceValue: 1
         scope: 0
         requiredTags: []
         requiredCounters: []
@@ -145,6 +147,7 @@ MonoBehaviour:
         valueSource: 0
         value: 1.2
         sourceStat: 0
+        sourceValue: 1
         scope: 0
         requiredTags: []
         requiredCounters: []
@@ -189,6 +192,13 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredValues: []
+        chance: 1
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
         recipe:
           recipeId: 
           definition: {fileID: 11400000, guid: c9327ae439bedea43846b237a7449754, type: 2}
@@ -214,6 +224,7 @@ MonoBehaviour:
             - target: 1
               operation: 1
               sourceStat: 1
+              sourceValue: 0
               value: 1.07
             overrideDamageModifier: 0
             damageModifier:
@@ -306,10 +317,10 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 'Inflict <b><color=#FFEF39>Memory</color></b>
         DMG 350% of own ATK
 
-        
 
-        <size=20><color=#C0C0C0>- Increase
-        own ATK by 7% for 10 seconds<i>(Max 5 Stackable)</i></color></size>'
+
+        <size=20><color=#C0C0C0>- Increase own ATK
+        by 7% for 10 seconds<i>(Max 5 Stackable)</i></color></size>'
       track: 0
       level: 1
       fragmentCost: 1
@@ -359,7 +370,7 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 'Inflict <b><color=#FFEF39>Memory</color></b>
         DMG <b><color=#FFA500>450%</color></b> of own ATK
 
-        
+
 
         <size=20><color=#C0C0C0>-
         Increase own ATK by 7% for 10 seconds<i>(Max 5 Stackable)</i></color></size>'
@@ -386,6 +397,13 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredValues: []
+        chance: 1
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
         recipe:
           recipeId: 
           definition: {fileID: 11400000, guid: c9327ae439bedea43846b237a7449754, type: 2}
@@ -411,6 +429,7 @@ MonoBehaviour:
             - target: 1
               operation: 1
               sourceStat: 1
+              sourceValue: 0
               value: 1.07
             overrideDamageModifier: 0
             damageModifier:
@@ -503,7 +522,7 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 'Inflict <b><color=#FFEF39>Memory</color></b>
         DMG <b><color=#FFA500>450%</color></b> of own ATK
 
-        
+
 
         <size=20><color=#C0C0C0>-
         Increase <b><color=#FFA500>Allies</color></b> ATK by 7% for 10 seconds<i>(Max
@@ -557,7 +576,7 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 'Inflict <b><color=#FFEF39>Memory</color></b>
         DMG <b><color=#FFA500>550%</color></b> of own ATK
 
-        
+
 
         <size=20><color=#C0C0C0>-
         Increase <b><color=#FFA500>Allies</color></b> ATK by 7% for 10 seconds<i>(Max
@@ -591,6 +610,8 @@ MonoBehaviour:
         chance: 1
         internalCooldown: 0
         attackRatio: 0
+        sourceStatDamageSource: 0
+        sourceStatRatio: 0
         targetMaxHpRatio: 0.08
         capTargetMaxHpDamage: 1
         targetMaxHpDamageCapSource: 0
@@ -609,11 +630,11 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 'Inflict <b><color=#FFEF39>Memory</color></b>
         DMG 800% of own ATK
 
-        
 
-        <size=20><color=#C0C0C0>- Ultimate
-        deals additional <b><color=#FFEF39>Memory</color></b> DMG equal to 8% of
-        enemy Max HP<i>(Capped at 500% of own ATK)</i></color></size>'
+
+        <size=20><color=#C0C0C0>- Ultimate deals additional
+        <b><color=#FFEF39>Memory</color></b> DMG equal to 8% of enemy Max HP<i>(Capped
+        at 500% of own ATK)</i></color></size>'
       track: 1
       level: 1
       fragmentCost: 1
@@ -663,7 +684,7 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 'Inflict <b><color=#FFEF39>Memory</color></b>
         DMG <b><color=#FFA500>1000%</color></b> of own ATK
 
-        
+
 
         <size=20><color=#C0C0C0>-
         Ultimate deals additional <b><color=#FFEF39>Memory</color></b> DMG equal
@@ -691,6 +712,13 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredValues: []
+        chance: 1
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
         recipe:
           recipeId: 
           definition: {fileID: 11400000, guid: 0a97ed468387ee64a87baff9532c7fe7, type: 2}
@@ -805,7 +833,7 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 'Inflict <b><color=#FFEF39>Memory</color></b>
         DMG <b><color=#FFA500>1000%</color></b> of own ATK
 
-        
+
 
         <size=20><color=#C0C0C0>-
         Ultimate deals additional <b><color=#FFEF39>Memory</color></b> DMG equal
@@ -864,7 +892,7 @@ MonoBehaviour:
       skillPanelDescriptionOverride: 'Inflict <b><color=#FFEF39>Memory</color></b>
         DMG <b><color=#FFA500>1300%</color></b> of own ATK
 
-        
+
 
         <size=20><color=#C0C0C0>-
         Ultimate deals additional <b><color=#FFEF39>Memory</color></b> DMG equal
@@ -897,6 +925,13 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredValues: []
+        chance: 1
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
         recipe:
           recipeId: 
           definition: {fileID: 11400000, guid: 8dbbb82e715344145810d466b3014c99, type: 2}
@@ -1009,7 +1044,7 @@ MonoBehaviour:
       description: Every self attack ignores enemy Defense.
       skillPanelDescriptionOverride: 'Increase <b>Basic Stats</b> by +20%
 
-        
+
 
         -
         <size=20><color=#C0C0C0>Every own attack will <n>Ignore enemy Defense</b></color></size>'
@@ -1043,6 +1078,9 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredValues: []
         chance: 0.35
         effectType: 3
         scope: 0
@@ -1051,6 +1089,8 @@ MonoBehaviour:
         flatValue: 0
         runtimeTag: 
         runtimeTagDuration: 0
+        cooldownTag: 
+        cooldownDuration: 0
       enemyElementModifiers: []
       passiveHookTypeName: 
       nodeId: rugal.passive.lv2
@@ -1058,7 +1098,7 @@ MonoBehaviour:
       description: Genocide Cutter has a 35% chance to reset its cooldown when used.
       skillPanelDescriptionOverride: 'Increase <b>Basic Stats</b> by +20%
 
-        
+
 
         <size=20><color=#C0C0C0>-
         Every own attack will <b>Ignore enemy Defense</b></color></size>
@@ -1077,6 +1117,7 @@ MonoBehaviour:
         valueSource: 1
         value: 0.5
         sourceStat: 11
+        sourceValue: 1
         scope: 0
         requiredTags: []
         requiredCounters: []
@@ -1098,7 +1139,7 @@ MonoBehaviour:
       description: Increase own ATK based on 50% of own DEF
       skillPanelDescriptionOverride: 'Increase <b>Basic Stats</b> by +20%
 
-        
+
 
         <size=20><color=#C0C0C0>-
         Every own attack will <b>Ignore enemy Defense</b></color></size>
@@ -1185,6 +1226,13 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 1
           runtimeTag: rugal.omega_mode
+        requiredTags: []
+        requiredCounters: []
+        requiredValues: []
+        chance: 1
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
         recipe:
           recipeId: 
           definition: {fileID: 11400000, guid: 269b285972ac0304a861e7b7a9b4f1bc, type: 2}
@@ -1297,10 +1345,12 @@ MonoBehaviour:
               - target: 1
                 operation: 1
                 sourceStat: 1
+                sourceValue: 0
                 value: 1.2
               - target: 2
                 operation: 1
                 sourceStat: 2
+                sourceValue: 0
                 value: 1.2
               overrideDamageModifier: 0
               damageModifier:
@@ -1391,10 +1441,12 @@ MonoBehaviour:
               - target: 1
                 operation: 1
                 sourceStat: 1
+                sourceValue: 0
                 value: 1.2
               - target: 2
                 operation: 1
                 sourceStat: 2
+                sourceValue: 0
                 value: 1.2
               overrideDamageModifier: 0
               damageModifier:
@@ -1579,6 +1631,7 @@ MonoBehaviour:
           tag: rugal.omega_mode
           addTag: 1
           duration: 1e+15
+          rememberEnemyTarget: 0
         counterEffects:
         - trigger: 1
           filter:
@@ -1635,6 +1688,7 @@ MonoBehaviour:
           tag: rugal.omega_mode
           addTag: 0
           duration: 1e+15
+          rememberEnemyTarget: 0
         counterEffects:
         - trigger: 1
           filter:
