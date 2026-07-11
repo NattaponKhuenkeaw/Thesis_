@@ -4,6 +4,14 @@ using UnityEngine;
 public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinition
 {
     [HideInInspector]
+    public bool filterByElement;
+    [HideInInspector]
+    public ElementType filterElementType = ElementType.None;
+    [HideInInspector]
+    public bool filterByCategory;
+    [HideInInspector]
+    public AttackCategory filterCategory = AttackCategory.Normal;
+    [HideInInspector]
     [Range(0f, 1f)] public float chance = 1f;
     [HideInInspector]
     [Min(0f)] public float internalCooldown = 0f;
@@ -16,6 +24,12 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
     [Min(0f)] public float sourceStatRatio = 0f;
     [HideInInspector]
     [Min(0f)] public float targetMaxHpRatio = 0f;
+    [HideInInspector]
+    public string sourceRuntimeEffectStackKey;
+    [HideInInspector]
+    [Min(0f)] public float attackRatioPerSourceRuntimeEffectStack = 0f;
+    [HideInInspector]
+    [Min(0)] public int maxSourceRuntimeEffectStacks = 0;
     [HideInInspector]
     public bool capTargetMaxHpDamage = false;
     [HideInInspector]
@@ -31,9 +45,11 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
         if (context == null
             || context.targetEnemy == null
             || !context.targetEnemy.IsAlive
+            || (parameters.filter != null && !parameters.filter.Matches(context))
             || (parameters.attackRatio <= 0f
                 && parameters.sourceStatRatio <= 0f
-                && parameters.targetMaxHpRatio <= 0f))
+                && parameters.targetMaxHpRatio <= 0f
+                && parameters.attackRatioPerSourceRuntimeEffectStack <= 0f))
         {
             return;
         }
@@ -55,8 +71,13 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
             instance.lastTriggeredAt = Time.time;
         }
 
-        CharacterStats formulaSourceStats = RuntimeEffectRuntimeUtility.ResolveFormulaSourceStats(context);
+        // Additional damage is resolved on every triggering hit. Its source stats
+        // must follow current buffs/debuffs rather than the application snapshot.
+        CharacterStats formulaSourceStats = RuntimeEffectRuntimeUtility.ResolveCurrentFormulaSourceStats(context);
         float sourceAttack = formulaSourceStats != null ? Mathf.Max(0f, formulaSourceStats.attack) : 0f;
+        int sourceStackCount = ResolveSourceRuntimeEffectStackCount(context.sourceCharacter, parameters);
+        float resolvedAttackRatio = Mathf.Max(0f, parameters.attackRatio)
+            + Mathf.Max(0f, parameters.attackRatioPerSourceRuntimeEffectStack) * sourceStackCount;
         float sourceStatDamage = ResolveSourceStatValue(formulaSourceStats, parameters.sourceStatDamageSource)
             * Mathf.Max(0f, parameters.sourceStatRatio);
         float maxHpDamage = Mathf.Max(0f, context.targetEnemy.maxHP) * Mathf.Max(0f, parameters.targetMaxHpRatio);
@@ -67,7 +88,7 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
             maxHpDamage = Mathf.Min(maxHpDamage, Mathf.Max(0f, cap));
         }
 
-        float baseDamage = sourceAttack * Mathf.Max(0f, parameters.attackRatio) + sourceStatDamage + maxHpDamage;
+        float baseDamage = sourceAttack * resolvedAttackRatio + sourceStatDamage + maxHpDamage;
         if (baseDamage <= 0f)
         {
             return;
@@ -153,17 +174,62 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
 
         return new RuntimeEffectAdditionalDamageParameters
         {
+            filter = new RuntimeEffectDamageFilter
+            {
+                filterByElement = filterByElement,
+                elementType = filterElementType,
+                filterByCategory = filterByCategory,
+                category = filterCategory
+            },
             chance = chance,
             internalCooldown = internalCooldown,
             attackRatio = attackRatio,
             sourceStatDamageSource = sourceStatDamageSource,
             sourceStatRatio = sourceStatRatio,
             targetMaxHpRatio = targetMaxHpRatio,
+            sourceRuntimeEffectStackKey = sourceRuntimeEffectStackKey,
+            attackRatioPerSourceRuntimeEffectStack = attackRatioPerSourceRuntimeEffectStack,
+            maxSourceRuntimeEffectStacks = maxSourceRuntimeEffectStacks,
             capTargetMaxHpDamage = capTargetMaxHpDamage,
             targetMaxHpDamageCapSource = targetMaxHpDamageCapSource,
             targetMaxHpDamageCapRatio = targetMaxHpDamageCapRatio,
             elementType = elementType
         };
+    }
+
+    private static int ResolveSourceRuntimeEffectStackCount(
+        CharacterObject sourceCharacter,
+        RuntimeEffectAdditionalDamageParameters parameters)
+    {
+        if (sourceCharacter == null
+            || parameters == null
+            || string.IsNullOrWhiteSpace(parameters.sourceRuntimeEffectStackKey))
+        {
+            return 0;
+        }
+
+        int count = 0;
+        TeamLoader teamLoader = TeamLoader.Instance;
+        if (teamLoader != null && teamLoader.RunInventory != null)
+        {
+            count = teamLoader.RunInventory.GetRuntimeEffectStackCount(
+                sourceCharacter,
+                parameters.sourceRuntimeEffectStackKey);
+        }
+        else
+        {
+            PlayerCharacter activePlayer = PlayerCharacter.Instance;
+            if (activePlayer != null
+                && activePlayer.characterObject == sourceCharacter
+                && activePlayer.RuntimeEffects != null)
+            {
+                count = activePlayer.RuntimeEffects.GetStackCount(parameters.sourceRuntimeEffectStackKey);
+            }
+        }
+
+        return parameters.maxSourceRuntimeEffectStacks > 0
+            ? Mathf.Min(count, parameters.maxSourceRuntimeEffectStacks)
+            : count;
     }
 
     private float ResolveSourceStatValue(CharacterStats sourceStats, RuntimeEffectStatTarget source)

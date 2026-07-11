@@ -12,4 +12,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 439bde92a263d984aa561a111ba9a27e, type: 3}
   m_Name: PlayerAudioData_Orochi
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAudioData
-  mappings: []
+  mappings:
+  - stateId: 2
+    sfxVariants:
+    - {fileID: 8300000, guid: 676cf0b66e4756442beae3648beb2bd4, type: 3}
+    loopSFX: 1
+    volumeSFX: 1
+    pitchSFX: 1
+    voiceVariants: []
+    loopVoice: 0
+    volumeVoice: 0
+    pitchVoice: 0
+  - stateId: 3
+    sfxVariants:
+    - {fileID: 8300000, guid: 8a2d0e3c1a811af4ebc6804dc51b2615, type: 3}
+    loopSFX: 0
+    volumeSFX: 1
+    pitchSFX: 1
+    voiceVariants: []
+    loopVoice: 0
+    volumeVoice: 0
+    pitchVoice: 0
+  - stateId: 7
+    sfxVariants:
+    - {fileID: 8300000, guid: 44a9da6b4851126409b5dda7f69024fa, type: 3}
+    loopSFX: 0
+    volumeSFX: 0.5
+    pitchSFX: 1
+    voiceVariants: []
+    loopVoice: 0
+    volumeVoice: 1
+    pitchVoice: 1

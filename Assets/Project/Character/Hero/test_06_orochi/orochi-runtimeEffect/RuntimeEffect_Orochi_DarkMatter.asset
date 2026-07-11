@@ -28,9 +28,9 @@ MonoBehaviour:
     operation: 4
     sourceStat: 1
     statRatioValueSource: 0
-    value: 0.07
+    value: 0.05
   - target: 4
     operation: 4
     sourceStat: 4
     statRatioValueSource: 0
-    value: 0.07
+    value: 0.05

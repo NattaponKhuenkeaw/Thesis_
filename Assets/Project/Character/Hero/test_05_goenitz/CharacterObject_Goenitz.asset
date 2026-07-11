@@ -102,10 +102,14 @@ MonoBehaviour:
         cooldownValue: 0
         energyCostOperation: 0
         energyCostValue: 0
+        ignoreDefense: 0
+        ignoreDamageResistance: 0
+        ignoreElementalIncomingModifiers: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
       runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -152,10 +156,14 @@ MonoBehaviour:
         cooldownValue: 0
         energyCostOperation: 0
         energyCostValue: 0
+        ignoreDefense: 0
+        ignoreDamageResistance: 0
+        ignoreElementalIncomingModifiers: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
       runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -180,6 +188,7 @@ MonoBehaviour:
       actionModifiers: []
       runtimeTagEffects: []
       runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -239,6 +248,7 @@ MonoBehaviour:
         requiredRuntimeEffectStacks: []
         requiredValues: []
         chance: 1
+        rollChancePerEnemyTarget: 0
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
@@ -315,12 +325,20 @@ MonoBehaviour:
               lowHpMultiplier: 2
             overrideAdditionalDamage: 0
             additionalDamage:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
               chance: 1
               internalCooldown: 0
               attackRatio: 0.2
               sourceStatDamageSource: 0
               sourceStatRatio: 0
               targetMaxHpRatio: 0
+              sourceRuntimeEffectStackKey: 
+              attackRatioPerSourceRuntimeEffectStack: 0
+              maxSourceRuntimeEffectStacks: 0
               capTargetMaxHpDamage: 0
               targetMaxHpDamageCapSource: 1
               targetMaxHpDamageCapRatio: 1
@@ -347,6 +365,7 @@ MonoBehaviour:
         sourceCharacterId: 
         filterByTargetElement: 0
         targetElement: 0
+      runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -391,6 +410,7 @@ MonoBehaviour:
         requiredRuntimeEffectStacks: []
         requiredValues: []
         chance: 1
+        rollChancePerEnemyTarget: 0
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
@@ -467,12 +487,20 @@ MonoBehaviour:
               lowHpMultiplier: 2
             overrideAdditionalDamage: 0
             additionalDamage:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
               chance: 1
               internalCooldown: 0
               attackRatio: 0.2
               sourceStatDamageSource: 0
               sourceStatRatio: 0
               targetMaxHpRatio: 0
+              sourceRuntimeEffectStackKey: 
+              attackRatioPerSourceRuntimeEffectStack: 0
+              maxSourceRuntimeEffectStacks: 0
               capTargetMaxHpDamage: 0
               targetMaxHpDamageCapSource: 1
               targetMaxHpDamageCapRatio: 1
@@ -499,6 +527,7 @@ MonoBehaviour:
         sourceCharacterId: 
         filterByTargetElement: 0
         targetElement: 0
+      runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -546,10 +575,14 @@ MonoBehaviour:
         cooldownValue: 0
         energyCostOperation: 0
         energyCostValue: 0
+        ignoreDefense: 0
+        ignoreDamageResistance: 0
+        ignoreElementalIncomingModifiers: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
       runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -597,10 +630,14 @@ MonoBehaviour:
         cooldownValue: 0
         energyCostOperation: 0
         energyCostValue: 0
+        ignoreDefense: 0
+        ignoreDamageResistance: 0
+        ignoreElementalIncomingModifiers: 0
         replacementProjectileType: 31
         replacementProjectileData: {fileID: 11400000, guid: 4da94e08f5984dafaa9cad8105535e23, type: 2}
       runtimeTagEffects: []
       runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -648,6 +685,7 @@ MonoBehaviour:
         requiredRuntimeEffectStacks: []
         requiredValues: []
         chance: 1
+        rollChancePerEnemyTarget: 0
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
@@ -664,7 +702,7 @@ MonoBehaviour:
             appliesOn: 1
             durationType: 0
             durationSeconds: 10
-            stackMode: 0
+            stackMode: 2
             stackLimit: 1
             refreshDurationOnReapply: 1
             stackable: 0
@@ -719,12 +757,20 @@ MonoBehaviour:
               lowHpMultiplier: 2
             overrideAdditionalDamage: 0
             additionalDamage:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
               chance: 1
               internalCooldown: 0
               attackRatio: 0.2
               sourceStatDamageSource: 0
               sourceStatRatio: 0
               targetMaxHpRatio: 0
+              sourceRuntimeEffectStackKey: 
+              attackRatioPerSourceRuntimeEffectStack: 0
+              maxSourceRuntimeEffectStacks: 0
               capTargetMaxHpDamage: 0
               targetMaxHpDamageCapSource: 1
               targetMaxHpDamageCapRatio: 1
@@ -751,6 +797,7 @@ MonoBehaviour:
         sourceCharacterId: 
         filterByTargetElement: 0
         targetElement: 0
+      runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -800,10 +847,14 @@ MonoBehaviour:
         cooldownValue: 0
         energyCostOperation: 0
         energyCostValue: 0
+        ignoreDefense: 0
+        ignoreDamageResistance: 0
+        ignoreElementalIncomingModifiers: 0
         replacementProjectileType: 31
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
       runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -857,6 +908,9 @@ MonoBehaviour:
         cooldownValue: 0
         energyCostOperation: 3
         energyCostValue: 0
+        ignoreDefense: 0
+        ignoreDamageResistance: 0
+        ignoreElementalIncomingModifiers: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects:
@@ -879,6 +933,7 @@ MonoBehaviour:
         duration: 20
         rememberEnemyTarget: 0
       runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -966,6 +1021,7 @@ MonoBehaviour:
         requiredRuntimeEffectStacks: []
         requiredValues: []
         chance: 1
+        rollChancePerEnemyTarget: 0
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
@@ -1037,12 +1093,20 @@ MonoBehaviour:
               lowHpMultiplier: 2
             overrideAdditionalDamage: 0
             additionalDamage:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
               chance: 1
               internalCooldown: 0
               attackRatio: 0.2
               sourceStatDamageSource: 0
               sourceStatRatio: 0
               targetMaxHpRatio: 0
+              sourceRuntimeEffectStackKey: 
+              attackRatioPerSourceRuntimeEffectStack: 0
+              maxSourceRuntimeEffectStacks: 0
               capTargetMaxHpDamage: 0
               targetMaxHpDamageCapSource: 1
               targetMaxHpDamageCapRatio: 1
@@ -1139,12 +1203,20 @@ MonoBehaviour:
                 lowHpMultiplier: 0
               overrideAdditionalDamage: 0
               additionalDamage:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
                 chance: 0
                 internalCooldown: 0
                 attackRatio: 0
                 sourceStatDamageSource: 0
                 sourceStatRatio: 0
                 targetMaxHpRatio: 0
+                sourceRuntimeEffectStackKey: 
+                attackRatioPerSourceRuntimeEffectStack: 0
+                maxSourceRuntimeEffectStacks: 0
                 capTargetMaxHpDamage: 0
                 targetMaxHpDamageCapSource: 0
                 targetMaxHpDamageCapRatio: 0
@@ -1170,6 +1242,287 @@ MonoBehaviour:
         sourceCharacterId: 
         filterByTargetElement: 0
         targetElement: 0
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredRuntimeEffectStacks: []
+        requiredValues: []
+        chance: 1
+        rollChancePerEnemyTarget: 0
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
+        recipe:
+          recipeId: 
+          definition: {fileID: 11400000, guid: 67292c3f1e672744888738b073a6fd98, type: 2}
+          presentation:
+            effectId: 
+            displayName: Wind Frenzy
+            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 0
+            appliesOn: 0
+            durationType: 0
+            durationSeconds: 10
+            stackMode: 2
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 1
+            removeOnOwnerDamaged: 0
+            stackKey: 
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreElementalIncomingModifiers: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+              tickInterval: 1
+            overrideHeal: 0
+            heal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              sourceRuntimeEffectStackKey: 
+              attackRatioPerSourceRuntimeEffectStack: 0
+              maxSourceRuntimeEffectStacks: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+          childRecipes:
+          - recipeId: 
+            definition: {fileID: 11400000, guid: 1a1bf39f6486e4348abe73b5ac9287d6, type: 2}
+            presentation:
+              effectId: 
+              displayName: Blizzard
+              icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+              fieldVisualPrefab: {fileID: 0}
+            policy:
+              kind: 0
+              appliesOn: 0
+              durationType: 0
+              durationSeconds: 10
+              stackMode: 1
+              stackLimit: 2
+              refreshDurationOnReapply: 1
+              stackable: 1
+              removeOnOwnerDamaged: 0
+              stackKey: blizzard.stack.key
+            parameters:
+              overrideStatModifiers: 1
+              statModifiers:
+              - target: 1
+                operation: 1
+                sourceStat: 0
+                statRatioValueSource: 0
+                value: 1.1
+              - target: 0
+                operation: 1
+                sourceStat: 0
+                statRatioValueSource: 0
+                value: 1.1
+              - target: 2
+                operation: 1
+                sourceStat: 0
+                statRatioValueSource: 0
+                value: 1.1
+              - target: 3
+                operation: 1
+                sourceStat: 0
+                statRatioValueSource: 0
+                value: 1.1
+              - target: 4
+                operation: 0
+                sourceStat: 0
+                statRatioValueSource: 0
+                value: 10
+              - target: 5
+                operation: 0
+                sourceStat: 0
+                statRatioValueSource: 0
+                value: 10
+              - target: 6
+                operation: 0
+                sourceStat: 0
+                statRatioValueSource: 0
+                value: 10
+              - target: 7
+                operation: 0
+                sourceStat: 0
+                statRatioValueSource: 0
+                value: 10
+              - target: 8
+                operation: 0
+                sourceStat: 0
+                statRatioValueSource: 0
+                value: 10
+              - target: 9
+                operation: 1
+                sourceStat: 0
+                statRatioValueSource: 0
+                value: 1.1
+              - target: 10
+                operation: 0
+                sourceStat: 0
+                statRatioValueSource: 0
+                value: 10
+              overrideDamageModifier: 0
+              damageModifier:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                outgoingDamagePercentAdd: 0
+                incomingDamageTakenPercentAdd: 0
+              overrideDamageInput: 0
+              damageInput:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                defenderDefensePercentAdd: 0
+                defenderDamageResistancePercentAdd: 0
+                ignoreDefense: 0
+                ignoreDamageResistance: 0
+                ignoreElementalIncomingModifiers: 0
+              overridePeriodicHeal: 0
+              periodicHeal:
+                valueSource: 0
+                valueRatio: 0
+                flatValue: 0
+                useSourceStats: 0
+                tickInterval: 0
+              overrideHeal: 0
+              heal:
+                valueSource: 1
+                valueRatio: 0.1
+                flatValue: 0
+                useSourceStats: 1
+              overrideLifesteal: 0
+              lifesteal:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                damageDealtRatio: 0
+                lowHpThreshold: 0
+                lowHpMultiplier: 0
+              overrideAdditionalDamage: 0
+              additionalDamage:
+                filter:
+                  filterByElement: 0
+                  elementType: 0
+                  filterByCategory: 0
+                  category: 0
+                chance: 0
+                internalCooldown: 0
+                attackRatio: 0
+                sourceStatDamageSource: 0
+                sourceStatRatio: 0
+                targetMaxHpRatio: 0
+                sourceRuntimeEffectStackKey: 
+                attackRatioPerSourceRuntimeEffectStack: 0
+                maxSourceRuntimeEffectStacks: 0
+                capTargetMaxHpDamage: 0
+                targetMaxHpDamageCapSource: 0
+                targetMaxHpDamageCapRatio: 0
+                elementType: 0
+              overrideStatus: 0
+              status:
+                status: 0
+              overrideShield: 0
+              shield:
+                valueSource: 0
+                valueRatio: 0.1
+                flatValue: 0
+                useSourceStats: 1
+        applicationMode: 0
+        applicationCount: 1
+        effect: {fileID: 0}
+        scope: 0
+        stackMode: 0
+        stackLimit: 99
+        refreshDurationOnReapply: 1
+        durationOverride: -1
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
+        filterByTargetElement: 0
+        targetElement: 0
+      runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -1204,10 +1557,14 @@ MonoBehaviour:
         When Hit, Decrease Enemy <b><color=#00FFED>Echo</color></b>DMG Resistance
         -15% for 10 seconds</color></size>\r\n<size=20><color=#C0C0C0>- After Yamidokoku,
         Self can perform a Follow-up \"Shin : Yaotome\"</color></size>\r\n<size=20><color=#C0C0C0>-
-        During Ultimate, self will become Immunity to all Damage / Debuff, if Ultimate
-        killed enemy, self will grant \"Wind Frenzy\" 1 stack per kill</color></size>\r\n<size=19><color=#00ffff>
-        \u2022 Wind Frenzy: Increase ATK-Related Stat by 7%, Remove if owner got
-        damaged</color></size>"
+        When Ultimate, Grant <b><color=#00FFED>Blizzard</color></b> for 20 seconds<i><color=#C0C0C0>(Max
+        2 stackable)</color></i>. During Ultimate, self will become Immunity to all
+        Damage / Debuff, if Ultimate killed enemy, self will grant <b><color=#00FFED>Wind
+        Frenzy</color></b> 1 stack per kill</color></size>\r\n<size=19><color=#00ffff>\u2022
+        Blizzard: Increase All Stats +20%, When attack there 60% chance to spawn
+        a Thunder Projectile that Deal additional <b><color=#00FFED>Echo</color></b> 
+        DMG equal to 500% of own ATK</color></size>\r\n<size=19><color=#00ffff> \u2022
+        Wind Frenzy: Increase ATK-Related Stat by 7%, Remove if owner got damaged</color></size>"
       track: 1
       level: 4
       fragmentCost: 1
@@ -1236,6 +1593,7 @@ MonoBehaviour:
         requiredRuntimeEffectStacks: []
         requiredValues: []
         chance: 1
+        rollChancePerEnemyTarget: 0
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
@@ -1307,12 +1665,20 @@ MonoBehaviour:
               lowHpMultiplier: 2
             overrideAdditionalDamage: 0
             additionalDamage:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
               chance: 1
               internalCooldown: 0
               attackRatio: 0.2
               sourceStatDamageSource: 0
               sourceStatRatio: 0
               targetMaxHpRatio: 0
+              sourceRuntimeEffectStackKey: 
+              attackRatioPerSourceRuntimeEffectStack: 0
+              maxSourceRuntimeEffectStacks: 0
               capTargetMaxHpDamage: 0
               targetMaxHpDamageCapSource: 1
               targetMaxHpDamageCapRatio: 1
@@ -1339,6 +1705,7 @@ MonoBehaviour:
         sourceCharacterId: 
         filterByTargetElement: 0
         targetElement: 0
+      runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -1367,6 +1734,7 @@ MonoBehaviour:
       actionModifiers: []
       runtimeTagEffects: []
       runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -1387,10 +1755,15 @@ MonoBehaviour:
           runtimeTag: 
         chance: 1
         internalCooldown: 0
+        criticalHitRequirement: 0
         attackRatio: 2
         sourceStatDamageSource: 0
         sourceStatRatio: 0
         targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
         capTargetMaxHpDamage: 0
         targetMaxHpDamageCapSource: 0
         targetMaxHpDamageCapRatio: 1
@@ -1446,6 +1819,9 @@ MonoBehaviour:
         cooldownValue: 0
         energyCostOperation: 0
         energyCostValue: 0
+        ignoreDefense: 0
+        ignoreDamageResistance: 0
+        ignoreElementalIncomingModifiers: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects:
@@ -1504,6 +1880,7 @@ MonoBehaviour:
         duration: 0
         rememberEnemyTarget: 0
       runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -1523,10 +1900,15 @@ MonoBehaviour:
           runtimeTag: goenitz_after_dash_bonus_action
         chance: 1
         internalCooldown: 0
+        criticalHitRequirement: 0
         attackRatio: 0
         sourceStatDamageSource: 0
         sourceStatRatio: 0
         targetMaxHpRatio: 0.04
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
         capTargetMaxHpDamage: 1
         targetMaxHpDamageCapSource: 0
         targetMaxHpDamageCapRatio: 5
@@ -1566,6 +1948,7 @@ MonoBehaviour:
       actionModifiers: []
       runtimeTagEffects: []
       runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []

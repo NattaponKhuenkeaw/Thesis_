@@ -95,6 +95,8 @@ public class PassiveStatModifierDefinitionDrawer : PropertyDrawer
         SerializedProperty sourceStat = property.FindPropertyRelative("sourceStat");
         SerializedProperty statRatioValueSource = property.FindPropertyRelative("statRatioValueSource");
         SerializedProperty scope = property.FindPropertyRelative("scope");
+        SerializedProperty filterOutgoingDamageByCategory = property.FindPropertyRelative("filterOutgoingDamageByCategory");
+        SerializedProperty outgoingDamageCategory = property.FindPropertyRelative("outgoingDamageCategory");
         SerializedProperty requiredTags = property.FindPropertyRelative("requiredTags");
         SerializedProperty requiredCounters = property.FindPropertyRelative("requiredCounters");
 
@@ -110,6 +112,15 @@ public class PassiveStatModifierDefinitionDrawer : PropertyDrawer
 
         EditorGUI.PropertyField(NextLine(ref position), value);
         EditorGUI.PropertyField(NextLine(ref position), scope);
+
+        if (UsesOutgoingDamageFilter(target))
+        {
+            EditorGUI.PropertyField(NextLine(ref position), filterOutgoingDamageByCategory, new GUIContent("Filter By Category"));
+            if (filterOutgoingDamageByCategory.boolValue)
+            {
+                EditorGUI.PropertyField(NextLine(ref position), outgoingDamageCategory, new GUIContent("Category"));
+            }
+        }
 
         line = NextPropertyRect(ref position, requiredTags);
         EditorGUI.PropertyField(line, requiredTags, true);
@@ -129,10 +140,16 @@ public class PassiveStatModifierDefinitionDrawer : PropertyDrawer
         }
 
         SerializedProperty valueSource = property.FindPropertyRelative("valueSource");
+        SerializedProperty target = property.FindPropertyRelative("target");
+        SerializedProperty filterOutgoingDamageByCategory = property.FindPropertyRelative("filterOutgoingDamageByCategory");
         SerializedProperty requiredTags = property.FindPropertyRelative("requiredTags");
         SerializedProperty requiredCounters = property.FindPropertyRelative("requiredCounters");
 
         int lineCount = UsesPassiveSourceStat(valueSource) ? 8 : 6;
+        if (UsesOutgoingDamageFilter(target))
+        {
+            lineCount += filterOutgoingDamageByCategory.boolValue ? 2 : 1;
+        }
         float height = lineCount * EditorGUIUtility.singleLineHeight
             + (lineCount - 1) * EditorGUIUtility.standardVerticalSpacing;
 
@@ -144,6 +161,11 @@ public class PassiveStatModifierDefinitionDrawer : PropertyDrawer
     private static bool UsesPassiveSourceStat(SerializedProperty valueSource)
     {
         return (PassiveModifierValueSource)valueSource.enumValueIndex == PassiveModifierValueSource.SourceStatRatio;
+    }
+
+    private static bool UsesOutgoingDamageFilter(SerializedProperty target)
+    {
+        return (PassiveModifierTarget)target.enumValueIndex == PassiveModifierTarget.OutgoingDamage;
     }
 
     private static Rect NextLine(ref Rect position)

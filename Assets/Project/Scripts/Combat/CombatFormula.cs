@@ -22,25 +22,28 @@ public static class CombatFormula
         float critDamage = attackerStats != null ? Mathf.Max(0f, attackerStats.critDamage) : 150f;
         isCrit = canCrit && Random.Range(0f, 100f) <= critRate;
 
-        float resolvedDamage = isCrit
-            ? mitigatedDamage * (critDamage / 100f)
-            : mitigatedDamage;
+        float resolvedDamage = mitigatedDamage;
+
+        if (UsesElementalMasteryScaling(routine) && elementType != ElementType.None)
+        {
+            float elementalMastery = attackerStats != null
+                ? Mathf.Max(0f, attackerStats.elementalMastery)
+                : 0f;
+            resolvedDamage *= 1f + elementalMastery / 100f;
+        }
 
         if (UsesPrimaryDamageScaling(routine))
         {
-            if (elementType != ElementType.None)
-            {
-                float elementalMastery = attackerStats != null
-                    ? Mathf.Max(0f, attackerStats.elementalMastery)
-                    : 0f;
-                resolvedDamage *= 1f + elementalMastery / 100f;
-            }
-
             if (category == AttackCategory.Ultimate)
             {
                 float impact = attackerStats != null ? attackerStats.impact : 0f;
                 resolvedDamage *= 1f + impact / 100f;
             }
+        }
+
+        if (isCrit)
+        {
+            resolvedDamage *= critDamage / 100f;
         }
 
         return Mathf.Max(0f, resolvedDamage);
@@ -54,6 +57,13 @@ public static class CombatFormula
     private static bool UsesPrimaryDamageScaling(DamageRoutine routine)
     {
         return routine == DamageRoutine.Normal || routine == DamageRoutine.Elemental;
+    }
+
+    private static bool UsesElementalMasteryScaling(DamageRoutine routine)
+    {
+        return routine == DamageRoutine.Normal
+            || routine == DamageRoutine.Elemental
+            || routine == DamageRoutine.Additional;
     }
 
     public static float CalculateOutgoingDamage(float baseAttack, float actionMultiplier, float critRate, float critDmg, float impact, bool isUlt, out bool isCrit)

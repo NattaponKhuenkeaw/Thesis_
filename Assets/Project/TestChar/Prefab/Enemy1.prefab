@@ -209,15 +209,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: maxHP
-      value: 2000
+      value: 10000
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: defense
-      value: 10
+      value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: currentHP
-      value: 2000
+      value: 10000
+      objectReference: {fileID: 0}
+    - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: damageRes
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: attackDamage
@@ -329,7 +333,7 @@ PrefabInstance:
     - target: {fileID: 4337216351384873233, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: managedReferences[2092758189833191443].m_Value
       value: 
-      objectReference: {fileID: 1894847176620359854}
+      objectReference: {fileID: 0}
     - target: {fileID: 4337216351384873233, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: 'm_BlackboardVariableOverridesList.Array.data[2]'
       value: 2092758189833191443
@@ -461,11 +465,11 @@ PrefabInstance:
     - target: {fileID: 6582193374017421191, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: damageText
       value: 
-      objectReference: {fileID: 5801027921471458532}
+      objectReference: {fileID: 0}
     - target: {fileID: 6582193374017421191, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: healthSlider
       value: 
-      objectReference: {fileID: 699333681905081599}
+      objectReference: {fileID: 0}
     - target: {fileID: 6582193374017421191, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: enemyController
       value: 
@@ -618,22 +622,6 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 2992548729297104892}
   m_SourcePrefab: {fileID: 100100000, guid: c135c5413a913c346868205d4f41acfe, type: 3}
---- !u!114 &699333681905081599 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3724904848930421334, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-  m_PrefabInstance: {fileID: 4180762667386644137}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 67db9e8f0e2ae9c40bc1e2b64352a6b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Slider
---- !u!1 &1894847176620359854 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2328031192748680711, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-  m_PrefabInstance: {fileID: 4180762667386644137}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &3682925780710360539 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
@@ -670,17 +658,6 @@ MonoBehaviour:
     m_Bits: 8
   groundCheckDistance: 0.08
   groundNormalMinY: 0.25
---- !u!114 &5801027921471458532 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7675375483045177933, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-  m_PrefabInstance: {fileID: 4180762667386644137}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
 --- !u!4 &7519174093949083380 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5934746496802764893, guid: c135c5413a913c346868205d4f41acfe, type: 3}

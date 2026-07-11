@@ -782,6 +782,11 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
                             continue;
                         }
 
+                        if (IsAlwaysRuntimeEffectSuperseded(sourceCharacter, node, effect))
+                        {
+                            continue;
+                        }
+
                         ApplyAlwaysRuntimeEffect(effect, sourceCharacter, sourceStats);
                     }
                 }
@@ -1005,6 +1010,51 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
                 ApplyPotentialStatModifier(targetStats, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
             }
         }
+    }
+
+    private bool IsAlwaysRuntimeEffectSuperseded(
+        CharacterObject sourceCharacter,
+        PotentialNodeDefinition ownerNode,
+        PassiveRuntimeEffectDefinition effect)
+    {
+        RuntimeEffectDefinition resolvedEffect = effect != null ? effect.ResolvedEffect : null;
+        if (sourceCharacter == null || ownerNode == null || resolvedEffect == null)
+        {
+            return false;
+        }
+
+        foreach (PotentialNodeDefinition candidateNode in EnumerateUnlockedPotentialNodes(sourceCharacter))
+        {
+            if (candidateNode == null
+                || candidateNode == ownerNode
+                || candidateNode.track != ownerNode.track
+                || candidateNode.level <= ownerNode.level
+                || candidateNode.runtimeEffects == null)
+            {
+                continue;
+            }
+
+            for (int i = 0; i < candidateNode.runtimeEffects.Count; i++)
+            {
+                PassiveRuntimeEffectDefinition candidate = candidateNode.runtimeEffects[i];
+                if (candidate == null
+                    || candidate.trigger != PassiveTriggerType.Always
+                    || candidate.ResolvedEffect == null)
+                {
+                    continue;
+                }
+
+                if (string.Equals(
+                    candidate.ResolvedEffect.StableId,
+                    resolvedEffect.StableId,
+                    StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private IEnumerable<PotentialNodeDefinition> EnumerateUnlockedPotentialNodes(CharacterObject sourceCharacter)

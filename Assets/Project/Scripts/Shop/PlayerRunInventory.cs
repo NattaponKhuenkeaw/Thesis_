@@ -191,6 +191,7 @@ namespace Project.ShopSystem
         [NonSerialized] private Dictionary<string, BaseItem> itemIndexById;
         [NonSerialized] private float[] runtimeEffectMultiplierSums;
         [NonSerialized] private readonly List<RuntimeEffectInstance> expiredRuntimeEffects = new List<RuntimeEffectInstance>();
+        [NonSerialized] private readonly HashSet<CharacterObject> resolvingRuntimeStats = new HashSet<CharacterObject>();
         [NonSerialized] private Dictionary<string, CharacterItem> characterItemsByCharacterId;
 
         public event Action<CharacterObject> OnRuntimeEffectsChanged;
@@ -620,7 +621,24 @@ namespace Project.ShopSystem
                 stats.attack = stats.attack * (1f + atkPercentBonus / 100f);
                 stats.defense = stats.defense * (1f + defPercentBonus / 100f);
             }
-            ApplyRuntimeEffectsToStats(character, stats);
+            // Live source-stat formulas may form a cross-character dependency cycle
+            // (for example, A reads B's current stats while B reads A's). Keep the
+            // outer calculation registered so source resolution can break that cycle
+            // with the effect's captured source snapshot.
+            if (!resolvingRuntimeStats.Add(character))
+            {
+                return stats;
+            }
+
+            try
+            {
+                ApplyRuntimeEffectsToStats(character, stats);
+            }
+            finally
+            {
+                resolvingRuntimeStats.Remove(character);
+            }
+
             return stats;
         }
 
@@ -693,7 +711,8 @@ namespace Project.ShopSystem
                 durationOverride,
                 stackMode,
                 stackLimit,
-                refreshDurationOnReapply);
+                refreshDurationOnReapply,
+                0);
         }
 
         public bool ApplyRuntimeEffect(
@@ -701,7 +720,8 @@ namespace Project.ShopSystem
             RuntimeEffectRecipe recipe,
             CharacterObject sourceCharacter = null,
             CharacterStats sourceStats = null,
-            float durationOverride = -1f)
+            float durationOverride = -1f,
+            int stackLimitOverride = 0)
         {
             if (recipe == null || recipe.definition == null)
             {
@@ -717,7 +737,8 @@ namespace Project.ShopSystem
                 durationOverride,
                 RuntimeEffectRuntimeUtility.GetStackMode(recipe.definition, recipe),
                 RuntimeEffectRuntimeUtility.GetStackLimit(recipe, 1),
-                RuntimeEffectRuntimeUtility.GetRefreshDurationOnReapply(recipe, true));
+                RuntimeEffectRuntimeUtility.GetRefreshDurationOnReapply(recipe, true),
+                stackLimitOverride);
         }
 
         private bool ApplyRuntimeEffectInternal(
@@ -729,7 +750,8 @@ namespace Project.ShopSystem
             float durationOverride,
             RuntimeEffectStackMode stackMode,
             int stackLimit,
-            bool refreshDurationOnReapply)
+            bool refreshDurationOnReapply,
+            int stackLimitOverride)
         {
             if (targetCharacter == null || effectDefinition == null)
             {
@@ -744,7 +766,9 @@ namespace Project.ShopSystem
 
             state.EnsureEffectList();
             List<RuntimeEffectInstance> activeEffects = state.MutableActiveEffects;
-            int resolvedStackLimit = RuntimeEffectRuntimeUtility.GetStackLimit(recipe, stackLimit);
+            int resolvedStackLimit = stackLimitOverride > 0
+                ? stackLimitOverride
+                : RuntimeEffectRuntimeUtility.GetStackLimit(recipe, stackLimit);
             bool resolvedRefreshDuration = RuntimeEffectRuntimeUtility.GetRefreshDurationOnReapply(recipe, refreshDurationOnReapply);
             bool effectRequiresTicking = RuntimeEffectRuntimeUtility.RequiresTicking(effectDefinition, recipe);
             bool effectAffectsStats = RuntimeEffectRuntimeUtility.AffectsStats(effectDefinition, recipe);
@@ -1436,6 +1460,13 @@ namespace Project.ShopSystem
             if (sourceCharacter == targetCharacter)
             {
                 return targetStats ?? (instance != null ? instance.sourceStatsSnapshot : null);
+            }
+
+            if (resolvingRuntimeStats.Contains(sourceCharacter))
+            {
+                return instance != null && instance.sourceStatsSnapshot != null
+                    ? instance.sourceStatsSnapshot
+                    : GetCharacterBaseStats(sourceCharacter);
             }
 
             return GetCharacterStats(sourceCharacter);

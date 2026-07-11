@@ -27,6 +27,7 @@ MonoBehaviour:
     critDamage: 150
     cooldownRate: 0
     impact: 0
+    damageReduction: 0
     aeRecharge: 1
   metaData:
     displayName: Kula
@@ -37,7 +38,7 @@ MonoBehaviour:
       \u0E21\u0E31\u0E01\u0E15\u0E48\u0E2D\u0E2A\u0E39\u0E49\u0E23\u0E48\u0E27\u0E21\u0E01\u0E31\u0E1A\u0E2B\u0E38\u0E48\u0E19\u0E22\u0E19\u0E15\u0E4C\u0E04\u0E39\u0E48\u0E43\u0E08\u0E2D\u0E22\u0E48\u0E32\u0E07
       Candy"
     portrait: {fileID: -7830753740487926875, guid: 7550d0bdc8b434340912b62004099188, type: 3}
-    animatorController: {fileID: 9100000, guid: 815b33a35641994489dd122eacb4e98d, type: 2}
+    animatorController: {fileID: 9100000, guid: 95133ae643c38954a833c13bd95b70fc, type: 2}
   auraEnergyRate: 1
   audioData: {fileID: 0}
   movementProfile: {fileID: 0}
@@ -59,8 +60,93 @@ MonoBehaviour:
     cancelWindowStartFrame: 25
     dashSpeed: 20
     cooldownFrames: 24
-  progressionDefinition:
-    maxConstellationRank: 6
-    constellationNodes: []
-    passiveNodes: []
+  kitDefinition:
+    skill:
+      abilityId: 
+      abilityName: Skill
+      icon: {fileID: 0}
+      description: 
+    ultimate:
+      abilityId: 
+      abilityName: Ultimate
+      icon: {fileID: 0}
+      description: 
+    passive:
+      abilityId: 
+      abilityName: Passive
+      icon: {fileID: 0}
+      description: 
+    baseSkillNode:
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: base.skill
+      nodeName: Base Skill
+      description: 
+      skillPanelDescriptionOverride: 
+      track: 0
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
+    baseUltimateNode:
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: base.ultimate
+      nodeName: Base Ultimate
+      description: 
+      skillPanelDescriptionOverride: 
+      track: 1
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
+    basePassiveNode:
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: base.passive
+      nodeName: Base Passive
+      description: 
+      skillPanelDescriptionOverride: 
+      track: 2
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
+    potentialNodes: []
   actionResolverTable: {fileID: 11400000, guid: b191980b61293c644972e717c7f3f248, type: 2}

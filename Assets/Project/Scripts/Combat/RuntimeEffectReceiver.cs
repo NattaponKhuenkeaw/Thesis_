@@ -55,7 +55,8 @@ public class RuntimeEffectReceiver : MonoBehaviour
             durationOverride,
             stackMode,
             stackLimit,
-            refreshDurationOnReapply);
+            refreshDurationOnReapply,
+            0);
     }
 
     public int GetStackCount(string effectIdOrStackKey)
@@ -78,11 +79,52 @@ public class RuntimeEffectReceiver : MonoBehaviour
         return count;
     }
 
+    public int RemoveEffectStacks(
+        string effectIdOrStackKey,
+        int count = 1,
+        CharacterObject sourceCharacter = null)
+    {
+        if (string.IsNullOrWhiteSpace(effectIdOrStackKey) || count <= 0)
+        {
+            return 0;
+        }
+
+        int remaining = count;
+        int removed = 0;
+        for (int i = activeEffects.Count - 1; i >= 0 && remaining > 0; i--)
+        {
+            RuntimeEffectInstance instance = activeEffects[i];
+            if (!RuntimeEffectMatchesKey(instance, effectIdOrStackKey)
+                || (sourceCharacter != null && instance.sourceCharacter != sourceCharacter))
+            {
+                continue;
+            }
+
+            int available = Mathf.Max(1, instance.stackCount);
+            int removeCount = Mathf.Min(available, remaining);
+            removed += removeCount;
+            remaining -= removeCount;
+
+            if (instance.RemoveStack(removeCount))
+            {
+                RemoveEffect(instance);
+            }
+            else
+            {
+                EnsureVisual(instance);
+                RaiseEffectsChanged();
+            }
+        }
+
+        return removed;
+    }
+
     public RuntimeEffectInstance ApplyEffect(
         RuntimeEffectRecipe recipe,
         CharacterObject sourceCharacter,
         CharacterStats sourceStats,
-        float durationOverride = -1f)
+        float durationOverride = -1f,
+        int stackLimitOverride = 0)
     {
         if (recipe == null || recipe.definition == null)
         {
@@ -97,7 +139,8 @@ public class RuntimeEffectReceiver : MonoBehaviour
             durationOverride,
             RuntimeEffectRuntimeUtility.GetStackMode(recipe.definition, recipe),
             RuntimeEffectRuntimeUtility.GetStackLimit(recipe, 1),
-            RuntimeEffectRuntimeUtility.GetRefreshDurationOnReapply(recipe, true));
+            RuntimeEffectRuntimeUtility.GetRefreshDurationOnReapply(recipe, true),
+            stackLimitOverride);
     }
 
     private RuntimeEffectInstance ApplyEffectInternal(
@@ -108,7 +151,8 @@ public class RuntimeEffectReceiver : MonoBehaviour
         float durationOverride,
         RuntimeEffectStackMode stackMode,
         int stackLimit,
-        bool refreshDurationOnReapply)
+        bool refreshDurationOnReapply,
+        int stackLimitOverride)
     {
         if (definition == null)
         {
@@ -117,7 +161,9 @@ public class RuntimeEffectReceiver : MonoBehaviour
 
         CacheTargets();
 
-        int resolvedStackLimit = RuntimeEffectRuntimeUtility.GetStackLimit(recipe, stackLimit);
+        int resolvedStackLimit = stackLimitOverride > 0
+            ? stackLimitOverride
+            : RuntimeEffectRuntimeUtility.GetStackLimit(recipe, stackLimit);
         bool resolvedRefreshDuration = RuntimeEffectRuntimeUtility.GetRefreshDurationOnReapply(recipe, refreshDurationOnReapply);
         bool effectRequiresTicking = RuntimeEffectRuntimeUtility.RequiresTicking(definition, recipe);
         float resolvedDuration = RuntimeEffectRuntimeUtility.ResolveDuration(definition, recipe, durationOverride);

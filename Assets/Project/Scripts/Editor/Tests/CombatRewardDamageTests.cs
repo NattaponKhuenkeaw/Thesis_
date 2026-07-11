@@ -7,6 +7,114 @@ using UnityEngine.TestTools;
 public class CombatRewardDamageTests
 {
     [Test]
+    public void AdditionalDamageFormulaSourceUsesCurrentEffectiveStats()
+    {
+        GameObject playerObject = new GameObject("Additional Damage Live Source Test");
+        CharacterObject character = ScriptableObject.CreateInstance<CharacterObject>();
+
+        try
+        {
+            character.characterId = "additional-live-source-character";
+            CharacterStats snapshot = new CharacterStats { attack = 100f };
+            CharacterStats currentStats = new CharacterStats { attack = 25f };
+            PlayerCharacter player = playerObject.AddComponent<PlayerCharacter>();
+            player.characterObject = character;
+
+            FieldInfo runtimeStatsField = typeof(PlayerCharacter).GetField(
+                "runtimeStats",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(runtimeStatsField, Is.Not.Null);
+            runtimeStatsField.SetValue(player, currentStats);
+
+            CharacterStats resolved = RuntimeEffectRuntimeUtility.ResolveCurrentFormulaSourceStats(
+                new RuntimeEffectDamageContext
+                {
+                    sourceCharacter = character,
+                    sourceStats = snapshot
+                });
+
+            Assert.That(resolved.attack, Is.EqualTo(25f).Within(0.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(character);
+            Object.DestroyImmediate(playerObject);
+        }
+    }
+
+    [Test]
+    public void CombatFormula_ElementalAdditionalDamageUsesMasteryWithoutCritOrImpact()
+    {
+        CharacterStats stats = new CharacterStats
+        {
+            elementalMastery = 50f,
+            critRate = 100f,
+            critDamage = 300f,
+            impact = 100f
+        };
+
+        float damage = CombatFormula.CalculateResolvedDamage(
+            100f,
+            DamageRoutine.Additional,
+            ElementType.Ash,
+            stats,
+            0f,
+            AttackCategory.Ultimate,
+            out bool isCrit);
+
+        Assert.That(damage, Is.EqualTo(150f).Within(0.001f));
+        Assert.That(isCrit, Is.False);
+    }
+
+    [Test]
+    public void PassiveController_OutgoingDamageUsesCategoryFilterAndLegacyTargets()
+    {
+        GameObject playerObject = new GameObject("Outgoing Damage Filter Test Player");
+        CharacterObject character = ScriptableObject.CreateInstance<CharacterObject>();
+
+        try
+        {
+            character.characterId = "outgoing-damage-filter-character";
+            character.kitDefinition.basePassiveNode.statModifiers.Add(new PassiveStatModifierDefinition
+            {
+                target = PassiveModifierTarget.OutgoingDamage,
+                operation = PassiveNumericOperation.Multiply,
+                value = 1.5f,
+                filterOutgoingDamageByCategory = true,
+                outgoingDamageCategory = AttackCategory.Skill
+            });
+            character.kitDefinition.basePassiveNode.statModifiers.Add(new PassiveStatModifierDefinition
+            {
+                target = PassiveModifierTarget.UltimateDamage,
+                operation = PassiveNumericOperation.Multiply,
+                value = 2f
+            });
+
+            PlayerCharacter player = playerObject.AddComponent<PlayerCharacter>();
+            CharacterPassiveController passiveController = playerObject.AddComponent<CharacterPassiveController>();
+            player.characterObject = character;
+            player.PassiveController = passiveController;
+            passiveController.playerCharacter = player;
+            passiveController.InitializeFromCharacterData();
+
+            float skillDamage = passiveController.ModifyOutgoingDamage(
+                new RuntimeEffectDamageContext { category = AttackCategory.Skill },
+                100f);
+            float ultimateDamage = passiveController.ModifyOutgoingDamage(
+                new RuntimeEffectDamageContext { category = AttackCategory.Ultimate },
+                100f);
+
+            Assert.That(skillDamage, Is.EqualTo(150f).Within(0.001f));
+            Assert.That(ultimateDamage, Is.EqualTo(200f).Within(0.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(character);
+            Object.DestroyImmediate(playerObject);
+        }
+    }
+
+    [Test]
     public void CombatAction_DefaultsGuaranteedAuraRewardToZero()
     {
         ComboAction action = new ComboAction();

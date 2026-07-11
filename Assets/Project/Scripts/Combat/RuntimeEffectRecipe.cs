@@ -98,12 +98,17 @@ public class RuntimeEffectLifestealParameters
 [Serializable]
 public class RuntimeEffectAdditionalDamageParameters
 {
+    public RuntimeEffectDamageFilter filter = new RuntimeEffectDamageFilter();
     [Range(0f, 1f)] public float chance = 1f;
     [Min(0f)] public float internalCooldown = 0f;
     [Min(0f)] public float attackRatio = 0.2f;
     public RuntimeEffectStatTarget sourceStatDamageSource = RuntimeEffectStatTarget.MaxHP;
     [Min(0f)] public float sourceStatRatio = 0f;
     [Min(0f)] public float targetMaxHpRatio = 0f;
+    [Tooltip("Optional source-owned runtime effect id or stack key used to scale attackRatio.")]
+    public string sourceRuntimeEffectStackKey;
+    [Min(0f)] public float attackRatioPerSourceRuntimeEffectStack = 0f;
+    [Min(0)] public int maxSourceRuntimeEffectStacks = 0;
     public bool capTargetMaxHpDamage = false;
     public RuntimeEffectStatTarget targetMaxHpDamageCapSource = RuntimeEffectStatTarget.Attack;
     [Min(0f)] public float targetMaxHpDamageCapRatio = 1f;
@@ -264,6 +269,14 @@ public class RuntimeEffectParameterSet
         if (overrideAdditionalDamage && additionalDamage != null)
         {
             builder.Append("add:")
+                .Append(additionalDamage.filter != null && additionalDamage.filter.filterByElement ? '1' : '0')
+                .Append(',')
+                .Append(additionalDamage.filter != null ? (int)additionalDamage.filter.elementType : 0)
+                .Append(',')
+                .Append(additionalDamage.filter != null && additionalDamage.filter.filterByCategory ? '1' : '0')
+                .Append(',')
+                .Append(additionalDamage.filter != null ? (int)additionalDamage.filter.category : 0)
+                .Append(',')
                 .Append(additionalDamage.chance.ToString("R"))
                 .Append(',')
                 .Append(additionalDamage.internalCooldown.ToString("R"))
@@ -275,6 +288,12 @@ public class RuntimeEffectParameterSet
                 .Append(additionalDamage.sourceStatRatio.ToString("R"))
                 .Append(',')
                 .Append(additionalDamage.targetMaxHpRatio.ToString("R"))
+                .Append(',')
+                .Append(additionalDamage.sourceRuntimeEffectStackKey ?? string.Empty)
+                .Append(',')
+                .Append(additionalDamage.attackRatioPerSourceRuntimeEffectStack.ToString("R"))
+                .Append(',')
+                .Append(additionalDamage.maxSourceRuntimeEffectStacks)
                 .Append(',')
                 .Append(additionalDamage.capTargetMaxHpDamage ? '1' : '0')
                 .Append(',')
@@ -697,6 +716,21 @@ public static class RuntimeEffectRuntimeUtility
         return ResolveLiveSourceStats(context.sourceCharacter, null) ?? context.sourceStats;
     }
 
+    /// <summary>
+    /// Resolves the source's effective stats at trigger time regardless of the
+    /// effect duration. Use this for formulas, such as additional on-hit damage,
+    /// that must react immediately to buffs and debuffs on their source.
+    /// </summary>
+    public static CharacterStats ResolveCurrentFormulaSourceStats(RuntimeEffectDamageContext context)
+    {
+        if (context == null)
+        {
+            return null;
+        }
+
+        return ResolveLiveSourceStats(context.sourceCharacter, null) ?? context.sourceStats;
+    }
+
     private static CharacterStats ResolveLiveSourceStats(CharacterObject sourceCharacter, PlayerCharacter contextPlayer)
     {
         if (sourceCharacter == null)
@@ -841,12 +875,22 @@ public static class RuntimeEffectRuntimeUtility
             parameters.overrideAdditionalDamage = true;
             parameters.additionalDamage = new RuntimeEffectAdditionalDamageParameters
             {
+                filter = new RuntimeEffectDamageFilter
+                {
+                    filterByElement = additionalDamage.filterByElement,
+                    elementType = additionalDamage.filterElementType,
+                    filterByCategory = additionalDamage.filterByCategory,
+                    category = additionalDamage.filterCategory
+                },
                 chance = additionalDamage.chance,
                 internalCooldown = additionalDamage.internalCooldown,
                 attackRatio = additionalDamage.attackRatio,
                 sourceStatDamageSource = additionalDamage.sourceStatDamageSource,
                 sourceStatRatio = additionalDamage.sourceStatRatio,
                 targetMaxHpRatio = additionalDamage.targetMaxHpRatio,
+                sourceRuntimeEffectStackKey = additionalDamage.sourceRuntimeEffectStackKey,
+                attackRatioPerSourceRuntimeEffectStack = additionalDamage.attackRatioPerSourceRuntimeEffectStack,
+                maxSourceRuntimeEffectStacks = additionalDamage.maxSourceRuntimeEffectStacks,
                 capTargetMaxHpDamage = additionalDamage.capTargetMaxHpDamage,
                 targetMaxHpDamageCapSource = additionalDamage.targetMaxHpDamageCapSource,
                 targetMaxHpDamageCapRatio = additionalDamage.targetMaxHpDamageCapRatio,

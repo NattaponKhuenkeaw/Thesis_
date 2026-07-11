@@ -39,13 +39,13 @@ MonoBehaviour:
     quantity: 998
   characterPotentials:
   - characterId: char_3_shermie
-    skillLevel: 4
-    ultimateLevel: 4
-    passiveLevel: 4
+    skillLevel: 0
+    ultimateLevel: 0
+    passiveLevel: 0
   - characterId: char_1_kyo
-    skillLevel: 4
-    ultimateLevel: 4
-    passiveLevel: 4
+    skillLevel: 0
+    ultimateLevel: 0
+    passiveLevel: 0
   - characterId: Char_2_Rugal
     skillLevel: 4
     ultimateLevel: 4
@@ -55,10 +55,10 @@ MonoBehaviour:
     ultimateLevel: 4
     passiveLevel: 4
   - characterId: char-0-main
-    skillLevel: 4
-    ultimateLevel: 4
-    passiveLevel: 4
-  - characterId: char_6_orochi
     skillLevel: 0
     ultimateLevel: 0
+    passiveLevel: 0
+  - characterId: char_6_orochi
+    skillLevel: 4
+    ultimateLevel: 4
     passiveLevel: 4

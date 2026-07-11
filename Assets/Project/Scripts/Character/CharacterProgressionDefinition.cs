@@ -30,7 +30,8 @@ public enum PassiveModifierTarget
     CooldownRate,
     Impact,
     AuraEnergyRecharge,
-    IncomingDamageTaken
+    IncomingDamageTaken,
+    OutgoingDamage
 }
 
 public enum PassiveEffectScope
@@ -78,6 +79,19 @@ public enum PassiveTriggerType
     OnAfterDash,
     OnIncomingDamageCheck,
     OnDamageTaken
+}
+
+public enum PassiveCriticalHitRequirement
+{
+    Any,
+    Critical,
+    NonCritical
+}
+
+public enum PassiveResourceValueMode
+{
+    CharacterStat,
+    TriggerDamageDealt
 }
 
 public enum PassiveCounterOperation
@@ -251,6 +265,13 @@ public class RuntimeEffectStackRequirement
 }
 
 [Serializable]
+public class PassiveRuntimeEffectStackLimitModifierDefinition
+{
+    public string effectIdOrStackKey;
+    [Min(1)] public int stackLimit = 1;
+}
+
+[Serializable]
 public class PassiveRuntimeValueRequirement
 {
     public PassiveRuntimeValueSubject subject = PassiveRuntimeValueSubject.Source;
@@ -326,6 +347,9 @@ public class PassiveStatModifierDefinition
     [Tooltip("Optional upper bound for counter scaling. 0 means uncapped.")]
     [Min(0)] public int maxCounterScale = 0;
     public PassiveEffectScope scope = PassiveEffectScope.Self;
+    [Tooltip("Only used by Outgoing Damage. When disabled, the modifier applies to every attack category.")]
+    public bool filterOutgoingDamageByCategory = false;
+    public AttackCategory outgoingDamageCategory = AttackCategory.Normal;
     public List<RuntimeTagRequirement> requiredTags = new List<RuntimeTagRequirement>();
     public List<RuntimeCounterRequirement> requiredCounters = new List<RuntimeCounterRequirement>();
 
@@ -403,6 +427,12 @@ public class PassiveActionModifierDefinition
     public float cooldownValue = 0f;
     public PassiveValueModifierOperation energyCostOperation = PassiveValueModifierOperation.None;
     public float energyCostValue = 0f;
+
+    [Header("Damage Input")]
+    [Tooltip("When enabled, matching action hits bypass the defender's DEF calculation.")]
+    public bool ignoreDefense = false;
+    public bool ignoreDamageResistance = false;
+    public bool ignoreElementalIncomingModifiers = false;
 
     [Header("Projectile Replacement")]
     public ProjectileType replacementProjectileType = ProjectileType.None;
@@ -514,6 +544,8 @@ public class PassiveRuntimeEffectDefinition : ISerializationCallbackReceiver
     public List<RuntimeEffectStackRequirement> requiredRuntimeEffectStacks = new List<RuntimeEffectStackRequirement>();
     public List<PassiveRuntimeValueRequirement> requiredValues = new List<PassiveRuntimeValueRequirement>();
     [Range(0f, 1f)] public float chance = 1f;
+    [Tooltip("When targeting remembered enemies, roll chance independently for each enemy.")]
+    public bool rollChancePerEnemyTarget = false;
 
     [Header("Enemy Target Source")]
     [Tooltip("Enemy runtime effects normally use the trigger context enemy. RuntimeTagHitTargets reuses enemies remembered by a runtime-tag effect.")]
@@ -762,6 +794,7 @@ public class PassiveResourceEffectDefinition
     [Range(0f, 1f)] public float chance = 1f;
     public PassiveResourceEffectType effectType = PassiveResourceEffectType.Heal;
     public PassiveEffectScope scope = PassiveEffectScope.Self;
+    public PassiveResourceValueMode valueMode = PassiveResourceValueMode.CharacterStat;
     public PassiveModifierTarget valueSource = PassiveModifierTarget.AttackStat;
     public float valueRatio = 0f;
     public float flatValue = 0f;
@@ -911,6 +944,7 @@ public class CharacterEffectSetDefinition
     public List<PassiveActionModifierDefinition> actionModifiers = new List<PassiveActionModifierDefinition>();
     public List<PassiveRuntimeTagEffectDefinition> runtimeTagEffects = new List<PassiveRuntimeTagEffectDefinition>();
     public List<PassiveRuntimeEffectDefinition> runtimeEffects = new List<PassiveRuntimeEffectDefinition>();
+    public List<PassiveRuntimeEffectStackLimitModifierDefinition> runtimeEffectStackLimitModifiers = new List<PassiveRuntimeEffectStackLimitModifierDefinition>();
     public List<PassiveCounterEffectDefinition> counterEffects = new List<PassiveCounterEffectDefinition>();
     public List<PassiveConditionalStateEffectDefinition> conditionalStateEffects = new List<PassiveConditionalStateEffectDefinition>();
     public List<PassiveOnHitStatusEffectDefinition> onHitStatusEffects = new List<PassiveOnHitStatusEffectDefinition>();
