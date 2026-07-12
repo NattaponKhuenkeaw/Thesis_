@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace CombatCore
 {
@@ -15,7 +18,7 @@ namespace CombatCore
             {
                 if (_instance == null)
                 {
-                    _instance = Object.FindFirstObjectByType<TrainingDebugManager>();
+                    _instance = UnityEngine.Object.FindFirstObjectByType<TrainingDebugManager>();
                 }
                 return _instance;
             }
@@ -26,15 +29,30 @@ namespace CombatCore
         public bool showDebugVisualization = false;
 
         public static bool IsActive => Instance != null && Instance.showDebugVisualization;
+        public event Action TeamRosterChanged;
+
+        private TeamLoader _teamLoader;
+        private CharacterObject[] _activeTeam = Array.Empty<CharacterObject>();
+
+        public TeamLoader TeamLoader => _teamLoader;
+        public IReadOnlyList<CharacterObject> ActiveTeam => _activeTeam;
 
         public void ToggleDebugMode()
         {
             showDebugVisualization = !showDebugVisualization;
+            if (showDebugVisualization)
+            {
+                ResolveTeamLoader();
+            }
         }
 
         public void SetDebugMode(bool active)
         {
             showDebugVisualization = active;
+            if (active)
+            {
+                ResolveTeamLoader();
+            }
         }
 
         private void Awake()
@@ -52,11 +70,150 @@ namespace CombatCore
             // but plan implies a persistent singleton-like hub.
         }
 
+        private void OnEnable()
+        {
+            if (_instance != this)
+            {
+                return;
+            }
+
+            SceneManager.sceneLoaded += HandleSceneLoaded;
+        }
+
+        private void OnDisable()
+        {
+            if (_instance == this)
+            {
+                SceneManager.sceneLoaded -= HandleSceneLoaded;
+            }
+        }
+
+        private void Start()
+        {
+            ResolveTeamLoader();
+        }
+
         private void OnDestroy()
         {
             if (_instance == this)
             {
+                UnbindTeamLoader();
                 _instance = null;
+            }
+        }
+
+        public CharacterObject ResolveDamageSource(CharacterObject sourceCharacter)
+        {
+            if (sourceCharacter != null)
+            {
+                for (int i = 0; i < _activeTeam.Length; i++)
+                {
+                    if (_activeTeam[i] == sourceCharacter)
+                    {
+                        return sourceCharacter;
+                    }
+                }
+
+                return null;
+            }
+
+            return _teamLoader != null ? _teamLoader.CurrentCharacter : null;
+        }
+
+        public static string GetCharacterDisplayName(CharacterObject character)
+        {
+            if (character == null)
+            {
+                return "Unknown";
+            }
+
+            return character.metaData != null && !string.IsNullOrWhiteSpace(character.metaData.displayName)
+                ? character.metaData.displayName
+                : character.name;
+        }
+
+        private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            ResolveTeamLoader(forceNotify: true);
+        }
+
+        private void ResolveTeamLoader(bool forceNotify = false)
+        {
+            TeamLoader resolved = TeamLoader.Instance;
+            if (resolved == null)
+            {
+                resolved = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
+            }
+
+            if (_teamLoader != resolved)
+            {
+                UnbindTeamLoader();
+                _teamLoader = resolved;
+                if (_teamLoader != null)
+                {
+                    _teamLoader.OnTeamChanged += RefreshActiveTeam;
+                }
+            }
+
+            RefreshActiveTeam(forceNotify);
+        }
+
+        private void UnbindTeamLoader()
+        {
+            if (_teamLoader != null)
+            {
+                _teamLoader.OnTeamChanged -= RefreshActiveTeam;
+                _teamLoader = null;
+            }
+        }
+
+        private void RefreshActiveTeam()
+        {
+            RefreshActiveTeam(forceNotify: false);
+        }
+
+        private void RefreshActiveTeam(bool forceNotify)
+        {
+            CharacterObject[] snapshot = _teamLoader != null
+                ? _teamLoader.GetTeamSnapshot()
+                : Array.Empty<CharacterObject>();
+
+            int occupiedCount = 0;
+            for (int i = 0; i < snapshot.Length; i++)
+            {
+                if (snapshot[i] != null)
+                {
+                    occupiedCount++;
+                }
+            }
+
+            CharacterObject[] orderedTeam = new CharacterObject[occupiedCount];
+            int destinationIndex = 0;
+            for (int i = 0; i < snapshot.Length; i++)
+            {
+                if (snapshot[i] != null)
+                {
+                    orderedTeam[destinationIndex++] = snapshot[i];
+                }
+            }
+
+            bool changed = _activeTeam.Length != orderedTeam.Length;
+            if (!changed)
+            {
+                for (int i = 0; i < orderedTeam.Length; i++)
+                {
+                    if (_activeTeam[i] != orderedTeam[i])
+                    {
+                        changed = true;
+                        break;
+                    }
+                }
+            }
+
+            _activeTeam = orderedTeam;
+            if (changed || forceNotify)
+            {
+                TeamRosterChanged?.Invoke();
             }
         }
     }

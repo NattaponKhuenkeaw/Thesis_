@@ -239,7 +239,7 @@ public class EnemyController : MonoBehaviour
 
         if (CombatCore.TrainingDebugStats.Instance != null && CombatCore.TrainingDebugManager.IsActive)
         {
-            CombatCore.TrainingDebugStats.Instance.RecordHit(this, finalIncomingDamage);
+            CombatCore.TrainingDebugStats.Instance.RecordHit(this, reactionData.sourceCharacter, finalIncomingDamage);
         }
 
         bool shouldApplyReaction = !isSeparateDamage && ShouldApplyHitReaction();

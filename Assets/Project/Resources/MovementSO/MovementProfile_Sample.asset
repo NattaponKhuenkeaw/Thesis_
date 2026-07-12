@@ -37,7 +37,7 @@ MonoBehaviour:
   verticalSpeedPenalty: 0.5
   groundedActionProbeDistance: 0.35
   airborneActionVelocityThreshold: 0.15
-  enableAttackFacingLockOn: 0
+  enableAttackFacingLockOn: 1
   attackFacingCancelInputThreshold: 0.2
   airborneGravityPolicy:
     startupVelocityRetain: 0.05

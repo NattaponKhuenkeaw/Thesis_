@@ -7,6 +7,6 @@
 - [x] Create `styles.css` (Extract styles)
 - [x] Create `scripts.js` (Extract scripts and Tailwind config)
 - [x] Refactor reference resolution in `InspectScreenUI.cs` to run in `Start()` instead of `Awake()`
-- [/] Verify that controls work and character switching works properly
+- [x] Verify that controls work and character switching works properly
 - [/] Create `index.html` (Core Identity: 01, 02, 03, 11)
 - [/] Create `mechanics.html` (Game Systems: 04, 05, 06, 08)

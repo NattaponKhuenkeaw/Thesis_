@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -53,8 +54,10 @@ public class CameraLookAhead : MonoBehaviour
     private float currentProxyX      = 0f;
     private float proxyVelocityX     = 0f;
     private float currentHorizontalOffset = 0f;
+    private float directionalCueOffset = 0f;
     private int currentFacingDirection = 1;
     private int tweenId = -1;
+    private Coroutine directionalCueRoutine;
 
     // =========================================================
     // Unity Methods
@@ -122,7 +125,7 @@ public class CameraLookAhead : MonoBehaviour
         float   vy        = playerRigidbody.linearVelocity.y;
 
         // --- Horizontal: follow player X plus our look-ahead offset ---
-        float targetX = playerPos.x + currentHorizontalOffset;
+        float targetX = playerPos.x + currentHorizontalOffset + directionalCueOffset;
         currentProxyX = Mathf.SmoothDamp(
             currentProxyX,
             targetX,
@@ -151,5 +154,41 @@ public class CameraLookAhead : MonoBehaviour
             playerPos.y + currentOffsetY,
             transform.position.z
         );
+    }
+
+    public void PlayDirectionalCue(float worldOffset, float duration)
+    {
+        if (directionalCueRoutine != null)
+        {
+            StopCoroutine(directionalCueRoutine);
+        }
+
+        directionalCueRoutine = StartCoroutine(DirectionalCueRoutine(Mathf.Max(0f, worldOffset), Mathf.Max(0.05f, duration)));
+    }
+
+    private IEnumerator DirectionalCueRoutine(float worldOffset, float duration)
+    {
+        float halfDuration = duration * 0.5f;
+        float elapsed = 0f;
+
+        while (elapsed < halfDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float progress = Mathf.Clamp01(elapsed / halfDuration);
+            directionalCueOffset = Mathf.SmoothStep(0f, worldOffset, progress);
+            yield return null;
+        }
+
+        elapsed = 0f;
+        while (elapsed < halfDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float progress = Mathf.Clamp01(elapsed / halfDuration);
+            directionalCueOffset = Mathf.SmoothStep(worldOffset, 0f, progress);
+            yield return null;
+        }
+
+        directionalCueOffset = 0f;
+        directionalCueRoutine = null;
     }
 }

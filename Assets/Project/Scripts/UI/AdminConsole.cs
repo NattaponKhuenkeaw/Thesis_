@@ -56,4 +56,13 @@ public class AdminConsole : MonoBehaviour
             CombatCore.TrainingDebugManager.Instance.ToggleDebugMode();
         }
     }
+
+    public void ClearState()
+    {
+        if (Project.Core.ZoneState.SceneTransitionManager.Instance == null
+            || !Project.Core.ZoneState.SceneTransitionManager.Instance.SetCurrentRoomExitAvailable(true))
+        {
+            Debug.LogWarning("[AdminConsole] Current scene exit could not be unlocked.");
+        }
+    }
 }

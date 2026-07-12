@@ -416,7 +416,7 @@ GameObject:
   - component: {fileID: 254402034}
   - component: {fileID: 254402033}
   m_Layer: 3
-  m_Name: Ground (3)
+  m_Name: StartWall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3439,6 +3439,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1693833456}
+  - component: {fileID: 1693833457}
   m_Layer: 0
   m_Name: Environment
   m_TagString: Untagged
@@ -3465,6 +3466,25 @@ Transform:
   - {fileID: 1131555106}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1693833457
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1693833455}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a8ac3a8f0184f4eb505cf51f1c20ff7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.SceneBoundaryController
+  _entranceWall: {fileID: 254402033}
+  _exitWall: {fileID: 1965268048}
+  _exitTrigger: {fileID: 171316424}
+  _entrancePadding: 0.75
+  _exitPadding: 0.75
+  _cameraCueDistance: 3
+  _cameraCueDuration: 0.65
 --- !u!1 &1841845422
 GameObject:
   m_ObjectHideFlags: 0
@@ -3784,7 +3804,7 @@ GameObject:
   - component: {fileID: 1965268049}
   - component: {fileID: 1965268048}
   m_Layer: 3
-  m_Name: Ground (4)
+  m_Name: ExitWall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4829,6 +4849,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6162526047640078980, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6275706953271454894, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -4852,6 +4876,10 @@ PrefabInstance:
     - target: {fileID: 7489620626253704799, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8177585464230773734, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8551180002215020973, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
       propertyPath: playerCharacter
@@ -5122,6 +5150,26 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 5987486934906660419}
+    - target: {fileID: 8100000000000000002, guid: 35c30a4832336874f83c1d60b7c60b70, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000002, guid: 35c30a4832336874f83c1d60b7c60b70, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000002, guid: 35c30a4832336874f83c1d60b7c60b70, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000002, guid: 35c30a4832336874f83c1d60b7c60b70, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8100000000000000002, guid: 35c30a4832336874f83c1d60b7c60b70, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8296843990740601251, guid: 35c30a4832336874f83c1d60b7c60b70, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0

@@ -13,7 +13,6 @@ namespace CombatCore
         private GUIStyle barBackgroundStyle;
         private GUIStyle barForegroundStyle;
         private bool stylesInitialized = false;
-        private float cachedHeight = 160f;
 
         private void InitializeStyles()
         {
@@ -52,12 +51,14 @@ namespace CombatCore
             if (stats == null) return;
 
             var activeStatuses = stats.GetActiveStatusEffects();
-            float width = 300;
+            var damageRecords = stats.CharacterDamageRecords;
+            float width = 480;
             float margin = 10;
-            Rect windowRect = new Rect(Screen.width - width - margin, margin, width, cachedHeight);
+            float contentHeight = 220f + damageRecords.Count * 22f + activeStatuses.Count * 22f;
+            Rect windowRect = new Rect(Screen.width - width - margin, margin, width, contentHeight);
 
             GUI.Box(windowRect, ""); // Semi-transparent box background
-            GUILayout.BeginArea(new Rect(windowRect.x + 10, windowRect.y + 5, width - 20, cachedHeight - 10));
+            GUILayout.BeginArea(new Rect(windowRect.x + 10, windowRect.y + 5, width - 20, contentHeight - 10));
 
             GUILayout.BeginVertical();
 
@@ -68,6 +69,27 @@ namespace CombatCore
             GUILayout.Label($"Target: {enemyName}", labelStyle);
             GUILayout.Label($"DPS: {stats.GetDPS():F1}", labelStyle);
             GUILayout.Label($"Total Damage: {stats.totalDamageOnCurrentTarget:F1}", labelStyle);
+            GUILayout.Label($"Max Damage Hit: {stats.maxDamageHit:F1}", labelStyle);
+
+            GUILayout.Space(8);
+            GUILayout.Label("TEAM DAMAGE", headerStyle);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Character", headerStyle, GUILayout.Width(150));
+            GUILayout.Label("Total", headerStyle, GUILayout.Width(90));
+            GUILayout.Label("Share", headerStyle, GUILayout.Width(80));
+            GUILayout.Label("Max Hit", headerStyle, GUILayout.Width(90));
+            GUILayout.EndHorizontal();
+
+            for (int i = 0; i < damageRecords.Count; i++)
+            {
+                TrainingDebugStats.CharacterDamageRecord record = damageRecords[i];
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(TrainingDebugManager.GetCharacterDisplayName(record.character), labelStyle, GUILayout.Width(150));
+                GUILayout.Label(record.totalDamage.ToString("F1"), labelStyle, GUILayout.Width(90));
+                GUILayout.Label($"{stats.GetTeamDamageSharePercent(record):F1}%", labelStyle, GUILayout.Width(80));
+                GUILayout.Label(record.maxDamageHit.ToString("F1"), labelStyle, GUILayout.Width(90));
+                GUILayout.EndHorizontal();
+            }
 
             GUILayout.Space(10);
 
@@ -108,12 +130,6 @@ namespace CombatCore
             }
 
             GUILayout.EndVertical();
-
-            if (Event.current.type == EventType.Repaint)
-            {
-                // Set height based on layout content + bottom/top padding
-                cachedHeight = GUILayoutUtility.GetLastRect().height + 20f;
-            }
 
             GUILayout.EndArea();
         }

@@ -771,7 +771,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4378788422193081448, guid: bf99d4004bc87874b89a0c8e3f9f45af, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: CloseShopUI
+      value: ExitShop
       objectReference: {fileID: 0}
     - target: {fileID: 4378788422193081448, guid: bf99d4004bc87874b89a0c8e3f9f45af, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName

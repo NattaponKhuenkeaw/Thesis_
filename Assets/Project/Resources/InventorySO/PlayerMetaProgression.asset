@@ -20,7 +20,7 @@ MonoBehaviour:
   - sourceItemId: char_1_kyo
     displayName: Kyo Fragment
     fragmentType: 0
-    quantity: 999
+    quantity: 1000
   - sourceItemId: Char_2_Rugal
     displayName: Rugal Fragment
     fragmentType: 0
@@ -47,9 +47,9 @@ MonoBehaviour:
     ultimateLevel: 0
     passiveLevel: 0
   - characterId: Char_2_Rugal
-    skillLevel: 4
-    ultimateLevel: 4
-    passiveLevel: 4
+    skillLevel: 0
+    ultimateLevel: 0
+    passiveLevel: 0
   - characterId: char_5_goenitz
     skillLevel: 4
     ultimateLevel: 4
@@ -59,6 +59,6 @@ MonoBehaviour:
     ultimateLevel: 0
     passiveLevel: 0
   - characterId: char_6_orochi
-    skillLevel: 4
-    ultimateLevel: 4
-    passiveLevel: 4
+    skillLevel: 0
+    ultimateLevel: 0
+    passiveLevel: 0

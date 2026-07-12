@@ -19,6 +19,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
+    damageSourceStat: 0
     actionDamageMultiplier: 5
     auraEnergyReward: 0
     comboTree:
@@ -32,6 +33,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
+    damageSourceStat: 0
     actionDamageMultiplier: 2
     auraEnergyReward: 0
     comboTree:
@@ -46,6 +48,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
+    damageSourceStat: 0
     actionDamageMultiplier: 3.5
     auraEnergyReward: 10
     comboTree:
@@ -61,6 +64,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
+    damageSourceStat: 0
     actionDamageMultiplier: 7
     auraEnergyReward: 0
     comboTree:
@@ -122,7 +126,7 @@ MonoBehaviour:
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
         keyframes:
-        - startFrame: 0
+        - startFrame: 3
           endFrame: 10
           taskType: 0
           easing: 1
@@ -269,6 +273,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
     - rid: 1588256162561392759
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -1412,6 +1418,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
     - rid: 1588256193077838072
       type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -1831,6 +1839,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
     - rid: 1588256211525697665
       type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
       data:

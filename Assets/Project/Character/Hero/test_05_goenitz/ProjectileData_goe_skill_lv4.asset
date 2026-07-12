@@ -52,6 +52,9 @@ MonoBehaviour:
   stopOnImpact: 1
   destroyWhenHitsExhausted: 1
   destroyOnLifetimeExpire: 1
+  trackAreaOccupants: 0
+  areaEffectRefreshInterval: 0.25
+  areaEffects: []
   spawnFeedback:
     vfxType: 0
     vfxClip: {fileID: 0}
@@ -88,7 +91,7 @@ MonoBehaviour:
         knockfallFrames: 10
         recoveryFrames: 9
         horizontalSpeed: 0.3
-        launchSpeed: 3
+        launchSpeed: 2
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1

@@ -66,7 +66,7 @@ MonoBehaviour:
     - rid: 3612912968212152434
     allowGroundToAirTransition: 0
     damageSourceStat: 0
-    actionDamageMultiplier: 5.5
+    actionDamageMultiplier: 6.5
     auraEnergyReward: 10
     comboTree:
       treeName: Combo
@@ -82,7 +82,7 @@ MonoBehaviour:
     - rid: 3612912968212152435
     allowGroundToAirTransition: 0
     damageSourceStat: 0
-    actionDamageMultiplier: 10
+    actionDamageMultiplier: 11
     auraEnergyReward: 0
     comboTree:
       treeName: Combo
@@ -105,8 +105,8 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 3612912966069911565
-    cooldown: 0
-    energyCost: 0
+    cooldown: 40
+    energyCost: 100
     activationVFXType: 0
     activationVFXPrefab: {fileID: 0}
     activationVFXOffset: {x: 0, y: 0, z: 0}

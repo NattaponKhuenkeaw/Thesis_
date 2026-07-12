@@ -19,6 +19,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
+    damageSourceStat: 0
     actionDamageMultiplier: 4
     auraEnergyReward: 0
     comboTree:
@@ -32,6 +33,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
+    damageSourceStat: 0
     actionDamageMultiplier: 3
     auraEnergyReward: 0
     comboTree:
@@ -46,6 +48,7 @@ MonoBehaviour:
     priority: 1
     conditions: []
     allowGroundToAirTransition: 0
+    damageSourceStat: 0
     actionDamageMultiplier: 3.5
     auraEnergyReward: 3
     comboTree:
@@ -60,6 +63,7 @@ MonoBehaviour:
     priority: 1
     conditions: []
     allowGroundToAirTransition: 0
+    damageSourceStat: 0
     actionDamageMultiplier: 4
     auraEnergyReward: 3
     comboTree:
@@ -75,6 +79,7 @@ MonoBehaviour:
     priority: 1
     conditions: []
     allowGroundToAirTransition: 0
+    damageSourceStat: 0
     actionDamageMultiplier: 7
     auraEnergyReward: 3
     comboTree:
@@ -98,6 +103,7 @@ MonoBehaviour:
     conditions:
     - rid: 3612912913179476115
     allowGroundToAirTransition: 0
+    damageSourceStat: 0
     actionDamageMultiplier: 7
     auraEnergyReward: 20
     comboTree:
@@ -1005,7 +1011,7 @@ MonoBehaviour:
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
         keyframes:
-        - startFrame: 1
+        - startFrame: 3
           endFrame: 11
           taskType: 0
           easing: 34
@@ -1053,6 +1059,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
         - label: VFX
           vfxType: 103
           vfxClip: {fileID: 0}
@@ -1070,6 +1078,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
     - rid: 1588255929706479795
       type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -1091,6 +1101,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
         - label: Dust Land
           vfxType: 32
           vfxClip: {fileID: 0}
@@ -1104,6 +1116,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
     - rid: 1588255929706479806
       type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -1121,6 +1135,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
     - rid: 1588256211525697644
       type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -1472,7 +1488,7 @@ MonoBehaviour:
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
         keyframes:
-        - startFrame: 1
+        - startFrame: 3
           endFrame: 17
           taskType: 0
           easing: 16
@@ -1569,6 +1585,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
         - label: VFX
           vfxType: 100
           vfxClip: {fileID: 0}
@@ -1582,6 +1600,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
     - rid: 3251577402691944747
       type: {class: TriggerWindow, ns: , asm: Assembly-CSharp}
       data:
@@ -2714,6 +2734,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 1
+          adjustLayer: 0
+          fitScreenSize: 0
         - label: VFX
           vfxType: 107
           vfxClip: {fileID: 0}
@@ -2727,6 +2749,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
     - rid: 3612912935743782998
       type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -2744,6 +2768,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 1
+          adjustLayer: 0
+          fitScreenSize: 0
         - label: VFX
           vfxType: 107
           vfxClip: {fileID: 0}
@@ -2757,6 +2783,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
     - rid: 3612912935743782999
       type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -2778,6 +2806,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
         - label: VFX
           vfxType: 105
           vfxClip: {fileID: 0}
@@ -2791,6 +2821,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
     - rid: 3612912955328561274
       type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
       data:

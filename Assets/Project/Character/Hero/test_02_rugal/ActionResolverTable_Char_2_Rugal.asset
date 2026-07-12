@@ -19,6 +19,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
+    damageSourceStat: 0
     actionDamageMultiplier: 7.5
     auraEnergyReward: 0
     comboTree:
@@ -32,6 +33,7 @@ MonoBehaviour:
     priority: 1
     conditions: []
     allowGroundToAirTransition: 0
+    damageSourceStat: 0
     actionDamageMultiplier: 3
     auraEnergyReward: 0
     comboTree:
@@ -46,6 +48,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
+    damageSourceStat: 0
     actionDamageMultiplier: 4
     auraEnergyReward: 10
     comboTree:
@@ -61,6 +64,7 @@ MonoBehaviour:
     conditions:
     - rid: 3612912868654055999
     allowGroundToAirTransition: 0
+    damageSourceStat: 0
     actionDamageMultiplier: 12
     auraEnergyReward: 10
     comboTree:
@@ -76,6 +80,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     allowGroundToAirTransition: 0
+    damageSourceStat: 0
     actionDamageMultiplier: 8
     auraEnergyReward: 0
     comboTree:
@@ -977,6 +982,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
     - rid: 1588255929706480004
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -1024,12 +1031,12 @@ MonoBehaviour:
         activeFrames: 33
         elementType: 0
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
-        offset: {x: -0.5507513, y: 1.9592235}
-        size: {x: 1.3459373, y: 0.992684}
+        offset: {x: -0.5383595, y: 1.946832}
+        size: {x: 1.3707209, y: 2.3061824}
         canGrabAirborne: 1
         damageRatio: 0
         impactFreezeFrames: 8
-        holdFrames: 20
+        holdFrames: 1000000000
         recoveryFrames: 5
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 5
@@ -1085,7 +1092,7 @@ MonoBehaviour:
           audioData:
             rid: -2
           hitData:
-            rid: 1588255929706480014
+            rid: -2
           eventData:
             rid: -2
           componentOrder:
@@ -1099,11 +1106,6 @@ MonoBehaviour:
           rid: -2
         onGrabSuccessNode:
           rid: -2
-    - rid: 1588255929706480014
-      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
-      data:
-        hitboxes:
-        - rid: 3251577386225893548
     - rid: 1588255929706480016
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -1613,6 +1615,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
         - label: Dust
           vfxType: 30
           vfxClip: {fileID: 0}
@@ -1626,6 +1630,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
     - rid: 3251577360560685244
       type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -1643,6 +1649,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 1
+          adjustLayer: 0
+          fitScreenSize: 0
     - rid: 3251577360560685258
       type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -1775,27 +1783,6 @@ MonoBehaviour:
           volume: 0.35
           pitchVariation: 1
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
-    - rid: 3251577386225893548
-      type: {class: GrabHitbox, ns: , asm: Assembly-CSharp}
-      data:
-        startFrameOffset: 0
-        activeFrames: 1
-        elementType: 0
-        debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
-        offset: {x: 0.6, y: 0.3}
-        size: {x: 0.8, y: 0.8}
-        canGrabAirborne: 0
-        damageRatio: 0
-        impactFreezeFrames: 0
-        holdFrames: 5000
-        recoveryFrames: 6
-        flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
-        hitSFX: {fileID: 0}
-        hitVFXType: 0
-        hitVFXPrefab: {fileID: 0}
-        hitVFXOffset: {x: 0, y: 0}
-        impactTier: 0
     - rid: 3251577402691944752
       type: {class: TriggerWindow, ns: , asm: Assembly-CSharp}
       data:
@@ -1903,6 +1890,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
         - label: VFX
           vfxType: 148
           vfxClip: {fileID: 0}
@@ -1916,6 +1905,8 @@ MonoBehaviour:
             rotation: {x: 0, y: 0, z: 0}
             scale: {x: 1, y: 1, z: 1}
           loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
     - rid: 3612912868654055608
       type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
       data:

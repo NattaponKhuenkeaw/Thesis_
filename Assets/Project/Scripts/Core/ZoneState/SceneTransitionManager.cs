@@ -38,6 +38,16 @@ namespace Project.Core.ZoneState
         private Image fadeImage;
         private bool isTransitioning = false;
         private List<Canvas> disabledCanvases = new List<Canvas>();
+        private SceneBoundaryController activeBoundaryController;
+
+        public bool IsCurrentRoomExitAvailable
+        {
+            get
+            {
+                SceneBoundaryController controller = ResolveCurrentBoundaryController();
+                return controller == null || controller.IsExitAvailable;
+            }
+        }
 
         private void Awake()
         {
@@ -135,6 +145,22 @@ namespace Project.Core.ZoneState
             StartCoroutine(TransitionRoutine(sceneName, room, targetEntrance));
         }
 
+        /// <summary>
+        /// Reusable room-flow facade for debug, shop, and future enemy-clear systems.
+        /// </summary>
+        public bool SetCurrentRoomExitAvailable(bool available, bool playFeedback = true)
+        {
+            SceneBoundaryController controller = ResolveCurrentBoundaryController();
+            if (controller == null)
+            {
+                Debug.LogWarning("[SceneTransitionManager] Current scene has no SceneBoundaryController; exit availability was not changed.");
+                return false;
+            }
+
+            controller.SetExitAvailable(available, playFeedback);
+            return true;
+        }
+
         private RoomData ResolveRoomData(string sceneName)
         {
             if (mapData == null)
@@ -198,11 +224,13 @@ namespace Project.Core.ZoneState
 
                 PlayerCharacter player = Object.FindFirstObjectByType<PlayerCharacter>();
                 EntrancePoint targetEntrance = FindEntrancePoint(entranceId);
+                activeBoundaryController = Object.FindFirstObjectByType<SceneBoundaryController>();
 
                 Debug.Log($"[SceneTransitionManager] Runtime lookup after load: Player={(player != null ? player.name : "missing")}, Entrance={(targetEntrance != null ? targetEntrance.name : "missing")}.");
 
                 if (player != null && targetEntrance != null)
                 {
+                    activeBoundaryController?.PrepareForIntro(targetEntrance);
                     Debug.Log($"[SceneTransitionManager] Teleporting player from {player.transform.position} to entrance spawn {targetEntrance.SpawnPosition}; stop point is {targetEntrance.StopPosition}.");
                     player.transform.position = targetEntrance.SpawnPosition;
 
@@ -265,6 +293,7 @@ namespace Project.Core.ZoneState
             }
             finally
             {
+                activeBoundaryController?.CompleteIntro();
                 // Always release the transition lock path. If this coroutine exits early,
                 // leaving canvases disabled or input locked is worse than showing UI.
                 EnableSceneCanvases();
@@ -340,6 +369,16 @@ namespace Project.Core.ZoneState
             }
 
             return fallback;
+        }
+
+        private SceneBoundaryController ResolveCurrentBoundaryController()
+        {
+            if (activeBoundaryController == null)
+            {
+                activeBoundaryController = Object.FindFirstObjectByType<SceneBoundaryController>();
+            }
+
+            return activeBoundaryController;
         }
 
         private void CreateFadeOverlay()

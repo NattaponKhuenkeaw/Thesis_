@@ -1,5 +1,6 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
-using CombatCore;
 
 namespace CombatCore
 {
@@ -8,13 +9,21 @@ namespace CombatCore
     /// </summary>
     public class TrainingDebugStats : MonoBehaviour
     {
+        [Serializable]
+        public sealed class CharacterDamageRecord
+        {
+            public CharacterObject character;
+            public float totalDamage;
+            public float maxDamageHit;
+        }
+
         private static TrainingDebugStats _instance;
         public static TrainingDebugStats Instance
         {
             get
             {
                 if (_instance == null)
-                    _instance = Object.FindFirstObjectByType<TrainingDebugStats>();
+                    _instance = UnityEngine.Object.FindFirstObjectByType<TrainingDebugStats>();
                 return _instance;
             }
         }
@@ -23,6 +32,7 @@ namespace CombatCore
         public EnemyController lastAttackedEnemy;
         public float lastDamagePerHit;
         public float totalDamageOnCurrentTarget;
+        public float maxDamageHit;
 
         [Header("DPS Tracking")]
         public float dpsStartTime = -1f;
@@ -30,6 +40,11 @@ namespace CombatCore
         private float lastHitTime;
         private float lastDpsUpdateTime;
         private const float STATS_RESET_TIMEOUT = 6.7f; // Set to 6.7 seconds as requested
+        private readonly List<CharacterDamageRecord> characterDamageRecords = new List<CharacterDamageRecord>();
+        private TrainingDebugManager trainingManager;
+        private bool sampleActive;
+
+        public IReadOnlyList<CharacterDamageRecord> CharacterDamageRecords => characterDamageRecords;
 
         void Awake()
         {
@@ -44,8 +59,14 @@ namespace CombatCore
             _instance = this;
         }
 
+        private void Start()
+        {
+            BindTrainingManager();
+        }
+
         private void OnDestroy()
         {
+            UnbindTrainingManager();
             if (_instance == this)
             {
                 _instance = null;
@@ -55,49 +76,85 @@ namespace CombatCore
         void Update()
         {
             float time = Time.time;
-            if (time > lastHitTime + STATS_RESET_TIMEOUT)
+            if (sampleActive && time > lastHitTime + STATS_RESET_TIMEOUT)
             {
-                // Reset stats if no hits for a while
-                if (lastAttackedEnemy != null)
-                {
-                    lastDamagePerHit = 0f;
-                    totalDamageOnCurrentTarget = 0f;
-                    dpsStartTime = -1f;
-                    currentDPS = 0f;
-                }
+                ClearSample();
             }
-            else if (dpsStartTime >= 0f && time >= lastDpsUpdateTime + 1f)
+            else if (sampleActive && dpsStartTime >= 0f && time >= lastDpsUpdateTime + 1f)
             {
                 // Update DPS decay every 1 second
                 UpdateDPS();
             }
         }
 
-        public void RecordHit(EnemyController enemy, float damage)
+        public void RecordHit(EnemyController enemy, CharacterObject sourceCharacter, float damage)
         {
-            float time = Time.time;
-            if (lastAttackedEnemy != enemy)
+            if (enemy == null || damage <= 0f)
             {
-                totalDamageOnCurrentTarget = 0f;
-                lastAttackedEnemy = enemy;
-                dpsStartTime = time;
-            }
-            else if (time > lastHitTime + STATS_RESET_TIMEOUT)
-            {
-                totalDamageOnCurrentTarget = 0f;
-                dpsStartTime = time;
-            }
-            else if (dpsStartTime < 0f)
-            {
-                dpsStartTime = time;
+                return;
             }
 
+            BindTrainingManager();
+            float time = Time.time;
+            if ((sampleActive && lastAttackedEnemy != enemy)
+                || (sampleActive && time > lastHitTime + STATS_RESET_TIMEOUT))
+            {
+                ClearSample();
+            }
+
+            if (!sampleActive)
+            {
+                dpsStartTime = time;
+                sampleActive = true;
+            }
+
+            lastAttackedEnemy = enemy;
             lastDamagePerHit = damage;
             totalDamageOnCurrentTarget += damage;
+            maxDamageHit = Mathf.Max(maxDamageHit, damage);
             lastHitTime = time;
+
+            CharacterObject attributedCharacter = trainingManager != null
+                ? trainingManager.ResolveDamageSource(sourceCharacter)
+                : sourceCharacter;
+            CharacterDamageRecord record = FindRecord(attributedCharacter);
+            if (record != null)
+            {
+                record.totalDamage += damage;
+                record.maxDamageHit = Mathf.Max(record.maxDamageHit, damage);
+            }
 
             // Recalculate DPS immediately on hit
             UpdateDPS();
+        }
+
+        public float GetTeamDamageSharePercent(CharacterDamageRecord record)
+        {
+            if (record == null || totalDamageOnCurrentTarget <= 0f)
+            {
+                return 0f;
+            }
+
+            return record.totalDamage / totalDamageOnCurrentTarget * 100f;
+        }
+
+        public void ClearSample()
+        {
+            sampleActive = false;
+            lastAttackedEnemy = null;
+            lastDamagePerHit = 0f;
+            totalDamageOnCurrentTarget = 0f;
+            maxDamageHit = 0f;
+            dpsStartTime = -1f;
+            currentDPS = 0f;
+            lastHitTime = 0f;
+            lastDpsUpdateTime = 0f;
+
+            for (int i = 0; i < characterDamageRecords.Count; i++)
+            {
+                characterDamageRecords[i].totalDamage = 0f;
+                characterDamageRecords[i].maxDamageHit = 0f;
+            }
         }
 
         private void UpdateDPS()
@@ -117,6 +174,75 @@ namespace CombatCore
         public float GetDPS()
         {
             return currentDPS;
+        }
+
+        private void BindTrainingManager()
+        {
+            TrainingDebugManager resolved = TrainingDebugManager.Instance;
+            if (trainingManager == resolved)
+            {
+                return;
+            }
+
+            UnbindTrainingManager();
+            trainingManager = resolved;
+            if (trainingManager != null)
+            {
+                trainingManager.TeamRosterChanged += HandleTeamRosterChanged;
+            }
+
+            RebuildCharacterRecords();
+        }
+
+        private void UnbindTrainingManager()
+        {
+            if (trainingManager != null)
+            {
+                trainingManager.TeamRosterChanged -= HandleTeamRosterChanged;
+                trainingManager = null;
+            }
+        }
+
+        private void HandleTeamRosterChanged()
+        {
+            ClearSample();
+            RebuildCharacterRecords();
+        }
+
+        private void RebuildCharacterRecords()
+        {
+            characterDamageRecords.Clear();
+            if (trainingManager == null)
+            {
+                return;
+            }
+
+            IReadOnlyList<CharacterObject> activeTeam = trainingManager.ActiveTeam;
+            for (int i = 0; i < activeTeam.Count; i++)
+            {
+                characterDamageRecords.Add(new CharacterDamageRecord
+                {
+                    character = activeTeam[i]
+                });
+            }
+        }
+
+        private CharacterDamageRecord FindRecord(CharacterObject character)
+        {
+            if (character == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < characterDamageRecords.Count; i++)
+            {
+                if (characterDamageRecords[i].character == character)
+                {
+                    return characterDamageRecords[i];
+                }
+            }
+
+            return null;
         }
 
         public string GetEnemyStateName()

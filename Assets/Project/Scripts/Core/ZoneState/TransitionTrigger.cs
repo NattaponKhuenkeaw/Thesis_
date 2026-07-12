@@ -20,6 +20,31 @@ namespace Project.Core.ZoneState
         [SerializeField] private Color debugColor = new Color(0.2f, 0.8f, 1f, 0.4f);
 
         private bool hasTriggered = false;
+        private IRoomExitGate exitGate;
+        private Collider2D exitCollider;
+
+        public Collider2D ExitCollider
+        {
+            get
+            {
+                if (exitCollider == null)
+                {
+                    exitCollider = GetComponent<Collider2D>();
+                }
+
+                return exitCollider;
+            }
+        }
+
+        private void Awake()
+        {
+            exitCollider = GetComponent<Collider2D>();
+        }
+
+        public void SetExitGate(IRoomExitGate gate)
+        {
+            exitGate = gate;
+        }
 
         private void OnTriggerEnter2D(Collider2D other)
         {
@@ -29,6 +54,12 @@ namespace Project.Core.ZoneState
             PlayerCharacter player = other.GetComponentInParent<PlayerCharacter>();
             if (player != null && !player.IsDead)
             {
+                if (exitGate != null && !exitGate.IsExitAvailable)
+                {
+                    Debug.Log("[TransitionTrigger] Exit is still locked; transition request ignored.", this);
+                    return;
+                }
+
                 hasTriggered = true;
                 
                 if (SceneTransitionManager.Instance != null)

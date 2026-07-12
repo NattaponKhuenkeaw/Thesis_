@@ -68,6 +68,17 @@ namespace Project.ShopSystem.UI
             Project.UI.InputLockManager.Unlock();
         }
 
+        public void ExitShop()
+        {
+            CloseShopUI();
+
+            if (Project.Core.ZoneState.SceneTransitionManager.Instance == null
+                || !Project.Core.ZoneState.SceneTransitionManager.Instance.SetCurrentRoomExitAvailable(true))
+            {
+                Debug.LogWarning("[ShopUI] Current scene exit could not be unlocked.");
+            }
+        }
+
         public void SwitchTab(ShopTab tab)
         {
             currentTab = ShopTab.Sell;

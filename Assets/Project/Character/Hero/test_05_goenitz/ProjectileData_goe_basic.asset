@@ -52,6 +52,9 @@ MonoBehaviour:
   stopOnImpact: 0
   destroyWhenHitsExhausted: 1
   destroyOnLifetimeExpire: 1
+  trackAreaOccupants: 0
+  areaEffectRefreshInterval: 0.25
+  areaEffects: []
   spawnFeedback:
     vfxType: 0
     vfxClip: {fileID: 0}
@@ -93,7 +96,7 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        juggleLaunchScale: 1
+        juggleLaunchScale: 0.95
         juggleStunScale: 1
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
