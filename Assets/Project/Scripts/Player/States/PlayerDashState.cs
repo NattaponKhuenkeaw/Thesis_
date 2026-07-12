@@ -85,10 +85,6 @@ public class PlayerDashState : FrameDataPlayerState
         TryConsumeAllowedBuffers();
     }
 
-    protected override void HandleInputDuringCancel()
-    {
-        TryConsumeAllowedBuffers();
-    }
 
     // =========================================================
     // Custom Input — initiates dash physics (FSM defers here)

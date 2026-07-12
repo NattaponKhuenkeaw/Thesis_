@@ -274,7 +274,6 @@ public abstract class FrameDataPlayerState : PlayerState
             case ActionPhase.Startup:  OnStartupBegin();  break;
             case ActionPhase.Active:   OnActiveBegin();   break;
             case ActionPhase.Recovery: OnRecoveryBegin(); break;
-            case ActionPhase.Cancel:   OnCancelBegin();   break;
             case ActionPhase.Done:     OnActionComplete(); break;
         }
     }
@@ -359,9 +358,6 @@ public abstract class FrameDataPlayerState : PlayerState
                 break;
             case ActionPhase.Recovery:
                 HandleInputDuringRecovery();
-                break;
-            case ActionPhase.Cancel:
-                HandleInputDuringCancel();
                 break;
         }
     }
@@ -487,8 +483,6 @@ public abstract class FrameDataPlayerState : PlayerState
                 return logicFrame - cachedFrameData.startupFrames;
             case ActionPhase.Recovery:
                 return logicFrame - cachedFrameData.startupFrames - cachedFrameData.activeFrames;
-            case ActionPhase.Cancel:
-                return logicFrame - cachedFrameData.cancelWindowStartFrame + 1;
             default:
                 return 0;
         }

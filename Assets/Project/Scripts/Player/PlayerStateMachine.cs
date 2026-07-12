@@ -657,20 +657,27 @@ public class PlayerStateMachine : MonoBehaviour
 
         if (CurrentState == null) return false;
 
-        // 1. ถ้าตัวละครกำลังออกท่า (Dash, Attack, Skill, Ultimate)
-        // ให้เช็คกฎจังหวะเฟรมจาก InterruptPolicy ที่เราตั้งไว้
-        if (CurrentState is FrameDataPlayerState fdState)
+        // Ground locomotion states: allowed
+        if (CurrentState == IdleState || CurrentState == MoveState)
         {
-            return fdState.CanBeInterruptedBy(ActionCategory.Switch);
-        }
-
-        // 2. ถ้าเป็น State เคลื่อนไหวปกติ อนุญาตให้เปลี่ยนตัวได้ทันที (Idle, Move, Jump)
-        if (CurrentState == IdleState || CurrentState == MoveState || CurrentState == AirborneState || CurrentState == FallingState || CurrentState == LandingState || CurrentState == JumpStartupState)
-        {
+            if (playerCharacter.Movement != null && !playerCharacter.Movement.GroundState.IsEffectivelyGrounded)
+            {
+                return false;
+            }
             return true;
         }
 
-        // 3. State อื่นๆ เช่น Hitstun หรือ Dead จะตกลงมาที่นี่ และไม่อนุญาตให้เปลี่ยนตัว
+        // Action states: Attack, Skill, Ultimate
+        if (CurrentStateId == PlayerStateId.Attacking || CurrentStateId == PlayerStateId.Skill || CurrentStateId == PlayerStateId.Ultimate)
+        {
+            if (CurrentState is FrameDataPlayerState fdState)
+            {
+                // Only allow switching during the Recovery phase
+                return fdState.CurrentPhase == ActionPhase.Recovery;
+            }
+        }
+
+        // All other states (Airborne, Dash, Jump, Take Damage / Hitstun, etc.) are NOT allowed
         return false;
     }
 }

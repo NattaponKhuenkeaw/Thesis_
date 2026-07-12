@@ -47,12 +47,6 @@ public class PlayerSkillState : CombatPlayerState
         if (TryConsumeAllowedBuffers()) return;
     }
 
-    protected override void HandleInputDuringCancel()
-    {
-        if (TryAutoChain()) return;
-        if (TryConsumeAllowedBuffers()) return;
-    }
-
     public override bool HandleSkillInput()
     {
         OnSkillInput();
@@ -75,7 +69,7 @@ public class PlayerSkillState : CombatPlayerState
             return;
         }
 
-        if (currentPhase == ActionPhase.Recovery || currentPhase == ActionPhase.Cancel)
+        if (currentPhase == ActionPhase.Recovery)
         {
             if (TryStartFreshSkillAction(exitOnFailure: false, requireDifferentAction: true))
             {

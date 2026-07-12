@@ -13,13 +13,14 @@ public class CharacterSwitchSlot : MonoBehaviour
     public Slider hpSlider;
     public Image hpFill;               
 
-    [Header("Aura Energy Bar")]
-    public Slider aeSlider;
-    public Image aeFill;
-
     [Header("Switch Cooldown UI")]
     public Image cooldownFill;
     public TMP_Text cooldownText;
+
+    [Header("Extra Overlays")]
+    public Image aeOverlay;
+    public Image cooldownOverlay;
+    public Image followUpOverlay;
 
     private string lastCooldownText = string.Empty;
     private bool isCooldownVisible;
@@ -105,54 +106,6 @@ public class CharacterSwitchSlot : MonoBehaviour
 
     public void RefreshEnergy(float? currentAE = null, float? maxAE = null)
     {
-        if (boundCharacter == null)
-        {
-            SetEnergyUI(0f, 100f);
-            return;
-        }
-
-        float actualCurrent = currentAE ?? 0f;
-        float actualMax = maxAE ?? 100f;
-
-        if (currentAE == null || maxAE == null)
-        {
-            TeamLoader teamLoader = hudManager != null ? hudManager.teamLoader : null;
-            if (teamLoader != null)
-            {
-                actualCurrent = teamLoader.GetCharacterCurrentAE(boundCharacter);
-                actualMax = teamLoader.GetCharacterMaxAE(boundCharacter);
-            }
-            else
-            {
-                actualMax = TeamLoader.DefaultUltimateAuraEnergyCost;
-            }
-        }
-
-        SetEnergyUI(actualCurrent, actualMax);
-    }
-
-    private void SetEnergyUI(float currentAE, float maxAE)
-    {
-        if (maxAE <= 0f)
-        {
-            if (aeSlider != null) aeSlider.value = 0f;
-            if (aeFill != null) aeFill.fillAmount = 0f;
-            return;
-        }
-
-        float normalized = Mathf.Clamp01(currentAE / maxAE);
-
-        if (aeSlider != null)
-        {
-            aeSlider.minValue = 0f;
-            aeSlider.maxValue = 1f;
-            aeSlider.value = normalized;
-        }
-
-        if (aeFill != null)
-        {
-            aeFill.fillAmount = normalized;
-        }
     }
 
     public void RefreshCooldown(float remainingCooldown, float totalCooldown)
@@ -160,6 +113,10 @@ public class CharacterSwitchSlot : MonoBehaviour
         if (totalCooldown <= 0f || remainingCooldown <= 0f)
         {
             SetCooldownVisible(false);
+            if (cooldownOverlay != null)
+            {
+                cooldownOverlay.fillAmount = 0f;
+            }
             return;
         }
 
@@ -170,6 +127,11 @@ public class CharacterSwitchSlot : MonoBehaviour
             if (!isCooldownVisible)
                 cooldownFill.gameObject.SetActive(true);
             cooldownFill.fillAmount = normalized;
+        }
+
+        if (cooldownOverlay != null)
+        {
+            cooldownOverlay.fillAmount = normalized;
         }
 
         if (cooldownText != null)
@@ -203,6 +165,59 @@ public class CharacterSwitchSlot : MonoBehaviour
 
         if (!visible)
             lastCooldownText = string.Empty;
+    }
+
+    private void Update()
+    {
+        if (boundCharacter == null) return;
+
+        TeamLoader teamLoader = hudManager != null ? hudManager.teamLoader : null;
+        if (teamLoader == null) return;
+
+        // 1. aeOverlay (0 -> 1)
+        if (aeOverlay != null)
+        {
+            float currentAE = teamLoader.GetCharacterCurrentAE(boundCharacter);
+            float maxAE = teamLoader.GetCharacterMaxAE(boundCharacter);
+            aeOverlay.fillAmount = maxAE > 0f ? Mathf.Clamp01(currentAE / maxAE) : 0f;
+        }
+
+        // 2. cooldownOverlay (1 -> 0)
+        if (cooldownOverlay != null)
+        {
+            bool isCurrent = teamLoader.CurrentCharacter == boundCharacter;
+            if (!isCurrent && teamLoader.IsSwitchOnCooldown)
+            {
+                float remaining = teamLoader.RemainingCooldown;
+                float duration = teamLoader.switchCooldownDuration;
+                cooldownOverlay.fillAmount = duration > 0f ? Mathf.Clamp01(remaining / duration) : 0f;
+            }
+            else
+            {
+                cooldownOverlay.fillAmount = 0f;
+            }
+        }
+
+        // 3. followUpOverlay (0 -> 1 representing time window remaining ratio)
+        if (followUpOverlay != null)
+        {
+            if (teamLoader.TryGetCharacterUltimateFollowUpWindow(boundCharacter, out float remaining, out float total) && total > 0f)
+            {
+                if (!followUpOverlay.gameObject.activeSelf)
+                {
+                    followUpOverlay.gameObject.SetActive(true);
+                }
+                followUpOverlay.fillAmount = Mathf.Clamp01(remaining / total);
+            }
+            else
+            {
+                if (followUpOverlay.gameObject.activeSelf)
+                {
+                    followUpOverlay.gameObject.SetActive(false);
+                }
+                followUpOverlay.fillAmount = 0f;
+            }
+        }
     }
 
     private static string FormatCooldownText(float seconds)

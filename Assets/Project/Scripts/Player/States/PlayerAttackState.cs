@@ -97,12 +97,6 @@ public class PlayerAttackState : CombatPlayerState
         if (TryConsumeAllowedBuffers()) return;
     }
 
-    protected override void HandleInputDuringCancel()
-    {
-        if (TryAutoChain()) return;
-        if (TryConsumeAllowedBuffers()) return;
-    }
-
     public override bool HandleAttackInput()
     {
         OnAttackInput();
@@ -132,7 +126,7 @@ public class PlayerAttackState : CombatPlayerState
             return;
         }
 
-        if (currentPhase == ActionPhase.Cancel || currentPhase == ActionPhase.Recovery)
+        if (currentPhase == ActionPhase.Recovery)
         {
             TryResolveNextStep();
         }

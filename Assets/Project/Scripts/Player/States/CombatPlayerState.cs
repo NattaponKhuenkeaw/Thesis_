@@ -288,6 +288,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     protected override void OnRecoveryBegin()
     {
         player.Combat?.OnRecoveryPhaseFromState();
+        TryStartCooldown();
     }
 
     protected override void OnActionComplete()
@@ -296,11 +297,6 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         resolver.Reset();
         player.Combat?.ResetCombo();
         ExitToAppropriateMovementState();
-    }
-
-    protected override void OnCancelBegin()
-    {
-        TryStartCooldown();
     }
 
     protected override void OnPhaseChanged(ActionPhase oldPhase, ActionPhase newPhase)

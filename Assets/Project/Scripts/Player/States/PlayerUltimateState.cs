@@ -56,12 +56,6 @@ public class PlayerUltimateState : CombatPlayerState
         if (TryConsumeAllowedBuffers()) return;
     }
 
-    protected override void HandleInputDuringCancel()
-    {
-        if (TryAutoChain()) return;
-        if (TryConsumeAllowedBuffers()) return;
-    }
-
     public override bool HandleUltimateInput()
     {
         OnUltimateInput();
@@ -84,14 +78,14 @@ public class PlayerUltimateState : CombatPlayerState
             return;
         }
 
-        if (currentPhase == ActionPhase.Recovery || currentPhase == ActionPhase.Cancel)
+        if (currentPhase == ActionPhase.Recovery)
         {
             if (TryStartFreshUltimateAction(exitOnFailure: false, requireDifferentAction: true, endCurrentActionBeforePreview: true))
             {
                 return;
             }
 
-            if (currentPhase == ActionPhase.Cancel && player.Combat != null && player.Combat.IsAttacking())
+            if (player.Combat != null && player.Combat.IsAttacking())
             {
                 TryResolveNextUltimateStep();
             }
@@ -253,13 +247,4 @@ public class PlayerUltimateState : CombatPlayerState
         }
     }
 
-    protected override void OnCancelBegin()
-    {
-        base.OnCancelBegin();
-        if (player != null)
-        {
-            player.IsUltimateInvulnerable = false;
-            player.HasSuperArmor = false;
-        }
-    }
 }

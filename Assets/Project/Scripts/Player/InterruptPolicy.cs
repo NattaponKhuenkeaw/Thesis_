@@ -65,7 +65,6 @@ public struct InterruptPolicy
         ActionPhase.Startup  => startup,
         ActionPhase.Active   => active,
         ActionPhase.Recovery => recovery,
-        ActionPhase.Cancel   => cancel,
         _ => ActionCategory.None
     };
 
@@ -74,7 +73,6 @@ public struct InterruptPolicy
         ActionPhase.Startup  => startupGate,
         ActionPhase.Active   => activeGate,
         ActionPhase.Recovery => recoveryGate,
-        ActionPhase.Cancel   => cancelGate,
         _ => InputGate.None
     };
 

@@ -42,7 +42,10 @@ public class CharacterPassiveController : MonoBehaviour
 
     void Update()
     {
-        runtimeState?.Tick();
+        if (TeamLoader.Instance == null)
+        {
+            runtimeState?.Tick();
+        }
     }
 
     public void SetMetaProgression(PlayerMetaProgression progression)
@@ -54,7 +57,14 @@ public class CharacterPassiveController : MonoBehaviour
     public void InitializeFromCharacterData()
     {
         ResolveMetaProgression();
-        runtimeState.Reset();
+        if (TeamLoader.Instance != null && playerCharacter != null && playerCharacter.characterObject != null)
+        {
+            runtimeState = TeamLoader.Instance.GetCharacterCombatRuntimeState(playerCharacter.characterObject);
+        }
+        else
+        {
+            runtimeState.Reset();
+        }
         runtimeTagHitTargets.Clear();
         RebuildHooks();
         RefreshConditionalStateEffects();

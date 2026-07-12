@@ -1,9 +1,9 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class BackgroundUltimateExecutor : MonoBehaviour
+public class PlayerTeamSwitchState : MonoBehaviour
 {
-    private AttackStepData ultimateStep;
+    private AttackStepData actionStep;
     private int currentFrame;
     private int facingDirection;
     private CharacterStats castingStats;
@@ -19,6 +19,7 @@ public class BackgroundUltimateExecutor : MonoBehaviour
     private string sourceActionId;
     private string sourceActionName;
     private GameObject visualClone;
+    private AttackCategory attackCategory;
 
     private HitBoxDamage cloneHitboxDamage;
     private Collider2D cloneCollider;
@@ -29,7 +30,7 @@ public class BackgroundUltimateExecutor : MonoBehaviour
     private float logicTimeCounter = 0f;
     private const float LOGIC_FPS = 60f;
 
-    public static BackgroundUltimateExecutor Spawn(
+    public static PlayerTeamSwitchState Spawn(
         GameObject playerGameObject,
         AttackStepData currentStep,
         int currentFrame,
@@ -39,13 +40,81 @@ public class BackgroundUltimateExecutor : MonoBehaviour
         CharacterObject castingCharacter,
         string actionName,
         Sprite currentSprite,
-        RuntimeAnimatorController animController)
+        RuntimeAnimatorController animController,
+        AttackCategory category)
     {
-        GameObject executorGo = new GameObject("BackgroundUltimateExecutor_" + (castingCharacter.metaData != null ? castingCharacter.metaData.displayName : "Clone"));
+        GameObject executorGo = new GameObject("PlayerTeamSwitchState_" + (castingCharacter.metaData != null ? castingCharacter.metaData.displayName : "Clone"));
         executorGo.transform.position = playerGameObject.transform.position;
         executorGo.transform.rotation = playerGameObject.transform.rotation;
 
-        BackgroundUltimateExecutor executor = executorGo.AddComponent<BackgroundUltimateExecutor>();
+        // Copy Rigidbody2D velocity to preserve the motion trajectory
+        Rigidbody2D playerRb = playerGameObject.GetComponent<Rigidbody2D>();
+        if (playerRb != null)
+        {
+            Rigidbody2D cloneRb = executorGo.AddComponent<Rigidbody2D>();
+            cloneRb.bodyType = RigidbodyType2D.Dynamic;
+            cloneRb.gravityScale = playerRb.gravityScale;
+            cloneRb.linearVelocity = playerRb.linearVelocity;
+            cloneRb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            cloneRb.sharedMaterial = playerRb.sharedMaterial;
+        }
+
+        // Copy Colliders to preserve physical behavior (ground checks, wall collision)
+        Collider2D[] playerColliders = playerGameObject.GetComponentsInChildren<Collider2D>();
+        List<Collider2D> clonedColliders = new List<Collider2D>();
+        foreach (var col in playerColliders)
+        {
+            if (col == null || col.isTrigger) continue; // Skip trigger colliders (like hitboxes/hurtboxes)
+
+            Collider2D cloneCol = null;
+            if (col is BoxCollider2D box)
+            {
+                BoxCollider2D cloneBox = executorGo.AddComponent<BoxCollider2D>();
+                cloneBox.offset = box.offset;
+                cloneBox.size = box.size;
+                cloneBox.sharedMaterial = box.sharedMaterial;
+                cloneBox.isTrigger = false;
+                cloneCol = cloneBox;
+            }
+            else if (col is CircleCollider2D circle)
+            {
+                CircleCollider2D cloneCircle = executorGo.AddComponent<CircleCollider2D>();
+                cloneCircle.offset = circle.offset;
+                cloneCircle.radius = circle.radius;
+                cloneCircle.sharedMaterial = circle.sharedMaterial;
+                cloneCircle.isTrigger = false;
+                cloneCol = cloneCircle;
+            }
+            else if (col is CapsuleCollider2D capsule)
+            {
+                CapsuleCollider2D cloneCapsule = executorGo.AddComponent<CapsuleCollider2D>();
+                cloneCapsule.offset = capsule.offset;
+                cloneCapsule.size = capsule.size;
+                cloneCapsule.direction = capsule.direction;
+                cloneCapsule.sharedMaterial = capsule.sharedMaterial;
+                cloneCapsule.isTrigger = false;
+                cloneCol = cloneCapsule;
+            }
+
+            if (cloneCol != null)
+            {
+                clonedColliders.Add(cloneCol);
+            }
+        }
+
+        // Ignore collision between all cloned colliders and all player colliders
+        foreach (var cloneCol in clonedColliders)
+        {
+            foreach (var playerCol in playerColliders)
+            {
+                if (playerCol != null)
+                {
+                    Physics2D.IgnoreCollision(cloneCol, playerCol, true);
+                }
+            }
+        }
+
+        PlayerTeamSwitchState executor = executorGo.AddComponent<PlayerTeamSwitchState>();
         executor.Initialize(
             currentStep,
             currentFrame,
@@ -63,11 +132,12 @@ public class BackgroundUltimateExecutor : MonoBehaviour
             sourceCombat != null ? sourceCombat.CurrentActionId : null,
             sourceCombat != null ? sourceCombat.CurrentActionName : actionName,
             currentSprite,
-            animController);
+            animController,
+            category);
         return executor;
     }
 
-    /// <summary>Initializes and starts the background ultimate simulation.</summary>
+    /// <summary>Initializes and starts the background action simulation.</summary>
     public void Initialize(
         AttackStepData step,
         int startFrame,
@@ -85,9 +155,10 @@ public class BackgroundUltimateExecutor : MonoBehaviour
         string resolvedSourceActionId,
         string resolvedSourceActionName,
         Sprite characterSprite,
-        RuntimeAnimatorController animatorController)
+        RuntimeAnimatorController animatorController,
+        AttackCategory category)
     {
-        ultimateStep = step;
+        actionStep = step;
         currentFrame = startFrame;
         facingDirection = facing;
         castingStats = stats;
@@ -103,9 +174,11 @@ public class BackgroundUltimateExecutor : MonoBehaviour
         sourceCharacter = resolvedSourceCharacter;
         sourceActionId = resolvedSourceActionId;
         sourceActionName = resolvedSourceActionName;
+        attackCategory = category;
 
-        // Set local scale for facing direction
-        transform.localScale = new Vector3(facingDirection, 1f, 1f);
+        // Set Y rotation for facing direction (since player flips via Y rotation)
+        transform.rotation = Quaternion.Euler(0f, facingDirection == -1 ? 180f : 0f, 0f);
+        transform.localScale = Vector3.one;
 
         // Create visual clone
         visualClone = new GameObject("VisualClone");
@@ -162,38 +235,61 @@ public class BackgroundUltimateExecutor : MonoBehaviour
 
     private void AdvanceFrames(float deltaTime)
     {
-        if (ultimateStep == null) return;
+        if (actionStep == null) return;
 
         logicTimeCounter += deltaTime;
         int targetFrame = Mathf.FloorToInt(logicTimeCounter * LOGIC_FPS + 0.001f);
 
+        bool frameSequenceDone = false;
         while (currentFrame < targetFrame)
         {
             currentFrame++;
-            ActionPhase currentPhase = ultimateStep.GetPhase(currentFrame);
+            ActionPhase currentPhase = actionStep.GetPhase(currentFrame);
 
             if (currentPhase == ActionPhase.Done)
             {
-                Terminate();
+                frameSequenceDone = true;
                 break;
             }
 
-            int logicFrame = ultimateStep.GetLogicFrame(currentFrame);
+            int logicFrame = actionStep.GetLogicFrame(currentFrame);
             ProcessLogicFrame(logicFrame, currentPhase);
+        }
+
+        if (frameSequenceDone)
+        {
+            bool animatorDone = true;
+            if (visualClone != null)
+            {
+                Animator anim = visualClone.GetComponent<Animator>();
+                if (anim != null && anim.runtimeAnimatorController != null && !anim.IsInTransition(0))
+                {
+                    AnimatorStateInfo stateInfo = anim.GetCurrentAnimatorStateInfo(0);
+                    if (!stateInfo.loop && stateInfo.normalizedTime < 1.0f)
+                    {
+                        animatorDone = false;
+                    }
+                }
+            }
+
+            if (animatorDone)
+            {
+                Terminate();
+            }
         }
     }
 
     /// <summary>Processes hitboxes, spawns VFX, and applies damage formulas.</summary>
     private void ProcessLogicFrame(int frame, ActionPhase phase)
     {
-        if (ultimateStep == null) return;
+        if (actionStep == null) return;
 
-        int frameInActivePhase = frame - ultimateStep.startupFrames - 1;
-        if (phase == ActionPhase.Active && ultimateStep.hitData != null && ultimateStep.hitData.hitboxes != null)
+        int frameInActivePhase = frame - actionStep.startupFrames - 1;
+        if (phase == ActionPhase.Active && actionStep.hitData != null && actionStep.hitData.hitboxes != null)
         {
-            for (int i = 0; i < ultimateStep.hitData.hitboxes.Count; i++)
+            for (int i = 0; i < actionStep.hitData.hitboxes.Count; i++)
             {
-                HitboxBase hitbox = ultimateStep.hitData.hitboxes[i];
+                HitboxBase hitbox = actionStep.hitData.hitboxes[i];
                 if (hitbox == null) continue;
 
                 if (frameInActivePhase == hitbox.startFrameOffset)
@@ -238,9 +334,9 @@ public class BackgroundUltimateExecutor : MonoBehaviour
                     0f,
                     0f,
                     normalHitbox,
-                    AttackCategory.Ultimate,
-                    sourceActionName ?? ultimateStep.stepName,
-                    ultimateStep,
+                    attackCategory,
+                    sourceActionName ?? actionStep.stepName,
+                    actionStep,
                     null,
                     sourceActionId);
                 ConfigurePerEnemyDamageCalculation(cloneHitboxDamage);
@@ -289,7 +385,7 @@ public class BackgroundUltimateExecutor : MonoBehaviour
             {
                 cloneHitboxDamage?.ProcessHit(enemy);
             }
-            overlapResults[i] = null; // Prevent memory leak of Unity GameObjects
+            overlapResults[i] = null;
         }
     }
 

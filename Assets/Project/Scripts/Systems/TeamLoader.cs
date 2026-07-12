@@ -46,6 +46,18 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     [SerializeField] private float lastSwitchTime = -999f;
 
     private readonly Dictionary<CharacterObject, CharacterStats> characterRuntimeStats = new Dictionary<CharacterObject, CharacterStats>();
+    private readonly Dictionary<CharacterObject, CombatRuntimeState> characterCombatRuntimeStates = new Dictionary<CharacterObject, CombatRuntimeState>();
+
+    public CombatRuntimeState GetCharacterCombatRuntimeState(CharacterObject character)
+    {
+        if (character == null) return null;
+        if (!characterCombatRuntimeStates.TryGetValue(character, out var state) || state == null)
+        {
+            state = new CombatRuntimeState();
+            characterCombatRuntimeStates[character] = state;
+        }
+        return state;
+    }
     private CharacterObject[] teamSnapshot = Array.Empty<CharacterObject>();
     private PlayerRunInventory subscribedRuntimeEffectInventory;
     private bool isReconcilingAlwaysRuntimeEffects;
@@ -98,6 +110,10 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     private void Update()
     {
         runInventory?.TickRuntimeEffects(Time.deltaTime);
+        foreach (var state in characterCombatRuntimeStates.Values)
+        {
+            state?.Tick();
+        }
     }
 
     public CharacterObject[] GetTeamSnapshot()
@@ -225,16 +241,51 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
         if (playerCharacter != null
             && playerCharacter.StateMachine != null
-            && playerCharacter.StateMachine.CurrentStateId == PlayerStateId.Ultimate)
+            && (playerCharacter.StateMachine.CurrentStateId == PlayerStateId.Attacking
+                || playerCharacter.StateMachine.CurrentStateId == PlayerStateId.Skill
+                || playerCharacter.StateMachine.CurrentStateId == PlayerStateId.Ultimate))
         {
-            SpawnBackgroundUltimateExecutor();
+            SpawnPlayerTeamSwitchClone();
+            if (GameFreezeManager.Instance != null)
+            {
+                GameFreezeManager.Instance.PlaySlowMotion(0.5f, 0.5f);
+            }
         }
 
         currentIndex = index;
         runInventory?.SetActiveTeamSlotIndex(currentIndex);
         lastSwitchTime = Time.time;
         LoadCurrentCharacter();
+        SnapPlayerToGround();
         return true;
+    }
+
+    private void SnapPlayerToGround()
+    {
+        if (playerCharacter == null) return;
+
+        LayerMask groundMask = LayerMask.GetMask("Ground");
+        if (playerCharacter.Movement != null)
+        {
+            groundMask = playerCharacter.Movement.groundLayer;
+        }
+
+        Vector2 origin = playerCharacter.transform.position;
+        origin.y += 0.5f;
+
+        RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, 5f, groundMask);
+        if (hit.collider != null)
+        {
+            Vector3 pos = playerCharacter.transform.position;
+            pos.y = hit.point.y;
+            playerCharacter.transform.position = pos;
+
+            Rigidbody2D rb = playerCharacter.GetComponent<Rigidbody2D>();
+            if (rb != null)
+            {
+                rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+            }
+        }
     }
 
     public bool ContainsCharacter(CharacterObject character)
@@ -245,6 +296,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     public void DeployLoadout(CharacterObject[] newTeam, int preferredIndex, Artifact[][] artifactData = null)
     {
+        characterCombatRuntimeStates.Clear();
         if (newTeam == null)
         {
             return;
@@ -315,6 +367,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     public void RefreshRuntimeState()
     {
+        characterCombatRuntimeStates.Clear();
         SyncTeamSnapshotFromInventory();
         ReconcileAlwaysRuntimeEffects();
         RebuildRuntimeStats();
@@ -1212,15 +1265,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     private CombatRuntimeState ResolveRuntimeState(CharacterObject sourceCharacter)
     {
-        if (sourceCharacter == null
-            || playerCharacter == null
-            || playerCharacter.characterObject != sourceCharacter
-            || playerCharacter.PassiveController == null)
-        {
-            return null;
-        }
-
-        return playerCharacter.PassiveController.RuntimeState;
+        return GetCharacterCombatRuntimeState(sourceCharacter);
     }
 
 
@@ -1380,20 +1425,34 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         return highestCost > 0f ? highestCost : DefaultUltimateAuraEnergyCost;
     }
 
-    private void SpawnBackgroundUltimateExecutor()
+    private void SpawnPlayerTeamSwitchClone()
     {
-        if (playerCharacter == null)
+        if (playerCharacter == null || playerCharacter.StateMachine == null)
         {
             return;
         }
 
-        PlayerUltimateState ultimateState = playerCharacter.StateMachine?.UltimateState;
-        if (ultimateState == null)
+        PlayerStateId stateId = playerCharacter.StateMachine.CurrentStateId;
+        FrameDataPlayerState activeState = null;
+        AttackCategory category = AttackCategory.Normal;
+
+        if (stateId == PlayerStateId.Ultimate)
         {
-            return;
+            activeState = playerCharacter.StateMachine.UltimateState;
+            category = AttackCategory.Ultimate;
+        }
+        else if (stateId == PlayerStateId.Skill)
+        {
+            activeState = playerCharacter.StateMachine.SkillState;
+            category = AttackCategory.Skill;
+        }
+        else if (stateId == PlayerStateId.Attacking)
+        {
+            activeState = playerCharacter.StateMachine.AttackState;
+            category = AttackCategory.Normal;
         }
 
-        if (playerCharacter.StateMachine.CurrentStateId != PlayerStateId.Ultimate)
+        if (activeState == null)
         {
             return;
         }
@@ -1404,7 +1463,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             return;
         }
 
-        int currentFrame = ultimateState.CurrentFrame;
+        int currentFrame = activeState.CurrentFrame;
         int facing = playerCharacter.Movement != null ? playerCharacter.Movement.FacingDirection : 1;
 
         CharacterObject castingCharacter = playerCharacter.characterObject;
@@ -1427,7 +1486,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             ? castingCharacter.metaData.animatorController
             : null;
 
-        BackgroundUltimateExecutor.Spawn(
+        PlayerTeamSwitchState.Spawn(
             playerCharacter.gameObject,
             currentStep,
             currentFrame,
@@ -1437,7 +1496,77 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             castingCharacter,
             currentStep.stepName,
             currentSprite,
-            animController);
+            animController,
+            category);
+    }
+
+    public bool TryGetCharacterUltimateFollowUpWindow(CharacterObject character, out float remainingSeconds, out float durationSeconds)
+    {
+        remainingSeconds = 0f;
+        durationSeconds = 0f;
+        if (character == null || character.kitDefinition == null || metaProgression == null) return false;
+
+        CombatRuntimeState runtimeState = GetCharacterCombatRuntimeState(character);
+        if (runtimeState == null) return false;
+
+        bool foundWindow = false;
+        foreach (var node in character.kitDefinition.potentialNodes)
+        {
+            if (node == null) continue;
+
+            int unlockedLevel = metaProgression.GetPotentialLevel(character, node.track);
+            if (unlockedLevel < node.level) continue;
+
+            List<PassiveActionModifierDefinition> modifiers = node.actionModifiers;
+            if (modifiers == null) continue;
+
+            for (int i = 0; i < modifiers.Count; i++)
+            {
+                PassiveActionModifierDefinition modifier = modifiers[i];
+                if (modifier == null
+                    || !modifier.unlocked
+                    || modifier.category != AttackCategory.Ultimate
+                    || modifier.requiredTags == null
+                    || modifier.requiredTags.Count == 0)
+                {
+                    continue;
+                }
+
+                float candidateRemaining = 0f;
+                float candidateDuration = 0f;
+                bool hasTimedRequirement = false;
+
+                for (int reqIdx = 0; reqIdx < modifier.requiredTags.Count; reqIdx++)
+                {
+                    var requirement = modifier.requiredTags[reqIdx];
+                    if (requirement == null
+                        || !requirement.expectedValue
+                        || string.IsNullOrWhiteSpace(requirement.tag)
+                        || !runtimeState.TryGetTagTiming(requirement.tag, out float tagRemaining, out float tagDuration))
+                    {
+                        continue;
+                    }
+
+                    if (!hasTimedRequirement || tagRemaining < candidateRemaining)
+                    {
+                        candidateRemaining = tagRemaining;
+                        candidateDuration = tagDuration;
+                    }
+                    hasTimedRequirement = true;
+                }
+
+                if (!hasTimedRequirement || candidateRemaining <= remainingSeconds)
+                {
+                    continue;
+                }
+
+                remainingSeconds = candidateRemaining;
+                durationSeconds = Mathf.Max(candidateDuration, candidateRemaining);
+                foundWindow = true;
+            }
+        }
+
+        return foundWindow;
     }
 
     private void OnDestroy()
