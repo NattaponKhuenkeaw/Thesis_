@@ -372,6 +372,10 @@ public abstract class RuntimeEffectDefinition : ScriptableObject
     [HideInInspector]
     public bool stackable = false;
 
+    [Min(1)]
+    [Tooltip("Default max stack count when this effect stacks and no recipe or passive override supplies a stack limit.")]
+    public int stackLimit = 1;
+
     [HideInInspector]
     public bool removeOnOwnerDamaged = false;
 

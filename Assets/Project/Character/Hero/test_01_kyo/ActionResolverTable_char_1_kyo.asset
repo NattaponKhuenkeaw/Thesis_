@@ -453,8 +453,8 @@ MonoBehaviour:
       data:
         stepData:
           startupFrames: 1
-          activeFrames: 76
-          recoveryFrames: 13
+          activeFrames: 88
+          recoveryFrames: 1
           cancelWindowStartFrame: 100
           loopActivePhase: 0
           stepName: 212 Shiki Kototsuki You

@@ -443,7 +443,7 @@ MonoBehaviour:
         knockupFrames: 17
         knockfallFrames: 20
         recoveryFrames: 9
-        horizontalSpeed: 6
+        horizontalSpeed: 7
         launchSpeed: 4
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
@@ -513,7 +513,7 @@ MonoBehaviour:
           endFrame: 25
           taskType: 0
           easing: 1
-          position: {x: 2, y: 0, z: 0}
+          position: {x: 2.5, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
         - startFrame: 38

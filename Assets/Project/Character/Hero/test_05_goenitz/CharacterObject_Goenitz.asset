@@ -690,8 +690,8 @@ MonoBehaviour:
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
         recipe:
-          recipeId: 
-          definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
+          recipeId: echo.resistance
+          definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
           presentation:
             effectId: 
             displayName: Decrease Echo DMG Resistence
@@ -702,12 +702,12 @@ MonoBehaviour:
             appliesOn: 1
             durationType: 0
             durationSeconds: 10
-            stackMode: 2
+            stackMode: 1
             stackLimit: 1
             refreshDurationOnReapply: 1
-            stackable: 0
+            stackable: 1
             removeOnOwnerDamaged: 0
-            stackKey: 
+            stackKey: echo.resistance.2
           parameters:
             overrideStatModifiers: 0
             statModifiers: []
@@ -1599,7 +1599,7 @@ MonoBehaviour:
         consumeRuntimeTagOnApply: 0
         recipe:
           recipeId: 
-          definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
+          definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
           presentation:
             effectId: 
             displayName: Decrease Echo Resistance
@@ -1613,9 +1613,9 @@ MonoBehaviour:
             stackMode: 0
             stackLimit: 1
             refreshDurationOnReapply: 1
-            stackable: 0
+            stackable: 1
             removeOnOwnerDamaged: 0
-            stackKey: 
+            stackKey: echo.resistance
           parameters:
             overrideStatModifiers: 0
             statModifiers: []
@@ -1717,7 +1717,7 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: goenitz.passive.lv1
       nodeName: Echo Scar
-      description: Critical hits reduce enemy Echo resistance by 15%.
+      description: Critical hits reduce enemy Echo resistance by 15%
       skillPanelDescriptionOverride: 'There 35% chance to <b>Evade</b> Incoming attack
         from enemy
 
@@ -1756,7 +1756,7 @@ MonoBehaviour:
         chance: 1
         internalCooldown: 0
         criticalHitRequirement: 0
-        attackRatio: 2
+        attackRatio: 2.5
         sourceStatDamageSource: 0
         sourceStatRatio: 0
         targetMaxHpRatio: 0
@@ -1769,6 +1769,14 @@ MonoBehaviour:
         targetMaxHpDamageCapRatio: 1
         elementType: 2
         consumeRuntimeTagOnTrigger: 0
+        overrideDetectionBox: 0
+        detectionBoxSize: {x: 10, y: 10}
+        startDelaySeconds: 0
+        activeSeconds: 0
+        scanIntervalSeconds: 0
+        requireDashInvulnerability: 0
+        hitEachEnemyOnce: 0
+        maxTargetsPerDash: 0
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []

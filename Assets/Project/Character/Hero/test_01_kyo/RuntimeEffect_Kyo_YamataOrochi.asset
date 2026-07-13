@@ -22,6 +22,7 @@ MonoBehaviour:
   durationSeconds: 10
   refreshDurationOnReapply: 1
   stackable: 0
+  stackLimit: 1
   removeOnOwnerDamaged: 0
   effects:
   - {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}

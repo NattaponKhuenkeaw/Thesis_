@@ -768,12 +768,12 @@ MonoBehaviour:
       dashThroughDamageEffects: []
       defensiveEffects: []
       resourceEffects:
-      - trigger: 2
+      - trigger: 3
         filter:
           filterByCategory: 1
           category: 2
-          filterByActionId: 0
-          actionId: 
+          filterByActionId: 1
+          actionId: rugal.ultimate
           filterByActionName: 0
           actionName: 
           filterByStepName: 0

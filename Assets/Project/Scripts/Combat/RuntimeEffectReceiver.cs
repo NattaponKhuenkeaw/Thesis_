@@ -44,7 +44,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
         CharacterStats sourceStats,
         float durationOverride = -1f,
         RuntimeEffectStackMode stackMode = RuntimeEffectStackMode.UseDefinition,
-        int stackLimit = 1,
+        int stackLimit = 0,
         bool refreshDurationOnReapply = true)
     {
         return ApplyEffectInternal(
@@ -161,9 +161,12 @@ public class RuntimeEffectReceiver : MonoBehaviour
 
         CacheTargets();
 
+        int fallbackStackLimit = stackLimit > 0
+            ? stackLimit
+            : RuntimeEffectRuntimeUtility.GetDefaultStackLimit(definition);
         int resolvedStackLimit = stackLimitOverride > 0
             ? stackLimitOverride
-            : RuntimeEffectRuntimeUtility.GetStackLimit(recipe, stackLimit);
+            : RuntimeEffectRuntimeUtility.GetStackLimit(recipe, fallbackStackLimit);
         bool resolvedRefreshDuration = RuntimeEffectRuntimeUtility.GetRefreshDurationOnReapply(recipe, refreshDurationOnReapply);
         bool effectRequiresTicking = RuntimeEffectRuntimeUtility.RequiresTicking(definition, recipe);
         float resolvedDuration = RuntimeEffectRuntimeUtility.ResolveDuration(definition, recipe, durationOverride);

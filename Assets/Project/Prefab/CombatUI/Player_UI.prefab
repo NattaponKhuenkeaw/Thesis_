@@ -1470,6 +1470,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5431726527385925260}
     m_Modifications:
+    - target: {fileID: 1444312140988332499, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1449895029844726071, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1935851107303064062, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -1501,6 +1509,10 @@ PrefabInstance:
     - target: {fileID: 3661211315963838035, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3928755608750267788, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
+      propertyPath: m_Interactable
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4371461661466285017, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
       propertyPath: m_AnchorMax.y
@@ -1517,6 +1529,30 @@ PrefabInstance:
     - target: {fileID: 4371461661466285017, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: -103.582306
+      objectReference: {fileID: 0}
+    - target: {fileID: 4779650180640801238, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
+      propertyPath: m_Interactable
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5496118082732689203, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5523567073823956169, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
+      propertyPath: m_Interactable
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6122467469128006730, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
+      propertyPath: m_Color.a
+      value: 0.5882353
+      objectReference: {fileID: 0}
+    - target: {fileID: 6122467469128006730, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
+      propertyPath: m_Color.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6122467469128006730, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6557959174119603048, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
       propertyPath: m_Name
@@ -1610,6 +1646,22 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7242668172304897699, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 2.5002
+      objectReference: {fileID: 0}
+    - target: {fileID: 7242668172304897699, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -1.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 7320618537058384519, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7368363962538249270, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7991346106435724073, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -1624,6 +1676,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7991346106435724073, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
       propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8607283110506973882, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
+      propertyPath: m_Name
+      value: HPLerp_Slide
+      objectReference: {fileID: 0}
+    - target: {fileID: 8717301110958518982, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}
+      propertyPath: m_RaycastTarget
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9138396072491808997, guid: 7377c21404010ab4baea115f5f29a1c7, type: 3}

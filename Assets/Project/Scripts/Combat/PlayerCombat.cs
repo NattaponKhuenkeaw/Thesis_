@@ -540,12 +540,17 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public float GetRemainingCooldown(AttackCategory category, float cooldown, string actionName = null, string actionId = null)
     {
         CharacterObject activeChar = playerCharacter != null ? playerCharacter.characterObject : null;
+        return GetRemainingCooldownForCharacter(activeChar, category, cooldown, actionName, actionId);
+    }
+
+    public float GetRemainingCooldownForCharacter(CharacterObject character, AttackCategory category, float cooldown, string actionName = null, string actionId = null)
+    {
         bool hasSpecificAction = !string.IsNullOrWhiteSpace(actionName) || !string.IsNullOrWhiteSpace(actionId);
 
         string normalizedActionName = !string.IsNullOrWhiteSpace(actionId)
             ? actionId
             : string.IsNullOrWhiteSpace(actionName) ? "Default" : actionName;
-        CooldownKey actionKey = new CooldownKey(activeChar, category, normalizedActionName);
+        CooldownKey actionKey = new CooldownKey(character, category, normalizedActionName);
 
         if (lastActionUseTime.TryGetValue(actionKey, out float actionUseTime))
         {
@@ -557,7 +562,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             return 0f;
         }
 
-        CooldownKey categoryKey = new CooldownKey(activeChar, category);
+        CooldownKey categoryKey = new CooldownKey(character, category);
         if (!lastCategoryUseTime.TryGetValue(categoryKey, out float useTime))
         {
             return 0f;

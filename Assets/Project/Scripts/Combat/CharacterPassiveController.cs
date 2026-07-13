@@ -1616,7 +1616,7 @@ public class CharacterPassiveController : MonoBehaviour
                 sourceStats,
                 effect.durationOverride,
                 effect.stackMode,
-                effect.stackLimit,
+                stackLimitOverride > 0 ? stackLimitOverride : effect.stackLimit,
                 effect.refreshDurationOnReapply);
         }
 
@@ -1633,7 +1633,7 @@ public class CharacterPassiveController : MonoBehaviour
         RuntimeEffectRecipe recipe = effect.ResolvedRecipe;
         int result = recipe != null
             ? RuntimeEffectRuntimeUtility.GetStackLimit(recipe, effect.stackLimit)
-            : Mathf.Max(1, effect.stackLimit);
+            : Mathf.Max(RuntimeEffectRuntimeUtility.GetDefaultStackLimit(effect.ResolvedEffect), effect.stackLimit);
         string definitionId = effect.ResolvedEffect.StableId;
         string stableId = RuntimeEffectRuntimeUtility.GetStableId(effect.ResolvedEffect, recipe);
         string stackKey = RuntimeEffectRuntimeUtility.GetStackKey(effect.ResolvedEffect, recipe);

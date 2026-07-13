@@ -760,6 +760,19 @@ public class PassiveOnHitStatusEffectDefinition
 [Serializable]
 public class PassiveDashThroughDamageDefinition : AdditionalDamageEffectDefinition
 {
+    [Header("Dash Detection")]
+    [Tooltip("When disabled, PlayerCombat dashThroughDamageBoxSize is used as a fallback.")]
+    public bool overrideDetectionBox = false;
+    public Vector2 detectionBoxSize = new Vector2(1.8f, 2.4f);
+    [Min(0f)] public float startDelaySeconds = 0f;
+    [Tooltip("0 means stay active for the whole dash.")]
+    [Min(0f)] public float activeSeconds = 0f;
+    [Tooltip("0 means scan every frame.")]
+    [Min(0f)] public float scanIntervalSeconds = 0f;
+    public bool requireDashInvulnerability = true;
+    public bool hitEachEnemyOnce = true;
+    [Tooltip("0 means no target cap for this dash.")]
+    [Min(0)] public int maxTargetsPerDash = 0;
 }
 
 [Serializable]

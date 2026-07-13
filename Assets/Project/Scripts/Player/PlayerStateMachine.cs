@@ -650,7 +650,7 @@ public class PlayerStateMachine : MonoBehaviour
     }
 
 
-    public bool CanSwitchCharacter()
+    public bool CanSwitchCharacter(int framesThreshold = 2)
     {
         if (teamLoader != null && teamLoader.IsSwitchOnCooldown)
             return false;
@@ -672,8 +672,18 @@ public class PlayerStateMachine : MonoBehaviour
         {
             if (CurrentState is FrameDataPlayerState fdState)
             {
-                // Only allow switching during the Recovery phase
-                return fdState.CurrentPhase == ActionPhase.Recovery;
+                // If the current step is an auto-chain step, do not allow switching.
+                if (playerCharacter != null && playerCharacter.Combat != null)
+                {
+                    AttackStepData step = playerCharacter.Combat.GetCurrentStepData();
+                    if (step != null && step.autoChainToNext)
+                    {
+                        return false;
+                    }
+                }
+
+                // Allow switching during recovery or framesThreshold before it starts
+                return fdState.IsInRecoveryOrNearIt(framesThreshold);
             }
         }
 

@@ -16,11 +16,13 @@ public class CharacterSwitchSlot : MonoBehaviour
     [Header("Switch Cooldown UI")]
     public Image cooldownFill;
     public TMP_Text cooldownText;
+    public GameObject unavailableOverlay;
 
     [Header("Extra Overlays")]
     public Image aeOverlay;
     public Image cooldownOverlay;
     public Image followUpOverlay;
+    [SerializeField] private GameObject aeGaugeVisual;
 
     private string lastCooldownText = string.Empty;
     private bool isCooldownVisible;
@@ -113,10 +115,6 @@ public class CharacterSwitchSlot : MonoBehaviour
         if (totalCooldown <= 0f || remainingCooldown <= 0f)
         {
             SetCooldownVisible(false);
-            if (cooldownOverlay != null)
-            {
-                cooldownOverlay.fillAmount = 0f;
-            }
             return;
         }
 
@@ -127,11 +125,6 @@ public class CharacterSwitchSlot : MonoBehaviour
             if (!isCooldownVisible)
                 cooldownFill.gameObject.SetActive(true);
             cooldownFill.fillAmount = normalized;
-        }
-
-        if (cooldownOverlay != null)
-        {
-            cooldownOverlay.fillAmount = normalized;
         }
 
         if (cooldownText != null)
@@ -174,23 +167,54 @@ public class CharacterSwitchSlot : MonoBehaviour
         TeamLoader teamLoader = hudManager != null ? hudManager.teamLoader : null;
         if (teamLoader == null) return;
 
-        // 1. aeOverlay (0 -> 1)
-        if (aeOverlay != null)
+        bool isCurrent = teamLoader.CurrentCharacter == boundCharacter;
+
+        // 1. aeGaugeVisual and aeOverlay (0 -> 1)
+        if (aeGaugeVisual != null)
         {
-            float currentAE = teamLoader.GetCharacterCurrentAE(boundCharacter);
-            float maxAE = teamLoader.GetCharacterMaxAE(boundCharacter);
-            aeOverlay.fillAmount = maxAE > 0f ? Mathf.Clamp01(currentAE / maxAE) : 0f;
+            aeGaugeVisual.SetActive(!isCurrent);
         }
 
-        // 2. cooldownOverlay (1 -> 0)
+        if (aeOverlay != null)
+        {
+            if (isCurrent && aeGaugeVisual == null)
+            {
+                aeOverlay.gameObject.SetActive(false);
+            }
+            else
+            {
+                if (aeGaugeVisual == null)
+                {
+                    aeOverlay.gameObject.SetActive(true);
+                }
+                
+                if (!isCurrent)
+                {
+                    float currentAE = teamLoader.GetCharacterCurrentAE(boundCharacter);
+                    float maxAE = teamLoader.GetCharacterMaxAE(boundCharacter);
+                    aeOverlay.fillAmount = maxAE > 0f ? Mathf.Clamp01(currentAE / maxAE) : 0f;
+                }
+            }
+        }
+
+        // 2. cooldownOverlay (1 -> 0) FOR ULTIMATE COOLDOWN
         if (cooldownOverlay != null)
         {
-            bool isCurrent = teamLoader.CurrentCharacter == boundCharacter;
-            if (!isCurrent && teamLoader.IsSwitchOnCooldown)
+            float ultRemaining = 0f;
+            float ultDuration = 0f;
+            if (boundCharacter.actionResolverTable != null && boundCharacter.actionResolverTable.ultimateActions != null && boundCharacter.actionResolverTable.ultimateActions.Count > 0)
             {
-                float remaining = teamLoader.RemainingCooldown;
-                float duration = teamLoader.switchCooldownDuration;
-                cooldownOverlay.fillAmount = duration > 0f ? Mathf.Clamp01(remaining / duration) : 0f;
+                var ultAction = boundCharacter.actionResolverTable.ultimateActions[0];
+                ultDuration = ultAction.cooldown;
+                if (PlayerCharacter.Instance != null && PlayerCharacter.Instance.Combat != null)
+                {
+                    ultRemaining = PlayerCharacter.Instance.Combat.GetRemainingCooldownForCharacter(boundCharacter, AttackCategory.Ultimate, ultDuration, ultAction.actionName, ultAction.actionId);
+                }
+            }
+            
+            if (ultDuration > 0f && ultRemaining > 0f)
+            {
+                cooldownOverlay.fillAmount = Mathf.Clamp01(ultRemaining / ultDuration);
             }
             else
             {
@@ -217,6 +241,23 @@ public class CharacterSwitchSlot : MonoBehaviour
                 }
                 followUpOverlay.fillAmount = 0f;
             }
+        }
+
+        // 4. Switch Cooldown Visuals (unavailable panel & feedback)
+        PlayerStateMachine stateMachine = hudManager != null ? hudManager.stateMachine : null;
+        bool isSwitchUnavailable = false;
+        if (stateMachine != null)
+        {
+            isSwitchUnavailable = !stateMachine.CanSwitchCharacter(5);
+        }
+        else
+        {
+            isSwitchUnavailable = teamLoader.IsSwitchOnCooldown;
+        }
+
+        if (unavailableOverlay != null)
+        {
+            unavailableOverlay.SetActive(!isCurrent && isSwitchUnavailable);
         }
     }
 

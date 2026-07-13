@@ -90,6 +90,18 @@ public abstract class FrameDataPlayerState : PlayerState
     public int CurrentFrame => currentFrame;
     public ActionPhase CurrentPhase => currentPhase;
 
+    public bool IsInRecoveryOrNearIt(int framesThreshold = 5)
+    {
+        if (cachedFrameData == null) return false;
+        if (currentPhase == ActionPhase.Recovery) return true;
+        if (currentPhase == ActionPhase.Active)
+        {
+            int remainingActiveFrames = cachedFrameData.ActivePhaseEnd - currentFrame;
+            return remainingActiveFrames <= framesThreshold;
+        }
+        return false;
+    }
+
     /// <summary>
     /// Subclasses return their interrupt policy. The base class uses this
     /// for ALL interrupt/cancel checks and InputGate queries.

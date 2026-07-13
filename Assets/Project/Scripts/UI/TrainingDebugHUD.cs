@@ -10,9 +10,11 @@ namespace CombatCore
     {
         private GUIStyle headerStyle;
         private GUIStyle labelStyle;
+        private GUIStyle statusStyle;
         private GUIStyle barBackgroundStyle;
         private GUIStyle barForegroundStyle;
         private bool stylesInitialized = false;
+        private Vector2 scrollPosition = Vector2.zero;
 
         private void InitializeStyles()
         {
@@ -24,6 +26,11 @@ namespace CombatCore
             labelStyle = new GUIStyle(GUI.skin.label);
             labelStyle.fontSize = 12;
             labelStyle.normal.textColor = Color.white;
+
+            statusStyle = new GUIStyle(GUI.skin.label);
+            statusStyle.fontSize = 11;
+            statusStyle.normal.textColor = Color.white;
+            statusStyle.wordWrap = true;
 
             // Background for the stun bar (dark grey)
             Texture2D bgTex = new Texture2D(1, 1);
@@ -54,12 +61,18 @@ namespace CombatCore
             var damageRecords = stats.CharacterDamageRecords;
             float width = 480;
             float margin = 10;
-            float contentHeight = 220f + damageRecords.Count * 22f + activeStatuses.Count * 22f;
+            
+            // Limit height to Screen height minus margins
+            float maxHeight = Screen.height - (margin * 2);
+            float calculatedHeight = 220f + damageRecords.Count * 22f + activeStatuses.Count * 26f;
+            float contentHeight = Mathf.Min(calculatedHeight, maxHeight);
+            
             Rect windowRect = new Rect(Screen.width - width - margin, margin, width, contentHeight);
 
             GUI.Box(windowRect, ""); // Semi-transparent box background
             GUILayout.BeginArea(new Rect(windowRect.x + 10, windowRect.y + 5, width - 20, contentHeight - 10));
-
+            
+            scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUILayout.Width(width - 20), GUILayout.Height(contentHeight - 10));
             GUILayout.BeginVertical();
 
             GUILayout.Label("⚔ TRAINING DEBUG", headerStyle);
@@ -125,12 +138,12 @@ namespace CombatCore
                     string details = !string.IsNullOrEmpty(status.modifierDetails) ? $" ({status.modifierDetails})" : "";
                     string duration = status.isInfinite ? "∞" : $"{status.remainingDuration:F1}s";
                     string stack = status.stackCount > 1 ? $" x{status.stackCount}" : "";
-                    GUILayout.Label($"• {status.displayName}{stack}{details}: {duration}", labelStyle);
+                    GUILayout.Label($"• {status.displayName}{stack}{details}: {duration}", statusStyle);
                 }
             }
 
             GUILayout.EndVertical();
-
+            GUILayout.EndScrollView();
             GUILayout.EndArea();
         }
     }

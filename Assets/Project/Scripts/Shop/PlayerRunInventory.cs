@@ -699,7 +699,7 @@ namespace Project.ShopSystem
             CharacterStats sourceStats = null,
             float durationOverride = -1f,
             RuntimeEffectStackMode stackMode = RuntimeEffectStackMode.UseDefinition,
-            int stackLimit = 1,
+            int stackLimit = 0,
             bool refreshDurationOnReapply = true)
         {
             return ApplyRuntimeEffectInternal(
@@ -766,9 +766,12 @@ namespace Project.ShopSystem
 
             state.EnsureEffectList();
             List<RuntimeEffectInstance> activeEffects = state.MutableActiveEffects;
+            int fallbackStackLimit = stackLimit > 0
+                ? stackLimit
+                : RuntimeEffectRuntimeUtility.GetDefaultStackLimit(effectDefinition);
             int resolvedStackLimit = stackLimitOverride > 0
                 ? stackLimitOverride
-                : RuntimeEffectRuntimeUtility.GetStackLimit(recipe, stackLimit);
+                : RuntimeEffectRuntimeUtility.GetStackLimit(recipe, fallbackStackLimit);
             bool resolvedRefreshDuration = RuntimeEffectRuntimeUtility.GetRefreshDurationOnReapply(recipe, refreshDurationOnReapply);
             bool effectRequiresTicking = RuntimeEffectRuntimeUtility.RequiresTicking(effectDefinition, recipe);
             bool effectAffectsStats = RuntimeEffectRuntimeUtility.AffectsStats(effectDefinition, recipe);

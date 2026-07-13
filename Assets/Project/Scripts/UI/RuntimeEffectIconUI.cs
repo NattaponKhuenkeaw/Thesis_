@@ -8,7 +8,6 @@ public class RuntimeEffectIconUI : MonoBehaviour
     private static readonly string[] StackTextNames = { "QuantityText", "StackText", "AmountText", "Amount", "CountText" };
 
     [SerializeField] private Image iconImage;
-    [SerializeField] private Image durationFill;
     [SerializeField] private TMP_Text stackText;
 
     [NonSerialized] private RuntimeEffectInstance boundEffect;
@@ -46,10 +45,6 @@ public class RuntimeEffectIconUI : MonoBehaviour
         if (boundEffect == null || boundEffect.definition == null)
         {
             RequiresTimerRefresh = false;
-            if (durationFill != null)
-            {
-                durationFill.gameObject.SetActive(false);
-            }
 
             if (stackText != null)
             {
@@ -60,23 +55,9 @@ public class RuntimeEffectIconUI : MonoBehaviour
             return;
         }
 
-        float totalDuration = boundEffect.appliedDurationSeconds > 0f
-            ? boundEffect.appliedDurationSeconds
-            : RuntimeEffectRuntimeUtility.ResolveDuration(boundEffect.definition, boundEffect.recipe);
-        bool timed = RuntimeEffectRuntimeUtility.GetDurationType(boundEffect.definition, boundEffect.recipe) == RuntimeEffectDurationType.Seconds
-            && totalDuration > 0f;
         bool showStackCount = boundStackCount > 1;
-        float normalized = timed
-            ? Mathf.Clamp01(boundEffect.remainingSeconds / totalDuration)
-            : 0f;
 
         RequiresTimerRefresh = false;
-
-        if (durationFill != null)
-        {
-            durationFill.gameObject.SetActive(false);
-            durationFill.fillAmount = timed ? (1f - normalized) : 0f;
-        }
 
         if (stackText != null)
         {
@@ -95,12 +76,6 @@ public class RuntimeEffectIconUI : MonoBehaviour
         if (iconImage == null)
         {
             iconImage = GetComponent<Image>();
-        }
-
-        if (durationFill == null)
-        {
-            Transform fillTransform = transform.Find("DurationFill");
-            durationFill = fillTransform != null ? fillTransform.GetComponent<Image>() : null;
         }
 
         TMP_Text namedStackText = FindTextByNames(StackTextNames);

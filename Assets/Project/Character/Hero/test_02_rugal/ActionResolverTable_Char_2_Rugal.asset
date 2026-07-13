@@ -1092,7 +1092,7 @@ MonoBehaviour:
           audioData:
             rid: -2
           hitData:
-            rid: -2
+            rid: 3612913031924154461
           eventData:
             rid: -2
           componentOrder:
@@ -2088,7 +2088,7 @@ MonoBehaviour:
         entries:
         - label: Ultimate Sequence
           eventType: 2
-          triggerFrame: 57
+          triggerFrame: 53
           trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
           overlaySettings:
             fadeInDuration: 0.03
@@ -2131,7 +2131,7 @@ MonoBehaviour:
               slowMotion:
                 enabled: 1
                 timeScale: 0.5
-                duration: 0.8
+                duration: 0.4
                 delaySeconds: 0
           afterImageSettings:
             spawnIntervalSeconds: 0.05
@@ -2139,3 +2139,29 @@ MonoBehaviour:
             endFrame: 1
           enableUltimateZoom: 0
           ultimateZoomSize: 5
+    - rid: 3612913031924154461
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 3612913031924154462
+    - rid: 3612913031924154462
+      type: {class: GrabHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 0
+        activeFrames: 3
+        elementType: 0
+        debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
+        offset: {x: -0.49420157, y: 1.8117262}
+        size: {x: 0.8, y: 0.8}
+        canGrabAirborne: 0
+        damageRatio: 0
+        impactFreezeFrames: 4
+        holdFrames: 24
+        recoveryFrames: 6
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        hitSFX: {fileID: 0}
+        hitVFXType: 14
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        impactTier: 0

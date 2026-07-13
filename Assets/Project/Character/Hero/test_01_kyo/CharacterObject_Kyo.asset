@@ -330,7 +330,9 @@ MonoBehaviour:
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
       runtimeEffects: []
-      runtimeEffectStackLimitModifiers: []
+      runtimeEffectStackLimitModifiers:
+      - effectIdOrStackKey: 
+        stackLimit: 0
       counterEffects: []
       conditionalStateEffects: []
       onHitStatusEffects: []
@@ -1017,12 +1019,12 @@ MonoBehaviour:
             appliesOn: 2
             durationType: 0
             durationSeconds: 20
-            stackMode: 0
+            stackMode: 1
             stackLimit: 1
             refreshDurationOnReapply: 1
-            stackable: 0
+            stackable: 1
             removeOnOwnerDamaged: 0
-            stackKey: 
+            stackKey: yamata.orochi
           parameters:
             overrideStatModifiers: 0
             statModifiers: []
@@ -1112,7 +1114,7 @@ MonoBehaviour:
               appliesOn: 2
               durationType: 0
               durationSeconds: 20
-              stackMode: 0
+              stackMode: 1
               stackLimit: 0
               refreshDurationOnReapply: 0
               stackable: 0
@@ -1206,7 +1208,7 @@ MonoBehaviour:
               appliesOn: 2
               durationType: 0
               durationSeconds: 20
-              stackMode: 0
+              stackMode: 1
               stackLimit: 0
               refreshDurationOnReapply: 0
               stackable: 0
@@ -1298,7 +1300,7 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 1
         sourceCharacterId: char_1_kyo
-        filterByTargetElement: 1
+        filterByTargetElement: 0
         targetElement: 3
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
@@ -1373,12 +1375,12 @@ MonoBehaviour:
             appliesOn: 2
             durationType: 0
             durationSeconds: 20
-            stackMode: 0
+            stackMode: 1
             stackLimit: 1
             refreshDurationOnReapply: 1
-            stackable: 0
+            stackable: 1
             removeOnOwnerDamaged: 0
-            stackKey: 
+            stackKey: kusanagi.blessing
           parameters:
             overrideStatModifiers: 0
             statModifiers: []
@@ -1465,7 +1467,7 @@ MonoBehaviour:
               fieldVisualPrefab: {fileID: 0}
             policy:
               kind: 2
-              appliesOn: 0
+              appliesOn: 2
               durationType: 0
               durationSeconds: 20
               stackMode: 0
@@ -1564,7 +1566,7 @@ MonoBehaviour:
               fieldVisualPrefab: {fileID: 0}
             policy:
               kind: 2
-              appliesOn: 0
+              appliesOn: 2
               durationType: 0
               durationSeconds: 20
               stackMode: 0

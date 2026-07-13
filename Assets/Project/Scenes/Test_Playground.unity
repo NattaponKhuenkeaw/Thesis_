@@ -1870,7 +1870,7 @@ PrefabInstance:
     - target: {fileID: 6090851060313224835, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 9100000, guid: 03216d92fc41d234c91dfd2a036c96bb, type: 2}
+      objectReference: {fileID: 9100000, guid: 3436f3bf41714a54391f36d8cfdd4294, type: 2}
     - target: {fileID: 7035595824811832153, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: holdDuration
       value: 0.5
@@ -4705,22 +4705,6 @@ PrefabInstance:
       propertyPath: playerCharacter
       value: 
       objectReference: {fileID: 729008943279367373}
-    - target: {fileID: 1818631623947276570, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
-      propertyPath: m_Color.a
-      value: 0.5882353
-      objectReference: {fileID: 0}
-    - target: {fileID: 1818631623947276570, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
-      propertyPath: m_Color.b
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1818631623947276570, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
-      propertyPath: m_Color.g
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1818631623947276570, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
-      propertyPath: m_Color.r
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 2516685864901967638, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
       propertyPath: m_Name
       value: PlayerCanvas
@@ -4748,18 +4732,6 @@ PrefabInstance:
     - target: {fileID: 2975028043752143859, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2975028043752143859, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
-      propertyPath: m_SizeDelta.x
-      value: 2.5002
-      objectReference: {fileID: 0}
-    - target: {fileID: 2975028043752143859, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: -1.25
-      objectReference: {fileID: 0}
-    - target: {fileID: 4231547502858725354, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
-      propertyPath: m_Name
-      value: HPLerp_Slide
       objectReference: {fileID: 0}
     - target: {fileID: 4325132260802469588, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
       propertyPath: teamLoader
@@ -4849,10 +4821,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6162526047640078980, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 6275706953271454894, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -4876,10 +4844,6 @@ PrefabInstance:
     - target: {fileID: 7489620626253704799, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8177585464230773734, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8551180002215020973, guid: f4ab887920d1a9342a037cb9cf1d10a3, type: 3}
       propertyPath: playerCharacter

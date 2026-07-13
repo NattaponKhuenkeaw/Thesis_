@@ -61,7 +61,8 @@ MonoBehaviour:
     actionName: Shermie Crush
     context: 0
     priority: 0
-    conditions: []
+    conditions:
+    - rid: 3612913050244874240
     allowGroundToAirTransition: 0
     damageSourceStat: 1
     actionDamageMultiplier: 0.12
@@ -1815,7 +1816,7 @@ MonoBehaviour:
           recoveryFrames: 25
           cancelWindowStartFrame: 53
           loopActivePhase: 0
-          stepName: Attack6
+          stepName: Step2-2
           animationClip: {fileID: 7400000, guid: 93e0e7c622cf5d74b8dcbc8fa5f8a5a9, type: 2}
           lockAirPosition: 1
           autoChainToNext: 0
@@ -2348,7 +2349,7 @@ MonoBehaviour:
           endFrame: 43
           taskType: 0
           easing: 1
-          position: {x: 0, y: -3, z: 0}
+          position: {x: 0, y: -10, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
     - rid: 3612912955328561250
@@ -2518,7 +2519,7 @@ MonoBehaviour:
         knockupFrames: 12
         knockfallFrames: 10
         recoveryFrames: 9
-        horizontalSpeed: 3
+        horizontalSpeed: 5
         launchSpeed: 1
         useSnapToAnchor: 1
         snapOffset: {x: 1.5, y: 0}
@@ -2533,3 +2534,10 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 1
+    - rid: 3612913050244874240
+      type: {class: RuntimeTagActionCondition, ns: , asm: Assembly-CSharp}
+      data:
+        tagType: 0
+        tag: shermie.cute.follow_up
+        shouldExist: 1
+        applyOnActionStart: 0

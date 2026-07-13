@@ -504,6 +504,13 @@ public static class RuntimeEffectRuntimeUtility
             : Mathf.Max(1, fallbackStackLimit);
     }
 
+    public static int GetDefaultStackLimit(RuntimeEffectDefinition definition, int fallbackStackLimit = 1)
+    {
+        return definition != null
+            ? Mathf.Max(1, definition.stackLimit)
+            : Mathf.Max(1, fallbackStackLimit);
+    }
+
     public static bool GetRefreshDurationOnReapply(RuntimeEffectRecipeData recipe, bool fallback)
     {
         return recipe != null && recipe.policy != null

@@ -1333,7 +1333,7 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: shermie.ultimate.lv2
       nodeName: Ultimate Damage Up
-      description: Ultimate damage multiplier becomes 1000% of ATK.
+      description: Ultimate damage multiplier becomes 1000% of ATK
       skillPanelDescriptionOverride: 'Inflict <b><color=#00FFED>Echo</color></b>
         DMG <b><color=#FFA500>1000%</color></b> of ATK,<size=20><color=#C0C0C0> Increase
         own Max HP +50% for 20 seconds</color></size>
@@ -1382,7 +1382,7 @@ MonoBehaviour:
           filterByActionName: 0
           actionName: 
           filterByStepName: 1
-          stepName: Shermie Carnival
+          stepName: Step2-2
           filterByElement: 0
           elementType: 0
           requireRuntimeTag: 1
@@ -1633,9 +1633,13 @@ MonoBehaviour:
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
-      runtimeEffects:
-      - trigger: 0
-        filter:
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects:
+      - filter:
           filterByCategory: 0
           category: 0
           filterByActionId: 0
@@ -1648,128 +1652,22 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
-        requiredTags: []
-        requiredCounters: []
-        requiredRuntimeEffectStacks: []
-        requiredValues: []
         chance: 1
-        rollChancePerEnemyTarget: 0
-        enemyTargetSource: 0
-        enemyTargetRuntimeTag: 
-        consumeRuntimeTagOnApply: 0
-        recipe:
-          recipeId: shermie.passive.lv1.max_hp_echo
-          definition: {fileID: 11400000, guid: 415918be4bdded440914c0232e1022fa, type: 2}
-          presentation:
-            effectId: shermie.passive.max_hp_echo
-            displayName: Shermie Max HP Echo
-            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
-            fieldVisualPrefab: {fileID: 0}
-          policy:
-            kind: 2
-            appliesOn: 0
-            durationType: 1
-            durationSeconds: 1
-            stackMode: 0
-            stackLimit: 1
-            refreshDurationOnReapply: 1
-            stackable: 0
-            removeOnOwnerDamaged: 0
-            stackKey: shermie.passive.max_hp_echo
-          parameters:
-            overrideStatModifiers: 0
-            statModifiers: []
-            overrideDamageModifier: 0
-            damageModifier:
-              filter:
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              outgoingDamagePercentAdd: 0
-              incomingDamageTakenPercentAdd: 0
-            overrideDamageInput: 0
-            damageInput:
-              filter:
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              defenderDefensePercentAdd: 0
-              defenderDamageResistancePercentAdd: 0
-              ignoreDefense: 0
-              ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
-            overridePeriodicHeal: 0
-            periodicHeal:
-              valueSource: 1
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-              tickInterval: 1
-            overrideHeal: 0
-            heal:
-              valueSource: 1
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-            overrideLifesteal: 0
-            lifesteal:
-              filter:
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              damageDealtRatio: 0.5
-              lowHpThreshold: 0.3
-              lowHpMultiplier: 2
-            overrideAdditionalDamage: 1
-            additionalDamage:
-              filter:
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              chance: 1
-              internalCooldown: 2
-              attackRatio: 0
-              sourceStatDamageSource: 0
-              sourceStatRatio: 0.08
-              targetMaxHpRatio: 0
-              sourceRuntimeEffectStackKey: 
-              attackRatioPerSourceRuntimeEffectStack: 0
-              maxSourceRuntimeEffectStacks: 0
-              capTargetMaxHpDamage: 0
-              targetMaxHpDamageCapSource: 1
-              targetMaxHpDamageCapRatio: 1
-              elementType: 2
-            overrideStatus: 0
-            status:
-              status: 5
-            overrideShield: 0
-            shield:
-              valueSource: 0
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-          childRecipes: []
-        applicationMode: 0
-        applicationCount: 1
-        effect: {fileID: 0}
-        scope: 0
-        stackMode: 0
-        stackLimit: 1
-        refreshDurationOnReapply: 1
-        durationOverride: -1
-        overrideSourceCharacter: 0
-        sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
-      runtimeEffectStackLimitModifiers: []
-      counterEffects: []
-      conditionalStateEffects: []
-      onHitStatusEffects: []
-      additionalDamageEffects: []
+        internalCooldown: 2.5
+        criticalHitRequirement: 0
+        attackRatio: 0
+        sourceStatDamageSource: 9
+        sourceStatRatio: 0.08
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 0
+        elementType: 2
+        consumeRuntimeTagOnTrigger: 0
       dashThroughDamageEffects: []
       defensiveEffects: []
       resourceEffects: []
@@ -2024,8 +1922,85 @@ MonoBehaviour:
         filterByTargetElement: 0
         targetElement: 0
       runtimeEffectStackLimitModifiers: []
-      counterEffects: []
-      conditionalStateEffects: []
+      counterEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 1
+          filterByActionId: 1
+          actionId: shermie.skill.ex
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        counterId: shermie.skill.ex.removal
+        operation: 0
+        value: 1
+      conditionalStateEffects:
+      - trigger: 0
+        filter:
+          filterByCategory: 1
+          category: 0
+          filterByActionId: 1
+          actionId: shermie.skill.ex
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        requiredTags:
+        - tag: shermie.cute.follow_up
+          expectedValue: 1
+        requiredCounters:
+        - counterId: shermie.skill.ex.removal
+          comparison: 3
+          value: 1
+        requiredRuntimeEffectStacks: []
+        requiredValues: []
+        runtimeTagEffects:
+        - trigger: 0
+          filter:
+            filterByCategory: 0
+            category: 0
+            filterByActionId: 0
+            actionId: 
+            filterByActionName: 0
+            actionName: 
+            filterByStepName: 0
+            stepName: 
+            filterByElement: 0
+            elementType: 0
+            requireRuntimeTag: 0
+            runtimeTag: 
+          tag: shermie.cute.follow_up
+          addTag: 0
+          duration: 0
+          rememberEnemyTarget: 0
+        counterEffects:
+        - trigger: 0
+          filter:
+            filterByCategory: 0
+            category: 0
+            filterByActionId: 0
+            actionId: 
+            filterByActionName: 0
+            actionName: 
+            filterByStepName: 0
+            stepName: 
+            filterByElement: 0
+            elementType: 0
+            requireRuntimeTag: 0
+            runtimeTag: 
+          counterId: shermie.skill.ex.removal
+          operation: 2
+          value: 1
       onHitStatusEffects: []
       additionalDamageEffects: []
       dashThroughDamageEffects: []
