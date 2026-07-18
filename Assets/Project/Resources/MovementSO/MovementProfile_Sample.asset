@@ -12,14 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 138b668169d86f14d8f2e020a5f632eb, type: 3}
   m_Name: MovementProfile_Sample
   m_EditorClassIdentifier: Assembly-CSharp::MovementProfile
-  moveSpeed: 9
-  jumpForce: 22
+  moveSpeed: 13
+  jumpForce: 25
   maxJumpCount: 2
   maxAirDashCount: 1
-  groundAcceleration: 110
-  groundDeceleration: 140
-  airAcceleration: 110
-  airDeceleration: 140
+  groundAcceleration: 100
+  groundDeceleration: 170
+  airAcceleration: 100
+  airDeceleration: 170
   airSpeedMultiplier: 1.1
   fastFallMultiplier: 10
   riseGravityMultiplier: 3.5
@@ -30,8 +30,8 @@ MonoBehaviour:
   jumpBufferTime: 0.15
   fallGravityMultiplier: 3
   maxFallSpeed: 25
-  jumpStartupTime: 0.05
-  landingLagTime: 0.1
+  jumpStartupTime: 0.1
+  landingLagTime: 0
   dropDownDuration: 0.2
   movementInputDeadZone: 0.7
   verticalSpeedPenalty: 0.5

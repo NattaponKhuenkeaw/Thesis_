@@ -1,1637 +1,1068 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neo-JJK | Cursed Realm Archive</title>
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
-    <!-- FontAwesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Tailwind CSS v3 Play CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        shibuya: {
-                            bg: '#050608',
-                            concrete: '#0d0f14',
-                            slate: '#161922',
-                            dark: '#1c202a',
-                            crimson: '#ff003c',
-                            jade: '#00ff7f',
-                            amber: '#f5a623',
-                            purple: '#bc00dd',
-                            metal: '#2e3648',
-                        }
-                    },
-                    fontFamily: {
-                        bebas: ['Bebas Neue', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                        outfit: ['Outfit', 'sans-serif'],
-                        tc: ['Noto Sans TC', 'sans-serif'],
-                    },
-                    boxShadow: {
-                        'neon-crimson': '0 0 15px rgba(255, 0, 60, 0.25)',
-                        'neon-jade': '0 0 15px rgba(0, 255, 127, 0.25)',
-                        'neon-amber': '0 0 15px rgba(245, 166, 35, 0.25)',
-                        'figma-crimson': '4px 4px 0px 0px #ff003c',
-                        'figma-jade': '4px 4px 0px 0px #00ff7f',
-                        'figma-amber': '4px 4px 0px 0px #f5a623',
-                    }
-                }
-            }
-        }
-    </script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Neo-JJK game design, technical architecture, and art direction showcase.">
+  <title>Neo-JJK — Design &amp; Production Bible</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080a0f;
+      --surface: #10141d;
+      --surface-2: #161c27;
+      --surface-3: #1d2532;
+      --ink: #f4f1e8;
+      --muted: #a5adba;
+      --quiet: #707b8d;
+      --line: rgba(255, 255, 255, .11);
+      --line-strong: rgba(255, 255, 255, .22);
+      --game: #ff6b57;
+      --tech: #59d6c7;
+      --art: #e6ba62;
+      --ok: #78d59d;
+      --warn: #e7bd69;
+      --risk: #ef7b87;
+      --info: #82aef5;
+      --radius: 18px;
+      --shadow: 0 24px 70px rgba(0, 0, 0, .34);
+      --max: 1260px;
+    }
 
-    <style type="text/css">
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #050608;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #1c202a;
-            border: 2px solid #050608;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #ff003c;
-        }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      background:
+        radial-gradient(circle at 10% -10%, rgba(255, 107, 87, .13), transparent 30rem),
+        radial-gradient(circle at 100% 8%, rgba(89, 214, 199, .10), transparent 32rem),
+        var(--bg);
+      color: var(--ink);
+      font: 15px/1.65 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      text-rendering: optimizeLegibility;
+    }
 
-        /* Glitch animations */
-        .neon-flicker {
-            animation: flicker 4s infinite alternate;
-        }
+    a { color: inherit; }
+    button, input { font: inherit; }
+    button { color: inherit; }
+    img { display: block; max-width: 100%; }
+    code, .mono { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+    code { color: #cbeee8; }
 
-        @keyframes flicker {
-            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
-                opacity: 1;
-                text-shadow: 0 0 8px rgba(255, 0, 60, 0.6), 0 0 20px rgba(255, 0, 60, 0.4);
-            }
-            20%, 24%, 55% {
-                opacity: 0.6;
-                text-shadow: none;
-            }
-        }
+    .skip-link {
+      position: fixed;
+      z-index: 100;
+      top: 12px;
+      left: 12px;
+      transform: translateY(-160%);
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: var(--ink);
+      color: var(--bg);
+      font-weight: 800;
+    }
+    .skip-link:focus { transform: translateY(0); }
 
-        /* Hazard stripes */
-        .hazard-stripes {
-            background: repeating-linear-gradient(
-                -45deg,
-                #f5a623,
-                #f5a623 10px,
-                #000000 10px,
-                #000000 20px
-            );
-        }
+    .shell { width: min(calc(100% - 40px), var(--max)); margin-inline: auto; }
 
-        /* Cursed energy aura */
-        .cursed-glow {
-            box-shadow: 0 0 25px rgba(188, 0, 221, 0.15), inset 0 0 15px rgba(0, 255, 127, 0.05);
-        }
+    .topbar {
+      position: sticky;
+      z-index: 30;
+      top: 0;
+      border-bottom: 1px solid var(--line);
+      background: rgba(8, 10, 15, .82);
+      backdrop-filter: blur(18px);
+    }
+    .topbar-inner {
+      min-height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .brand-mark {
+      width: 34px;
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255, 107, 87, .55);
+      border-radius: 10px;
+      background: rgba(255, 107, 87, .12);
+      color: var(--game);
+      font-weight: 950;
+      letter-spacing: -.06em;
+    }
+    .brand-copy { display: grid; line-height: 1.15; }
+    .brand-copy strong { font-size: .9rem; letter-spacing: .08em; text-transform: uppercase; }
+    .brand-copy span { color: var(--quiet); font-size: .72rem; }
+    .top-actions { display: flex; align-items: center; gap: 8px; }
+    .top-link, .print-button {
+      min-height: 38px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, .025);
+      color: var(--muted);
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .top-link:hover, .print-button:hover, .top-link:focus-visible, .print-button:focus-visible {
+      border-color: var(--line-strong);
+      color: var(--ink);
+    }
 
-        /* Custom Clip path angles for Shonen cutouts */
-        .shonen-clip {
-            clip-path: polygon(0 0, 100% 0, 95% 100%, 0% 100%);
-        }
+    .hero { padding: 78px 0 42px; }
+    .eyebrow {
+      margin: 0 0 14px;
+      color: var(--game);
+      font-size: .74rem;
+      font-weight: 850;
+      letter-spacing: .19em;
+      text-transform: uppercase;
+    }
+    .hero-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(290px, .65fr); gap: 46px; align-items: end; }
+    h1, h2, h3, h4, p { margin-top: 0; }
+    h1 {
+      max-width: 900px;
+      margin-bottom: 20px;
+      font-size: clamp(3.2rem, 8vw, 7.4rem);
+      line-height: .9;
+      letter-spacing: -.065em;
+    }
+    .hero-lede { max-width: 770px; margin-bottom: 0; color: var(--muted); font-size: clamp(1.03rem, 2vw, 1.28rem); }
+    .revision-card {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.015));
+      box-shadow: var(--shadow);
+    }
+    .revision-card dl { margin: 0; display: grid; gap: 14px; }
+    .revision-card div { display: grid; grid-template-columns: 94px 1fr; gap: 12px; }
+    dt { color: var(--quiet); font-size: .75rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    dd { margin: 0; color: var(--ink); }
 
-        .shonen-clip-both {
-            clip-path: polygon(5% 0, 100% 0, 95% 100%, 0% 100%);
-        }
+    .executive-strip { padding: 14px 0 42px; }
+    .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .metric {
+      min-height: 112px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: var(--surface);
+    }
+    .metric .label { display: block; margin-bottom: 8px; color: var(--quiet); font-size: .7rem; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
+    .metric strong { display: block; font-size: 1.25rem; line-height: 1.25; }
+    .metric small { color: var(--muted); }
 
-        /* Noise overlay to resemble Kowloon urban decay */
-        .kowloon-grunge {
-            background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 0);
-            background-size: 16px 16px;
-        }
+    .discipline-nav-wrap {
+      position: sticky;
+      z-index: 25;
+      top: 68px;
+      border-block: 1px solid var(--line);
+      background: rgba(8, 10, 15, .92);
+      backdrop-filter: blur(18px);
+    }
+    .discipline-nav { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding-block: 10px; }
+    .discipline-tab {
+      min-height: 50px;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 850;
+      cursor: pointer;
+    }
+    .discipline-tab span { display: block; color: var(--quiet); font-size: .67rem; font-weight: 750; letter-spacing: .09em; text-transform: uppercase; }
+    .discipline-tab:hover, .discipline-tab:focus-visible { background: rgba(255,255,255,.04); color: var(--ink); }
+    .discipline-tab[aria-selected="true"] { background: var(--surface-2); color: var(--ink); border-color: var(--line-strong); }
+    .discipline-tab[data-tab="game"][aria-selected="true"] { box-shadow: inset 0 -3px var(--game); }
+    .discipline-tab[data-tab="tech"][aria-selected="true"] { box-shadow: inset 0 -3px var(--tech); }
+    .discipline-tab[data-tab="art"][aria-selected="true"] { box-shadow: inset 0 -3px var(--art); }
 
-        /* Slide animations */
-        .tab-pane {
-            display: none;
-        }
-        .tab-pane.active {
-            display: block;
-            animation: paneSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-        }
+    main { padding: 44px 0 100px; }
+    .discipline-panel[hidden] { display: none; }
+    .discipline-panel { animation: reveal .28s ease both; }
+    @keyframes reveal { from { opacity: 0; transform: translateY(8px); } }
 
-        @keyframes paneSlideIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    .discipline-header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 26px;
+      align-items: end;
+      margin-bottom: 28px;
+      padding-bottom: 28px;
+      border-bottom: 1px solid var(--line);
+    }
+    .discipline-kicker { margin-bottom: 8px; font-size: .72rem; font-weight: 900; letter-spacing: .15em; text-transform: uppercase; }
+    .game-accent { color: var(--game); }
+    .tech-accent { color: var(--tech); }
+    .art-accent { color: var(--art); }
+    .discipline-header h2 { margin-bottom: 8px; font-size: clamp(2.2rem, 5vw, 4.4rem); line-height: 1; letter-spacing: -.045em; }
+    .discipline-header p { max-width: 760px; margin-bottom: 0; color: var(--muted); }
+    .section-index { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; max-width: 420px; }
+    .section-index a { padding: 7px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: .76rem; text-decoration: none; }
+    .section-index a:hover, .section-index a:focus-visible { border-color: var(--line-strong); color: var(--ink); }
 
-        html {
-            scroll-behavior: smooth;
-        }
-    </style>
+    .section { padding: 42px 0; scroll-margin-top: 160px; }
+    .section + .section { border-top: 1px solid var(--line); }
+    .section-heading { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 22px; margin-bottom: 24px; }
+    .section-number { color: var(--quiet); font-size: .72rem; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
+    .section-heading h3 { margin-bottom: 6px; font-size: clamp(1.65rem, 3vw, 2.5rem); line-height: 1.1; letter-spacing: -.035em; }
+    .section-heading p { max-width: 780px; margin: 0; color: var(--muted); }
+
+    .grid-2, .grid-3, .grid-4 { display: grid; gap: 14px; }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(150deg, rgba(255,255,255,.035), rgba(255,255,255,.012));
+    }
+    .card h4 { margin-bottom: 8px; font-size: 1rem; }
+    .card p:last-child, .card ul:last-child { margin-bottom: 0; }
+    .card p, .card li { color: var(--muted); }
+    .card ul { padding-left: 1.15rem; }
+    .card strong { color: var(--ink); }
+    .card--game { border-top: 3px solid var(--game); }
+    .card--tech { border-top: 3px solid var(--tech); }
+    .card--art { border-top: 3px solid var(--art); }
+    .card--risk { border-color: rgba(239, 123, 135, .35); background: rgba(239, 123, 135, .055); }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      font-size: .66rem;
+      font-weight: 900;
+      letter-spacing: .07em;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+    .status--live { color: var(--ok); background: rgba(120, 213, 157, .08); }
+    .status--partial { color: var(--warn); background: rgba(231, 189, 105, .08); }
+    .status--target { color: var(--info); background: rgba(130, 174, 245, .08); }
+    .status--risk { color: var(--risk); background: rgba(239, 123, 135, .08); }
+
+    .loop {
+      counter-reset: loop;
+      display: grid;
+      grid-template-columns: repeat(6, minmax(120px, 1fr));
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+    .loop-step {
+      counter-increment: loop;
+      position: relative;
+      min-width: 140px;
+      min-height: 150px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+    }
+    .loop-step::before { content: "0" counter(loop); display: block; margin-bottom: 24px; color: var(--game); font: 800 .72rem/1 "SFMono-Regular", Consolas, monospace; }
+    .loop-step strong { display: block; line-height: 1.2; }
+    .loop-step span { color: var(--muted); font-size: .82rem; }
+
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
+    table { width: 100%; border-collapse: collapse; min-width: 680px; background: rgba(255,255,255,.012); }
+    th, td { padding: 13px 16px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: var(--quiet); background: rgba(255,255,255,.025); font-size: .68rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+    td { color: var(--muted); }
+    td strong { color: var(--ink); }
+    tr:last-child td { border-bottom: 0; }
+
+    .flowline { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .flow-node { position: relative; min-height: 120px; padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+    .flow-node:not(:last-child)::after { content: "→"; position: absolute; z-index: 2; top: 50%; right: -15px; color: var(--quiet); }
+    .flow-node strong { display: block; margin-bottom: 6px; }
+    .flow-node span { color: var(--muted); font-size: .82rem; }
+
+    .roster { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .roster-card { padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+    .roster-card header { display: flex; align-items: start; justify-content: space-between; gap: 10px; }
+    .roster-card h4 { margin-bottom: 4px; }
+    .roster-card p { margin: 0; color: var(--muted); font-size: .82rem; }
+
+    .architecture { display: grid; gap: 10px; }
+    .arch-row { display: grid; grid-template-columns: 150px 1fr; gap: 12px; align-items: stretch; }
+    .arch-label { display: grid; place-items: center; padding: 14px; border: 1px solid rgba(89,214,199,.28); border-radius: 13px; background: rgba(89,214,199,.06); color: var(--tech); font-size: .72rem; font-weight: 900; letter-spacing: .1em; text-align: center; text-transform: uppercase; }
+    .arch-cells { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; }
+    .arch-cell { padding: 15px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); }
+    .arch-cell strong { display: block; font-size: .87rem; }
+    .arch-cell span { color: var(--muted); font-size: .77rem; }
+
+    .reference-frame { overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+    .reference-frame img { width: 100%; aspect-ratio: 16/8; object-fit: cover; filter: saturate(.72) contrast(1.05); }
+    .reference-frame figcaption { display: grid; grid-template-columns: 100px 1fr; gap: 14px; padding: 16px 18px; color: var(--muted); font-size: .82rem; }
+    .reference-frame figcaption strong { color: var(--art); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; }
+
+    .reference-gallery { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 12px; }
+    .reference-tile {
+      grid-column: span 4;
+      overflow: hidden;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .reference-tile--wide { grid-column: span 6; }
+    .reference-tile--hero { grid-column: span 8; }
+    .reference-shot {
+      width: 100%;
+      height: 230px;
+      object-fit: cover;
+      background: var(--surface-3);
+    }
+    .reference-tile--diagram .reference-shot { object-fit: contain; }
+    .reference-caption { padding: 15px 16px 17px; }
+    .reference-caption h4 { margin-bottom: 5px; font-size: .94rem; }
+    .reference-caption p { margin-bottom: 10px; color: var(--muted); font-size: .79rem; }
+    .reference-source { color: var(--quiet); font: .65rem/1.3 "SFMono-Regular", Consolas, monospace; letter-spacing: .05em; text-transform: uppercase; }
+
+    .character-showcase {
+      display: grid;
+      grid-template-columns: minmax(220px, .72fr) minmax(0, 1.28fr);
+      gap: 18px;
+      overflow: hidden;
+      border: 1px solid var(--line-strong);
+      border-radius: calc(var(--radius) + 4px);
+      background:
+        radial-gradient(circle at 18% 20%, rgba(255, 107, 87, .2), transparent 34%),
+        linear-gradient(145deg, var(--surface-2), var(--surface));
+      box-shadow: var(--shadow);
+    }
+    .character-portrait-wrap { position: relative; min-height: 360px; background: #090a0e; }
+    .character-portrait-wrap::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 62%, rgba(8,10,15,.88));
+      pointer-events: none;
+    }
+    .character-portrait { width: 100%; height: 100%; min-height: 360px; object-fit: contain; object-position: center; background: #21145b; }
+    .character-rank {
+      position: absolute;
+      z-index: 2;
+      left: 18px;
+      bottom: 16px;
+      padding: 6px 9px;
+      border: 1px solid rgba(255,107,87,.62);
+      border-radius: 999px;
+      background: rgba(8,10,15,.76);
+      color: var(--game);
+      font-size: .68rem;
+      font-weight: 900;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .character-sheet { padding: 28px 28px 26px 10px; align-self: center; }
+    .character-sheet header { display: flex; align-items: start; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+    .character-sheet h4 { margin-bottom: 3px; font-size: clamp(1.8rem, 4vw, 3rem); line-height: 1; letter-spacing: -.04em; }
+    .character-meta { margin: 0; color: var(--muted); }
+    .character-level { color: var(--game); font: 800 .78rem/1.3 "SFMono-Regular", Consolas, monospace; text-align: right; }
+    .core-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .core-stat { padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.035); }
+    .core-stat span { display: block; margin-bottom: 8px; color: var(--quiet); font-size: .67rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+    .core-stat strong { display: block; font-size: clamp(1.45rem, 3vw, 2.25rem); line-height: 1; }
+    .core-stat small { color: var(--muted); }
+    .stat-atk { border-top: 3px solid var(--game); }
+    .stat-def { border-top: 3px solid var(--tech); }
+    .stat-hp { border-top: 3px solid var(--ok); }
+    .character-note { margin: 18px 0 0; color: var(--muted); font-size: .82rem; }
+
+    .swatches { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .swatch { min-height: 130px; display: flex; flex-direction: column; justify-content: end; padding: 14px; border: 1px solid var(--line); border-radius: 14px; }
+    .swatch strong { font-size: .82rem; }
+    .swatch span { color: rgba(255,255,255,.72); font: .68rem/1.3 "SFMono-Regular", Consolas, monospace; }
+
+    .callout {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 24px;
+      padding: 24px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: var(--surface-2);
+    }
+    .callout .label { color: var(--warn); font-size: .7rem; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+    .callout p:last-child { margin-bottom: 0; color: var(--muted); }
+
+    .footer { padding: 34px 0 52px; border-top: 1px solid var(--line); color: var(--quiet); }
+    .footer-inner { display: flex; justify-content: space-between; gap: 24px; }
+    .footer a { color: var(--muted); }
+
+    :focus-visible { outline: 3px solid rgba(130, 174, 245, .7); outline-offset: 3px; }
+
+    @media (max-width: 1000px) {
+      .hero-grid, .discipline-header { grid-template-columns: 1fr; }
+      .section-index { justify-content: flex-start; max-width: none; }
+      .metric-grid, .grid-4, .roster { grid-template-columns: repeat(2, 1fr); }
+      .grid-3 { grid-template-columns: repeat(2, 1fr); }
+      .flowline { grid-template-columns: 1fr 1fr; }
+      .flow-node:not(:last-child)::after { display: none; }
+      .arch-cells { grid-template-columns: repeat(2, 1fr); }
+      .reference-tile, .reference-tile--wide, .reference-tile--hero { grid-column: span 6; }
+      .character-showcase { grid-template-columns: minmax(200px, .65fr) minmax(0, 1.35fr); }
+    }
+
+    @media (max-width: 700px) {
+      .shell { width: min(calc(100% - 24px), var(--max)); }
+      .topbar-inner { min-height: 60px; }
+      .brand-copy span, .top-link { display: none; }
+      .discipline-nav-wrap { top: 60px; }
+      .discipline-nav { gap: 4px; }
+      .discipline-tab { min-height: 46px; padding-inline: 4px; font-size: .76rem; }
+      .discipline-tab span { display: none; }
+      .hero { padding-top: 52px; }
+      .metric-grid, .grid-2, .grid-3, .grid-4, .roster, .flowline, .swatches { grid-template-columns: 1fr; }
+      .reference-tile, .reference-tile--wide, .reference-tile--hero { grid-column: 1 / -1; }
+      .reference-shot { height: 210px; }
+      .section-heading, .callout, .reference-frame figcaption { grid-template-columns: 1fr; gap: 8px; }
+      .character-showcase { grid-template-columns: 1fr; }
+      .character-portrait-wrap, .character-portrait { min-height: 300px; max-height: 430px; }
+      .character-sheet { padding: 22px; }
+      .core-stats { grid-template-columns: 1fr; }
+      .arch-row { grid-template-columns: 1fr; }
+      .arch-cells { grid-template-columns: 1fr; }
+      .footer-inner { display: grid; }
+      h1 { font-size: clamp(3rem, 18vw, 5.2rem); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
+    }
+
+    @media print {
+      :root { color-scheme: light; --bg: #fff; --surface: #fff; --surface-2: #f4f5f6; --surface-3: #eceff2; --ink: #15181d; --muted: #48515e; --quiet: #687484; --line: rgba(0,0,0,.16); --line-strong: rgba(0,0,0,.28); }
+      body { background: #fff; font-size: 10pt; }
+      .topbar, .discipline-nav-wrap, .section-index, .print-button { display: none !important; }
+      .discipline-panel[hidden] { display: block !important; }
+      .hero { padding-top: 20px; }
+      main { padding-bottom: 20px; }
+      .section { break-inside: avoid; padding-block: 22px; }
+      .card, .metric, .roster-card, .table-wrap, .reference-frame, .reference-tile, .character-showcase { break-inside: avoid; box-shadow: none; }
+    }
+  </style>
 </head>
-<body class="bg-shibuya-bg text-gray-200 font-outfit min-h-screen overflow-x-hidden flex kowloon-grunge">
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
 
-    <!-- SUBWAY NAVIGATION SIDEBAR -->
-    <aside class="fixed top-0 left-0 w-[300px] h-screen bg-shibuya-concrete border-r border-shibuya-metal/60 flex flex-col z-50 p-6 hidden lg:flex">
-        <!-- Brand Header -->
-        <div class="flex items-center gap-3 mb-8 pb-4 border-b border-shibuya-metal/30">
-            <div class="w-8 h-8 rounded bg-shibuya-crimson flex items-center justify-center text-white font-bebas text-xl border border-shibuya-crimson/50 shadow-neon-crimson">
-                呪
-            </div>
-            <div class="flex flex-col">
-                <span class="font-bebas text-2xl tracking-wider text-white leading-none">NEO-JJK: ARCHIVE</span>
-                <span class="text-[9px] font-mono tracking-widest text-shibuya-crimson uppercase mt-0.5">SHIBUYA SUBWAY OPERATIONS</span>
-            </div>
-        </div>
-
-        <!-- Search Bar -->
-        <div class="relative mb-6">
-            <i class="fa-solid fa-skull absolute left-3 top-1/2 -translate-y-1/2 text-shibuya-crimson/70 text-xs"></i>
-            <input type="text" id="gddSearch" class="w-full pl-9 pr-4 py-2 bg-shibuya-slate border border-shibuya-metal/60 rounded-md text-white font-outfit text-sm placeholder-gray-500 focus:outline-none focus:border-shibuya-crimson focus:ring-1 focus:ring-shibuya-crimson/30 transition-all" placeholder="FILTER CURSED CODES...">
-        </div>
-
-        <!-- Kowloon Vertical Neon Sign -->
-        <div class="mb-4 bg-shibuya-bg p-3 border border-shibuya-metal/50 rounded flex items-center justify-between relative overflow-hidden">
-            <div class="flex flex-col">
-                <span class="font-tc font-bold text-shibuya-jade text-sm tracking-widest">領域展開 ・ 渋谷事変</span>
-                <span class="font-mono text-[9px] text-gray-500 uppercase mt-0.5">District: Kowloon Alley</span>
-            </div>
-            <span class="font-bebas text-xs px-2 py-0.5 rounded bg-shibuya-crimson/20 border border-shibuya-crimson/40 text-shibuya-crimson animate-pulse">INCIDENT 02</span>
-        </div>
-
-        <!-- Menu Navigation Links -->
-        <nav class="flex-grow overflow-y-auto pr-1">
-            <ul class="space-y-1 text-sm font-bebas tracking-wide">
-                <li><a href="#purpose" class="nav-link active flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-crimson font-mono">01.</span> PURPOSE & CONSTRAINT</span><span class="text-[9px] font-tc text-shibuya-crimson">[渋谷]</span></a></li>
-                <li><a href="#identity" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-jade font-mono">02.</span> PROJECT IDENTITY</span><span class="text-[9px] font-tc text-shibuya-jade">[特級]</span></a></li>
-                <li><a href="#visuals" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-amber font-mono">03.</span> VISUAL & SOUND</span><span class="text-[9px] font-tc text-shibuya-amber">[画風]</span></a></li>
-                <li><a href="#inputs" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-crimson font-mono">04.</span> KEYS & INPUTS</span><span class="text-[9px] font-tc text-shibuya-crimson font-bold">[制御]</span></a></li>
-                <li><a href="#core-loop" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-jade font-mono">05.</span> CORE GAME LOOPS</span><span class="text-[9px] font-tc text-shibuya-jade">[輪廻]</span></a></li>
-                <li><a href="#combat" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-purple font-mono">06.</span> COMBAT DIRECTION</span><span class="text-[9px] font-tc text-shibuya-purple">[呪法]</span></a></li>
-                <li><a href="#characters" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-crimson font-mono">07.</span> ROSTER KIT</span><span class="text-[9px] font-tc text-shibuya-crimson">[名簿]</span></a></li>
-                <li><a href="#progression" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-jade font-mono">08.</span> ROGUE PROGRESS</span><span class="text-[9px] font-tc text-shibuya-jade">[昇華]</span></a></li>
-                <li><a href="#items-enemies" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-amber font-mono">09.</span> ITEMS & ENEMIES</span><span class="text-[9px] font-tc text-shibuya-amber">[呪具]</span></a></li>
-                <li><a href="#bosses" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-crimson font-mono">10.</span> BOSS FIGHTS</span><span class="text-[9px] font-tc text-shibuya-crimson">[大敵]</span></a></li>
-                <li><a href="#inspirations" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-jade font-mono">11.</span> REFERENCE GAMES</span><span class="text-[9px] font-tc text-shibuya-jade">[範例]</span></a></li>
-                <li><a href="#tech-stack" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-amber font-mono">12.</span> TECH ARCHITECTURE</span><span class="text-[9px] font-tc text-shibuya-amber">[構築]</span></a></li>
-                <li><a href="#prototype-truth" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-crimson font-mono">13.</span> TECHNICAL DEBT</span><span class="text-[9px] font-tc text-shibuya-crimson">[禊ぎ]</span></a></li>
-                <li><a href="#roadmap" class="nav-link flex items-center justify-between px-3 py-2.5 rounded text-gray-400 hover:text-white hover:bg-shibuya-slate transition-all"><span class="flex items-center gap-2"><span class="text-shibuya-jade font-mono">14.</span> SUBWAY TIMELINE</span><span class="text-[9px] font-tc text-shibuya-jade font-bold">[作戦]</span></a></li>
-            </ul>
-        </nav>
-    </aside>
-
-    <!-- BACK TO TOP FLOATING BUTTON -->
-    <button id="scrollTopBtn" class="fixed bottom-6 right-6 w-12 h-12 bg-shibuya-concrete border-2 border-shibuya-crimson text-shibuya-crimson rounded flex items-center justify-center hover:bg-shibuya-crimson hover:text-white shadow-neon-crimson transition-all cursor-pointer z-50 opacity-0 pointer-events-none">
-        <i class="fa-solid fa-arrow-up text-lg"></i>
-    </button>
-
-    <!-- LIGHTBOX MODAL -->
-    <div id="lightboxModal" class="fixed top-0 left-0 w-screen h-screen bg-black/95 backdrop-blur-md z-[999] hidden items-center justify-center cursor-zoom-out">
-        <button class="absolute top-6 right-6 text-white hover:text-shibuya-crimson transition-colors text-3xl"><i class="fa-solid fa-xmark"></i></button>
-        <img class="lightbox-img max-w-[90%] max-h-[85%] border border-shibuya-metal/50 rounded shadow-2xl" src="" alt="Cursed Expand Scope">
+  <header class="topbar">
+    <div class="shell topbar-inner">
+      <a class="brand" href="#top" aria-label="Neo-JJK design bible home">
+        <span class="brand-mark" aria-hidden="true">NJ</span>
+        <span class="brand-copy"><strong>Neo-JJK</strong><span>Design &amp; Production Bible</span></span>
+      </a>
+      <div class="top-actions">
+        <a class="top-link" href="../GDD_Neo-JJK.md">Open source GDD</a>
+        <button class="print-button" type="button" onclick="window.print()">Print / PDF</button>
+      </div>
     </div>
+  </header>
 
-    <!-- MAIN OPERATIONS BOARD -->
-    <main class="flex-grow lg:ml-[300px] px-4 md:px-12 py-8 max-w-full lg:max-w-[calc(100vw-300px)]">
+  <div id="top" class="hero shell">
+    <div class="hero-grid">
+      <div>
+        <p class="eyebrow">Current design authority · verified 18 July 2026</p>
+        <h1>Fast combat.<br>Clear systems.<br>High impact.</h1>
+        <p class="hero-lede">Neo-JJK is a PC-first 2D side-scrolling hack-and-slash rogue-lite built around a three-character team, readable room pressure, low execution burden, and spectacular supernatural feedback.</p>
+      </div>
+      <aside class="revision-card" aria-label="Document metadata">
+        <dl>
+          <div><dt>Build</dt><dd>Unity 6000.3.4f1</dd></div>
+          <div><dt>Prototype</dt><dd>Combat Playground ⇄ Soul Shop</dd></div>
+          <div><dt>Authority</dt><dd>GDD + inspected runtime</dd></div>
+          <div><dt>Scope</dt><dd>Single-player, PC-first</dd></div>
+        </dl>
+      </aside>
+    </div>
+  </div>
 
-        <!-- INCIDENT FLASH HEADER (SHONEN PORTAL VIBE) -->
-        <div class="relative bg-shibuya-concrete border-4 border-black shadow-figma-crimson p-6 md:p-8 rounded-none mb-12 overflow-hidden select-none">
-            <!-- Diagonal Hazard Bar decoration -->
-            <div class="absolute top-0 right-0 w-24 h-full bg-gradient-to-l from-shibuya-crimson/10 to-transparent pointer-events-none"></div>
-            
-            <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-                <span class="bg-shibuya-crimson text-black font-bebas text-xs md:text-sm font-bold tracking-widest px-3 py-1 rounded-none shonen-clip">
-                    OPERATION ARCHIVE // SPECIAL GRADE ONLY [特級]
-                </span>
-                <span class="text-xs font-mono text-shibuya-amber flex items-center gap-1.5 font-bold">
-                    <span class="w-2.5 h-2.5 rounded-full bg-shibuya-amber animate-ping"></span> SIGNAL ACTIVE
-                </span>
-            </div>
+  <section class="executive-strip shell" aria-label="Executive summary">
+    <div class="metric-grid">
+      <article class="metric"><span class="label">Player promise</span><strong>Simple verbs, expressive teams</strong><small>Combat depth comes from rotation and build choices.</small></article>
+      <article class="metric"><span class="label">Current content</span><strong>8 character assets</strong><small>6 substantially authored, 2 prototype placeholders.</small></article>
+      <article class="metric"><span class="label">Runtime shape</span><strong>251 project scripts</strong><small>Data-driven combat, progression, shop, UI, and scene flow.</small></article>
+      <article class="metric"><span class="label">Delivery state</span><strong>Vertical-slice foundation</strong><small>Full room/reward/boss run remains the primary gap.</small></article>
+    </div>
+  </section>
 
-            <h1 class="font-bebas text-5xl md:text-7xl font-black text-white leading-none tracking-tight mb-3">
-                NEO-JJK: THE <span class="text-shibuya-crimson neon-flicker">SHIBUYA</span> PROTOCOL
-            </h1>
-            <p class="font-outfit text-gray-400 text-sm md:text-lg max-w-3xl mb-6">
-                Refactoring authority document mapping the transition of high-effort fighter prototypes into a casual, high-payoff side-scroller rogue-lite.
-            </p>
+  <div class="discipline-nav-wrap">
+    <nav class="shell discipline-nav" role="tablist" aria-label="Design disciplines">
+      <button id="tab-game" class="discipline-tab" type="button" role="tab" aria-selected="true" aria-controls="panel-game" data-tab="game">Game Design<span>Player experience &amp; systems</span></button>
+      <button id="tab-tech" class="discipline-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-tech" data-tab="tech">Tech / Architecture<span>Runtime &amp; production truth</span></button>
+      <button id="tab-art" class="discipline-tab" type="button" role="tab" aria-selected="false" aria-controls="panel-art" data-tab="art">Art Design<span>Visual, UI &amp; audio language</span></button>
+    </nav>
+  </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-shibuya-metal/40 pt-4 text-xs font-mono">
-                <div class="flex flex-col">
-                    <span class="text-gray-500 uppercase">Archive ID</span>
-                    <span class="text-white font-bold tracking-wider mt-0.5">SHIBUYA-INCIDENT-02</span>
-                </div>
-                <div class="flex flex-col">
-                    <span class="text-gray-500 uppercase">Cursed Grade</span>
-                    <span class="text-shibuya-crimson font-bold tracking-wider mt-0.5">SPECIAL CLASS [特級]</span>
-                </div>
-                <div class="flex flex-col">
-                    <span class="text-gray-500 uppercase">Operating System</span>
-                    <span class="text-shibuya-jade font-bold tracking-wider mt-0.5">UNITY 6 / URP 17</span>
-                </div>
-                <div class="flex flex-col">
-                    <span class="text-gray-500 uppercase">Sector Boundary</span>
-                    <span class="text-shibuya-amber font-bold tracking-wider mt-0.5">KOWLOON-STATION</span>
-                </div>
-            </div>
+  <main id="main-content" class="shell">
+    <article id="panel-game" class="discipline-panel" role="tabpanel" aria-labelledby="tab-game" data-panel="game">
+      <header class="discipline-header">
+        <div>
+          <p class="discipline-kicker game-accent">Discipline 01</p>
+          <h2>Game Design</h2>
+          <p>The intended player experience, combat rules, team expression, progression, encounter language, and current playable content.</p>
+        </div>
+        <nav class="section-index" aria-label="Game design sections">
+          <a href="#game-identity">Identity</a><a href="#game-loop">Core loop</a><a href="#game-combat">Combat</a><a href="#game-team">Team</a><a href="#game-character">Character</a><a href="#game-progression">Progression</a><a href="#game-encounters">Encounters</a>
+        </nav>
+      </header>
+
+      <section id="game-identity" class="section">
+        <div class="section-heading"><span class="section-number">01 / Identity</span><div><h3>Casual execution, strategic preparation</h3><p>The game avoids fighting-game execution complexity. Mastery lives in team construction, action timing, resource use, and responding to readable threats.</p></div></div>
+        <div class="grid-3">
+          <article class="card card--game"><h4>Fast hack &amp; slash</h4><p>Short, understandable action kits keep attention on movement, targets, cooldowns, and impact rather than long command strings.</p></article>
+          <article class="card card--game"><h4>Beat them, acquire them</h4><p>Boss rivals become playable pool candidates. The Soul Shop turns characters, Artifacts, consumables, and duplicates into run decisions.</p></article>
+          <article class="card card--game"><h4>Build through rotation</h4><p>Three characters cover damage, setup, control, or survival. Swapping is a deliberate rhythm rather than a combo-system substitute.</p></article>
+        </div>
+        <div class="reference-gallery" style="margin-top:14px" aria-label="Game identity references">
+          <figure class="reference-tile reference-tile--wide">
+            <img class="reference-shot" src="https://images.steamusercontent.com/ugc/13067568473687387792/45B261D4D9A656E16A151EF9BA0C459F3266E616/?imw=1024&amp;&amp;ima=fit&amp;impolicy=Letterbox&amp;imcolor=%23000000&amp;letterbox=false" alt="Dungeon Slasher side-scrolling gameplay reference." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Dungeon Slasher — room pressure</h4><p>Reference for direct side-scrolling combat, readable lanes, and character-build pacing.</p><span class="reference-source">Identity reference · steamusercontent.com</span></figcaption>
+          </figure>
+          <figure class="reference-tile reference-tile--wide">
+            <img class="reference-shot" src="https://store-images.s-microsoft.com/image/apps.38892.14044995170568579.c13577be-3cd6-4656-8a1f-1a197178694d.b3643bf5-077b-4ade-b606-9449437423f0" alt="BlazBlue Entropy Effect inspiration artwork." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>BlazBlue Entropy Effect — pace</h4><p>Reference for high-energy character differentiation, simple action readability, and rogue-lite structure.</p><span class="reference-source">Identity reference · microsoft.com</span></figcaption>
+          </figure>
+        </div>
+        <div class="callout" style="margin-top:14px"><span class="label">Production constraint</span><p><strong>Low implementation burden is part of the design.</strong> Prefer a clear reusable rule over a bespoke mechanic, and sell power with layered VFX/audio rather than animation volume or strict execution.</p></div>
+      </section>
+
+      <section id="game-loop" class="section">
+        <div class="section-heading"><span class="section-number">02 / Loop</span><div><h3>Run loop and combat cadence</h3><p>The target macro loop is room-driven. The current prototype proves combat, shop, progression ownership, and two-scene transitions, but not yet a complete randomized run.</p></div></div>
+        <div class="loop" aria-label="Target run loop">
+          <div class="loop-step"><strong>Prepare</strong><span>Draft three characters and equip Artifacts.</span></div>
+          <div class="loop-step"><strong>Enter</strong><span>Cross the sealed room boundary into combat.</span></div>
+          <div class="loop-step"><strong>Clear</strong><span>Fight, rotate, manage AE, and survive pressure.</span></div>
+          <div class="loop-step"><strong>Choose</strong><span>Take one reward, resource, or route.</span></div>
+          <div class="loop-step"><strong>Escalate</strong><span>Face elites, shops, and boss patterns.</span></div>
+          <div class="loop-step"><strong>Resolve</strong><span>Win or fail; retain only permanent progression.</span></div>
+        </div>
+        <div class="reference-gallery" style="margin-top:14px" aria-label="Core loop reference">
+          <figure class="reference-tile reference-tile--hero">
+            <img class="reference-shot" src="https://digitalchumps.com/wp-content/uploads/2024/01/Gorgeous-action-packed-battles.gif?x96629" alt="Animated BlazBlue Entropy Effect combat-room reference." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Room-to-room combat cadence</h4><p>Reference for fast entry, compact combat pressure, a decisive clear, and a quick return to run choices.</p><span class="reference-source">Core-loop reference · digitalchumps.com</span></figcaption>
+          </figure>
+        </div>
+        <div class="grid-2" style="margin-top:14px">
+          <article class="card"><span class="status status--live">Current</span><h4 style="margin-top:14px">Moment-to-moment</h4><p>Approach → Basic loop → Skill/Ultimate → swap setup/support → return to DPS → dodge threats → repeat.</p></article>
+          <article class="card"><span class="status status--target">Target</span><h4 style="margin-top:14px">Session arc</h4><p>Lobby → authored room sequence → reward/shop branches → boss → result → persistence/reset.</p></article>
+        </div>
+      </section>
+
+      <section id="game-combat" class="section">
+        <div class="section-heading"><span class="section-number">03 / Combat</span><div><h3>Authorable actions with explicit state authority</h3><p>Every action declares Ground, Air, or Both context and executes authored Startup, Active, Recovery, Cancel, and Done phases. State rules determine what may interrupt.</p></div></div>
+        <div class="grid-4">
+          <article class="card"><h4>Basic Attack</h4><p>Readable 2–3 hit core loop. Fast, repeatable, and forward-facing; VFX and hit feedback carry the impact.</p></article>
+          <article class="card"><h4>Skill</h4><p>One primary active ability per release kit. Cooldown-gated with an obvious damage, setup, movement, shield, or control purpose.</p></article>
+          <article class="card"><h4>Ultimate</h4><p>High-impact authored action gated by full Aura Energy and, when configured, an additional cooldown.</p></article>
+          <article class="card"><h4>Dash / Jump</h4><p>Responsive survival and traversal verbs, including double jump, authored air-dash limits, and one-way-platform drop-through.</p></article>
+        </div>
+        <div class="reference-gallery" style="margin-top:14px" aria-label="Combat action reference">
+          <figure class="reference-tile reference-tile--hero">
+            <img class="reference-shot" src="https://wutheringlab.com/wp-content/uploads/2023/06/8.gif" alt="Animated action-combat reference with large supernatural attack effects." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Action impact and phase clarity</h4><p>Reference for readable wind-up, active attack shape, recovery, and high-impact Skill/Ultimate delivery.</p><span class="reference-source">Combat reference · wutheringlab.com</span></figcaption>
+          </figure>
         </div>
 
-        <!-- WARNING MARQUEE BANNER -->
-        <div class="w-full overflow-hidden bg-shibuya-amber text-black py-2 mb-12 font-bebas tracking-wider border-y-2 border-black flex items-center whitespace-nowrap text-sm md:text-base font-bold">
-            <div class="flex animate-[marquee_20s_linear_infinite]">
-                <span class="mx-4"><i class="fa-solid fa-triangle-exclamation"></i> WARNING: COMPILATION GATED BY SPECIAL GRADE CRITERIA</span>
-                <span class="mx-4"><i class="fa-solid fa-triangle-exclamation"></i> DO NOT REBUILD FIGHTING GAME DATA TABLES</span>
-                <span class="mx-4"><i class="fa-solid fa-triangle-exclamation"></i> 12-FRAME ROTATION PRIORITY ENFORCED</span>
-                <span class="mx-4"><i class="fa-solid fa-triangle-exclamation"></i> STRICTLY LOW EFFORT PRODUCTION BIAS</span>
-                <span class="mx-4"><i class="fa-solid fa-triangle-exclamation"></i> WARNING: COMPILATION GATED BY SPECIAL GRADE CRITERIA</span>
-            </div>
+        <h4 style="margin:28px 0 12px">Current input map</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Input</th><th>Verb</th><th>Runtime rule</th></tr></thead>
+            <tbody>
+              <tr><td><strong>A / D</strong></td><td>Move</td><td>Horizontal movement and directional action context.</td></tr>
+              <tr><td><strong>Space</strong></td><td>Jump</td><td>Jump/double jump; near-simultaneous grounded Jump + Attack/Skill prioritizes Jump.</td></tr>
+              <tr><td><strong>LMB / RMB</strong></td><td>Basic / Skill</td><td>State-authorized actions with 0.15-second buffers.</td></tr>
+              <tr><td><strong>Left Shift</strong></td><td>Dash</td><td>Ground/air eligibility and cooldown come from character movement/dash data.</td></tr>
+              <tr><td><strong>R</strong></td><td>Ultimate</td><td>Requires resolved action availability, full AE cost, and any authored cooldown.</td></tr>
+              <tr><td><strong>S + Space</strong></td><td>Drop through</td><td>Available only when grounded on a one-way platform.</td></tr>
+              <tr><td><strong>1 / 2 / 3</strong></td><td>Team slot</td><td>0.35-second slot buffer; legal only from grounded locomotion or recovery boundary.</td></tr>
+            </tbody>
+          </table>
         </div>
 
-        <!-- 01. PURPOSE SECTION -->
-        <section id="purpose" class="mb-16 scroll-mt-6">
-            <h2 class="font-bebas text-4xl text-white flex items-center gap-3 border-b-2 border-shibuya-metal/60 pb-2 mb-6">
-                <span class="bg-shibuya-crimson text-black px-2 py-0.5 text-2xl font-bold shonen-clip">01</span>
-                <span>[領域展開] PURPOSE & PRODUCTION CONSTRAINTS</span>
-            </h2>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2 text-gray-300 space-y-4">
-                    <p class="text-lg leading-relaxed">
-                        Neo-JJK shifts away from the complexity of traditional action fighters. We target a modular **2D Side-Scrolling Hack-and-Slash Rogue-lite** focused entirely on casual entry barriers, minimal script footprint, and supreme visual payoffs.
-                    </p>
-                    <p>
-                        Our workflow rules demand strict encapsulation. Scripts must remain short, modular, and performance-tuned. Development prioritization favors flashy graphical representation (VFX) over highly authored animation sequences.
-                    </p>
-                </div>
-                <!-- Warning Callout Box (Figma Outlined) -->
-                <div class="bg-shibuya-concrete border-2 border-shibuya-amber/60 p-5 shadow-figma-amber rounded-none relative">
-                    <span class="absolute -top-3 left-4 bg-shibuya-amber text-black font-bebas text-xs font-bold px-2 py-0.5 tracking-wider">CRITICAL CONSTRAINTS</span>
-                    <ul class="space-y-2 font-mono text-xs text-gray-400 mt-2">
-                        <li class="flex items-start gap-2">
-                            <span class="text-shibuya-amber font-bold">▶</span>
-                            <span><strong>Low dev effort:</strong> Minimal custom scripts.</span>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <span class="text-shibuya-amber font-bold">▶</span>
-                            <span><strong>Low skill floor/ceiling:</strong> Casual friendly.</span>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <span class="text-shibuya-amber font-bold">▶</span>
-                            <span><strong>Visual emphasis:</strong> Large VFX slash arcs.</span>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <span class="text-shibuya-amber font-bold">▶</span>
-                            <span><strong>Simple logic:</strong> SO driven properties.</span>
-                        </li>
-                    </ul>
-                </div>
+        <div class="grid-3" style="margin-top:14px">
+          <article class="card"><h4>Aura Energy</h4><p>Stored per character. Confirmed hits independently roll Low 5%, Medium 10%, or High 15% for a base 10 AE × recharge; an action may also author one guaranteed first-hit reward.</p></article>
+          <article class="card"><h4>Damage routines</h4><p>Normal and Elemental damage can crit and use defense/reduction. Elemental Mastery scales elemental output; Impact scales Ultimate primary damage. Additional and DOT routines are non-critical.</p></article>
+          <article class="card"><h4>Runtime effects</h4><p>Recipes author triggers, target, values, duration, stacks, removal, and UI. Shared formulas implement stats, damage, shield, heal, status, lifesteal, and Additional Damage.</p></article>
+        </div>
+
+        <h4 style="margin:28px 0 12px">Elemental reaction model</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Element</th><th>Gauge / reaction identity</th><th>Reaction outcome</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Memory</strong></td><td>Independent gauge; strong/weak capacity modifies a 20% Max HP base.</td><td>Enemy cannot react for 8 seconds.</td></tr>
+              <tr><td><strong>Echo</strong></td><td>Tracks damage during its 20-second reaction.</td><td>On expiry, deals half of the accumulated damage.</td></tr>
+              <tr><td><strong>Ash</strong></td><td>Applies a 5-second DOT before reaction; strongest same-element DOT replaces weaker.</td><td>Deals lost-HP damage capped at 8% enemy Max HP.</td></tr>
+              <tr><td><strong>Void</strong></td><td>Applies a 5-second DOT before reaction.</td><td>150% ATK area burst; Confusion on normal enemies or 30% action-speed reduction on elites/bosses for 15 seconds.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="game-team" class="section">
+        <div class="section-heading"><span class="section-number">04 / Team</span><div><h3>Six roles, three slots, one rotation plan</h3><p>Roles communicate expected contribution; they do not impose a mandatory party composition.</p></div></div>
+        <div class="grid-3">
+          <article class="card"><h4>Reaper / Executioner</h4><p><strong>Burst DPS</strong> and <strong>sustained DPS</strong>. They convert setup windows into damage.</p></article>
+          <article class="card"><h4>Herald / Arbiter</h4><p><strong>Buffer</strong> and <strong>control/debuffer</strong>. They create better decisions and safer burst windows.</p></article>
+          <article class="card"><h4>Warden / Keeper</h4><p><strong>Defender</strong> and <strong>healer</strong>. They stabilize mistakes and extend the run.</p></article>
+        </div>
+        <div class="reference-gallery" style="margin-top:14px" aria-label="Team and role references">
+          <figure class="reference-tile">
+            <img class="reference-shot" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2HY1EesyVxubm5I87Po0SoDHBYBSazQf3T-Jk95QNghLCjLsKaTqJ5eXT&amp;s=10" alt="Three-character action RPG team-rotation reference." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Team rotation</h4><p>Reference for setup, support, burst, and return-to-DPS rhythm across three visible slots.</p><span class="reference-source">Team reference · gstatic.com</span></figcaption>
+          </figure>
+          <figure class="reference-tile reference-tile--wide reference-tile--diagram">
+            <img class="reference-shot" src="../../../ca1.png" alt="Neo-JJK character role and stat reference board." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Role and stat board</h4><p>Source-GDD reference for positioning the six roles and summarizing expected combat contribution.</p><span class="reference-source">Team reference · local recovered copy</span></figcaption>
+          </figure>
+          <figure class="reference-tile reference-tile--wide reference-tile--diagram">
+            <img class="reference-shot" src="../../../ca1.png" alt="Neo-JJK role archetype triangle mapping damage, amplification, and sustain." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Archetype triangle</h4><p>Local working board that maps the roster between damage, amplification, and sustain.</p><span class="reference-source">Team reference · local ca1.png</span></figcaption>
+          </figure>
+          <figure class="reference-tile reference-tile--wide reference-tile--diagram">
+            <img class="reference-shot" src="../../../ca2.png" alt="Neo-JJK bilingual role function board." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Role functions</h4><p>Local definitions for combat contribution, expected durability, damage, and mobility.</p><span class="reference-source">Team reference · local ca2.png</span></figcaption>
+          </figure>
+          <figure class="reference-tile reference-tile--wide reference-tile--diagram">
+            <img class="reference-shot" src="../../../ca3.png" alt="Neo-JJK role naming and fantasy board." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Role fantasy</h4><p>Local naming rationale for Reaper, Executioner, Herald, Arbiter, Warden, and Keeper.</p><span class="reference-source">Team reference · local ca3.png</span></figcaption>
+          </figure>
+        </div>
+        <h4 style="margin:28px 0 12px">Swap finish</h4>
+        <div class="flowline">
+          <div class="flow-node"><strong>Request slot</strong><span>Key 1–3 enters the 0.35s buffer.</span></div>
+          <div class="flow-node"><strong>Validate</strong><span>Grounded idle/move, recovery, or final two frames before recovery.</span></div>
+          <div class="flow-node"><strong>Resolve outgoing</strong><span>Snapshot source stats, action, motion, and attribution.</span></div>
+          <div class="flow-node"><strong>Activate incoming</strong><span>Clear input buffers and load the new slot on the ground.</span></div>
+          <div class="flow-node"><strong>Finish &amp; cool down</strong><span>Outgoing action completes; the current 0.7-second shared swap cooldown displays on every slot.</span></div>
+        </div>
+      </section>
+
+      <section id="game-character" class="section">
+        <div class="section-heading"><span class="section-number">05 / Character</span><div><h3>Readable identity at portrait and inspector scale</h3><p>A character card must communicate who the unit is, what they do, and their three survival/output anchors before exposing secondary statistics.</p></div></div>
+        <article class="character-showcase" aria-label="Character profile for Main using CharacterObject_main authored data">
+          <div class="character-portrait-wrap">
+            <img class="character-portrait" src="../../../Assets/Project/Character/Hero/test_0_Main/Untitled379_20260427215647.jpg" alt="Authored portrait icon for Main from CharacterObject_main, showing a silver-haired character in white clothing against a purple background." loading="lazy" decoding="async">
+            <span class="character-rank">Authored icon · CharacterObject_main</span>
+          </div>
+          <div class="character-sheet">
+            <header>
+              <div><h4>Main</h4><p class="character-meta">Void · Arbiter · Player</p></div>
+              <span class="character-level">LV. 01 / 30<br>57 EXP · AUTHORED</span>
+            </header>
+            <div class="core-stats" aria-label="CharacterObject_main base character stats">
+              <div class="core-stat stat-atk"><span>ATK</span><strong>50</strong><small>+6.1 per level</small></div>
+              <div class="core-stat stat-def"><span>DEF</span><strong>38</strong><small>+4.2 per level</small></div>
+              <div class="core-stat stat-hp"><span>HP</span><strong>813</strong><small>+81 per level</small></div>
             </div>
-        </section>
+            <p class="character-note"><strong>Authored source: <code>CharacterObject_main.asset</code>.</strong> These are the serialized base stats before later level growth, equipped Artifact bonuses, and other runtime modifiers are resolved.</p>
+          </div>
+        </article>
+        <div class="reference-gallery" style="margin-top:14px" aria-label="Character and elemental references">
+          <figure class="reference-tile reference-tile--wide reference-tile--diagram">
+            <img class="reference-shot" src="https://upload-os-bbs.hoyolab.com/upload/2025/01/28/13693861/d7cf74b844c6ff690f37810e2610c852_2399325505013166081.jpg?x-oss-process=image%2Fresize%2Cs_1000%2Fauto-orient%2C0%2Finterlace%2C1%2Fformat%2Cwebp%2Fquality%2Cq_70" alt="Action RPG character-stat interface reference." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Character stat hierarchy</h4><p>Reference for portrait prominence, grouped values, and a clear distinction between core and secondary stats.</p><span class="reference-source">Character reference · hoyolab.com</span></figcaption>
+          </figure>
+          <figure class="reference-tile reference-tile--wide reference-tile--diagram">
+            <img class="reference-shot" src="assets/elemental-type-reference.svg" alt="Neo-JJK elemental type reference board for Memory, Echo, Ash, and Void." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Element identity</h4><p>Local GDD diagram pairing Memory, Echo, Ash, and Void mechanics with character-facing visual language.</p><span class="reference-source">Character reference · reconstructed locally</span></figcaption>
+          </figure>
+        </div>
+      </section>
 
-        <!-- 02. PROJECT IDENTITY -->
-        <section id="identity" class="mb-16 scroll-mt-6">
-            <h2 class="font-bebas text-4xl text-white flex items-center gap-3 border-b-2 border-shibuya-metal/60 pb-2 mb-6">
-                <span class="bg-shibuya-jade text-black px-2 py-0.5 text-2xl font-bold shonen-clip">02</span>
-                <span>[特級情報] PROJECT IDENTITY & PILLARS</span>
-            </h2>
-            
-            <div class="overflow-x-auto border-2 border-black shadow-figma-jade mb-8">
-                <table class="w-full text-left border-collapse text-sm">
-                    <thead>
-                        <tr class="bg-shibuya-slate border-b border-shibuya-metal/50 text-white font-bebas uppercase tracking-wider text-xs">
-                            <th class="p-4 border-r border-shibuya-metal/30 w-1/4">FIELD TYPE</th>
-                            <th class="p-4">CURSED REALM PROTOCOL SPECIFICATION</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-shibuya-metal/30 bg-shibuya-concrete">
-                        <tr>
-                            <td class="p-4 font-mono font-bold text-shibuya-jade border-r border-shibuya-metal/30 bg-shibuya-slate/20">WORKING TITLE</td>
-                            <td class="p-4 font-bold text-white uppercase tracking-wide">Neo-JJK (Cursed Incident)</td>
-                        </tr>
-                        <tr>
-                            <td class="p-4 font-mono font-bold text-shibuya-jade border-r border-shibuya-metal/30 bg-shibuya-slate/20">CORE FANTASY</td>
-                            <td class="p-4">Clear side-scrolling rooms with 3-character rotation routines, unleashing ultimate cursed bursts.</td>
-                        </tr>
-                        <tr>
-                            <td class="p-4 font-mono font-bold text-shibuya-jade border-r border-shibuya-metal/30 bg-shibuya-slate/20">STORY INTENT</td>
-                            <td class="p-4 text-gray-400 italic">"Shin" dies and is sent to the Cursed Realm by "Blind". Players must fight Fiends; dying resets memory. Only 1 in 50 survives.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+      <section id="game-progression" class="section">
+        <div class="section-heading"><span class="section-number">06 / Progression</span><div><h3>Run power and permanent identity stay separate</h3><p>Run state is disposable; Potential and duplicate fragments provide permanent character identity without making every run start from zero knowledge.</p></div></div>
+        <div class="grid-3">
+          <article class="card"><span class="status status--live">Implemented</span><h4 style="margin-top:14px">Character Level</h4><p>Lv.1–30 per run. EXP Potions are previewed and committed in Character Inspector; only ATK, DEF, and Max HP grow.</p></article>
+          <article class="card"><span class="status status--live">Implemented</span><h4 style="margin-top:14px">Character Potential</h4><p>Permanent Skill, Ultimate, and Passive tracks, each 0–4. Duplicate characters become fragments spent on sequential nodes.</p></article>
+          <article class="card"><span class="status status--partial">Partial</span><h4 style="margin-top:14px">Artifact Transcendence</h4><p>Duplicate Artifact fragments persist. Spending UI, permanent levels, scaling, and reacquisition restoration remain targets.</p></article>
+        </div>
+        <div class="reference-gallery" style="margin-top:14px" aria-label="Progression references">
+          <figure class="reference-tile">
+            <img class="reference-shot" src="https://digitalchumps.com/wp-content/uploads/2024/01/Jin.gif?x96629" alt="Animated character moving through a side-scrolling rogue-lite space." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Soul Shop transition</h4><p>Reference for keeping the shop as a walkable world-space pause between combat rooms.</p><span class="reference-source">Progression reference · digitalchumps.com</span></figcaption>
+          </figure>
+          <figure class="reference-tile reference-tile--wide reference-tile--diagram">
+            <img class="reference-shot" src="https://www.gameuidatabase.com/uploads/Genshin-Impact01032021-021309-52226.jpg" alt="Character level and experience interface reference." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Character Level UI</h4><p>Reference for EXP preview, current and maximum level, potion cost, and explicit confirmation.</p><span class="reference-source">Progression reference · gameuidatabase.com</span></figcaption>
+          </figure>
+          <figure class="reference-tile reference-tile--wide reference-tile--diagram">
+            <img class="reference-shot" src="https://static.wikia.nocookie.net/gensin-impact/images/3/3f/Constellation_Menu.png/revision/latest?cb=20220411014019" alt="Sequential character upgrade-node interface reference." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Potential node path</h4><p>Reference for sequential permanent upgrades, locked/unlocked states, selection, and preview hierarchy.</p><span class="reference-source">Progression reference · wikia.nocookie.net</span></figcaption>
+          </figure>
+        </div>
 
-            <!-- JJK Shibuya Theme Lore Block -->
-            <div class="relative bg-shibuya-concrete border border-shibuya-purple/50 p-6 rounded-none cursed-glow mb-8 max-w-4xl">
-                <div class="absolute -top-3 left-4 bg-shibuya-purple text-white font-bebas text-xs font-bold px-3 py-0.5 tracking-widest shonen-clip">
-                    CURSE SYNOPSIS [呪術]
-                </div>
-                <p class="font-tc text-[#e0d6ff] text-base leading-relaxed italic">
-                    「 呪言の契り 」 —— Shin was pulled from the ashes of mortality into the Shibuya Incident Subway core. Guided by Waifu Waifu Blind, they manipulate "Aura" (Cursed Energy) to bypass physical limits. Falling behind means rotting into the hive mind of the Fiends.
-                </p>
-            </div>
+        <h4 style="margin:30px 0 12px">Current authored roster</h4>
+        <div class="roster">
+          <article class="roster-card"><header><h4>Main</h4><span class="status status--live">Active</span></header><p>Void · Arbiter<br>Runtime effects + Potential authored</p></article>
+          <article class="roster-card"><header><h4>Kyo</h4><span class="status status--live">Active</span></header><p>Ash · Herald<br>Team support + Potential authored</p></article>
+          <article class="roster-card"><header><h4>Rugal</h4><span class="status status--live">Active</span></header><p>Memory · Executioner<br>Sustained kit + Potential authored</p></article>
+          <article class="roster-card"><header><h4>Shermie</h4><span class="status status--live">Active</span></header><p>Echo · Warden<br>Shield/heal kit + Potential authored</p></article>
+          <article class="roster-card"><header><h4>Goenitz</h4><span class="status status--live">Active</span></header><p>Echo · Reaper<br>Burst/projectile kit authored</p></article>
+          <article class="roster-card"><header><h4>Orochi</h4><span class="status status--live">Active</span></header><p>Void · Reaper<br>Stack and Additional Damage kit</p></article>
+          <article class="roster-card"><header><h4>Krizalid</h4><span class="status status--risk">Prototype</span></header><p>Ash · Executioner<br>Ability IDs and growth incomplete</p></article>
+          <article class="roster-card"><header><h4>Kula</h4><span class="status status--risk">Prototype</span></header><p>Echo · Herald<br>Movement/actions/progression incomplete</p></article>
+        </div>
 
-            <!-- Experience Pillars (Shonen Graphic Cards) -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mb-8">
-                <div class="bg-shibuya-concrete border border-shibuya-metal/80 hover:border-shibuya-crimson p-6 transition-all shadow-md group">
-                    <i class="fa-solid fa-burst text-shibuya-crimson text-3xl mb-4 group-hover:scale-110 transition-transform block"></i>
-                    <h4 class="font-bebas text-2xl text-white mb-2">Fast Side-Scrolling Combat</h4>
-                    <p class="text-sm text-gray-400">Zero frame-advantage micro-management. Heavy slash hits, sweeping collision logic, and instant cancel buffers.</p>
-                </div>
-                <div class="bg-shibuya-concrete border border-shibuya-metal/80 hover:border-shibuya-jade p-6 transition-all shadow-md group">
-                    <i class="fa-solid fa-users text-shibuya-jade text-3xl mb-4 group-hover:scale-110 transition-transform block"></i>
-                    <h4 class="font-bebas text-2xl text-white mb-2">Beat Them & Recruit Them</h4>
-                    <p class="text-sm text-gray-400">Bosses are unlocked as recruits upon execution. Currencies and upgrade pools scale dynamically at the subway Soul Shop.</p>
-                </div>
-                <div class="bg-shibuya-concrete border border-shibuya-metal/80 hover:border-shibuya-amber p-6 transition-all shadow-md group">
-                    <i class="fa-solid fa-dna text-shibuya-amber text-3xl mb-4 group-hover:scale-110 transition-transform block"></i>
-                    <h4 class="font-bebas text-2xl text-white mb-2">Constellation Potentials</h4>
-                    <p class="text-sm text-gray-400">Unlock permanent potential levels for characters in between runs. Keep base upgrades functional on reset.</p>
-                </div>
-            </div>
+        <div class="grid-2" style="margin-top:14px">
+          <article class="card"><h4>Soul Shop — current</h4><p>World-space typed offers, purchase/sell flow, stackable consumables, duplicates, and rerolls. Every reroll adds 15% of base price; purchased floor offers become unavailable for that shop visit.</p></article>
+          <article class="card card--risk"><h4>Full rogue-lite loop — missing</h4><p>Randomized room/reward routing, run result, boss progression, and final loss/reset orchestration are not yet a playable end-to-end loop.</p></article>
+        </div>
+      </section>
 
-            <!-- GIF Media Card -->
-            <div class="border border-shibuya-metal bg-shibuya-concrete p-3 max-w-4xl">
-                <div class="relative overflow-hidden cursor-zoom-in" onclick="openLightbox('https://digitalchumps.com/wp-content/uploads/2024/01/Jin.gif?x96629')">
-                    <img src="https://digitalchumps.com/wp-content/uploads/2024/01/Jin.gif?x96629" class="w-full max-h-[350px] object-cover hover:scale-105 transition-transform duration-500" alt="Combat Graphic Vibe">
-                    <span class="absolute bottom-3 left-3 bg-black/80 text-[10px] font-mono text-shibuya-jade px-2 py-0.5 tracking-widest uppercase">Target Presentation Vibe</span>
-                </div>
-            </div>
-        </section>
+      <section id="game-encounters" class="section">
+        <div class="section-heading"><span class="section-number">07 / Encounters</span><div><h3>Readable pressure before raw stat checks</h3><p>Enemies create movement, target-priority, and rotation decisions. Bosses use telegraph → evade → punish rather than fighting-game reactions.</p></div></div>
+        <div class="grid-4">
+          <article class="card"><h4>Trash</h4><p>Fast-clear targets that teach reach, spacing, and crowd control.</p></article>
+          <article class="card"><h4>Ranged</h4><p>Readable projectiles force movement and target priority.</p></article>
+          <article class="card"><h4>Guard</h4><p>Frontal resistance creates flanking or burst choices without requiring parry.</p></article>
+          <article class="card"><h4>Elite</h4><p>Two or three clear attacks, larger tells, and a stronger reward.</p></article>
+        </div>
+        <div class="reference-gallery" style="margin-top:14px" aria-label="Boss encounter references">
+          <figure class="reference-tile reference-tile--wide">
+            <img class="reference-shot" src="https://i.ytimg.com/vi/uN8O57b12WI/maxresdefault.jpg" alt="Side-scrolling boss battle with a large enemy and readable arena." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Boss encounter composition</h4><p>Reference for large silhouette, clear arena pressure, readable attack lanes, and punish-window framing.</p><span class="reference-source">Encounter reference · i.ytimg.com</span></figcaption>
+          </figure>
+          <figure class="reference-tile reference-tile--wide">
+            <img class="reference-shot" src="../image.png" alt="Small player character facing a large armored boss in a dark side-scrolling arena." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Scale and negative space</h4><p>Local reference for preserving a calm player-sized pocket beneath a dominant boss silhouette.</p><span class="reference-source">Encounter reference · local image.png</span></figcaption>
+          </figure>
+        </div>
+        <div class="flowline" style="margin-top:14px">
+          <div class="flow-node"><strong>Telegraph</strong><span>Shape, animation, audio, and warning zone establish threat.</span></div>
+          <div class="flow-node"><strong>Reposition</strong><span>Move, jump, or dash away from the resolution area.</span></div>
+          <div class="flow-node"><strong>Recovery</strong><span>The boss exposes a readable damage window.</span></div>
+          <div class="flow-node"><strong>Spend</strong><span>Use rotation, buffs, Skill, and Ultimate.</span></div>
+          <div class="flow-node"><strong>Escalate</strong><span>Pattern or phase changes the decision, not only health/damage.</span></div>
+        </div>
+      </section>
+    </article>
 
-        <!-- 03. VISUAL AND SOUND -->
-        <section id="visuals" class="mb-16 scroll-mt-6">
-            <h2 class="font-bebas text-4xl text-white flex items-center gap-3 border-b-2 border-shibuya-metal/60 pb-2 mb-6">
-                <span class="bg-shibuya-amber text-black px-2 py-0.5 text-2xl font-bold shonen-clip">03</span>
-                <span>[美術・音響] VISUAL, MOOD, & AUDIO DIRECTION</span>
-            </h2>
-            <p class="text-gray-300 max-w-3xl mb-6">
-                Sell combat impact through heavy visual and auditory feedback. Minimal animation sheets are supplemented by screenshakes, freeze-frames, and directional hit-stops.
-            </p>
+    <article id="panel-tech" class="discipline-panel" role="tabpanel" aria-labelledby="tab-tech" data-panel="tech" hidden>
+      <header class="discipline-header">
+        <div>
+          <p class="discipline-kicker tech-accent">Discipline 02</p>
+          <h2>Technical / Architecture Design</h2>
+          <p>Current runtime ownership, data flow, platform stack, project scale, implemented scene contract, and delivery risk.</p>
+        </div>
+        <nav class="section-index" aria-label="Technical sections">
+          <a href="#tech-runtime">Runtime</a><a href="#tech-stack">Stack</a><a href="#tech-data">Data</a><a href="#tech-scene">Scenes</a><a href="#tech-scale">Scale</a><a href="#tech-roadmap">Status</a>
+        </nav>
+      </header>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mb-8">
-                <div class="bg-shibuya-concrete border-l-4 border-shibuya-crimson p-5">
-                    <h4 class="font-bebas text-xl text-white mb-1">Aesthetic Readability</h4>
-                    <p class="text-xs text-gray-400">Heavy silhouettes, circular swing guides, and clear color codes matching specific elements.</p>
-                </div>
-                <div class="bg-shibuya-concrete border-l-4 border-shibuya-jade p-5">
-                    <h4 class="font-bebas text-xl text-white mb-1">Freeze-Frame Punch</h4>
-                    <p class="text-xs text-gray-400">Trigger standard 6-12 frames of game freeze on landed strikes to sell power without anim overhead.</p>
-                </div>
-                <div class="bg-shibuya-concrete border-l-4 border-shibuya-amber p-5">
-                    <h4 class="font-bebas text-xl text-white mb-1">Audio Tells</h4>
-                    <p class="text-xs text-gray-400">Sound cues accompany boss indicators, giving the player instant reaction guidelines.</p>
-                </div>
-            </div>
+      <section id="tech-runtime" class="section">
+        <div class="section-heading"><span class="section-number">01 / Runtime</span><div><h3>Facade + FSM + authored data + explicit state owners</h3><p>The system is data-driven, but runtime state has dedicated authorities so the active GameObject is not mistaken for the whole run.</p></div></div>
+        <div class="architecture" aria-label="Runtime architecture layers">
+          <div class="arch-row"><div class="arch-label">Presentation</div><div class="arch-cells"><div class="arch-cell"><strong>Player / Team HUD</strong><span>HP, AE, cooldown, swap</span></div><div class="arch-cell"><strong>Runtime Effect UI</strong><span>Authored icon + stack count</span></div><div class="arch-cell"><strong>World Feedback</strong><span>Damage, reactions, threats</span></div><div class="arch-cell"><strong>Training HUD</strong><span>Source-attributed metrics</span></div></div></div>
+          <div class="arch-row"><div class="arch-label">Orchestration</div><div class="arch-cells"><div class="arch-cell"><strong>PlayerCharacter</strong><span>Active-character facade</span></div><div class="arch-cell"><strong>PlayerStateMachine</strong><span>Legal state/action routes</span></div><div class="arch-cell"><strong>TeamLoader</strong><span>Three-slot runtime authority</span></div><div class="arch-cell"><strong>SceneTransitionManager</strong><span>Persistent transition facade</span></div></div></div>
+          <div class="arch-row"><div class="arch-label">Execution</div><div class="arch-cells"><div class="arch-cell"><strong>PlayerCombat</strong><span>Actions, cooldowns, rewards</span></div><div class="arch-cell"><strong>ActionResolver</strong><span>Contextual action/step lookup</span></div><div class="arch-cell"><strong>Passive / Effects</strong><span>Triggers, recipes, formulas</span></div><div class="arch-cell"><strong>Enemy + Elements</strong><span>Damage, AI, gauge/reaction</span></div></div></div>
+          <div class="arch-row"><div class="arch-label">State &amp; Data</div><div class="arch-cells"><div class="arch-cell"><strong>CharacterObject</strong><span>Stats, actions, kit, growth</span></div><div class="arch-cell"><strong>PlayerRunInventory</strong><span>Run ownership and effects</span></div><div class="arch-cell"><strong>MetaProgression</strong><span>Fragments and Potential</span></div><div class="arch-cell"><strong>Scene-local controllers</strong><span>Walls, confiner, triggers</span></div></div></div>
+        </div>
+      </section>
 
-            <!-- 3 Reference image grid -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl">
-                <div class="border border-shibuya-metal bg-shibuya-concrete p-2 cursor-zoom-in" onclick="openLightbox('https://i.redd.it/p4scnbqwrp991.gif')">
-                    <img src="https://i.redd.it/p4scnbqwrp991.gif" class="w-full h-44 object-cover" alt="Atmospheric Silhouette">
-                    <span class="block text-[10px] text-gray-500 font-mono mt-1 text-center">DARK SILHOUETTE PACING</span>
-                </div>
-                <div class="border border-shibuya-metal bg-shibuya-concrete p-2 cursor-zoom-in" onclick="openLightbox('https://play-lh.googleusercontent.com/en87Nnc-5suECm7xBou8Eux7FV1tQauF5rQwfwQS5KqfGXrTdXsJt_wAXIpxHJ2frNk=w526-h296-rw')">
-                    <img src="https://play-lh.googleusercontent.com/en87Nnc-5suECm7xBou8Eux7FV1tQauF5rQwfwQS5KqfGXrTdXsJt_wAXIpxHJ2frNk=w526-h296-rw" class="w-full h-44 object-cover" alt="Slash Reference">
-                    <span class="block text-[10px] text-gray-500 font-mono mt-1 text-center">CURSED SLASH ARC EFFECT</span>
-                </div>
-                <div class="border border-shibuya-metal bg-shibuya-concrete p-2 cursor-zoom-in" onclick="openLightbox('https://static.gameloop.com/img/4375ce928cc53fa9963f5133aef4ed2b.jpg?imageMogr2/thumbnail/undefinedxundefined/format/webp')">
-                    <img src="https://static.gameloop.com/img/4375ce928cc53fa9963f5133aef4ed2b.jpg?imageMogr2/thumbnail/undefinedxundefined/format/webp" class="w-full h-44 object-cover" alt="Combat Feedback UI">
-                    <span class="block text-[10px] text-gray-500 font-mono mt-1 text-center">ACTION COMBAT READOUT</span>
-                </div>
-            </div>
-        </section>
+      <section id="tech-stack" class="section">
+        <div class="section-heading"><span class="section-number">02 / Stack</span><div><h3>Verified project stack</h3><p>Values come from the current Unity project and package manifest, not the older architecture snapshot.</p></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Area</th><th>Current value</th><th>Use</th></tr></thead><tbody>
+          <tr><td><strong>Engine</strong></td><td>Unity 6000.3.4f1</td><td>Single-player 2D runtime and authoring.</td></tr>
+          <tr><td><strong>Render</strong></td><td>URP 17.3.0</td><td>2D presentation, Shader Graph, particles/VFX.</td></tr>
+          <tr><td><strong>Input</strong></td><td>Input System 1.17.0</td><td>Player action map plus direct team-slot keys.</td></tr>
+          <tr><td><strong>Camera</strong></td><td>Cinemachine 3.1.6</td><td>Framing, confiner bounds, look-ahead, impulse.</td></tr>
+          <tr><td><strong>AI</strong></td><td>Unity Behavior 1.0.15</td><td>Enemy action, condition, and reaction nodes.</td></tr>
+          <tr><td><strong>UI</strong></td><td>Unity UI 2.0.0 + TMP</td><td>HUD, Team Builder, shop, inspector, world UI.</td></tr>
+          <tr><td><strong>Testing</strong></td><td>Test Framework 1.6.0</td><td>Five current EditMode fixtures plus documented Play Mode smoke checks.</td></tr>
+          <tr><td><strong>Networking</strong></td><td>None</td><td>All gameplay uses single-player local authority.</td></tr>
+        </tbody></table></div>
+      </section>
 
-        <!-- 04. KEYS AND INPUTS -->
-        <section id="inputs" class="mb-16 scroll-mt-6">
-            <h2 class="font-bebas text-4xl text-white flex items-center gap-3 border-b-2 border-shibuya-metal/60 pb-2 mb-6">
-                <span class="bg-shibuya-crimson text-black px-2 py-0.5 text-2xl font-bold shonen-clip">04</span>
-                <span>[キー入力] PLATFORM & BIND VERBS</span>
-            </h2>
-            
-            <div class="overflow-x-auto border border-shibuya-metal shadow-figma-crimson mb-8">
-                <table class="w-full text-left text-sm">
-                    <thead>
-                        <tr class="bg-shibuya-slate border-b border-shibuya-metal/50 text-white font-bebas tracking-wide text-xs">
-                            <th class="p-4">INPUT BIND</th>
-                            <th class="p-4">COMBAT ACTION</th>
-                            <th class="p-4">DETERMINED LOGICAL BEHAVIOR</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-shibuya-concrete divide-y divide-shibuya-metal/30">
-                        <tr>
-                            <td class="p-4"><span class="key">A</span> / <span class="key">D</span></td>
-                            <td class="p-4 font-bold text-white">Left / Right Move</td>
-                            <td class="p-4 text-gray-400">Horizontal locomotion. Controls dash direction.</td>
-                        </tr>
-                        <tr>
-                            <td class="p-4"><span class="key">Space</span></td>
-                            <td class="p-4 font-bold text-white">Jump</td>
-                            <td class="p-4 text-gray-400">Double jump enabled across all roster selections.</td>
-                        </tr>
-                        <tr>
-                            <td class="p-4"><span class="key">LMB</span></td>
-                            <td class="p-4 font-bold text-white">Basic Attack (BA)</td>
-                            <td class="p-4 text-gray-400">Triggers basic state attack loop (2-3 strikes).</td>
-                        </tr>
-                        <tr>
-                            <td class="p-4"><span class="key">RMB</span></td>
-                            <td class="p-4 font-bold text-white">Skill</td>
-                            <td class="p-4 text-gray-400">Triggers active character skill. Cancels standard normal strings.</td>
-                        </tr>
-                        <tr>
-                            <td class="p-4"><span class="key">Shift</span></td>
-                            <td class="p-4 font-bold text-white">Dash</td>
-                            <td class="p-4 text-gray-400">Invincibility-frame dash. Responsive interrupt verb.</td>
-                        </tr>
-                        <tr>
-                            <td class="p-4"><span class="key">Q</span></td>
-                            <td class="p-4 font-bold text-white">Ultimate</td>
-                            <td class="p-4 text-gray-400">Triggers Special Class Ultimate finisher. Displays flash overlays.</td>
-                        </tr>
-                        <tr>
-                            <td class="p-4"><span class="key">1</span> / <span class="key">2</span> / <span class="key">3</span></td>
-                            <td class="p-4 font-bold text-white">Team Swap</td>
-                            <td class="p-4 text-gray-400">Instant swap. Transmits input buffer cache to incoming fighter.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+      <section id="tech-data" class="section">
+        <div class="section-heading"><span class="section-number">03 / Data</span><div><h3>State ownership and effect recipe split</h3><p>Static definitions, per-run state, permanent progression, and live receiver state are intentionally separate.</p></div></div>
+        <div class="grid-2">
+          <article class="card card--tech"><h4>Authored content</h4><p><code>CharacterObject</code>, action tables, frame components, movement profiles, projectile/VFX libraries, element databases, Artifacts, and item catalog.</p></article>
+          <article class="card card--tech"><h4>Run state</h4><p><code>PlayerRunInventory</code> owns acquired items, currency, character level/EXP, deployed team snapshot, and team/run runtime effects.</p></article>
+          <article class="card card--tech"><h4>Permanent state</h4><p><code>PlayerMetaProgression</code> owns character/Artifact fragments and three-track Potential levels.</p></article>
+          <article class="card card--tech"><h4>Local live state</h4><p><code>RuntimeEffectReceiver</code>, enemy elemental state, current FSM phase, projectile runtime, and scene-local boundary state.</p></article>
+        </div>
+        <div class="callout" style="margin-top:14px"><span class="label">Runtime effects</span><p><strong>Formula definitions are reusable ingredients.</strong> A Runtime Effect Recipe owned by a character, projectile, or future Artifact supplies per-use values, duration, target, stack policy, removal policy, and presentation. Legacy direct definitions remain a compatibility path during migration.</p></div>
+      </section>
 
-            <!-- Tech Input Rule Panel -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl text-xs font-mono">
-                <div class="bg-shibuya-concrete border border-shibuya-metal p-4">
-                    <span class="text-shibuya-crimson font-bold block mb-2">// BUFFER CACHE</span>
-                    The input manager uses a 12-frame buffer window to store inputs near recoveries and execute them instantly.
-                </div>
-                <div class="bg-shibuya-concrete border border-shibuya-metal p-4">
-                    <span class="text-shibuya-jade font-bold block mb-2">// PRIORITY ORDER</span>
-                    Evaluated hierarchy: System/Swap &gt; Skill/Ultimate &gt; Dash/Jump &gt; Basic Attacks.
-                </div>
-                <div class="bg-shibuya-concrete border border-shibuya-metal p-4">
-                    <span class="text-shibuya-amber font-bold block mb-2">// SWAP CANCEL</span>
-                    Swapping leaves the outgoing avatar executing their last action while the new character jumps in.
-                </div>
-            </div>
-        </section>
+      <section id="tech-scene" class="section">
+        <div class="section-heading"><span class="section-number">04 / Scenes</span><div><h3>Implemented room boundary contract</h3><p>The two active build scenes prove persistent transitions and scene-local boundary ownership. The full run graph is still target architecture.</p></div></div>
+        <div class="flowline">
+          <div class="flow-node"><strong>Load room</strong><span>Persistent manager resolves entrance and scene-local controller.</span></div>
+          <div class="flow-node"><strong>Open intro</strong><span>Left boundary permits off-stage entry during PlayerIntroState.</span></div>
+          <div class="flow-node"><strong>Seal stage</strong><span>Intro completion closes the wall/confiner behind the player.</span></div>
+          <div class="flow-node"><strong>Unlock exit</strong><span>Shared API opens right wall, expands confiner, cues camera.</span></div>
+          <div class="flow-node"><strong>Trigger transition</strong><span>Player enters authored trigger; repeated unlocks are idempotent.</span></div>
+        </div>
+        <div class="grid-2" style="margin-top:14px">
+          <article class="card"><span class="status status--live">Build scenes</span><h4 style="margin-top:14px">Test_Playground ⇄ Test_Shop</h4><p>Combat/training and walkable Soul Shop are enabled in Build Settings and use the shared scene/boundary pipeline.</p></article>
+          <article class="card"><span class="status status--target">Target graph</span><h4 style="margin-top:14px">Menu → Lobby → Run → Boss → Result</h4><p>Combat/reward/shop routing, randomized authored rooms, boss progression, and run result remain to be assembled.</p></article>
+        </div>
+      </section>
 
-        <!-- 05. CORE GAME LOOP -->
-        <section id="core-loop" class="mb-16 scroll-mt-6">
-            <h2 class="font-bebas text-4xl text-white flex items-center gap-3 border-b-2 border-shibuya-metal/60 pb-2 mb-6">
-                <span class="bg-shibuya-jade text-black px-2 py-0.5 text-2xl font-bold shonen-clip">05</span>
-                <span>[循環設計] SESSION GAMEPLAY ROUTINES</span>
-            </h2>
-            
-            <div class="bg-shibuya-concrete border border-shibuya-metal p-6 mb-8 max-w-4xl">
-                <h4 class="font-bebas text-xl text-shibuya-jade mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-arrows-spin"></i> ROTATION FLOW DESIGN
-                </h4>
-                <div class="flex flex-wrap items-center gap-2 text-xs md:text-sm font-mono bg-black/40 p-4 border border-shibuya-metal/50">
-                    <span class="text-white">CHOOSE 3-CHAR TEAM</span>
-                    <span class="text-gray-600">➔</span>
-                    <span class="text-white">ENTER STAGE ROOM</span>
-                    <span class="text-gray-600">➔</span>
-                    <span class="text-white">CLEAR INCOMING FIENDS</span>
-                    <span class="text-gray-600">➔</span>
-                    <span class="text-shibuya-jade">CHOOSE STAT SEAL</span>
-                    <span class="text-gray-600">➔</span>
-                    <span class="text-white">FIGHT STATION MASTER</span>
-                    <span class="text-gray-600">➔</span>
-                    <span class="text-shibuya-crimson">RECOVER SOUL FRAGMENTS</span>
-                </div>
-            </div>
+      <section id="tech-scale" class="section">
+        <div class="section-heading"><span class="section-number">05 / Scale</span><div><h3>251 scripts under the project runtime root</h3><p>The codebase has grown materially since the old 168-script snapshot; Combat, Player, Team Builder, UI, and Core now carry most of the production surface.</p></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Area</th><th>Scripts</th><th>Primary responsibility</th></tr></thead><tbody>
+          <tr><td>Combat</td><td><strong>79</strong></td><td>Resolution, effects, elements, projectiles, hit feedback, VFX/audio, movement/input.</td></tr>
+          <tr><td>Player</td><td><strong>27</strong></td><td>FSM, states, buffers, policies, ability/team HUD.</td></tr>
+          <tr><td>TeamBuilder</td><td><strong>24</strong></td><td>Draft/deploy, inspector, equipment, level, and Potential UI.</td></tr>
+          <tr><td>Behavior</td><td><strong>23</strong></td><td>Enemy behavior actions, conditions, reactions.</td></tr>
+          <tr><td>Character</td><td><strong>22</strong></td><td>Character, action, frame, stat, and progression data.</td></tr>
+          <tr><td>UI</td><td><strong>21</strong></td><td>Player/world HUD, runtime effect presentation, feedback, input locks.</td></tr>
+          <tr><td>Editor</td><td><strong>15</strong></td><td>Authoring tools, inspectors, focused EditMode tests.</td></tr>
+          <tr><td>Core</td><td><strong>11</strong></td><td>Persistent root, scene transition, boundary, and zone state.</td></tr>
+          <tr><td>All remaining areas</td><td><strong>49</strong></td><td>AI, animation, camera, inventory, progression, shop, systems, parallax, debug.</td></tr>
+        </tbody></table></div>
+      </section>
 
-            <!-- Shonen Fighter Rotation Description -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mb-8">
-                <div class="space-y-4">
-                    <h3 class="font-bebas text-2xl text-white">Genshin-Style Team Rotations</h3>
-                    <p class="text-gray-400 text-sm">
-                        Do not try to master long technical combos on a single character. Success relies on swapping team members to stack stat buffs before unleashing ultimate bursts:
-                    </p>
-                    <div class="bg-shibuya-slate/40 border border-shibuya-metal/30 p-4 rounded text-xs font-mono">
-                        <strong class="text-shibuya-crimson">DPS FIELD FOCUS:</strong> Stack standard combo strings to build Ultimate energy.
-                        <br><br>
-                        <strong class="text-shibuya-purple">SWAP SUPPORT CAST:</strong> Deploy Cursed barrier shields and area healing zones.
-                        <br><br>
-                        <strong class="text-shibuya-jade">BURST EXECUTION:</strong> Swap back to DPS to execute ultimate skills with active buffs.
-                    </div>
-                </div>
+      <section id="tech-roadmap" class="section">
+        <div class="section-heading"><span class="section-number">06 / Status</span><div><h3>Vertical-slice foundation; full loop not yet gated</h3><p>Mechanically rich subsystems exist, but delivery risk now sits in integration, content readiness, player-facing clarity, and release proof.</p></div></div>
+        <div class="grid-3">
+          <article class="card"><span class="status status--live">Functional</span><h4 style="margin-top:14px">Combat + Team</h4><p>Core actions, damage/elements, Aura Energy, runtime effects, three-slot state, swap finish, and HUD are operational.</p></article>
+          <article class="card"><span class="status status--partial">Partial</span><h4 style="margin-top:14px">Rogue-lite</h4><p>Shop, inventory, level, Potential, duplicates, and scene foundation exist; rewards, routing, boss, and reset orchestration do not.</p></article>
+          <article class="card"><span class="status status--risk">Risk</span><h4 style="margin-top:14px">Content + QA</h4><p>Character readiness varies; accessibility, controller navigation, full-run tests, performance evidence, and release build remain.</p></article>
+        </div>
+      </section>
+    </article>
 
-                <div class="border border-shibuya-metal bg-shibuya-concrete p-2 cursor-zoom-in" onclick="openLightbox('https://digitalchumps.com/wp-content/uploads/2024/01/Gorgeous-action-packed-battles.gif?x96629')">
-                    <img src="https://digitalchumps.com/wp-content/uploads/2024/01/Gorgeous-action-packed-battles.gif?x96629" class="w-full h-full object-cover max-h-[220px]" alt="Dungeon Battle Pace">
-                    <span class="block text-[10px] text-gray-500 font-mono mt-1 text-center">FAST COMBAT AND UPGRADES</span>
-                </div>
-            </div>
-        </section>
+    <article id="panel-art" class="discipline-panel" role="tabpanel" aria-labelledby="tab-art" data-panel="art" hidden>
+      <header class="discipline-header">
+        <div>
+          <p class="discipline-kicker art-accent">Discipline 03</p>
+          <h2>Art Design</h2>
+          <p>The visual hierarchy, combat readability, VFX grammar, UI presentation, audio cues, and production constraints that sell Neo-JJK's supernatural action.</p>
+        </div>
+        <nav class="section-index" aria-label="Art design sections">
+          <a href="#art-thesis">Thesis</a><a href="#art-combat">Combat language</a><a href="#art-world">World</a><a href="#art-references">Reference index</a><a href="#art-ui">UI</a><a href="#art-audio">Audio</a><a href="#art-production">Production</a>
+        </nav>
+      </header>
 
-        <!-- 06. COMBAT DIRECTION -->
-        <section id="combat" class="mb-16 scroll-mt-6">
-            <h2 class="font-bebas text-4xl text-white flex items-center gap-3 border-b-2 border-shibuya-metal/60 pb-2 mb-6">
-                <span class="bg-shibuya-amber text-black px-2 py-0.5 text-2xl font-bold shonen-clip">06</span>
-                <span>[戦闘技術] ROTATION COMBAT VS LEGACY DNA</span>
-            </h2>
-            <p class="text-gray-300 max-w-3xl mb-8">
-                We have stripped complex fighter frame data and parry mechanics, replacing them with skill-cooldown rotations and simple dash-invincibility windows.
-            </p>
+      <section id="art-thesis" class="section">
+        <div class="section-heading"><span class="section-number">01 / Thesis</span><div><h3>Graphic supernatural impact over animation volume</h3><p>Short economical character animation is acceptable when silhouettes, attack shapes, timing, VFX, camera, and audio make the action readable and satisfying.</p></div></div>
+        <div class="grid-3">
+          <article class="card card--art"><h4>Readable silhouette</h4><p>Character pose, facing, weapon/body shape, and contact area remain understandable against dark environments.</p></article>
+          <article class="card card--art"><h4>Graphic attack shape</h4><p>Slash arcs, burst circles, projectile lanes, and warning zones communicate reach before ornamental detail.</p></article>
+          <article class="card card--art"><h4>Layered impact</h4><p>Animation contact, hit flash, VFX, audio, hit-stop, camera impulse, and damage UI scale with outcome importance.</p></article>
+        </div>
+        <div class="reference-gallery" style="margin-top:14px" aria-label="Visual mood reference">
+          <figure class="reference-tile reference-tile--hero">
+            <img class="reference-shot" src="https://i.redd.it/p4scnbqwrp991.gif" alt="Animated dark side-scrolling supernatural action mood reference." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Supernatural action mood</h4><p>Reference for dark stage values, bright attack shapes, readable silhouettes, and fast room-clear energy.</p><span class="reference-source">Art-thesis reference · i.redd.it</span></figcaption>
+          </figure>
+        </div>
+      </section>
 
-            <!-- TABS MODULE -->
-            <div class="tabs-container max-w-4xl">
-                <div class="flex gap-2 border-b border-shibuya-metal/50 pb-2 mb-6 font-bebas text-lg">
-                    <button class="tab-btn active px-4 py-1.5 border border-shibuya-jade/30 text-shibuya-jade hover:bg-shibuya-jade/10 transition-colors" onclick="switchTab(event, 'kept-tab')">
-                        ACTIVE PROTOCOLS (KEPT)
-                    </button>
-                    <button class="tab-btn px-4 py-1.5 border border-shibuya-crimson/30 text-shibuya-crimson hover:bg-shibuya-crimson/10 transition-colors" onclick="switchTab(event, 'removed-tab')">
-                        DEPRECATED TECHNIQUE (STRIPPED)
-                    </button>
-                </div>
+      <section id="art-combat" class="section">
+        <div class="section-heading"><span class="section-number">02 / Combat</span><div><h3>A restrained readability stack</h3><p>Feedback must distinguish telegraph, contact, damage magnitude, element/status, and completion. More layers are not automatically better.</p></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Layer</th><th>Job</th><th>Production rule</th></tr></thead><tbody>
+          <tr><td><strong>Telegraph</strong></td><td>Predict attack timing and area.</td><td>Readable shape and contrast before resolution; boss danger also needs an audible cue.</td></tr>
+          <tr><td><strong>Contact</strong></td><td>Confirm a hit occurred.</td><td>Animation contact + flash/impact VFX + short hit sound.</td></tr>
+          <tr><td><strong>Magnitude</strong></td><td>Differentiate weak, strong, crit, Skill, and Ultimate.</td><td>Scale hit-stop, impulse, sound weight, VFX size, and number treatment.</td></tr>
+          <tr><td><strong>Element / status</strong></td><td>Explain gauge, DOT, reaction, buff, shield, or debuff.</td><td>Use consistent color/icon/motion language; do not rely on color alone.</td></tr>
+          <tr><td><strong>Resolution</strong></td><td>Show ready, cooldown complete, room clear, or boss recovery.</td><td>Use a distinct, brief signal that does not compete with immediate danger.</td></tr>
+        </tbody></table></div>
 
-                <div id="kept-tab" class="tab-pane active space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-shibuya-concrete border border-shibuya-metal p-5 shadow-figma-jade">
-                            <h4 class="font-bebas text-xl text-shibuya-jade mb-3"><i class="fa-solid fa-circle-check"></i> Standard Combat Features</h4>
-                            <ul class="space-y-2 text-xs font-mono text-gray-400">
-                                <li><strong class="text-white">Simple Hit Reactions:</strong> Short stagger, visual knockback effects.</li>
-                                <li><strong class="text-white">Swap Cancel:</strong> Active actions continue during character swaps.</li>
-                                <li><strong class="text-white">iFrame Dodge:</strong> Short invincibility frames on dodge dash.</li>
-                                <li><strong class="text-white">Hit-Stop Freezer:</strong> Freezes visual elements on landed criticals.</li>
-                            </ul>
-                        </div>
-                        <div class="bg-shibuya-concrete border border-shibuya-metal p-5 shadow-figma-jade">
-                            <h4 class="font-bebas text-xl text-shibuya-jade mb-3"><i class="fa-solid fa-users-viewfinder"></i> Team Role Breakdown</h4>
-                            <ul class="space-y-2 text-xs font-mono text-gray-400">
-                                <li><strong class="text-shibuya-crimson">Main DPS:</strong> High-field presence, executes core combos.</li>
-                                <li><strong class="text-shibuya-purple">Sub DPS:</strong> Dumps skill/ultimate cooldowns, exits field.</li>
-                                <li><strong class="text-shibuya-jade">Support:</strong> Offfield energy regen, shields, heals.</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+        <div class="swatches" style="margin-top:14px" aria-label="Working visual palette">
+          <div class="swatch" style="background:#ff6b57"><strong>Player impact</strong><span>#FF6B57</span></div>
+          <div class="swatch" style="background:#59d6c7; color:#06120f"><strong>System / support</strong><span style="color:#173a35">#59D6C7</span></div>
+          <div class="swatch" style="background:#e6ba62; color:#1d1608"><strong>Warning / reward</strong><span style="color:#4b3910">#E6BA62</span></div>
+          <div class="swatch" style="background:#8b3dff"><strong>Void identity</strong><span>#8B3DFF</span></div>
+          <div class="swatch" style="background:#10141d"><strong>Stage neutral</strong><span>#10141D</span></div>
+        </div>
+        <p style="margin-top:10px;color:var(--quiet);font-size:.8rem">Palette is a showcase hierarchy, not a replacement for authored element assets. Every gameplay-critical state needs a non-color cue.</p>
+      </section>
 
-                <div id="removed-tab" class="tab-pane">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-shibuya-concrete border border-shibuya-metal p-5 shadow-figma-crimson">
-                            <h4 class="font-bebas text-xl text-shibuya-crimson mb-3"><i class="fa-solid fa-ban"></i> Removed Core Systems</h4>
-                            <ul class="space-y-2 text-xs font-mono text-gray-500">
-                                <li>✖ Complex branching combo trees (e.g. BlazBlue style).</li>
-                                <li>✖ Millisecond active cancel frame windows.</li>
-                                <li>✖ Physics-based airborne juggles & gravity state rules.</li>
-                                <li>✖ Perfect swap counters and timing checks.</li>
-                            </ul>
-                        </div>
-                        <div class="bg-shibuya-concrete border border-shibuya-metal p-5 shadow-figma-crimson">
-                            <h4 class="font-bebas text-xl text-shibuya-crimson mb-3"><i class="fa-solid fa-circle-minus"></i> Removed Hit States</h4>
-                            <ul class="space-y-2 text-xs font-mono text-gray-500">
-                                <li>✖ Long air- juggle locks and launch physics loops.</li>
-                                <li>✖ Stagger-lock loops against Special Grade bosses.</li>
-                                <li>✖ Damage Scaling governed by overall combo counters.</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+      <section id="art-world" class="section">
+        <div class="section-heading"><span class="section-number">03 / World</span><div><h3>Dark stages, bright decisions</h3><p>Environments support silhouette and hazard readability. Boss reference is used for scale, telegraph clarity, and punish-window composition—not for direct visual copying.</p></div></div>
+        <figure class="reference-frame">
+          <img src="../image.png" alt="Reference image showing a small player character facing a large, high-contrast boss in a dark side-scrolling arena.">
+          <figcaption><strong>Reference lens</strong><span>Large boss silhouette, calm negative space around the player, clear ground plane, and attack shapes that read against a restrained environment.</span></figcaption>
+        </figure>
+        <div class="grid-3" style="margin-top:14px">
+          <article class="card"><h4>Environment</h4><p>Dark supernatural spaces with separated foreground, play plane, and background. Decoration must not resemble hazards or interactables.</p></article>
+          <article class="card"><h4>Boss scale</h4><p>Large mass, iconic silhouette, stable visual center, broad attack shapes, and obvious recovery pose.</p></article>
+          <article class="card"><h4>Room readability</h4><p>Entrance, sealed boundary, exit trigger, platforms, and danger zones remain visible during full combat VFX load.</p></article>
+        </div>
+      </section>
 
-        <!-- 07. CHARACTER KIT DESIGN & SIMULATOR -->
-        <section id="characters" class="mb-16 scroll-mt-6">
-            <h2 class="font-bebas text-4xl text-white flex items-center gap-3 border-b-2 border-shibuya-metal/60 pb-2 mb-6">
-                <span class="bg-shibuya-crimson text-black px-2 py-0.5 text-2xl font-bold shonen-clip">07</span>
-                <span>[武闘名簿] FIGHTER ROSTER & ACTION SIMULATOR</span>
-            </h2>
-            
-            <div class="overflow-x-auto border border-shibuya-metal shadow-md mb-8">
-                <table class="w-full text-left text-sm">
-                    <thead>
-                        <tr class="bg-shibuya-slate border-b border-shibuya-metal/50 text-white font-bebas tracking-wide text-xs">
-                            <th class="p-4">KIT MODULE</th>
-                            <th class="p-4">BUDGET FRAME</th>
-                            <th class="p-4">DESIGN AND BEHAVIOR INSTRUCTION</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-shibuya-concrete divide-y divide-shibuya-metal/30">
-                        <tr>
-                            <td class="p-4 font-bold text-shibuya-crimson">Basic Attack (BA)</td>
-                            <td class="p-4 font-mono text-xs">2-3 Hits Max</td>
-                            <td class="p-4 text-gray-400">Simple forward-facing strikes, loopable, ground & air uniform.</td>
-                        </tr>
-                        <tr>
-                            <td class="p-4 font-bold text-shibuya-jade">Skill</td>
-                            <td class="p-4 font-mono text-xs">1 Active Cooldown</td>
-                            <td class="p-4 text-gray-400">Interrupts BA. A/D steer controls active trajectory paths.</td>
-                        </tr>
-                        <tr>
-                            <td class="p-4 font-bold text-shibuya-amber">Ultimate</td>
-                            <td class="p-4 font-mono text-xs">1 Energy Release</td>
-                            <td class="p-4 text-gray-400">Flickers screens. Full frame freezes during damage registration.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+      <section id="art-references" class="section">
+        <div class="section-heading"><span class="section-number">04 / Reference index</span><div><h3>Complete visual reference board</h3><p>This index preserves the complete board in one place. The same references now also appear inside the Identity, Loop, Combat, Team, Character, Progression, Encounters, and Art sections where each design lens is applied.</p></div></div>
 
-            <!-- INTERACTIVE Fig-quality Character Kit Simulator -->
-            <div class="bg-shibuya-concrete border-2 border-shibuya-crimson p-6 shadow-figma-crimson max-w-4xl">
-                <div class="flex justify-between items-center border-b border-shibuya-metal/40 pb-4 mb-6">
-                    <span class="font-bebas text-2xl text-white tracking-widest flex items-center gap-2">
-                        <i class="fa-solid fa-gamepad text-shibuya-crimson"></i> ARCHIVE SELECTOR TERMINAL
-                    </span>
-                    <!-- Roster Selection grid -->
-                    <div class="flex gap-2">
-                        <button class="char-select-btn active px-3 py-1 bg-shibuya-crimson text-black font-bebas text-sm font-bold tracking-wider" onclick="selectSimChar('shin')">
-                            SHIN (DPS)
-                        </button>
-                        <button class="char-select-btn px-3 py-1 bg-shibuya-slate border border-shibuya-metal text-gray-400 font-bebas text-sm font-bold tracking-wider" onclick="selectSimChar('blind')">
-                            BLIND (SUB)
-                        </button>
-                        <button class="char-select-btn px-3 py-1 bg-shibuya-slate border border-shibuya-metal text-gray-400 font-bebas text-sm font-bold tracking-wider" onclick="selectSimChar('sage')">
-                            SAGE (SUPP)
-                        </button>
-                    </div>
-                </div>
+        <h4 style="margin:0 0 12px">Combat, pacing, and mood</h4>
+        <div class="reference-gallery">
+          <figure class="reference-tile reference-tile--hero">
+            <img class="reference-shot" src="https://i.redd.it/p4scnbqwrp991.gif" alt="Animated dark side-scrolling action concept reference." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Mood and side-scrolling action</h4><p>Atmosphere, supernatural contrast, combat-plane readability, and rapid room-clearing tone.</p><span class="reference-source">Source · i.redd.it</span></figcaption>
+          </figure>
+          <figure class="reference-tile">
+            <img class="reference-shot" src="https://digitalchumps.com/wp-content/uploads/2024/01/Gorgeous-action-packed-battles.gif?x96629" alt="Animated BlazBlue Entropy Effect combat reference." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>BlazBlue Entropy Effect — combat</h4><p>Fast side-scrolling action, strong hit presentation, and compact combat cadence.</p><span class="reference-source">Source · digitalchumps.com</span></figcaption>
+          </figure>
+          <figure class="reference-tile">
+            <img class="reference-shot" src="https://wutheringlab.com/wp-content/uploads/2023/06/8.gif" alt="Animated Wuthering Waves combat reference." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Wuthering Waves — action impact</h4><p>Action-phase presentation, large VFX shapes, and high-impact Skill/Ultimate delivery.</p><span class="reference-source">Source · wutheringlab.com</span></figcaption>
+          </figure>
+          <figure class="reference-tile">
+            <img class="reference-shot" src="https://digitalchumps.com/wp-content/uploads/2024/01/Jin.gif?x96629" alt="Animated BlazBlue Entropy Effect character combat reference." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>BlazBlue Entropy Effect — character flow</h4><p>Character identity, traversal-to-combat continuity, and flashy low-friction execution.</p><span class="reference-source">Source · digitalchumps.com</span></figcaption>
+          </figure>
+          <figure class="reference-tile reference-tile--wide">
+            <img class="reference-shot" src="https://i.ytimg.com/vi/uN8O57b12WI/maxresdefault.jpg" alt="Side-scrolling boss battle reference with a large enemy and readable arena." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Boss encounter composition</h4><p>Large silhouette, clear arena pressure, readable attack lanes, and punish-window framing.</p><span class="reference-source">Source · i.ytimg.com</span></figcaption>
+          </figure>
+          <figure class="reference-tile reference-tile--wide">
+            <img class="reference-shot" src="https://images.steamusercontent.com/ugc/13067568473687387792/45B261D4D9A656E16A151EF9BA0C459F3266E616/?imw=1024&amp;&amp;ima=fit&amp;impolicy=Letterbox&amp;imcolor=%23000000&amp;letterbox=false" alt="Dungeon Slasher gameplay inspiration reference." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Dungeon Slasher</h4><p>Side-scrolling room pressure, character-build structure, and direct combat readability.</p><span class="reference-source">Source · steamusercontent.com</span></figcaption>
+          </figure>
+          <figure class="reference-tile">
+            <img class="reference-shot" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2HY1EesyVxubm5I87Po0SoDHBYBSazQf3T-Jk95QNghLCjLsKaTqJ5eXT&amp;s=10" alt="Genshin Impact team-rotation inspiration reference." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Genshin Impact</h4><p>Simplified team rotation: setup, support, burst, return to primary damage.</p><span class="reference-source">Source · gstatic.com</span></figcaption>
+          </figure>
+          <figure class="reference-tile">
+            <img class="reference-shot" src="https://store-images.s-microsoft.com/image/apps.38892.14044995170568579.c13577be-3cd6-4656-8a1f-1a197178694d.b3643bf5-077b-4ade-b606-9449437423f0" alt="BlazBlue Entropy Effect inspiration artwork." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>BlazBlue Entropy Effect</h4><p>Rogue-lite pacing, character differentiation, and high-energy side-scrolling presentation.</p><span class="reference-source">Source · microsoft.com</span></figcaption>
+          </figure>
+        </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-shibuya-slate p-4 border border-shibuya-metal/60 flex flex-col justify-between">
-                        <div>
-                            <span id="charBadge" class="bg-shibuya-crimson/20 border border-shibuya-crimson/50 text-shibuya-crimson text-[9px] font-mono px-2 py-0.5 tracking-widest uppercase">Main DPS</span>
-                            <h3 id="charName" class="font-bebas text-3xl font-black text-white mt-2">SHIN</h3>
-                            <p id="charTag" class="text-xs text-gray-400 font-mono mt-1 mb-4 italic">"Spirit Fire Aura, fast blade combos"</p>
-                        </div>
+        <h4 style="margin:30px 0 12px">Character, stat, and progression UX</h4>
+        <div class="reference-gallery">
+          <figure class="reference-tile reference-tile--wide reference-tile--diagram">
+            <img class="reference-shot" src="https://upload-os-bbs.hoyolab.com/upload/2025/01/28/13693861/d7cf74b844c6ff690f37810e2610c852_2399325505013166081.jpg?x-oss-process=image%2Fresize%2Cs_1000%2Fauto-orient%2C0%2Finterlace%2C1%2Fformat%2Cwebp%2Fquality%2Cq_70" alt="Character stat presentation reference from an action RPG interface." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Character stat presentation</h4><p>Reference for readable stat grouping, value hierarchy, and character-facing information density.</p><span class="reference-source">Source · hoyolab.com</span></figcaption>
+          </figure>
+          <figure class="reference-tile reference-tile--wide reference-tile--diagram">
+            <img class="reference-shot" src="../../../ca1.png" alt="Neo-JJK character role and stat reference board." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Character role and stat board</h4><p>Source-GDD reference for role positioning and character information design.</p><span class="reference-source">Source · local recovered copy</span></figcaption>
+          </figure>
+          <figure class="reference-tile reference-tile--wide reference-tile--diagram">
+            <img class="reference-shot" src="assets/elemental-type-reference.svg" alt="Neo-JJK elemental type reference board." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Elemental type board</h4><p>Memory, Echo, Ash, and Void identity reference for systemic and visual differentiation.</p><span class="reference-source">Source · reconstructed from GDD rules</span></figcaption>
+          </figure>
+          <figure class="reference-tile reference-tile--wide reference-tile--diagram">
+            <img class="reference-shot" src="https://www.gameuidatabase.com/uploads/Genshin-Impact01032021-021309-52226.jpg" alt="Genshin Impact character level interface reference." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Character Level UI</h4><p>Reference for EXP preview, current/max progression, and level-up confirmation.</p><span class="reference-source">Source · gameuidatabase.com</span></figcaption>
+          </figure>
+          <figure class="reference-tile reference-tile--wide reference-tile--diagram">
+            <img class="reference-shot" src="https://static.wikia.nocookie.net/gensin-impact/images/3/3f/Constellation_Menu.png/revision/latest?cb=20220411014019" alt="Genshin Impact constellation progression interface reference." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Potential node presentation</h4><p>Reference for sequential permanent upgrades, node states, selection, and preview hierarchy.</p><span class="reference-source">Source · wikia.nocookie.net</span></figcaption>
+          </figure>
+        </div>
 
-                        <div class="space-y-2">
-                            <button class="trigger-btn w-full flex justify-between items-center bg-shibuya-concrete border border-shibuya-metal hover:border-shibuya-crimson p-2.5 text-xs text-white tracking-wider font-mono font-bold" onclick="triggerAction('ba')">
-                                <span>Flame Arc Chain</span>
-                                <span class="key">LMB</span>
-                            </button>
-                            <button class="trigger-btn w-full flex justify-between items-center bg-shibuya-concrete border border-shibuya-metal hover:border-shibuya-crimson p-2.5 text-xs text-white tracking-wider font-mono font-bold" onclick="triggerAction('skill')">
-                                <span>Aura Burst</span>
-                                <span class="key">RMB</span>
-                            </button>
-                            <button class="trigger-btn w-full flex justify-between items-center bg-shibuya-concrete border border-shibuya-metal hover:border-shibuya-crimson p-2.5 text-xs text-white tracking-wider font-mono font-bold" onclick="triggerAction('ult')">
-                                <span>Cursed Inferno</span>
-                                <span class="key">Q</span>
-                            </button>
-                        </div>
-                    </div>
+        <h4 style="margin:30px 0 12px">Local Neo-JJK role boards</h4>
+        <div class="reference-gallery">
+          <figure class="reference-tile reference-tile--wide reference-tile--diagram">
+            <img class="reference-shot" src="../../../ca1.png" alt="Neo-JJK role archetype triangle mapping DPS, amplifier, and sustain." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Archetype triangle</h4><p>Local working board positioning Reaper, Executioner, Herald, Arbiter, and Warden across DPS, amplification, and sustain.</p><span class="reference-source">Local · ca1.png</span></figcaption>
+          </figure>
+          <figure class="reference-tile reference-tile--wide reference-tile--diagram">
+            <img class="reference-shot" src="../../../ca2.png" alt="Neo-JJK bilingual role definition board." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Role function board</h4><p>Local bilingual definition of combat contribution, expected health/damage, and mobility profiles.</p><span class="reference-source">Local · ca2.png</span></figcaption>
+          </figure>
+          <figure class="reference-tile reference-tile--wide reference-tile--diagram">
+            <img class="reference-shot" src="../../../ca3.png" alt="Neo-JJK role name and thematic meaning board." loading="lazy" decoding="async">
+            <figcaption class="reference-caption"><h4>Role naming and fantasy</h4><p>Local thematic rationale for Reaper, Executioner, Herald, Arbiter, and Warden terminology.</p><span class="reference-source">Local · ca3.png</span></figcaption>
+          </figure>
+        </div>
+      </section>
 
-                    <div class="md:col-span-2 flex flex-col justify-between bg-black/60 p-4 border border-shibuya-metal/50">
-                        <div class="flex justify-between items-center text-[10px] font-mono text-gray-500 mb-3 uppercase">
-                            <span>FSM Animation Log Terminal</span>
-                            <span id="cooldownLabel">CDR: 0%</span>
-                        </div>
+      <section id="art-ui" class="section">
+        <div class="section-heading"><span class="section-number">05 / UI</span><div><h3>Information hierarchy follows urgency</h3><p>Combat UI is glanceable. Safe-zone UI can carry more detail and comparison. Prototype fallback layouts are functional, not final art approval.</p></div></div>
+        <div class="grid-3">
+          <article class="card"><h4>Critical — always visible</h4><p>Active HP, immediate threat, action unavailability, and Ultimate readiness.</p></article>
+          <article class="card"><h4>Important — glanceable</h4><p>Skill/Ultimate cooldown, AE, team HP, swap cooldown, active-effect icon/stack state, and follow-up windows. Timed-effect duration display remains a target.</p></article>
+          <article class="card"><h4>Reference — on demand</h4><p>Full stats, level/EXP, Potential nodes, equipment comparison, inventory, and shop details.</p></article>
+        </div>
+        <div class="callout" style="margin-top:14px"><span class="label">Interaction standard</span><p>Hover, focus, selection, locked, affordable, upgrade, downgrade, and confirmed states must each be distinct. Keyboard/controller focus and reduced-motion behavior are release requirements, not optional polish.</p></div>
+      </section>
 
-                        <!-- Frame Visualizer Bar -->
-                        <div class="relative w-full h-8 bg-shibuya-slate border border-shibuya-metal/80 overflow-hidden flex mb-4">
-                            <div id="wPhase" class="h-full bg-shibuya-amber text-black font-bebas text-xs flex items-center justify-center font-bold" style="width: 30%">WINDUP</div>
-                            <div id="aPhase" class="h-full bg-shibuya-crimson text-white font-bebas text-xs flex items-center justify-center font-bold" style="width: 40%">ACTIVE</div>
-                            <div id="rPhase" class="h-full bg-shibuya-jade text-black font-bebas text-xs flex items-center justify-center font-bold" style="width: 30%">RECOVER</div>
-                            <div id="frameIndicator" class="absolute top-0 left-0 w-1 h-full bg-white shadow-[0_0_8px_#fff]" style="display: none;"></div>
-                        </div>
+      <section id="art-audio" class="section">
+        <div class="section-heading"><span class="section-number">06 / Audio</span><div><h3>Sound carries threat, identity, and impact</h3><p>Audio is a gameplay channel. It must explain action timing and priority, not only decorate VFX.</p></div></div>
+        <div class="grid-4">
+          <article class="card"><h4>Basic</h4><p>Short transient, low tail, clear hit/miss difference.</p></article>
+          <article class="card"><h4>Skill</h4><p>Character-specific charge/release identity and cooldown-ready cue.</p></article>
+          <article class="card"><h4>Ultimate</h4><p>AE-ready chime, activation signature, release weight, and controlled mix ducking.</p></article>
+          <article class="card"><h4>Threat</h4><p>Boss warning and dangerous projectile cues arrive before active resolution.</p></article>
+        </div>
+      </section>
 
-                        <!-- Output log -->
-                        <div id="consoleOutput" class="h-32 overflow-y-auto bg-black/80 border border-shibuya-metal/30 p-3 font-mono text-[11px] text-shibuya-jade leading-relaxed space-y-1">
-                            <div>&gt; READY TO ENGAGE COMBAT VERBS...</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+      <section id="art-production" class="section">
+        <div class="section-heading"><span class="section-number">07 / Production</span><div><h3>Art definition of done</h3><p>Every release action and encounter must pass a readability and feedback check in motion, not only look correct in isolated assets.</p></div></div>
+        <div class="grid-2">
+          <article class="card"><span class="status status--live">Pipeline exists</span><h4 style="margin-top:14px">Current capability</h4><ul><li>Animation/action authoring tools</li><li>VFX and projectile libraries</li><li>Hit flash, hit-stop, camera impulse, slow motion</li><li>World damage and runtime-effect UI</li><li>Per-character audio profiles</li></ul></article>
+          <article class="card card--risk"><span class="status status--risk">Approval pending</span><h4 style="margin-top:14px">Human visual / feel gates</h4><ul><li>Final UI composition and node art</li><li>Switch timing and overlay readability</li><li>Camera exit-cue distance/duration</li><li>Combat noise under dense VFX</li><li>Controller focus and accessibility options</li></ul></article>
+        </div>
+      </section>
+    </article>
+  </main>
 
-        <!-- 08. ROGUE-LITE PROGRESSION -->
-        <section id="progression" class="mb-16 scroll-mt-6">
-            <h2 class="font-bebas text-4xl text-white flex items-center gap-3 border-b-2 border-shibuya-metal/60 pb-2 mb-6">
-                <span class="bg-shibuya-jade text-black px-2 py-0.5 text-2xl font-bold shonen-clip">08</span>
-                <span>[契約昇華] SOUL SHOP & UPGRADE TERMINAL</span>
-            </h2>
-            <p class="text-gray-300 max-w-3xl mb-8">
-                Cursed souls harvested from bosses serve as trade currencies at the Subway Soul Shop NPC, unlocking permanent stat boosts and constellation potentials.
-            </p>
+  <footer class="footer">
+    <div class="shell footer-inner">
+      <span>Neo-JJK Design &amp; Production Bible · runtime snapshot 2026-07-18</span>
+      <span>Source of truth: <a href="../GDD_Neo-JJK.md">GDD_Neo-JJK.md</a></span>
+    </div>
+  </footer>
 
-            <div class="overflow-x-auto border border-shibuya-metal shadow-md mb-8">
-                <table class="w-full text-left text-sm">
-                    <thead>
-                        <tr class="bg-shibuya-slate border-b border-shibuya-metal/50 text-white font-bebas tracking-wide text-xs">
-                            <th class="p-4 border-r border-shibuya-metal/30">CURRENCY CLASSIFICATION</th>
-                            <th class="p-4">OBTAIN DESIGN PATHWAY</th>
-                            <th class="p-4">DEATH INCIDENT RESET RULE</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-shibuya-concrete divide-y divide-shibuya-metal/30">
-                        <tr>
-                            <td class="p-4 font-mono font-bold text-white border-r border-shibuya-metal/30">Soul Currency</td>
-                            <td class="p-4">Defeating basic room fiends. Spent at in-run shop rooms.</td>
-                            <td class="p-4 font-bold text-shibuya-crimson uppercase">Reset on death</td>
-                        </tr>
-                        <tr>
-                            <td class="p-4 font-mono font-bold text-white border-r border-shibuya-metal/30">Soul Fragments</td>
-                            <td class="p-4">Defeating special grade bosses and Shibuya timeline checkpoints.</td>
-                            <td class="p-4 font-bold text-shibuya-jade uppercase">Permanent retain</td>
-                        </tr>
-                        <tr>
-                            <td class="p-4 font-mono font-bold text-white border-r border-shibuya-metal/30">Recruit Contract</td>
-                            <td class="p-4">Purchased in Lobby using harvested Soul Fragments.</td>
-                            <td class="p-4 font-bold text-shibuya-jade uppercase">Permanent retain</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+  <script>
+    (() => {
+      const tabs = [...document.querySelectorAll('[role="tab"]')];
+      const panels = [...document.querySelectorAll('[role="tabpanel"]')];
 
-            <!-- Interactive Cursed Upgrades Stats Calculator -->
-            <div class="bg-shibuya-concrete border-2 border-shibuya-jade p-6 shadow-figma-jade max-w-4xl mb-8">
-                <h4 class="font-bebas text-2xl text-white tracking-widest flex items-center gap-2 mb-4 border-b border-shibuya-metal/40 pb-2">
-                    <i class="fa-solid fa-dna text-shibuya-jade"></i> POTENTIAL CONFIGURATION TERMINAL
-                </h4>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <!-- Config Panel controls -->
-                    <div class="space-y-4 font-mono text-xs">
-                        <div class="flex flex-col gap-1.5">
-                            <span class="text-gray-500 uppercase tracking-widest">Active In-Run Charms</span>
-                            <div class="space-y-1 bg-black/40 p-3 border border-shibuya-metal/60">
-                                <label class="flex items-center gap-2 cursor-pointer text-gray-300 hover:text-white select-none">
-                                    <input type="checkbox" id="upAtk" class="accent-shibuya-jade" onchange="recalcStats()">
-                                    <span>ATK Seal Charm (+15% ATK)</span>
-                                </label>
-                                <label class="flex items-center gap-2 cursor-pointer text-gray-300 hover:text-white select-none">
-                                    <input type="checkbox" id="upCdr" class="accent-shibuya-jade" onchange="recalcStats()">
-                                    <span>CDR Seal Charm (+10% CDR)</span>
-                                </label>
-                                <label class="flex items-center gap-2 cursor-pointer text-gray-300 hover:text-white select-none">
-                                    <input type="checkbox" id="upCrit" class="accent-shibuya-jade" onchange="recalcStats()">
-                                    <span>CRIT Seal Charm (+15% CRIT)</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="flex flex-col gap-1.5">
-                            <span class="text-gray-500 uppercase tracking-widest">Permanent Constellation Potential</span>
-                            <select id="potUpgrade" class="w-full bg-shibuya-slate border border-shibuya-metal py-2 px-3 text-white rounded focus:outline-none focus:border-shibuya-jade transition-colors" onchange="recalcStats()">
-                                <option value="0">Grade 0 (Base Stats)</option>
-                                <option value="1">Grade I potential (+10 ATK)</option>
-                                <option value="2">Grade II potential (+10 ATK, +5% CDR)</option>
-                                <option value="3">Grade III potential (+20 ATK, +5% CDR, +10% CRIT)</option>
-                                <option value="4">Grade IV potential (+30 ATK, +10% CDR, +10% CRIT)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Output specs panel -->
-                    <div class="md:col-span-2 grid grid-cols-2 gap-4">
-                        <div class="bg-black/50 border border-shibuya-metal p-4 flex flex-col justify-between">
-                            <span class="text-[10px] font-mono text-gray-500 uppercase">Attack Power (ATK)</span>
-                            <div class="flex items-baseline gap-2 mt-2">
-                                <span id="valAtk" class="font-bebas text-4xl text-white tracking-wide">10</span>
-                                <span class="calc-stat-val-orig font-mono text-xs text-gray-600 line-through">10</span>
-                            </div>
-                        </div>
-                        <div class="bg-black/50 border border-shibuya-metal p-4 flex flex-col justify-between">
-                            <span class="text-[10px] font-mono text-gray-500 uppercase">Target Roster HP</span>
-                            <div class="mt-2">
-                                <span id="valHp" class="font-bebas text-4xl text-white tracking-wide">100</span>
-                            </div>
-                        </div>
-                        <div class="bg-black/50 border border-shibuya-metal p-4 flex flex-col justify-between">
-                            <span class="text-[10px] font-mono text-gray-500 uppercase">Aura Crit Rate</span>
-                            <div class="flex items-center gap-2 mt-2">
-                                <span id="valCrit" class="font-bebas text-4xl text-white tracking-wide">5%</span>
-                                <span id="diffCrit" class="font-mono text-xs text-shibuya-jade"></span>
-                            </div>
-                        </div>
-                        <div class="bg-black/50 border border-shibuya-metal p-4 flex flex-col justify-between">
-                            <span class="text-[10px] font-mono text-gray-500 uppercase">Cooldown Master (CDR)</span>
-                            <div class="flex items-center gap-2 mt-2">
-                                <span id="valCdr" class="font-bebas text-4xl text-white tracking-wide">0%</span>
-                                <span id="diffCdr" class="font-mono text-xs text-shibuya-jade"></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Potential Constellation Image Frame -->
-            <div class="border border-shibuya-metal bg-shibuya-concrete p-3 max-w-4xl">
-                <div class="relative overflow-hidden cursor-zoom-in" onclick="openLightbox('https://static.wikia.nocookie.net/gensin-impact/images/3/3f/Constellation_Menu.png/revision/latest?cb=20220411014019')">
-                    <img src="https://static.wikia.nocookie.net/gensin-impact/images/3/3f/Constellation_Menu.png/revision/latest?cb=20220411014019" class="w-full max-h-[300px] object-cover hover:scale-105 transition-transform duration-500" alt="Potential Node Upgrade Menu UI">
-                    <span class="absolute bottom-3 left-3 bg-black/80 text-[10px] font-mono text-shibuya-jade px-2 py-0.5 tracking-widest uppercase">Permanent Potential Menu layout</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- 09. ITEMS AND ENEMIES -->
-        <section id="items-enemies" class="mb-16 scroll-mt-6">
-            <h2 class="font-bebas text-4xl text-white flex items-center gap-3 border-b-2 border-shibuya-metal/60 pb-2 mb-6">
-                <span class="bg-shibuya-amber text-black px-2 py-0.5 text-2xl font-bold shonen-clip">09</span>
-                <span>[妖魔呪具] ITEMS & ENEMY THREAT ARCHE TYPES</span>
-            </h2>
-            <p class="text-gray-300 max-w-3xl mb-8">
-                Every threat within the Cursed Realm possesses high-readability attack indicators. Keep combat pacing direct and clear.
-            </p>
-
-            <div class="overflow-x-auto border border-shibuya-metal shadow-md mb-8">
-                <table class="w-full text-left text-sm">
-                    <thead>
-                        <tr class="bg-shibuya-slate border-b border-shibuya-metal/50 text-white font-bebas tracking-wide text-xs">
-                            <th class="p-4">ITEM DESIGN SEAL</th>
-                            <th class="p-4">PACING UTILITY</th>
-                            <th class="p-4">DETERMINED COMBAT UTILITY SPEC</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-shibuya-concrete divide-y divide-shibuya-metal/30">
-                        <tr>
-                            <td class="p-4 font-bold text-white">Damage Charm</td>
-                            <td class="p-4 font-mono text-xs text-shibuya-crimson">ATK Multiplier</td>
-                            <td class="p-4 text-gray-400">Increases standard slash string, active skill, and ultimate damage values.</td>
-                        </tr>
-                        <tr>
-                            <td class="p-4 font-bold text-white">Cooldown Charm</td>
-                            <td class="p-4 font-mono text-xs text-shibuya-jade">CDR Reduction</td>
-                            <td class="p-4 text-gray-400">Refunds active skill cooldown states instantly on room clear transition.</td>
-                        </tr>
-                        <tr>
-                            <td class="p-4 font-bold text-white">Shield Charm</td>
-                            <td class="p-4 font-mono text-xs text-shibuya-amber">Swap Buffer</td>
-                            <td class="p-4 text-gray-400">Generates a visual bubble absorbing up to 20% max HP damage upon swap.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Shibuya Enemy Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-5xl">
-                <div class="bg-shibuya-concrete border border-shibuya-metal p-5">
-                    <span class="text-shibuya-jade font-bebas text-lg tracking-wider block mb-2">// TRASH FIEND</span>
-                    <p class="text-xs text-gray-400 leading-relaxed">Low HP. Simple stagger reactions. Main target used for building Ultimate charges.</p>
-                </div>
-                <div class="bg-shibuya-concrete border border-shibuya-metal p-5">
-                    <span class="text-shibuya-amber font-bebas text-lg tracking-wider block mb-2">// RANGED FIEND</span>
-                    <p class="text-xs text-gray-400 leading-relaxed">Low HP. Fires targeted bullets/arrows. Priority target. Forces active player repositioning.</p>
-                </div>
-                <div class="bg-shibuya-concrete border border-shibuya-metal p-5">
-                    <span class="text-shibuya-crimson font-bebas text-lg tracking-wider block mb-2">// SHIELD FIEND</span>
-                    <p class="text-xs text-gray-400 leading-relaxed">Blocks frontal strikes. Weak from behind. Bypassed by simple dash transitions.</p>
-                </div>
-                <div class="bg-shibuya-concrete border border-shibuya-metal p-5">
-                    <span class="text-shibuya-purple font-bebas text-lg tracking-wider block mb-2">// ELITE MINI-BOSS</span>
-                    <p class="text-xs text-gray-400 leading-relaxed">Heavy health bars. Special armor swings. Displays ground indicator boundaries.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- 10. BOSS BATTLES -->
-        <section id="bosses" class="mb-16 scroll-mt-6">
-            <h2 class="font-bebas text-4xl text-white flex items-center gap-3 border-b-2 border-shibuya-metal/60 pb-2 mb-6">
-                <span class="bg-shibuya-crimson text-black px-2 py-0.5 text-2xl font-bold shonen-clip">10</span>
-                <span>[大敵決戦] PATTERN-BASED BOSS FIGHT ENGINE</span>
-            </h2>
-            <p class="text-gray-300 max-w-3xl mb-8">
-                Subway Bosses act as large-scale combat puzzles. Players dodge incoming hazard shapes, then swap characters to deploy heavy bursts during vulnerability states.
-            </p>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl">
-                <!-- Figma styled check blocks -->
-                <div class="bg-shibuya-concrete border border-shibuya-metal p-6 shadow-md">
-                    <h4 class="font-bebas text-xl text-shibuya-jade mb-3"><i class="fa-solid fa-circle-check"></i> Standard Boss Mechanics</h4>
-                    <ul class="space-y-3 font-mono text-xs text-gray-400">
-                        <li class="flex items-start gap-2">
-                            <span class="text-shibuya-jade">✔</span>
-                            <span><strong>Large silhouettes:</strong> High placement and visual readability.</span>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <span class="text-shibuya-jade">✔</span>
-                            <span><strong>Telegraphed warnings:</strong> Danger outlines match spatial hits.</span>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <span class="text-shibuya-jade">✔</span>
-                            <span><strong>Stagger resistance:</strong> Armor is bypassable only during stun states.</span>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <span class="text-shibuya-jade">✔</span>
-                            <span><strong>Phase shifts:</strong> Combat scales as HP boundaries fall below 60% and 30%.</span>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="bg-shibuya-concrete border border-shibuya-metal p-6 shadow-md">
-                    <h4 class="font-bebas text-xl text-shibuya-crimson mb-3"><i class="fa-solid fa-circle-xmark"></i> Banned Boss Behaviors</h4>
-                    <ul class="space-y-3 font-mono text-xs text-gray-500">
-                        <li class="flex items-start gap-2">
-                            <span class="text-shibuya-crimson">✖</span>
-                            <span>No launcher grab states or infinite combo juggle targets.</span>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <span class="text-shibuya-crimson">✖</span>
-                            <span>No frame-advantage trap locks.</span>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <span class="text-shibuya-crimson">✖</span>
-                            <span>No dynamic input-reading dodge maneuvers.</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </section>
-
-        <!-- 11. INSPIRATIONS -->
-        <section id="inspirations" class="mb-16 scroll-mt-6">
-            <h2 class="font-bebas text-4xl text-white flex items-center gap-3 border-b-2 border-shibuya-metal/60 pb-2 mb-6">
-                <span class="bg-shibuya-jade text-black px-2 py-0.5 text-2xl font-bold shonen-clip">11</span>
-                <span>[参考範例] INSPIRATIONS & PRIMARY TARGETS</span>
-            </h2>
-            <p class="text-gray-300 max-w-3xl mb-8">
-                Benchmarking game references to align visual pacing, progression templates, and fight models.
-            </p>
-
-            <!-- Dungeon Slasher Big Featured Banner (Primary Inspiration) -->
-            <div class="bg-shibuya-concrete border-2 border-shibuya-crimson p-6 shadow-figma-crimson flex flex-col md:flex-row gap-6 items-center max-w-4xl mb-8 select-none">
-                <div class="w-full md:w-2/5 h-44 overflow-hidden border border-shibuya-metal cursor-zoom-in" onclick="openLightbox('https://pbs.twimg.com/media/GjJqasrbIAI--4p.png')">
-                    <img src="https://pbs.twimg.com/media/GjJqasrbIAI--4p.png" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500" alt="Dungeon Slasher Reference">
-                </div>
-                <div class="flex-grow flex flex-col items-start md:w-3/5">
-                    <span class="bg-shibuya-crimson/25 border border-shibuya-crimson text-shibuya-crimson font-bebas text-xs font-bold px-3 py-0.5 tracking-widest shonen-clip mb-3">★ PRIMARY CORE MODEL [主典]</span>
-                    <h3 class="font-bebas text-3xl font-black text-white mb-2 leading-none">DUNGEON SLASHER</h3>
-                    <p class="text-sm text-gray-400 leading-relaxed">
-                        The primary model for Neo-JJK's combat pace. It defines our side-scrolling exploration loop, melee target configurations, and visual attack readouts.
-                    </p>
-                </div>
-            </div>
-
-            <!-- Other Inspirations Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl">
-                <div class="bg-shibuya-concrete border border-shibuya-metal/60 p-4">
-                    <div class="h-28 overflow-hidden mb-3 border border-shibuya-metal/30 cursor-zoom-in" onclick="openLightbox('https://assets-prd.ignimgs.com/2022/09/29/screen-shot-2022-09-29-at-1-03-15-pm-1664481812278.png')">
-                        <img src="https://assets-prd.ignimgs.com/2022/09/29/screen-shot-2022-09-29-at-1-03-15-pm-1664481812278.png" class="w-full h-full object-cover" alt="Oblivion Override Reference">
-                    </div>
-                    <h4 class="font-bebas text-xl text-white mb-1">Oblivion Override</h4>
-                    <p class="text-xs text-gray-500">Guides the rogue-lite upgrade selection grids and status-synergy loops.</p>
-                </div>
-                <div class="bg-shibuya-concrete border border-shibuya-metal/60 p-4">
-                    <div class="h-28 overflow-hidden mb-3 border border-shibuya-metal/30 cursor-zoom-in" onclick="openLightbox('https://play-lh.googleusercontent.com/8nuRkO_lfGb-QzIVH6XPbN6r9FMBphYJ-Z_jzHrtxZW_4txdwPjvl4frRo4QCr0BmuA')">
-                        <img src="https://play-lh.googleusercontent.com/8nuRkO_lfGb-QzIVH6XPbN6r9FMBphYJ-Z_jzHrtxZW_4txdwPjvl4frRo4QCr0BmuA" class="w-full h-full object-cover" alt="Skul Reference">
-                    </div>
-                    <h4 class="font-bebas text-xl text-white mb-1">Skul: Hero Slayer</h4>
-                    <p class="text-xs text-gray-500">Guides character identity via small kits, persistent soul shops, and run upgrades.</p>
-                </div>
-                <div class="bg-shibuya-concrete border border-shibuya-metal/60 p-4">
-                    <div class="h-28 overflow-hidden mb-3 border border-shibuya-metal/30 cursor-zoom-in" onclick="openLightbox('https://images.squarespace-cdn.com/content/v1/606d159a953867291018f801/1617765374873-IP4ANI7I6BITEWEVJMRJ/cp_thumbs__0002_God.jpg')">
-                        <img src="https://images.squarespace-cdn.com/content/v1/606d159a953867291018f801/1617765374873-IP4ANI7I6BITEWEVJMRJ/cp_thumbs__0002_God.jpg" class="w-full h-full object-cover" alt="Hollow Knight Reference">
-                    </div>
-                    <h4 class="font-bebas text-xl text-white mb-1">Hollow Knight</h4>
-                    <p class="text-xs text-gray-500">Guides boss patterns: telegraphed AoEs, warning lines, and punish zones.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- 12. PROJECT TECH STACK -->
-        <section id="tech-stack" class="mb-16 scroll-mt-6">
-            <h2 class="font-bebas text-4xl text-white flex items-center gap-3 border-b-2 border-shibuya-metal/60 pb-2 mb-6">
-                <span class="bg-shibuya-amber text-black px-2 py-0.5 text-2xl font-bold shonen-clip">12</span>
-                <span>[構築技術] RE-ALIGNED UNITY ARCHITECTURE</span>
-            </h2>
-            
-            <div class="overflow-x-auto border border-shibuya-metal shadow-md mb-8">
-                <table class="w-full text-left text-sm">
-                    <thead>
-                        <tr class="bg-shibuya-slate border-b border-shibuya-metal/50 text-white font-bebas tracking-wide text-xs">
-                            <th class="p-4">SUBSYSTEM LAYER</th>
-                            <th class="p-4">UNITY STACK VALUE</th>
-                            <th class="p-4">CORE SYSTEM RESPONSIBILITY</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-shibuya-concrete divide-y divide-shibuya-metal/30">
-                        <tr>
-                            <td class="p-4 font-bold text-white">Engine / Version</td>
-                            <td class="p-4 font-mono text-xs">Unity 6 LTS</td>
-                            <td class="p-4 text-gray-400">Authoritative runtime runtime loop.</td>
-                        </tr>
-                        <tr>
-                            <td class="p-4 font-bold text-white">Render Pipeline</td>
-                            <td class="p-4 font-mono text-xs">URP 17.x</td>
-                            <td class="p-4 text-gray-400">Post-processing filters, shader graph overlays, VFX graph particle sweeps.</td>
-                        </tr>
-                        <tr>
-                            <td class="p-4 font-bold text-white">Input Module</td>
-                            <td class="p-4 font-mono text-xs">Input System 1.8.x</td>
-                            <td class="p-4 text-gray-400">Handles action buffer cache tables.</td>
-                        </tr>
-                        <tr>
-                            <td class="p-4 font-bold text-white">Camera Director</td>
-                            <td class="p-4 font-mono text-xs">Cinemachine 3.x</td>
-                            <td class="p-4 text-gray-400">Controls camera clamping, priority switches, and shakes.</td>
-                        </tr>
-                        <tr>
-                            <td class="p-4 font-bold text-white">AI Controller</td>
-                            <td class="p-4 font-mono text-xs">Behavior Graph</td>
-                            <td class="p-4 text-gray-400">Unity Behavior graph nodes governing basic fiend movements.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Folder tree layout -->
-            <h3 class="font-bebas text-2xl text-white mb-4">Encapsulated Scripts folder convention</h3>
-            <div class="font-mono text-xs bg-black/60 border border-shibuya-metal/80 p-5 rounded text-gray-400 space-y-1">
-                <div>Assets/Project/Scripts/</div>
-                <div>├── <span class="text-shibuya-jade font-bold">AIBehaviour/</span>       <span class="text-gray-600">// EnemyController, EnemyHitReactionHandler</span></div>
-                <div>├── <span class="text-shibuya-jade font-bold">Animation/</span>         <span class="text-gray-600">// PlayerAnimator, AnimationHandler_Enemy</span></div>
-                <div>├── <span class="text-shibuya-jade font-bold">Behavior/</span>          <span class="text-gray-600">// Unity Behavior Graph node expansions</span></div>
-                <div>├── <span class="text-shibuya-jade font-bold">Character/</span>         <span class="text-gray-600">// SO definitions (CharacterObject, CombatData)</span></div>
-                <div>├── <span class="text-shibuya-jade font-bold">Combat/</span>            <span class="text-gray-600">// Hitbox trackers, Projectiles, GameFreezeManager</span></div>
-                <div>├── <span class="text-shibuya-jade font-bold">Player/</span>            <span class="text-gray-600">// PlayerStateMachine, all State subclasses</span></div>
-                <div>├── <span class="text-shibuya-jade font-bold">Shop/</span>              <span class="text-gray-600">// ShopManager, PlayerShopInventory, ShopUI</span></div>
-                <div>└── <span class="text-shibuya-jade font-bold">Systems/</span>           <span class="text-gray-600">// PlayerCharacter facade, TeamLoader script</span></div>
-            </div>
-        </section>
-
-        <!-- 13. PROTOTYPE TRUTH & CHECKLIST -->
-        <section id="prototype-truth" class="mb-16 scroll-mt-6">
-            <h2 class="font-bebas text-4xl text-white flex items-center gap-3 border-b-2 border-shibuya-metal/60 pb-2 mb-6">
-                <span class="bg-shibuya-crimson text-black px-2 py-0.5 text-2xl font-bold shonen-clip">13</span>
-                <span>[禊ぎリスト] DETECTED TECHNICAL DEBT CHORES</span>
-            </h2>
-            <p class="text-gray-300 max-w-3xl mb-8">
-                Refactoring milestones mapped from structural audits of our 168 prototype codebase scripts.
-            </p>
-
-            <!-- FIGMA DEBT CHECKLIST -->
-            <div class="bg-shibuya-concrete border border-shibuya-metal p-6 max-w-4xl shadow-figma-crimson">
-                <h4 class="font-bebas text-2xl text-shibuya-crimson mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-circle-radiation"></i> TECHNICAL DEBT RESOLUTION LIST
-                </h4>
-                
-                <ul id="debtList" class="space-y-4 font-mono text-xs">
-                    <li class="flex items-start gap-3 bg-black/30 p-3 border border-shibuya-metal/40">
-                        <input type="checkbox" id="debt1" class="mt-0.5 accent-shibuya-crimson cursor-pointer" onchange="saveDebtState()">
-                        <div class="flex flex-col gap-0.5 cursor-pointer">
-                            <span class="debt-item-title font-bold text-white">Decompose monolithic PlayerCombat.cs (48KB)</span>
-                            <span class="debt-item-desc text-gray-500">Split into smaller components: hitbox activator, projectile controller, and visual feedback presenter.</span>
-                        </div>
-                    </li>
-                    <li class="flex items-start gap-3 bg-black/30 p-3 border border-shibuya-metal/40">
-                        <input type="checkbox" id="debt2" class="mt-0.5 accent-shibuya-crimson cursor-pointer" onchange="saveDebtState()">
-                        <div class="flex flex-col gap-0.5 cursor-pointer">
-                            <span class="debt-item-title font-bold text-white">Decompress CombatPlayerState.cs (32KB)</span>
-                            <span class="debt-item-desc text-gray-500">Remove legacy frame-advantage rules, link windows, and airborne launch logic.</span>
-                        </div>
-                    </li>
-                    <li class="flex items-start gap-3 bg-black/30 p-3 border border-shibuya-metal/40">
-                        <input type="checkbox" id="debt3" class="mt-0.5 accent-shibuya-crimson cursor-pointer" onchange="saveDebtState()">
-                        <div class="flex flex-col gap-0.5 cursor-pointer">
-                            <span class="debt-item-title font-bold text-white">Fix class/filename mismatches</span>
-                            <span class="debt-item-desc text-gray-500">Rename PlayerInputHandler to InputHandler_Player and AnimetionEventRelay to AnimationEventRelay.</span>
-                        </div>
-                    </li>
-                    <li class="flex items-start gap-3 bg-black/30 p-3 border border-shibuya-metal/40">
-                        <input type="checkbox" id="debt4" class="mt-0.5 accent-shibuya-crimson cursor-pointer" onchange="saveDebtState()">
-                        <div class="flex flex-col gap-0.5 cursor-pointer">
-                            <span class="debt-item-title font-bold text-white">Prevent InputLockManager locks</span>
-                            <span class="debt-item-desc text-gray-500">Convert the static lock layout to a disposable handle design to prevent UI lock freezes.</span>
-                        </div>
-                    </li>
-                    <li class="flex items-start gap-3 bg-black/30 p-3 border border-shibuya-metal/40">
-                        <input type="checkbox" id="debt5" class="mt-0.5 accent-shibuya-crimson cursor-pointer" onchange="saveDebtState()">
-                        <div class="flex flex-col gap-0.5 cursor-pointer">
-                            <span class="debt-item-title font-bold text-white">Gate debug override shortcuts</span>
-                            <span class="debt-item-desc text-gray-500">Ensure the basic attack numeric shortcuts compile strictly within #if UNITY_EDITOR blocks.</span>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-        </section>
-
-        <!-- 14. 6-MONTH ROADMAP TIMELINE -->
-        <section id="roadmap" class="mb-16 scroll-mt-6">
-            <h2 class="font-bebas text-4xl text-white flex items-center gap-3 border-b-2 border-shibuya-metal/60 pb-2 mb-6">
-                <span class="bg-shibuya-jade text-black px-2 py-0.5 text-2xl font-bold shonen-clip">14</span>
-                <span>[渋谷作戦] SHIBUYA OPERATIONS ROADMAP</span>
-            </h2>
-            <p class="text-gray-300 max-w-3xl mb-8">
-                The 6-Month timeline mapped to sub-sprint operations across Shibuya Station's underground floors. Expand months to check off checklist progress.
-            </p>
-
-            <!-- TIMELINE -->
-            <div id="timelineList" class="relative max-w-4xl pl-6 border-l-2 border-shibuya-metal/60 font-mono text-xs space-y-6 select-none">
-                
-                <!-- Month 1 -->
-                <div id="month1" class="relative timeline-item active">
-                    <span class="absolute left-[-31px] top-1 w-4 h-4 rounded-full bg-shibuya-bg border-2 border-shibuya-crimson shadow-neon-crimson timeline-badge"></span>
-                    <div class="bg-shibuya-concrete border border-shibuya-metal/80 rounded">
-                        <div class="flex justify-between items-center bg-shibuya-slate/50 p-3 border-b border-shibuya-metal/40 cursor-pointer hover:bg-shibuya-slate/80 transition-colors" onclick="toggleTimeline('month1')">
-                            <div class="flex items-center gap-4">
-                                <span class="font-bebas text-lg text-white font-bold tracking-wider">MONTH 1 // B5F - SUBWAY PLATFORM</span>
-                                <span class="text-[10px] text-shibuya-crimson font-bold uppercase">Strip & Stabilize</span>
-                            </div>
-                            <i class="fa-solid fa-chevron-down text-gray-500 timeline-toggle-icon"></i>
-                        </div>
-                        
-                        <div class="timeline-content p-4 space-y-3 bg-black/20">
-                            <div class="flex items-start gap-3">
-                                <input type="checkbox" id="m1_1" class="mt-0.5 accent-shibuya-jade cursor-pointer" onchange="saveRoadmap()">
-                                <div class="flex flex-col gap-0.5">
-                                    <span class="roadmap-check-title font-bold text-white">Stabilize simple compile conditions</span>
-                                    <span class="roadmap-check-desc text-gray-500">Organize assembly definitions (.asmdef) across all scripts.</span>
-                                </div>
-                            </div>
-                            <div class="flex items-start gap-3">
-                                <input type="checkbox" id="m1_2" class="mt-0.5 accent-shibuya-jade cursor-pointer" onchange="saveRoadmap()">
-                                <div class="flex flex-col gap-0.5">
-                                    <span class="roadmap-check-title font-bold text-white">Inject InputLockManager fixes</span>
-                                    <span class="roadmap-check-desc text-gray-500">Transition panels to disposable handles to guarantee clean screen closes.</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Month 2 -->
-                <div id="month2" class="relative timeline-item">
-                    <span class="absolute left-[-31px] top-1 w-4 h-4 rounded-full bg-shibuya-bg border-2 border-shibuya-jade shadow-neon-jade timeline-badge"></span>
-                    <div class="bg-shibuya-concrete border border-shibuya-metal/80 rounded">
-                        <div class="flex justify-between items-center bg-shibuya-slate/50 p-3 border-b border-shibuya-metal/40 cursor-pointer hover:bg-shibuya-slate/80 transition-colors" onclick="toggleTimeline('month2')">
-                            <div class="flex items-center gap-4">
-                                <span class="font-bebas text-lg text-white font-bold tracking-wider">MONTH 2 // B4F - CONCOURSE DEPOT</span>
-                                <span class="text-[10px] text-shibuya-jade font-bold uppercase">Combat Core</span>
-                            </div>
-                            <i class="fa-solid fa-chevron-down text-gray-500 timeline-toggle-icon"></i>
-                        </div>
-                        
-                        <div class="timeline-content p-4 space-y-3 bg-black/20">
-                            <div class="flex items-start gap-3">
-                                <input type="checkbox" id="m2_1" class="mt-0.5 accent-shibuya-jade cursor-pointer" onchange="saveRoadmap()">
-                                <div class="flex flex-col gap-0.5">
-                                    <span class="roadmap-check-title font-bold text-white">Implement active slash scripts</span>
-                                    <span class="roadmap-check-desc text-gray-500">Lock Ground/Air standard strings, dash interrupts, and simple triggers.</span>
-                                </div>
-                            </div>
-                            <div class="flex items-start gap-3">
-                                <input type="checkbox" id="m2_2" class="mt-0.5 accent-shibuya-jade cursor-pointer" onchange="saveRoadmap()">
-                                <div class="flex flex-col gap-0.5">
-                                    <span class="roadmap-check-title font-bold text-white">Bind visual frame freezes</span>
-                                    <span class="roadmap-check-desc text-gray-500">Verify Cinemachine shakes and frame hit-stop.</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Month 3 -->
-                <div id="month3" class="relative timeline-item">
-                    <span class="absolute left-[-31px] top-1 w-4 h-4 rounded-full bg-shibuya-bg border-2 border-shibuya-amber shadow-neon-amber timeline-badge"></span>
-                    <div class="bg-shibuya-concrete border border-shibuya-metal/80 rounded">
-                        <div class="flex justify-between items-center bg-shibuya-slate/50 p-3 border-b border-shibuya-metal/40 cursor-pointer hover:bg-shibuya-slate/80 transition-colors" onclick="toggleTimeline('month3')">
-                            <div class="flex items-center gap-4">
-                                <span class="font-bebas text-lg text-white font-bold tracking-wider">MONTH 3 // B3F - CONTROL HUB</span>
-                                <span class="text-[10px] text-shibuya-amber font-bold uppercase">Team & Swap</span>
-                            </div>
-                            <i class="fa-solid fa-chevron-down text-gray-500 timeline-toggle-icon"></i>
-                        </div>
-                        
-                        <div class="timeline-content p-4 space-y-3 bg-black/20">
-                            <div class="flex items-start gap-3">
-                                <input type="checkbox" id="m3_1" class="mt-0.5 accent-shibuya-jade cursor-pointer" onchange="saveRoadmap()">
-                                <div class="flex flex-col gap-0.5">
-                                    <span class="roadmap-check-title font-bold text-white">Develop TeamLoader swaps</span>
-                                    <span class="roadmap-check-desc text-gray-500">Enable swap cancels and buffer inheritance across active characters.</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Month 4 -->
-                <div id="month4" class="relative timeline-item">
-                    <span class="absolute left-[-31px] top-1 w-4 h-4 rounded-full bg-shibuya-bg border-2 border-shibuya-purple shadow-neon-purple timeline-badge"></span>
-                    <div class="bg-shibuya-concrete border border-shibuya-metal/80 rounded">
-                        <div class="flex justify-between items-center bg-shibuya-slate/50 p-3 border-b border-shibuya-metal/40 cursor-pointer hover:bg-shibuya-slate/80 transition-colors" onclick="toggleTimeline('month4')">
-                            <div class="flex items-center gap-4">
-                                <span class="font-bebas text-lg text-white font-bold tracking-wider">MONTH 4 // B2F - SHOPPING ARCADE</span>
-                                <span class="text-[10px] text-shibuya-purple font-bold uppercase">Rogue-lite Loop</span>
-                            </div>
-                            <i class="fa-solid fa-chevron-down text-gray-500 timeline-toggle-icon"></i>
-                        </div>
-                        
-                        <div class="timeline-content p-4 space-y-3 bg-black/20">
-                            <div class="flex items-start gap-3">
-                                <input type="checkbox" id="m4_1" class="mt-0.5 accent-shibuya-jade cursor-pointer" onchange="saveRoadmap()">
-                                <div class="flex flex-col gap-0.5">
-                                    <span class="roadmap-check-title font-bold text-white">Assemble Subway Lobby Flow</span>
-                                    <span class="roadmap-check-desc text-gray-500">Connect Lobby, Soul Shop NPC, and combat room scenes.</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Month 5 -->
-                <div id="month5" class="relative timeline-item">
-                    <span class="absolute left-[-31px] top-1 w-4 h-4 rounded-full bg-shibuya-bg border-2 border-shibuya-crimson shadow-neon-crimson timeline-badge"></span>
-                    <div class="bg-shibuya-concrete border border-shibuya-metal/80 rounded">
-                        <div class="flex justify-between items-center bg-shibuya-slate/50 p-3 border-b border-shibuya-metal/40 cursor-pointer hover:bg-shibuya-slate/80 transition-colors" onclick="toggleTimeline('month5')">
-                            <div class="flex items-center gap-4">
-                                <span class="font-bebas text-lg text-white font-bold tracking-wider">MONTH 5 // B1F - TICKET GATE</span>
-                                <span class="text-[10px] text-shibuya-crimson font-bold uppercase">Boss & Content</span>
-                            </div>
-                            <i class="fa-solid fa-chevron-down text-gray-500 timeline-toggle-icon"></i>
-                        </div>
-                        
-                        <div class="timeline-content p-4 space-y-3 bg-black/20">
-                            <div class="flex items-start gap-3">
-                                <input type="checkbox" id="m5_1" class="mt-0.5 accent-shibuya-jade cursor-pointer" onchange="saveRoadmap()">
-                                <div class="flex flex-col gap-0.5">
-                                    <span class="roadmap-check-title font-bold text-white">Develop boss phase controllers</span>
-                                    <span class="roadmap-check-desc text-gray-500">Assemble HP threshold conditions and warning zone triggers.</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Month 6 -->
-                <div id="month6" class="relative timeline-item">
-                    <span class="absolute left-[-31px] top-1 w-4 h-4 rounded-full bg-shibuya-bg border-2 border-shibuya-jade shadow-neon-jade timeline-badge"></span>
-                    <div class="bg-shibuya-concrete border border-shibuya-metal/80 rounded">
-                        <div class="flex justify-between items-center bg-shibuya-slate/50 p-3 border-b border-shibuya-metal/40 cursor-pointer hover:bg-shibuya-slate/80 transition-colors" onclick="toggleTimeline('month6')">
-                            <div class="flex items-center gap-4">
-                                <span class="font-bebas text-lg text-white font-bold tracking-wider">MONTH 6 // GROUND LEVEL - SHIBUYA OVERGROUND</span>
-                                <span class="text-[10px] text-shibuya-jade font-bold uppercase">Thesis & Shipping</span>
-                            </div>
-                            <i class="fa-solid fa-chevron-down text-gray-500 timeline-toggle-icon"></i>
-                        </div>
-                        
-                        <div class="timeline-content p-4 space-y-3 bg-black/20">
-                            <div class="flex items-start gap-3">
-                                <input type="checkbox" id="m6_1" class="mt-0.5 accent-shibuya-jade cursor-pointer" onchange="saveRoadmap()">
-                                <div class="flex flex-col gap-0.5">
-                                    <span class="roadmap-check-title font-bold text-white">Compile shipping build</span>
-                                    <span class="roadmap-check-desc text-gray-500">Ensure optimal GC performance, asset bundle structures, and thesis write-ups.</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </section>
-
-        <!-- OPERATION FOOTER -->
-        <footer class="mt-16 pt-8 border-t border-shibuya-metal/40 text-center text-xs font-mono text-gray-500">
-            <p>SHIBUYA SUBWAY OPERATIONS DIVISION // NEO-JJK DESIGN ARCHIVE // CONFIDENTIAL [特級]</p>
-        </footer>
-
-    </main>
-
-    <!-- JS WIDGETS -->
-    <script>
-        /* Tracking active header highlight scroll */
-        window.addEventListener('DOMContentLoaded', () => {
-            const observer = new IntersectionObserver(entries => {
-                entries.forEach(entry => {
-                    const id = entry.target.getAttribute('id');
-                    if (entry.intersectionRatio > 0.15) {
-                        document.querySelectorAll('.nav-link').forEach(a => {
-                            a.classList.remove('active', 'text-white', 'bg-shibuya-slate');
-                            a.classList.add('text-gray-400');
-                        });
-                        const activeLink = document.querySelector(`.nav-link[href="#${id}"]`);
-                        if (activeLink) {
-                            activeLink.classList.add('active', 'text-white', 'bg-shibuya-slate');
-                            activeLink.classList.remove('text-gray-400');
-                        }
-                    }
-                });
-            }, { threshold: [0.15, 0.5], rootMargin: "0px 0px -40% 0px" });
-
-            document.querySelectorAll('section').forEach(section => {
-                observer.observe(section);
-            });
-            
-            // Load persistent states
-            loadDebtState();
-            loadRoadmapState();
-            recalcStats();
+      function activate(name, updateHash = true) {
+        tabs.forEach(tab => {
+          const selected = tab.dataset.tab === name;
+          tab.setAttribute('aria-selected', String(selected));
+          tab.tabIndex = selected ? 0 : -1;
         });
+        panels.forEach(panel => { panel.hidden = panel.dataset.panel !== name; });
+        if (updateHash) history.replaceState(null, '', `#${name}`);
+        window.scrollTo({ top: document.querySelector('.discipline-nav-wrap').offsetTop - 66, behavior: 'smooth' });
+      }
 
-        /* Dynamic Filter Search */
-        document.getElementById('gddSearch').addEventListener('input', function(e) {
-            const val = e.target.value.toLowerCase();
-            document.querySelectorAll('section').forEach(sec => {
-                const text = sec.textContent.toLowerCase();
-                if (text.includes(val)) {
-                    sec.style.display = 'block';
-                } else {
-                    sec.style.display = 'none';
-                }
-            });
+      tabs.forEach((tab, index) => {
+        tab.addEventListener('click', () => activate(tab.dataset.tab));
+        tab.addEventListener('keydown', event => {
+          if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+          event.preventDefault();
+          let next = index;
+          if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+          if (event.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length;
+          if (event.key === 'Home') next = 0;
+          if (event.key === 'End') next = tabs.length - 1;
+          activate(tabs[next].dataset.tab);
+          tabs[next].focus();
         });
+      });
 
-        /* Scroll Top Float Button */
-        const scrollTopBtn = document.getElementById('scrollTopBtn');
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 300) {
-                scrollTopBtn.classList.remove('opacity-0', 'pointer-events-none');
-            } else {
-                scrollTopBtn.classList.add('opacity-0', 'pointer-events-none');
-            }
-        });
-        scrollTopBtn.addEventListener('click', () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
+      document.addEventListener('click', event => {
+        const link = event.target.closest('a[href^="#"]');
+        if (!link) return;
+        const target = document.querySelector(link.getAttribute('href'));
+        if (!target) return;
+        const owner = target.closest('[data-panel]');
+        if (owner && owner.hidden) activate(owner.dataset.panel, false);
+      });
 
-        /* Image Lightbox overlays */
-        const lightboxModal = document.getElementById('lightboxModal');
-        const lightboxImg = lightboxModal.querySelector('.lightbox-img');
-        
-        function openLightbox(src) {
-            lightboxImg.src = src;
-            lightboxModal.classList.remove('hidden');
-            lightboxModal.classList.add('flex');
-        }
-        
-        lightboxModal.addEventListener('click', () => {
-            lightboxModal.classList.add('hidden');
-            lightboxModal.classList.remove('flex');
-        });
-
-        /* Dynamic Tabs switcher */
-        function switchTab(evt, tabId) {
-            const container = evt.currentTarget.closest('.tabs-container');
-            container.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active', 'border-shibuya-jade', 'text-shibuya-jade', 'border-shibuya-crimson', 'text-shibuya-crimson');
-                btn.classList.add('border-shibuya-metal/30', 'text-gray-400');
-            });
-            container.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
-            
-            evt.currentTarget.classList.add('active');
-            if(tabId === 'kept-tab') {
-                evt.currentTarget.classList.add('border-shibuya-jade', 'text-shibuya-jade');
-                evt.currentTarget.classList.remove('border-shibuya-metal/30', 'text-gray-400');
-            } else {
-                evt.currentTarget.classList.add('border-shibuya-crimson', 'text-shibuya-crimson');
-                evt.currentTarget.classList.remove('border-shibuya-metal/30', 'text-gray-400');
-            }
-            document.getElementById(tabId).classList.add('active');
-        }
-
-        /* Timeline Accordions */
-        function toggleTimeline(id) {
-            const item = document.getElementById(id);
-            const isActive = item.classList.contains('active');
-            
-            document.querySelectorAll('.timeline-item').forEach(el => {
-                el.classList.remove('active');
-            });
-            
-            if (!isActive) {
-                item.classList.add('active');
-            }
-        }
-
-        /* Roster data kit specs */
-        const charData = {
-            shin: {
-                name: "SHIN",
-                role: "Main DPS",
-                roleClass: "bg-shibuya-crimson/20 border-shibuya-crimson text-shibuya-crimson",
-                tagline: '"Spirit Fire Aura, fast blade combos"',
-                actions: {
-                    ba: {
-                        name: "Flame Arc Chain",
-                        windup: 8, active: 10, recovery: 8,
-                        log: "State FSM: Basic 3-hit string. (Hit 1: 5 DMG | Hit 2: 7 DMG | Hit 3: 12 DMG). Spawned hitbox (OverlapBoxNonAlloc). VFX: Red Arc slash."
-                    },
-                    skill: {
-                        name: "Aura Burst",
-                        windup: 12, active: 18, recovery: 12,
-                        log: "State FSM: Aura Burst triggered. Directional steer active. VFX: Explosion. Staggered minor trash targets."
-                    },
-                    ult: {
-                        name: "Cursed Inferno",
-                        windup: 25, active: 30, recovery: 20,
-                        log: "SPECIAL GRADED ULTIMATE: Cursed Inferno. Full screenshake triggers. Camera slow-mo activated. Hit-stop: 12 frames."
-                    }
-                }
-            },
-            blind: {
-                name: "BLIND",
-                role: "Sub-DPS",
-                roleClass: "bg-shibuya-purple/20 border-shibuya-purple text-shibuya-purple",
-                tagline: '"Aura projectile triggers, quick positioning support"',
-                actions: {
-                    ba: {
-                        name: "Spectral Needle",
-                        windup: 6, active: 8, recovery: 6,
-                        log: "State FSM: Ranged arrow trigger. Fired tracking projectle. VFX: Purple tracer."
-                    },
-                    skill: {
-                        name: "Cursed Echo",
-                        windup: 10, active: 15, recovery: 10,
-                        log: "State FSM: Echo circle spawn. Targets inside take +10% Cursed DMG. Buff inherits on team swap."
-                    },
-                    ult: {
-                        name: "Blind Judgement",
-                        windup: 20, active: 40, recovery: 15,
-                        log: "SPECIAL GRADED ULTIMATE: Blind Judgement. Storm projectile sweeps target coordinates. Play SFX: High crescendo."
-                    }
-                }
-            },
-            sage: {
-                name: "SAGE",
-                role: "Support",
-                roleClass: "bg-shibuya-jade/20 border-shibuya-jade text-shibuya-jade",
-                tagline: '"Aura Barrier shielding, healing zones"',
-                actions: {
-                    ba: {
-                        name: "Stave Stagger",
-                        windup: 12, active: 8, recovery: 14,
-                        log: "State FSM: Staff strike. Low recovery. Staggered front shield targets."
-                    },
-                    skill: {
-                        name: "Cursed Shield",
-                        windup: 8, active: 5, recovery: 10,
-                        log: "State FSM: Barrier cast. Absorbs damage equal to 25% max HP. SFX: Glass shimmer."
-                    },
-                    ult: {
-                        name: "Sanctuary Ward",
-                        windup: 15, active: 60, recovery: 15,
-                        log: "SPECIAL GRADED ULTIMATE: Sanctuary Ward. Healing zone active. Restores 3% HP tick to roster members inside."
-                    }
-                }
-            }
-        };
-
-        let currentActiveSimChar = 'shin';
-        let isExecutingSimAction = false;
-
-        function selectSimChar(key) {
-            if (isExecutingSimAction) return;
-            currentActiveSimChar = key;
-            document.querySelectorAll('.char-select-btn').forEach(btn => {
-                btn.className = "char-select-btn px-3 py-1 bg-shibuya-slate border border-shibuya-metal text-gray-400 font-bebas text-sm font-bold tracking-wider";
-            });
-            event.target.className = "char-select-btn active px-3 py-1 bg-shibuya-crimson text-black font-bebas text-sm font-bold tracking-wider shadow-neon-crimson";
-
-            const data = charData[key];
-            const badge = document.getElementById('charBadge');
-            badge.textContent = data.role;
-            badge.className = `text-[9px] font-mono px-2 py-0.5 tracking-widest uppercase border ${data.roleClass}`;
-
-            document.getElementById('charName').textContent = data.name;
-            document.getElementById('charTag').textContent = data.tagline;
-
-            const buttons = document.querySelectorAll('.trigger-btn');
-            buttons[0].querySelector('span').textContent = data.actions.ba.name;
-            buttons[1].querySelector('span').textContent = data.actions.skill.name;
-            buttons[2].querySelector('span').textContent = data.actions.ult.name;
-
-            addConsoleLine(`SWAPPED ACTIVE TERMINAL TO ${data.name}. READY.`);
-        }
-
-        function triggerAction(actionKey) {
-            if (isExecutingSimAction) return;
-            isExecutingSimAction = true;
-            
-            const btn = event.currentTarget;
-            btn.classList.add('border-shibuya-crimson', 'bg-shibuya-crimson/10');
-
-            const char = charData[currentActiveSimChar];
-            const action = char.actions[actionKey];
-
-            const totalFrames = action.windup + action.active + action.recovery;
-            const wPct = (action.windup / totalFrames) * 100;
-            const aPct = (action.active / totalFrames) * 100;
-            const rPct = (action.recovery / totalFrames) * 100;
-
-            document.getElementById('wPhase').style.width = `${wPct}%`;
-            document.getElementById('aPhase').style.width = `${aPct}%`;
-            document.getElementById('rPhase').style.width = `${rPct}%`;
-
-            const indicator = document.getElementById('frameIndicator');
-            indicator.style.display = 'block';
-            indicator.style.left = '0%';
-
-            addConsoleLine(`FSM STATE: ${action.name.toUpperCase()} CAST. WINDUP:${action.windup}F | ACTIVE:${action.active}F | RECOVER:${action.recovery}F`);
-
-            let start = null;
-            const duration = totalFrames * 16.67; // 60fps frame count translation in ms
-            
-            function animateIndicator(timestamp) {
-                if (!start) start = timestamp;
-                const progress = timestamp - start;
-                const pct = Math.min((progress / duration) * 100, 100);
-                indicator.style.left = `${pct}%`;
-
-                if (progress < duration) {
-                    requestAnimationFrame(animateIndicator);
-                } else {
-                    indicator.style.display = 'none';
-                    btn.classList.remove('border-shibuya-crimson', 'bg-shibuya-crimson/10');
-                    isExecutingSimAction = false;
-                    addConsoleLine(`SUCCESS: ${action.log}`);
-                }
-            }
-            requestAnimationFrame(animateIndicator);
-        }
-
-        function addConsoleLine(text) {
-            const consoleBox = document.getElementById('consoleOutput');
-            const newLine = document.createElement('div');
-            newLine.textContent = `> ${text}`;
-            consoleBox.appendChild(newLine);
-            consoleBox.scrollTop = consoleBox.scrollHeight;
-        }
-
-        /* Stats upgrade math */
-        function recalcStats() {
-            let baseAtk = 10;
-            let baseHp = 100;
-            let baseCrit = 5;
-            let baseCdr = 0;
-
-            const potLvl = parseInt(document.getElementById('potUpgrade').value);
-            if (potLvl >= 1) baseAtk += 10;
-            if (potLvl >= 2) { baseAtk += 10; baseCdr += 5; }
-            if (potLvl >= 3) { baseAtk += 20; baseCdr += 5; baseCrit += 10; }
-            if (potLvl >= 4) { baseAtk += 30; baseCdr += 10; baseCrit += 10; }
-
-            const baseAtkBeforeCharms = baseAtk;
-            const baseCritBeforeCharms = baseCrit;
-            const baseCdrBeforeCharms = baseCdr;
-
-            const hasAtkCharm = document.getElementById('upAtk').checked;
-            const hasCdrCharm = document.getElementById('upCdr').checked;
-            const hasCritCharm = document.getElementById('upCrit').checked;
-
-            if (hasAtkCharm) baseAtk = Math.round(baseAtk * 1.15);
-            if (hasCdrCharm) baseCdr += 10;
-            if (hasCritCharm) baseCrit += 15;
-
-            document.getElementById('valAtk').textContent = baseAtk;
-            document.querySelector('.calc-stat-val-orig').textContent = potLvl > 0 ? (potLvl >= 3 ? 30 : 20) : 10;
-            document.getElementById('valCrit').textContent = `${baseCrit}%`;
-            document.getElementById('valCdr').textContent = `${baseCdr}%`;
-
-            const diffCrit = document.getElementById('diffCrit');
-            const diffCdr = document.getElementById('diffCdr');
-
-            diffCrit.textContent = baseCrit > baseCritBeforeCharms ? `(+${baseCrit - baseCritBeforeCharms}%)` : '';
-            diffCdr.textContent = baseCdr > baseCdrBeforeCharms ? `(+${baseCdr - baseCdrBeforeCharms}%)` : '';
-            
-            document.getElementById('cooldownLabel').textContent = `CDR: ${baseCdr}%`;
-        }
-
-        /* Persist checklist selections */
-        function saveDebtState() {
-            const states = {};
-            document.querySelectorAll('#debtList input[type="checkbox"]').forEach(box => {
-                states[box.id] = box.checked;
-            });
-            localStorage.setItem('jjk_debt_states', JSON.stringify(states));
-        }
-
-        function loadDebtState() {
-            const data = localStorage.getItem('jjk_debt_states');
-            if (data) {
-                const states = JSON.parse(data);
-                Object.keys(states).forEach(id => {
-                    const box = document.getElementById(id);
-                    if (box) box.checked = states[id];
-                });
-            }
-        }
-
-        function saveRoadmap() {
-            const states = {};
-            document.querySelectorAll('#timelineList input[type="checkbox"]').forEach(box => {
-                states[box.id] = box.checked;
-            });
-            localStorage.setItem('jjk_roadmap_states', JSON.stringify(states));
-            updateTimelineBadgeStates();
-        }
-
-        function loadRoadmapState() {
-            const data = localStorage.getItem('jjk_roadmap_states');
-            if (data) {
-                const states = JSON.parse(data);
-                Object.keys(states).forEach(id => {
-                    const box = document.getElementById(id);
-                    if (box) box.checked = states[id];
-                });
-            }
-            updateTimelineBadgeStates();
-        }
-
-        function updateTimelineBadgeStates() {
-            document.querySelectorAll('.timeline-item').forEach(item => {
-                const checkboxes = item.querySelectorAll('input[type="checkbox"]');
-                const total = checkboxes.length;
-                let checkedCount = 0;
-                checkboxes.forEach(cb => { if (cb.checked) checkedCount++; });
-
-                const badge = item.querySelector('.timeline-badge');
-                if (total > 0 && checkedCount === total) {
-                    badge.classList.remove('bg-shibuya-bg');
-                    badge.classList.add('bg-shibuya-jade');
-                } else {
-                    badge.classList.add('bg-shibuya-bg');
-                }
-            });
-        }
-    </script>
+      const requested = location.hash.slice(1);
+      if (['game', 'tech', 'art'].includes(requested)) {
+        activate(requested, false);
+      } else if (requested) {
+        const deepTarget = document.getElementById(requested);
+        const owner = deepTarget?.closest('[data-panel]');
+        if (owner?.hidden) activate(owner.dataset.panel, false);
+      }
+    })();
+  </script>
 </body>
 </html>

@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Neo-JJK elemental type reference</title>
+  <desc id="desc">Four character element cards for Memory, Echo, Ash, and Void with their narrative identities and reaction roles.</desc>
+  <rect width="1600" height="900" fill="#0b0e15"/>
+  <text x="80" y="90" fill="#f4f1e8" font-family="Inter,Segoe UI,sans-serif" font-size="48" font-weight="800">ELEMENTAL TYPE</text>
+  <text x="80" y="132" fill="#7f8999" font-family="Inter,Segoe UI,sans-serif" font-size="22" letter-spacing="4">CHARACTER IDENTITY → REACTION LANGUAGE</text>
+
+  <g transform="translate(80 190)">
+    <rect width="340" height="600" rx="28" fill="#151b27" stroke="#82aef5" stroke-width="3"/>
+    <circle cx="170" cy="105" r="54" fill="none" stroke="#82aef5" stroke-width="10"/>
+    <circle cx="170" cy="105" r="15" fill="#82aef5"/>
+    <text x="34" y="215" fill="#82aef5" font-family="Inter,Segoe UI,sans-serif" font-size="36" font-weight="900">MEMORY</text>
+    <text x="34" y="258" fill="#f4f1e8" font-family="Inter,Segoe UI,sans-serif" font-size="20">Clings to what must</text>
+    <text x="34" y="288" fill="#f4f1e8" font-family="Inter,Segoe UI,sans-serif" font-size="20">not be lost.</text>
+    <line x1="34" y1="330" x2="306" y2="330" stroke="#30394a" stroke-width="2"/>
+    <text x="34" y="382" fill="#9fa9b8" font-family="Inter,Segoe UI,sans-serif" font-size="18" letter-spacing="2">REACTION</text>
+    <text x="34" y="425" fill="#f4f1e8" font-family="Inter,Segoe UI,sans-serif" font-size="22" font-weight="700">Denial / control</text>
+    <text x="34" y="472" fill="#9fa9b8" font-family="Inter,Segoe UI,sans-serif" font-size="18">Stops enemy reactions</text>
+    <text x="34" y="502" fill="#9fa9b8" font-family="Inter,Segoe UI,sans-serif" font-size="18">for a fixed window.</text>
+  </g>
+
+  <g transform="translate(450 190)">
+    <rect width="340" height="600" rx="28" fill="#151b27" stroke="#59d6c7" stroke-width="3"/>
+    <path d="M105 116c35-70 95-70 130 0-35 70-95 70-130 0Z" fill="none" stroke="#59d6c7" stroke-width="10"/>
+    <circle cx="170" cy="116" r="20" fill="#59d6c7"/>
+    <text x="34" y="215" fill="#59d6c7" font-family="Inter,Segoe UI,sans-serif" font-size="36" font-weight="900">ECHO</text>
+    <text x="34" y="258" fill="#f4f1e8" font-family="Inter,Segoe UI,sans-serif" font-size="20">Searches for meaning</text>
+    <text x="34" y="288" fill="#f4f1e8" font-family="Inter,Segoe UI,sans-serif" font-size="20">that still remains.</text>
+    <line x1="34" y1="330" x2="306" y2="330" stroke="#30394a" stroke-width="2"/>
+    <text x="34" y="382" fill="#9fa9b8" font-family="Inter,Segoe UI,sans-serif" font-size="18" letter-spacing="2">REACTION</text>
+    <text x="34" y="425" fill="#f4f1e8" font-family="Inter,Segoe UI,sans-serif" font-size="22" font-weight="700">Store / release</text>
+    <text x="34" y="472" fill="#9fa9b8" font-family="Inter,Segoe UI,sans-serif" font-size="18">Records damage, then</text>
+    <text x="34" y="502" fill="#9fa9b8" font-family="Inter,Segoe UI,sans-serif" font-size="18">returns part on expiry.</text>
+  </g>
+
+  <g transform="translate(820 190)">
+    <rect width="340" height="600" rx="28" fill="#151b27" stroke="#ff6b57" stroke-width="3"/>
+    <path d="M170 46c30 50 68 75 55 125-10 39-38 60-55 60s-45-21-55-60c-13-50 25-75 55-125Z" fill="none" stroke="#ff6b57" stroke-width="10"/>
+    <path d="M170 120c12 21 26 34 20 55-4 16-14 24-20 24s-16-8-20-24c-6-21 8-34 20-55Z" fill="#ff6b57"/>
+    <text x="34" y="215" fill="#ff6b57" font-family="Inter,Segoe UI,sans-serif" font-size="36" font-weight="900">ASH</text>
+    <text x="34" y="258" fill="#f4f1e8" font-family="Inter,Segoe UI,sans-serif" font-size="20">Still has something</text>
+    <text x="34" y="288" fill="#f4f1e8" font-family="Inter,Segoe UI,sans-serif" font-size="20">left to finish.</text>
+    <line x1="34" y1="330" x2="306" y2="330" stroke="#30394a" stroke-width="2"/>
+    <text x="34" y="382" fill="#9fa9b8" font-family="Inter,Segoe UI,sans-serif" font-size="18" letter-spacing="2">REACTION</text>
+    <text x="34" y="425" fill="#f4f1e8" font-family="Inter,Segoe UI,sans-serif" font-size="22" font-weight="700">Attrition / execute</text>
+    <text x="34" y="472" fill="#9fa9b8" font-family="Inter,Segoe UI,sans-serif" font-size="18">Burns first, then scales</text>
+    <text x="34" y="502" fill="#9fa9b8" font-family="Inter,Segoe UI,sans-serif" font-size="18">with health already lost.</text>
+  </g>
+
+  <g transform="translate(1190 190)">
+    <rect width="330" height="600" rx="28" fill="#151b27" stroke="#a671ff" stroke-width="3"/>
+    <path d="M165 52 226 112 165 172 104 112Z" fill="none" stroke="#a671ff" stroke-width="10"/>
+    <path d="M165 82 196 112 165 142 134 112Z" fill="#a671ff"/>
+    <text x="34" y="215" fill="#a671ff" font-family="Inter,Segoe UI,sans-serif" font-size="36" font-weight="900">VOID</text>
+    <text x="34" y="258" fill="#f4f1e8" font-family="Inter,Segoe UI,sans-serif" font-size="20">Escapes what cannot</text>
+    <text x="34" y="288" fill="#f4f1e8" font-family="Inter,Segoe UI,sans-serif" font-size="20">be faced directly.</text>
+    <line x1="34" y1="330" x2="296" y2="330" stroke="#30394a" stroke-width="2"/>
+    <text x="34" y="382" fill="#9fa9b8" font-family="Inter,Segoe UI,sans-serif" font-size="18" letter-spacing="2">REACTION</text>
+    <text x="34" y="425" fill="#f4f1e8" font-family="Inter,Segoe UI,sans-serif" font-size="22" font-weight="700">Burst / disruption</text>
+    <text x="34" y="472" fill="#9fa9b8" font-family="Inter,Segoe UI,sans-serif" font-size="18">Area burst plus confusion</text>
+    <text x="34" y="502" fill="#9fa9b8" font-family="Inter,Segoe UI,sans-serif" font-size="18">or action-speed reduction.</text>
+  </g>
+</svg>

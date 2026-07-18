@@ -4,6 +4,8 @@
 
 This document is the current design authority for **Neo-JJK**.
 
+> **Runtime verification:** 2026-07-18. Design statements describe the intended player experience. Tables labeled **Current Prototype Truth** describe behavior verified in the Unity project. Planned systems are explicitly marked as targets or speculative.
+
 `GDD_JJK.md` is a legacy plan. Keep it as historical reference, but do not use it as the active combat direction unless a human explicitly asks for legacy comparison work.
 
 Neo-JJK has shifted away from action/fighting-game hybrid combat and into a simpler **2D side-scrolling action hack-and-slash rogue-lite**. The design target is fast, readable, flashy, and easy to build.
@@ -95,7 +97,7 @@ Sound should make combat easy to read:
 
 ### Primary Rule
 
-**PC Keyboard & Mouse is the authoritative input model.** Gamepad controller support is a mapped port layer mirroring the exact same verb set and timing windows, without redesigning combat around precision differences.
+**PC Keyboard & Mouse is the current authoritative input model.** Gamepad parity remains a target, not a current claim: the action asset maps movement, Basic Attack, Dash, and Jump, but Skill, Ultimate, and direct team-slot selection still need complete controller bindings and navigation validation.
 
 ### PC Keyboard & Mouse Controls
 
@@ -106,15 +108,15 @@ Sound should make combat easy to read:
 | **LMB** | Basic Attack (BA) | Performs state-based basic attack chains. |
 | **RMB** | Skill | Triggers character-specific skill. |
 | **Shift** | Dash | Invincibility-frame dash. |
-| **Q** | Ultimate | Triggers character ultimate. |
-| **S (on platform)** | Drop down | Drop down to the platform below. |
+| **R** | Ultimate | Triggers the character's authored Ultimate. Both Aura Energy and any authored Ultimate cooldown must be ready. |
+| **S + Space (on one-way platform)** | Drop down | Hold Down while pressing Jump to pass through the platform below. |
 | **1, 2, 3** | Team Swap | Swaps active character to slot 1, 2, or 3. |
 
 ### Input Rules
 
-1. **Buffer Window**: The system maintains a **12-frame input buffer**. Inputs registered within 12 frames of an active action ending are queued and executed on the first possible frame.
-2. **Priority Input Type over Input Order** : Input Type Hierarchy is **"System/Swap/Reaction" -> "Skill/Ultimate" -> "Dash/Jump" -> "Basic Attack" -> "Basic Movement"**. If the player presses different input type in the buffer window, the input type with higher priority will be executed and clear the cache.
-3. **Team Swap** : When press Team Swap will clone another character into field with **Swap animation sequence** while the previous character will continue to execute their last action until end then disappear(this called **Team Swap Cancel**) and new character will Inheritance the last Input buffer of previous character to continue chaining.
+1. **Action Buffer**: Attack, Skill, Ultimate, Dash, and Jump inputs each use a short **0.15-second** buffer. A buffered action is consumed only when the current state authorizes it; consuming an action clears the other pending buffered actions.
+2. **Jump Priority**: If Jump and an attack/Skill are pressed together while grounded, Jump resolves first so the following action can use its air context. There is no global type-priority list beyond this safeguard and the state/action cancel rules.
+3. **Team Swap**: Team slots 1–3 use a separate **0.35-second** buffer. A swap is valid only from grounded idle/move, during recovery, or within the final two authored frames before recovery begins. Switching clears pending inputs and starts the team cooldown; the current `Player.prefab` is tuned to **0.7 seconds**.
 
 ---
 
@@ -160,6 +162,7 @@ Players should fail because they mistimed dodges, stood in boss patterns, chose 
 
 <!-- @tag:combat -->
 # Combat Design
+<!-- @tag:combat-scope -->
 
 ### Combat Action System
 
@@ -170,9 +173,9 @@ Every character has actions governed by distinct Wind-up (SF), Active (AF), and 
 - **Skill**: Custom ability. Cancels BA. Cooldown-gated. A/D inputs steer/alter trajectory or form.
 - **Ultimate (Ult)**: High-damage finisher. Cancels Skill. Requires the character's Aura Energy meter to reach the authored Ultimate cost.
 
-All Action can be done on Ground or Air, The Player FSM should stay the same result.
+Every authored action declares a **Ground**, **Air**, or **Both** cast context. Ground and Air actions use their matching FSM route; a ground-cast `Both` action remains ground-authoritative even if authored motion briefly lifts the collider. This keeps action selection and cancel routing predictable without requiring extended aerial-combo systems.
 
-Remove any Character Lock position/gravity on Action (Except Dash/Jump) to prevent character stuck loop.
+Actions should avoid unnecessary position or gravity locks. Only authored movement actions such as Dash/Jump should override locomotion strongly enough to prevent normal control from behaving as expected.
 
 ### Basic Attack
 
@@ -192,9 +195,9 @@ Remove any Character Lock position/gravity on Action (Except Dash/Jump) to preve
 
 - Flashy burst action.
 - High impact VFX.
-- Aura Energy resource gate; Ultimate is not cooldown-gated.
+- Aura Energy resource gate, with an optional authored action cooldown.
 - Each Ultimate authors its own Aura Energy cost. The character's maximum Aura Energy equals its highest authored Ultimate cost.
-- Cooldown Reduction lowers the effective Aura Energy cost, capped at 50% cost reduction.
+- Cooldown Rate shortens authored Skill/Ultimate cooldowns. Aura Energy cost changes require an explicit character Potential/passive effect; generic CDR does not reduce AE cost.
 - Should be easy to trigger and understand.
 
 ### Aura Energy
@@ -211,10 +214,10 @@ Remove any Character Lock position/gravity on Action (Except Dash/Jump) to preve
 
 - Combat actions may author a total action damage multiplier. Each hitbox uses a clamped 0-100% ratio of that total budget.
 - Legacy actions without a total damage budget continue to use each hitbox ratio directly.
-- Physical primary damage uses the Normal routine and Damage Mastery.
-- Non-physical primary damage uses the Elemental routine and Elemental Multiplier instead of Damage Mastery.
+- Physical primary damage uses the Normal routine. Non-physical primary damage uses the Elemental routine.
+- **Elemental Mastery** increases elemental damage. **Impact** increases primary Ultimate damage. Both Normal and Elemental primary damage use the standard defense, damage-reduction, and critical-hit resolution.
 - Normal and Elemental primary damage can critically hit.
-- Additional Damage from passives or artifacts is resolved as a separate damage event and cannot critically hit.
+- Additional Damage from passives or artifacts is resolved as a separate damage event, can benefit from Elemental Mastery when elemental, and cannot critically hit.
 - Melee hitboxes, projectiles, and background Ultimates use the same per-enemy damage and Aura Energy rules.
 
 ### Dodge / Dash
@@ -231,23 +234,22 @@ Remove any Character Lock position/gravity on Action (Except Dash/Jump) to preve
 
 ### Buff / Debuff
 
-- Use simple timers and stat modifiers.
-- Avoid stacking rules that need spreadsheets.
-- Make UI feedback readable.
+- Buffs, debuffs, shields, healing, lifesteal, status, and Additional Damage use the shared Runtime Effect pipeline.
+- A character kit, Potential node, projectile, or Artifact authors the trigger, target, duration, values, stacking rule, removal policy, and presentation through a **Runtime Effect Recipe**. Reusable formula definitions supply the underlying behavior.
+- Team/run effects live with `PlayerRunInventory`; enemy-local effects live with `RuntimeEffectReceiver`. This keeps effects active across character swaps without making the current player object the owner of permanent run state.
+- Effects with different recipe identities do not merge just because they reuse the same formula. Stack limits and stack-scaled values are resolved from the authored recipe and unlocked Potential modifiers.
+- Active timed effects must expose an icon and remaining duration on the HUD when presentation data is authored. Important defensive and status outcomes also require in-world VFX or animation feedback.
 
 ### Elemental Reaction
 
 > Inspiration by Zenless Zone Zero Anomaly System
 
-When Player encounter Enemy. all Enemy will have a gauge of each Elemental. when player attacking them with a specific elemental Damage, it will Increase the Gauge. After the specific gauge is filled will have a unique reaction of each Element.
+Each enemy has a separate gauge for every elemental type. Filling a gauge triggers that element's reaction; multiple elemental gauges and reactions can exist independently.
 
-- **Elemental Gauge**: Nomrally Capped 100/100 of progressive bar, each enemy have Strong or Weak to specific Elemental meaning if enemy have Strong to Ash, the Ash Gauge is 150/150, if enemy have Weak to Ash, the Ash Gauge is 50/50.
-- **Enemy Elemental Gauge**: Base Gauge amount is 20% of their Max HP.
-- **Building up**: The rate of Increase depend on character's **Elemental Mastery**. Skill will do **100%** of **Base Damage×Elemental Multiplier** to Gauge, Basic Attack **50%** of **Base Damage×Elemental Multiplier** to Gauge, Ultimate will do **200%** of **Base Damage×Elemental Multiplier** to Gauge.
-- **DOT**: Some Element have DOT when apply. the DOT will also help Increase Elemental Gauge per tick. DOT will deal 30% of **Attacker's ATKxElemental Mastery%** (DOT doesn't Stack but Replace with Strongest one if they are same Element)
-- **Elemental Reaction**: Trigger when Enemy Elemental Gauge reach 100/100. Trigger a unique Element Effect and the Enemy take damage from specific Elemental Increase by 50% for 20 second.(then the gauge is reset)
-
-(P.S Each Elemental Gauge can be filled simultaneously)
+- **Elemental Gauge**: Base capacity is **20% of the enemy's Max HP**. A Weak element has 50% capacity and a Strong element has 150% capacity.
+- **Building Gauge**: Gauge gain equals the hit's base damage multiplied by **(1 + Elemental Mastery%)**, then by **50%** for Basic Attacks, **100%** for Skills, or **200%** for Ultimates.
+- **DOT**: Ash and Void apply a five-second DOT that ticks once per second for `30% ATK × (1 + Elemental Mastery%)`. Same-element DOTs do not stack; only a stronger replacement refreshes the DOT. Each tick also contributes 50% of its damage to that element's gauge.
+- **Elemental Reaction**: When a gauge reaches capacity, it resets and starts that element's reaction for 20 seconds. While active, the enemy takes 50% more damage from that same element.
 
 ### Team-Combat Rules
 
@@ -262,14 +264,18 @@ Characters are tools in a simple loop:
 
 **Role Classification**:
 
-- **Main DPS**: High on-field presence, executes core combos and sustained loops.
-- **Sub DPS**: Quick-swap burst, dumps Skills/Ultimates.
-- **Support**: Defensive utility (shields/heals) and team-wide offensive buffs.
+- **Reaper**: Burst DPS; enters briefly to deliver high-value Skill/Ultimate damage.
+- **Executioner**: Sustained DPS; owns the main on-field damage loop.
+- **Herald**: Support/buffer; improves team damage, resources, or action access.
+- **Arbiter**: Crowd-control/debuffer; controls space or weakens enemy defenses.
+- **Warden**: Tank/defender; prevents damage through shielding or mitigation.
+- **Keeper**: Healer/support; restores or stabilizes the team.
 
 ### Swap Rules
 
-- **Team Swap Cancel** : When press Team Swap will clone another character into field with **Swap animation sequence** while the previous character will continue to execute their last action until end then disappear, the movement of the previous character will also be preserved and executed normally.
-- **Team Swap Inheritance** : the new character will Inheritance the last Input buffer of previous character to continue chaining.
+- **Team Swap Finish**: During an allowed action recovery/cancel window, swapping creates a background executor for the outgoing character's remaining action while the incoming character becomes active. The outgoing executor preserves the action's resolved stats, hitboxes, and motion, then disappears when the action ends.
+- **No Input Inheritance**: A switch clears the active input buffer. The incoming character begins from its normal locomotion state rather than continuing the previous character's queued chain.
+- **Availability**: Swapping is ground-only, respects the team swap cooldown, and cannot interrupt auto-chain steps, Dash/Jump, airborne states, hitstun, or death.
 - **Optional** swap-in effect, such as small damage, shield, heal, buff, or particle burst depend on Character Passive or Artifact.
 
 ---
@@ -287,18 +293,21 @@ Characters are tools in a simple loop:
 | DEF | XX | Defense |
 | HP | XXX | Health |
 |SPD | X | Speed |
-| CDR | XX% | Cooldown Reduction Mastery |
+| Elemental Mastery | XX% | Increases elemental damage and elemental gauge gain. |
 | CRIT | XX% | Critical Rate |
 | CRIT Dmg | XXX% | Critical Damage |
-| Elemental Multiplier | X.XX% | Multiplier used by Elemental damage |
-| Impact | X.XX% | Multiplier used for Ultimate |
-| Aura Energy Recharge(AE) | X.XX% | Multiplier on all Aura Energy recharge |
+| Cooldown Rate | XX% | Shortens authored Skill and Ultimate cooldowns. |
+| Impact | XX% | Increases primary Ultimate damage. |
+| Damage Reduction | XX% | Reduces incoming damage after DEF mitigation. |
+| Aura Energy Recharge | X.XX | Multiplier on Aura Energy gains; 1.00 is the standard rate. |
 
 Artifact bonuses are added to a character's base stats when the team is deployed. Runtime HP, movement speed, damage, cooldown calculations, Aura Energy, HUD values, projectiles, and background Ultimates read the resolved runtime stats.
 
 ### Character Role
 
 <img src="https://media.discordapp.net/attachments/1508760327712669696/1508760328874492004/ca1.png?ex=6a35088d&is=6a33b70d&hm=42de706cd5fd8230f0d8891717d15cae5d622bffdf7ebb1fd81812bb50aa2720&=&format=webp&quality=lossless&width=1535&height=863" alt="Character Stats]" width="800">
+
+The runtime role enum is the same six-role taxonomy used by Team Builder and character inspection UI: **Reaper, Executioner, Herald, Arbiter, Warden, and Keeper**. A three-character team is not required to include one character from every broad category, but it should contain a clear damage plan, a setup or survival tool, and a reason to rotate rather than remain on one character indefinitely.
 
 ### Elemental Type
 
@@ -337,10 +346,10 @@ Character Level is run-scoped growth for each acquired character. It is separate
 
 #### Permanent Potential Upgrade
 
-- it represent a system like Constellation or Aetherium Core in Honkai Star Rail. this will use to permanent upgrade that character.
-- Seperate into 3 Main Node (Skill / Ultimate / Passive). with **4/4** nodes each.
-- Potential upgrade only acquired when you buy that character from Soul Shop again.
-- Max upgrade is 1/6 step
+- Potential is the permanent character-progression system, comparable to a small constellation path.
+- Each character has three tracks: **Skill**, **Ultimate**, and **Passive**. Each track has four sequential levels, for a maximum of **4/4 per track** and **12 upgrade nodes** per character.
+- Duplicate characters convert into that character's permanent Potential Fragments. The player spends those fragments in the Character Potential panel to unlock the next node in a track.
+- A node may modify stats, action behavior, cooldowns, Aura Energy, runtime effects, or conditional passives. Each track must be upgraded in order.
 
 ### Reward Categories
 
@@ -370,7 +379,7 @@ Character Level is run-scoped growth for each acquired character. It is separate
     - **Character Skill Panel**: Icon and Information for Basic Attack, Skill, Ultimate, and Passive with embedded text (values change depending on unlocked Potential).
     - **Equipment Panel**: 3 Artifact Slots. Clicking an equipped Artifact shows an Artifact Preview Panel with [Ascend / Switch] buttons. Clicking Switch opens the InventoryGridItem filtered by Artifact type ("Click to Switch per slot"). Clicking Ascend enters the Artifact Ascend UI.
     - **Character Level Panel**: Displays current level, Level Slider bar, current EXP / max EXP, EXP Potion ItemGrid, and a Level-Up button. Clicking an EXP Potion previews how much it will increase the Character Level; clicking the level-up button confirms the decision.
-    - **Character Potential Panel**: A full screen change (exited through a back button). Contains Potential Nodes (seperate from Skill/Ultimate/Passive, Lv.0 -> Lv.4 requiring 16 upgrades). Clicking a node shows a Potential Preview Panel (Context / Item Needed / Ascend button). Dupe fragments are required to ascend.
+    - **Character Potential Panel**: A full-screen view exited through a back button. It contains three tracks—Skill, Ultimate, and Passive—with four sequential levels each (12 nodes total). Clicking a node shows its preview, fragment cost, and upgrade button. Character Potential Fragments are required to unlock the next level in that track.
 
 ### Backpack System
 
@@ -391,6 +400,13 @@ Character Level is run-scoped growth for each acquired character. It is separate
 - Only when entering TeamBuilder Mode (Safe Zone) can players Drag&Drop or Change Character/Artifact. The player must click **Deploy (Save)** for changes to be applied.
 - In Combat Zone mode, loadout editing is locked while Team Lookup remains available.
 
+### Combat HUD and Runtime Feedback
+
+- The active HUD shows current HP, Skill cooldown, Ultimate cooldown, Aura Energy readiness, and any Potential-created follow-up window.
+- Team portraits show per-character HP/AE state, authored Ultimate readiness, the shared swap cooldown, and whether a slot is currently unavailable.
+- Runtime Effect icons currently show authored icon presentation and merged stack count. A remaining-duration display is not currently rendered; timed effects need a designer-approved duration/readiness cue before player-facing completion.
+- The Training Debug HUD attributes accepted damage to the original source character, including delayed projectiles and outgoing-character switch actions. It displays total damage, team share, and max hit for every deployed team member.
+
 ---
 
 <!-- @tag:progression -->
@@ -404,10 +420,10 @@ Character Level is run-scoped growth for each acquired character. It is separate
 - **Shop Rule** : The Soul Shop act as a safe haven for players. It is the only place where players can change, replace, or purchase their loadout (Character/Artifact) before venturing into the next Cursed Realm.  
 - **Shop Environment** : A Whole Scene-Fixed Camera-Walkable-Background UI-driven rather than Overlay UI (Like Blazblue Entropy Effect). Player can walk Right off-screen to leave the Shop Scene.
 - **Shop Algorithm**: The shop algorithm will randomize items on an Item Zone on the floor. It uses the pool of characters and artifacts the player has unlocked. When a player walks into an Item Zone, it shows Information / Price / Icon on the background layer. Player can press Click to Buy. All Item Zones are One-Time buy per shop entered. If the Artifact or Character that the player already owns populates as an Item Zone, it will become a Fragment (an Item for Upgrade) instead.
-- **Shop Reroll**: Player can Reroll shop Items but the new Item price will increase exponentially every time you reroll.
+- **Shop Reroll**: Rerolling refreshes every world-space offer. Prices increase linearly by the shop's authored percentage per reroll; the current default is **+15% of base price per reroll**.
 - **Sell Zone**: There is a Sell Zone that connects to the Player Inventory (Backpack System UI) where players can sell items for a cheap price.
-- **Duplicate Progression Target**: Reacquiring an owned Character advances its permanent Potential path. Reacquiring an owned Artifact during a run converts the duplicate into that Artifact's Fragment for Transcendence.
-- **Current Implementation Note**: One-time ownership filtering still treats owned Characters and Artifacts as sold out. Duplicate conversion is not implemented yet. Consumable Items remain repeatable purchases.
+- **Duplicate Progression**: Reacquiring an owned Character converts the duplicate into that character's permanent Potential Fragments. Reacquiring an owned Artifact converts the duplicate into that Artifact's Transcendence Fragments.
+- **Current Implementation Note**: The shop acquisition flow performs duplicate conversion and persists the fragments in Meta Progression. Consumable Items remain repeatable purchases. Artifact Transcendence spending is still a future system.
 
 ### Utility Resource
 
@@ -432,41 +448,27 @@ P.S Lose but retain Upgrade mean you lose that Item/Character/Artifact if you di
 Artifacts are equipment that can be assigned to a character before deployment.
 Each character has three Artifact slots. Equipped Artifact `bonusStats` are
 added to that character's runtime stats. Artifact data can also author separate
-Additional Damage effects, although the four currently authored Artifacts do
-not contain an Additional Damage effect.
+Additional Damage effects, although neither of the two current Artifact assets
+contains an Additional Damage effect.
 
 Passive descriptions are currently display text unless the behavior is also represented by implemented stat bonuses or an authored runtime effect.
 
 ### Artifact Transcendence
 
-Artifact Transcendence is the permanent Artifact upgrade system.
+Artifact Transcendence is the planned permanent Artifact upgrade system.
 
-- Each Artifact has a maximum Transcendence Level of **+5/5**.
-- When the player obtains a duplicate of an Artifact they already own during a
-  run, the duplicate converts into that Artifact's specific Fragment.
-- Artifact Fragments are spent only in the Artifact Transcendence System UI.
-- The Artifact Transcendence System UI is accessible only through **Character
-  Inspector UI -> Artifact Section**.
-- Transcendence improves the Artifact's numeric stats and its authored passive
-  effect.
-- Transcendence Level is permanent across runs and must be restored when the
-  Artifact is reacquired.
-- Runtime equipped-Artifact data must include both the Artifact identity and
-  its permanent Transcendence Level.
-- Fragment costs, duplicate conversion quantity, fragment behavior on run loss,
-  stat scaling, and passive scaling require a separate balance specification
-  before implementation.
+- **Implemented now**: an owned duplicate Artifact converts into that Artifact's specific Transcendence Fragments, which persist in Meta Progression.
+- **Target design**: each Artifact has a maximum Transcendence Level of **+5/5**. The Artifact Transcendence UI will spend its fragments, improve numeric stats and authored passive effects, and restore the permanent level when the Artifact is acquired in later runs.
+- **Not implemented yet**: permanent Transcendence levels, fragment-spending UI, upgrade costs, stat/passive scaling, and runtime restoration of a Transcendence level.
 
-| Implemented Artifact | Price | Implemented Runtime Bonuses | Displayed Passive Description |
+| Active Artifact Asset | Price | Implemented Runtime Bonuses | Displayed Passive Description |
 | --- | ---: | --- | --- |
-| **Blind's Boundless Ribbon** | 2000 | +1 SPD, +10 CDR, +0.15 Aura Energy Multiplier | Damage resistance and swap-heal text are display-only. |
-| **Fiend-Flesh Mask** | 650 | +15% ATK, -5% DEF | Defeat-stack and dark-slash text are display-only. |
-| **Soul-Merchant's Scales** | 1200 | +10% DMG Mastery | Soul Fragment and reroll-discount text are display-only. |
-| **Broken Chrono-Relic** | 950 | +15% CRIT Damage | Room-entry ATK decay and cooldown-refund text are display-only. |
+| **Blind's Boundless Ribbon** | 2000 | +35 Elemental Mastery, +15 Cooldown Rate, +0.15 Aura Energy Recharge | Damage resistance and swap-heal text are display-only. |
+| **Fiend-Flesh Mask** | 6000 | -20% Max HP, +55% ATK, -40% DEF, +125 CRIT Damage, +10 Impact, -0.20 Aura Energy Recharge | Defeat-stack and dark-slash text are display-only. |
 
 #### Planned Artifact Concepts
 
-These speculative Artifacts remain part of the design direction. They are not claims about current runtime implementation.
+These speculative Artifacts remain part of the design direction. They are not claims about current runtime implementation; where a concept reuses an active Artifact name, its concept values do not override the active asset above.
 
 | Artifact Name | Type / Role | Stats | Passive Effect | Description | Lore / World Setting |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -495,17 +497,20 @@ These speculative Artifacts remain part of the design direction. They are not cl
 
 | Previous or Planned Behavior | Current Game State |
 | --- | --- |
-| Ultimate cooldown or generic resource gate | Replaced by per-character Aura Energy. Maximum capacity is derived from the authored Ultimate cost. |
+| Ultimate cooldown as the only readiness gate | Replaced by per-character Aura Energy. Maximum capacity is derived from the authored Ultimate cost; an Ultimate may also retain its own authored cooldown. |
 | Aura Energy granted when an action starts, misses, or defeats an enemy | Replaced by confirmed-damage rewards: a per-hit chance reward plus one optional guaranteed action reward. |
 | Independent hitbox damage values for multi-hit actions | Replaced by an optional total action damage budget distributed through per-hit ratios. |
 | One shared damage formula | Replaced by Normal, Elemental, and non-critical Additional Damage routines. |
 | Character base stats used directly during combat | Replaced by per-team-slot runtime stats built from the character plus equipped Artifact bonuses. |
 | Team Builder edits immediately changing runtime state | Replaced by a session draft. Only confirmed Deploy writes the loadout to `TeamLoader`. |
-| Character Level and EXP Potion progression | Target design documented; runtime level state, EXP curves, potion inventory, UI, and reset flow are not implemented yet. |
-| Artifact Transcendence and Artifact Fragments | Target design documented; permanent levels, fragment conversion, upgrade costs, passive scaling, and save data are not implemented yet. |
+| Character Level and EXP Potion progression | Implemented as run-scoped state: levels and EXP are owned by the run inventory, EXP Potions stack, the Character Level panel previews/commits consumption, and ATK/DEF/Max HP growth reaches runtime combat. |
+| Artifact Transcendence and Artifact Fragments | Duplicate Artifact conversion and persistent Transcendence Fragment storage are implemented. Permanent levels, fragment spending, scaling, and restoration remain target design. |
 | Artifact passive descriptions automatically executing | Not implemented generically. Only numeric `bonusStats` and explicitly authored Additional Damage effects affect combat. |
-| The four displayed Artifact passive effects | Not authored as runtime effects in the current Artifact assets. |
+| The two active Artifact passive descriptions | Not authored as runtime effects in the current Artifact assets. |
 | Finding Artifacts during Cursed Realm runs and losing them on run failure | Not implemented by this branch; current code covers Soul Shop ownership, loadout management, and deployment. |
+| One-off buff/debuff assets owning formula, timing, stacking, and presentation | Replaced by Runtime Effect Recipes: kits and projectiles own application values/policy while reusable definitions own formula behavior. Legacy direct definitions remain supported during migration. |
+| Unattributed delayed or off-field damage | Replaced by source-character attribution carried through projectiles and outgoing-character switch actions into enemy damage and Training Debug totals. |
+| Unbounded stage edges and direct scene loading | Replaced in the active prototype by scene-local entrance/exit boundaries coordinated through a persistent transition manager. Full randomized run routing remains a target. |
 
 ---
 
@@ -587,9 +592,9 @@ These speculative Artifacts remain part of the design direction. They are not cl
 <!-- @tag:bosses -->
 ## Boss Battle Direction
 
-### Boss Fantasy
+![alt text](https://i.ytimg.com/vi/uN8O57b12WI/maxresdefault.jpg)
 
-Bosses are no longer traditional fighting-game opponents.
+### Boss Fantasy
 
 They should feel closer to **generic 2D action bosses**:
 
@@ -602,7 +607,7 @@ They should feel closer to **generic 2D action bosses**:
 - Short punish windows
 - High VFX spectacle
 
-### Boss Rules
+### Boss Design
 
 Bosses should:
 
@@ -613,14 +618,40 @@ Bosses should:
 - Force dodging and repositioning.
 - Give obvious openings after major attacks.
 
-### Boss Encounter Loop
+### Boss Encounter Loop Gameplay
 
-1. Boss telegraphs.
-2. Player dodges or repositions.
-3. Boss recovery creates a damage window.
-4. Player uses DPS, support buff, skill, ultimate, or swap burst.
-5. Boss changes pattern or phase.
-6. Repeat with increasing hazard density.
+```mermaid
+flowchart TD
+    %% Custom Styling
+    classDef bossNode fill:#ff6b6b,stroke:#c92a2a,stroke-width:2px,color:#fff;
+    classDef playerNode fill:#4dabf7,stroke:#1971c2,stroke-width:2px,color:#fff;
+    classDef phaseNode fill:#cc5de8,stroke:#862e9c,stroke-width:2px,color:#fff;
+    classDef startNode fill:#51cf66,stroke:#2b8a3e,stroke-width:2px,color:#fff;
+
+    Start([Start of Combat]):::startNode --> Step1[1. Boss Telegraphs]:::bossNode
+
+    Step1 --> Step2[2. Player Dodges or Repositions]:::playerNode
+
+    Step2 --> Step3[3. Boss Recovery creates Damage Window]:::bossNode
+
+    Step3 --> Step4[4. Player Damage Window]:::playerNode
+
+    subgraph Step4_Burst [Offensive Actions]
+        direction LR
+        DPS[DPS Combo]
+        Buff[Support Buff]
+        Skill[Skill]
+        Ult[Ultimate]
+        Swap[Swap Burst]
+    end
+    Step4 --> Step4_Burst
+
+    Step4_Burst --> Step5[5. Boss Changes Pattern/Phase]:::bossNode
+
+    Step5 --> Step6[6. Hazard Density Increases]:::phaseNode
+
+    Step6 -->|Loop with Higher Hazard Density| Step1
+```
 
 ---
 
@@ -629,20 +660,23 @@ Bosses should:
 
 ### Primary Inspirations
 
-- **Dungeon Slasher** - fast side-scrolling action, room pressure, simple combat readability.
-- **Oblivion Override** - action rogue-lite pacing and quick build growth.
-- **Skul: The Hero Slayer** - character identity through small kits and run upgrades.
+<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; max-width: 800px;">
+  <!-- Big Image (Spans both columns) -->
+  <div style="grid-column: span 2;">
+    <img src="https://images.steamusercontent.com/ugc/13067568473687387792/45B261D4D9A656E16A151EF9BA0C459F3266E616/?imw=1024&&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=false" style="width: 100%; height: auto; object-fit: cover; border-radius: 6px;">
+  </div>
+  <!-- 2 Small Images -->
+  <div>
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2HY1EesyVxubm5I87Po0SoDHBYBSazQf3T-Jk95QNghLCjLsKaTqJ5eXT&s=10" style="width: 100%; height: 160px; object-fit: cover; border-radius: 6px;">
+  </div>
+  <div>
+    <img src="https://store-images.s-microsoft.com/image/apps.38892.14044995170568579.c13577be-3cd6-4656-8a1f-1a197178694d.b3643bf5-077b-4ade-b606-9449437423f0" style="width: 100%; height: 160px; object-fit: cover; border-radius: 6px;">
+  </div>
+</div>
+
+- **Dungeon Slasher** - fast side-scrolling action, room pressure, with character build mechanics.
 - **Genshin Impact** - simplified team rotation model: DPS, support, buff, burst, repeat.
-- **Hollow Knight** - boss readability, telegraphs, AOE patterns, punish windows.
-
-### What To Borrow
-
-- Fast room-clearing.
-- Simple attack verbs.
-- Upgrade choices that are easy to understand.
-- Bosses with clear tells and pattern pressure.
-- Team rotation based on skill cooldowns and buffs.
-- Big VFX that makes simple attacks feel good.
+- **BlazBlue Entropy Effect** - fast side-scrolling action, room pressure, simple combat readability and rogue-lite mechanics.
 
 ---
 
@@ -653,20 +687,19 @@ Bosses should:
 
 | Area | Value |
 |------|-------|
-| Engine | Unity 6 (6000.x LTS) |
+| Engine | Unity **6000.3.4f1** |
 | Language | C# (.NET Standard 2.1) |
-| Render Pipeline | URP 17.x |
+| Render Pipeline | URP **17.3.0** |
 | Dimension | 2D side-scrolling |
-| Input | Unity Input System 1.8.x (`PlayerInput` component) |
-| Camera | Cinemachine 3.x (explore / combat priority switching) |
-| UI | Unity UI Canvas + TextMeshPro 4.x |
+| Input | Unity Input System **1.17.0** (`PlayerInput` component plus direct number-key team slots) |
+| Camera | Cinemachine **3.1.6** (room framing, confiner boundaries, look-ahead, shake) |
+| UI | Unity UI **2.0.0** + TextMeshPro |
 | Physics | Physics2D (`Rigidbody2D`, triggers, `OverlapCircle`) |
-| VFX | VFX Graph 17.x + Shader Graph 17.x |
-| Level Tools | ProBuilder 6.x |
-| AI | Unity Behavior Graph (enemy FSM nodes) |
+| VFX | URP particle/VFX presentation, Shader Graph, reusable projectile/VFX libraries |
+| AI | Unity Behavior **1.0.15** (enemy behavior nodes) |
 | Version Control | Git + GitHub |
-| CI | GitHub Actions (stub) |
-| Testing | Unity Test Framework 1.x (0 % coverage) |
+| Networking | None; single-player authority |
+| Testing | Unity Test Framework **1.6.0**; five current EditMode regression fixtures plus Play Mode smoke checks documented in DevLogs |
 
 ### Architecture Pattern
 
@@ -674,14 +707,16 @@ Bosses should:
 
 | Layer | Responsibility |
 |-------|---------------|
-| `PlayerCharacter` (Facade) | Owns active `CharacterObject`; caches movement, combat, animation, audio, passive, FSM |
-| `PlayerStateMachine` (FSM) | Priority-based state transitions with 12-frame input buffer |
-| `FrameDataPlayerState` | Phase lifecycle — being simplified to wind-up / active / recovery only |
-| `PlayerCombat` (Executor) | Hitbox activation, projectiles, VFX, audio — adapting grab/combo-tree code |
-| `CharacterObject` (SO) | Primary data container: stats, combos, skills, movement, audio, progression |
-| `ActionResolver` | Combo tree walker — being replaced with simple linear BA chain |
-| `EnemyController` + Behavior Graph | Enemy FSM via Unity Behavior nodes |
-| `TeamLoader` | Runtime party of up to 3 characters with HP tracking |
+| `PlayerCharacter` (Facade) | Owns the active `CharacterObject` and connects movement, combat, animation, audio, passive controller, runtime effects, and FSM. |
+| `PlayerStateMachine` + `ActionInputBuffer` | State-authorized locomotion/action transitions, time-based action buffers, ground/air routing, and legal switch windows. |
+| `FrameDataPlayerState` | Executes authored Startup, Active, Recovery, Cancel, and Done phases while states decide which buffered actions may interrupt. |
+| `PlayerCombat` + `ActionResolver` | Resolves the current action/step, hitboxes, projectiles, cooldowns, damage attribution, and Aura Energy rewards. |
+| `CharacterObject` + `CharacterKitDefinition` | Primary authored character data: stats, movement, actions, role/element, passive recipes, and Potential nodes. |
+| `CharacterPassiveController` + Runtime Effect pipeline | Evaluates kit triggers/filters and applies recipe-driven stat, damage, status, healing, shield, and resource effects. |
+| `TeamLoader` | Runtime authority for the three deployed slots, active index, HP/AE, effective stats, Artifacts, swap cooldown, and outgoing-action clone. |
+| `PlayerRunInventory` / `PlayerMetaProgression` | Separate run-scoped ownership from permanent fragments and Potential levels. |
+| `EnemyController` + Behavior Graph + `EnemyElementalState` | Enemy health/reactions, behavior nodes, elemental gauges, DOTs, and reaction state. |
+| `SceneTransitionManager` + `SceneBoundaryController` | Persistent transition facade with scene-local entrance, exit, trigger, and Cinemachine confiner ownership. |
 
 ### Codebase Scale
 
@@ -689,32 +724,36 @@ Bosses should:
 |-----------|--------:|------|
 | AIBehaviour | 2 | Enemy controller + hit reaction |
 | Animation | 3 | Player / enemy animation adapters |
-| Behavior | 23 | Unity Behavior tree nodes |
+| Behavior | 23 | Unity Behavior action, condition, and reaction nodes |
 | Cameras | 1 | Cinemachine coordinator |
-| Character | 23 | SO data: frame data, combo trees, stats, progression |
-| Combat | 50 | Hitboxes, projectiles, movement, input, managers |
-| Editor | 9 | Custom authoring windows |
-| Inventory | 5 | Item / codex SO data |
+| Character | 22 | Character/action/frame/progression authoring data |
+| Combat | 79 | Resolution, effects, elements, feedback, projectiles, VFX/audio, movement/input |
+| Core | 11 | Persistent root, scene transitions, boundaries, zone state |
+| Editor | 15 | Character/action/projectile/VFX authoring and regression tests |
+| Inventory | 6 | Item, Artifact, character-item, and codex data |
 | Parallax | 3 | Background scrolling |
-| Player | 24 | FSM + states + input buffer |
-| Shop | 6 | Shop inventory + runtime + UI |
-| Systems | 4 | PlayerCharacter facade, TeamLoader |
-| TeamBuilder | 5 | Team composition UI |
-| UI | 10 | HUD, skill tree, world UI, debug |
-| **Total** | **168** | |
+| Player | 27 | FSM, states, buffers, interrupt policy, combat HUD |
+| Progression | 2 | Acquisition resolution and permanent meta progression |
+| Shop | 7 | World-space offers, run inventory, selling, and shop UI |
+| Systems | 4 | Player facade, TeamLoader, timing, entity sorting |
+| TeamBuilder | 24 | Draft/deploy flow, inspector, equipment, level, and Potential panels |
+| UI | 21 | HUD, world UI, runtime effects, feedback, input locks, debug |
+| **Total** | **251** | Current `.cs` files under `Assets/Project/Scripts/` |
 
 ### Key ScriptableObjects
 
 | SO Type | Purpose |
 |---------|--------|
-| `CharacterObject` | Character data: stats, combos, skills, movement, audio, progression |
-| `ActionResolverTable` | Combo resolution config (being simplified) |
-| `AttackStepData` | Single attack step: frame timing + hit / motion / VFX / audio blocks |
-| `ComboTree` / `ComboNode` | Linked-list combo routing (being replaced with linear chains) |
+| `CharacterObject` | Character identity, stats, role/element, movement/audio, action table, kit, and level growth |
+| `ActionResolverTable` | Ground/air Basic Attack, Skill, and Ultimate action routes |
+| `AttackStepData` / `ActionFrameData` | Authored action phases plus hit, motion, VFX, audio, projectile, and event components |
+| `CharacterKitDefinition` / Potential nodes | Base abilities, passive triggers, recipe applications, and three permanent 0–4 upgrade tracks |
 | `MovementProfile` | Movement tuning: speed, jump, gravity |
-| `CharacterProgressionDefinition` | Skill tree node definitions |
-| `CodexInventory` | Master item catalog |
-| `ReactionRuleTable` | Enemy hit reaction rules (being simplified) |
+| `RuntimeEffectDefinition` / `RuntimeEffectRecipe` | Reusable effect formula plus per-kit application policy, values, stacking, and presentation |
+| `PlayerRunInventory` / `PlayerMetaProgression` | Run ownership/state and permanent fragment/Potential state |
+| `CodexInventory` | Master Character, Artifact, and Item catalog |
+| `ElementDatabase` / `EnemyElementalProfile` | Element presentation/DOT rules and enemy strength-based gauge capacity |
+| `ReactionRuleTable` | Enemy hit-reaction selection rules |
 | `ProjectileData` | Projectile configuration |
 
 ### Folder Convention
@@ -728,16 +767,18 @@ Assets/Project/Scripts/
 │   ├── Conditions/  # IsAlive, HasTarget, CanAttack
 │   └── Reactions/   # TakeDamage, Die
 ├── Cameras/         # CameraManager (Cinemachine)
-├── Character/       # All CharacterObject SO definitions
-├── Combat/          # PlayerCombat, HitBox*, Projectile*, VFX, Audio, Freeze
-├── Editor/          # Authoring windows
+├── Character/       # CharacterObject, action/frame data, stats, kit definitions
+├── Combat/          # Resolution, runtime effects, elements, hitboxes, projectiles, VFX/audio
+├── Core/            # Persistent root, scene transition, room boundary, zone state
+├── Editor/          # Authoring windows, inspectors, and EditMode tests
 ├── Inventory/       # BaseItem, CharacterItem, Artifact, CodexInventory
 ├── Parallax/        # ParallaxController, Background, Layer
-├── Player/          # PlayerStateMachine, all PlayerState subclasses
-├── Shop/            # ShopManager, PlayerShopInventory, ShopUI
+├── Player/          # PlayerStateMachine, action buffer, states, ability/team HUD
+├── Progression/     # Duplicate acquisition and permanent meta progression
+├── Shop/            # ShopManager, PlayerRunInventory, world-space shop UI
 ├── Systems/         # PlayerCharacter, TeamLoader, EntitySortingManager
-├── TeamBuilder/     # TeamBuilderUI, slots, grid
-└── UI/              # PlayerHUD, SkillTreeUI, EnemyWorldUI, InputLockManager
+├── TeamBuilder/     # Draft/deploy, roster, equipment, level, Potential, inspector UI
+└── UI/              # Player/world HUD, runtime effects, feedback, helpers, debug
 ```
 
 ---
@@ -745,22 +786,23 @@ Assets/Project/Scripts/
 <!-- @tag:prototype-truth -->
 ## Current Prototype Truth
 
-> Inspected via architecture review (2025-06-02) — 168 scripts under `Assets/Project/Scripts`.
+> Current design-aligned runtime snapshot. This section distinguishes functioning systems from remaining design targets.
 
 ### Runtime Shape
 
 | Subsystem | State | Neo-JJK Action |
 |-----------|-------|----------------|
-| PlayerStateMachine (24 scripts) | Working FSM, 12 states, priority transitions, input buffer | **Keep** — adapt air-attack, retain grab states for future use |
-| PlayerCombat (50 scripts) | Frame-data engine, combo trees, hitboxes, projectiles, grab | **Refactor** — adapt ActionResolver and simplify combos, retain grabs |
-| CharacterObject SOs (23 scripts) | Rich data: combos, skills, ultimates, stats, progression | **Simplify** — reduce to 2-3 hit BA, 1 skill, 1 ultimate per character |
+| PlayerStateMachine | Working FSM with 0.15s action buffers, 0.35s team-slot buffer, ground/air action context, and a two-frame pre-recovery switch allowance | **Keep** — use authored action routes without adding execution-heavy aerial-combo requirements. |
+| PlayerCombat | Frame-data action executor with hitboxes, projectiles, Aura Energy, damage attribution, cooldowns, and passive/runtime-effect hooks | **Keep** — author readable core actions and validate feedback before adding more backend mechanics. |
+| Character content | Eight `CharacterObject` assets; six have substantial kit/Potential authoring and two remain prototype placeholders | **Content pass** — bring each release character to one coherent Basic loop, Skill, Ultimate, passive, and readable role. |
 | Enemy AI (25 scripts) | Unity Behavior Graph: patrol, chase, attack, react, die | **Keep** — good foundation for simple enemy FSM |
-| Team System (9 scripts) | TeamLoader manages 3-char party, HP tracking, swap | **Keep** — simplify to instant swap, remove swap-cancel |
-| Shop / Inventory (11 scripts) | Full shop, codex inventory, character items | **Keep** — aligns with Soul Shop design |
-| Camera (1 script, 871 lines) | Cinemachine explore / combat switching, shake, framing | **Keep** — reduce combat camera complexity |
-| UI (10 scripts) | PlayerHUD, SkillTreeUI, EnemyWorldUI, TeamSwitchHUD | **Keep** — update for simplified combat |
+| Team System | `TeamLoader` manages three deployed slots, per-character HP/AE/effective stats, Artifacts, shared switch cooldown, and outgoing-action clones | **Keep** — retain the readable recovery-window swap finish and explicit slot availability feedback. |
+| Runtime Effects / Progression | Recipe-driven buffs, debuffs, shields, heals, statuses, Additional Damage, stack rules, Character Level, and 12-node Potential persistence are functional | **Consolidate content** — migrate legacy definitions gradually and playtest kit readability. |
+| Shop / Inventory | World-space typed offers, linear-price rerolls, selling, stackable consumables, duplicate conversion, run saves, and permanent fragments are functional | **Keep** — finish run-loss/reset rules and Artifact Transcendence spending separately. |
+| Scene / Camera | Persistent transitions coordinate scene-local boundaries, intro sealing, exit unlocking, confiner expansion, and a rightward exit cue in the two active build scenes | **Extend** — reuse the boundary contract for authored combat/reward/boss rooms. |
+| UI | Team draft/deploy, Inspector, Level, Potential, Equipment, shop, combat ability/team HUD, runtime effects, and training contribution feedback exist | **Polish** — final layout, accessibility, and controller navigation need human visual/feel review. |
 | Parallax (3 scripts) | Background parallax scrolling | **Keep** — fits 2D side-scrolling |
-| Editor Tools (9 scripts) | Animation editor, projectile editor, action tree controller | **Keep** — retain good infrastructure, adapt logic for simpler needs |
+| Editor Tools | Animation/action authoring, projectile/VFX libraries, property drawers, and focused regression tests | **Keep** — use the tools to reduce content-authoring risk rather than expanding system scope. |
 
 ### What Works Well
 
@@ -772,21 +814,46 @@ Assets/Project/Scripts/
 - Input System integration (modern API).
 - VFX / audio feedback pipeline.
 
+### Current Authored Roster Snapshot
+
+| Character Asset | Element | Runtime Role | Content Status |
+| --- | --- | --- | --- |
+| Main | Void | Arbiter | Active authored kit with Skill, Ultimate, passive, runtime effects, and Potential data. |
+| Kyo | Ash | Herald | Active authored kit with team support effects and Potential data. |
+| Rugal | Memory | Executioner | Active authored sustained-damage kit and Potential data. |
+| Shermie | Echo | Warden | Active defensive/control kit with shield/heal effects and Potential data. |
+| Goenitz | Echo | Reaper | Active burst/critical kit with projectile and runtime-effect authoring. |
+| Orochi | Void | Reaper | Active burst kit with Void Additional Damage, stack rules, and Potential data. |
+| Krizalid | Ash | Executioner | Prototype character data; ability IDs, level growth, and Potential content are not release-ready. |
+| Kula | Echo | Herald | Prototype character data; movement, complete actions, level growth, and Potential content are not release-ready. |
+
 ---
 
 <!-- @tag:scene-roles -->
 ## Scene Flow
 
-**MainMenu → Lobby → In-Game (CombatRoom ↔ RewardRoom → BossRoom) → Result → Lobby**
+**Target run flow:** `MainMenu → Lobby → CombatRoom → RewardRoom / Shop → BossRoom → Result → Lobby`
 
-| Scene | Purpose |
-|-------|---------|
-| `MainMenu` | Title screen, settings, save slot |
-| `Lobby` | Walkable hub — Soul Shop, team builder, run prep (Blazblue Entropy Effect style) |
-| `CombatRoom` | Side-scrolling room-clear with enemy waves |
-| `RewardRoom` | Upgrade choice, heal, event, or shop encounter |
-| `BossRoom` | Pattern-based boss fight |
-| `Result` | Run win / fail summary, return to lobby |
+**Current playable prototype:** `Test_Playground ⇄ Test_Shop`
+
+| Scene / Role | Status | Purpose |
+|-------|--------|---------|
+| `Test_Playground` | **Implemented prototype** | Combat/training room with entrance sealing, locked exit, unlock cue, team combat, and damage-contribution HUD. |
+| `Test_Shop` | **Implemented prototype** | Walkable Soul Shop/Team Builder scene with a locked exit exposed through the shared transition contract. |
+| `MainMenu` | **Target** | Title screen, settings, save slot. |
+| `Lobby` | **Target** | Walkable hub for run preparation and long-term progression. |
+| `CombatRoom` | **Target contract proven** | Side-scrolling room-clear using the implemented entrance/exit boundary rules. |
+| `RewardRoom` | **Target** | Upgrade choice, heal, event, or shop encounter. |
+| `BossRoom` | **Target** | Pattern-based boss fight. |
+| `Result` | **Target** | Run win/fail summary and return to Lobby. |
+
+### Implemented Room Boundary Contract
+
+1. A room loads with the exit logically locked and its right boundary/confiner closed.
+2. `PlayerIntroState` may enter from outside the left playable edge; finishing or cleaning up Intro seals the entrance.
+3. A room-clear source calls the shared exit-availability API. Unlocking moves the wall, expands the confiner, and plays a short additive rightward camera cue.
+4. The player walks through the authored `TransitionTrigger`; repeated unlock calls are idempotent.
+5. Scene-local controllers own walls and confiners. The persistent `SceneTransitionManager` coordinates loading and exposes the stable API.
 
 ### Rogue-lite (Speculative) System
 
@@ -795,30 +862,6 @@ Assets/Project/Scripts/
 - Every third room cleared opens a **Shop Path** for the player to stop by. If the player chooses not to enter the Shop, the shop path disappears and requires another 3 room clears to appear again.
 - Inside the Combat Room, the game will generate a pattern of biome and Monster Waves.
 - The Reward System provides randomized choices but fixed amounts (Currency / Item / Artifact). These randomized drops are pulled from the CodexInventory and scale based on Difficulty.
-
----
-
-<!-- @tag:system-ownership -->
-## Canonical Future System Ownership
-
-| System | Ownership |
-| --- | --- |
-| `PlayerController` | Movement, dodge, active character routing, player input. |
-| `CharacterRuntime` | Current character stats, cooldowns, skill/ultimate use, active buffs. |
-| `TeamController` | Character swap, team roster, shared team resources if any. |
-| `AttackResolver` | Hit detection, damage application, hit-stop, simple knockback/stagger. |
-| `UpgradeSystem` | Run rewards, potentials, stat/effect modifiers. |
-| `EnemyController` | Enemy movement, attacks, health, simple state behavior. |
-| `BossController` | Boss phases, telegraphs, AOE/projectile pattern sequencing. |
-| `RoomFlowController` | Room start, spawn waves, clear condition, reward transition. |
-| `VfxAudioPresenter` | Combat feedback, impact effects, skill/ultimate presentation. |
-| `UICombatHud` | Health, cooldown, ultimate, swap, reward choices. |
-
-### Hard Rule
-
-Do not rebuild fighting-game architecture unless a human explicitly changes the design direction again.
-
-Do not dump all future gameplay into one global script just because it is faster today. Keep systems small, but do not over-engineer them.
 
 ---
 
@@ -845,14 +888,6 @@ Do not dump all future gameplay into one global script just because it is faster
 6. **Amateur-friendly maintenance**
    A future tired developer should understand a feature quickly.
 
-### Data-Driven Content Targets
-
-- `CharacterDefinition` - health, movement, attack data, skill, ultimate, role, VFX/audio references.
-- `SkillDefinition` - cooldown, damage, area, effect, status, VFX/audio.
-- `UpgradeDefinition` - reward text, stat modifiers, simple triggered effects.
-- `EnemyDefinition` - health, movement, attack list, reward value.
-- `BossPatternDefinition` - telegraph, attack shape, projectile/area pattern, recovery.
-
 ---
 
 <!-- @tag:roadmap -->
@@ -860,17 +895,19 @@ Do not dump all future gameplay into one global script just because it is faster
 
 > 12 × 2-week sprints. End-of-sprint = playable build + thesis note.
 > Direction: Refactor fighting-game prototype → Neo-JJK hack-and-slash rogue-lite.
+>
+> **Status note (2026-07-18):** The original month order is retained for planning history. Current work has landed out of sequence; use the status column and **Current Prototype Truth** as the authority for what exists now.
 
 ### Phase Overview
 
-| Month | Phase | Focus |
-|-------|-------|-------|
-| 1 | **Strip & Stabilize** | Audit codebase, remove fighting-game DNA, stabilize simple combat |
-| 2 | **Combat Core** | Lock simple BA / Skill / Ult / Dodge loop with one character |
-| 3 | **Team & Swap** | Team rotation, simple swap, per-character cooldowns |
-| 4 | **Rogue-Lite Loop** | Room flow, reward choices, Soul Shop, upgrades |
-| 5 | **Boss & Content** | Pattern-based boss, enemy archetypes, content scaling |
-| 6 | **Polish & Thesis** | VFX / audio polish, QA, performance, thesis write-up |
+| Month | Phase | Current Status | Remaining Focus |
+|-------|-------|----------------|-----------------|
+| 1 | **Strip & Stabilize** | **Partial** | Legacy complexity and class/file inconsistencies remain; current systems compile and are actively refactored. |
+| 2 | **Combat Core** | **Functional, tuning** | Core actions, elements, Aura Energy, feedback, projectiles, and effects work; simplify character kits and complete feel tests. |
+| 3 | **Team & Swap** | **Functional** | Three-slot runtime state, outgoing-action swap finish, cooldown/readiness HUD, and loadout deployment work; tune clarity and feel. |
+| 4 | **Rogue-Lite Loop** | **Partial** | Soul Shop, run inventory, levels, Potential, duplicates, and two-scene transitions work; room generation, reward choice, and full reset flow remain. |
+| 5 | **Boss & Content** | **Early content** | Eight character assets exist at mixed readiness; enemy foundation exists; authored release rooms and boss loop remain. |
+| 6 | **Polish & Thesis** | **Not gated** | Accessibility, controller navigation, full-run QA, performance targets, release build, and thesis evidence remain. |
 
 ---
 
@@ -917,7 +954,7 @@ Do not dump all future gameplay into one global script just because it is faster
 - Ultimate: flashy burst, gated by the character's full Aura Energy cost
 - Dodge / Dash: i-frame dash, simple survival verb
 - Hit detection: `OverlapCircle` / `OverlapBox`, `NonAlloc` variants
-- Damage formula: `base × modifier × defense` (keep `DamageCalculator` pure)
+- Damage formula: resolved through the pure `CombatFormula` utility, including routine, defense, damage reduction, critical, Elemental Mastery, and Impact rules.
 
 **Accept:** One character fights one enemy. All 4 verbs responsive. No legacy routing.
 
@@ -945,11 +982,11 @@ Do not dump all future gameplay into one global script just because it is faster
 **Goal:** 2-3 character team with simple swap.
 
 - `TeamLoader`: manage 3-character party (simplify existing)
-- Swap keys 1 / 2 / 3: instant character change
+- Swap keys 1 / 2 / 3: ground-only, recovery-window character change with a team swap cooldown
 - Swap animation: clone-in new, old continues last action then fades
 - Per-character resources: Skill cooldown and Ultimate Aura Energy are tracked independently
 - Per-character HP via `TeamLoader` (already works)
-- Input buffer inheritance: new character inherits previous buffer
+- Input buffer clears on switch; the incoming character starts from its normal locomotion state
 
 **Accept:** Player swaps 3 characters mid-combat. Cooldowns per-character. Swap responsive.
 
@@ -992,7 +1029,7 @@ Do not dump all future gameplay into one global script just because it is faster
 - Soul Shop: spend currency on characters / artifacts
 - Soul Fragments (retained on death) + in-run currency (lost on death)
 - Shop reroll with increasing price
-- Character Potential: buy same character again → permanent upgrade (1–6 levels)
+- Character Potential: duplicate character → permanent fragments → one of three sequential tracks, each capped at 4/4.
 
 **Accept:** Upgrades change run feel. Shop provides between-run progression.
 
@@ -1060,14 +1097,14 @@ Do not dump all future gameplay into one global script just because it is faster
 
 ### Milestone Gates
 
-| Gate | Criteria | Target |
-|------|----------|--------|
-| M1 — Clean Slate | Fighting-game DNA removed, simple combat compiles | End Month 1 |
-| M2 — Combat Lock | BA / Skill / Ult / Dodge feels good with one character | End Month 2 |
-| M3 — Team Works | 3-character swap with HUD and cooldowns | End Month 3 |
-| M4 — Loop Runs | Full room → reward → boss flow with Soul Shop | End Month 4 |
-| M5 — Content Ready | Multiple characters, enemies, upgrades, bosses | End Month 5 |
-| M6 — Ship | Polished, tested, thesis submitted | End Month 6 |
+| Gate | Criteria | Current Assessment |
+|------|----------|--------------------|
+| M1 — Clean Slate | Fighting-game DNA removed, simple combat compiles | **Partial** — compilation/runtime foundation exists; legacy complexity remains. |
+| M2 — Combat Lock | BA / Skill / Ult / Dodge feels good with one character | **Mechanically met; feel approval pending.** |
+| M3 — Team Works | 3-character swap with HUD and cooldowns | **Mechanically met; human clarity/feel pass pending.** |
+| M4 — Loop Runs | Full room → reward → boss flow with Soul Shop | **Not met** — shop and transition foundation exist, full run does not. |
+| M5 — Content Ready | Multiple release-ready characters, enemies, upgrades, bosses | **Not met** — mixed-readiness character assets and enemy foundation only. |
+| M6 — Ship | Polished, tested, thesis submitted | **Not met.** |
 
 ---
 

@@ -17,9 +17,9 @@ MonoBehaviour:
   maxJumpCount: 2
   maxAirDashCount: 1
   groundAcceleration: 110
-  groundDeceleration: 140
+  groundDeceleration: 50
   airAcceleration: 110
-  airDeceleration: 140
+  airDeceleration: 50
   airSpeedMultiplier: 1.1
   fastFallMultiplier: 10
   riseGravityMultiplier: 3.5
