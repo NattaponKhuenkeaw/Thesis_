@@ -57,6 +57,8 @@ GameObject:
   m_Component:
   - component: {fileID: 8850677962514263319}
   - component: {fileID: 7111990659181474709}
+  - component: {fileID: 3419202181910011112}
+  - component: {fileID: 3419202181910011113}
   m_Layer: 0
   m_Name: Manager
   m_TagString: Untagged
@@ -95,8 +97,39 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e9022b4244d8a9f4c94d4a6339ee96af, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.RootPersistentManager
+--- !u!114 &3419202181910011112
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 822730165316854140}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e67f0c4664b84fcdbd758a7c26071901, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Project.UI.RunResultUI
+--- !u!114 &3419202181910011113
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 822730165316854140}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f347d2a4e3e4a8abde163861519a701, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Core.RunEnd.RunEndController
+  runInventory: {fileID: 11400000, guid: 7e77a39b7efedda4f924677b81de549c, type: 2}
+  metaProgression: {fileID: 11400000, guid: f3d0c0c5246b7f04093bf9b8106bccef, type: 2}
+  runResultUI: {fileID: 3419202181910011112}
+  deathDelaySeconds: 1.75
+  lobbySceneName: Test_Lobby
+  lobbyEntranceId: Default
+  roomsCleared: 0
 --- !u!1 &1566489620681877580
 GameObject:
   m_ObjectHideFlags: 0

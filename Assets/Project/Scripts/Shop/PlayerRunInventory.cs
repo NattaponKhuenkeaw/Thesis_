@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Project.InventorySystem.Items;
+using Project.Progression;
 
 namespace Project.ShopSystem
 {
@@ -406,6 +407,27 @@ namespace Project.ShopSystem
         public void ResetRunProgress()
         {
             ClearInventory();
+        }
+
+        public void ResetRunProgressForDeath(PlayerMetaProgression metaProgression = null)
+        {
+            EnsureInventoryData();
+            ownedItems.Clear();
+            itemStacks.Clear();
+            runCharacters.Clear();
+            currency = DefaultCurrency;
+
+            EnsureTeamSlotCapacity(DefaultTeamSlotCount);
+            for (int i = 0; i < teamSlots.Length; i++)
+            {
+                teamSlots[i].Character = null;
+                teamSlots[i].SetArtifacts(null, DefaultArtifactSlotCount);
+            }
+
+            activeTeamSlotIndex = 0;
+            AddUnlockedRosterItems(metaProgression);
+            AddPermanentItems(metaProgression);
+            PostInventoryMutation(save: true);
         }
 
         public bool CanAfford(int amount)
@@ -1935,6 +1957,57 @@ namespace Project.ShopSystem
                 FillTeamSlotsFromOwnedCharacters();
             }
             activeTeamSlotIndex = ResolveActiveSlotIndex(activeTeamSlotIndex);
+        }
+
+        private void AddUnlockedRosterItems(PlayerMetaProgression metaProgression)
+        {
+            if (metaProgression == null)
+            {
+                return;
+            }
+
+            metaProgression.LoadPersistentStateIfNeeded();
+            CharacterItem[] characterItems = Resources.LoadAll<CharacterItem>("ItemSO");
+            for (int i = 0; i < characterItems.Length; i++)
+            {
+                CharacterItem characterItem = characterItems[i];
+                if (characterItem == null || characterItem.characterObjectData == null)
+                {
+                    continue;
+                }
+
+                if (metaProgression.IsCharacterUnlocked(characterItem))
+                {
+                    AddResolvedItem(characterItem, 1);
+                }
+            }
+        }
+
+        private void AddPermanentItems(PlayerMetaProgression metaProgression)
+        {
+            if (metaProgression == null)
+            {
+                return;
+            }
+
+            metaProgression.LoadPersistentStateIfNeeded();
+            IReadOnlyList<PermanentItemStack> permanentItems = metaProgression.PermanentItems;
+            for (int i = 0; i < permanentItems.Count; i++)
+            {
+                PermanentItemStack stack = permanentItems[i];
+                if (stack == null || stack.quantity <= 0 || string.IsNullOrWhiteSpace(stack.itemId))
+                {
+                    continue;
+                }
+
+                BaseItem item = ResolveItemById(stack.itemId);
+                if (item == null)
+                {
+                    continue;
+                }
+
+                AddResolvedItem(item, Mathf.Max(1, stack.quantity));
+            }
         }
 
         private bool ShouldPreferAuthoredBootstrapOverSavedData(SavedPlayerRunInventoryData data)

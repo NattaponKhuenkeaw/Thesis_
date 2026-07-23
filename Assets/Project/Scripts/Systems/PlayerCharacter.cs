@@ -169,6 +169,24 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         NotifyHealthChanged();
     }
 
+    public void ForceDeath()
+    {
+        if (characterObject == null || (IsDead && deathEventRaised))
+            return;
+
+        currentHP = 0f;
+        NotifyHealthChanged();
+
+        if (!deathEventRaised)
+        {
+            deathEventRaised = true;
+            OnDied?.Invoke();
+        }
+
+        if (StateMachine != null)
+            StateMachine.ChangeState(StateMachine.DeadState);
+    }
+
     public bool TakeDamage(float value)
     {
         if (value <= 0f || IsDead)

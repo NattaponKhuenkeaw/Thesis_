@@ -18,6 +18,8 @@ MonoBehaviour:
     spirit that Fiends fear.
   icon: {fileID: 21300000, guid: ba0cf0928e2789b4681f5f153ee3bee3, type: 3}
   price: 1200
+  retentionPolicy: 1
+  deathConversionFragmentAmount: 1
   isEquippable: 1
   passiveDescription: Swapping characters triggers an Aura burst dealing 100% ATK
     as damage and knocking back nearby enemies.
@@ -31,5 +33,6 @@ MonoBehaviour:
     critDamage: 0
     cooldownRate: 0
     impact: 10
+    damageReduction: 0
     aeRecharge: 0.35
   additionalDamageEffects: []
