@@ -12,9 +12,7 @@ public interface ICharacterCombat
     bool CanMoveAfterAttack();
     bool CanSwitchDirection();
     bool ShouldSuppressLandingFeedback();
-    bool ShouldPreserveGroundAuthority();
     bool IsInAirborneAction();
-    float GetAirborneGravityScale();
 
     // =========================================================
     // Combat Engine (used by PlayerAttackState)

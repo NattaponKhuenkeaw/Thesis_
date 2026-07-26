@@ -21,7 +21,7 @@ MonoBehaviour:
     maxHP: 813
     attack: 50
     defense: 38
-    speed: 9
+    speed: 10.5
     elementalMastery: 0
     critRate: 5
     critDamage: 150
@@ -53,7 +53,7 @@ MonoBehaviour:
     activeFrames: 12
     recoveryFrames: 12
     cancelWindowStartFrame: 25
-    dashSpeed: 60
+    dashSpeed: 25
     cooldownFrames: 24
   kitDefinition:
     skill:

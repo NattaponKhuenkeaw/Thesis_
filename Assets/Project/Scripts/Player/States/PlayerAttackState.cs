@@ -64,7 +64,7 @@ public class PlayerAttackState : CombatPlayerState
         if (player.Combat != null && player.Combat.IsAttacking())
         {
             if (resolver.IsActive && !resolver.IsLastStep()
-                && player.Movement != null && !player.Movement.IsGrounded())
+                && player.Combat.IsAirCombo)
             {
                 player.Combat.CancelCurrentAttackButKeepComboProgress();
                 if (player.Animator != null)
@@ -174,10 +174,4 @@ public class PlayerAttackState : CombatPlayerState
         fsm.CurrentState.OnUltimateInput();
     }
 
-    public override void OnMoveInput(Vector2 input)
-    {
-        base.OnMoveInput(input);
-        if (player.Movement != null)
-            player.Movement.SetDownInput(input.y < -0.5f);
-    }
 }

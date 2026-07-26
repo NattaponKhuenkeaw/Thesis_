@@ -31,7 +31,7 @@ public class PlayerMoveState : PlayerState
         if (player.Movement == null)
             return;
 
-        if (!player.Movement.GroundState.IsEffectivelyGrounded)
+        if (fsm.IsAirborneContext)
         {
             fsm.ChangeState(fsm.FallingState);
             return;
@@ -41,14 +41,4 @@ public class PlayerMoveState : PlayerState
             fsm.ChangeState(fsm.IdleState);
     }
 
-    // =========================================================
-    // Custom Input — move also forwards down input
-    // =========================================================
-    public override void OnMoveInput(Vector2 input)
-    {
-        base.OnMoveInput(input);
-
-        if (player.Movement != null)
-            player.Movement.SetDownInput(input.y < -0.5f);
-    }
 }

@@ -26,9 +26,9 @@ public class PlayerLandingState : PlayerState
             return;
         }
 
-        if (!player.Movement.GroundState.IsEffectivelyGrounded)
+        if (fsm.IsAirborneContext)
         {
-            fsm.ChangeState(fsm.AirborneState);
+            fsm.ChangeState(fsm.FallingState);
             return;
         }
 
@@ -37,9 +37,25 @@ public class PlayerLandingState : PlayerState
             return;
         }
 
+        if (fsm.InputBuffer != null
+            && fsm.InputBuffer.HasAttackBuffer
+            && fsm.InputBuffer.ConsumeAttack())
+        {
+            fsm.ChangeState(fsm.AttackState);
+            fsm.CurrentState.OnAttackInput();
+            return;
+        }
+
         if (Mathf.Abs(player.Movement.HorizontalInput) > 0.01f)
             fsm.ChangeState(fsm.MoveState);
         else
             fsm.ChangeState(fsm.IdleState);
+    }
+
+    public override bool HandleAttackInput()
+    {
+        // RouteAttackInput has already buffered it. Landing commits first, then
+        // Update starts the action from an unambiguous grounded context.
+        return true;
     }
 }

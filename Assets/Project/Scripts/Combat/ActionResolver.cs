@@ -17,6 +17,7 @@ public class ActionResolver
     private ComboTree activeTree;
     private StandaloneAction activeStandalone;
     private int treeDepth;
+    private bool activeActionStartedAirborne;
 
     // Logging
     private PlayerStateMachine fsm;
@@ -66,6 +67,7 @@ public class ActionResolver
             Log($"Standalone Match! Priority: {standalone.priority}", Color.yellow);
             activeStandalone = standalone;
             ActiveCombatAction = standalone;
+            activeActionStartedAirborne = !ctx.isGrounded;
             activeTree = standalone.comboTree;
             LastMatchedConditions = standalone.conditions;
 
@@ -110,6 +112,7 @@ public class ActionResolver
         {
             Log($"Action Selection: '{bestAction.ActionKey}' (Category={category}, Priority={bestAction.priority})");
             ActiveCombatAction = bestAction;
+            activeActionStartedAirborne = !ctx.isGrounded;
             activeTree = bestAction.comboTree;
         }
         else
@@ -381,7 +384,7 @@ public class ActionResolver
         return true;
     }
 
-    public bool IsAirCombo => ActiveCombatAction != null && ActiveCombatAction.context == CombatActionContext.Air;
+    public bool IsAirCombo => ActiveCombatAction != null && activeActionStartedAirborne;
 
     public float GetComboResetDelay()
     {
@@ -403,6 +406,7 @@ public class ActionResolver
         activeTree = null;
         activeStandalone = null;
         ActiveCombatAction = null;
+        activeActionStartedAirborne = false;
         LastMatchedConditions = null;
         treeDepth = 0;
     }
@@ -427,6 +431,14 @@ public class ActionResolver
             }
 
             if (sa.triggerCategory != category)
+            {
+                continue;
+            }
+
+            CombatActionContext expectedContext = ctx.input.isGrounded
+                ? CombatActionContext.Ground
+                : CombatActionContext.Air;
+            if (sa.context != CombatActionContext.Both && sa.context != expectedContext)
             {
                 continue;
             }

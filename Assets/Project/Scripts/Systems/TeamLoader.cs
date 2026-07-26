@@ -267,7 +267,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         LayerMask groundMask = LayerMask.GetMask("Ground");
         if (playerCharacter.Movement != null)
         {
-            groundMask = playerCharacter.Movement.groundLayer;
+            groundMask = playerCharacter.Movement.GroundCollisionMask;
         }
 
         Vector2 origin = playerCharacter.transform.position;
@@ -1292,7 +1292,6 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
         playerCharacter.Combat?.ResetCombo();
         playerCharacter.Movement?.CancelAttackMotion();
-        playerCharacter.Movement?.StopDashPhysics();
         playerCharacter.StateMachine?.ResetForCharacterSwitch();
         playerCharacter.StateMachine?.InputBuffer?.ClearAll();
     }

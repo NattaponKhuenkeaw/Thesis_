@@ -636,18 +636,6 @@ PrefabInstance:
       propertyPath: targetCanvas
       value: 
       objectReference: {fileID: 2040178244}
-    - target: {fileID: 6805025547357927974, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
-      propertyPath: maxFallSpeed
-      value: 50
-      objectReference: {fileID: 0}
-    - target: {fileID: 6805025547357927974, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
-      propertyPath: landingLagTime
-      value: 0.1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6805025547357927974, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
-      propertyPath: jumpStartupTime
-      value: 0.05
-      objectReference: {fileID: 0}
     - target: {fileID: 7851930121724842516, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: m_Name
       value: PlayerManager

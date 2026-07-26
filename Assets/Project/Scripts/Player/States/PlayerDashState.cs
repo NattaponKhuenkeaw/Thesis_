@@ -13,25 +13,39 @@ public class PlayerDashState : FrameDataPlayerState
     public override PlayerStatePriority Priority => PlayerStatePriority.Ability;
 
     // =========================================================
-    // Capabilities — only move input during dash
+    // Capabilities — Startup/Active own the dash burst. A dash that started
+    // grounded returns normal locomotion control on its first Recovery frame.
     // =========================================================
     public override bool AcceptsMoveInput => true;
-    public override bool AcceptsDashInput => true;
+    public override bool AcceptsDashInput => false;
     public override bool AcceptsJumpInput => true;
     public override bool AcceptsAttackInput => true;
     public override bool AcceptsSkillInput => true;
     public override bool AcceptsUltimateInput => true;
-    public override bool LocksMovement => true;
-    public override bool LocksFacing => true;
+    public override bool LocksMovement => !IsRecoveryLocomotionOpen;
+    public override bool LocksFacing => !IsRecoveryLocomotionOpen;
 
     private bool dashStarted;
     private bool exitHandled;
+    private bool startedGrounded;
+
+    public bool IsRecoveryLocomotionOpen =>
+        startedGrounded && CurrentPhase == ActionPhase.Recovery;
 
     // =========================================================
     // FrameDataPlayerState — provide frame data from DashData
     // =========================================================
 
-    protected override InterruptPolicy GetInterruptPolicy() => InterruptPolicy.Dash;
+    protected override InterruptPolicy GetInterruptPolicy()
+    {
+        InterruptPolicy policy = InterruptPolicy.Dash;
+        if (startedGrounded)
+        {
+            policy.recoveryGate = InputGate.AllowAll;
+        }
+
+        return policy;
+    }
 
     protected override ActionFrameData GetFrameData()
     {
@@ -49,20 +63,14 @@ public class PlayerDashState : FrameDataPlayerState
     {
         dashStarted = false;
         exitHandled = false;
+        startedGrounded = fsm.IsGroundedContext;
         base.Enter(context);
-
-        if (player.Movement != null)
-            player.Movement.OnDashComplete += HandleDashComplete;
     }
 
     public override void Exit()
     {
         base.Exit();
-        if (player.Movement != null)
-        {
-            player.Movement.StopDashPhysics();
-            player.Movement.OnDashComplete -= HandleDashComplete;
-        }
+        player.Movement?.FinishDash();
     }
 
     // =========================================================
@@ -89,16 +97,6 @@ public class PlayerDashState : FrameDataPlayerState
     // =========================================================
     // Custom Input — initiates dash physics (FSM defers here)
     // =========================================================
-    public override bool HandleDashInput(float inputX)
-    {
-        // If we've already started the dash physics, return false to let the FSM
-        // handle re-dash interrupts via RouteDashInput and InterruptPolicy.
-        if (dashStarted) return false;
-
-        OnDashInput(inputX);
-        return true;
-    }
-
     public override void OnDashInput(float inputX)
     {
         if (!dashStarted && player.Movement != null)
@@ -106,16 +104,5 @@ public class PlayerDashState : FrameDataPlayerState
             dashStarted = true;
             player.Movement.Dash(inputX);
         }
-    }
-
-    // =========================================================
-    // Callbacks
-    // =========================================================
-    private void HandleDashComplete()
-    {
-        if (exitHandled) return;
-        exitHandled = true;
-        if (fsm.CurrentState == this)
-            ExitToAppropriateMovementState();
     }
 }

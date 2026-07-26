@@ -26,3 +26,15 @@ MonoBehaviour:
     skillLevel: 4
     ultimateLevel: 4
     passiveLevel: 4
+  - characterId: char-0-main
+    skillLevel: 4
+    ultimateLevel: 4
+    passiveLevel: 4
+  - characterId: Char_2_Rugal
+    skillLevel: 4
+    ultimateLevel: 4
+    passiveLevel: 4
+  - characterId: char_6_orochi
+    skillLevel: 4
+    ultimateLevel: 4
+    passiveLevel: 4

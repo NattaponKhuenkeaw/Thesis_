@@ -93,7 +93,7 @@ public struct InterruptPolicy
     };
 
     /// <summary>
-    /// Dash: Recovery interruptable by Ultimate/Skill/Jump/Dash/Attack.
+    /// Dash: Recovery interruptable by Ultimate/Skill/Jump/Attack.
     /// No facing or movement changes during any active phase.
     /// </summary>
     public static readonly InterruptPolicy Dash = new InterruptPolicy
@@ -101,13 +101,14 @@ public struct InterruptPolicy
         startup  = ActionCategory.None,
         active   = ActionCategory.None,
         recovery = ActionCategory.Ultimate | ActionCategory.Skill 
-                 | ActionCategory.Jump     | ActionCategory.Dash 
+                 | ActionCategory.Jump
                  | ActionCategory.BasicAttack | ActionCategory.Switch,
         cancel   = ActionCategory.All & ~ActionCategory.Switch,
-        // InputGate — dash direction is committed on startup, no changes until cancel
         startupGate  = InputGate.None,
         activeGate   = InputGate.None,
-        recoveryGate = InputGate.AllowMovement,
+        // Active owns horizontal dash travel. Recovery releases vertical
+        // physics but does not inject normal walking into the dash distance.
+        recoveryGate = InputGate.None,
         cancelGate   = InputGate.AllowAll
     };
 
@@ -153,8 +154,8 @@ public struct InterruptPolicy
 
     /// <summary>
     /// AirborneAttack: Same interrupt categories as BasicAttack, but with
-    /// airborne-specific InputGate rules. Recovery allows movement input
-    /// so the gravity drift system can read horizontal input for air control.
+    /// airborne-specific InputGate rules. Recovery allows direct forward
+    /// movement while the motor keeps vertical motion suspended.
     /// </summary>
     public static readonly InterruptPolicy AirborneAttack = new InterruptPolicy
     {
@@ -165,7 +166,7 @@ public struct InterruptPolicy
                  | ActionCategory.Jump | ActionCategory.Dash
                  | ActionCategory.BasicAttack | ActionCategory.Switch,
         cancel = ActionCategory.All & ~ActionCategory.Switch,
-        // InputGate — airborne: facing on startup, movement on recovery for air drift control
+        // InputGate — airborne: facing on startup, forward movement on recovery
         startupGate  = InputGate.AllowFacing,
         activeGate   = InputGate.None,
         recoveryGate = InputGate.AllowMovement,

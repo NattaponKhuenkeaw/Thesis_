@@ -6,29 +6,38 @@ using System;
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerMovement : MonoBehaviour
 {
-    // =========================================================
-    // Dependencies
-    // =========================================================
-    [Header("Dependencies")]
-    public SpriteRenderer spriteRenderer;
-    [SerializeField] private MonoBehaviour combatHandler;
+    private const string PlayerLayerName = "Player";
+    private const string EnemyLayerName = "Enemy";
+    private const string GroundLayerName = "Ground";
+    private const string OneWayPlatformLayerName = "OneWayPlatform";
+    private const float AttackFacingCancelInputThreshold = 0.2f;
+    private const float MinimumGroundNormalY = 0.5f;
+    private const float GroundedVerticalTolerance = 0.1f;
+    private const float DashDecelerationStart = 0.55f;
+    private const float DashEndSpeedRatio = 0.15f;
+    private const int MaximumDropThroughFrames = 45;
+
+    private enum FallSession
+    {
+        Neutral,
+        JumpArc
+    }
 
     // =========================================================
     // Movement Profile (data-driven, assigned by PlayerCharacter)
     // =========================================================
     [HideInInspector] public MovementProfile profile;
 
-    /// <summary>Safe profile accessor with fallback defaults.</summary>
-    private MovementProfile P => profile != null ? profile : FallbackProfile;
-    private static MovementProfile _fallback;
-    private static MovementProfile FallbackProfile =>
-        _fallback != null ? _fallback : (_fallback = ScriptableObject.CreateInstance<MovementProfile>());
+    private MovementProfile P => profile;
 
     // =========================================================
     // Dash Settings
     // =========================================================
     [Header("Dash Settings")]
     [HideInInspector] public DashData dashData;
+
+    [Header("Grounding")]
+    [SerializeField] private Transform groundCheck;
 
     // =========================================================
     // Dash Visuals
@@ -40,25 +49,11 @@ public class PlayerMovement : MonoBehaviour
     public float dashAfterimageSpawnInterval = 0.05f;
 
     // =========================================================
-    // Layer Settings
-    // =========================================================
-    [Header("Layer Settings")]
-    public string playerLayerName = "Player";
-    public string enemyLayerName = "Enemy";
-    public string oneWayPlatformLayerName = "OneWayPlatform";
-
-    // =========================================================
-    // Physics Checks
-    // =========================================================
-    [Header("Physics Checks")]
-    public Transform groundCheck;
-    public LayerMask groundLayer;
-
-    // =========================================================
     // Private Runtime Data
     // =========================================================
     private Rigidbody2D rb;
     public Rigidbody2D RB => rb;
+    private SpriteRenderer spriteRenderer;
     private PlayerStateMachine fsm;
     private ICharacterCombat combat;
 
@@ -68,32 +63,33 @@ public class PlayerMovement : MonoBehaviour
     public GroundStateProvider GroundState { get; } = new GroundStateProvider();
 
     private bool isGrounded;
-    private bool wasGrounded;
-    private bool isHoldingDown;
-    private float originalGravityScale;
     private float horizontalInput;
-    private float lastAppliedMotionVelocityX;
-    private float coyoteUntil = -999f;
+    private float lastAppliedMotionVelocityY;
+    private int coyoteFramesRemaining;
     private int jumpsUsed;
     private int airDashesUsed;
+    private FallSession activeFallSession = FallSession.Neutral;
 
-    // GC-free ground check (Optimization 1)
-    private Collider2D[] groundHitBuffer = new Collider2D[5];
+    private readonly ContactPoint2D[] groundContactBuffer = new ContactPoint2D[8];
+    private readonly RaycastHit2D[] oneWayCrossingBuffer = new RaycastHit2D[8];
     private ContactFilter2D groundContactFilter;
+    private ContactFilter2D oneWayContactFilter;
 
-    // Float timers replacing coroutines (Optimization 3)
-    private float landingEndTime;
+    private int landingFramesRemaining;
     private float lastAfterimageTime;
     private float lastFacingChangeTime = -999f;
+    private bool missingProfileReported;
+    private Vector2 previousGroundCheckPosition;
+    private bool hasPreviousGroundCheckPosition;
 
     // Frame-data driven dash
     private int dashCooldownFramesRemaining;
-    private int currentDashFrame = 0;
-    private float dashLogicTimeCounter = 0f;
+    private bool dashInProgress;
     private float dashDir = 1f;
 
     // Attack motion
     private float attackMotionVelocityX;
+    private float attackMotionVelocityY;
     private Coroutine attackMotionCoroutine;
     private bool isAttackMotionActive;
     private bool useUnscaledAttackMotion;
@@ -130,13 +126,29 @@ public class PlayerMovement : MonoBehaviour
     // Computed State
     // =========================================================
     public bool IsDashing => fsm != null && fsm.CurrentStateId == PlayerStateId.Dashing;
-    public bool IsJumping => fsm != null && fsm.CurrentStateId == PlayerStateId.JumpStartup;
+    public bool IsGroundDashRecovery =>
+        fsm != null
+        && fsm.CurrentState is PlayerDashState dashState
+        && dashState.IsRecoveryLocomotionOpen;
+    public bool IsJumpStarting => fsm != null
+        && fsm.JumpState != null
+        && fsm.CurrentState == fsm.JumpState
+        && fsm.JumpState.IsStartingUp;
     public bool IsDroppingDown => dropDownCoroutine != null;
-    public bool IsLanding => Time.time < landingEndTime;
-    public float HorizontalInput => GetEffectiveHorizontalInput();
-    public float RawHorizontalInput => horizontalInput;
+    public bool IsLanding => landingFramesRemaining > 0;
+    public float HorizontalInput => horizontalInput;
     public float VerticalVelocity => rb != null ? rb.linearVelocity.y : 0f;
     public int FacingDirection => transform.eulerAngles.y > 90f ? -1 : 1;
+    public LayerMask GroundCollisionMask => GetGroundCheckMask();
+    public SpriteRenderer SpriteRenderer
+    {
+        get
+        {
+            if (spriteRenderer == null)
+                spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+            return spriteRenderer;
+        }
+    }
 
 
     // =========================================================
@@ -145,7 +157,6 @@ public class PlayerMovement : MonoBehaviour
     public event Action OnJumpStart;
     public event Action OnDoubleJump;
     public event Action OnDashStart;
-    public event Action OnDashComplete;
     public event Action OnLand;
 
     // =========================================================
@@ -155,14 +166,13 @@ public class PlayerMovement : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         fsm = GetComponent<PlayerStateMachine>();
-        combat = combatHandler as ICharacterCombat;
-        if (combat == null) combat = GetComponent<ICharacterCombat>();
-        if (spriteRenderer == null) spriteRenderer = GetComponent<SpriteRenderer>();
+        combat = GetComponent<ICharacterCombat>();
+        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
-        originalGravityScale = rb.gravityScale;
-        playerLayer = LayerMask.NameToLayer(playerLayerName);
-        enemyLayer = LayerMask.NameToLayer(enemyLayerName);
-        oneWayPlatformLayer = LayerMask.NameToLayer(oneWayPlatformLayerName);
+        rb.gravityScale = 0f;
+        playerLayer = LayerMask.NameToLayer(PlayerLayerName);
+        enemyLayer = LayerMask.NameToLayer(EnemyLayerName);
+        oneWayPlatformLayer = LayerMask.NameToLayer(OneWayPlatformLayerName);
         solidColliders = Array.FindAll(GetComponentsInChildren<Collider2D>(), c => c != null && !c.isTrigger);
         SetPlayerEnemyCollisionIgnored(true);
 
@@ -171,36 +181,51 @@ public class PlayerMovement : MonoBehaviour
         groundContactFilter.SetLayerMask(cachedGroundMask);
         groundContactFilter.useLayerMask = true;
         groundContactFilter.useTriggers = false;
+
+        oneWayContactFilter = new ContactFilter2D();
+        oneWayContactFilter.SetLayerMask(
+            oneWayPlatformLayer >= 0 ? 1 << oneWayPlatformLayer : 0);
+        oneWayContactFilter.useLayerMask = true;
+        oneWayContactFilter.useTriggers = false;
     }
 
     void FixedUpdate()
     {
+        if (!EnsureProfileAssigned())
+        {
+            rb.linearVelocity = Vector2.zero;
+            return;
+        }
+
+        if (landingFramesRemaining > 0) landingFramesRemaining--;
+        if (dashCooldownFramesRemaining > 0) dashCooldownFramesRemaining--;
+
         UpdateFacing();
         CheckGround();
 
-        if (dashCooldownFramesRemaining > 0) dashCooldownFramesRemaining--;
+        if (!GroundState.IsEffectivelyGrounded
+            && !GroundState.WasGrounded
+            && coyoteFramesRemaining > 0)
+        {
+            coyoteFramesRemaining--;
+        }
 
-        if (IsDashing) ProcessDashFrame();
-        HandleVerticalPhysics();
-        ApplyHorizontalMovement();
+        if (IsDashing && ProcessDashFrame())
+        {
+            return;
+        }
+
+        ApplyMotorVelocity();
     }
 
     // =========================================================
     // Public API
     // =========================================================
-    public void SetMoveInput(Vector2 input) => horizontalInput = Mathf.Clamp(input.x, -1f, 1f);
-    
-    [Obsolete("Use SetMoveInput instead")]
-    public void Move(Vector2 input) => SetMoveInput(input);
-
-    public void Jump()
-    {
-        if (IsDashing && !IsInDashRecovery()) return;
-        if (GroundState.IsEffectivelyGrounded || Time.time <= coyoteUntil) landingEndTime = -999f;
-    }
+    public void SetHorizontalInput(float inputX) =>
+        horizontalInput = Mathf.Clamp(inputX, -1f, 1f);
 
     /// <summary>
-    /// Called by PlayerJumpStartupState.Enter() to consume the jump resource.
+    /// Called by PlayerJumpState whenever a ground jump or double jump begins.
     /// </summary>
     public void ConsumeJumpCount()
     {
@@ -213,18 +238,35 @@ public class PlayerMovement : MonoBehaviour
             jumpsUsed++;
             OnDoubleJump?.Invoke();
         }
-        coyoteUntil = -999f;
+        coyoteFramesRemaining = 0;
+        landingFramesRemaining = 0;
     }
 
     /// <summary>
-    /// Called by PlayerJumpStartupState on the final startup frame to apply the impulse.
+    /// Called by PlayerJumpState on the final startup frame to assign launch velocity.
     /// </summary>
-    public void ApplyJumpImpulse()
+    public void ApplyJumpLaunch()
     {
-        GroundState.ClearAuthority();
-        rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
-        rb.AddForce(Vector2.up * P.jumpForce, ForceMode2D.Impulse);
+        if (!EnsureProfileAssigned())
+        {
+            return;
+        }
+
+        isGrounded = false;
+        currentGroundCollider = null;
+        activeFallSession = FallSession.JumpArc;
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, P.jumpSpeed);
+        lastAppliedMotionVelocityY = 0f;
+        GroundState.Tick(false, P.jumpSpeed);
         OnJumpStart?.Invoke();
+    }
+
+    public void PrepareJumpStartup()
+    {
+        StopAttackMotion();
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+        lastAppliedMotionVelocityY = 0f;
+        landingFramesRemaining = 0;
     }
 
     public void Dash(float inputX)
@@ -235,27 +277,17 @@ public class PlayerMovement : MonoBehaviour
 
     private void StartDash(float inputX)
     {
+        dashInProgress = true;
         OnDashStart?.Invoke();
+        lastAppliedMotionVelocityY = 0f;
         dashDir = GetDashDirection(inputX);
         SetFacingDirection((int)dashDir, false);
-        currentDashFrame = 0;
-        dashLogicTimeCounter = 0f;
-        lastAfterimageTime = -dashAfterimageSpawnInterval;
+        lastAfterimageTime = Time.time - dashAfterimageSpawnInterval;
     }
 
-    public void SetDownInput(bool isPressed) => isHoldingDown = isPressed;
-    public bool IsDownInputHeld() => isHoldingDown;
-    public bool IsGrounded() => GroundState.IsEffectivelyGrounded;
     public bool IsPhysicallyGrounded() => GroundState.IsGrounded;
-
-    public bool IsGroundedForActionSelection()
-    {
-        // Cast-state authority must win over authored lift so grounded "Both"
-        // actions do not accidentally route into air cancels mid-motion.
-        if (GroundState.IsEffectivelyGrounded || (combat != null && combat.ShouldPreserveGroundAuthority())) return true;
-        if (IsJumping || rb.linearVelocity.y > P.airborneActionVelocityThreshold) return false;
-        return rb.linearVelocity.y <= 0f && IsNearGroundForActionSelection();
-    }
+    public bool IsGroundedForActionSelection() =>
+        fsm != null ? fsm.IsGroundedContext : GroundState.IsEffectivelyGrounded;
 
     public bool IsAgainstWall()
     {
@@ -263,7 +295,7 @@ public class PlayerMovement : MonoBehaviour
         Vector2 originLower = rb.position + Vector2.up * 0.5f;
         Vector2 originUpper = rb.position + Vector2.up * 1.5f;
         Vector2 direction = Vector2.right * dir;
-        LayerMask wallMask = groundLayer;
+        LayerMask wallMask = GetGroundCheckMask();
         if (playerLayer != -1) wallMask &= ~(1 << playerLayer);
         if (enemyLayer != -1) wallMask &= ~(1 << enemyLayer);
         return Physics2D.Raycast(originLower, direction, 1.2f, wallMask) || Physics2D.Raycast(originUpper, direction, 1.2f, wallMask);
@@ -274,8 +306,7 @@ public class PlayerMovement : MonoBehaviour
         if (IsDroppingDown) return false;
         if (!CanDropDown()) RefreshGroundStateForDropDown();
         if (!CanDropDown()) return false;
-        GroundState.ClearAuthority();
-        coyoteUntil = -999f;
+        coyoteFramesRemaining = 0;
         dropDownCoroutine = StartCoroutine(DropDownRoutine(currentGroundCollider));
         return true;
     }
@@ -324,7 +355,18 @@ public class PlayerMovement : MonoBehaviour
 
 
 
-    public void StartDashCooldown() => dashCooldownFramesRemaining = dashData != null ? dashData.cooldownFrames : 0;
+    public void FinishDash()
+    {
+        if (!dashInProgress)
+        {
+            return;
+        }
+
+        dashInProgress = false;
+        dashCooldownFramesRemaining = dashData != null
+            ? Mathf.Max(0, dashData.cooldownFrames)
+            : 0;
+    }
 
     public void ApplyAttackMovement(MotionKeyframe keyframe)
     {
@@ -335,95 +377,221 @@ public class PlayerMovement : MonoBehaviour
     public void SetUseUnscaledAttackMotion(bool useUnscaled) => useUnscaledAttackMotion = useUnscaled;
     public void CancelAttackMotion() => StopAttackMotion();
 
-    public bool CanDash() => CanStartGroundDash() || CanStartAirDash();
-    public bool CanJump() => !IsJumping && (IsGroundJumpAvailable() || CanUseAirJump()) && !(IsDashing && !IsInDashRecovery());
+    public bool CanDash() => profile != null && (CanStartGroundDash() || CanStartAirDash());
+    public bool CanJump() => profile != null
+        && !IsJumpStarting
+        && (IsGroundJumpAvailable() || CanUseAirJump())
+        && !(IsDashing && !IsInDashRecovery());
 
     // =========================================================
     // Private Logic
     // =========================================================
     private void CheckGround()
     {
-        int hitCount = Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundContactFilter, groundHitBuffer);
-        currentGroundCollider = GetBestGroundCollider(groundHitBuffer, hitCount);
-        isGrounded = currentGroundCollider != null;
-        if (isGrounded) coyoteUntil = Time.time + P.coyoteTime;
-        if (isGrounded && !wasGrounded) { jumpsUsed = 0; airDashesUsed = 0; combat?.ResetAirComboCooldown(); if (!ShouldSuppressLandingFeedback()) landingEndTime = Time.time + P.landingLagTime; OnLand?.Invoke(); }
+        bool wasPhysicallyGrounded = GroundState.IsGrounded;
+        bool canLand = rb.linearVelocity.y <= GroundedVerticalTolerance;
+        isGrounded = canLand && TryGetGroundCollider(out currentGroundCollider);
 
-        GroundState.Tick(isGrounded, wasGrounded, rb.linearVelocity.y, IsJumping);
-
-        wasGrounded = isGrounded;
-    }
-
-    private int GetGroundCheckMask() => groundLayer.value | (oneWayPlatformLayer >= 0 ? 1 << oneWayPlatformLayer : 0);
-
-    private Collider2D GetBestGroundCollider(Collider2D[] hits, int hitCount)
-    {
-        Collider2D best = null; float bestTop = float.MinValue; bool bestOneWay = false;
-        for (int i = 0; i < hitCount; i++)
+        if (!isGrounded && canLand)
         {
-            Collider2D h = hits[i]; if (h == null || h.isTrigger || (ignoredGroundCollider != null && h == ignoredGroundCollider)) continue;
-            float top = h.bounds.max.y; bool oneWay = oneWayPlatformLayer >= 0 && h.gameObject.layer == oneWayPlatformLayer;
-            if (best == null || top > bestTop + 0.001f || (Mathf.Abs(top - bestTop) <= 0.02f && oneWay && !bestOneWay)) { best = h; bestTop = top; bestOneWay = oneWay; }
+            isGrounded = TryGetCrossedOneWayPlatform(out currentGroundCollider);
         }
-        return best;
+
+        if (isGrounded)
+        {
+            // Position is authoritative before logical ground state becomes visible.
+            SnapToOneWayPlatform(currentGroundCollider);
+        }
+
+        if (isGrounded && !IsJumpStarting)
+        {
+            coyoteFramesRemaining = P.coyoteFrames;
+        }
+
+        GroundState.Tick(isGrounded, rb.linearVelocity.y);
+        CacheGroundCheckPosition();
+
+        if (!isGrounded)
+        {
+            if (wasPhysicallyGrounded)
+            {
+                activeFallSession = FallSession.Neutral;
+                fsm?.NotifyGroundLost();
+            }
+
+            return;
+        }
+
+        if (wasPhysicallyGrounded)
+        {
+            return;
+        }
+
+        if (rb.linearVelocity.y < 0f)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+            lastAppliedMotionVelocityY = 0f;
+        }
+
+        jumpsUsed = 0;
+        airDashesUsed = 0;
+        activeFallSession = FallSession.Neutral;
+        combat?.ResetAirComboCooldown();
+        landingFramesRemaining = ShouldSuppressLandingFeedback() ? 0 : P.landingRecoveryFrames;
+        fsm?.NotifyLanded();
+        OnLand?.Invoke();
     }
 
-    private bool IsGroundJumpAvailable() => jumpsUsed == 0 && (GroundState.IsEffectivelyGrounded || Time.time <= coyoteUntil);
-    private bool CanUseAirJump() => jumpsUsed < MaxJumps;
+    private int GetGroundCheckMask() => LayerMask.GetMask(GroundLayerName, OneWayPlatformLayerName);
 
-    private void HandleVerticalPhysics()
+    private void SnapToOneWayPlatform(Collider2D groundCollider)
     {
-        if (IsDashing) return;
-
-        // ─── Airborne Action: single-path gravity scale from AirborneGravityPolicy ───
-        if (combat != null && combat.IsInAirborneAction())
+        if (groundCheck == null
+            || groundCollider == null
+            || oneWayPlatformLayer < 0
+            || groundCollider.gameObject.layer != oneWayPlatformLayer)
         {
-            // If rising fast (e.g. from jump impulse), let physics damp the rise first
-            // rather than immediately applying combat's gravity suppression.
-            if (rb.linearVelocity.y <= P.apexVelocityThreshold)
-            {
-                float gravScale = combat.GetAirborneGravityScale();
-                rb.gravityScale = originalGravityScale * gravScale;
+            return;
+        }
 
-                // Clamp fall speed even during partial gravity
-                if (rb.linearVelocity.y < -P.maxFallSpeed)
-                    rb.linearVelocity = new Vector2(rb.linearVelocity.x, -P.maxFallSpeed);
-                return;
+        float correctionY = groundCollider.bounds.max.y - groundCheck.position.y;
+        if (Mathf.Abs(correctionY) <= 0.0001f)
+        {
+            return;
+        }
+
+        rb.position += Vector2.up * correctionY;
+        Physics2D.SyncTransforms();
+    }
+
+    private bool TryGetGroundCollider(out Collider2D groundCollider)
+    {
+        groundCollider = null;
+        float bestTop = float.MinValue;
+
+        if (solidColliders == null)
+        {
+            return false;
+        }
+
+        foreach (Collider2D playerCollider in solidColliders)
+        {
+            if (playerCollider == null || !playerCollider.enabled)
+            {
+                continue;
+            }
+
+            int contactCount = playerCollider.GetContacts(groundContactFilter, groundContactBuffer);
+            for (int i = 0; i < contactCount; i++)
+            {
+                ContactPoint2D contact = groundContactBuffer[i];
+                if (contact.normal.y < MinimumGroundNormalY)
+                {
+                    continue;
+                }
+
+                Collider2D candidate = contact.collider == playerCollider
+                    ? contact.otherCollider
+                    : contact.collider;
+                if (candidate == null || candidate.isTrigger || candidate == ignoredGroundCollider)
+                {
+                    continue;
+                }
+
+                float top = candidate.bounds.max.y;
+                if (groundCollider == null || top > bestTop)
+                {
+                    groundCollider = candidate;
+                    bestTop = top;
+                }
             }
         }
 
-        // ─── Standard vertical physics (no combat coupling) ───
-        float targetG = originalGravityScale;
-        if (GroundState.IsEffectivelyGrounded) { rb.gravityScale = targetG; return; }
-
-        if (rb.linearVelocity.y > P.apexVelocityThreshold) targetG *= P.riseGravityMultiplier;
-        else if (isHoldingDown && rb.linearVelocity.y < 0) targetG *= P.fastFallMultiplier;
-        else if (rb.linearVelocity.y < -P.apexVelocityThreshold) targetG *= P.fallGravityMultiplier;
-        else targetG *= P.apexGravityMultiplier;
-        rb.gravityScale = targetG;
-        if (rb.linearVelocity.y < -P.maxFallSpeed) rb.linearVelocity = new Vector2(rb.linearVelocity.x, -P.maxFallSpeed);
+        return groundCollider != null;
     }
+
+    private bool TryGetCrossedOneWayPlatform(out Collider2D groundCollider)
+    {
+        groundCollider = null;
+
+        if (groundCheck == null
+            || oneWayPlatformLayer < 0
+            || !hasPreviousGroundCheckPosition)
+        {
+            return false;
+        }
+
+        Vector2 currentGroundCheckPosition = groundCheck.position;
+        if (currentGroundCheckPosition.y >= previousGroundCheckPosition.y)
+        {
+            return false;
+        }
+
+        int hitCount = Physics2D.Linecast(
+            previousGroundCheckPosition,
+            currentGroundCheckPosition,
+            oneWayContactFilter,
+            oneWayCrossingBuffer);
+        float bestTop = float.MinValue;
+        const float crossingTolerance = 0.02f;
+
+        for (int i = 0; i < hitCount; i++)
+        {
+            Collider2D candidate = oneWayCrossingBuffer[i].collider;
+            if (candidate == null || candidate.isTrigger || candidate == ignoredGroundCollider)
+            {
+                continue;
+            }
+
+            float platformTop = candidate.bounds.max.y;
+            bool crossedTop = previousGroundCheckPosition.y >= platformTop - crossingTolerance
+                && currentGroundCheckPosition.y <= platformTop + crossingTolerance;
+            bool horizontallySupported = currentGroundCheckPosition.x >= candidate.bounds.min.x
+                && currentGroundCheckPosition.x <= candidate.bounds.max.x;
+            if (!crossedTop || !horizontallySupported || platformTop <= bestTop)
+            {
+                continue;
+            }
+
+            groundCollider = candidate;
+            bestTop = platformTop;
+        }
+
+        return groundCollider != null;
+    }
+
+    private void CacheGroundCheckPosition()
+    {
+        if (groundCheck == null)
+        {
+            hasPreviousGroundCheckPosition = false;
+            return;
+        }
+
+        previousGroundCheckPosition = groundCheck.position;
+        hasPreviousGroundCheckPosition = true;
+    }
+
+    private bool IsGroundJumpAvailable() => jumpsUsed == 0 && (GroundState.IsEffectivelyGrounded || coyoteFramesRemaining > 0);
+    private bool CanUseAirJump() => jumpsUsed < MaxJumps;
 
     private void SetPlayerEnemyCollisionIgnored(bool ignored) { if (playerLayer != -1 && enemyLayer != -1) Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, ignored); }
 
     private void StopAttackMotion()
     {
         if (attackMotionCoroutine != null) { StopCoroutine(attackMotionCoroutine); attackMotionCoroutine = null; }
-        isAttackMotionActive = false; attackMotionVelocityX = 0f; useUnscaledAttackMotion = false;
+        isAttackMotionActive = false;
+        attackMotionVelocityX = 0f;
+        attackMotionVelocityY = 0f;
+        useUnscaledAttackMotion = false;
     }
 
-    private bool CanStartGroundDash() => dashCooldownFramesRemaining <= 0 && !IsLanding && (GroundState.IsEffectivelyGrounded || Time.time <= coyoteUntil);
-    private bool CanStartAirDash() => dashCooldownFramesRemaining <= 0 && !IsLanding && !GroundState.IsEffectivelyGrounded && Time.time > coyoteUntil && airDashesUsed < MaxAirDashes;
+    private bool IsDashReady() => !dashInProgress && dashCooldownFramesRemaining <= 0;
+    private bool CanStartGroundDash() => IsDashReady() && !IsLanding && (fsm == null || fsm.IsGroundedContext);
+    private bool CanStartAirDash() => IsDashReady() && !IsLanding && fsm != null && fsm.IsAirborneContext && airDashesUsed < MaxAirDashes;
     private bool CanDropDown() => GroundState.IsEffectivelyGrounded && currentGroundCollider != null && oneWayPlatformLayer >= 0 && currentGroundCollider.gameObject.layer == oneWayPlatformLayer;
-    private void RefreshGroundStateForDropDown() { int hitCount = Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundContactFilter, groundHitBuffer); currentGroundCollider = GetBestGroundCollider(groundHitBuffer, hitCount); isGrounded = currentGroundCollider != null; GroundState.Tick(isGrounded, wasGrounded, rb.linearVelocity.y, IsJumping); }
+    private void RefreshGroundStateForDropDown() => CheckGround();
     private bool ShouldSuppressLandingFeedback() => combat != null && combat.ShouldSuppressLandingFeedback();
-
-    private bool IsNearGroundForActionSelection()
-    {
-        if (groundCheck == null || P.groundedActionProbeDistance <= 0f) return false;
-        RaycastHit2D hit = Physics2D.Raycast(groundCheck.position, Vector2.down, P.groundedActionProbeDistance, GetGroundCheckMask());
-        return hit.collider != null && !hit.collider.isTrigger && (ignoredGroundCollider == null || hit.collider != ignoredGroundCollider);
-    }
 
     private float GetDashDirection(float inputX) => Mathf.Abs(inputX) > 0.1f ? (inputX > 0 ? 1f : -1f) : FacingDirection;
 
@@ -434,108 +602,81 @@ public class PlayerMovement : MonoBehaviour
         return IsLanding;
     }
 
-    private float GetEffectiveHorizontalInput()
+    private float GetAllowedHorizontalInput()
     {
-        float absInput = Mathf.Abs(horizontalInput);
-        if (P.movementInputDeadZone > 0f && absInput < P.movementInputDeadZone)
+        if (fsm == null || !(fsm.CurrentState is FrameDataPlayerState frameState))
+        {
+            return horizontalInput;
+        }
+
+        InputGate gate = frameState.GetCurrentInputGate();
+        if (gate == InputGate.AllowAll)
+        {
+            return horizontalInput;
+        }
+
+        if ((gate & InputGate.AllowMovement) == 0)
         {
             return 0f;
         }
+
+        if (Mathf.Abs(horizontalInput) > 0.01f
+            && (int)Mathf.Sign(horizontalInput) != FacingDirection)
+        {
+            return 0f;
+        }
+
         return horizontalInput;
     }
 
-    private void ApplyHorizontalMovement()
+    private void ApplyMotorVelocity()
     {
-        if (rb == null || IsDashing) return;
+        if (rb == null) return;
 
-        // 1. Recover physics-only velocity from last frame before calculating this frame's physics.
-        // This prevents the additive motion from accumulating into acceleration (the 'flying away' bug).
-        float currentPhysX = rb.linearVelocity.x - lastAppliedMotionVelocityX;
+        float baseVerticalVelocity = rb.linearVelocity.y - lastAppliedMotionVelocityY;
+        float motionVelocityX = isAttackMotionActive ? attackMotionVelocityX : 0f;
+        float motionVelocityY = isAttackMotionActive ? attackMotionVelocityY : 0f;
+        float movementVelocityX = IsMovementLocked() || isAttackMotionActive
+            ? 0f
+            : GetAllowedHorizontalInput() * BaseMoveSpeed;
+        float movementVelocityY = ResolveVerticalVelocity(baseVerticalVelocity, motionVelocityY);
 
-        // ─── Attack Motion: X-only additive offset (Y is handled via impulse, not continuous) ───
-        float motionOffsetX = isAttackMotionActive ? attackMotionVelocityX : 0f;
+        rb.linearVelocity = new Vector2(
+            movementVelocityX + motionVelocityX,
+            movementVelocityY + motionVelocityY);
+        lastAppliedMotionVelocityY = motionVelocityY;
+    }
 
-        // ─── Airborne Action Drift ───
+    private float ResolveVerticalVelocity(float currentVelocity, float motionVelocity)
+    {
+        if (IsJumpStarting || (isAttackMotionActive && Mathf.Abs(motionVelocity) > 0.001f))
+        {
+            return 0f;
+        }
+
         if (combat != null && combat.IsInAirborneAction())
         {
-            float gravScale = combat.GetAirborneGravityScale();
-            float driftScale = P.airborneActionDriftScale * gravScale;
-
-            float newPhysX;
-            if (driftScale <= 0.001f)
-            {
-                newPhysX = Mathf.MoveTowards(currentPhysX, 0f, P.airDeceleration * Time.fixedDeltaTime);
-            }
-            else
-            {
-                // 1. Resolve effective movement input based on InputGate
-                float movementInput = horizontalInput;
-                if (fsm != null && fsm.CurrentState is FrameDataPlayerState fdState)
-                {
-                    InputGate gate = fdState.GetCurrentInputGate();
-                    if ((gate & InputGate.AllowAll) == 0)
-                    {
-                        if ((gate & InputGate.AllowMovement) != 0)
-                        {
-                            // Restricted Movement: Only toward facing direction, reject opposite
-                            if (Mathf.Abs(movementInput) > 0.01f && (int)Mathf.Sign(movementInput) != FacingDirection)
-                                movementInput = 0f;
-                        }
-                        else
-                        {
-                            // Facing only (or None): No move
-                            movementInput = 0f;
-                        }
-                    }
-                }
-
-                float targetX = movementInput * BaseMoveSpeed * P.airSpeedMultiplier * driftScale;
-                float accel = P.airAcceleration * driftScale;
-                newPhysX = Mathf.MoveTowards(currentPhysX, targetX, accel * Time.fixedDeltaTime);
-            }
-
-            lastAppliedMotionVelocityX = motionOffsetX;
-            rb.linearVelocity = new Vector2(newPhysX + motionOffsetX, rb.linearVelocity.y);
-            return;
+            return 0f;
         }
 
-        if (IsMovementLocked())
+        if (GroundState.IsEffectivelyGrounded && currentVelocity <= GroundedVerticalTolerance)
         {
-            lastAppliedMotionVelocityX = motionOffsetX;
-            rb.linearVelocity = new Vector2(motionOffsetX, rb.linearVelocity.y);
-            return;
+            return 0f;
         }
 
-        // ─── Input Dead Zone ───
-        float effectiveInput = GetEffectiveHorizontalInput();
-
-        // ─── Vertical Velocity Attenuation ───
-        // Higher vertical speed = less horizontal control
-        float verticalAttenuation = 1f;
-        if (!GroundState.IsEffectivelyGrounded && P.verticalSpeedPenalty > 0f)
+        if (currentVelocity > 0f)
         {
-            // Use jumpForce as reference when rising, maxFallSpeed when falling for consistent feel
-            float refSpeed = rb.linearVelocity.y > 0 ? P.jumpForce : P.maxFallSpeed;
-            if (refSpeed > 0.001f)
-            {
-                float normalizedVertSpeed = Mathf.Abs(rb.linearVelocity.y) / refSpeed;
-                verticalAttenuation = 1f - (Mathf.Clamp01(normalizedVertSpeed) * P.verticalSpeedPenalty);
-            }
+            return Mathf.Max(
+                currentVelocity - (P.riseDeceleration * Time.fixedDeltaTime),
+                0f);
         }
 
-        float baseSpeed = BaseMoveSpeed * (GroundState.IsEffectivelyGrounded ? 1f : P.airSpeedMultiplier) * verticalAttenuation;
-        float tgtX = effectiveInput * baseSpeed;
-        float acc = Mathf.Abs(tgtX) < 0.01f
-            ? (GroundState.IsEffectivelyGrounded ? P.groundDeceleration : P.airDeceleration)
-            : (GroundState.IsEffectivelyGrounded ? P.groundAcceleration : P.airAcceleration);
-
-        if (Mathf.Abs(currentPhysX) > 0.01f && Mathf.Sign(tgtX) != Mathf.Sign(currentPhysX) && !GroundState.IsEffectivelyGrounded)
-            acc *= 1.15f;
-
-        float nextPhysX = Mathf.MoveTowards(currentPhysX, tgtX, acc * Time.fixedDeltaTime);
-
-        lastAppliedMotionVelocityX = motionOffsetX;
-        rb.linearVelocity = new Vector2(nextPhysX + motionOffsetX, rb.linearVelocity.y);
+        float fallAcceleration = activeFallSession == FallSession.JumpArc
+            ? P.jumpFallAcceleration
+            : P.neutralFallAcceleration;
+        return Mathf.Max(
+            currentVelocity - (fallAcceleration * Time.fixedDeltaTime),
+            -P.maximumFallSpeed);
     }
 
     private void UpdateFacing()
@@ -561,7 +702,7 @@ public class PlayerMovement : MonoBehaviour
         {
             hasPerformedInitialLockOnForCurrentStep = combat != null && combat.IsExecutingAutoChainStep;
         }
-        if (Mathf.Abs(horizontalInput) >= P.attackFacingCancelInputThreshold) attackFacingLockOnCancelledForCurrentAttack = true;
+        if (Mathf.Abs(horizontalInput) >= AttackFacingCancelInputThreshold) attackFacingLockOnCancelledForCurrentAttack = true;
         wasAttackLockOnActive = true; lastObservedComboStep = step;
     }
 
@@ -569,11 +710,11 @@ public class PlayerMovement : MonoBehaviour
     {
         if (!_isAutoTargetEnabled) return false;
         if (hasPerformedInitialLockOnForCurrentStep || (combat != null && combat.IsExecutingAutoChainStep)) return false;
-        if (!P.enableAttackFacingLockOn || attackFacingLockOnCancelledForCurrentAttack || combat == null || !combat.IsAttacking() || Mathf.Abs(horizontalInput) >= P.attackFacingCancelInputThreshold) return false;
+        if (attackFacingLockOnCancelledForCurrentAttack || combat == null || !combat.IsAttacking() || Mathf.Abs(horizontalInput) >= AttackFacingCancelInputThreshold) return false;
         EnemyController target = GetAttackFacingLockOnTarget();
         if (target == null || !target.IsAlive) return false;
         float dx = target.transform.position.x - transform.position.x;
-        if (Mathf.Abs(dx) <= Mathf.Max(0.2f, P.attackFacingCancelInputThreshold)) return false;
+        if (Mathf.Abs(dx) <= AttackFacingCancelInputThreshold) return false;
         SetFacingDirection(dx >= 0f ? 1 : -1, false); hasPerformedInitialLockOnForCurrentStep = true; return true;
     }
 
@@ -603,23 +744,63 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    // Jump session is now handled by PlayerJumpStartupState
+    // Jump session is owned by PlayerJumpState.
 
-    private void ProcessDashFrame()
+    private bool ProcessDashFrame()
     {
-        if (dashData == null) return;
-        dashLogicTimeCounter += Time.fixedDeltaTime; int target = Mathf.RoundToInt(dashLogicTimeCounter * FrameDataConstants.LOGIC_FPS);
-        while (currentDashFrame < target) { currentDashFrame++; if (currentDashFrame == dashData.startupFrames + dashData.activeFrames + 1) StartDashCooldown(); if (currentDashFrame >= dashData.startupFrames + dashData.activeFrames + dashData.recoveryFrames) { EndDash(); return; } }
-        rb.gravityScale = 0f;
-        if (currentDashFrame <= dashData.startupFrames) rb.linearVelocity = Vector2.zero;
-        else if (currentDashFrame <= dashData.startupFrames + dashData.activeFrames) { float t = (float)(currentDashFrame - dashData.startupFrames) / Mathf.Max(1, dashData.activeFrames); rb.linearVelocity = new Vector2(dashDir * dashData.dashSpeed * (1f - t) * (1f - t), 0f); if (enableDashAfterimage && dashLogicTimeCounter - lastAfterimageTime >= dashAfterimageSpawnInterval) { SpawnAfterimage(); lastAfterimageTime = dashLogicTimeCounter; } }
-        else rb.linearVelocity = Vector2.zero;
+        if (dashData == null || !(fsm.CurrentState is PlayerDashState dashState))
+        {
+            return false;
+        }
+
+        if (dashState.CurrentPhase == ActionPhase.Startup)
+        {
+            rb.linearVelocity = Vector2.zero;
+            return true;
+        }
+
+        if (dashState.CurrentPhase != ActionPhase.Active)
+        {
+            return false;
+        }
+
+        int activeFrame = Mathf.Clamp(
+            dashState.CurrentFrame - dashData.startupFrames,
+            1,
+            Mathf.Max(1, dashData.activeFrames));
+        float activeProgress = dashData.activeFrames <= 1
+            ? 0f
+            : (activeFrame - 1f) / (dashData.activeFrames - 1f);
+        float decelerationProgress = Mathf.InverseLerp(
+            DashDecelerationStart,
+            1f,
+            activeProgress);
+        float speedRatio = Mathf.Lerp(
+            1f,
+            DashEndSpeedRatio,
+            decelerationProgress * decelerationProgress);
+        rb.linearVelocity = new Vector2(
+            dashDir * dashData.dashSpeed * speedRatio,
+            0f);
+
+        if (enableDashAfterimage && Time.time - lastAfterimageTime >= dashAfterimageSpawnInterval)
+        {
+            SpawnAfterimage();
+            lastAfterimageTime = Time.time;
+        }
+
+        return true;
     }
 
-    private void EndDash() { rb.gravityScale = originalGravityScale; OnDashComplete?.Invoke(); }
-    public void StopDashPhysics() => rb.gravityScale = originalGravityScale;
-    public bool IsInvincible() => IsDashing && dashData != null && currentDashFrame <= dashData.startupFrames + dashData.activeFrames;
-    public bool IsInDashRecovery() => IsDashing && dashData != null && currentDashFrame > dashData.startupFrames + dashData.activeFrames;
+    public bool IsInvincible() =>
+        IsDashing
+        && fsm.CurrentState is PlayerDashState dashState
+        && (dashState.CurrentPhase == ActionPhase.Startup || dashState.CurrentPhase == ActionPhase.Active);
+
+    public bool IsInDashRecovery() =>
+        IsDashing
+        && fsm.CurrentState is PlayerDashState dashState
+        && dashState.CurrentPhase == ActionPhase.Recovery;
 
 
 
@@ -628,6 +809,7 @@ public class PlayerMovement : MonoBehaviour
 
     public void SpawnAfterimage()
     {
+        spriteRenderer = SpriteRenderer;
         if (spriteRenderer == null) return;
         GameObject ghost = new GameObject("DashGhost"); ghost.transform.position = transform.position; ghost.transform.rotation = transform.rotation; ghost.transform.localScale = transform.localScale;
         SpriteRenderer sr = ghost.AddComponent<SpriteRenderer>(); sr.sprite = spriteRenderer.sprite; sr.color = dashAfterimageColor; sr.flipX = spriteRenderer.flipX; sr.flipY = spriteRenderer.flipY; sr.sortingLayerID = spriteRenderer.sortingLayerID; sr.sortingOrder = spriteRenderer.sortingOrder - 1;
@@ -674,18 +856,12 @@ public class PlayerMovement : MonoBehaviour
 
         float dur = Mathf.Max(0, k.endFrame - k.startFrame) / (float)FrameDataConstants.LOGIC_FPS;
 
-        // Apply Y as a one-shot impulse (never continuously override vertical physics)
-        if (Mathf.Abs(totalDelta.y) > 0.001f)
-        {
-            rb.AddForce(Vector2.up * totalDelta.y * rb.mass / Mathf.Max(dur, Time.fixedDeltaTime), ForceMode2D.Impulse);
-        }
-
         if (dur <= 0)
         {
-            // Instant: apply X as a single-frame velocity burst
-            if (Mathf.Abs(totalDelta.x) > 0.001f)
+            if (totalDelta.sqrMagnitude > 0.000001f)
             {
                 attackMotionVelocityX = totalDelta.x / Mathf.Max(Time.fixedDeltaTime, 0.001f);
+                attackMotionVelocityY = totalDelta.y / Mathf.Max(Time.fixedDeltaTime, 0.001f);
                 yield return new WaitForFixedUpdate();
             }
         }
@@ -703,9 +879,10 @@ public class PlayerMovement : MonoBehaviour
                 float easedT = TweenEase(0, 1, t, k.easing);
                 float easedPrev = TweenEase(0, 1, prevT, k.easing);
 
-                // X: compute per-frame velocity offset from eased progress delta
                 float frameDeltaX = totalDelta.x * (easedT - easedPrev);
+                float frameDeltaY = totalDelta.y * (easedT - easedPrev);
                 attackMotionVelocityX = frameDeltaX / Mathf.Max(delta, 0.001f);
+                attackMotionVelocityY = frameDeltaY / Mathf.Max(delta, 0.001f);
 
                 prevT = t;
 
@@ -735,8 +912,26 @@ public class PlayerMovement : MonoBehaviour
     private IEnumerator DropDownRoutine(Collider2D t)
     {
         if (t == null || solidColliders == null) { dropDownCoroutine = null; yield break; }
-        ignoredGroundCollider = t; SetDropDownCollision(t, true); isGrounded = false; currentGroundCollider = null; if (rb != null) rb.linearVelocity = new Vector2(rb.linearVelocity.x, Mathf.Min(rb.linearVelocity.y, -4f));
-        yield return new WaitForSeconds(P.dropDownDuration); float r = Time.time + 0.5f; while (t != null && !HasClearedDropDownCollider(t) && Time.time < r) yield return null;
+        ignoredGroundCollider = t;
+        SetDropDownCollision(t, true);
+        isGrounded = false;
+        currentGroundCollider = null;
+        activeFallSession = FallSession.Neutral;
+        float dropVelocity = 0f;
+        if (rb != null) rb.linearVelocity = new Vector2(rb.linearVelocity.x, dropVelocity);
+        GroundState.Tick(false, dropVelocity);
+        CacheGroundCheckPosition();
+        fsm?.NotifyGroundLost();
+
+        int elapsedFrames = 0;
+        while (t != null
+            && !HasClearedDropDownCollider(t)
+            && elapsedFrames < MaximumDropThroughFrames)
+        {
+            elapsedFrames++;
+            yield return new WaitForFixedUpdate();
+        }
+
         SetDropDownCollision(t, false); if (ignoredGroundCollider == t) ignoredGroundCollider = null; dropDownCoroutine = null;
     }
 
@@ -747,5 +942,25 @@ public class PlayerMovement : MonoBehaviour
         if (t == null || solidColliders == null) return true;
         float b = t.bounds.min.y, p = float.MinValue; bool f = false; foreach (var c in solidColliders) if (c != null) { p = Mathf.Max(p, c.bounds.max.y); f = true; }
         return !f || p <= b - 0.02f;
+    }
+
+    private bool EnsureProfileAssigned()
+    {
+        if (profile != null)
+        {
+            missingProfileReported = false;
+            return true;
+        }
+
+        if (!missingProfileReported)
+        {
+            Debug.LogError(
+                $"[{nameof(PlayerMovement)}] {name} has no MovementProfile. "
+                + "Assign one on the active CharacterObject; movement is disabled instead of using hidden fallback values.",
+                this);
+            missingProfileReported = true;
+        }
+
+        return false;
     }
 }

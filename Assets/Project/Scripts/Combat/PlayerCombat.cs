@@ -374,7 +374,10 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         // Sync visual animation with logic frame (handles visual looping).
         // CRITICAL: We skip this in the 'Done' phase to allow the Animator to 
         // begin its natural exit transitions without logic conflict.
-        if (currentStepData != null && animHandler != null && phase != ActionPhase.Done)
+        if (currentStepData != null
+            && currentStepData.loopActivePhase
+            && animHandler != null
+            && phase == ActionPhase.Active)
         {
             animHandler.UpdateActionNormalizedTime(frame, currentStepData.TotalFrames);
         }
@@ -408,31 +411,9 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     /// <summary>
     /// Whether the player is currently in an airborne combat action.
-    /// Used by PlayerMovement to decide whether to apply airborne gravity policy.
-    /// Returns true for ANY active combat action (Attack, Skill, Ultimate) while airborne.
+    /// The deterministic player motor suspends base vertical motion in this state.
     /// </summary>
     public bool IsInAirborneAction() => (currentPhase != ActionPhase.None) && isAirCombo;
-
-    public bool ShouldPreserveGroundAuthority()
-    {
-        return IsAttacking()
-            && currentActionStartedGrounded
-            && !currentActionAllowsGroundToAirTransition
-            && !isAirCombo;
-    }
-
-    /// <summary>
-    /// Current gravity scale factor for airborne actions (0..1).
-    /// Set by CombatPlayerState based on the current action phase and AirborneGravityPolicy.
-    /// </summary>
-    private float airborneGravityScaleOverride = 1f;
-
-    public float GetAirborneGravityScale() => airborneGravityScaleOverride;
-
-    /// <summary>
-    /// Called by CombatPlayerState to communicate the current phase's gravity scale.
-    /// </summary>
-    public void SetAirborneGravityScale(float scale) => airborneGravityScaleOverride = Mathf.Clamp01(scale);
     public int GetComboStep() => comboDepth;
     public bool CanSwitchDirection() => currentPhase == ActionPhase.None || currentPhase == ActionPhase.Startup;
     public bool CanMoveAfterAttack() => !IsAttacking();
@@ -730,7 +711,6 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         isAirCombo = false;
         currentActionStartedGrounded = false;
         currentActionAllowsGroundToAirTransition = false;
-        airborneGravityScaleOverride = 1f;
         isExecutingAutoChainStep = false;
         currentGrabHitbox = null;
         lastGrabParams = default;
@@ -1492,7 +1472,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         passiveController?.NotifyAfterDash();
         StartDashThroughDamageRoutine();
 
-        if (isAirCombo && comboDepth > 0 && movement != null && !movement.IsGrounded())
+        if (isAirCombo && comboDepth > 0 && movement != null && !movement.IsGroundedForActionSelection())
             CancelCurrentAttackButKeepComboProgress();
         else
             ResetCombo();
@@ -2019,12 +1999,12 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     private void ApplyPriority(bool isPriority)
     {
-        if (movement == null || movement.spriteRenderer == null) return;
+        if (movement == null || movement.SpriteRenderer == null) return;
         
         // Using a simpler approach for player since it's usually one renderer
         // but let's be safe and use current order + offset
         int baseOrder = 0; // Default player order is usually 0
-        movement.spriteRenderer.sortingOrder = baseOrder + (isPriority ? Project.Systems.EntitySortingManager.PRIORITY_SORTING_OFFSET : 0);
+        movement.SpriteRenderer.sortingOrder = baseOrder + (isPriority ? Project.Systems.EntitySortingManager.PRIORITY_SORTING_OFFSET : 0);
     }
 
     private System.Collections.IEnumerator PriorityResetRoutine(float delay)

@@ -1867,10 +1867,18 @@ PrefabInstance:
       propertyPath: metaProgression
       value: 
       objectReference: {fileID: 11400000, guid: f3d0c0c5246b7f04093bf9b8106bccef, type: 2}
+    - target: {fileID: 4691528794087154357, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4691528794087154357, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
+      propertyPath: runtimeState.runtimeTags.Array.size
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6090851060313224835, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 9100000, guid: 3436f3bf41714a54391f36d8cfdd4294, type: 2}
+      objectReference: {fileID: 9100000, guid: 38e3871755c7d8d46bbcaadba6a293a7, type: 2}
     - target: {fileID: 7035595824811832153, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: holdDuration
       value: 0.5

@@ -1,18 +1,8 @@
-using UnityEngine;
-
 namespace CombatCore
 {
-    public enum GroundStateAuthority
-    {
-        Physical,
-        StickyGrounded,
-        ForceAirborne
-    }
-
     /// <summary>
-    /// Single authority for the character's ground state.
-    /// Updates once per FixedUpdate to prevent physics-vs-logic timing mismatches.
-    /// All action logic should query this provider instead of decentralized IsGrounded() calls.
+    /// Fixed-step history for real player ground contact.
+    /// Combat action context is intentionally owned by combat, not by this provider.
     /// </summary>
     public class GroundStateProvider
     {
@@ -31,65 +21,17 @@ namespace CombatCore
         /// <summary>Current Y velocity reported by Rigidbody.</summary>
         public float VerticalVelocity { get; private set; }
 
-        /// <summary>True if actively in a jump startup/impulse session. Suppresses grounded logic.</summary>
-        public bool IsInJumpSession { get; private set; }
+        /// <summary>Gameplay ground state follows contact exactly.</summary>
+        public bool IsEffectivelyGrounded => IsGrounded;
 
         /// <summary>
-        /// Runtime override that lets a state guardrail decide whether physical ground separation
-        /// should count as airborne for gameplay logic.
+        /// Updates the state. Called only by PlayerMovement in FixedUpdate.
         /// </summary>
-        public GroundStateAuthority Authority { get; private set; }
-
-        /// <summary>
-        /// Effective ground state. Jump startup always wins first, then state-owned authority,
-        /// then the raw physical overlap result.
-        /// </summary>
-        public bool IsEffectivelyGrounded
+        public void Tick(bool grounded, float verticalVelocity)
         {
-            get
-            {
-                if (IsInJumpSession)
-                {
-                    return false;
-                }
-
-                return Authority switch
-                {
-                    GroundStateAuthority.StickyGrounded => true,
-                    GroundStateAuthority.ForceAirborne => false,
-                    _ => IsGrounded
-                };
-            }
-        }
-
-        /// <summary>
-        /// Updates the state. Called ONLY by PlayerMovement.CheckGround() in FixedUpdate.
-        /// </summary>
-        public void Tick(bool grounded, bool wasGrounded, float verticalVelocity, bool inJumpSession)
-        {
-            WasGrounded = wasGrounded;
+            WasGrounded = IsGrounded;
             IsGrounded = grounded;
             VerticalVelocity = verticalVelocity;
-            IsInJumpSession = inJumpSession;
-
-            if (Authority == GroundStateAuthority.StickyGrounded && grounded && !inJumpSession)
-            {
-                Authority = GroundStateAuthority.Physical;
-            }
-            else if (Authority == GroundStateAuthority.StickyGrounded && inJumpSession)
-            {
-                Authority = GroundStateAuthority.Physical;
-            }
-        }
-
-        public void SetAuthority(GroundStateAuthority authority)
-        {
-            Authority = authority;
-        }
-
-        public void ClearAuthority()
-        {
-            Authority = GroundStateAuthority.Physical;
         }
     }
 }

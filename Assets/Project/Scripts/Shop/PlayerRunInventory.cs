@@ -189,7 +189,7 @@ namespace Project.ShopSystem
         [NonSerialized] private bool hasLoadedPersistentState;
         [NonSerialized] private bool isApplyingPersistentState;
         [NonSerialized] private Dictionary<string, BaseItem> itemIndexById;
-        [NonSerialized] private float[] runtimeEffectMultiplierSums;
+        [NonSerialized] private readonly Stack<float[]> runtimeEffectMultiplierSumPool = new Stack<float[]>();
         [NonSerialized] private readonly List<RuntimeEffectInstance> expiredRuntimeEffects = new List<RuntimeEffectInstance>();
         [NonSerialized] private readonly HashSet<CharacterObject> resolvingRuntimeStats = new HashSet<CharacterObject>();
         [NonSerialized] private Dictionary<string, CharacterItem> characterItemsByCharacterId;
@@ -1172,54 +1172,65 @@ namespace Project.ShopSystem
                 return;
             }
 
-            float[] multiplierSums = GetRuntimeEffectMultiplierSums();
-
-            List<RuntimeEffectInstance> activeEffects = state.MutableActiveEffects;
-            for (int i = 0; i < activeEffects.Count; i++)
+            float[] multiplierSums = RentRuntimeEffectMultiplierSums();
+            try
             {
-                RuntimeEffectInstance instance = activeEffects[i];
-                if (instance == null || instance.definition == null)
+                List<RuntimeEffectInstance> activeEffects = state.MutableActiveEffects;
+                for (int i = 0; i < activeEffects.Count; i++)
                 {
-                    continue;
+                    RuntimeEffectInstance instance = activeEffects[i];
+                    if (instance == null || instance.definition == null)
+                    {
+                        continue;
+                    }
+
+                    RuntimeEffectContext context = BuildRuntimeEffectContext(
+                        character,
+                        state,
+                        instance,
+                        0f,
+                        stats,
+                        GetCharacterBaseStats(character));
+                    context.multiplierSums = multiplierSums;
+
+                    instance.definition.ModifyStats(context, stats);
                 }
 
-                RuntimeEffectContext context = BuildRuntimeEffectContext(
-                    character,
-                    state,
-                    instance,
-                    0f,
-                    stats,
-                    GetCharacterBaseStats(character));
-                context.multiplierSums = multiplierSums;
-
-                instance.definition.ModifyStats(context, stats);
+                for (int i = 0; i < multiplierSums.Length; i++)
+                {
+                    float sum = multiplierSums[i];
+                    if (Mathf.Abs(sum) > 0.0001f)
+                    {
+                        RuntimeEffectStatTarget targetStat = (RuntimeEffectStatTarget)i;
+                        float currentVal = RuntimeEffectDefinition.GetStat(stats, targetStat);
+                        float multipliedVal = currentVal * (1f + sum);
+                        RuntimeEffectDefinition.SetStat(stats, targetStat, multipliedVal);
+                    }
+                }
             }
-
-            for (int i = 0; i < multiplierSums.Length; i++)
+            finally
             {
-                float sum = multiplierSums[i];
-                if (Mathf.Abs(sum) > 0.0001f)
-                {
-                    RuntimeEffectStatTarget targetStat = (RuntimeEffectStatTarget)i;
-                    float currentVal = RuntimeEffectDefinition.GetStat(stats, targetStat);
-                    float multipliedVal = currentVal * (1f + sum);
-                    RuntimeEffectDefinition.SetStat(stats, targetStat, multipliedVal);
-                }
+                ReturnRuntimeEffectMultiplierSums(multiplierSums);
             }
         }
 
-        private float[] GetRuntimeEffectMultiplierSums()
+        private float[] RentRuntimeEffectMultiplierSums()
         {
-            if (runtimeEffectMultiplierSums == null || runtimeEffectMultiplierSums.Length != RuntimeEffectStatTargetCount)
+            float[] multiplierSums = runtimeEffectMultiplierSumPool.Count > 0
+                ? runtimeEffectMultiplierSumPool.Pop()
+                : new float[RuntimeEffectStatTargetCount];
+            Array.Clear(multiplierSums, 0, multiplierSums.Length);
+            return multiplierSums;
+        }
+
+        private void ReturnRuntimeEffectMultiplierSums(float[] multiplierSums)
+        {
+            if (multiplierSums == null || multiplierSums.Length != RuntimeEffectStatTargetCount)
             {
-                runtimeEffectMultiplierSums = new float[RuntimeEffectStatTargetCount];
-            }
-            else
-            {
-                Array.Clear(runtimeEffectMultiplierSums, 0, runtimeEffectMultiplierSums.Length);
+                return;
             }
 
-            return runtimeEffectMultiplierSums;
+            runtimeEffectMultiplierSumPool.Push(multiplierSums);
         }
 
         public float ModifyOutgoingDamage(

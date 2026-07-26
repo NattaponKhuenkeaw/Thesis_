@@ -5,12 +5,104 @@ using Project.InventorySystem.Items;
 using Project.ShopSystem;
 using Project.TeamBuilder.UI;
 using Project.Core.ZoneState;
+using Project.Progression;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
 
 public class TeamRuntimeStatFeedbackTests
 {
+    [Test]
+    public void ShermieSelfStatBuffs_DoNotModifyTeammateStats()
+    {
+        CharacterObject shermieAsset = AssetDatabase.LoadAssetAtPath<CharacterObject>(
+            "Assets/Project/Character/Hero/test_03_shermie/CharacterObject_Shermie.asset");
+        Assert.That(shermieAsset, Is.Not.Null);
+
+        GameObject playerObject = new GameObject("Shermie Self Buff Test Player");
+        GameObject loaderObject = new GameObject("Shermie Self Buff Test Loader");
+        PlayerRunInventory runInventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        PlayerMetaProgression progression = ScriptableObject.CreateInstance<PlayerMetaProgression>();
+        CharacterObject shermie = Object.Instantiate(shermieAsset);
+        CharacterObject teammate = ScriptableObject.CreateInstance<CharacterObject>();
+
+        try
+        {
+            teammate.characterId = "shermie-self-buff-test-teammate";
+            teammate.stats.maxHP = 1000f;
+            teammate.stats.defense = 100f;
+
+            progression.SetPotentialLevel(shermie, PotentialTrack.Skill, 2);
+
+            PlayerCharacter playerCharacter = playerObject.AddComponent<PlayerCharacter>();
+            CharacterPassiveController passiveController = playerObject.AddComponent<CharacterPassiveController>();
+            playerCharacter.PassiveController = passiveController;
+            passiveController.playerCharacter = playerCharacter;
+
+            TeamLoader teamLoader = loaderObject.AddComponent<TeamLoader>();
+            teamLoader.playerCharacter = playerCharacter;
+            typeof(TeamLoader)
+                .GetField("metaProgression", BindingFlags.Instance | BindingFlags.NonPublic)
+                ?.SetValue(teamLoader, progression);
+            teamLoader.SetRunInventory(runInventory);
+            teamLoader.DeployLoadout(new[] { shermie, teammate }, 0);
+
+            passiveController.SetMetaProgression(progression);
+            passiveController.InitializeFromCharacterData();
+
+            float teammateDefenseBefore = teamLoader.GetCharacterRuntimeStats(teammate).defense;
+            float shermieDefenseBefore = teamLoader.GetCharacterRuntimeStats(shermie).defense;
+
+            passiveController.NotifyActionStarted(
+                AttackCategory.Skill,
+                "shermie.skill",
+                "Diamod Dust",
+                new AttackStepData { stepName = "Grab Dash" });
+
+            Assert.That(
+                teamLoader.GetCharacterRuntimeStats(shermie).defense,
+                Is.EqualTo(shermieDefenseBefore * 1.5f).Within(0.001f));
+            Assert.That(
+                teamLoader.GetCharacterRuntimeStats(teammate).defense,
+                Is.EqualTo(teammateDefenseBefore).Within(0.001f));
+
+            runInventory.ClearRuntimeEffects(shermie);
+            runInventory.ClearRuntimeEffects(teammate);
+
+            passiveController.NotifyActionStarted(
+                AttackCategory.Skill,
+                "shermie.skill",
+                "Diamod Dust",
+                new AttackStepData { stepName = "Grab Dash" });
+
+            float teammateMaxHpBefore = teamLoader.GetCharacterRuntimeStats(teammate).maxHP;
+            float shermieMaxHpBefore = teamLoader.GetCharacterRuntimeStats(shermie).maxHP;
+
+            passiveController.NotifyActionStarted(
+                AttackCategory.Ultimate,
+                "shermie.ultimate",
+                "Shermie Carnival",
+                null);
+
+            Assert.That(
+                teamLoader.GetCharacterRuntimeStats(shermie).maxHP,
+                Is.EqualTo(shermieMaxHpBefore * 1.5f).Within(0.001f));
+            Assert.That(
+                teamLoader.GetCharacterRuntimeStats(teammate).maxHP,
+                Is.EqualTo(teammateMaxHpBefore).Within(0.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(teammate);
+            Object.DestroyImmediate(shermie);
+            Object.DestroyImmediate(progression);
+            Object.DestroyImmediate(runInventory);
+            Object.DestroyImmediate(loaderObject);
+            Object.DestroyImmediate(playerObject);
+        }
+    }
+
     [Test]
     public void TeamLoader_StoresArtifactsAndRefreshesRuntimeStats()
     {

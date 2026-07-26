@@ -25,9 +25,7 @@ public class PlayerStateMachine : MonoBehaviour
     // =========================================================
     public PlayerIdleState IdleState { get; private set; }
     public PlayerMoveState MoveState { get; private set; }
-    public PlayerJumpStartupState JumpStartupState { get; private set; }
-    public PlayerJumpRisingState JumpRisingState { get; private set; }
-    public PlayerAirborneState AirborneState { get; private set; }
+    public PlayerJumpState JumpState { get; private set; }
     public PlayerFallingState FallingState { get; private set; }
     public PlayerLandingState LandingState { get; private set; }
     public PlayerDashState DashState { get; private set; }
@@ -51,6 +49,10 @@ public class PlayerStateMachine : MonoBehaviour
     // Current State
     // =========================================================
     public PlayerState CurrentState { get; private set; }
+    public PlayerEnvironmentContext EnvironmentContext { get; private set; } =
+        PlayerEnvironmentContext.Grounded;
+    public bool IsGroundedContext => EnvironmentContext == PlayerEnvironmentContext.Grounded;
+    public bool IsAirborneContext => EnvironmentContext == PlayerEnvironmentContext.Airborne;
 
     // =========================================================
     // Centralized Input Buffer
@@ -132,7 +134,7 @@ public class PlayerStateMachine : MonoBehaviour
 
         PlayerStateId prevId = CurrentStateId;
         context.previousState = prevId;
-        context.wasAirborne = playerCharacter.Movement != null && !playerCharacter.Movement.GroundState.IsEffectivelyGrounded;
+        context.wasAirborne = IsAirborneContext;
 
         CurrentState?.Exit();
         CurrentState = newState;
@@ -248,14 +250,6 @@ public class PlayerStateMachine : MonoBehaviour
     }
 
     /// <summary>
-    /// Route down input. Always forwarded to current state.
-    /// </summary>
-    public void RouteDownInput(bool held)
-    {
-        CurrentState?.OnDownInput(held);
-    }
-
-    /// <summary>
     /// Route jump pressed. If the current state handles it (returns true),
     /// no further routing is done. Otherwise, it uses the default Accept Jump logic.
     /// </summary>
@@ -287,8 +281,7 @@ public class PlayerStateMachine : MonoBehaviour
                 PlayerStateId interruptedState = CurrentStateId;
                 InputBuffer?.ConsumeJump();
 
-                ChangeState(JumpStartupState);
-                CurrentState.OnJumpInput();
+                ChangeState(JumpState);
 
                 if (interruptedState == PlayerStateId.Attacking || interruptedState == PlayerStateId.AirborneAttacking)
                 {
@@ -319,8 +312,7 @@ public class PlayerStateMachine : MonoBehaviour
                 return;
 
             InputBuffer?.ConsumeJump();
-            ChangeState(JumpStartupState);
-            CurrentState.OnJumpInput();
+            ChangeState(JumpState);
         }
     }
 
@@ -330,6 +322,7 @@ public class PlayerStateMachine : MonoBehaviour
     public void RouteDashInput(float inputX)
     {
         if (CurrentState == null) return;
+        if (CurrentState == DashState) return;
 
         // Always buffer the dash for mid-action consumption
         InputBuffer.BufferDash(inputX);
@@ -349,6 +342,7 @@ public class PlayerStateMachine : MonoBehaviour
             && playerCharacter.Movement != null
             && playerCharacter.Movement.CanDash())
         {
+            InputBuffer?.ConsumeDash(out _);
             ChangeState(DashState);
             CurrentState.OnDashInput(inputX);
         }
@@ -365,7 +359,7 @@ public class PlayerStateMachine : MonoBehaviour
         {
             RouteJumpInput();
 
-            if (CurrentStateId == PlayerStateId.Airborne || CurrentStateId == PlayerStateId.JumpStartup)
+            if (CurrentState == JumpState)
             {
                 RouteAttackInput();
             }
@@ -389,10 +383,42 @@ public class PlayerStateMachine : MonoBehaviour
 
         if (CurrentState.AcceptsAttackInput && playerCharacter.HasActionForContext(AttackCategory.Normal))
         {
-            bool isGrounded = playerCharacter.Movement != null && playerCharacter.Movement.IsGroundedForActionSelection();
-            ChangeState(isGrounded ? AttackState : AirAttackState);
+            ChangeState(ResolveBasicAttackState());
             CurrentState.OnAttackInput();
         }
+    }
+
+    /// <summary>
+    /// Physics tells the FSM about support changes in the same fixed step.
+    /// Coyote time remains a jump permission and never keeps a ground locomotion state alive.
+    /// </summary>
+    public void NotifyGroundLost()
+    {
+        EnvironmentContext = PlayerEnvironmentContext.Airborne;
+
+        if (CurrentState == IdleState || CurrentState == MoveState || CurrentState == LandingState)
+        {
+            ChangeState(FallingState);
+        }
+    }
+
+    /// <summary>
+    /// Landing is a context barrier: falling inputs cannot start a ground action
+    /// until the snapped ground position and Landing state are both committed.
+    /// </summary>
+    public void NotifyLanded()
+    {
+        EnvironmentContext = PlayerEnvironmentContext.Grounded;
+
+        if (CurrentState == JumpState || CurrentState == FallingState)
+        {
+            ChangeState(LandingState);
+        }
+    }
+
+    public void NotifyJumpLaunched()
+    {
+        EnvironmentContext = PlayerEnvironmentContext.Airborne;
     }
 
     /// <summary>
@@ -406,7 +432,7 @@ public class PlayerStateMachine : MonoBehaviour
         {
             RouteJumpInput();
 
-            if (CurrentStateId == PlayerStateId.Airborne || CurrentStateId == PlayerStateId.JumpStartup)
+            if (CurrentState == JumpState)
             {
                 RouteSkillInput();
             }
@@ -574,9 +600,7 @@ public class PlayerStateMachine : MonoBehaviour
     {
         IdleState = new PlayerIdleState(playerCharacter, this);
         MoveState = new PlayerMoveState(playerCharacter, this);
-        JumpStartupState = new PlayerJumpStartupState(playerCharacter, this);
-        JumpRisingState = new PlayerJumpRisingState(playerCharacter, this);
-        AirborneState = new PlayerAirborneState(playerCharacter, this);
+        JumpState = new PlayerJumpState(playerCharacter, this);
         FallingState = new PlayerFallingState(playerCharacter, this);
         LandingState = new PlayerLandingState(playerCharacter, this);
         DashState = new PlayerDashState(playerCharacter, this);
@@ -589,13 +613,18 @@ public class PlayerStateMachine : MonoBehaviour
         IntroState = new PlayerIntroState(playerCharacter, this);
     }
 
+    private PlayerState ResolveBasicAttackState()
+    {
+        return IsAirborneContext ? AirAttackState : AttackState;
+    }
+
     private PlayerState ResolveLocomotionStateForCharacterSwitch()
     {
         if (playerCharacter == null || playerCharacter.Movement == null)
             return IdleState;
 
-        if (!playerCharacter.Movement.GroundState.IsEffectivelyGrounded)
-            return AirborneState;
+        if (IsAirborneContext)
+            return FallingState;
 
         if (playerCharacter.Movement.IsLanding)
             return LandingState;
@@ -617,7 +646,7 @@ public class PlayerStateMachine : MonoBehaviour
         if (CurrentStateId != PlayerStateId.Idle && CurrentStateId != PlayerStateId.Running)
             return false;
 
-        if (!playerCharacter.Movement.GroundState.IsEffectivelyGrounded)
+        if (!IsGroundedContext)
             return false;
 
         return true;
@@ -636,7 +665,7 @@ public class PlayerStateMachine : MonoBehaviour
 
         // We only want this safeguard for actions that are still effectively
         // ground-started and have not committed yet.
-        if (!playerCharacter.Movement.GroundState.IsEffectivelyGrounded)
+        if (!IsGroundedContext)
             return false;
 
         if (currentFrameState.CurrentPhase == ActionPhase.None || currentFrameState.CurrentPhase == ActionPhase.Startup)
@@ -660,7 +689,7 @@ public class PlayerStateMachine : MonoBehaviour
         // Ground locomotion states: allowed
         if (CurrentState == IdleState || CurrentState == MoveState)
         {
-            if (playerCharacter.Movement != null && !playerCharacter.Movement.GroundState.IsEffectivelyGrounded)
+            if (IsAirborneContext)
             {
                 return false;
             }

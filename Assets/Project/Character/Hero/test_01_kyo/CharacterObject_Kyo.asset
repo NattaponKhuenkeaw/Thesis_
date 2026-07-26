@@ -21,7 +21,7 @@ MonoBehaviour:
     maxHP: 892
     attack: 45
     defense: 37
-    speed: 10.5
+    speed: 11
     elementalMastery: 0
     critRate: 5
     critDamage: 150
@@ -54,10 +54,10 @@ MonoBehaviour:
   _dashData:
     animationClip: {fileID: 7400000, guid: 1170a54f57116384b8506475803c25eb, type: 2}
     startupFrames: 5
-    activeFrames: 25
-    recoveryFrames: 15
-    cancelWindowStartFrame: 35
-    dashSpeed: 40
+    activeFrames: 27
+    recoveryFrames: 13
+    cancelWindowStartFrame: 32
+    dashSpeed: 15
     cooldownFrames: 24
   kitDefinition:
     skill:

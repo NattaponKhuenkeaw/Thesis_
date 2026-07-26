@@ -202,14 +202,14 @@ MonoBehaviour:
           endFrame: 7
           taskType: 0
           easing: 16
-          position: {x: 0, y: 0.2, z: 0}
+          position: {x: 0.3, y: 0.2, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
         - startFrame: 7
           endFrame: 35
           taskType: 0
           easing: 16
-          position: {x: 0, y: 1, z: 0}
+          position: {x: 0, y: 0.7, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
         - startFrame: 30
@@ -232,8 +232,8 @@ MonoBehaviour:
         activeFrames: 4
         elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 0.86026186, y: 2.7276223}
-        size: {x: 1.9641931, y: 1.6888655}
+        offset: {x: 0.80849195, y: 2.4835644}
+        size: {x: 2.1860638, y: 2.5911407}
         damageRatio: 0.65
         impactTier: 0
         useDeterministicReaction: 1
@@ -265,8 +265,8 @@ MonoBehaviour:
         activeFrames: 3
         elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 0.92805606, y: 3.0138671}
-        size: {x: 1.9189966, y: 1.5984726}
+        offset: {x: 0.93545187, y: 2.725435}
+        size: {x: 2.3479483, y: 2.5007482}
         damageRatio: 0.35
         impactTier: 2
         useDeterministicReaction: 1

@@ -22,11 +22,6 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     private bool advanceCurrentNodeWithUnscaledTime;
     private Coroutine activeActionSequenceCoroutine;
 
-    // --- Airborne Gravity Policy ---
-    private AirborneGravityPolicy gravityPolicy;
-    private int recoveryFrameCount;
-    private int framesInRecovery;
-
     public CombatPlayerState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
     public override void Enter(TransitionContext context)
@@ -42,15 +37,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             player.Combat.OnGrabConnected += HandleGrabConnected;
         }
 
-        prevFrameGrounded = player.Movement != null && player.Movement.GroundState.IsEffectivelyGrounded;
-
-        // --- Gravity Policy ---
-        gravityPolicy = player.Movement != null && player.Movement.profile != null
-            ? player.Movement.profile.airborneGravityPolicy
-            : AirborneGravityPolicy.Default;
-        framesInRecovery = 0;
-        recoveryFrameCount = 0;
-        UpdateGravityScale(ActionPhase.Startup, 0f);
+        prevFrameGrounded = fsm.IsGroundedContext;
     }
 
     // Removed FixedUpdate update of prevFrameGrounded to ensure Update() has exclusive control 
@@ -58,10 +45,6 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
     public override void Exit()
     {
-        GroundStateAuthority authorityOnExit = player.Movement != null
-            ? player.Movement.GroundState.Authority
-            : GroundStateAuthority.Physical;
-
         EndActiveActionEventSequence();
         StopAfterImageTrails();
         TryStartCooldown();
@@ -80,18 +63,11 @@ public abstract class CombatPlayerState : FrameDataPlayerState
                 player.Combat.CancelCurrentAttackButKeepComboProgress();
             else
                 player.Combat.ResetCombo();
-
-            player.Combat.SetAirborneGravityScale(1f); // Restore gravity
         }
 
         if (player.Combat != null)
         {
             player.Combat.OnGrabConnected -= HandleGrabConnected;
-        }
-
-        if (player.Movement != null && authorityOnExit == GroundStateAuthority.ForceAirborne)
-        {
-            player.Movement.GroundState.ClearAuthority();
         }
 
         base.Exit();
@@ -102,11 +78,11 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
     public override void Update()
     {
-        UpdateGroundAuthorityGuardrail();
+        UpdateActionContext();
 
         // Check for landing BEFORE base.Update() advances frames, so we can interrupt cleanly
         bool isMovingUp = player.Movement != null && player.Movement.VerticalVelocity > 0.1f;
-        if (player.Movement != null && player.Movement.GroundState.IsEffectivelyGrounded && !prevFrameGrounded && !isMovingUp)
+        if (fsm.IsGroundedContext && !prevFrameGrounded && !isMovingUp)
         {
             OnLandedDuringCombat();
         }
@@ -119,29 +95,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         }
 
         // --- Ground State Tracking ---
-        if (player.Movement != null)
-        {
-            prevFrameGrounded = player.Movement.GroundState.IsEffectivelyGrounded;
-        }
-
-        // --- Recovery Early Exit (Gravity takes over) ---
-        if (currentPhase == ActionPhase.Recovery && player.Movement != null && player.Combat != null && player.Combat.IsInAirborneAction())
-        {
-            float maxFall = player.Movement.profile != null
-                ? player.Movement.profile.maxFallSpeed
-                : 18f;
-
-            if (gravityPolicy.ShouldExitRecovery(player.Movement.VerticalVelocity, maxFall))
-            {
-                fsm.Log("FSM", $"[{StateId}] Recovery exit: fall velocity threshold reached", Color.yellow);
-                OnActionComplete();
-                return;
-            }
-        }
-
-        // --- Continuous Gravity Update ---
-        // Keeps gravity synced with the current action authority after ground/air promotion decisions.
-        UpdateGravityScale(currentPhase, GetRecoveryProgress());
+        prevFrameGrounded = fsm.IsGroundedContext;
 
         if (player.Combat != null && player.Combat.IsAttacking() && currentPhase == ActionPhase.Active)
         {
@@ -160,10 +114,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             }
         }
 
-        if (player.Movement != null)
-        {
-            prevFrameGrounded = player.Movement.GroundState.IsEffectivelyGrounded;
-        }
+        prevFrameGrounded = fsm.IsGroundedContext;
     }
 
     // =========================================================
@@ -254,11 +205,6 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     {
         player.Combat?.ProcessFrameFromState(frame, phase);
         ProcessActionEvents(frame);
-
-        if (phase == ActionPhase.Recovery)
-        {
-            framesInRecovery++;
-        }
     }
 
     protected override bool ShouldAdvanceLogicFrames()
@@ -299,31 +245,6 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         ExitToAppropriateMovementState();
     }
 
-    protected override void OnPhaseChanged(ActionPhase oldPhase, ActionPhase newPhase)
-    {
-        base.OnPhaseChanged(oldPhase, newPhase);
-
-        if (newPhase == ActionPhase.Startup)
-        {
-            if (player.Combat != null && player.Combat.IsInAirborneAction() && player.Movement != null)
-            {
-                Rigidbody2D rb = player.Movement.GetComponent<Rigidbody2D>();
-                if (rb != null)
-                {
-                    rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * gravityPolicy.startupVelocityRetain);
-                }
-            }
-        }
-        else if (newPhase == ActionPhase.Recovery)
-        {
-            framesInRecovery = 0;
-            ActionFrameData frameData = CachedFrameData;
-            recoveryFrameCount = frameData != null ? frameData.recoveryFrames : 1;
-        }
-
-        UpdateGravityScale(newPhase, 0f);
-    }
-
     protected virtual void TryStartCooldown()
     {
         if (hasStartedCooldown || player.Combat == null) return;
@@ -354,22 +275,12 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     protected virtual InputContext BuildInputContext()
     {
         ActionInputBuffer buffer = fsm.InputBuffer;
-        bool logicallyGrounded = player.Movement != null && player.Movement.GroundState.IsEffectivelyGrounded;
+        bool logicallyGrounded = fsm.IsGroundedContext;
         bool justLanded = player.Movement != null && (player.Movement.GroundState.JustLanded || player.Movement.IsLanding);
-        
-        bool actionGrounded;
-        if (player.Combat != null && player.Combat.IsAttacking())
-        {
-            actionGrounded = logicallyGrounded;
-        }
-        else
-        {
-            actionGrounded = player.Movement != null && player.Movement.IsGroundedForActionSelection();
-        }
 
         return new InputContext
         {
-            isGrounded = actionGrounded,
+            isGrounded = logicallyGrounded,
             directionalInput = buffer != null ? buffer.DirectionalInput : Vector2.zero,
             facingDirection = player.Movement != null ? player.Movement.FacingDirection : 1,
             previousState = transitionContext.previousState,
@@ -423,7 +334,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             resolver.ActiveCombatAction?.actionName,
             resolver.ActiveCombatAction?.actionId,
             isAutoChain);
-        UpdateGroundAuthorityGuardrail();
+        UpdateActionContext();
         RestartAction();
     }
 
@@ -890,29 +801,8 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     }
 
     // =========================================================
-    // Airborne Gravity & Landing
+    // Airborne Action Context & Landing
     // =========================================================
-
-    private void UpdateGravityScale(ActionPhase phase, float recoveryProgress)
-    {
-        // Only apply airborne gravity policy if we are actually airborne
-        if (player.Combat != null && player.Combat.IsInAirborneAction())
-        {
-            float scale = gravityPolicy.Evaluate(phase, recoveryProgress);
-            player.Combat.SetAirborneGravityScale(scale);
-        }
-        else if (player.Combat != null)
-        {
-            // Reset to full gravity when grounded or not in airborne action
-            player.Combat.SetAirborneGravityScale(1f);
-        }
-    }
-
-    private float GetRecoveryProgress()
-    {
-        if (currentPhase != ActionPhase.Recovery) return 0f;
-        return recoveryFrameCount > 0 ? (float)framesInRecovery / recoveryFrameCount : 1f;
-    }
 
     private void OnLandedDuringCombat()
     {
@@ -926,64 +816,28 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         }
     }
 
-    private void UpdateGroundAuthorityGuardrail()
+    private void UpdateActionContext()
     {
-        if (player.Movement == null)
+        if (player.Movement == null || player.Combat == null || !player.Combat.IsAttacking())
         {
-            return;
-        }
-
-        if (player.Combat == null || !player.Combat.IsAttacking())
-        {
-            if (player.Movement.GroundState.Authority == GroundStateAuthority.ForceAirborne)
-            {
-                player.Movement.GroundState.ClearAuthority();
-            }
-
             return;
         }
 
         if (player.Combat.IsAirCombo)
         {
-            if (player.Movement.IsPhysicallyGrounded() && player.Movement.VerticalVelocity <= 0.1f)
-            {
-                player.Movement.GroundState.ClearAuthority();
-            }
-            else
-            {
-                player.Movement.GroundState.SetAuthority(GroundStateAuthority.ForceAirborne);
-            }
-
             return;
         }
 
-        if (player.Combat.CurrentActionAllowsGroundToAirTransition)
+        if (player.Combat.CurrentActionStartedGrounded
+            && player.Combat.CurrentActionAllowsGroundToAirTransition
+            && fsm.IsAirborneContext)
         {
-            if (!player.Movement.IsPhysicallyGrounded())
+            player.Combat.SetAirCombo(true);
+            if (player.Animator != null)
             {
-                player.Combat.SetAirCombo(true);
-                player.Movement.GroundState.SetAuthority(GroundStateAuthority.ForceAirborne);
-
-                if (player.Animator != null)
-                {
-                    player.Animator.RestoreAirborneState();
-                }
+                player.Animator.RestoreAirborneState();
             }
-            else
-            {
-                player.Movement.GroundState.ClearAuthority();
-            }
-
-            return;
         }
-
-        if (player.Combat.CurrentActionStartedGrounded)
-        {
-            player.Movement.GroundState.SetAuthority(GroundStateAuthority.StickyGrounded);
-            return;
-        }
-
-        player.Movement.GroundState.ClearAuthority();
     }
 
     // =========================================================
@@ -1003,7 +857,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
         // Case 1: We just landed this frame — an airborne action would be
         // immediately interrupted on the next Update(), wasting its cooldown.
-        bool isGrounded = player.Movement.GroundState.IsEffectivelyGrounded;
+        bool isGrounded = fsm.IsGroundedContext;
         bool wasAirborneLastFrame = !prevFrameGrounded;
         bool notMovingUp = player.Movement.VerticalVelocity <= 0.1f;
 
