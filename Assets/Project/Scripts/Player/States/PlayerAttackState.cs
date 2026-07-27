@@ -76,8 +76,6 @@ public class PlayerAttackState : CombatPlayerState
             }
         }
 
-        resolver.Reset();
-
         if (fsm.CurrentState == this)
             ExitToAppropriateMovementState();
     }
@@ -126,7 +124,7 @@ public class PlayerAttackState : CombatPlayerState
             return;
         }
 
-        if (currentPhase == ActionPhase.Recovery)
+        if (IsRecoveryOrCancelPhase)
         {
             TryResolveNextStep();
         }

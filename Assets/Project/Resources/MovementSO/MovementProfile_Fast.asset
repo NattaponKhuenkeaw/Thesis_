@@ -16,7 +16,7 @@ MonoBehaviour:
   jumpSpeed: 20
   riseDeceleration: 55
   jumpFallAcceleration: 95
-  neutralFallAcceleration: 50
+  neutralFallAcceleration: 40
   maximumFallSpeed: 28
   maxJumpCount: 2
   maxAirDashCount: 1

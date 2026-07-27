@@ -802,7 +802,9 @@ public class HitBoxDamage : MonoBehaviour
     private Vector2 GetActiveHitboxCenter()
     {
         Collider2D attackerCollider = GetActiveHitboxCollider();
-        return attackerCollider != null ? attackerCollider.bounds.center : (Vector2)transform.position;
+        return attackerCollider != null
+            ? (Vector2)attackerCollider.bounds.center
+            : (Vector2)transform.position;
     }
 
     private void TriggerHitStop(int frames)

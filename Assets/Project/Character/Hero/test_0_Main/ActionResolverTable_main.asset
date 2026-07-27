@@ -50,7 +50,7 @@ MonoBehaviour:
     allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 3.5
-    auraEnergyReward: 10
+    auraEnergyReward: 5
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
@@ -73,7 +73,7 @@ MonoBehaviour:
       rootNode:
         rid: 1588256193077837993
     cooldown: 24
-    energyCost: 100
+    energyCost: 60
     activationVFXType: 0
     activationVFXPrefab: {fileID: 0}
     activationVFXOffset: {x: 0, y: 0, z: 0}
@@ -126,7 +126,7 @@ MonoBehaviour:
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
         keyframes:
-        - startFrame: 1
+        - startFrame: 2
           endFrame: 10
           taskType: 0
           easing: 1

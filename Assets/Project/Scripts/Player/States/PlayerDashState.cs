@@ -3,7 +3,8 @@ using UnityEngine;
 /// <summary>
 /// Dash state: player is dashing (ground or air).
 /// Inherits FrameDataPlayerState for automatic phase tracking.
-/// During Recovery/Cancel phase, accepts buffered attack/jump inputs for cancel chains.
+/// Authored dash motion remains locked through Recovery. The cancel frame opens
+/// locomotion for a grounded dash and enables the universal cancel inputs.
 /// </summary>
 public class PlayerDashState : FrameDataPlayerState
 {
@@ -14,7 +15,7 @@ public class PlayerDashState : FrameDataPlayerState
 
     // =========================================================
     // Capabilities — Startup/Active own the dash burst. A dash that started
-    // grounded returns normal locomotion control on its first Recovery frame.
+    // grounded returns normal locomotion control on its authored Cancel frame.
     // =========================================================
     public override bool AcceptsMoveInput => true;
     public override bool AcceptsDashInput => false;
@@ -22,15 +23,15 @@ public class PlayerDashState : FrameDataPlayerState
     public override bool AcceptsAttackInput => true;
     public override bool AcceptsSkillInput => true;
     public override bool AcceptsUltimateInput => true;
-    public override bool LocksMovement => !IsRecoveryLocomotionOpen;
-    public override bool LocksFacing => !IsRecoveryLocomotionOpen;
+    public override bool LocksMovement => !IsCancelLocomotionOpen;
+    public override bool LocksFacing => !IsCancelLocomotionOpen;
 
     private bool dashStarted;
     private bool exitHandled;
     private bool startedGrounded;
 
-    public bool IsRecoveryLocomotionOpen =>
-        startedGrounded && CurrentPhase == ActionPhase.Recovery;
+    public bool IsCancelLocomotionOpen =>
+        startedGrounded && CurrentPhase == ActionPhase.Cancel;
 
     // =========================================================
     // FrameDataPlayerState — provide frame data from DashData
@@ -38,13 +39,7 @@ public class PlayerDashState : FrameDataPlayerState
 
     protected override InterruptPolicy GetInterruptPolicy()
     {
-        InterruptPolicy policy = InterruptPolicy.Dash;
-        if (startedGrounded)
-        {
-            policy.recoveryGate = InputGate.AllowAll;
-        }
-
-        return policy;
+        return InterruptPolicy.Dash;
     }
 
     protected override ActionFrameData GetFrameData()

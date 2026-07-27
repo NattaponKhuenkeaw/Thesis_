@@ -69,7 +69,7 @@ public class PlayerSkillState : CombatPlayerState
             return;
         }
 
-        if (currentPhase == ActionPhase.Recovery)
+        if (IsRecoveryOrCancelPhase)
         {
             if (TryStartFreshSkillAction(exitOnFailure: false, requireDifferentAction: true))
             {
@@ -101,13 +101,7 @@ public class PlayerSkillState : CombatPlayerState
 
     private bool TryStartFreshSkillAction(bool exitOnFailure, bool requireDifferentAction)
     {
-        if (ShouldAbortBeforeExecution())
-        {
-            resolver.Reset();
-            return false;
-        }
-
-        InputContext ctx = BuildInputContext();
+        InputContext ctx = BuildInputContext(preserveActiveActionInput: !requireDifferentAction);
         ActionResolver previewResolver = new ActionResolver();
         AttackStepData previewStep = previewResolver.ResolveInitial(ctx, resolverTable, AttackCategory.Skill);
         SkillAction previewSkillAction = previewResolver.ActiveCombatAction as SkillAction;
@@ -124,6 +118,11 @@ public class PlayerSkillState : CombatPlayerState
         if (requireDifferentAction && IsSameSkillAction(previewSkillAction, activeSkillAction))
         {
             return false;
+        }
+
+        if (requireDifferentAction)
+        {
+            CommitResolvedActionOutput();
         }
 
         if (requireDifferentAction && player.Combat != null && player.Combat.IsAttacking())

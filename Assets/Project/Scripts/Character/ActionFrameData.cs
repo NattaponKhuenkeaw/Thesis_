@@ -70,8 +70,9 @@ public class ActionFrameData
         if (loopActivePhase && frame > ActivePhaseEnd)
             return ActionPhase.Active;
 
-        // Cancel window check bypassed
-            
+        if (HasCancelWindow && frame >= cancelWindowStartFrame)
+            return ActionPhase.Cancel;
+
         if (startupFrames > 0 && frame <= startupFrames) return ActionPhase.Startup;
         if (frame <= startupFrames + activeFrames) return ActionPhase.Active;
 

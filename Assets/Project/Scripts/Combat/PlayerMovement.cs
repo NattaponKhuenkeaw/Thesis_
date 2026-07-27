@@ -13,8 +13,9 @@ public class PlayerMovement : MonoBehaviour
     private const float AttackFacingCancelInputThreshold = 0.2f;
     private const float MinimumGroundNormalY = 0.5f;
     private const float GroundedVerticalTolerance = 0.1f;
-    private const float DashDecelerationStart = 0.55f;
-    private const float DashEndSpeedRatio = 0.15f;
+    private const float DashBurstPeakRatio = 1.18f;
+    private const float DashBurstSettleProgress = 0.22f;
+    private const float DashBrakeEndSpeedRatio = 0.08f;
     private const int MaximumDropThroughFrames = 45;
 
     private enum FallSession
@@ -72,6 +73,7 @@ public class PlayerMovement : MonoBehaviour
 
     private readonly ContactPoint2D[] groundContactBuffer = new ContactPoint2D[8];
     private readonly RaycastHit2D[] oneWayCrossingBuffer = new RaycastHit2D[8];
+    private readonly RaycastHit2D[] actionOutputGroundBuffer = new RaycastHit2D[8];
     private ContactFilter2D groundContactFilter;
     private ContactFilter2D oneWayContactFilter;
 
@@ -126,10 +128,10 @@ public class PlayerMovement : MonoBehaviour
     // Computed State
     // =========================================================
     public bool IsDashing => fsm != null && fsm.CurrentStateId == PlayerStateId.Dashing;
-    public bool IsGroundDashRecovery =>
+    public bool IsGroundDashCancelOpen =>
         fsm != null
         && fsm.CurrentState is PlayerDashState dashState
-        && dashState.IsRecoveryLocomotionOpen;
+        && dashState.IsCancelLocomotionOpen;
     public bool IsJumpStarting => fsm != null
         && fsm.JumpState != null
         && fsm.CurrentState == fsm.JumpState
@@ -353,6 +355,67 @@ public class PlayerMovement : MonoBehaviour
         return (Vector3)(nextPosition - previousPosition);
     }
 
+    public bool SnapToGroundForActionOutput()
+    {
+        if (rb == null || groundCheck == null || !EnsureProfileAssigned())
+        {
+            return GroundState.IsGrounded;
+        }
+
+        if (GroundState.IsGrounded)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+            lastAppliedMotionVelocityY = 0f;
+            return true;
+        }
+
+        Vector2 origin = (Vector2)groundCheck.position + (Vector2.up * 0.02f);
+        int hitCount = Physics2D.Raycast(
+            origin,
+            Vector2.down,
+            groundContactFilter,
+            actionOutputGroundBuffer,
+            Mathf.Infinity);
+        RaycastHit2D bestHit = default;
+        float bestDistance = float.MaxValue;
+
+        for (int i = 0; i < hitCount; i++)
+        {
+            RaycastHit2D hit = actionOutputGroundBuffer[i];
+            if (hit.collider == null
+                || hit.collider.isTrigger
+                || hit.collider == ignoredGroundCollider
+                || hit.distance >= bestDistance)
+            {
+                continue;
+            }
+
+            bestHit = hit;
+            bestDistance = hit.distance;
+        }
+
+        if (bestHit.collider == null)
+        {
+            return false;
+        }
+
+        float correctionY = bestHit.point.y - groundCheck.position.y;
+        rb.position += Vector2.up * correctionY;
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+        transform.position = new Vector3(rb.position.x, rb.position.y, transform.position.z);
+        Physics2D.SyncTransforms();
+
+        isGrounded = true;
+        currentGroundCollider = bestHit.collider;
+        lastAppliedMotionVelocityY = 0f;
+        GroundState.Tick(true, 0f);
+        CacheGroundCheckPosition();
+        ResetLandingResources();
+        landingFramesRemaining = ShouldSuppressLandingFeedback() ? 0 : P.landingRecoveryFrames;
+        OnLand?.Invoke();
+        return true;
+    }
+
 
 
     public void FinishDash()
@@ -433,10 +496,7 @@ public class PlayerMovement : MonoBehaviour
             lastAppliedMotionVelocityY = 0f;
         }
 
-        jumpsUsed = 0;
-        airDashesUsed = 0;
-        activeFallSession = FallSession.Neutral;
-        combat?.ResetAirComboCooldown();
+        ResetLandingResources();
         landingFramesRemaining = ShouldSuppressLandingFeedback() ? 0 : P.landingRecoveryFrames;
         fsm?.NotifyLanded();
         OnLand?.Invoke();
@@ -572,7 +632,10 @@ public class PlayerMovement : MonoBehaviour
         hasPreviousGroundCheckPosition = true;
     }
 
-    private bool IsGroundJumpAvailable() => jumpsUsed == 0 && (GroundState.IsEffectivelyGrounded || coyoteFramesRemaining > 0);
+    private bool IsGroundJumpAvailable() => jumpsUsed == 0
+        && ((fsm != null && fsm.IsGroundedContext)
+            || GroundState.IsEffectivelyGrounded
+            || coyoteFramesRemaining > 0);
     private bool CanUseAirJump() => jumpsUsed < MaxJumps;
 
     private void SetPlayerEnemyCollisionIgnored(bool ignored) { if (playerLayer != -1 && enemyLayer != -1) Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, ignored); }
@@ -584,6 +647,14 @@ public class PlayerMovement : MonoBehaviour
         attackMotionVelocityX = 0f;
         attackMotionVelocityY = 0f;
         useUnscaledAttackMotion = false;
+    }
+
+    private void ResetLandingResources()
+    {
+        jumpsUsed = 0;
+        airDashesUsed = 0;
+        activeFallSession = FallSession.Neutral;
+        combat?.ResetAirComboCooldown();
     }
 
     private bool IsDashReady() => !dashInProgress && dashCooldownFramesRemaining <= 0;
@@ -654,7 +725,7 @@ public class PlayerMovement : MonoBehaviour
             return 0f;
         }
 
-        if (combat != null && combat.IsInAirborneAction())
+        if (combat != null && combat.IsActiveCombat())
         {
             return 0f;
         }
@@ -759,37 +830,65 @@ public class PlayerMovement : MonoBehaviour
             return true;
         }
 
-        if (dashState.CurrentPhase != ActionPhase.Active)
+        if (dashState.CurrentPhase == ActionPhase.Active)
         {
-            return false;
+            int activeFrame = Mathf.Clamp(
+                dashState.CurrentFrame - dashData.startupFrames,
+                1,
+                Mathf.Max(1, dashData.activeFrames));
+            float activeProgress = dashData.activeFrames <= 1
+                ? 1f
+                : (activeFrame - 1f) / (dashData.activeFrames - 1f);
+            float settleProgress = Mathf.Clamp01(
+                activeProgress / DashBurstSettleProgress);
+            float settleEase = 1f - ((1f - settleProgress) * (1f - settleProgress));
+            float speedRatio = Mathf.Lerp(
+                DashBurstPeakRatio,
+                1f,
+                settleEase);
+
+            rb.linearVelocity = new Vector2(
+                dashDir * dashData.dashSpeed * speedRatio,
+                0f);
+
+            if (enableDashAfterimage && Time.time - lastAfterimageTime >= dashAfterimageSpawnInterval)
+            {
+                SpawnAfterimage();
+                lastAfterimageTime = Time.time;
+            }
+
+            return true;
         }
 
-        int activeFrame = Mathf.Clamp(
-            dashState.CurrentFrame - dashData.startupFrames,
-            1,
-            Mathf.Max(1, dashData.activeFrames));
-        float activeProgress = dashData.activeFrames <= 1
-            ? 0f
-            : (activeFrame - 1f) / (dashData.activeFrames - 1f);
-        float decelerationProgress = Mathf.InverseLerp(
-            DashDecelerationStart,
-            1f,
-            activeProgress);
-        float speedRatio = Mathf.Lerp(
-            1f,
-            DashEndSpeedRatio,
-            decelerationProgress * decelerationProgress);
-        rb.linearVelocity = new Vector2(
-            dashDir * dashData.dashSpeed * speedRatio,
-            0f);
-
-        if (enableDashAfterimage && Time.time - lastAfterimageTime >= dashAfterimageSpawnInterval)
+        if (dashState.CurrentPhase == ActionPhase.Recovery)
         {
-            SpawnAfterimage();
-            lastAfterimageTime = Time.time;
+            int totalFrames = dashData.startupFrames
+                + dashData.activeFrames
+                + dashData.recoveryFrames;
+            int recoveryStartFrame = dashData.startupFrames + dashData.activeFrames + 1;
+            bool hasCancelWindow = dashData.cancelWindowStartFrame > 0
+                && dashData.cancelWindowStartFrame <= totalFrames;
+            int brakeEndFrame = hasCancelWindow
+                ? dashData.cancelWindowStartFrame - 1
+                : totalFrames;
+            float brakeProgress = Mathf.InverseLerp(
+                recoveryStartFrame,
+                Mathf.Max(recoveryStartFrame + 1, brakeEndFrame),
+                dashState.CurrentFrame);
+            float brakeEase = brakeProgress * brakeProgress * (3f - (2f * brakeProgress));
+            float speedRatio = Mathf.Lerp(1f, DashBrakeEndSpeedRatio, brakeEase);
+            float verticalVelocity = ResolveVerticalVelocity(
+                rb.linearVelocity.y - lastAppliedMotionVelocityY,
+                0f);
+
+            rb.linearVelocity = new Vector2(
+                dashDir * dashData.dashSpeed * speedRatio,
+                verticalVelocity);
+            lastAppliedMotionVelocityY = 0f;
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     public bool IsInvincible() =>

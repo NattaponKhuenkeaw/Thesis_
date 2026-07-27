@@ -15,12 +15,14 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
     private readonly HashSet<ActionEventEntry> triggeredActionEvents = new HashSet<ActionEventEntry>();
     private readonly Dictionary<ActionEventEntry, Coroutine> activeAfterImageCoroutines = new Dictionary<ActionEventEntry, Coroutine>();
-    protected bool prevFrameGrounded;
     private ActionEventEntry activeActionSequence;
     private GameFreezeManager.FreezeToken activeFreezeToken;
     private bool pauseCurrentNodeForSequence;
     private bool advanceCurrentNodeWithUnscaledTime;
     private Coroutine activeActionSequenceCoroutine;
+    private CombatAction capturedOutputAction;
+    private bool capturedActionStartedGrounded;
+    private bool hasCommittedActionOutput;
 
     public CombatPlayerState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
@@ -30,21 +32,20 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         resolverTable = player.characterObject != null ? player.characterObject.actionResolverTable : null;
         resolver.SetLogger(fsm);
         hasStartedCooldown = false;
+        capturedOutputAction = null;
+        capturedActionStartedGrounded = fsm.IsGroundedContext;
+        hasCommittedActionOutput = false;
         ResetActionEventTracking();
 
         if (player.Combat != null)
         {
             player.Combat.OnGrabConnected += HandleGrabConnected;
         }
-
-        prevFrameGrounded = fsm.IsGroundedContext;
     }
-
-    // Removed FixedUpdate update of prevFrameGrounded to ensure Update() has exclusive control 
-    // over the frame-to-frame transition for landing detection.
 
     public override void Exit()
     {
+        CommitResolvedActionOutput();
         EndActiveActionEventSequence();
         StopAfterImageTrails();
         TryStartCooldown();
@@ -72,30 +73,19 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
         base.Exit();
         resolver.Reset();
+        capturedOutputAction = null;
         hasStartedCooldown = false;
         triggeredActionEvents.Clear();
     }
 
     public override void Update()
     {
-        UpdateActionContext();
-
-        // Check for landing BEFORE base.Update() advances frames, so we can interrupt cleanly
-        bool isMovingUp = player.Movement != null && player.Movement.VerticalVelocity > 0.1f;
-        if (fsm.IsGroundedContext && !prevFrameGrounded && !isMovingUp)
-        {
-            OnLandedDuringCombat();
-        }
-
         base.Update();
 
         if (fsm.CurrentState != this)
         {
             return;
         }
-
-        // --- Ground State Tracking ---
-        prevFrameGrounded = fsm.IsGroundedContext;
 
         if (player.Combat != null && player.Combat.IsAttacking() && currentPhase == ActionPhase.Active)
         {
@@ -114,7 +104,6 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             }
         }
 
-        prevFrameGrounded = fsm.IsGroundedContext;
     }
 
     // =========================================================
@@ -240,7 +229,6 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     protected override void OnActionComplete()
     {
         TryStartCooldown();
-        resolver.Reset();
         player.Combat?.ResetCombo();
         ExitToAppropriateMovementState();
     }
@@ -272,11 +260,16 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         }
     }
 
-    protected virtual InputContext BuildInputContext()
+    protected virtual InputContext BuildInputContext(bool preserveActiveActionInput = true)
     {
         ActionInputBuffer buffer = fsm.InputBuffer;
-        bool logicallyGrounded = fsm.IsGroundedContext;
+        bool logicallyGrounded = preserveActiveActionInput && resolver.IsActive
+            ? resolver.StartedGrounded
+            : fsm.IsGroundedContext;
         bool justLanded = player.Movement != null && (player.Movement.GroundState.JustLanded || player.Movement.IsLanding);
+        bool wasPhysicallyAirborne = player.Movement != null
+            ? !player.Movement.GroundState.WasGrounded
+            : !logicallyGrounded;
 
         return new InputContext
         {
@@ -287,7 +280,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             hasGrabbedEnemy = player.Combat != null && player.Combat.HasGrabbedEnemy(),
             hasPreviouslyGrabbedEnemy = player.Combat != null && player.Combat.HadGrabAtStepStart,
             isAgainstWall = player.Movement != null && player.Movement.IsAgainstWall(),
-            wasAirborne = (!prevFrameGrounded && logicallyGrounded) || justLanded,
+            wasAirborne = wasPhysicallyAirborne || justLanded,
             justLanded = justLanded,
             isAirCombo = player.Combat != null && player.Combat.IsAirCombo,
             passiveController = player.PassiveController,
@@ -320,11 +313,15 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             player.Movement.ForceFaceDirectionFromInput(ctx.directionalInput);
         }
 
-        player.Combat?.BeginResolvedAction(
-            ctx.isGrounded,
-            !ctx.isGrounded,
-            resolver.ActiveCombatAction != null && resolver.ActiveCombatAction.allowGroundToAirTransition,
-            resolver.ActiveCombatAction);
+        CombatAction resolvedAction = resolver.ActiveCombatAction;
+        if (capturedOutputAction != resolvedAction)
+        {
+            capturedOutputAction = resolvedAction;
+            capturedActionStartedGrounded = ctx.isGrounded;
+            hasCommittedActionOutput = false;
+        }
+
+        player.Combat?.BeginResolvedAction(!ctx.isGrounded, resolvedAction);
 
         player.Combat?.ExecuteStep(
             step,
@@ -334,7 +331,6 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             resolver.ActiveCombatAction?.actionName,
             resolver.ActiveCombatAction?.actionId,
             isAutoChain);
-        UpdateActionContext();
         RestartAction();
     }
 
@@ -801,75 +797,47 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     }
 
     // =========================================================
-    // Airborne Action Context & Landing
-    // =========================================================
-
-    private void OnLandedDuringCombat()
-    {
-        if (player.Combat == null) return;
-
-        if (player.Combat.ShouldInterruptAttackOnGrounded())
-        {
-            fsm.Log("FSM", $"[{StateId}] Interrupted by landing", Color.yellow);
-            player.Combat.ResetCombo();
-            ExitToAppropriateMovementState();
-        }
-    }
-
-    private void UpdateActionContext()
-    {
-        if (player.Movement == null || player.Combat == null || !player.Combat.IsAttacking())
-        {
-            return;
-        }
-
-        if (player.Combat.IsAirCombo)
-        {
-            return;
-        }
-
-        if (player.Combat.CurrentActionStartedGrounded
-            && player.Combat.CurrentActionAllowsGroundToAirTransition
-            && fsm.IsAirborneContext)
-        {
-            player.Combat.SetAirCombo(true);
-            if (player.Animator != null)
-            {
-                player.Animator.RestoreAirborneState();
-            }
-        }
-    }
-
-    // =========================================================
-    // Pre-Execution Interrupt Guard
+    // Authored Action Output Context
     // =========================================================
 
     /// <summary>
-    /// Centralized guard that checks whether a new combat action should be
-    /// aborted BEFORE resolve/execute/cooldown. Call this at the top of
-    /// OnSkillInput / OnUltimateInput / OnAttackInput when currentPhase == None.
-    ///
-    /// Returns true if the action was aborted (state already exited).
+    /// Returns the state that a cancel or natural completion must commit before
+    /// the next action or locomotion state resolves.
     /// </summary>
-    protected bool ShouldAbortBeforeExecution()
+    public bool TryGetProjectedOutputContext(
+        out CombatActionOutputContext outputContext,
+        out bool startedGrounded)
     {
-        if (player.Movement == null) return false;
+        CombatAction action = capturedOutputAction ?? resolver.ActiveCombatAction;
+        outputContext = action != null
+            ? action.outputContext
+            : CombatActionOutputContext.MatchInput;
+        startedGrounded = capturedOutputAction != null
+            ? capturedActionStartedGrounded
+            : resolver.StartedGrounded;
+        return action != null;
+    }
+
+    protected void CommitResolvedActionOutput()
+    {
+        if (hasCommittedActionOutput
+            || !TryGetProjectedOutputContext(
+                out CombatActionOutputContext outputContext,
+                out bool startedGrounded))
+        {
+            return;
+        }
+
+        hasCommittedActionOutput = true;
+        fsm.CommitActionOutputContext(outputContext, startedGrounded);
+    }
+
+    protected override void ExitToAppropriateMovementState()
+    {
+        CommitResolvedActionOutput();
+        base.ExitToAppropriateMovementState();
+    }
 
         // Case 1: We just landed this frame — an airborne action would be
         // immediately interrupted on the next Update(), wasting its cooldown.
-        bool isGrounded = fsm.IsGroundedContext;
-        bool wasAirborneLastFrame = !prevFrameGrounded;
-        bool notMovingUp = player.Movement.VerticalVelocity <= 0.1f;
-
-        if (isGrounded && wasAirborneLastFrame && notMovingUp
-            && player.Combat != null && player.Combat.ShouldInterruptAttackOnGrounded())
-        {
-            fsm.Log("FSM", $"[{StateId}] Aborted: landing detected before execution", Color.yellow);
-            player.Combat.ResetCombo();
-            ExitToAppropriateMovementState();
-            return true;
-        }
-
-        return false;
-    }
 }

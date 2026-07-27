@@ -677,9 +677,15 @@ namespace CombatEditor.UI
                     MarkDirtyAndRebuild();
                 });
 
-                AddEnumField(body, "Context", action.context, value => {
-                    RecordUndo("Edit Context");
+                AddEnumField(body, "Input Context", action.context, value => {
+                    RecordUndo("Edit Input Context");
                     action.context = (CombatActionContext)value;
+                    MarkDirtyAndRebuild();
+                });
+
+                AddEnumField(body, "Output Context", action.outputContext, value => {
+                    RecordUndo("Edit Output Context");
+                    action.outputContext = (CombatActionOutputContext)value;
                     MarkDirtyAndRebuild();
                 });
 

@@ -12,7 +12,6 @@ public interface ICharacterCombat
     bool CanMoveAfterAttack();
     bool CanSwitchDirection();
     bool ShouldSuppressLandingFeedback();
-    bool IsInAirborneAction();
 
     // =========================================================
     // Combat Engine (used by PlayerAttackState)
@@ -27,7 +26,6 @@ public interface ICharacterCombat
     AttackStepData GetCurrentStepData();
     int GetComboStep();
     bool IsExecutingAutoChainStep { get; }
-    bool ShouldInterruptAttackOnGrounded();
     bool HasActiveHitstop { get; }
     bool HasGrabbedEnemy();
 

@@ -87,8 +87,8 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588255892939997284
-    cooldown: 0
-    energyCost: 100
+    cooldown: 20
+    energyCost: 80
     activationVFXType: 40
     activationVFXPrefab: {fileID: 784361931337648594, guid: 4c0e5d975c6ec9341ac97977330a4775, type: 3}
     activationVFXOffset: {x: 0, y: 2, z: 0}
@@ -202,7 +202,7 @@ MonoBehaviour:
           endFrame: 7
           taskType: 0
           easing: 16
-          position: {x: 0.3, y: 0.2, z: 0}
+          position: {x: 0.5, y: 0.2, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
         - startFrame: 7

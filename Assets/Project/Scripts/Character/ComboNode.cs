@@ -13,6 +13,13 @@ public enum CombatActionContext
     Both
 }
 
+public enum CombatActionOutputContext
+{
+    MatchInput,
+    Ground,
+    Air
+}
+
 public enum ActionDamageSourceStat
 {
     Attack,
@@ -29,14 +36,15 @@ public abstract class CombatAction
 
     public string ActionKey => !string.IsNullOrWhiteSpace(actionId) ? actionId : actionName;
     
-    [Header("Activation Conditions")]
+    [Header("Locomotion Context")]
+    [Tooltip("Environment context required when this action is selected.")]
     public CombatActionContext context = CombatActionContext.Ground;
+    [Tooltip("Environment context committed when the action completes or is cancelled. Match Input preserves the context captured when the action started.")]
+    public CombatActionOutputContext outputContext = CombatActionOutputContext.MatchInput;
+
+    [Header("Activation Conditions")]
     public int priority = 0;
     [SerializeReference] public List<ActionConditionBase> conditions = new List<ActionConditionBase>();
-
-    [Header("Ground Authority")]
-    [Tooltip("If this action starts on the ground, losing physical ground contact is allowed to promote it into an airborne action state.")]
-    public bool allowGroundToAirTransition = false;
 
     [Header("Action Damage")]
     [Tooltip("Stat used by this action's multiplier. Existing actions default to Attack.")]

@@ -51,8 +51,15 @@ public class PlayerStateMachine : MonoBehaviour
     public PlayerState CurrentState { get; private set; }
     public PlayerEnvironmentContext EnvironmentContext { get; private set; } =
         PlayerEnvironmentContext.Grounded;
-    public bool IsGroundedContext => EnvironmentContext == PlayerEnvironmentContext.Grounded;
-    public bool IsAirborneContext => EnvironmentContext == PlayerEnvironmentContext.Airborne;
+    private int actionRoutingContextOverrideDepth;
+    private PlayerEnvironmentContext actionRoutingContextOverride;
+    private bool reconcilePhysicalContextAfterAction;
+
+    public PlayerEnvironmentContext ActionSelectionContext =>
+        HasActionRoutingContextOverride ? actionRoutingContextOverride : EnvironmentContext;
+    public bool HasActionRoutingContextOverride => actionRoutingContextOverrideDepth > 0;
+    public bool IsGroundedContext => ActionSelectionContext == PlayerEnvironmentContext.Grounded;
+    public bool IsAirborneContext => ActionSelectionContext == PlayerEnvironmentContext.Airborne;
 
     // =========================================================
     // Centralized Input Buffer
@@ -96,6 +103,7 @@ public class PlayerStateMachine : MonoBehaviour
 
     void Update()
     {
+        ReconcilePhysicalContextIfNeeded();
         CurrentState?.Update();
     }
 
@@ -256,6 +264,7 @@ public class PlayerStateMachine : MonoBehaviour
     public void RouteJumpInput()
     {
         if (CurrentState == null) return;
+        using ActionOutputRoutingScope outputRouting = BeginCurrentActionOutputRouting();
 
         // State-first: let the current state try to consume the input
         if (CurrentState.HandleJumpInput())
@@ -322,6 +331,7 @@ public class PlayerStateMachine : MonoBehaviour
     public void RouteDashInput(float inputX)
     {
         if (CurrentState == null) return;
+        using ActionOutputRoutingScope outputRouting = BeginCurrentActionOutputRouting();
         if (CurrentState == DashState) return;
 
         // Always buffer the dash for mid-action consumption
@@ -394,6 +404,11 @@ public class PlayerStateMachine : MonoBehaviour
     /// </summary>
     public void NotifyGroundLost()
     {
+        if (CurrentState is CombatPlayerState)
+        {
+            return;
+        }
+
         EnvironmentContext = PlayerEnvironmentContext.Airborne;
 
         if (CurrentState == IdleState || CurrentState == MoveState || CurrentState == LandingState)
@@ -408,6 +423,11 @@ public class PlayerStateMachine : MonoBehaviour
     /// </summary>
     public void NotifyLanded()
     {
+        if (CurrentState is CombatPlayerState)
+        {
+            return;
+        }
+
         EnvironmentContext = PlayerEnvironmentContext.Grounded;
 
         if (CurrentState == JumpState || CurrentState == FallingState)
@@ -421,12 +441,63 @@ public class PlayerStateMachine : MonoBehaviour
         EnvironmentContext = PlayerEnvironmentContext.Airborne;
     }
 
+    public PlayerEnvironmentContext ResolveActionOutputContext(
+        CombatActionOutputContext outputContext,
+        bool startedGrounded)
+    {
+        return outputContext switch
+        {
+            CombatActionOutputContext.Ground => PlayerEnvironmentContext.Grounded,
+            CombatActionOutputContext.Air => PlayerEnvironmentContext.Airborne,
+            _ => startedGrounded
+                ? PlayerEnvironmentContext.Grounded
+                : PlayerEnvironmentContext.Airborne
+        };
+    }
+
+    public void BeginActionOutputRouting(
+        CombatActionOutputContext outputContext,
+        bool startedGrounded)
+    {
+        actionRoutingContextOverride = ResolveActionOutputContext(outputContext, startedGrounded);
+        actionRoutingContextOverrideDepth++;
+    }
+
+    public void EndActionOutputRouting()
+    {
+        actionRoutingContextOverrideDepth = Mathf.Max(0, actionRoutingContextOverrideDepth - 1);
+    }
+
+    public void CommitActionOutputContext(
+        CombatActionOutputContext outputContext,
+        bool startedGrounded)
+    {
+        PlayerEnvironmentContext resolvedContext =
+            ResolveActionOutputContext(outputContext, startedGrounded);
+        EnvironmentContext = resolvedContext;
+
+        bool physicallyGrounded = playerCharacter != null
+            && playerCharacter.Movement != null
+            && playerCharacter.Movement.IsPhysicallyGrounded();
+
+        if (resolvedContext == PlayerEnvironmentContext.Grounded
+            && playerCharacter != null
+            && playerCharacter.Movement != null)
+        {
+            physicallyGrounded = playerCharacter.Movement.SnapToGroundForActionOutput();
+        }
+
+        reconcilePhysicalContextAfterAction =
+            physicallyGrounded != (resolvedContext == PlayerEnvironmentContext.Grounded);
+    }
+
     /// <summary>
     /// Route skill pressed. State-first routing.
     /// </summary>
     public void RouteSkillInput()
     {
         if (CurrentState == null) return;
+        using ActionOutputRoutingScope outputRouting = BeginCurrentActionOutputRouting();
 
         if (ShouldPrioritizeBufferedJumpBeforeCombat())
         {
@@ -479,6 +550,7 @@ public class PlayerStateMachine : MonoBehaviour
     public void RouteUltimateInput()
     {
         if (CurrentState == null) return;
+        using ActionOutputRoutingScope outputRouting = BeginCurrentActionOutputRouting();
 
         InputBuffer.BufferUltimate();
 
@@ -558,6 +630,40 @@ public class PlayerStateMachine : MonoBehaviour
     // =========================================================
     // Private Methods
     // =========================================================
+    private ActionOutputRoutingScope BeginCurrentActionOutputRouting()
+    {
+        if (CurrentState is CombatPlayerState combatState
+            && combatState.TryGetProjectedOutputContext(
+                out CombatActionOutputContext outputContext,
+                out bool startedGrounded))
+        {
+            BeginActionOutputRouting(outputContext, startedGrounded);
+            return new ActionOutputRoutingScope(this, true);
+        }
+
+        return new ActionOutputRoutingScope(this, false);
+    }
+
+    private readonly struct ActionOutputRoutingScope : IDisposable
+    {
+        private readonly PlayerStateMachine stateMachine;
+        private readonly bool active;
+
+        public ActionOutputRoutingScope(PlayerStateMachine stateMachine, bool active)
+        {
+            this.stateMachine = stateMachine;
+            this.active = active;
+        }
+
+        public void Dispose()
+        {
+            if (active)
+            {
+                stateMachine.EndActionOutputRouting();
+            }
+        }
+    }
+
     private bool TryResolveStartAction(AttackCategory category, out CombatAction action, out AttackStepData step)
     {
         action = null;
@@ -633,6 +739,44 @@ public class PlayerStateMachine : MonoBehaviour
             return MoveState;
 
         return IdleState;
+    }
+
+    private void ReconcilePhysicalContextIfNeeded()
+    {
+        if (!reconcilePhysicalContextAfterAction
+            || CurrentState is FrameDataPlayerState
+            || playerCharacter == null
+            || playerCharacter.Movement == null)
+        {
+            return;
+        }
+
+        bool physicallyGrounded = playerCharacter.Movement.IsPhysicallyGrounded();
+        PlayerEnvironmentContext physicalContext = physicallyGrounded
+            ? PlayerEnvironmentContext.Grounded
+            : PlayerEnvironmentContext.Airborne;
+        reconcilePhysicalContextAfterAction = false;
+
+        if (EnvironmentContext == physicalContext)
+        {
+            return;
+        }
+
+        EnvironmentContext = physicalContext;
+        if (physicallyGrounded)
+        {
+            if (CurrentState == JumpState || CurrentState == FallingState)
+            {
+                ChangeState(LandingState);
+            }
+
+            return;
+        }
+
+        if (CurrentState == IdleState || CurrentState == MoveState || CurrentState == LandingState)
+        {
+            ChangeState(FallingState);
+        }
     }
 
     private bool ShouldPrioritizeBufferedJumpBeforeCombat()

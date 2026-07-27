@@ -613,8 +613,8 @@ MonoBehaviour:
       cooldownModifiers: []
       actionModifiers:
       - category: 1
-        actionId: 
-        actionName: Diamod Dust
+        actionId: shermie.skill
+        actionName:
         stepName: 
         unlocked: 1
         priorityBonus: 0
@@ -757,7 +757,7 @@ MonoBehaviour:
             overrideShield: 1
             shield:
               valueSource: 0
-              valueRatio: 0.2
+              valueRatio: 0.4
               flatValue: 0
               useSourceStats: 1
           childRecipes: []

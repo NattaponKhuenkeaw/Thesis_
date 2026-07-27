@@ -96,8 +96,6 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     public PlayerCharacter PlayerCharacter => playerCharacter;
     public Vector2 FacingDirection => GetFacingDirection();
-    private bool currentActionStartedGrounded;
-    private bool currentActionAllowsGroundToAirTransition;
     private bool isExecutingAutoChainStep;
     private GrabHitbox currentGrabHitbox;
     private bool hadGrabAtStepStart;
@@ -129,8 +127,6 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public bool IsExecutingAutoChainStep => isExecutingAutoChainStep;
     public bool HadGrabAtStepStart => hadGrabAtStepStart;
     public bool IsAirCombo => isAirCombo;
-    public bool CurrentActionStartedGrounded => currentActionStartedGrounded;
-    public bool CurrentActionAllowsGroundToAirTransition => currentActionAllowsGroundToAirTransition;
     public float CurrentActionDamageMultiplier => currentActionDamageMultiplier;
     public ActionDamageSourceStat CurrentActionDamageSourceStat => currentActionDamageSourceStat;
     public float CurrentActionDamageSourceValue => GetCurrentActionDamageSourceValue();
@@ -397,23 +393,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public bool IsAttacking() => currentPhase != ActionPhase.None && currentStepData != null;
     public bool IsActiveCombat() => IsAttacking() && currentPhase != ActionPhase.Done;
 
-    public bool ShouldInterruptAttackOnGrounded()
-    {
-        if (!IsAttacking())
-        {
-            return false;
-        }
-
-        return isAirCombo;
-    }
-
     public bool ShouldSuppressLandingFeedback() => false;
-
-    /// <summary>
-    /// Whether the player is currently in an airborne combat action.
-    /// The deterministic player motor suspends base vertical motion in this state.
-    /// </summary>
-    public bool IsInAirborneAction() => (currentPhase != ActionPhase.None) && isAirCombo;
     public int GetComboStep() => comboDepth;
     public bool CanSwitchDirection() => currentPhase == ActionPhase.None || currentPhase == ActionPhase.Startup;
     public bool CanMoveAfterAttack() => !IsAttacking();
@@ -632,14 +612,16 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         AddPendingCooldownReduction(categoryKey, seconds);
     }
 
+    [System.Obsolete("Use the action-owned input/output context overload.")]
     public void BeginResolvedAction(
         bool startedGrounded,
         bool airCombo,
         bool allowGroundToAirTransition,
-        CombatAction action)
+        CombatAction action) =>
+        BeginResolvedAction(airCombo, action);
+
+    public void BeginResolvedAction(bool airCombo, CombatAction action)
     {
-        currentActionStartedGrounded = startedGrounded;
-        currentActionAllowsGroundToAirTransition = allowGroundToAirTransition;
         isAirCombo = airCombo;
         bool beginsNewAction = action == null
             || currentResolvedCombatAction != action
@@ -709,8 +691,6 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         // hitstop is now global
         currentAttackFrame = 0;
         isAirCombo = false;
-        currentActionStartedGrounded = false;
-        currentActionAllowsGroundToAirTransition = false;
         isExecutingAutoChainStep = false;
         currentGrabHitbox = null;
         lastGrabParams = default;
@@ -756,8 +736,6 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             cachedAnimator.speed = 1f;
         }
 
-        currentActionStartedGrounded = false;
-        currentActionAllowsGroundToAirTransition = false;
         movement?.CancelAttackMotion();
         OnComboFinished?.Invoke();
     }

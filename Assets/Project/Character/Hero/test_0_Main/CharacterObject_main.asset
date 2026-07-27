@@ -49,11 +49,11 @@ MonoBehaviour:
     maxHpPerLevel: 81
   _dashData:
     animationClip: {fileID: 7400000, guid: a3c837dc24c5bff43b19dd4e52b327ab, type: 2}
-    startupFrames: 5
-    activeFrames: 12
-    recoveryFrames: 12
-    cancelWindowStartFrame: 25
-    dashSpeed: 25
+    startupFrames: 8
+    activeFrames: 18
+    recoveryFrames: 16
+    cancelWindowStartFrame: 39
+    dashSpeed: 15
     cooldownFrames: 24
   kitDefinition:
     skill:

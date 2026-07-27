@@ -83,10 +83,9 @@ public class PlayerAnimator : MonoBehaviour
         anim.SetBool(isGroundedHash, movement.GroundState.IsEffectivelyGrounded);
         anim.SetBool(isLandingHash, movement.IsLanding);
 
-        // Startup/Active remain dash-animation authoritative. Ground Dash
-        // Recovery returns locomotion control, so let Speed/facing drive the
-        // visible return to Run/Idle instead of showing a dead-control tail.
-        if (movement.IsDashing && !movement.IsGroundDashRecovery)
+        // Dash remains animation-authoritative until its authored cancel frame.
+        // Ground locomotion becomes visible at the same frame control returns.
+        if (movement.IsDashing && !movement.IsGroundDashCancelOpen)
         {
             anim.SetFloat(speedHash, 0f);
             anim.SetFloat(verticalVelocityHash, 0f);

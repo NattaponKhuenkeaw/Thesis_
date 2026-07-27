@@ -100,7 +100,7 @@ namespace CombatEditor.UI
                 {
                     var action = actions[i];
                     string displayLabel = (action is StandaloneAction sa && sa.isPlungeAction) ? "Plunge Attack" : action.actionName;
-                    string title = $"{titlePrefix} {displayLabel} ({action.context})";
+                    string title = $"{titlePrefix} {displayLabel} ({action.context} \u2192 {action.outputContext})";
                     string category = $"{categoryPrefix}_{i}";
 
                     System.Action deleteAction = () => {

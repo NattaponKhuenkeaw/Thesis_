@@ -201,7 +201,7 @@ public abstract class PlayerState
     /// Resolves the correct movement state to transition into after an action finishes.
     /// Checks airborne → grounded+moving → grounded+idle in priority order.
     /// </summary>
-    protected void ExitToAppropriateMovementState()
+    protected virtual void ExitToAppropriateMovementState()
     {
         if (player.Movement == null)
         {

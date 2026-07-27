@@ -57,7 +57,7 @@ MonoBehaviour:
     activeFrames: 27
     recoveryFrames: 13
     cancelWindowStartFrame: 32
-    dashSpeed: 15
+    dashSpeed: 18
     cooldownFrames: 24
   kitDefinition:
     skill:
