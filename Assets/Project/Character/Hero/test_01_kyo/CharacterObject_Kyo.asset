@@ -24,11 +24,11 @@ MonoBehaviour:
     speed: 11
     elementalMastery: 0
     critRate: 5
-    critDamage: 150
+    critDamage: 50
     cooldownRate: 0
     impact: 0
     damageReduction: 0
-    aeRecharge: 1
+    aeRecharge: 0
   metaData:
     displayName: Kyo
     description: "\u0E17\u0E32\u0E22\u0E32\u0E17\u0E15\u0E23\u0E30\u0E01\u0E39\u0E25\u0E04\u0E38\u0E0B\u0E32\u0E19\u0E32\u0E07\u0E34
@@ -57,7 +57,7 @@ MonoBehaviour:
     activeFrames: 27
     recoveryFrames: 13
     cancelWindowStartFrame: 32
-    dashSpeed: 18
+    dashSpeed: 10
     cooldownFrames: 24
   kitDefinition:
     skill:

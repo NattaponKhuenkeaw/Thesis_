@@ -256,7 +256,12 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         runInventory?.SetActiveTeamSlotIndex(currentIndex);
         lastSwitchTime = Time.time;
         LoadCurrentCharacter();
-        SnapPlayerToGround();
+        if (playerCharacter == null
+            || playerCharacter.StateMachine == null
+            || playerCharacter.StateMachine.IsGroundedContext)
+        {
+            SnapPlayerToGround();
+        }
         return true;
     }
 

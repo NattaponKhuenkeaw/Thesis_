@@ -34,7 +34,7 @@ public sealed class AuraEnergyRewardClaim
 /// </summary>
 public class PlayerCombat : MonoBehaviour, ICharacterCombat
 {
-    private const float AuraEnergyChanceReward = 10f;
+    private const float AuraEnergyChanceReward = 5f;
 
     [Header("Dependencies")]
     public PlayerCharacter playerCharacter;
@@ -393,7 +393,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public bool IsAttacking() => currentPhase != ActionPhase.None && currentStepData != null;
     public bool IsActiveCombat() => IsAttacking() && currentPhase != ActionPhase.Done;
 
-    public bool ShouldSuppressLandingFeedback() => false;
+    public bool ShouldSuppressLandingFeedback() => IsActiveCombat();
     public int GetComboStep() => comboDepth;
     public bool CanSwitchDirection() => currentPhase == ActionPhase.None || currentPhase == ActionPhase.Startup;
     public bool CanMoveAfterAttack() => !IsAttacking();
@@ -616,7 +616,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public void BeginResolvedAction(
         bool startedGrounded,
         bool airCombo,
-        bool allowGroundToAirTransition,
+        bool legacyGroundToAirFlag,
         CombatAction action) =>
         BeginResolvedAction(airCombo, action);
 
@@ -919,7 +919,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         CharacterStats stats = teamLoader.GetCharacterRuntimeStats(character);
         AuraEnergyRate auraEnergyRate = character.auraEnergyRate;
         float statMultiplier = stats != null
-            ? Mathf.Max(0f, stats.aeRecharge)
+            ? Mathf.Max(0f, 1f + stats.aeRecharge)
             : 1f;
 
         if (actionRewardClaim != null && actionRewardClaim.TryClaim())
@@ -1598,6 +1598,14 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     {
         if (isAirCombo && comboDepth > 0)
         {
+            // Physical contact is observed while an Air-output action remains
+            // active. PlayerMovement replays OnLand after the authored action
+            // ends, so the combo is reset only at that output reconciliation.
+            if (IsActiveCombat())
+            {
+                return;
+            }
+
             ResetCombo();
         }
     }

@@ -555,4 +555,26 @@ public class CombatRewardDamageTests
             Object.DestroyImmediate(enemyObject);
         }
     }
+
+    [Test]
+    public void CombatFormula_CritDamageAppliesBonusPercentage()
+    {
+        CharacterStats stats = new CharacterStats
+        {
+            critRate = 100f,
+            critDamage = 50f // 50% extra damage -> 1.5x total multiplier
+        };
+
+        float damage = CombatFormula.CalculateResolvedDamage(
+            100f,
+            DamageRoutine.Normal,
+            ElementType.None,
+            stats,
+            0f,
+            AttackCategory.Normal,
+            out bool isCrit);
+
+        Assert.That(isCrit, Is.True);
+        Assert.That(damage, Is.EqualTo(150f).Within(0.001f));
+    }
 }

@@ -837,7 +837,4 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         CommitResolvedActionOutput();
         base.ExitToAppropriateMovementState();
     }
-
-        // Case 1: We just landed this frame — an airborne action would be
-        // immediately interrupted on the next Update(), wasting its cooldown.
 }

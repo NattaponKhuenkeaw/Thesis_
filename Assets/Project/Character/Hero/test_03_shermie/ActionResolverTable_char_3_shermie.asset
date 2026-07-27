@@ -16,9 +16,9 @@ MonoBehaviour:
   - actionId: 
     actionName: Ground Combo
     context: 0
+    outputContext: 1
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 8
     auraEnergyReward: 0
@@ -30,9 +30,9 @@ MonoBehaviour:
   - actionId: 
     actionName: Air Combo
     context: 1
+    outputContext: 2
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 3
     auraEnergyReward: 0
@@ -45,9 +45,9 @@ MonoBehaviour:
   - actionId: shermie.skill
     actionName: Diamod Dust
     context: 0
+    outputContext: 1
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 5.5
     auraEnergyReward: 7
@@ -60,10 +60,10 @@ MonoBehaviour:
   - actionId: shermie.skill.ex
     actionName: Shermie Crush
     context: 0
+    outputContext: 1
     priority: 0
     conditions:
     - rid: 3612913050244874240
-    allowGroundToAirTransition: 0
     damageSourceStat: 1
     actionDamageMultiplier: 0.12
     auraEnergyReward: 10
@@ -77,9 +77,9 @@ MonoBehaviour:
   - actionId: shermie.ultimate
     actionName: Shermie Carnival
     context: 0
+    outputContext: 1
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 8.5
     auraEnergyReward: 5
@@ -142,7 +142,7 @@ MonoBehaviour:
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
         keyframes:
-        - startFrame: 1
+        - startFrame: 2
           endFrame: 32
           taskType: 0
           easing: 34
@@ -733,11 +733,11 @@ MonoBehaviour:
             speed: 10
             elementalMastery: 0
             critRate: 5
-            critDamage: 150
+            critDamage: 50
             cooldownRate: 0
             impact: 0
             damageReduction: 0
-            aeRecharge: 1
+            aeRecharge: 0
           sourceCategory: 0
           sourceActionId: 
           sourceActionName: 

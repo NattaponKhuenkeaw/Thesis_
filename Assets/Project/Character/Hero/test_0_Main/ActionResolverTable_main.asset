@@ -16,9 +16,9 @@ MonoBehaviour:
   - actionId: 
     actionName: Ground
     context: 0
+    outputContext: 0
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 5
     auraEnergyReward: 0
@@ -30,9 +30,9 @@ MonoBehaviour:
   - actionId: 
     actionName: Air
     context: 1
+    outputContext: 0
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 2
     auraEnergyReward: 0
@@ -45,12 +45,12 @@ MonoBehaviour:
   - actionId: main.skill.dark_chain
     actionName: Dark Chain
     context: 0
+    outputContext: 0
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 3.5
-    auraEnergyReward: 5
+    auraEnergyReward: 10
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
@@ -61,9 +61,9 @@ MonoBehaviour:
   - actionId: main.ultimate.jailbreak_punisher
     actionName: Jailbreak Punisher
     context: 0
+    outputContext: 0
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 7
     auraEnergyReward: 0

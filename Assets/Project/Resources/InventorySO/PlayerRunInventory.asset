@@ -38,8 +38,8 @@ MonoBehaviour:
       attackPerLevel: 6.1
       defensePerLevel: 4.2
       maxHpPerLevel: 81
-    currentHP: 813
-    currentAE: 100
+    currentHP: 740.53625
+    currentAE: 60
     activeEffects: []
     hasTickingEffects: 0
   - character: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
@@ -50,8 +50,8 @@ MonoBehaviour:
       attackPerLevel: 5.2
       defensePerLevel: 4.4
       maxHpPerLevel: 80
-    currentHP: 892
-    currentAE: 80
+    currentHP: 819.0073
+    currentAE: 16
     activeEffects:
     - definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
       sourceCharacter: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
@@ -62,11 +62,11 @@ MonoBehaviour:
         speed: 11
         elementalMastery: 0
         critRate: 5
-        critDamage: 150
+        critDamage: 50
         cooldownRate: 0
         impact: 0
         damageReduction: 0
-        aeRecharge: 1
+        aeRecharge: 0
       remainingSeconds: -1
       appliedDurationSeconds: -1
       elapsedSeconds: 0
@@ -95,7 +95,7 @@ MonoBehaviour:
       attackPerLevel: 4.7
       defensePerLevel: 5.5
       maxHpPerLevel: 95
-    currentHP: 1250
+    currentHP: 1060.8923
     currentAE: 50
     activeEffects: []
     hasTickingEffects: 0
@@ -121,15 +121,31 @@ MonoBehaviour:
       maxHpPerLevel: 69.7
     currentHP: 651
     currentAE: 100
-    activeEffects: []
+    activeEffects:
+    - definition: {fileID: 11400000, guid: 5527da15b2ed4559a6d6bbdc2eea2994, type: 2}
+      sourceCharacter: {fileID: 11400000, guid: 862c5f94563edd64bac74e8fbcce835c, type: 2}
+      sourceStatsSnapshot:
+        maxHP: 651
+        attack: 59
+        defense: 42
+        speed: 6.5
+        elementalMastery: 0
+        critRate: 5
+        critDamage: 50
+        cooldownRate: 0
+        impact: 0
+        damageReduction: 0
+        aeRecharge: 0
+      remainingSeconds: -1
+      appliedDurationSeconds: -1
+      elapsedSeconds: 0
+      nextTickAt: 0
+      stackCount: 1
+      remainingShieldAmount: 0
+      appliedShieldAmount: 0
     hasTickingEffects: 0
   teamSlots:
-  - character: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
-    artifacts:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-  - character: {fileID: 11400000, guid: a2f28494c803e0b49a390a31a390a787, type: 2}
+  - character: {fileID: 11400000, guid: 27891cf9824752045b475995e212e47e, type: 2}
     artifacts:
     - {fileID: 0}
     - {fileID: 0}
@@ -139,4 +155,9 @@ MonoBehaviour:
     - {fileID: 0}
     - {fileID: 0}
     - {fileID: 0}
-  activeTeamSlotIndex: 0
+  - character: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
+    artifacts:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+  activeTeamSlotIndex: 2

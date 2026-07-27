@@ -16,9 +16,9 @@ MonoBehaviour:
   - actionId: 
     actionName: Ground Combo
     context: 0
+    outputContext: 0
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 7.5
     auraEnergyReward: 0
@@ -30,9 +30,9 @@ MonoBehaviour:
   - actionId: 
     actionName: Air Combo
     context: 1
+    outputContext: 0
     priority: 1
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 3
     auraEnergyReward: 0
@@ -45,9 +45,9 @@ MonoBehaviour:
   - actionId: rugal.skill
     actionName: Genocide Cutter
     context: 2
+    outputContext: 0
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 4
     auraEnergyReward: 10
@@ -60,10 +60,10 @@ MonoBehaviour:
   - actionId: rugal.skill.ex
     actionName: Genocide Cutter (EX)
     context: 2
+    outputContext: 0
     priority: 10
     conditions:
     - rid: 3612912868654055999
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 12
     auraEnergyReward: 10
@@ -77,9 +77,9 @@ MonoBehaviour:
   - actionId: rugal.ultimate
     actionName: Gigantic Pressure
     context: 0
+    outputContext: 0
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 8
     auraEnergyReward: 0
@@ -841,14 +841,14 @@ MonoBehaviour:
           endFrame: 19
           taskType: 0
           easing: 16
-          position: {x: 0, y: 1, z: 0}
+          position: {x: 0, y: 1.5, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
         - startFrame: 34
-          endFrame: 56
+          endFrame: 60
           taskType: 0
           easing: 16
-          position: {x: 0, y: -1, z: 0}
+          position: {x: 0, y: -1.5, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
     - rid: 1588255929706479997

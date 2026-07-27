@@ -19,7 +19,7 @@ public static class CombatFormula
 
         bool canCrit = CanRoutineCrit(routine);
         float critRate = attackerStats != null ? Mathf.Max(0f, attackerStats.critRate) : 0f;
-        float critDamage = attackerStats != null ? Mathf.Max(0f, attackerStats.critDamage) : 150f;
+        float critDamage = attackerStats != null ? Mathf.Max(0f, attackerStats.critDamage) : 50f;
         isCrit = canCrit && Random.Range(0f, 100f) <= critRate;
 
         float resolvedDamage = mitigatedDamage;
@@ -43,7 +43,7 @@ public static class CombatFormula
 
         if (isCrit)
         {
-            resolvedDamage *= critDamage / 100f;
+            resolvedDamage *= 1f + (critDamage / 100f);
         }
 
         return Mathf.Max(0f, resolvedDamage);

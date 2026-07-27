@@ -366,6 +366,8 @@ public class PlayerMovement : MonoBehaviour
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
             lastAppliedMotionVelocityY = 0f;
+            ResetLandingResources();
+            landingFramesRemaining = 0;
             return true;
         }
 
@@ -411,12 +413,28 @@ public class PlayerMovement : MonoBehaviour
         GroundState.Tick(true, 0f);
         CacheGroundCheckPosition();
         ResetLandingResources();
-        landingFramesRemaining = ShouldSuppressLandingFeedback() ? 0 : P.landingRecoveryFrames;
-        OnLand?.Invoke();
+        landingFramesRemaining = 0;
         return true;
     }
 
 
+
+    /// <summary>
+    /// Replays the physical landing only after an Air-output action has ended.
+    /// Contact detected during the action updates physics immediately but cannot
+    /// interrupt the authored action animation, combo, or locomotion context.
+    /// </summary>
+    public void BeginLandingAfterAirActionOutput()
+    {
+        if (!GroundState.IsGrounded || !EnsureProfileAssigned())
+        {
+            return;
+        }
+
+        ResetLandingResources();
+        landingFramesRemaining = P.landingRecoveryFrames;
+        OnLand?.Invoke();
+    }
 
     public void FinishDash()
     {

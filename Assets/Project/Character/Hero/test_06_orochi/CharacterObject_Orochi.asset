@@ -24,11 +24,11 @@ MonoBehaviour:
     speed: 6.5
     elementalMastery: 0
     critRate: 5
-    critDamage: 150
+    critDamage: 50
     cooldownRate: 0
     impact: 0
     damageReduction: 0
-    aeRecharge: 1
+    aeRecharge: 0
   metaData:
     displayName: Orochi
     description: "Orochi is a deity whose purpose is to protect Gaia, considering

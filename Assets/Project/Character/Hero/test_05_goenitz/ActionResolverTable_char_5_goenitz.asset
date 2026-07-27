@@ -16,9 +16,9 @@ MonoBehaviour:
   - actionId: goenitz.basic.ground
     actionName: Ground
     context: 0
+    outputContext: 0
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 9
     auraEnergyReward: 0
@@ -30,9 +30,9 @@ MonoBehaviour:
   - actionId: goenitz.basic.air
     actionName: Air
     context: 1
+    outputContext: 0
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 7
     auraEnergyReward: 0
@@ -45,9 +45,9 @@ MonoBehaviour:
   - actionId: goenitz.skill.yonokaze
     actionName: Yonokaze
     context: 0
+    outputContext: 0
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 3.5
     auraEnergyReward: 0
@@ -61,9 +61,9 @@ MonoBehaviour:
   - actionId: goenitz.ultimate.yamidokoku
     actionName: Yamidokoku
     context: 0
+    outputContext: 0
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 8.5
     auraEnergyReward: 0
@@ -72,7 +72,7 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588256193077837929
-    cooldown: 17
+    cooldown: 18
     energyCost: 70
     activationVFXType: 0
     activationVFXPrefab: {fileID: 0}
@@ -80,14 +80,14 @@ MonoBehaviour:
     activationVoice: {fileID: 8300000, guid: eac3ad0f9e2cf834c96b0930a5e7c8bb, type: 3}
     activationSFX: {fileID: 8300000, guid: 89828ad405b7a3242a87e2d30d0cadeb, type: 3}
     voiceDelay: 0.1
-    useDashAfterImage: 0
+    useDashAfterImage: 1
   - actionId: goenitz.ultimate2.shin.yaotome
     actionName: 'Shin Yaotome : Jissokoku'
     context: 0
+    outputContext: 0
     priority: 10
     conditions:
     - rid: 3612912846363689063
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 8.5
     auraEnergyReward: 0

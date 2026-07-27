@@ -228,6 +228,7 @@ public class PlayerStateMachine : MonoBehaviour
         if (IdleState == null)
             InitializeStates();
 
+        using ActionOutputRoutingScope outputRouting = BeginCurrentActionOutputRouting();
         InputBuffer?.ClearAll();
 
         if (CurrentState is FrameDataPlayerState || CurrentState == AttackState || CurrentState == SkillState || CurrentState == UltimateState)
@@ -364,6 +365,7 @@ public class PlayerStateMachine : MonoBehaviour
     public void RouteAttackInput()
     {
         if (CurrentState == null) return;
+        using ActionOutputRoutingScope outputRouting = BeginCurrentActionOutputRouting();
 
         if (ShouldPrioritizeBufferedJumpBeforeCombat())
         {
@@ -765,6 +767,8 @@ public class PlayerStateMachine : MonoBehaviour
         EnvironmentContext = physicalContext;
         if (physicallyGrounded)
         {
+            playerCharacter.Movement.BeginLandingAfterAirActionOutput();
+
             if (CurrentState == JumpState || CurrentState == FallingState)
             {
                 ChangeState(LandingState);

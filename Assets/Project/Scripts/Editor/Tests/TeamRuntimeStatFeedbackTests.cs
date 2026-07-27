@@ -533,7 +533,7 @@ public class TeamRuntimeStatFeedbackTests
 
             character.characterId = "hp-tag-character";
             character.stats.maxHP = 100f;
-            character.stats.aeRecharge = 1f;
+            character.stats.aeRecharge = 0f;
             character.kitDefinition.basePassiveNode.statModifiers.Add(new PassiveStatModifierDefinition
             {
                 target = PassiveModifierTarget.AuraEnergyRecharge,
@@ -594,12 +594,12 @@ public class TeamRuntimeStatFeedbackTests
             teamLoader.RefreshRuntimeStatsAndResources();
 
             Assert.That(passiveController.RuntimeState.HasTag(highHpTag), Is.True);
-            Assert.That(teamLoader.GetCharacterRuntimeStats(character).aeRecharge, Is.EqualTo(1.25f).Within(0.001f));
+            Assert.That(teamLoader.GetCharacterRuntimeStats(character).aeRecharge, Is.EqualTo(0.25f).Within(0.001f));
 
             teamLoader.SetCharacterCurrentHP(character, 60f);
 
             Assert.That(passiveController.RuntimeState.HasTag(highHpTag), Is.False);
-            Assert.That(teamLoader.GetCharacterRuntimeStats(character).aeRecharge, Is.EqualTo(1f).Within(0.001f));
+            Assert.That(teamLoader.GetCharacterRuntimeStats(character).aeRecharge, Is.EqualTo(0f).Within(0.001f));
         }
         finally
         {
@@ -624,7 +624,7 @@ public class TeamRuntimeStatFeedbackTests
             const string tag = "test.hp.above.70";
 
             character.characterId = "always-filter-character";
-            character.stats.aeRecharge = 1f;
+            character.stats.aeRecharge = 0f;
             statEffect.effectId = "test.always_filtered_ae_recharge";
 
             character.kitDefinition.basePassiveNode.runtimeEffects.Add(new PassiveRuntimeEffectDefinition

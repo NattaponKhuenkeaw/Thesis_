@@ -16,9 +16,9 @@ MonoBehaviour:
   - actionId: kyo.basic.ground
     actionName: Ground
     context: 0
+    outputContext: 1
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 4
     auraEnergyReward: 0
@@ -30,9 +30,9 @@ MonoBehaviour:
   - actionId: kyo.basic.air
     actionName: Air
     context: 1
+    outputContext: 2
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 3
     auraEnergyReward: 0
@@ -45,9 +45,9 @@ MonoBehaviour:
   - actionId: kyo.skill.ground
     actionName: Flame Gather
     context: 0
+    outputContext: 1
     priority: 1
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 3.5
     auraEnergyReward: 3
@@ -60,9 +60,9 @@ MonoBehaviour:
   - actionId: kyo.skill.air
     actionName: Fireball
     context: 1
+    outputContext: 2
     priority: 1
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 4
     auraEnergyReward: 3
@@ -76,9 +76,9 @@ MonoBehaviour:
   - actionId: kyo.ultimate
     actionName: "108 Shiki \u2022 Yami Barai"
     context: 0
+    outputContext: 1
     priority: 1
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 7
     auraEnergyReward: 3
@@ -99,10 +99,10 @@ MonoBehaviour:
   - actionId: kyo.ultimate.ex
     actionName: 182 Shiki
     context: 0
+    outputContext: 1
     priority: 10
     conditions:
     - rid: 3612912913179476115
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 7
     auraEnergyReward: 20

@@ -173,7 +173,15 @@ Every character has actions governed by distinct Wind-up (SF), Active (AF), and 
 - **Skill**: Custom ability. Cancels BA. Cooldown-gated. A/D inputs steer/alter trajectory or form.
 - **Ultimate (Ult)**: High-damage finisher. Cancels Skill. Requires the character's Aura Energy meter to reach the authored Ultimate cost.
 
-Every authored action declares a **Ground**, **Air**, or **Both** cast context. Ground and Air actions use their matching FSM route; a ground-cast `Both` action remains ground-authoritative even if authored motion briefly lifts the collider. This keeps action selection and cancel routing predictable without requiring extended aerial-combo systems.
+Every authored combat action declares an **Input Context** (`Ground`, `Air`, or `Both`) and an **Output Context** (`MatchInput`, `Ground`, or `Air`):
+
+- Input context is captured when the action is selected and remains locked for the complete action. Physical support changes do not reclassify or interrupt the action.
+- `MatchInput` preserves the captured input context. An explicit `Ground` or `Air` output supports actions such as grounded launchers that deliberately end airborne.
+- Authored MotionData is the sole action-motion authority. Normal locomotion gravity does not compete with MotionData during Startup, Active, Recovery, or Cancel.
+- Natural completion or an accepted cancel commits the authored output before the next action, locomotion state, or team switch resolves.
+- A `Ground` output snaps to valid ground and returns direct grounded control without an extra Landing lock. An `Air` output first resolves Air; if the collider is already supported, the FSM then performs `Landing -> Idle/Move`.
+- Physical contact remains observable by explicitly authored environmental triggers such as `Require Just Landed`, but it cannot change the locked action context by itself.
+- The authored Cancel frame is the universal control/cancel boundary. Recovery remains part of the committed action unless its interrupt policy explicitly permits an earlier transition.
 
 Actions should avoid unnecessary position or gravity locks. Only authored movement actions such as Dash/Jump should override locomotion strongly enough to prevent normal control from behaving as expected.
 
@@ -708,7 +716,7 @@ flowchart TD
 | Layer | Responsibility |
 |-------|---------------|
 | `PlayerCharacter` (Facade) | Owns the active `CharacterObject` and connects movement, combat, animation, audio, passive controller, runtime effects, and FSM. |
-| `PlayerStateMachine` + `ActionInputBuffer` | State-authorized locomotion/action transitions, time-based action buffers, ground/air routing, and legal switch windows. |
+| `PlayerStateMachine` + `ActionInputBuffer` | State-authorized locomotion/action transitions, time-based action buffers, captured action input context, committed action output context, and legal switch windows. |
 | `FrameDataPlayerState` | Executes authored Startup, Active, Recovery, Cancel, and Done phases while states decide which buffered actions may interrupt. |
 | `PlayerCombat` + `ActionResolver` | Resolves the current action/step, hitboxes, projectiles, cooldowns, damage attribution, and Aura Energy rewards. |
 | `CharacterObject` + `CharacterKitDefinition` | Primary authored character data: stats, movement, actions, role/element, passive recipes, and Potential nodes. |
