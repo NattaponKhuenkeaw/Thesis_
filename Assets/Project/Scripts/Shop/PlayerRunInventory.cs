@@ -163,6 +163,8 @@ namespace Project.ShopSystem
         private const int DefaultArtifactSlotCount = 3;
         private const int DefaultCurrency = 1000;
         private const string SaveKey = "project.player_run_inventory.v2";
+        /// <summary>Step 1 (Not Perma): run inventory must not persist items/team/characters across sessions.</summary>
+        private const bool PersistRunInventoryAcrossSessions = false;
         private const string DefaultCharacterItemId = "char-0-main";
         private const string DefaultCharacterItemResourcePath = "ItemSO/char_0_Main";
         private static readonly int RuntimeEffectStatTargetCount = Enum.GetValues(typeof(RuntimeEffectStatTarget)).Length;
@@ -426,7 +428,8 @@ namespace Project.ShopSystem
 
             activeTeamSlotIndex = 0;
             AddUnlockedRosterItems(metaProgression);
-            AddPermanentItems(metaProgression);
+            // Step 1 (Not Perma): do not restore permanent dungeon items into the next run.
+            // AddPermanentItems(metaProgression);
             PostInventoryMutation(save: true);
         }
 
@@ -451,6 +454,51 @@ namespace Project.ShopSystem
         {
             EnsureRunData();
             return CountTeamCharacters() > 0;
+        }
+
+        public int GetDeployedTeamMemberCount()
+        {
+            EnsureRunData();
+            return CountTeamCharacters();
+        }
+
+        /// <summary>
+        /// Clears run-scoped loot/progression while keeping the currently deployed lobby team loadout.
+        /// </summary>
+        public bool TryPrepareForNewRun(int minimumTeamMembers, out string failureReason)
+        {
+            EnsureRunData();
+
+            int deployedCount = CountTeamCharacters();
+            if (deployedCount < Mathf.Max(1, minimumTeamMembers))
+            {
+                failureReason = $"Deploy at least {Mathf.Max(1, minimumTeamMembers)} team member(s) before starting a run.";
+                return false;
+            }
+
+            CharacterObject[] teamSnapshot = GetTeamSnapshot();
+            int activeIndex = activeTeamSlotIndex;
+            Artifact[][] artifactSnapshot = BuildTeamArtifactSnapshot(teamSnapshot.Length);
+
+            itemStacks.Clear();
+            currency = DefaultCurrency;
+            runCharacters.Clear();
+
+            for (int i = ownedItems.Count - 1; i >= 0; i--)
+            {
+                BaseItem item = ownedItems[i];
+                if (item == null || item is CharacterItem)
+                {
+                    continue;
+                }
+
+                ownedItems.RemoveAt(i);
+            }
+
+            DeployTeam(teamSnapshot, activeIndex, artifactSnapshot);
+            PostInventoryMutation(save: false);
+            failureReason = null;
+            return true;
         }
 
         public void DeployTeam(CharacterObject[] characters, int preferredIndex, Artifact[][] artifactsBySlot = null)
@@ -1301,6 +1349,11 @@ namespace Project.ShopSystem
                 return;
             }
 
+            if (!PersistRunInventoryAcrossSessions)
+            {
+                return;
+            }
+
             EnsureRunData();
 
             SavedPlayerRunInventoryData data = new SavedPlayerRunInventoryData
@@ -1383,6 +1436,18 @@ namespace Project.ShopSystem
             hasLoadedPersistentState = true;
             EnsureInventoryData();
             EnsureTeamSlotCapacity(DefaultTeamSlotCount);
+
+            if (!PersistRunInventoryAcrossSessions)
+            {
+                if (PlayerPrefs.HasKey(SaveKey))
+                {
+                    PlayerPrefs.DeleteKey(SaveKey);
+                    PlayerPrefs.Save();
+                }
+
+                EnsurePlayableState();
+                return;
+            }
 
             string json = PlayerPrefs.GetString(SaveKey, string.Empty);
             if (string.IsNullOrWhiteSpace(json))
@@ -2301,6 +2366,18 @@ namespace Project.ShopSystem
             }
 
             return count;
+        }
+
+        private Artifact[][] BuildTeamArtifactSnapshot(int slotCount)
+        {
+            int resolvedSlotCount = Mathf.Max(DefaultTeamSlotCount, slotCount, teamSlots != null ? teamSlots.Length : 0);
+            Artifact[][] snapshot = new Artifact[resolvedSlotCount][];
+            for (int i = 0; i < resolvedSlotCount; i++)
+            {
+                snapshot[i] = GetEquippedArtifactsAt(i);
+            }
+
+            return snapshot;
         }
 
         private int CountOwnedItems()

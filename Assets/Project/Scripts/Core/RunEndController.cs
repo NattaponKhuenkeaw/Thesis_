@@ -139,12 +139,13 @@ namespace Project.Core.RunEnd
             metaProgression?.SavePersistentState();
             runInventory?.ResetRunProgressForDeath(metaProgression);
 
-            if (runResultUI == null)
-            {
-                runResultUI = gameObject.AddComponent<RunResultUI>();
-            }
-
-            runResultUI.Show(snapshot, ReturnToLobby);
+            // Step 1 (Not Perma): skip Run Result screen; return to Lobby immediately after death bookkeeping.
+            // if (runResultUI == null)
+            // {
+            //     runResultUI = gameObject.AddComponent<RunResultUI>();
+            // }
+            // runResultUI.Show(snapshot, ReturnToLobby);
+            ReturnToLobby();
         }
 
         private void ReturnToLobby()
@@ -506,9 +507,10 @@ namespace Project.Core.RunEnd
 
             switch (GetRetentionPolicy(item))
             {
-                case ItemRetentionPolicy.KeepPermanent:
-                    ProcessKeepPermanentReward(item, resolvedQuantity, snapshot);
-                    break;
+                // Step 1 (Not Perma): run characters/items must not become permanent meta inventory.
+                // case ItemRetentionPolicy.KeepPermanent:
+                //     ProcessKeepPermanentReward(item, resolvedQuantity, snapshot);
+                //     break;
                 case ItemRetentionPolicy.ConvertOnDeath:
                     int fragmentAmount = Mathf.Max(1, item.deathConversionFragmentAmount) * resolvedQuantity;
                     metaProgression.AddFragments(item, fragmentAmount);

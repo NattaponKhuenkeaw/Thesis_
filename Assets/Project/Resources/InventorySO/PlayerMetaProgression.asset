@@ -12,17 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49a8e553d4c07b3459651c53e66b2fde, type: 3}
   m_Name: PlayerMetaProgression
   m_EditorClassIdentifier: Assembly-CSharp::Project.Progression.PlayerMetaProgression
-  fragments: []
-  characterPotentials:
-  - characterId: char_3_shermie
-    skillLevel: 4
-    ultimateLevel: 4
-    passiveLevel: 4
-  - characterId: char_5_goenitz
-    skillLevel: 4
-    ultimateLevel: 4
-    passiveLevel: 4
-  - characterId: char_1_kyo
-    skillLevel: 4
-    ultimateLevel: 4
-    passiveLevel: 4
+  metaCurrency: 0
+  fragments:
+  - sourceItemId: char-0-main
+    displayName: Main Fragment
+    fragmentType: 0
+    quantity: 1
+  characterPotentials: []
+  unlockedCharacterIds:
+  - char-0-main
+  - char_3_shermie
+  permanentItems: []

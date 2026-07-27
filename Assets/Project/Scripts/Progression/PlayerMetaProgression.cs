@@ -68,6 +68,7 @@ namespace Project.Progression
     [Serializable]
     internal class SavedPlayerMetaProgressionData
     {
+        public int metaCurrency;
         public List<ProgressionFragmentStack> fragments = new List<ProgressionFragmentStack>();
         public List<CharacterPotentialProgress> characterPotentials = new List<CharacterPotentialProgress>();
         public List<string> unlockedCharacterIds = new List<string>();
@@ -78,6 +79,11 @@ namespace Project.Progression
     public class PlayerMetaProgression : ScriptableObject
     {
         private const string SaveKey = "project.player_meta_progression.v1";
+        /// <summary>Step 1 (Not Perma): meta save keeps fragments/potential only — not permanent dungeon items.</summary>
+        private const bool PersistPermanentItemsInMeta = false;
+
+        [Header("Meta Currency (Lobby / Permanent Upgrades)")]
+        [SerializeField] private int metaCurrency;
 
         [Header("Unused Upgrade Materials")]
         [SerializeField] private List<ProgressionFragmentStack> fragments = new List<ProgressionFragmentStack>();
@@ -98,6 +104,42 @@ namespace Project.Progression
         public IReadOnlyList<CharacterPotentialProgress> CharacterPotentials => characterPotentials;
         public IReadOnlyList<string> UnlockedCharacterIds => unlockedCharacterIds;
         public IReadOnlyList<PermanentItemStack> PermanentItems => permanentItems;
+        public int MetaCurrency => Mathf.Max(0, metaCurrency);
+
+        public bool CanAffordMetaCurrency(int amount)
+        {
+            return amount <= 0 || MetaCurrency >= amount;
+        }
+
+        public void AddMetaCurrency(int amount)
+        {
+            if (amount <= 0)
+            {
+                return;
+            }
+
+            EnsureData();
+            metaCurrency = Mathf.Max(0, metaCurrency + amount);
+            SavePersistentState();
+        }
+
+        public bool TrySpendMetaCurrency(int amount)
+        {
+            if (amount <= 0)
+            {
+                return true;
+            }
+
+            EnsureData();
+            if (metaCurrency < amount)
+            {
+                return false;
+            }
+
+            metaCurrency -= amount;
+            SavePersistentState();
+            return true;
+        }
 
         private void OnEnable()
         {
@@ -219,11 +261,17 @@ namespace Project.Progression
             characterPotentials.Clear();
             unlockedCharacterIds.Clear();
             permanentItems.Clear();
+            metaCurrency = 0;
             SavePersistentState();
         }
 
         public int AddPermanentItem(BaseItem item, int amount = 1)
         {
+            if (!PersistPermanentItemsInMeta)
+            {
+                return 0;
+            }
+
             if (item == null || amount <= 0)
             {
                 return 0;
@@ -503,7 +551,10 @@ namespace Project.Progression
         public string ExportJson()
         {
             EnsureData();
-            SavedPlayerMetaProgressionData data = new SavedPlayerMetaProgressionData();
+            SavedPlayerMetaProgressionData data = new SavedPlayerMetaProgressionData
+            {
+                metaCurrency = Mathf.Max(0, metaCurrency)
+            };
 
             for (int i = 0; i < fragments.Count; i++)
             {
@@ -550,6 +601,11 @@ namespace Project.Progression
 
             for (int i = 0; i < permanentItems.Count; i++)
             {
+                if (!PersistPermanentItemsInMeta)
+                {
+                    break;
+                }
+
                 PermanentItemStack stack = permanentItems[i];
                 if (stack == null || stack.quantity <= 0 || string.IsNullOrWhiteSpace(stack.itemId))
                 {
@@ -571,6 +627,7 @@ namespace Project.Progression
         {
             EnsureData();
             isApplyingPersistentState = true;
+            metaCurrency = 0;
             fragments.Clear();
             characterPotentials.Clear();
             unlockedCharacterIds.Clear();
@@ -581,6 +638,8 @@ namespace Project.Progression
                 SavedPlayerMetaProgressionData data = JsonUtility.FromJson<SavedPlayerMetaProgressionData>(json);
                 if (data != null)
                 {
+                    metaCurrency = Mathf.Max(0, data.metaCurrency);
+
                     if (data.fragments != null)
                     {
                         for (int i = 0; i < data.fragments.Count; i++)
@@ -633,7 +692,7 @@ namespace Project.Progression
                         }
                     }
 
-                    if (data.permanentItems != null)
+                    if (data.permanentItems != null && PersistPermanentItemsInMeta)
                     {
                         for (int i = 0; i < data.permanentItems.Count; i++)
                         {

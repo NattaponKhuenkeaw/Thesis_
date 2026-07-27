@@ -38,9 +38,8 @@ namespace Project.InventorySystem.Items
                     return retentionPolicy;
                 }
 
-                return this is CharacterItem
-                    ? ItemRetentionPolicy.KeepPermanent
-                    : ItemRetentionPolicy.LoseOnDeath;
+                // Step 1 (Not Perma): characters are run-scoped; only meta fragments/currency persist.
+                return ItemRetentionPolicy.LoseOnDeath;
             }
         }
     }
