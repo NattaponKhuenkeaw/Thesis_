@@ -226,8 +226,17 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         TryStartCooldown();
     }
 
+    protected override void HandleInputDuringCancel()
+    {
+        // Auto-chain is a structural step transition, so it must still win
+        // when an authored Cancel window begins on the first Recovery frame.
+        if (TryAutoChain()) return;
+        base.HandleInputDuringCancel();
+    }
+
     protected override void OnActionComplete()
     {
+        CaptureCompletedStepBoundaryContext();
         TryStartCooldown();
         player.Combat?.ResetCombo();
         ExitToAppropriateMovementState();
@@ -293,13 +302,65 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     {
         if (!resolver.IsActive) return false;
 
-        InputContext ctx = BuildInputContext();
-        AttackStepData nextStep = resolver.ResolveNext(ctx);
+        InputContext ctx = BuildStepBoundaryInputContext();
+        bool contextChanged = ctx.isGrounded != resolver.StartedGrounded;
+        AttackStepData nextStep;
+
+        if (contextChanged)
+        {
+            // A completed step that crossed a ground boundary must not keep
+            // walking the old tree. Re-resolve the same input category from
+            // the matching Ground/Air action root.
+            ctx.actionAvailabilityProvider = null;
+            ActionResolver previewResolver = new ActionResolver();
+            nextStep = previewResolver.ResolveInitial(
+                ctx,
+                resolverTable,
+                GetAttackCategory(),
+                forceRootStep: true);
+            if (nextStep == null)
+            {
+                return false;
+            }
+
+            player.Combat?.ResetCombo();
+            resolver.Reset();
+            nextStep = resolver.ResolveInitial(
+                ctx,
+                resolverTable,
+                GetAttackCategory(),
+                forceRootStep: true);
+            if (nextStep == null)
+            {
+                return false;
+            }
+
+            OnStepBoundaryActionResolved(resolver.ActiveCombatAction);
+        }
+        else
+        {
+            nextStep = resolver.ResolveNext(ctx);
+        }
+
         if (nextStep == null) return false;
 
         ExecuteCombatStep(nextStep, ctx, isAutoChain);
         return true;
     }
+
+    private InputContext BuildStepBoundaryInputContext()
+    {
+        bool boundaryGrounded = fsm.SyncCombatContextAtStepBoundary(
+            resolver.StartedGrounded);
+        InputContext ctx = BuildInputContext(preserveActiveActionInput: false);
+
+        // Input routing may temporarily expose an authored output override.
+        // The step-boundary resolver uses cause-aware physical contact instead.
+        ctx.isGrounded = boundaryGrounded;
+        return ctx;
+    }
+
+    protected virtual void OnStepBoundaryActionResolved(CombatAction action) { }
 
     protected void ExecuteCombatStep(AttackStepData step, InputContext ctx, bool isAutoChain)
     {
@@ -314,12 +375,13 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         }
 
         CombatAction resolvedAction = resolver.ActiveCombatAction;
-        if (capturedOutputAction != resolvedAction)
-        {
-            capturedOutputAction = resolvedAction;
-            capturedActionStartedGrounded = ctx.isGrounded;
-            hasCommittedActionOutput = false;
-        }
+
+        // Output ownership is step-scoped. This matters when a Both action
+        // re-selects itself from the opposite physical context: the action
+        // reference is unchanged, but MatchInput must follow the new root step.
+        capturedOutputAction = resolvedAction;
+        capturedActionStartedGrounded = ctx.isGrounded;
+        hasCommittedActionOutput = false;
 
         player.Combat?.BeginResolvedAction(!ctx.isGrounded, resolvedAction);
 
@@ -830,6 +892,14 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
         hasCommittedActionOutput = true;
         fsm.CommitActionOutputContext(outputContext, startedGrounded);
+    }
+
+    protected void CaptureCompletedStepBoundaryContext()
+    {
+        // Completion may update physical routing state for the outgoing action,
+        // but MatchInput remains owned by the context captured on step entry.
+        // Re-contact during authored MotionData must not rewrite that contract.
+        fsm.SyncCombatContextAtStepBoundary(capturedActionStartedGrounded);
     }
 
     protected override void ExitToAppropriateMovementState()

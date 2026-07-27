@@ -205,6 +205,11 @@ public class PlayerUltimateState : CombatPlayerState
         return success;
     }
 
+    protected override void OnStepBoundaryActionResolved(CombatAction action)
+    {
+        activeUltimateAction = action as UltimateAction;
+    }
+
     protected override void OnStartupBegin()
     {
         base.OnStartupBegin();

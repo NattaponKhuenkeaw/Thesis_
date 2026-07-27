@@ -45,7 +45,7 @@ MonoBehaviour:
   - actionId: shermie.skill
     actionName: Diamod Dust
     context: 0
-    outputContext: 1
+    outputContext: 0
     priority: 0
     conditions: []
     damageSourceStat: 0
@@ -60,7 +60,7 @@ MonoBehaviour:
   - actionId: shermie.skill.ex
     actionName: Shermie Crush
     context: 0
-    outputContext: 1
+    outputContext: 0
     priority: 0
     conditions:
     - rid: 3612913050244874240
@@ -1721,7 +1721,7 @@ MonoBehaviour:
           startupFrames: 1
           activeFrames: 100
           recoveryFrames: 154
-          cancelWindowStartFrame: 107
+          cancelWindowStartFrame: 128
           loopActivePhase: 0
           stepName: Grab-Confirm
           animationClip: {fileID: 7400000, guid: 8673861c524c23e43a75cf0d7d5dacc5, type: 2}

@@ -244,6 +244,32 @@ public class PlayerStateMachine : MonoBehaviour
         InputBuffer?.ClearAll();
     }
 
+    public bool SnapToGroundForCharacterSwitch()
+    {
+        if (playerCharacter == null || playerCharacter.Movement == null)
+            return false;
+
+        // Team Switch is a Ground-only transition. The outgoing action may have
+        // temporarily lifted the shared body with authored MotionData, but that
+        // physical pose must not make the incoming character enter Fall/Landing.
+        if (!playerCharacter.Movement.SnapToGroundForActionOutput())
+            return false;
+
+        EnvironmentContext = PlayerEnvironmentContext.Grounded;
+        reconcilePhysicalContextAfterAction = false;
+
+        PlayerState groundedState =
+            Mathf.Abs(playerCharacter.Movement.HorizontalInput) > 0.01f
+                ? MoveState
+                : IdleState;
+        if (CurrentState != groundedState)
+        {
+            ChangeState(groundedState);
+        }
+
+        return true;
+    }
+
     // =========================================================
     // Centralized Input Routing
     // These methods atomically handle "check → transition → forward"
@@ -318,8 +344,13 @@ public class PlayerStateMachine : MonoBehaviour
             // Pre-validate: reject if no jump resources available.
             // Without this, the action state would be interrupted for a jump
             // that never physically executes (e.g., 0 jumps left while airborne).
-            if (playerCharacter.Movement != null && !playerCharacter.Movement.CanJump())
+            if (!CanStartJumpFromCurrentOrProjectedOutput())
                 return;
+
+            if (ShouldLaunchImmediatelyAfterActionOutputSnap())
+            {
+                JumpState.LaunchImmediatelyOnNextEntry();
+            }
 
             InputBuffer?.ConsumeJump();
             ChangeState(JumpState);
@@ -430,7 +461,17 @@ public class PlayerStateMachine : MonoBehaviour
             return;
         }
 
+        bool transitionedFromAirborne =
+            EnvironmentContext == PlayerEnvironmentContext.Airborne;
         EnvironmentContext = PlayerEnvironmentContext.Grounded;
+
+        // An authored Ground/MatchInput output snap already published Grounded
+        // before the incoming action entered. Repeated support is therefore not
+        // a new landing and must not insert Landing/Falling between actions.
+        if (!transitionedFromAirborne)
+        {
+            return;
+        }
 
         if (CurrentState == JumpState || CurrentState == FallingState)
         {
@@ -441,6 +482,34 @@ public class PlayerStateMachine : MonoBehaviour
     public void NotifyJumpLaunched()
     {
         EnvironmentContext = PlayerEnvironmentContext.Airborne;
+    }
+
+    /// <summary>
+    /// Combat steps keep their entry context while running. At a legal step
+    /// boundary, publish real contact only when it represents a valid context
+    /// transition. Ground actions lifted by authored MotionData remain Ground;
+    /// only genuine support loss may reroute them to Air.
+    /// </summary>
+    public bool SyncCombatContextAtStepBoundary(bool stepStartedGrounded)
+    {
+        PlayerMovement movement = playerCharacter != null
+            ? playerCharacter.Movement
+            : null;
+        bool physicallyGrounded = movement != null && movement.IsPhysicallyGrounded();
+        bool groundedForRouting = physicallyGrounded;
+
+        if (stepStartedGrounded
+            && !physicallyGrounded
+            && (movement == null || !movement.IsFallingFromLostSupport))
+        {
+            groundedForRouting = true;
+        }
+
+        EnvironmentContext = groundedForRouting
+            ? PlayerEnvironmentContext.Grounded
+            : PlayerEnvironmentContext.Airborne;
+        reconcilePhysicalContextAfterAction = false;
+        return groundedForRouting;
     }
 
     public PlayerEnvironmentContext ResolveActionOutputContext(
@@ -646,6 +715,53 @@ public class PlayerStateMachine : MonoBehaviour
         return new ActionOutputRoutingScope(this, false);
     }
 
+    private bool CanStartJumpFromCurrentOrProjectedOutput()
+    {
+        PlayerMovement movement = playerCharacter != null
+            ? playerCharacter.Movement
+            : null;
+        if (movement == null)
+            return true;
+
+        if (movement.CanJump())
+            return true;
+
+        // A legal cancel from an action whose authored output is Ground will
+        // snap and reset landing resources in CombatPlayerState.Exit before
+        // JumpState.Enter consumes the ground jump. Validate against that
+        // projected state instead of stale airborne jump usage.
+        if (movement.profile == null
+            || !(CurrentState is CombatPlayerState combatState)
+            || !combatState.TryGetProjectedOutputContext(
+                out CombatActionOutputContext outputContext,
+                out bool startedGrounded))
+        {
+            return false;
+        }
+
+        return ResolveActionOutputContext(outputContext, startedGrounded)
+            == PlayerEnvironmentContext.Grounded;
+    }
+
+    private bool ShouldLaunchImmediatelyAfterActionOutputSnap()
+    {
+        PlayerMovement movement = playerCharacter != null
+            ? playerCharacter.Movement
+            : null;
+        if (movement == null
+            || movement.IsPhysicallyGrounded()
+            || !(CurrentState is CombatPlayerState combatState)
+            || !combatState.TryGetProjectedOutputContext(
+                out CombatActionOutputContext outputContext,
+                out bool startedGrounded))
+        {
+            return false;
+        }
+
+        return ResolveActionOutputContext(outputContext, startedGrounded)
+            == PlayerEnvironmentContext.Grounded;
+    }
+
     private readonly struct ActionOutputRoutingScope : IDisposable
     {
         private readonly PlayerStateMachine stateMachine;
@@ -753,6 +869,15 @@ public class PlayerStateMachine : MonoBehaviour
             return;
         }
 
+        // An accepted Jump cancel owns its startup even though a committed
+        // Ground/MatchInput output has just made physical contact. Reconciliation
+        // resumes from the launch frame's authoritative Air transition.
+        if (CurrentState == JumpState && JumpState.IsStartingUp)
+        {
+            reconcilePhysicalContextAfterAction = false;
+            return;
+        }
+
         bool physicallyGrounded = playerCharacter.Movement.IsPhysicallyGrounded();
         PlayerEnvironmentContext physicalContext = physicallyGrounded
             ? PlayerEnvironmentContext.Grounded
@@ -847,6 +972,14 @@ public class PlayerStateMachine : MonoBehaviour
         // Action states: Attack, Skill, Ultimate
         if (CurrentStateId == PlayerStateId.Attacking || CurrentStateId == PlayerStateId.Skill || CurrentStateId == PlayerStateId.Ultimate)
         {
+            // Team Switch is Ground-only. Use the action-owned context so
+            // authored upward MotionData does not incorrectly reject a
+            // technically Ground action, while genuine Air actions remain blocked.
+            if (!IsGroundedContext)
+            {
+                return false;
+            }
+
             if (CurrentState is FrameDataPlayerState fdState)
             {
                 // If the current step is an auto-chain step, do not allow switching.

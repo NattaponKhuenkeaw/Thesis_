@@ -13,15 +13,23 @@ public class PlayerMovement : MonoBehaviour
     private const float AttackFacingCancelInputThreshold = 0.2f;
     private const float MinimumGroundNormalY = 0.5f;
     private const float GroundedVerticalTolerance = 0.1f;
-    private const float DashBurstPeakRatio = 1.18f;
-    private const float DashBurstSettleProgress = 0.22f;
-    private const float DashBrakeEndSpeedRatio = 0.08f;
+    private const float DashDecelerationStart = 0.55f;
+    private const float DashEndSpeedRatio = 0.15f;
     private const int MaximumDropThroughFrames = 45;
 
     private enum FallSession
     {
         Neutral,
         JumpArc
+    }
+
+    private enum AirborneTransitionCause
+    {
+        None,
+        LostSupport,
+        AuthoredActionMotion,
+        Jump,
+        DropThrough
     }
 
     // =========================================================
@@ -70,6 +78,7 @@ public class PlayerMovement : MonoBehaviour
     private int jumpsUsed;
     private int airDashesUsed;
     private FallSession activeFallSession = FallSession.Neutral;
+    private AirborneTransitionCause airborneTransitionCause;
 
     private readonly ContactPoint2D[] groundContactBuffer = new ContactPoint2D[8];
     private readonly RaycastHit2D[] oneWayCrossingBuffer = new RaycastHit2D[8];
@@ -83,6 +92,7 @@ public class PlayerMovement : MonoBehaviour
     private bool missingProfileReported;
     private Vector2 previousGroundCheckPosition;
     private bool hasPreviousGroundCheckPosition;
+    private float actionOutputSnapFixedTime = float.NegativeInfinity;
 
     // Frame-data driven dash
     private int dashCooldownFramesRemaining;
@@ -128,16 +138,19 @@ public class PlayerMovement : MonoBehaviour
     // Computed State
     // =========================================================
     public bool IsDashing => fsm != null && fsm.CurrentStateId == PlayerStateId.Dashing;
-    public bool IsGroundDashCancelOpen =>
+    public bool IsGroundDashRecovery =>
         fsm != null
         && fsm.CurrentState is PlayerDashState dashState
-        && dashState.IsCancelLocomotionOpen;
+        && dashState.IsRecoveryLocomotionOpen;
     public bool IsJumpStarting => fsm != null
         && fsm.JumpState != null
         && fsm.CurrentState == fsm.JumpState
         && fsm.JumpState.IsStartingUp;
     public bool IsDroppingDown => dropDownCoroutine != null;
     public bool IsLanding => landingFramesRemaining > 0;
+    public bool IsFallingFromLostSupport =>
+        !GroundState.IsGrounded
+        && airborneTransitionCause == AirborneTransitionCause.LostSupport;
     public float HorizontalInput => horizontalInput;
     public float VerticalVelocity => rb != null ? rb.linearVelocity.y : 0f;
     public int FacingDirection => transform.eulerAngles.y > 90f ? -1 : 1;
@@ -156,6 +169,7 @@ public class PlayerMovement : MonoBehaviour
     // =========================================================
     // Events
     // =========================================================
+    public event Action OnJumpStartup;
     public event Action OnJumpStart;
     public event Action OnDoubleJump;
     public event Action OnDashStart;
@@ -254,9 +268,11 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
+        actionOutputSnapFixedTime = float.NegativeInfinity;
         isGrounded = false;
         currentGroundCollider = null;
         activeFallSession = FallSession.JumpArc;
+        airborneTransitionCause = AirborneTransitionCause.Jump;
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, P.jumpSpeed);
         lastAppliedMotionVelocityY = 0f;
         GroundState.Tick(false, P.jumpSpeed);
@@ -269,6 +285,7 @@ public class PlayerMovement : MonoBehaviour
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
         lastAppliedMotionVelocityY = 0f;
         landingFramesRemaining = 0;
+        OnJumpStartup?.Invoke();
     }
 
     public void Dash(float inputX)
@@ -362,14 +379,11 @@ public class PlayerMovement : MonoBehaviour
             return GroundState.IsGrounded;
         }
 
-        if (GroundState.IsGrounded)
-        {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
-            lastAppliedMotionVelocityY = 0f;
-            ResetLandingResources();
-            landingFramesRemaining = 0;
-            return true;
-        }
+        // GroundState is sampled before authored MotionData is applied in the
+        // fixed tick, so it may still say grounded after the action has moved
+        // the Rigidbody away from contact. Stop the outgoing motion and always
+        // resolve a fresh floor point before publishing a Ground output.
+        StopAttackMotion();
 
         Vector2 origin = (Vector2)groundCheck.position + (Vector2.up * 0.02f);
         int hitCount = Physics2D.Raycast(
@@ -409,11 +423,22 @@ public class PlayerMovement : MonoBehaviour
 
         isGrounded = true;
         currentGroundCollider = bestHit.collider;
+        airborneTransitionCause = AirborneTransitionCause.None;
         lastAppliedMotionVelocityY = 0f;
-        GroundState.Tick(true, 0f);
+        // An authored Ground output is a state correction, not a physical
+        // landing. Keep JustLanded/JustBecameAirborne false so the accepted
+        // successor cannot be rerouted by a synthetic contact event.
+        GroundState.SynchronizeWithoutTransition(true, 0f);
         CacheGroundCheckPosition();
         ResetLandingResources();
         landingFramesRemaining = 0;
+        // Combat completion can snap inside FixedUpdate, while Team Switch
+        // snaps from Update between physics simulations. In the latter case,
+        // the next FixedUpdate still sees contacts from before the correction,
+        // so retain Ground through that upcoming sample as well.
+        actionOutputSnapFixedTime = Time.inFixedTimeStep
+            ? Time.fixedTime
+            : Time.fixedTime + Time.fixedDeltaTime;
         return true;
     }
 
@@ -469,6 +494,19 @@ public class PlayerMovement : MonoBehaviour
     // =========================================================
     private void CheckGround()
     {
+        // A Ground action output can snap after this fixed step's physics contacts
+        // were generated. Keep that authored result for the rest of this one step;
+        // normal contact-driven edge/fall detection resumes on the next FixedUpdate.
+        if (Time.fixedTime <= actionOutputSnapFixedTime + 0.0001f)
+        {
+            isGrounded = true;
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+            lastAppliedMotionVelocityY = 0f;
+            GroundState.SynchronizeWithoutTransition(true, 0f);
+            CacheGroundCheckPosition();
+            return;
+        }
+
         bool wasPhysicallyGrounded = GroundState.IsGrounded;
         bool canLand = rb.linearVelocity.y <= GroundedVerticalTolerance;
         isGrounded = canLand && TryGetGroundCollider(out currentGroundCollider);
@@ -497,11 +535,16 @@ public class PlayerMovement : MonoBehaviour
             if (wasPhysicallyGrounded)
             {
                 activeFallSession = FallSession.Neutral;
+                airborneTransitionCause = IsAuthoredVerticalMotionLiftingPlayer()
+                    ? AirborneTransitionCause.AuthoredActionMotion
+                    : AirborneTransitionCause.LostSupport;
                 fsm?.NotifyGroundLost();
             }
 
             return;
         }
+
+        airborneTransitionCause = AirborneTransitionCause.None;
 
         if (wasPhysicallyGrounded)
         {
@@ -514,10 +557,14 @@ public class PlayerMovement : MonoBehaviour
             lastAppliedMotionVelocityY = 0f;
         }
 
+        bool suppressLandingFeedback = ShouldSuppressLandingFeedback();
         ResetLandingResources();
-        landingFramesRemaining = ShouldSuppressLandingFeedback() ? 0 : P.landingRecoveryFrames;
+        landingFramesRemaining = suppressLandingFeedback ? 0 : P.landingRecoveryFrames;
         fsm?.NotifyLanded();
-        OnLand?.Invoke();
+        if (!suppressLandingFeedback)
+        {
+            OnLand?.Invoke();
+        }
     }
 
     private int GetGroundCheckMask() => LayerMask.GetMask(GroundLayerName, OneWayPlatformLayerName);
@@ -680,7 +727,15 @@ public class PlayerMovement : MonoBehaviour
     private bool CanStartAirDash() => IsDashReady() && !IsLanding && fsm != null && fsm.IsAirborneContext && airDashesUsed < MaxAirDashes;
     private bool CanDropDown() => GroundState.IsEffectivelyGrounded && currentGroundCollider != null && oneWayPlatformLayer >= 0 && currentGroundCollider.gameObject.layer == oneWayPlatformLayer;
     private void RefreshGroundStateForDropDown() => CheckGround();
-    private bool ShouldSuppressLandingFeedback() => combat != null && combat.ShouldSuppressLandingFeedback();
+    private bool ShouldSuppressLandingFeedback() =>
+        (fsm != null && fsm.CurrentState is CombatPlayerState)
+        || (combat != null && combat.ShouldSuppressLandingFeedback());
+
+    private bool IsAuthoredVerticalMotionLiftingPlayer()
+    {
+        return lastAppliedMotionVelocityY > 0.001f
+            || (isAttackMotionActive && attackMotionVelocityY > 0.001f);
+    }
 
     private float GetDashDirection(float inputX) => Mathf.Abs(inputX) > 0.1f ? (inputX > 0 ? 1f : -1f) : FacingDirection;
 
@@ -744,6 +799,14 @@ public class PlayerMovement : MonoBehaviour
         }
 
         if (combat != null && combat.IsActiveCombat())
+        {
+            return 0f;
+        }
+
+        // Dash Active always clears vertical velocity. During its Recovery tail,
+        // neutral input keeps that gravity lock while raw A/D immediately
+        // releases normal falling without adding horizontal walk velocity.
+        if (IsInDashRecovery() && Mathf.Abs(horizontalInput) <= 0.01f)
         {
             return 0f;
         }
@@ -848,65 +911,37 @@ public class PlayerMovement : MonoBehaviour
             return true;
         }
 
-        if (dashState.CurrentPhase == ActionPhase.Active)
+        if (dashState.CurrentPhase != ActionPhase.Active)
         {
-            int activeFrame = Mathf.Clamp(
-                dashState.CurrentFrame - dashData.startupFrames,
-                1,
-                Mathf.Max(1, dashData.activeFrames));
-            float activeProgress = dashData.activeFrames <= 1
-                ? 1f
-                : (activeFrame - 1f) / (dashData.activeFrames - 1f);
-            float settleProgress = Mathf.Clamp01(
-                activeProgress / DashBurstSettleProgress);
-            float settleEase = 1f - ((1f - settleProgress) * (1f - settleProgress));
-            float speedRatio = Mathf.Lerp(
-                DashBurstPeakRatio,
-                1f,
-                settleEase);
-
-            rb.linearVelocity = new Vector2(
-                dashDir * dashData.dashSpeed * speedRatio,
-                0f);
-
-            if (enableDashAfterimage && Time.time - lastAfterimageTime >= dashAfterimageSpawnInterval)
-            {
-                SpawnAfterimage();
-                lastAfterimageTime = Time.time;
-            }
-
-            return true;
+            return false;
         }
 
-        if (dashState.CurrentPhase == ActionPhase.Recovery)
-        {
-            int totalFrames = dashData.startupFrames
-                + dashData.activeFrames
-                + dashData.recoveryFrames;
-            int recoveryStartFrame = dashData.startupFrames + dashData.activeFrames + 1;
-            bool hasCancelWindow = dashData.cancelWindowStartFrame > 0
-                && dashData.cancelWindowStartFrame <= totalFrames;
-            int brakeEndFrame = hasCancelWindow
-                ? dashData.cancelWindowStartFrame - 1
-                : totalFrames;
-            float brakeProgress = Mathf.InverseLerp(
-                recoveryStartFrame,
-                Mathf.Max(recoveryStartFrame + 1, brakeEndFrame),
-                dashState.CurrentFrame);
-            float brakeEase = brakeProgress * brakeProgress * (3f - (2f * brakeProgress));
-            float speedRatio = Mathf.Lerp(1f, DashBrakeEndSpeedRatio, brakeEase);
-            float verticalVelocity = ResolveVerticalVelocity(
-                rb.linearVelocity.y - lastAppliedMotionVelocityY,
-                0f);
+        int activeFrame = Mathf.Clamp(
+            dashState.CurrentFrame - dashData.startupFrames,
+            1,
+            Mathf.Max(1, dashData.activeFrames));
+        float activeProgress = dashData.activeFrames <= 1
+            ? 0f
+            : (activeFrame - 1f) / (dashData.activeFrames - 1f);
+        float decelerationProgress = Mathf.InverseLerp(
+            DashDecelerationStart,
+            1f,
+            activeProgress);
+        float speedRatio = Mathf.Lerp(
+            1f,
+            DashEndSpeedRatio,
+            decelerationProgress * decelerationProgress);
+        rb.linearVelocity = new Vector2(
+            dashDir * dashData.dashSpeed * speedRatio,
+            0f);
 
-            rb.linearVelocity = new Vector2(
-                dashDir * dashData.dashSpeed * speedRatio,
-                verticalVelocity);
-            lastAppliedMotionVelocityY = 0f;
-            return true;
+        if (enableDashAfterimage && Time.time - lastAfterimageTime >= dashAfterimageSpawnInterval)
+        {
+            SpawnAfterimage();
+            lastAfterimageTime = Time.time;
         }
 
-        return false;
+        return true;
     }
 
     public bool IsInvincible() =>
@@ -917,7 +952,8 @@ public class PlayerMovement : MonoBehaviour
     public bool IsInDashRecovery() =>
         IsDashing
         && fsm.CurrentState is PlayerDashState dashState
-        && dashState.CurrentPhase == ActionPhase.Recovery;
+        && (dashState.CurrentPhase == ActionPhase.Recovery
+            || dashState.CurrentPhase == ActionPhase.Cancel);
 
 
 
@@ -1029,11 +1065,13 @@ public class PlayerMovement : MonoBehaviour
     private IEnumerator DropDownRoutine(Collider2D t)
     {
         if (t == null || solidColliders == null) { dropDownCoroutine = null; yield break; }
+        actionOutputSnapFixedTime = float.NegativeInfinity;
         ignoredGroundCollider = t;
         SetDropDownCollision(t, true);
         isGrounded = false;
         currentGroundCollider = null;
         activeFallSession = FallSession.Neutral;
+        airborneTransitionCause = AirborneTransitionCause.DropThrough;
         float dropVelocity = 0f;
         if (rb != null) rb.linearVelocity = new Vector2(rb.linearVelocity.x, dropVelocity);
         GroundState.Tick(false, dropVelocity);

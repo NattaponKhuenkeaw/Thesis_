@@ -22,14 +22,16 @@ public class PlayerAttackState : CombatPlayerState
     public override bool AcceptsAttackInput => true;
     public override bool AcceptsSkillInput => true;
     public override bool AcceptsUltimateInput => true;
-    public override bool LocksMovement => true;
+    public override bool LocksMovement => player.Combat == null || !player.Combat.IsAirCombo;
     public override bool LocksFacing => true;
 
     protected override AttackCategory GetAttackCategory() => AttackCategory.Normal;
 
     protected override InterruptPolicy GetInterruptPolicy()
     {
-        return InterruptPolicy.BasicAttack;
+        return player.Combat != null && player.Combat.IsAirCombo
+            ? InterruptPolicy.AirborneAttack
+            : InterruptPolicy.BasicAttack;
     }
 
     // =========================================================
@@ -61,10 +63,13 @@ public class PlayerAttackState : CombatPlayerState
 
     protected override void OnActionComplete()
     {
+        CaptureCompletedStepBoundaryContext();
+
         if (player.Combat != null && player.Combat.IsAttacking())
         {
             if (resolver.IsActive && !resolver.IsLastStep()
-                && player.Combat.IsAirCombo)
+                && player.Combat.IsAirCombo
+                && fsm.IsAirborneContext)
             {
                 player.Combat.CancelCurrentAttackButKeepComboProgress();
                 if (player.Animator != null)

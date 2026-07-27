@@ -57,7 +57,11 @@ public class ActionResolver
     /// Checks standalone actions first, then enters the appropriate combo tree.
     /// Returns the resolved AttackStepData, or null if nothing matches.
     /// </summary>
-    public AttackStepData ResolveInitial(InputContext ctx, ActionResolverTable table, AttackCategory category = AttackCategory.Normal)
+    public AttackStepData ResolveInitial(
+        InputContext ctx,
+        ActionResolverTable table,
+        AttackCategory category = AttackCategory.Normal,
+        bool forceRootStep = false)
     {
         Reset();
 
@@ -132,7 +136,9 @@ public class ActionResolver
 
         // 3. Check if the root node itself has a matching route for the initial input
         currentNode = activeTree.rootNode;
-        ComboRoute rootRoute = ComboRouter.FindMatchedRoute(currentNode, ctx);
+        ComboRoute rootRoute = forceRootStep
+            ? null
+            : ComboRouter.FindMatchedRoute(currentNode, ctx);
 
         if (rootRoute != null)
         {
@@ -146,7 +152,10 @@ public class ActionResolver
         }
 
         treeDepth = 1;
-        ApplyStartingComboDepthOverride(ctx, bestAction);
+        if (!forceRootStep)
+        {
+            ApplyStartingComboDepthOverride(ctx, bestAction);
+        }
         return currentNode.stepData;
     }
 

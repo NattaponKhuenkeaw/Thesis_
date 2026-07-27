@@ -89,7 +89,7 @@ MonoBehaviour:
       rootNode:
         rid: 1588255929706480004
     cooldown: 7
-    energyCost: 100
+    energyCost: 50
     activationVFXType: 40
     activationVFXPrefab: {fileID: 0}
     activationVFXOffset: {x: -0.5, y: 3, z: 0}
@@ -1851,10 +1851,10 @@ MonoBehaviour:
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
         - startFrame: 87
-          endFrame: 115
+          endFrame: 137
           taskType: 0
           easing: 1
-          position: {x: 0, y: -1.2, z: 0}
+          position: {x: 0, y: -2, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
     - rid: 3612912868654055606

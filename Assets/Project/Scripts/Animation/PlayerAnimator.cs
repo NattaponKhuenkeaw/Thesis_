@@ -83,9 +83,10 @@ public class PlayerAnimator : MonoBehaviour
         anim.SetBool(isGroundedHash, movement.GroundState.IsEffectivelyGrounded);
         anim.SetBool(isLandingHash, movement.IsLanding);
 
-        // Dash remains animation-authoritative until its authored cancel frame.
-        // Ground locomotion becomes visible at the same frame control returns.
-        if (movement.IsDashing && !movement.IsGroundDashCancelOpen)
+        // Startup/Active remain dash-animation authoritative. Ground Dash
+        // Recovery returns locomotion control, so let Speed/facing drive the
+        // visible return to Run/Idle instead of showing a dead-control tail.
+        if (movement.IsDashing && !movement.IsGroundDashRecovery)
         {
             anim.SetFloat(speedHash, 0f);
             anim.SetFloat(verticalVelocityHash, 0f);
@@ -176,11 +177,15 @@ public class PlayerAnimator : MonoBehaviour
         if (anim != null)
         {
             var stateInfo = anim.GetCurrentAnimatorStateInfo(0);
-            var nextStateInfo = anim.GetNextAnimatorStateInfo(0);
-            if (stateInfo.shortNameHash == groundedHash || nextStateInfo.shortNameHash == groundedHash)
+            if (stateInfo.shortNameHash == groundedHash)
             {
                 return;
             }
+
+            // Locomotion has already regained authority. Even if Grounded is
+            // queued as the next Animator state, force it now so a stale
+            // Landed/Fall transition cannot play out after a silent Ground
+            // action output (notably Rugal's Genocide Cutter).
             anim.Play(groundedHash, 0, 0f);
         }
     }

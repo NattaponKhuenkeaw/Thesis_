@@ -13,16 +13,16 @@ public class PlayerAirAttackState : PlayerAttackState
     public override PlayerStatePriority Priority => PlayerStatePriority.NormalAttack;
 
     /// <summary>
-    /// InputGate decides whether direct horizontal control is allowed.
+    /// The current step's physical context decides movement authority.
     /// </summary>
-    public override bool LocksMovement => false;
+    public override bool LocksMovement => base.LocksMovement;
 
     // =========================================================
-    // InterruptPolicy — Airborne-specific
+    // InterruptPolicy — selected from the current step context
     // =========================================================
 
     protected override InterruptPolicy GetInterruptPolicy()
     {
-        return InterruptPolicy.AirborneAttack;
+        return base.GetInterruptPolicy();
     }
 }

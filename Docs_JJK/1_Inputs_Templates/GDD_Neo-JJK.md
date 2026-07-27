@@ -104,7 +104,7 @@ Sound should make combat easy to read:
 | Input | Combat Verb | Description / Behavior |
 | --- | --- | --- |
 | **A / D** | Move Left / Right | Horizontal locomotion. Dash cancels can be directed by holding A or D. |
-| **Space** | Jump | Double jump supported. Press in air to double jump. |
+| **Space** | Jump | Double jump supported. Ground and double jumps use their authored startup as a brief commitment: directional input may buffer, but horizontal movement pauses until launch. |
 | **LMB** | Basic Attack (BA) | Performs state-based basic attack chains. |
 | **RMB** | Skill | Triggers character-specific skill. |
 | **Shift** | Dash | Invincibility-frame dash. |
@@ -175,13 +175,17 @@ Every character has actions governed by distinct Wind-up (SF), Active (AF), and 
 
 Every authored combat action declares an **Input Context** (`Ground`, `Air`, or `Both`) and an **Output Context** (`MatchInput`, `Ground`, or `Air`):
 
-- Input context is captured when the action is selected and remains locked for the complete action. Physical support changes do not reclassify or interrupt the action.
-- `MatchInput` preserves the captured input context. An explicit `Ground` or `Air` output supports actions such as grounded launchers that deliberately end airborne.
+- Input context is captured for each executing step and remains locked until that step reaches a legal chain boundary. Physical support changes do not interrupt the running step.
+- At a legal next-step boundary, the FSM samples cause-aware Ground/Air state. A Ground step changes to Air only after genuine floor/platform support loss; authored positive-Y MotionData remains Ground-owned at every boundary. If context is unchanged, the resolver continues the current combo tree. If context changed, it ends that tree, selects the matching action conditions for the same input category, and starts the selected action's root step. If no action matches, combat ends into physical locomotion.
+- A context-change re-route always starts at the selected root; root-route shortcuts and starting-depth overrides do not skip it.
+- `MatchInput` always preserves the context captured when the executing step began. Ground/Air re-routing caused by genuine edge loss happens at a legal next-step resolver boundary; it does not rewrite the completed step's authored output. An explicit `Ground` or `Air` output still overrides the captured input on completion or accepted cancel.
 - Authored MotionData is the sole action-motion authority. Normal locomotion gravity does not compete with MotionData during Startup, Active, Recovery, or Cancel.
 - Natural completion or an accepted cancel commits the authored output before the next action, locomotion state, or team switch resolves.
-- A `Ground` output snaps to valid ground and returns direct grounded control without an extra Landing lock. An `Air` output first resolves Air; if the collider is already supported, the FSM then performs `Landing -> Idle/Move`.
-- Physical contact remains observable by explicitly authored environmental triggers such as `Require Just Landed`, but it cannot change the locked action context by itself.
+- A `Ground` output snaps to valid ground and returns direct grounded control without an extra Landing lock or landing animation, including when authored MotionData left and re-contacted the floor before completion. When locomotion regains authority it forces the Grounded animation immediately instead of allowing a queued Landed/Fall transition to finish. If a physically airborne Ground/`MatchInput` action accepts a direct Jump cancel, that correction is silent and the Jump launches in the same transition without Landing/Falling or a second startup hold. Ordinary jumps retain their authored startup. An `Air` output first resolves Air; if the collider is already supported, the FSM then performs `Landing -> Idle/Move`.
+- Physical contact remains observable by explicitly authored environmental triggers such as `Require Just Landed`, but it cannot change the running step's locked context by itself.
 - The authored Cancel frame is the universal control/cancel boundary. Recovery remains part of the committed action unless its interrupt policy explicitly permits an earlier transition.
+- Structural auto-chain has priority at both Recovery and Cancel boundaries. A Cancel window authored on the first Recovery frame cannot skip an `autoChainToNext` node.
+- Dash is an explicit movement-action exception: Startup/Active own the dash curve, while a Ground Dash returns movement, facing, and locomotion animation on its first Recovery frame. Air Dash keeps horizontal locomotion locked during Recovery; neutral A/D holds vertical gravity at zero, and any A/D input releases normal falling.
 
 Actions should avoid unnecessary position or gravity locks. Only authored movement actions such as Dash/Jump should override locomotion strongly enough to prevent normal control from behaving as expected.
 

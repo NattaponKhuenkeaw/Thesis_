@@ -12,14 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 138b668169d86f14d8f2e020a5f632eb, type: 3}
   m_Name: MovementProfile_Sample
   m_EditorClassIdentifier: Assembly-CSharp::MovementProfile
-  moveSpeed: 10.5
-  jumpSpeed: 24
-  riseDeceleration: 65
+  moveSpeed: 10
+  jumpSpeed: 20
+  riseDeceleration: 55
   jumpFallAcceleration: 95
   neutralFallAcceleration: 40
   maximumFallSpeed: 28
   maxJumpCount: 2
   maxAirDashCount: 1
   coyoteFrames: 7
-  jumpStartupFrames: 4
-  landingRecoveryFrames: 0
+  jumpStartupFrames: 6
+  landingRecoveryFrames: 7

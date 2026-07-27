@@ -35,7 +35,8 @@ References:
 The pass is based on state and action consistency, not only animation appearance:
 
 - A ground action may begin only after valid floor/platform contact.
-- A combat action keeps its captured input context until natural completion or a legal cancel; physical contact cannot interrupt or reclassify it.
+- A combat step keeps its captured input context while executing; physical contact cannot interrupt or reclassify it mid-step.
+- At a legal next-step boundary, unchanged context continues the current tree while genuine support loss starts the matching action root. Authored vertical MotionData does not count as support-loss falling.
 - The outgoing action's authored output is committed before the next action, locomotion state, or team switch resolves.
 - Repeating the same input sequence from the same position produces the same movement and action route.
 - InputGate and authored MotionData may intentionally restrict or move the player; ambient Rigidbody gravity or acceleration may not create a competing result.
@@ -46,7 +47,7 @@ Reference timing targets from the supplied *BlazBlue Entropy Effect* recordings:
 - The baseline jump rises for about 0.36 seconds, has a short apex, then accelerates into a faster descent.
 - Edge/drop descent begins close to zero vertical speed and accelerates more gently than a jump-arc descent.
 - Starting descent values are `jumpFallAcceleration = 95`, `neutralFallAcceleration = 40`, and `maximumFallSpeed = 28`.
-- Dash starting curve: `1.18x` peak on the first Active frame, ease-out settlement to `1.00x` during the first `22%` of Active, then a smooth Recovery brake to `0.08x` immediately before Cancel.
+- Restored Dash curve: `1.00x` through the first `55%` of Active, then quadratic deceleration to `0.15x` on the final Active frame; Recovery adds no authored dash velocity.
 
 ## Core Scenarios
 
@@ -61,10 +62,10 @@ Reference timing targets from the supplied *BlazBlue Entropy Effect* recordings:
 ### 2. Jump and edge transition
 
 - [ ] Repeat a standing jump five times; startup timing, launch height, and fall arc are visually consistent.
-- [ ] During the internal jump-startup frames the player remains Ground; `PlayerJumpState` publishes Airborne only on the exact launch frame.
+- [ ] On Jump acceptance the Jump animation starts immediately; during internal startup frames the body remains physically supported, landing notification cannot steal the accepted startup, and `PlayerJumpState` consumes the jump and publishes Airborne only on the exact launch frame.
 - [ ] Walk off an edge without jumping; state becomes Falling and never briefly returns to a ground action context.
 - [ ] Press jump just after leaving the edge; coyote jump works only within its authored frame window.
-- [ ] Double jump restarts the same jump session, clears existing downward momentum, and produces the full authored launch speed.
+- [ ] Double jump restarts the same jump session, clears existing downward momentum, holds horizontal motor output for the authored startup while still buffering direction, then produces the full launch speed and restores horizontal response.
 - [ ] Double jump consumes one air jump and its resource resets only after landing.
 - [ ] Once upward velocity ends, the jump session accelerates downward every fixed step without an apex hang or an instant terminal-speed snap.
 - [ ] The jump session reaches the ground noticeably faster than an equal-height neutral edge/drop fall.
@@ -75,14 +76,20 @@ Reference timing targets from the supplied *BlazBlue Entropy Effect* recordings:
 - [ ] Before contact, every accepted attack resolves through the air action route; no ground attack starts.
 - [ ] If no air action/resource is available, input is rejected or buffered according to the existing combat rule; it does not fall back to a ground action.
 - [ ] Air-action vertical suspension and authored MotionData remain repeatable while attack is spammed.
-- [ ] On real contact, the current air action and animation continue; no combo reset, cooldown loss, Landing animation, or Ground route occurs mid-action.
+- [ ] On real contact, the current air step and animation continue; no combo reset, cooldown loss, Landing animation, or Ground route occurs mid-step.
 - [ ] The player cannot move freely under a ground-attack animation caused by a stale ground/air context.
 - [ ] From Falling, an airborne-only Skill and Ultimate can resolve when their normal resource/cooldown conditions pass.
 - [ ] With Kyo, use the air Skill, land before its seven-second cooldown ends, and press Skill repeatedly; the ground Skill remains rejected and the shared cooldown UI continues counting down.
 - [ ] Repeat in reverse: use Kyo's ground Skill, jump before cooldown ends, and confirm the air Skill remains rejected.
 - [ ] Confirm conditional Skill variants explicitly authored with zero cooldown can still resolve during their valid passive/follow-up window.
-- [ ] Start a ground-input attack, move beyond an edge during the action, and confirm ordinary route conditions continue to observe the captured Ground input context.
-- [ ] Author/use a `Require Just Landed` trigger and confirm it observes contact during the locked action without changing that action's Ground/Air context.
+- [ ] Start a ground-input attack, move beyond an edge during the step, and confirm ordinary route conditions continue to observe captured Ground input until the legal next-step boundary.
+- [ ] Buffer the next normal while airborne; the old ground tree does not continue and the matching air action starts from its root step with no delayed ground snap.
+- [ ] Repeat with Ground actions authored at approximately `Y = +0.1` and `Y = +10`; losing contact from either authored lift remains on the Ground action tree instead of starting an Air attack.
+- [ ] Repeat with an auto-chain step; context change re-roots automatically without requiring a click.
+- [ ] Start an air step and land before its next boundary; the running air animation completes, then the matching ground action starts from its root.
+- [ ] Keep physical context unchanged for ground and air chains; each continues its current child/default route rather than restarting at root.
+- [ ] Use a context with no matching action at the next boundary; combat ends into Falling or Idle/Move instead of continuing the invalid tree.
+- [ ] Author/use a `Require Just Landed` trigger and confirm it observes contact during the locked step without changing that step's Ground/Air context.
 - [ ] Repeat at least ten platform drops and ten jump descents.
 
 ### 4. Landing and one-way platforms
@@ -102,11 +109,17 @@ Reference timing targets from the supplied *BlazBlue Entropy Effect* recordings:
 - [ ] Start an air attack while rising, at apex, and while falling; base vertical motion suspends for the complete authored action.
 - [ ] When the air action ends without landing, the previously latched jump/neutral fall acceleration resumes from a stable state.
 - [ ] MotionData X/Y displacement is repeatable and is not altered by Rigidbody acceleration.
-- [ ] A ground-started `Both` action with authored lift remains on its captured ground combo route for its complete lifetime.
-- [ ] The same `Both` action started in the air remains on its captured air route through physical landing, completion, or cancel.
+- [ ] A ground-started `Both` step with authored lift remains on its captured ground route while that step executes.
+- [ ] The same `Both` step started in the air remains on its captured air route while that step executes, even if it physically lands.
 - [ ] Ground-only standalone actions never resolve from a falling or jumping state.
-- [ ] `MatchInput` output preserves the context captured when the action began.
-- [ ] A Ground-output action cancelled/completed while visually airborne snaps to valid ground before the next action or locomotion state and does not add a Landing lock.
+- [ ] Cancelling a step with `MatchInput` preserves that executing step's captured context.
+- [ ] Genuine edge loss at a legal next-step boundary re-resolves the matching Air action root or physical locomotion; the outgoing `MatchInput` value itself remains its captured input context.
+- [ ] A Ground-output action cancelled/completed while visually airborne silently snaps to valid ground before the next action or locomotion state; it never inserts Landing/Falling and the incoming state/animation owns the same handoff.
+- [ ] With Rugal, start `rugal.skill` on the ground (`Both`/`MatchInput`, Ground -> Air -> Ground MotionData). Let it complete while neutral: the body physically snaps to the floor and returns directly to Idle with no Falling state, Landing state, `Landed` clip, or landing recovery.
+- [ ] Repeat `rugal.skill`, hold left/right as its locomotion/cancel window opens, and confirm the outgoing MotionData stops before the floor snap; Move takes control immediately at floor height with no airborne walk frame or delayed Fall/Land session.
+- [ ] Repeat both Rugal cases several times. Component `FixedUpdate` order must never republish Air after the authored Ground output snap.
+- [ ] From the ground, enter a `Both`/`MatchInput` action with upward MotionData, become physically airborne, and cancel with Jump; the player silently snaps and launches in the same transition with no Idle, Landing, Falling, or second startup-hold frame.
+- [ ] Repeat after spending every available air jump and with an explicit Ground-output action; the pending snap/reset still permits exactly one refreshed ground jump and does not publish `JustLanded`.
 - [ ] During the Recovery switch window, switching characters out of a visually airborne Ground-output action is available and leaves the incoming character grounded with no carried action motion.
 - [ ] A Ground-input/Air-output action remains Ground during execution, then enters Air/Falling only after completion or accepted cancel.
 - [ ] An Air-output action that is already physically supported resolves Air first, then visibly/statefully performs `Landing -> Idle/Move`.
@@ -114,12 +127,14 @@ Reference timing targets from the supplied *BlazBlue Entropy Effect* recordings:
 
 ### 6. Dash and resource regression
 
-- [ ] Ground and air dash start at the `1.18x` starting peak, visibly settle to authored `dashSpeed`, and preserve the punch through Active.
-- [ ] Recovery braking is continuous from `1.00x` toward `0.08x`; there is no weak start, constant-speed glide, second acceleration, or abrupt stop.
-- [ ] Ground Dash remains movement/facing-locked for every Recovery frame.
-- [ ] On the exact authored Ground Dash Cancel frame, held A/D immediately produces normal walking speed and can turn the character; there is no hidden post-cancel lock.
-- [ ] On the first Air Dash Recovery frame, airborne gravity resumes but held A/D does not add walk speed to the authored air-dash distance.
-- [ ] Ground Dash Cancel visibly returns to Run/Idle on the same frame control returns; Dash ActionEnd does not cause a second speed change or hitch.
+- [ ] Ground and air dash hold authored `dashSpeed` through the first `55%` of Active, then decelerate smoothly to `0.15x` at the final Active frame.
+- [ ] Recovery adds no second authored dash brake, acceleration, or glide.
+- [ ] On the first Ground Dash Recovery frame, held A/D immediately produces normal walking speed and can turn the character.
+- [ ] Ground Dash remains movement/facing-open through the late Cancel phase; there is no final relock or hidden `0.2s` tail.
+- [ ] Ground Dash Recovery visibly returns to Run/Idle on the same frame control returns; Dash ActionEnd does not cause a second speed change or hitch.
+- [ ] On the first Air Dash Recovery frame with neutral A/D, vertical velocity stays zero and gravity remains locked.
+- [ ] Pressing either A or D during Air Dash Recovery immediately releases normal falling, but does not add horizontal walk speed to the authored air-dash distance.
+- [ ] Releasing A/D again during the same Air Dash Recovery locks gravity again on the next physics step.
 - [ ] Mash dash throughout startup, active, recovery, and cooldown; only one dash occurs and no second dash is queued.
 - [ ] A full post-exit cooldown elapses before another ground dash can start, including characters whose recovery exceeds their cooldown frame value.
 - [ ] Dash immediately after walking off an edge resolves as an air dash, not a coyote-ground dash.
@@ -127,12 +142,17 @@ Reference timing targets from the supplied *BlazBlue Entropy Effect* recordings:
 - [ ] Dash, jump, double jump, air attack, and landing can be chained without stuck velocity or a stale state.
 - [ ] Character movement-speed stat overrides still change direct horizontal speed.
 - [ ] Switching characters during or after movement leaves no carried attack motion or dash velocity.
+- [ ] During a Ground-context action whose MotionData has temporarily lifted the Rigidbody, activate Team Switch in its legal recovery window. The incoming character silently snaps to the floor and enters Idle/Move immediately with no Fall, Landing animation, or landing recovery.
+- [ ] Repeat that switch while holding and releasing movement. The first `FixedUpdate` after the Update-driven switch must preserve the silent Ground correction and never create landing recovery.
+- [ ] Attempt Team Switch from a genuine Air-context action recovery. The switch remains unavailable.
 - [ ] From an air attack, cancel into air dash while rising, near apex, and falling. Dash animation starts immediately and remains visible through Dash; Fall begins only after Dash exits.
 
 ### 7. Combat animation ownership
 
 - [ ] Execute each normal combo route by repeated click at least ten times; every new step restarts its authored clip at frame zero.
 - [ ] Execute every available auto-chain route at least ten times; no transition keeps replaying the previous step animation.
+- [ ] Execute Goenitz's follow-up Ultimate and confirm the authored sequence reaches `Exit -> Recover`; Recover's animation and audio begin instead of the Ultimate ending after Exit.
+- [ ] Verify an auto-chain node whose Cancel begins on its first Recovery frame advances before Cancel-phase movement or buffered input can skip it.
 - [ ] Execute directional/conditional branches repeatedly; the animation always matches the step selected by the resolver.
 - [ ] Test two consecutive steps that reuse the same Animator state or clip; the second step visibly restarts instead of continuing the previous normalized time.
 - [ ] Test a looping Active step; only its resolved action state is time-synchronized and unrelated Animator layers/states are not replayed.
@@ -175,7 +195,4 @@ Starting-value adjustment order:
 1. If jump descent still feels lunar, raise `jumpFallAcceleration` by 10-15 without changing launch/rise.
 2. If edge/drop feels pulled downward instead of naturally released, lower `neutralFallAcceleration` by 5; if it hangs, raise it by 5-10.
 3. Change `maximumFallSpeed` only if long falls remain globally too slow or too fast after both early curves feel correct.
-4. For Dash, change one starting knob at a time after ten repeated inputs:
-   - Weak first-frame response: raise peak by `0.04`; harsh/teleport-like response: lower it by `0.04`.
-   - Recovery hard-stops: raise brake-end ratio by `0.03`; Recovery glides too far: lower it by `0.03`.
-   - Initial accent lasts too long: lower settle progress by `0.05`; it vanishes too quickly: raise it by `0.05`.
+4. Do not retune Dash during the first pass. First verify the restored `55%`/`0.15x` Active curve, first-Recovery grounded handoff, and neutral-vs-A/D Air Recovery gravity rule. Record any feel failure before changing values.

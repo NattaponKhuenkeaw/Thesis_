@@ -33,5 +33,16 @@ namespace CombatCore
             IsGrounded = grounded;
             VerticalVelocity = verticalVelocity;
         }
+
+        /// <summary>
+        /// Synchronizes an authored position correction without publishing a
+        /// physical support transition to action conditions.
+        /// </summary>
+        public void SynchronizeWithoutTransition(bool grounded, float verticalVelocity)
+        {
+            WasGrounded = grounded;
+            IsGrounded = grounded;
+            VerticalVelocity = verticalVelocity;
+        }
     }
 }

@@ -622,6 +622,13 @@ MonoBehaviour:
           position: {x: -0.3, y: 0.1, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
+        - startFrame: 10
+          endFrame: 17
+          taskType: 0
+          easing: 1
+          position: {x: 0, y: -0.1, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
     - rid: 1588256193077838002
       type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -939,18 +946,32 @@ MonoBehaviour:
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
         keyframes:
-        - startFrame: 0
-          endFrame: 0
+        - startFrame: 1
+          endFrame: 5
           taskType: 0
           easing: 1
-          position: {x: 0.1, y: 0.05, z: 0}
+          position: {x: 0.1, y: 0.1, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
         - startFrame: 33
           endFrame: 42
           taskType: 0
           easing: 1
-          position: {x: 2, y: 0.05, z: 0}
+          position: {x: 2, y: 0.1, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 10
+          endFrame: 15
+          taskType: 0
+          easing: 1
+          position: {x: 0, y: -0.1, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 44
+          endFrame: 53
+          taskType: 0
+          easing: 1
+          position: {x: 0, y: -0.1, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
     - rid: 1588256193077838034

@@ -10,6 +10,7 @@ public sealed class PlayerJumpState : PlayerState
     private int startupFrame;
     private int totalStartupFrames;
     private bool hasLaunched;
+    private bool launchImmediatelyOnNextEntry;
 
     public PlayerJumpState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
@@ -26,10 +27,17 @@ public sealed class PlayerJumpState : PlayerState
     public override bool AcceptsAttackInput => hasLaunched;
     public override bool AcceptsSkillInput => hasLaunched;
     public override bool AcceptsUltimateInput => hasLaunched;
+    // Startup is the authored jump commitment window. Directional input may
+    // keep buffering, but the motor must hold position until launch so ground
+    // and double jumps have the same readable, punchy anticipation.
+    public override bool LocksMovement => !hasLaunched;
 
     public override void Enter()
     {
         base.Enter();
+        bool launchImmediately = launchImmediatelyOnNextEntry;
+        launchImmediatelyOnNextEntry = false;
+
         if (player.Movement == null)
         {
             fsm.ChangeState(fsm.IdleState);
@@ -37,6 +45,10 @@ public sealed class PlayerJumpState : PlayerState
         }
 
         BeginJump();
+        if (launchImmediately)
+        {
+            CommitJumpLaunch();
+        }
     }
 
     public override void FixedUpdate()
@@ -52,10 +64,7 @@ public sealed class PlayerJumpState : PlayerState
             return;
         }
 
-        player.Movement.ApplyJumpLaunch();
-        hasLaunched = true;
-        fsm.NotifyJumpLaunched();
-        player.Animator?.RestoreAirborneState();
+        CommitJumpLaunch();
     }
 
     public override void Update()
@@ -137,9 +146,18 @@ public sealed class PlayerJumpState : PlayerState
         fsm.CurrentState.OnAttackInput();
     }
 
+    /// <summary>
+    /// A direct cancel from a physically airborne Ground-output action already
+    /// paid its commitment in the outgoing Recovery. Launch on entry so the
+    /// silent output snap cannot add a second apparent jump-start lock.
+    /// </summary>
+    public void LaunchImmediatelyOnNextEntry()
+    {
+        launchImmediatelyOnNextEntry = true;
+    }
+
     private void BeginJump()
     {
-        player.Movement.ConsumeJumpCount();
         player.Movement.PrepareJumpStartup();
 
         totalStartupFrames = player.Movement.profile != null
@@ -147,5 +165,16 @@ public sealed class PlayerJumpState : PlayerState
             : 1;
         startupFrame = 0;
         hasLaunched = false;
+    }
+
+    private void CommitJumpLaunch()
+    {
+        // Commit the resource on the same frame as physical launch. If an
+        // action-output snap or real landing occurs during startup, its ground
+        // reset is therefore observed before this jump is counted.
+        player.Movement.ConsumeJumpCount();
+        player.Movement.ApplyJumpLaunch();
+        hasLaunched = true;
+        fsm.NotifyJumpLaunched();
     }
 }

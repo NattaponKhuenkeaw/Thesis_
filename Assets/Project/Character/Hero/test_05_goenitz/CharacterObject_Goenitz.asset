@@ -24,7 +24,7 @@ MonoBehaviour:
     speed: 6.5
     elementalMastery: 0
     critRate: 5
-    critDamage: 125
+    critDamage: 50
     cooldownRate: 0
     impact: 0
     damageReduction: 0
@@ -54,10 +54,10 @@ MonoBehaviour:
   _dashData:
     animationClip: {fileID: 7400000, guid: a84ff45c3f3eb5047be611bbaa8bb3e9, type: 2}
     startupFrames: 7
-    activeFrames: 33
-    recoveryFrames: 10
-    cancelWindowStartFrame: 44
-    dashSpeed: 20
+    activeFrames: 14
+    recoveryFrames: 29
+    cancelWindowStartFrame: 43
+    dashSpeed: 40
     cooldownFrames: 18
   kitDefinition:
     skill:
@@ -95,7 +95,7 @@ MonoBehaviour:
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 2
-        finalDamageValue: 2.5
+        finalDamageValue: 1.5
         finalDamageRequiresCriticalHit: 1
         auraEnergyRewardAdd: 0
         cooldownOperation: 0
@@ -149,7 +149,7 @@ MonoBehaviour:
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 2
-        finalDamageValue: 2.5
+        finalDamageValue: 1.5
         finalDamageRequiresCriticalHit: 1
         auraEnergyRewardAdd: 0
         cooldownOperation: 0

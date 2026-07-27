@@ -88,6 +88,11 @@ public class PlayerSkillState : CombatPlayerState
         return TryResolveNextStep(isAutoChain);
     }
 
+    protected override void OnStepBoundaryActionResolved(CombatAction action)
+    {
+        activeSkillAction = action as SkillAction;
+    }
+
     protected override void TryStartCooldown()
     {
         if (cooldownStartedForCurrentAction)

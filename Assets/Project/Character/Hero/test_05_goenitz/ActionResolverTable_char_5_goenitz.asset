@@ -61,7 +61,7 @@ MonoBehaviour:
   - actionId: goenitz.ultimate.yamidokoku
     actionName: Yamidokoku
     context: 0
-    outputContext: 0
+    outputContext: 1
     priority: 0
     conditions: []
     damageSourceStat: 0
@@ -84,7 +84,7 @@ MonoBehaviour:
   - actionId: goenitz.ultimate2.shin.yaotome
     actionName: 'Shin Yaotome : Jissokoku'
     context: 0
-    outputContext: 0
+    outputContext: 1
     priority: 10
     conditions:
     - rid: 3612912846363689063

@@ -256,9 +256,15 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         runInventory?.SetActiveTeamSlotIndex(currentIndex);
         lastSwitchTime = Time.time;
         LoadCurrentCharacter();
-        if (playerCharacter == null
-            || playerCharacter.StateMachine == null
-            || playerCharacter.StateMachine.IsGroundedContext)
+
+        // A successful Team Switch is always a Ground transition. The outgoing
+        // Ground action may have lifted the shared Rigidbody through MotionData,
+        // so resolve the incoming character against the floor unconditionally.
+        if (playerCharacter != null && playerCharacter.StateMachine != null)
+        {
+            playerCharacter.StateMachine.SnapToGroundForCharacterSwitch();
+        }
+        else
         {
             SnapPlayerToGround();
         }
@@ -269,12 +275,13 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     {
         if (playerCharacter == null) return;
 
-        LayerMask groundMask = LayerMask.GetMask("Ground");
         if (playerCharacter.Movement != null)
         {
-            groundMask = playerCharacter.Movement.GroundCollisionMask;
+            playerCharacter.Movement.SnapToGroundForActionOutput();
+            return;
         }
 
+        LayerMask groundMask = LayerMask.GetMask("Ground");
         Vector2 origin = playerCharacter.transform.position;
         origin.y += 0.5f;
 
