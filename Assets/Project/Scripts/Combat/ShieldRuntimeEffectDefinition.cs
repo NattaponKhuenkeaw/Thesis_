@@ -14,6 +14,7 @@ public class ShieldRuntimeEffectDefinition : RuntimeEffectDefinition
 
     public override bool SupportsStackMerging => true;
     public override bool ReapplyWhenRecipeChanges => true;
+    public override RuntimeEffectStateChannel StateChannel => RuntimeEffectStateChannel.Shield;
 
     public override void OnApply(RuntimeEffectContext context)
     {

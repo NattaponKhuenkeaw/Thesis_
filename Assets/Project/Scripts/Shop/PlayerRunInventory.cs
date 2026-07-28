@@ -158,6 +158,21 @@ namespace Project.ShopSystem
     [CreateAssetMenu(fileName = "New Player Run Inventory", menuName = "Inventory/Player Run Inventory", order = 12)]
     public class PlayerRunInventory : ScriptableObject
     {
+        public readonly struct RuntimeEffectMutationBatch : IDisposable
+        {
+            private readonly PlayerRunInventory owner;
+
+            internal RuntimeEffectMutationBatch(PlayerRunInventory owner)
+            {
+                this.owner = owner;
+            }
+
+            public void Dispose()
+            {
+                owner?.EndRuntimeEffectMutationBatch();
+            }
+        }
+
         private const int DefaultTeamSlotCount = 3;
         private const int DefaultArtifactSlotCount = 3;
         private const int DefaultCurrency = 1000;
@@ -192,9 +207,15 @@ namespace Project.ShopSystem
         [NonSerialized] private readonly Stack<float[]> runtimeEffectMultiplierSumPool = new Stack<float[]>();
         [NonSerialized] private readonly List<RuntimeEffectInstance> expiredRuntimeEffects = new List<RuntimeEffectInstance>();
         [NonSerialized] private readonly HashSet<CharacterObject> resolvingRuntimeStats = new HashSet<CharacterObject>();
+        [NonSerialized] private readonly List<CharacterObject> pendingRuntimeEffectCharacters = new List<CharacterObject>();
+        [NonSerialized] private readonly HashSet<CharacterObject> pendingRuntimeEffectCharacterSet = new HashSet<CharacterObject>();
+        [NonSerialized] private readonly HashSet<CharacterObject> pendingRuntimeEffectStatCharacters = new HashSet<CharacterObject>();
         [NonSerialized] private Dictionary<string, CharacterItem> characterItemsByCharacterId;
+        [NonSerialized] private int runtimeEffectMutationBatchDepth;
 
         public event Action<CharacterObject> OnRuntimeEffectsChanged;
+        internal event Action<CharacterObject, bool> OnRuntimeEffectsChangedDetailed;
+        public bool IsDispatchingRuntimeEffectStatChange { get; private set; }
 
         public IReadOnlyList<InventoryStack> ItemStacks
         {
@@ -670,6 +691,16 @@ namespace Project.ShopSystem
                 : Array.Empty<RuntimeEffectInstance>();
         }
 
+        public RuntimeEffectInstance GetRuntimeEffectByChannel(
+            CharacterObject character,
+            RuntimeEffectStateChannel channel)
+        {
+            RunCharacterState state = GetRunCharacter(character);
+            return state != null
+                ? RuntimeEffectRuntimeUtility.FindByStateChannel(state.ActiveEffects, channel)
+                : null;
+        }
+
         public int GetRuntimeEffectStackCount(CharacterObject character, string effectIdOrStackKey)
         {
             RunCharacterState state = GetRunCharacter(character);
@@ -777,13 +808,35 @@ namespace Project.ShopSystem
             bool effectAffectsStats = RuntimeEffectRuntimeUtility.AffectsStats(effectDefinition, recipe);
             float resolvedDuration = RuntimeEffectRuntimeUtility.ResolveDuration(effectDefinition, recipe, durationOverride);
             bool shouldStack = ResolveShouldStack(effectDefinition, recipe, stackMode);
-            RuntimeEffectInstance instance = !shouldStack
-                ? FindRuntimeEffect(activeEffects, effectDefinition, recipe)
-                : null;
-
             CharacterStats resolvedSourceStats = sourceStats != null
                 ? sourceStats.Clone()
                 : (sourceCharacter != null ? GetCharacterStats(sourceCharacter) : GetCharacterBaseStats(targetCharacter));
+
+            RuntimeEffectStateChannel stateChannel =
+                RuntimeEffectRuntimeUtility.GetStateChannel(effectDefinition, recipe);
+            RuntimeEffectInstance instance = stateChannel != RuntimeEffectStateChannel.None
+                ? FindAndCollapseStateChannel(activeEffects, stateChannel)
+                : !shouldStack ? FindRuntimeEffect(activeEffects, effectDefinition, recipe) : null;
+
+            if (instance != null && stateChannel != RuntimeEffectStateChannel.None)
+            {
+                bool affectsStats = effectAffectsStats || instance.AffectsStats;
+                instance.Rebind(effectDefinition, recipe, sourceCharacter, resolvedSourceStats);
+                instance.stackCount = 1;
+                instance.Refresh(durationOverride);
+                effectDefinition.OnReapplied(BuildRuntimeEffectContext(targetCharacter, state, instance, 0f));
+                state.RecalculateTickingEffects();
+
+                if (instance.IsExpired
+                    || RuntimeEffectRuntimeUtility.GetDurationType(effectDefinition, recipe) == RuntimeEffectDurationType.Instant)
+                {
+                    RemoveRuntimeEffect(targetCharacter, state, instance);
+                    return true;
+                }
+
+                RaiseRuntimeEffectsChanged(targetCharacter, affectsStats);
+                return true;
+            }
 
             if (shouldStack && effectDefinition.SupportsStackMerging)
             {
@@ -963,7 +1016,6 @@ namespace Project.ShopSystem
                 return false;
             }
 
-            string expectedStackKey = RuntimeEffectRuntimeUtility.GetStackKey(effectDefinition, recipe);
             bool changed = false;
             for (int i = state.MutableActiveEffects.Count - 1; i >= 0; i--)
             {
@@ -973,8 +1025,7 @@ namespace Project.ShopSystem
                     continue;
                 }
 
-                if (!string.Equals(instance.definition.StableId, effectDefinition.StableId, StringComparison.Ordinal)
-                    || !string.Equals(instance.StackKey, expectedStackKey, StringComparison.Ordinal))
+                if (!RuntimeEffectRuntimeUtility.MatchesIdentity(instance, effectDefinition, recipe))
                 {
                     continue;
                 }
@@ -1004,7 +1055,6 @@ namespace Project.ShopSystem
                 return false;
             }
 
-            string expectedStackKey = RuntimeEffectRuntimeUtility.GetStackKey(effectDefinition, recipe);
             for (int i = state.MutableActiveEffects.Count - 1; i >= 0; i--)
             {
                 RuntimeEffectInstance instance = state.MutableActiveEffects[i];
@@ -1013,8 +1063,7 @@ namespace Project.ShopSystem
                     continue;
                 }
 
-                if (!string.Equals(instance.definition.StableId, effectDefinition.StableId, StringComparison.Ordinal)
-                    || !string.Equals(instance.StackKey, expectedStackKey, StringComparison.Ordinal))
+                if (!RuntimeEffectRuntimeUtility.MatchesIdentity(instance, effectDefinition, recipe))
                 {
                     continue;
                 }
@@ -1124,7 +1173,8 @@ namespace Project.ShopSystem
                     }
 
                     instance.elapsedSeconds += resolvedDelta;
-                    if (instance.RequiresFormulaUpdate)
+                    if (instance.RequiresFormulaUpdate
+                        && instance.definition.IsFormulaUpdateDue(instance))
                     {
                         targetStatsSnapshot ??= GetCharacterStats(state.character);
                         instance.definition.OnUpdate(BuildRuntimeEffectContext(
@@ -1516,6 +1566,7 @@ namespace Project.ShopSystem
                 return currentDamage;
             }
 
+            using RuntimeEffectMutationBatch mutationBatch = BeginRuntimeEffectMutationBatch();
             float result = currentDamage;
             expiredRuntimeEffects.Clear();
             bool shieldAmountChanged = false;
@@ -1631,10 +1682,66 @@ namespace Project.ShopSystem
 
         private void RaiseRuntimeEffectsChanged(CharacterObject character, bool affectsStats)
         {
+            if (runtimeEffectMutationBatchDepth > 0)
+            {
+                if (pendingRuntimeEffectCharacterSet.Add(character))
+                {
+                    pendingRuntimeEffectCharacters.Add(character);
+                }
+
+                if (affectsStats)
+                {
+                    pendingRuntimeEffectStatCharacters.Add(character);
+                }
+
+                return;
+            }
+
+            DispatchRuntimeEffectsChanged(character, affectsStats);
+        }
+
+        public RuntimeEffectMutationBatch BeginRuntimeEffectMutationBatch()
+        {
+            runtimeEffectMutationBatchDepth++;
+            return new RuntimeEffectMutationBatch(this);
+        }
+
+        private void EndRuntimeEffectMutationBatch()
+        {
+            runtimeEffectMutationBatchDepth = Mathf.Max(0, runtimeEffectMutationBatchDepth - 1);
+            if (runtimeEffectMutationBatchDepth > 0)
+            {
+                return;
+            }
+
+            while (pendingRuntimeEffectCharacters.Count > 0)
+            {
+                CharacterObject character = pendingRuntimeEffectCharacters[0];
+                pendingRuntimeEffectCharacters.RemoveAt(0);
+                pendingRuntimeEffectCharacterSet.Remove(character);
+                bool affectsStats = pendingRuntimeEffectStatCharacters.Remove(character);
+                DispatchRuntimeEffectsChanged(character, affectsStats);
+            }
+
+            pendingRuntimeEffectCharacterSet.Clear();
+            pendingRuntimeEffectStatCharacters.Clear();
+        }
+
+        private void DispatchRuntimeEffectsChanged(CharacterObject character, bool affectsStats)
+        {
             OnRuntimeEffectsChanged?.Invoke(character);
+            OnRuntimeEffectsChangedDetailed?.Invoke(character, affectsStats);
             if (affectsStats)
             {
-                CharacterEvents.NotifyStatsChanged(character);
+                IsDispatchingRuntimeEffectStatChange = true;
+                try
+                {
+                    CharacterEvents.NotifyStatsChanged(character);
+                }
+                finally
+                {
+                    IsDispatchingRuntimeEffectStatChange = false;
+                }
             }
         }
 
@@ -1658,6 +1765,37 @@ namespace Project.ShopSystem
             }
 
             return null;
+        }
+
+        private static RuntimeEffectInstance FindAndCollapseStateChannel(
+            List<RuntimeEffectInstance> activeEffects,
+            RuntimeEffectStateChannel channel)
+        {
+            RuntimeEffectInstance retained = null;
+            for (int i = activeEffects.Count - 1; i >= 0; i--)
+            {
+                RuntimeEffectInstance candidate = activeEffects[i];
+                if (candidate == null || candidate.StateChannel != channel)
+                {
+                    continue;
+                }
+
+                if (retained == null)
+                {
+                    retained = candidate;
+                    continue;
+                }
+
+                retained.remainingShieldAmount =
+                    Mathf.Max(0f, retained.remainingShieldAmount)
+                    + Mathf.Max(0f, candidate.remainingShieldAmount);
+                retained.appliedShieldAmount =
+                    Mathf.Max(0f, retained.appliedShieldAmount)
+                    + Mathf.Max(0f, candidate.appliedShieldAmount);
+                activeEffects.RemoveAt(i);
+            }
+
+            return retained;
         }
 
         private static int CountRuntimeEffects(
@@ -1727,61 +1865,19 @@ namespace Project.ShopSystem
             for (int i = 0; i < activeEffects.Count; i++)
             {
                 RuntimeEffectInstance instance = activeEffects[i];
-                if (!MatchesRuntimeEffect(instance, effectDefinition, recipe))
+                if (RuntimeEffectRuntimeUtility.CanMergeStack(
+                    instance,
+                    effectDefinition,
+                    recipe,
+                    sourceCharacter,
+                    sourceStats,
+                    resolvedDuration))
                 {
-                    continue;
+                    return instance;
                 }
-
-                if (instance.sourceCharacter != sourceCharacter)
-                {
-                    continue;
-                }
-
-                if (RuntimeEffectRuntimeUtility.GetDurationType(effectDefinition, recipe) != RuntimeEffectDurationType.Forever
-                    && !StatsApproximatelyEqual(instance.sourceStatsSnapshot, sourceStats))
-                {
-                    continue;
-                }
-
-                if (!Mathf.Approximately(instance.appliedDurationSeconds, resolvedDuration))
-                {
-                    continue;
-                }
-
-                return instance;
             }
 
             return null;
-        }
-
-        private static bool StatsApproximatelyEqual(CharacterStats a, CharacterStats b)
-        {
-            if (ReferenceEquals(a, b))
-            {
-                return true;
-            }
-
-            if (a == null || b == null)
-            {
-                return a == null && b == null;
-            }
-
-            return Approximately(a.maxHP, b.maxHP)
-                && Approximately(a.attack, b.attack)
-                && Approximately(a.defense, b.defense)
-                && Approximately(a.speed, b.speed)
-                && Approximately(a.elementalMastery, b.elementalMastery)
-                && Approximately(a.critRate, b.critRate)
-                && Approximately(a.critDamage, b.critDamage)
-                && Approximately(a.cooldownRate, b.cooldownRate)
-                && Approximately(a.impact, b.impact)
-                && Approximately(a.damageReduction, b.damageReduction)
-                && Approximately(a.aeRecharge, b.aeRecharge);
-        }
-
-        private static bool Approximately(float a, float b)
-        {
-            return Mathf.Abs(a - b) <= 0.0001f;
         }
 
         private static bool MatchesRuntimeEffect(
@@ -1789,13 +1885,7 @@ namespace Project.ShopSystem
             RuntimeEffectDefinition effectDefinition,
             RuntimeEffectRecipe recipe)
         {
-            if (instance == null || instance.definition == null || effectDefinition == null)
-            {
-                return false;
-            }
-
-            return string.Equals(instance.definition.StableId, effectDefinition.StableId, StringComparison.Ordinal)
-                && string.Equals(instance.StackKey, RuntimeEffectRuntimeUtility.GetStackKey(effectDefinition, recipe), StringComparison.Ordinal);
+            return RuntimeEffectRuntimeUtility.MatchesIdentity(instance, effectDefinition, recipe);
         }
 
         private static bool RuntimeEffectMatchesKey(RuntimeEffectInstance instance, string effectIdOrStackKey)

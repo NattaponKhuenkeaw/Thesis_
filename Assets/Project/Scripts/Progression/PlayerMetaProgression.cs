@@ -67,6 +67,12 @@ namespace Project.Progression
     [CreateAssetMenu(fileName = "New Player Meta Progression", menuName = "Progression/Player Meta Progression", order = 20)]
     public class PlayerMetaProgression : ScriptableObject
     {
+        private sealed class UnlockedPotentialCacheEntry
+        {
+            public CharacterKitDefinition kit;
+            public IReadOnlyList<PotentialNodeDefinition> nodes;
+        }
+
         private const string SaveKey = "project.player_meta_progression.v1";
 
         [Header("Unused Upgrade Materials")]
@@ -77,12 +83,15 @@ namespace Project.Progression
 
         [NonSerialized] private bool hasLoadedPersistentState;
         [NonSerialized] private bool isApplyingPersistentState;
+        [NonSerialized] private Dictionary<CharacterObject, UnlockedPotentialCacheEntry> unlockedPotentialCache;
 
         public IReadOnlyList<ProgressionFragmentStack> Fragments => fragments;
         public IReadOnlyList<CharacterPotentialProgress> CharacterPotentials => characterPotentials;
+        public event Action<string> OnPotentialChanged;
 
         private void OnEnable()
         {
+            InvalidatePotentialCache();
             if (ShouldUsePersistentStorage())
             {
                 LoadPersistentStateIfNeeded();
@@ -199,7 +208,9 @@ namespace Project.Progression
             EnsureData();
             fragments.Clear();
             characterPotentials.Clear();
+            InvalidatePotentialCache();
             SavePersistentState();
+            OnPotentialChanged?.Invoke(null);
         }
 
         public int GetPotentialLevel(CharacterObject character, PotentialTrack track)
@@ -236,10 +247,35 @@ namespace Project.Progression
             bool changed = before != progress.GetLevel(track);
             if (changed)
             {
+                InvalidatePotentialCache(characterId);
                 SavePersistentState();
+                OnPotentialChanged?.Invoke(characterId);
             }
 
             return changed;
+        }
+
+        public bool ResetPotentialLevels(CharacterObject character)
+        {
+            return character != null && ResetPotentialLevels(character.characterId);
+        }
+
+        public bool ResetPotentialLevels(string characterId)
+        {
+            CharacterPotentialProgress progress = FindPotentialProgress(characterId, createIfMissing: false);
+            if (progress == null
+                || (progress.skillLevel == 0 && progress.ultimateLevel == 0 && progress.passiveLevel == 0))
+            {
+                return false;
+            }
+
+            progress.skillLevel = 0;
+            progress.ultimateLevel = 0;
+            progress.passiveLevel = 0;
+            InvalidatePotentialCache(characterId);
+            SavePersistentState();
+            OnPotentialChanged?.Invoke(characterId);
+            return true;
         }
 
         public bool CanUpgradePotential(CharacterObject character, PotentialTrack track, out PotentialNodeDefinition nextNode)
@@ -312,20 +348,39 @@ namespace Project.Progression
             };
         }
 
-        public IEnumerable<PotentialNodeDefinition> GetUnlockedPotentialNodes(CharacterObject character)
+        public IReadOnlyList<PotentialNodeDefinition> GetUnlockedPotentialNodes(CharacterObject character)
         {
             if (character == null || character.kitDefinition == null)
             {
-                yield break;
+                return Array.Empty<PotentialNodeDefinition>();
             }
 
+            unlockedPotentialCache ??=
+                new Dictionary<CharacterObject, UnlockedPotentialCacheEntry>();
+            if (unlockedPotentialCache.TryGetValue(character, out UnlockedPotentialCacheEntry cached)
+                && cached != null
+                && cached.kit == character.kitDefinition
+                && cached.nodes != null)
+            {
+                return cached.nodes;
+            }
+
+            List<PotentialNodeDefinition> unlockedNodes = new List<PotentialNodeDefinition>();
             foreach (PotentialNodeDefinition node in character.kitDefinition.EnumerateAllNodes())
             {
                 if (IsPotentialNodeUnlocked(character, node))
                 {
-                    yield return node;
+                    unlockedNodes.Add(node);
                 }
             }
+
+            IReadOnlyList<PotentialNodeDefinition> result = unlockedNodes.AsReadOnly();
+            unlockedPotentialCache[character] = new UnlockedPotentialCacheEntry
+            {
+                kit = character.kitDefinition,
+                nodes = result
+            };
+            return result;
         }
 
         public bool IsPotentialNodeUnlocked(CharacterObject character, PotentialNodeDefinition node)
@@ -476,6 +531,43 @@ namespace Project.Progression
             }
 
             isApplyingPersistentState = false;
+            InvalidatePotentialCache();
+            OnPotentialChanged?.Invoke(null);
+        }
+
+        private void InvalidatePotentialCache(string characterId = null)
+        {
+            if (unlockedPotentialCache == null)
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(characterId))
+            {
+                unlockedPotentialCache.Clear();
+                return;
+            }
+
+            List<CharacterObject> matches = null;
+            foreach (CharacterObject character in unlockedPotentialCache.Keys)
+            {
+                if (character != null
+                    && string.Equals(character.characterId, characterId, StringComparison.Ordinal))
+                {
+                    matches ??= new List<CharacterObject>();
+                    matches.Add(character);
+                }
+            }
+
+            if (matches == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < matches.Count; i++)
+            {
+                unlockedPotentialCache.Remove(matches[i]);
+            }
         }
 
         private ProgressionFragmentStack FindFragmentStack(string sourceId, ProgressionFragmentType fragmentType)

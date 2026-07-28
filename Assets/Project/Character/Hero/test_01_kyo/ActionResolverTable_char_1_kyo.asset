@@ -34,7 +34,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     damageSourceStat: 0
-    actionDamageMultiplier: 3
+    actionDamageMultiplier: 2.5
     auraEnergyReward: 0
     comboTree:
       treeName: Combo
@@ -135,7 +135,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.39169496, y: 2.2068093}
         size: {x: 1.418764, y: 1.550219}
-        damageRatio: 0.15
+        damageRatio: 0.1
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
@@ -1442,7 +1442,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.1020966, y: 1.9555622}
         size: {x: 1.7736158, y: 0.93169653}
-        damageRatio: 0.5
+        damageRatio: 0.25
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
@@ -1511,7 +1511,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.28628784, y: 2.3803887}
         size: {x: 1.3284358, y: 2.0338614}
-        damageRatio: 0.15
+        damageRatio: 0.1
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
@@ -1544,7 +1544,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.48456204, y: 1.63021}
         size: {x: 2.0094042, y: 1.0838954}
-        damageRatio: 0.2
+        damageRatio: 0.15
         impactTier: 1
         useDeterministicReaction: 1
         reactionKind: 1
@@ -1685,7 +1685,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.99722207, y: 1.2020371}
         size: {x: 1.6311111, y: 2.3251853}
-        damageRatio: 0.5
+        damageRatio: 0.45
         impactTier: 2
         useDeterministicReaction: 1
         reactionKind: 2

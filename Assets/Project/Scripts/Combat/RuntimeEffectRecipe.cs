@@ -537,9 +537,16 @@ public static class RuntimeEffectRuntimeUtility
             return false;
         }
 
-        return instance.recipe != null && instance.recipe.policy != null
-            ? instance.recipe.policy.removeOnOwnerDamaged
-            : instance.definition != null && instance.definition.removeOnOwnerDamaged;
+        return RemoveOnOwnerDamaged(instance.definition, instance.recipe);
+    }
+
+    public static bool RemoveOnOwnerDamaged(
+        RuntimeEffectDefinition definition,
+        RuntimeEffectRecipeData recipe)
+    {
+        return recipe != null && recipe.policy != null
+            ? recipe.policy.removeOnOwnerDamaged
+            : definition != null && definition.removeOnOwnerDamaged;
     }
 
     public static bool RequiresTicking(RuntimeEffectInstance instance)
@@ -694,6 +701,133 @@ public static class RuntimeEffectRuntimeUtility
         return string.IsNullOrWhiteSpace(parameterSignature)
             ? baseKey
             : $"{baseKey}|{parameterSignature}";
+    }
+
+    public static RuntimeEffectStateChannel GetStateChannel(
+        RuntimeEffectDefinition definition,
+        RuntimeEffectRecipeData recipe)
+    {
+        RuntimeEffectDefinition resolvedDefinition = ResolveDefinition(definition, recipe);
+        return resolvedDefinition != null
+            ? resolvedDefinition.StateChannel
+            : RuntimeEffectStateChannel.None;
+    }
+
+    public static bool MatchesIdentity(
+        RuntimeEffectInstance instance,
+        RuntimeEffectDefinition definition,
+        RuntimeEffectRecipeData recipe)
+    {
+        if (instance == null || instance.definition == null || definition == null)
+        {
+            return false;
+        }
+
+        RuntimeEffectStateChannel channel = GetStateChannel(definition, recipe);
+        if (channel != RuntimeEffectStateChannel.None)
+        {
+            return instance.StateChannel == channel;
+        }
+
+        return instance.StateChannel == RuntimeEffectStateChannel.None
+            && string.Equals(instance.definition.StableId, definition.StableId, StringComparison.Ordinal)
+            && string.Equals(instance.StackKey, GetStackKey(definition, recipe), StringComparison.Ordinal);
+    }
+
+    public static bool MatchesIdentity(
+        RuntimeEffectInstance instance,
+        RuntimeEffectDefinition definition,
+        string resolvedStackKey)
+    {
+        if (instance == null || instance.definition == null || definition == null)
+        {
+            return false;
+        }
+
+        RuntimeEffectStateChannel channel = GetStateChannel(definition, null);
+        if (channel != RuntimeEffectStateChannel.None)
+        {
+            return instance.StateChannel == channel;
+        }
+
+        return instance.StateChannel == RuntimeEffectStateChannel.None
+            && string.Equals(instance.definition.StableId, definition.StableId, StringComparison.Ordinal)
+            && string.Equals(instance.StackKey, resolvedStackKey, StringComparison.Ordinal);
+    }
+
+    public static RuntimeEffectInstance FindByStateChannel(
+        IReadOnlyList<RuntimeEffectInstance> activeEffects,
+        RuntimeEffectStateChannel channel)
+    {
+        if (activeEffects == null || channel == RuntimeEffectStateChannel.None)
+        {
+            return null;
+        }
+
+        for (int i = 0; i < activeEffects.Count; i++)
+        {
+            RuntimeEffectInstance instance = activeEffects[i];
+            if (instance != null && instance.StateChannel == channel)
+            {
+                return instance;
+            }
+        }
+
+        return null;
+    }
+
+    public static bool CanMergeStack(
+        RuntimeEffectInstance instance,
+        RuntimeEffectDefinition definition,
+        RuntimeEffectRecipeData recipe,
+        CharacterObject sourceCharacter,
+        CharacterStats sourceStats,
+        float resolvedDuration)
+    {
+        if (!MatchesIdentity(instance, definition, recipe)
+            || instance.StateChannel != RuntimeEffectStateChannel.None
+            || instance.sourceCharacter != sourceCharacter)
+        {
+            return false;
+        }
+
+        if (GetDurationType(definition, recipe) != RuntimeEffectDurationType.Forever
+            && !StatsApproximatelyEqual(instance.sourceStatsSnapshot, sourceStats))
+        {
+            return false;
+        }
+
+        return Mathf.Approximately(instance.appliedDurationSeconds, resolvedDuration);
+    }
+
+    private static bool StatsApproximatelyEqual(CharacterStats a, CharacterStats b)
+    {
+        if (ReferenceEquals(a, b))
+        {
+            return true;
+        }
+
+        if (a == null || b == null)
+        {
+            return a == null && b == null;
+        }
+
+        return Approximately(a.maxHP, b.maxHP)
+            && Approximately(a.attack, b.attack)
+            && Approximately(a.defense, b.defense)
+            && Approximately(a.speed, b.speed)
+            && Approximately(a.elementalMastery, b.elementalMastery)
+            && Approximately(a.critRate, b.critRate)
+            && Approximately(a.critDamage, b.critDamage)
+            && Approximately(a.cooldownRate, b.cooldownRate)
+            && Approximately(a.impact, b.impact)
+            && Approximately(a.damageReduction, b.damageReduction)
+            && Approximately(a.aeRecharge, b.aeRecharge);
+    }
+
+    private static bool Approximately(float a, float b)
+    {
+        return Mathf.Abs(a - b) <= 0.0001f;
     }
 
     public static RuntimeEffectParameterSet GetParameters(RuntimeEffectInstance instance)

@@ -22,4 +22,4 @@ MonoBehaviour:
   maxAirDashCount: 1
   coyoteFrames: 7
   jumpStartupFrames: 5
-  landingRecoveryFrames: 6
+  landingRecoveryFrames: 3

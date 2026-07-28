@@ -99,6 +99,8 @@ public class AbilityUIManager : MonoBehaviour
 
     private readonly Dictionary<string, CooldownDisplayState> skillCooldowns     = new();
     private readonly Dictionary<string, CooldownDisplayState> ultimateCooldowns  = new();
+    private readonly List<string> cooldownKeyBuffer = new();
+    private readonly List<string> cooldownClearBuffer = new();
 
     private SlotRushState skillRush;
     private SlotRushState ultRush;
@@ -262,22 +264,22 @@ public class AbilityUIManager : MonoBehaviour
     {
         if (cooldowns.Count == 0) return;
 
-        List<string> keysToClear = null;
-        List<string> keys        = new List<string>(cooldowns.Keys);
+        cooldownKeyBuffer.Clear();
+        cooldownClearBuffer.Clear();
+        cooldownKeyBuffer.AddRange(cooldowns.Keys);
+        string currentKey = GetCurrentCharacterKey();
 
-        for (int i = 0; i < keys.Count; i++)
+        for (int i = 0; i < cooldownKeyBuffer.Count; i++)
         {
-            string key   = keys[i];
+            string key   = cooldownKeyBuffer[i];
             CooldownDisplayState state = cooldowns[key];
             state.current = Mathf.Max(0f, state.current - Time.deltaTime);
 
             if (state.current <= 0f || state.max <= 0f)
             {
-                keysToClear ??= new List<string>();
-                keysToClear.Add(key);
+                cooldownClearBuffer.Add(key);
 
                 // Kick off ready-rush for the current character's slot
-                string currentKey = GetCurrentCharacterKey();
                 if (string.Equals(key, currentKey, System.StringComparison.Ordinal)
                     && !rush.isRushing)
                 {
@@ -289,9 +291,8 @@ public class AbilityUIManager : MonoBehaviour
             cooldowns[key] = state;
         }
 
-        if (keysToClear == null) return;
-        for (int i = 0; i < keysToClear.Count; i++)
-            cooldowns.Remove(keysToClear[i]);
+        for (int i = 0; i < cooldownClearBuffer.Count; i++)
+            cooldowns.Remove(cooldownClearBuffer[i]);
     }
 
     // ─────────────────────────────────────────────────────────────────────────

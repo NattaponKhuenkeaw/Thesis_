@@ -50,7 +50,7 @@ MonoBehaviour:
     conditions: []
     damageSourceStat: 0
     actionDamageMultiplier: 4
-    auraEnergyReward: 10
+    auraEnergyReward: 5
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
@@ -66,7 +66,7 @@ MonoBehaviour:
     - rid: 3612912868654055999
     damageSourceStat: 0
     actionDamageMultiplier: 12
-    auraEnergyReward: 10
+    auraEnergyReward: 5
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
@@ -335,9 +335,10 @@ MonoBehaviour:
           - audio
           - hitbox
           - events
-        routes: []
+        routes:
+        - rid: 3612913392612278362
         defaultNext:
-          rid: 1588255929706479959
+          rid: -2
         onGrabSuccessNode:
           rid: -2
     - rid: 1588255929706479942
@@ -838,7 +839,7 @@ MonoBehaviour:
       data:
         keyframes:
         - startFrame: 13
-          endFrame: 19
+          endFrame: 27
           taskType: 0
           easing: 16
           position: {x: 0, y: 1.5, z: 0}
@@ -849,6 +850,13 @@ MonoBehaviour:
           taskType: 0
           easing: 16
           position: {x: 0, y: -1.5, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 11
+          endFrame: 13
+          taskType: 0
+          easing: 1
+          position: {x: 0.5, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
     - rid: 1588255929706479997
@@ -865,8 +873,8 @@ MonoBehaviour:
         activeFrames: 3
         elementType: 1
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 0.5950986, y: 0.96649176}
-        size: {x: 1.4098027, y: 1.9329835}
+        offset: {x: 0.8438324, y: 1.2048619}
+        size: {x: 1.9901812, y: 2.4097238}
         damageRatio: 0.33333334
         impactTier: 0
         useDeterministicReaction: 1
@@ -898,8 +906,8 @@ MonoBehaviour:
         activeFrames: 4
         elementType: 1
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 0.90847754, y: 2.3834577}
-        size: {x: 3.2177553, y: 1.268593}
+        offset: {x: 1.012117, y: 2.414549}
+        size: {x: 3.4250343, y: 2.2428002}
         damageRatio: 0.33333334
         impactTier: 1
         useDeterministicReaction: 1
@@ -931,8 +939,8 @@ MonoBehaviour:
         activeFrames: 3
         elementType: 1
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: -0.15666091, y: 2.9375181}
-        size: {x: 3.9332266, y: 1.877712}
+        offset: {x: -0.15666091, y: 2.8235152}
+        size: {x: 3.9332266, y: 2.1057181}
         damageRatio: 0.33333334
         impactTier: 1
         useDeterministicReaction: 1
@@ -2165,3 +2173,23 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         impactTier: 0
+    - rid: 3612913392612278362
+      type: {class: ComboRoute, ns: , asm: Assembly-CSharp}
+      data:
+        direction: 1
+        requireGrounded: 0
+        requireAirborne: 0
+        requireGrabbedEnemy: 0
+        requiredPreviousState: 0
+        conditions:
+        - rid: 3612913392612278363
+        targetNode:
+          rid: 1588255929706479959
+        priority: 0
+        allowImmediateInterrupt: 0
+    - rid: 3612913392612278363
+      type: {class: PotentialLevelActionCondition, ns: , asm: Assembly-CSharp}
+      data:
+        track: 2
+        comparison: 3
+        level: 3

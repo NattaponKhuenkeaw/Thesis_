@@ -14,8 +14,6 @@ public sealed class PlayerJumpState : PlayerState
 
     public PlayerJumpState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
-    // Keep the existing serialized Airborne ID; JumpStartup and JumpRising are
-    // legacy enum values retained only so old serialized data does not shift.
     public override PlayerStateId StateId => PlayerStateId.Airborne;
     public override PlayerStatePriority Priority => PlayerStatePriority.Ability;
 

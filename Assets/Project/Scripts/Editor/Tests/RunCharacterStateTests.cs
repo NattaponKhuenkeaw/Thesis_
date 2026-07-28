@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Reflection;
 using NUnit.Framework;
 using Project.InventorySystem.Items;
 using Project.ShopSystem;
@@ -364,17 +366,22 @@ public class RunCharacterStateTests
             RuntimeEffectInstance instance = inventory.GetActiveRuntimeEffects(character)[0];
             Assert.That(instance.remainingShieldAmount, Is.EqualTo(40f).Within(0.001f));
 
+            int runtimeEffectNotifications = 0;
+            inventory.OnRuntimeEffectsChanged += _ => runtimeEffectNotifications++;
             RuntimeEffectDamageContext context = new RuntimeEffectDamageContext();
             float firstDamage = inventory.ModifyIncomingDamage(character, context, 25f);
             Assert.That(firstDamage, Is.EqualTo(0f).Within(0.001f));
             Assert.That(context.shieldAbsorbedAmount, Is.EqualTo(25f).Within(0.001f));
             Assert.That(instance.remainingShieldAmount, Is.EqualTo(15f).Within(0.001f));
             Assert.That(inventory.GetActiveRuntimeEffects(character).Count, Is.EqualTo(1));
+            Assert.That(runtimeEffectNotifications, Is.EqualTo(1));
 
+            runtimeEffectNotifications = 0;
             float secondDamage = inventory.ModifyIncomingDamage(character, context, 20f);
             Assert.That(secondDamage, Is.EqualTo(5f).Within(0.001f));
             Assert.That(context.shieldAbsorbedAmount, Is.EqualTo(40f).Within(0.001f));
             Assert.That(inventory.GetActiveRuntimeEffects(character).Count, Is.EqualTo(0));
+            Assert.That(runtimeEffectNotifications, Is.EqualTo(1));
         }
         finally
         {
@@ -437,35 +444,237 @@ public class RunCharacterStateTests
     }
 
     [Test]
-    public void RuntimeEffectShieldSharedStackKeyAddsAcrossDifferentRecipes()
+    public void RuntimeEffectShieldStateChannelAddsAcrossDifferentRecipesAndRefreshesIncomingDuration()
     {
         PlayerRunInventory inventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
         CharacterObject character = ScriptableObject.CreateInstance<CharacterObject>();
+        CharacterObject secondSource = ScriptableObject.CreateInstance<CharacterObject>();
         ShieldRuntimeEffectDefinition shield = ScriptableObject.CreateInstance<ShieldRuntimeEffectDefinition>();
 
         try
         {
             character.stats.maxHP = 100f;
+            secondSource.stats.maxHP = 100f;
             shield.durationType = RuntimeEffectDurationType.Seconds;
             shield.durationSeconds = 30f;
 
-            RuntimeEffectRecipe largeShield = CreateShieldRecipe(shield, "test.skill-shield", 0.4f);
-            RuntimeEffectRecipe smallShield = CreateShieldRecipe(shield, "test.grab-shield", 0.12f);
+            RuntimeEffectRecipe largeShield = CreateShieldRecipe(shield, "test.skill-shield", 0.4f, 30f);
+            RuntimeEffectRecipe smallShield = CreateShieldRecipe(shield, "test.grab-shield", 0.12f, 12f);
 
-            inventory.DeployTeam(new[] { character }, 0);
+            inventory.DeployTeam(new[] { character, secondSource }, 0);
             inventory.ApplyRuntimeEffect(character, largeShield, character, character.stats);
-            inventory.ApplyRuntimeEffect(character, smallShield, character, character.stats);
+            RuntimeEffectInstance first = inventory.GetRuntimeEffectByChannel(
+                character,
+                RuntimeEffectStateChannel.Shield);
+            Assert.That(first, Is.Not.Null);
+
+            inventory.ModifyIncomingDamage(character, new RuntimeEffectDamageContext(), 10f);
+            inventory.TickRuntimeEffects(2f);
+            inventory.ApplyRuntimeEffect(character, smallShield, secondSource, secondSource.stats);
 
             RuntimeEffectInstance instance = inventory.GetActiveRuntimeEffects(character)[0];
             Assert.That(inventory.GetActiveRuntimeEffects(character).Count, Is.EqualTo(1));
-            Assert.That(instance.remainingShieldAmount, Is.EqualTo(52f).Within(0.001f));
+            Assert.That(instance, Is.SameAs(first));
+            Assert.That(instance.StateChannel, Is.EqualTo(RuntimeEffectStateChannel.Shield));
+            Assert.That(instance.stackCount, Is.EqualTo(1));
+            Assert.That(instance.remainingShieldAmount, Is.EqualTo(42f).Within(0.001f));
             Assert.That(instance.appliedShieldAmount, Is.EqualTo(52f).Within(0.001f));
+            Assert.That(instance.remainingSeconds, Is.EqualTo(12f).Within(0.001f));
+            Assert.That(instance.appliedDurationSeconds, Is.EqualTo(12f).Within(0.001f));
+            Assert.That(instance.recipe, Is.SameAs(smallShield));
+            Assert.That(instance.sourceCharacter, Is.SameAs(secondSource));
+            Assert.That(
+                inventory.GetRuntimeEffectByChannel(character, RuntimeEffectStateChannel.Shield),
+                Is.SameAs(instance));
+
+            inventory.ApplyRuntimeEffect(
+                secondSource,
+                smallShield,
+                secondSource,
+                secondSource.stats);
+            Assert.That(
+                inventory.GetRuntimeEffectByChannel(secondSource, RuntimeEffectStateChannel.Shield)
+                    .remainingShieldAmount,
+                Is.EqualTo(12f).Within(0.001f));
+            Assert.That(instance.remainingShieldAmount, Is.EqualTo(42f).Within(0.001f));
+
+            inventory.TickRuntimeEffects(12.1f);
+            Assert.That(inventory.GetActiveRuntimeEffects(character), Is.Empty);
+            Assert.That(inventory.GetActiveRuntimeEffects(secondSource), Is.Empty);
         }
         finally
         {
             Object.DestroyImmediate(shield);
+            Object.DestroyImmediate(secondSource);
             Object.DestroyImmediate(character);
             Object.DestroyImmediate(inventory);
+        }
+    }
+
+    [Test]
+    public void RuntimeEffectReceiverUsesOneShieldStateAcrossRecipes()
+    {
+        GameObject receiverObject = new GameObject("Shield Receiver");
+        RuntimeEffectReceiver receiver = receiverObject.AddComponent<RuntimeEffectReceiver>();
+        CharacterObject firstSource = ScriptableObject.CreateInstance<CharacterObject>();
+        CharacterObject secondSource = ScriptableObject.CreateInstance<CharacterObject>();
+        ShieldRuntimeEffectDefinition shield = ScriptableObject.CreateInstance<ShieldRuntimeEffectDefinition>();
+
+        try
+        {
+            firstSource.stats.maxHP = 100f;
+            secondSource.stats.maxHP = 100f;
+            RuntimeEffectRecipe largeShield = CreateShieldRecipe(shield, "receiver.large", 0.4f, 30f);
+            RuntimeEffectRecipe smallShield = CreateShieldRecipe(shield, "receiver.small", 0.12f, 8f);
+
+            RuntimeEffectInstance first =
+                receiver.ApplyEffect(largeShield, firstSource, firstSource.stats);
+            RuntimeEffectInstance reapplied =
+                receiver.ApplyEffect(smallShield, secondSource, secondSource.stats);
+
+            Assert.That(receiver.ActiveEffects.Count, Is.EqualTo(1));
+            Assert.That(reapplied, Is.SameAs(first));
+            Assert.That(receiver.GetEffectByChannel(RuntimeEffectStateChannel.Shield), Is.SameAs(first));
+            Assert.That(first.remainingShieldAmount, Is.EqualTo(52f).Within(0.001f));
+            Assert.That(first.stackCount, Is.EqualTo(1));
+            Assert.That(first.remainingSeconds, Is.EqualTo(8f).Within(0.001f));
+            Assert.That(first.sourceCharacter, Is.SameAs(secondSource));
+
+            int changeNotifications = 0;
+            receiver.OnEffectsChanged += () => changeNotifications++;
+            float remainingDamage = receiver.ModifyIncomingDamage(
+                new RuntimeEffectDamageContext(),
+                100f);
+            Assert.That(remainingDamage, Is.EqualTo(48f).Within(0.001f));
+            Assert.That(receiver.ActiveEffects, Is.Empty);
+            Assert.That(changeNotifications, Is.EqualTo(1));
+        }
+        finally
+        {
+            Object.DestroyImmediate(shield);
+            Object.DestroyImmediate(secondSource);
+            Object.DestroyImmediate(firstSource);
+            Object.DestroyImmediate(receiverObject);
+        }
+    }
+
+    [Test]
+    public void RuntimeEffectStateChannelDoesNotMergeDifferentNonShieldRecipes()
+    {
+        PlayerRunInventory inventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        CharacterObject character = ScriptableObject.CreateInstance<CharacterObject>();
+        DamageModifierRuntimeEffectDefinition effect =
+            ScriptableObject.CreateInstance<DamageModifierRuntimeEffectDefinition>();
+
+        try
+        {
+            RuntimeEffectRecipe first = new RuntimeEffectRecipe
+            {
+                definition = effect,
+                recipeId = "non-channel.first",
+                policy = new RuntimeEffectApplicationPolicy
+                {
+                    durationType = RuntimeEffectDurationType.Seconds,
+                    durationSeconds = 10f,
+                    stackMode = RuntimeEffectStackMode.Override
+                }
+            };
+            RuntimeEffectRecipe second = new RuntimeEffectRecipe
+            {
+                definition = effect,
+                recipeId = "non-channel.second",
+                policy = new RuntimeEffectApplicationPolicy
+                {
+                    durationType = RuntimeEffectDurationType.Seconds,
+                    durationSeconds = 10f,
+                    stackMode = RuntimeEffectStackMode.Override
+                }
+            };
+
+            inventory.DeployTeam(new[] { character }, 0);
+            inventory.ApplyRuntimeEffect(character, first, character, character.stats);
+            inventory.ApplyRuntimeEffect(character, second, character, character.stats);
+
+            Assert.That(inventory.GetActiveRuntimeEffects(character).Count, Is.EqualTo(2));
+        }
+        finally
+        {
+            Object.DestroyImmediate(effect);
+            Object.DestroyImmediate(character);
+            Object.DestroyImmediate(inventory);
+        }
+    }
+
+    [Test]
+    public void PeriodicRuntimeEffectOnlyAdvancesFormulaScheduleWhenDueAndCatchesUp()
+    {
+        PlayerRunInventory inventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        CharacterObject character = ScriptableObject.CreateInstance<CharacterObject>();
+        PeriodicHealRuntimeEffectDefinition effect =
+            ScriptableObject.CreateInstance<PeriodicHealRuntimeEffectDefinition>();
+
+        try
+        {
+            character.stats.maxHP = 100f;
+            effect.durationType = RuntimeEffectDurationType.Seconds;
+            effect.durationSeconds = 10f;
+            effect.tickInterval = 1f;
+            effect.flatValue = 1f;
+
+            inventory.DeployTeam(new[] { character }, 0);
+            inventory.ApplyRuntimeEffect(character, effect, character, character.stats);
+            RuntimeEffectInstance instance = inventory.GetActiveRuntimeEffects(character)[0];
+
+            inventory.TickRuntimeEffects(0.1f);
+            Assert.That(instance.nextTickAt, Is.EqualTo(1f).Within(0.001f));
+
+            inventory.TickRuntimeEffects(0.4f);
+            Assert.That(instance.nextTickAt, Is.EqualTo(1f).Within(0.001f));
+
+            inventory.TickRuntimeEffects(2.6f);
+            Assert.That(instance.elapsedSeconds, Is.EqualTo(3.1f).Within(0.001f));
+            Assert.That(instance.nextTickAt, Is.EqualTo(4f).Within(0.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(effect);
+            Object.DestroyImmediate(character);
+            Object.DestroyImmediate(inventory);
+        }
+    }
+
+    [Test]
+    public void PlayerHudDoesNotBuildDisplayEntryForIconlessEffect()
+    {
+        GameObject hudObject = new GameObject("Runtime Effect HUD Test");
+        PlayerHUD hud = hudObject.AddComponent<PlayerHUD>();
+        StatRuntimeEffectDefinition effect = ScriptableObject.CreateInstance<StatRuntimeEffectDefinition>();
+        RuntimeEffectInstance instance = new RuntimeEffectInstance();
+
+        try
+        {
+            effect.kind = RuntimeEffectKind.Buff;
+            effect.icon = null;
+            instance.Initialize(effect, null, null);
+
+            MethodInfo buildEntries = typeof(PlayerHUD).GetMethod(
+                "BuildDisplayEntries",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            FieldInfo entriesField = typeof(PlayerHUD).GetField(
+                "runtimeEffectDisplayEntries",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(buildEntries, Is.Not.Null);
+            Assert.That(entriesField, Is.Not.Null);
+
+            buildEntries.Invoke(hud, new object[] { new[] { instance } });
+            ICollection entries = entriesField.GetValue(hud) as ICollection;
+            Assert.That(entries, Is.Not.Null);
+            Assert.That(entries.Count, Is.EqualTo(0));
+        }
+        finally
+        {
+            Object.DestroyImmediate(effect);
+            Object.DestroyImmediate(hudObject);
         }
     }
 
@@ -485,8 +694,10 @@ public class RunCharacterStateTests
             character.stats.attack = 50f;
 
             PlayerCharacter player = playerObject.AddComponent<PlayerCharacter>();
+            EnsureEditModeAwake(player, PlayerCharacter.Instance);
             TeamLoader teamLoader = loaderObject.AddComponent<TeamLoader>();
             teamLoader.playerCharacter = player;
+            EnsureEditModeAwake(teamLoader, TeamLoader.Instance);
             teamLoader.SetRunInventory(inventory);
             teamLoader.DeployLoadout(new[] { character }, 0);
             player.SetCharacter(character, 25f, character.stats);
@@ -565,7 +776,8 @@ public class RunCharacterStateTests
     private static RuntimeEffectRecipe CreateShieldRecipe(
         ShieldRuntimeEffectDefinition shield,
         string recipeId,
-        float valueRatio)
+        float valueRatio,
+        float durationSeconds = 30f)
     {
         return new RuntimeEffectRecipe
         {
@@ -576,10 +788,9 @@ public class RunCharacterStateTests
                 kind = RuntimeEffectKind.Buff,
                 appliesOn = RuntimeEffectApplyTarget.Allies,
                 durationType = RuntimeEffectDurationType.Seconds,
-                durationSeconds = 30f,
+                durationSeconds = durationSeconds,
                 stackMode = RuntimeEffectStackMode.Override,
-                refreshDurationOnReapply = true,
-                stackKey = "shared.shield"
+                refreshDurationOnReapply = true
             },
             parameters = new RuntimeEffectParameterSet
             {
@@ -611,9 +822,11 @@ public class RunCharacterStateTests
             character.stats.damageReduction = 0f;
 
             PlayerCharacter player = playerObject.AddComponent<PlayerCharacter>();
+            EnsureEditModeAwake(player, PlayerCharacter.Instance);
             player.RuntimeEffects = playerObject.AddComponent<RuntimeEffectReceiver>();
             TeamLoader teamLoader = loaderObject.AddComponent<TeamLoader>();
             teamLoader.playerCharacter = player;
+            EnsureEditModeAwake(teamLoader, TeamLoader.Instance);
             teamLoader.SetRunInventory(inventory);
             teamLoader.DeployLoadout(new[] { character }, 0);
             player.SetCharacter(character, 100f, character.stats);
@@ -621,6 +834,7 @@ public class RunCharacterStateTests
             shield.durationType = RuntimeEffectDurationType.Seconds;
             shield.durationSeconds = 30f;
             shield.flatValue = 60f;
+            shield.valueRatio = 0f;
             shield.useSourceStats = true;
 
             inventory.ApplyRuntimeEffect(character, shield, character, character.stats);
@@ -646,5 +860,21 @@ public class RunCharacterStateTests
             Object.DestroyImmediate(loaderObject);
             Object.DestroyImmediate(playerObject);
         }
+    }
+
+    private static void EnsureEditModeAwake(
+        MonoBehaviour component,
+        MonoBehaviour currentInstance)
+    {
+        if (component == null || ReferenceEquals(component, currentInstance))
+        {
+            return;
+        }
+
+        MethodInfo awake = component.GetType().GetMethod(
+            "Awake",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.That(awake, Is.Not.Null);
+        awake.Invoke(component, null);
     }
 }

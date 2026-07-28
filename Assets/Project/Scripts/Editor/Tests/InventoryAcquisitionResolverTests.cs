@@ -136,4 +136,82 @@ public class InventoryAcquisitionResolverTests
         Object.DestroyImmediate(characterDefinition);
         Object.DestroyImmediate(characterItem);
     }
+
+    [Test]
+    public void UnlockedPotentialNodesCacheInvalidatesOnMutationResetImportAndKitReplacement()
+    {
+        PlayerMetaProgression progression = ScriptableObject.CreateInstance<PlayerMetaProgression>();
+        CharacterObject character = ScriptableObject.CreateInstance<CharacterObject>();
+        PotentialNodeDefinition levelOne = new PotentialNodeDefinition
+        {
+            nodeId = "cache.skill.1",
+            track = PotentialTrack.Skill,
+            level = 1
+        };
+        PotentialNodeDefinition levelTwo = new PotentialNodeDefinition
+        {
+            nodeId = "cache.skill.2",
+            track = PotentialTrack.Skill,
+            level = 2
+        };
+
+        try
+        {
+            character.characterId = "potential-cache-character";
+            character.kitDefinition = new CharacterKitDefinition();
+            character.kitDefinition.potentialNodes.Add(levelOne);
+            character.kitDefinition.potentialNodes.Add(levelTwo);
+
+            int changeCount = 0;
+            string lastChangedCharacterId = null;
+            progression.OnPotentialChanged += characterId =>
+            {
+                changeCount++;
+                lastChangedCharacterId = characterId;
+            };
+
+            var initial = progression.GetUnlockedPotentialNodes(character);
+            Assert.That(progression.GetUnlockedPotentialNodes(character), Is.SameAs(initial));
+            Assert.That(initial, Has.No.Member(levelOne));
+
+            Assert.That(progression.SetPotentialLevel(character, PotentialTrack.Skill, 1), Is.True);
+            var upgraded = progression.GetUnlockedPotentialNodes(character);
+            Assert.That(upgraded, Is.Not.SameAs(initial));
+            Assert.That(upgraded, Has.Member(levelOne));
+            Assert.That(upgraded, Has.No.Member(levelTwo));
+            Assert.That(changeCount, Is.EqualTo(1));
+            Assert.That(lastChangedCharacterId, Is.EqualTo(character.characterId));
+
+            Assert.That(progression.ResetPotentialLevels(character), Is.True);
+            var reset = progression.GetUnlockedPotentialNodes(character);
+            Assert.That(reset, Has.No.Member(levelOne));
+            Assert.That(changeCount, Is.EqualTo(2));
+
+            CharacterKitDefinition replacementKit = new CharacterKitDefinition();
+            PotentialNodeDefinition replacementDefault = new PotentialNodeDefinition
+            {
+                nodeId = "cache.replacement.default",
+                track = PotentialTrack.Passive,
+                level = 0,
+                unlockedByDefault = true
+            };
+            replacementKit.potentialNodes.Add(replacementDefault);
+            character.kitDefinition = replacementKit;
+            var replacement = progression.GetUnlockedPotentialNodes(character);
+            Assert.That(replacement, Is.Not.SameAs(reset));
+            Assert.That(replacement, Has.Member(replacementDefault));
+
+            progression.ImportJson("{\"fragments\":[],\"characterPotentials\":[]}");
+            Assert.That(changeCount, Is.EqualTo(3));
+            Assert.That(lastChangedCharacterId, Is.Null);
+            Assert.That(
+                progression.GetUnlockedPotentialNodes(character),
+                Is.Not.SameAs(replacement));
+        }
+        finally
+        {
+            Object.DestroyImmediate(character);
+            Object.DestroyImmediate(progression);
+        }
+    }
 }

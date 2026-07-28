@@ -16,6 +16,21 @@ public class PeriodicHealRuntimeEffectDefinition : RuntimeEffectDefinition
 
     public override bool RequiresFormulaTicking => true;
 
+    public override bool IsFormulaUpdateDue(RuntimeEffectInstance instance)
+    {
+        if (instance == null)
+        {
+            return false;
+        }
+
+        if (instance.nextTickAt <= 0f)
+        {
+            instance.nextTickAt = Mathf.Max(0.05f, ResolveTickInterval(instance));
+        }
+
+        return instance.elapsedSeconds >= instance.nextTickAt;
+    }
+
     public override void OnUpdate(RuntimeEffectContext context)
     {
         if (context.instance == null)
@@ -36,6 +51,16 @@ public class PeriodicHealRuntimeEffectDefinition : RuntimeEffectDefinition
             ApplyTickHeal(context, hasOverride, parameters);
             context.instance.nextTickAt += Mathf.Max(0.05f, interval);
         }
+    }
+
+    private float ResolveTickInterval(RuntimeEffectInstance instance)
+    {
+        RuntimeEffectParameterSet parameterSet = RuntimeEffectRuntimeUtility.GetParameters(instance);
+        return parameterSet != null
+            && parameterSet.overridePeriodicHeal
+            && parameterSet.periodicHeal != null
+                ? parameterSet.periodicHeal.tickInterval
+                : tickInterval;
     }
 
     private bool TryGetOverrideParameters(RuntimeEffectContext context, out RuntimeEffectPeriodicHealParameters parameters)

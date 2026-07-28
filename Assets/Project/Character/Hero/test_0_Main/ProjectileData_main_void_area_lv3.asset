@@ -80,6 +80,7 @@ MonoBehaviour:
         - target: 3
           operation: 0
           sourceStat: 3
+          statRatioValueSource: 0
           value: 1
         overrideDamageModifier: 0
         damageModifier:
@@ -104,7 +105,13 @@ MonoBehaviour:
           ignoreElementalIncomingModifiers: 0
         overridePeriodicHeal: 0
         periodicHeal:
+          valueSource: 1
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
           tickInterval: 1
+        overrideHeal: 0
+        heal:
           valueSource: 1
           valueRatio: 0.1
           flatValue: 0
@@ -121,12 +128,20 @@ MonoBehaviour:
           lowHpMultiplier: 2
         overrideAdditionalDamage: 0
         additionalDamage:
+          filter:
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
           chance: 1
           internalCooldown: 0
           attackRatio: 0.2
           sourceStatDamageSource: 0
           sourceStatRatio: 0
           targetMaxHpRatio: 0
+          sourceRuntimeEffectStackKey: 
+          attackRatioPerSourceRuntimeEffectStack: 0
+          maxSourceRuntimeEffectStacks: 0
           capTargetMaxHpDamage: 0
           targetMaxHpDamageCapSource: 1
           targetMaxHpDamageCapRatio: 1
@@ -134,6 +149,12 @@ MonoBehaviour:
         overrideStatus: 0
         status:
           status: 5
+        overrideShield: 0
+        shield:
+          valueSource: 0
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
       childRecipes: []
     effect: {fileID: 0}
     requiredNodeId: main.passive.lv1
@@ -167,6 +188,7 @@ MonoBehaviour:
         - target: 4
           operation: 0
           sourceStat: 4
+          statRatioValueSource: 0
           value: 20
         overrideDamageModifier: 0
         damageModifier:
@@ -191,7 +213,13 @@ MonoBehaviour:
           ignoreElementalIncomingModifiers: 0
         overridePeriodicHeal: 0
         periodicHeal:
+          valueSource: 1
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
           tickInterval: 1
+        overrideHeal: 0
+        heal:
           valueSource: 1
           valueRatio: 0.1
           flatValue: 0
@@ -208,12 +236,20 @@ MonoBehaviour:
           lowHpMultiplier: 2
         overrideAdditionalDamage: 0
         additionalDamage:
+          filter:
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
           chance: 1
           internalCooldown: 0
           attackRatio: 0.2
           sourceStatDamageSource: 0
           sourceStatRatio: 0
           targetMaxHpRatio: 0
+          sourceRuntimeEffectStackKey: 
+          attackRatioPerSourceRuntimeEffectStack: 0
+          maxSourceRuntimeEffectStacks: 0
           capTargetMaxHpDamage: 0
           targetMaxHpDamageCapSource: 1
           targetMaxHpDamageCapRatio: 1
@@ -221,6 +257,12 @@ MonoBehaviour:
         overrideStatus: 0
         status:
           status: 5
+        overrideShield: 0
+        shield:
+          valueSource: 0
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
       childRecipes: []
     effect: {fileID: 0}
     requiredNodeId: main.passive.lv3
@@ -274,7 +316,13 @@ MonoBehaviour:
           ignoreElementalIncomingModifiers: 0
         overridePeriodicHeal: 0
         periodicHeal:
+          valueSource: 1
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
           tickInterval: 1
+        overrideHeal: 0
+        heal:
           valueSource: 1
           valueRatio: 0.1
           flatValue: 0
@@ -291,12 +339,20 @@ MonoBehaviour:
           lowHpMultiplier: 2
         overrideAdditionalDamage: 0
         additionalDamage:
+          filter:
+            filterByElement: 0
+            elementType: 0
+            filterByCategory: 0
+            category: 0
           chance: 1
           internalCooldown: 0
           attackRatio: 0.2
           sourceStatDamageSource: 0
           sourceStatRatio: 0
           targetMaxHpRatio: 0
+          sourceRuntimeEffectStackKey: 
+          attackRatioPerSourceRuntimeEffectStack: 0
+          maxSourceRuntimeEffectStacks: 0
           capTargetMaxHpDamage: 0
           targetMaxHpDamageCapSource: 1
           targetMaxHpDamageCapRatio: 1
@@ -304,6 +360,12 @@ MonoBehaviour:
         overrideStatus: 1
         status:
           status: 5
+        overrideShield: 0
+        shield:
+          valueSource: 0
+          valueRatio: 0.1
+          flatValue: 0
+          useSourceStats: 1
       childRecipes: []
     effect: {fileID: 0}
     requiredNodeId: main.passive.lv4
@@ -337,7 +399,7 @@ MonoBehaviour:
         elementType: 4
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 0, y: 2}
-        size: {x: 30, y: 5}
+        size: {x: 45, y: 5}
         damageRatio: 0.7142857
         impactTier: 0
         useDeterministicReaction: 1

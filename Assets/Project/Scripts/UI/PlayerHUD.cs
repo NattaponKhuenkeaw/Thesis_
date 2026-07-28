@@ -441,6 +441,11 @@ public class PlayerHUD : MonoBehaviour
                 continue;
             }
 
+            if (RuntimeEffectRuntimeUtility.GetIcon(effect) == null)
+            {
+                continue;
+            }
+
             string stackKey = effect.StackKey ?? string.Empty;
             bool canAggregate = RuntimeEffectRuntimeUtility.IsStackable(effect) || !string.IsNullOrEmpty(stackKey);
             if (canAggregate && runtimeEffectStackIndexes.TryGetValue(stackKey, out int existingIndex))
@@ -836,17 +841,10 @@ public class PlayerHUD : MonoBehaviour
             return 0f;
         }
 
-        float total = 0f;
-        for (int i = 0; i < resolvedEffects.Count; i++)
-        {
-            RuntimeEffectInstance effect = resolvedEffects[i];
-            if (effect != null && effect.remainingShieldAmount > 0f)
-            {
-                total += effect.remainingShieldAmount;
-            }
-        }
-
-        return total;
+        RuntimeEffectInstance shield = RuntimeEffectRuntimeUtility.FindByStateChannel(
+            resolvedEffects,
+            RuntimeEffectStateChannel.Shield);
+        return shield != null ? Mathf.Max(0f, shield.remainingShieldAmount) : 0f;
     }
 
     private Transform FindHudRoot(Transform parent)

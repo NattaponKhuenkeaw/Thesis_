@@ -14,6 +14,154 @@ using UnityEngine.UI;
 public class TeamRuntimeStatFeedbackTests
 {
     [Test]
+    public void TeamLoaderAlwaysRuntimeEffectReconciliationIsIdempotentAndRemovesObsoleteBinding()
+    {
+        GameObject playerObject = new GameObject("Always Binding Test Player");
+        GameObject loaderObject = new GameObject("Always Binding Test Loader");
+        PlayerRunInventory runInventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        PlayerMetaProgression progression = ScriptableObject.CreateInstance<PlayerMetaProgression>();
+        CharacterObject character = ScriptableObject.CreateInstance<CharacterObject>();
+        StatRuntimeEffectDefinition effect = ScriptableObject.CreateInstance<StatRuntimeEffectDefinition>();
+        StatRuntimeEffectDefinition secondEffect = ScriptableObject.CreateInstance<StatRuntimeEffectDefinition>();
+
+        try
+        {
+            character.characterId = "always-binding-test-character";
+            character.kitDefinition = new CharacterKitDefinition();
+            effect.effectId = "always-binding-test-effect";
+            effect.durationType = RuntimeEffectDurationType.Forever;
+            effect.statModifiers.Add(new RuntimeEffectStatModifier
+            {
+                target = RuntimeEffectStatTarget.Attack,
+                operation = RuntimeEffectStatOperation.Add,
+                value = 10f
+            });
+            secondEffect.effectId = "always-binding-test-effect-second";
+            secondEffect.durationType = RuntimeEffectDurationType.Forever;
+
+            PassiveRuntimeEffectDefinition alwaysEffect = new PassiveRuntimeEffectDefinition
+            {
+                trigger = PassiveTriggerType.Always,
+                recipe = new RuntimeEffectRecipe
+                {
+                    definition = effect,
+                    recipeId = "always-binding-test-recipe",
+                    policy = new RuntimeEffectApplicationPolicy
+                    {
+                        appliesOn = RuntimeEffectApplyTarget.Self,
+                        durationType = RuntimeEffectDurationType.Forever,
+                        stackMode = RuntimeEffectStackMode.Override,
+                        removeOnOwnerDamaged = false
+                    }
+                }
+            };
+            character.kitDefinition.basePassiveNode.runtimeEffects.Add(alwaysEffect);
+            character.kitDefinition.basePassiveNode.runtimeEffects.Add(new PassiveRuntimeEffectDefinition
+            {
+                trigger = PassiveTriggerType.Always,
+                recipe = new RuntimeEffectRecipe
+                {
+                    definition = secondEffect,
+                    recipeId = "always-binding-test-recipe-second",
+                    policy = new RuntimeEffectApplicationPolicy
+                    {
+                        appliesOn = RuntimeEffectApplyTarget.Self,
+                        durationType = RuntimeEffectDurationType.Forever,
+                        stackMode = RuntimeEffectStackMode.Override,
+                        removeOnOwnerDamaged = false
+                    }
+                }
+            });
+            RuntimeEffectRecipe upgradedRecipe = new RuntimeEffectRecipe
+            {
+                definition = effect,
+                recipeId = "always-binding-test-recipe-upgraded",
+                policy = new RuntimeEffectApplicationPolicy
+                {
+                    appliesOn = RuntimeEffectApplyTarget.Self,
+                    durationType = RuntimeEffectDurationType.Forever,
+                    stackMode = RuntimeEffectStackMode.Override,
+                    removeOnOwnerDamaged = false
+                }
+            };
+            PotentialNodeDefinition upgradeNode = new PotentialNodeDefinition
+            {
+                nodeId = "always-binding-test-passive-1",
+                track = PotentialTrack.Passive,
+                level = 1
+            };
+            upgradeNode.runtimeEffects.Add(new PassiveRuntimeEffectDefinition
+            {
+                trigger = PassiveTriggerType.Always,
+                recipe = upgradedRecipe
+            });
+            character.kitDefinition.potentialNodes.Add(upgradeNode);
+
+            PlayerCharacter player = playerObject.AddComponent<PlayerCharacter>();
+            TeamLoader loader = loaderObject.AddComponent<TeamLoader>();
+            loader.playerCharacter = player;
+            SetPrivateField(loader, "metaProgression", progression);
+            loader.SetRunInventory(runInventory);
+
+            int runtimeEffectNotifications = 0;
+            runInventory.OnRuntimeEffectsChanged += _ => runtimeEffectNotifications++;
+            loader.DeployLoadout(new[] { character }, 0);
+
+            Assert.That(runInventory.GetActiveRuntimeEffects(character).Count, Is.EqualTo(2));
+            Assert.That(runtimeEffectNotifications, Is.EqualTo(1));
+
+            MethodInfo reconcile = typeof(TeamLoader).GetMethod(
+                "ReconcileAlwaysRuntimeEffects",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(reconcile, Is.Not.Null);
+            runtimeEffectNotifications = 0;
+            reconcile.Invoke(loader, null);
+            reconcile.Invoke(loader, null);
+
+            Assert.That(runInventory.GetActiveRuntimeEffects(character).Count, Is.EqualTo(2));
+            Assert.That(runtimeEffectNotifications, Is.EqualTo(0));
+
+            int teamChangedNotifications = 0;
+            loader.OnTeamChanged += () => teamChangedNotifications++;
+            Assert.That(
+                progression.SetPotentialLevel(character, PotentialTrack.Passive, 1),
+                Is.True);
+
+            var upgradedEffects = runInventory.GetActiveRuntimeEffects(character);
+            bool foundUpgradedRecipe = false;
+            bool foundSupersededRecipe = false;
+            for (int i = 0; i < upgradedEffects.Count; i++)
+            {
+                foundUpgradedRecipe |= ReferenceEquals(upgradedEffects[i].recipe, upgradedRecipe);
+                foundSupersededRecipe |= ReferenceEquals(upgradedEffects[i].recipe, alwaysEffect.recipe);
+            }
+
+            Assert.That(upgradedEffects.Count, Is.EqualTo(2));
+            Assert.That(foundUpgradedRecipe, Is.True);
+            Assert.That(foundSupersededRecipe, Is.False);
+            Assert.That(runtimeEffectNotifications, Is.EqualTo(1));
+            Assert.That(teamChangedNotifications, Is.EqualTo(1));
+
+            character.kitDefinition.basePassiveNode.runtimeEffects.Clear();
+            upgradeNode.runtimeEffects.Clear();
+            reconcile.Invoke(loader, null);
+
+            Assert.That(runInventory.GetActiveRuntimeEffects(character), Is.Empty);
+            Assert.That(runtimeEffectNotifications, Is.EqualTo(2));
+        }
+        finally
+        {
+            Object.DestroyImmediate(secondEffect);
+            Object.DestroyImmediate(effect);
+            Object.DestroyImmediate(character);
+            Object.DestroyImmediate(progression);
+            Object.DestroyImmediate(runInventory);
+            Object.DestroyImmediate(loaderObject);
+            Object.DestroyImmediate(playerObject);
+        }
+    }
+
+    [Test]
     public void ShermieSelfStatBuffs_DoNotModifyTeammateStats()
     {
         CharacterObject shermieAsset = AssetDatabase.LoadAssetAtPath<CharacterObject>(
@@ -581,12 +729,14 @@ public class TeamRuntimeStatFeedbackTests
             });
 
             PlayerCharacter playerCharacter = playerObject.AddComponent<PlayerCharacter>();
+            EnsureEditModeAwake(playerCharacter, PlayerCharacter.Instance);
             CharacterPassiveController passiveController = playerObject.AddComponent<CharacterPassiveController>();
             playerCharacter.PassiveController = passiveController;
             passiveController.playerCharacter = playerCharacter;
 
             TeamLoader teamLoader = loaderObject.AddComponent<TeamLoader>();
             teamLoader.playerCharacter = playerCharacter;
+            EnsureEditModeAwake(teamLoader, TeamLoader.Instance);
             teamLoader.SetRunInventory(runInventory);
             teamLoader.DeployLoadout(new[] { character }, 0);
 
@@ -624,7 +774,7 @@ public class TeamRuntimeStatFeedbackTests
             const string tag = "test.hp.above.70";
 
             character.characterId = "always-filter-character";
-            character.stats.aeRecharge = 0f;
+            character.stats.aeRecharge = 1f;
             statEffect.effectId = "test.always_filtered_ae_recharge";
 
             character.kitDefinition.basePassiveNode.runtimeEffects.Add(new PassiveRuntimeEffectDefinition
@@ -663,12 +813,14 @@ public class TeamRuntimeStatFeedbackTests
             });
 
             PlayerCharacter playerCharacter = playerObject.AddComponent<PlayerCharacter>();
+            EnsureEditModeAwake(playerCharacter, PlayerCharacter.Instance);
             CharacterPassiveController passiveController = playerObject.AddComponent<CharacterPassiveController>();
             playerCharacter.PassiveController = passiveController;
             passiveController.playerCharacter = playerCharacter;
 
             TeamLoader teamLoader = loaderObject.AddComponent<TeamLoader>();
             teamLoader.playerCharacter = playerCharacter;
+            EnsureEditModeAwake(teamLoader, TeamLoader.Instance);
             teamLoader.SetRunInventory(runInventory);
             teamLoader.DeployLoadout(new[] { character }, 0);
 
@@ -884,6 +1036,22 @@ public class TeamRuntimeStatFeedbackTests
 
         Assert.That(field, Is.Not.Null);
         field.SetValue(target, value);
+    }
+
+    private static void EnsureEditModeAwake(
+        MonoBehaviour component,
+        MonoBehaviour currentInstance)
+    {
+        if (component == null || ReferenceEquals(component, currentInstance))
+        {
+            return;
+        }
+
+        MethodInfo awake = component.GetType().GetMethod(
+            "Awake",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.That(awake, Is.Not.Null);
+        awake.Invoke(component, null);
     }
 
     private static UltimateAction CreateTestUltimateAction(

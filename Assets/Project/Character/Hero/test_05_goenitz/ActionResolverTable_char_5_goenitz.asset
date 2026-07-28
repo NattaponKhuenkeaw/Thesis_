@@ -49,7 +49,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     damageSourceStat: 0
-    actionDamageMultiplier: 3.5
+    actionDamageMultiplier: 3
     auraEnergyReward: 0
     comboTree:
       treeName: Combo

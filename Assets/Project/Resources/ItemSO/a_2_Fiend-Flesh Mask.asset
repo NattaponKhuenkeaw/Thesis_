@@ -23,14 +23,15 @@ MonoBehaviour:
     5 stacks). Max stacks release a small dark slash that deal 50% of additional
     attack.
   bonusStats:
-    maxHP: -20
-    attack: 55
-    defense: -40
+    maxHP: 0
+    attack: 20
+    defense: -10
     speed: 0
     elementalMastery: 0
     critRate: 0
-    critDamage: 125
+    critDamage: 30
     cooldownRate: 0
-    impact: 10
-    aeRecharge: -0.2
+    impact: 7
+    damageReduction: 0
+    aeRecharge: 0
   additionalDamageEffects: []

@@ -564,7 +564,7 @@ MonoBehaviour:
         requiredTags: []
         requiredCounters: []
         damageMultiplierOperation: 3
-        damageMultiplierValue: 4.5
+        damageMultiplierValue: 4
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 0
