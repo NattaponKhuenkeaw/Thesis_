@@ -1238,7 +1238,7 @@ MonoBehaviour:
               pulseInterval: 0.01
               slowMotion:
                 enabled: 1
-                timeScale: 0.3
+                timeScale: 0.6
                 duration: 0.3
                 delaySeconds: 0
           afterImageSettings:
@@ -1348,7 +1348,7 @@ MonoBehaviour:
               pulseInterval: 0.01
               slowMotion:
                 enabled: 1
-                timeScale: 0.3
+                timeScale: 0.6
                 duration: 1
                 delaySeconds: 0
           afterImageSettings:

@@ -23,7 +23,7 @@ MonoBehaviour:
     a trail of energy healing the incoming character for 8% of their missing HP.
   bonusStats:
     maxHP: 0
-    attack: 0
+    attack: 15
     defense: 0
     speed: 0
     elementalMastery: 15
@@ -32,5 +32,5 @@ MonoBehaviour:
     cooldownRate: 5
     impact: 0
     damageReduction: 0
-    aeRecharge: 0.15
+    aeRecharge: 0
   additionalDamageEffects: []

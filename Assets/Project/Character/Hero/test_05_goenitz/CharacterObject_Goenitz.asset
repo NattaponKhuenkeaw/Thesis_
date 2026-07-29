@@ -57,7 +57,7 @@ MonoBehaviour:
     activeFrames: 14
     recoveryFrames: 29
     cancelWindowStartFrame: 43
-    dashSpeed: 40
+    dashSpeed: 30
     cooldownFrames: 18
   kitDefinition:
     skill:
@@ -564,7 +564,7 @@ MonoBehaviour:
         requiredTags: []
         requiredCounters: []
         damageMultiplierOperation: 3
-        damageMultiplierValue: 4
+        damageMultiplierValue: 4.5
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 0

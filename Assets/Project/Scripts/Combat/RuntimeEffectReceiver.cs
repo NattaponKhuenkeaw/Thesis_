@@ -215,6 +215,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
                 resolvedDuration);
             if (stackTarget != null)
             {
+                stackTarget.Rebind(recipe, sourceCharacter, sourceStats);
                 if (stackTarget.stackCount < resolvedStackLimit)
                 {
                     stackTarget.AddStack(durationOverride, resolvedRefreshDuration);

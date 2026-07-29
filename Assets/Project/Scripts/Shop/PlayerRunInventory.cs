@@ -849,6 +849,7 @@ namespace Project.ShopSystem
                     resolvedDuration);
                 if (stackTarget != null)
                 {
+                    stackTarget.Rebind(effectDefinition, recipe, sourceCharacter, resolvedSourceStats);
                     if (stackTarget.stackCount < resolvedStackLimit)
                     {
                         stackTarget.AddStack(durationOverride, resolvedRefreshDuration);
@@ -1516,24 +1517,20 @@ namespace Project.ShopSystem
             CharacterStats targetStats,
             RuntimeEffectInstance instance)
         {
+            CharacterStats snapshot = instance != null
+                ? instance.sourceStatsSnapshot
+                : null;
             if (sourceCharacter == null)
             {
-                return targetStats ?? (instance != null ? instance.sourceStatsSnapshot : null);
+                return snapshot ?? targetStats;
             }
 
             if (sourceCharacter == targetCharacter)
             {
-                return targetStats ?? (instance != null ? instance.sourceStatsSnapshot : null);
+                return snapshot ?? targetStats;
             }
 
-            if (resolvingRuntimeStats.Contains(sourceCharacter))
-            {
-                return instance != null && instance.sourceStatsSnapshot != null
-                    ? instance.sourceStatsSnapshot
-                    : GetCharacterBaseStats(sourceCharacter);
-            }
-
-            return GetCharacterStats(sourceCharacter);
+            return snapshot ?? GetCharacterBaseStats(sourceCharacter);
         }
 
         private CharacterStats ResolveRuntimeEffectSourceBaseStats(

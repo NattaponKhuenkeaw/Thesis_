@@ -48,7 +48,7 @@ MonoBehaviour:
   enemyLayerMask:
     serializedVersion: 2
     m_Bits: 256
-  hitIntervalFrames: 300
+  hitIntervalFrames: 250
   stopOnImpact: 0
   destroyWhenHitsExhausted: 0
   destroyOnLifetimeExpire: 1
@@ -400,7 +400,7 @@ MonoBehaviour:
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 0, y: 2}
         size: {x: 45, y: 5}
-        damageRatio: 0.1428
+        damageRatio: 0.36
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0

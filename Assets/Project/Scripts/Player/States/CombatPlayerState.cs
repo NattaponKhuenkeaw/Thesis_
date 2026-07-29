@@ -475,7 +475,24 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             case ActionEventType.AfterImage:
                 StartAfterImageTrail(entry);
                 break;
+
+            case ActionEventType.SetFacingDirection:
+                ApplyFacingDirectionEvent(entry);
+                break;
         }
+    }
+
+    private void ApplyFacingDirectionEvent(ActionEventEntry entry)
+    {
+        if (entry == null || player?.Movement == null)
+        {
+            return;
+        }
+
+        entry.facingDirectionSettings ??= new FacingDirectionEventSettings();
+        int direction = entry.facingDirectionSettings.ResolveDirection(
+            player.Movement.FacingDirection);
+        player.Movement.SnapFacingDirection(direction);
     }
 
     private void StartUltimateOverlaySequence(ActionEventEntry entry)

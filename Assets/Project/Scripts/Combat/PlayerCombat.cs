@@ -1663,16 +1663,36 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         return Mathf.Max(0f, value);
     }
 
-    public void RefreshProjectileDamageContext(ref ProjectileSpawnContext context)
+    public bool RefreshProjectileDamageContext(ref ProjectileSpawnContext context)
     {
-        if (playerCharacter == null)
+        if (context.sourceCharacter == null)
         {
-            return;
+            return false;
         }
 
-        context.attackerStats = playerCharacter.Stats;
-        context.sourceAttack = GetModifiedAttackStat();
-        context.actionDamageSourceValue = GetModifiedActionDamageSourceValue(context.actionDamageSourceStat);
+        TeamLoader runtimeOwner = TeamLoader.Instance;
+        DeployedCharacterRuntime deployedRuntime = null;
+        bool sourceIsDeployed = runtimeOwner != null
+            && runtimeOwner.TryGetDeployedCharacterRuntime(
+                context.sourceCharacter,
+                out deployedRuntime);
+        CharacterStats sourceStats = sourceIsDeployed
+            ? deployedRuntime.EffectiveStats
+            : context.attackerStats;
+        if (sourceStats == null)
+        {
+            return false;
+        }
+
+        context.attackerStats = sourceStats;
+        context.sourceAttack = Mathf.Max(0f, sourceStats.attack);
+        context.actionDamageSourceValue = context.actionDamageSourceStat switch
+        {
+            ActionDamageSourceStat.MaxHP => Mathf.Max(0f, sourceStats.maxHP),
+            ActionDamageSourceStat.Defense => Mathf.Max(0f, sourceStats.defense),
+            _ => Mathf.Max(0f, sourceStats.attack)
+        };
+        return sourceIsDeployed;
     }
 
     private float ResolveHitDamageMultiplier(float damageRatio)

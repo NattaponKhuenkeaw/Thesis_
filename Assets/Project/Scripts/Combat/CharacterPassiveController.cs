@@ -1039,10 +1039,21 @@ public class CharacterPassiveController : MonoBehaviour
             TeamLoader teamLoader = TeamLoader.Instance;
             if (teamLoader != null)
             {
-                Artifact[] artifacts = teamLoader.GetEquippedArtifactsFor(playerCharacter.characterObject);
+                IReadOnlyList<Artifact> artifacts;
+                if (teamLoader.TryGetDeployedCharacterRuntime(
+                        playerCharacter.characterObject,
+                        out DeployedCharacterRuntime deployedRuntime))
+                {
+                    artifacts = deployedRuntime.EquippedArtifacts;
+                }
+                else
+                {
+                    artifacts = teamLoader.GetEquippedArtifactsFor(playerCharacter.characterObject);
+                }
+
                 if (artifacts != null)
                 {
-                    for (int i = 0; i < artifacts.Length; i++)
+                    for (int i = 0; i < artifacts.Count; i++)
                     {
                         Artifact artifact = artifacts[i];
                         AddAdditionalDamageEffects(
@@ -2541,6 +2552,7 @@ public class CharacterPassiveController : MonoBehaviour
             return;
         }
 
+        bool removedAnyTag = false;
         for (int modifierIndex = 0; modifierIndex < timedWindowModifiers.Count; modifierIndex++)
         {
             PassiveActionModifierDefinition modifier = timedWindowModifiers[modifierIndex];
@@ -2568,9 +2580,14 @@ public class CharacterPassiveController : MonoBehaviour
                 RuntimeTagRequirement requirement = modifier.requiredTags[requirementIndex];
                 if (requirement != null && !string.IsNullOrWhiteSpace(requirement.tag))
                 {
-                    runtimeState.RemoveTag(requirement.tag);
+                    removedAnyTag |= runtimeState.RemoveTag(requirement.tag);
                 }
             }
+        }
+
+        if (removedAnyTag && playerCharacter != null && playerCharacter.characterObject != null)
+        {
+            CharacterEvents.NotifyStatsChanged(playerCharacter.characterObject);
         }
     }
 }

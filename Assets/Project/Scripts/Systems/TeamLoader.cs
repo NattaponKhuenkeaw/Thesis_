@@ -62,7 +62,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     [SerializeField] private int currentIndex = 0;
     [SerializeField] private float lastSwitchTime = -999f;
 
-    private readonly Dictionary<CharacterObject, CharacterStats> characterRuntimeStats = new Dictionary<CharacterObject, CharacterStats>();
+    private readonly Dictionary<CharacterObject, DeployedCharacterRuntime> deployedCharacterRuntimes =
+        new Dictionary<CharacterObject, DeployedCharacterRuntime>();
     private readonly Dictionary<CharacterObject, CombatRuntimeState> characterCombatRuntimeStates = new Dictionary<CharacterObject, CombatRuntimeState>();
     private readonly Dictionary<CharacterObject, List<PassiveActionModifierDefinition>> ultimateWindowModifiers =
         new Dictionary<CharacterObject, List<PassiveActionModifierDefinition>>();
@@ -397,8 +398,16 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     public Artifact[] GetEquippedArtifactsFor(CharacterObject character)
     {
-        int slotIndex = FindCharacterIndex(character);
-        return slotIndex >= 0 ? GetEquippedArtifactsAt(slotIndex) : Array.Empty<Artifact>();
+        SyncTeamSnapshotFromInventory();
+        if (runInventory == null || character == null)
+        {
+            return Array.Empty<Artifact>();
+        }
+
+        int slotIndex = runInventory.FindTeamSlot(character);
+        return slotIndex >= 0
+            ? runInventory.GetEquippedArtifactsAt(slotIndex)
+            : Array.Empty<Artifact>();
     }
 
     public Artifact[] GetEquippedArtifactsAt(int slotIndex)
@@ -451,14 +460,59 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             return null;
         }
 
-        if (characterRuntimeStats.TryGetValue(character, out CharacterStats stats))
+        if (deployedCharacterRuntimes.TryGetValue(
+            character,
+            out DeployedCharacterRuntime runtime))
         {
-            return stats;
+            return runtime.EffectiveStats;
         }
 
-        CharacterStats fallback = BuildRuntimeStats(character, FindCharacterIndex(character));
-        characterRuntimeStats[character] = fallback;
+        int slotIndex = FindCharacterIndex(character);
+        CharacterStats fallback = BuildRuntimeStats(character, slotIndex);
+        if (slotIndex >= 0)
+        {
+            RegisterDeployedRuntime(character, slotIndex, fallback);
+        }
+
         return fallback;
+    }
+
+    public bool TryGetDeployedCharacterRuntime(
+        CharacterObject character,
+        out DeployedCharacterRuntime runtime)
+    {
+        if (character != null
+            && deployedCharacterRuntimes.TryGetValue(character, out runtime)
+            && runtime != null)
+        {
+            return true;
+        }
+
+        runtime = null;
+        return false;
+    }
+
+    public CharacterStats ResolveSourceStats(
+        CharacterObject sourceCharacter,
+        CharacterStats sourceStatsSnapshot,
+        SourceStatReadMode readMode)
+    {
+        if (readMode == SourceStatReadMode.LiveOnResolve
+            && TryGetDeployedCharacterRuntime(
+                sourceCharacter,
+                out DeployedCharacterRuntime runtime)
+            && runtime.EffectiveStats != null)
+        {
+            return runtime.EffectiveStats;
+        }
+
+        return sourceStatsSnapshot;
+    }
+
+    public IReadOnlyList<PotentialNodeDefinition> GetCharacterPotentialNodes(
+        CharacterObject character)
+    {
+        return EnumerateUnlockedPotentialNodes(character);
     }
 
     public CharacterStats GetCharacterPermanentStats(CharacterObject character)
@@ -711,6 +765,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         SyncTeamSnapshotFromInventory();
         if (FindCharacterIndex(changedChar) >= 0)
         {
+            ReconcileAlwaysRuntimeEffects();
             RefreshRuntimeStatsOnly(changedChar);
         }
     }
@@ -833,7 +888,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     private void RebuildRuntimeStats()
     {
-        characterRuntimeStats.Clear();
+        deployedCharacterRuntimes.Clear();
         SyncTeamSnapshotFromInventory();
         if (teamSnapshot == null)
         {
@@ -845,7 +900,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             CharacterObject character = teamSnapshot[i];
             if (character != null)
             {
-                characterRuntimeStats[character] = BuildRuntimeStats(character, i);
+                RegisterDeployedRuntime(character, i, BuildRuntimeStats(character, i));
             }
         }
     }
@@ -940,11 +995,57 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         int slotIndex = FindCharacterIndex(character);
         if (slotIndex < 0)
         {
-            characterRuntimeStats.Remove(character);
+            deployedCharacterRuntimes.Remove(character);
             return;
         }
 
-        characterRuntimeStats[character] = BuildRuntimeStats(character, slotIndex);
+        RegisterDeployedRuntime(
+            character,
+            slotIndex,
+            BuildRuntimeStats(character, slotIndex));
+    }
+
+    private void RegisterDeployedRuntime(
+        CharacterObject character,
+        int slotIndex,
+        CharacterStats stats)
+    {
+        int resolvedSlotIndex = ResolveCharacterSlot(character, slotIndex);
+        if (character == null || resolvedSlotIndex < 0)
+        {
+            return;
+        }
+
+        Artifact[] artifacts = runInventory != null
+            ? runInventory.GetEquippedArtifactsAt(resolvedSlotIndex)
+            : Array.Empty<Artifact>();
+        if (deployedCharacterRuntimes.TryGetValue(
+            character,
+            out DeployedCharacterRuntime runtime))
+        {
+            runtime.UpdateStats(resolvedSlotIndex, stats, artifacts);
+            return;
+        }
+
+        deployedCharacterRuntimes[character] = new DeployedCharacterRuntime(
+            character,
+            resolvedSlotIndex,
+            stats,
+            artifacts,
+            GetCharacterCombatRuntimeState(character));
+    }
+
+    private int ResolveCharacterSlot(CharacterObject character, int fallbackSlotIndex)
+    {
+        if (character == null)
+        {
+            return -1;
+        }
+
+        int inventorySlot = runInventory != null
+            ? runInventory.FindTeamSlot(character)
+            : -1;
+        return inventorySlot >= 0 ? inventorySlot : fallbackSlotIndex;
     }
 
     private void ReconcileAlwaysRuntimeEffects()
@@ -1253,8 +1354,9 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         float baseLeveledAtk = stats.attack;
         float baseLeveledDef = stats.defense;
 
-        Artifact[] slotArtifacts = includeArtifacts && runInventory != null && slotIndex >= 0
-            ? runInventory.GetEquippedArtifactsAt(slotIndex)
+        int artifactOwnerSlot = ResolveCharacterSlot(character, slotIndex);
+        Artifact[] slotArtifacts = includeArtifacts && runInventory != null && artifactOwnerSlot >= 0
+            ? runInventory.GetEquippedArtifactsAt(artifactOwnerSlot)
             : Array.Empty<Artifact>();
 
         float hpPercentBonus = 0f;
@@ -1748,7 +1850,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         if (teamSnapshot == null) return;
 
         staleRuntimeStatCharacters.Clear();
-        foreach (CharacterObject character in characterRuntimeStats.Keys)
+        foreach (CharacterObject character in deployedCharacterRuntimes.Keys)
         {
             if (FindCharacterIndex(character) < 0)
             {
@@ -1758,7 +1860,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
         for (int i = 0; i < staleRuntimeStatCharacters.Count; i++)
         {
-            characterRuntimeStats.Remove(staleRuntimeStatCharacters[i]);
+            deployedCharacterRuntimes.Remove(staleRuntimeStatCharacters[i]);
         }
     }
 

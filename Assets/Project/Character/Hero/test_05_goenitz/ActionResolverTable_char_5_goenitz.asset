@@ -49,7 +49,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     damageSourceStat: 0
-    actionDamageMultiplier: 3
+    actionDamageMultiplier: 3.5
     auraEnergyReward: 0
     comboTree:
       treeName: Combo
@@ -1840,6 +1840,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
         - label: Ultimate Sequence
@@ -1893,6 +1895,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
         - label: Ultimate Sequence
@@ -1946,6 +1950,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 1
           ultimateZoomSize: 5
     - rid: 1588256193077837934
@@ -2222,6 +2228,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
         - label: Ultimate Sequence
@@ -2275,6 +2283,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 1588256193077837951
@@ -2385,6 +2395,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 1588256211525697674
@@ -2486,6 +2498,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 1588256211525697678
@@ -2543,6 +2557,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 3612912841365651557
@@ -2671,6 +2687,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 1
           ultimateZoomSize: 5
         - label: Ultimate Sequence
@@ -2724,6 +2742,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 3612912841365651560
@@ -3432,6 +3452,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
         - label: Ultimate Sequence
@@ -3485,6 +3507,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 3612912846363689101
@@ -3655,6 +3679,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 3612912846363689303
@@ -3712,5 +3738,7 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5

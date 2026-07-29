@@ -26,7 +26,7 @@ MonoBehaviour:
     attack: 0
     defense: 0
     speed: 0
-    elementalMastery: 20
+    elementalMastery: 25
     critRate: 0
     critDamage: 0
     cooldownRate: 15

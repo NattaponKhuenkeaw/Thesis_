@@ -350,10 +350,12 @@ public class HitBoxDamage : MonoBehaviour
             ? rewardOwner.ModifyRuntimeOutgoingDamage(rewardCharacter, runtimeContext, finalDamage)
             : finalDamage;
 
-        if (passiveController != null)
-        {
-            finalDamage = passiveController.ModifyOutgoingDamage(runtimeContext, finalDamage);
-        }
+        finalDamage = HasMatchingPassiveController()
+            ? passiveController.ModifyOutgoingDamage(runtimeContext, finalDamage)
+            : DeployedCharacterDamageModifierEvaluator.ModifyOutgoingDamage(
+                rewardCharacter,
+                runtimeContext,
+                finalDamage);
 
         if (enemy.ElementalState != null && !damageInput.ignoreElementalIncomingModifiers)
         {
@@ -361,15 +363,20 @@ public class HitBoxDamage : MonoBehaviour
             damageInput.ignoreElementalIncomingModifiers = true;
         }
 
-        if (passiveController != null)
-        {
-            finalDamage = passiveController.ModifyActionFinalDamage(
+        finalDamage = HasMatchingPassiveController()
+            ? passiveController.ModifyActionFinalDamage(
+                sourceCategory,
+                sourceActionId,
+                sourceActionName,
+                finalDamage,
+                currentIsCrit)
+            : DeployedCharacterDamageModifierEvaluator.ModifyFinalDamage(
+                rewardCharacter,
                 sourceCategory,
                 sourceActionId,
                 sourceActionName,
                 finalDamage,
                 currentIsCrit);
-        }
 
         currentResolvedDamage = Mathf.Max(0f, finalDamage);
         runtimeContext.damage = currentResolvedDamage;
@@ -401,7 +408,7 @@ public class HitBoxDamage : MonoBehaviour
             actionName = sourceActionName,
             stepData = sourceStepData,
             stepName = sourceStepData != null ? sourceStepData.stepName : null,
-            runtimeState = passiveController != null ? passiveController.RuntimeState : null,
+            runtimeState = ResolveSourceRuntimeState(),
             enemy = enemy,
             enemyMaxHp = enemy.maxHP,
             elementType = ResolveElementType(),
@@ -418,13 +425,6 @@ public class HitBoxDamage : MonoBehaviour
             float liveSourceAttack = liveSourceStats != null
                 ? Mathf.Max(0f, liveSourceStats.attack)
                 : currentSourceAttack;
-            if (passiveController != null)
-            {
-                liveSourceAttack = passiveController.ModifyRuntimeValue(
-                    PassiveModifierTarget.AttackStat,
-                    liveSourceAttack);
-            }
-
             float baseDamage = effect.CalculateBaseDamage(liveSourceAttack, context, liveSourceStats);
             RuntimeEffectDamageContext runtimeContext = BuildRuntimeDamageContext(enemy, baseDamage, direction);
             runtimeContext.sourceStats = liveSourceStats;
@@ -484,16 +484,23 @@ public class HitBoxDamage : MonoBehaviour
 
     private CharacterStats ResolveActionSpecificAttackerStats()
     {
-        if (currentAttackerStats == null || passiveController == null)
+        if (currentAttackerStats == null)
         {
             return currentAttackerStats;
         }
 
-        float resolvedCritDamage = passiveController.ModifyActionCriticalDamage(
-            sourceCategory,
-            sourceActionId,
-            sourceActionName,
-            currentAttackerStats.critDamage);
+        float resolvedCritDamage = HasMatchingPassiveController()
+            ? passiveController.ModifyActionCriticalDamage(
+                sourceCategory,
+                sourceActionId,
+                sourceActionName,
+                currentAttackerStats.critDamage)
+            : DeployedCharacterDamageModifierEvaluator.ModifyCriticalDamage(
+                rewardCharacter,
+                sourceCategory,
+                sourceActionId,
+                sourceActionName,
+                currentAttackerStats.critDamage);
 
         if (Mathf.Approximately(resolvedCritDamage, currentAttackerStats.critDamage))
         {
@@ -720,12 +727,44 @@ public class HitBoxDamage : MonoBehaviour
 
     private void ApplyActionDamageInputModifiers(RuntimeEffectDamageInput input)
     {
-        passiveController?.ModifyActionDamageInput(
+        string stepName = sourceStepData != null ? sourceStepData.stepName : null;
+        if (HasMatchingPassiveController())
+        {
+            passiveController.ModifyActionDamageInput(
+                sourceCategory,
+                sourceActionId,
+                sourceActionName,
+                stepName,
+                input);
+            return;
+        }
+
+        DeployedCharacterDamageModifierEvaluator.ModifyDamageInput(
+            rewardCharacter,
             sourceCategory,
             sourceActionId,
             sourceActionName,
-            sourceStepData != null ? sourceStepData.stepName : null,
+            stepName,
             input);
+    }
+
+    private bool HasMatchingPassiveController()
+    {
+        return passiveController != null
+            && passiveController.playerCharacter != null
+            && passiveController.playerCharacter.characterObject == rewardCharacter;
+    }
+
+    private CombatRuntimeState ResolveSourceRuntimeState()
+    {
+        if (HasMatchingPassiveController())
+        {
+            return passiveController.RuntimeState;
+        }
+
+        return rewardCharacter != null && TeamLoader.Instance != null
+            ? TeamLoader.Instance.GetCharacterCombatRuntimeState(rewardCharacter)
+            : null;
     }
 
     private void ApplyDeterministicReaction(

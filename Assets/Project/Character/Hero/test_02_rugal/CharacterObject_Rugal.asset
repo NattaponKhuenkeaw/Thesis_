@@ -231,13 +231,13 @@ MonoBehaviour:
             kind: 0
             appliesOn: 0
             durationType: 0
-            durationSeconds: 10
-            stackMode: 0
+            durationSeconds: 7
+            stackMode: 2
             stackLimit: 5
             refreshDurationOnReapply: 1
             stackable: 1
             removeOnOwnerDamaged: 0
-            stackKey: 
+            stackKey: Increase.atk
           parameters:
             overrideStatModifiers: 1
             statModifiers:
@@ -453,13 +453,13 @@ MonoBehaviour:
             kind: 0
             appliesOn: 2
             durationType: 0
-            durationSeconds: 10
+            durationSeconds: 7
             stackMode: 2
             stackLimit: 5
             refreshDurationOnReapply: 1
             stackable: 1
             removeOnOwnerDamaged: 0
-            stackKey: 
+            stackKey: Increase.atk
           parameters:
             overrideStatModifiers: 1
             statModifiers:
@@ -1235,7 +1235,9 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 1
           runtimeTag: rugal.omega_mode
-        requiredTags: []
+        requiredTags:
+        - tag: rugal.omega_mode
+          expectedValue: 1
         requiredCounters: []
         requiredRuntimeEffectStacks: []
         requiredValues: []
@@ -1566,12 +1568,12 @@ MonoBehaviour:
         filter:
           filterByCategory: 1
           category: 1
-          filterByActionId: 1
+          filterByActionId: 0
           actionId: rugal.skill
           filterByActionName: 0
           actionName: 
-          filterByStepName: 0
-          stepName: 
+          filterByStepName: 1
+          stepName: Genocide Cutter
           filterByElement: 0
           elementType: 0
           requireRuntimeTag: 0
@@ -1583,12 +1585,12 @@ MonoBehaviour:
         filter:
           filterByCategory: 1
           category: 2
-          filterByActionId: 1
+          filterByActionId: 0
           actionId: rugal.ultimate
           filterByActionName: 0
           actionName: 
-          filterByStepName: 0
-          stepName: 
+          filterByStepName: 1
+          stepName: Wall Slam
           filterByElement: 0
           elementType: 0
           requireRuntimeTag: 0
@@ -1617,12 +1619,12 @@ MonoBehaviour:
         filter:
           filterByCategory: 1
           category: 2
-          filterByActionId: 1
-          actionId: rugal.ultimate.ex
+          filterByActionId: 0
+          actionId: rugal.skill.ex
           filterByActionName: 0
           actionName: 
-          filterByStepName: 0
-          stepName: 
+          filterByStepName: 1
+          stepName: Grab FollowupEX
           filterByElement: 0
           elementType: 0
           requireRuntimeTag: 0
@@ -1631,7 +1633,7 @@ MonoBehaviour:
         operation: 0
         value: 1
       conditionalStateEffects:
-      - trigger: 0
+      - trigger: 1
         filter:
           filterByCategory: 0
           category: 0

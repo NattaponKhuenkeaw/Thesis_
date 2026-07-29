@@ -791,43 +791,7 @@ public static class RuntimeEffectRuntimeUtility
             return false;
         }
 
-        if (GetDurationType(definition, recipe) != RuntimeEffectDurationType.Forever
-            && !StatsApproximatelyEqual(instance.sourceStatsSnapshot, sourceStats))
-        {
-            return false;
-        }
-
         return Mathf.Approximately(instance.appliedDurationSeconds, resolvedDuration);
-    }
-
-    private static bool StatsApproximatelyEqual(CharacterStats a, CharacterStats b)
-    {
-        if (ReferenceEquals(a, b))
-        {
-            return true;
-        }
-
-        if (a == null || b == null)
-        {
-            return a == null && b == null;
-        }
-
-        return Approximately(a.maxHP, b.maxHP)
-            && Approximately(a.attack, b.attack)
-            && Approximately(a.defense, b.defense)
-            && Approximately(a.speed, b.speed)
-            && Approximately(a.elementalMastery, b.elementalMastery)
-            && Approximately(a.critRate, b.critRate)
-            && Approximately(a.critDamage, b.critDamage)
-            && Approximately(a.cooldownRate, b.cooldownRate)
-            && Approximately(a.impact, b.impact)
-            && Approximately(a.damageReduction, b.damageReduction)
-            && Approximately(a.aeRecharge, b.aeRecharge);
-    }
-
-    private static bool Approximately(float a, float b)
-    {
-        return Mathf.Abs(a - b) <= 0.0001f;
     }
 
     public static RuntimeEffectParameterSet GetParameters(RuntimeEffectInstance instance)
@@ -837,24 +801,12 @@ public static class RuntimeEffectRuntimeUtility
 
     public static CharacterStats ResolveFormulaSourceStats(RuntimeEffectContext context)
     {
-        if (context.instance == null || GetDurationType(context.instance.definition, context.instance.recipe) != RuntimeEffectDurationType.Forever)
-        {
-            return context.sourceStats;
-        }
-
-        return ResolveLiveSourceStats(context.sourceCharacter, context.targetPlayer) ?? context.sourceStats;
+        return context.sourceStats;
     }
 
     public static CharacterStats ResolveFormulaSourceStats(RuntimeEffectDamageContext context)
     {
-        if (context == null
-            || context.instance == null
-            || GetDurationType(context.instance.definition, context.instance.recipe) != RuntimeEffectDurationType.Forever)
-        {
-            return context != null ? context.sourceStats : null;
-        }
-
-        return ResolveLiveSourceStats(context.sourceCharacter, null) ?? context.sourceStats;
+        return context != null ? context.sourceStats : null;
     }
 
     /// <summary>
@@ -869,47 +821,10 @@ public static class RuntimeEffectRuntimeUtility
             return null;
         }
 
-        return ResolveLiveSourceStats(context.sourceCharacter, null) ?? context.sourceStats;
-    }
-
-    private static CharacterStats ResolveLiveSourceStats(CharacterObject sourceCharacter, PlayerCharacter contextPlayer)
-    {
-        if (sourceCharacter == null)
-        {
-            return null;
-        }
-
-        PlayerCharacter activePlayer = PlayerCharacter.Instance;
-        if (activePlayer != null && activePlayer.characterObject == sourceCharacter)
-        {
-            return activePlayer.Stats;
-        }
-
-        if (contextPlayer != null && contextPlayer.characterObject == sourceCharacter)
-        {
-            return contextPlayer.Stats;
-        }
-
-        TeamLoader teamLoader = TeamLoader.Instance;
-        if (teamLoader != null)
-        {
-            if (teamLoader.RunInventory != null)
-            {
-                CharacterStats runStats = teamLoader.RunInventory.GetCharacterStats(sourceCharacter);
-                if (runStats != null)
-                {
-                    return runStats;
-                }
-            }
-
-            CharacterStats runtimeStats = teamLoader.GetCharacterRuntimeStats(sourceCharacter);
-            if (runtimeStats != null)
-            {
-                return runtimeStats;
-            }
-        }
-
-        return sourceCharacter.GetLeveledStats();
+        return CombatSourceStatResolver.Resolve(
+            context.sourceCharacter,
+            context.sourceStats,
+            SourceStatReadMode.LiveOnResolve);
     }
 
     public static void CopyLegacyDefinitionParameters(RuntimeEffectDefinition definition, RuntimeEffectParameterSet parameters)

@@ -296,7 +296,7 @@ MonoBehaviour:
             kind: 0
             appliesOn: 0
             durationType: 0
-            durationSeconds: 5
+            durationSeconds: 10
             stackMode: 0
             stackLimit: 5
             refreshDurationOnReapply: 1

@@ -8,7 +8,36 @@ public enum ActionEventType
     UltimateOverlaySequence,
     TeleportToNearestEnemy,
     ScreenImpulse,
-    AfterImage
+    AfterImage,
+    SetFacingDirection
+}
+
+public enum ActionFacingMode
+{
+    Opposite,
+    Left,
+    Right
+}
+
+[Serializable]
+public class FacingDirectionEventSettings
+{
+    public ActionFacingMode mode = ActionFacingMode.Opposite;
+
+    public int ResolveDirection(int currentDirection)
+    {
+        switch (mode)
+        {
+            case ActionFacingMode.Left:
+                return -1;
+
+            case ActionFacingMode.Right:
+                return 1;
+
+            default:
+                return currentDirection >= 0 ? -1 : 1;
+        }
+    }
 }
 
 public enum UltimateFreezeTimelineMode
@@ -84,6 +113,9 @@ public class ActionEventEntry
 
     [Header("After Image")]
     public AfterImageEventSettings afterImageSettings = new AfterImageEventSettings();
+
+    [Header("Facing Direction")]
+    public FacingDirectionEventSettings facingDirectionSettings = new FacingDirectionEventSettings();
 
     [Header("Ultimate Zoom Settings")]
     [Tooltip("If true, the camera will instantly zoom in on the player during the sequence.")]

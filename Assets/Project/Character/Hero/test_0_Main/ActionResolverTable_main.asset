@@ -66,7 +66,7 @@ MonoBehaviour:
     conditions: []
     damageSourceStat: 0
     actionDamageMultiplier: 7
-    auraEnergyReward: 0
+    auraEnergyReward: 3
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
@@ -682,13 +682,15 @@ MonoBehaviour:
               pulseInterval: 0.01
               slowMotion:
                 enabled: 1
-                timeScale: 0.1
+                timeScale: 0.5
                 duration: 0.7
                 delaySeconds: 0
           afterImageSettings:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
         - label: Ultimate Sequence
@@ -742,6 +744,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 1588256193077838004
@@ -1083,6 +1087,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 1588256193077838061
@@ -1211,6 +1217,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
         - label: Ultimate Sequence
@@ -1264,6 +1272,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
         - label: Ultimate Sequence
@@ -1317,6 +1327,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
         - label: Ultimate Sequence
@@ -1370,6 +1382,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 1588256193077838066
@@ -1662,6 +1676,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 1588256211525697660
@@ -1731,6 +1747,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
         - label: Ultimate Sequence
@@ -1784,6 +1802,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 1588256211525697662
@@ -1841,6 +1861,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 1588256211525697664

@@ -79,6 +79,11 @@ public class PlayerStateMachine : MonoBehaviour
     /// </summary>
     public event Action<PlayerStateId, PlayerStateId> OnStateChanged;
 
+    /// <summary>
+    /// Fired whenever a jump launch occurs (ground jump or double jump).
+    /// </summary>
+    public event Action OnJumpLaunched;
+
     // =========================================================
     // Unity Methods
     // =========================================================
@@ -482,6 +487,7 @@ public class PlayerStateMachine : MonoBehaviour
     public void NotifyJumpLaunched()
     {
         EnvironmentContext = PlayerEnvironmentContext.Airborne;
+        OnJumpLaunched?.Invoke();
     }
 
     /// <summary>
