@@ -715,6 +715,29 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1068387717141365166, guid: 6aab51df95d9d3441a3071e4f54b438a, type: 3}
   m_PrefabInstance: {fileID: 495679380}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &606731727 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1566489620681877580, guid: 4c94aec46ce6d47448decf0352d8445c, type: 3}
+  m_PrefabInstance: {fileID: 1988212737}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &606731730
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 606731727}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 362ae6814a52b0a42bf322d70eb7eafa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.RoomClearManager
+  enemies:
+  - {fileID: 0}
+  - {fileID: 0}
+  portalsRoot: {fileID: 0}
+  hidePortalsOnStart: 1
+  unlockSceneExitOnClear: 1
 --- !u!1 &681616279
 GameObject:
   m_ObjectHideFlags: 0
@@ -1258,7 +1281,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9ba9828af59af34993ad53d8aef9874, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.TransitionTrigger
-  targetSceneName: Test_Playground
+  targetSceneName: combat_1
   targetEntranceId: Default
   debugColor: {r: 0.2, g: 0.8, b: 1, a: 0.4}
 --- !u!1 &1653632139
@@ -2294,6 +2317,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 822730165316854140, guid: 4c94aec46ce6d47448decf0352d8445c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1715479630}
+    - targetCorrespondingSourceObject: {fileID: 1566489620681877580, guid: 4c94aec46ce6d47448decf0352d8445c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 606731730}
   m_SourcePrefab: {fileID: 100100000, guid: 4c94aec46ce6d47448decf0352d8445c, type: 3}
 --- !u!1001 &2006486923
 PrefabInstance:
@@ -4133,7 +4159,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 979919694387824128, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.49999368
+      value: 0.5000027
       objectReference: {fileID: 0}
     - target: {fileID: 979919694387824128, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
       propertyPath: m_LocalPosition.y
