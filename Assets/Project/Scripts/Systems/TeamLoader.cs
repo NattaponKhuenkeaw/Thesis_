@@ -260,6 +260,54 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         return true;
     }
 
+    public bool TrySwitchToNextLivingCharacterAfterActiveDefeat()
+    {
+        ResolveDependencies();
+        SyncTeamSnapshotFromInventory();
+
+        if (teamSnapshot == null || teamSnapshot.Length == 0 || playerCharacter == null)
+        {
+            return false;
+        }
+
+        CharacterObject defeatedCharacter = playerCharacter.characterObject ?? CurrentCharacter;
+        int defeatedIndex = FindCharacterIndex(defeatedCharacter);
+        if (defeatedIndex >= 0)
+        {
+            currentIndex = defeatedIndex;
+            runInventory?.SetActiveTeamSlotIndex(currentIndex);
+            NotifyCharacterHealthUpdated(defeatedCharacter);
+        }
+
+        int nextLivingIndex = FindNextLivingIndex(defeatedIndex >= 0 ? defeatedIndex : currentIndex);
+        if (nextLivingIndex < 0)
+        {
+            return false;
+        }
+
+        currentIndex = nextLivingIndex;
+        runInventory?.SetActiveTeamSlotIndex(currentIndex);
+        lastSwitchTime = Time.time;
+
+        LoadCurrentCharacter(forceReload: true);
+        playerCharacter.Animator?.SetDie(false);
+        playerCharacter.StateMachine?.InputBuffer?.ClearAll();
+        if (playerCharacter.StateMachine != null)
+        {
+            playerCharacter.StateMachine.ChangeState(playerCharacter.StateMachine.IdleState);
+        }
+
+        SnapPlayerToGround();
+        NotifyAllCharacterResources();
+
+        CharacterObject nextCharacter = CurrentCharacter;
+        string displayName = nextCharacter != null && nextCharacter.metaData != null && !string.IsNullOrWhiteSpace(nextCharacter.metaData.displayName)
+            ? nextCharacter.metaData.displayName
+            : (nextCharacter != null ? nextCharacter.name : "Unknown");
+        Debug.Log($"[TeamLoader] Active character was defeated. Switched to next living character: {displayName}", this);
+        return true;
+    }
+
     private void SnapPlayerToGround()
     {
         if (playerCharacter == null) return;
@@ -763,6 +811,27 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         {
             index = (index + direction + teamSnapshot.Length) % teamSnapshot.Length;
             if (teamSnapshot[index] != null)
+            {
+                return index;
+            }
+        }
+
+        return -1;
+    }
+
+    private int FindNextLivingIndex(int startIndex)
+    {
+        if (teamSnapshot == null || teamSnapshot.Length == 0)
+        {
+            return -1;
+        }
+
+        int index = Mathf.Clamp(startIndex, 0, teamSnapshot.Length - 1);
+        for (int i = 0; i < teamSnapshot.Length; i++)
+        {
+            index = (index + 1) % teamSnapshot.Length;
+            CharacterObject candidate = teamSnapshot[index];
+            if (candidate != null && GetCharacterCurrentHP(candidate) > 0.01f)
             {
                 return index;
             }

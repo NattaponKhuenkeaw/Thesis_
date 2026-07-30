@@ -183,7 +183,7 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
             OnDied?.Invoke();
         }
 
-        if (StateMachine != null)
+        if (StateMachine != null && IsDead)
             StateMachine.ChangeState(StateMachine.DeadState);
     }
 
@@ -275,7 +275,7 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
             deathEventRaised = true;
             OnDied?.Invoke();
 
-            if (StateMachine != null)
+            if (StateMachine != null && IsDead)
                 StateMachine.ChangeState(StateMachine.DeadState);
         }
         else

@@ -23,6 +23,9 @@ namespace Project.Core.RunEnd
         [SerializeField] private PlayerMetaProgression metaProgression;
         [SerializeField] private RunResultUI runResultUI;
 
+        [Header("Room Clear Rewards")]
+        [SerializeField, Min(0)] private int roomClearCurrencyReward = 25;
+
         [Header("Death Flow")]
         [SerializeField, Min(0f)] private float deathDelaySeconds = 1.75f;
         [SerializeField] private string lobbySceneName = "Test_Lobby";
@@ -81,6 +84,7 @@ namespace Project.Core.RunEnd
         public void NotifyRoomCleared()
         {
             roomsCleared = Mathf.Max(0, roomsCleared + 1);
+            AwardRoomClearCurrency();
         }
 
         public void SetRoomsCleared(int value)
@@ -118,10 +122,21 @@ namespace Project.Core.RunEnd
                 return;
             }
 
+            if (TrySwitchToLivingTeamMember())
+            {
+                return;
+            }
+
             isHandlingDeath = true;
             LockDeathInput();
             CancelActivePlayerActions(subscribedPlayer);
             StartCoroutine(DeathFlowRoutine());
+        }
+
+        private bool TrySwitchToLivingTeamMember()
+        {
+            TeamLoader teamLoader = TeamLoader.Instance ?? FindFirstObjectByType<TeamLoader>();
+            return teamLoader != null && teamLoader.TrySwitchToNextLivingCharacterAfterActiveDefeat();
         }
 
         private IEnumerator DeathFlowRoutine()
@@ -162,6 +177,25 @@ namespace Project.Core.RunEnd
 
             Debug.LogWarning("[RunEndController] SceneTransitionManager is missing. Loading lobby scene directly.");
             SceneManager.LoadScene(lobbySceneName);
+        }
+
+        private void AwardRoomClearCurrency()
+        {
+            int reward = Mathf.Max(0, roomClearCurrencyReward);
+            if (reward <= 0)
+            {
+                return;
+            }
+
+            ResolveDependencies();
+            if (runInventory == null)
+            {
+                Debug.LogWarning("[RunEndController] Cannot award room-clear currency because PlayerRunInventory is missing.", this);
+                return;
+            }
+
+            runInventory.AddCurrency(reward);
+            Debug.Log($"[RunEndController] Room clear reward granted: +{reward} currency. Rooms cleared={roomsCleared}.", this);
         }
 
         private IEnumerator RespawnAfterSceneLoadRoutine()

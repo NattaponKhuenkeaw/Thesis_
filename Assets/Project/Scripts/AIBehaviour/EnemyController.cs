@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using UnityEngine;
 using Unity.Behavior;
-using Project.ShopSystem;
 
 /// <summary>
 /// Core enemy component. Holds stats, HP events, and helpers used by
@@ -31,9 +30,6 @@ public class EnemyController : MonoBehaviour
     public float defense = 0f;
     public float damageRes = 0f;
     public bool isEliteOrBoss = false;
-
-    [Header("Run Rewards")]
-    [SerializeField, Min(0)] private int currencyReward = 25;
 
     // =========================================================
     // State
@@ -368,7 +364,6 @@ public class EnemyController : MonoBehaviour
         if (bodyCollider  != null) bodyCollider.enabled  = false;
         if (attackHitbox  != null) attackHitbox.enabled  = false;
 
-        AwardRunCurrency();
         OnDied?.Invoke();
 
         // Remove from combat camera when dead
@@ -376,32 +371,6 @@ public class EnemyController : MonoBehaviour
             CameraManager.instance.LeaveCombat(this);
 
         Destroy(gameObject);
-    }
-
-    private void AwardRunCurrency()
-    {
-        if (currencyReward <= 0)
-            return;
-
-        PlayerRunInventory runInventory = null;
-        TeamLoader teamLoader = TeamLoader.Instance;
-        if (teamLoader != null)
-        {
-            runInventory = teamLoader.RunInventory;
-        }
-
-        if (runInventory == null)
-        {
-            runInventory = Resources.Load<PlayerRunInventory>("InventorySO/PlayerRunInventory");
-        }
-
-        if (runInventory == null)
-        {
-            Debug.LogWarning($"[EnemyController] Cannot award {currencyReward} currency because PlayerRunInventory is missing.");
-            return;
-        }
-
-        runInventory.AddCurrency(currencyReward);
     }
 
     private void CacheOriginalColors()

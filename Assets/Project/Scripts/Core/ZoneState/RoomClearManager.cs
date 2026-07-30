@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Project.Core.RunEnd;
 
 namespace Project.Core.ZoneState
 {
@@ -72,16 +73,27 @@ namespace Project.Core.ZoneState
                 return;
             }
 
+            bool hasTrackedEnemy = false;
             for (int i = 0; i < enemies.Count; i++)
             {
                 EnemyController enemy = enemies[i];
-                if (enemy != null && enemy.IsAlive)
+                if (enemy == null)
+                {
+                    continue;
+                }
+
+                hasTrackedEnemy = true;
+                if (enemy.IsAlive)
                 {
                     return;
                 }
             }
 
             roomCleared = true;
+            if (hasTrackedEnemy)
+            {
+                NotifyRunEndRoomCleared();
+            }
 
             if (unlockSceneExitOnClear)
             {
@@ -96,6 +108,18 @@ namespace Project.Core.ZoneState
             {
                 portalsRoot.SetActive(true);
             }
+        }
+
+        private void NotifyRunEndRoomCleared()
+        {
+            RunEndController runEndController = RunEndController.Instance ?? FindFirstObjectByType<RunEndController>();
+            if (runEndController == null)
+            {
+                Debug.LogWarning("[RoomClearManager] Room cleared but RunEndController is missing; room reward was not granted.", this);
+                return;
+            }
+
+            runEndController.NotifyRoomCleared();
         }
     }
 }

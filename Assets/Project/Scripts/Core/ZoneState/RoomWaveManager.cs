@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using Project.Core.RunEnd;
 
 namespace Project.Core.ZoneState
 {
@@ -48,6 +49,7 @@ namespace Project.Core.ZoneState
         private int currentWaveIndex = -1;
         private bool hasStarted;
         private bool roomCleared;
+        private bool spawnedAnyEnemy;
 
         private void Awake()
         {
@@ -83,6 +85,7 @@ namespace Project.Core.ZoneState
             }
 
             hasStarted = true;
+            spawnedAnyEnemy = false;
 
             if (waveRoutine != null)
             {
@@ -148,6 +151,7 @@ namespace Project.Core.ZoneState
                 enemy.OnDied -= HandleEnemyDied;
                 enemy.OnDied += HandleEnemyDied;
                 activeEnemies.Add(enemy);
+                spawnedAnyEnemy = true;
             }
         }
 
@@ -197,6 +201,10 @@ namespace Project.Core.ZoneState
             }
 
             roomCleared = true;
+            if (spawnedAnyEnemy)
+            {
+                NotifyRunEndRoomCleared();
+            }
 
             if (unlockSceneExitOnClear)
             {
@@ -213,6 +221,18 @@ namespace Project.Core.ZoneState
             }
 
             onRoomCleared?.Invoke();
+        }
+
+        private void NotifyRunEndRoomCleared()
+        {
+            RunEndController runEndController = RunEndController.Instance ?? FindFirstObjectByType<RunEndController>();
+            if (runEndController == null)
+            {
+                Debug.LogWarning("[RoomWaveManager] Room cleared but RunEndController is missing; room reward was not granted.", this);
+                return;
+            }
+
+            runEndController.NotifyRoomCleared();
         }
 
         private void UnsubscribeActiveEnemies()
