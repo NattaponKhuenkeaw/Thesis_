@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Project.InventorySystem.Items;
@@ -19,6 +18,24 @@ public interface ITeamEnergySystem
 
 public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 {
+    private sealed class AlwaysRuntimeEffectBinding
+    {
+        public CharacterObject target;
+        public CharacterObject source;
+        public PassiveRuntimeEffectDefinition authoredEffect;
+        public RuntimeEffectDefinition definition;
+        public RuntimeEffectRecipe recipe;
+        public CharacterStats sourceStats;
+
+        public bool Matches(AlwaysRuntimeEffectBinding other)
+        {
+            return other != null
+                && ReferenceEquals(target, other.target)
+                && ReferenceEquals(source, other.source)
+                && ReferenceEquals(authoredEffect, other.authoredEffect);
+        }
+    }
+
     public static TeamLoader Instance { get; private set; }
 
     public const float DefaultUltimateAuraEnergyCost = 100f;
@@ -45,8 +62,21 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     [SerializeField] private int currentIndex = 0;
     [SerializeField] private float lastSwitchTime = -999f;
 
-    private readonly Dictionary<CharacterObject, CharacterStats> characterRuntimeStats = new Dictionary<CharacterObject, CharacterStats>();
+    private readonly Dictionary<CharacterObject, DeployedCharacterRuntime> deployedCharacterRuntimes =
+        new Dictionary<CharacterObject, DeployedCharacterRuntime>();
     private readonly Dictionary<CharacterObject, CombatRuntimeState> characterCombatRuntimeStates = new Dictionary<CharacterObject, CombatRuntimeState>();
+    private readonly Dictionary<CharacterObject, List<PassiveActionModifierDefinition>> ultimateWindowModifiers =
+        new Dictionary<CharacterObject, List<PassiveActionModifierDefinition>>();
+    private readonly Dictionary<CharacterObject, IReadOnlyList<PotentialNodeDefinition>> defaultUnlockedPotentialNodes =
+        new Dictionary<CharacterObject, IReadOnlyList<PotentialNodeDefinition>>();
+    private readonly List<AlwaysRuntimeEffectBinding> alwaysRuntimeEffectBindings =
+        new List<AlwaysRuntimeEffectBinding>();
+    private readonly List<AlwaysRuntimeEffectBinding> desiredAlwaysRuntimeEffectBindings =
+        new List<AlwaysRuntimeEffectBinding>();
+    private readonly HashSet<PassiveRuntimeEffectDefinition> warnedInvalidAlwaysEffects =
+        new HashSet<PassiveRuntimeEffectDefinition>();
+    private readonly List<CharacterObject> staleRuntimeStatCharacters =
+        new List<CharacterObject>();
 
     public CombatRuntimeState GetCharacterCombatRuntimeState(CharacterObject character)
     {
@@ -60,8 +90,10 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     }
     private CharacterObject[] teamSnapshot = Array.Empty<CharacterObject>();
     private PlayerRunInventory subscribedRuntimeEffectInventory;
+    private PlayerMetaProgression subscribedMetaProgression;
     private bool isReconcilingAlwaysRuntimeEffects;
     private bool isRefreshingFromHealthChange;
+    private bool isApplyingRuntimeStats;
 
     public PlayerRunInventory RunInventory => runInventory;
     public int CurrentIndex => currentIndex;
@@ -87,6 +119,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     {
         BindPlayerCharacter();
         BindRunInventoryEvents();
+        BindMetaProgressionEvents();
         CharacterEvents.OnCharacterStatsChanged += HandleCharacterStatsChanged;
     }
 
@@ -94,6 +127,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     {
         UnbindPlayerCharacter();
         UnbindRunInventoryEvents();
+        UnbindMetaProgressionEvents();
         CharacterEvents.OnCharacterStatsChanged -= HandleCharacterStatsChanged;
     }
 
@@ -110,10 +144,6 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     private void Update()
     {
         runInventory?.TickRuntimeEffects(Time.deltaTime);
-        foreach (var state in characterCombatRuntimeStates.Values)
-        {
-            state?.Tick();
-        }
     }
 
     public CharacterObject[] GetTeamSnapshot()
@@ -127,17 +157,21 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     public void SetRunInventory(PlayerRunInventory inventory)
     {
         UnbindRunInventoryEvents();
+        alwaysRuntimeEffectBindings.Clear();
+        ultimateWindowModifiers.Clear();
+        defaultUnlockedPotentialNodes.Clear();
         runInventory = inventory;
         BindRunInventoryEvents();
+        BindMetaProgressionEvents();
         BootstrapRunInventoryTeam();
         SyncTeamSnapshotFromInventory();
-        ReconcileAlwaysRuntimeEffects();
         if (runInventory != null && runInventory.HasDeployedTeam())
         {
             RefreshRuntimeState();
         }
         else
         {
+            ReconcileAlwaysRuntimeEffects();
             RebuildRuntimeStats();
         }
     }
@@ -256,7 +290,18 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         runInventory?.SetActiveTeamSlotIndex(currentIndex);
         lastSwitchTime = Time.time;
         LoadCurrentCharacter();
-        SnapPlayerToGround();
+
+        // A successful Team Switch is always a Ground transition. The outgoing
+        // Ground action may have lifted the shared Rigidbody through MotionData,
+        // so resolve the incoming character against the floor unconditionally.
+        if (playerCharacter != null && playerCharacter.StateMachine != null)
+        {
+            playerCharacter.StateMachine.SnapToGroundForCharacterSwitch();
+        }
+        else
+        {
+            SnapPlayerToGround();
+        }
         return true;
     }
 
@@ -312,12 +357,13 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     {
         if (playerCharacter == null) return;
 
-        LayerMask groundMask = LayerMask.GetMask("Ground");
         if (playerCharacter.Movement != null)
         {
-            groundMask = playerCharacter.Movement.groundLayer;
+            playerCharacter.Movement.SnapToGroundForActionOutput();
+            return;
         }
 
+        LayerMask groundMask = LayerMask.GetMask("Ground");
         Vector2 origin = playerCharacter.transform.position;
         origin.y += 0.5f;
 
@@ -345,6 +391,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     public void DeployLoadout(CharacterObject[] newTeam, int preferredIndex, Artifact[][] artifactData = null)
     {
         characterCombatRuntimeStates.Clear();
+        ultimateWindowModifiers.Clear();
+        defaultUnlockedPotentialNodes.Clear();
         if (newTeam == null)
         {
             return;
@@ -398,8 +446,16 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     public Artifact[] GetEquippedArtifactsFor(CharacterObject character)
     {
-        int slotIndex = FindCharacterIndex(character);
-        return slotIndex >= 0 ? GetEquippedArtifactsAt(slotIndex) : Array.Empty<Artifact>();
+        SyncTeamSnapshotFromInventory();
+        if (runInventory == null || character == null)
+        {
+            return Array.Empty<Artifact>();
+        }
+
+        int slotIndex = runInventory.FindTeamSlot(character);
+        return slotIndex >= 0
+            ? runInventory.GetEquippedArtifactsAt(slotIndex)
+            : Array.Empty<Artifact>();
     }
 
     public Artifact[] GetEquippedArtifactsAt(int slotIndex)
@@ -416,6 +472,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     public void RefreshRuntimeState()
     {
         characterCombatRuntimeStates.Clear();
+        ultimateWindowModifiers.Clear();
+        defaultUnlockedPotentialNodes.Clear();
         SyncTeamSnapshotFromInventory();
         ReconcileAlwaysRuntimeEffects();
         RebuildRuntimeStats();
@@ -435,7 +493,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         if (playerCharacter != null && playerCharacter.characterObject != null)
         {
             CharacterStats activeStats = GetCharacterRuntimeStats(playerCharacter.characterObject);
-            playerCharacter.RefreshRuntimeStats(activeStats);
+            ApplyActivePlayerRuntimeStats(activeStats);
             NotifyCharacterHealthUpdated(playerCharacter.characterObject);
         }
 
@@ -450,14 +508,59 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             return null;
         }
 
-        if (characterRuntimeStats.TryGetValue(character, out CharacterStats stats))
+        if (deployedCharacterRuntimes.TryGetValue(
+            character,
+            out DeployedCharacterRuntime runtime))
         {
-            return stats;
+            return runtime.EffectiveStats;
         }
 
-        CharacterStats fallback = BuildRuntimeStats(character, FindCharacterIndex(character));
-        characterRuntimeStats[character] = fallback;
+        int slotIndex = FindCharacterIndex(character);
+        CharacterStats fallback = BuildRuntimeStats(character, slotIndex);
+        if (slotIndex >= 0)
+        {
+            RegisterDeployedRuntime(character, slotIndex, fallback);
+        }
+
         return fallback;
+    }
+
+    public bool TryGetDeployedCharacterRuntime(
+        CharacterObject character,
+        out DeployedCharacterRuntime runtime)
+    {
+        if (character != null
+            && deployedCharacterRuntimes.TryGetValue(character, out runtime)
+            && runtime != null)
+        {
+            return true;
+        }
+
+        runtime = null;
+        return false;
+    }
+
+    public CharacterStats ResolveSourceStats(
+        CharacterObject sourceCharacter,
+        CharacterStats sourceStatsSnapshot,
+        SourceStatReadMode readMode)
+    {
+        if (readMode == SourceStatReadMode.LiveOnResolve
+            && TryGetDeployedCharacterRuntime(
+                sourceCharacter,
+                out DeployedCharacterRuntime runtime)
+            && runtime.EffectiveStats != null)
+        {
+            return runtime.EffectiveStats;
+        }
+
+        return sourceStatsSnapshot;
+    }
+
+    public IReadOnlyList<PotentialNodeDefinition> GetCharacterPotentialNodes(
+        CharacterObject character)
+    {
+        return EnumerateUnlockedPotentialNodes(character);
     }
 
     public CharacterStats GetCharacterPermanentStats(CharacterObject character)
@@ -699,7 +802,10 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     private void HandleCharacterStatsChanged(CharacterObject changedChar)
     {
-        if (changedChar == null)
+        if (changedChar == null
+            || isReconcilingAlwaysRuntimeEffects
+            || (subscribedRuntimeEffectInventory != null
+                && subscribedRuntimeEffectInventory.IsDispatchingRuntimeEffectStatChange))
         {
             return;
         }
@@ -707,13 +813,14 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         SyncTeamSnapshotFromInventory();
         if (FindCharacterIndex(changedChar) >= 0)
         {
+            ReconcileAlwaysRuntimeEffects();
             RefreshRuntimeStatsOnly(changedChar);
         }
     }
 
-    private void HandleRuntimeEffectsChanged(CharacterObject changedCharacter)
+    private void HandleRuntimeEffectsChanged(CharacterObject changedCharacter, bool affectsStats)
     {
-        if (isReconcilingAlwaysRuntimeEffects)
+        if (isReconcilingAlwaysRuntimeEffects || !affectsStats)
         {
             return;
         }
@@ -741,7 +848,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         subscribedRuntimeEffectInventory = runInventory;
         if (subscribedRuntimeEffectInventory != null)
         {
-            subscribedRuntimeEffectInventory.OnRuntimeEffectsChanged += HandleRuntimeEffectsChanged;
+            subscribedRuntimeEffectInventory.OnRuntimeEffectsChangedDetailed += HandleRuntimeEffectsChanged;
         }
     }
 
@@ -749,20 +856,19 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     {
         if (subscribedRuntimeEffectInventory != null)
         {
-            subscribedRuntimeEffectInventory.OnRuntimeEffectsChanged -= HandleRuntimeEffectsChanged;
+            subscribedRuntimeEffectInventory.OnRuntimeEffectsChangedDetailed -= HandleRuntimeEffectsChanged;
             subscribedRuntimeEffectInventory = null;
         }
     }
 
     private void RefreshRuntimeStatsOnly(CharacterObject changedCharacter)
     {
-        ReconcileAlwaysRuntimeEffects();
-        RebuildRuntimeStats();
+        RebuildRuntimeStats(changedCharacter);
 
         if (playerCharacter != null && playerCharacter.characterObject != null)
         {
             CharacterStats activeStats = GetCharacterRuntimeStats(playerCharacter.characterObject);
-            playerCharacter.RefreshRuntimeStats(activeStats);
+            ApplyActivePlayerRuntimeStats(activeStats);
             NotifyCharacterHealthUpdated(playerCharacter.characterObject);
         }
 
@@ -846,13 +952,12 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     private void NotifyTeamChanged()
     {
         CleanUpStoredData();
-        RebuildRuntimeStats();
         OnTeamChanged?.Invoke();
     }
 
     private void RebuildRuntimeStats()
     {
-        characterRuntimeStats.Clear();
+        deployedCharacterRuntimes.Clear();
         SyncTeamSnapshotFromInventory();
         if (teamSnapshot == null)
         {
@@ -864,9 +969,152 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             CharacterObject character = teamSnapshot[i];
             if (character != null)
             {
-                characterRuntimeStats[character] = BuildRuntimeStats(character, i);
+                RegisterDeployedRuntime(character, i, BuildRuntimeStats(character, i));
             }
         }
+    }
+
+    private void BindMetaProgressionEvents()
+    {
+        if (subscribedMetaProgression == metaProgression)
+        {
+            return;
+        }
+
+        UnbindMetaProgressionEvents();
+        subscribedMetaProgression = metaProgression;
+        if (subscribedMetaProgression != null)
+        {
+            subscribedMetaProgression.OnPotentialChanged += HandlePotentialChanged;
+        }
+    }
+
+    private void UnbindMetaProgressionEvents()
+    {
+        if (subscribedMetaProgression == null)
+        {
+            return;
+        }
+
+        subscribedMetaProgression.OnPotentialChanged -= HandlePotentialChanged;
+        subscribedMetaProgression = null;
+    }
+
+    private void HandlePotentialChanged(string characterId)
+    {
+        if (string.IsNullOrWhiteSpace(characterId))
+        {
+            ultimateWindowModifiers.Clear();
+            defaultUnlockedPotentialNodes.Clear();
+        }
+        else
+        {
+            for (int i = teamSnapshot.Length - 1; i >= 0; i--)
+            {
+                CharacterObject character = teamSnapshot[i];
+                if (character != null
+                    && string.Equals(character.characterId, characterId, StringComparison.Ordinal))
+                {
+                    ultimateWindowModifiers.Remove(character);
+                    defaultUnlockedPotentialNodes.Remove(character);
+                }
+            }
+        }
+
+        SyncTeamSnapshotFromInventory();
+        bool affectsTeam = string.IsNullOrWhiteSpace(characterId);
+        if (!affectsTeam)
+        {
+            for (int i = 0; i < teamSnapshot.Length; i++)
+            {
+                CharacterObject character = teamSnapshot[i];
+                if (character != null
+                    && string.Equals(character.characterId, characterId, StringComparison.Ordinal))
+                {
+                    affectsTeam = true;
+                    break;
+                }
+            }
+        }
+
+        if (!affectsTeam)
+        {
+            return;
+        }
+
+        ReconcileAlwaysRuntimeEffects();
+        RebuildRuntimeStats();
+        if (playerCharacter != null && playerCharacter.characterObject != null)
+        {
+            ApplyActivePlayerRuntimeStats(
+                GetCharacterRuntimeStats(playerCharacter.characterObject));
+        }
+
+        OnTeamChanged?.Invoke();
+        NotifyAllCharacterResources();
+    }
+
+    private void RebuildRuntimeStats(CharacterObject character)
+    {
+        if (character == null)
+        {
+            return;
+        }
+
+        int slotIndex = FindCharacterIndex(character);
+        if (slotIndex < 0)
+        {
+            deployedCharacterRuntimes.Remove(character);
+            return;
+        }
+
+        RegisterDeployedRuntime(
+            character,
+            slotIndex,
+            BuildRuntimeStats(character, slotIndex));
+    }
+
+    private void RegisterDeployedRuntime(
+        CharacterObject character,
+        int slotIndex,
+        CharacterStats stats)
+    {
+        int resolvedSlotIndex = ResolveCharacterSlot(character, slotIndex);
+        if (character == null || resolvedSlotIndex < 0)
+        {
+            return;
+        }
+
+        Artifact[] artifacts = runInventory != null
+            ? runInventory.GetEquippedArtifactsAt(resolvedSlotIndex)
+            : Array.Empty<Artifact>();
+        if (deployedCharacterRuntimes.TryGetValue(
+            character,
+            out DeployedCharacterRuntime runtime))
+        {
+            runtime.UpdateStats(resolvedSlotIndex, stats, artifacts);
+            return;
+        }
+
+        deployedCharacterRuntimes[character] = new DeployedCharacterRuntime(
+            character,
+            resolvedSlotIndex,
+            stats,
+            artifacts,
+            GetCharacterCombatRuntimeState(character));
+    }
+
+    private int ResolveCharacterSlot(CharacterObject character, int fallbackSlotIndex)
+    {
+        if (character == null)
+        {
+            return -1;
+        }
+
+        int inventorySlot = runInventory != null
+            ? runInventory.FindTeamSlot(character)
+            : -1;
+        return inventorySlot >= 0 ? inventorySlot : fallbackSlotIndex;
     }
 
     private void ReconcileAlwaysRuntimeEffects()
@@ -879,48 +1127,95 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         isReconcilingAlwaysRuntimeEffects = true;
         try
         {
-            for (int sourceIndex = 0; sourceIndex < teamSnapshot.Length; sourceIndex++)
+            BuildDesiredAlwaysRuntimeEffectBindings();
+            using (runInventory.BeginRuntimeEffectMutationBatch())
             {
-                CharacterObject sourceCharacter = teamSnapshot[sourceIndex];
-                if (sourceCharacter == null || sourceCharacter.kitDefinition == null)
+                for (int i = alwaysRuntimeEffectBindings.Count - 1; i >= 0; i--)
                 {
-                    continue;
-                }
-
-                CharacterStats sourceStats = BuildRuntimeStats(sourceCharacter, sourceIndex, includeArtifacts: true, includeRuntimeEffects: false);
-                foreach (PotentialNodeDefinition node in EnumerateUnlockedPotentialNodes(sourceCharacter))
-                {
-                    List<PassiveRuntimeEffectDefinition> effects = node != null ? node.runtimeEffects : null;
-                    if (effects == null)
+                    AlwaysRuntimeEffectBinding existing = alwaysRuntimeEffectBindings[i];
+                    AlwaysRuntimeEffectBinding desired =
+                        FindMatchingBinding(desiredAlwaysRuntimeEffectBindings, existing);
+                    bool runtimeIdentityUnchanged = desired != null
+                        && ReferenceEquals(existing.definition, desired.definition)
+                        && ReferenceEquals(existing.recipe, desired.recipe);
+                    if (runtimeIdentityUnchanged
+                        && HasAppliedAlwaysRuntimeEffectBinding(existing))
                     {
                         continue;
                     }
 
-                    for (int effectIndex = 0; effectIndex < effects.Count; effectIndex++)
+                    RemoveAlwaysRuntimeEffectBinding(existing);
+                    alwaysRuntimeEffectBindings.RemoveAt(i);
+                }
+
+                for (int i = 0; i < desiredAlwaysRuntimeEffectBindings.Count; i++)
+                {
+                    AlwaysRuntimeEffectBinding desired = desiredAlwaysRuntimeEffectBindings[i];
+                    if (FindMatchingBinding(alwaysRuntimeEffectBindings, desired) != null)
                     {
-                        PassiveRuntimeEffectDefinition effect = effects[effectIndex];
-                        if (effect == null || effect.trigger != PassiveTriggerType.Always || effect.ResolvedEffect == null)
-                        {
-                            continue;
-                        }
+                        continue;
+                    }
 
-                        if (IsAlwaysRuntimeEffectSuperseded(sourceCharacter, node, effect))
-                        {
-                            continue;
-                        }
-
-                        ApplyAlwaysRuntimeEffect(effect, sourceCharacter, sourceStats);
+                    if (HasAppliedAlwaysRuntimeEffectBinding(desired)
+                        || ApplyAlwaysRuntimeEffectBinding(desired))
+                    {
+                        alwaysRuntimeEffectBindings.Add(desired);
                     }
                 }
             }
         }
         finally
         {
+            desiredAlwaysRuntimeEffectBindings.Clear();
             isReconcilingAlwaysRuntimeEffects = false;
         }
     }
 
-    private void ApplyAlwaysRuntimeEffect(
+    private void BuildDesiredAlwaysRuntimeEffectBindings()
+    {
+        desiredAlwaysRuntimeEffectBindings.Clear();
+        for (int sourceIndex = 0; sourceIndex < teamSnapshot.Length; sourceIndex++)
+        {
+            CharacterObject sourceCharacter = teamSnapshot[sourceIndex];
+            if (sourceCharacter == null || sourceCharacter.kitDefinition == null)
+            {
+                continue;
+            }
+
+            CharacterStats sourceStats = BuildRuntimeStats(
+                sourceCharacter,
+                sourceIndex,
+                includeArtifacts: true,
+                includeRuntimeEffects: false);
+            IReadOnlyList<PotentialNodeDefinition> nodes = EnumerateUnlockedPotentialNodes(sourceCharacter);
+            for (int nodeIndex = 0; nodeIndex < nodes.Count; nodeIndex++)
+            {
+                PotentialNodeDefinition node = nodes[nodeIndex];
+                List<PassiveRuntimeEffectDefinition> effects = node != null ? node.runtimeEffects : null;
+                if (effects == null)
+                {
+                    continue;
+                }
+
+                for (int effectIndex = 0; effectIndex < effects.Count; effectIndex++)
+                {
+                    PassiveRuntimeEffectDefinition effect = effects[effectIndex];
+                    if (effect == null
+                        || effect.trigger != PassiveTriggerType.Always
+                        || effect.ResolvedEffect == null
+                        || IsAlwaysRuntimeEffectSuperseded(sourceCharacter, node, effect)
+                        || !ValidateAlwaysRuntimeEffect(effect))
+                    {
+                        continue;
+                    }
+
+                    AddDesiredAlwaysRuntimeEffectBindings(effect, sourceCharacter, sourceStats);
+                }
+            }
+        }
+    }
+
+    private void AddDesiredAlwaysRuntimeEffectBindings(
         PassiveRuntimeEffectDefinition effect,
         CharacterObject sourceCharacter,
         CharacterStats sourceStats)
@@ -932,6 +1227,10 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             : ScopeToApplyTarget(effect.scope);
         PassiveEventContext context = BuildAlwaysRuntimeEffectContext(sourceCharacter);
         bool sourceFilterMatches = effect.filter == null || effect.filter.Matches(context);
+        if (!sourceFilterMatches)
+        {
+            return;
+        }
 
         for (int targetIndex = 0; targetIndex < teamSnapshot.Length; targetIndex++)
         {
@@ -947,30 +1246,126 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
                 RuntimeEffectApplyTarget.Allies => true,
                 _ => false
             };
-
-            if (!sourceFilterMatches || !shouldApply || !MatchesRuntimeEffectTarget(effect, targetCharacter))
+            if (!shouldApply || !MatchesRuntimeEffectTarget(effect, targetCharacter))
             {
-                runInventory.RemoveRuntimeEffect(targetCharacter, resolvedEffect, resolvedRecipe, sourceCharacter);
                 continue;
             }
 
-            if (resolvedRecipe != null)
+            desiredAlwaysRuntimeEffectBindings.Add(new AlwaysRuntimeEffectBinding
             {
-                runInventory.ApplyRuntimeEffect(targetCharacter, resolvedRecipe, sourceCharacter, sourceStats);
-            }
-            else
+                target = targetCharacter,
+                source = sourceCharacter,
+                authoredEffect = effect,
+                definition = resolvedEffect,
+                recipe = resolvedRecipe,
+                sourceStats = sourceStats
+            });
+        }
+    }
+
+    private bool ValidateAlwaysRuntimeEffect(PassiveRuntimeEffectDefinition effect)
+    {
+        RuntimeEffectDefinition definition = effect != null ? effect.ResolvedEffect : null;
+        RuntimeEffectRecipe recipe = effect != null ? effect.ResolvedRecipe : null;
+        bool valid = definition != null
+            && RuntimeEffectRuntimeUtility.GetDurationType(definition, recipe) == RuntimeEffectDurationType.Forever
+            && !RuntimeEffectRuntimeUtility.RemoveOnOwnerDamaged(definition, recipe);
+        if (!valid && effect != null && warnedInvalidAlwaysEffects.Add(effect))
+        {
+            Debug.LogWarning(
+                $"TeamLoader: Always runtime effect '{definition?.name ?? "Missing"}' must be Forever and cannot remove on owner damage.");
+        }
+
+        return valid;
+    }
+
+    private static AlwaysRuntimeEffectBinding FindMatchingBinding(
+        List<AlwaysRuntimeEffectBinding> bindings,
+        AlwaysRuntimeEffectBinding candidate)
+    {
+        for (int i = 0; i < bindings.Count; i++)
+        {
+            AlwaysRuntimeEffectBinding binding = bindings[i];
+            if (binding != null && binding.Matches(candidate))
             {
-                runInventory.ApplyRuntimeEffect(
-                    targetCharacter,
-                    resolvedEffect,
-                    sourceCharacter,
-                    sourceStats,
-                    effect.durationOverride,
-                    effect.stackMode,
-                    effect.stackLimit,
-                    effect.refreshDurationOnReapply);
+                return binding;
             }
         }
+
+        return null;
+    }
+
+    private bool ApplyAlwaysRuntimeEffectBinding(AlwaysRuntimeEffectBinding binding)
+    {
+        if (binding == null
+            || binding.target == null
+            || binding.source == null
+            || binding.definition == null)
+        {
+            return false;
+        }
+
+        if (binding.recipe != null)
+        {
+            return runInventory.ApplyRuntimeEffect(
+                binding.target,
+                binding.recipe,
+                binding.source,
+                binding.sourceStats);
+        }
+
+        PassiveRuntimeEffectDefinition authored = binding.authoredEffect;
+        return authored != null && runInventory.ApplyRuntimeEffect(
+            binding.target,
+            binding.definition,
+            binding.source,
+            binding.sourceStats,
+            authored.durationOverride,
+            authored.stackMode,
+            authored.stackLimit,
+            authored.refreshDurationOnReapply);
+    }
+
+    private bool HasAppliedAlwaysRuntimeEffectBinding(AlwaysRuntimeEffectBinding binding)
+    {
+        if (binding == null || binding.target == null || binding.definition == null)
+        {
+            return false;
+        }
+
+        IReadOnlyList<RuntimeEffectInstance> activeEffects =
+            runInventory.GetActiveRuntimeEffects(binding.target);
+        for (int i = 0; i < activeEffects.Count; i++)
+        {
+            RuntimeEffectInstance instance = activeEffects[i];
+            if (RuntimeEffectRuntimeUtility.MatchesIdentity(
+                    instance,
+                    binding.definition,
+                    binding.recipe)
+                && instance.sourceCharacter == binding.source
+                && RuntimeEffectRuntimeUtility.GetDurationType(
+                    instance.definition,
+                    instance.recipe) == RuntimeEffectDurationType.Forever)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void RemoveAlwaysRuntimeEffectBinding(AlwaysRuntimeEffectBinding binding)
+    {
+        if (binding == null || binding.target == null || binding.definition == null)
+        {
+            return;
+        }
+
+        runInventory.RemoveRuntimeEffect(
+            binding.target,
+            binding.definition,
+            binding.recipe,
+            binding.source);
     }
 
     private PassiveEventContext BuildAlwaysRuntimeEffectContext(CharacterObject sourceCharacter)
@@ -1028,16 +1423,23 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         float baseLeveledAtk = stats.attack;
         float baseLeveledDef = stats.defense;
 
-        Artifact[] slotArtifacts = includeArtifacts && runInventory != null && slotIndex >= 0
-            ? runInventory.GetEquippedArtifactsAt(slotIndex)
+        int artifactOwnerSlot = ResolveCharacterSlot(character, slotIndex);
+        Artifact[] slotArtifacts = includeArtifacts && runInventory != null && artifactOwnerSlot >= 0
+            ? runInventory.GetEquippedArtifactsAt(artifactOwnerSlot)
             : Array.Empty<Artifact>();
 
         float hpPercentBonus = 0f;
         float atkPercentBonus = 0f;
         float defPercentBonus = 0f;
 
-        foreach (var artifact in slotArtifacts.Where(a => a?.bonusStats != null))
+        for (int artifactIndex = 0; artifactIndex < slotArtifacts.Length; artifactIndex++)
         {
+            Artifact artifact = slotArtifacts[artifactIndex];
+            if (artifact == null || artifact.bonusStats == null)
+            {
+                continue;
+            }
+
             hpPercentBonus += artifact.bonusStats.maxHP;
             atkPercentBonus += artifact.bonusStats.attack;
             defPercentBonus += artifact.bonusStats.defense;
@@ -1179,30 +1581,37 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         return false;
     }
 
-    private IEnumerable<PotentialNodeDefinition> EnumerateUnlockedPotentialNodes(CharacterObject sourceCharacter)
+    private IReadOnlyList<PotentialNodeDefinition> EnumerateUnlockedPotentialNodes(CharacterObject sourceCharacter)
     {
         if (sourceCharacter == null || sourceCharacter.kitDefinition == null)
         {
-            yield break;
+            return Array.Empty<PotentialNodeDefinition>();
         }
 
         if (metaProgression != null)
         {
-            foreach (PotentialNodeDefinition node in metaProgression.GetUnlockedPotentialNodes(sourceCharacter))
-            {
-                yield return node;
-            }
-
-            yield break;
+            return metaProgression.GetUnlockedPotentialNodes(sourceCharacter);
         }
 
+        if (defaultUnlockedPotentialNodes.TryGetValue(
+            sourceCharacter,
+            out IReadOnlyList<PotentialNodeDefinition> cached))
+        {
+            return cached;
+        }
+
+        List<PotentialNodeDefinition> nodes = new List<PotentialNodeDefinition>();
         foreach (PotentialNodeDefinition node in sourceCharacter.kitDefinition.EnumerateAllNodes())
         {
             if (node != null && (node.unlockedByDefault || node.level <= 0))
             {
-                yield return node;
+                nodes.Add(node);
             }
         }
+
+        IReadOnlyList<PotentialNodeDefinition> result = nodes.AsReadOnly();
+        defaultUnlockedPotentialNodes[sourceCharacter] = result;
+        return result;
     }
 
     private static void ApplyPotentialStatModifier(
@@ -1342,8 +1751,14 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     {
         if (teamSnapshot == null) return;
 
-        foreach (var character in teamSnapshot.Where(c => c != null))
+        for (int i = 0; i < teamSnapshot.Length; i++)
         {
+            CharacterObject character = teamSnapshot[i];
+            if (character == null)
+            {
+                continue;
+            }
+
             NotifyCharacterHealthUpdated(character);
             OnCharacterAuraEnergyUpdated?.Invoke(
                 character,
@@ -1361,12 +1776,28 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
         playerCharacter.Combat?.ResetCombo();
         playerCharacter.Movement?.CancelAttackMotion();
-        playerCharacter.Movement?.StopDashPhysics();
         playerCharacter.StateMachine?.ResetForCharacterSwitch();
         playerCharacter.StateMachine?.InputBuffer?.ClearAll();
     }
 
-    private int CountCharacters(CharacterObject[] teamData) => teamData?.Count(c => c != null) ?? 0;
+    private static int CountCharacters(CharacterObject[] teamData)
+    {
+        if (teamData == null)
+        {
+            return 0;
+        }
+
+        int count = 0;
+        for (int i = 0; i < teamData.Length; i++)
+        {
+            if (teamData[i] != null)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
 
     private void NotifyCurrentCharacterChanged()
     {
@@ -1415,6 +1846,11 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             state.currentHP = Mathf.Clamp(currentHp, 0f, maxHp);
         }
 
+        if (isApplyingRuntimeStats)
+        {
+            return;
+        }
+
         RefreshActiveConditionalStateEffects();
         RefreshRuntimeStatsFromHealthChange(playerCharacter.characterObject);
         NotifyCharacterHealthUpdated(playerCharacter.characterObject);
@@ -1441,6 +1877,25 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         playerCharacter?.PassiveController?.RefreshConditionalStateEffects();
     }
 
+    private void ApplyActivePlayerRuntimeStats(CharacterStats stats)
+    {
+        if (playerCharacter == null)
+        {
+            return;
+        }
+
+        bool wasApplyingRuntimeStats = isApplyingRuntimeStats;
+        isApplyingRuntimeStats = true;
+        try
+        {
+            playerCharacter.RefreshRuntimeStats(stats);
+        }
+        finally
+        {
+            isApplyingRuntimeStats = wasApplyingRuntimeStats;
+        }
+    }
+
     private void RefreshRuntimeStatsFromHealthChange(CharacterObject character)
     {
         if (isRefreshingFromHealthChange || character == null)
@@ -1463,10 +1918,18 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     {
         if (teamSnapshot == null) return;
 
-        var keysToRemove = characterRuntimeStats.Keys.Where(k => !teamSnapshot.Contains(k)).ToList();
-        foreach (var key in keysToRemove)
+        staleRuntimeStatCharacters.Clear();
+        foreach (CharacterObject character in deployedCharacterRuntimes.Keys)
         {
-            characterRuntimeStats.Remove(key);
+            if (FindCharacterIndex(character) < 0)
+            {
+                staleRuntimeStatCharacters.Add(character);
+            }
+        }
+
+        for (int i = 0; i < staleRuntimeStatCharacters.Count; i++)
+        {
+            deployedCharacterRuntimes.Remove(staleRuntimeStatCharacters[i]);
         }
     }
 
@@ -1485,11 +1948,16 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             return DefaultUltimateAuraEnergyCost;
         }
 
-        float highestCost = character.actionResolverTable.ultimateActions
-            .Where(a => a != null)
-            .Select(a => Mathf.Max(0f, a.energyCost))
-            .DefaultIfEmpty(0f)
-            .Max();
+        float highestCost = 0f;
+        List<UltimateAction> actions = character.actionResolverTable.ultimateActions;
+        for (int i = 0; i < actions.Count; i++)
+        {
+            UltimateAction action = actions[i];
+            if (action != null)
+            {
+                highestCost = Mathf.Max(highestCost, Mathf.Max(0f, action.energyCost));
+            }
+        }
 
         return highestCost > 0f ? highestCost : DefaultUltimateAuraEnergyCost;
     }
@@ -1579,63 +2047,82 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         if (runtimeState == null) return false;
 
         bool foundWindow = false;
-        foreach (var node in character.kitDefinition.potentialNodes)
+        List<PassiveActionModifierDefinition> modifiers = GetUltimateWindowModifiers(character);
+        for (int modifierIndex = 0; modifierIndex < modifiers.Count; modifierIndex++)
         {
-            if (node == null) continue;
+            PassiveActionModifierDefinition modifier = modifiers[modifierIndex];
+            float candidateRemaining = 0f;
+            float candidateDuration = 0f;
+            bool hasTimedRequirement = false;
 
-            int unlockedLevel = metaProgression.GetPotentialLevel(character, node.track);
-            if (unlockedLevel < node.level) continue;
+            for (int reqIdx = 0; reqIdx < modifier.requiredTags.Count; reqIdx++)
+            {
+                RuntimeTagRequirement requirement = modifier.requiredTags[reqIdx];
+                if (requirement == null
+                    || !requirement.expectedValue
+                    || string.IsNullOrWhiteSpace(requirement.tag)
+                    || !runtimeState.TryGetTagTiming(requirement.tag, out float tagRemaining, out float tagDuration))
+                {
+                    continue;
+                }
 
-            List<PassiveActionModifierDefinition> modifiers = node.actionModifiers;
-            if (modifiers == null) continue;
+                if (!hasTimedRequirement || tagRemaining < candidateRemaining)
+                {
+                    candidateRemaining = tagRemaining;
+                    candidateDuration = tagDuration;
+                }
+                hasTimedRequirement = true;
+            }
+
+            if (!hasTimedRequirement || candidateRemaining <= remainingSeconds)
+            {
+                continue;
+            }
+
+            remainingSeconds = candidateRemaining;
+            durationSeconds = Mathf.Max(candidateDuration, candidateRemaining);
+            foundWindow = true;
+        }
+
+        return foundWindow;
+    }
+
+    private List<PassiveActionModifierDefinition> GetUltimateWindowModifiers(CharacterObject character)
+    {
+        if (ultimateWindowModifiers.TryGetValue(
+            character,
+            out List<PassiveActionModifierDefinition> cached))
+        {
+            return cached;
+        }
+
+        List<PassiveActionModifierDefinition> result = new List<PassiveActionModifierDefinition>();
+        IReadOnlyList<PotentialNodeDefinition> nodes = EnumerateUnlockedPotentialNodes(character);
+        for (int nodeIndex = 0; nodeIndex < nodes.Count; nodeIndex++)
+        {
+            PotentialNodeDefinition node = nodes[nodeIndex];
+            List<PassiveActionModifierDefinition> modifiers = node != null ? node.actionModifiers : null;
+            if (modifiers == null)
+            {
+                continue;
+            }
 
             for (int i = 0; i < modifiers.Count; i++)
             {
                 PassiveActionModifierDefinition modifier = modifiers[i];
-                if (modifier == null
-                    || !modifier.unlocked
-                    || modifier.category != AttackCategory.Ultimate
-                    || modifier.requiredTags == null
-                    || modifier.requiredTags.Count == 0)
+                if (modifier != null
+                    && modifier.unlocked
+                    && modifier.category == AttackCategory.Ultimate
+                    && modifier.requiredTags != null
+                    && modifier.requiredTags.Count > 0)
                 {
-                    continue;
+                    result.Add(modifier);
                 }
-
-                float candidateRemaining = 0f;
-                float candidateDuration = 0f;
-                bool hasTimedRequirement = false;
-
-                for (int reqIdx = 0; reqIdx < modifier.requiredTags.Count; reqIdx++)
-                {
-                    var requirement = modifier.requiredTags[reqIdx];
-                    if (requirement == null
-                        || !requirement.expectedValue
-                        || string.IsNullOrWhiteSpace(requirement.tag)
-                        || !runtimeState.TryGetTagTiming(requirement.tag, out float tagRemaining, out float tagDuration))
-                    {
-                        continue;
-                    }
-
-                    if (!hasTimedRequirement || tagRemaining < candidateRemaining)
-                    {
-                        candidateRemaining = tagRemaining;
-                        candidateDuration = tagDuration;
-                    }
-                    hasTimedRequirement = true;
-                }
-
-                if (!hasTimedRequirement || candidateRemaining <= remainingSeconds)
-                {
-                    continue;
-                }
-
-                remainingSeconds = candidateRemaining;
-                durationSeconds = Mathf.Max(candidateDuration, candidateRemaining);
-                foundWindow = true;
             }
         }
 
-        return foundWindow;
+        ultimateWindowModifiers[character] = result;
+        return result;
     }
 
     private void OnDestroy()

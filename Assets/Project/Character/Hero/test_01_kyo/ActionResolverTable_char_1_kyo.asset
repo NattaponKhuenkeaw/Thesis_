@@ -16,9 +16,9 @@ MonoBehaviour:
   - actionId: kyo.basic.ground
     actionName: Ground
     context: 0
+    outputContext: 1
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 4
     auraEnergyReward: 0
@@ -30,11 +30,11 @@ MonoBehaviour:
   - actionId: kyo.basic.air
     actionName: Air
     context: 1
+    outputContext: 2
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
-    actionDamageMultiplier: 3
+    actionDamageMultiplier: 2.5
     auraEnergyReward: 0
     comboTree:
       treeName: Combo
@@ -45,9 +45,9 @@ MonoBehaviour:
   - actionId: kyo.skill.ground
     actionName: Flame Gather
     context: 0
+    outputContext: 1
     priority: 1
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 3.5
     auraEnergyReward: 3
@@ -60,9 +60,9 @@ MonoBehaviour:
   - actionId: kyo.skill.air
     actionName: Fireball
     context: 1
+    outputContext: 2
     priority: 1
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 4
     auraEnergyReward: 3
@@ -76,9 +76,9 @@ MonoBehaviour:
   - actionId: kyo.ultimate
     actionName: "108 Shiki \u2022 Yami Barai"
     context: 0
+    outputContext: 1
     priority: 1
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 7
     auraEnergyReward: 3
@@ -87,8 +87,8 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588255892939997284
-    cooldown: 0
-    energyCost: 100
+    cooldown: 20
+    energyCost: 80
     activationVFXType: 40
     activationVFXPrefab: {fileID: 784361931337648594, guid: 4c0e5d975c6ec9341ac97977330a4775, type: 3}
     activationVFXOffset: {x: 0, y: 2, z: 0}
@@ -99,10 +99,10 @@ MonoBehaviour:
   - actionId: kyo.ultimate.ex
     actionName: 182 Shiki
     context: 0
+    outputContext: 1
     priority: 10
     conditions:
     - rid: 3612912913179476115
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 7
     auraEnergyReward: 20
@@ -135,7 +135,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.39169496, y: 2.2068093}
         size: {x: 1.418764, y: 1.550219}
-        damageRatio: 0.15
+        damageRatio: 0.1
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
@@ -202,14 +202,14 @@ MonoBehaviour:
           endFrame: 7
           taskType: 0
           easing: 16
-          position: {x: 0, y: 0.2, z: 0}
+          position: {x: 0.5, y: 0.2, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
         - startFrame: 7
           endFrame: 35
           taskType: 0
           easing: 16
-          position: {x: 0, y: 1, z: 0}
+          position: {x: 0, y: 0.7, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
         - startFrame: 30
@@ -232,8 +232,8 @@ MonoBehaviour:
         activeFrames: 4
         elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 0.86026186, y: 2.7276223}
-        size: {x: 1.9641931, y: 1.6888655}
+        offset: {x: 0.80849195, y: 2.4835644}
+        size: {x: 2.1860638, y: 2.5911407}
         damageRatio: 0.65
         impactTier: 0
         useDeterministicReaction: 1
@@ -265,8 +265,8 @@ MonoBehaviour:
         activeFrames: 3
         elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 0.92805606, y: 3.0138671}
-        size: {x: 1.9189966, y: 1.5984726}
+        offset: {x: 0.93545187, y: 2.725435}
+        size: {x: 2.3479483, y: 2.5007482}
         damageRatio: 0.35
         impactTier: 2
         useDeterministicReaction: 1
@@ -1238,7 +1238,7 @@ MonoBehaviour:
               pulseInterval: 0.01
               slowMotion:
                 enabled: 1
-                timeScale: 0.3
+                timeScale: 0.6
                 duration: 0.3
                 delaySeconds: 0
           afterImageSettings:
@@ -1348,7 +1348,7 @@ MonoBehaviour:
               pulseInterval: 0.01
               slowMotion:
                 enabled: 1
-                timeScale: 0.3
+                timeScale: 0.6
                 duration: 1
                 delaySeconds: 0
           afterImageSettings:
@@ -1442,7 +1442,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.1020966, y: 1.9555622}
         size: {x: 1.7736158, y: 0.93169653}
-        damageRatio: 0.5
+        damageRatio: 0.25
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
@@ -1511,7 +1511,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.28628784, y: 2.3803887}
         size: {x: 1.3284358, y: 2.0338614}
-        damageRatio: 0.15
+        damageRatio: 0.1
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 0
@@ -1544,7 +1544,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.48456204, y: 1.63021}
         size: {x: 2.0094042, y: 1.0838954}
-        damageRatio: 0.2
+        damageRatio: 0.15
         impactTier: 1
         useDeterministicReaction: 1
         reactionKind: 1
@@ -1685,7 +1685,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.99722207, y: 1.2020371}
         size: {x: 1.6311111, y: 2.3251853}
-        damageRatio: 0.5
+        damageRatio: 0.45
         impactTier: 2
         useDeterministicReaction: 1
         reactionKind: 2

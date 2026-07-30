@@ -24,21 +24,21 @@ MonoBehaviour:
     speed: 6.5
     elementalMastery: 0
     critRate: 5
-    critDamage: 150
+    critDamage: 50
     cooldownRate: 0
     impact: 0
     damageReduction: 0
-    aeRecharge: 1
+    aeRecharge: 0
   metaData:
     displayName: Orochi
     description: "Orochi is a deity whose purpose is to protect Gaia, considering
       itself an extension of the earth itself. Unlike a typical antagonist, its actions
       are driven by philosophy rather than malice\u2014it believes humanity\u2019s
       destruction is a necessary step to restore natural balance, not an end in itself."
-    portrait: {fileID: 8610711615170815230, guid: e7d970256f094d94a941f6f76687c92b, type: 3}
+    portrait: {fileID: 21300000, guid: 2f64b98de1dc5db489e8f3f18f057b9f, type: 3}
     animatorController: {fileID: 9100000, guid: 03216d92fc41d234c91dfd2a036c96bb, type: 2}
   auraEnergyRate: 2
-  audioData: {fileID: 0}
+  audioData: {fileID: 11400000, guid: 1964af1f6440a7249b5a515bdccd7de8, type: 2}
   movementProfile: {fileID: 11400000, guid: 475fcb4220eff1746b3aa7806eb8c0a1, type: 2}
   maxJumpOverride: -1
   maxAirDashOverride: -1
@@ -56,7 +56,7 @@ MonoBehaviour:
     activeFrames: 22
     recoveryFrames: 25
     cancelWindowStartFrame: 53
-    dashSpeed: 40
+    dashSpeed: 15
     cooldownFrames: 24
   kitDefinition:
     skill:

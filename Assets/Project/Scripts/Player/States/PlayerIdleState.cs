@@ -22,7 +22,7 @@ public class PlayerIdleState : PlayerState
     public override void Enter()
     {
         if (player.Movement != null)
-            player.Movement.Move(Vector2.zero);
+            player.Movement.SetHorizontalInput(0f);
 
         if (player.Animator != null)
             player.Animator.TriggerGrounded();
@@ -30,7 +30,7 @@ public class PlayerIdleState : PlayerState
 
     public override void Update()
     {
-        if (player.Movement != null && !player.Movement.GroundState.IsEffectivelyGrounded)
+        if (fsm.IsAirborneContext)
         {
             fsm.ChangeState(fsm.FallingState);
             return;

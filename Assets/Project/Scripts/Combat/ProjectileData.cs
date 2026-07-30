@@ -170,9 +170,9 @@ public static class ProjectileSpatialUtility
         }
 
         PlayerMovement playerMovement = actor.GetComponent<PlayerMovement>() ?? actor.GetComponentInParent<PlayerMovement>();
-        if (playerMovement != null && playerMovement.groundLayer.value != 0)
+        if (playerMovement != null && playerMovement.GroundCollisionMask.value != 0)
         {
-            return playerMovement.groundLayer.value;
+            return playerMovement.GroundCollisionMask.value;
         }
 
         EnemyHitReactionHandler enemyGrounding = actor.GetComponent<EnemyHitReactionHandler>() ?? actor.GetComponentInParent<EnemyHitReactionHandler>();

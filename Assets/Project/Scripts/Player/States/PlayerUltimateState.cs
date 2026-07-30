@@ -78,7 +78,7 @@ public class PlayerUltimateState : CombatPlayerState
             return;
         }
 
-        if (currentPhase == ActionPhase.Recovery)
+        if (IsRecoveryOrCancelPhase)
         {
             if (TryStartFreshUltimateAction(exitOnFailure: false, requireDifferentAction: true, endCurrentActionBeforePreview: true))
             {
@@ -94,19 +94,9 @@ public class PlayerUltimateState : CombatPlayerState
 
     private bool TryStartFreshUltimateAction(bool exitOnFailure, bool requireDifferentAction, bool endCurrentActionBeforePreview)
     {
-        if (ShouldAbortBeforeExecution())
-        {
-            resolver.Reset();
-            return false;
-        }
-
         UltimateAction previousAction = activeUltimateAction;
-        if (requireDifferentAction && endCurrentActionBeforePreview && player.Combat != null && player.Combat.IsAttacking())
-        {
-            player.Combat.ResetCombo();
-        }
 
-        InputContext ctx = BuildInputContext();
+        InputContext ctx = BuildInputContext(preserveActiveActionInput: !requireDifferentAction);
         ActionResolver previewResolver = new ActionResolver();
         AttackStepData previewStep = previewResolver.ResolveInitial(ctx, resolverTable, AttackCategory.Ultimate);
         UltimateAction previewUltimateAction = previewResolver.ActiveCombatAction as UltimateAction;
@@ -123,6 +113,16 @@ public class PlayerUltimateState : CombatPlayerState
         if (requireDifferentAction && IsSameUltimateAction(previewUltimateAction, previousAction))
         {
             return false;
+        }
+
+        if (requireDifferentAction)
+        {
+            CommitResolvedActionOutput();
+        }
+
+        if (requireDifferentAction && endCurrentActionBeforePreview && player.Combat != null && player.Combat.IsAttacking())
+        {
+            player.Combat.ResetCombo();
         }
 
         TeamLoader teamLoader = TeamLoader.Instance;
@@ -203,6 +203,11 @@ public class PlayerUltimateState : CombatPlayerState
         }
 
         return success;
+    }
+
+    protected override void OnStepBoundaryActionResolved(CombatAction action)
+    {
+        activeUltimateAction = action as UltimateAction;
     }
 
     protected override void OnStartupBegin()

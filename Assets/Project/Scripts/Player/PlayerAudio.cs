@@ -21,6 +21,7 @@ public class PlayerAudio : MonoBehaviour
         if (this.player != null && this.player.StateMachine != null)
         {
             this.player.StateMachine.OnStateChanged -= HandleStateChanged;
+            this.player.StateMachine.OnJumpLaunched -= HandleJumpLaunched;
         }
 
         this.player = player;
@@ -38,6 +39,7 @@ public class PlayerAudio : MonoBehaviour
         if (player.StateMachine != null)
         {
             player.StateMachine.OnStateChanged += HandleStateChanged;
+            player.StateMachine.OnJumpLaunched += HandleJumpLaunched;
         }
 
         // Initialize local sources once
@@ -50,6 +52,7 @@ public class PlayerAudio : MonoBehaviour
         if (player != null && player.StateMachine != null)
         {
             player.StateMachine.OnStateChanged -= HandleStateChanged;
+            player.StateMachine.OnJumpLaunched -= HandleJumpLaunched;
         }
     }
 
@@ -71,14 +74,25 @@ public class PlayerAudio : MonoBehaviour
             return;
         }
 
-        currentStateId = newState;
-        var mapping = audioData.GetMapping(newState);
-        
-        //Debug.Log($"[PlayerAudio] State Change: {prevState} -> {newState}. Mapping found: {mapping != null} (Count in list: {audioData.mappings.Count})");
+        // Skip Airborne state in state change handler because OnJumpLaunched handles
+        // playing jump sounds on exact physical launch (including double jumps).
+        if (newState == PlayerStateId.Airborne) return;
 
+        PlayAudioForState(newState);
+    }
+
+    private void HandleJumpLaunched()
+    {
+        if (audioData == null) return;
+        PlayAudioForState(PlayerStateId.Airborne);
+    }
+
+    private void PlayAudioForState(PlayerStateId stateId)
+    {
+        currentStateId = stateId;
+        var mapping = audioData.GetMapping(stateId);
+        
         // Stop previous looping sounds if they shouldn't continue
-        // (For now, we stop loops on state change unless the new state has the same loop? 
-        // Actually, simpler to just stop and let the new state start its own loop.)
         StopLoopingSounds();
 
         if (mapping == null) return;

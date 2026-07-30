@@ -16,9 +16,9 @@ MonoBehaviour:
   - actionId: 
     actionName: Ground
     context: 0
+    outputContext: 0
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 5
     auraEnergyReward: 0
@@ -30,9 +30,9 @@ MonoBehaviour:
   - actionId: 
     actionName: Air
     context: 1
+    outputContext: 0
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 2
     auraEnergyReward: 0
@@ -45,9 +45,9 @@ MonoBehaviour:
   - actionId: main.skill.dark_chain
     actionName: Dark Chain
     context: 0
+    outputContext: 0
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 3.5
     auraEnergyReward: 10
@@ -61,19 +61,19 @@ MonoBehaviour:
   - actionId: main.ultimate.jailbreak_punisher
     actionName: Jailbreak Punisher
     context: 0
+    outputContext: 0
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 7
-    auraEnergyReward: 0
+    auraEnergyReward: 3
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
       rootNode:
         rid: 1588256193077837993
     cooldown: 24
-    energyCost: 100
+    energyCost: 60
     activationVFXType: 0
     activationVFXPrefab: {fileID: 0}
     activationVFXOffset: {x: 0, y: 0, z: 0}
@@ -91,9 +91,9 @@ MonoBehaviour:
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
         stepData:
-          startupFrames: 6
-          activeFrames: 10
-          recoveryFrames: 12
+          startupFrames: 2
+          activeFrames: 15
+          recoveryFrames: 11
           cancelWindowStartFrame: 25
           loopActivePhase: 0
           stepName: Attack1
@@ -126,11 +126,11 @@ MonoBehaviour:
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
         keyframes:
-        - startFrame: 3
+        - startFrame: 2
           endFrame: 10
           taskType: 0
           easing: 1
-          position: {x: 1, y: 0, z: 0}
+          position: {x: 0.7, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
     - rid: 1588256136747024575
@@ -279,10 +279,10 @@ MonoBehaviour:
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
         stepData:
-          startupFrames: 6
-          activeFrames: 21
+          startupFrames: 1
+          activeFrames: 17
           recoveryFrames: 13
-          cancelWindowStartFrame: 39
+          cancelWindowStartFrame: 30
           loopActivePhase: 0
           stepName: Attack2
           animationClip: {fileID: 7400000, guid: 16980d03d7e2f824ba2af7a0b368a8f0, type: 2}
@@ -314,15 +314,15 @@ MonoBehaviour:
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
         keyframes:
-        - startFrame: 0
+        - startFrame: 1
           endFrame: 3
           taskType: 0
           easing: 1
-          position: {x: 1, y: 0, z: 0}
+          position: {x: 0.7, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
-        - startFrame: 19
-          endFrame: 22
+        - startFrame: 12
+          endFrame: 14
           taskType: 0
           easing: 1
           position: {x: 0.5, y: 0, z: 0}
@@ -348,10 +348,10 @@ MonoBehaviour:
         useDeterministicReaction: 1
         reactionKind: 1
         impactFreezeFrames: 0
-        knockbackFrames: 10
-        knockupFrames: 8
-        knockfallFrames: 6
-        recoveryFrames: 6
+        knockbackFrames: 8
+        knockupFrames: 6
+        knockfallFrames: 5
+        recoveryFrames: 5
         horizontalSpeed: 5
         launchSpeed: 1
         useSnapToAnchor: 0
@@ -361,7 +361,7 @@ MonoBehaviour:
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 5
+        flashFrames: 4
         hitSFX: {fileID: 0}
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
@@ -370,7 +370,7 @@ MonoBehaviour:
     - rid: 1588256162561392763
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
-        startFrameOffset: 16
+        startFrameOffset: 11
         activeFrames: 2
         elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
@@ -381,10 +381,10 @@ MonoBehaviour:
         useDeterministicReaction: 1
         reactionKind: 1
         impactFreezeFrames: 0
-        knockbackFrames: 10
-        knockupFrames: 8
-        knockfallFrames: 6
-        recoveryFrames: 6
+        knockbackFrames: 8
+        knockupFrames: 6
+        knockfallFrames: 5
+        recoveryFrames: 5
         horizontalSpeed: 5
         launchSpeed: 1
         useSnapToAnchor: 0
@@ -394,7 +394,7 @@ MonoBehaviour:
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 5
+        flashFrames: 4
         hitSFX: {fileID: 0}
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
@@ -544,10 +544,10 @@ MonoBehaviour:
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
         stepData:
-          startupFrames: 16
-          activeFrames: 19
-          recoveryFrames: 23
-          cancelWindowStartFrame: 54
+          startupFrames: 12
+          activeFrames: 16
+          recoveryFrames: 22
+          cancelWindowStartFrame: 47
           loopActivePhase: 0
           stepName: Dark Chain
           animationClip: {fileID: 7400000, guid: 0317f3858efd2494ebd53095b4246805, type: 2}
@@ -622,6 +622,13 @@ MonoBehaviour:
           position: {x: -0.3, y: 0.1, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
+        - startFrame: 10
+          endFrame: 17
+          taskType: 0
+          easing: 1
+          position: {x: 0, y: -0.1, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
     - rid: 1588256193077838002
       type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -675,13 +682,15 @@ MonoBehaviour:
               pulseInterval: 0.01
               slowMotion:
                 enabled: 1
-                timeScale: 0.1
+                timeScale: 0.5
                 duration: 0.7
                 delaySeconds: 0
           afterImageSettings:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
         - label: Ultimate Sequence
@@ -735,6 +744,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 1588256193077838004
@@ -905,10 +916,10 @@ MonoBehaviour:
         useDeterministicReaction: 1
         reactionKind: 1
         impactFreezeFrames: 0
-        knockbackFrames: 15
-        knockupFrames: 12
-        knockfallFrames: 10
-        recoveryFrames: 9
+        knockbackFrames: 13
+        knockupFrames: 10
+        knockfallFrames: 9
+        recoveryFrames: 8
         horizontalSpeed: 7
         launchSpeed: 1
         useSnapToAnchor: 0
@@ -918,7 +929,7 @@ MonoBehaviour:
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
+        flashFrames: 5
         hitSFX: {fileID: 0}
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
@@ -939,18 +950,32 @@ MonoBehaviour:
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
         keyframes:
-        - startFrame: 0
-          endFrame: 0
+        - startFrame: 1
+          endFrame: 5
           taskType: 0
           easing: 1
-          position: {x: 0.1, y: 0.05, z: 0}
+          position: {x: 0.1, y: 0.1, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
         - startFrame: 33
           endFrame: 42
           taskType: 0
           easing: 1
-          position: {x: 2, y: 0.05, z: 0}
+          position: {x: 2, y: 0.1, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 10
+          endFrame: 15
+          taskType: 0
+          easing: 1
+          position: {x: 0, y: -0.1, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 44
+          endFrame: 53
+          taskType: 0
+          easing: 1
+          position: {x: 0, y: -0.1, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
     - rid: 1588256193077838034
@@ -1062,6 +1087,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 1588256193077838061
@@ -1190,6 +1217,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
         - label: Ultimate Sequence
@@ -1243,6 +1272,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
         - label: Ultimate Sequence
@@ -1296,6 +1327,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
         - label: Ultimate Sequence
@@ -1349,6 +1382,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 1588256193077838066
@@ -1508,16 +1543,16 @@ MonoBehaviour:
         entries:
         - label: SFX
           clip: {fileID: 8300000, guid: 6dbe3ecbb7bf0fd47b365d1dd9ff2b49, type: 3}
-          triggerFrame: 15
-          duration: 26
+          triggerFrame: 10
+          duration: 22
           channel: 1
           volume: 0.5
           pitchVariation: 1
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
         - label: SFX
           clip: {fileID: 8300000, guid: 42de5f418024ff8408960fa139cb75da, type: 3}
-          triggerFrame: 12
-          duration: 15
+          triggerFrame: 7
+          duration: 13
           channel: 1
           volume: 0.5
           pitchVariation: 1
@@ -1528,7 +1563,7 @@ MonoBehaviour:
         entries:
         - label: SFX
           clip: {fileID: 8300000, guid: 81bf0a826d7d12147a6fed0cff16d78e, type: 3}
-          triggerFrame: 6
+          triggerFrame: 2
           duration: 18
           channel: 1
           volume: 0.7
@@ -1540,16 +1575,16 @@ MonoBehaviour:
         entries:
         - label: SFX
           clip: {fileID: 8300000, guid: 60fea6f9cd755924ea53ea4a5b381699, type: 3}
-          triggerFrame: 5
-          duration: 7
+          triggerFrame: 4
+          duration: 5
           channel: 1
           volume: 0.7
           pitchVariation: 1
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
         - label: SFX
           clip: {fileID: 8300000, guid: 60fea6f9cd755924ea53ea4a5b381699, type: 3}
-          triggerFrame: 20
-          duration: 7
+          triggerFrame: 12
+          duration: 5
           channel: 1
           volume: 0.7
           pitchVariation: 1.5
@@ -1641,6 +1676,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 1588256211525697660
@@ -1710,6 +1747,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
         - label: Ultimate Sequence
@@ -1763,6 +1802,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 1588256211525697662
@@ -1820,6 +1861,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 1588256211525697664

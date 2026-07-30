@@ -155,7 +155,32 @@ public sealed class ProjectileHitboxModule
 
     private void RefreshLiveDamageContext()
     {
-        activeContext.sourceCombat?.RefreshProjectileDamageContext(ref activeContext);
+        if (activeContext.sourceCombat == null)
+        {
+            return;
+        }
+
+        bool sourceIsStillDeployed =
+            activeContext.sourceCombat.RefreshProjectileDamageContext(ref activeContext);
+        bool passiveControllerMatchesSource =
+            activeContext.passiveController != null
+            && activeContext.passiveController.playerCharacter != null
+            && activeContext.passiveController.playerCharacter.characterObject
+                == activeContext.sourceCharacter;
+        if (!passiveControllerMatchesSource)
+        {
+            // PlayerCombat and CharacterPassiveController are shared by the
+            // currently deployed character. A projectile that outlives a team
+            // switch reads live stats from the source's deployed record, but
+            // must not evaluate the newly active character's action modifiers.
+            activeContext.passiveController = null;
+        }
+
+        if (!sourceIsStillDeployed)
+        {
+            // A removed source keeps the application-time fallback snapshot.
+            activeContext.attackerStats ??= activeContext.sourceCharacter.GetLeveledStats();
+        }
     }
 
     private void ApplyNormalHitData(NormalHitbox normalHitbox, ProjectileSpawnContext context)

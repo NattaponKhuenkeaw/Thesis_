@@ -23,8 +23,8 @@ public class CharacterStats
     [Header("Combat Stats")]
     [Tooltip("Critical hit rate (percentage, e.g. 10 = 10%)")]
     public float critRate = 5f;
-    [Tooltip("Critical damage multiplier (percentage, e.g. 150 = 150%)")]
-    public float critDamage = 150f;
+    [Tooltip("Critical damage bonus multiplier (percentage, e.g. 50 = 50% extra damage)")]
+    public float critDamage = 50f;
     [Tooltip("Cooldown rate (percentage, e.g. 10 = 10% faster)")]
     public float cooldownRate = 0f;
     [Tooltip("Impact / Ultimate DMG (percentage, e.g. 10 = 10% more Ultimate DMG)")]
@@ -33,8 +33,8 @@ public class CharacterStats
     public float damageReduction = 0f;
 
     [Header("Aura Energy")]
-    [Tooltip("Aura Energy Recharge multiplier (e.g. 1.0 = 100% standard AE recharge)")]
-    public float aeRecharge = 1f; // AE Recharge
+    [Tooltip("Aura Energy Recharge bonus multiplier (e.g. 0.0 = 0% extra AE recharge bonus)")]
+    public float aeRecharge = 0f; // AE Recharge
 
     public CharacterStats Clone()
     {

@@ -2,8 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// Falling state: player walked off an edge without jumping.
-/// Only movement and facing are allowed — no actions, no input buffering.
-/// The player must commit to the fall.
+/// Falling remains an airborne action context until real ground contact.
 /// On landing → Idle or Move.
 /// </summary>
 public class PlayerFallingState : PlayerState
@@ -19,9 +18,9 @@ public class PlayerFallingState : PlayerState
     public override bool AcceptsMoveInput => true;
     public override bool AcceptsDashInput => true;
     public override bool AcceptsJumpInput => true; // Allow coyote-time jump or double jump
-    public override bool AcceptsAttackInput => false;
-    public override bool AcceptsSkillInput => false;
-    public override bool AcceptsUltimateInput => false;
+    public override bool AcceptsAttackInput => true;
+    public override bool AcceptsSkillInput => true;
+    public override bool AcceptsUltimateInput => true;
 
     public override void Enter()
     {
@@ -35,19 +34,10 @@ public class PlayerFallingState : PlayerState
         if (player.Movement == null) return;
 
         // Landing detection
-        bool isMovingUp = player.Movement.VerticalVelocity > 0.1f;
-        if (player.Movement.GroundState.IsEffectivelyGrounded && !isMovingUp)
+        if (fsm.IsGroundedContext)
         {
             fsm.ChangeState(fsm.LandingState);
         }
-    }
-
-    public override void OnMoveInput(Vector2 input)
-    {
-        base.OnMoveInput(input);
-
-        if (player.Movement != null)
-            player.Movement.SetDownInput(input.y < -0.5f);
     }
 
     public override bool HandleJumpInput()
@@ -57,10 +47,22 @@ public class PlayerFallingState : PlayerState
         // Allow coyote-time jump or double jump
         if (player.Movement.CanJump())
         {
-            fsm.ChangeState(fsm.JumpStartupState);
+            fsm.ChangeState(fsm.JumpState);
             return true;
         }
 
         return false;
+    }
+
+    public override bool HandleAttackInput()
+    {
+        OnAttackInput();
+        return true;
+    }
+
+    public override void OnAttackInput()
+    {
+        fsm.ChangeState(fsm.AirAttackState);
+        fsm.CurrentState.OnAttackInput();
     }
 }

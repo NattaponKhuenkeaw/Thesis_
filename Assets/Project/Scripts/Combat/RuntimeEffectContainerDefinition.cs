@@ -133,7 +133,15 @@ public class RuntimeEffectContainerDefinition : RuntimeEffectDefinition
                 RuntimeEffectRecipeData childRecipe = childRecipes[i];
                 RuntimeEffectDefinition effect = childRecipe != null ? childRecipe.definition : null;
                 if (effect == null) continue;
-                if (parentInstance != null) context.instance = parentInstance.GetChildInstance(childRecipe);
+                RuntimeEffectInstance childInstance = parentInstance != null
+                    ? parentInstance.GetChildInstance(childRecipe)
+                    : null;
+                if (!RuntimeEffectRuntimeUtility.RequiresFormulaUpdate(effect, childRecipe)
+                    || !effect.IsFormulaUpdateDue(childInstance))
+                {
+                    continue;
+                }
+                context.instance = childInstance;
                 effect.OnUpdate(context);
             }
             context.instance = parentInstance;
@@ -144,10 +152,57 @@ public class RuntimeEffectContainerDefinition : RuntimeEffectDefinition
         {
             RuntimeEffectDefinition effect = GetEffect(i);
             if (effect == null) continue;
-            if (parentInstance != null) context.instance = parentInstance.GetChildInstance(effect);
+            RuntimeEffectInstance childInstance = parentInstance != null
+                ? parentInstance.GetChildInstance(effect)
+                : null;
+            if (!effect.RequiresFormulaTicking || !effect.IsFormulaUpdateDue(childInstance))
+            {
+                continue;
+            }
+            context.instance = childInstance;
             effect.OnUpdate(context);
         }
         context.instance = parentInstance;
+    }
+
+    public override bool IsFormulaUpdateDue(RuntimeEffectInstance instance)
+    {
+        if (instance == null)
+        {
+            return false;
+        }
+
+        RuntimeEffectRecipe parentRecipe = instance.recipe as RuntimeEffectRecipe;
+        List<RuntimeEffectRecipeData> childRecipes = parentRecipe != null ? parentRecipe.childRecipes : null;
+        if (childRecipes != null && childRecipes.Count > 0)
+        {
+            for (int i = 0; i < childRecipes.Count; i++)
+            {
+                RuntimeEffectRecipeData childRecipe = childRecipes[i];
+                RuntimeEffectDefinition effect = childRecipe != null ? childRecipe.definition : null;
+                if (effect != null
+                    && RuntimeEffectRuntimeUtility.RequiresFormulaUpdate(effect, childRecipe)
+                    && effect.IsFormulaUpdateDue(instance.GetChildInstance(childRecipe)))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        for (int i = 0; i < EffectCount; i++)
+        {
+            RuntimeEffectDefinition effect = GetEffect(i);
+            if (effect != null
+                && effect.RequiresFormulaTicking
+                && effect.IsFormulaUpdateDue(instance.GetChildInstance(effect)))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public override void OnReapplied(RuntimeEffectContext context)

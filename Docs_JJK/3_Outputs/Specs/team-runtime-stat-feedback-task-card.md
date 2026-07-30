@@ -46,6 +46,7 @@ calculations, Potential, and equipped Artifact stats synchronized with
 - Team Builder stat feedback
 - Artifact slot drag and drop
 - TeamLoader runtime artifact storage and stat refresh
+- Runtime team-effect stat calculation and source-stat lookup
 - Character Level and Artifact Transcendence design documentation
 
 ### Files To Inspect First
@@ -74,6 +75,12 @@ calculations, Potential, and equipped Artifact stats synchronized with
 - [x] Closing Team UI rebuilds runtime stats, clamps HP/AE to refreshed limits,
   reloads the active character, and publishes refresh events.
 - [x] Character Potential changes are reapplied when runtime state refreshes.
+- [x] A self-targeted stat effect remains isolated to its owner when an allied
+  runtime effect queries that owner's source stats.
+- [x] Shermie Skill Potential Lv.2 may shield allies without copying Shermie's
+  self-only +50% DEF to them.
+- [x] Shermie Ultimate Lv.0 grants +50% Max HP only to Shermie, including while
+  a Shermie-sourced allied effect is active.
 - [x] Character Level and Artifact Transcendence rules are documented as target
   design without claiming the unimplemented systems exist.
 - [x] Works on the primary PC input model.

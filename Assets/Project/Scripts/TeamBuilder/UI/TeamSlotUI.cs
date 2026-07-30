@@ -754,7 +754,7 @@ namespace Project.TeamBuilder.UI
             }
 
             Color feedbackColor = isUpgrade ? statBoostColor : statDowngradeColor;
-            Graphic feedbackGraphic = profileImage != null ? profileImage : atkText;
+            Graphic feedbackGraphic = profileImage != null ? (Graphic)profileImage : atkText;
             if (feedbackGraphic != null)
             {
                 feedbackDriver.PlayFlash(feedbackGraphic, feedbackColor, statFeedbackDuration);

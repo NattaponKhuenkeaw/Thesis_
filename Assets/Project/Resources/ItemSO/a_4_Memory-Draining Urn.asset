@@ -25,11 +25,12 @@ MonoBehaviour:
     maxHP: 15
     attack: 0
     defense: 0
-    speed: -0.5
+    speed: -1
     elementalMastery: 0
     critRate: 0
     critDamage: 0
     cooldownRate: 0
     impact: 5
+    damageReduction: 7
     aeRecharge: 0
   additionalDamageEffects: []

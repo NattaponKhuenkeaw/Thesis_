@@ -34,6 +34,8 @@ public class PlayerAnimator : MonoBehaviour
     private Rigidbody2D rb;
     private bool wasFalling;
     private HashSet<int> animParamHashes;
+    private int actionAnimationLayer = -1;
+    private int actionAnimationStateHash;
 
     // =========================================================
     // Unity Methods
@@ -72,7 +74,7 @@ public class PlayerAnimator : MonoBehaviour
 
         float verticalVelocity = rb.linearVelocity.y;
         // Suppress negative vertical velocity in the animator during jump startup to prevent premature "Fall" transitions.
-        if (movement.IsJumping && verticalVelocity < 0.1f)
+        if (movement.IsJumpStarting && verticalVelocity < 0.1f)
         {
             verticalVelocity = 0.1f;
         }
@@ -80,6 +82,17 @@ public class PlayerAnimator : MonoBehaviour
 
         anim.SetBool(isGroundedHash, movement.GroundState.IsEffectivelyGrounded);
         anim.SetBool(isLandingHash, movement.IsLanding);
+
+        // Startup/Active remain dash-animation authoritative. Ground Dash
+        // Recovery returns locomotion control, so let Speed/facing drive the
+        // visible return to Run/Idle instead of showing a dead-control tail.
+        if (movement.IsDashing && !movement.IsGroundDashRecovery)
+        {
+            anim.SetFloat(speedHash, 0f);
+            anim.SetFloat(verticalVelocityHash, 0f);
+            wasFalling = false;
+            return;
+        }
 
         // Check if we are in an "Active" combat action (Startup, Active, Recovery, Cancel).
         // If we are in the 'Done' phase, we allow locomotion parameters to update 
@@ -102,7 +115,7 @@ public class PlayerAnimator : MonoBehaviour
         }
 
         bool suppressFallAnimation = (combat != null && combat.ShouldSuppressLandingFeedback());
-        bool isFalling = !suppressFallAnimation && !movement.GroundState.IsEffectivelyGrounded && rb.linearVelocity.y < -0.1f && !movement.IsLanding && !movement.IsJumping;
+        bool isFalling = !suppressFallAnimation && !movement.GroundState.IsEffectivelyGrounded && rb.linearVelocity.y < -0.1f && !movement.IsLanding && !movement.IsJumpStarting;
         
         if (isFalling && !wasFalling)
         {
@@ -164,11 +177,15 @@ public class PlayerAnimator : MonoBehaviour
         if (anim != null)
         {
             var stateInfo = anim.GetCurrentAnimatorStateInfo(0);
-            var nextStateInfo = anim.GetNextAnimatorStateInfo(0);
-            if (stateInfo.shortNameHash == groundedHash || nextStateInfo.shortNameHash == groundedHash)
+            if (stateInfo.shortNameHash == groundedHash)
             {
                 return;
             }
+
+            // Locomotion has already regained authority. Even if Grounded is
+            // queued as the next Animator state, force it now so a stale
+            // Landed/Fall transition cannot play out after a silent Ground
+            // action output (notably Rugal's Genocide Cutter).
             anim.Play(groundedHash, 0, 0f);
         }
     }
@@ -185,6 +202,8 @@ public class PlayerAnimator : MonoBehaviour
 
     public void TriggerAttackCombo(int comboStep, string explicitClipName = null, string stepName = null)
     {
+        ResetActionAnimationTarget();
+
         // Prioritize attack animation over lingering jump transitions when attacking mid-air.
         SafeResetTrigger(jumpHash);
 
@@ -209,11 +228,11 @@ public class PlayerAnimator : MonoBehaviour
         candidates.Add($"_Attack{comboStep}");
         candidates.Add($"Attack_{comboStep:D2}"); // Attack_01 style
 
-        if (!TryPlayFirstExistingState(candidates.ToArray()))
+        if (!TryPlayFirstExistingState(candidates.ToArray(), true))
         {
             // If still nothing, try to use a trigger if the parameter exists
-            SafeSetTrigger(Animator.StringToHash("Attack"));
             anim.SetInteger(Animator.StringToHash("ComboStep"), comboStep);
+            SafeSetTrigger(Animator.StringToHash("Attack"));
         }
     }
 
@@ -222,6 +241,7 @@ public class PlayerAnimator : MonoBehaviour
         if (anim == null)
             return;
 
+        ResetActionAnimationTarget();
         SafeResetTrigger(jumpHash);
         SafeResetTrigger(landingHash);
         anim.SetBool(isLandingHash, false);
@@ -246,7 +266,7 @@ public class PlayerAnimator : MonoBehaviour
         // Always add generic candidates as fallbacks
         candidates.AddRange(GetAirAttackStateCandidates(normalizedStep));
 
-        if (!TryPlayFirstExistingState(candidates.ToArray()))
+        if (!TryPlayFirstExistingState(candidates.ToArray(), true))
         {
             // Fallback to integer parameter if it exists
             int airStepHash = Animator.StringToHash("AirComboStep");
@@ -261,6 +281,9 @@ public class PlayerAnimator : MonoBehaviour
     public void RestoreAirborneState()
     {
         if (anim == null || movement == null || rb == null)
+            return;
+
+        if (movement.IsDashing)
             return;
 
         // If we are already in jump/fall states and not significantly into the animation,
@@ -300,6 +323,7 @@ public class PlayerAnimator : MonoBehaviour
         if (anim == null)
             return;
 
+        ResetActionAnimationTarget();
         SafeResetTrigger(jumpHash);
         SafeResetTrigger(landingHash);
         anim.SetBool(isLandingHash, false);
@@ -313,10 +337,10 @@ public class PlayerAnimator : MonoBehaviour
         // Always add generic candidates as fallbacks
         candidates.AddRange(GetSkillStateCandidates(airborne));
 
-        if (TryPlayFirstExistingState(candidates.ToArray()))
+        if (TryPlayFirstExistingState(candidates.ToArray(), true))
             return;
 
-        PlayStateByName(airborne ? "Air_Skill" : "Skill", "Skill");
+        PlayStateByName(airborne ? "Air_Skill" : "Skill", "Skill", true);
     }
 
     public void TriggerUltimate(string explicitClipName = null, bool airborne = false)
@@ -324,6 +348,7 @@ public class PlayerAnimator : MonoBehaviour
         if (anim == null)
             return;
 
+        ResetActionAnimationTarget();
         SafeResetTrigger(jumpHash);
         SafeResetTrigger(landingHash);
         anim.SetBool(isLandingHash, false);
@@ -337,30 +362,34 @@ public class PlayerAnimator : MonoBehaviour
         // Always add generic candidates as fallbacks
         candidates.AddRange(GetUltimateStateCandidates(airborne));
 
-        if (TryPlayFirstExistingState(candidates.ToArray()))
+        if (TryPlayFirstExistingState(candidates.ToArray(), true))
             return;
 
-        PlayStateByName(airborne ? "Air_Ultimate" : "Ultimate", "Ultimate");
+        PlayStateByName(airborne ? "Air_Ultimate" : "Ultimate", "Ultimate", true);
     }
 
     public void TriggerSubStepAnimation(AnimationClip clip)
     {
         if (clip == null || anim == null) return;
-        
+
+        ResetActionAnimationTarget();
         // Attempt to play the exact clip name as the State name
-        if (!TryPlayFirstExistingState(new string[] { clip.name }))
+        if (!TryPlayFirstExistingState(new string[] { clip.name }, true))
         {
             //Debug.LogWarning($"[Combat Engine] Animator State '{clip.name}' could not be found! Please make sure the State Node inside the Animator is named EXACTLY like the Animation Clip.");
         }
     }
 
-    private void PlayStateByName(string stateName, string fallbackStateName)
+    private void PlayStateByName(
+        string stateName,
+        string fallbackStateName,
+        bool trackActionState = false)
     {
         List<string> candidates = new List<string>();
         if (!string.IsNullOrWhiteSpace(stateName)) candidates.Add(stateName);
         if (!string.IsNullOrWhiteSpace(fallbackStateName) && fallbackStateName != stateName) candidates.Add(fallbackStateName);
 
-        if (TryPlayFirstExistingState(candidates.ToArray()))
+        if (TryPlayFirstExistingState(candidates.ToArray(), trackActionState))
             return;
 
         string resolvedStateName = !string.IsNullOrWhiteSpace(stateName)
@@ -370,7 +399,14 @@ public class PlayerAnimator : MonoBehaviour
         if (string.IsNullOrWhiteSpace(resolvedStateName))
             return;
 
-        anim.Play(resolvedStateName, 0, 0f);
+        int resolvedHash = Animator.StringToHash(resolvedStateName);
+        if (trackActionState)
+        {
+            actionAnimationLayer = 0;
+            actionAnimationStateHash = resolvedHash;
+        }
+
+        anim.Play(resolvedHash, 0, 0f);
     }
 
     private string[] GetAirAttackStateCandidates(int comboStep)
@@ -399,7 +435,7 @@ public class PlayerAnimator : MonoBehaviour
             : new[] { "Ultimate" };
     }
 
-    private bool TryPlayFirstExistingState(string[] stateNames)
+    private bool TryPlayFirstExistingState(string[] stateNames, bool trackActionState = false)
     {
         if (stateNames == null || stateNames.Length == 0 || anim == null)
             return false;
@@ -420,18 +456,14 @@ public class PlayerAnimator : MonoBehaviour
                 // Try short name
                 if (anim.HasState(i, shortHash))
                 {
-                    var stateInfo = anim.GetCurrentAnimatorStateInfo(i);
-                    var nextStateInfo = anim.GetNextAnimatorStateInfo(i);
-                    
-                    // Guard: If we are already in this state OR transitioning to it, 
-                    // and we just started it (normalizedTime < 0.01), don't play again to avoid frame-0 lock.
-                    if ((stateInfo.shortNameHash == shortHash && stateInfo.normalizedTime < 0.05f) || 
-                        (nextStateInfo.shortNameHash == shortHash))
+                    if (trackActionState)
                     {
-                        return true; 
+                        actionAnimationLayer = i;
+                        actionAnimationStateHash = shortHash;
                     }
 
-                    //Debug.Log($"[PlayerAnimator] Playing State: '{stateName}' on Layer {i}. (Prev: {stateInfo.shortNameHash})");
+                    // ExecuteStep calls this exactly once. Always restart from
+                    // frame zero, including when consecutive steps reuse a state.
                     anim.Play(shortHash, i, 0f);
                     return true;
                 }
@@ -439,9 +471,12 @@ public class PlayerAnimator : MonoBehaviour
                 // Try legacy path (only on layer 0)
                 if (i == 0 && anim.HasState(i, legacyHash))
                 {
-                    if (anim.GetCurrentAnimatorStateInfo(i).shortNameHash == legacyHash) return true;
+                    if (trackActionState)
+                    {
+                        actionAnimationLayer = i;
+                        actionAnimationStateHash = legacyHash;
+                    }
 
-                    //Debug.Log($"[PlayerAnimator] Playing Legacy State: '{legacyPath}' on Layer 0.");
                     anim.Play(legacyHash, i, 0f);
                     return true;
                 }
@@ -477,7 +512,14 @@ public class PlayerAnimator : MonoBehaviour
     /// </summary>
     public void UpdateActionNormalizedTime(int logicFrame, int totalFrames)
     {
-        if (anim == null || totalFrames <= 0) return;
+        if (anim == null
+            || totalFrames <= 0
+            || actionAnimationLayer < 0
+            || actionAnimationLayer >= anim.layerCount
+            || actionAnimationStateHash == 0)
+        {
+            return;
+        }
 
         // Calculate normalized time (0 to 1)
         // logicFrame is 1-indexed, so we subtract 1 for the timeline position.
@@ -487,17 +529,19 @@ public class PlayerAnimator : MonoBehaviour
         // we STOP forcing the frame to allow the Animator to blend into the next state.
         if (normalizedTime > 0.99f) return;
 
-        // We apply this to all layers to ensure any active combat animation is synced.
-        for (int i = 0; i < anim.layerCount; i++)
+        AnimatorStateInfo state = anim.GetCurrentAnimatorStateInfo(actionAnimationLayer);
+        bool expectedStateIsCurrent = state.shortNameHash == actionAnimationStateHash
+            || state.fullPathHash == actionAnimationStateHash;
+        if (!expectedStateIsCurrent || Mathf.Abs(state.normalizedTime - normalizedTime) > 0.001f)
         {
-            var state = anim.GetCurrentAnimatorStateInfo(i);
-            
-            // Optimization: Only play if the normalized time difference is significant enough to notice
-            if (Mathf.Abs(state.normalizedTime - normalizedTime) > 0.001f)
-            {
-                anim.Play(state.fullPathHash, i, normalizedTime);
-            }
+            anim.Play(actionAnimationStateHash, actionAnimationLayer, normalizedTime);
         }
+    }
+
+    private void ResetActionAnimationTarget()
+    {
+        actionAnimationLayer = -1;
+        actionAnimationStateHash = 0;
     }
 
     // =========================================================

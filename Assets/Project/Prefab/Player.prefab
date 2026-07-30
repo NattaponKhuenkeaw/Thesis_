@@ -352,7 +352,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDamping: 0
   m_AngularDamping: 0.05
-  m_GravityScale: 2.2
+  m_GravityScale: 0
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -458,8 +458,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30743ed04525aed4da9e51a9f1319260, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
-  spriteRenderer: {fileID: 5710717605876365618}
-  combatHandler: {fileID: 3573541607337625934}
   profile: {fileID: 0}
   dashData:
     animationClip: {fileID: 0}
@@ -469,17 +467,11 @@ MonoBehaviour:
     cancelWindowStartFrame: 25
     dashSpeed: 20
     cooldownFrames: 24
+  groundCheck: {fileID: 3725453944956529812}
   enableDashAfterimage: 1
   dashAfterimageColor: {r: 0.6179246, g: 0.94856673, b: 1, a: 1}
   dashAfterimageLifetime: 0.2
   dashAfterimageSpawnInterval: 0.085
-  playerLayerName: Player
-  enemyLayerName: Enemy
-  oneWayPlatformLayerName: OneWayPlatform
-  groundCheck: {fileID: 3725453944956529812}
-  groundLayer:
-    serializedVersion: 2
-    m_Bits: 8
   maxJumpOverride: -1
   maxAirDashOverride: -1
   moveSpeedOverride: -1

@@ -18,21 +18,19 @@ MonoBehaviour:
     lose yourself to the fog."
   icon: {fileID: 21300000, guid: ed8fd30f185d0b743a8b3a9b2cdc2e7f, type: 3}
   price: 2000
-  retentionPolicy: 2
-  deathConversionFragmentAmount: 1
   isEquippable: 1
   passiveDescription: Active characters receive 15% damage resistance. Swapping leaves
     a trail of energy healing the incoming character for 8% of their missing HP.
   bonusStats:
     maxHP: 0
-    attack: 0
+    attack: 15
     defense: 0
     speed: 0
-    elementalMastery: 35
+    elementalMastery: 15
     critRate: 0
     critDamage: 0
-    cooldownRate: 15
+    cooldownRate: 5
     impact: 0
     damageReduction: 0
-    aeRecharge: 0.15
+    aeRecharge: 0
   additionalDamageEffects: []

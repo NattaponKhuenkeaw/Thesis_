@@ -35,7 +35,7 @@ public class PlayerIntroState : PlayerState
             var rb = player.GetComponent<Rigidbody2D>();
             if (rb != null) rb.linearVelocity = Vector2.zero;
             
-            player.Movement.SetMoveInput(Vector2.zero);
+            player.Movement.SetHorizontalInput(0f);
         }
     }
 
@@ -68,7 +68,7 @@ public class PlayerIntroState : PlayerState
         // Move towards target
         float sign = Mathf.Sign(directionToTarget);
         player.Movement.SnapFacingDirection((int)sign);
-        player.Movement.SetMoveInput(new Vector2(sign, 0f));
+        player.Movement.SetHorizontalInput(sign);
     }
 
     public override void Exit()
@@ -77,7 +77,7 @@ public class PlayerIntroState : PlayerState
         TargetEntrance = null;
         if (player.Movement != null)
         {
-            player.Movement.SetMoveInput(Vector2.zero);
+            player.Movement.SetHorizontalInput(0f);
             
             var rb = player.GetComponent<Rigidbody2D>();
             if (rb != null) rb.linearVelocity = Vector2.zero;
@@ -88,7 +88,7 @@ public class PlayerIntroState : PlayerState
     {
         if (player.Movement != null)
         {
-            player.Movement.SetMoveInput(Vector2.zero);
+            player.Movement.SetHorizontalInput(0f);
             if (snapToStopX && TargetEntrance != null)
             {
                 player.Movement.TeleportHorizontally(TargetEntrance.StopPosition.x);

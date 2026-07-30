@@ -21,14 +21,6 @@ namespace Project.Progression
     }
 
     [Serializable]
-    public class PermanentItemStack
-    {
-        public string itemId;
-        public string displayName;
-        [Min(0)] public int quantity = 1;
-    }
-
-    [Serializable]
     public class CharacterPotentialProgress
     {
         public string characterId;
@@ -68,22 +60,20 @@ namespace Project.Progression
     [Serializable]
     internal class SavedPlayerMetaProgressionData
     {
-        public int metaCurrency;
         public List<ProgressionFragmentStack> fragments = new List<ProgressionFragmentStack>();
         public List<CharacterPotentialProgress> characterPotentials = new List<CharacterPotentialProgress>();
-        public List<string> unlockedCharacterIds = new List<string>();
-        public List<PermanentItemStack> permanentItems = new List<PermanentItemStack>();
     }
 
     [CreateAssetMenu(fileName = "New Player Meta Progression", menuName = "Progression/Player Meta Progression", order = 20)]
     public class PlayerMetaProgression : ScriptableObject
     {
-        private const string SaveKey = "project.player_meta_progression.v1";
-        /// <summary>Step 1 (Not Perma): meta save keeps fragments/potential only — not permanent dungeon items.</summary>
-        private const bool PersistPermanentItemsInMeta = false;
+        private sealed class UnlockedPotentialCacheEntry
+        {
+            public CharacterKitDefinition kit;
+            public IReadOnlyList<PotentialNodeDefinition> nodes;
+        }
 
-        [Header("Meta Currency (Lobby / Permanent Upgrades)")]
-        [SerializeField] private int metaCurrency;
+        private const string SaveKey = "project.player_meta_progression.v1";
 
         [Header("Unused Upgrade Materials")]
         [SerializeField] private List<ProgressionFragmentStack> fragments = new List<ProgressionFragmentStack>();
@@ -91,58 +81,17 @@ namespace Project.Progression
         [Header("Permanent Character Potential")]
         [SerializeField] private List<CharacterPotentialProgress> characterPotentials = new List<CharacterPotentialProgress>();
 
-        [Header("Permanent Roster")]
-        [SerializeField] private List<string> unlockedCharacterIds = new List<string>();
-
-        [Header("Permanent Items")]
-        [SerializeField] private List<PermanentItemStack> permanentItems = new List<PermanentItemStack>();
-
         [NonSerialized] private bool hasLoadedPersistentState;
         [NonSerialized] private bool isApplyingPersistentState;
+        [NonSerialized] private Dictionary<CharacterObject, UnlockedPotentialCacheEntry> unlockedPotentialCache;
 
         public IReadOnlyList<ProgressionFragmentStack> Fragments => fragments;
         public IReadOnlyList<CharacterPotentialProgress> CharacterPotentials => characterPotentials;
-        public IReadOnlyList<string> UnlockedCharacterIds => unlockedCharacterIds;
-        public IReadOnlyList<PermanentItemStack> PermanentItems => permanentItems;
-        public int MetaCurrency => Mathf.Max(0, metaCurrency);
-
-        public bool CanAffordMetaCurrency(int amount)
-        {
-            return amount <= 0 || MetaCurrency >= amount;
-        }
-
-        public void AddMetaCurrency(int amount)
-        {
-            if (amount <= 0)
-            {
-                return;
-            }
-
-            EnsureData();
-            metaCurrency = Mathf.Max(0, metaCurrency + amount);
-            SavePersistentState();
-        }
-
-        public bool TrySpendMetaCurrency(int amount)
-        {
-            if (amount <= 0)
-            {
-                return true;
-            }
-
-            EnsureData();
-            if (metaCurrency < amount)
-            {
-                return false;
-            }
-
-            metaCurrency -= amount;
-            SavePersistentState();
-            return true;
-        }
+        public event Action<string> OnPotentialChanged;
 
         private void OnEnable()
         {
+            InvalidatePotentialCache();
             if (ShouldUsePersistentStorage())
             {
                 LoadPersistentStateIfNeeded();
@@ -259,116 +208,9 @@ namespace Project.Progression
             EnsureData();
             fragments.Clear();
             characterPotentials.Clear();
-            unlockedCharacterIds.Clear();
-            permanentItems.Clear();
-            metaCurrency = 0;
+            InvalidatePotentialCache();
             SavePersistentState();
-        }
-
-        public int AddPermanentItem(BaseItem item, int amount = 1)
-        {
-            if (!PersistPermanentItemsInMeta)
-            {
-                return 0;
-            }
-
-            if (item == null || amount <= 0)
-            {
-                return 0;
-            }
-
-            string itemId = GetSourceId(item);
-            if (string.IsNullOrWhiteSpace(itemId))
-            {
-                return 0;
-            }
-
-            EnsureData();
-            PermanentItemStack stack = FindPermanentItemStack(itemId);
-            if (stack == null)
-            {
-                stack = new PermanentItemStack
-                {
-                    itemId = itemId,
-                    displayName = BuildPermanentItemDisplayName(item),
-                    quantity = 0
-                };
-                permanentItems.Add(stack);
-            }
-
-            int previousQuantity = Mathf.Max(0, stack.quantity);
-            int requestedAmount = Mathf.Max(1, amount);
-            stack.displayName = BuildPermanentItemDisplayName(item);
-            stack.quantity = item is Item
-                ? Mathf.Max(previousQuantity, requestedAmount)
-                : Mathf.Max(previousQuantity, 1);
-
-            int added = Mathf.Max(0, stack.quantity - previousQuantity);
-            if (added > 0)
-            {
-                SavePersistentState();
-            }
-
-            return added;
-        }
-
-        public bool IsCharacterUnlocked(CharacterObject character)
-        {
-            return character != null && IsCharacterUnlocked(character.characterId);
-        }
-
-        public bool IsCharacterUnlocked(CharacterItem characterItem)
-        {
-            return characterItem != null && IsCharacterUnlocked(characterItem.characterObjectData);
-        }
-
-        public bool IsCharacterUnlocked(string characterId)
-        {
-            if (string.IsNullOrWhiteSpace(characterId))
-            {
-                return false;
-            }
-
-            EnsureData();
-            return unlockedCharacterIds.Contains(characterId);
-        }
-
-        public bool UnlockCharacter(CharacterObject character)
-        {
-            if (character == null)
-            {
-                return false;
-            }
-
-            return UnlockCharacter(character.characterId);
-        }
-
-        public bool UnlockCharacter(CharacterItem characterItem)
-        {
-            if (characterItem == null)
-            {
-                return false;
-            }
-
-            return UnlockCharacter(characterItem.characterObjectData);
-        }
-
-        public bool UnlockCharacter(string characterId)
-        {
-            if (string.IsNullOrWhiteSpace(characterId))
-            {
-                return false;
-            }
-
-            EnsureData();
-            if (unlockedCharacterIds.Contains(characterId))
-            {
-                return false;
-            }
-
-            unlockedCharacterIds.Add(characterId);
-            SavePersistentState();
-            return true;
+            OnPotentialChanged?.Invoke(null);
         }
 
         public int GetPotentialLevel(CharacterObject character, PotentialTrack track)
@@ -405,10 +247,35 @@ namespace Project.Progression
             bool changed = before != progress.GetLevel(track);
             if (changed)
             {
+                InvalidatePotentialCache(characterId);
                 SavePersistentState();
+                OnPotentialChanged?.Invoke(characterId);
             }
 
             return changed;
+        }
+
+        public bool ResetPotentialLevels(CharacterObject character)
+        {
+            return character != null && ResetPotentialLevels(character.characterId);
+        }
+
+        public bool ResetPotentialLevels(string characterId)
+        {
+            CharacterPotentialProgress progress = FindPotentialProgress(characterId, createIfMissing: false);
+            if (progress == null
+                || (progress.skillLevel == 0 && progress.ultimateLevel == 0 && progress.passiveLevel == 0))
+            {
+                return false;
+            }
+
+            progress.skillLevel = 0;
+            progress.ultimateLevel = 0;
+            progress.passiveLevel = 0;
+            InvalidatePotentialCache(characterId);
+            SavePersistentState();
+            OnPotentialChanged?.Invoke(characterId);
+            return true;
         }
 
         public bool CanUpgradePotential(CharacterObject character, PotentialTrack track, out PotentialNodeDefinition nextNode)
@@ -481,20 +348,39 @@ namespace Project.Progression
             };
         }
 
-        public IEnumerable<PotentialNodeDefinition> GetUnlockedPotentialNodes(CharacterObject character)
+        public IReadOnlyList<PotentialNodeDefinition> GetUnlockedPotentialNodes(CharacterObject character)
         {
             if (character == null || character.kitDefinition == null)
             {
-                yield break;
+                return Array.Empty<PotentialNodeDefinition>();
             }
 
+            unlockedPotentialCache ??=
+                new Dictionary<CharacterObject, UnlockedPotentialCacheEntry>();
+            if (unlockedPotentialCache.TryGetValue(character, out UnlockedPotentialCacheEntry cached)
+                && cached != null
+                && cached.kit == character.kitDefinition
+                && cached.nodes != null)
+            {
+                return cached.nodes;
+            }
+
+            List<PotentialNodeDefinition> unlockedNodes = new List<PotentialNodeDefinition>();
             foreach (PotentialNodeDefinition node in character.kitDefinition.EnumerateAllNodes())
             {
                 if (IsPotentialNodeUnlocked(character, node))
                 {
-                    yield return node;
+                    unlockedNodes.Add(node);
                 }
             }
+
+            IReadOnlyList<PotentialNodeDefinition> result = unlockedNodes.AsReadOnly();
+            unlockedPotentialCache[character] = new UnlockedPotentialCacheEntry
+            {
+                kit = character.kitDefinition,
+                nodes = result
+            };
+            return result;
         }
 
         public bool IsPotentialNodeUnlocked(CharacterObject character, PotentialNodeDefinition node)
@@ -551,10 +437,7 @@ namespace Project.Progression
         public string ExportJson()
         {
             EnsureData();
-            SavedPlayerMetaProgressionData data = new SavedPlayerMetaProgressionData
-            {
-                metaCurrency = Mathf.Max(0, metaCurrency)
-            };
+            SavedPlayerMetaProgressionData data = new SavedPlayerMetaProgressionData();
 
             for (int i = 0; i < fragments.Count; i++)
             {
@@ -590,36 +473,6 @@ namespace Project.Progression
                 });
             }
 
-            for (int i = 0; i < unlockedCharacterIds.Count; i++)
-            {
-                string characterId = unlockedCharacterIds[i];
-                if (!string.IsNullOrWhiteSpace(characterId) && !data.unlockedCharacterIds.Contains(characterId))
-                {
-                    data.unlockedCharacterIds.Add(characterId);
-                }
-            }
-
-            for (int i = 0; i < permanentItems.Count; i++)
-            {
-                if (!PersistPermanentItemsInMeta)
-                {
-                    break;
-                }
-
-                PermanentItemStack stack = permanentItems[i];
-                if (stack == null || stack.quantity <= 0 || string.IsNullOrWhiteSpace(stack.itemId))
-                {
-                    continue;
-                }
-
-                data.permanentItems.Add(new PermanentItemStack
-                {
-                    itemId = stack.itemId,
-                    displayName = stack.displayName,
-                    quantity = Mathf.Max(0, stack.quantity)
-                });
-            }
-
             return JsonUtility.ToJson(data);
         }
 
@@ -627,19 +480,14 @@ namespace Project.Progression
         {
             EnsureData();
             isApplyingPersistentState = true;
-            metaCurrency = 0;
             fragments.Clear();
             characterPotentials.Clear();
-            unlockedCharacterIds.Clear();
-            permanentItems.Clear();
 
             if (!string.IsNullOrWhiteSpace(json))
             {
                 SavedPlayerMetaProgressionData data = JsonUtility.FromJson<SavedPlayerMetaProgressionData>(json);
                 if (data != null)
                 {
-                    metaCurrency = Mathf.Max(0, data.metaCurrency);
-
                     if (data.fragments != null)
                     {
                         for (int i = 0; i < data.fragments.Count; i++)
@@ -679,52 +527,47 @@ namespace Project.Progression
                             });
                         }
                     }
-
-                    if (data.unlockedCharacterIds != null)
-                    {
-                        for (int i = 0; i < data.unlockedCharacterIds.Count; i++)
-                        {
-                            string characterId = data.unlockedCharacterIds[i];
-                            if (!string.IsNullOrWhiteSpace(characterId) && !unlockedCharacterIds.Contains(characterId))
-                            {
-                                unlockedCharacterIds.Add(characterId);
-                            }
-                        }
-                    }
-
-                    if (data.permanentItems != null && PersistPermanentItemsInMeta)
-                    {
-                        for (int i = 0; i < data.permanentItems.Count; i++)
-                        {
-                            PermanentItemStack stack = data.permanentItems[i];
-                            if (stack == null || stack.quantity <= 0 || string.IsNullOrWhiteSpace(stack.itemId))
-                            {
-                                continue;
-                            }
-
-                            PermanentItemStack existingStack = FindPermanentItemStack(stack.itemId);
-                            if (existingStack == null)
-                            {
-                                permanentItems.Add(new PermanentItemStack
-                                {
-                                    itemId = stack.itemId,
-                                    displayName = stack.displayName,
-                                    quantity = Mathf.Max(0, stack.quantity)
-                                });
-                            }
-                            else
-                            {
-                                existingStack.displayName = !string.IsNullOrWhiteSpace(stack.displayName)
-                                    ? stack.displayName
-                                    : existingStack.displayName;
-                                existingStack.quantity = Mathf.Max(existingStack.quantity, stack.quantity);
-                            }
-                        }
-                    }
                 }
             }
 
             isApplyingPersistentState = false;
+            InvalidatePotentialCache();
+            OnPotentialChanged?.Invoke(null);
+        }
+
+        private void InvalidatePotentialCache(string characterId = null)
+        {
+            if (unlockedPotentialCache == null)
+            {
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(characterId))
+            {
+                unlockedPotentialCache.Clear();
+                return;
+            }
+
+            List<CharacterObject> matches = null;
+            foreach (CharacterObject character in unlockedPotentialCache.Keys)
+            {
+                if (character != null
+                    && string.Equals(character.characterId, characterId, StringComparison.Ordinal))
+                {
+                    matches ??= new List<CharacterObject>();
+                    matches.Add(character);
+                }
+            }
+
+            if (matches == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < matches.Count; i++)
+            {
+                unlockedPotentialCache.Remove(matches[i]);
+            }
         }
 
         private ProgressionFragmentStack FindFragmentStack(string sourceId, ProgressionFragmentType fragmentType)
@@ -746,32 +589,6 @@ namespace Project.Progression
 
                 if (string.Equals(stack.sourceItemId, sourceId, StringComparison.Ordinal)
                     && stack.fragmentType == fragmentType)
-                {
-                    return stack;
-                }
-            }
-
-            return null;
-        }
-
-        private PermanentItemStack FindPermanentItemStack(string itemId)
-        {
-            EnsureData();
-            if (permanentItems == null)
-            {
-                permanentItems = new List<PermanentItemStack>();
-            }
-
-            for (int i = permanentItems.Count - 1; i >= 0; i--)
-            {
-                PermanentItemStack stack = permanentItems[i];
-                if (stack == null || stack.quantity <= 0 || string.IsNullOrWhiteSpace(stack.itemId))
-                {
-                    permanentItems.RemoveAt(i);
-                    continue;
-                }
-
-                if (string.Equals(stack.itemId, itemId, StringComparison.Ordinal))
                 {
                     return stack;
                 }
@@ -820,8 +637,6 @@ namespace Project.Progression
         {
             fragments ??= new List<ProgressionFragmentStack>();
             characterPotentials ??= new List<CharacterPotentialProgress>();
-            unlockedCharacterIds ??= new List<string>();
-            permanentItems ??= new List<PermanentItemStack>();
         }
 
         private static ProgressionFragmentType GetFragmentType(BaseItem sourceItem)
@@ -838,11 +653,6 @@ namespace Project.Progression
                 : sourceItem.name;
 
             return $"{itemName} Fragment";
-        }
-
-        private static string BuildPermanentItemDisplayName(BaseItem item)
-        {
-            return !string.IsNullOrWhiteSpace(item.itemName) ? item.itemName : item.name;
         }
 
         private static string GetSourceId(BaseItem sourceItem)

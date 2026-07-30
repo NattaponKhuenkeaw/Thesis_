@@ -10,6 +10,8 @@ public class RuntimeEffectReceiver : MonoBehaviour
 
     private readonly Dictionary<RuntimeEffectInstance, GameObject> activeVisuals =
         new Dictionary<RuntimeEffectInstance, GameObject>();
+    private readonly Dictionary<RuntimeEffectInstance, GameObject> activeVisualPrefabs =
+        new Dictionary<RuntimeEffectInstance, GameObject>();
     private readonly HashSet<RuntimeEffectInstance> retainedVisuals = new HashSet<RuntimeEffectInstance>();
     private readonly List<RuntimeEffectInstance> visualsToRemove = new List<RuntimeEffectInstance>();
     private readonly List<RuntimeEffectInstance> expiredEffects = new List<RuntimeEffectInstance>();
@@ -21,6 +23,11 @@ public class RuntimeEffectReceiver : MonoBehaviour
     public event Action OnEffectsChanged;
 
     public IReadOnlyList<RuntimeEffectInstance> ActiveEffects => activeEffects;
+
+    public RuntimeEffectInstance GetEffectByChannel(RuntimeEffectStateChannel channel)
+    {
+        return RuntimeEffectRuntimeUtility.FindByStateChannel(activeEffects, channel);
+    }
 
     private void Awake()
     {
@@ -172,18 +179,43 @@ public class RuntimeEffectReceiver : MonoBehaviour
         float resolvedDuration = RuntimeEffectRuntimeUtility.ResolveDuration(definition, recipe, durationOverride);
         bool shouldStack = ResolveShouldStack(definition, recipe, stackMode);
         string resolvedStackKey = RuntimeEffectRuntimeUtility.GetStackKey(definition, recipe);
-        RuntimeEffectInstance existing = !shouldStack ? FindEffect(definition, resolvedStackKey) : null;
+        RuntimeEffectStateChannel stateChannel =
+            RuntimeEffectRuntimeUtility.GetStateChannel(definition, recipe);
+        RuntimeEffectInstance existing = stateChannel != RuntimeEffectStateChannel.None
+            ? FindAndCollapseStateChannel(stateChannel)
+            : !shouldStack ? FindEffect(definition, resolvedStackKey) : null;
+
+        if (existing != null && stateChannel != RuntimeEffectStateChannel.None)
+        {
+            existing.Rebind(definition, recipe, sourceCharacter, sourceStats);
+            existing.stackCount = 1;
+            existing.Refresh(durationOverride);
+            definition.OnReapplied(BuildContext(existing, 0f));
+            RecalculateTickingState();
+            EnsureVisual(existing);
+
+            if (existing.IsExpired
+                || RuntimeEffectRuntimeUtility.GetDurationType(definition, recipe) == RuntimeEffectDurationType.Instant)
+            {
+                RemoveEffect(existing);
+                return existing;
+            }
+
+            RaiseEffectsChanged();
+            return existing;
+        }
 
         if (shouldStack && definition.SupportsStackMerging)
         {
             RuntimeEffectInstance stackTarget = FindMergeableEffect(
                 definition,
-                resolvedStackKey,
+                recipe,
                 sourceCharacter,
                 sourceStats,
                 resolvedDuration);
             if (stackTarget != null)
             {
+                stackTarget.Rebind(recipe, sourceCharacter, sourceStats);
                 if (stackTarget.stackCount < resolvedStackLimit)
                 {
                     stackTarget.AddStack(durationOverride, resolvedRefreshDuration);
@@ -442,19 +474,20 @@ public class RuntimeEffectReceiver : MonoBehaviour
             }
         }
 
-        if (shieldAmountChanged)
-        {
-            RaiseEffectsChanged();
-        }
-
+        bool removedAny = expiredEffects.Count > 0;
         if (expiredEffects.Count > 0)
         {
             for (int i = 0; i < expiredEffects.Count; i++)
             {
-                RemoveEffect(expiredEffects[i]);
+                RemoveEffect(expiredEffects[i], notify: false);
             }
 
             expiredEffects.Clear();
+        }
+
+        if (shieldAmountChanged || removedAny)
+        {
+            RaiseEffectsChanged();
         }
 
         context.instance = null;
@@ -586,7 +619,8 @@ public class RuntimeEffectReceiver : MonoBehaviour
             }
 
             instance.elapsedSeconds += resolvedDelta;
-            if (instance.RequiresFormulaUpdate)
+            if (instance.RequiresFormulaUpdate
+                && instance.definition.IsFormulaUpdateDue(instance))
             {
                 instance.definition.OnUpdate(BuildContext(instance, resolvedDelta));
             }
@@ -637,6 +671,36 @@ public class RuntimeEffectReceiver : MonoBehaviour
         }
 
         return null;
+    }
+
+    private RuntimeEffectInstance FindAndCollapseStateChannel(RuntimeEffectStateChannel channel)
+    {
+        RuntimeEffectInstance retained = null;
+        for (int i = activeEffects.Count - 1; i >= 0; i--)
+        {
+            RuntimeEffectInstance candidate = activeEffects[i];
+            if (candidate == null || candidate.StateChannel != channel)
+            {
+                continue;
+            }
+
+            if (retained == null)
+            {
+                retained = candidate;
+                continue;
+            }
+
+            retained.remainingShieldAmount =
+                Mathf.Max(0f, retained.remainingShieldAmount)
+                + Mathf.Max(0f, candidate.remainingShieldAmount);
+            retained.appliedShieldAmount =
+                Mathf.Max(0f, retained.appliedShieldAmount)
+                + Mathf.Max(0f, candidate.appliedShieldAmount);
+            DestroyVisual(candidate);
+            activeEffects.RemoveAt(i);
+        }
+
+        return retained;
     }
 
     public bool RemoveEffectStack(
@@ -712,7 +776,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
 
     private RuntimeEffectInstance FindMergeableEffect(
         RuntimeEffectDefinition definition,
-        string resolvedStackKey,
+        RuntimeEffectRecipe recipe,
         CharacterObject sourceCharacter,
         CharacterStats sourceStats,
         float resolvedDuration)
@@ -720,72 +784,24 @@ public class RuntimeEffectReceiver : MonoBehaviour
         for (int i = 0; i < activeEffects.Count; i++)
         {
             RuntimeEffectInstance instance = activeEffects[i];
-            if (!MatchesEffect(instance, definition, resolvedStackKey))
+            if (RuntimeEffectRuntimeUtility.CanMergeStack(
+                instance,
+                definition,
+                recipe,
+                sourceCharacter,
+                sourceStats,
+                resolvedDuration))
             {
-                continue;
+                return instance;
             }
-
-            if (instance.sourceCharacter != sourceCharacter)
-            {
-                continue;
-            }
-
-            if (RuntimeEffectRuntimeUtility.GetDurationType(instance.definition, instance.recipe) != RuntimeEffectDurationType.Forever
-                && !StatsApproximatelyEqual(instance.sourceStatsSnapshot, sourceStats))
-            {
-                continue;
-            }
-
-            if (!Mathf.Approximately(instance.appliedDurationSeconds, resolvedDuration))
-            {
-                continue;
-            }
-
-            return instance;
         }
 
         return null;
     }
 
-    private static bool StatsApproximatelyEqual(CharacterStats a, CharacterStats b)
-    {
-        if (ReferenceEquals(a, b))
-        {
-            return true;
-        }
-
-        if (a == null || b == null)
-        {
-            return a == null && b == null;
-        }
-
-        return Approximately(a.maxHP, b.maxHP)
-            && Approximately(a.attack, b.attack)
-            && Approximately(a.defense, b.defense)
-            && Approximately(a.speed, b.speed)
-            && Approximately(a.elementalMastery, b.elementalMastery)
-            && Approximately(a.critRate, b.critRate)
-            && Approximately(a.critDamage, b.critDamage)
-            && Approximately(a.cooldownRate, b.cooldownRate)
-            && Approximately(a.impact, b.impact)
-            && Approximately(a.damageReduction, b.damageReduction)
-            && Approximately(a.aeRecharge, b.aeRecharge);
-    }
-
-    private static bool Approximately(float a, float b)
-    {
-        return Mathf.Abs(a - b) <= 0.0001f;
-    }
-
     private static bool MatchesEffect(RuntimeEffectInstance instance, RuntimeEffectDefinition definition, string resolvedStackKey)
     {
-        if (instance == null || instance.definition == null || definition == null)
-        {
-            return false;
-        }
-
-        return string.Equals(instance.definition.StableId, definition.StableId, StringComparison.Ordinal)
-            && string.Equals(instance.StackKey, resolvedStackKey, StringComparison.Ordinal);
+        return RuntimeEffectRuntimeUtility.MatchesIdentity(instance, definition, resolvedStackKey);
     }
 
     private static bool RuntimeEffectMatchesKey(RuntimeEffectInstance instance, string effectIdOrStackKey)
@@ -801,7 +817,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
             || string.Equals(instance.definition.StableId, effectIdOrStackKey, StringComparison.Ordinal);
     }
 
-    private void RemoveEffect(RuntimeEffectInstance instance)
+    private void RemoveEffect(RuntimeEffectInstance instance, bool notify = true)
     {
         if (instance == null)
         {
@@ -812,21 +828,40 @@ public class RuntimeEffectReceiver : MonoBehaviour
         DestroyVisual(instance);
         activeEffects.Remove(instance);
         RecalculateTickingState();
-        RaiseEffectsChanged();
+        if (notify)
+        {
+            RaiseEffectsChanged();
+        }
     }
 
     private void EnsureVisual(RuntimeEffectInstance instance)
     {
-        if (instance == null
-            || instance.definition == null
-            || RuntimeEffectRuntimeUtility.GetFieldVisualPrefab(instance) == null
-            || activeVisuals.ContainsKey(instance))
+        if (instance == null || instance.definition == null)
         {
             return;
         }
 
-        GameObject visual = Instantiate(RuntimeEffectRuntimeUtility.GetFieldVisualPrefab(instance), transform);
+        GameObject prefab = RuntimeEffectRuntimeUtility.GetFieldVisualPrefab(instance);
+        if (prefab == null)
+        {
+            DestroyVisual(instance);
+            return;
+        }
+
+        if (activeVisuals.ContainsKey(instance))
+        {
+            if (activeVisualPrefabs.TryGetValue(instance, out GameObject currentPrefab)
+                && currentPrefab == prefab)
+            {
+                return;
+            }
+
+            DestroyVisual(instance);
+        }
+
+        GameObject visual = Instantiate(prefab, transform);
         activeVisuals[instance] = visual;
+        activeVisualPrefabs[instance] = prefab;
     }
 
     private void DestroyVisual(RuntimeEffectInstance instance)
@@ -837,6 +872,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
         }
 
         activeVisuals.Remove(instance);
+        activeVisualPrefabs.Remove(instance);
         if (visual != null)
         {
             Destroy(visual);

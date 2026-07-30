@@ -33,7 +33,7 @@ MonoBehaviour:
     loopVoice: 0
     volumeVoice: 0
     pitchVoice: 0
-  - stateId: 7
+  - stateId: 5
     sfxVariants:
     - {fileID: 8300000, guid: e79495f52477fbe43b43b9225312fe16, type: 3}
     loopSFX: 0

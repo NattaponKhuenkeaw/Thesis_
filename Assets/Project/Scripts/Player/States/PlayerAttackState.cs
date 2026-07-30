@@ -22,14 +22,16 @@ public class PlayerAttackState : CombatPlayerState
     public override bool AcceptsAttackInput => true;
     public override bool AcceptsSkillInput => true;
     public override bool AcceptsUltimateInput => true;
-    public override bool LocksMovement => true;
+    public override bool LocksMovement => player.Combat == null || !player.Combat.IsAirCombo;
     public override bool LocksFacing => true;
 
     protected override AttackCategory GetAttackCategory() => AttackCategory.Normal;
 
     protected override InterruptPolicy GetInterruptPolicy()
     {
-        return InterruptPolicy.BasicAttack;
+        return player.Combat != null && player.Combat.IsAirCombo
+            ? InterruptPolicy.AirborneAttack
+            : InterruptPolicy.BasicAttack;
     }
 
     // =========================================================
@@ -61,10 +63,13 @@ public class PlayerAttackState : CombatPlayerState
 
     protected override void OnActionComplete()
     {
+        CaptureCompletedStepBoundaryContext();
+
         if (player.Combat != null && player.Combat.IsAttacking())
         {
             if (resolver.IsActive && !resolver.IsLastStep()
-                && player.Movement != null && !player.Movement.IsGrounded())
+                && player.Combat.IsAirCombo
+                && fsm.IsAirborneContext)
             {
                 player.Combat.CancelCurrentAttackButKeepComboProgress();
                 if (player.Animator != null)
@@ -75,8 +80,6 @@ public class PlayerAttackState : CombatPlayerState
                 player.Combat.ResetCombo();
             }
         }
-
-        resolver.Reset();
 
         if (fsm.CurrentState == this)
             ExitToAppropriateMovementState();
@@ -126,7 +129,7 @@ public class PlayerAttackState : CombatPlayerState
             return;
         }
 
-        if (currentPhase == ActionPhase.Recovery)
+        if (IsRecoveryOrCancelPhase)
         {
             TryResolveNextStep();
         }
@@ -174,10 +177,4 @@ public class PlayerAttackState : CombatPlayerState
         fsm.CurrentState.OnUltimateInput();
     }
 
-    public override void OnMoveInput(Vector2 input)
-    {
-        base.OnMoveInput(input);
-        if (player.Movement != null)
-            player.Movement.SetDownInput(input.y < -0.5f);
-    }
 }

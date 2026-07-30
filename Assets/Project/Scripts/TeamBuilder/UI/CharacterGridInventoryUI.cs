@@ -61,7 +61,7 @@ namespace Project.TeamBuilder.UI
                 {
                     bool isInTeam = (parentBuilder != null) && parentBuilder.IsCharacterInTeam(character);
                     System.Action<CharacterItem> clickHandler = parentBuilder != null
-                        ? parentBuilder.TryAssignCharacterToSelectedSlot
+                        ? (System.Action<CharacterItem>)parentBuilder.TryAssignCharacterToSelectedSlot
                         : null;
                     PlayerRunInventory runInventory = parentBuilder != null
                         ? parentBuilder.RunInventory

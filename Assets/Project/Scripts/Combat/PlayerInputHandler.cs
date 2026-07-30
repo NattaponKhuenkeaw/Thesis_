@@ -94,7 +94,6 @@ public class InputHandler_Player : MonoBehaviour
         if (Project.UI.InputLockManager.IsLocked) return;
 
         moveInput = value.Get<Vector2>();
-        stateMachine?.RouteDownInput(moveInput.y < -0.5f);
     }
 
     public void OnJump(InputValue value)
@@ -104,7 +103,6 @@ public class InputHandler_Player : MonoBehaviour
 
         moveInput = GetLatestMoveInput();
         stateMachine?.InputBuffer?.SetDirectionalInput(moveInput);
-        stateMachine?.RouteDownInput(moveInput.y < -0.5f);
 
         PlayerMovement movement = stateMachine != null && stateMachine.playerCharacter != null
             ? stateMachine.playerCharacter.Movement
@@ -188,8 +186,7 @@ public class InputHandler_Player : MonoBehaviour
         if (movement == null)
             return true;
 
-        bool isGroundedLike = movement.IsGrounded() || movement.IsGroundedForActionSelection();
-        if (!isGroundedLike)
+        if (!stateMachine.IsGroundedContext)
             return true;
 
         stateMachine.InputBuffer?.BufferJump();
@@ -197,7 +194,7 @@ public class InputHandler_Player : MonoBehaviour
 
         // If jump is being prioritized from the ground, do not allow the same
         // callback to start a ground combat action before the state fully flips airborne.
-        return stateMachine.CurrentStateId == PlayerStateId.JumpStartup || stateMachine.CurrentStateId == PlayerStateId.Airborne;
+        return stateMachine.CurrentState == stateMachine.JumpState;
     }
 
     private void HandleTeamSwitchInput()

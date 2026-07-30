@@ -24,11 +24,11 @@ MonoBehaviour:
     speed: 10
     elementalMastery: 0
     critRate: 5
-    critDamage: 150
+    critDamage: 50
     cooldownRate: 0
     impact: 0
     damageReduction: 0
-    aeRecharge: 1
+    aeRecharge: 0
   metaData:
     displayName: Kula
     description: "\u0E16\u0E39\u0E01\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E02\u0E36\u0E49\u0E19\u0E21\u0E32\u0E40\u0E1E\u0E37\u0E48\u0E2D\u0E40\u0E1B\u0E47\u0E19
@@ -41,7 +41,7 @@ MonoBehaviour:
     animatorController: {fileID: 9100000, guid: 95133ae643c38954a833c13bd95b70fc, type: 2}
   auraEnergyRate: 1
   audioData: {fileID: 0}
-  movementProfile: {fileID: 0}
+  movementProfile: {fileID: 11400000, guid: cd71e34e3ebc46d458f1965ef79c3daf, type: 2}
   maxJumpOverride: -1
   maxAirDashOverride: -1
   _authoredFPS: 24

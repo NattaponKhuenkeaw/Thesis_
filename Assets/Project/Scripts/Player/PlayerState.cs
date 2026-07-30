@@ -13,8 +13,6 @@ public enum PlayerStateId
     None,
     Idle,
     Running,
-    JumpStartup,
-    JumpRising,
     Airborne,
     Falling,
     Dashing,
@@ -26,6 +24,16 @@ public enum PlayerStateId
     Dead,
     Intro,
     Landing
+}
+
+/// <summary>
+/// Gameplay environment context owned by the FSM.
+/// Physics may report contacts, but action routing reads only this value.
+/// </summary>
+public enum PlayerEnvironmentContext
+{
+    Grounded,
+    Airborne
 }
 
 /// <summary>
@@ -141,22 +149,14 @@ public abstract class PlayerState
     public virtual bool HandleUltimateInput() => false;
 
     /// <summary>
-    /// Movement input. Default: forwards to PlayerMovement if AcceptsMoveInput is true.
+    /// Movement input. Only X is forwarded to physics. Y remains available to
+    /// explicit action conditions and Down+Jump drop-through routing.
     /// Override for custom behavior (e.g., IdleState transitions to MoveState).
     /// </summary>
     public virtual void OnMoveInput(Vector2 input)
     {
         if (AcceptsMoveInput && player.Movement != null)
-            player.Movement.SetMoveInput(input);
-    }
-
-    /// <summary>
-    /// Down input. Default: forwards to PlayerMovement if AcceptsMoveInput is true.
-    /// </summary>
-    public virtual void OnDownInput(bool held)
-    {
-        if (AcceptsMoveInput && player.Movement != null)
-            player.Movement.SetDownInput(held);
+            player.Movement.SetHorizontalInput(input.x);
     }
 
     /// <summary>
@@ -166,7 +166,7 @@ public abstract class PlayerState
     public virtual void OnJumpInput()
     {
         if (AcceptsJumpInput)
-            fsm.ChangeState(fsm.JumpStartupState);
+            fsm.ChangeState(fsm.JumpState);
     }
 
     /// <summary>
@@ -199,7 +199,7 @@ public abstract class PlayerState
     /// Resolves the correct movement state to transition into after an action finishes.
     /// Checks airborne → grounded+moving → grounded+idle in priority order.
     /// </summary>
-    protected void ExitToAppropriateMovementState()
+    protected virtual void ExitToAppropriateMovementState()
     {
         if (player.Movement == null)
         {
@@ -211,13 +211,13 @@ public abstract class PlayerState
         // Always ensure gravity/motion control is returned to movement unit
         player.Movement.CancelAttackMotion();
 
-        if (!player.Movement.GroundState.IsEffectivelyGrounded)
+        if (fsm.IsAirborneContext)
         {
-            fsm.Log("FSM", "[Exit] Determined: Airborne \u2192 Jumping", Color.cyan);
+            fsm.Log("FSM", "[Exit] Determined: Airborne \u2192 Falling", Color.cyan);
             if (player.Animator != null)
                 player.Animator.RestoreAirborneState();
 
-            fsm.ChangeState(fsm.AirborneState);
+            fsm.ChangeState(fsm.FallingState);
         }
         else if (player.Movement.IsLanding)
         {

@@ -24,11 +24,11 @@ MonoBehaviour:
     speed: 6.5
     elementalMastery: 0
     critRate: 5
-    critDamage: 225
+    critDamage: 50
     cooldownRate: 0
     impact: 0
     damageReduction: 0
-    aeRecharge: 1
+    aeRecharge: 0
   metaData:
     displayName: Goenitz
     description: "\u0E15\u0E31\u0E27\u0E25\u0E30\u0E04\u0E23\u0E40\u0E27\u0E2D\u0E23\u0E4C\u0E0A\u0E31\u0E19\u0E2A\u0E25\u0E31\u0E1A\u0E40\u0E1E\u0E28
@@ -54,10 +54,10 @@ MonoBehaviour:
   _dashData:
     animationClip: {fileID: 7400000, guid: a84ff45c3f3eb5047be611bbaa8bb3e9, type: 2}
     startupFrames: 7
-    activeFrames: 13
-    recoveryFrames: 30
-    cancelWindowStartFrame: 42
-    dashSpeed: 110
+    activeFrames: 14
+    recoveryFrames: 29
+    cancelWindowStartFrame: 43
+    dashSpeed: 30
     cooldownFrames: 18
   kitDefinition:
     skill:
@@ -95,7 +95,7 @@ MonoBehaviour:
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 2
-        finalDamageValue: 2.5
+        finalDamageValue: 1.5
         finalDamageRequiresCriticalHit: 1
         auraEnergyRewardAdd: 0
         cooldownOperation: 0
@@ -149,7 +149,7 @@ MonoBehaviour:
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 2
-        finalDamageValue: 2.5
+        finalDamageValue: 1.5
         finalDamageRequiresCriticalHit: 1
         auraEnergyRewardAdd: 0
         cooldownOperation: 0

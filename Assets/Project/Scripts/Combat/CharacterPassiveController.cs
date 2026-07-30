@@ -25,6 +25,15 @@ public class CharacterPassiveController : MonoBehaviour
         new List<(PotentialNodeDefinition node, IPassiveEffectHook hook)>();
     private readonly Dictionary<string, List<EnemyController>> runtimeTagHitTargets =
         new Dictionary<string, List<EnemyController>>();
+    private readonly List<PotentialNodeDefinition> fallbackActiveNodes =
+        new List<PotentialNodeDefinition>();
+    private readonly List<PassiveActionModifierDefinition> timedWindowModifiers =
+        new List<PassiveActionModifierDefinition>();
+    private IReadOnlyList<PotentialNodeDefinition> activeNodes = Array.Empty<PotentialNodeDefinition>();
+    private CharacterObject activeNodesCharacter;
+    private CharacterKitDefinition activeNodesKit;
+    private PlayerMetaProgression activeNodesProgression;
+    private PlayerMetaProgression subscribedMetaProgression;
 
     public CombatRuntimeState RuntimeState => runtimeState;
     public PlayerMetaProgression MetaProgression => metaProgression;
@@ -37,20 +46,21 @@ public class CharacterPassiveController : MonoBehaviour
         }
 
         ResolveMetaProgression();
+        BindMetaProgressionEvents();
         InitializeFromCharacterData();
     }
 
-    void Update()
+    private void OnDestroy()
     {
-        if (TeamLoader.Instance == null)
-        {
-            runtimeState?.Tick();
-        }
+        UnbindMetaProgressionEvents();
     }
 
     public void SetMetaProgression(PlayerMetaProgression progression)
     {
+        UnbindMetaProgressionEvents();
         metaProgression = progression;
+        BindMetaProgressionEvents();
+        InvalidatePotentialCaches();
         RebuildHooks();
     }
 
@@ -66,6 +76,7 @@ public class CharacterPassiveController : MonoBehaviour
             runtimeState.Reset();
         }
         runtimeTagHitTargets.Clear();
+        InvalidatePotentialCaches();
         RebuildHooks();
         RefreshConditionalStateEffects();
     }
@@ -109,22 +120,43 @@ public class CharacterPassiveController : MonoBehaviour
             : 0;
     }
 
-    public IEnumerable<PotentialNodeDefinition> GetActiveNodes()
+    public IReadOnlyList<PotentialNodeDefinition> GetActiveNodes()
     {
         CharacterObject character = playerCharacter != null ? playerCharacter.characterObject : null;
         CharacterKitDefinition kit = character != null ? character.kitDefinition : null;
         if (kit == null)
         {
-            yield break;
+            return Array.Empty<PotentialNodeDefinition>();
         }
 
+        if (activeNodesCharacter == character
+            && activeNodesKit == kit
+            && activeNodesProgression == metaProgression
+            && activeNodes != null)
+        {
+            return activeNodes;
+        }
+
+        activeNodesCharacter = character;
+        activeNodesKit = kit;
+        activeNodesProgression = metaProgression;
+        if (metaProgression != null)
+        {
+            activeNodes = metaProgression.GetUnlockedPotentialNodes(character);
+            return activeNodes;
+        }
+
+        fallbackActiveNodes.Clear();
         foreach (PotentialNodeDefinition node in kit.EnumerateAllNodes())
         {
-            if (IsNodeActive(character, node))
+            if (node != null && (node.unlockedByDefault || node.level <= 0))
             {
-                yield return node;
+                fallbackActiveNodes.Add(node);
             }
         }
+
+        activeNodes = fallbackActiveNodes;
+        return activeNodes;
     }
 
     public bool IsNodeUnlocked(string nodeId)
@@ -165,13 +197,7 @@ public class CharacterPassiveController : MonoBehaviour
             return false;
         }
 
-        bool changed = metaProgression.TryUpgradePotential(character, track);
-        if (changed)
-        {
-            RebuildHooks();
-        }
-
-        return changed;
+        return metaProgression.TryUpgradePotential(character, track);
     }
 
     public bool UnlockNodeById(string nodeId)
@@ -200,13 +226,7 @@ public class CharacterPassiveController : MonoBehaviour
             return false;
         }
 
-        bool changed = metaProgression.SetPotentialLevel(character, node.track, node.level - 1);
-        if (changed)
-        {
-            RebuildHooks();
-        }
-
-        return changed;
+        return metaProgression.SetPotentialLevel(character, node.track, node.level - 1);
     }
 
     public void ResetPotentialLevels()
@@ -214,13 +234,10 @@ public class CharacterPassiveController : MonoBehaviour
         CharacterObject character = playerCharacter != null ? playerCharacter.characterObject : null;
         if (metaProgression != null && character != null)
         {
-            metaProgression.SetPotentialLevel(character, PotentialTrack.Skill, 0);
-            metaProgression.SetPotentialLevel(character, PotentialTrack.Ultimate, 0);
-            metaProgression.SetPotentialLevel(character, PotentialTrack.Passive, 0);
+            metaProgression.ResetPotentialLevels(character);
         }
 
         runtimeState.Reset();
-        RebuildHooks();
     }
 
     public float ModifyValue(PassiveModifierTarget target, float baseValue, PassiveEffectScope scope = PassiveEffectScope.Self)
@@ -636,59 +653,47 @@ public class CharacterPassiveController : MonoBehaviour
         }
 
         bool foundWindow = false;
-        foreach (PotentialNodeDefinition node in GetActiveNodes())
+        for (int modifierIndex = 0; modifierIndex < timedWindowModifiers.Count; modifierIndex++)
         {
-            List<PassiveActionModifierDefinition> modifiers = node != null ? node.actionModifiers : null;
-            if (modifiers == null)
+            PassiveActionModifierDefinition modifier = timedWindowModifiers[modifierIndex];
+            if (modifier == null
+                || !modifier.Matches(category, actionId, actionName, runtimeState, ignoreRuntimeRequirements))
             {
                 continue;
             }
 
-            for (int i = 0; i < modifiers.Count; i++)
+            float candidateRemaining = 0f;
+            float candidateDuration = 0f;
+            bool hasTimedRequirement = false;
+
+            for (int requirementIndex = 0; requirementIndex < modifier.requiredTags.Count; requirementIndex++)
             {
-                PassiveActionModifierDefinition modifier = modifiers[i];
-                if (modifier == null
-                    || !modifier.unlocked
-                    || !modifier.Matches(category, actionId, actionName, runtimeState, ignoreRuntimeRequirements)
-                    || modifier.requiredTags == null
-                    || modifier.requiredTags.Count == 0)
+                RuntimeTagRequirement requirement = modifier.requiredTags[requirementIndex];
+                if (requirement == null
+                    || !requirement.expectedValue
+                    || string.IsNullOrWhiteSpace(requirement.tag)
+                    || !runtimeState.TryGetTagTiming(requirement.tag, out float tagRemaining, out float tagDuration))
                 {
                     continue;
                 }
 
-                float candidateRemaining = 0f;
-                float candidateDuration = 0f;
-                bool hasTimedRequirement = false;
-
-                for (int requirementIndex = 0; requirementIndex < modifier.requiredTags.Count; requirementIndex++)
+                if (!hasTimedRequirement || tagRemaining < candidateRemaining)
                 {
-                    RuntimeTagRequirement requirement = modifier.requiredTags[requirementIndex];
-                    if (requirement == null
-                        || !requirement.expectedValue
-                        || string.IsNullOrWhiteSpace(requirement.tag)
-                        || !runtimeState.TryGetTagTiming(requirement.tag, out float tagRemaining, out float tagDuration))
-                    {
-                        continue;
-                    }
-
-                    if (!hasTimedRequirement || tagRemaining < candidateRemaining)
-                    {
-                        candidateRemaining = tagRemaining;
-                        candidateDuration = tagDuration;
-                    }
-
-                    hasTimedRequirement = true;
+                    candidateRemaining = tagRemaining;
+                    candidateDuration = tagDuration;
                 }
 
-                if (!hasTimedRequirement || candidateRemaining <= remainingSeconds)
-                {
-                    continue;
-                }
-
-                remainingSeconds = candidateRemaining;
-                durationSeconds = Mathf.Max(candidateDuration, candidateRemaining);
-                foundWindow = true;
+                hasTimedRequirement = true;
             }
+
+            if (!hasTimedRequirement || candidateRemaining <= remainingSeconds)
+            {
+                continue;
+            }
+
+            remainingSeconds = candidateRemaining;
+            durationSeconds = Mathf.Max(candidateDuration, candidateRemaining);
+            foundWindow = true;
         }
 
         return foundWindow;
@@ -1034,10 +1039,21 @@ public class CharacterPassiveController : MonoBehaviour
             TeamLoader teamLoader = TeamLoader.Instance;
             if (teamLoader != null)
             {
-                Artifact[] artifacts = teamLoader.GetEquippedArtifactsFor(playerCharacter.characterObject);
+                IReadOnlyList<Artifact> artifacts;
+                if (teamLoader.TryGetDeployedCharacterRuntime(
+                        playerCharacter.characterObject,
+                        out DeployedCharacterRuntime deployedRuntime))
+                {
+                    artifacts = deployedRuntime.EquippedArtifacts;
+                }
+                else
+                {
+                    artifacts = teamLoader.GetEquippedArtifactsFor(playerCharacter.characterObject);
+                }
+
                 if (artifacts != null)
                 {
-                    for (int i = 0; i < artifacts.Length; i++)
+                    for (int i = 0; i < artifacts.Count; i++)
                     {
                         Artifact artifact = artifacts[i];
                         AddAdditionalDamageEffects(
@@ -2208,9 +2224,13 @@ public class CharacterPassiveController : MonoBehaviour
     private void RebuildHooks()
     {
         activeHooks.Clear();
+        timedWindowModifiers.Clear();
 
-        foreach (PotentialNodeDefinition node in GetActiveNodes())
+        IReadOnlyList<PotentialNodeDefinition> nodes = GetActiveNodes();
+        for (int nodeIndex = 0; nodeIndex < nodes.Count; nodeIndex++)
         {
+            PotentialNodeDefinition node = nodes[nodeIndex];
+            CacheTimedWindowModifiers(node);
             if (node == null || string.IsNullOrEmpty(node.passiveHookTypeName))
             {
                 continue;
@@ -2228,6 +2248,77 @@ public class CharacterPassiveController : MonoBehaviour
                 activeHooks.Add((node, hook));
             }
         }
+    }
+
+    private void CacheTimedWindowModifiers(PotentialNodeDefinition node)
+    {
+        List<PassiveActionModifierDefinition> modifiers = node != null ? node.actionModifiers : null;
+        if (modifiers == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < modifiers.Count; i++)
+        {
+            PassiveActionModifierDefinition modifier = modifiers[i];
+            if (modifier != null
+                && modifier.unlocked
+                && modifier.requiredTags != null
+                && modifier.requiredTags.Count > 0)
+            {
+                timedWindowModifiers.Add(modifier);
+            }
+        }
+    }
+
+    private void InvalidatePotentialCaches()
+    {
+        activeNodes = Array.Empty<PotentialNodeDefinition>();
+        activeNodesCharacter = null;
+        activeNodesKit = null;
+        activeNodesProgression = null;
+        fallbackActiveNodes.Clear();
+        timedWindowModifiers.Clear();
+    }
+
+    private void BindMetaProgressionEvents()
+    {
+        if (subscribedMetaProgression == metaProgression)
+        {
+            return;
+        }
+
+        UnbindMetaProgressionEvents();
+        subscribedMetaProgression = metaProgression;
+        if (subscribedMetaProgression != null)
+        {
+            subscribedMetaProgression.OnPotentialChanged += HandlePotentialChanged;
+        }
+    }
+
+    private void UnbindMetaProgressionEvents()
+    {
+        if (subscribedMetaProgression == null)
+        {
+            return;
+        }
+
+        subscribedMetaProgression.OnPotentialChanged -= HandlePotentialChanged;
+        subscribedMetaProgression = null;
+    }
+
+    private void HandlePotentialChanged(string characterId)
+    {
+        CharacterObject character = playerCharacter != null ? playerCharacter.characterObject : null;
+        if (character == null
+            || (!string.IsNullOrWhiteSpace(characterId)
+                && !string.Equals(character.characterId, characterId, StringComparison.Ordinal)))
+        {
+            return;
+        }
+
+        InvalidatePotentialCaches();
+        RebuildHooks();
     }
 
     private PassiveEventContext BuildContext(
@@ -2461,40 +2552,42 @@ public class CharacterPassiveController : MonoBehaviour
             return;
         }
 
-        foreach (PotentialNodeDefinition node in GetActiveNodes())
+        bool removedAnyTag = false;
+        for (int modifierIndex = 0; modifierIndex < timedWindowModifiers.Count; modifierIndex++)
         {
-            List<PassiveActionModifierDefinition> modifiers = node != null ? node.actionModifiers : null;
-            if (modifiers == null)
+            PassiveActionModifierDefinition modifier = timedWindowModifiers[modifierIndex];
+            if (modifier == null)
             {
                 continue;
             }
 
-            for (int i = 0; i < modifiers.Count; i++)
+            bool matchesOriginal = modifier.Matches(
+                category,
+                actionId,
+                actionName,
+                runtimeState,
+                ignoreRuntimeRequirements: true);
+            bool matchesReplacement = string.Equals(modifier.replacementActionId, actionId, StringComparison.Ordinal)
+                || string.Equals(modifier.replacementActionName, actionName, StringComparison.Ordinal);
+
+            if ((!matchesOriginal && !matchesReplacement) || modifier.requiredTags == null)
             {
-                PassiveActionModifierDefinition modifier = modifiers[i];
-                if (modifier == null || !modifier.unlocked)
-                {
-                    continue;
-                }
+                continue;
+            }
 
-                bool matchesOriginal = modifier.Matches(category, actionId, actionName, runtimeState, ignoreRuntimeRequirements: true);
-                bool matchesReplacement = string.Equals(modifier.replacementActionId, actionId, StringComparison.Ordinal)
-                    || string.Equals(modifier.replacementActionName, actionName, StringComparison.Ordinal);
-
-                if ((!matchesOriginal && !matchesReplacement) || modifier.requiredTags == null)
+            for (int requirementIndex = 0; requirementIndex < modifier.requiredTags.Count; requirementIndex++)
+            {
+                RuntimeTagRequirement requirement = modifier.requiredTags[requirementIndex];
+                if (requirement != null && !string.IsNullOrWhiteSpace(requirement.tag))
                 {
-                    continue;
-                }
-
-                for (int requirementIndex = 0; requirementIndex < modifier.requiredTags.Count; requirementIndex++)
-                {
-                    RuntimeTagRequirement requirement = modifier.requiredTags[requirementIndex];
-                    if (requirement != null && !string.IsNullOrWhiteSpace(requirement.tag))
-                    {
-                        runtimeState.RemoveTag(requirement.tag);
-                    }
+                    removedAnyTag |= runtimeState.RemoveTag(requirement.tag);
                 }
             }
+        }
+
+        if (removedAnyTag && playerCharacter != null && playerCharacter.characterObject != null)
+        {
+            CharacterEvents.NotifyStatsChanged(playerCharacter.characterObject);
         }
     }
 }

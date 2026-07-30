@@ -16,9 +16,9 @@ MonoBehaviour:
   - actionId: basic.combo
     actionName: New Combo
     context: 0
+    outputContext: 0
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 5.5
     auraEnergyReward: 0
@@ -30,9 +30,9 @@ MonoBehaviour:
   - actionId: air.combo
     actionName: Blowback Attack
     context: 1
+    outputContext: 0
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 2
     auraEnergyReward: 0
@@ -45,9 +45,9 @@ MonoBehaviour:
   - actionId: orochi.skill
     actionName: Exorcism of Untouchable
     context: 2
+    outputContext: 0
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 3
     auraEnergyReward: 15
@@ -60,14 +60,14 @@ MonoBehaviour:
   - actionId: orochi.skill.ex
     actionName: Revelo Omnino (Mid)
     context: 2
+    outputContext: 0
     priority: 10
     conditions:
     - rid: 3612912968212152433
     - rid: 3612912968212152434
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 6.5
-    auraEnergyReward: 10
+    auraEnergyReward: 3
     comboTree:
       treeName: Combo
       comboResetDelay: 0.8
@@ -77,10 +77,10 @@ MonoBehaviour:
   - actionId: orochi.skill.super.ex
     actionName: Trial of Sky Fire EX
     context: 0
+    outputContext: 0
     priority: 20
     conditions:
     - rid: 3612912968212152435
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 11
     auraEnergyReward: 0
@@ -94,9 +94,9 @@ MonoBehaviour:
   - actionId: orochi.ultimate
     actionName: Emcompassing Chaos
     context: 2
+    outputContext: 0
     priority: 0
     conditions: []
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 3
     auraEnergyReward: 0
@@ -106,7 +106,7 @@ MonoBehaviour:
       rootNode:
         rid: 3612912966069911565
     cooldown: 40
-    energyCost: 100
+    energyCost: 80
     activationVFXType: 0
     activationVFXPrefab: {fileID: 0}
     activationVFXOffset: {x: 0, y: 0, z: 0}
@@ -117,10 +117,10 @@ MonoBehaviour:
   - actionId: orochi.ultimate.ex
     actionName: Supreme Divinity
     context: 2
+    outputContext: 0
     priority: 30
     conditions:
     - rid: 3612913001198256217
-    allowGroundToAirTransition: 0
     damageSourceStat: 0
     actionDamageMultiplier: 3
     auraEnergyReward: 0
@@ -1235,6 +1235,59 @@ MonoBehaviour:
             endFrame: 1
           enableUltimateZoom: 0
           ultimateZoomSize: 5
+        - label: Ultimate Sequence
+          eventType: 3
+          triggerFrame: 10
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          freezeWorld: 1
+          freezeDurationOverride: 0
+          timelineMode: 0
+          activationVFXType: 0
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 0, z: 0}
+          activationVoice: {fileID: 0}
+          activationSFX: {fileID: 0}
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0.4
+              endStrength: 0.08
+              duration: 0.14
+              pulseInterval: 0.025
+              slowMotion:
+                enabled: 0
+                timeScale: 0.35
+                duration: 0.08
+                delaySeconds: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          enableUltimateZoom: 0
+          ultimateZoomSize: 5
     - rid: 3612912968212152411
       type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -1765,6 +1818,59 @@ MonoBehaviour:
                 enabled: 1
                 timeScale: 0.5
                 duration: 0.5
+                delaySeconds: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          enableUltimateZoom: 0
+          ultimateZoomSize: 5
+        - label: Ultimate Sequence
+          eventType: 3
+          triggerFrame: 10
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          freezeWorld: 1
+          freezeDurationOverride: 0
+          timelineMode: 0
+          activationVFXType: 0
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 0, z: 0}
+          activationVoice: {fileID: 0}
+          activationSFX: {fileID: 0}
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0.4
+              endStrength: 0.08
+              duration: 0.14
+              pulseInterval: 0.025
+              slowMotion:
+                enabled: 0
+                timeScale: 0.35
+                duration: 0.08
                 delaySeconds: 0
           afterImageSettings:
             spawnIntervalSeconds: 0.05

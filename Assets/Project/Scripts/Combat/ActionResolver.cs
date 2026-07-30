@@ -17,6 +17,7 @@ public class ActionResolver
     private ComboTree activeTree;
     private StandaloneAction activeStandalone;
     private int treeDepth;
+    private bool activeActionStartedAirborne;
 
     // Logging
     private PlayerStateMachine fsm;
@@ -43,6 +44,9 @@ public class ActionResolver
     public bool IsActive => currentNode != null || activeStandalone != null;
     public CombatAction ActiveCombatAction { get; private set; }
     public List<ActionConditionBase> LastMatchedConditions { get; private set; }
+    public bool StartedGrounded => ActiveCombatAction != null && !activeActionStartedAirborne;
+    public CombatActionOutputContext ResolvedOutputContext =>
+        ActiveCombatAction != null ? ActiveCombatAction.outputContext : CombatActionOutputContext.MatchInput;
 
     // =========================================================
     // Resolve - First Attack Input (no active combo)
@@ -53,7 +57,11 @@ public class ActionResolver
     /// Checks standalone actions first, then enters the appropriate combo tree.
     /// Returns the resolved AttackStepData, or null if nothing matches.
     /// </summary>
-    public AttackStepData ResolveInitial(InputContext ctx, ActionResolverTable table, AttackCategory category = AttackCategory.Normal)
+    public AttackStepData ResolveInitial(
+        InputContext ctx,
+        ActionResolverTable table,
+        AttackCategory category = AttackCategory.Normal,
+        bool forceRootStep = false)
     {
         Reset();
 
@@ -66,6 +74,7 @@ public class ActionResolver
             Log($"Standalone Match! Priority: {standalone.priority}", Color.yellow);
             activeStandalone = standalone;
             ActiveCombatAction = standalone;
+            activeActionStartedAirborne = !ctx.isGrounded;
             activeTree = standalone.comboTree;
             LastMatchedConditions = standalone.conditions;
 
@@ -110,6 +119,7 @@ public class ActionResolver
         {
             Log($"Action Selection: '{bestAction.ActionKey}' (Category={category}, Priority={bestAction.priority})");
             ActiveCombatAction = bestAction;
+            activeActionStartedAirborne = !ctx.isGrounded;
             activeTree = bestAction.comboTree;
         }
         else
@@ -126,7 +136,9 @@ public class ActionResolver
 
         // 3. Check if the root node itself has a matching route for the initial input
         currentNode = activeTree.rootNode;
-        ComboRoute rootRoute = ComboRouter.FindMatchedRoute(currentNode, ctx);
+        ComboRoute rootRoute = forceRootStep
+            ? null
+            : ComboRouter.FindMatchedRoute(currentNode, ctx);
 
         if (rootRoute != null)
         {
@@ -140,7 +152,10 @@ public class ActionResolver
         }
 
         treeDepth = 1;
-        ApplyStartingComboDepthOverride(ctx, bestAction);
+        if (!forceRootStep)
+        {
+            ApplyStartingComboDepthOverride(ctx, bestAction);
+        }
         return currentNode.stepData;
     }
 
@@ -156,21 +171,6 @@ public class ActionResolver
     public AttackStepData ResolveNext(InputContext ctx)
     {
         if (currentNode == null) return null;
-
-        // Context Validation: Prevent Air combos from continuing on the Ground and vice versa.
-        if (ActiveCombatAction != null && ActiveCombatAction.context != CombatActionContext.Both)
-        {
-            if (ActiveCombatAction.context == CombatActionContext.Ground && !ctx.isGrounded)
-            {
-                Log($"Context Invalidated: Expected Ground, but is Airborne. Canceling chain.", Color.red);
-                return null; // Force chain break, FSM will start a new air action
-            }
-            if (ActiveCombatAction.context == CombatActionContext.Air && ctx.isGrounded)
-            {
-                Log($"Context Invalidated: Expected Air, but is Grounded. Canceling chain.", Color.red);
-                return null; // Force chain break, FSM will start a new ground action
-            }
-        }
 
         string prevNodeName = currentNode.stepData?.stepName ?? "Unknown";
 
@@ -381,7 +381,7 @@ public class ActionResolver
         return true;
     }
 
-    public bool IsAirCombo => ActiveCombatAction != null && ActiveCombatAction.context == CombatActionContext.Air;
+    public bool IsAirCombo => ActiveCombatAction != null && activeActionStartedAirborne;
 
     public float GetComboResetDelay()
     {
@@ -403,6 +403,7 @@ public class ActionResolver
         activeTree = null;
         activeStandalone = null;
         ActiveCombatAction = null;
+        activeActionStartedAirborne = false;
         LastMatchedConditions = null;
         treeDepth = 0;
     }
@@ -427,6 +428,14 @@ public class ActionResolver
             }
 
             if (sa.triggerCategory != category)
+            {
+                continue;
+            }
+
+            CombatActionContext expectedContext = ctx.input.isGrounded
+                ? CombatActionContext.Ground
+                : CombatActionContext.Air;
+            if (sa.context != CombatActionContext.Both && sa.context != expectedContext)
             {
                 continue;
             }

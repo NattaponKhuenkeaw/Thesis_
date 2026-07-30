@@ -82,11 +82,6 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
             drawer.debugColor = Color.green; // Green for player
         }
 
-        if (GetComponent<PlayerSpeedFallbackFeedback>() == null)
-        {
-            gameObject.AddComponent<PlayerSpeedFallbackFeedback>();
-        }
-
         if (GetComponentInChildren<PlayerWorldUI>(true) == null)
         {
             gameObject.AddComponent<PlayerWorldUI>();
@@ -361,8 +356,8 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         }
 
         if (action is SkillAction skillAction
-            && Combat != null
-            && Combat.IsOnCooldown(action.Category, skillAction.cooldown, skillAction.actionName, skillAction.actionId))
+            && skillAction.cooldown > 0f
+            && IsAbilitySlotOnCooldown(action.Category))
         {
             return false;
         }
@@ -383,12 +378,53 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         return true;
     }
 
+    private bool IsAbilitySlotOnCooldown(AttackCategory category)
+    {
+        if (Combat == null || characterObject == null || characterObject.actionResolverTable == null)
+        {
+            return false;
+        }
+
+        ActionResolverTable table = characterObject.actionResolverTable;
+        System.Collections.Generic.IReadOnlyList<SkillAction> actions = category switch
+        {
+            AttackCategory.Skill => table.skillActions,
+            AttackCategory.Ultimate => table.ultimateActions,
+            _ => null
+        };
+
+        if (actions == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < actions.Count; i++)
+        {
+            SkillAction slotAction = actions[i];
+            if (slotAction == null || slotAction.cooldown <= 0f)
+            {
+                continue;
+            }
+
+            if (Combat.IsOnCooldown(
+                    category,
+                    slotAction.cooldown,
+                    slotAction.actionName,
+                    slotAction.actionId))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     // =========================================================
     // Private Methods
     // =========================================================
     private InputContext BuildActionInputContext(bool includeAvailability)
     {
-        bool actionGrounded = Movement != null && Movement.IsGroundedForActionSelection();
+        bool actionGrounded = StateMachine == null || StateMachine.IsGroundedContext;
         bool justLanded = Movement != null && (Movement.GroundState.JustLanded || Movement.IsLanding);
         return new InputContext
         {
@@ -438,7 +474,6 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
     {
         Combat?.ResetCombo();
         Movement?.CancelAttackMotion();
-        Movement?.StopDashPhysics();
         StateMachine?.ResetForCharacterSwitch();
     }
 

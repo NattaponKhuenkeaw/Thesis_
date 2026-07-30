@@ -537,9 +537,16 @@ public static class RuntimeEffectRuntimeUtility
             return false;
         }
 
-        return instance.recipe != null && instance.recipe.policy != null
-            ? instance.recipe.policy.removeOnOwnerDamaged
-            : instance.definition != null && instance.definition.removeOnOwnerDamaged;
+        return RemoveOnOwnerDamaged(instance.definition, instance.recipe);
+    }
+
+    public static bool RemoveOnOwnerDamaged(
+        RuntimeEffectDefinition definition,
+        RuntimeEffectRecipeData recipe)
+    {
+        return recipe != null && recipe.policy != null
+            ? recipe.policy.removeOnOwnerDamaged
+            : definition != null && definition.removeOnOwnerDamaged;
     }
 
     public static bool RequiresTicking(RuntimeEffectInstance instance)
@@ -696,6 +703,97 @@ public static class RuntimeEffectRuntimeUtility
             : $"{baseKey}|{parameterSignature}";
     }
 
+    public static RuntimeEffectStateChannel GetStateChannel(
+        RuntimeEffectDefinition definition,
+        RuntimeEffectRecipeData recipe)
+    {
+        RuntimeEffectDefinition resolvedDefinition = ResolveDefinition(definition, recipe);
+        return resolvedDefinition != null
+            ? resolvedDefinition.StateChannel
+            : RuntimeEffectStateChannel.None;
+    }
+
+    public static bool MatchesIdentity(
+        RuntimeEffectInstance instance,
+        RuntimeEffectDefinition definition,
+        RuntimeEffectRecipeData recipe)
+    {
+        if (instance == null || instance.definition == null || definition == null)
+        {
+            return false;
+        }
+
+        RuntimeEffectStateChannel channel = GetStateChannel(definition, recipe);
+        if (channel != RuntimeEffectStateChannel.None)
+        {
+            return instance.StateChannel == channel;
+        }
+
+        return instance.StateChannel == RuntimeEffectStateChannel.None
+            && string.Equals(instance.definition.StableId, definition.StableId, StringComparison.Ordinal)
+            && string.Equals(instance.StackKey, GetStackKey(definition, recipe), StringComparison.Ordinal);
+    }
+
+    public static bool MatchesIdentity(
+        RuntimeEffectInstance instance,
+        RuntimeEffectDefinition definition,
+        string resolvedStackKey)
+    {
+        if (instance == null || instance.definition == null || definition == null)
+        {
+            return false;
+        }
+
+        RuntimeEffectStateChannel channel = GetStateChannel(definition, null);
+        if (channel != RuntimeEffectStateChannel.None)
+        {
+            return instance.StateChannel == channel;
+        }
+
+        return instance.StateChannel == RuntimeEffectStateChannel.None
+            && string.Equals(instance.definition.StableId, definition.StableId, StringComparison.Ordinal)
+            && string.Equals(instance.StackKey, resolvedStackKey, StringComparison.Ordinal);
+    }
+
+    public static RuntimeEffectInstance FindByStateChannel(
+        IReadOnlyList<RuntimeEffectInstance> activeEffects,
+        RuntimeEffectStateChannel channel)
+    {
+        if (activeEffects == null || channel == RuntimeEffectStateChannel.None)
+        {
+            return null;
+        }
+
+        for (int i = 0; i < activeEffects.Count; i++)
+        {
+            RuntimeEffectInstance instance = activeEffects[i];
+            if (instance != null && instance.StateChannel == channel)
+            {
+                return instance;
+            }
+        }
+
+        return null;
+    }
+
+    public static bool CanMergeStack(
+        RuntimeEffectInstance instance,
+        RuntimeEffectDefinition definition,
+        RuntimeEffectRecipeData recipe,
+        CharacterObject sourceCharacter,
+        CharacterStats sourceStats,
+        float resolvedDuration)
+    {
+        if (!MatchesIdentity(instance, definition, recipe)
+            || instance.StateChannel != RuntimeEffectStateChannel.None
+            || instance.sourceCharacter != sourceCharacter)
+        {
+            return false;
+        }
+
+        return Mathf.Approximately(instance.appliedDurationSeconds, resolvedDuration);
+    }
+
     public static RuntimeEffectParameterSet GetParameters(RuntimeEffectInstance instance)
     {
         return instance != null && instance.recipe != null ? instance.recipe.parameters : null;
@@ -703,24 +801,12 @@ public static class RuntimeEffectRuntimeUtility
 
     public static CharacterStats ResolveFormulaSourceStats(RuntimeEffectContext context)
     {
-        if (context.instance == null || GetDurationType(context.instance.definition, context.instance.recipe) != RuntimeEffectDurationType.Forever)
-        {
-            return context.sourceStats;
-        }
-
-        return ResolveLiveSourceStats(context.sourceCharacter, context.targetPlayer) ?? context.sourceStats;
+        return context.sourceStats;
     }
 
     public static CharacterStats ResolveFormulaSourceStats(RuntimeEffectDamageContext context)
     {
-        if (context == null
-            || context.instance == null
-            || GetDurationType(context.instance.definition, context.instance.recipe) != RuntimeEffectDurationType.Forever)
-        {
-            return context != null ? context.sourceStats : null;
-        }
-
-        return ResolveLiveSourceStats(context.sourceCharacter, null) ?? context.sourceStats;
+        return context != null ? context.sourceStats : null;
     }
 
     /// <summary>
@@ -735,47 +821,10 @@ public static class RuntimeEffectRuntimeUtility
             return null;
         }
 
-        return ResolveLiveSourceStats(context.sourceCharacter, null) ?? context.sourceStats;
-    }
-
-    private static CharacterStats ResolveLiveSourceStats(CharacterObject sourceCharacter, PlayerCharacter contextPlayer)
-    {
-        if (sourceCharacter == null)
-        {
-            return null;
-        }
-
-        PlayerCharacter activePlayer = PlayerCharacter.Instance;
-        if (activePlayer != null && activePlayer.characterObject == sourceCharacter)
-        {
-            return activePlayer.Stats;
-        }
-
-        if (contextPlayer != null && contextPlayer.characterObject == sourceCharacter)
-        {
-            return contextPlayer.Stats;
-        }
-
-        TeamLoader teamLoader = TeamLoader.Instance;
-        if (teamLoader != null)
-        {
-            if (teamLoader.RunInventory != null)
-            {
-                CharacterStats runStats = teamLoader.RunInventory.GetCharacterStats(sourceCharacter);
-                if (runStats != null)
-                {
-                    return runStats;
-                }
-            }
-
-            CharacterStats runtimeStats = teamLoader.GetCharacterRuntimeStats(sourceCharacter);
-            if (runtimeStats != null)
-            {
-                return runtimeStats;
-            }
-        }
-
-        return sourceCharacter.GetLeveledStats();
+        return CombatSourceStatResolver.Resolve(
+            context.sourceCharacter,
+            context.sourceStats,
+            SourceStatReadMode.LiveOnResolve);
     }
 
     public static void CopyLegacyDefinitionParameters(RuntimeEffectDefinition definition, RuntimeEffectParameterSet parameters)

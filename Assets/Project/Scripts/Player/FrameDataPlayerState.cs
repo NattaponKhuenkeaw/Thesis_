@@ -286,6 +286,7 @@ public abstract class FrameDataPlayerState : PlayerState
             case ActionPhase.Startup:  OnStartupBegin();  break;
             case ActionPhase.Active:   OnActiveBegin();   break;
             case ActionPhase.Recovery: OnRecoveryBegin(); break;
+            case ActionPhase.Cancel:   OnCancelBegin();   break;
             case ActionPhase.Done:     OnActionComplete(); break;
         }
     }
@@ -371,6 +372,9 @@ public abstract class FrameDataPlayerState : PlayerState
             case ActionPhase.Recovery:
                 HandleInputDuringRecovery();
                 break;
+            case ActionPhase.Cancel:
+                HandleInputDuringCancel();
+                break;
         }
     }
 
@@ -406,7 +410,7 @@ public abstract class FrameDataPlayerState : PlayerState
     /// Checks in priority order: Ultimate > Skill > Dash > Jump > Attack.
     /// Returns true if an input was consumed and a transition occurred.
     /// </summary>
-    protected bool TryConsumeAllowedBuffers()
+    protected virtual bool TryConsumeAllowedBuffers()
     {
         ActionCategory allowed = GetInterruptPolicy().GetAllowedFor(currentPhase);
         ActionInputBuffer buffer = fsm.InputBuffer;
@@ -504,4 +508,7 @@ public abstract class FrameDataPlayerState : PlayerState
     /// Access the cached frame data (non-null after StartAction).
     /// </summary>
     protected ActionFrameData CachedFrameData => cachedFrameData;
+
+    protected bool IsRecoveryOrCancelPhase =>
+        currentPhase == ActionPhase.Recovery || currentPhase == ActionPhase.Cancel;
 }

@@ -47,6 +47,24 @@ document Character Level plus Artifact Transcendence design.
 - [x] Closing Team UI did not force effective-stat and progression refresh, so
   active HP/CDR/passive state could remain stale.
 - [x] The base Char-Slot prefab referenced only one of its three ArtifactSlots.
+- [x] Runtime stat multiplier accumulation used one shared scratch array.
+  Shermie Skill Potential Lv.2 adds an allied shield that queries Shermie's
+  source stats; that nested query wrote Shermie's self-only DEF/Max HP
+  multipliers into the teammate's in-progress calculation.
+
+## Shermie Self-Buff Isolation Follow-up
+
+- Replaced the shared runtime multiplier scratch array with pooled,
+  per-calculation arrays so nested source-stat queries are re-entrant.
+- Preserved the authored behavior: Skill Potential Lv.2 still shields allies,
+  while Shermie's +50% DEF remains self-only.
+- Preserved Ultimate Lv.0's +50% Max HP as a Shermie-only effect even while a
+  Shermie-sourced allied runtime effect is active.
+- Added an asset-backed EditMode regression using
+  `CharacterObject_Shermie.asset`.
+- Both gameplay and Editor/test assemblies compile with zero errors. The
+  focused test was not executed in batch mode because another Unity Editor
+  instance currently has the project open.
 
 ## Game Feel Notes
 

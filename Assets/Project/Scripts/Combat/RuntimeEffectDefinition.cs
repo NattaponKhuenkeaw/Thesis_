@@ -63,6 +63,12 @@ public enum RuntimeEffectStackMode
     Stack
 }
 
+public enum RuntimeEffectStateChannel
+{
+    None,
+    Shield
+}
+
 [Serializable]
 public class RuntimeEffectStatModifier
 {
@@ -100,6 +106,7 @@ public class RuntimeEffectInstance
         && RuntimeEffectRuntimeUtility.GetDurationType(definition, recipe) == RuntimeEffectDurationType.Seconds;
     public bool IsExpired => forceExpired || (UsesTimer && remainingSeconds <= 0f);
     public string StackKey { get; private set; }
+    public RuntimeEffectStateChannel StateChannel { get; private set; }
     public bool RequiresTicking { get; private set; }
     public bool RequiresFormulaUpdate { get; private set; }
     public bool AffectsStats { get; private set; }
@@ -149,6 +156,7 @@ public class RuntimeEffectInstance
 
         // Cache properties to avoid dynamic re-evaluation
         StackKey = RuntimeEffectRuntimeUtility.GetStackKey(definition, recipe);
+        StateChannel = RuntimeEffectRuntimeUtility.GetStateChannel(definition, recipe);
         RequiresTicking = RuntimeEffectRuntimeUtility.RequiresTicking(definition, recipe);
         RequiresFormulaUpdate = RuntimeEffectRuntimeUtility.RequiresFormulaUpdate(definition, recipe);
         AffectsStats = RuntimeEffectRuntimeUtility.AffectsStats(definition, recipe);
@@ -156,11 +164,22 @@ public class RuntimeEffectInstance
 
     public void Rebind(RuntimeEffectRecipeData effectRecipe, CharacterObject source, CharacterStats sourceStats)
     {
+        Rebind(definition, effectRecipe, source, sourceStats);
+    }
+
+    public void Rebind(
+        RuntimeEffectDefinition effectDefinition,
+        RuntimeEffectRecipeData effectRecipe,
+        CharacterObject source,
+        CharacterStats sourceStats)
+    {
+        definition = effectDefinition;
         recipe = effectRecipe;
         sourceCharacter = source;
         sourceStatsSnapshot = sourceStats != null ? sourceStats.Clone() : null;
 
         StackKey = RuntimeEffectRuntimeUtility.GetStackKey(definition, recipe);
+        StateChannel = RuntimeEffectRuntimeUtility.GetStateChannel(definition, recipe);
         RequiresTicking = RuntimeEffectRuntimeUtility.RequiresTicking(definition, recipe);
         RequiresFormulaUpdate = RuntimeEffectRuntimeUtility.RequiresFormulaUpdate(definition, recipe);
         AffectsStats = RuntimeEffectRuntimeUtility.AffectsStats(definition, recipe);
@@ -384,6 +403,7 @@ public abstract class RuntimeEffectDefinition : ScriptableObject
     public virtual bool RequiresTicking => durationType == RuntimeEffectDurationType.Seconds || RequiresFormulaTicking;
     public virtual bool SupportsStackMerging => false;
     public virtual bool ReapplyWhenRecipeChanges => false;
+    public virtual RuntimeEffectStateChannel StateChannel => RuntimeEffectStateChannel.None;
 
     public string StableId => !string.IsNullOrWhiteSpace(effectId) ? effectId : name;
     public virtual string StackKey => StableId;
@@ -406,6 +426,7 @@ public abstract class RuntimeEffectDefinition : ScriptableObject
     public virtual void OnApply(RuntimeEffectContext context) { }
     public virtual void OnReapplied(RuntimeEffectContext context) { }
     public virtual void OnUpdate(RuntimeEffectContext context) { }
+    public virtual bool IsFormulaUpdateDue(RuntimeEffectInstance instance) => true;
     public virtual void OnExpired(RuntimeEffectContext context) { }
     public virtual void ModifyStats(RuntimeEffectContext context, CharacterStats stats) { }
     public virtual void ModifyDamageInput(RuntimeEffectDamageInput input) { }

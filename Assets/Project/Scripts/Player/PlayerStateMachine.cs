@@ -25,9 +25,7 @@ public class PlayerStateMachine : MonoBehaviour
     // =========================================================
     public PlayerIdleState IdleState { get; private set; }
     public PlayerMoveState MoveState { get; private set; }
-    public PlayerJumpStartupState JumpStartupState { get; private set; }
-    public PlayerJumpRisingState JumpRisingState { get; private set; }
-    public PlayerAirborneState AirborneState { get; private set; }
+    public PlayerJumpState JumpState { get; private set; }
     public PlayerFallingState FallingState { get; private set; }
     public PlayerLandingState LandingState { get; private set; }
     public PlayerDashState DashState { get; private set; }
@@ -51,6 +49,17 @@ public class PlayerStateMachine : MonoBehaviour
     // Current State
     // =========================================================
     public PlayerState CurrentState { get; private set; }
+    public PlayerEnvironmentContext EnvironmentContext { get; private set; } =
+        PlayerEnvironmentContext.Grounded;
+    private int actionRoutingContextOverrideDepth;
+    private PlayerEnvironmentContext actionRoutingContextOverride;
+    private bool reconcilePhysicalContextAfterAction;
+
+    public PlayerEnvironmentContext ActionSelectionContext =>
+        HasActionRoutingContextOverride ? actionRoutingContextOverride : EnvironmentContext;
+    public bool HasActionRoutingContextOverride => actionRoutingContextOverrideDepth > 0;
+    public bool IsGroundedContext => ActionSelectionContext == PlayerEnvironmentContext.Grounded;
+    public bool IsAirborneContext => ActionSelectionContext == PlayerEnvironmentContext.Airborne;
 
     // =========================================================
     // Centralized Input Buffer
@@ -69,6 +78,11 @@ public class PlayerStateMachine : MonoBehaviour
     /// Fired on every state transition. Subscribers receive (previousStateId, newStateId).
     /// </summary>
     public event Action<PlayerStateId, PlayerStateId> OnStateChanged;
+
+    /// <summary>
+    /// Fired whenever a jump launch occurs (ground jump or double jump).
+    /// </summary>
+    public event Action OnJumpLaunched;
 
     // =========================================================
     // Unity Methods
@@ -94,6 +108,7 @@ public class PlayerStateMachine : MonoBehaviour
 
     void Update()
     {
+        ReconcilePhysicalContextIfNeeded();
         CurrentState?.Update();
     }
 
@@ -132,7 +147,7 @@ public class PlayerStateMachine : MonoBehaviour
 
         PlayerStateId prevId = CurrentStateId;
         context.previousState = prevId;
-        context.wasAirborne = playerCharacter.Movement != null && !playerCharacter.Movement.GroundState.IsEffectivelyGrounded;
+        context.wasAirborne = IsAirborneContext;
 
         CurrentState?.Exit();
         CurrentState = newState;
@@ -218,6 +233,7 @@ public class PlayerStateMachine : MonoBehaviour
         if (IdleState == null)
             InitializeStates();
 
+        using ActionOutputRoutingScope outputRouting = BeginCurrentActionOutputRouting();
         InputBuffer?.ClearAll();
 
         if (CurrentState is FrameDataPlayerState || CurrentState == AttackState || CurrentState == SkillState || CurrentState == UltimateState)
@@ -231,6 +247,32 @@ public class PlayerStateMachine : MonoBehaviour
         }
 
         InputBuffer?.ClearAll();
+    }
+
+    public bool SnapToGroundForCharacterSwitch()
+    {
+        if (playerCharacter == null || playerCharacter.Movement == null)
+            return false;
+
+        // Team Switch is a Ground-only transition. The outgoing action may have
+        // temporarily lifted the shared body with authored MotionData, but that
+        // physical pose must not make the incoming character enter Fall/Landing.
+        if (!playerCharacter.Movement.SnapToGroundForActionOutput())
+            return false;
+
+        EnvironmentContext = PlayerEnvironmentContext.Grounded;
+        reconcilePhysicalContextAfterAction = false;
+
+        PlayerState groundedState =
+            Mathf.Abs(playerCharacter.Movement.HorizontalInput) > 0.01f
+                ? MoveState
+                : IdleState;
+        if (CurrentState != groundedState)
+        {
+            ChangeState(groundedState);
+        }
+
+        return true;
     }
 
     // =========================================================
@@ -248,20 +290,13 @@ public class PlayerStateMachine : MonoBehaviour
     }
 
     /// <summary>
-    /// Route down input. Always forwarded to current state.
-    /// </summary>
-    public void RouteDownInput(bool held)
-    {
-        CurrentState?.OnDownInput(held);
-    }
-
-    /// <summary>
     /// Route jump pressed. If the current state handles it (returns true),
     /// no further routing is done. Otherwise, it uses the default Accept Jump logic.
     /// </summary>
     public void RouteJumpInput()
     {
         if (CurrentState == null) return;
+        using ActionOutputRoutingScope outputRouting = BeginCurrentActionOutputRouting();
 
         // State-first: let the current state try to consume the input
         if (CurrentState.HandleJumpInput())
@@ -287,8 +322,7 @@ public class PlayerStateMachine : MonoBehaviour
                 PlayerStateId interruptedState = CurrentStateId;
                 InputBuffer?.ConsumeJump();
 
-                ChangeState(JumpStartupState);
-                CurrentState.OnJumpInput();
+                ChangeState(JumpState);
 
                 if (interruptedState == PlayerStateId.Attacking || interruptedState == PlayerStateId.AirborneAttacking)
                 {
@@ -315,12 +349,16 @@ public class PlayerStateMachine : MonoBehaviour
             // Pre-validate: reject if no jump resources available.
             // Without this, the action state would be interrupted for a jump
             // that never physically executes (e.g., 0 jumps left while airborne).
-            if (playerCharacter.Movement != null && !playerCharacter.Movement.CanJump())
+            if (!CanStartJumpFromCurrentOrProjectedOutput())
                 return;
 
+            if (ShouldLaunchImmediatelyAfterActionOutputSnap())
+            {
+                JumpState.LaunchImmediatelyOnNextEntry();
+            }
+
             InputBuffer?.ConsumeJump();
-            ChangeState(JumpStartupState);
-            CurrentState.OnJumpInput();
+            ChangeState(JumpState);
         }
     }
 
@@ -330,6 +368,8 @@ public class PlayerStateMachine : MonoBehaviour
     public void RouteDashInput(float inputX)
     {
         if (CurrentState == null) return;
+        using ActionOutputRoutingScope outputRouting = BeginCurrentActionOutputRouting();
+        if (CurrentState == DashState) return;
 
         // Always buffer the dash for mid-action consumption
         InputBuffer.BufferDash(inputX);
@@ -349,6 +389,7 @@ public class PlayerStateMachine : MonoBehaviour
             && playerCharacter.Movement != null
             && playerCharacter.Movement.CanDash())
         {
+            InputBuffer?.ConsumeDash(out _);
             ChangeState(DashState);
             CurrentState.OnDashInput(inputX);
         }
@@ -360,12 +401,13 @@ public class PlayerStateMachine : MonoBehaviour
     public void RouteAttackInput()
     {
         if (CurrentState == null) return;
+        using ActionOutputRoutingScope outputRouting = BeginCurrentActionOutputRouting();
 
         if (ShouldPrioritizeBufferedJumpBeforeCombat())
         {
             RouteJumpInput();
 
-            if (CurrentStateId == PlayerStateId.Airborne || CurrentStateId == PlayerStateId.JumpStartup)
+            if (CurrentState == JumpState)
             {
                 RouteAttackInput();
             }
@@ -389,10 +431,141 @@ public class PlayerStateMachine : MonoBehaviour
 
         if (CurrentState.AcceptsAttackInput && playerCharacter.HasActionForContext(AttackCategory.Normal))
         {
-            bool isGrounded = playerCharacter.Movement != null && playerCharacter.Movement.IsGroundedForActionSelection();
-            ChangeState(isGrounded ? AttackState : AirAttackState);
+            ChangeState(ResolveBasicAttackState());
             CurrentState.OnAttackInput();
         }
+    }
+
+    /// <summary>
+    /// Physics tells the FSM about support changes in the same fixed step.
+    /// Coyote time remains a jump permission and never keeps a ground locomotion state alive.
+    /// </summary>
+    public void NotifyGroundLost()
+    {
+        if (CurrentState is CombatPlayerState)
+        {
+            return;
+        }
+
+        EnvironmentContext = PlayerEnvironmentContext.Airborne;
+
+        if (CurrentState == IdleState || CurrentState == MoveState || CurrentState == LandingState)
+        {
+            ChangeState(FallingState);
+        }
+    }
+
+    /// <summary>
+    /// Landing is a context barrier: falling inputs cannot start a ground action
+    /// until the snapped ground position and Landing state are both committed.
+    /// </summary>
+    public void NotifyLanded()
+    {
+        if (CurrentState is CombatPlayerState)
+        {
+            return;
+        }
+
+        bool transitionedFromAirborne =
+            EnvironmentContext == PlayerEnvironmentContext.Airborne;
+        EnvironmentContext = PlayerEnvironmentContext.Grounded;
+
+        // An authored Ground/MatchInput output snap already published Grounded
+        // before the incoming action entered. Repeated support is therefore not
+        // a new landing and must not insert Landing/Falling between actions.
+        if (!transitionedFromAirborne)
+        {
+            return;
+        }
+
+        if (CurrentState == JumpState || CurrentState == FallingState)
+        {
+            ChangeState(LandingState);
+        }
+    }
+
+    public void NotifyJumpLaunched()
+    {
+        EnvironmentContext = PlayerEnvironmentContext.Airborne;
+        OnJumpLaunched?.Invoke();
+    }
+
+    /// <summary>
+    /// Combat steps keep their entry context while running. At a legal step
+    /// boundary, publish real contact only when it represents a valid context
+    /// transition. Ground actions lifted by authored MotionData remain Ground;
+    /// only genuine support loss may reroute them to Air.
+    /// </summary>
+    public bool SyncCombatContextAtStepBoundary(bool stepStartedGrounded)
+    {
+        PlayerMovement movement = playerCharacter != null
+            ? playerCharacter.Movement
+            : null;
+        bool physicallyGrounded = movement != null && movement.IsPhysicallyGrounded();
+        bool groundedForRouting = physicallyGrounded;
+
+        if (stepStartedGrounded
+            && !physicallyGrounded
+            && (movement == null || !movement.IsFallingFromLostSupport))
+        {
+            groundedForRouting = true;
+        }
+
+        EnvironmentContext = groundedForRouting
+            ? PlayerEnvironmentContext.Grounded
+            : PlayerEnvironmentContext.Airborne;
+        reconcilePhysicalContextAfterAction = false;
+        return groundedForRouting;
+    }
+
+    public PlayerEnvironmentContext ResolveActionOutputContext(
+        CombatActionOutputContext outputContext,
+        bool startedGrounded)
+    {
+        return outputContext switch
+        {
+            CombatActionOutputContext.Ground => PlayerEnvironmentContext.Grounded,
+            CombatActionOutputContext.Air => PlayerEnvironmentContext.Airborne,
+            _ => startedGrounded
+                ? PlayerEnvironmentContext.Grounded
+                : PlayerEnvironmentContext.Airborne
+        };
+    }
+
+    public void BeginActionOutputRouting(
+        CombatActionOutputContext outputContext,
+        bool startedGrounded)
+    {
+        actionRoutingContextOverride = ResolveActionOutputContext(outputContext, startedGrounded);
+        actionRoutingContextOverrideDepth++;
+    }
+
+    public void EndActionOutputRouting()
+    {
+        actionRoutingContextOverrideDepth = Mathf.Max(0, actionRoutingContextOverrideDepth - 1);
+    }
+
+    public void CommitActionOutputContext(
+        CombatActionOutputContext outputContext,
+        bool startedGrounded)
+    {
+        PlayerEnvironmentContext resolvedContext =
+            ResolveActionOutputContext(outputContext, startedGrounded);
+        EnvironmentContext = resolvedContext;
+
+        bool physicallyGrounded = playerCharacter != null
+            && playerCharacter.Movement != null
+            && playerCharacter.Movement.IsPhysicallyGrounded();
+
+        if (resolvedContext == PlayerEnvironmentContext.Grounded
+            && playerCharacter != null
+            && playerCharacter.Movement != null)
+        {
+            physicallyGrounded = playerCharacter.Movement.SnapToGroundForActionOutput();
+        }
+
+        reconcilePhysicalContextAfterAction =
+            physicallyGrounded != (resolvedContext == PlayerEnvironmentContext.Grounded);
     }
 
     /// <summary>
@@ -401,12 +574,13 @@ public class PlayerStateMachine : MonoBehaviour
     public void RouteSkillInput()
     {
         if (CurrentState == null) return;
+        using ActionOutputRoutingScope outputRouting = BeginCurrentActionOutputRouting();
 
         if (ShouldPrioritizeBufferedJumpBeforeCombat())
         {
             RouteJumpInput();
 
-            if (CurrentStateId == PlayerStateId.Airborne || CurrentStateId == PlayerStateId.JumpStartup)
+            if (CurrentState == JumpState)
             {
                 RouteSkillInput();
             }
@@ -453,6 +627,7 @@ public class PlayerStateMachine : MonoBehaviour
     public void RouteUltimateInput()
     {
         if (CurrentState == null) return;
+        using ActionOutputRoutingScope outputRouting = BeginCurrentActionOutputRouting();
 
         InputBuffer.BufferUltimate();
 
@@ -532,6 +707,87 @@ public class PlayerStateMachine : MonoBehaviour
     // =========================================================
     // Private Methods
     // =========================================================
+    private ActionOutputRoutingScope BeginCurrentActionOutputRouting()
+    {
+        if (CurrentState is CombatPlayerState combatState
+            && combatState.TryGetProjectedOutputContext(
+                out CombatActionOutputContext outputContext,
+                out bool startedGrounded))
+        {
+            BeginActionOutputRouting(outputContext, startedGrounded);
+            return new ActionOutputRoutingScope(this, true);
+        }
+
+        return new ActionOutputRoutingScope(this, false);
+    }
+
+    private bool CanStartJumpFromCurrentOrProjectedOutput()
+    {
+        PlayerMovement movement = playerCharacter != null
+            ? playerCharacter.Movement
+            : null;
+        if (movement == null)
+            return true;
+
+        if (movement.CanJump())
+            return true;
+
+        // A legal cancel from an action whose authored output is Ground will
+        // snap and reset landing resources in CombatPlayerState.Exit before
+        // JumpState.Enter consumes the ground jump. Validate against that
+        // projected state instead of stale airborne jump usage.
+        if (movement.profile == null
+            || !(CurrentState is CombatPlayerState combatState)
+            || !combatState.TryGetProjectedOutputContext(
+                out CombatActionOutputContext outputContext,
+                out bool startedGrounded))
+        {
+            return false;
+        }
+
+        return ResolveActionOutputContext(outputContext, startedGrounded)
+            == PlayerEnvironmentContext.Grounded;
+    }
+
+    private bool ShouldLaunchImmediatelyAfterActionOutputSnap()
+    {
+        PlayerMovement movement = playerCharacter != null
+            ? playerCharacter.Movement
+            : null;
+        if (movement == null
+            || movement.IsPhysicallyGrounded()
+            || !(CurrentState is CombatPlayerState combatState)
+            || !combatState.TryGetProjectedOutputContext(
+                out CombatActionOutputContext outputContext,
+                out bool startedGrounded))
+        {
+            return false;
+        }
+
+        return ResolveActionOutputContext(outputContext, startedGrounded)
+            == PlayerEnvironmentContext.Grounded;
+    }
+
+    private readonly struct ActionOutputRoutingScope : IDisposable
+    {
+        private readonly PlayerStateMachine stateMachine;
+        private readonly bool active;
+
+        public ActionOutputRoutingScope(PlayerStateMachine stateMachine, bool active)
+        {
+            this.stateMachine = stateMachine;
+            this.active = active;
+        }
+
+        public void Dispose()
+        {
+            if (active)
+            {
+                stateMachine.EndActionOutputRouting();
+            }
+        }
+    }
+
     private bool TryResolveStartAction(AttackCategory category, out CombatAction action, out AttackStepData step)
     {
         action = null;
@@ -574,9 +830,7 @@ public class PlayerStateMachine : MonoBehaviour
     {
         IdleState = new PlayerIdleState(playerCharacter, this);
         MoveState = new PlayerMoveState(playerCharacter, this);
-        JumpStartupState = new PlayerJumpStartupState(playerCharacter, this);
-        JumpRisingState = new PlayerJumpRisingState(playerCharacter, this);
-        AirborneState = new PlayerAirborneState(playerCharacter, this);
+        JumpState = new PlayerJumpState(playerCharacter, this);
         FallingState = new PlayerFallingState(playerCharacter, this);
         LandingState = new PlayerLandingState(playerCharacter, this);
         DashState = new PlayerDashState(playerCharacter, this);
@@ -589,13 +843,18 @@ public class PlayerStateMachine : MonoBehaviour
         IntroState = new PlayerIntroState(playerCharacter, this);
     }
 
+    private PlayerState ResolveBasicAttackState()
+    {
+        return IsAirborneContext ? AirAttackState : AttackState;
+    }
+
     private PlayerState ResolveLocomotionStateForCharacterSwitch()
     {
         if (playerCharacter == null || playerCharacter.Movement == null)
             return IdleState;
 
-        if (!playerCharacter.Movement.GroundState.IsEffectivelyGrounded)
-            return AirborneState;
+        if (IsAirborneContext)
+            return FallingState;
 
         if (playerCharacter.Movement.IsLanding)
             return LandingState;
@@ -604,6 +863,55 @@ public class PlayerStateMachine : MonoBehaviour
             return MoveState;
 
         return IdleState;
+    }
+
+    private void ReconcilePhysicalContextIfNeeded()
+    {
+        if (!reconcilePhysicalContextAfterAction
+            || CurrentState is FrameDataPlayerState
+            || playerCharacter == null
+            || playerCharacter.Movement == null)
+        {
+            return;
+        }
+
+        // An accepted Jump cancel owns its startup even though a committed
+        // Ground/MatchInput output has just made physical contact. Reconciliation
+        // resumes from the launch frame's authoritative Air transition.
+        if (CurrentState == JumpState && JumpState.IsStartingUp)
+        {
+            reconcilePhysicalContextAfterAction = false;
+            return;
+        }
+
+        bool physicallyGrounded = playerCharacter.Movement.IsPhysicallyGrounded();
+        PlayerEnvironmentContext physicalContext = physicallyGrounded
+            ? PlayerEnvironmentContext.Grounded
+            : PlayerEnvironmentContext.Airborne;
+        reconcilePhysicalContextAfterAction = false;
+
+        if (EnvironmentContext == physicalContext)
+        {
+            return;
+        }
+
+        EnvironmentContext = physicalContext;
+        if (physicallyGrounded)
+        {
+            playerCharacter.Movement.BeginLandingAfterAirActionOutput();
+
+            if (CurrentState == JumpState || CurrentState == FallingState)
+            {
+                ChangeState(LandingState);
+            }
+
+            return;
+        }
+
+        if (CurrentState == IdleState || CurrentState == MoveState || CurrentState == LandingState)
+        {
+            ChangeState(FallingState);
+        }
     }
 
     private bool ShouldPrioritizeBufferedJumpBeforeCombat()
@@ -617,7 +925,7 @@ public class PlayerStateMachine : MonoBehaviour
         if (CurrentStateId != PlayerStateId.Idle && CurrentStateId != PlayerStateId.Running)
             return false;
 
-        if (!playerCharacter.Movement.GroundState.IsEffectivelyGrounded)
+        if (!IsGroundedContext)
             return false;
 
         return true;
@@ -636,7 +944,7 @@ public class PlayerStateMachine : MonoBehaviour
 
         // We only want this safeguard for actions that are still effectively
         // ground-started and have not committed yet.
-        if (!playerCharacter.Movement.GroundState.IsEffectivelyGrounded)
+        if (!IsGroundedContext)
             return false;
 
         if (currentFrameState.CurrentPhase == ActionPhase.None || currentFrameState.CurrentPhase == ActionPhase.Startup)
@@ -660,7 +968,7 @@ public class PlayerStateMachine : MonoBehaviour
         // Ground locomotion states: allowed
         if (CurrentState == IdleState || CurrentState == MoveState)
         {
-            if (playerCharacter.Movement != null && !playerCharacter.Movement.GroundState.IsEffectivelyGrounded)
+            if (IsAirborneContext)
             {
                 return false;
             }
@@ -670,6 +978,14 @@ public class PlayerStateMachine : MonoBehaviour
         // Action states: Attack, Skill, Ultimate
         if (CurrentStateId == PlayerStateId.Attacking || CurrentStateId == PlayerStateId.Skill || CurrentStateId == PlayerStateId.Ultimate)
         {
+            // Team Switch is Ground-only. Use the action-owned context so
+            // authored upward MotionData does not incorrectly reject a
+            // technically Ground action, while genuine Air actions remain blocked.
+            if (!IsGroundedContext)
+            {
+                return false;
+            }
+
             if (CurrentState is FrameDataPlayerState fdState)
             {
                 // If the current step is an auto-chain step, do not allow switching.

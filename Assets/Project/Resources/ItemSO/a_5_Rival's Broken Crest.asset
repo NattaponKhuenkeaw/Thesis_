@@ -23,13 +23,14 @@ MonoBehaviour:
     and fully charges the active character's Ultimate.
   bonusStats:
     maxHP: 0
-    attack: 35
+    attack: 10
     defense: 0
-    speed: 1
+    speed: 0
     elementalMastery: 0
-    critRate: 15
+    critRate: 7
     critDamage: 0
     cooldownRate: 0
-    impact: 40
+    impact: 20
+    damageReduction: -10
     aeRecharge: 0
   additionalDamageEffects: []

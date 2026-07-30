@@ -677,9 +677,15 @@ namespace CombatEditor.UI
                     MarkDirtyAndRebuild();
                 });
 
-                AddEnumField(body, "Context", action.context, value => {
-                    RecordUndo("Edit Context");
+                AddEnumField(body, "Input Context", action.context, value => {
+                    RecordUndo("Edit Input Context");
                     action.context = (CombatActionContext)value;
+                    MarkDirtyAndRebuild();
+                });
+
+                AddEnumField(body, "Output Context", action.outputContext, value => {
+                    RecordUndo("Edit Output Context");
+                    action.outputContext = (CombatActionOutputContext)value;
                     MarkDirtyAndRebuild();
                 });
 
@@ -1508,6 +1514,10 @@ namespace CombatEditor.UI
                 {
                     entry.afterImageSettings = new AfterImageEventSettings();
                 }
+                if (entry.facingDirectionSettings == null)
+                {
+                    entry.facingDirectionSettings = new FacingDirectionEventSettings();
+                }
 
                 BuildFoldoutCard($"Event #{idx + 1}: {entry.label}", $"event_entry_{idx}", entry.trackColor, inner =>
                 {
@@ -1552,6 +1562,10 @@ namespace CombatEditor.UI
 
                         case ActionEventType.AfterImage:
                             BuildAfterImageActionEventFields(inner, entry);
+                            break;
+
+                        case ActionEventType.SetFacingDirection:
+                            BuildFacingDirectionActionEventFields(inner, entry);
                             break;
                     }
                 }, () =>
@@ -1744,6 +1758,20 @@ namespace CombatEditor.UI
                     MarkDirty();
                 });
             }
+        }
+
+        private void BuildFacingDirectionActionEventFields(VisualElement inner, ActionEventEntry entry)
+        {
+            FacingDirectionEventSettings settings =
+                entry.facingDirectionSettings ??= new FacingDirectionEventSettings();
+
+            AddSeparator(inner, "Facing Direction");
+            AddEnumField(inner, "Mode", settings.mode, value =>
+            {
+                RecordUndo("Edit Facing Direction Mode");
+                settings.mode = (ActionFacingMode)value;
+                MarkDirty();
+            });
         }
 
         private void BuildGameImpulseRequestFields(VisualElement inner, GameImpulseRequest request, string undoPrefix)

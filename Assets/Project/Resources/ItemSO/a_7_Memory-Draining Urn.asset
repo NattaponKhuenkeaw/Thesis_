@@ -22,11 +22,11 @@ MonoBehaviour:
   passiveDescription: Landing 10 Basic Attacks grants a Shield equal to 8% Max HP
     (12s CD) which explodes for physical damage when broken/expired
   bonusStats:
-    maxHP: 50
+    maxHP: 45
     attack: 0
     defense: 0
     speed: 0
-    elementalMastery: 0
+    elementalMastery: 7
     critRate: 0
     critDamage: 0
     cooldownRate: 0

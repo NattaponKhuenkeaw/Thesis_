@@ -34,7 +34,7 @@ public sealed class AuraEnergyRewardClaim
 /// </summary>
 public class PlayerCombat : MonoBehaviour, ICharacterCombat
 {
-    private const float AuraEnergyChanceReward = 10f;
+    private const float AuraEnergyChanceReward = 5f;
 
     [Header("Dependencies")]
     public PlayerCharacter playerCharacter;
@@ -96,8 +96,6 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     public PlayerCharacter PlayerCharacter => playerCharacter;
     public Vector2 FacingDirection => GetFacingDirection();
-    private bool currentActionStartedGrounded;
-    private bool currentActionAllowsGroundToAirTransition;
     private bool isExecutingAutoChainStep;
     private GrabHitbox currentGrabHitbox;
     private bool hadGrabAtStepStart;
@@ -129,8 +127,6 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public bool IsExecutingAutoChainStep => isExecutingAutoChainStep;
     public bool HadGrabAtStepStart => hadGrabAtStepStart;
     public bool IsAirCombo => isAirCombo;
-    public bool CurrentActionStartedGrounded => currentActionStartedGrounded;
-    public bool CurrentActionAllowsGroundToAirTransition => currentActionAllowsGroundToAirTransition;
     public float CurrentActionDamageMultiplier => currentActionDamageMultiplier;
     public ActionDamageSourceStat CurrentActionDamageSourceStat => currentActionDamageSourceStat;
     public float CurrentActionDamageSourceValue => GetCurrentActionDamageSourceValue();
@@ -374,7 +370,10 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         // Sync visual animation with logic frame (handles visual looping).
         // CRITICAL: We skip this in the 'Done' phase to allow the Animator to 
         // begin its natural exit transitions without logic conflict.
-        if (currentStepData != null && animHandler != null && phase != ActionPhase.Done)
+        if (currentStepData != null
+            && currentStepData.loopActivePhase
+            && animHandler != null
+            && phase == ActionPhase.Active)
         {
             animHandler.UpdateActionNormalizedTime(frame, currentStepData.TotalFrames);
         }
@@ -394,45 +393,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     public bool IsAttacking() => currentPhase != ActionPhase.None && currentStepData != null;
     public bool IsActiveCombat() => IsAttacking() && currentPhase != ActionPhase.Done;
 
-    public bool ShouldInterruptAttackOnGrounded()
-    {
-        if (!IsAttacking())
-        {
-            return false;
-        }
-
-        return isAirCombo;
-    }
-
-    public bool ShouldSuppressLandingFeedback() => false;
-
-    /// <summary>
-    /// Whether the player is currently in an airborne combat action.
-    /// Used by PlayerMovement to decide whether to apply airborne gravity policy.
-    /// Returns true for ANY active combat action (Attack, Skill, Ultimate) while airborne.
-    /// </summary>
-    public bool IsInAirborneAction() => (currentPhase != ActionPhase.None) && isAirCombo;
-
-    public bool ShouldPreserveGroundAuthority()
-    {
-        return IsAttacking()
-            && currentActionStartedGrounded
-            && !currentActionAllowsGroundToAirTransition
-            && !isAirCombo;
-    }
-
-    /// <summary>
-    /// Current gravity scale factor for airborne actions (0..1).
-    /// Set by CombatPlayerState based on the current action phase and AirborneGravityPolicy.
-    /// </summary>
-    private float airborneGravityScaleOverride = 1f;
-
-    public float GetAirborneGravityScale() => airborneGravityScaleOverride;
-
-    /// <summary>
-    /// Called by CombatPlayerState to communicate the current phase's gravity scale.
-    /// </summary>
-    public void SetAirborneGravityScale(float scale) => airborneGravityScaleOverride = Mathf.Clamp01(scale);
+    public bool ShouldSuppressLandingFeedback() => IsActiveCombat();
     public int GetComboStep() => comboDepth;
     public bool CanSwitchDirection() => currentPhase == ActionPhase.None || currentPhase == ActionPhase.Startup;
     public bool CanMoveAfterAttack() => !IsAttacking();
@@ -651,14 +612,16 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         AddPendingCooldownReduction(categoryKey, seconds);
     }
 
+    [System.Obsolete("Use the action-owned input/output context overload.")]
     public void BeginResolvedAction(
         bool startedGrounded,
         bool airCombo,
-        bool allowGroundToAirTransition,
-        CombatAction action)
+        bool legacyGroundToAirFlag,
+        CombatAction action) =>
+        BeginResolvedAction(airCombo, action);
+
+    public void BeginResolvedAction(bool airCombo, CombatAction action)
     {
-        currentActionStartedGrounded = startedGrounded;
-        currentActionAllowsGroundToAirTransition = allowGroundToAirTransition;
         isAirCombo = airCombo;
         bool beginsNewAction = action == null
             || currentResolvedCombatAction != action
@@ -728,9 +691,6 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         // hitstop is now global
         currentAttackFrame = 0;
         isAirCombo = false;
-        currentActionStartedGrounded = false;
-        currentActionAllowsGroundToAirTransition = false;
-        airborneGravityScaleOverride = 1f;
         isExecutingAutoChainStep = false;
         currentGrabHitbox = null;
         lastGrabParams = default;
@@ -776,8 +736,6 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             cachedAnimator.speed = 1f;
         }
 
-        currentActionStartedGrounded = false;
-        currentActionAllowsGroundToAirTransition = false;
         movement?.CancelAttackMotion();
         OnComboFinished?.Invoke();
     }
@@ -961,7 +919,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         CharacterStats stats = teamLoader.GetCharacterRuntimeStats(character);
         AuraEnergyRate auraEnergyRate = character.auraEnergyRate;
         float statMultiplier = stats != null
-            ? Mathf.Max(0f, stats.aeRecharge)
+            ? Mathf.Max(0f, 1f + stats.aeRecharge)
             : 1f;
 
         if (actionRewardClaim != null && actionRewardClaim.TryClaim())
@@ -1492,7 +1450,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         passiveController?.NotifyAfterDash();
         StartDashThroughDamageRoutine();
 
-        if (isAirCombo && comboDepth > 0 && movement != null && !movement.IsGrounded())
+        if (isAirCombo && comboDepth > 0 && movement != null && !movement.IsGroundedForActionSelection())
             CancelCurrentAttackButKeepComboProgress();
         else
             ResetCombo();
@@ -1640,6 +1598,14 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     {
         if (isAirCombo && comboDepth > 0)
         {
+            // Physical contact is observed while an Air-output action remains
+            // active. PlayerMovement replays OnLand after the authored action
+            // ends, so the combo is reset only at that output reconciliation.
+            if (IsActiveCombat())
+            {
+                return;
+            }
+
             ResetCombo();
         }
     }
@@ -1697,16 +1663,36 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         return Mathf.Max(0f, value);
     }
 
-    public void RefreshProjectileDamageContext(ref ProjectileSpawnContext context)
+    public bool RefreshProjectileDamageContext(ref ProjectileSpawnContext context)
     {
-        if (playerCharacter == null)
+        if (context.sourceCharacter == null)
         {
-            return;
+            return false;
         }
 
-        context.attackerStats = playerCharacter.Stats;
-        context.sourceAttack = GetModifiedAttackStat();
-        context.actionDamageSourceValue = GetModifiedActionDamageSourceValue(context.actionDamageSourceStat);
+        TeamLoader runtimeOwner = TeamLoader.Instance;
+        DeployedCharacterRuntime deployedRuntime = null;
+        bool sourceIsDeployed = runtimeOwner != null
+            && runtimeOwner.TryGetDeployedCharacterRuntime(
+                context.sourceCharacter,
+                out deployedRuntime);
+        CharacterStats sourceStats = sourceIsDeployed
+            ? deployedRuntime.EffectiveStats
+            : context.attackerStats;
+        if (sourceStats == null)
+        {
+            return false;
+        }
+
+        context.attackerStats = sourceStats;
+        context.sourceAttack = Mathf.Max(0f, sourceStats.attack);
+        context.actionDamageSourceValue = context.actionDamageSourceStat switch
+        {
+            ActionDamageSourceStat.MaxHP => Mathf.Max(0f, sourceStats.maxHP),
+            ActionDamageSourceStat.Defense => Mathf.Max(0f, sourceStats.defense),
+            _ => Mathf.Max(0f, sourceStats.attack)
+        };
+        return sourceIsDeployed;
     }
 
     private float ResolveHitDamageMultiplier(float damageRatio)
@@ -2019,12 +2005,12 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     private void ApplyPriority(bool isPriority)
     {
-        if (movement == null || movement.spriteRenderer == null) return;
+        if (movement == null || movement.SpriteRenderer == null) return;
         
         // Using a simpler approach for player since it's usually one renderer
         // but let's be safe and use current order + offset
         int baseOrder = 0; // Default player order is usually 0
-        movement.spriteRenderer.sortingOrder = baseOrder + (isPriority ? Project.Systems.EntitySortingManager.PRIORITY_SORTING_OFFSET : 0);
+        movement.SpriteRenderer.sortingOrder = baseOrder + (isPriority ? Project.Systems.EntitySortingManager.PRIORITY_SORTING_OFFSET : 0);
     }
 
     private System.Collections.IEnumerator PriorityResetRoutine(float delay)

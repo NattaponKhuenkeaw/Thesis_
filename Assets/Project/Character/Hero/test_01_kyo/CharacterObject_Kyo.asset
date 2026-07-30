@@ -21,14 +21,14 @@ MonoBehaviour:
     maxHP: 892
     attack: 45
     defense: 37
-    speed: 10.5
+    speed: 11
     elementalMastery: 0
     critRate: 5
-    critDamage: 150
+    critDamage: 50
     cooldownRate: 0
     impact: 0
     damageReduction: 0
-    aeRecharge: 1
+    aeRecharge: 0
   metaData:
     displayName: Kyo
     description: "\u0E17\u0E32\u0E22\u0E32\u0E17\u0E15\u0E23\u0E30\u0E01\u0E39\u0E25\u0E04\u0E38\u0E0B\u0E32\u0E19\u0E32\u0E07\u0E34
@@ -54,10 +54,10 @@ MonoBehaviour:
   _dashData:
     animationClip: {fileID: 7400000, guid: 1170a54f57116384b8506475803c25eb, type: 2}
     startupFrames: 5
-    activeFrames: 25
-    recoveryFrames: 15
-    cancelWindowStartFrame: 35
-    dashSpeed: 40
+    activeFrames: 27
+    recoveryFrames: 13
+    cancelWindowStartFrame: 32
+    dashSpeed: 15
     cooldownFrames: 24
   kitDefinition:
     skill:
