@@ -16,8 +16,6 @@ MonoBehaviour:
   displayName: Memory
   damageTextColor: {r: 1, g: 0.93886316, b: 0.2216981, a: 1}
   icon: {fileID: 21300000, guid: 0cb8634b4dc2531499817875b4aa0832, type: 3}
-  hasDOT: 0
+  dotDuration: 5
   dotDamageRatio: 0.3
-  reactionType: 1
-  reactionDuration: 20
-  reactionDescription: Enemy will unable to react for 8 seconds.
+  dotTickInterval: 1

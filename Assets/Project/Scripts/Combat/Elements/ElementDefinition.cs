@@ -10,13 +10,13 @@ public class ElementDefinition : ScriptableObject
     public Sprite icon;
 
     [Header("DOT Properties")]
-    public bool hasDOT;
-    [Tooltip("DOT tick ratio: 0.3 means 30% of Attacker's ATK * ElementalMastery%")]
+    [Min(0.05f)]
+    [Tooltip("How long this element's DOT remains active, in seconds.")]
+    public float dotDuration = 5f;
+    [Min(0f)]
+    [Tooltip("Damage per tick as a ratio of attacker ATK before Elemental Mastery.")]
     public float dotDamageRatio = 0.3f;
-
-    [Header("Reaction Properties")]
-    public ElementReactionType reactionType;
-    public float reactionDuration = 20f;
-    [TextArea(3, 5)]
-    public string reactionDescription;
+    [Min(0.05f)]
+    [Tooltip("Time in seconds between DOT damage ticks.")]
+    public float dotTickInterval = 1f;
 }

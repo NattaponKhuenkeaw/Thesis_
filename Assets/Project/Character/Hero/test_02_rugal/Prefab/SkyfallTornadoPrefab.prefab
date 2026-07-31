@@ -202,4 +202,3 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ElementPayload
   elementType: 0
   sourceCharacterId: 
-  canReact: 1

@@ -234,12 +234,9 @@ namespace Project.TeamBuilder.UI.Panels
 
         private void PopulateElementRoleFallback()
         {
-            ElementDatabase database = ElementDatabase.Load();
-            Sprite icon = database != null ? database.GetIcon(_currentCharacter.elementType) : null;
             if (elementIcon != null)
             {
-                elementIcon.sprite = icon;
-                elementIcon.enabled = icon != null;
+                elementIcon.enabled = false;
             }
 
             if (elementRoleText == null)
@@ -247,19 +244,9 @@ namespace Project.TeamBuilder.UI.Panels
                 return;
             }
 
-            string elementName = _currentCharacter.elementType.ToString();
-            if (database != null)
-            {
-                ElementDefinition definition = database.GetDefinition(_currentCharacter.elementType);
-                if (definition != null && !string.IsNullOrWhiteSpace(definition.displayName))
-                {
-                    elementName = definition.displayName;
-                }
-            }
-
             elementRoleText.text = _currentCharacter.characterRole == CharacterRole.None
-                ? elementName.ToUpperInvariant()
-                : $"{elementName.ToUpperInvariant()} - {_currentCharacter.characterRole.ToString().ToUpperInvariant()}";
+                ? string.Empty
+                : _currentCharacter.characterRole.ToString().ToUpperInvariant();
         }
 
         private void BuildDisplayNodes()

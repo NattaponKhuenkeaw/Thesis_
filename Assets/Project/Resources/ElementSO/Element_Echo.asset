@@ -16,9 +16,6 @@ MonoBehaviour:
   displayName: Echo
   damageTextColor: {r: 0, g: 1, b: 0.9284022, a: 1}
   icon: {fileID: 21300000, guid: ab68fa42c73b91348a4a6baa978ca7ad, type: 3}
-  hasDOT: 0
+  dotDuration: 5
   dotDamageRatio: 0.3
-  reactionType: 2
-  reactionDuration: 20
-  reactionDescription: When Elemental Reaction is removed, Deal Echo damage of that
-    20s accumulate damage / 2.
+  dotTickInterval: 1

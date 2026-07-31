@@ -1583,6 +1583,13 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             reactionData.sourceActionName = "Dash";
 
             float damageDealt = enemy.TakeHit(reactionData, transform.position);
+            if (damageDealt > 0f)
+            {
+                enemy.DamageTypeState?.ApplyDot(
+                    effect.elementType,
+                    stats,
+                    character);
+            }
             dealtDamage |= damageDealt > 0f;
         }
 

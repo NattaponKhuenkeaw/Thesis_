@@ -156,12 +156,10 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
             return;
         }
 
-        EnemyElementalState elementalState = context.targetEnemy.GetComponent<EnemyElementalState>();
-        if (elementalState != null)
-        {
-            elementalState.RecordDamageTaken(damageDealt);
-            elementalState.ApplyElementalDamage(parameters.elementType, damageInput.baseDamage, formulaSourceStats, AttackCategory.Normal);
-        }
+        context.targetEnemy.DamageTypeState?.ApplyDot(
+            parameters.elementType,
+            formulaSourceStats,
+            context.sourceCharacter);
     }
 
     private RuntimeEffectAdditionalDamageParameters ResolveParameters(RuntimeEffectDamageContext context)

@@ -1331,11 +1331,6 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             return false;
         }
 
-        if (effect.filterByTargetElement && target.elementType != effect.targetElement)
-        {
-            return false;
-        }
-
         return true;
     }
 

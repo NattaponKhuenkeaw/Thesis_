@@ -252,16 +252,23 @@ Actions should avoid unnecessary position or gravity locks. Only authored moveme
 - Effects with different recipe identities do not merge just because they reuse the same formula. Stack limits and stack-scaled values are resolved from the authored recipe and unlocked Potential modifiers.
 - Active timed effects must expose an icon and remaining duration on the HUD when presentation data is authored. Important defensive and status outcomes also require in-world VFX or animation feedback.
 
-### Elemental Reaction
+### Damage Types and DOT
 
-> Inspiration by Zenless Zone Zero Anomaly System
+Damage type belongs to each authored hit, not to the character. The current hit
+types are Physical, Memory, Echo, Ash, and Void.
 
-Each enemy has a separate gauge for every elemental type. Filling a gauge triggers that element's reaction; multiple elemental gauges and reactions can exist independently.
-
-- **Elemental Gauge**: Base capacity is **20% of the enemy's Max HP**. A Weak element has 50% capacity and a Strong element has 150% capacity.
-- **Building Gauge**: Gauge gain equals the hit's base damage multiplied by **(1 + Elemental Mastery%)**, then by **50%** for Basic Attacks, **100%** for Skills, or **200%** for Ultimates.
-- **DOT**: Ash and Void apply a five-second DOT that ticks once per second for `30% ATK × (1 + Elemental Mastery%)`. Same-element DOTs do not stack; only a stronger replacement refreshes the DOT. Each tick also contributes 50% of its damage to that element's gauge.
-- **Elemental Reaction**: When a gauge reaches capacity, it resets and starts that element's reaction for 20 seconds. While active, the enemy takes 50% more damage from that same element.
+- Every enemy profile authors a direct reduction percentage for Physical and
+  each non-Physical damage type.
+- Direct-hit type reduction applies after DEF and general Damage Reduction.
+- Memory, Echo, Ash, and Void apply a standalone DOT configured by their
+  `ElementDefinition`.
+- Each definition authors DOT duration, damage ratio, and tick interval.
+- DOT damage equals `ATK × configured ratio × (1 + Elemental Mastery%)`, cannot
+  critically hit. DOT bypasses DEF, then passes through general Damage Reduction
+  and its matching damage-type reduction.
+- Same-type DOT does not stack. A stronger application replaces the active DOT;
+  an equal application refreshes it.
+- Elemental gauges and elemental reactions do not exist.
 
 ### Team-Combat Rules
 
@@ -305,7 +312,7 @@ Characters are tools in a simple loop:
 | DEF | XX | Defense |
 | HP | XXX | Health |
 |SPD | X | Speed |
-| Elemental Mastery | XX% | Increases elemental damage and elemental gauge gain. |
+| Elemental Mastery | XX% | Increases non-Physical hit and DOT damage. |
 | CRIT | XX% | Critical Rate |
 | CRIT Dmg | XXX% | Critical Damage |
 | Cooldown Rate | XX% | Shortens authored Skill and Ultimate cooldowns. |
@@ -321,16 +328,11 @@ Artifact bonuses are added to a character's base stats when the team is deployed
 
 The runtime role enum is the same six-role taxonomy used by Team Builder and character inspection UI: **Reaper, Executioner, Herald, Arbiter, Warden, and Keeper**. A three-character team is not required to include one character from every broad category, but it should contain a clear damage plan, a setup or survival tool, and a reason to rotate rather than remain on one character indefinitely.
 
-### Elemental Type
+### Character Damage-Type Policy
 
-![Elemental Type](https://media.discordapp.net/attachments/1515649413287247892/1515649413437980772/1.png?ex=6a350c03&is=6a33ba83&hm=7dbc4813f0d141149b66895d83b8193a02f3fc2a463e73b4b1e149c864ea706d&=&format=webp&quality=lossless&width=1536&height=864)
-
-| Type | Description | Have DOT? | Effect |
-| --- | --- | --- | --- |
-| Memory | The one who still clings to something and doesn't want to lose | No | Enemy will unable to react for 8 seconds. |
-| Echo | The one who is still searching for the meaning of something | No | When Elemental Reaction is removed, Deal Echo damage of that 20s accumulate damage / 2. |
-| Ash | The one who still has something left to do | Yes | Inflict Ash damage based on Enemy's lost HP (Capped 8% of Enemy's Max HP) once. |
-| Void | The one who tries to escape from something they don't want to face | Yes | Deal Explosive AOE Void damage of 150%ATK once. Enemy debuffed Confusion(attack randomly) for 15 seconds. if Enemy is Elite or Bosses, will decrease their Action Speed by 30% instead. |
+Characters do not have an innate damage type. Their individual hitboxes,
+projectiles, and Additional Damage effects author Physical, Memory, Echo, Ash,
+or Void independently.
 
 ---
 
@@ -727,7 +729,7 @@ flowchart TD
 | `CharacterPassiveController` + Runtime Effect pipeline | Evaluates kit triggers/filters and applies recipe-driven stat, damage, status, healing, shield, and resource effects. |
 | `TeamLoader` | Runtime authority for the three deployed slots, active index, HP/AE, effective stats, Artifacts, swap cooldown, and outgoing-action clone. |
 | `PlayerRunInventory` / `PlayerMetaProgression` | Separate run-scoped ownership from permanent fragments and Potential levels. |
-| `EnemyController` + Behavior Graph + `EnemyElementalState` | Enemy health/reactions, behavior nodes, elemental gauges, DOTs, and reaction state. |
+| `EnemyController` + Behavior Graph + `EnemyDamageTypeState` | Enemy health/reactions, behavior nodes, damage-type reduction, and standalone elemental DOT state. |
 | `SceneTransitionManager` + `SceneBoundaryController` | Persistent transition facade with scene-local entrance, exit, trigger, and Cinemachine confiner ownership. |
 
 ### Codebase Scale
@@ -764,7 +766,7 @@ flowchart TD
 | `RuntimeEffectDefinition` / `RuntimeEffectRecipe` | Reusable effect formula plus per-kit application policy, values, stacking, and presentation |
 | `PlayerRunInventory` / `PlayerMetaProgression` | Run ownership/state and permanent fragment/Potential state |
 | `CodexInventory` | Master Character, Artifact, and Item catalog |
-| `ElementDatabase` / `EnemyElementalProfile` | Element presentation/DOT rules and enemy strength-based gauge capacity |
+| `ElementDatabase` / `EnemyElementalProfile` | Hit-type presentation, DOT configuration, and direct enemy damage-type reductions |
 | `ReactionRuleTable` | Enemy hit-reaction selection rules |
 | `ProjectileData` | Projectile configuration |
 
@@ -828,16 +830,16 @@ Assets/Project/Scripts/
 
 ### Current Authored Roster Snapshot
 
-| Character Asset | Element | Runtime Role | Content Status |
-| --- | --- | --- | --- |
-| Main | Void | Arbiter | Active authored kit with Skill, Ultimate, passive, runtime effects, and Potential data. |
-| Kyo | Ash | Herald | Active authored kit with team support effects and Potential data. |
-| Rugal | Memory | Executioner | Active authored sustained-damage kit and Potential data. |
-| Shermie | Echo | Warden | Active defensive/control kit with shield/heal effects and Potential data. |
-| Goenitz | Echo | Reaper | Active burst/critical kit with projectile and runtime-effect authoring. |
-| Orochi | Void | Reaper | Active burst kit with Void Additional Damage, stack rules, and Potential data. |
-| Krizalid | Ash | Executioner | Prototype character data; ability IDs, level growth, and Potential content are not release-ready. |
-| Kula | Echo | Herald | Prototype character data; movement, complete actions, level growth, and Potential content are not release-ready. |
+| Character Asset | Runtime Role | Content Status |
+| --- | --- | --- |
+| Main | Arbiter | Active authored kit with Skill, Ultimate, passive, runtime effects, and Potential data. |
+| Kyo | Herald | Active authored kit with team support effects and Potential data. |
+| Rugal | Executioner | Active authored sustained-damage kit and Potential data. |
+| Shermie | Warden | Active defensive/control kit with shield/heal effects and Potential data. |
+| Goenitz | Reaper | Active burst/critical kit with projectile and runtime-effect authoring. |
+| Orochi | Reaper | Active burst kit with Void Additional Damage, stack rules, and Potential data. |
+| Krizalid | Executioner | Prototype character data; ability IDs, level growth, and Potential content are not release-ready. |
+| Kula | Herald | Prototype character data; movement, complete actions, level growth, and Potential content are not release-ready. |
 
 ---
 

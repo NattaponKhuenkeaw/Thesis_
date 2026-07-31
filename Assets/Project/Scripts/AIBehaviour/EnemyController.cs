@@ -78,7 +78,7 @@ public class EnemyController : MonoBehaviour
     private Coroutine flashCoroutine;
     private Coroutine priorityResetCoroutine;
     private RuntimeEffectReceiver runtimeEffects;
-    private EnemyElementalState elementalState;
+    private EnemyDamageTypeState damageTypeState;
     private SpriteRenderer attackHitboxSR;
     private LineRenderer attackHitboxLR;
 
@@ -120,7 +120,9 @@ public class EnemyController : MonoBehaviour
         if (runtimeEffects == null)
             runtimeEffects = gameObject.AddComponent<RuntimeEffectReceiver>();
 
-        elementalState = GetComponent<EnemyElementalState>();
+        damageTypeState = GetComponent<EnemyDamageTypeState>();
+        if (damageTypeState == null)
+            damageTypeState = gameObject.AddComponent<EnemyDamageTypeState>();
 
         // Start with hitbox disabled and cache debug renderers
         if (attackHitbox != null)
@@ -208,10 +210,14 @@ public class EnemyController : MonoBehaviour
 
         float finalIncomingDamage = reactionData.damageIsFinal
             ? reactionData.damage
-            : CombatFormula.CalculateIncomingDamage(reactionData.damage, defense, damageRes);
-        if (elementalState != null && !reactionData.ignoreElementalIncomingModifiers)
+            : CombatFormula.CalculateIncomingDamage(
+                reactionData.damage,
+                defense,
+                damageRes,
+                reactionData.damageRoutine);
+        if (damageTypeState != null && !reactionData.ignoreElementalIncomingModifiers)
         {
-            finalIncomingDamage = elementalState.ModifyIncomingDamage(reactionData.elementType, finalIncomingDamage);
+            finalIncomingDamage = damageTypeState.ModifyIncomingDamage(reactionData.elementType, finalIncomingDamage);
         }
 
         if (runtimeEffects != null)
@@ -333,16 +339,16 @@ public class EnemyController : MonoBehaviour
         runtimeEffects?.ApplyStatus(statusEffect, enabled);
     }
 
-    public EnemyElementalState ElementalState
+    public EnemyDamageTypeState DamageTypeState
     {
         get
         {
-            if (elementalState == null)
+            if (damageTypeState == null)
             {
-                elementalState = GetComponent<EnemyElementalState>();
+                damageTypeState = GetComponent<EnemyDamageTypeState>();
             }
 
-            return elementalState;
+            return damageTypeState;
         }
     }
 

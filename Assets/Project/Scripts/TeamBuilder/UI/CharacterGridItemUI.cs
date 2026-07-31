@@ -84,10 +84,7 @@ namespace Project.TeamBuilder.UI
                 
                 if (attributeImage != null)
                 {
-                    var db = ElementDatabase.Load();
-                    Sprite sprite = db != null ? db.GetIcon(item.characterObjectData.elementType) : null;
-                    attributeImage.sprite = sprite;
-                    attributeImage.enabled = sprite != null;
+                    attributeImage.enabled = false;
                 }
             }
             else

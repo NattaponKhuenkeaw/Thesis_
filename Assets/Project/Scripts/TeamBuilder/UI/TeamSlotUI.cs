@@ -155,10 +155,7 @@ namespace Project.TeamBuilder.UI
 
             if (elementIcon != null && charObj != null)
             {
-                var db = ElementDatabase.Load();
-                Sprite sprite = db != null ? db.GetIcon(charObj.elementType) : null;
-                elementIcon.sprite = sprite;
-                elementIcon.enabled = sprite != null;
+                elementIcon.enabled = false;
             }
 
             if (emptyStateOverlay != null)

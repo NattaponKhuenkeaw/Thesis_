@@ -61,10 +61,7 @@ namespace Project.ShopSystem.UI
             {
                 if (item is CharacterItem characterItem && characterItem.characterObjectData != null)
                 {
-                    var db = ElementDatabase.Load();
-                    Sprite sprite = db != null ? db.GetIcon(characterItem.characterObjectData.elementType) : null;
-                    attributeImage.sprite = sprite;
-                    attributeImage.enabled = sprite != null;
+                    attributeImage.enabled = false;
                 }
                 else
                 {

@@ -29,10 +29,7 @@ namespace Project.TeamBuilder.UI.Panels
 
             if (elementIcon != null)
             {
-                var db = ElementDatabase.Load();
-                Sprite sprite = db != null ? db.GetIcon(data.elementType) : null;
-                elementIcon.sprite = sprite;
-                elementIcon.enabled = sprite != null;
+                elementIcon.enabled = false;
             }
 
             if (elementRoleUI != null)
