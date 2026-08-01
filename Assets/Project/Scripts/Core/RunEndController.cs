@@ -122,8 +122,11 @@ namespace Project.Core.RunEnd
                 return;
             }
 
+            // Safety net only: PlayerCharacter should already switch before raising OnDied.
+            // If a living teammate still exists while the shared body is dead, recover.
             if (TrySwitchToLivingTeamMember())
             {
+                Debug.LogWarning("[RunEndController] OnDied received while living teammates remain; recovered instead of ending run.", this);
                 return;
             }
 
@@ -135,8 +138,23 @@ namespace Project.Core.RunEnd
 
         private bool TrySwitchToLivingTeamMember()
         {
+            if (subscribedPlayer == null || !subscribedPlayer.IsDead)
+            {
+                return false;
+            }
+
             TeamLoader teamLoader = TeamLoader.Instance ?? FindFirstObjectByType<TeamLoader>();
-            return teamLoader != null && teamLoader.TrySwitchToNextLivingCharacterAfterActiveDefeat();
+            if (teamLoader == null)
+            {
+                return false;
+            }
+
+            if (!teamLoader.HasAnyLivingCharacter(subscribedPlayer.characterObject))
+            {
+                return false;
+            }
+
+            return teamLoader.TrySwitchToNextLivingCharacterAfterActiveDefeat();
         }
 
         private IEnumerator DeathFlowRoutine()
@@ -508,9 +526,9 @@ namespace Project.Core.RunEnd
                 return;
             }
 
-            player.Movement?.SetMoveInput(Vector2.zero);
+            player.Movement?.SetHorizontalInput(0f);
             player.Movement?.CancelAttackMotion();
-            player.Movement?.StopDashPhysics();
+            player.Movement?.FinishDash();
             player.Combat?.ResetCombo();
             player.Combat?.ClearGrabbedEnemy();
             player.StateMachine?.InputBuffer?.ClearAll();

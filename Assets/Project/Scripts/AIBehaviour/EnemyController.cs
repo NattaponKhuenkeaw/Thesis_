@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 using Unity.Behavior;
+using Project.ShopSystem;
 
 /// <summary>
 /// Core enemy component. Holds stats, HP events, and helpers used by
@@ -30,6 +31,12 @@ public class EnemyController : MonoBehaviour
     public float defense = 0f;
     public float damageRes = 0f;
     public bool isEliteOrBoss = false;
+
+    [Header("Kill Rewards")]
+    [Tooltip("Run currency granted to PlayerRunInventory when this enemy dies.")]
+    [SerializeField, Min(0)] private int currencyReward = 5;
+    [Tooltip("Optional override used when isEliteOrBoss is true. Leave at 0 to use currencyReward.")]
+    [SerializeField, Min(0)] private int eliteCurrencyReward = 15;
 
     // =========================================================
     // State
@@ -364,6 +371,7 @@ public class EnemyController : MonoBehaviour
         if (bodyCollider  != null) bodyCollider.enabled  = false;
         if (attackHitbox  != null) attackHitbox.enabled  = false;
 
+        AwardKillCurrency();
         OnDied?.Invoke();
 
         // Remove from combat camera when dead
@@ -371,6 +379,38 @@ public class EnemyController : MonoBehaviour
             CameraManager.instance.LeaveCombat(this);
 
         Destroy(gameObject);
+    }
+
+    private void AwardKillCurrency()
+    {
+        int reward = ResolveKillCurrencyReward();
+        if (reward <= 0)
+            return;
+
+        PlayerRunInventory inventory = ResolveRunInventory();
+        if (inventory == null)
+        {
+            Debug.LogWarning($"[EnemyController] Cannot award kill currency ({reward}) because PlayerRunInventory is missing.", this);
+            return;
+        }
+
+        inventory.AddCurrency(reward);
+    }
+
+    private int ResolveKillCurrencyReward()
+    {
+        if (isEliteOrBoss && eliteCurrencyReward > 0)
+            return eliteCurrencyReward;
+
+        return Mathf.Max(0, currencyReward);
+    }
+
+    private static PlayerRunInventory ResolveRunInventory()
+    {
+        if (TeamLoader.Instance != null && TeamLoader.Instance.RunInventory != null)
+            return TeamLoader.Instance.RunInventory;
+
+        return Resources.Load<PlayerRunInventory>("InventorySO/PlayerRunInventory");
     }
 
     private void CacheOriginalColors()

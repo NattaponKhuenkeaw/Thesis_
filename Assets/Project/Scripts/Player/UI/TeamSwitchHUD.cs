@@ -160,6 +160,12 @@ public class TeamSwitchHUD : MonoBehaviour
     {
         if (teamLoader == null) return;
 
+        if (!teamLoader.CanSwitchToIndex(index))
+        {
+            Debug.Log("ไม่สามารถเปลี่ยนไปยังตัวละครนี้ได้ (ตาย / cooldown / ตัวเดิม)!");
+            return;
+        }
+
         // เช็คกฎเปลี่ยนตัว
         if (stateMachine != null && !stateMachine.CanSwitchCharacter())
         {

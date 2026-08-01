@@ -175,11 +175,9 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         if (!deathEventRaised)
         {
             deathEventRaised = true;
-            OnDied?.Invoke();
+            ClearUltimateGaugeOnDeath();
+            HandleCharacterDefeated();
         }
-
-        if (StateMachine != null && IsDead)
-            StateMachine.ChangeState(StateMachine.DeadState);
     }
 
     public bool TakeDamage(float value)
@@ -268,18 +266,49 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         if (currentHP <= 0f && !deathEventRaised)
         {
             deathEventRaised = true;
-            OnDied?.Invoke();
-
-            if (StateMachine != null && IsDead)
-                StateMachine.ChangeState(StateMachine.DeadState);
+            ClearUltimateGaugeOnDeath();
+            HandleCharacterDefeated();
         }
-        else
+        else if (StateMachine != null && !IsDead)
         {
-            if (StateMachine != null && !IsDead)
-                StateMachine.ChangeState(StateMachine.HitstunState);
+            StateMachine.ChangeState(StateMachine.HitstunState);
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Active character knockout: try a living teammate first. Only raise OnDied
+    /// (RunEnd / team wipe) when nobody left can continue the run.
+    /// </summary>
+    private void HandleCharacterDefeated()
+    {
+        TeamLoader teamLoader = TeamLoader.Instance ?? UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
+        if (teamLoader != null && teamLoader.TrySwitchToNextLivingCharacterAfterActiveDefeat())
+        {
+            // Shared body recovered onto another living character — do not end the run.
+            return;
+        }
+
+        OnDied?.Invoke();
+
+        if (StateMachine != null && IsDead)
+            StateMachine.ChangeState(StateMachine.DeadState);
+    }
+
+    /// <summary>
+    /// Resets this character's Ultimate Aura Energy to 0 and notifies AE UI listeners.
+    /// </summary>
+    private void ClearUltimateGaugeOnDeath()
+    {
+        if (characterObject == null)
+            return;
+
+        TeamLoader teamLoader = TeamLoader.Instance;
+        if (teamLoader == null)
+            return;
+
+        teamLoader.SetCharacterCurrentAE(characterObject, 0f);
     }
 
     public bool TryCounter(GameObject attacker)
