@@ -106,18 +106,30 @@ namespace Project.Core.ZoneState
         /// Initiates transition to a target scene by scene name. Configuration (like ZoneMode) is loaded from MapSO.
         /// Public overload to allow binding in Unity Inspector events (e.g. Button.onClick).
         /// </summary>
-        /// <param name="sceneName">Name of the target scene in Build Settings.</param>
         public void TransitionToScene(string sceneName)
         {
             TransitionToScene(sceneName, "");
         }
 
         /// <summary>
-        /// Initiates transition to a target scene by scene name and specific entrance ID. Configuration (like ZoneMode) is loaded from MapSO.
+        /// Initiates transition by scene name / MapSO key. Uses layout swap when possible.
         /// </summary>
-        /// <param name="sceneName">Name of the target scene in Build Settings.</param>
-        /// <param name="entranceId">The specific entrance ID to spawn at. If empty, the room's default entrance ID is used.</param>
         public void TransitionToScene(string sceneName, string entranceId)
+        {
+            BeginTransition(ResolveRoom(sceneName), sceneName, entranceId);
+        }
+
+        public void TransitionToRoom(string roomId)
+        {
+            TransitionToRoom(roomId, "");
+        }
+
+        public void TransitionToRoom(string roomId, string entranceId)
+        {
+            BeginTransition(ResolveRoom(roomId), roomId, entranceId);
+        }
+
+        private void BeginTransition(RoomData room, string fallbackKey, string entranceId)
         {
             if (isTransitioning)
             {
@@ -125,24 +137,23 @@ namespace Project.Core.ZoneState
                 return;
             }
 
-            RoomData room = ResolveRoomData(sceneName);
-
             string targetEntrance = string.IsNullOrEmpty(entranceId) ? "Default" : entranceId;
-
-            if (room != null)
+            if (room != null && string.IsNullOrEmpty(entranceId))
             {
-                if (string.IsNullOrEmpty(entranceId))
-                {
-                    targetEntrance = room.DefaultEntranceId;
-                }
+                targetEntrance = room.DefaultEntranceId;
             }
-            else
+            else if (room == null)
             {
-                Debug.LogWarning($"[SceneTransitionManager] Room '{sceneName}' was not found in MapSO! Using default CombatZone and default entrance.");
+                Debug.LogWarning($"[SceneTransitionManager] Room '{fallbackKey}' was not found in MapSO! Using default CombatZone and default entrance.");
             }
 
-            Debug.Log($"[SceneTransitionManager] Transition requested: {SceneManager.GetActiveScene().name} -> {sceneName}, entrance='{targetEntrance}', room={(room != null ? room.name : "missing")}.");
-            StartCoroutine(TransitionRoutine(sceneName, room, targetEntrance));
+            string loadKey = room != null
+                ? (string.IsNullOrWhiteSpace(room.SceneName) ? room.RoomId : room.SceneName)
+                : fallbackKey;
+
+            bool useLayoutSwap = CanSwapLayout(room);
+            Debug.Log($"[SceneTransitionManager] Transition requested: {SceneManager.GetActiveScene().name} -> '{loadKey}' (room={(room != null ? room.RoomId : "missing")}, layoutSwap={useLayoutSwap}), entrance='{targetEntrance}'.");
+            StartCoroutine(TransitionRoutine(loadKey, room, targetEntrance, useLayoutSwap));
         }
 
         /// <summary>
@@ -161,23 +172,31 @@ namespace Project.Core.ZoneState
             return true;
         }
 
-        private RoomData ResolveRoomData(string sceneName)
+        private RoomData ResolveRoom(string key)
         {
             if (mapData == null)
             {
                 mapData = Resources.Load<MapSO>(MapDataResourcePath);
             }
 
-            return mapData != null ? mapData.GetRoomData(sceneName) : null;
+            return mapData != null ? mapData.ResolveRoom(key) : null;
         }
 
-        private IEnumerator TransitionRoutine(string sceneName, RoomData targetRoom, string entranceId)
+        private static bool CanSwapLayout(RoomData room)
+        {
+            return room != null
+                && room.UsesLayoutSwap
+                && RoomLayoutHost.Instance != null
+                && RoomLayoutHost.Instance.isActiveAndEnabled;
+        }
+
+        private IEnumerator TransitionRoutine(string sceneName, RoomData targetRoom, string entranceId, bool useLayoutSwap)
         {
             isTransitioning = true;
             Time.timeScale = 1f;
 
             Project.UI.InputLockManager.Lock();
-            Debug.Log($"[SceneTransitionManager] Transition started. TargetScene='{sceneName}', Entrance='{entranceId}'.");
+            Debug.Log($"[SceneTransitionManager] Transition started. Target='{sceneName}', Entrance='{entranceId}', LayoutSwap={useLayoutSwap}.");
 
             try
             {
@@ -190,25 +209,47 @@ namespace Project.Core.ZoneState
 
                 yield return StartCoroutine(FadeOverlayRoutine(0f, 1f));
 
-                Debug.Log($"[SceneTransitionManager] Fade-out complete. Loading scene '{sceneName}'.");
-                AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName);
-                if (asyncLoad == null)
+                if (useLayoutSwap)
                 {
-                    Debug.LogError($"[SceneTransitionManager] Failed to load scene '{sceneName}'.");
-                    yield break;
-                }
+                    activeBoundaryController = null;
+                    if (!RoomLayoutHost.Instance.MountRoom(targetRoom))
+                    {
+                        Debug.LogError($"[SceneTransitionManager] Layout swap failed for room '{targetRoom.RoomId}'. Aborting transition.");
+                        yield break;
+                    }
 
-                while (!asyncLoad.isDone)
-                {
                     yield return null;
+                    Debug.Log($"[SceneTransitionManager] Layout swap complete. ActiveRoom='{targetRoom.RoomId}'.");
                 }
+                else
+                {
+                    Debug.Log($"[SceneTransitionManager] Fade-out complete. Loading scene '{sceneName}'.");
+                    if (!Application.CanStreamedLevelBeLoaded(sceneName))
+                    {
+                        Debug.LogError(
+                            $"[SceneTransitionManager] Scene '{sceneName}' is not in Build Settings / Build Profile. " +
+                            $"Fix RoomData.sceneName to match an enabled scene (e.g. 'combat_1'), or add the scene via File > Build Profiles.");
+                        yield break;
+                    }
 
-                yield return null;
-                Debug.Log($"[SceneTransitionManager] Scene load complete. ActiveScene='{SceneManager.GetActiveScene().name}'. Reacquiring transition input lock.");
+                    AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName);
+                    if (asyncLoad == null)
+                    {
+                        Debug.LogError($"[SceneTransitionManager] Failed to load scene '{sceneName}'.");
+                        yield break;
+                    }
 
-                // Scene load resets static input locks; reacquire the transition lock for the intro run.
-                Project.UI.InputLockManager.ResetLocks();
-                Project.UI.InputLockManager.Lock();
+                    while (!asyncLoad.isDone)
+                    {
+                        yield return null;
+                    }
+
+                    yield return null;
+                    Debug.Log($"[SceneTransitionManager] Scene load complete. ActiveScene='{SceneManager.GetActiveScene().name}'. Reacquiring transition input lock.");
+
+                    Project.UI.InputLockManager.ResetLocks();
+                    Project.UI.InputLockManager.Lock();
+                }
 
                 if (zoneStateProvider != null)
                 {
@@ -224,7 +265,7 @@ namespace Project.Core.ZoneState
 
                 PlayerCharacter player = Object.FindFirstObjectByType<PlayerCharacter>();
                 EntrancePoint targetEntrance = FindEntrancePoint(entranceId);
-                activeBoundaryController = Object.FindFirstObjectByType<SceneBoundaryController>();
+                activeBoundaryController = ResolveBoundaryControllerAfterTransition(useLayoutSwap);
 
                 Debug.Log($"[SceneTransitionManager] Runtime lookup after load: Player={(player != null ? player.name : "missing")}, Entrance={(targetEntrance != null ? targetEntrance.name : "missing")}.");
 
@@ -294,14 +335,40 @@ namespace Project.Core.ZoneState
             finally
             {
                 activeBoundaryController?.CompleteIntro();
-                // Always release the transition lock path. If this coroutine exits early,
-                // leaving canvases disabled or input locked is worse than showing UI.
+
+                // Safe rooms (shop / reward) have no clear gate — unlock exit after intro.
+                if (targetRoom != null && targetRoom.ZoneMode == ZoneMode.SafeZone)
+                {
+                    if (activeBoundaryController == null)
+                    {
+                        activeBoundaryController = ResolveCurrentBoundaryController();
+                    }
+
+                    activeBoundaryController?.SetExitAvailable(true, playFeedback: false);
+                    RoomExitPresenter.PrepareOffersForSafeRoom(targetRoom.RoomId);
+                    Debug.Log($"[SceneTransitionManager] SafeZone '{targetRoom.RoomId}' exit unlocked.");
+                }
+
                 EnableSceneCanvases();
                 Project.UI.InputLockManager.Unlock();
                 Time.timeScale = 1f;
                 isTransitioning = false;
                 Debug.Log("[SceneTransitionManager] Transition cleanup complete. Scene canvases restored, input unlocked, time scale reset.");
             }
+        }
+
+        private SceneBoundaryController ResolveBoundaryControllerAfterTransition(bool useLayoutSwap)
+        {
+            if (useLayoutSwap && RoomLayoutHost.Instance != null)
+            {
+                SceneBoundaryController hosted = RoomLayoutHost.Instance.FindBoundaryController();
+                if (hosted != null)
+                {
+                    return hosted;
+                }
+            }
+
+            return Object.FindFirstObjectByType<SceneBoundaryController>();
         }
 
         private IEnumerator FadeOverlayRoutine(float startAlpha, float targetAlpha)
@@ -352,6 +419,15 @@ namespace Project.Core.ZoneState
 
         private EntrancePoint FindEntrancePoint(string entranceId)
         {
+            if (RoomLayoutHost.Instance != null && RoomLayoutHost.Instance.HasActiveLayout)
+            {
+                EntrancePoint hosted = RoomLayoutHost.Instance.FindEntrance(entranceId);
+                if (hosted != null)
+                {
+                    return hosted;
+                }
+            }
+
             EntrancePoint[] entrances = Object.FindObjectsByType<EntrancePoint>(FindObjectsSortMode.None);
             EntrancePoint fallback = null;
 
@@ -373,6 +449,11 @@ namespace Project.Core.ZoneState
 
         private SceneBoundaryController ResolveCurrentBoundaryController()
         {
+            if (activeBoundaryController == null && RoomLayoutHost.Instance != null)
+            {
+                activeBoundaryController = RoomLayoutHost.Instance.FindBoundaryController();
+            }
+
             if (activeBoundaryController == null)
             {
                 activeBoundaryController = Object.FindFirstObjectByType<SceneBoundaryController>();
@@ -398,12 +479,10 @@ namespace Project.Core.ZoneState
             GameObject imageObj = new GameObject("FadeOverlay");
             imageObj.transform.SetParent(canvasObj.transform);
             fadeImage = imageObj.AddComponent<Image>();
-            
-            // Start fully transparent and disable raycasts so it doesn't eat mouse clicks
+
             fadeImage.color = new Color(0f, 0f, 0f, 0f);
             fadeImage.raycastTarget = false;
 
-            // Stretch Image to fill canvas
             RectTransform rect = fadeImage.rectTransform;
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = Vector2.one;

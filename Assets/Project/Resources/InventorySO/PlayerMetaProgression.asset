@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49a8e553d4c07b3459651c53e66b2fde, type: 3}
   m_Name: PlayerMetaProgression
   m_EditorClassIdentifier: Assembly-CSharp::Project.Progression.PlayerMetaProgression
+  metaCurrency: 0
   fragments:
   - sourceItemId: ART-004
     displayName: Memory-Draining Urn Fragment
@@ -82,3 +83,11 @@ MonoBehaviour:
     skillLevel: 4
     ultimateLevel: 4
     passiveLevel: 4
+  unlockedCharacterIds:
+  - char-0-main
+  - char_3_shermie
+  - char_1_kyo
+  - Char_2_Rugal
+  - char_5_goenitz
+  - char_6_orochi
+  permanentItems: []

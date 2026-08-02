@@ -14,7 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Project.ShopSystem.PlayerRunInventory
   ownedItems:
   - {fileID: 11400000, guid: 588790c4612f0304f89d14fb2bd64923, type: 2}
-  - {fileID: 11400000, guid: 077165c891eca7b4f8fa6a6ccf2751f2, type: 2}
   itemStacks: []
   currency: 1000
   runCharacters:
@@ -27,19 +26,7 @@ MonoBehaviour:
       defensePerLevel: 4.2
       maxHpPerLevel: 81
     currentHP: 813
-    currentAE: 100
-    activeEffects: []
-    hasTickingEffects: 0
-  - character: {fileID: 11400000, guid: c9c99302d3f5d8a43b612bd108aa3f05, type: 2}
-    upgrade:
-      level: 1
-      maxLevel: 30
-      currentExp: 0
-      attackPerLevel: 4.7
-      defensePerLevel: 5.5
-      maxHpPerLevel: 95
-    currentHP: 1250
-    currentAE: 50
+    currentAE: 60
     activeEffects: []
     hasTickingEffects: 0
   teamSlots:
@@ -48,7 +35,7 @@ MonoBehaviour:
     - {fileID: 0}
     - {fileID: 0}
     - {fileID: 0}
-  - character: {fileID: 11400000, guid: c9c99302d3f5d8a43b612bd108aa3f05, type: 2}
+  - character: {fileID: 0}
     artifacts:
     - {fileID: 0}
     - {fileID: 0}

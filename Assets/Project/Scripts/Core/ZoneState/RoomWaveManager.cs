@@ -206,20 +206,7 @@ namespace Project.Core.ZoneState
                 NotifyRunEndRoomCleared();
             }
 
-            if (unlockSceneExitOnClear)
-            {
-                if (SceneTransitionManager.Instance == null
-                    || !SceneTransitionManager.Instance.SetCurrentRoomExitAvailable(true))
-                {
-                    Debug.LogWarning("[RoomWaveManager] Current scene exit could not be unlocked.", this);
-                }
-            }
-
-            if (portalsRoot != null)
-            {
-                portalsRoot.SetActive(true);
-            }
-
+            RoomExitPresenter.RevealExits(portalsRoot, unlockSceneExitOnClear);
             onRoomCleared?.Invoke();
         }
 

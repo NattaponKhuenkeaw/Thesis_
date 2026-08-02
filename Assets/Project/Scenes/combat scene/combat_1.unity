@@ -1459,6 +1459,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9ba9828af59af34993ad53d8aef9874, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.TransitionTrigger
+  targetRoomId: 
   targetSceneName: Test_Playground
   targetEntranceId: Default
   debugColor: {r: 0.2, g: 0.8, b: 1, a: 0.4}
@@ -1674,7 +1675,7 @@ MonoBehaviour:
   mapData: {fileID: 0}
   lobbySceneName: Test_Lobby
   firstDungeonSceneName: Test_Playground
-  firstDungeonEntranceId: Default
+  boundaryFadeDuration: 0.35
   minimumTeamMembers: 1
   requireAllTeamSlotsFilled: 0
 --- !u!223 &1845395691 stripped
@@ -4368,11 +4369,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 979919694387824128, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.49999368
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 979919694387824128, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 8.365223
+      value: 3.1000004
       objectReference: {fileID: 0}
     - target: {fileID: 1085931734417189504, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
       propertyPath: m_LocalPosition.y
@@ -4464,7 +4465,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7003089252169759538, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
       propertyPath: orthographic size
-      value: 12
+      value: 5.5
       objectReference: {fileID: 0}
     - target: {fileID: 8926741243426994369, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
       propertyPath: Lens.OrthographicSize
