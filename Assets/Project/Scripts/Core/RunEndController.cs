@@ -29,7 +29,6 @@ namespace Project.Core.RunEnd
         [Header("Death Flow")]
         [SerializeField, Min(0f)] private float deathDelaySeconds = 1.75f;
         [SerializeField] private string lobbySceneName = "Test_Lobby";
-        [SerializeField] private string lobbyEntranceId = "Default";
 
         [Header("Runtime Summary")]
         [SerializeField, Min(0)] private int roomsCleared;
@@ -40,7 +39,6 @@ namespace Project.Core.RunEnd
         private bool isHandlingDeath;
         private bool hasDeathInputLock;
         private bool waitingForRespawnScene;
-        private bool usedTransitionManagerForReturn;
 
         private void Awake()
         {
@@ -97,6 +95,10 @@ namespace Project.Core.RunEnd
             runStartedAt = Time.unscaledTime;
             roomsCleared = 0;
             CaptureFragmentBaseline();
+
+            RoomChoiceDirector director = RoomChoiceDirector.Instance
+                ?? Object.FindFirstObjectByType<RoomChoiceDirector>();
+            director?.ResetRouteState();
         }
 
         private IEnumerator BindPlayerNextFrame()
@@ -122,8 +124,11 @@ namespace Project.Core.RunEnd
                 return;
             }
 
+            // Safety net only: PlayerCharacter should already switch before raising OnDied.
+            // If a living teammate still exists while the shared body is dead, recover.
             if (TrySwitchToLivingTeamMember())
             {
+                Debug.LogWarning("[RunEndController] OnDied received while living teammates remain; recovered instead of ending run.", this);
                 return;
             }
 
@@ -135,8 +140,23 @@ namespace Project.Core.RunEnd
 
         private bool TrySwitchToLivingTeamMember()
         {
+            if (subscribedPlayer == null || !subscribedPlayer.IsDead)
+            {
+                return false;
+            }
+
             TeamLoader teamLoader = TeamLoader.Instance ?? FindFirstObjectByType<TeamLoader>();
-            return teamLoader != null && teamLoader.TrySwitchToNextLivingCharacterAfterActiveDefeat();
+            if (teamLoader == null)
+            {
+                return false;
+            }
+
+            if (!teamLoader.HasAnyLivingCharacter(subscribedPlayer.characterObject))
+            {
+                return false;
+            }
+
+            return teamLoader.TrySwitchToNextLivingCharacterAfterActiveDefeat();
         }
 
         private IEnumerator DeathFlowRoutine()
@@ -166,17 +186,23 @@ namespace Project.Core.RunEnd
         private void ReturnToLobby()
         {
             waitingForRespawnScene = true;
-            usedTransitionManagerForReturn = SceneTransitionManager.Instance != null;
             ReleaseDeathInputLock();
 
-            if (SceneTransitionManager.Instance != null)
+            GameRunManager runManager = GameRunManager.Instance ?? FindFirstObjectByType<GameRunManager>();
+            if (runManager != null)
             {
-                SceneTransitionManager.Instance.TransitionToScene(lobbySceneName, lobbyEntranceId);
-                return;
+                // Lobby/Run boundary load — not SceneTransition (MapSO / entrance / intro).
+                if (runManager.ReturnToLobby())
+                {
+                    return;
+                }
             }
 
-            Debug.LogWarning("[RunEndController] SceneTransitionManager is missing. Loading lobby scene directly.");
-            SceneManager.LoadScene(lobbySceneName);
+            string targetLobby = runManager != null && !string.IsNullOrWhiteSpace(runManager.LobbySceneName)
+                ? runManager.LobbySceneName
+                : lobbySceneName;
+            Debug.LogWarning("[RunEndController] GameRunManager boundary load unavailable. Loading lobby scene directly.", this);
+            SceneManager.LoadScene(targetLobby);
         }
 
         private void AwardRoomClearCurrency()
@@ -221,13 +247,9 @@ namespace Project.Core.RunEnd
                 }
             }
 
-            if (!usedTransitionManagerForReturn)
-            {
-                InputLockManager.ResetLocks();
-            }
+            InputLockManager.ResetLocks();
 
             waitingForRespawnScene = false;
-            usedTransitionManagerForReturn = false;
             isHandlingDeath = false;
             ResetRunTracking();
             BindPlayer(player);
@@ -508,9 +530,9 @@ namespace Project.Core.RunEnd
                 return;
             }
 
-            player.Movement?.SetMoveInput(Vector2.zero);
+            player.Movement?.SetHorizontalInput(0f);
             player.Movement?.CancelAttackMotion();
-            player.Movement?.StopDashPhysics();
+            player.Movement?.FinishDash();
             player.Combat?.ResetCombo();
             player.Combat?.ClearGrabbedEnemy();
             player.StateMachine?.InputBuffer?.ClearAll();

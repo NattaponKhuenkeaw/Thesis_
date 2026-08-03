@@ -1,11 +1,15 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using Project.Core.RunEnd;
 using Project.Core.ZoneState;
 using Project.InventorySystem.Items;
 using Project.Progression;
 using Project.ShopSystem;
+using Project.UI;
 
 namespace Project.Core
 {
@@ -17,7 +21,7 @@ namespace Project.Core
 
     /// <summary>
     /// Coordinates the core loop: Lobby -> Start Run -> In-Dungeon -> Die -> Lobby.
-    /// Place on the persistent manager root (same hierarchy as SceneTransitionManager).
+    /// Owns Lobby/Run boundary scene loads. Mid-run room hops stay on SceneTransitionManager.
     /// </summary>
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(-8500)]
@@ -26,6 +30,7 @@ namespace Project.Core
         private const string RunInventoryResourcePath = "InventorySO/PlayerRunInventory";
         private const string MetaProgressionResourcePath = "InventorySO/PlayerMetaProgression";
         private const string DefaultMapResourcePath = "MapSO/Test_MapSO";
+        private const string ZoneStateProviderResourcePath = "CombatSO/ZoneStateProvider";
 
         public static GameRunManager Instance { get; private set; }
 
@@ -36,20 +41,28 @@ namespace Project.Core
         [SerializeField] private PlayerRunInventory runInventory;
         [SerializeField] private PlayerMetaProgression metaProgression;
         [SerializeField] private MapSO mapData;
+        [SerializeField] private ZoneStateProvider zoneStateProvider;
 
         [Header("Scene Flow")]
         [SerializeField] private string lobbySceneName = "Test_Lobby";
         [SerializeField] private string firstDungeonSceneName = "Test_Playground";
-        [SerializeField] private string firstDungeonEntranceId = "Default";
+        [SerializeField, Min(0f)] private float boundaryFadeDuration = 0.35f;
 
         [Header("Run Start Rules")]
         [SerializeField, Min(1)] private int minimumTeamMembers = 1;
         [SerializeField] private bool requireAllTeamSlotsFilled;
 
         [NonSerialized] private bool isStartingRun;
+        [NonSerialized] private bool isBoundaryLoading;
         [NonSerialized] private GameRunPhase currentPhase = GameRunPhase.Lobby;
 
+        private Canvas boundaryCanvas;
+        private Image boundaryFadeImage;
+        private readonly List<Canvas> disabledCanvases = new List<Canvas>();
+
         public GameRunPhase CurrentPhase => currentPhase;
+        public bool IsBoundaryLoading => isBoundaryLoading;
+        public string LobbySceneName => lobbySceneName;
         public PlayerRunInventory RunInventory => runInventory;
         public PlayerMetaProgression MetaProgression => metaProgression;
 
@@ -76,7 +89,9 @@ namespace Project.Core
             }
 
             ResolveDependencies();
+            EnsureBoundaryFadeOverlay();
             ApplyPhaseForScene(SceneManager.GetActiveScene().name, notify: false);
+            ApplyZoneStateForScene(SceneManager.GetActiveScene().name);
         }
 
         private void OnEnable()
@@ -114,7 +129,7 @@ namespace Project.Core
         {
             failureReason = null;
 
-            if (isStartingRun)
+            if (isStartingRun || isBoundaryLoading)
             {
                 failureReason = "A run is already being started.";
                 NotifyRunStartFailed(failureReason);
@@ -163,18 +178,124 @@ namespace Project.Core
 
             SetPhase(GameRunPhase.InRun);
 
-            if (SceneTransitionManager.Instance != null)
+            // Lobby -> first dungeon is a run boundary, not a mid-run room hop.
+            if (!LoadBoundaryScene(firstDungeonSceneName))
             {
-                SceneTransitionManager.Instance.TransitionToScene(firstDungeonSceneName, firstDungeonEntranceId);
-            }
-            else
-            {
-                Debug.LogWarning("[GameRunManager] SceneTransitionManager is missing. Loading dungeon scene directly.");
-                SceneManager.LoadScene(firstDungeonSceneName);
+                isStartingRun = false;
+                failureReason = $"Failed to load first dungeon scene '{firstDungeonSceneName}'.";
+                NotifyRunStartFailed(failureReason);
+                return false;
             }
 
             isStartingRun = false;
             return true;
+        }
+
+        /// <summary>
+        /// Death / abandon path: leave the run and return to Lobby without MapSO/entrance/intro.
+        /// </summary>
+        public bool ReturnToLobby()
+        {
+            SetPhase(GameRunPhase.Lobby);
+            return LoadBoundaryScene(lobbySceneName);
+        }
+
+        /// <summary>
+        /// Loads a Lobby/Run boundary scene. Does not resolve MapSO rooms, entrances, or intro runs.
+        /// Mid-run room transitions must keep using <see cref="SceneTransitionManager"/>.
+        /// </summary>
+        public bool LoadBoundaryScene(string sceneName)
+        {
+            if (string.IsNullOrWhiteSpace(sceneName))
+            {
+                Debug.LogError("[GameRunManager] LoadBoundaryScene called with an empty scene name.", this);
+                return false;
+            }
+
+            if (isBoundaryLoading)
+            {
+                Debug.LogWarning("[GameRunManager] Boundary scene load already in progress. Ignoring request.", this);
+                return false;
+            }
+
+            EnsureBoundaryFadeOverlay();
+            StartCoroutine(LoadBoundarySceneRoutine(sceneName));
+            return true;
+        }
+
+        private IEnumerator LoadBoundarySceneRoutine(string sceneName)
+        {
+            isBoundaryLoading = true;
+            Time.timeScale = 1f;
+            InputLockManager.Lock();
+
+            try
+            {
+                DisableAllSceneCanvases();
+                yield return FadeBoundaryOverlay(0f, 1f);
+
+                Debug.Log($"[GameRunManager] Boundary load: {SceneManager.GetActiveScene().name} -> {sceneName}");
+                AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName);
+                if (asyncLoad == null)
+                {
+                    Debug.LogError($"[GameRunManager] Failed to load boundary scene '{sceneName}'.", this);
+                    yield break;
+                }
+
+                while (!asyncLoad.isDone)
+                {
+                    yield return null;
+                }
+
+                yield return null;
+
+                // Scene load clears static locks; reacquire until fade-in completes.
+                InputLockManager.ResetLocks();
+                InputLockManager.Lock();
+                DisableAllSceneCanvases();
+
+                ApplyZoneStateForScene(sceneName);
+
+                yield return FadeBoundaryOverlay(1f, 0f);
+            }
+            finally
+            {
+                EnableSceneCanvases();
+                InputLockManager.Unlock();
+                Time.timeScale = 1f;
+                isBoundaryLoading = false;
+            }
+        }
+
+        private void ApplyZoneStateForScene(string sceneName)
+        {
+            ResolveDependencies();
+
+            if (zoneStateProvider == null)
+            {
+                Debug.LogWarning("[GameRunManager] ZoneStateProvider missing; lobby/shop equip UI may stay locked as CombatZone.", this);
+                return;
+            }
+
+            RoomData room = mapData != null ? mapData.ResolveRoom(sceneName) : null;
+            if (room == null)
+            {
+                // Lobby must behave like Shop (SafeZone) even if MapSO entry is missing.
+                if (string.Equals(sceneName, lobbySceneName, StringComparison.Ordinal))
+                {
+                    zoneStateProvider.SetFallbackMode(ZoneMode.SafeZone);
+                    zoneStateProvider.SetCurrentRoom(null);
+                    zoneStateProvider.ForceBroadcast();
+                    Debug.LogWarning($"[GameRunManager] Scene '{sceneName}' has no RoomData in MapSO. Forced SafeZone fallback for Lobby.", this);
+                    return;
+                }
+
+                Debug.LogWarning($"[GameRunManager] Scene '{sceneName}' has no RoomData in MapSO; zone mode was not updated.", this);
+                return;
+            }
+
+            zoneStateProvider.SetCurrentRoom(room);
+            Debug.Log($"[GameRunManager] Zone state updated for boundary scene. Room={room.name}, Mode={room.ZoneMode}.", this);
         }
 
         private Artifact[][] BuildArtifactDataForDeploy(int slotCount)
@@ -250,6 +371,11 @@ namespace Project.Core
                 mapData = Resources.Load<MapSO>(DefaultMapResourcePath);
             }
 
+            if (zoneStateProvider == null)
+            {
+                zoneStateProvider = Resources.Load<ZoneStateProvider>(ZoneStateProviderResourcePath);
+            }
+
             if (string.IsNullOrWhiteSpace(firstDungeonSceneName) && mapData != null && mapData.Rooms != null)
             {
                 for (int i = 0; i < mapData.Rooms.Count; i++)
@@ -266,14 +392,100 @@ namespace Project.Core
                     }
 
                     firstDungeonSceneName = room.SceneName;
-                    if (string.IsNullOrWhiteSpace(firstDungeonEntranceId))
-                    {
-                        firstDungeonEntranceId = room.DefaultEntranceId;
-                    }
-
                     break;
                 }
             }
+        }
+
+        private void EnsureBoundaryFadeOverlay()
+        {
+            if (boundaryFadeImage != null)
+            {
+                return;
+            }
+
+            GameObject canvasObj = new GameObject("RunBoundaryCanvas");
+            canvasObj.transform.SetParent(transform);
+            boundaryCanvas = canvasObj.AddComponent<Canvas>();
+            boundaryCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            boundaryCanvas.sortingOrder = 10000;
+
+            CanvasScaler scaler = canvasObj.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            canvasObj.AddComponent<GraphicRaycaster>();
+
+            GameObject imageObj = new GameObject("BoundaryFadeOverlay");
+            imageObj.transform.SetParent(canvasObj.transform);
+            boundaryFadeImage = imageObj.AddComponent<Image>();
+            boundaryFadeImage.color = new Color(0f, 0f, 0f, 0f);
+            boundaryFadeImage.raycastTarget = false;
+
+            RectTransform rect = boundaryFadeImage.rectTransform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+        }
+
+        private IEnumerator FadeBoundaryOverlay(float startAlpha, float targetAlpha)
+        {
+            if (boundaryFadeImage == null)
+            {
+                yield break;
+            }
+
+            float duration = Mathf.Max(0f, boundaryFadeDuration);
+            if (duration <= 0f)
+            {
+                Color instant = boundaryFadeImage.color;
+                instant.a = targetAlpha;
+                boundaryFadeImage.color = instant;
+                yield break;
+            }
+
+            float elapsed = 0f;
+            Color color = boundaryFadeImage.color;
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float progress = Mathf.Clamp01(elapsed / duration);
+                color.a = Mathf.Lerp(startAlpha, targetAlpha, progress);
+                boundaryFadeImage.color = color;
+                yield return null;
+            }
+
+            color.a = targetAlpha;
+            boundaryFadeImage.color = color;
+        }
+
+        private void DisableAllSceneCanvases()
+        {
+            disabledCanvases.Clear();
+            Canvas[] canvases = FindObjectsByType<Canvas>(FindObjectsSortMode.None);
+            for (int i = 0; i < canvases.Length; i++)
+            {
+                Canvas canvas = canvases[i];
+                if (canvas != null && canvas != boundaryCanvas && canvas.enabled)
+                {
+                    canvas.enabled = false;
+                    disabledCanvases.Add(canvas);
+                }
+            }
+        }
+
+        private void EnableSceneCanvases()
+        {
+            for (int i = 0; i < disabledCanvases.Count; i++)
+            {
+                Canvas canvas = disabledCanvases[i];
+                if (canvas != null)
+                {
+                    canvas.enabled = true;
+                }
+            }
+
+            disabledCanvases.Clear();
         }
     }
 }

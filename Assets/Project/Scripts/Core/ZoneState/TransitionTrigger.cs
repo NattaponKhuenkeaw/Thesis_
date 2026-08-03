@@ -3,17 +3,23 @@ using UnityEngine;
 namespace Project.Core.ZoneState
 {
     /// <summary>
-    /// Place on a GameObject with a 2D Trigger Collider to represent a door or portal.
-    /// When the player overlaps, triggers transition to the target scene.
+    /// Exit / portal trigger. By default opens the room-choice UI when the exit is unlocked.
+    /// Set a fixed destination and disable openRoomChoiceUi for direct hops (e.g. debug).
     /// </summary>
     [RequireComponent(typeof(Collider2D))]
     public class TransitionTrigger : MonoBehaviour
     {
-        [Header("Scene Transition Settings")]
-        [Tooltip("The name of the scene to load.")]
+        [Header("Room Choice (BlazBlue)")]
+        [Tooltip("When true and exit is unlocked, walking in opens the next-room choice UI.")]
+        [SerializeField] private bool openRoomChoiceUi = true;
+
+        [Header("Fixed Destination (Optional)")]
+        [Tooltip("Used only when openRoomChoiceUi is false.")]
+        [SerializeField] private string targetRoomId;
+
+        [Tooltip("Used only when openRoomChoiceUi is false.")]
         [SerializeField] private string targetSceneName;
 
-        [Tooltip("Optional entrance ID to spawn at in the target scene.")]
         [SerializeField] private string targetEntranceId = "Default";
 
         [Header("Visuals (Optional)")]
@@ -50,28 +56,48 @@ namespace Project.Core.ZoneState
         {
             if (hasTriggered) return;
 
-            // Check if the overlapping object is the player character
             PlayerCharacter player = other.GetComponentInParent<PlayerCharacter>();
-            if (player != null && !player.IsDead)
+            if (player == null || player.IsDead)
             {
-                if (exitGate != null && !exitGate.IsExitAvailable)
+                return;
+            }
+
+            if (exitGate != null && !exitGate.IsExitAvailable)
+            {
+                Debug.Log("[TransitionTrigger] Exit is still locked; request ignored.", this);
+                return;
+            }
+
+            if (openRoomChoiceUi)
+            {
+                hasTriggered = true;
+                Debug.Log("[TransitionTrigger] Player reached exit. Opening room choice UI.", this);
+                if (!RoomExitPresenter.TryShowChoiceUi())
                 {
-                    Debug.Log("[TransitionTrigger] Exit is still locked; transition request ignored.", this);
-                    return;
+                    hasTriggered = false;
+                    Debug.LogWarning("[TransitionTrigger] Failed to open room choice UI.", this);
                 }
 
-                hasTriggered = true;
-                
-                if (SceneTransitionManager.Instance != null)
-                {
-                    Debug.Log($"[TransitionTrigger] Player entered exit portal. Transitioning to '{targetSceneName}'");
-                    SceneTransitionManager.Instance.TransitionToScene(targetSceneName, targetEntranceId);
-                }
-                else
-                {
-                    Debug.LogError("[TransitionTrigger] SceneTransitionManager Instance is missing in the scene!");
-                }
+                return;
             }
+
+            if (SceneTransitionManager.Instance == null)
+            {
+                Debug.LogError("[TransitionTrigger] SceneTransitionManager Instance is missing in the scene!");
+                return;
+            }
+
+            hasTriggered = true;
+
+            if (!string.IsNullOrWhiteSpace(targetRoomId))
+            {
+                Debug.Log($"[TransitionTrigger] Player entered exit portal. Transitioning to room '{targetRoomId}'");
+                SceneTransitionManager.Instance.TransitionToRoom(targetRoomId, targetEntranceId);
+                return;
+            }
+
+            Debug.Log($"[TransitionTrigger] Player entered exit portal. Transitioning to '{targetSceneName}'");
+            SceneTransitionManager.Instance.TransitionToScene(targetSceneName, targetEntranceId);
         }
 
         private void OnDrawGizmos()

@@ -229,7 +229,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     public bool SwitchNext()
     {
         SyncTeamSnapshotFromInventory();
-        int nextIndex = FindNextOccupiedIndex(currentIndex, 1);
+        int nextIndex = FindNextLivingIndex(currentIndex);
         if (nextIndex < 0)
         {
             return false;
@@ -241,7 +241,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     public bool SwitchPrevious()
     {
         SyncTeamSnapshotFromInventory();
-        int previousIndex = FindNextOccupiedIndex(currentIndex, -1);
+        int previousIndex = FindPreviousLivingIndex(currentIndex);
         if (previousIndex < 0)
         {
             return false;
@@ -264,6 +264,12 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         }
 
         if (currentIndex == index)
+        {
+            return false;
+        }
+
+        // Knocked-out characters stay out for the rest of the run.
+        if (!IsCharacterAliveFromInventory(teamSnapshot[index]))
         {
             return false;
         }
@@ -305,6 +311,28 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         return true;
     }
 
+    public bool CanSwitchToIndex(int index)
+    {
+        SyncTeamSnapshotFromInventory();
+        if (teamSnapshot == null || index < 0 || index >= teamSnapshot.Length)
+        {
+            return false;
+        }
+
+        CharacterObject character = teamSnapshot[index];
+        return character != null
+            && index != currentIndex
+            && IsCharacterAliveFromInventory(character)
+            && !IsSwitchOnCooldown;
+    }
+
+    public bool HasAnyLivingCharacter(CharacterObject excludeCharacter = null)
+    {
+        ResolveDependencies();
+        SyncTeamSnapshotFromInventory();
+        return FindAnyLivingIndex(excludeCharacter) >= 0;
+    }
+
     public bool TrySwitchToNextLivingCharacterAfterActiveDefeat()
     {
         ResolveDependencies();
@@ -316,6 +344,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         }
 
         CharacterObject defeatedCharacter = playerCharacter.characterObject ?? CurrentCharacter;
+        PersistDefeatedCharacterHp(defeatedCharacter);
+
         int defeatedIndex = FindCharacterIndex(defeatedCharacter);
         if (defeatedIndex >= 0)
         {
@@ -324,7 +354,9 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             NotifyCharacterHealthUpdated(defeatedCharacter);
         }
 
-        int nextLivingIndex = FindNextLivingIndex(defeatedIndex >= 0 ? defeatedIndex : currentIndex);
+        int nextLivingIndex = FindNextLivingIndex(
+            defeatedIndex >= 0 ? defeatedIndex : currentIndex,
+            defeatedCharacter);
         if (nextLivingIndex < 0)
         {
             return false;
@@ -351,6 +383,16 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             : (nextCharacter != null ? nextCharacter.name : "Unknown");
         Debug.Log($"[TeamLoader] Active character was defeated. Switched to next living character: {displayName}", this);
         return true;
+    }
+
+    private void PersistDefeatedCharacterHp(CharacterObject defeatedCharacter)
+    {
+        if (defeatedCharacter == null || runInventory == null)
+        {
+            return;
+        }
+
+        runInventory.SetRunCharacterCurrentHP(defeatedCharacter, 0f);
     }
 
     private void SnapPlayerToGround()
@@ -576,20 +618,39 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     public float GetCharacterCurrentHP(CharacterObject character)
     {
-        if (character == null || runInventory == null) return 0f;
-
-        if (playerCharacter != null && playerCharacter.characterObject == character)
-            return playerCharacter.CurrentHP;
-
-        var state = runInventory.GetRunCharacter(character);
-        if (state == null) return GetCharacterMaxHP(character);
-
-        if (state.currentHP < 0f) 
+        if (character == null)
         {
-            state.currentHP = GetCharacterMaxHP(character);
+            return 0f;
         }
 
-        return state.currentHP;
+        if (playerCharacter != null && playerCharacter.characterObject == character)
+        {
+            return playerCharacter.CurrentHP;
+        }
+
+        if (runInventory == null)
+        {
+            return GetCharacterMaxHP(character);
+        }
+
+        var state = runInventory.GetRunCharacter(character);
+        if (state == null)
+        {
+            return GetCharacterMaxHP(character);
+        }
+
+        if (state.currentHP < 0f)
+        {
+            float maxHp = GetCharacterMaxHP(character);
+            // Keep uninitialized until we have a positive max; do not stamp 0 or the
+            // character is treated as dead during team wipe / living searches.
+            if (maxHp > 0f)
+            {
+                state.currentHP = maxHp;
+            }
+        }
+
+        return state.currentHP < 0f ? GetCharacterMaxHP(character) : state.currentHP;
     }
 
     public void SetCharacterCurrentHP(CharacterObject character, float hp)
@@ -597,13 +658,9 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         if (character == null || runInventory == null) return;
         
         float maxHp = GetCharacterMaxHP(character);
-        float clampedHp = Mathf.Clamp(hp, 0f, maxHp);
+        float clampedHp = Mathf.Clamp(hp, 0f, Mathf.Max(0f, maxHp));
         
-        var state = runInventory.GetRunCharacter(character);
-        if (state != null)
-        {
-            state.currentHP = clampedHp;
-        }
+        runInventory.SetRunCharacterCurrentHP(character, clampedHp);
         
         if (playerCharacter != null && playerCharacter.characterObject == character)
         {
@@ -618,7 +675,28 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     public float GetCharacterMaxHP(CharacterObject character)
     {
         CharacterStats stats = GetCharacterRuntimeStats(character);
-        return stats != null ? stats.maxHP : 0f;
+        if (stats != null && stats.maxHP > 0f)
+        {
+            return stats.maxHP;
+        }
+
+        if (character == null)
+        {
+            return 0f;
+        }
+
+        CharacterStats leveled = character.GetLeveledStats();
+        if (leveled != null && leveled.maxHP > 0f)
+        {
+            return leveled.maxHP;
+        }
+
+        return character.stats != null ? Mathf.Max(0f, character.stats.maxHP) : 0f;
+    }
+
+    public bool IsCharacterAlive(CharacterObject character)
+    {
+        return character != null && GetCharacterCurrentHP(character) > 0.01f;
     }
 
     public void ResetCharacterHP(CharacterObject character)
@@ -925,7 +1003,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         return -1;
     }
 
-    private int FindNextLivingIndex(int startIndex)
+    private int FindNextLivingIndex(int startIndex, CharacterObject excludeCharacter = null)
     {
         if (teamSnapshot == null || teamSnapshot.Length == 0)
         {
@@ -937,13 +1015,93 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         {
             index = (index + 1) % teamSnapshot.Length;
             CharacterObject candidate = teamSnapshot[index];
-            if (candidate != null && GetCharacterCurrentHP(candidate) > 0.01f)
+            if (candidate == null || candidate == excludeCharacter)
+            {
+                continue;
+            }
+
+            if (IsCharacterAliveFromInventory(candidate))
             {
                 return index;
             }
         }
 
         return -1;
+    }
+
+    private int FindPreviousLivingIndex(int startIndex, CharacterObject excludeCharacter = null)
+    {
+        if (teamSnapshot == null || teamSnapshot.Length == 0)
+        {
+            return -1;
+        }
+
+        int index = Mathf.Clamp(startIndex, 0, teamSnapshot.Length - 1);
+        for (int i = 0; i < teamSnapshot.Length; i++)
+        {
+            index = (index - 1 + teamSnapshot.Length) % teamSnapshot.Length;
+            CharacterObject candidate = teamSnapshot[index];
+            if (candidate == null || candidate == excludeCharacter)
+            {
+                continue;
+            }
+
+            if (IsCharacterAliveFromInventory(candidate))
+            {
+                return index;
+            }
+        }
+
+        return -1;
+    }
+
+    private int FindAnyLivingIndex(CharacterObject excludeCharacter = null)
+    {
+        if (teamSnapshot == null || teamSnapshot.Length == 0)
+        {
+            return -1;
+        }
+
+        for (int i = 0; i < teamSnapshot.Length; i++)
+        {
+            CharacterObject candidate = teamSnapshot[i];
+            if (candidate == null || candidate == excludeCharacter)
+            {
+                continue;
+            }
+
+            if (IsCharacterAliveFromInventory(candidate))
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    /// <summary>
+    /// Living check that always reads inventory (or max-HP fallback), never the
+    /// shared active PlayerCharacter body — safe while the active body is at 0 HP.
+    /// </summary>
+    private bool IsCharacterAliveFromInventory(CharacterObject character)
+    {
+        if (character == null)
+        {
+            return false;
+        }
+
+        if (runInventory == null)
+        {
+            return GetCharacterMaxHP(character) > 0.01f;
+        }
+
+        var state = runInventory.GetRunCharacter(character);
+        if (state == null || state.currentHP < 0f)
+        {
+            return GetCharacterMaxHP(character) > 0.01f;
+        }
+
+        return state.currentHP > 0.01f;
     }
 
     private int FindCharacterIndex(CharacterObject character) =>
@@ -1835,19 +1993,22 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             return;
         }
 
-        var state = runInventory.GetRunCharacter(playerCharacter.characterObject);
-        if (state != null)
-        {
-            state.currentHP = Mathf.Clamp(currentHp, 0f, maxHp);
-        }
+        float clampedHp = Mathf.Clamp(currentHp, 0f, Mathf.Max(0f, maxHp));
+        runInventory.SetRunCharacterCurrentHP(playerCharacter.characterObject, clampedHp);
 
         if (isApplyingRuntimeStats)
         {
             return;
         }
 
-        RefreshActiveConditionalStateEffects();
-        RefreshRuntimeStatsFromHealthChange(playerCharacter.characterObject);
+        // Knockout path: skip runtime-stat rebuild at 0 HP — it is unnecessary and
+        // has caused crashes while death / team-switch is mid-flight.
+        if (clampedHp > 0.01f)
+        {
+            RefreshActiveConditionalStateEffects();
+            RefreshRuntimeStatsFromHealthChange(playerCharacter.characterObject);
+        }
+
         NotifyCharacterHealthUpdated(playerCharacter.characterObject);
     }
 

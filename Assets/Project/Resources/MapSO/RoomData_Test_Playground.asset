@@ -12,6 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60fd2ca7f56b62c45b42664e28129625, type: 3}
   m_Name: RoomData_Test_Playground
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.RoomData
+  roomId: Test_Playground
   sceneName: Test_Playground
+  layoutPrefab: {fileID: 0}
+  roomKind: 0
+  displayName: Combat Training
+  offerIcon: {fileID: 0}
+  offerWeight: 1
+  includeInRandomOffers: 0
   zoneMode: 1
   defaultEntranceId: Default
+  useStaticCamera: 0

@@ -675,6 +675,21 @@ namespace Project.ShopSystem
             return FindRunCharacterState(character);
         }
 
+        /// <summary>
+        /// Writes run HP into inventory only (does not push onto the active PlayerCharacter).
+        /// Used when knocking out the active character before searching for a living teammate.
+        /// </summary>
+        public void SetRunCharacterCurrentHP(CharacterObject character, float hp)
+        {
+            RunCharacterState state = GetOrCreateRunCharacterState(character);
+            if (state == null)
+            {
+                return;
+            }
+
+            state.currentHP = Mathf.Max(0f, hp);
+        }
+
         public CharacterStats GetCharacterStats(CharacterObject character)
         {
             CharacterStats stats = GetCharacterBaseStats(character);

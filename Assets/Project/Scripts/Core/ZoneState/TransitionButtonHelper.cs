@@ -1,22 +1,14 @@
 using UnityEngine;
 using UnityEngine.UI;
-using Project.Core.ZoneState;
 
 namespace Project.Core.ZoneState
 {
-    /// <summary>
-    /// Attach this component to a UI Button. It will automatically bind its onClick 
-    /// event to trigger a scene transition using the active SceneTransitionManager instance,
-    /// avoiding inspector reference loss due to singleton destruction.
-    /// </summary>
     [RequireComponent(typeof(Button))]
     public class TransitionButtonHelper : MonoBehaviour
     {
         [Header("Destination Settings")]
-        [Tooltip("The target scene to transition to.")]
+        [SerializeField] private string targetRoomId;
         [SerializeField] private string targetSceneName;
-
-        [Tooltip("Optional entrance ID to spawn at.")]
         [SerializeField] private string targetEntranceId = "Default";
 
         private void Awake()
@@ -31,21 +23,25 @@ namespace Project.Core.ZoneState
 
         private void OnButtonClicked()
         {
-            if (string.IsNullOrEmpty(targetSceneName))
+            if (SceneTransitionManager.Instance == null)
             {
-                Debug.LogWarning($"[TransitionButtonHelper] Target scene name on button {gameObject.name} is empty!");
+                Debug.LogError("[TransitionButtonHelper] SceneTransitionManager.Instance is null! Cannot transition.");
                 return;
             }
 
-            if (SceneTransitionManager.Instance != null)
+            if (!string.IsNullOrWhiteSpace(targetRoomId))
             {
-                Debug.Log($"[TransitionButtonHelper] Button clicked. Transitioning to scene: {targetSceneName}");
-                SceneTransitionManager.Instance.TransitionToScene(targetSceneName, targetEntranceId);
+                SceneTransitionManager.Instance.TransitionToRoom(targetRoomId, targetEntranceId);
+                return;
             }
-            else
+
+            if (string.IsNullOrEmpty(targetSceneName))
             {
-                Debug.LogError("[TransitionButtonHelper] SceneTransitionManager.Instance is null! Cannot transition.");
+                Debug.LogWarning($"[TransitionButtonHelper] Both targetRoomId and targetSceneName on button {gameObject.name} are empty!");
+                return;
             }
+
+            SceneTransitionManager.Instance.TransitionToScene(targetSceneName, targetEntranceId);
         }
     }
 }

@@ -14,25 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Project.ShopSystem.PlayerRunInventory
   ownedItems:
   - {fileID: 11400000, guid: 588790c4612f0304f89d14fb2bd64923, type: 2}
-  - {fileID: 11400000, guid: 1145849e0b6d2e440a771231cf407ddb, type: 2}
-  - {fileID: 11400000, guid: 077165c891eca7b4f8fa6a6ccf2751f2, type: 2}
-  - {fileID: 11400000, guid: 0c19cb6fb2abbe346b6d4dc429d2e4d0, type: 2}
-  - {fileID: 11400000, guid: 6b2f112e2e15b20468e27601ac347a21, type: 2}
-  - {fileID: 11400000, guid: b1bb8bdcaab9a4c4c86350394a06d0ef, type: 2}
-  - {fileID: 11400000, guid: 04606c51be389b14d93cef0d791fd30c, type: 2}
-  - {fileID: 11400000, guid: 8dae9784a4112a44691459c99d1d3a64, type: 2}
-  - {fileID: 11400000, guid: 7067f23f35adada468f5f53a56908cbe, type: 2}
-  - {fileID: 11400000, guid: 2d59be04fc8886642a4770b2b0971bee, type: 2}
-  - {fileID: 11400000, guid: 6811db41c79c43a41b3ff2f4a87eecb4, type: 2}
-  - {fileID: 11400000, guid: ebf8bba8c93cfd14290bddaa7dce2736, type: 2}
-  - {fileID: 11400000, guid: 1b1c3cc942c0d6e44bc6bb3ae5ef3414, type: 2}
-  - {fileID: 11400000, guid: 947559303eef7b740a2c21e5f5e600a9, type: 2}
-  - {fileID: 11400000, guid: 68ba37ce923f66e48a0239356de067a9, type: 2}
-  - {fileID: 11400000, guid: bc26e0a53989a6d439beb924d07f61f8, type: 2}
-  itemStacks:
-  - item: {fileID: 11400000, guid: bc26e0a53989a6d439beb924d07f61f8, type: 2}
-    quantity: 7
-  currency: 547350
+  itemStacks: []
+  currency: 1000
   runCharacters:
   - character: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
     upgrade:
@@ -43,230 +26,23 @@ MonoBehaviour:
       defensePerLevel: 4.2
       maxHpPerLevel: 81
     currentHP: 813
-    currentAE: 28.8
+    currentAE: 60
     activeEffects: []
-    hasTickingEffects: 0
-  - character: {fileID: 11400000, guid: c9c99302d3f5d8a43b612bd108aa3f05, type: 2}
-    upgrade:
-      level: 30
-      maxLevel: 30
-      currentExp: 0
-      attackPerLevel: 4.7
-      defensePerLevel: 5.5
-      maxHpPerLevel: 95
-    currentHP: 2376.575
-    currentAE: 50
-    activeEffects:
-    - definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
-      sourceCharacter: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
-      sourceStatsSnapshot:
-        maxHP: 892
-        attack: 50.4
-        defense: 42.55
-        speed: 11
-        elementalMastery: 65
-        critRate: 5
-        critDamage: 50
-        cooldownRate: 7
-        impact: 10
-        damageReduction: 0
-        aeRecharge: 0.6
-      remainingSeconds: -1
-      appliedDurationSeconds: -1
-      elapsedSeconds: 0
-      nextTickAt: 0
-      stackCount: 1
-      remainingShieldAmount: 0
-      appliedShieldAmount: 0
-    - definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
-      sourceCharacter: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
-      sourceStatsSnapshot:
-        maxHP: 892
-        attack: 50.4
-        defense: 42.55
-        speed: 11
-        elementalMastery: 65
-        critRate: 5
-        critDamage: 50
-        cooldownRate: 7
-        impact: 10
-        damageReduction: 0
-        aeRecharge: 0.6
-      remainingSeconds: -1
-      appliedDurationSeconds: -1
-      elapsedSeconds: 0
-      nextTickAt: 0
-      stackCount: 1
-      remainingShieldAmount: 0
-      appliedShieldAmount: 0
-    hasTickingEffects: 0
-  - character: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
-    upgrade:
-      level: 30
-      maxLevel: 30
-      currentExp: 0
-      attackPerLevel: 5.2
-      defensePerLevel: 4.4
-      maxHpPerLevel: 80
-    currentHP: 1492.9651
-    currentAE: 80
-    activeEffects:
-    - definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
-      sourceCharacter: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
-      sourceStatsSnapshot:
-        maxHP: 892
-        attack: 50.4
-        defense: 42.55
-        speed: 11
-        elementalMastery: 65
-        critRate: 5
-        critDamage: 50
-        cooldownRate: 7
-        impact: 10
-        damageReduction: 0
-        aeRecharge: 0.6
-      remainingSeconds: -1
-      appliedDurationSeconds: -1
-      elapsedSeconds: 0
-      nextTickAt: 0
-      stackCount: 1
-      remainingShieldAmount: 0
-      appliedShieldAmount: 0
-    - definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
-      sourceCharacter: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
-      sourceStatsSnapshot:
-        maxHP: 892
-        attack: 50.4
-        defense: 42.55
-        speed: 11
-        elementalMastery: 65
-        critRate: 5
-        critDamage: 50
-        cooldownRate: 7
-        impact: 10
-        damageReduction: 0
-        aeRecharge: 0.6
-      remainingSeconds: -1
-      appliedDurationSeconds: -1
-      elapsedSeconds: 0
-      nextTickAt: 0
-      stackCount: 1
-      remainingShieldAmount: 0
-      appliedShieldAmount: 0
-    hasTickingEffects: 0
-  - character: {fileID: 11400000, guid: 27891cf9824752045b475995e212e47e, type: 2}
-    upgrade:
-      level: 1
-      maxLevel: 30
-      currentExp: 0
-      attackPerLevel: 5.7
-      defensePerLevel: 4.8
-      maxHpPerLevel: 82.85
-    currentHP: 1093.2001
-    currentAE: 50
-    activeEffects: []
-    hasTickingEffects: 0
-  - character: {fileID: 11400000, guid: 862c5f94563edd64bac74e8fbcce835c, type: 2}
-    upgrade:
-      level: 1
-      maxLevel: 30
-      currentExp: 0
-      attackPerLevel: 8
-      defensePerLevel: 4.5
-      maxHpPerLevel: 69.7
-    currentHP: 651
-    currentAE: 80
-    activeEffects:
-    - definition: {fileID: 11400000, guid: 6ed675cfdf0d458f93a3a18b9ea705db, type: 2}
-      sourceCharacter: {fileID: 11400000, guid: 862c5f94563edd64bac74e8fbcce835c, type: 2}
-      sourceStatsSnapshot:
-        maxHP: 651
-        attack: 83.38
-        defense: 0
-        speed: 7.5
-        elementalMastery: 145
-        critRate: 24
-        critDamage: 80
-        cooldownRate: 5
-        impact: 27
-        damageReduction: -10
-        aeRecharge: 0
-      remainingSeconds: -1
-      appliedDurationSeconds: -1
-      elapsedSeconds: 0
-      nextTickAt: 0
-      stackCount: 8
-      remainingShieldAmount: 0
-      appliedShieldAmount: 0
-    hasTickingEffects: 0
-  - character: {fileID: 11400000, guid: a2f28494c803e0b49a390a31a390a787, type: 2}
-    upgrade:
-      level: 30
-      maxLevel: 30
-      currentExp: 0
-      attackPerLevel: 7
-      defensePerLevel: 3.7
-      maxHpPerLevel: 79.5
-    currentHP: 1333.5023
-    currentAE: 70
-    activeEffects:
-    - definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
-      sourceCharacter: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
-      sourceStatsSnapshot:
-        maxHP: 892
-        attack: 50.4
-        defense: 42.55
-        speed: 11
-        elementalMastery: 65
-        critRate: 5
-        critDamage: 50
-        cooldownRate: 7
-        impact: 10
-        damageReduction: 0
-        aeRecharge: 0.6
-      remainingSeconds: -1
-      appliedDurationSeconds: -1
-      elapsedSeconds: 0
-      nextTickAt: 0
-      stackCount: 1
-      remainingShieldAmount: 0
-      appliedShieldAmount: 0
-    - definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
-      sourceCharacter: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
-      sourceStatsSnapshot:
-        maxHP: 892
-        attack: 50.4
-        defense: 42.55
-        speed: 11
-        elementalMastery: 65
-        critRate: 5
-        critDamage: 50
-        cooldownRate: 7
-        impact: 10
-        damageReduction: 0
-        aeRecharge: 0.6
-      remainingSeconds: -1
-      appliedDurationSeconds: -1
-      elapsedSeconds: 0
-      nextTickAt: 0
-      stackCount: 1
-      remainingShieldAmount: 0
-      appliedShieldAmount: 0
     hasTickingEffects: 0
   teamSlots:
-  - character: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
+  - character: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
     artifacts:
-    - {fileID: 11400000, guid: b1bb8bdcaab9a4c4c86350394a06d0ef, type: 2}
-    - {fileID: 11400000, guid: 68ba37ce923f66e48a0239356de067a9, type: 2}
-    - {fileID: 11400000, guid: 1145849e0b6d2e440a771231cf407ddb, type: 2}
-  - character: {fileID: 11400000, guid: a2f28494c803e0b49a390a31a390a787, type: 2}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+  - character: {fileID: 0}
     artifacts:
-    - {fileID: 11400000, guid: 04606c51be389b14d93cef0d791fd30c, type: 2}
-    - {fileID: 11400000, guid: 8dae9784a4112a44691459c99d1d3a64, type: 2}
-    - {fileID: 11400000, guid: ebf8bba8c93cfd14290bddaa7dce2736, type: 2}
-  - character: {fileID: 11400000, guid: c9c99302d3f5d8a43b612bd108aa3f05, type: 2}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+  - character: {fileID: 0}
     artifacts:
-    - {fileID: 11400000, guid: 1b1c3cc942c0d6e44bc6bb3ae5ef3414, type: 2}
-    - {fileID: 11400000, guid: 2d59be04fc8886642a4770b2b0971bee, type: 2}
-    - {fileID: 11400000, guid: 0c19cb6fb2abbe346b6d4dc429d2e4d0, type: 2}
-  activeTeamSlotIndex: 1
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+  activeTeamSlotIndex: 0

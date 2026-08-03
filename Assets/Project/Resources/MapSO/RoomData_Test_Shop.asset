@@ -12,7 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60fd2ca7f56b62c45b42664e28129625, type: 3}
   m_Name: RoomData_Test_Shop
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.RoomData
+  roomId: Test_Shop
   sceneName: Test_Shop
+  layoutPrefab: {fileID: 0}
+  roomKind: 2
+  displayName: Soul Shop
+  offerIcon: {fileID: 0}
+  offerWeight: 1
+  includeInRandomOffers: 1
   zoneMode: 0
   defaultEntranceId: Default
   useStaticCamera: 1

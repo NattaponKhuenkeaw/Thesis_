@@ -245,14 +245,18 @@ public class CharacterSwitchSlot : MonoBehaviour
 
         // 4. Switch Cooldown Visuals (unavailable panel & feedback)
         PlayerStateMachine stateMachine = hudManager != null ? hudManager.stateMachine : null;
-        bool isSwitchUnavailable = false;
-        if (stateMachine != null)
+        bool isDead = teamLoader != null && !teamLoader.IsCharacterAlive(boundCharacter);
+        bool isSwitchUnavailable = isDead;
+        if (!isDead)
         {
-            isSwitchUnavailable = !stateMachine.CanSwitchCharacter(5);
-        }
-        else
-        {
-            isSwitchUnavailable = teamLoader.IsSwitchOnCooldown;
+            if (stateMachine != null)
+            {
+                isSwitchUnavailable = !stateMachine.CanSwitchCharacter(5);
+            }
+            else
+            {
+                isSwitchUnavailable = teamLoader != null && teamLoader.IsSwitchOnCooldown;
+            }
         }
 
         if (unavailableOverlay != null)
