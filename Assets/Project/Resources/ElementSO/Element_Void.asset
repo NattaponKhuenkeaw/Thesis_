@@ -16,10 +16,6 @@ MonoBehaviour:
   displayName: Void
   damageTextColor: {r: 0.54516023, g: 0.24056602, b: 1, a: 1}
   icon: {fileID: 21300000, guid: caa6b5507a548724d997451c57d3656e, type: 3}
-  hasDOT: 1
-  dotDamageRatio: 0.3
-  reactionType: 4
-  reactionDuration: 20
-  reactionDescription: Deal Explosive AOE Void damage of 150%ATK once. Enemy debuffed
-    Confusion(attack randomly) for 15 seconds. if Enemy is Elite or Bosses, will
-    decrease their Action Speed by 30% instead.
+  dotDuration: 5
+  dotDamageRatio: 0.26
+  dotTickInterval: 0.7

@@ -160,14 +160,9 @@ namespace CombatCore
         private void UpdateDPS()
         {
             float elapsed = Time.time - dpsStartTime;
-            if (elapsed <= 0f)
-            {
-                currentDPS = lastDamagePerHit;
-            }
-            else
-            {
-                currentDPS = totalDamageOnCurrentTarget / elapsed;
-            }
+            // Floor elapsed to 1s minimum so early hits don't produce
+            // absurdly inflated DPS (e.g. 500dmg / 0.02s = 25000 DPS).
+            currentDPS = totalDamageOnCurrentTarget / Mathf.Max(elapsed, 1f);
             lastDpsUpdateTime = Time.time;
         }
 

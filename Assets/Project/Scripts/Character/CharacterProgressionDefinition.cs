@@ -583,10 +583,6 @@ public class PassiveRuntimeEffectDefinition : ISerializationCallbackReceiver
     public bool overrideSourceCharacter = false;
     public string sourceCharacterId;
 
-    [Header("Target Filter")]
-    public bool filterByTargetElement = false;
-    public ElementType targetElement = ElementType.None;
-
     public RuntimeEffectDefinition ResolvedEffect => recipe != null && recipe.definition != null
         ? recipe.definition
         : effect;
@@ -941,8 +937,6 @@ public class PassiveEnemyElementModifierDefinition
     public ElementType elementType = ElementType.None;
     public float incomingDamagePercentAdd = 0f;
     public float resistancePercentAdd = 0f;
-    public float masteryPercentAdd = 0f;
-    public float gaugeBuildPercentAdd = 0f;
     public bool permanent = true;
     public bool stacks = false;
     [Min(0f)] public float duration = 0f;

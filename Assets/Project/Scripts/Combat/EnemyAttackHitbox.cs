@@ -71,15 +71,6 @@ public class EnemyAttackHitbox : MonoBehaviour
         if (damage <= 0f)
             return;
 
-        ElementType playerElement = playerCharacter.characterObject != null
-            ? playerCharacter.characterObject.elementType
-            : ElementType.None;
-        EnemyElementalState elementalState = enemyController.ElementalState;
-        if (elementalState != null)
-        {
-            damage = elementalState.ModifyOutgoingDamageAgainst(playerElement, damage);
-        }
-
         // --- NEW: Check for Player Counter ---
         if (playerCharacter.TryCounter(enemyController.gameObject))
         {

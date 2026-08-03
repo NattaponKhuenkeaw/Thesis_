@@ -10,12 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 41a3b096304d2f047826cb8c969d6de8, type: 3}
-  m_Name: EnemyElementalProfile_Dummy
+  m_Name: EnemyElementalProfile_Sample
   m_EditorClassIdentifier: Assembly-CSharp::EnemyElementalProfile
-  resistances:
-  - elementType: 2
-    strength: 1
-    useLegacyStrengthForResistance: 0
-    resistancePercent: 0
-    useLegacyStrengthForMastery: 0
-    masteryPercent: 0
+  physicalDamageReduction: 10
+  memoryDamageReduction: 10
+  echoDamageReduction: 10
+  ashDamageReduction: 10
+  voidDamageReduction: 10

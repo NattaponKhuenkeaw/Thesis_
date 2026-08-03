@@ -84,9 +84,8 @@ public class ElementDatabase : ScriptableObject
         return def != null ? def.icon : null;
     }
 
-    public bool HasDOT(ElementType type)
+    public bool HasDotDefinition(ElementType type)
     {
-        var def = GetDefinition(type);
-        return def != null && def.hasDOT;
+        return GetDefinition(type) != null;
     }
 }

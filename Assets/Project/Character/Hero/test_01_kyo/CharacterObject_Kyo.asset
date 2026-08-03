@@ -14,7 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterObject
   characterId: char_1_kyo
   characterType: 0
-  elementType: 3
   characterRole: 3
   previewPrefab: {fileID: 6597880524197938003, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
   stats:
@@ -109,8 +108,7 @@ MonoBehaviour:
       nodeName: Base Skill
       description: 
       skillPanelDescriptionOverride: Inflict <b><color=#FF0000>Ash</color></b> DMG
-        350% of own ATK, <color=#C0C0C0>When Hit will build a <b><color=#FF0000>Ash</color></b>
-        <b>Elemenetal Daze Gauge</b> by +25% of it original</color>
+        350% of own ATK and apply the configured Ash DOT.
       track: 0
       level: 0
       fragmentCost: 0
@@ -275,8 +273,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 1
-        targetElement: 3
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -289,8 +285,8 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: kyo.passive.base
       nodeName: Kusanagi Lineage
-      description: Increase allies Ash DMG by 15%.
-      skillPanelDescriptionOverride: Increase <b><color=#FF0000>Ash Allies</color></b>
+      description: Increase all allies damage by 15%.
+      skillPanelDescriptionOverride: Increase <b><color=#FF0000>All Allies</color></b>
         DMG by 15%
       track: 2
       level: 0
@@ -346,9 +342,7 @@ MonoBehaviour:
       nodeName: Skill Multiplier
       description: Increase Skill multiplier to 400% of ATK.
       skillPanelDescriptionOverride: Inflict <b><color=#FF0000>Ash</color></b> DMG
-        <b><color=#FFA500>400%</color></b> of own ATK, <color=#C0C0C0>When Hit will
-        build a <b><color=#FF0000>Ash</color></b> <b>Elemenetal Daze Gauge</b> by
-        +25% of it original</color>
+        <b><color=#FFA500>400%</color></b> of own ATK and apply the configured Ash DOT.
       track: 0
       level: 1
       fragmentCost: 1
@@ -366,37 +360,13 @@ MonoBehaviour:
       dashThroughDamageEffects: []
       defensiveEffects: []
       resourceEffects: []
-      enemyElementModifiers:
-      - trigger: 3
-        filter:
-          filterByCategory: 1
-          category: 1
-          filterByActionId: 0
-          actionId: 
-          filterByActionName: 0
-          actionName: 
-          filterByStepName: 0
-          stepName: 
-          filterByElement: 0
-          elementType: 0
-          requireRuntimeTag: 0
-          runtimeTag: 
-        elementType: 3
-        incomingDamagePercentAdd: 0
-        resistancePercentAdd: 0
-        masteryPercentAdd: 0
-        gaugeBuildPercentAdd: 50
-        permanent: 0
-        stacks: 0
-        duration: 0
+      enemyElementModifiers: []
       passiveHookTypeName: 
       nodeId: kyo.skill.lv2
       nodeName: Ash Daze Pressure
-      description: Skill hits increase Ash gauge build by 25%.
+      description: Legacy gauge upgrade retired by the damage-type simplification.
       skillPanelDescriptionOverride: Inflict <b><color=#FF0000>Ash</color></b> DMG
-        <b><color=#FFA500>400%</color></b> of own ATK, <color=#C0C0C0>When Hit will
-        build a <b><color=#FF0000>Ash</color></b> <b>Elemenetal Daze Gauge</b> by
-        <b><color=#FFA500>+50%</color></b> of it original</color>
+        <b><color=#FFA500>400%</color></b> of own ATK and apply the configured Ash DOT.
       track: 0
       level: 2
       fragmentCost: 1
@@ -448,9 +418,8 @@ MonoBehaviour:
       nodeName: AE Reward
       description: Increase Skill AE reward by 1.
       skillPanelDescriptionOverride: Inflict <b><color=#FF0000>Ash</color></b> DMG
-        <b><color=#FFA500>400%</color></b> of own ATK, <color=#C0C0C0>When Hit will
-        build a <b><color=#FF0000>Ash</color></b> <b>Elemenetal Daze Gauge</b> by
-        <b><color=#FFA500>+50%</color></b> of it original</color>  <size=20><color=#C0C0C0>-
+        <b><color=#FFA500>400%</color></b> of own ATK and apply the configured Ash DOT.
+        <size=20><color=#C0C0C0>-
         Increase Skill AE reward by 1</color></size>
       track: 0
       level: 3
@@ -506,9 +475,7 @@ MonoBehaviour:
       nodeName: Allied Flame Mend
       description: Skill use heals all allies for 10% of Kyo ATK.
       skillPanelDescriptionOverride: 'Inflict <b><color=#FF0000>Ash</color></b> DMG
-        <b><color=#FFA500>400%</color></b> of own ATK, <color=#C0C0C0>When Hit will
-        build a <b><color=#FF0000>Ash</color></b> <b>Elemenetal Daze Gauge</b> by
-        <b><color=#FFA500>+50%</color></b> of it original</color>
+        <b><color=#FFA500>400%</color></b> of own ATK and apply the configured Ash DOT.
 
 
 
@@ -1743,7 +1710,7 @@ MonoBehaviour:
       nodeName: Ash Spark
       description: When dealing damage, 20% chance to deal additional Ash DMG based
         on 20% ATK.
-      skillPanelDescriptionOverride: 'Increase <b><color=#FF0000>Ash Allies</color></b>
+      skillPanelDescriptionOverride: 'Increase <b><color=#FF0000>All Allies</color></b>
         DMG by 15%
 
 
@@ -1775,7 +1742,7 @@ MonoBehaviour:
       nodeId: kyo.passive.lv2
       nodeName: Basic Attack State 3
       description: Unlock State(3) on Basic Attack.
-      skillPanelDescriptionOverride: 'Increase <b><color=#FF0000>Ash Allies</color></b>
+      skillPanelDescriptionOverride: 'Increase <b><color=#FF0000>All Allies</color></b>
         DMG by 15%
 
 
@@ -2030,7 +1997,7 @@ MonoBehaviour:
       nodeId: kyo.passive.lv3
       nodeName: Burning Momentum
       description: When HP is above 70%, own AE Recharge increases by 25%
-      skillPanelDescriptionOverride: 'Increase <b><color=#FF0000>Ash Allies</color></b>
+      skillPanelDescriptionOverride: 'Increase <b><color=#FF0000>All Allies</color></b>
         DMG by 15%
 
 
@@ -2187,8 +2154,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 1
         sourceCharacterId: char_1_kyo
-        filterByTargetElement: 1
-        targetElement: 3
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -2200,9 +2165,9 @@ MonoBehaviour:
       enemyElementModifiers: []
       passiveHookTypeName: 
       nodeId: kyo.passive.lv4
-      nodeName: Ash Team Attack
-      description: Increase Ash allies ATK based on 20% of Kyo ATK
-      skillPanelDescriptionOverride: 'Increase <b><color=#FF0000>Ash Allies</color></b>
+      nodeName: Team Attack
+      description: Increase all allies ATK based on 20% of Kyo ATK
+      skillPanelDescriptionOverride: 'Increase <b><color=#FF0000>All Allies</color></b>
         DMG by 15%
 
 

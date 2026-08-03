@@ -200,12 +200,10 @@ public class HitBoxDamage : MonoBehaviour
 
         if (hasDamageSource && primaryDamageDealt > 0f)
         {
-            var elementalState = enemy.GetComponent<EnemyElementalState>();
-            if (elementalState != null)
-            {
-                elementalState.RecordDamageTaken(primaryDamageDealt);
-                elementalState.ApplyElementalDamage(reactionData.elementType, currentDamage, currentAttackerStats, sourceCategory);
-            }
+            enemy.DamageTypeState?.ApplyDot(
+                reactionData.elementType,
+                currentAttackerStats,
+                rewardCharacter);
 
             if (enemy.IsAlive)
             {
@@ -357,9 +355,9 @@ public class HitBoxDamage : MonoBehaviour
                 runtimeContext,
                 finalDamage);
 
-        if (enemy.ElementalState != null && !damageInput.ignoreElementalIncomingModifiers)
+        if (enemy.DamageTypeState != null && !damageInput.ignoreElementalIncomingModifiers)
         {
-            finalDamage = enemy.ElementalState.ModifyIncomingDamage(elementType, finalDamage);
+            finalDamage = enemy.DamageTypeState.ModifyIncomingDamage(elementType, finalDamage);
             damageInput.ignoreElementalIncomingModifiers = true;
         }
 
@@ -464,13 +462,10 @@ public class HitBoxDamage : MonoBehaviour
             {
                 context.damageDealt = damageDealt;
                 effect.ConsumeTargetRuntimeEffectStacks(context);
-                var elementalState = enemy.GetComponent<EnemyElementalState>();
-                if (elementalState != null)
-                {
-                    elementalState.RecordDamageTaken(damageDealt);
-                    elementalState.ApplyElementalDamage(additionalData.elementType, baseDamage, liveSourceStats, AttackCategory.Normal);
-                }
-
+                enemy.DamageTypeState?.ApplyDot(
+                    additionalData.elementType,
+                    liveSourceStats,
+                    rewardCharacter);
             }
         }
     }

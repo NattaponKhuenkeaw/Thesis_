@@ -1823,11 +1823,6 @@ public class CharacterPassiveController : MonoBehaviour
             return false;
         }
 
-        if (effect.filterByTargetElement && target.elementType != effect.targetElement)
-        {
-            return false;
-        }
-
         return true;
     }
 
@@ -2023,8 +2018,8 @@ public class CharacterPassiveController : MonoBehaviour
             return;
         }
 
-        EnemyElementalState elementalState = context.enemy.GetComponent<EnemyElementalState>();
-        if (elementalState == null)
+        EnemyDamageTypeState damageTypeState = context.enemy.DamageTypeState;
+        if (damageTypeState == null)
         {
             return;
         }
@@ -2037,7 +2032,7 @@ public class CharacterPassiveController : MonoBehaviour
                 continue;
             }
 
-            elementalState.ApplyRuntimeElementModifier(effect);
+            damageTypeState.ApplyRuntimeElementModifier(effect);
         }
     }
 
