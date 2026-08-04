@@ -736,13 +736,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
         float maxAE = GetCharacterMaxAE(character);
         float newAE = Mathf.Clamp(value, 0f, maxAE);
-        
-        var state = runInventory.GetRunCharacter(character);
-        if (state != null)
-        {
-            state.currentAE = newAE;
-        }
-        
+
+        runInventory.SetRunCharacterCurrentAE(character, newAE);
         OnCharacterAuraEnergyUpdated?.Invoke(character, newAE, maxAE);
     }
 

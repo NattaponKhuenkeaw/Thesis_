@@ -7,7 +7,6 @@ namespace Project.InventorySystem.Items
     public class Artifact : BaseItem
     {
         [Header("Artifact Specifics")]
-        public bool isEquippable = true;
         [TextArea(3, 5)]
         public string passiveDescription = "Unique passive effect description here.";
 

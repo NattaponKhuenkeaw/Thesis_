@@ -120,6 +120,8 @@ namespace Project.Core.ZoneState
 
         private static void EnsureDirector()
         {
+            RunProgressionManager.EnsureInstance();
+
             if (RoomChoiceDirector.Instance != null)
             {
                 return;

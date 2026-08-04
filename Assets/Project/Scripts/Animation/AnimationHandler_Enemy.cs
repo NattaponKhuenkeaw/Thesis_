@@ -18,9 +18,14 @@ public class AnimationHandler_Enemy : MonoBehaviour
     private readonly int takeDamageHash = Animator.StringToHash("TakeDamage");
     private readonly int dieHash = Animator.StringToHash("Die");
     private readonly int attackHash = Animator.StringToHash("Attack");
+    private readonly int attackCleaveHash = Animator.StringToHash("AttackCleave");
+    private readonly int attackJumpSmashHash = Animator.StringToHash("AttackJumpSmash");
+    private readonly int attackChargeHash = Animator.StringToHash("AttackCharge");
     private readonly int reactionStateHash = Animator.StringToHash("ReactionState");
     private readonly int airborneHash = Animator.StringToHash("IsAirborne");
     private readonly int grabbedHash = Animator.StringToHash("IsGrabbed");
+    private readonly int bossPhaseHash = Animator.StringToHash("BossPhase");
+
 
     private HashSet<int> animParamHashes;
 
@@ -98,6 +103,35 @@ public class AnimationHandler_Enemy : MonoBehaviour
     {
         if (animParamHashes != null && animParamHashes.Contains(attackHash))
             anim.SetTrigger(attackHash);
+    }
+
+    /// <summary>
+    /// Fires a pattern-specific trigger when present; otherwise falls back to Attack.
+    /// Safe no-op if the animator controller is still a stub.
+    /// </summary>
+    public void TriggerBossPattern(Project.AIBehaviour.Boss.BossPatternId patternId)
+    {
+        int hash = patternId switch
+        {
+            Project.AIBehaviour.Boss.BossPatternId.HeavyCleave => attackCleaveHash,
+            Project.AIBehaviour.Boss.BossPatternId.JumpSmash => attackJumpSmashHash,
+            Project.AIBehaviour.Boss.BossPatternId.BullCharge => attackChargeHash,
+            _ => attackHash
+        };
+
+        if (animParamHashes != null && animParamHashes.Contains(hash))
+        {
+            anim.SetTrigger(hash);
+            return;
+        }
+
+        TriggerAttack();
+    }
+
+    public void SetBossPhase(int phase)
+    {
+        if (animParamHashes != null && animParamHashes.Contains(bossPhaseHash))
+            anim.SetInteger(bossPhaseHash, phase);
     }
 
     public void SetSpeed(float speed)

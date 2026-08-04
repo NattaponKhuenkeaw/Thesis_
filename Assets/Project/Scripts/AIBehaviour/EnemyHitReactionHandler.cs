@@ -949,6 +949,22 @@ public class EnemyHitReactionHandler : MonoBehaviour
         hasResolvedAirborneLanding = false;
     }
 
+    /// <summary>
+    /// Hard-stop any active hit reaction (used by bosses that ignore juggle/stagger-lock).
+    /// </summary>
+    public void ForceClearReaction(bool zeroVelocity = true)
+    {
+        CleanupReaction();
+
+        if (rb == null)
+            return;
+
+        EnsureDynamicBody();
+        rb.gravityScale = originalGravityScale;
+        if (zeroVelocity)
+            rb.linearVelocity = Vector2.zero;
+    }
+
     private void CleanupReaction()
     {
         ExitImpactFreeze();

@@ -76,10 +76,35 @@ namespace Project.Core.ZoneState
         {
             clearsSinceShopOpportunity = 0;
             offerBuffer.Clear();
+            RunProgressionManager.EnsureInstance()?.ResetRun();
         }
 
         public IReadOnlyList<RoomChoiceOffer> GenerateOffersAfterClear(string excludeRoomId = null)
         {
+            if (string.IsNullOrWhiteSpace(excludeRoomId))
+            {
+                excludeRoomId = ResolveCurrentRoomId();
+            }
+
+            RoomData clearedRoom = ResolveRoom(excludeRoomId);
+            RunProgressionManager progression = RunProgressionManager.EnsureInstance();
+            progression?.NotifyRoomCleared(clearedRoom);
+
+            // Boss segment: Choice UI stays, but only the boss is offered.
+            if (progression != null
+                && progression.TryResolveForcedBossRoom(mapData != null ? mapData : EnsureMapData(), out RoomData bossRoom)
+                && bossRoom != null)
+            {
+                offerBuffer.Clear();
+                usedRoomIds.Clear();
+                offerBuffer.Add(new RoomChoiceOffer(bossRoom));
+                usedRoomIds.Add(bossRoom.RoomId);
+                Debug.Log(
+                    $"[RoomChoiceDirector] Boss due (depth={progression.currentRoomDepth}/{progression.RoomsBeforeBoss}). Forced offer '{bossRoom.RoomId}'.",
+                    this);
+                return offerBuffer;
+            }
+
             clearsSinceShopOpportunity = Mathf.Max(0, clearsSinceShopOpportunity + 1);
 
             bool includeShop = clearsSinceShopOpportunity >= shopEveryClears;
@@ -88,29 +113,20 @@ namespace Project.Core.ZoneState
                 clearsSinceShopOpportunity = 0;
             }
 
-            if (string.IsNullOrWhiteSpace(excludeRoomId))
-            {
-                excludeRoomId = ResolveCurrentRoomId();
-            }
-
             return GenerateOffers(excludeRoomId, includeShop);
         }
 
         public IReadOnlyList<RoomChoiceOffer> GenerateOffers(string excludeRoomId, bool includeShop)
         {
-            if (mapData == null)
+            if (EnsureMapData() == null)
             {
-                mapData = Resources.Load<MapSO>(DefaultMapResourcePath);
+                Debug.LogError("[RoomChoiceDirector] MapSO is missing; cannot generate room choices.", this);
+                offerBuffer.Clear();
+                return offerBuffer;
             }
 
             offerBuffer.Clear();
             usedRoomIds.Clear();
-
-            if (mapData == null)
-            {
-                Debug.LogError("[RoomChoiceDirector] MapSO is missing; cannot generate room choices.", this);
-                return offerBuffer;
-            }
 
             if (includeShop)
             {
@@ -133,6 +149,26 @@ namespace Project.Core.ZoneState
             ShuffleOffers();
             Debug.Log($"[RoomChoiceDirector] Generated {offerBuffer.Count} offers (shopIncluded={includeShop}).", this);
             return offerBuffer;
+        }
+
+        private MapSO EnsureMapData()
+        {
+            if (mapData == null)
+            {
+                mapData = Resources.Load<MapSO>(DefaultMapResourcePath);
+            }
+
+            return mapData;
+        }
+
+        private RoomData ResolveRoom(string roomId)
+        {
+            if (EnsureMapData() == null || string.IsNullOrWhiteSpace(roomId))
+            {
+                return null;
+            }
+
+            return mapData.ResolveRoom(roomId);
         }
 
         private bool TryAddOfferOfKind(RoomKind kind, string excludeRoomId)

@@ -99,6 +99,10 @@ namespace Project.Core.RunEnd
             RoomChoiceDirector director = RoomChoiceDirector.Instance
                 ?? Object.FindFirstObjectByType<RoomChoiceDirector>();
             director?.ResetRouteState();
+
+            // ResetRouteState already resets progression when a director exists;
+            // still clear depth if only the progression manager is present.
+            RunProgressionManager.EnsureInstance()?.ResetRun();
         }
 
         private IEnumerator BindPlayerNextFrame()
@@ -169,7 +173,6 @@ namespace Project.Core.RunEnd
             ResolveDependencies();
 
             RunResultSnapshot snapshot = BuildSnapshot();
-            ConvertPermanentRunData(snapshot);
             AppendFragmentRewardDeltas(snapshot);
             metaProgression?.SavePersistentState();
             runInventory?.ResetRunProgressForDeath(metaProgression);
@@ -283,21 +286,13 @@ namespace Project.Core.RunEnd
 
                 BaseItem item = stack.item;
                 stackedItems.Add(item);
-                if (GetRetentionPolicy(item) == ItemRetentionPolicy.LoseOnDeath)
-                {
-                    snapshot.AddLostItem(GetItemId(item), GetItemDisplayName(item), stack.quantity);
-                }
+                snapshot.AddLostItem(GetItemId(item), GetItemDisplayName(item), stack.quantity);
             }
 
             for (int i = 0; i < runInventory.ownedItems.Count; i++)
             {
                 BaseItem item = runInventory.ownedItems[i];
                 if (item == null || item is Item && stackedItems.Contains(item))
-                {
-                    continue;
-                }
-
-                if (GetRetentionPolicy(item) != ItemRetentionPolicy.LoseOnDeath)
                 {
                     continue;
                 }
@@ -317,61 +312,11 @@ namespace Project.Core.RunEnd
                 Artifact[] artifacts = runInventory.GetEquippedArtifactsAt(slotIndex);
                 for (int artifactIndex = 0; artifactIndex < artifacts.Length; artifactIndex++)
                 {
-                    Artifact artifact = artifacts[artifactIndex];
-                    if (GetRetentionPolicy(artifact) == ItemRetentionPolicy.LoseOnDeath)
-                    {
-                        AddLostArtifactOnce(snapshot, listedArtifactIds, artifact);
-                    }
+                    AddLostArtifactOnce(snapshot, listedArtifactIds, artifacts[artifactIndex]);
                 }
             }
 
             return snapshot;
-        }
-
-        private void ConvertPermanentRunData(RunResultSnapshot snapshot)
-        {
-            if (runInventory == null || metaProgression == null)
-            {
-                return;
-            }
-
-            metaProgression.LoadPersistentStateIfNeeded();
-            HashSet<BaseItem> stackedItems = new HashSet<BaseItem>();
-            HashSet<string> processedUniqueItemIds = new HashSet<string>();
-
-            IReadOnlyList<InventoryStack> stacks = runInventory.ItemStacks;
-            for (int i = 0; i < stacks.Count; i++)
-            {
-                InventoryStack stack = stacks[i];
-                if (stack == null || stack.item == null || stack.quantity <= 0)
-                {
-                    continue;
-                }
-
-                stackedItems.Add(stack.item);
-                ProcessRetentionReward(stack.item, stack.quantity, snapshot, processedUniqueItemIds);
-            }
-
-            for (int i = 0; i < runInventory.ownedItems.Count; i++)
-            {
-                BaseItem item = runInventory.ownedItems[i];
-                if (item == null || item is Item && stackedItems.Contains(item))
-                {
-                    continue;
-                }
-
-                ProcessRetentionReward(item, 1, snapshot, processedUniqueItemIds);
-            }
-
-            CharacterObject[] team = runInventory.GetTeamSnapshot();
-            for (int slotIndex = 0; slotIndex < team.Length; slotIndex++)
-            {
-                Artifact[] artifacts = runInventory.GetEquippedArtifactsAt(slotIndex);
-                for (int artifactIndex = 0; artifactIndex < artifacts.Length; artifactIndex++)
-                {
-                    ProcessRetentionReward(artifacts[artifactIndex], 1, snapshot, processedUniqueItemIds);
-                }
-            }
         }
 
         private void AppendFragmentRewardDeltas(RunResultSnapshot snapshot)
@@ -422,10 +367,10 @@ namespace Project.Core.RunEnd
                     continue;
                 }
 
+                // Lobby respawn: full HP so the player can move, empty AE (ultimate gauge).
                 float maxHp = teamLoader.GetCharacterMaxHP(character);
-                float maxAe = teamLoader.GetCharacterMaxAE(character);
                 teamLoader.SetCharacterCurrentHP(character, maxHp);
-                teamLoader.SetCharacterCurrentAE(character, maxAe);
+                teamLoader.SetCharacterCurrentAE(character, 0f);
             }
 
             teamLoader.LoadCurrentCharacter(forceReload: true);
@@ -538,62 +483,6 @@ namespace Project.Core.RunEnd
             player.StateMachine?.InputBuffer?.ClearAll();
         }
 
-        private void ProcessRetentionReward(
-            BaseItem item,
-            int quantity,
-            RunResultSnapshot snapshot,
-            HashSet<string> processedUniqueItemIds)
-        {
-            if (item == null || metaProgression == null || quantity <= 0)
-            {
-                return;
-            }
-
-            int resolvedQuantity = Mathf.Max(1, quantity);
-            if (item is not Item)
-            {
-                string itemId = GetItemId(item);
-                if (!string.IsNullOrWhiteSpace(itemId)
-                    && processedUniqueItemIds != null
-                    && !processedUniqueItemIds.Add(itemId))
-                {
-                    return;
-                }
-            }
-
-            switch (GetRetentionPolicy(item))
-            {
-                // Step 1 (Not Perma): run characters/items must not become permanent meta inventory.
-                // case ItemRetentionPolicy.KeepPermanent:
-                //     ProcessKeepPermanentReward(item, resolvedQuantity, snapshot);
-                //     break;
-                case ItemRetentionPolicy.ConvertOnDeath:
-                    int fragmentAmount = Mathf.Max(1, item.deathConversionFragmentAmount) * resolvedQuantity;
-                    metaProgression.AddFragments(item, fragmentAmount);
-                    break;
-            }
-        }
-
-        private void ProcessKeepPermanentReward(BaseItem item, int quantity, RunResultSnapshot snapshot)
-        {
-            if (item is CharacterItem characterItem)
-            {
-                bool unlocked = metaProgression.UnlockCharacter(characterItem);
-                if (unlocked)
-                {
-                    snapshot?.AddUnlockedCharacter(GetItemId(characterItem), GetItemDisplayName(characterItem));
-                }
-
-                return;
-            }
-
-            int added = metaProgression.AddPermanentItem(item, quantity);
-            if (added > 0)
-            {
-                snapshot?.AddPermanentReward($"PermanentItem:{GetItemId(item)}", GetItemDisplayName(item), added);
-            }
-        }
-
         private static void AddLostArtifactOnce(
             RunResultSnapshot snapshot,
             HashSet<string> listedArtifactIds,
@@ -611,11 +500,6 @@ namespace Project.Core.RunEnd
             }
 
             snapshot.AddLostArtifact(itemId, GetItemDisplayName(artifact), 1);
-        }
-
-        private static ItemRetentionPolicy GetRetentionPolicy(BaseItem item)
-        {
-            return item != null ? item.ResolvedRetentionPolicy : ItemRetentionPolicy.LoseOnDeath;
         }
 
         private static string GetItemId(BaseItem item)

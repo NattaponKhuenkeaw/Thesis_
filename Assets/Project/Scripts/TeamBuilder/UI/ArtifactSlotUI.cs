@@ -33,9 +33,7 @@ namespace Project.TeamBuilder.UI
         // =========================================================
         // Properties
         // =========================================================
-        public Artifact CurrentArtifact => currentArtifact;
         public TeamSlotUI ParentSlot => parentSlot;
-        public bool ReadOnly => readOnly;
 
         // =========================================================
         // Initialization
@@ -71,8 +69,6 @@ namespace Project.TeamBuilder.UI
             {
                 slotBackground.color = (artifact != null) ? filledSlotColor : emptySlotColor;
             }
-
-            // Removed automatic recalculation to allow TeamSlotUI to batch updates.
         }
 
         public void ClearArtifact()
@@ -89,8 +85,6 @@ namespace Project.TeamBuilder.UI
             {
                 slotBackground.color = emptySlotColor;
             }
-
-            // Removed automatic recalculation to allow TeamSlotUI to batch updates.
         }
 
         public Artifact GetArtifact()

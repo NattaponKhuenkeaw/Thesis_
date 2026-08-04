@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using UnityEngine;
 using Unity.Behavior;
-using Project.ShopSystem;
 
 /// <summary>
 /// Core enemy component. Holds stats, HP events, and helpers used by
@@ -31,12 +30,6 @@ public class EnemyController : MonoBehaviour
     public float defense = 0f;
     public float damageRes = 0f;
     public bool isEliteOrBoss = false;
-
-    [Header("Kill Rewards")]
-    [Tooltip("Run currency granted to PlayerRunInventory when this enemy dies.")]
-    [SerializeField, Min(0)] private int currencyReward = 5;
-    [Tooltip("Optional override used when isEliteOrBoss is true. Leave at 0 to use currencyReward.")]
-    [SerializeField, Min(0)] private int eliteCurrencyReward = 15;
 
     // =========================================================
     // State
@@ -73,6 +66,12 @@ public class EnemyController : MonoBehaviour
     [Header("Anti-Stunlock")]
     [SerializeField] private int antiStunlockComboThreshold = 4;
     [SerializeField] [Range(0f, 1f)] private float antiStunlockResistChance = 0.3f;
+
+    /// <summary>
+    /// When true, incoming hits still deal damage but skip hit-reactions / Behavior interruption.
+    /// Bosses keep this true permanently (stagger/juggle resist); trash enemies may toggle it.
+    /// </summary>
+    [System.NonSerialized] public bool ignoreHitReactions;
 
     // =========================================================
     // References
@@ -141,6 +140,13 @@ public class EnemyController : MonoBehaviour
 
             attackHitboxSR = attackHitbox.GetComponent<SpriteRenderer>();
             attackHitboxLR = attackHitbox.GetComponent<LineRenderer>();
+
+            // SpriteRenderer ignores BoxCollider2D.offset, so it misleads hitbox tuning.
+            // Keep it disabled; LineRenderer follows the real collider center/size.
+            if (attackHitboxSR != null)
+                attackHitboxSR.enabled = false;
+
+            EnsureAttackHitboxDebugLineRenderer();
         }
 
         // Auto-attach hurtbox drawer to main body
@@ -158,34 +164,29 @@ public class EnemyController : MonoBehaviour
         // Runtime visualization for Game View
         if (attackHitbox != null && attackHitbox.enabled)
         {
-            // Toggle visibility based on debug mode (using cached references)
-            if (attackHitboxSR != null) attackHitboxSR.enabled = isDebugActive;
-            if (attackHitboxLR != null) attackHitboxLR.enabled = isDebugActive;
+            bool showAttackDebug = isDebugActive;
 
-            if (isDebugActive)
+            // Never use SpriteRenderer for attack debug — it is centered on the transform,
+            // while damage uses BoxCollider2D.offset (different center).
+            if (attackHitboxSR != null)
+                attackHitboxSR.enabled = false;
+
+            if (attackHitboxLR != null)
             {
-                // 1. Auto-scale SpriteRenderer to match Collider size
-                if (attackHitboxSR != null)
-                {
-                    if (attackHitbox is BoxCollider2D box)
-                    {
-                        attackHitboxSR.drawMode = SpriteDrawMode.Sliced;
-                        attackHitboxSR.size = box.size;
-                    }
-                }
-
-                // 2. Beautiful outline using LineRenderer
-                if (attackHitboxLR != null)
-                {
+                attackHitboxLR.enabled = showAttackDebug;
+                if (showAttackDebug)
                     DrawLineRenderer(attackHitboxLR);
-                }
-                else
-                {
-#if UNITY_EDITOR
-                    DrawHitboxRuntime();
-#endif
-                }
             }
+            else if (showAttackDebug)
+            {
+#if UNITY_EDITOR
+                DrawHitboxRuntime();
+#endif
+            }
+        }
+        else if (attackHitboxLR != null)
+        {
+            attackHitboxLR.enabled = false;
         }
     }
 
@@ -302,6 +303,9 @@ public class EnemyController : MonoBehaviour
 
     private bool ShouldApplyHitReaction()
     {
+        if (ignoreHitReactions)
+            return false;
+
         if (hitReactionHandler == null)
             return true;
 
@@ -371,7 +375,6 @@ public class EnemyController : MonoBehaviour
         if (bodyCollider  != null) bodyCollider.enabled  = false;
         if (attackHitbox  != null) attackHitbox.enabled  = false;
 
-        AwardKillCurrency();
         OnDied?.Invoke();
 
         // Remove from combat camera when dead
@@ -379,38 +382,6 @@ public class EnemyController : MonoBehaviour
             CameraManager.instance.LeaveCombat(this);
 
         Destroy(gameObject);
-    }
-
-    private void AwardKillCurrency()
-    {
-        int reward = ResolveKillCurrencyReward();
-        if (reward <= 0)
-            return;
-
-        PlayerRunInventory inventory = ResolveRunInventory();
-        if (inventory == null)
-        {
-            Debug.LogWarning($"[EnemyController] Cannot award kill currency ({reward}) because PlayerRunInventory is missing.", this);
-            return;
-        }
-
-        inventory.AddCurrency(reward);
-    }
-
-    private int ResolveKillCurrencyReward()
-    {
-        if (isEliteOrBoss && eliteCurrencyReward > 0)
-            return eliteCurrencyReward;
-
-        return Mathf.Max(0, currencyReward);
-    }
-
-    private static PlayerRunInventory ResolveRunInventory()
-    {
-        if (TeamLoader.Instance != null && TeamLoader.Instance.RunInventory != null)
-            return TeamLoader.Instance.RunInventory;
-
-        return Resources.Load<PlayerRunInventory>("InventorySO/PlayerRunInventory");
     }
 
     private void CacheOriginalColors()
@@ -550,9 +521,27 @@ public class EnemyController : MonoBehaviour
 
             // Toggle cached debug renderers
             bool isDebugActive = CombatCore.TrainingDebugManager.IsActive;
-            if (attackHitboxSR != null) attackHitboxSR.enabled = active && isDebugActive;
-            if (attackHitboxLR != null) attackHitboxLR.enabled = active && isDebugActive;
+            if (attackHitboxSR != null)
+                attackHitboxSR.enabled = false;
+            if (attackHitboxLR != null)
+                attackHitboxLR.enabled = active && isDebugActive;
         }
+    }
+
+    private void EnsureAttackHitboxDebugLineRenderer()
+    {
+        if (attackHitboxLR == null)
+            return;
+
+        if (attackHitboxLR.sharedMaterial == null)
+            attackHitboxLR.material = new Material(Shader.Find("Sprites/Default"));
+
+        attackHitboxLR.startColor = new Color(1f, 0.15f, 0.1f, 1f);
+        attackHitboxLR.endColor = new Color(1f, 0.15f, 0.1f, 1f);
+        attackHitboxLR.startWidth = 0.05f;
+        attackHitboxLR.endWidth = 0.05f;
+        attackHitboxLR.sortingOrder = 500;
+        attackHitboxLR.useWorldSpace = true;
     }
 
     // =========================================================

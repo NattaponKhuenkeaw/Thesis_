@@ -435,22 +435,19 @@ namespace Project.ShopSystem
         public void ResetRunProgressForDeath(PlayerMetaProgression metaProgression = null)
         {
             EnsureInventoryData();
+
+            // Keep the lobby team roster so the player can leave again; strip run loot,
+            // run levels/effects, equipped run artifacts, and earned currency.
+            CharacterObject[] teamSnapshot = GetTeamSnapshot();
+            int activeIndex = activeTeamSlotIndex;
+
             ownedItems.Clear();
             itemStacks.Clear();
             runCharacters.Clear();
             currency = DefaultCurrency;
 
-            EnsureTeamSlotCapacity(DefaultTeamSlotCount);
-            for (int i = 0; i < teamSlots.Length; i++)
-            {
-                teamSlots[i].Character = null;
-                teamSlots[i].SetArtifacts(null, DefaultArtifactSlotCount);
-            }
-
-            activeTeamSlotIndex = 0;
+            DeployTeam(teamSnapshot, activeIndex, artifactsBySlot: null);
             AddUnlockedRosterItems(metaProgression);
-            // Step 1 (Not Perma): do not restore permanent dungeon items into the next run.
-            // AddPermanentItems(metaProgression);
             PostInventoryMutation(save: true);
         }
 
@@ -688,6 +685,20 @@ namespace Project.ShopSystem
             }
 
             state.currentHP = Mathf.Max(0f, hp);
+        }
+
+        /// <summary>
+        /// Writes run Aura Energy into inventory only (does not require TeamLoader UI notify).
+        /// </summary>
+        public void SetRunCharacterCurrentAE(CharacterObject character, float ae)
+        {
+            RunCharacterState state = GetOrCreateRunCharacterState(character);
+            if (state == null)
+            {
+                return;
+            }
+
+            state.currentAE = Mathf.Max(0f, ae);
         }
 
         public CharacterStats GetCharacterStats(CharacterObject character)
@@ -2158,33 +2169,6 @@ namespace Project.ShopSystem
                 {
                     AddResolvedItem(characterItem, 1);
                 }
-            }
-        }
-
-        private void AddPermanentItems(PlayerMetaProgression metaProgression)
-        {
-            if (metaProgression == null)
-            {
-                return;
-            }
-
-            metaProgression.LoadPersistentStateIfNeeded();
-            IReadOnlyList<PermanentItemStack> permanentItems = metaProgression.PermanentItems;
-            for (int i = 0; i < permanentItems.Count; i++)
-            {
-                PermanentItemStack stack = permanentItems[i];
-                if (stack == null || stack.quantity <= 0 || string.IsNullOrWhiteSpace(stack.itemId))
-                {
-                    continue;
-                }
-
-                BaseItem item = ResolveItemById(stack.itemId);
-                if (item == null)
-                {
-                    continue;
-                }
-
-                AddResolvedItem(item, Mathf.Max(1, stack.quantity));
             }
         }
 

@@ -59,6 +59,8 @@ GameObject:
   - component: {fileID: 7111990659181474709}
   - component: {fileID: 3419202181910011112}
   - component: {fileID: 3419202181910011113}
+  - component: {fileID: 8871381574323264281}
+  - component: {fileID: -8724967272555202555}
   m_Layer: 0
   m_Name: Manager
   m_TagString: Untagged
@@ -97,7 +99,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e9022b4244d8a9f4c94d4a6339ee96af, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.RootPersistentManager
 --- !u!114 &3419202181910011112
 MonoBehaviour:
@@ -109,7 +111,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e67f0c4664b84fcdbd758a7c26071901, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.UI.RunResultUI
 --- !u!114 &3419202181910011113
 MonoBehaviour:
@@ -121,15 +123,53 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f347d2a4e3e4a8abde163861519a701, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.RunEnd.RunEndController
   runInventory: {fileID: 11400000, guid: 7e77a39b7efedda4f924677b81de549c, type: 2}
   metaProgression: {fileID: 11400000, guid: f3d0c0c5246b7f04093bf9b8106bccef, type: 2}
   runResultUI: {fileID: 3419202181910011112}
+  roomClearCurrencyReward: 500
   deathDelaySeconds: 1.75
   lobbySceneName: Test_Lobby
-  lobbyEntranceId: Default
   roomsCleared: 0
+--- !u!114 &8871381574323264281
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 822730165316854140}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b80f2f8870291a444b310079fb8f2b03, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Core.GameRunManager
+  runInventory: {fileID: 0}
+  metaProgression: {fileID: 0}
+  mapData: {fileID: 0}
+  zoneStateProvider: {fileID: 0}
+  lobbySceneName: Test_Lobby
+  firstDungeonSceneName: Test_Playground
+  boundaryFadeDuration: 0.35
+  minimumTeamMembers: 1
+  requireAllTeamSlotsFilled: 0
+--- !u!114 &-8724967272555202555
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 822730165316854140}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af636cdbaf426554e947b433e8fd28d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.RoomChoiceDirector
+  mapData: {fileID: 0}
+  offerCount: 2
+  shopEveryClears: 3
+  defaultFillKinds: 000000000100000003000000
+  clearsSinceShopOpportunity: 0
 --- !u!1 &1566489620681877580
 GameObject:
   m_ObjectHideFlags: 0
@@ -140,6 +180,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2328885466388573497}
   - component: {fileID: 6754166015969975239}
+  - component: {fileID: 4990774588960370306}
   m_Layer: 0
   m_Name: SceneManager
   m_TagString: Untagged
@@ -179,6 +220,24 @@ MonoBehaviour:
   mapData: {fileID: 11400000, guid: 286c2d1c11083884ea1cacac57e88f23, type: 2}
   transitionOutSFX: {fileID: 0}
   transitionInSFX: {fileID: 0}
+--- !u!114 &4990774588960370306
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1566489620681877580}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 362ae6814a52b0a42bf322d70eb7eafa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.RoomClearManager
+  enemies:
+  - {fileID: 0}
+  - {fileID: 0}
+  portalsRoot: {fileID: 0}
+  hidePortalsOnStart: 1
+  unlockSceneExitOnClear: 1
 --- !u!1 &3340296907417705203
 GameObject:
   m_ObjectHideFlags: 0
@@ -298,6 +357,9 @@ MonoBehaviour:
   lastAttackedEnemy: {fileID: 0}
   lastDamagePerHit: 0
   totalDamageOnCurrentTarget: 0
+  maxDamageHit: 0
+  dpsStartTime: -1
+  currentDPS: 0
 --- !u!1 &7588547787764624034
 GameObject:
   m_ObjectHideFlags: 0

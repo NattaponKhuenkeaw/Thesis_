@@ -16,6 +16,8 @@ public class EnemyWorldUI : MonoBehaviour
     [SerializeField] private float healthLerpDuration = 0.5f;
 
     [SerializeField] private bool hideCanvasOnDeath = true;
+    [Tooltip("When false, world HP sliders stay hidden (boss uses screen HUD instead). Attack warning still works.")]
+    [SerializeField] private bool showHealthBar = true;
 
     [Header("Attack Warning")]
     [SerializeField] private GameObject attackWarningIcon;
@@ -45,12 +47,14 @@ public class EnemyWorldUI : MonoBehaviour
             attackWarningIcon.SetActive(false);
         }
 
+        ApplyHealthBarVisibility();
         UpdateHealthBar();
     }
 
     private void OnEnable()
     {
         SubscribeToEnemyEvents();
+        ApplyHealthBarVisibility();
         UpdateHealthBar();
     }
 
@@ -232,7 +236,7 @@ public class EnemyWorldUI : MonoBehaviour
 
     private void UpdateHealthBar()
     {
-        if (healthSlider == null || enemyController == null)
+        if (!showHealthBar || healthSlider == null || enemyController == null)
         {
             return;
         }
@@ -258,6 +262,28 @@ public class EnemyWorldUI : MonoBehaviour
 
             healthLerpCoroutine = StartCoroutine(HealthLerpRoutine(normalizedHp));
         }
+    }
+
+    private void ApplyHealthBarVisibility()
+    {
+        if (healthSlider != null)
+        {
+            healthSlider.gameObject.SetActive(showHealthBar);
+        }
+
+        if (damageLerpSlider != null)
+        {
+            damageLerpSlider.gameObject.SetActive(showHealthBar);
+        }
+    }
+
+    /// <summary>
+    /// Bosses use screen-space HUD; call with false to hide world HP while keeping attack warning.
+    /// </summary>
+    public void SetShowHealthBar(bool visible)
+    {
+        showHealthBar = visible;
+        ApplyHealthBarVisibility();
     }
 
     private IEnumerator HealthLerpRoutine(float targetValue)

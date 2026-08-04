@@ -94,6 +94,17 @@ namespace Project.Core
             ApplyZoneStateForScene(SceneManager.GetActiveScene().name);
         }
 
+        private void Start()
+        {
+            // Cold-start in Lobby: SceneBoundaryController locks exits in Awake.
+            // Mirror SafeZone unlock that SceneTransitionManager does after intro.
+            string activeScene = SceneManager.GetActiveScene().name;
+            if (string.Equals(activeScene, lobbySceneName, StringComparison.Ordinal))
+            {
+                ConfigureSafeZoneExitForScene(activeScene);
+            }
+        }
+
         private void OnEnable()
         {
             SceneManager.sceneLoaded += HandleSceneLoaded;
@@ -255,6 +266,9 @@ namespace Project.Core
                 DisableAllSceneCanvases();
 
                 ApplyZoneStateForScene(sceneName);
+                // Death/abandon return skips SceneTransitionManager, so SafeZone exits
+                // (Lobby) would stay physically/logically locked without this.
+                ConfigureSafeZoneExitForScene(sceneName);
 
                 yield return FadeBoundaryOverlay(1f, 0f);
             }
@@ -296,6 +310,43 @@ namespace Project.Core
 
             zoneStateProvider.SetCurrentRoom(room);
             Debug.Log($"[GameRunManager] Zone state updated for boundary scene. Room={room.name}, Mode={room.ZoneMode}.", this);
+        }
+
+        /// <summary>
+        /// Safe rooms have no clear gate. Boundary loads (death → Lobby) must unlock the
+        /// exit the same way <see cref="SceneTransitionManager"/> does after intro.
+        /// </summary>
+        private void ConfigureSafeZoneExitForScene(string sceneName)
+        {
+            if (string.IsNullOrWhiteSpace(sceneName))
+            {
+                return;
+            }
+
+            ResolveDependencies();
+
+            RoomData room = mapData != null ? mapData.ResolveRoom(sceneName) : null;
+            bool isLobby = string.Equals(sceneName, lobbySceneName, StringComparison.Ordinal);
+            bool isSafeZone = isLobby
+                || (room != null && room.ZoneMode == ZoneMode.SafeZone);
+
+            if (!isSafeZone)
+            {
+                return;
+            }
+
+            SceneBoundaryController boundary = FindFirstObjectByType<SceneBoundaryController>();
+            if (boundary == null)
+            {
+                Debug.LogWarning($"[GameRunManager] SafeZone '{sceneName}' has no SceneBoundaryController; exit was not unlocked.", this);
+                return;
+            }
+
+            boundary.SetExitAvailable(true, playFeedback: false);
+
+            string excludeRoomId = room != null ? room.RoomId : null;
+            RoomExitPresenter.PrepareOffersForSafeRoom(excludeRoomId);
+            Debug.Log($"[GameRunManager] SafeZone '{sceneName}' exit unlocked after boundary load.", this);
         }
 
         private Artifact[][] BuildArtifactDataForDeploy(int slotCount)

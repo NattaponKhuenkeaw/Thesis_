@@ -2,14 +2,6 @@ using UnityEngine;
 
 namespace Project.InventorySystem.Items
 {
-    public enum ItemRetentionPolicy
-    {
-        UseTypeDefault,
-        LoseOnDeath,
-        KeepPermanent,
-        ConvertOnDeath
-    }
-
     public abstract class BaseItem : ScriptableObject
     {
         [Header("Basic Information")]
@@ -21,26 +13,5 @@ namespace Project.InventorySystem.Items
         
         [Header("Shop Settings")]
         public int price;
-
-        [Header("Run Retention")]
-        [Tooltip("Controls what happens to this item when the player dies. UseTypeDefault keeps existing type behavior.")]
-        public ItemRetentionPolicy retentionPolicy = ItemRetentionPolicy.UseTypeDefault;
-
-        [Tooltip("Fragments gained per item when Retention Policy is Convert On Death.")]
-        [Min(1)] public int deathConversionFragmentAmount = 1;
-
-        public ItemRetentionPolicy ResolvedRetentionPolicy
-        {
-            get
-            {
-                if (retentionPolicy != ItemRetentionPolicy.UseTypeDefault)
-                {
-                    return retentionPolicy;
-                }
-
-                // Step 1 (Not Perma): characters are run-scoped; only meta fragments/currency persist.
-                return ItemRetentionPolicy.LoseOnDeath;
-            }
-        }
     }
 }

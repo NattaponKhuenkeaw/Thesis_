@@ -1,6 +1,6 @@
 # Architecture Decision Records Index
 
-> Last updated: 2026-07-07
+> Last updated: 2026-08-04
 
 ## Dependency Order
 
@@ -10,6 +10,7 @@ graph TD
     ADR002["ADR-002: Runtime Effect Recipes"]
     ADR003["ADR-003: Deterministic State-Owned Player Movement"]
     ADR005["ADR-005: Deployed Character Live-Stat Authority"]
+    ADR006["ADR-006: Boss Pattern Controller"]
     ADR001 --> ADR002
     ADR002 --> ADR005
 ```
@@ -24,6 +25,7 @@ _Update this diagram as ADRs are added. Show which decisions depend on others._
 | [002](002-runtime-effect-recipes.md) | Runtime Effect Recipes | **Accepted** | Phase 2 | Splits reusable formulas from kit-owned application recipes |
 | [003](003-deterministic-player-state-owned-movement.md) | Deterministic State-Owned Player Movement | **Accepted** | Phase 1 | Implementation approved; awaiting human E2E feel approval |
 | [005](005-deployed-character-live-stat-authority.md) | Deployed Character Live-Stat Authority | **Accepted** | Phase 2 | Runtime-only deployed records and explicit formula read policy |
+| [006](006-boss-pattern-controller.md) | Boss Pattern Controller | **Accepted** | Content / Boss | Bosses use pattern sequencer; Behavior Graph stays for trash enemies |
 
 ## Phase Mapping
 

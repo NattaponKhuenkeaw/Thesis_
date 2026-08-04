@@ -194,6 +194,8 @@ namespace Project.Core.ZoneState
         {
             isTransitioning = true;
             Time.timeScale = 1f;
+            // Mutable: may become true after post-load layout mount (Lobby -> Boss).
+            bool layoutActive = useLayoutSwap;
 
             Project.UI.InputLockManager.Lock();
             Debug.Log($"[SceneTransitionManager] Transition started. Target='{sceneName}', Entrance='{entranceId}', LayoutSwap={useLayoutSwap}.");
@@ -205,6 +207,9 @@ namespace Project.Core.ZoneState
                     GameAudioManager.Instance.PlayHitSFX(transitionOutSFX);
                 }
 
+                // One clear per transition. Later DisableAllSceneCanvases calls must accumulate
+                // so layout-swap (same scene) does not forget canvases already turned off.
+                disabledCanvases.Clear();
                 DisableAllSceneCanvases();
 
                 yield return StartCoroutine(FadeOverlayRoutine(0f, 1f));
@@ -249,6 +254,28 @@ namespace Project.Core.ZoneState
 
                     Project.UI.InputLockManager.ResetLocks();
                     Project.UI.InputLockManager.Lock();
+
+                    // Hybrid rooms: scene is only the shell. Mount layout after load even if
+                    // the previous scene had no RoomLayoutHost (e.g. Lobby -> Boss_01).
+                    if (targetRoom != null && targetRoom.UsesLayoutSwap)
+                    {
+                        RoomLayoutHost host = RoomLayoutHost.EnsureInActiveScene();
+                        activeBoundaryController = null;
+                        if (host == null || !host.MountRoom(targetRoom))
+                        {
+                            Debug.LogError($"[SceneTransitionManager] Post-load layout mount failed for room '{targetRoom.RoomId}'.");
+                            yield break;
+                        }
+
+                        layoutActive = true;
+                        yield return null;
+                        Debug.Log($"[SceneTransitionManager] Post-load layout mount complete. ActiveRoom='{targetRoom.RoomId}'.");
+                    }
+                    else if (RoomLayoutHost.Instance != null)
+                    {
+                        // Returning to a baked combat/lobby scene — restore authored content.
+                        RoomLayoutHost.Instance.ClearActiveLayout();
+                    }
                 }
 
                 if (zoneStateProvider != null)
@@ -265,7 +292,7 @@ namespace Project.Core.ZoneState
 
                 PlayerCharacter player = Object.FindFirstObjectByType<PlayerCharacter>();
                 EntrancePoint targetEntrance = FindEntrancePoint(entranceId);
-                activeBoundaryController = ResolveBoundaryControllerAfterTransition(useLayoutSwap);
+                activeBoundaryController = ResolveBoundaryControllerAfterTransition(layoutActive);
 
                 Debug.Log($"[SceneTransitionManager] Runtime lookup after load: Player={(player != null ? player.name : "missing")}, Entrance={(targetEntrance != null ? targetEntrance.name : "missing")}.");
 
@@ -393,27 +420,27 @@ namespace Project.Core.ZoneState
 
         private void DisableAllSceneCanvases()
         {
-            disabledCanvases.Clear();
             Canvas[] canvases = Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None);
             foreach (Canvas canvas in canvases)
             {
-                if (canvas != transitionCanvas && canvas.enabled)
-                {
-                    canvas.enabled = false;
+                if (canvas == null || canvas == transitionCanvas || !canvas.enabled)
+                    continue;
+
+                canvas.enabled = false;
+                if (!disabledCanvases.Contains(canvas))
                     disabledCanvases.Add(canvas);
-                }
             }
         }
 
         private void EnableSceneCanvases()
         {
-            foreach (Canvas canvas in disabledCanvases)
+            for (int i = 0; i < disabledCanvases.Count; i++)
             {
+                Canvas canvas = disabledCanvases[i];
                 if (canvas != null)
-                {
                     canvas.enabled = true;
-                }
             }
+
             disabledCanvases.Clear();
         }
 
