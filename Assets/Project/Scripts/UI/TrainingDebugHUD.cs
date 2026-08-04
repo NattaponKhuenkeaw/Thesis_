@@ -318,8 +318,12 @@ namespace CombatCore
             GUILayout.Label("📊  DPS SHOWCASE", stylePanelTitle);
             DrawSeparator();
 
-            // Large DPS value
-            GUILayout.Label($"{stats.GetDPS():F1}", styleValueLarge);
+            // Large DPS value — show "—" during the 1s warmup window
+            float dps = stats.GetDPS();
+            string dpsText = (stats.dpsStartTime >= 0f && (Time.time - stats.dpsStartTime) < 1f)
+                ? "—"
+                : $"{dps:F1}";
+            GUILayout.Label(dpsText, styleValueLarge);
             GUILayout.Label("damage per second", styleLabel);
 
             GUILayout.Space(6f);

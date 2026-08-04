@@ -121,6 +121,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         BindRunInventoryEvents();
         BindMetaProgressionEvents();
         CharacterEvents.OnCharacterStatsChanged += HandleCharacterStatsChanged;
+        SyncTeamSnapshotFromInventory();
+        ReconcileAlwaysRuntimeEffects();
     }
 
     private void OnDisable()
@@ -772,7 +774,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     private void HandleRuntimeEffectsChanged(CharacterObject changedCharacter, bool affectsStats)
     {
-        if (isReconcilingAlwaysRuntimeEffects || !affectsStats)
+        if (isReconcilingAlwaysRuntimeEffects)
         {
             return;
         }
@@ -785,7 +787,11 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         SyncTeamSnapshotFromInventory();
         if (FindCharacterIndex(changedCharacter) >= 0)
         {
-            RefreshRuntimeStatsOnly(changedCharacter);
+            ReconcileAlwaysRuntimeEffects();
+            if (affectsStats)
+            {
+                RefreshRuntimeStatsOnly(changedCharacter);
+            }
         }
     }
 

@@ -25,8 +25,8 @@ namespace Project.ShopSystem
         public CharacterUpgrade upgrade = new CharacterUpgrade();
         public float currentHP = -1f;
         public float currentAE = -1f;
-        [SerializeField] private List<RuntimeEffectInstance> activeEffects = new List<RuntimeEffectInstance>();
-        [SerializeField] private bool hasTickingEffects;
+        [NonSerialized] private List<RuntimeEffectInstance> activeEffects = new List<RuntimeEffectInstance>();
+        [NonSerialized] private bool hasTickingEffects;
 
         public IReadOnlyList<RuntimeEffectInstance> ActiveEffects
         {
@@ -55,6 +55,13 @@ namespace Project.ShopSystem
         internal void EnsureEffectList()
         {
             activeEffects ??= new List<RuntimeEffectInstance>();
+        }
+
+        internal void ClearTransientRuntimeEffects()
+        {
+            EnsureEffectList();
+            activeEffects.Clear();
+            hasTickingEffects = false;
         }
 
         internal void RecalculateTickingEffects()
@@ -180,6 +187,7 @@ namespace Project.ShopSystem
         private const string DefaultCharacterItemId = "char-0-main";
         private const string DefaultCharacterItemResourcePath = "ItemSO/char_0_Main";
         private static readonly int RuntimeEffectStatTargetCount = Enum.GetValues(typeof(RuntimeEffectStatTarget)).Length;
+        private static int currentPlaySessionId;
 
         [Header("Player Owned Items")]
         [Tooltip("Runtime-owned items for the current run. Character items represent roster ownership.")]
@@ -212,6 +220,7 @@ namespace Project.ShopSystem
         [NonSerialized] private readonly HashSet<CharacterObject> pendingRuntimeEffectStatCharacters = new HashSet<CharacterObject>();
         [NonSerialized] private Dictionary<string, CharacterItem> characterItemsByCharacterId;
         [NonSerialized] private int runtimeEffectMutationBatchDepth;
+        [NonSerialized] private int initializedPlaySessionId = -1;
 
         public event Action<CharacterObject> OnRuntimeEffectsChanged;
         internal event Action<CharacterObject, bool> OnRuntimeEffectsChangedDetailed;
@@ -253,8 +262,18 @@ namespace Project.ShopSystem
             }
         }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void BeginPlaySession()
+        {
+            unchecked
+            {
+                currentPlaySessionId++;
+            }
+        }
+
         private void OnEnable()
         {
+            EnsureTransientRuntimeStateForPlaySession();
             if (ShouldUsePersistentStorage())
             {
                 LoadPersistentStateIfNeeded();
@@ -1407,6 +1426,7 @@ namespace Project.ShopSystem
 
         public void LoadPersistentStateIfNeeded()
         {
+            EnsureTransientRuntimeStateForPlaySession();
             if (!ShouldUsePersistentStorage())
             {
                 EnsureInventoryData();
@@ -1999,6 +2019,7 @@ namespace Project.ShopSystem
 
         private void EnsureRunData()
         {
+            EnsureTransientRuntimeStateForPlaySession();
             if (ShouldUsePersistentStorage())
             {
                 LoadPersistentStateIfNeeded();
@@ -2013,6 +2034,31 @@ namespace Project.ShopSystem
 
             EnsureTeamSlotCapacity(DefaultTeamSlotCount);
             EnsurePlayableState();
+        }
+
+        private void EnsureTransientRuntimeStateForPlaySession()
+        {
+            if (!Application.isPlaying || initializedPlaySessionId == currentPlaySessionId)
+            {
+                return;
+            }
+
+            initializedPlaySessionId = currentPlaySessionId;
+            if (runCharacters != null)
+            {
+                for (int i = 0; i < runCharacters.Count; i++)
+                {
+                    runCharacters[i]?.ClearTransientRuntimeEffects();
+                }
+            }
+
+            expiredRuntimeEffects.Clear();
+            resolvingRuntimeStats.Clear();
+            pendingRuntimeEffectCharacters.Clear();
+            pendingRuntimeEffectCharacterSet.Clear();
+            pendingRuntimeEffectStatCharacters.Clear();
+            runtimeEffectMutationBatchDepth = 0;
+            IsDispatchingRuntimeEffectStatChange = false;
         }
 
         private void EnsurePlayableState()
