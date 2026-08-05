@@ -74,12 +74,9 @@ namespace Project.TeamBuilder.UI
 
                 if (levelText != null)
                 {
-                    CharacterUpgrade upgrade = runInventory != null
-                        ? runInventory.GetCharacterUpgrade(item.characterObjectData)
-                        : item.characterObjectData.upgrade;
-                    levelText.text = upgrade != null
-                        ? upgrade.LevelLabel
-                        : "Lv.1/30";
+                    int globalLevel = runInventory != null ? runInventory.GlobalLevel : 1;
+                    int globalMaxLevel = runInventory != null ? runInventory.GlobalMaxLevel : 30;
+                    levelText.text = $"Lv.{globalLevel}/{globalMaxLevel}";
                 }
                 
                 if (attributeImage != null)

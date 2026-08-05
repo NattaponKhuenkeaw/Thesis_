@@ -144,13 +144,9 @@ namespace Project.TeamBuilder.UI
 
             if (levelText != null)
             {
-                CharacterUpgrade upgrade = charObj != null && parentBuilder != null
-                    ? parentBuilder.ResolveCharacterUpgrade(charObj)
-                    : (charObj != null ? charObj.upgrade : null);
-
-                levelText.text = upgrade != null
-                    ? upgrade.LevelLabel
-                    : "Lv.1/30";
+                int globalLevel = parentBuilder != null ? parentBuilder.ResolveRunGlobalLevel() : 1;
+                int globalMaxLevel = parentBuilder != null ? parentBuilder.ResolveRunGlobalMaxLevel() : 30;
+                levelText.text = $"Lv.{globalLevel}/{globalMaxLevel}";
             }
 
             if (elementIcon != null && charObj != null)

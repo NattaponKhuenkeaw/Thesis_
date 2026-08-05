@@ -795,6 +795,16 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         }
     }
 
+    private void HandleGlobalLevelChanged(int previousLevel, int currentLevel)
+    {
+        if (previousLevel == currentLevel)
+        {
+            return;
+        }
+
+        RefreshRuntimeStatsAndResources();
+    }
+
     private void BindRunInventoryEvents()
     {
         if (subscribedRuntimeEffectInventory == runInventory)
@@ -807,6 +817,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         if (subscribedRuntimeEffectInventory != null)
         {
             subscribedRuntimeEffectInventory.OnRuntimeEffectsChangedDetailed += HandleRuntimeEffectsChanged;
+            subscribedRuntimeEffectInventory.OnGlobalLevelChanged += HandleGlobalLevelChanged;
         }
     }
 
@@ -815,6 +826,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         if (subscribedRuntimeEffectInventory != null)
         {
             subscribedRuntimeEffectInventory.OnRuntimeEffectsChangedDetailed -= HandleRuntimeEffectsChanged;
+            subscribedRuntimeEffectInventory.OnGlobalLevelChanged -= HandleGlobalLevelChanged;
             subscribedRuntimeEffectInventory = null;
         }
     }
@@ -1462,7 +1474,9 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
                         includeArtifacts: true,
                         includeRuntimeEffects: false,
                         includePotentialModifiers: false);
-                CharacterStats sourceBaseStats = sourceCharacter.GetLeveledStats();
+                CharacterStats sourceBaseStats = runInventory != null
+                    ? runInventory.GetCharacterBaseStats(sourceCharacter)
+                    : sourceCharacter.GetLeveledStats();
                 ApplyPotentialStatModifier(targetStats, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
             }
         }

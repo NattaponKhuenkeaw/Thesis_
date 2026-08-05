@@ -21,6 +21,7 @@ namespace Project.TeamBuilder.UI
         Info,
         Skill,
         Equipment,
+        // LEGACY: Kept so existing serialized/prefab bindings remain valid.
         Level,
         Potential
     }
@@ -548,7 +549,6 @@ namespace Project.TeamBuilder.UI
             bool missingRequiredPanel = infoPanel == null
                 || skillPanel == null
                 || equipmentPanel == null
-                || levelPanel == null
                 || potentialPanel == null;
             if (!missingRequiredPanel && subPanels != null && subPanels.Length > 0)
             {
@@ -652,7 +652,9 @@ namespace Project.TeamBuilder.UI
 
         public void ShowLevelPage()
         {
-            SetActivePage(InspectPage.Level);
+            // Existing prefab OnClick bindings land on the read-only Info page
+            // while the legacy EXP panel remains serialized for migration.
+            SetActivePage(InspectPage.Info);
         }
 
         public void ShowPotentialPage()
@@ -1011,8 +1013,21 @@ namespace Project.TeamBuilder.UI
             return playerInventory;
         }
 
+        public int ResolveRunGlobalLevel()
+        {
+            PlayerRunInventory inventory = ResolveRunInventory();
+            return inventory != null ? inventory.GlobalLevel : 1;
+        }
+
+        public int ResolveRunGlobalMaxLevel()
+        {
+            PlayerRunInventory inventory = ResolveRunInventory();
+            return inventory != null ? inventory.GlobalMaxLevel : 30;
+        }
+
         public CharacterUpgrade ResolveCharacterUpgrade(CharacterObject character)
         {
+            // Compatibility API for the retained CharacterLevelPanel only.
             if (character == null) return null;
             var runInv = ResolveRunInventory();
             if (runInv != null)

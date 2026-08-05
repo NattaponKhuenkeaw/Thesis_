@@ -6,6 +6,9 @@ using System;
 
 namespace Project.TeamBuilder.UI.Panels
 {
+    /// <summary>
+    /// LEGACY: Retained with CharacterLevelPanel until serialized references are removed safely.
+    /// </summary>
     public class LevelingPotionSlotUI : MonoBehaviour
     {
         [Header("UI References")]

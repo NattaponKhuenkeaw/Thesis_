@@ -4,7 +4,7 @@
 
 This document is the current design authority for **Neo-JJK**.
 
-> **Runtime verification:** 2026-07-18. Design statements describe the intended player experience. Tables labeled **Current Prototype Truth** describe behavior verified in the Unity project. Planned systems are explicitly marked as targets or speculative.
+> **Runtime verification:** 2026-08-05. Design statements describe the intended player experience. Tables labeled **Current Prototype Truth** describe behavior verified in the Unity project. Planned systems are explicitly marked as targets or speculative.
 
 `GDD_JJK.md` is a legacy plan. Keep it as historical reference, but do not use it as the active combat direction unless a human explicitly asks for legacy comparison work.
 
@@ -338,19 +338,27 @@ or Void independently.
 
 ![Character Level System](https://www.gameuidatabase.com/uploads/Genshin-Impact01032021-021309-52226.jpg)
 
-### Character Level System
+### Run Global Level System
 
-Character Level is run-scoped growth for each acquired character. It is separate from permanent Character Potential.
+Run Global Level is casual, run-scoped growth shared by the complete character roster. It is separate from permanent Character Potential.
 
-- Every character starts each run at **Lv.1**.
-- A character also starts with the permanent Potential rank the player has already unlocked for that character.
-- Character Level, current EXP, and unspent EXP Potions are removed when the run is lost or reset.
-- The maximum Character Level is **Lv.30/30**.
-- Characters gain EXP only from **EXP Potions**. Defeating monsters does not directly grant EXP.
-- EXP Potions can be obtained from the **Soul Shop** and **Room Clear Rewards**.
-- EXP Potions are consumed only through the Character Level System UI.
-- When current EXP reaches or exceeds the current level EXP cap, the character levels up. Excess EXP carries into the next level.
-- Leveling increases only the character's basic **ATK, DEF, and Max HP**.
+- Every run starts at **Global Lv.1** and has a maximum of **Global Lv.30/30**.
+- Every character resolves stats from the same Run Global Level, including characters not acquired, inventoried, or deployed in the current run.
+- Losing or resetting the run resets Run Global Level to **Lv.1**.
+- Run Global Level has no EXP meter. It advances through a **Level** room event that awards an immediate **+1, +2, or +3 levels**.
+- The Level event roll uses these project-owner-authored weights:
+
+| Level Gain | Weight |
+| --- | --- |
+| +1 | 65% |
+| +2 | 25% |
+| +3 | 10% |
+
+- The result is clamped at Global Lv.30 and applied once after the randomization reveal completes.
+- Leveling increases each character's own authored basic **ATK, DEF, and Max HP** growth; the shared level does not make character growth values identical.
+- After application, deployed runtime stats and visible stat/level readouts refresh from the new Run Global Level.
+- The former per-character level/EXP state, Character Level panel, and Leveling Potion remain in code only as **legacy migration paths**. They are not part of the active design and should not receive new content.
+- A character still uses the permanent Potential rank the player has unlocked for that character; Potential is not reset with Run Global Level.
 
 ---
 
@@ -389,11 +397,13 @@ Character Level is run-scoped growth for each acquired character. It is separate
   - **Character Slider Panel**: For selecting characters; features a slider-like character icon selection matching standard gacha aesthetics.
   - **Character Visual Panel**: Emphasizes the character Icon, Name, Element, and Role based on the slider selection.
   - **Content Panel**: Populates based on the selected character and contains the following windows:
-    - **Character Info Panel**: Current level, potential, all character stats, and 3 Artifact Slots.
+    - **Character Info Panel**: Shared Run Global Level, permanent Potential, all character stats, and 3 Artifact Slots.
     - **Character Skill Panel**: Icon and Information for Basic Attack, Skill, Ultimate, and Passive with embedded text (values change depending on unlocked Potential).
     - **Equipment Panel**: 3 Artifact Slots. Clicking an equipped Artifact shows an Artifact Preview Panel with [Ascend / Switch] buttons. Clicking Switch opens the InventoryGridItem filtered by Artifact type ("Click to Switch per slot"). Clicking Ascend enters the Artifact Ascend UI.
-    - **Character Level Panel**: Displays current level, Level Slider bar, current EXP / max EXP, EXP Potion ItemGrid, and a Level-Up button. Clicking an EXP Potion previews how much it will increase the Character Level; clicking the level-up button confirms the decision.
     - **Character Potential Panel**: A full-screen view exited through a back button. It contains three tracks—Skill, Ultimate, and Passive—with four sequential levels each (12 nodes total). Clicking a node shows its preview, fragment cost, and upgrade button. Character Potential Fragments are required to unlock the next level in that track.
+
+> [!NOTE]
+> The former Character Level panel, EXP slider, Leveling Potion grid, and confirmation button are legacy. The active Character Inspector exposes the shared Run Global Level as read-only run information; leveling interaction happens only through the Level room event.
 
 ### Backpack System
 
@@ -407,9 +417,9 @@ Character Level is run-scoped growth for each acquired character. It is separate
 
 - **Safe Zone Rule**: Character Inspector / Backpack / TeamBuilder are ONLY accessible in Safe Zones (e.g. Shop Room). In Combat-Zones, their UI will disappear to improve player focus on exploration & combat. In Combat-Zone, only "Team Lookup" is available to view the team without modification.
 - **TeamLookup / TeamBuilder** is a UI-Slot Team of 3 containing 3 Artifacts individually. It operates as a Grid-Box (Standard-Gacha Team Roster) accessible via UI Icon or TAB key.
-- It aims for easy Lookup, Summarization, and modification of the current Build and Team. It displays Overall Information (Stats / Role / Character Basic Data like Name, Role, Element, Level, Potential, Equipment) with an Artifact Preview Window on Mouse Raycast to improve QOL.
+- It aims for easy Lookup, Summarization, and modification of the current Build and Team. It displays Overall Information (Stats / Role / Character Basic Data like Name, Role, Element, shared Run Global Level, Potential, Equipment) with an Artifact Preview Window on Mouse Raycast to improve QOL.
 - To Deploy Character/Artifact, the player clicks on the desired TeamSlot, bringing up the Character Inventory.
-- Character Inventory consists of Grid-Like CharItems (Element, Level, and an "In-Team" text if already deployed). It features a Character Switch preview (current char in this slot -> selected char to that slot).
+- Character Inventory consists of Grid-Like CharItems (Element, shared Run Global Level, and an "In-Team" text if already deployed). It features a Character Switch preview (current char in this slot -> selected char to that slot).
 - **Drag & Drop** only works on the TeamSlotUI. Dragging causes the screen to fade to translucent black, highlighting available drop spots. (CharacterGridItem uses click-to-switch per slot, but characters in the TeamSlotUI are draggable).
 - Only when entering TeamBuilder Mode (Safe Zone) can players Drag&Drop or Change Character/Artifact. The player must click **Deploy (Save)** for changes to be applied.
 - In Combat Zone mode, loadout editing is locked while Team Lookup remains available.
@@ -446,7 +456,7 @@ Character Level is run-scoped growth for each acquired character. It is separate
 |Currency | The In-Game Utility Currency for **Soul Shop** | Lose |
 | Character | The Characters that can use in the game. | Lose but upgraded are retain |
 | Artifact | Equipment assigned to character loadouts. | Lose but upgraded are retain |
-| EXP Potion | Consumable Character EXP used only from Character Inspector. | Lose |
+| Run Global Level | Shared roster power earned from Level room events. | Lose; reset to Lv.1 |
 | Fragment | Fragment-specific duplicate material used for Transcendence or Potential. | Retain |
 | Items | The consumable items that can use during the Cursed Realm runs. | Lose |
 
@@ -517,7 +527,7 @@ These speculative Artifacts remain part of the design direction. They are not cl
 | One shared damage formula | Replaced by Normal, Elemental, and non-critical Additional Damage routines. |
 | Character base stats used directly during combat | Replaced by per-team-slot runtime stats built from the character plus equipped Artifact bonuses. |
 | Team Builder edits immediately changing runtime state | Replaced by a session draft. Only confirmed Deploy writes the loadout to `TeamLoader`. |
-| Character Level and EXP Potion progression | Implemented as run-scoped state: levels and EXP are owned by the run inventory, EXP Potions stack, the Character Level panel previews/commits consumption, and ATK/DEF/Max HP growth reaches runtime combat. |
+| Run Global Level progression | Implemented as one run-scoped level used by every character; the admin prototype rolls +1/+2/+3 with 65%/25%/10% weights and refreshes deployed stats. The former per-character EXP, Leveling Potion, and Character Level panel path is retained as legacy only. |
 | Artifact Transcendence and Artifact Fragments | Duplicate Artifact conversion and persistent Transcendence Fragment storage are implemented. Permanent levels, fragment spending, scaling, and restoration remain target design. |
 | Artifact passive descriptions automatically executing | Not implemented generically. Only numeric `bonusStats` and explicitly authored Additional Damage effects affect combat. |
 | The two active Artifact passive descriptions | Not authored as runtime effects in the current Artifact assets. |
@@ -811,10 +821,10 @@ Assets/Project/Scripts/
 | Character content | Eight `CharacterObject` assets; six have substantial kit/Potential authoring and two remain prototype placeholders | **Content pass** — bring each release character to one coherent Basic loop, Skill, Ultimate, passive, and readable role. |
 | Enemy AI (25 scripts) | Unity Behavior Graph: patrol, chase, attack, react, die | **Keep** — good foundation for simple enemy FSM |
 | Team System | `TeamLoader` manages three deployed slots, per-character HP/AE/effective stats, Artifacts, shared switch cooldown, and outgoing-action clones | **Keep** — retain the readable recovery-window swap finish and explicit slot availability feedback. |
-| Runtime Effects / Progression | Recipe-driven buffs, debuffs, shields, heals, statuses, Additional Damage, stack rules, Character Level, and 12-node Potential persistence are functional | **Consolidate content** — migrate legacy definitions gradually and playtest kit readability. |
+| Runtime Effects / Progression | Recipe-driven buffs, debuffs, shields, heals, statuses, Additional Damage, stack rules, Run Global Level, and 12-node Potential persistence are functional | **Consolidate content** — migrate the former individual level/EXP path as legacy and playtest kit readability. |
 | Shop / Inventory | World-space typed offers, linear-price rerolls, selling, stackable consumables, duplicate conversion, run saves, and permanent fragments are functional | **Keep** — finish run-loss/reset rules and Artifact Transcendence spending separately. |
 | Scene / Camera | Persistent transitions coordinate scene-local boundaries, intro sealing, exit unlocking, confiner expansion, and a rightward exit cue in the two active build scenes | **Extend** — reuse the boundary contract for authored combat/reward/boss rooms. |
-| UI | Team draft/deploy, Inspector, Level, Potential, Equipment, shop, combat ability/team HUD, runtime effects, and training contribution feedback exist | **Polish** — final layout, accessibility, and controller navigation need human visual/feel review. |
+| UI | Team draft/deploy, Inspector, Potential, Equipment, shop, combat ability/team HUD, runtime effects, and training contribution feedback exist; the individual Character Level panel is legacy | **Polish** — add the shared run-level presentation during the future Level room pass, then complete accessibility and controller review. |
 | Parallax (3 scripts) | Background parallax scrolling | **Keep** — fits 2D side-scrolling |
 | Editor Tools | Animation/action authoring, projectile/VFX libraries, property drawers, and focused regression tests | **Keep** — use the tools to reduce content-authoring risk rather than expanding system scope. |
 
@@ -846,7 +856,7 @@ Assets/Project/Scripts/
 <!-- @tag:scene-roles -->
 ## Scene Flow
 
-**Target run flow:** `MainMenu → Lobby → CombatRoom → RewardRoom / Shop → BossRoom → Result → Lobby`
+**Target run flow:** `MainMenu → Lobby → CombatRoom → RewardRoom / Shop / Level → BossRoom → Result → Lobby`
 
 **Current playable prototype:** `Test_Playground ⇄ Test_Shop`
 
@@ -858,6 +868,7 @@ Assets/Project/Scripts/
 | `Lobby` | **Target** | Walkable hub for run preparation and long-term progression. |
 | `CombatRoom` | **Target contract proven** | Side-scrolling room-clear using the implemented entrance/exit boundary rules. |
 | `RewardRoom` | **Target** | Upgrade choice, heal, event, or shop encounter. |
+| `Level` | **Target; admin trigger prototype implemented** | Safe room that presents a +1/+2/+3 Run Global Level event through a fixed-camera background-screen sequence. |
 | `BossRoom` | **Target** | Pattern-based boss fight. |
 | `Result` | **Target** | Run win/fail summary and return to Lobby. |
 
@@ -868,6 +879,21 @@ Assets/Project/Scripts/
 3. A room-clear source calls the shared exit-availability API. Unlocking moves the wall, expands the confiner, and plays a short additive rightward camera cue.
 4. The player walks through the authored `TransitionTrigger`; repeated unlock calls are idempotent.
 5. Scene-local controllers own walls and confiners. The persistent `SceneTransitionManager` coordinates loading and exposes the stable API.
+
+### Level Room (Target)
+
+The `Level` room is a Safe Zone with a static camera and a walkable, background-UI-driven presentation that follows the Soul Shop's environmental interaction language.
+
+1. The room contains a background-screen button connected to a player raycast/collision interaction zone.
+2. Entering the interaction zone changes the button animation to a clearly selected state; leaving it returns the button to idle unless the event has started.
+3. Pressing the interaction input starts the event only when no Level sequence is already running.
+4. The sequence hides normal UI, locks player input, and pans the camera to prioritize the background screen.
+5. The screen visibly randomizes between **1-3**, then settles on the weighted result: **1 = 65%, 2 = 25%, 3 = 10%**.
+6. The final number remains readable, a level-up sound plays, and the result is applied to Run Global Level exactly once.
+7. All character stat resolution updates from the new shared level, including characters outside the current run inventory; deployed runtime stats refresh immediately.
+8. The camera returns, player input unlocks, and normal UI becomes visible again so the player can compare the new level and stats.
+
+The sequence is non-interruptible after confirmation. Repeated inputs are ignored while it is active, the result cannot exceed Global Lv.30, and cleanup on scene interruption must restore UI/input ownership. Exact camera, randomization, reveal-hold, animation, and audio timings require a human game-feel pass when the room is implemented. Whether a room can award more than one completed event per visit is also pending that room implementation; a single event resolution must never apply twice.
 
 ### Rogue-lite (Speculative) System
 
@@ -902,6 +928,9 @@ Assets/Project/Scripts/
 6. **Amateur-friendly maintenance**
    A future tired developer should understand a feature quickly.
 
+7. **Run-global level authority**
+   `PlayerRunInventory` owns one Run Global Level. Character-specific growth is calculated at that shared level without requiring the character to be owned, while presentation and deployed runtime systems react to an explicit level-changed event. Per-character EXP state is legacy only.
+
 ---
 
 <!-- @tag:roadmap -->
@@ -919,7 +948,7 @@ Assets/Project/Scripts/
 | 1 | **Strip & Stabilize** | **Partial** | Legacy complexity and class/file inconsistencies remain; current systems compile and are actively refactored. |
 | 2 | **Combat Core** | **Functional, tuning** | Core actions, elements, Aura Energy, feedback, projectiles, and effects work; simplify character kits and complete feel tests. |
 | 3 | **Team & Swap** | **Functional** | Three-slot runtime state, outgoing-action swap finish, cooldown/readiness HUD, and loadout deployment work; tune clarity and feel. |
-| 4 | **Rogue-Lite Loop** | **Partial** | Soul Shop, run inventory, levels, Potential, duplicates, and two-scene transitions work; room generation, reward choice, and full reset flow remain. |
+| 4 | **Rogue-Lite Loop** | **Partial** | Soul Shop, run inventory, Run Global Level prototype, Potential, duplicates, and two-scene transitions work; the Level room presentation, room generation, reward choice, and full reset flow remain. |
 | 5 | **Boss & Content** | **Early content** | Eight character assets exist at mixed readiness; enemy foundation exists; authored release rooms and boss loop remain. |
 | 6 | **Polish & Thesis** | **Not gated** | Accessibility, controller navigation, full-run QA, performance targets, release build, and thesis evidence remain. |
 
