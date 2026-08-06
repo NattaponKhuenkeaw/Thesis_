@@ -45,7 +45,7 @@ namespace Project.TeamBuilder.UI.Panels
             if (levelPanelButton != null)
             {
                 levelPanelButton.onClick.RemoveListener(OpenLevelPanel);
-                levelPanelButton.onClick.AddListener(OpenLevelPanel);
+                levelPanelButton.gameObject.SetActive(false);
             }
 
             if (potentialPanelButton != null)
@@ -75,18 +75,18 @@ namespace Project.TeamBuilder.UI.Panels
             currentEquippedArtifacts = equippedArtifacts;
 
             var data = character.characterObjectData;
-            var upgrade = inspectScreenUI != null ? inspectScreenUI.ResolveCharacterUpgrade(data) : data.upgrade;
+            int globalLevel = inspectScreenUI != null ? inspectScreenUI.ResolveRunGlobalLevel() : 1;
+            int globalMaxLevel = inspectScreenUI != null ? inspectScreenUI.ResolveRunGlobalMaxLevel() : 30;
 
             if (levelText != null)
             {
-                levelText.text = upgrade != null ? upgrade.LevelLabel : "Lv.1/30";
+                levelText.text = $"Lv.{globalLevel}/{globalMaxLevel}";
             }
 
-            // Hide the Level button when the character is already at max level.
+            // The dedicated individual EXP page is no longer an active route.
             if (levelPanelButton != null)
             {
-                bool isMax = upgrade != null && upgrade.IsMaxLevel;
-                levelPanelButton.gameObject.SetActive(!isMax);
+                levelPanelButton.gameObject.SetActive(false);
             }
 
             if (potentialText != null)

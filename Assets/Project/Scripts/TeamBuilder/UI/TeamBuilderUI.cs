@@ -551,6 +551,7 @@ namespace Project.TeamBuilder.UI
 
         public CharacterUpgrade ResolveCharacterUpgrade(CharacterObject character)
         {
+            // Compatibility API for the retained CharacterLevelPanel only.
             if (character == null)
             {
                 return null;
@@ -561,6 +562,18 @@ namespace Project.TeamBuilder.UI
             return state != null && state.upgrade != null
                 ? state.upgrade
                 : character.upgrade;
+        }
+
+        public int ResolveRunGlobalLevel()
+        {
+            PlayerRunInventory inventory = ResolveRunInventoryReference();
+            return inventory != null ? inventory.GlobalLevel : 1;
+        }
+
+        public int ResolveRunGlobalMaxLevel()
+        {
+            PlayerRunInventory inventory = ResolveRunInventoryReference();
+            return inventory != null ? inventory.GlobalMaxLevel : 30;
         }
 
         public CharacterStats ResolveCharacterStats(CharacterObject character)

@@ -121,6 +121,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         BindRunInventoryEvents();
         BindMetaProgressionEvents();
         CharacterEvents.OnCharacterStatsChanged += HandleCharacterStatsChanged;
+        SyncTeamSnapshotFromInventory();
+        ReconcileAlwaysRuntimeEffects();
     }
 
     private void OnDisable()
@@ -922,7 +924,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     private void HandleRuntimeEffectsChanged(CharacterObject changedCharacter, bool affectsStats)
     {
-        if (isReconcilingAlwaysRuntimeEffects || !affectsStats)
+        if (isReconcilingAlwaysRuntimeEffects)
         {
             return;
         }
@@ -935,8 +937,22 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         SyncTeamSnapshotFromInventory();
         if (FindCharacterIndex(changedCharacter) >= 0)
         {
-            RefreshRuntimeStatsOnly(changedCharacter);
+            ReconcileAlwaysRuntimeEffects();
+            if (affectsStats)
+            {
+                RefreshRuntimeStatsOnly(changedCharacter);
+            }
         }
+    }
+
+    private void HandleGlobalLevelChanged(int previousLevel, int currentLevel)
+    {
+        if (previousLevel == currentLevel)
+        {
+            return;
+        }
+
+        RefreshRuntimeStatsAndResources();
     }
 
     private void BindRunInventoryEvents()
@@ -951,6 +967,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         if (subscribedRuntimeEffectInventory != null)
         {
             subscribedRuntimeEffectInventory.OnRuntimeEffectsChangedDetailed += HandleRuntimeEffectsChanged;
+            subscribedRuntimeEffectInventory.OnGlobalLevelChanged += HandleGlobalLevelChanged;
         }
     }
 
@@ -959,6 +976,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         if (subscribedRuntimeEffectInventory != null)
         {
             subscribedRuntimeEffectInventory.OnRuntimeEffectsChangedDetailed -= HandleRuntimeEffectsChanged;
+            subscribedRuntimeEffectInventory.OnGlobalLevelChanged -= HandleGlobalLevelChanged;
             subscribedRuntimeEffectInventory = null;
         }
     }
@@ -1582,11 +1600,6 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             return false;
         }
 
-        if (effect.filterByTargetElement && target.elementType != effect.targetElement)
-        {
-            return false;
-        }
-
         return true;
     }
 
@@ -1712,7 +1725,9 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
                         includeArtifacts: true,
                         includeRuntimeEffects: false,
                         includePotentialModifiers: false);
-                CharacterStats sourceBaseStats = sourceCharacter.GetLeveledStats();
+                CharacterStats sourceBaseStats = runInventory != null
+                    ? runInventory.GetCharacterBaseStats(sourceCharacter)
+                    : sourceCharacter.GetLeveledStats();
                 ApplyPotentialStatModifier(targetStats, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
             }
         }

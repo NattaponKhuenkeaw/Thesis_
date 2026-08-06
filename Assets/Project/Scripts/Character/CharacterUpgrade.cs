@@ -4,8 +4,10 @@ using UnityEngine;
 public class CharacterUpgrade
 {
     [Header("Level Info")]
+    [Tooltip("LEGACY: Individual runtime level is retained for serialized migration. PlayerRunInventory.GlobalLevel is authoritative.")]
     public int level = 1;
     public int maxLevel = 30;
+    [Tooltip("LEGACY: Run Global Level does not use EXP.")]
     public int currentExp = 0;
 
     [Header("Level Stat Growth")]

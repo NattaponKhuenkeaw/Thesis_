@@ -33,7 +33,6 @@ public class CharacterObject : ScriptableObject
     [Header("Core Info")]
     public string characterId;
     public CharacterType characterType = CharacterType.Player;
-    public ElementType elementType = ElementType.None;
     public CharacterRole characterRole = CharacterRole.None;
 
     [Header("Editor & Preview")]

@@ -16,9 +16,6 @@ MonoBehaviour:
   displayName: Ash
   damageTextColor: {r: 1, g: 0, b: 0, a: 1}
   icon: {fileID: 21300000, guid: a7d3d9ce50bb3f3469562d4c64078615, type: 3}
-  hasDOT: 1
+  dotDuration: 7
   dotDamageRatio: 0.3
-  reactionType: 3
-  reactionDuration: 20
-  reactionDescription: Inflict <color=#FF0000>Ash</color> damage based on Enemy's
-    lost HP (Capped 8% of Enemy's Max HP) once.
+  dotTickInterval: 1.15

@@ -15,7 +15,8 @@ public static class CombatFormula
         float mitigatedDamage = CalculateIncomingDamage(
             Mathf.Max(0f, baseDamage),
             defenderDefense,
-            defenderDamageResistance);
+            defenderDamageResistance,
+            routine);
 
         bool canCrit = CanRoutineCrit(routine);
         float critRate = attackerStats != null ? Mathf.Max(0f, attackerStats.critRate) : 0f;
@@ -105,6 +106,16 @@ public static class CombatFormula
         float damageAfterReduction = damageAfterDef * (1f - clampedReduction / 100f);
         
         return Mathf.Max(1f, damageAfterReduction);
+    }
+
+    public static float CalculateIncomingDamage(
+        float incomingDamage,
+        float defense,
+        float damageReductionPercent,
+        DamageRoutine routine)
+    {
+        float resolvedDefense = routine == DamageRoutine.Dot ? 0f : defense;
+        return CalculateIncomingDamage(incomingDamage, resolvedDefense, damageReductionPercent);
     }
 
     public static float CalculateCooldownDuration(float baseCooldown, float cooldownRatePercent)

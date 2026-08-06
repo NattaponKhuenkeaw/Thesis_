@@ -1,6 +1,6 @@
 # Architecture Decision Records Index
 
-> Last updated: 2026-08-05
+> Last updated: 2026-08-06
 
 ## Dependency Order
 
@@ -12,8 +12,12 @@ graph TD
     ADR005["ADR-005: Deployed Character Live-Stat Authority"]
     ADR006["ADR-006: Boss Pattern Controller"]
     ADR007["ADR-007: EncounterSO Layout Spawn Slots"]
+    ADR008["ADR-008: Hit-Owned Damage Types and Enemy Reductions"]
+    ADR009["ADR-009: Run-Global Character Level Authority"]
     ADR001 --> ADR002
     ADR002 --> ADR005
+    ADR005 --> ADR008
+    ADR005 --> ADR009
     ADR006 --> ADR007
 ```
 
@@ -29,6 +33,8 @@ _Update this diagram as ADRs are added. Show which decisions depend on others._
 | [005](005-deployed-character-live-stat-authority.md) | Deployed Character Live-Stat Authority | **Accepted** | Phase 2 | Runtime-only deployed records and explicit formula read policy |
 | [006](006-boss-pattern-controller.md) | Boss Pattern Controller | **Accepted** | Content / Boss | Bosses use pattern sequencer; Behavior Graph stays for trash enemies |
 | [007](007-encounter-so-layout-spawn-slots.md) | EncounterSO + Layout Spawn Slots | **Accepted** | Phase 3 | Waves from EncounterSO; positions stay on layout slots |
+| [008](008-hit-owned-damage-types-and-enemy-reductions.md) | Hit-Owned Damage Types and Enemy Reductions | **Accepted** | Phase 2 | Approved with standalone per-element DOT configuration |
+| [009](009-run-global-character-level-authority.md) | Run-Global Character Level Authority | **Accepted** | Phase 2 | One run level feeds ADR-005 deployed stat records; individual EXP path is legacy |
 
 ## Phase Mapping
 

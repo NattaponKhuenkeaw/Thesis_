@@ -651,8 +651,8 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f493f83c5c675934ab0bd8d51617d288, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyElementalState
-  profile: {fileID: 0}
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyDamageTypeState
+  profile: {fileID: 11400000, guid: 014c3367673144d4cb2a3f82eb421115, type: 2}
 --- !u!1001 &4539165287175780490
 PrefabInstance:
   m_ObjectHideFlags: 0

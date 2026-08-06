@@ -160,9 +160,11 @@ namespace CombatCore
         private void UpdateDPS()
         {
             float elapsed = Time.time - dpsStartTime;
-            if (elapsed <= 0f)
+            if (elapsed < 1f)
             {
-                currentDPS = lastDamagePerHit;
+                // Not enough sample time to produce a meaningful rate.
+                // Showing 0 avoids misleading first-hit spikes.
+                currentDPS = 0f;
             }
             else
             {

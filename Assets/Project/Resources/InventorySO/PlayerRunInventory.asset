@@ -16,6 +16,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 588790c4612f0304f89d14fb2bd64923, type: 2}
   itemStacks: []
   currency: 1000
+  _globalLevel: 1
+  _globalMaxLevel: 30
   runCharacters:
   - character: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
     upgrade:

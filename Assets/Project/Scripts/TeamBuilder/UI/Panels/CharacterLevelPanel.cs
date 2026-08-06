@@ -11,6 +11,9 @@ using Project.UI;
 
 namespace Project.TeamBuilder.UI.Panels
 {
+    /// <summary>
+    /// LEGACY: Retained for prefab/save migration. Run Global Level has no EXP panel.
+    /// </summary>
     public class CharacterLevelPanel : MonoBehaviour, IInspectSubPanel
     {
         [Header("Level Display")]

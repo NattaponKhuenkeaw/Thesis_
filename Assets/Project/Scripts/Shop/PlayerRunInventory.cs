@@ -23,11 +23,12 @@ namespace Project.ShopSystem
     public class RunCharacterState
     {
         public CharacterObject character;
+        [Tooltip("LEGACY: Per-character level/EXP is retained for serialized migration only. Run Global Level is authoritative.")]
         public CharacterUpgrade upgrade = new CharacterUpgrade();
         public float currentHP = -1f;
         public float currentAE = -1f;
-        [SerializeField] private List<RuntimeEffectInstance> activeEffects = new List<RuntimeEffectInstance>();
-        [SerializeField] private bool hasTickingEffects;
+        [NonSerialized] private List<RuntimeEffectInstance> activeEffects = new List<RuntimeEffectInstance>();
+        [NonSerialized] private bool hasTickingEffects;
 
         public IReadOnlyList<RuntimeEffectInstance> ActiveEffects
         {
@@ -56,6 +57,13 @@ namespace Project.ShopSystem
         internal void EnsureEffectList()
         {
             activeEffects ??= new List<RuntimeEffectInstance>();
+        }
+
+        internal void ClearTransientRuntimeEffects()
+        {
+            EnsureEffectList();
+            activeEffects.Clear();
+            hasTickingEffects = false;
         }
 
         internal void RecalculateTickingEffects()
@@ -150,6 +158,7 @@ namespace Project.ShopSystem
     internal class SavedPlayerRunInventoryData
     {
         public int currency = 1000;
+        public int globalLevel = 1;
         public int activeTeamSlotIndex;
         public List<SavedInventoryItemRecord> items = new List<SavedInventoryItemRecord>();
         public List<SavedRunCharacterRecord> runCharacters = new List<SavedRunCharacterRecord>();
@@ -183,6 +192,7 @@ namespace Project.ShopSystem
         private const string DefaultCharacterItemId = "char-0-main";
         private const string DefaultCharacterItemResourcePath = "ItemSO/char_0_Main";
         private static readonly int RuntimeEffectStatTargetCount = Enum.GetValues(typeof(RuntimeEffectStatTarget)).Length;
+        private static int currentPlaySessionId;
 
         [Header("Player Owned Items")]
         [Tooltip("Runtime-owned items for the current run. Character items represent roster ownership.")]
@@ -195,8 +205,17 @@ namespace Project.ShopSystem
         [Header("Currency")]
         public int currency = DefaultCurrency;
 
+        [Header("Run Global Level")]
+        [SerializeField, Min(1)]
+        [Tooltip("Shared level used by every character for the current run.")]
+        private int _globalLevel = 1;
+
+        [SerializeField, Min(1)]
+        [Tooltip("Maximum shared level for a run.")]
+        private int _globalMaxLevel = 30;
+
         [Header("Run Character State")]
-        [Tooltip("Run-scoped character level and EXP. Cleared with the current run inventory.")]
+        [Tooltip("LEGACY level/EXP records plus active per-character HP, AE, and runtime effects.")]
         [SerializeField] private List<RunCharacterState> runCharacters = new List<RunCharacterState>();
 
         [Header("Deployed Team")]
@@ -215,8 +234,10 @@ namespace Project.ShopSystem
         [NonSerialized] private readonly HashSet<CharacterObject> pendingRuntimeEffectStatCharacters = new HashSet<CharacterObject>();
         [NonSerialized] private Dictionary<string, CharacterItem> characterItemsByCharacterId;
         [NonSerialized] private int runtimeEffectMutationBatchDepth;
+        [NonSerialized] private int initializedPlaySessionId = -1;
 
         public event Action<CharacterObject> OnRuntimeEffectsChanged;
+        public event Action<int, int> OnGlobalLevelChanged;
         internal event Action<CharacterObject, bool> OnRuntimeEffectsChangedDetailed;
         public bool IsDispatchingRuntimeEffectStatChange { get; private set; }
 
@@ -238,6 +259,17 @@ namespace Project.ShopSystem
             }
         }
 
+        public int GlobalLevel
+        {
+            get
+            {
+                EnsureRunData();
+                return _globalLevel;
+            }
+        }
+
+        public int GlobalMaxLevel => Mathf.Max(1, _globalMaxLevel);
+
         public int ActiveTeamSlotIndex
         {
             get
@@ -256,8 +288,18 @@ namespace Project.ShopSystem
             }
         }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void BeginPlaySession()
+        {
+            unchecked
+            {
+                currentPlaySessionId++;
+            }
+        }
+
         private void OnEnable()
         {
+            EnsureTransientRuntimeStateForPlaySession();
             if (ShouldUsePersistentStorage())
             {
                 LoadPersistentStateIfNeeded();
@@ -413,6 +455,8 @@ namespace Project.ShopSystem
         public void ClearInventory()
         {
             EnsureInventoryData();
+            int previousGlobalLevel = _globalLevel;
+            _globalLevel = 1;
             ownedItems.Clear();
             itemStacks.Clear();
             runCharacters.Clear();
@@ -425,6 +469,10 @@ namespace Project.ShopSystem
 
             activeTeamSlotIndex = 0;
             PostInventoryMutation(save: true);
+            if (previousGlobalLevel != _globalLevel)
+            {
+                OnGlobalLevelChanged?.Invoke(previousGlobalLevel, _globalLevel);
+            }
         }
 
         public void ResetRunProgress()
@@ -440,15 +488,39 @@ namespace Project.ShopSystem
             // run levels/effects, equipped run artifacts, and earned currency.
             CharacterObject[] teamSnapshot = GetTeamSnapshot();
             int activeIndex = activeTeamSlotIndex;
+            int previousGlobalLevel = _globalLevel;
 
             ownedItems.Clear();
             itemStacks.Clear();
             runCharacters.Clear();
             currency = DefaultCurrency;
+            _globalLevel = 1;
 
             DeployTeam(teamSnapshot, activeIndex, artifactsBySlot: null);
             AddUnlockedRosterItems(metaProgression);
             PostInventoryMutation(save: true);
+            if (previousGlobalLevel != _globalLevel)
+            {
+                OnGlobalLevelChanged?.Invoke(previousGlobalLevel, _globalLevel);
+            }
+        }
+
+        public int AddGlobalLevels(int requestedLevels)
+        {
+            EnsureRunData();
+            if (requestedLevels <= 0 || _globalLevel >= GlobalMaxLevel)
+            {
+                return 0;
+            }
+
+            int previousGlobalLevel = _globalLevel;
+            int remainingLevels = GlobalMaxLevel - previousGlobalLevel;
+            int appliedLevels = Mathf.Min(requestedLevels, remainingLevels);
+            _globalLevel = previousGlobalLevel + appliedLevels;
+
+            SavePersistentState();
+            OnGlobalLevelChanged?.Invoke(previousGlobalLevel, _globalLevel);
+            return appliedLevels;
         }
 
         public bool CanAfford(int amount)
@@ -657,6 +729,8 @@ namespace Project.ShopSystem
 
         public CharacterUpgrade GetCharacterUpgrade(CharacterObject character)
         {
+            // Compatibility API for the disabled individual EXP UI. Active stat
+            // resolution uses GlobalLevel and does not require this record.
             RunCharacterState state = GetOrCreateRunCharacterState(character);
             return state != null ? state.upgrade : null;
         }
@@ -766,9 +840,9 @@ namespace Project.ShopSystem
                 return new CharacterStats();
             }
 
-            CharacterUpgrade runUpgrade = GetCharacterUpgrade(character);
-            CharacterStats leveled = runUpgrade != null
-                ? runUpgrade.ApplyLevelGrowth(character.stats)
+            CharacterUpgrade authoredGrowth = character.upgrade;
+            CharacterStats leveled = authoredGrowth != null
+                ? authoredGrowth.CalculateStatsAtLevel(character.stats, GlobalLevel)
                 : (character.stats != null ? character.stats.Clone() : new CharacterStats());
 
             if (character.movementProfile != null)
@@ -1447,6 +1521,7 @@ namespace Project.ShopSystem
             SavedPlayerRunInventoryData data = new SavedPlayerRunInventoryData
             {
                 currency = currency,
+                globalLevel = _globalLevel,
                 activeTeamSlotIndex = activeTeamSlotIndex
             };
 
@@ -1508,6 +1583,7 @@ namespace Project.ShopSystem
 
         public void LoadPersistentStateIfNeeded()
         {
+            EnsureTransientRuntimeStateForPlaySession();
             if (!ShouldUsePersistentStorage())
             {
                 EnsureInventoryData();
@@ -2030,6 +2106,7 @@ namespace Project.ShopSystem
             itemStacks.Clear();
             runCharacters.Clear();
             currency = Mathf.Max(0, data.currency);
+            _globalLevel = Mathf.Clamp(data.globalLevel, 1, GlobalMaxLevel);
 
             BuildItemIndices();
 
@@ -2112,6 +2189,7 @@ namespace Project.ShopSystem
 
         private void EnsureRunData()
         {
+            EnsureTransientRuntimeStateForPlaySession();
             if (ShouldUsePersistentStorage())
             {
                 LoadPersistentStateIfNeeded();
@@ -2126,6 +2204,31 @@ namespace Project.ShopSystem
 
             EnsureTeamSlotCapacity(DefaultTeamSlotCount);
             EnsurePlayableState();
+        }
+
+        private void EnsureTransientRuntimeStateForPlaySession()
+        {
+            if (!Application.isPlaying || initializedPlaySessionId == currentPlaySessionId)
+            {
+                return;
+            }
+
+            initializedPlaySessionId = currentPlaySessionId;
+            if (runCharacters != null)
+            {
+                for (int i = 0; i < runCharacters.Count; i++)
+                {
+                    runCharacters[i]?.ClearTransientRuntimeEffects();
+                }
+            }
+
+            expiredRuntimeEffects.Clear();
+            resolvingRuntimeStats.Clear();
+            pendingRuntimeEffectCharacters.Clear();
+            pendingRuntimeEffectCharacterSet.Clear();
+            pendingRuntimeEffectStatCharacters.Clear();
+            runtimeEffectMutationBatchDepth = 0;
+            IsDispatchingRuntimeEffectStatChange = false;
         }
 
         private void EnsurePlayableState()
@@ -2212,6 +2315,9 @@ namespace Project.ShopSystem
 
         private void EnsureInventoryData()
         {
+            _globalMaxLevel = Mathf.Max(1, _globalMaxLevel);
+            _globalLevel = Mathf.Clamp(_globalLevel, 1, _globalMaxLevel);
+
             if (ownedItems == null)
             {
                 ownedItems = new List<BaseItem>();
@@ -2854,6 +2960,8 @@ namespace Project.ShopSystem
 
         private static CharacterUpgrade CreateRunUpgrade(CharacterObject character)
         {
+            // HP/AE/effect records still use RunCharacterState; preserve its
+            // legacy upgrade payload until serialized save migration is removed.
             CharacterUpgrade source = character != null ? character.upgrade : null;
             CharacterUpgrade upgrade = source != null ? source.Clone() : new CharacterUpgrade();
             upgrade.level = 1;

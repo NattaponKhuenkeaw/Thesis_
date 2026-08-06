@@ -1,6 +1,7 @@
 
 using UnityEngine;
 using UnityEngine.UI;
+using Project.Progression;
 
 public class AdminConsole : MonoBehaviour
 {
@@ -53,6 +54,26 @@ public class AdminConsole : MonoBehaviour
     public void ResetLevel()
     {
         
+    }
+
+    /// <summary>
+    /// Unity OnClick prototype for the future Level-room reward sequence.
+    /// </summary>
+    public void TriggerGlobalLevelUpEvent()
+    {
+        if (runInventory == null)
+        {
+            Debug.LogWarning("[AdminConsole] Run Global Level event requires a PlayerRunInventory reference.");
+            return;
+        }
+
+        int rolledLevels = RunGlobalLevelReward.Roll();
+        int previousLevel = runInventory.GlobalLevel;
+        int appliedLevels = runInventory.AddGlobalLevels(rolledLevels);
+
+        Debug.Log(
+            $"[AdminConsole] Run Global Level event rolled +{rolledLevels}, applied +{appliedLevels}, "
+            + $"and changed Global Lv.{previousLevel} to Lv.{runInventory.GlobalLevel}.");
     }
 
     public void ResetPlayerRun()

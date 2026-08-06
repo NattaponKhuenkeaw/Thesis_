@@ -5,6 +5,7 @@ namespace Project.InventorySystem.Items
     public enum ConsumableType
     {
         None,
+        // LEGACY: Run Global Level rewards replaced individual EXP potions.
         LevelingPotion
     }
 
@@ -17,7 +18,7 @@ namespace Project.InventorySystem.Items
         [Header("Consumable Properties")]
         public ConsumableType consumableType = ConsumableType.None;
         
-        [Tooltip("EXP granted per unit consumed (for LevelingPotion type)")]
+        [Tooltip("LEGACY: EXP granted by the disabled individual Leveling Potion flow.")]
         public int expAmount = 0;
     }
 }

@@ -993,11 +993,6 @@ public class PassiveRuntimeEffectDefinitionDrawer : FoldoutPropertyDrawer
         {
             EffectDrawerUtility.Draw(ref position, Prop(property, "sourceCharacterId"));
         }
-        EffectDrawerUtility.Draw(ref position, Prop(property, "filterByTargetElement"));
-        if (Prop(property, "filterByTargetElement").boolValue)
-        {
-            EffectDrawerUtility.Draw(ref position, Prop(property, "targetElement"));
-        }
     }
 
     protected override float GetExpandedHeight(SerializedProperty property)
@@ -1015,8 +1010,7 @@ public class PassiveRuntimeEffectDefinitionDrawer : FoldoutPropertyDrawer
             + EffectDrawerUtility.Height(Prop(property, "recipe"))
             + EffectDrawerUtility.Height(Prop(property, "applicationMode"))
             + EffectDrawerUtility.Height(Prop(property, "applicationCount"))
-            + EffectDrawerUtility.Height(Prop(property, "overrideSourceCharacter"))
-            + EffectDrawerUtility.Height(Prop(property, "filterByTargetElement"));
+            + EffectDrawerUtility.Height(Prop(property, "overrideSourceCharacter"));
         if (EffectDrawerUtility.EnumEquals(Prop(property, "enemyTargetSource"), PassiveRuntimeEnemyTargetSource.RuntimeTagHitTargets))
         {
             height += EffectDrawerUtility.Height(Prop(property, "enemyTargetRuntimeTag"));
@@ -1025,11 +1019,6 @@ public class PassiveRuntimeEffectDefinitionDrawer : FoldoutPropertyDrawer
         {
             height += EffectDrawerUtility.Height(Prop(property, "sourceCharacterId"));
         }
-        if (Prop(property, "filterByTargetElement").boolValue)
-        {
-            height += EffectDrawerUtility.Height(Prop(property, "targetElement"));
-        }
-
         return height;
     }
 }
@@ -1369,8 +1358,6 @@ public class PassiveEnemyElementModifierDefinitionDrawer : FoldoutPropertyDrawer
         EffectDrawerUtility.Draw(ref position, Prop(property, "elementType"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "incomingDamagePercentAdd"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "resistancePercentAdd"));
-        EffectDrawerUtility.Draw(ref position, Prop(property, "masteryPercentAdd"));
-        EffectDrawerUtility.Draw(ref position, Prop(property, "gaugeBuildPercentAdd"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "permanent"));
         if (!Prop(property, "permanent").boolValue)
         {
@@ -1386,8 +1373,6 @@ public class PassiveEnemyElementModifierDefinitionDrawer : FoldoutPropertyDrawer
             + EffectDrawerUtility.Height(Prop(property, "elementType"))
             + EffectDrawerUtility.Height(Prop(property, "incomingDamagePercentAdd"))
             + EffectDrawerUtility.Height(Prop(property, "resistancePercentAdd"))
-            + EffectDrawerUtility.Height(Prop(property, "masteryPercentAdd"))
-            + EffectDrawerUtility.Height(Prop(property, "gaugeBuildPercentAdd"))
             + EffectDrawerUtility.Height(Prop(property, "permanent"))
             + EffectDrawerUtility.Height(Prop(property, "stacks"));
         if (!Prop(property, "permanent").boolValue)
