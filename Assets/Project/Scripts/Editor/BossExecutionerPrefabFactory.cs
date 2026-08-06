@@ -110,7 +110,7 @@ namespace Project.EditorTools
             GameObject created = AssetDatabase.LoadAssetAtPath<GameObject>(OutputPath);
             Selection.activeObject = created;
             EditorGUIUtility.PingObject(created);
-            Debug.Log($"[BossExecutionerPrefabFactory] Created {OutputPath}. Assign it to a RoomWaveManager wave entry.");
+            Debug.Log($"[BossExecutionerPrefabFactory] Created {OutputPath}. Assign it to EncounterSO spawn entries (via RoomData.Encounter).");
         }
     }
 }

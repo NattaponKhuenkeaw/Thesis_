@@ -148,6 +148,7 @@ namespace Project.AIBehaviour.Boss
             // GDD: bosses resist stagger-lock / juggle. Recovery is a damage window only.
             enemy.ignoreHitReactions = true;
             enemy.SetAttackHitboxActive(false);
+            enemy.ConfigureDeathDespawn(3f);
             groundTelegraph?.Hide();
 
             // Screen HUD owns boss HP; keep world warning icon but hide world bars.
@@ -245,6 +246,25 @@ namespace Project.AIBehaviour.Boss
         }
 
         private void HandleDied()
+        {
+            isBusy = false;
+            CleanupAttackState();
+            RestorePhysics();
+            groundTelegraph?.Hide();
+
+            if (brainRoutine != null)
+            {
+                StopCoroutine(brainRoutine);
+                brainRoutine = null;
+            }
+
+            BossDeathSequence.EnsureInstance().BeginFromBoss(enemy);
+        }
+
+        /// <summary>
+        /// Called by BossDeathSequence to strip leftover attack windows immediately.
+        /// </summary>
+        public void ForceClearCombatHazards()
         {
             isBusy = false;
             CleanupAttackState();

@@ -39,6 +39,7 @@ namespace Project.Core.ZoneState
         private bool isTransitioning = false;
         private List<Canvas> disabledCanvases = new List<Canvas>();
         private SceneBoundaryController activeBoundaryController;
+        private bool pendingTeamHealOnTransition;
 
         public bool IsCurrentRoomExitAvailable
         {
@@ -127,6 +128,15 @@ namespace Project.Core.ZoneState
         public void TransitionToRoom(string roomId, string entranceId)
         {
             BeginTransition(ResolveRoom(roomId), roomId, entranceId);
+        }
+
+        /// <summary>
+        /// Queues a full-team heal/revive for the next transition load.
+        /// Used by boss death flow so restore never happens inside the boss arena.
+        /// </summary>
+        public void RequestTeamHealOnNextTransition()
+        {
+            pendingTeamHealOnTransition = true;
         }
 
         private void BeginTransition(RoomData room, string fallbackKey, string entranceId)
@@ -288,6 +298,13 @@ namespace Project.Core.ZoneState
                     Debug.LogWarning("[SceneTransitionManager] ZoneStateProvider is missing; target room could not be broadcast.");
                 }
 
+                // Post-boss restore: apply after the next room exists so the player arrives full HP.
+                if (pendingTeamHealOnTransition)
+                {
+                    pendingTeamHealOnTransition = false;
+                    ApplyPendingTeamHeal();
+                }
+
                 DisableAllSceneCanvases();
 
                 PlayerCharacter player = Object.FindFirstObjectByType<PlayerCharacter>();
@@ -396,6 +413,19 @@ namespace Project.Core.ZoneState
             }
 
             return Object.FindFirstObjectByType<SceneBoundaryController>();
+        }
+
+        private static void ApplyPendingTeamHeal()
+        {
+            TeamLoader teamLoader = TeamLoader.Instance ?? Object.FindFirstObjectByType<TeamLoader>();
+            if (teamLoader == null)
+            {
+                Debug.LogWarning("[SceneTransitionManager] Pending team heal requested but TeamLoader is missing.");
+                return;
+            }
+
+            teamLoader.HealAndReviveEntireTeam();
+            Debug.Log("[SceneTransitionManager] Applied post-boss team heal/revive during transition load.");
         }
 
         private IEnumerator FadeOverlayRoutine(float startAlpha, float targetAlpha)

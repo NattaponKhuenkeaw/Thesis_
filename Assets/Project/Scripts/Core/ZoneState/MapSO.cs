@@ -71,6 +71,8 @@ namespace Project.Core.ZoneState
                 return;
             }
 
+            RoomData excludedRoom = ResolveRoom(excludeRoomId);
+
             for (int i = 0; i < rooms.Count; i++)
             {
                 RoomData room = rooms[i];
@@ -84,14 +86,34 @@ namespace Project.Core.ZoneState
                     continue;
                 }
 
-                if (!string.IsNullOrWhiteSpace(excludeRoomId)
-                    && string.Equals(room.RoomId, excludeRoomId, System.StringComparison.Ordinal))
+                if (IsExcludedRoom(room, excludeRoomId, excludedRoom))
                 {
                     continue;
                 }
 
                 results.Add(room);
             }
+        }
+
+        private static bool IsExcludedRoom(RoomData room, string excludeKey, RoomData excludedRoom)
+        {
+            if (room == null)
+            {
+                return true;
+            }
+
+            if (excludedRoom != null && ReferenceEquals(room, excludedRoom))
+            {
+                return true;
+            }
+
+            if (string.IsNullOrWhiteSpace(excludeKey))
+            {
+                return false;
+            }
+
+            // Match RoomId only. Do not exclude by SceneName — hybrid combat rooms share combat_1.
+            return string.Equals(room.RoomId, excludeKey, System.StringComparison.Ordinal);
         }
     }
 }

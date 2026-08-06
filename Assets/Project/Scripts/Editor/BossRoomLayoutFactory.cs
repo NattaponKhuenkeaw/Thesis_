@@ -14,6 +14,8 @@ namespace Project.EditorTools
         private const string OutputPath = OutputFolder + "/RoomLayout_Boss_Executioner.prefab";
         private const string BossPrefabPath = "Assets/Project/TestChar/Prefab/Boss_Executioner.prefab";
         private const string RoomDataPath = "Assets/Project/Resources/MapSO/RoomData_Boss_01.asset";
+        private const string EncounterFolder = "Assets/Project/Resources/EncounterSO";
+        private const string EncounterAssetPath = EncounterFolder + "/Encounter_Boss_Executioner.asset";
 
         // Arena tuned for Jump Smash / Bull Charge (wider than trash combat).
         private const float GroundY = -4f;
@@ -107,19 +109,17 @@ namespace Project.EditorTools
             waveSo.FindProperty("playerTag").stringValue = "Player";
             waveSo.FindProperty("startOnlyOnce").boolValue = true;
             waveSo.FindProperty("delayBetweenWaves").floatValue = 0f;
-            waveSo.FindProperty("unlockSceneExitOnClear").boolValue = true;
+            waveSo.FindProperty("unlockSceneExitOnClear").boolValue = false;
+            waveSo.FindProperty("useBossDeathFlow").boolValue = true;
             waveSo.FindProperty("portalsRoot").objectReferenceValue = portalsRoot;
+            waveSo.FindProperty("waves").arraySize = 0;
 
-            SerializedProperty waves = waveSo.FindProperty("waves");
-            waves.arraySize = 1;
-            SerializedProperty wave0 = waves.GetArrayElementAtIndex(0);
-            wave0.FindPropertyRelative("name").stringValue = "Executioner";
-            SerializedProperty enemies = wave0.FindPropertyRelative("enemies");
-            enemies.arraySize = 1;
-            SerializedProperty entry = enemies.GetArrayElementAtIndex(0);
-            entry.FindPropertyRelative("enemyPrefab").objectReferenceValue = bossPrefab;
-            entry.FindPropertyRelative("spawnPoint").objectReferenceValue = bossSpawn.transform;
+            SerializedProperty spawnSlots = waveSo.FindProperty("spawnSlots");
+            spawnSlots.arraySize = 1;
+            spawnSlots.GetArrayElementAtIndex(0).objectReferenceValue = bossSpawn.transform;
             waveSo.ApplyModifiedPropertiesWithoutUndo();
+
+            EnsureBossEncounterAsset(bossPrefab);
 
             // ---- Visual helpers (optional markers) ----
             GameObject visuals = CreateChild(root, "Visuals");
@@ -174,8 +174,41 @@ namespace Project.EditorTools
                 so.FindProperty("sceneName").stringValue = "combat_1";
             }
 
+            EncounterSO encounter = AssetDatabase.LoadAssetAtPath<EncounterSO>(EncounterAssetPath);
+            if (encounter != null)
+            {
+                so.FindProperty("encounter").objectReferenceValue = encounter;
+            }
+
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(roomData);
+        }
+
+        private static void EnsureBossEncounterAsset(GameObject bossPrefab)
+        {
+            EnsureFolder("Assets/Project/Resources");
+            EnsureFolder(EncounterFolder);
+
+            EncounterSO encounter = AssetDatabase.LoadAssetAtPath<EncounterSO>(EncounterAssetPath);
+            if (encounter == null)
+            {
+                encounter = ScriptableObject.CreateInstance<EncounterSO>();
+                AssetDatabase.CreateAsset(encounter, EncounterAssetPath);
+            }
+
+            SerializedObject so = new SerializedObject(encounter);
+            so.FindProperty("delayBetweenWaves").floatValue = 0f;
+            SerializedProperty waves = so.FindProperty("waves");
+            waves.arraySize = 1;
+            SerializedProperty wave0 = waves.GetArrayElementAtIndex(0);
+            wave0.FindPropertyRelative("name").stringValue = "Executioner";
+            SerializedProperty enemies = wave0.FindPropertyRelative("enemies");
+            enemies.arraySize = 1;
+            SerializedProperty entry = enemies.GetArrayElementAtIndex(0);
+            entry.FindPropertyRelative("enemyPrefab").objectReferenceValue = bossPrefab;
+            entry.FindPropertyRelative("spawnSlotIndex").intValue = 0;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(encounter);
         }
 
         private static GameObject CreateWall(GameObject parent, string name, float x, float y, float width, float height)

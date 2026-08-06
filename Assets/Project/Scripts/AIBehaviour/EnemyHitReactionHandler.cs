@@ -28,10 +28,8 @@ public class EnemyHitReactionHandler : MonoBehaviour
     private float originalAnimatorSpeed = 1f;
     private float originalGravityScale = 1f;
     private RigidbodyType2D originalBodyType = RigidbodyType2D.Dynamic;
-
-
-
     private RigidbodyConstraints2D originalConstraints = RigidbodyConstraints2D.None;
+    private CollisionDetectionMode2D originalCollisionDetection = CollisionDetectionMode2D.Discrete;
     private bool launchVelocityApplied;
     private int landingStateEnteredFrame = -1;
     private Vector3 impactFreezeAnchorPosition;
@@ -65,11 +63,21 @@ public class EnemyHitReactionHandler : MonoBehaviour
             originalBodyType = rb.bodyType;
             originalGravityScale = rb.gravityScale;
             originalConstraints = rb.constraints;
+            originalCollisionDetection = rb.collisionDetectionMode;
         }
 
         if (groundLayers.value == 0)
         {
             groundLayers = Physics2D.DefaultRaycastLayers;
+        }
+        else
+        {
+            // Walls share Ground; floors may also be OneWayPlatform. Keep both in the mask.
+            int oneWayLayer = LayerMask.NameToLayer("OneWayPlatform");
+            if (oneWayLayer >= 0)
+            {
+                groundLayers |= (1 << oneWayLayer);
+            }
         }
     }
 
@@ -631,7 +639,11 @@ public class EnemyHitReactionHandler : MonoBehaviour
         }
 
         float velocityX = currentReaction.HorizontalSpeed * GetDirectionSign();
-        rb.linearVelocity = new Vector2(velocityX, 0f);
+        // Keep physics Y at ledges so knockback into a platform edge can fall instead of hang.
+        float velocityY = IsGrounded() ? 0f : rb.linearVelocity.y;
+        Vector2 velocity = new Vector2(velocityX, velocityY);
+        SuppressVelocityIntoWalls(ref velocity);
+        rb.linearVelocity = velocity;
     }
 
     private void ApplyLaunchVelocity()
@@ -642,7 +654,9 @@ public class EnemyHitReactionHandler : MonoBehaviour
         }
 
         float velocityX = currentReaction.HorizontalSpeed * GetDirectionSign();
-        rb.linearVelocity = new Vector2(velocityX, currentReaction.LaunchSpeed);
+        Vector2 velocity = new Vector2(velocityX, currentReaction.LaunchSpeed);
+        SuppressVelocityIntoWalls(ref velocity);
+        rb.linearVelocity = velocity;
         launchVelocityApplied = true;
     }
 
@@ -660,7 +674,9 @@ public class EnemyHitReactionHandler : MonoBehaviour
         }
 
         float velocityX = currentReaction.HorizontalSpeed * GetDirectionSign();
-        rb.linearVelocity = new Vector2(velocityX, rb.linearVelocity.y);
+        Vector2 velocity = new Vector2(velocityX, rb.linearVelocity.y);
+        SuppressVelocityIntoWalls(ref velocity);
+        rb.linearVelocity = velocity;
     }
 
     private float GetDirectionSign()
@@ -826,7 +842,71 @@ public class EnemyHitReactionHandler : MonoBehaviour
             }
         }
 
-        return filter.useLayerMask && bodyCollider.IsTouchingLayers(groundLayers);
+        // Do not use IsTouchingLayers(groundLayers): walls also use Ground and would
+        // false-positive as grounded, zeroing velocity while wedged into a wall/ledge.
+        return false;
+    }
+
+    /// <summary>
+    /// Zero horizontal knockback into steep Ground faces so Discrete box colliders
+    /// do not keep driving into walls / platform corners.
+    /// </summary>
+    private void SuppressVelocityIntoWalls(ref Vector2 velocity)
+    {
+        if (bodyCollider == null || Mathf.Abs(velocity.x) < 0.01f)
+        {
+            return;
+        }
+
+        ContactFilter2D filter = new ContactFilter2D();
+        filter.useLayerMask = groundLayers.value != 0;
+        if (filter.useLayerMask)
+        {
+            filter.SetLayerMask(groundLayers);
+        }
+        filter.useTriggers = false;
+
+        Vector2 direction = velocity.x > 0f ? Vector2.right : Vector2.left;
+        int hitCount = bodyCollider.Cast(direction, filter, groundHits, Mathf.Max(0.06f, groundCheckDistance));
+        for (int i = 0; i < hitCount; i++)
+        {
+            RaycastHit2D hit = groundHits[i];
+            if (hit.collider == null)
+            {
+                continue;
+            }
+
+            // Steep / wall-like surface facing against motion.
+            if (hit.normal.y < groundNormalMinY && Mathf.Abs(hit.normal.x) >= 0.4f)
+            {
+                if (velocity.x * hit.normal.x < 0f)
+                {
+                    velocity.x = 0f;
+                    return;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// AI idle may FreezePositionX (transform-driven chase). Knock reactions need X free.
+    /// </summary>
+    private void AllowReactionHorizontalMotion()
+    {
+        if (rb == null)
+        {
+            return;
+        }
+
+        if ((rb.constraints & RigidbodyConstraints2D.FreezePositionX) != 0)
+        {
+            rb.constraints &= ~RigidbodyConstraints2D.FreezePositionX;
+        }
+
+        if (rb.collisionDetectionMode == CollisionDetectionMode2D.Discrete)
+        {
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        }
     }
 
     private bool IsAirborneReactionState(EnemyReactionState state)
@@ -893,11 +973,13 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
             case EnemyReactionState.Knockback:
                 EnsureDynamicBody();
+                AllowReactionHorizontalMotion();
                 ApplyGroundKnockbackVelocity();
                 break;
 
             case EnemyReactionState.Knockup:
                 EnsureDynamicBody();
+                AllowReactionHorizontalMotion();
                 ApplyLaunchVelocity();
                 if (rb != null)
                 {
@@ -907,6 +989,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
             case EnemyReactionState.Knockfall:
                 EnsureDynamicBody();
+                AllowReactionHorizontalMotion();
                 if (rb != null)
                 {
                     rb.gravityScale = originalGravityScale; // Start falling
@@ -977,6 +1060,12 @@ public class EnemyHitReactionHandler : MonoBehaviour
         landingStateEnteredFrame = -1;
         hasResolvedAirborneLanding = false;
         ResetAirJuggleSession();
+
+        if (rb != null)
+        {
+            rb.constraints = originalConstraints;
+            rb.collisionDetectionMode = originalCollisionDetection;
+        }
         
         if (controller != null)
             controller.ResetComboCount();

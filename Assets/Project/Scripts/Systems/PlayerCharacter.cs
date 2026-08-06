@@ -182,10 +182,15 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
 
     public bool TakeDamage(float value)
     {
+        return TakeDamage(value, default);
+    }
+
+    public bool TakeDamage(float value, IncomingAttackContext attackContext)
+    {
         if (value <= 0f || IsDead)
             return false;
 
-        if (IsDamageInvulnerable || (Movement != null && Movement.IsInvincible()) || IsUltimateInvulnerable)
+        if (IsImmuneToIncomingAttack(attackContext))
         {
             OnDamageMissed?.Invoke();
             return false;
@@ -275,6 +280,23 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// True invulnerability beats every attack property.
+    /// Dash/dodge frames only beat <see cref="EnemyAttackProperty.Normal"/>.
+    /// </summary>
+    public bool IsImmuneToIncomingAttack(IncomingAttackContext attackContext)
+    {
+        if (IsDamageInvulnerable || IsUltimateInvulnerable)
+            return true;
+
+        bool hasDodgeFrames = Movement != null && Movement.IsInvincible();
+        if (attackContext.property == EnemyAttackProperty.Normal)
+            return hasDodgeFrames;
+
+        // Undodgeable / Grab ignore dash i-frames.
+        return false;
     }
 
     /// <summary>

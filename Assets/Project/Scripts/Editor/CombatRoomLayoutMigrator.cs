@@ -93,22 +93,33 @@ namespace Project.EditorTools
             GameObject waveManager = GameObject.Find("RoomWaveManager");
             GameObject background = GameObject.Find("BackGround");
 
-            // Prefer spawn points referenced by the wave manager.
+            // Prefer spawn points from spawnSlots, then legacy wave entries.
             Transform spawn0 = null, spawn1 = null, spawn2 = null;
             if (waveManager != null)
             {
                 SerializedObject waveSo = new SerializedObject(waveManager.GetComponent<RoomWaveManager>());
+                SerializedProperty slots = waveSo.FindProperty("spawnSlots");
+                if (slots != null && slots.arraySize > 0)
+                {
+                    if (slots.arraySize > 0)
+                        spawn0 = slots.GetArrayElementAtIndex(0).objectReferenceValue as Transform;
+                    if (slots.arraySize > 1)
+                        spawn1 = slots.GetArrayElementAtIndex(1).objectReferenceValue as Transform;
+                    if (slots.arraySize > 2)
+                        spawn2 = slots.GetArrayElementAtIndex(2).objectReferenceValue as Transform;
+                }
+
                 SerializedProperty waves = waveSo.FindProperty("waves");
                 if (waves != null && waves.arraySize > 0)
                 {
                     SerializedProperty enemies = waves.GetArrayElementAtIndex(0).FindPropertyRelative("enemies");
                     if (enemies != null)
                     {
-                        if (enemies.arraySize > 0)
+                        if (spawn0 == null && enemies.arraySize > 0)
                             spawn0 = enemies.GetArrayElementAtIndex(0).FindPropertyRelative("spawnPoint").objectReferenceValue as Transform;
-                        if (enemies.arraySize > 1)
+                        if (spawn1 == null && enemies.arraySize > 1)
                             spawn1 = enemies.GetArrayElementAtIndex(1).FindPropertyRelative("spawnPoint").objectReferenceValue as Transform;
-                        if (enemies.arraySize > 2)
+                        if (spawn2 == null && enemies.arraySize > 2)
                             spawn2 = enemies.GetArrayElementAtIndex(2).FindPropertyRelative("spawnPoint").objectReferenceValue as Transform;
                     }
                 }

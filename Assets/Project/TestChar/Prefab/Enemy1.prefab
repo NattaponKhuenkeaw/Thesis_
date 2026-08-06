@@ -228,15 +228,25 @@ PrefabInstance:
       value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: startArmored
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: armorDurability
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: armoredDamageMultiplier
+      value: 0.35
+      objectReference: {fileID: 0}
+    - target: {fileID: 4182337007799001123, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: attackProperty
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: hitReactionHandler
       value: 
       objectReference: {fileID: 2992548729297104892}
-    - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 747579930720166297, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: -27
@@ -661,7 +671,7 @@ MonoBehaviour:
   airJuggleSessionActive: 0
   groundLayers:
     serializedVersion: 2
-    m_Bits: 8
+    m_Bits: 520
   groundCheckDistance: 0.08
   groundNormalMinY: 0.25
 --- !u!4 &7519174093949083380 stripped

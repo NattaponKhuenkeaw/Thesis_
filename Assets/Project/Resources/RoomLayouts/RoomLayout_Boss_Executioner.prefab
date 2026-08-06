@@ -140,17 +140,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.RoomWaveManager
   playerTag: Player
   startOnlyOnce: 1
-  waves:
-  - name: Executioner
-    enemies:
-    - enemyPrefab: {fileID: 7125933182351504165, guid: 459b486a07c2f7142881a65b3a11b4ec, type: 3}
-      spawnPoint: {fileID: 8094037502590189038}
+  waves: []
   delayBetweenWaves: 0
-  unlockSceneExitOnClear: 1
+  spawnSlots:
+  - {fileID: 8094037502590189038}
+  unlockSceneExitOnClear: 0
   portalsRoot: {fileID: 4289945556266579237}
   onRoomCleared:
     m_PersistentCalls:
       m_Calls: []
+  useBossDeathFlow: 1
 --- !u!1 &1562523296701736931
 GameObject:
   m_ObjectHideFlags: 0

@@ -47,6 +47,10 @@ namespace Project.Core.ZoneState
         [Tooltip("If true, the camera will switch to a static camera with no following target in this room.")]
         [SerializeField] private bool useStaticCamera = false;
 
+        [Header("Encounter (Optional)")]
+        [Tooltip("When set, RoomWaveManager spawns from this data into layout spawn slots. When null, uses Inspector waves on the layout.")]
+        [SerializeField] private EncounterSO encounter;
+
         public string RoomId => string.IsNullOrWhiteSpace(roomId) ? sceneName : roomId;
         public string SceneName => sceneName;
         public GameObject LayoutPrefab => layoutPrefab;
@@ -58,6 +62,7 @@ namespace Project.Core.ZoneState
         public ZoneMode ZoneMode => zoneMode;
         public string DefaultEntranceId => defaultEntranceId;
         public bool UseStaticCamera => useStaticCamera;
+        public EncounterSO Encounter => encounter;
         public bool UsesLayoutSwap => layoutPrefab != null;
     }
 }

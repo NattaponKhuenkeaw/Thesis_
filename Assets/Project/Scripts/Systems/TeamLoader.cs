@@ -672,6 +672,35 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         NotifyCharacterHealthUpdated(character);
     }
 
+    /// <summary>
+    /// Full HP + revive for every deployed teammate. Used after boss clear during scene transition.
+    /// </summary>
+    public void HealAndReviveEntireTeam()
+    {
+        CharacterObject[] team = GetTeamSnapshot();
+        for (int i = 0; i < team.Length; i++)
+        {
+            CharacterObject character = team[i];
+            if (character == null)
+                continue;
+
+            float maxHp = GetCharacterMaxHP(character);
+            SetCharacterCurrentHP(character, maxHp);
+        }
+
+        if (playerCharacter != null)
+        {
+            playerCharacter.Animator?.SetDie(false);
+            if (playerCharacter.StateMachine != null
+                && playerCharacter.StateMachine.CurrentStateId == PlayerStateId.Dead)
+            {
+                playerCharacter.StateMachine.ChangeState(playerCharacter.StateMachine.IdleState);
+            }
+        }
+
+        LoadCurrentCharacter(forceReload: true);
+    }
+
     public float GetCharacterMaxHP(CharacterObject character)
     {
         CharacterStats stats = GetCharacterRuntimeStats(character);

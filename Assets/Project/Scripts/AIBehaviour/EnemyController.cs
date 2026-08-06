@@ -31,6 +31,24 @@ public class EnemyController : MonoBehaviour
     public float damageRes = 0f;
     public bool isEliteOrBoss = false;
 
+    [Header("Super Armor (Trash)")]
+    [Tooltip("If true, this enemy starts in orange Super Armor (BBEE trash wall).")]
+    [SerializeField] private bool startArmored = false;
+    [Tooltip("Incoming damage multiplier while Armored.")]
+    [SerializeField, Range(0.05f, 1f)] private float armoredDamageMultiplier = 0.35f;
+    [Tooltip("Armor durability depleted by non-break hits. 0 = only breaksArmor hits clear armor.")]
+    [SerializeField, Min(0f)] private float armorDurability = 40f;
+    [SerializeField] private Color armoredTint = new Color(1f, 0.55f, 0.15f, 1f);
+    [SerializeField, Min(0f)] private float brokenStateDuration = 0.35f;
+
+    [Header("Runtime Defense")]
+    [SerializeField] private EnemyDefenseState defenseState = EnemyDefenseState.Normal;
+    [SerializeField] private float currentArmorDurability;
+
+    public EnemyDefenseState DefenseState => defenseState;
+    public bool IsArmored => defenseState == EnemyDefenseState.Armored;
+    public bool StartArmored => startArmored;
+
     // =========================================================
     // State
     // =========================================================
@@ -66,12 +84,19 @@ public class EnemyController : MonoBehaviour
     [Header("Anti-Stunlock")]
     [SerializeField] private int antiStunlockComboThreshold = 4;
     [SerializeField] [Range(0f, 1f)] private float antiStunlockResistChance = 0.3f;
+    [Tooltip("After a successful anti-stunlock resist, skip hit-reactions for this many seconds so AI can swing. 0 = old one-hit resist only.")]
+    [SerializeField, Min(0f)] private float antiStunlockArmorDuration = 0f;
 
     /// <summary>
     /// When true, incoming hits still deal damage but skip hit-reactions / Behavior interruption.
     /// Bosses keep this true permanently (stagger/juggle resist); trash enemies may toggle it.
     /// </summary>
     [System.NonSerialized] public bool ignoreHitReactions;
+
+    private Coroutine antiStunlockArmorCoroutine;
+    private bool antiStunlockArmorActive;
+    private Coroutine brokenStateCoroutine;
+    private bool trashArmorOwnsIgnoreHitReactions;
 
     // =========================================================
     // References
@@ -99,12 +124,18 @@ public class EnemyController : MonoBehaviour
     [Header("Hit Reaction")]
     public EnemyHitReactionHandler hitReactionHandler;
 
+    [Header("Death")]
+    [Tooltip("Seconds before Destroy after Die(). Bosses set this so death anim can play.")]
+    [SerializeField] private float destroyDelayOnDeath = 0f;
+
     // =========================================================
     // Unity Methods
     // =========================================================
     void Start()
     {
         currentHP = maxHP;
+        if (startArmored)
+            EnterArmored(resetDurability: true);
     }
 
     void Awake()
@@ -240,6 +271,13 @@ public class EnemyController : MonoBehaviour
             };
             finalIncomingDamage = runtimeEffects.ModifyIncomingDamage(effectContext, finalIncomingDamage);
         }
+
+        bool armoredHit = IsArmored && !isSeparateDamage;
+        if (armoredHit)
+        {
+            finalIncomingDamage *= armoredDamageMultiplier;
+        }
+
         reactionData.damage = finalIncomingDamage;
 
         currentHP -= finalIncomingDamage;
@@ -250,14 +288,27 @@ public class EnemyController : MonoBehaviour
             CombatCore.TrainingDebugStats.Instance.RecordHit(this, reactionData.sourceCharacter, finalIncomingDamage);
         }
 
+        if (armoredHit)
+        {
+            ProcessArmorHit(reactionData.breaksArmor, finalIncomingDamage);
+        }
+
+        bool alreadyIgnoringReactions = ignoreHitReactions;
         bool shouldApplyReaction = !isSeparateDamage && ShouldApplyHitReaction();
         LastHitAppliedReaction = shouldApplyReaction;
 
         if (!shouldApplyReaction && !isSeparateDamage)
         {
-            // Once the enemy successfully resists stagger, break the combo counter so
-            // it does not immediately keep armoring through every following hit.
-            currentComboHits = 0;
+            // Grant / refresh a short armor window so mash cannot re-stagger before AI attacks.
+            // Duration 0 keeps legacy behavior: single resist then reset combo.
+            if (antiStunlockArmorDuration > 0f && (!alreadyIgnoringReactions || antiStunlockArmorActive))
+            {
+                BeginAntiStunlockArmorWindow(antiStunlockArmorDuration);
+            }
+            else if (!alreadyIgnoringReactions)
+            {
+                currentComboHits = 0;
+            }
         }
 
         // Fire event (AnimationHandler_Enemy triggers TakeDamage anim via this)
@@ -306,6 +357,9 @@ public class EnemyController : MonoBehaviour
         if (ignoreHitReactions)
             return false;
 
+        if (IsArmored)
+            return false;
+
         if (hitReactionHandler == null)
             return true;
 
@@ -326,6 +380,154 @@ public class EnemyController : MonoBehaviour
             return true;
 
         return UnityEngine.Random.value > antiStunlockResistChance;
+    }
+
+    public void EnterArmored(bool resetDurability = true)
+    {
+        if (brokenStateCoroutine != null)
+        {
+            StopCoroutine(brokenStateCoroutine);
+            brokenStateCoroutine = null;
+        }
+
+        defenseState = EnemyDefenseState.Armored;
+        if (resetDurability)
+            currentArmorDurability = Mathf.Max(0f, armorDurability);
+
+        if (!ignoreHitReactions)
+        {
+            ignoreHitReactions = true;
+            trashArmorOwnsIgnoreHitReactions = true;
+        }
+
+        ApplyArmorTint(true);
+    }
+
+    public void BreakArmor()
+    {
+        if (!IsArmored)
+            return;
+
+        defenseState = EnemyDefenseState.Broken;
+        currentArmorDurability = 0f;
+
+        if (trashArmorOwnsIgnoreHitReactions)
+        {
+            ignoreHitReactions = false;
+            trashArmorOwnsIgnoreHitReactions = false;
+        }
+
+        ApplyArmorTint(false);
+        currentComboHits = 0;
+
+        if (brokenStateDuration > 0f)
+        {
+            if (brokenStateCoroutine != null)
+                StopCoroutine(brokenStateCoroutine);
+            brokenStateCoroutine = StartCoroutine(BrokenStateRoutine());
+        }
+        else
+        {
+            defenseState = EnemyDefenseState.Normal;
+        }
+    }
+
+    private void ProcessArmorHit(bool breaksArmor, float appliedDamage)
+    {
+        if (!IsArmored)
+            return;
+
+        if (breaksArmor)
+        {
+            BreakArmor();
+            return;
+        }
+
+        if (armorDurability <= 0f)
+            return;
+
+        currentArmorDurability -= Mathf.Max(0f, appliedDamage);
+        if (currentArmorDurability <= 0f)
+            BreakArmor();
+    }
+
+    private IEnumerator BrokenStateRoutine()
+    {
+        yield return new WaitForSeconds(brokenStateDuration);
+        defenseState = EnemyDefenseState.Normal;
+        brokenStateCoroutine = null;
+    }
+
+    private void ApplyArmorTint(bool armored)
+    {
+        if (spriteRenderers == null || spriteRenderers.Length == 0)
+            return;
+
+        if (originalColors == null || originalColors.Length != spriteRenderers.Length)
+            CacheOriginalColors();
+
+        for (int i = 0; i < spriteRenderers.Length; i++)
+        {
+            if (spriteRenderers[i] == null)
+                continue;
+
+            spriteRenderers[i].color = armored
+                ? Color.Lerp(originalColors[i], armoredTint, 0.65f)
+                : originalColors[i];
+        }
+    }
+
+    private void BeginAntiStunlockArmorWindow(float duration)
+    {
+        if (duration <= 0f || !isAlive || IsArmored)
+            return;
+
+        if (antiStunlockArmorCoroutine != null)
+            StopCoroutine(antiStunlockArmorCoroutine);
+
+        antiStunlockArmorCoroutine = StartCoroutine(AntiStunlockArmorRoutine(duration));
+    }
+
+    private IEnumerator AntiStunlockArmorRoutine(float duration)
+    {
+        antiStunlockArmorActive = true;
+        ignoreHitReactions = true;
+
+        // Break out of the previous stagger so Behavior can start an attack this window.
+        if (hitReactionHandler != null && hitReactionHandler.IsInReaction)
+        {
+            hitReactionHandler.ForceClearReaction(zeroVelocity: false);
+        }
+
+        var behaviorAgent = GetComponent<BehaviorGraphAgent>();
+        if (behaviorAgent != null)
+        {
+            behaviorAgent.SetVariableValue("IsTakingDamage", false);
+        }
+
+        yield return new WaitForSeconds(duration);
+
+        antiStunlockArmorActive = false;
+        if (!IsArmored && !trashArmorOwnsIgnoreHitReactions)
+            ignoreHitReactions = false;
+        currentComboHits = 0;
+        antiStunlockArmorCoroutine = null;
+    }
+
+    private void StopAntiStunlockArmorWindow()
+    {
+        if (antiStunlockArmorCoroutine != null)
+        {
+            StopCoroutine(antiStunlockArmorCoroutine);
+            antiStunlockArmorCoroutine = null;
+        }
+
+        if (antiStunlockArmorActive)
+        {
+            antiStunlockArmorActive = false;
+            if (!IsArmored && !trashArmorOwnsIgnoreHitReactions)
+                ignoreHitReactions = false;
+        }
     }
 
     private static bool IsSeparateDamageRoutine(DamageRoutine routine)
@@ -366,11 +568,21 @@ public class EnemyController : MonoBehaviour
         TakeHit(data, transform.position);
     }
 
+    /// <summary>
+    /// Delay Destroy after Die so death animation can play (bosses use this).
+    /// </summary>
+    public void ConfigureDeathDespawn(float delaySeconds)
+    {
+        destroyDelayOnDeath = Mathf.Max(0f, delaySeconds);
+    }
+
     /// <summary>Trigger death sequence (also callable from DieAction node).</summary>
     public void Die()
     {
         if (!isAlive) return;
         isAlive = false;
+
+        StopAntiStunlockArmorWindow();
 
         if (bodyCollider  != null) bodyCollider.enabled  = false;
         if (attackHitbox  != null) attackHitbox.enabled  = false;
@@ -381,7 +593,10 @@ public class EnemyController : MonoBehaviour
         if (CameraManager.instance != null)
             CameraManager.instance.LeaveCombat(this);
 
-        Destroy(gameObject);
+        if (destroyDelayOnDeath > 0f)
+            Destroy(gameObject, destroyDelayOnDeath);
+        else
+            Destroy(gameObject);
     }
 
     private void CacheOriginalColors()
@@ -455,12 +670,8 @@ public class EnemyController : MonoBehaviour
             remainingFrames--;
         }
 
-        // Restore original colors
-        for (int i = 0; i < spriteRenderers.Length; i++)
-        {
-            if (spriteRenderers[i] != null && i < originalColors.Length)
-                spriteRenderers[i].color = originalColors[i];
-        }
+        // Restore original colors (or armored tint if still armored)
+        ApplyArmorTint(IsArmored);
 
         flashCoroutine = null;
     }
@@ -496,7 +707,19 @@ public class EnemyController : MonoBehaviour
 
     public void TriggerAttackWarning(float duration = -1f)
     {
-        worldUI?.ShowAttackWarning(duration);
+        AttackWarningStyle style = AttackWarningStyle.Normal;
+        if (attackHitbox != null)
+        {
+            EnemyAttackHitbox damageHitbox = attackHitbox.GetComponent<EnemyAttackHitbox>();
+            if (damageHitbox != null &&
+                (damageHitbox.AttackProperty == EnemyAttackProperty.Undodgeable ||
+                 damageHitbox.AttackProperty == EnemyAttackProperty.Grab))
+            {
+                style = AttackWarningStyle.Undodgeable;
+            }
+        }
+
+        worldUI?.ShowAttackWarning(duration, style);
     }
 
     public void HideAttackWarning()

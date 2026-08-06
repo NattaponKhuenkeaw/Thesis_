@@ -19,7 +19,8 @@ MonoBehaviour:
   displayName: "Boss \u2014 Executioner"
   offerIcon: {fileID: 0}
   offerWeight: 1
-  includeInRandomOffers: 1
+  includeInRandomOffers: 0
   zoneMode: 1
   defaultEntranceId: Default
   useStaticCamera: 0
+  encounter: {fileID: 11400000, guid: e6fbd806925497cd1af4d8e706c1b529, type: 2}

@@ -2156,6 +2156,14 @@ namespace CombatEditor.UI
                 MarkDirty();
             });
 
+            AddSeparator(body, "Armor Interaction");
+            AddToggle(body, "Breaks Armor", hitbox.breaksArmor, value =>
+            {
+                RecordUndo("Edit Breaks Armor");
+                hitbox.breaksArmor = value;
+                MarkDirty();
+            });
+
             AddSeparator(body, "Hit Feedback (Override)");
             AddObjectField(body, "Hit SFX", hitbox.hitSFX, value =>
             {

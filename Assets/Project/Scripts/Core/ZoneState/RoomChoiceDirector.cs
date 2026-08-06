@@ -33,6 +33,7 @@ namespace Project.Core.ZoneState
         private readonly List<RoomData> candidateBuffer = new List<RoomData>(16);
         private readonly List<RoomChoiceOffer> offerBuffer = new List<RoomChoiceOffer>(4);
         private readonly HashSet<string> usedRoomIds = new HashSet<string>();
+        private readonly HashSet<string> visitedRoomIds = new HashSet<string>();
 
         public int OfferCount => offerCount;
         public IReadOnlyList<RoomChoiceOffer> LastOffers => offerBuffer;
@@ -76,6 +77,7 @@ namespace Project.Core.ZoneState
         {
             clearsSinceShopOpportunity = 0;
             offerBuffer.Clear();
+            visitedRoomIds.Clear();
             RunProgressionManager.EnsureInstance()?.ResetRun();
         }
 
@@ -87,6 +89,16 @@ namespace Project.Core.ZoneState
             }
 
             RoomData clearedRoom = ResolveRoom(excludeRoomId);
+            if (clearedRoom != null && !string.IsNullOrWhiteSpace(clearedRoom.RoomId))
+            {
+                visitedRoomIds.Add(clearedRoom.RoomId);
+                excludeRoomId = clearedRoom.RoomId;
+            }
+            else if (!string.IsNullOrWhiteSpace(excludeRoomId))
+            {
+                visitedRoomIds.Add(excludeRoomId);
+            }
+
             RunProgressionManager progression = RunProgressionManager.EnsureInstance();
             progression?.NotifyRoomCleared(clearedRoom);
 
@@ -147,7 +159,9 @@ namespace Project.Core.ZoneState
             }
 
             ShuffleOffers();
-            Debug.Log($"[RoomChoiceDirector] Generated {offerBuffer.Count} offers (shopIncluded={includeShop}).", this);
+            Debug.Log(
+                $"[RoomChoiceDirector] Generated {offerBuffer.Count} offers (shopIncluded={includeShop}, visited={visitedRoomIds.Count}).",
+                this);
             return offerBuffer;
         }
 
@@ -207,6 +221,13 @@ namespace Project.Core.ZoneState
             {
                 RoomData room = list[i];
                 if (room == null || usedRoomIds.Contains(room.RoomId))
+                {
+                    list.RemoveAt(i);
+                    continue;
+                }
+
+                // Combat/Elite/Reward should not repeat in a run. Shop stays cadence-repeatable.
+                if (room.RoomKind != RoomKind.Shop && visitedRoomIds.Contains(room.RoomId))
                 {
                     list.RemoveAt(i);
                 }
