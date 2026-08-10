@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -184,67 +184,57 @@ namespace Project.UI
         private void CreateChoiceCard(Transform parent, RoomChoiceOffer offer, int index)
         {
             RoomData room = offer.Room;
-            Color accent = ResolveKindColor(offer.Kind);
+
+            // 1.(Easy = เขียว, Medium = เหลือง, Hard = ส้ม)
+            Color difficultyColor = ResolveDifficultyColor(offer.Kind.ToString());
 
             GameObject card = CreateRect($"Choice_{index}_{offer.Kind}", parent);
             Image cardImage = card.AddComponent<Image>();
             cardImage.color = new Color(0.12f, 0.14f, 0.18f, 1f);
 
             Outline outline = card.AddComponent<Outline>();
-            outline.effectColor = accent;
+            outline.effectColor = difficultyColor; // เปลี่ยนจาก accent เป็น difficultyColor
             outline.effectDistance = new Vector2(3f, -3f);
 
             Button button = card.AddComponent<Button>();
             button.targetGraphic = cardImage;
             ColorBlock colors = button.colors;
-            colors.highlightedColor = Color.Lerp(cardImage.color, accent, 0.35f);
-            colors.pressedColor = Color.Lerp(cardImage.color, accent, 0.55f);
+            colors.highlightedColor = Color.Lerp(cardImage.color, difficultyColor, 0.35f);
+            colors.pressedColor = Color.Lerp(cardImage.color, difficultyColor, 0.55f);
             colors.selectedColor = colors.highlightedColor;
             button.colors = colors;
 
             VerticalLayoutGroup cardLayout = card.AddComponent<VerticalLayoutGroup>();
             cardLayout.padding = new RectOffset(18, 18, 22, 22);
-            cardLayout.spacing = 12f;
-            cardLayout.childAlignment = TextAnchor.UpperCenter;
+            cardLayout.spacing = 16f;
+            cardLayout.childAlignment = TextAnchor.MiddleCenter; // ปรับให้จัดกลาง
             cardLayout.childControlWidth = true;
             cardLayout.childControlHeight = false;
             cardLayout.childForceExpandWidth = true;
             cardLayout.childForceExpandHeight = false;
 
-            GameObject kindBadge = CreateRect("KindBadge", card.transform);
-            LayoutElement badgeLayout = kindBadge.AddComponent<LayoutElement>();
-            badgeLayout.preferredHeight = 42f;
-            Image badgeImage = kindBadge.AddComponent<Image>();
-            badgeImage.color = accent;
+            // 2.(Easy / Medium / Hard)
+            TextMeshProUGUI difficultyLabel = CreateText("DifficultyLabel", card.transform, offer.Kind.ToString().ToUpper(), 22f, FontStyles.Bold);
+            difficultyLabel.alignment = TextAlignmentOptions.Center;
+            difficultyLabel.color = difficultyColor;
 
-            TextMeshProUGUI kindLabel = CreateText("Kind", kindBadge.transform, offer.Kind.ToString().ToUpperInvariant(), 20f, FontStyles.Bold);
-            kindLabel.alignment = TextAlignmentOptions.Center;
-            kindLabel.color = new Color(0.08f, 0.08f, 0.1f, 1f);
-            StretchToParent(kindLabel.rectTransform);
-
+            // Icon (ถ้ามี)
             if (room.OfferIcon != null)
             {
                 GameObject iconGo = CreateRect("Icon", card.transform);
                 LayoutElement iconLayout = iconGo.AddComponent<LayoutElement>();
-                iconLayout.preferredHeight = 96f;
+                iconLayout.preferredHeight = 80f;
                 Image iconImage = iconGo.AddComponent<Image>();
                 iconImage.sprite = room.OfferIcon;
                 iconImage.preserveAspect = true;
                 iconImage.raycastTarget = false;
             }
 
-            TextMeshProUGUI nameLabel = CreateText("Name", card.transform, offer.DisplayName, 24f, FontStyles.Bold);
-            nameLabel.alignment = TextAlignmentOptions.Center;
-            nameLabel.color = Color.white;
-
-            string zoneText = room.ZoneMode == ZoneMode.SafeZone ? "Safe Zone" : "Combat Zone";
-            TextMeshProUGUI zoneLabel = CreateText("Zone", card.transform, zoneText, 16f, FontStyles.Normal);
-            zoneLabel.alignment = TextAlignmentOptions.Center;
-            zoneLabel.color = new Color(0.75f, 0.8f, 0.86f, 1f);
-
-            TextMeshProUGUI hint = CreateText("Hint", card.transform, "Click to enter", 15f, FontStyles.Italic);
-            hint.alignment = TextAlignmentOptions.Center;
-            hint.color = new Color(accent.r, accent.g, accent.b, 0.95f);
+            // 3.Reward [ coin | artifact | artifact + coin ]
+            string rewardText = GetRewardText(offer);
+            TextMeshProUGUI rewardLabel = CreateText("RewardLabel", card.transform, $"Reward: {rewardText}", 20f, FontStyles.Bold);
+            rewardLabel.alignment = TextAlignmentOptions.Center;
+            rewardLabel.color = Color.white;
 
             string roomId = offer.RoomId;
             string entranceId = room.DefaultEntranceId;
@@ -350,6 +340,41 @@ namespace Project.UI
             GameObject eventSystemObject = new GameObject("EventSystem");
             eventSystemObject.AddComponent<EventSystem>();
             eventSystemObject.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+        }
+
+        /// <summary>
+        /// กำหนดสีตามระดับความยาก: Easy = เขียว, Medium = เหลือง, Hard = ส้ม
+        /// </summary>
+        private static Color ResolveDifficultyColor(string difficulty)
+        {
+            if (string.IsNullOrEmpty(difficulty)) return Color.white;
+
+            string diffLower = difficulty.ToLower();
+
+            if (diffLower.Contains("easy"))
+            {
+                return new Color(0.18f, 0.8f, 0.44f, 1f); // เขียว
+            }
+            if (diffLower.Contains("medium") || diffLower.Contains("med"))
+            {
+                return new Color(0.95f, 0.77f, 0.06f, 1f); // เหลือง
+            }
+            if (diffLower.Contains("hard"))
+            {
+                return new Color(0.9f, 0.49f, 0.13f, 1f); // ส้ม
+            }
+
+            return Color.white;
+        }
+
+        /// <summary>
+        /// แปลงข้อมูลของรางวัลเป็นข้อความ [ coin | artifact | artifact + coin ]
+        /// </summary>
+        private static string GetRewardText(RoomChoiceOffer offer)
+        {
+            // ถ้า offer มี property เก็บ reward ไว้ ให้ดึงมาใช้ตรงนี้
+            // เช่น return offer.RewardType.ToString();
+            return "coin"; // ค่าเริ่มต้นกรณีไม่มีตัวแปร reward
         }
     }
 }
