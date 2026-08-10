@@ -189,6 +189,25 @@ namespace Project.UI
             Color difficultyColor = ResolveDifficultyColor(offer.Kind.ToString());
 
             GameObject card = CreateRect($"Choice_{index}_{offer.Kind}", parent);
+
+            HorizontalLayoutGroup containerLayout = parent.GetComponent<HorizontalLayoutGroup>();
+            if (containerLayout == null)
+            {
+                containerLayout = parent.gameObject.AddComponent<HorizontalLayoutGroup>();
+            }
+
+            containerLayout.childControlWidth = false;
+            containerLayout.childControlHeight = true;      
+            containerLayout.childForceExpandWidth = false;
+            containerLayout.childForceExpandHeight = false;
+            containerLayout.childAlignment = TextAnchor.MiddleCenter;
+            containerLayout.spacing = 30f;
+
+            // เพิ่ม LayoutElement เพื่อล็อกขนาดการ์ดไม่ให้ยืดตาม parent
+            LayoutElement cardElement = card.AddComponent<LayoutElement>();
+            cardElement.preferredWidth = 220f;  // ความกว้างการ์ด
+            cardElement.preferredHeight = 300f; // ความสูงการ์ด
+
             Image cardImage = card.AddComponent<Image>();
             cardImage.color = new Color(0.12f, 0.14f, 0.18f, 1f);
 
@@ -205,8 +224,8 @@ namespace Project.UI
             button.colors = colors;
 
             VerticalLayoutGroup cardLayout = card.AddComponent<VerticalLayoutGroup>();
-            cardLayout.padding = new RectOffset(18, 18, 22, 22);
-            cardLayout.spacing = 16f;
+            cardLayout.padding = new RectOffset(12, 12, 16, 16);
+            cardLayout.spacing = 12f;
             cardLayout.childAlignment = TextAnchor.MiddleCenter; // ปรับให้จัดกลาง
             cardLayout.childControlWidth = true;
             cardLayout.childControlHeight = false;
@@ -214,7 +233,7 @@ namespace Project.UI
             cardLayout.childForceExpandHeight = false;
 
             // 2.(Easy / Medium / Hard)
-            TextMeshProUGUI difficultyLabel = CreateText("DifficultyLabel", card.transform, offer.Kind.ToString().ToUpper(), 22f, FontStyles.Bold);
+            TextMeshProUGUI difficultyLabel = CreateText("DifficultyLabel", card.transform, offer.Kind.ToString().ToUpper(), 16f, FontStyles.Bold);
             difficultyLabel.alignment = TextAlignmentOptions.Center;
             difficultyLabel.color = difficultyColor;
 
@@ -232,7 +251,7 @@ namespace Project.UI
 
             // 3.Reward [ coin | artifact | artifact + coin ]
             string rewardText = GetRewardText(offer);
-            TextMeshProUGUI rewardLabel = CreateText("RewardLabel", card.transform, $"Reward: {rewardText}", 20f, FontStyles.Bold);
+            TextMeshProUGUI rewardLabel = CreateText("RewardLabel", card.transform, $"Reward: {rewardText}", 14f, FontStyles.Bold);
             rewardLabel.alignment = TextAlignmentOptions.Center;
             rewardLabel.color = Color.white;
 
