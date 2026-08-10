@@ -847,7 +847,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 4
         activeFrames: 3
-        elementType: 2
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.8841436, y: 1.2545096}
         size: {x: 3.593923, y: 2.298166}
@@ -880,7 +880,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 7
         activeFrames: 3
-        elementType: 2
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.8435936, y: 1.2498498}
         size: {x: 3.8552637, y: 2.3133125}
@@ -913,7 +913,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 10
         activeFrames: 3
-        elementType: 2
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.963199, y: 1.1932151}
         size: {x: 3.6093466, y: 2.2099414}
@@ -946,7 +946,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 13
         activeFrames: 3
-        elementType: 2
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.079531, y: 1.1694081}
         size: {x: 3.7406754, y: 2.2753167}
@@ -2145,7 +2145,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 18
         activeFrames: 3
-        elementType: 2
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 2.274058, y: 1.7251742}
         size: {x: 4.300432, y: 3.1781354}
@@ -2878,7 +2878,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 5
         activeFrames: 2
-        elementType: 2
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.5329468, y: 1.2551045}
         size: {x: 2.9169376, y: 2.62297}
@@ -2911,7 +2911,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 22
         activeFrames: 2
-        elementType: 2
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.5460851, y: 1.4373848}
         size: {x: 2.6807704, y: 2.8747697}
@@ -3000,7 +3000,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 2
-        elementType: 2
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.9411199, y: 1.283295}
         size: {x: 3.9509192, y: 2.904873}
@@ -3033,7 +3033,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 2
         activeFrames: 2
-        elementType: 2
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.687238, y: 1.3020884}
         size: {x: 3.8190255, y: 2.7169378}
@@ -3066,7 +3066,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 4
         activeFrames: 4
-        elementType: 2
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.51809716, y: 1.3396753}
         size: {x: 4.7587023, y: 3.0552206}
@@ -3099,7 +3099,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 8
         activeFrames: 3
-        elementType: 2
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.0161245, y: 1.9034806}
         size: {x: 5.8299313, y: 4.145244}
@@ -3166,7 +3166,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 11
         activeFrames: 5
-        elementType: 2
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.0298467, y: 1.9507844}
         size: {x: 5.734492, y: 3.901569}
@@ -3199,7 +3199,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 16
         activeFrames: 5
-        elementType: 2
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.029847, y: 1.950784}
         size: {x: 5.734492, y: 3.901569}
@@ -3337,7 +3337,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 3
-        elementType: 2
+        elementType: 0
         debugColor: {r: 0.42, g: 0.81, b: 1, a: 1}
         projectileType: 0
         projectileData: {fileID: 11400000, guid: e8c2011236aa4804db1c338c71b3be9f, type: 2}
@@ -3348,7 +3348,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 45
         activeFrames: 3
-        elementType: 2
+        elementType: 0
         debugColor: {r: 0.42, g: 0.81, b: 1, a: 1}
         projectileType: 0
         projectileData: {fileID: 11400000, guid: 14292fe5ae190d2479e09342f1788db7, type: 2}
@@ -3359,7 +3359,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 112
         activeFrames: 20
-        elementType: 2
+        elementType: 0
         debugColor: {r: 0.42, g: 0.81, b: 1, a: 1}
         projectileType: 0
         projectileData: {fileID: 11400000, guid: 2c97fdb97c2849845993269349973027, type: 2}

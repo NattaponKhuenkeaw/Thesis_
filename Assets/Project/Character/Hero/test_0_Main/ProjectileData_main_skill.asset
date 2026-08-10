@@ -22,6 +22,7 @@ MonoBehaviour:
   playSpawnAnimation: 1
   spawnDuration: 0
   inheritFacingDirection: 1
+  applyOffsetToTarget: 1
   spawningHitbox:
     enabled: 0
     decrementsMaxHits: 0
@@ -51,6 +52,9 @@ MonoBehaviour:
   stopOnImpact: 1
   destroyWhenHitsExhausted: 0
   destroyOnLifetimeExpire: 1
+  trackAreaOccupants: 0
+  areaEffectRefreshInterval: 0.25
+  areaEffects: []
   spawnFeedback:
     vfxType: 0
     vfxClip: {fileID: 0}
@@ -73,7 +77,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 3
-        elementType: 4
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0, y: 2.4}
         size: {x: 8, y: 5}
@@ -92,7 +96,6 @@ MonoBehaviour:
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
         canAirJuggle: 1
-        maxJuggleCount: 2
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}

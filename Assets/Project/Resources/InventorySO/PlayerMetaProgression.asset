@@ -16,21 +16,25 @@ MonoBehaviour:
   - sourceItemId: char-0-main
     displayName: Main Fragment
     fragmentType: 0
-    quantity: 1
+    quantity: 97
   - sourceItemId: char_5_goenitz
     displayName: Goenitz Fragment
     fragmentType: 0
-    quantity: 1
+    quantity: 99
   - sourceItemId: char_3_shermie
     displayName: Shermie Fragment
     fragmentType: 0
-    quantity: 1
+    quantity: 99
   - sourceItemId: char_1_kyo
     displayName: Kyo Fragment
     fragmentType: 0
-    quantity: 1
+    quantity: 99
   - sourceItemId: Char_2_Rugal
     displayName: Rugal Fragment
     fragmentType: 0
-    quantity: 1
-  characterPotentials: []
+    quantity: 99
+  characterPotentials:
+  - characterId: char-0-main
+    skillLevel: 0
+    ultimateLevel: 0
+    passiveLevel: 2

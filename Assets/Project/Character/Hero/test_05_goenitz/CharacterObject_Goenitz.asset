@@ -362,8 +362,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -524,8 +522,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -713,8 +709,8 @@ MonoBehaviour:
             overrideDamageModifier: 1
             damageModifier:
               filter:
-                filterByElement: 1
-                elementType: 2
+                filterByElement: 0
+                elementType: 0
                 filterByCategory: 0
                 category: 0
               outgoingDamagePercentAdd: 0
@@ -794,8 +790,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -1239,8 +1233,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
       - trigger: 1
         filter:
           filterByCategory: 1
@@ -1519,8 +1511,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -1621,8 +1611,8 @@ MonoBehaviour:
             overrideDamageModifier: 1
             damageModifier:
               filter:
-                filterByElement: 1
-                elementType: 2
+                filterByElement: 0
+                elementType: 0
                 filterByCategory: 0
                 category: 0
               outgoingDamagePercentAdd: 0
@@ -1702,8 +1692,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -1766,7 +1754,7 @@ MonoBehaviour:
         capTargetMaxHpDamage: 0
         targetMaxHpDamageCapSource: 0
         targetMaxHpDamageCapRatio: 1
-        elementType: 2
+        elementType: 0
         consumeRuntimeTagOnTrigger: 0
         overrideDetectionBox: 0
         detectionBoxSize: {x: 10, y: 10}
@@ -1919,7 +1907,7 @@ MonoBehaviour:
         capTargetMaxHpDamage: 1
         targetMaxHpDamageCapSource: 0
         targetMaxHpDamageCapRatio: 5
-        elementType: 2
+        elementType: 0
         consumeRuntimeTagOnTrigger: 1
       dashThroughDamageEffects: []
       defensiveEffects: []

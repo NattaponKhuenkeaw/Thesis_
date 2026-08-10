@@ -10,7 +10,9 @@ public static class CombatFormula
         float defenderDefense,
         AttackCategory category,
         out bool isCrit,
-        float defenderDamageResistance = 0f)
+        float defenderDamageResistance = 0f,
+        bool allowDotCrit = false,
+        bool allowParticleCrit = true)
     {
         float mitigatedDamage = CalculateIncomingDamage(
             Mathf.Max(0f, baseDamage),
@@ -18,14 +20,14 @@ public static class CombatFormula
             defenderDamageResistance,
             routine);
 
-        bool canCrit = CanRoutineCrit(routine);
+        bool canCrit = CanRoutineCrit(routine, allowDotCrit, allowParticleCrit);
         float critRate = attackerStats != null ? Mathf.Max(0f, attackerStats.critRate) : 0f;
         float critDamage = attackerStats != null ? Mathf.Max(0f, attackerStats.critDamage) : 50f;
         isCrit = canCrit && Random.Range(0f, 100f) <= critRate;
 
         float resolvedDamage = mitigatedDamage;
 
-        if (UsesElementalMasteryScaling(routine) && elementType != ElementType.None)
+        if (UsesElementalMasteryScaling(routine, elementType))
         {
             float elementalMastery = attackerStats != null
                 ? Mathf.Max(0f, attackerStats.elementalMastery)
@@ -50,21 +52,33 @@ public static class CombatFormula
         return Mathf.Max(0f, resolvedDamage);
     }
 
-    private static bool CanRoutineCrit(DamageRoutine routine)
+    public static bool CanRoutineCrit(DamageRoutine routine, bool allowDotCrit = false, bool allowParticleCrit = true)
     {
-        return routine != DamageRoutine.Additional && routine != DamageRoutine.Dot;
+        switch (routine)
+        {
+            case DamageRoutine.Physical:
+                return true;
+            case DamageRoutine.Particle:
+                return allowParticleCrit;
+            case DamageRoutine.Dot:
+                return allowDotCrit;
+            default:
+                return false;
+        }
     }
 
     private static bool UsesPrimaryDamageScaling(DamageRoutine routine)
     {
-        return routine == DamageRoutine.Normal || routine == DamageRoutine.Elemental;
+        return routine == DamageRoutine.Physical;
     }
 
-    private static bool UsesElementalMasteryScaling(DamageRoutine routine)
+    private static bool UsesElementalMasteryScaling(DamageRoutine routine, ElementType elementType)
     {
-        return routine == DamageRoutine.Normal
-            || routine == DamageRoutine.Elemental
-            || routine == DamageRoutine.Additional;
+        if (routine == DamageRoutine.Particle || routine == DamageRoutine.Dot)
+        {
+            return true;
+        }
+        return routine == DamageRoutine.Physical && elementType != ElementType.None;
     }
 
     public static float CalculateOutgoingDamage(float baseAttack, float actionMultiplier, float critRate, float critDmg, float impact, bool isUlt, out bool isCrit)
@@ -114,6 +128,17 @@ public static class CombatFormula
         float damageReductionPercent,
         DamageRoutine routine)
     {
+        if (incomingDamage <= 0f)
+        {
+            return 0f;
+        }
+
+        if (routine == DamageRoutine.Particle)
+        {
+            // Particle damage ignores both DEF and RES completely
+            return Mathf.Max(0f, incomingDamage);
+        }
+
         float resolvedDefense = routine == DamageRoutine.Dot ? 0f : defense;
         return CalculateIncomingDamage(incomingDamage, resolvedDefense, damageReductionPercent);
     }

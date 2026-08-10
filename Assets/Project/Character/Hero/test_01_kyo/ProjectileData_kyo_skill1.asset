@@ -108,7 +108,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 3
         activeFrames: 3
-        elementType: 3
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0, y: 0.32}
         size: {x: 1.5, y: 1.5}

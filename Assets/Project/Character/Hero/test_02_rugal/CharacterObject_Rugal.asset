@@ -329,8 +329,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -551,8 +549,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -673,7 +669,7 @@ MonoBehaviour:
         capTargetMaxHpDamage: 1
         targetMaxHpDamageCapSource: 0
         targetMaxHpDamageCapRatio: 10
-        elementType: 1
+        elementType: 0
         consumeRuntimeTagOnTrigger: 0
       dashThroughDamageEffects: []
       defensiveEffects: []
@@ -1018,8 +1014,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -1559,8 +1553,6 @@ MonoBehaviour:
         durationOverride: 20
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
       runtimeEffectStackLimitModifiers: []
       counterEffects:
       - trigger: 1

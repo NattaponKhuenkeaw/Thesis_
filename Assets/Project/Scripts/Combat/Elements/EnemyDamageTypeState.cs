@@ -9,9 +9,12 @@ public class EnemyDamageTypeState : MonoBehaviour
         public float remainingDuration;
         public float tickTimer;
         public float tickInterval;
-        public float tickDamage;
+        public float tickDamagePerStack;
+        public int stackCount;
+        public int maxStacks;
         public CharacterObject sourceCharacter;
         public CharacterStats sourceStats;
+        public bool allowCrit;
     }
 
     private sealed class ActiveRuntimeReductionModifier
@@ -84,7 +87,8 @@ public class EnemyDamageTypeState : MonoBehaviour
     public void ApplyDot(
         ElementType damageType,
         CharacterStats attackerStats,
-        CharacterObject sourceCharacter)
+        CharacterObject sourceCharacter,
+        bool allowCrit = false)
     {
         if (damageType == ElementType.None || _enemy == null || !_enemy.IsAlive)
         {
@@ -111,6 +115,7 @@ public class EnemyDamageTypeState : MonoBehaviour
 
         float duration = Mathf.Max(0.05f, definition.dotDuration);
         float tickInterval = Mathf.Max(0.05f, definition.dotTickInterval);
+        int maxStacks = definition.maxStacks > 0 ? definition.maxStacks : 5;
         ActiveDot existing = FindDot(damageType);
 
         if (existing == null)
@@ -120,24 +125,30 @@ public class EnemyDamageTypeState : MonoBehaviour
                 damageType = damageType,
                 remainingDuration = duration,
                 tickInterval = tickInterval,
-                tickDamage = tickDamage,
+                tickDamagePerStack = tickDamage,
+                stackCount = 1,
+                maxStacks = maxStacks,
                 sourceCharacter = sourceCharacter,
-                sourceStats = attackerStats
+                sourceStats = attackerStats,
+                allowCrit = allowCrit
             });
             return;
         }
 
-        if (tickDamage + 0.0001f < existing.tickDamage)
+        if (existing.stackCount < existing.maxStacks)
         {
-            return;
+            existing.stackCount++;
         }
 
-        existing.remainingDuration = duration;
-        existing.tickTimer = 0f;
+        existing.remainingDuration = Mathf.Max(existing.remainingDuration, duration);
         existing.tickInterval = tickInterval;
-        existing.tickDamage = tickDamage;
+        if (tickDamage > existing.tickDamagePerStack)
+        {
+            existing.tickDamagePerStack = tickDamage;
+        }
         existing.sourceCharacter = sourceCharacter;
         existing.sourceStats = attackerStats;
+        existing.allowCrit = existing.allowCrit || allowCrit;
     }
 
     public void ApplyRuntimeElementModifier(PassiveEnemyElementModifierDefinition effect)
@@ -214,10 +225,24 @@ public class EnemyDamageTypeState : MonoBehaviour
 
     private void ApplyDotDamage(ActiveDot dot)
     {
-        HitReactionData dotHit = HitReactionData.Default(dot.tickDamage, Vector2.zero, 0f);
+        float totalTickDamage = dot.tickDamagePerStack * dot.stackCount;
+        bool isCrit = false;
+        if (dot.allowCrit && dot.sourceStats != null)
+        {
+            float critRate = Mathf.Max(0f, dot.sourceStats.critRate);
+            float critDamage = Mathf.Max(0f, dot.sourceStats.critDamage);
+            isCrit = Random.Range(0f, 100f) <= critRate;
+            if (isCrit)
+            {
+                totalTickDamage *= (1f + (critDamage / 100f));
+            }
+        }
+
+        HitReactionData dotHit = HitReactionData.Default(totalTickDamage, Vector2.zero, 0f);
         dotHit.damageIsFinal = false;
         dotHit.damageRoutine = DamageRoutine.Dot;
         dotHit.elementType = dot.damageType;
+        dotHit.isCriticalHit = isCrit;
         dotHit.flashFrames = 0;
         dotHit.sourceCharacter = dot.sourceCharacter;
         dotHit.sourceStats = dot.sourceStats;

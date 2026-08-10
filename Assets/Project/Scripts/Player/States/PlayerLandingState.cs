@@ -12,6 +12,7 @@ public class PlayerLandingState : PlayerState
     public override PlayerStatePriority Priority => PlayerStatePriority.Movement;
 
     public override bool AcceptsMoveInput => true;
+    public override bool AcceptsDashInput => true;
     public override bool AcceptsJumpInput => true;
     public override bool AcceptsAttackInput => true;
     public override bool AcceptsSkillInput => true;

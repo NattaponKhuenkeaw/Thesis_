@@ -45,7 +45,7 @@ MonoBehaviour:
       defensePerLevel: 4.2
       maxHpPerLevel: 81
     currentHP: 813
-    currentAE: 28.8
+    currentAE: 60
   - character: {fileID: 11400000, guid: c9c99302d3f5d8a43b612bd108aa3f05, type: 2}
     upgrade:
       level: 30
@@ -65,7 +65,7 @@ MonoBehaviour:
       defensePerLevel: 4.4
       maxHpPerLevel: 80
     currentHP: 892
-    currentAE: 21
+    currentAE: 51
   - character: {fileID: 11400000, guid: 27891cf9824752045b475995e212e47e, type: 2}
     upgrade:
       level: 1
@@ -97,17 +97,17 @@ MonoBehaviour:
     currentHP: 783
     currentAE: 70
   teamSlots:
-  - character: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
-    artifacts:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
   - character: {fileID: 11400000, guid: a2f28494c803e0b49a390a31a390a787, type: 2}
     artifacts:
     - {fileID: 0}
     - {fileID: 0}
     - {fileID: 0}
-  - character: {fileID: 11400000, guid: c9c99302d3f5d8a43b612bd108aa3f05, type: 2}
+  - character: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
+    artifacts:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+  - character: {fileID: 11400000, guid: 862c5f94563edd64bac74e8fbcce835c, type: 2}
     artifacts:
     - {fileID: 0}
     - {fileID: 0}

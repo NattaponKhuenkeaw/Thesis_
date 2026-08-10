@@ -49,6 +49,15 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Transform groundCheck;
 
     // =========================================================
+    // Visual Offset Layer (Fighting-Game Ground/Air Separation)
+    // =========================================================
+    [Header("Visual Root")]
+    [Tooltip("The child transform holding the SpriteRenderer/Animator. " +
+             "Ground actions with upward MotionData move this transform " +
+             "instead of the Rigidbody, keeping physics contact intact.")]
+    [SerializeField] private Transform visualRoot;
+
+    // =========================================================
     // Dash Visuals
     // =========================================================
     [Header("Dash Visuals")]
@@ -89,6 +98,11 @@ public class PlayerMovement : MonoBehaviour
     private int landingFramesRemaining;
     private float lastAfterimageTime;
     private float lastFacingChangeTime = -999f;
+
+    // Visual offset layer runtime
+    private float visualOffsetY;
+    private Vector3 initialVisualLocalPos;
+    private bool hasCachedInitialVisualLocalPos;
     private bool missingProfileReported;
     private Vector2 previousGroundCheckPosition;
     private bool hasPreviousGroundCheckPosition;
@@ -138,19 +152,20 @@ public class PlayerMovement : MonoBehaviour
     // Computed State
     // =========================================================
     public bool IsDashing => fsm != null && fsm.CurrentStateId == PlayerStateId.Dashing;
-    public bool IsGroundDashRecovery =>
+    public bool IsGroundDashLocomotionOpen =>
         fsm != null
         && fsm.CurrentState is PlayerDashState dashState
-        && dashState.IsRecoveryLocomotionOpen;
+        && dashState.IsCancelLocomotionOpen;
     public bool IsJumpStarting => fsm != null
         && fsm.JumpState != null
         && fsm.CurrentState == fsm.JumpState
         && fsm.JumpState.IsStartingUp;
     public bool IsDroppingDown => dropDownCoroutine != null;
     public bool IsLanding => landingFramesRemaining > 0;
-    public bool IsFallingFromLostSupport =>
+    public bool IsAirborneFromGroundDeparture =>
         !GroundState.IsGrounded
-        && airborneTransitionCause == AirborneTransitionCause.LostSupport;
+        && (airborneTransitionCause == AirborneTransitionCause.LostSupport
+            || airborneTransitionCause == AirborneTransitionCause.DropThrough);
     public float HorizontalInput => horizontalInput;
     public float VerticalVelocity => rb != null ? rb.linearVelocity.y : 0f;
     public int FacingDirection => transform.eulerAngles.y > 90f ? -1 : 1;
@@ -164,6 +179,12 @@ public class PlayerMovement : MonoBehaviour
             return spriteRenderer;
         }
     }
+
+    /// <summary>True when the visual root is offset from the Rigidbody due to a ground action's upward MotionData.</summary>
+    public bool IsVisuallyLifted => Mathf.Abs(visualOffsetY) > 0.001f;
+
+    /// <summary>Current visual Y offset applied to the visual root transform.</summary>
+    public float CurrentVisualOffsetY => visualOffsetY;
 
 
     // =========================================================
@@ -203,6 +224,17 @@ public class PlayerMovement : MonoBehaviour
             oneWayPlatformLayer >= 0 ? 1 << oneWayPlatformLayer : 0);
         oneWayContactFilter.useLayerMask = true;
         oneWayContactFilter.useTriggers = false;
+
+        if (visualRoot == null && spriteRenderer != null)
+        {
+            visualRoot = spriteRenderer.transform;
+        }
+
+        if (visualRoot != null)
+        {
+            initialVisualLocalPos = visualRoot.localPosition;
+            hasCachedInitialVisualLocalPos = true;
+        }
     }
 
     void FixedUpdate()
@@ -232,6 +264,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         ApplyMotorVelocity();
+        SyncVisualRoot();
     }
 
     // =========================================================
@@ -385,6 +418,22 @@ public class PlayerMovement : MonoBehaviour
         // resolve a fresh floor point before publishing a Ground output.
         StopAttackMotion();
 
+        // When the visual offset layer was active, the Rigidbody never left
+        // the ground. Just reset the visual offset — no teleport needed.
+        if (GroundState.IsGrounded)
+        {
+            ResetVisualOffset();
+            SyncVisualRoot();
+            GroundState.SynchronizeWithoutTransition(true, 0f);
+            CacheGroundCheckPosition();
+            ResetLandingResources();
+            landingFramesRemaining = 0;
+            actionOutputSnapFixedTime = Time.inFixedTimeStep
+                ? Time.fixedTime
+                : Time.fixedTime + Time.fixedDeltaTime;
+            return true;
+        }
+
         Vector2 origin = (Vector2)groundCheck.position + (Vector2.up * 0.02f);
         int hitCount = Physics2D.Raycast(
             origin,
@@ -476,7 +525,7 @@ public class PlayerMovement : MonoBehaviour
 
     public void ApplyAttackMovement(MotionKeyframe keyframe)
     {
-        StopAttackMotion();
+        StopAttackMotionVelocityOnly();
         if (keyframe != null) attackMotionCoroutine = StartCoroutine(AttackMovementCoroutine(keyframe));
     }
 
@@ -705,13 +754,19 @@ public class PlayerMovement : MonoBehaviour
 
     private void SetPlayerEnemyCollisionIgnored(bool ignored) { if (playerLayer != -1 && enemyLayer != -1) Physics2D.IgnoreLayerCollision(playerLayer, enemyLayer, ignored); }
 
-    private void StopAttackMotion()
+    private void StopAttackMotionVelocityOnly()
     {
         if (attackMotionCoroutine != null) { StopCoroutine(attackMotionCoroutine); attackMotionCoroutine = null; }
         isAttackMotionActive = false;
         attackMotionVelocityX = 0f;
         attackMotionVelocityY = 0f;
         useUnscaledAttackMotion = false;
+    }
+
+    private void StopAttackMotion()
+    {
+        StopAttackMotionVelocityOnly();
+        ResetVisualOffset();
     }
 
     private void ResetLandingResources()
@@ -1014,7 +1069,15 @@ public class PlayerMovement : MonoBehaviour
             if (totalDelta.sqrMagnitude > 0.000001f)
             {
                 attackMotionVelocityX = totalDelta.x / Mathf.Max(Time.fixedDeltaTime, 0.001f);
-                attackMotionVelocityY = totalDelta.y / Mathf.Max(Time.fixedDeltaTime, 0.001f);
+                if (ShouldUseVisualOffset())
+                {
+                    visualOffsetY += totalDelta.y;
+                    attackMotionVelocityY = 0f;
+                }
+                else
+                {
+                    attackMotionVelocityY = totalDelta.y / Mathf.Max(Time.fixedDeltaTime, 0.001f);
+                }
                 yield return new WaitForFixedUpdate();
             }
         }
@@ -1035,7 +1098,15 @@ public class PlayerMovement : MonoBehaviour
                 float frameDeltaX = totalDelta.x * (easedT - easedPrev);
                 float frameDeltaY = totalDelta.y * (easedT - easedPrev);
                 attackMotionVelocityX = frameDeltaX / Mathf.Max(delta, 0.001f);
-                attackMotionVelocityY = frameDeltaY / Mathf.Max(delta, 0.001f);
+                if (ShouldUseVisualOffset())
+                {
+                    visualOffsetY += frameDeltaY;
+                    attackMotionVelocityY = 0f;
+                }
+                else
+                {
+                    attackMotionVelocityY = frameDeltaY / Mathf.Max(delta, 0.001f);
+                }
 
                 prevT = t;
 
@@ -1046,7 +1117,7 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        StopAttackMotion();
+        StopAttackMotionVelocityOnly();
     }
 
     private float TweenEase(float f, float t, float time, LeanTweenType e)
@@ -1097,6 +1168,53 @@ public class PlayerMovement : MonoBehaviour
         if (t == null || solidColliders == null) return true;
         float b = t.bounds.min.y, p = float.MinValue; bool f = false; foreach (var c in solidColliders) if (c != null) { p = Mathf.Max(p, c.bounds.max.y); f = true; }
         return !f || p <= b - 0.02f;
+    }
+
+    /// <summary>
+    /// Returns true when the current combat context is Grounded and the visual
+    /// root is assigned. In that case, upward MotionData.y is routed to the
+    /// visual offset instead of the Rigidbody.
+    /// </summary>
+    private bool ShouldUseVisualOffset()
+    {
+        return visualRoot != null
+            && fsm != null
+            && fsm.IsGroundedContext;
+    }
+
+    private void CacheInitialVisualLocalPos()
+    {
+        if (visualRoot != null && !hasCachedInitialVisualLocalPos)
+        {
+            initialVisualLocalPos = visualRoot.localPosition;
+            hasCachedInitialVisualLocalPos = true;
+        }
+    }
+
+    /// <summary>
+    /// Applies the current visual offset to the visual root's local position.
+    /// Called once per FixedUpdate after all motion is resolved.
+    /// </summary>
+    private void SyncVisualRoot()
+    {
+        if (visualRoot == null) return;
+        CacheInitialVisualLocalPos();
+        Vector3 pos = initialVisualLocalPos;
+        pos.y += visualOffsetY;
+        visualRoot.localPosition = pos;
+    }
+
+    /// <summary>
+    /// Instantly resets the visual offset to zero.
+    /// </summary>
+    private void ResetVisualOffset()
+    {
+        visualOffsetY = 0f;
+        if (visualRoot != null)
+        {
+            CacheInitialVisualLocalPos();
+            visualRoot.localPosition = initialVisualLocalPos;
+        }
     }
 
     private bool EnsureProfileAssigned()

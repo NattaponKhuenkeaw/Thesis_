@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 public class PlayerTeamSwitchState : MonoBehaviour
 {
+    private static readonly List<PlayerTeamSwitchState> activeClones = new List<PlayerTeamSwitchState>();
+    private readonly List<Collider2D> myClonedColliders = new List<Collider2D>();
+
     private AttackStepData actionStep;
     private int currentFrame;
     private int facingDirection;
@@ -28,7 +31,9 @@ public class PlayerTeamSwitchState : MonoBehaviour
     private readonly Collider2D[] overlapResults = new Collider2D[20];
 
     private float logicTimeCounter = 0f;
+    private float lifetimeCounter = 0f;
     private const float LOGIC_FPS = 60f;
+    private const float MAX_CLONE_LIFETIME = 3.0f;
 
     public static PlayerTeamSwitchState Spawn(
         GameObject playerGameObject,
@@ -44,6 +49,7 @@ public class PlayerTeamSwitchState : MonoBehaviour
         AttackCategory category)
     {
         GameObject executorGo = new GameObject("PlayerTeamSwitchState_" + (castingCharacter.metaData != null ? castingCharacter.metaData.displayName : "Clone"));
+        executorGo.layer = playerGameObject.layer;
         executorGo.transform.position = playerGameObject.transform.position;
         executorGo.transform.rotation = playerGameObject.transform.rotation;
 
@@ -54,13 +60,22 @@ public class PlayerTeamSwitchState : MonoBehaviour
             Rigidbody2D cloneRb = executorGo.AddComponent<Rigidbody2D>();
             cloneRb.bodyType = RigidbodyType2D.Dynamic;
             cloneRb.gravityScale = playerRb.gravityScale;
-            cloneRb.linearVelocity = playerRb.linearVelocity;
+
+            if (currentStep != null && currentStep.motionData != null && currentStep.motionData.keyframes != null && currentStep.motionData.keyframes.Count > 0)
+            {
+                cloneRb.linearVelocity = Vector2.zero;
+            }
+            else
+            {
+                cloneRb.linearVelocity = playerRb.linearVelocity;
+            }
+
             cloneRb.constraints = RigidbodyConstraints2D.FreezeRotation;
             cloneRb.sharedMaterial = playerRb.sharedMaterial;
         }
 
         // Copy Colliders to preserve physical behavior (ground checks, wall collision)
-        Collider2D[] playerColliders = playerGameObject.GetComponentsInChildren<Collider2D>();
+        Collider2D[] playerColliders = playerGameObject.GetComponentsInChildren<Collider2D>(true);
         List<Collider2D> clonedColliders = new List<Collider2D>();
         foreach (var col in playerColliders)
         {
@@ -102,19 +117,21 @@ public class PlayerTeamSwitchState : MonoBehaviour
             }
         }
 
-        // Ignore collision between all cloned colliders and all player colliders
-        foreach (var cloneCol in clonedColliders)
-        {
-            foreach (var playerCol in playerColliders)
-            {
-                if (playerCol != null)
-                {
-                    Physics2D.IgnoreCollision(cloneCol, playerCol, true);
-                }
-            }
-        }
+        // Ignore collision between all cloned colliders and all current/future player colliders
+        IgnoreCollisionsWithPlayer(playerGameObject, clonedColliders);
+
+        // Ignore collision between clone colliders and all existing active clones' colliders
+        IgnoreCollisionsWithOtherClones(clonedColliders);
+
+        // Ignore collision between clone colliders and all enemy colliders
+        IgnoreCollisionsWithEnemies(clonedColliders);
+
+        SpriteRenderer playerSr = playerGameObject.GetComponentInChildren<SpriteRenderer>();
 
         PlayerTeamSwitchState executor = executorGo.AddComponent<PlayerTeamSwitchState>();
+        activeClones.Add(executor);
+        executor.myClonedColliders.AddRange(clonedColliders);
+
         executor.Initialize(
             currentStep,
             currentFrame,
@@ -131,9 +148,10 @@ public class PlayerTeamSwitchState : MonoBehaviour
             castingCharacter,
             sourceCombat != null ? sourceCombat.CurrentActionId : null,
             sourceCombat != null ? sourceCombat.CurrentActionName : actionName,
-            currentSprite,
+            currentSprite != null ? currentSprite : (playerSr != null ? playerSr.sprite : null),
             animController,
-            category);
+            category,
+            playerSr);
         return executor;
     }
 
@@ -156,7 +174,8 @@ public class PlayerTeamSwitchState : MonoBehaviour
         string resolvedSourceActionName,
         Sprite characterSprite,
         RuntimeAnimatorController animatorController,
-        AttackCategory category)
+        AttackCategory category,
+        SpriteRenderer sourceSpriteRenderer = null)
     {
         actionStep = step;
         currentFrame = startFrame;
@@ -176,17 +195,45 @@ public class PlayerTeamSwitchState : MonoBehaviour
         sourceActionName = resolvedSourceActionName;
         attackCategory = category;
 
+        // Capture source sprite world position and rotation BEFORE modifying executor root
+        Vector3 sourceWorldPos = sourceSpriteRenderer != null ? sourceSpriteRenderer.transform.position : transform.position;
+        Quaternion sourceWorldRot = sourceSpriteRenderer != null ? sourceSpriteRenderer.transform.rotation : transform.rotation;
+        Vector3 sourceLocalScale = sourceSpriteRenderer != null ? sourceSpriteRenderer.transform.localScale : Vector3.one;
+
         // Set Y rotation for facing direction (since player flips via Y rotation)
         transform.rotation = Quaternion.Euler(0f, facingDirection == -1 ? 180f : 0f, 0f);
-        transform.localScale = Vector3.one;
 
-        // Create visual clone
+        // Create visual clone preserving exact world position and orientation of original sprite transform
         visualClone = new GameObject("VisualClone");
-        visualClone.transform.SetParent(transform, false);
+        visualClone.layer = gameObject.layer;
+        visualClone.transform.SetParent(transform, true);
+
+        if (sourceSpriteRenderer != null)
+        {
+            visualClone.transform.position = sourceWorldPos;
+            visualClone.transform.rotation = sourceWorldRot;
+            visualClone.transform.localScale = sourceLocalScale;
+        }
 
         SpriteRenderer sr = visualClone.AddComponent<SpriteRenderer>();
         sr.sprite = characterSprite;
-        sr.sortingOrder = 5;
+
+        if (sourceSpriteRenderer != null)
+        {
+            sr.sortingLayerID = sourceSpriteRenderer.sortingLayerID;
+            sr.sortingOrder = sourceSpriteRenderer.sortingOrder;
+            sr.flipX = sourceSpriteRenderer.flipX;
+            sr.flipY = sourceSpriteRenderer.flipY;
+            sr.color = sourceSpriteRenderer.color;
+            if (sourceSpriteRenderer.sharedMaterial != null)
+            {
+                sr.sharedMaterial = sourceSpriteRenderer.sharedMaterial;
+            }
+        }
+        else
+        {
+            sr.sortingOrder = 5;
+        }
 
         if (animatorController != null)
         {
@@ -215,6 +262,7 @@ public class PlayerTeamSwitchState : MonoBehaviour
             enemyLayerMask = player.Combat.enemyLayerMask;
 
             GameObject hitboxGo = Object.Instantiate(player.Combat.hitboxObject, transform);
+            hitboxGo.layer = gameObject.layer;
             hitboxGo.SetActive(false);
             cloneHitboxDamage = hitboxGo.GetComponent<HitBoxDamage>();
 
@@ -227,33 +275,73 @@ public class PlayerTeamSwitchState : MonoBehaviour
         }
     }
 
+    private Vector3 initialVisualLocalPos = Vector3.zero;
+    private float baselineVisualLocalY = 0f;
+    private Vector3 initialRootPosition = Vector3.zero;
+    private float baselineRootPositionX = 0f;
+    private bool isMotionBaselineInitialized = false;
+
     /// <summary>Runs the deterministic physics and frame ticking logic.</summary>
     private void FixedUpdate()
     {
+        PlayerCharacter player = PlayerCharacter.Instance;
+        if (player != null && player.gameObject != null)
+        {
+            IgnoreCollisionsWithPlayer(player.gameObject, myClonedColliders);
+        }
+
         AdvanceFrames(Time.fixedDeltaTime);
+    }
+
+    private int GetMaxExecutionFrame()
+    {
+        if (actionStep == null) return 0;
+        int maxFrame = actionStep.startupFrames + actionStep.activeFrames + actionStep.recoveryFrames;
+        if (actionStep.motionData != null && actionStep.motionData.keyframes != null)
+        {
+            foreach (var k in actionStep.motionData.keyframes)
+            {
+                if (k != null)
+                {
+                    maxFrame = Mathf.Max(maxFrame, k.endFrame);
+                }
+            }
+        }
+        return maxFrame;
     }
 
     private void AdvanceFrames(float deltaTime)
     {
+        lifetimeCounter += deltaTime;
+        if (lifetimeCounter >= MAX_CLONE_LIFETIME)
+        {
+            Terminate();
+            return;
+        }
+
         if (actionStep == null) return;
 
         logicTimeCounter += deltaTime;
         int targetFrame = Mathf.FloorToInt(logicTimeCounter * LOGIC_FPS + 0.001f);
+        int maxExecutionFrame = GetMaxExecutionFrame();
 
         bool frameSequenceDone = false;
         while (currentFrame < targetFrame)
         {
             currentFrame++;
-            ActionPhase currentPhase = actionStep.GetPhase(currentFrame);
-
-            if (currentPhase == ActionPhase.Done)
+            if (currentFrame >= maxExecutionFrame)
             {
                 frameSequenceDone = true;
-                break;
             }
 
+            ActionPhase currentPhase = actionStep.GetPhase(currentFrame);
             int logicFrame = actionStep.GetLogicFrame(currentFrame);
             ProcessLogicFrame(logicFrame, currentPhase);
+
+            if (frameSequenceDone)
+            {
+                break;
+            }
         }
 
         if (frameSequenceDone)
@@ -284,6 +372,8 @@ public class PlayerTeamSwitchState : MonoBehaviour
     {
         if (actionStep == null) return;
 
+        ProcessMotionData(frame);
+
         int frameInActivePhase = frame - actionStep.startupFrames - 1;
         if (phase == ActionPhase.Active && actionStep.hitData != null && actionStep.hitData.hitboxes != null)
         {
@@ -312,6 +402,111 @@ public class PlayerTeamSwitchState : MonoBehaviour
         {
             PerformHitboxOverlapCheck();
         }
+    }
+
+    private void ProcessMotionData(int frame)
+    {
+        if (actionStep == null || actionStep.motionData == null || actionStep.motionData.keyframes == null)
+        {
+            return;
+        }
+
+        if (!isMotionBaselineInitialized)
+        {
+            float startFrameAuthoredY = EvaluateAuthoredVisualOffsetY(currentFrame);
+            float startFrameAuthoredX = EvaluateAuthoredMotionOffsetX(currentFrame);
+
+            if (visualClone != null)
+            {
+                initialVisualLocalPos = visualClone.transform.localPosition;
+                baselineVisualLocalY = initialVisualLocalPos.y - startFrameAuthoredY;
+            }
+
+            initialRootPosition = transform.position;
+            baselineRootPositionX = initialRootPosition.x - startFrameAuthoredX;
+            isMotionBaselineInitialized = true;
+        }
+
+        float currentOffsetY = EvaluateAuthoredVisualOffsetY(frame);
+        if (visualClone != null)
+        {
+            visualClone.transform.localPosition = new Vector3(
+                initialVisualLocalPos.x,
+                baselineVisualLocalY + currentOffsetY,
+                initialVisualLocalPos.z);
+        }
+
+        float currentOffsetX = EvaluateAuthoredMotionOffsetX(frame);
+        Rigidbody2D cloneRb = GetComponent<Rigidbody2D>();
+        if (cloneRb != null)
+        {
+            cloneRb.position = new Vector2(baselineRootPositionX + currentOffsetX, cloneRb.position.y);
+        }
+        else
+        {
+            transform.position = new Vector3(baselineRootPositionX + currentOffsetX, transform.position.y, transform.position.z);
+        }
+    }
+
+    private float EvaluateAuthoredVisualOffsetY(int frame)
+    {
+        if (actionStep == null || actionStep.motionData == null || actionStep.motionData.keyframes == null)
+            return 0f;
+
+        float totalOffsetY = 0f;
+        foreach (MotionKeyframe k in actionStep.motionData.keyframes)
+        {
+            if (k == null || Mathf.Abs(k.position.y) < 0.0001f) continue;
+
+            if (frame <= k.startFrame)
+            {
+                continue;
+            }
+            else if (frame >= k.endFrame)
+            {
+                totalOffsetY += k.position.y;
+            }
+            else
+            {
+                float duration = k.endFrame - k.startFrame;
+                float progress = Mathf.Clamp01((float)(frame - k.startFrame) / duration);
+                float easedProgress = TweenEase(0f, 1f, progress, k.easing);
+                totalOffsetY += k.position.y * easedProgress;
+            }
+        }
+        return totalOffsetY;
+    }
+
+    private float EvaluateAuthoredMotionOffsetX(int frame)
+    {
+        if (actionStep == null || actionStep.motionData == null || actionStep.motionData.keyframes == null)
+            return 0f;
+
+        float totalOffsetX = 0f;
+        float dir = facingDirection;
+
+        foreach (MotionKeyframe k in actionStep.motionData.keyframes)
+        {
+            if (k == null || Mathf.Abs(k.position.x) < 0.0001f) continue;
+            float deltaX = k.position.x * dir;
+
+            if (frame <= k.startFrame)
+            {
+                continue;
+            }
+            else if (frame >= k.endFrame)
+            {
+                totalOffsetX += deltaX;
+            }
+            else
+            {
+                float duration = k.endFrame - k.startFrame;
+                float progress = Mathf.Clamp01((float)(frame - k.startFrame) / duration);
+                float easedProgress = TweenEase(0f, 1f, progress, k.easing);
+                totalOffsetX += deltaX * easedProgress;
+            }
+        }
+        return totalOffsetX;
     }
 
     private void TriggerHitbox(HitboxBase hitbox)
@@ -435,6 +630,89 @@ public class PlayerTeamSwitchState : MonoBehaviour
             sourceCombat,
             sourceCharacter,
             auraEnergyRewardClaim);
+    }
+
+    private static void IgnoreCollisionsWithPlayer(GameObject playerGo, List<Collider2D> cloneCols)
+    {
+        if (playerGo == null || cloneCols == null) return;
+        Collider2D[] playerColliders = playerGo.GetComponentsInChildren<Collider2D>(true);
+        foreach (var cloneCol in cloneCols)
+        {
+            if (cloneCol == null) continue;
+            foreach (var playerCol in playerColliders)
+            {
+                if (playerCol != null)
+                {
+                    Physics2D.IgnoreCollision(cloneCol, playerCol, true);
+                }
+            }
+        }
+    }
+
+    private static void IgnoreCollisionsWithOtherClones(List<Collider2D> cloneCols)
+    {
+        if (cloneCols == null) return;
+        for (int i = activeClones.Count - 1; i >= 0; i--)
+        {
+            PlayerTeamSwitchState otherClone = activeClones[i];
+            if (otherClone == null || otherClone.myClonedColliders == null) continue;
+            foreach (var myCol in cloneCols)
+            {
+                if (myCol == null) continue;
+                foreach (var otherCol in otherClone.myClonedColliders)
+                {
+                    if (otherCol != null)
+                    {
+                        Physics2D.IgnoreCollision(myCol, otherCol, true);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void IgnoreCollisionsWithEnemies(List<Collider2D> cloneCols)
+    {
+        if (cloneCols == null) return;
+        EnemyController[] enemies = Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None);
+        foreach (var enemy in enemies)
+        {
+            if (enemy == null) continue;
+            Collider2D[] enemyCols = enemy.GetComponentsInChildren<Collider2D>(true);
+            foreach (var myCol in cloneCols)
+            {
+                if (myCol == null) continue;
+                foreach (var enemyCol in enemyCols)
+                {
+                    if (enemyCol != null)
+                    {
+                        Physics2D.IgnoreCollision(myCol, enemyCol, true);
+                    }
+                }
+            }
+        }
+    }
+
+    private static float TweenEase(float f, float t, float time, LeanTweenType e)
+    {
+        switch (e)
+        {
+            case LeanTweenType.linear: return LeanTween.linear(f, t, time);
+            case LeanTweenType.easeInQuad: return LeanTween.easeInQuad(f, t, time);
+            case LeanTweenType.easeOutQuad: return LeanTween.easeOutQuad(f, t, time);
+            case LeanTweenType.easeInOutQuad: return LeanTween.easeInOutQuad(f, t, time);
+            case LeanTweenType.easeInCubic: return LeanTween.easeInCubic(f, t, time);
+            case LeanTweenType.easeOutCubic: return LeanTween.easeOutCubic(f, t, time);
+            case LeanTweenType.easeInOutCubic: return LeanTween.easeInOutCubic(f, t, time);
+            case LeanTweenType.easeInSine: return LeanTween.easeInSine(f, t, time);
+            case LeanTweenType.easeOutSine: return LeanTween.easeOutSine(f, t, time);
+            case LeanTweenType.easeInOutSine: return LeanTween.easeInOutSine(f, t, time);
+            default: return Mathf.Lerp(f, t, time);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        activeClones.Remove(this);
     }
 
     /// <summary>Cleans up the executor and destroys the clone GameObject.</summary>

@@ -10,12 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 82e1b317c4c807242840e04434b4fabc, type: 3}
-  m_Name: Element_Memory
+  m_Name: Element_Darkness
   m_EditorClassIdentifier: Assembly-CSharp::ElementDefinition
-  elementType: 1
-  displayName: Memory
-  damageTextColor: {r: 1, g: 0.93886316, b: 0.2216981, a: 1}
-  icon: {fileID: 21300000, guid: 0cb8634b4dc2531499817875b4aa0832, type: 3}
+  elementType: 3
+  displayName: Darkness
+  damageTextColor: {r: 0.5, g: 0.1, b: 0.7, a: 1}
+  icon: {fileID: 0}
   dotDuration: 5
-  dotDamageRatio: 0.9
-  dotTickInterval: 2.49
+  dotDamageRatio: 0.35
+  dotTickInterval: 1
+  maxStacks: 5

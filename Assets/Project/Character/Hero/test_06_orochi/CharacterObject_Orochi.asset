@@ -250,8 +250,8 @@ MonoBehaviour:
             overrideAdditionalDamage: 1
             additionalDamage:
               filter:
-                filterByElement: 1
-                elementType: 4
+                filterByElement: 0
+                elementType: 0
                 filterByCategory: 0
                 category: 0
               chance: 1
@@ -266,7 +266,7 @@ MonoBehaviour:
               capTargetMaxHpDamage: 0
               targetMaxHpDamageCapSource: 1
               targetMaxHpDamageCapRatio: 1
-              elementType: 4
+              elementType: 0
             overrideStatus: 0
             status:
               status: 5
@@ -1168,7 +1168,7 @@ MonoBehaviour:
         capTargetMaxHpDamage: 0
         targetMaxHpDamageCapSource: 0
         targetMaxHpDamageCapRatio: 1
-        elementType: 4
+        elementType: 0
         consumeRuntimeTagOnTrigger: 0
       dashThroughDamageEffects: []
       defensiveEffects: []
@@ -1838,8 +1838,8 @@ MonoBehaviour:
           actionName: 
           filterByStepName: 0
           stepName: 
-          filterByElement: 1
-          elementType: 4
+          filterByElement: 0
+          elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
         requiredTags: []
@@ -2090,8 +2090,8 @@ MonoBehaviour:
             overrideAdditionalDamage: 1
             additionalDamage:
               filter:
-                filterByElement: 1
-                elementType: 4
+                filterByElement: 0
+                elementType: 0
                 filterByCategory: 0
                 category: 0
               chance: 1
@@ -2106,7 +2106,7 @@ MonoBehaviour:
               capTargetMaxHpDamage: 0
               targetMaxHpDamageCapSource: 1
               targetMaxHpDamageCapRatio: 1
-              elementType: 4
+              elementType: 0
             overrideStatus: 0
             status:
               status: 5
@@ -2410,8 +2410,8 @@ MonoBehaviour:
             overrideAdditionalDamage: 1
             additionalDamage:
               filter:
-                filterByElement: 1
-                elementType: 4
+                filterByElement: 0
+                elementType: 0
                 filterByCategory: 0
                 category: 0
               chance: 1
@@ -2426,7 +2426,7 @@ MonoBehaviour:
               capTargetMaxHpDamage: 0
               targetMaxHpDamageCapSource: 1
               targetMaxHpDamageCapRatio: 1
-              elementType: 4
+              elementType: 0
             overrideStatus: 0
             status:
               status: 5
@@ -2690,7 +2690,7 @@ MonoBehaviour:
         capTargetMaxHpDamage: 0
         targetMaxHpDamageCapSource: 0
         targetMaxHpDamageCapRatio: 1
-        elementType: 4
+        elementType: 0
         consumeRuntimeTagOnTrigger: 0
       dashThroughDamageEffects: []
       defensiveEffects: []

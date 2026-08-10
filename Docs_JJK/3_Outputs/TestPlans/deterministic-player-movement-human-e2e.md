@@ -124,14 +124,18 @@ Reference timing targets from the supplied *BlazBlue Entropy Effect* recordings:
 - [ ] A Ground-input/Air-output action remains Ground during execution, then enters Air/Falling only after completion or accepted cancel.
 - [ ] An Air-output action that is already physically supported resolves Air first, then visibly/statefully performs `Landing -> Idle/Move`.
 - [ ] Cancel each output case into Attack, Skill, Ultimate, Dash, and Jump where the interrupt policy permits; the incoming action resolves against the outgoing output, not stale input context.
+- [ ] Walk a ground-started `MatchInput` action off a ledge; natural completion and each legal cancel resolve Air without snapping to ground below, including while a thin edge-contact remains but the `GroundC.x - 1` support ray no longer finds ground.
+- [ ] Drop through a one-way platform and immediately attack; the action remains airborne and its animation is not canceled by a Ground output or Landing.
+- [ ] Repeat both scenarios with positive-Y MotionData and an explicit Ground output; authored lift remains Ground-owned and explicit Ground remains authoritative.
 
 ### 6. Dash and resource regression
 
 - [ ] Ground and air dash hold authored `dashSpeed` through the first `55%` of Active, then decelerate smoothly to `0.15x` at the final Active frame.
 - [ ] Recovery adds no second authored dash brake, acceleration, or glide.
-- [ ] On the first Ground Dash Recovery frame, held A/D immediately produces normal walking speed and can turn the character.
-- [ ] Ground Dash remains movement/facing-open through the late Cancel phase; there is no final relock or hidden `0.2s` tail.
-- [ ] Ground Dash Recovery visibly returns to Run/Idle on the same frame control returns; Dash ActionEnd does not cause a second speed change or hitch.
+- [ ] Ground Dash keeps movement/facing locked throughout Recovery; Attack, Skill, Ultimate, and Jump may interrupt there when legal, but held or buffered walking cannot replace the Dash sequence early.
+- [ ] On the first authored Ground Dash Cancel frame, held A/D produces normal walking speed and can turn the character.
+- [ ] Ground Dash visibly returns to Run/Idle on the same Cancel frame that control returns; Dash ActionEnd does not cause a second speed change or hitch.
+- [ ] Press Dash during Landing; an available Dash immediately replaces the landing animation/lock, while a cooldown-blocked Dash leaves Landing intact.
 - [ ] On the first Air Dash Recovery frame with neutral A/D, vertical velocity stays zero and gravity remains locked.
 - [ ] Pressing either A or D during Air Dash Recovery immediately releases normal falling, but does not add horizontal walk speed to the authored air-dash distance.
 - [ ] Releasing A/D again during the same Air Dash Recovery locks gravity again on the next physics step.
@@ -195,4 +199,4 @@ Starting-value adjustment order:
 1. If jump descent still feels lunar, raise `jumpFallAcceleration` by 10-15 without changing launch/rise.
 2. If edge/drop feels pulled downward instead of naturally released, lower `neutralFallAcceleration` by 5; if it hangs, raise it by 5-10.
 3. Change `maximumFallSpeed` only if long falls remain globally too slow or too fast after both early curves feel correct.
-4. Do not retune Dash during the first pass. First verify the restored `55%`/`0.15x` Active curve, first-Recovery grounded handoff, and neutral-vs-A/D Air Recovery gravity rule. Record any feel failure before changing values.
+4. Do not retune Dash during the first pass. First verify the restored `55%`/`0.15x` Active curve, authored-Cancel grounded handoff, and neutral-vs-A/D Air Recovery gravity rule. Record any feel failure before changing values.

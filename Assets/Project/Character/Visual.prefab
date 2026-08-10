@@ -47,14 +47,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UltimateFlashOverlay
   flashRenderer: {fileID: 2795941970376401442}
   targetCamera: {fileID: 0}
-  activationFadeInDuration: 0
-  activationHoldDuration: 0.15
-  activationDarkenDuration: 0
-  activationBlackHoldDuration: 0.6
-  activationFadeOutDuration: 0
+  defaultSequenceSettings:
+    fadeInDuration: 0.03
+    holdDuration: 0.15
+    darkenDuration: 0.12
+    blackHoldDuration: 0.5
+    fadeOutDuration: 0.25
+    flashColor: {r: 1, g: 1, b: 1, a: 1}
+    darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
   hitFlashDuration: 0.01
-  flashColor: {r: 1, g: 1, b: 1, a: 1}
-  darkColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!212 &2795941970376401442
 SpriteRenderer:
   serializedVersion: 2

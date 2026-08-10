@@ -9,29 +9,24 @@ public class EnemyElementalProfile : ScriptableObject
     public float physicalDamageReduction;
 
     [Range(0f, 95f)]
-    [Tooltip("Percentage reduction applied to Memory damage.")]
-    public float memoryDamageReduction;
+    [Tooltip("Percentage reduction applied to Lightning damage.")]
+    public float lightningDamageReduction;
 
     [Range(0f, 95f)]
-    [Tooltip("Percentage reduction applied to Echo damage.")]
-    public float echoDamageReduction;
+    [Tooltip("Percentage reduction applied to Bleed damage.")]
+    public float bleedDamageReduction;
 
     [Range(0f, 95f)]
-    [Tooltip("Percentage reduction applied to Ash damage.")]
-    public float ashDamageReduction;
-
-    [Range(0f, 95f)]
-    [Tooltip("Percentage reduction applied to Void damage.")]
-    public float voidDamageReduction;
+    [Tooltip("Percentage reduction applied to Darkness damage.")]
+    public float darknessDamageReduction;
 
     public float GetDamageReductionPercent(ElementType damageType)
     {
         return damageType switch
         {
-            ElementType.Memory => memoryDamageReduction,
-            ElementType.Echo => echoDamageReduction,
-            ElementType.Ash => ashDamageReduction,
-            ElementType.Void => voidDamageReduction,
+            ElementType.Lightning => lightningDamageReduction,
+            ElementType.Bleed => bleedDamageReduction,
+            ElementType.Darkness => darknessDamageReduction,
             _ => physicalDamageReduction
         };
     }

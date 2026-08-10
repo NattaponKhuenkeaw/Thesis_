@@ -506,7 +506,7 @@ public class PlayerStateMachine : MonoBehaviour
 
         if (stepStartedGrounded
             && !physicallyGrounded
-            && (movement == null || !movement.IsFallingFromLostSupport))
+            && (movement == null || !movement.IsAirborneFromGroundDeparture))
         {
             groundedForRouting = true;
         }
@@ -522,6 +522,15 @@ public class PlayerStateMachine : MonoBehaviour
         CombatActionOutputContext outputContext,
         bool startedGrounded)
     {
+        if (outputContext == CombatActionOutputContext.MatchInput
+            && startedGrounded
+            && playerCharacter != null
+            && playerCharacter.Movement != null
+            && playerCharacter.Movement.IsAirborneFromGroundDeparture)
+        {
+            return PlayerEnvironmentContext.Airborne;
+        }
+
         return outputContext switch
         {
             CombatActionOutputContext.Ground => PlayerEnvironmentContext.Grounded,

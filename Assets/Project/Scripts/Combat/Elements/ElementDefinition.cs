@@ -19,4 +19,8 @@ public class ElementDefinition : ScriptableObject
     [Min(0.05f)]
     [Tooltip("Time in seconds between DOT damage ticks.")]
     public float dotTickInterval = 1f;
+
+    [Min(1)]
+    [Tooltip("Maximum stack limit for this element's DOT ticks.")]
+    public int maxStacks = 5;
 }

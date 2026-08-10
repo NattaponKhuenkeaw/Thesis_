@@ -307,7 +307,7 @@ public class EnemyWorldUI : MonoBehaviour
         return routine switch
         {
             DamageRoutine.Dot => WorldTextType.Dot,
-            DamageRoutine.Additional => WorldTextType.Additional,
+            DamageRoutine.Particle => WorldTextType.Additional,
             _ => WorldTextType.Damage
         };
     }

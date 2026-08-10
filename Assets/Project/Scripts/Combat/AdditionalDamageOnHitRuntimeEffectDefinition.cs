@@ -104,7 +104,7 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
             actionName = context.actionName,
             stepData = context.stepData,
             elementType = parameters.elementType,
-            damageRoutine = DamageRoutine.Additional,
+            damageRoutine = DamageRoutine.Particle,
             isCriticalHit = false,
             damage = baseDamage,
             attackerPosition = context.attackerPosition,
@@ -122,7 +122,7 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
 
         float resolvedDamage = CombatFormula.CalculateResolvedDamage(
             damageInput.baseDamage,
-            DamageRoutine.Additional,
+            DamageRoutine.Particle,
             parameters.elementType,
             formulaSourceStats,
             damageInput.defenderDefense,
@@ -138,7 +138,7 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
         HitReactionData additionalData = HitReactionData.Default(resolvedDamage, context.hitDirection, 0f);
         additionalData.damageIsFinal = true;
         additionalData.ignoreElementalIncomingModifiers = damageInput.ignoreElementalIncomingModifiers;
-        additionalData.damageRoutine = DamageRoutine.Additional;
+        additionalData.damageRoutine = DamageRoutine.Particle;
         additionalData.elementType = parameters.elementType;
         additionalData.isCriticalHit = false;
         additionalData.flashFrames = 0;

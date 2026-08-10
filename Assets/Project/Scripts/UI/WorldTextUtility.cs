@@ -443,7 +443,7 @@ public class WorldTextUtility : MonoBehaviour
             _ => lowTierScale
         };
 
-        if (request.damageRoutine == DamageRoutine.Elemental || request.elementType != ElementType.None)
+        if (request.elementType != ElementType.None)
         {
             scale *= Mathf.Max(0.01f, elementalDamageScaleMultiplier);
         }

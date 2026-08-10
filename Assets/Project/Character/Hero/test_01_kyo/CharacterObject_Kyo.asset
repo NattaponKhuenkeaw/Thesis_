@@ -342,7 +342,8 @@ MonoBehaviour:
       nodeName: Skill Multiplier
       description: Increase Skill multiplier to 400% of ATK.
       skillPanelDescriptionOverride: Inflict <b><color=#FF0000>Ash</color></b> DMG
-        <b><color=#FFA500>400%</color></b> of own ATK and apply the configured Ash DOT.
+        <b><color=#FFA500>400%</color></b> of own ATK and apply the configured Ash
+        DOT.
       track: 0
       level: 1
       fragmentCost: 1
@@ -366,7 +367,8 @@ MonoBehaviour:
       nodeName: Ash Daze Pressure
       description: Legacy gauge upgrade retired by the damage-type simplification.
       skillPanelDescriptionOverride: Inflict <b><color=#FF0000>Ash</color></b> DMG
-        <b><color=#FFA500>400%</color></b> of own ATK and apply the configured Ash DOT.
+        <b><color=#FFA500>400%</color></b> of own ATK and apply the configured Ash
+        DOT.
       track: 0
       level: 2
       fragmentCost: 1
@@ -418,9 +420,8 @@ MonoBehaviour:
       nodeName: AE Reward
       description: Increase Skill AE reward by 1.
       skillPanelDescriptionOverride: Inflict <b><color=#FF0000>Ash</color></b> DMG
-        <b><color=#FFA500>400%</color></b> of own ATK and apply the configured Ash DOT.
-        <size=20><color=#C0C0C0>-
-        Increase Skill AE reward by 1</color></size>
+        <b><color=#FFA500>400%</color></b> of own ATK and apply the configured Ash
+        DOT. <size=20><color=#C0C0C0>- Increase Skill AE reward by 1</color></size>
       track: 0
       level: 3
       fragmentCost: 1
@@ -475,12 +476,12 @@ MonoBehaviour:
       nodeName: Allied Flame Mend
       description: Skill use heals all allies for 10% of Kyo ATK.
       skillPanelDescriptionOverride: 'Inflict <b><color=#FF0000>Ash</color></b> DMG
-        <b><color=#FFA500>400%</color></b> of own ATK and apply the configured Ash DOT.
+        <b><color=#FFA500>400%</color></b> of own ATK and apply the configured Ash
+        DOT.
 
 
 
-        <size=20><color=#C0C0C0>-
-        Increase Skill AE reward by 1</color></size>
+        <size=20><color=#C0C0C0>- Increase Skill AE reward by 1</color></size>
 
         <size=20><color=#C0C0C0>Upon
         Use,<b><color=#74C365>Regenerate all allies for 10% of Kyo ATK</color></b></color></size>'
@@ -601,7 +602,7 @@ MonoBehaviour:
               capTargetMaxHpDamage: 1
               targetMaxHpDamageCapSource: 1
               targetMaxHpDamageCapRatio: 5
-              elementType: 3
+              elementType: 0
             overrideStatus: 0
             status:
               status: 5
@@ -795,7 +796,7 @@ MonoBehaviour:
                 capTargetMaxHpDamage: 1
                 targetMaxHpDamageCapSource: 1
                 targetMaxHpDamageCapRatio: 5
-                elementType: 3
+                elementType: 0
               overrideStatus: 1
               status:
                 status: 0
@@ -815,8 +816,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 1
         sourceCharacterId: char_1_kyo
-        filterByTargetElement: 0
-        targetElement: 0
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -1267,8 +1266,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 1
         sourceCharacterId: char_1_kyo
-        filterByTargetElement: 0
-        targetElement: 3
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -1608,7 +1605,7 @@ MonoBehaviour:
                 capTargetMaxHpDamage: 1
                 targetMaxHpDamageCapSource: 1
                 targetMaxHpDamageCapRatio: 5
-                elementType: 3
+                elementType: 0
               overrideStatus: 0
               status:
                 status: 0
@@ -1628,8 +1625,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 1
         sourceCharacterId: char_1_kyo
-        filterByTargetElement: 0
-        targetElement: 0
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -1699,7 +1694,7 @@ MonoBehaviour:
         capTargetMaxHpDamage: 0
         targetMaxHpDamageCapSource: 0
         targetMaxHpDamageCapRatio: 1
-        elementType: 3
+        elementType: 0
         consumeRuntimeTagOnTrigger: 0
       dashThroughDamageEffects: []
       defensiveEffects: []
@@ -1898,8 +1893,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects:

@@ -16,10 +16,17 @@ public enum DamageImpactTier
 
 public enum DamageRoutine
 {
-    Normal,
-    Elemental,
-    Additional,
-    Dot
+    Physical,
+    Dot,
+    Particle,
+
+    // Legacy aliases
+    [System.Obsolete("Use Physical instead.")]
+    Normal = Physical,
+    [System.Obsolete("Use Physical instead.")]
+    Elemental = Physical,
+    [System.Obsolete("Use Particle instead.")]
+    Additional = Particle
 }
 
 public enum EnemyReactionKind
@@ -233,7 +240,7 @@ public struct HitReactionData
             impactTier = DamageImpactTier.Low,
             textImpactTier = DamageImpactTier.Low,
             elementType = ElementType.None,
-            damageRoutine = DamageRoutine.Normal,
+            damageRoutine = DamageRoutine.Physical,
             sourceCategory = AttackCategory.Normal
         };
     }

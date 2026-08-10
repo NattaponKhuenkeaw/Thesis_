@@ -325,7 +325,7 @@ public class EnemyController : MonoBehaviour
 
     private static bool IsSeparateDamageRoutine(DamageRoutine routine)
     {
-        return routine == DamageRoutine.Additional || routine == DamageRoutine.Dot;
+        return routine == DamageRoutine.Particle || routine == DamageRoutine.Dot;
     }
 
     public void ResetComboCount()

@@ -1,7 +1,7 @@
 # ADR-003: Deterministic State-Owned Player Movement
 
 - **Status:** Accepted; amended by user-approved action input/output contract
-- **Date:** 2026-07-24; amended 2026-07-27
+- **Date:** 2026-07-24; amended 2026-07-27 and 2026-08-10
 - **Decision Owners:** User-approved design/architecture checkpoint
 - **Related Task:** `deterministic-player-movement-refactor`
 
@@ -11,7 +11,7 @@ Player motion is currently distributed across `PlayerMovement`, `GroundStateProv
 
 This makes a player's position and action context difficult to infer from the active state. It also permits a falling player near the floor to resolve a ground attack before landing.
 
-The GDD requires Ground, Air, and Both actions to route predictably. The 2026-07-27 action amendment separates the context captured by each executing step from the state deliberately produced at completion/cancel. A later user feel correction restores the first Recovery frame as the Ground Dash control boundary and makes Air Dash Recovery gravity depend on live horizontal input.
+The GDD requires Ground, Air, and Both actions to route predictably. The 2026-07-27 action amendment separates the context captured by each executing step from the state deliberately produced at completion/cancel. A later user feel correction made Air Dash Recovery gravity depend on live horizontal input. The 2026-08-10 checkpoint keeps Ground Dash locomotion at the authored Cancel phase, permits Landing to transition directly into Dash, lets Recovery accept action interrupts without walking, and makes genuine edge/drop departure override a ground-started `MatchInput` output. A short `GroundC.x - 1` support ray prevents a lingering edge contact from masking departure.
 
 ## Decision
 
@@ -26,11 +26,11 @@ Adopt these ownership boundaries:
 7. `MovementProfile` contains only per-character locomotion outcomes, using frame-based timing where the combat/FSM already operates at a 60 Hz logic basis.
 8. Drop-through is a Falling transition, not a jump: ignore only the supporting platform, begin a neutral fall at zero vertical speed, and restore collision after the full player body clears it.
 9. Jump launch latches a `JumpArc` fall session; edge loss/drop-through latch a `Neutral` fall session. Air actions may suspend motion but do not rewrite the session that resumes.
-10. Dash restores its prior Active curve: full authored speed through the first 55% of Active, then quadratic deceleration to 15% at the final Active frame. Recovery does not add a second dash brake. Ground walking/facing and locomotion animation return together on the first Recovery frame and remain open through late Cancel. Air Dash Recovery keeps horizontal locomotion locked; neutral A/D holds vertical gravity at zero, while any A/D input releases normal falling without adding walk speed. Cooldown still begins when Dash exits.
+10. Dash restores its prior Active curve: full authored speed through the first 55% of Active, then quadratic deceleration to 15% at the final Active frame. Recovery does not add a second dash brake; it accepts Attack, Skill, Ultimate, and Jump interrupts but keeps movement/facing/locomotion animation locked. Ground walking/facing and locomotion animation return together at the authored Cancel phase, which retains the full action window. Air Dash Recovery keeps horizontal locomotion locked; neutral A/D holds vertical gravity at zero, while any A/D input releases normal falling without adding walk speed. Landing may transition directly into an available Dash, clearing the remaining landing lock. Cooldown still begins when Dash exits.
 11. `PlayerMovement` accepts a scalar horizontal input only. Vertical input remains outside physics and may be consumed only by explicit directional action conditions or Down+Jump platform drop-through.
 12. Animation follows gameplay ownership. Dash remains animation-authoritative through Startup/Active and Air Dash Recovery; Ground Dash Recovery permits the visible return to locomotion together with restored control. Each combat step resolves and restarts one explicit Animator state; optional logic-frame synchronization may target only that state and only during a looping Active phase.
 13. Every `CombatAction` declares an Input Context (`Ground`, `Air`, or `Both`) and Output Context (`MatchInput`, `Ground`, or `Air`). At each legal next-step boundary, cause-aware Ground/Air is sampled. Only genuine lost support changes a Ground action to Air; authored vertical MotionData remains Ground-owned. Unchanged context continues the current tree; changed context re-resolves the same category and starts the selected action's exact root step. No match ends combat into physical locomotion.
-14. `MatchInput` preserves the context captured when the executing step began for both accepted cancels and natural completion. Genuine edge-loss re-routing is resolved at legal next-step boundaries and does not rewrite the completed step's output. Explicit `Ground` and `Air` outputs remain authoritative.
+14. `MatchInput` preserves the context captured when the executing step began except when a ground-started step genuinely loses support or enters an authored drop-through. Contact must also retain a short support ray at `GroundC.x - 1`; a lingering edge contact without that support counts as genuine loss. At an accepted cancel or natural completion, that cause-aware ground departure resolves Air and cannot invoke the Ground snap. Authored positive-Y MotionData remains Ground-owned. Explicit `Ground` and `Air` outputs remain authoritative.
 15. Ground output stops outgoing MotionData, resolves a fresh physical floor point instead of trusting the pre-motion cached ground sample, snaps to valid ground, and clears landing lock without publishing a synthetic `JustLanded` transition or landing animation. The authored Ground correction owns the remainder of that fixed step so contacts generated before the snap cannot republish Air; ordinary contact evaluation resumes on the next fixed step. Locomotion entry forces the Grounded Animator state immediately rather than allowing a queued Landed/Fall transition to finish. When a physically airborne Ground/`MatchInput` action accepts a direct Jump cancel, the snap refreshes ground resources and Jump launches in the same state transition; ordinary jumps retain authored startup. Air output first resolves Air; if already physically supported, reconciliation waits until no frame-data action owns control, then replays one `Landing -> Idle/Move` transition.
 16. Team Switch is a Ground-context-only transition. Eligibility follows the action-owned context rather than a temporary Rigidbody pose caused by authored MotionData. Every accepted switch silently resolves the shared body to the floor and gives the incoming character direct Idle/Move authority without Fall, Landing, or landing recovery. When the correction occurs from `Update` between physics simulations, it remains authoritative through the upcoming fixed-step contact sample so stale pre-snap contacts cannot create a real landing session.
 16. `autoChainToNext` is a structural transition and is evaluated before player input in both Recovery and Cancel. An authored Cancel window that starts on the first Recovery frame cannot mask the auto-chain.
@@ -49,9 +49,9 @@ Rejected because jump and attack outcomes would continue to depend on implicit R
 
 Rejected because authored lift/support changes would mutate combo routing inside a running step, and landing could steal its animation or cooldown. Physical contact is sampled for routing only at legal completed-step boundaries and remains available to explicit environmental trigger conditions during execution.
 
-### Delay Ground Dash control handoff until Cancel
+### Return Ground Dash control on the first Recovery frame
 
-Rejected by the latest game-feel checkpoint because the additional locked tail made the dash feel slow and unresponsive after its visible motion/animation had effectively finished. Dash is a movement action and explicitly opens grounded locomotion in Recovery.
+Superseded by the 2026-08-10 game-feel checkpoint because walking could visibly override the committed Dash recovery. Recovery now accepts discrete combat actions while retaining its movement/facing lock; Cancel returns grounded control and permits the full action set.
 
 ### Replace the Rigidbody with a fully custom kinematic collision solver
 
@@ -84,7 +84,7 @@ Rejected as over-engineering for the current single-player 2D scope. Unity Physi
 4. Add MatchInput/Ground/Air output context and commit it on completion/cancel.
 5. Replace acceleration and impulse rules with direct motor output.
 6. Remove airborne gravity bridge APIs and obsolete profile fields.
-7. Restore the earlier Dash Active curve and first-Recovery grounded handoff; add neutral-input gravity lock with A/D release during Air Dash Recovery.
+7. Restore the earlier Dash Active curve, keep Recovery committed, hand grounded control back at Cancel, and retain neutral-input gravity lock with A/D release during Air Dash Recovery.
 8. Migrate movement profile assets while preserving current maximum speeds and frame timings as starting values.
 9. Compile both assemblies and use the human E2E plan; do not add or run script tests for this task.
 
@@ -101,7 +101,9 @@ Rejected as over-engineering for the current single-player 2D scope. Unity Physi
 - A direct Jump cancel from a physically airborne Ground/`MatchInput` action launches in the same transition after the silent resource refresh; it cannot idle through another startup hold.
 - Air output on physical ground resolves Air, then Landing, then Idle/Move.
 - Attack, Skill, Ultimate, Dash, Jump, and character-switch cancels resolve against the outgoing action's authored output.
-- Ground Dash returns movement plus locomotion animation on its first Recovery frame and does not relock at late Cancel.
+- Ground Dash Recovery accepts Attack, Skill, Ultimate, and Jump while remaining movement/facing/animation locked; Cancel returns movement plus locomotion animation and the full action set.
+- Landing Dash immediately replaces the landing lock/animation when Dash is available.
+- Ground-started `MatchInput` actions resolve Air after genuine ledge loss, a failing `GroundC.x - 1` support probe, or drop-through and never snap to distant ground; authored positive-Y motion remains Ground-owned.
 - Air Dash Recovery holds gravity with neutral A/D and releases normal falling immediately on A/D input without injecting horizontal walk speed.
 - One-way platform center, edge, pass-through, and drop-through scenarios pass.
 - Repeated identical input traces produce matching state transitions and trajectories within normal Physics2D contact tolerance.

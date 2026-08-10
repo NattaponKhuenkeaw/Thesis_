@@ -1538,7 +1538,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
                 actionId = "dash",
                 actionName = "Dash",
                 elementType = effect.elementType,
-                damageRoutine = DamageRoutine.Additional,
+                damageRoutine = DamageRoutine.Particle,
                 damage = baseDamage
             };
             RuntimeEffectDamageInput damageInput = new RuntimeEffectDamageInput
@@ -1557,7 +1557,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
             float resolvedDamage = CombatFormula.CalculateResolvedDamage(
                 damageInput.baseDamage,
-                DamageRoutine.Additional,
+                DamageRoutine.Particle,
                 effect.elementType,
                 stats,
                 damageInput.defenderDefense,
@@ -1572,7 +1572,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             Vector2 direction = GetFacingDirection();
             HitReactionData reactionData = HitReactionData.Default(resolvedDamage, direction, 0f);
             reactionData.damageIsFinal = true;
-            reactionData.damageRoutine = DamageRoutine.Additional;
+            reactionData.damageRoutine = DamageRoutine.Particle;
             reactionData.elementType = effect.elementType;
             reactionData.isCriticalHit = false;
             reactionData.ignoreElementalIncomingModifiers = damageInput.ignoreElementalIncomingModifiers;

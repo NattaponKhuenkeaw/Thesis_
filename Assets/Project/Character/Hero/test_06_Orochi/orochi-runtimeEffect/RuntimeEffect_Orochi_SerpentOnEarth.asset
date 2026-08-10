@@ -23,8 +23,8 @@ MonoBehaviour:
   refreshDurationOnReapply: 0
   stackable: 0
   removeOnOwnerDamaged: 0
-  filterByElement: 1
-  filterElementType: 4
+  filterByElement: 0
+  filterElementType: 0
   filterByCategory: 0
   filterCategory: 0
   chance: 1
@@ -39,4 +39,4 @@ MonoBehaviour:
   capTargetMaxHpDamage: 0
   targetMaxHpDamageCapSource: 1
   targetMaxHpDamageCapRatio: 1
-  elementType: 4
+  elementType: 0

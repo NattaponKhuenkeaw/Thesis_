@@ -10,16 +10,14 @@ public class CombatDamageTypeTests
     {
         EnemyElementalProfile profile = ScriptableObject.CreateInstance<EnemyElementalProfile>();
         profile.physicalDamageReduction = 10f;
-        profile.memoryDamageReduction = 20f;
-        profile.echoDamageReduction = 30f;
-        profile.ashDamageReduction = 40f;
-        profile.voidDamageReduction = 50f;
+        profile.lightningDamageReduction = 15f;
+        profile.bleedDamageReduction = 20f;
+        profile.darknessDamageReduction = 25f;
 
         Assert.That(profile.GetDamageReductionPercent(ElementType.None), Is.EqualTo(10f));
-        Assert.That(profile.GetDamageReductionPercent(ElementType.Memory), Is.EqualTo(20f));
-        Assert.That(profile.GetDamageReductionPercent(ElementType.Echo), Is.EqualTo(30f));
-        Assert.That(profile.GetDamageReductionPercent(ElementType.Ash), Is.EqualTo(40f));
-        Assert.That(profile.GetDamageReductionPercent(ElementType.Void), Is.EqualTo(50f));
+        Assert.That(profile.GetDamageReductionPercent(ElementType.Lightning), Is.EqualTo(15f));
+        Assert.That(profile.GetDamageReductionPercent(ElementType.Bleed), Is.EqualTo(20f));
+        Assert.That(profile.GetDamageReductionPercent(ElementType.Darkness), Is.EqualTo(25f));
 
         Object.DestroyImmediate(profile);
     }
@@ -31,39 +29,30 @@ public class CombatDamageTypeTests
         EnemyDamageTypeState state = enemy.AddComponent<EnemyDamageTypeState>();
         EnemyElementalProfile profile = ScriptableObject.CreateInstance<EnemyElementalProfile>();
         profile.physicalDamageReduction = 25f;
-        profile.voidDamageReduction = 95f;
+        profile.lightningDamageReduction = 50f;
         state.Initialize(profile);
 
         Assert.That(state.ModifyIncomingDamage(ElementType.None, 100f), Is.EqualTo(75f));
-        Assert.That(state.ModifyIncomingDamage(ElementType.Memory, 100f), Is.EqualTo(100f));
-        Assert.That(state.ModifyIncomingDamage(ElementType.Void, 100f), Is.EqualTo(5f).Within(0.001f));
-        Assert.That(state.ModifyIncomingDamage(ElementType.Void, 0f), Is.EqualTo(0f));
+        Assert.That(state.ModifyIncomingDamage(ElementType.Lightning, 100f), Is.EqualTo(50f));
+        Assert.That(state.ModifyIncomingDamage(ElementType.Lightning, 0f), Is.EqualTo(0f));
 
         Object.DestroyImmediate(profile);
         Object.DestroyImmediate(enemy);
     }
 
     [Test]
-    public void CharacterObjectNoLongerOwnsAnElementType()
-    {
-        FieldInfo elementField = typeof(CharacterObject).GetField(
-            "elementType",
-            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-
-        Assert.That(elementField, Is.Null);
-    }
-
-    [Test]
-    public void ElementDefinitionExposesStandaloneDotConfiguration()
+    public void ElementDefinitionExposesStandaloneDotConfigurationAndMaxStacks()
     {
         ElementDefinition definition = ScriptableObject.CreateInstance<ElementDefinition>();
         definition.dotDuration = 4f;
         definition.dotDamageRatio = 0.25f;
         definition.dotTickInterval = 0.5f;
+        definition.maxStacks = 5;
 
         Assert.That(definition.dotDuration, Is.EqualTo(4f));
         Assert.That(definition.dotDamageRatio, Is.EqualTo(0.25f));
         Assert.That(definition.dotTickInterval, Is.EqualTo(0.5f));
+        Assert.That(definition.maxStacks, Is.EqualTo(5));
 
         Object.DestroyImmediate(definition);
     }
@@ -76,14 +65,49 @@ public class CombatDamageTypeTests
             500f,
             20f,
             DamageRoutine.Dot);
-        float normalDamage = CombatFormula.CalculateIncomingDamage(
+        float physicalDamage = CombatFormula.CalculateIncomingDamage(
             100f,
             500f,
             20f,
-            DamageRoutine.Normal);
+            DamageRoutine.Physical);
 
         Assert.That(dotDamage, Is.EqualTo(80f).Within(0.001f));
-        Assert.That(normalDamage, Is.EqualTo(13.333f).Within(0.001f));
+        Assert.That(physicalDamage, Is.EqualTo(13.333f).Within(0.001f));
+    }
+
+    [Test]
+    public void ParticleDamageBypassesBothDefenseAndResistance()
+    {
+        float particleIncoming = CombatFormula.CalculateIncomingDamage(
+            100f,
+            500f,
+            50f,
+            DamageRoutine.Particle);
+
+        Assert.That(particleIncoming, Is.EqualTo(100f));
+    }
+
+    [Test]
+    public void ParticleDamageScalesWithElementalMasteryMultiplier()
+    {
+        CharacterStats stats = new CharacterStats
+        {
+            elementalMastery = 50f
+        };
+
+        float resolved = CombatFormula.CalculateResolvedDamage(
+            100f,
+            DamageRoutine.Particle,
+            ElementType.Lightning,
+            stats,
+            500f,
+            AttackCategory.Normal,
+            out _,
+            defenderDamageResistance: 50f,
+            allowParticleCrit: false);
+
+        // Particle ignores DEF and RES (100 base) and scales with (1 + 50/100) = 150
+        Assert.That(resolved, Is.EqualTo(150f).Within(0.001f));
     }
 }
 #endif

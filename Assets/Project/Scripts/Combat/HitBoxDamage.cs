@@ -427,7 +427,7 @@ public class HitBoxDamage : MonoBehaviour
             RuntimeEffectDamageContext runtimeContext = BuildRuntimeDamageContext(enemy, baseDamage, direction);
             runtimeContext.sourceStats = liveSourceStats;
             runtimeContext.elementType = effect.elementType;
-            runtimeContext.damageRoutine = DamageRoutine.Additional;
+            runtimeContext.damageRoutine = DamageRoutine.Particle;
             runtimeContext.isCriticalHit = false;
             RuntimeEffectDamageInput damageInput = BuildRuntimeDamageInput(runtimeContext, baseDamage, enemy);
             ApplyRuntimeDamageInputModifiers(damageInput);
@@ -435,7 +435,7 @@ public class HitBoxDamage : MonoBehaviour
             runtimeContext.damage = damageInput.baseDamage;
             float resolvedDamage = CombatFormula.CalculateResolvedDamage(
                 damageInput.baseDamage,
-                DamageRoutine.Additional,
+                DamageRoutine.Particle,
                 effect.elementType,
                 liveSourceStats,
                 damageInput.defenderDefense,
@@ -449,7 +449,7 @@ public class HitBoxDamage : MonoBehaviour
             HitReactionData additionalData = HitReactionData.Default(resolvedDamage, direction, 0f);
             additionalData.damageIsFinal = true;
             additionalData.ignoreElementalIncomingModifiers = damageInput.ignoreElementalIncomingModifiers;
-            additionalData.damageRoutine = DamageRoutine.Additional;
+            additionalData.damageRoutine = DamageRoutine.Particle;
             additionalData.elementType = effect.elementType;
             additionalData.isCriticalHit = false;
             additionalData.flashFrames = 0;
@@ -472,9 +472,7 @@ public class HitBoxDamage : MonoBehaviour
 
     private DamageRoutine ResolvePrimaryDamageRoutine()
     {
-        return ResolveElementType() == ElementType.None
-            ? DamageRoutine.Normal
-            : DamageRoutine.Elemental;
+        return DamageRoutine.Physical;
     }
 
     private CharacterStats ResolveActionSpecificAttackerStats()

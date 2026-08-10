@@ -615,7 +615,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 1
         activeFrames: 10
-        elementType: 2
+        elementType: 0
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 0.95337725, y: 1.4333203}
         size: {x: 1.4827974, y: 1.8470726}
@@ -843,7 +843,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 62
         activeFrames: 3
-        elementType: 2
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.311993, y: 0.56738263}
         size: {x: 2.969209, y: 1.449838}
@@ -917,7 +917,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 1
-        elementType: 2
+        elementType: 0
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 1.2170683, y: 0.91705257}
         size: {x: 3.7375476, y: 2.0341048}
@@ -938,7 +938,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 75
         activeFrames: 4
-        elementType: 2
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -1.4754045, y: 0.3999999}
         size: {x: 2.8058772, y: 1.1972927}
@@ -1011,7 +1011,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 1
-        elementType: 2
+        elementType: 0
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: -1.4820231, y: 0.77111274}
         size: {x: 4.0194426, y: 1.7708493}
@@ -1084,7 +1084,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 62
         activeFrames: 3
-        elementType: 2
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.311993, y: 0.56738263}
         size: {x: 2.969209, y: 1.449838}
@@ -1158,7 +1158,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 3
-        elementType: 2
+        elementType: 0
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 1.4198639, y: 0.91705257}
         size: {x: 4.143139, y: 2.0341048}
@@ -1179,7 +1179,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 71
         activeFrames: 4
-        elementType: 2
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -1.4754045, y: 0.3999999}
         size: {x: 2.8058772, y: 1.1972927}
@@ -1262,6 +1262,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 1588256145469341830
@@ -1310,7 +1312,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 5
         activeFrames: 11
-        elementType: 2
+        elementType: 0
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 1.1331985, y: 1.885921}
         size: {x: 1.7296784, y: 1.4562433}
@@ -1662,7 +1664,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 1
         activeFrames: 30
-        elementType: 2
+        elementType: 0
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 0.50361294, y: 1.3693061}
         size: {x: 1.2597638, y: 1.1715475}
@@ -1779,7 +1781,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 83
         activeFrames: 6
-        elementType: 2
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -1.1282648, y: 0.28957066}
         size: {x: 3.6333134, y: 0.95290196}
@@ -2210,7 +2212,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 8
-        elementType: 2
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.08858645, y: 0.6241445}
         size: {x: 8.776825, y: 1.7940304}
@@ -2293,6 +2295,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 3612912955328561162
@@ -2466,6 +2470,8 @@ MonoBehaviour:
             spawnIntervalSeconds: 0.05
             endMode: 0
             endFrame: 1
+          facingDirectionSettings:
+            mode: 0
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 3612912955328561254
@@ -2506,7 +2512,7 @@ MonoBehaviour:
       data:
         startFrameOffset: 6
         activeFrames: 3
-        elementType: 2
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.1757274, y: 1.5713856}
         size: {x: 2.1934872, y: 3.4521937}

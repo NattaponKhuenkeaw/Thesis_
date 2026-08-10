@@ -95,21 +95,19 @@ public struct InterruptPolicy
     };
 
     /// <summary>
-    /// Dash: Recovery interruptable by Ultimate/Skill/Jump/Attack.
-    /// No facing or movement changes during any active phase.
+    /// Dash: Recovery permits action interrupts but keeps movement/facing
+    /// locked. Cancel permits every action supported by the shared policy.
     /// </summary>
     public static readonly InterruptPolicy Dash = new InterruptPolicy
     {
         startup  = ActionCategory.None,
         active   = ActionCategory.None,
-        recovery = ActionCategory.Ultimate | ActionCategory.Skill 
-                 | ActionCategory.Jump
-                 | ActionCategory.BasicAttack | ActionCategory.Switch,
+        recovery = ActionCategory.Ultimate | ActionCategory.Skill
+                 | ActionCategory.Jump | ActionCategory.BasicAttack,
         cancel   = ActionCategory.All & ~ActionCategory.Switch,
         startupGate  = InputGate.None,
         activeGate   = InputGate.None,
-        // Active owns horizontal dash travel. Recovery releases vertical
-        // physics but does not inject normal walking into the dash distance.
+        // Recovery accepts action cancels but never walking/facing input.
         recoveryGate = InputGate.None,
         cancelGate   = InputGate.AllowAll
     };
