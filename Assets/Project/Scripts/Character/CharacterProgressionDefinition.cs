@@ -38,7 +38,8 @@ public enum PassiveEffectScope
 {
     Self,
     Allies,
-    Enemy
+    Enemy,
+    Teammates
 }
 
 public enum PassiveNumericOperation
@@ -554,6 +555,14 @@ public class PassiveRuntimeEffectDefinition : ISerializationCallbackReceiver
     [Tooltip("When enabled, removes the required/runtime target tag after a successful application.")]
     public bool consumeRuntimeTagOnApply = false;
 
+    [Header("Random Buff Selection")]
+    [Tooltip("When enabled, triggering this effect randomly selects between minRandomBuffCount and maxRandomBuffCount recipes from randomBuffPool.")]
+    public bool enableRandomBuffSelection = false;
+    [Min(1)] public int minRandomBuffCount = 1;
+    [Min(1)] public int maxRandomBuffCount = 1;
+    public bool allowDuplicateRandomBuffs = false;
+    public List<RuntimeEffectRecipeData> randomBuffPool = new List<RuntimeEffectRecipeData>();
+
     [Header("Recipe")]
     [Tooltip("Formula plus this kit node's values, duration, stack, display, and remove policy.")]
     public RuntimeEffectRecipe recipe = new RuntimeEffectRecipe();
@@ -591,6 +600,30 @@ public class PassiveRuntimeEffectDefinition : ISerializationCallbackReceiver
         ? recipe
         : null;
 
+    public bool HasValidEffect
+    {
+        get
+        {
+            if (ResolvedEffect != null)
+            {
+                return true;
+            }
+
+            if (enableRandomBuffSelection && randomBuffPool != null)
+            {
+                for (int i = 0; i < randomBuffPool.Count; i++)
+                {
+                    if (randomBuffPool[i] != null && randomBuffPool[i].IsValid)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+    }
+
     public void OnBeforeSerialize()
     {
         NormalizeRecipe();
@@ -603,6 +636,21 @@ public class PassiveRuntimeEffectDefinition : ISerializationCallbackReceiver
 
     public void NormalizeRecipe()
     {
+        if (randomBuffPool != null)
+        {
+            for (int i = 0; i < randomBuffPool.Count; i++)
+            {
+                RuntimeEffectRecipeData subRecipe = randomBuffPool[i];
+                if (subRecipe != null && subRecipe.definition != null)
+                {
+                    subRecipe.policy ??= new RuntimeEffectApplicationPolicy();
+                    if (subRecipe.policy.appliesOn == RuntimeEffectApplyTarget.Self && scope != PassiveEffectScope.Self)
+                    {
+                        subRecipe.policy.appliesOn = ScopeToApplyTarget(scope);
+                    }
+                }
+            }
+        }
         if (recipe == null)
         {
             recipe = new RuntimeEffectRecipe();
@@ -661,6 +709,7 @@ public class PassiveRuntimeEffectDefinition : ISerializationCallbackReceiver
         {
             PassiveEffectScope.Enemy => RuntimeEffectApplyTarget.Enemy,
             PassiveEffectScope.Allies => RuntimeEffectApplyTarget.Allies,
+            PassiveEffectScope.Teammates => RuntimeEffectApplyTarget.Teammates,
             _ => RuntimeEffectApplyTarget.Self
         };
     }
@@ -854,6 +903,8 @@ public class RuntimeAreaEffectApplication : ISerializationCallbackReceiver
         ? recipe
         : null;
 
+    public bool HasValidEffect => ResolvedEffect != null;
+
     public void OnBeforeSerialize()
     {
         NormalizeRecipe();
@@ -924,6 +975,7 @@ public class RuntimeAreaEffectApplication : ISerializationCallbackReceiver
         {
             PassiveEffectScope.Enemy => RuntimeEffectApplyTarget.Enemy,
             PassiveEffectScope.Allies => RuntimeEffectApplyTarget.Allies,
+            PassiveEffectScope.Teammates => RuntimeEffectApplyTarget.Teammates,
             _ => RuntimeEffectApplyTarget.Self
         };
     }

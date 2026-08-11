@@ -1151,7 +1151,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
                     PassiveRuntimeEffectDefinition effect = effects[effectIndex];
                     if (effect == null
                         || effect.trigger != PassiveTriggerType.Always
-                        || effect.ResolvedEffect == null
+                        || !effect.HasValidEffect
                         || IsAlwaysRuntimeEffectSuperseded(sourceCharacter, node, effect)
                         || !ValidateAlwaysRuntimeEffect(effect))
                     {
@@ -1193,6 +1193,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             {
                 RuntimeEffectApplyTarget.Self => targetCharacter == sourceCharacter,
                 RuntimeEffectApplyTarget.Allies => true,
+                RuntimeEffectApplyTarget.Teammates => targetCharacter != sourceCharacter,
                 _ => false
             };
             if (!shouldApply || !MatchesRuntimeEffectTarget(effect, targetCharacter))
@@ -1214,12 +1215,22 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     private bool ValidateAlwaysRuntimeEffect(PassiveRuntimeEffectDefinition effect)
     {
-        RuntimeEffectDefinition definition = effect != null ? effect.ResolvedEffect : null;
-        RuntimeEffectRecipe recipe = effect != null ? effect.ResolvedRecipe : null;
+        if (effect == null)
+        {
+            return false;
+        }
+
+        if (effect.enableRandomBuffSelection)
+        {
+            return effect.randomBuffPool != null && effect.randomBuffPool.Exists(r => r != null && r.IsValid);
+        }
+
+        RuntimeEffectDefinition definition = effect.ResolvedEffect;
+        RuntimeEffectRecipe recipe = effect.ResolvedRecipe;
         bool valid = definition != null
             && RuntimeEffectRuntimeUtility.GetDurationType(definition, recipe) == RuntimeEffectDurationType.Forever
             && !RuntimeEffectRuntimeUtility.RemoveOnOwnerDamaged(definition, recipe);
-        if (!valid && effect != null && warnedInvalidAlwaysEffects.Add(effect))
+        if (!valid && warnedInvalidAlwaysEffects.Add(effect))
         {
             Debug.LogWarning(
                 $"TeamLoader: Always runtime effect '{definition?.name ?? "Missing"}' must be Forever and cannot remove on owner damage.");
@@ -1338,6 +1349,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         {
             PassiveEffectScope.Enemy => RuntimeEffectApplyTarget.Enemy,
             PassiveEffectScope.Allies => RuntimeEffectApplyTarget.Allies,
+            PassiveEffectScope.Teammates => RuntimeEffectApplyTarget.Teammates,
             _ => RuntimeEffectApplyTarget.Self
         };
     }

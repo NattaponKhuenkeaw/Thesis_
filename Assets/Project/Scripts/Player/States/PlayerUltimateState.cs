@@ -131,7 +131,8 @@ public class PlayerUltimateState : CombatPlayerState
             ? teamLoader.GetUltimateCost(player.characterObject, previewUltimateAction)
             : TeamLoader.DefaultUltimateAuraEnergyCost;
 
-        if (currentAE < requiredAE)
+        bool waiveCost = player.PassiveController != null && player.PassiveController.RuntimeState != null && player.PassiveController.RuntimeState.HasTag("waive_next_ultimate_cost");
+        if (!waiveCost && currentAE < requiredAE)
         {
             if (exitOnFailure)
             {
@@ -234,8 +235,12 @@ public class PlayerUltimateState : CombatPlayerState
                 TeamLoader teamLoader = TeamLoader.Instance;
                 if (teamLoader != null && player.characterObject != null)
                 {
-                    float cost = teamLoader.GetUltimateCost(player.characterObject, activeUltimateAction);
-                    teamLoader.AddCharacterAE(player.characterObject, -cost);
+                    bool waiveCost = player.PassiveController != null && player.PassiveController.RuntimeState != null && player.PassiveController.RuntimeState.HasTag("waive_next_ultimate_cost");
+                    if (!waiveCost)
+                    {
+                        float cost = teamLoader.GetUltimateCost(player.characterObject, activeUltimateAction);
+                        teamLoader.AddCharacterAE(player.characterObject, -cost);
+                    }
                     player.PassiveController?.RuntimeState?.RemoveTag("waive_next_ultimate_cost");
                 }
             }

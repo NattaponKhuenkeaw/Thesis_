@@ -284,6 +284,16 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         currentHP += value;
         currentHP = Mathf.Min(currentHP, MaxHP);
 
+        TeamLoader teamLoader = TeamLoader.Instance;
+        if (teamLoader != null && teamLoader.RunInventory != null)
+        {
+            var state = teamLoader.RunInventory.GetRunCharacter(characterObject);
+            if (state != null)
+            {
+                state.currentHP = currentHP;
+            }
+        }
+
         OnHealed?.Invoke(value);
         NotifyHealthChanged();
     }

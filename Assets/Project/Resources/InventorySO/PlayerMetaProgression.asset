@@ -13,28 +13,12 @@ MonoBehaviour:
   m_Name: PlayerMetaProgression
   m_EditorClassIdentifier: Assembly-CSharp::Project.Progression.PlayerMetaProgression
   fragments:
-  - sourceItemId: char-0-main
-    displayName: Main Fragment
-    fragmentType: 0
-    quantity: 97
   - sourceItemId: char_5_goenitz
     displayName: Goenitz Fragment
     fragmentType: 0
-    quantity: 99
-  - sourceItemId: char_3_shermie
-    displayName: Shermie Fragment
-    fragmentType: 0
-    quantity: 99
-  - sourceItemId: char_1_kyo
-    displayName: Kyo Fragment
-    fragmentType: 0
-    quantity: 99
-  - sourceItemId: Char_2_Rugal
-    displayName: Rugal Fragment
-    fragmentType: 0
-    quantity: 99
+    quantity: 98
   characterPotentials:
-  - characterId: char-0-main
-    skillLevel: 0
+  - characterId: char_5_goenitz
+    skillLevel: 1
     ultimateLevel: 0
-    passiveLevel: 2
+    passiveLevel: 0

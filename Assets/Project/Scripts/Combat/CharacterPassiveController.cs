@@ -1191,7 +1191,7 @@ public class CharacterPassiveController : MonoBehaviour
         {
             PassiveRuntimeEffectDefinition effect = effects[i];
             if (effect == null
-                || effect.ResolvedEffect == null
+                || !effect.HasValidEffect
                 || effect.trigger != trigger
                 || effect.filter == null
                 || !effect.filter.Matches(context)
@@ -1271,9 +1271,7 @@ public class CharacterPassiveController : MonoBehaviour
 
     private bool ApplyRuntimeEffect(PassiveRuntimeEffectDefinition effect, PassiveEventContext context)
     {
-        RuntimeEffectDefinition resolvedEffect = effect != null ? effect.ResolvedEffect : null;
-        RuntimeEffectRecipe resolvedRecipe = effect != null ? effect.ResolvedRecipe : null;
-        if (effect == null || resolvedEffect == null || playerCharacter == null)
+        if (effect == null || playerCharacter == null)
         {
             return false;
         }
@@ -1283,9 +1281,113 @@ public class CharacterPassiveController : MonoBehaviour
             return RemoveRuntimeEffect(effect, context);
         }
 
-        RuntimeEffectApplyTarget applyTarget = resolvedRecipe != null && resolvedRecipe.policy != null
-            ? resolvedRecipe.policy.appliesOn
-            : ScopeToApplyTarget(effect.scope);
+        if (effect.enableRandomBuffSelection && effect.randomBuffPool != null && effect.randomBuffPool.Count > 0)
+        {
+            return ApplyRandomBuffPoolEffect(effect, context);
+        }
+
+        RuntimeEffectDefinition resolvedEffect = effect.ResolvedEffect;
+        RuntimeEffectRecipe resolvedRecipe = effect.ResolvedRecipe;
+        if (resolvedEffect == null)
+        {
+            return false;
+        }
+
+        return ApplySingleRecipeEffect(effect, resolvedEffect, resolvedRecipe, context);
+    }
+
+    private bool ApplyRandomBuffPoolEffect(PassiveRuntimeEffectDefinition effect, PassiveEventContext context)
+    {
+        if (effect == null || effect.randomBuffPool == null || effect.randomBuffPool.Count == 0)
+        {
+            return false;
+        }
+
+        int minCount = Mathf.Max(1, effect.minRandomBuffCount);
+        int maxCount = Mathf.Max(minCount, effect.maxRandomBuffCount);
+        int countToSelect = UnityEngine.Random.Range(minCount, maxCount + 1);
+
+        List<RuntimeEffectRecipeData> pool = effect.randomBuffPool;
+        List<RuntimeEffectRecipeData> selectedRecipes = new List<RuntimeEffectRecipeData>();
+
+        if (effect.allowDuplicateRandomBuffs)
+        {
+            for (int i = 0; i < countToSelect; i++)
+            {
+                int randomIndex = UnityEngine.Random.Range(0, pool.Count);
+                if (pool[randomIndex] != null && pool[randomIndex].IsValid)
+                {
+                    selectedRecipes.Add(pool[randomIndex]);
+                }
+            }
+        }
+        else
+        {
+            List<RuntimeEffectRecipeData> validPool = new List<RuntimeEffectRecipeData>();
+            for (int i = 0; i < pool.Count; i++)
+            {
+                if (pool[i] != null && pool[i].IsValid)
+                {
+                    validPool.Add(pool[i]);
+                }
+            }
+
+            int actualCount = Mathf.Min(countToSelect, validPool.Count);
+            for (int i = 0; i < actualCount; i++)
+            {
+                int randomIndex = UnityEngine.Random.Range(0, validPool.Count);
+                selectedRecipes.Add(validPool[randomIndex]);
+                validPool.RemoveAt(randomIndex);
+            }
+        }
+
+        if (selectedRecipes.Count == 0)
+        {
+            return false;
+        }
+
+        bool anyApplied = false;
+        for (int i = 0; i < selectedRecipes.Count; i++)
+        {
+            RuntimeEffectRecipeData selectedRecipeData = selectedRecipes[i];
+            RuntimeEffectRecipe recipeToApply = selectedRecipeData as RuntimeEffectRecipe;
+            if (recipeToApply == null)
+            {
+                recipeToApply = new RuntimeEffectRecipe
+                {
+                    recipeId = selectedRecipeData.recipeId,
+                    definition = selectedRecipeData.definition,
+                    presentation = selectedRecipeData.presentation,
+                    policy = selectedRecipeData.policy,
+                    parameters = selectedRecipeData.parameters
+                };
+            }
+
+            RuntimeEffectDefinition defToApply = recipeToApply.definition;
+            if (defToApply != null)
+            {
+                anyApplied |= ApplySingleRecipeEffect(effect, defToApply, recipeToApply, context);
+            }
+        }
+
+        return anyApplied;
+    }
+
+    private bool ApplySingleRecipeEffect(
+        PassiveRuntimeEffectDefinition effect,
+        RuntimeEffectDefinition resolvedEffect,
+        RuntimeEffectRecipe resolvedRecipe,
+        PassiveEventContext context)
+    {
+        RuntimeEffectApplyTarget applyTarget;
+        if (resolvedRecipe != null && resolvedRecipe.policy != null && (resolvedRecipe.policy.appliesOn != RuntimeEffectApplyTarget.Self || effect.scope == PassiveEffectScope.Self))
+        {
+            applyTarget = resolvedRecipe.policy.appliesOn;
+        }
+        else
+        {
+            applyTarget = ScopeToApplyTarget(effect.scope);
+        }
         TeamLoader teamLoader = ResolveTeamLoader();
         PlayerRunInventory inventory = ResolveRunInventory(teamLoader);
         ResolveRuntimeEffectSource(effect, teamLoader, inventory, out CharacterObject sourceCharacter, out CharacterStats sourceStats);
@@ -1352,6 +1454,7 @@ public class CharacterPassiveController : MonoBehaviour
             {
                 RuntimeEffectApplyTarget.Self => target == sourceCharacter,
                 RuntimeEffectApplyTarget.Allies => true,
+                RuntimeEffectApplyTarget.Teammates => target != sourceCharacter,
                 _ => false
             };
 
@@ -1441,6 +1544,7 @@ public class CharacterPassiveController : MonoBehaviour
             {
                 RuntimeEffectApplyTarget.Self => target == sourceCharacter,
                 RuntimeEffectApplyTarget.Allies => true,
+                RuntimeEffectApplyTarget.Teammates => target != sourceCharacter,
                 _ => false
             };
 
@@ -1812,6 +1916,7 @@ public class CharacterPassiveController : MonoBehaviour
         {
             PassiveEffectScope.Enemy => RuntimeEffectApplyTarget.Enemy,
             PassiveEffectScope.Allies => RuntimeEffectApplyTarget.Allies,
+            PassiveEffectScope.Teammates => RuntimeEffectApplyTarget.Teammates,
             _ => RuntimeEffectApplyTarget.Self
         };
     }
@@ -2108,7 +2213,10 @@ public class CharacterPassiveController : MonoBehaviour
         TeamLoader teamLoader = TeamLoader.Instance;
         if (teamLoader == null || playerCharacter.characterObject == null)
         {
-            playerCharacter.Heal(value);
+            if (scope != PassiveEffectScope.Teammates)
+            {
+                playerCharacter.Heal(value);
+            }
             return;
         }
 
@@ -2123,7 +2231,10 @@ public class CharacterPassiveController : MonoBehaviour
 
             if (character == playerCharacter.characterObject)
             {
-                playerCharacter.Heal(value);
+                if (scope != PassiveEffectScope.Teammates)
+                {
+                    playerCharacter.Heal(value);
+                }
                 continue;
             }
 
@@ -2157,6 +2268,11 @@ public class CharacterPassiveController : MonoBehaviour
         {
             if (team[i] != null)
             {
+                if (scope == PassiveEffectScope.Teammates && team[i] == playerCharacter.characterObject)
+                {
+                    continue;
+                }
+
                 teamLoader.AddCharacterAE(team[i], value);
             }
         }

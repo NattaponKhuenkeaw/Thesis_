@@ -985,6 +985,14 @@ public class PassiveRuntimeEffectDefinitionDrawer : FoldoutPropertyDrawer
             EffectDrawerUtility.Draw(ref position, Prop(property, "enemyTargetRuntimeTag"));
         }
         EffectDrawerUtility.Draw(ref position, Prop(property, "consumeRuntimeTagOnApply"));
+        EffectDrawerUtility.Draw(ref position, Prop(property, "enableRandomBuffSelection"));
+        if (Prop(property, "enableRandomBuffSelection").boolValue)
+        {
+            EffectDrawerUtility.Draw(ref position, Prop(property, "minRandomBuffCount"));
+            EffectDrawerUtility.Draw(ref position, Prop(property, "maxRandomBuffCount"));
+            EffectDrawerUtility.Draw(ref position, Prop(property, "allowDuplicateRandomBuffs"));
+            EffectDrawerUtility.Draw(ref position, Prop(property, "randomBuffPool"));
+        }
         EffectDrawerUtility.Draw(ref position, Prop(property, "recipe"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "applicationMode"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "applicationCount"));
@@ -1007,6 +1015,7 @@ public class PassiveRuntimeEffectDefinitionDrawer : FoldoutPropertyDrawer
             + EffectDrawerUtility.Height(Prop(property, "rollChancePerEnemyTarget"))
             + EffectDrawerUtility.Height(Prop(property, "enemyTargetSource"))
             + EffectDrawerUtility.Height(Prop(property, "consumeRuntimeTagOnApply"))
+            + EffectDrawerUtility.Height(Prop(property, "enableRandomBuffSelection"))
             + EffectDrawerUtility.Height(Prop(property, "recipe"))
             + EffectDrawerUtility.Height(Prop(property, "applicationMode"))
             + EffectDrawerUtility.Height(Prop(property, "applicationCount"))
@@ -1014,6 +1023,13 @@ public class PassiveRuntimeEffectDefinitionDrawer : FoldoutPropertyDrawer
         if (EffectDrawerUtility.EnumEquals(Prop(property, "enemyTargetSource"), PassiveRuntimeEnemyTargetSource.RuntimeTagHitTargets))
         {
             height += EffectDrawerUtility.Height(Prop(property, "enemyTargetRuntimeTag"));
+        }
+        if (Prop(property, "enableRandomBuffSelection").boolValue)
+        {
+            height += EffectDrawerUtility.Height(Prop(property, "minRandomBuffCount"))
+                + EffectDrawerUtility.Height(Prop(property, "maxRandomBuffCount"))
+                + EffectDrawerUtility.Height(Prop(property, "allowDuplicateRandomBuffs"))
+                + EffectDrawerUtility.Height(Prop(property, "randomBuffPool"));
         }
         if (Prop(property, "overrideSourceCharacter").boolValue)
         {

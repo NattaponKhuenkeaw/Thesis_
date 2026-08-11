@@ -23,7 +23,8 @@ public enum RuntimeEffectApplyTarget
 {
     Self,
     Enemy,
-    Allies
+    Allies,
+    Teammates
 }
 
 public enum RuntimeEffectStatTarget

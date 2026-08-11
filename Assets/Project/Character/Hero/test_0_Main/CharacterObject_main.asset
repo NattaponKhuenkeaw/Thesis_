@@ -101,6 +101,11 @@ MonoBehaviour:
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
+        enableRandomBuffSelection: 0
+        minRandomBuffCount: 1
+        maxRandomBuffCount: 1
+        allowDuplicateRandomBuffs: 0
+        randomBuffPool: []
         recipe:
           recipeId: main.base.skill.effect
           definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
@@ -257,17 +262,25 @@ MonoBehaviour:
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
-      runtimeEffects:
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects:
       - trigger: 3
         filter:
-          filterByCategory: 0
+          filterByCategory: 1
           category: 0
           filterByActionId: 0
           actionId: 
           filterByActionName: 0
           actionName: 
-          filterByStepName: 0
-          stepName: 
+          filterByStepName: 1
+          stepName: Attack3
           filterByElement: 0
           elementType: 0
           requireRuntimeTag: 0
@@ -277,129 +290,49 @@ MonoBehaviour:
         requiredRuntimeEffectStacks: []
         requiredValues: []
         chance: 1
-        rollChancePerEnemyTarget: 0
-        enemyTargetSource: 0
-        enemyTargetRuntimeTag: 
-        consumeRuntimeTagOnApply: 0
-        recipe:
-          recipeId: main.base.passive.effect
-          definition: {fileID: 11400000, guid: a5426b7d2231ff647a53ad306f3281f8, type: 2}
-          presentation:
-            effectId: 
-            displayName: Increase Elemental Mastery
-            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
-            fieldVisualPrefab: {fileID: 0}
-          policy:
-            kind: 0
-            appliesOn: 0
-            durationType: 0
-            durationSeconds: 10
-            stackMode: 0
-            stackLimit: 5
-            refreshDurationOnReapply: 1
-            stackable: 1
-            removeOnOwnerDamaged: 0
-            stackKey: 
-          parameters:
-            overrideStatModifiers: 1
-            statModifiers:
-            - target: 4
-              operation: 0
-              sourceStat: 4
-              statRatioValueSource: 0
-              value: 6
-            overrideDamageModifier: 0
-            damageModifier:
-              filter:
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              outgoingDamagePercentAdd: 0
-              incomingDamageTakenPercentAdd: 0
-            overrideDamageInput: 0
-            damageInput:
-              filter:
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              defenderDefensePercentAdd: 0
-              defenderDamageResistancePercentAdd: 0
-              ignoreDefense: 0
-              ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
-            overridePeriodicHeal: 0
-            periodicHeal:
-              valueSource: 1
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-              tickInterval: 1
-            overrideHeal: 0
-            heal:
-              valueSource: 1
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-            overrideLifesteal: 0
-            lifesteal:
-              filter:
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              damageDealtRatio: 0.5
-              lowHpThreshold: 0.3
-              lowHpMultiplier: 2
-            overrideAdditionalDamage: 0
-            additionalDamage:
-              filter:
-                filterByElement: 0
-                elementType: 0
-                filterByCategory: 0
-                category: 0
-              chance: 1
-              internalCooldown: 0
-              attackRatio: 0.2
-              sourceStatDamageSource: 0
-              sourceStatRatio: 0
-              targetMaxHpRatio: 0
-              sourceRuntimeEffectStackKey: 
-              attackRatioPerSourceRuntimeEffectStack: 0
-              maxSourceRuntimeEffectStacks: 0
-              capTargetMaxHpDamage: 0
-              targetMaxHpDamageCapSource: 1
-              targetMaxHpDamageCapRatio: 1
-              elementType: 0
-            overrideStatus: 0
-            status:
-              status: 5
-            overrideShield: 0
-            shield:
-              valueSource: 0
-              valueRatio: 0.1
-              flatValue: 0
-              useSourceStats: 1
-          childRecipes: []
-        applicationMode: 0
-        applicationCount: 1
-        effect: {fileID: 0}
+        effectType: 0
         scope: 0
-        stackMode: 2
-        stackLimit: 5
-        refreshDurationOnReapply: 1
-        durationOverride: 3
-        overrideSourceCharacter: 0
-        sourceCharacterId: 
-      runtimeEffectStackLimitModifiers: []
-      counterEffects: []
-      conditionalStateEffects: []
-      onHitStatusEffects: []
-      additionalDamageEffects: []
-      dashThroughDamageEffects: []
-      defensiveEffects: []
-      resourceEffects: []
+        valueMode: 1
+        valueSource: 0
+        valueRatio: 0.15
+        flatValue: 0
+        runtimeTag: waive_next_ultimate_cost
+        runtimeTagDuration: 0
+        cooldownActionId: 
+        cooldownActionName: 
+        cooldownTag: 
+        cooldownDuration: 0
+      - trigger: 3
+        filter:
+          filterByCategory: 1
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 1
+          stepName: Attack3
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredRuntimeEffectStacks: []
+        requiredValues: []
+        chance: 1
+        effectType: 1
+        scope: 0
+        valueMode: 0
+        valueSource: 0
+        valueRatio: 0
+        flatValue: 7
+        runtimeTag: waive_next_ultimate_cost
+        runtimeTagDuration: 0
+        cooldownActionId: 
+        cooldownActionName: 
+        cooldownTag: 
+        cooldownDuration: 0
       enemyElementModifiers: []
       passiveHookTypeName: 
       nodeId: base.passive
@@ -724,6 +657,11 @@ MonoBehaviour:
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
+        enableRandomBuffSelection: 0
+        minRandomBuffCount: 1
+        maxRandomBuffCount: 1
+        allowDuplicateRandomBuffs: 0
+        randomBuffPool: []
         recipe:
           recipeId: lv2.main.ult
           definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
@@ -1114,4 +1052,4 @@ MonoBehaviour:
       level: 4
       fragmentCost: 1
       unlockedByDefault: 0
-  actionResolverTable: {fileID: 11400000, guid: 4c22d52c4e028734cbd3294422a85e5b, type: 2}
+  actionResolverTable: {fileID: 11400000, guid: 1c5e68805e1f0064d92ecf2652b00e2c, type: 2}
