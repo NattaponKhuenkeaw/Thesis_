@@ -185,80 +185,100 @@ namespace Project.UI
         {
             RoomData room = offer.Room;
 
-            // 1.(Easy = เขียว, Medium = เหลือง, Hard = ส้ม)
-            Color difficultyColor = ResolveDifficultyColor(offer.Kind.ToString());
+            GameObject card = CreateRect($"Choice_{index}_{offer.Kind}", parent); 
 
-            GameObject card = CreateRect($"Choice_{index}_{offer.Kind}", parent);
-
-            HorizontalLayoutGroup containerLayout = parent.GetComponent<HorizontalLayoutGroup>();
-            if (containerLayout == null)
+            HorizontalLayoutGroup containerLayout = parent.GetComponent<HorizontalLayoutGroup>(); 
+            if (containerLayout == null) 
             {
-                containerLayout = parent.gameObject.AddComponent<HorizontalLayoutGroup>();
+                containerLayout = parent.gameObject.AddComponent<HorizontalLayoutGroup>(); 
             }
 
             containerLayout.childControlWidth = false;
-            containerLayout.childControlHeight = true;      
-            containerLayout.childForceExpandWidth = false;
-            containerLayout.childForceExpandHeight = false;
-            containerLayout.childAlignment = TextAnchor.MiddleCenter;
-            containerLayout.spacing = 30f;
+            containerLayout.childControlHeight = true;     
+            containerLayout.childForceExpandWidth = false; 
+            containerLayout.childForceExpandHeight = false; 
+            containerLayout.childAlignment = TextAnchor.MiddleCenter; 
+            containerLayout.spacing = 30f; 
 
             // เพิ่ม LayoutElement เพื่อล็อกขนาดการ์ดไม่ให้ยืดตาม parent
-            LayoutElement cardElement = card.AddComponent<LayoutElement>();
-            cardElement.preferredWidth = 220f;  // ความกว้างการ์ด
-            cardElement.preferredHeight = 300f; // ความสูงการ์ด
+            LayoutElement cardElement = card.AddComponent<LayoutElement>(); 
+            cardElement.preferredWidth = 260f;  // ความกว้างการ์ด
+            cardElement.preferredHeight = 320f; // ความสูงการ์ด
 
-            Image cardImage = card.AddComponent<Image>();
-            cardImage.color = new Color(0.12f, 0.14f, 0.18f, 1f);
+            Image cardImage = card.AddComponent<Image>(); 
+            cardImage.color = new Color(0.12f, 0.14f, 0.18f, 1f); 
 
-            Outline outline = card.AddComponent<Outline>();
-            outline.effectColor = difficultyColor; // เปลี่ยนจาก accent เป็น difficultyColor
-            outline.effectDistance = new Vector2(3f, -3f);
+            Outline outline = card.AddComponent<Outline>(); 
 
-            Button button = card.AddComponent<Button>();
-            button.targetGraphic = cardImage;
-            ColorBlock colors = button.colors;
-            colors.highlightedColor = Color.Lerp(cardImage.color, difficultyColor, 0.35f);
-            colors.pressedColor = Color.Lerp(cardImage.color, difficultyColor, 0.55f);
+            Button button = card.AddComponent<Button>(); 
+            button.targetGraphic = cardImage; 
+
+            VerticalLayoutGroup cardLayout = card.AddComponent<VerticalLayoutGroup>();
+            cardLayout.padding = new RectOffset(12, 12, 16, 16); 
+            cardLayout.spacing = 12f; 
+            cardLayout.childAlignment = TextAnchor.MiddleCenter;
+            cardLayout.childControlWidth = true; 
+            cardLayout.childControlHeight = false; 
+            cardLayout.childForceExpandWidth = true; 
+            cardLayout.childForceExpandHeight = false; 
+
+            // แยกการสร้าง UI ระหว่าง Shop กับ Combat
+            bool isShop = offer.Kind == RoomKind.Shop;
+
+            if (isShop)
+            {
+                // --- SHOP ---
+                TextMeshProUGUI shopLabel = CreateText("ShopLabel", card.transform, "SHOP", 22f, FontStyles.Bold);
+                shopLabel.alignment = TextAlignmentOptions.Center;
+                shopLabel.color = ResolveKindColor(RoomKind.Shop); 
+
+                outline.effectColor = ResolveKindColor(RoomKind.Shop); 
+            }
+            else
+            {
+                // --- COMBAT / ห้องต่อสู้ ---
+                string difficultyText = GetDifficultyFromKind(offer.Kind);
+                Color difficultyColor = ResolveDifficultyColor(difficultyText);
+
+                TextMeshProUGUI roomTypeLabel = CreateText("RoomTypeLabel", card.transform, offer.Kind.ToString().ToUpper(), 16f, FontStyles.Bold);
+                roomTypeLabel.alignment = TextAlignmentOptions.Center;
+                roomTypeLabel.color = Color.white;
+
+                TextMeshProUGUI difficultyLabel = CreateText("DifficultyLabel", card.transform, $"[{difficultyText.ToUpper()}]", 14f, FontStyles.Bold);
+                difficultyLabel.alignment = TextAlignmentOptions.Center;
+                difficultyLabel.color = difficultyColor;
+
+                string rewardText = GetRewardText(offer); 
+                TextMeshProUGUI rewardLabel = CreateText("RewardLabel", card.transform, $"Reward: {rewardText}", 13f, FontStyles.Normal);
+                rewardLabel.alignment = TextAlignmentOptions.Center;
+                rewardLabel.color = new Color(0.9f, 0.9f, 0.9f, 1f);
+
+                outline.effectColor = difficultyColor;
+            }
+
+            // สีปุ่ม Hover/Pressed ปรับตามสีของกรอบ Outline
+            ColorBlock colors = button.colors; 
+            colors.highlightedColor = Color.Lerp(cardImage.color, outline.effectColor, 0.35f);
+            colors.pressedColor = Color.Lerp(cardImage.color, outline.effectColor, 0.55f);
             colors.selectedColor = colors.highlightedColor;
             button.colors = colors;
 
-            VerticalLayoutGroup cardLayout = card.AddComponent<VerticalLayoutGroup>();
-            cardLayout.padding = new RectOffset(12, 12, 16, 16);
-            cardLayout.spacing = 12f;
-            cardLayout.childAlignment = TextAnchor.MiddleCenter; // ปรับให้จัดกลาง
-            cardLayout.childControlWidth = true;
-            cardLayout.childControlHeight = false;
-            cardLayout.childForceExpandWidth = true;
-            cardLayout.childForceExpandHeight = false;
-
-            // 2.(Easy / Medium / Hard)
-            TextMeshProUGUI difficultyLabel = CreateText("DifficultyLabel", card.transform, offer.Kind.ToString().ToUpper(), 16f, FontStyles.Bold);
-            difficultyLabel.alignment = TextAlignmentOptions.Center;
-            difficultyLabel.color = difficultyColor;
-
             // Icon (ถ้ามี)
-            if (room.OfferIcon != null)
+            if (room.OfferIcon != null) 
             {
-                GameObject iconGo = CreateRect("Icon", card.transform);
-                LayoutElement iconLayout = iconGo.AddComponent<LayoutElement>();
-                iconLayout.preferredHeight = 80f;
-                Image iconImage = iconGo.AddComponent<Image>();
-                iconImage.sprite = room.OfferIcon;
-                iconImage.preserveAspect = true;
-                iconImage.raycastTarget = false;
+                GameObject iconGo = CreateRect("Icon", card.transform); 
+                LayoutElement iconLayout = iconGo.AddComponent<LayoutElement>(); 
+                iconLayout.preferredHeight = 80f; 
+                Image iconImage = iconGo.AddComponent<Image>(); 
+                iconImage.sprite = room.OfferIcon; 
+                iconImage.preserveAspect = true; 
+                iconImage.raycastTarget = false; 
             }
 
-            // 3.Reward [ coin | artifact | artifact + coin ]
-            string rewardText = GetRewardText(offer);
-            TextMeshProUGUI rewardLabel = CreateText("RewardLabel", card.transform, $"Reward: {rewardText}", 14f, FontStyles.Bold);
-            rewardLabel.alignment = TextAlignmentOptions.Center;
-            rewardLabel.color = Color.white;
-
-            string roomId = offer.RoomId;
-            string entranceId = room.DefaultEntranceId;
-            button.onClick.AddListener(() => HandleChoiceClicked(roomId, entranceId, button));
-            choiceButtons.Add(button);
+            string roomId = offer.RoomId; 
+            string entranceId = room.DefaultEntranceId; 
+            button.onClick.AddListener(() => HandleChoiceClicked(roomId, entranceId, button)); 
+            choiceButtons.Add(button); 
         }
 
         private void HandleChoiceClicked(string roomId, string entranceId, Button source)
@@ -394,6 +414,25 @@ namespace Project.UI
             // ถ้า offer มี property เก็บ reward ไว้ ให้ดึงมาใช้ตรงนี้
             // เช่น return offer.RewardType.ToString();
             return "coin"; // ค่าเริ่มต้นกรณีไม่มีตัวแปร reward
+        }
+        private static string GetDifficultyFromKind(RoomKind kind)
+        {
+            switch (kind)
+            {
+                case RoomKind.Shop:
+                case RoomKind.Reward:
+                    return "Easy";
+
+                case RoomKind.Elite:
+                case RoomKind.Boss:
+                    return "Hard";
+
+                default:
+                    // สุ่มระดับความยาก (Easy, Medium, Hard) สำหรับห้อง Combat ปกติ
+                    string[] difficulties = { "Easy", "Medium", "Hard" };
+                    int randomIndex = Random.Range(0, difficulties.Length);
+                    return difficulties[randomIndex];
+            }
         }
     }
 }
