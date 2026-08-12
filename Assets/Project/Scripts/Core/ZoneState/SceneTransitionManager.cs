@@ -442,6 +442,14 @@ namespace Project.Core.ZoneState
                 }
 
                 EnableSceneCanvases();
+                // Layout-swap keeps RoomChoiceUI across rooms; re-arm after every transition.
+                // SafeZone PrepareOffersForSafeRoom already clears this; combat clears on room clear.
+                if (targetRoom == null || targetRoom.ZoneMode != ZoneMode.SafeZone)
+                {
+                    Project.UI.RoomChoiceUI.Instance?.ClearCommittedChoice();
+                    Project.UI.RoomChoiceUI.Instance?.Hide();
+                }
+
                 Project.UI.InputLockManager.Unlock();
                 Time.timeScale = 1f;
                 isTransitioning = false;
@@ -459,7 +467,7 @@ namespace Project.Core.ZoneState
             }
         }
 
-        private static IEnumerator PlayExitWalkRoutine()
+        private IEnumerator PlayExitWalkRoutine()
         {
             PlayerCharacter player = Object.FindFirstObjectByType<PlayerCharacter>();
             if (player == null || player.StateMachine == null || player.StateMachine.ExitState == null)
@@ -472,29 +480,29 @@ namespace Project.Core.ZoneState
                 yield break;
             }
 
-            TransitionTrigger exitTrigger = FindNearestExitTrigger(player.transform.position);
-            float facing = player.Movement != null ? player.Movement.FacingDirection : 1f;
-            Vector3 target;
+            const float pastExitDistance = 2.5f;
+            TransitionTrigger exitTrigger = ResolveExitTriggerForWalk(player.transform.position);
+            Vector3 target = player.transform.position;
             if (exitTrigger != null)
             {
-                target = exitTrigger.transform.position;
-                float towardExit = Mathf.Sign(target.x - player.transform.position.x);
-                if (Mathf.Abs(towardExit) < 0.01f)
-                {
-                    towardExit = facing;
-                }
-
-                // Always step a little past the exit so leave does not hard-cut while overlapping.
-                target.x += towardExit * 2.5f;
+                Collider2D exitCollider = exitTrigger.ExitCollider;
+                // Exit is authored on the right. Always walk past the outward edge.
+                // Do not use Sign(trigger - player): standing past the trigger center
+                // (common while facing into the room) would send the player back inward.
+                float outwardEdgeX = exitCollider != null
+                    ? exitCollider.bounds.max.x
+                    : exitTrigger.transform.position.x;
+                target.x = outwardEdgeX + pastExitDistance;
             }
             else
             {
-                target = player.transform.position + new Vector3(facing * 2.5f, 0f, 0f);
+                target.x = player.transform.position.x + pastExitDistance;
             }
 
             PlayerExitState exitState = player.StateMachine.ExitState;
             exitState.TargetPosition = target;
-            SceneBoundaryController boundary = Object.FindFirstObjectByType<SceneBoundaryController>();
+            SceneBoundaryController boundary = ResolveCurrentBoundaryController()
+                ?? Object.FindFirstObjectByType<SceneBoundaryController>();
             boundary?.PrepareForExit(target);
             player.StateMachine.ChangeState(exitState);
             Debug.Log($"[SceneTransitionManager] Exit walk started toward {target}.");
@@ -535,6 +543,22 @@ namespace Project.Core.ZoneState
                     player);
                 exitState.ForceComplete();
             }
+        }
+
+        private TransitionTrigger ResolveExitTriggerForWalk(Vector3 fromPosition)
+        {
+            SceneBoundaryController boundary = ResolveCurrentBoundaryController()
+                ?? Object.FindFirstObjectByType<SceneBoundaryController>();
+            if (boundary != null)
+            {
+                TransitionTrigger boundExit = boundary.ExitTrigger;
+                if (boundExit != null)
+                {
+                    return boundExit;
+                }
+            }
+
+            return FindNearestExitTrigger(fromPosition);
         }
 
         private static bool WasExitWalkAbortedByDeath(PlayerCharacter player = null)

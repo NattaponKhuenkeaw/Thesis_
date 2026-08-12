@@ -800,6 +800,16 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     /// </summary>
     public void HealAndReviveEntireTeam()
     {
+        HealTeamByMaxHpPercent(1f);
+    }
+
+    /// <summary>
+    /// Heals every deployed teammate by a fraction of their Max HP (additive, clamped).
+    /// 1 = full heal, 0.3 ≈ BBEE-style Rest (~30% Max HP).
+    /// </summary>
+    public void HealTeamByMaxHpPercent(float percentOfMaxHp)
+    {
+        float percent = Mathf.Clamp01(percentOfMaxHp);
         CharacterObject[] team = GetTeamSnapshot();
         for (int i = 0; i < team.Length; i++)
         {
@@ -808,7 +818,11 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
                 continue;
 
             float maxHp = GetCharacterMaxHP(character);
-            SetCharacterCurrentHP(character, maxHp);
+            if (maxHp <= 0f)
+                continue;
+
+            float current = GetCharacterCurrentHP(character);
+            SetCharacterCurrentHP(character, current + (maxHp * percent));
         }
 
         if (playerCharacter != null)

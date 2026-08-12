@@ -36,6 +36,9 @@ namespace Project.Core.ZoneState
         /// </summary>
         public static void PrepareOffers(string excludeRoomId = null)
         {
+            // Layout-swap keeps RoomChoiceUI alive across rooms; clear the latch from the last pick.
+            ArmChoiceUiForNewRoom();
+
             EnsureDirector();
             RoomChoiceDirector director = RoomChoiceDirector.Instance
                 ?? Object.FindFirstObjectByType<RoomChoiceDirector>();
@@ -58,6 +61,8 @@ namespace Project.Core.ZoneState
         /// </summary>
         public static void PrepareOffersForSafeRoom(string excludeRoomId = null)
         {
+            ArmChoiceUiForNewRoom();
+
             EnsureDirector();
             RoomChoiceDirector director = RoomChoiceDirector.Instance
                 ?? Object.FindFirstObjectByType<RoomChoiceDirector>();
@@ -110,6 +115,13 @@ namespace Project.Core.ZoneState
                 return false;
             }
 
+            // After a successful pick, UI stays latched until the next room arms offers.
+            // Do not treat that as "showing" — otherwise exit Stay never opens cards again.
+            if (ui.HasCommittedChoice)
+            {
+                return false;
+            }
+
             if (ui.IsShowing)
             {
                 return true;
@@ -117,6 +129,18 @@ namespace Project.Core.ZoneState
 
             ui.Show(offers);
             return ui.IsShowing;
+        }
+
+        private static void ArmChoiceUiForNewRoom()
+        {
+            RoomChoiceUI ui = RoomChoiceUI.Instance;
+            if (ui == null)
+            {
+                return;
+            }
+
+            ui.ClearCommittedChoice();
+            ui.Hide();
         }
 
         private static void EnsureDirector()

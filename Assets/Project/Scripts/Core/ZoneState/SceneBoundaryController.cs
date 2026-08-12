@@ -46,6 +46,8 @@ namespace Project.Core.ZoneState
 
         public bool IsExitAvailable { get; private set; }
 
+        public TransitionTrigger ExitTrigger => _exitTrigger;
+
         private void Awake()
         {
             Initialize();

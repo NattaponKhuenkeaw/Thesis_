@@ -1,29 +1,34 @@
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 using Project.Core.ZoneState;
 
 namespace Project.UI
 {
     /// <summary>
-    /// BlazBlue-style modal UI: pick the next room type from offer cards.
-    /// Builds the panel at runtime (no authored prefab required).
+    /// Proximity room-choice panel driven by an authored prefab (no runtime UI build).
+    /// Assign <see cref="panelRoot"/> + <see cref="cards"/> in the Inspector, or use
+    /// Project → UI → Create Room Choice UI Prefab.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class RoomChoiceUI : MonoBehaviour
     {
-        private const int CanvasSortingOrder = 8500;
+        private const string ResourcesPrefabPath = "UI/RoomChoiceUI";
 
         public static RoomChoiceUI Instance { get; private set; }
 
-        private GameObject canvasRoot;
-        private readonly List<Button> choiceButtons = new List<Button>(4);
-        private bool hasInputLock;
+        [Header("Authored UI")]
+        [Tooltip("Root object toggled on Show / Hide. Usually the Canvas or Panel.")]
+        [SerializeField] private GameObject panelRoot;
+
+        [Tooltip("Fixed card slots (typically 3). Unused slots are disabled when fewer offers exist.")]
+        [SerializeField] private RoomChoiceCardView[] cards;
+
+        private readonly List<RoomChoiceCardView> activeCards = new List<RoomChoiceCardView>(4);
         private bool choiceCommitted;
 
-        public bool IsShowing => canvasRoot != null;
+        public bool IsShowing => panelRoot != null && panelRoot.activeSelf;
+        public bool HasCommittedChoice => choiceCommitted;
 
         private void Awake()
         {
@@ -34,6 +39,8 @@ namespace Project.UI
             }
 
             Instance = this;
+            AutoWireIfNeeded();
+            HideImmediate();
         }
 
         private void OnDestroy()
@@ -42,8 +49,6 @@ namespace Project.UI
             {
                 Instance = null;
             }
-
-            ReleaseInputLock();
         }
 
         public static RoomChoiceUI EnsureInstance()
@@ -53,20 +58,79 @@ namespace Project.UI
                 return Instance;
             }
 
-            RoomChoiceUI existing = FindFirstObjectByType<RoomChoiceUI>();
+            RoomChoiceUI existing = FindFirstObjectByType<RoomChoiceUI>(FindObjectsInactive.Include);
             if (existing != null)
             {
                 return existing;
             }
 
-            GameObject go = new GameObject("RoomChoiceUI");
-            return go.AddComponent<RoomChoiceUI>();
+            // Must live under Resources/. Prefab/UI alone will not load at runtime.
+            GameObject prefab = Resources.Load<GameObject>(ResourcesPrefabPath);
+            if (prefab == null)
+            {
+                GameObject[] listed = Resources.LoadAll<GameObject>("UI");
+                for (int i = 0; i < listed.Length; i++)
+                {
+                    if (listed[i] != null
+                        && listed[i].name.IndexOf("RoomChoice", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        prefab = listed[i];
+                        break;
+                    }
+                }
+            }
+
+            if (prefab != null)
+            {
+                GameObject instance = Object.Instantiate(prefab);
+                instance.name = "RoomChoiceUI";
+                RoomChoiceUI ui = instance.GetComponent<RoomChoiceUI>()
+                    ?? instance.GetComponentInChildren<RoomChoiceUI>(true);
+                if (ui != null)
+                {
+                    return ui;
+                }
+
+                Debug.LogError(
+                    $"[RoomChoiceUI] Prefab '{prefab.name}' loaded but has no RoomChoiceUI component.");
+                Object.Destroy(instance);
+            }
+
+            Debug.LogError(
+                "[RoomChoiceUI] No authored UI found under Resources.\n"
+                + "Expected: Assets/Project/Resources/UI/RoomChoiceUI.prefab\n"
+                + "(Having it only in Prefab/UI is not enough.)");
+            return null;
+        }
+
+        public void ClearCommittedChoice()
+        {
+            choiceCommitted = false;
+        }
+
+        public void HideFromProximityExit()
+        {
+            if (choiceCommitted)
+            {
+                return;
+            }
+
+            Hide();
         }
 
         public void Show(IReadOnlyList<RoomChoiceOffer> offers)
         {
-            Hide();
-            choiceCommitted = false;
+            if (choiceCommitted)
+            {
+                return;
+            }
+
+            AutoWireIfNeeded();
+            if (panelRoot == null || cards == null || cards.Length == 0)
+            {
+                Debug.LogError("[RoomChoiceUI] Authored panelRoot/cards are not assigned.", this);
+                return;
+            }
 
             if (offers == null || offers.Count == 0)
             {
@@ -75,217 +139,78 @@ namespace Project.UI
             }
 
             EnsureEventSystem();
-            AcquireInputLock();
+            ClearCardClicks();
+            activeCards.Clear();
 
-            canvasRoot = new GameObject("RoomChoiceUI_Canvas");
-            canvasRoot.transform.SetParent(transform, false);
-
-            Canvas canvas = canvasRoot.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = CanvasSortingOrder;
-
-            CanvasScaler scaler = canvasRoot.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920f, 1080f);
-            scaler.matchWidthOrHeight = 0.5f;
-            canvasRoot.AddComponent<GraphicRaycaster>();
-
-            GameObject dimmer = CreateRect("Dimmer", canvasRoot.transform);
-            StretchToParent(dimmer.GetComponent<RectTransform>());
-            Image dimmerImage = dimmer.AddComponent<Image>();
-            dimmerImage.color = new Color(0f, 0f, 0f, 0.62f);
-
-            GameObject panel = CreateRect("Panel", dimmer.transform);
-            RectTransform panelRect = panel.GetComponent<RectTransform>();
-            panelRect.anchorMin = new Vector2(0.5f, 0.5f);
-            panelRect.anchorMax = new Vector2(0.5f, 0.5f);
-            panelRect.pivot = new Vector2(0.5f, 0.5f);
-            panelRect.anchoredPosition = Vector2.zero;
-            panelRect.sizeDelta = new Vector2(1100f, 520f);
-
-            Image panelImage = panel.AddComponent<Image>();
-            panelImage.color = new Color(0.07f, 0.08f, 0.11f, 0.96f);
-
-            VerticalLayoutGroup panelLayout = panel.AddComponent<VerticalLayoutGroup>();
-            panelLayout.padding = new RectOffset(36, 36, 28, 28);
-            panelLayout.spacing = 22f;
-            panelLayout.childAlignment = TextAnchor.UpperCenter;
-            panelLayout.childControlWidth = true;
-            panelLayout.childControlHeight = false;
-            panelLayout.childForceExpandWidth = true;
-            panelLayout.childForceExpandHeight = false;
-
-            TextMeshProUGUI title = CreateText("Title", panel.transform, "Choose Next Path", 34f, FontStyles.Bold);
-            title.alignment = TextAlignmentOptions.Center;
-            title.color = Color.white;
-
-            TextMeshProUGUI subtitle = CreateText(
-                "Subtitle",
-                panel.transform,
-                "Select a room type to continue",
-                18f,
-                FontStyles.Normal);
-            subtitle.alignment = TextAlignmentOptions.Center;
-            subtitle.color = new Color(0.78f, 0.82f, 0.88f, 1f);
-
-            GameObject row = CreateRect("Choices", panel.transform);
-            RectTransform rowRect = row.GetComponent<RectTransform>();
-            rowRect.sizeDelta = new Vector2(0f, 340f);
-            LayoutElement rowLayout = row.AddComponent<LayoutElement>();
-            rowLayout.preferredHeight = 340f;
-            rowLayout.flexibleHeight = 1f;
-
-            HorizontalLayoutGroup rowGroup = row.AddComponent<HorizontalLayoutGroup>();
-            rowGroup.spacing = 20f;
-            rowGroup.childAlignment = TextAnchor.MiddleCenter;
-            rowGroup.childControlWidth = true;
-            rowGroup.childControlHeight = true;
-            rowGroup.childForceExpandWidth = true;
-            rowGroup.childForceExpandHeight = true;
-            rowGroup.padding = new RectOffset(8, 8, 8, 8);
-
-            choiceButtons.Clear();
-            for (int i = 0; i < offers.Count; i++)
+            int slot = 0;
+            for (int i = 0; i < offers.Count && slot < cards.Length; i++)
             {
-                if (!offers[i].IsValid)
+                if (!offers[i].IsValid || cards[slot] == null)
                 {
                     continue;
                 }
 
-                CreateChoiceCard(row.transform, offers[i], i);
+                RoomChoiceOffer offer = offers[i];
+                RoomChoiceCardView card = cards[slot];
+                card.Bind(offer, () => HandleChoiceClicked(offer, card));
+                activeCards.Add(card);
+                slot++;
             }
 
-            if (choiceButtons.Count == 0)
+            for (int i = slot; i < cards.Length; i++)
             {
-                Debug.LogWarning("[RoomChoiceUI] Offers were present but none were valid; aborting show.", this);
+                if (cards[i] != null)
+                {
+                    cards[i].ClearClick();
+                    cards[i].gameObject.SetActive(false);
+                }
+            }
+
+            if (activeCards.Count == 0)
+            {
+                Debug.LogWarning("[RoomChoiceUI] Offers were present but none could bind to cards.", this);
                 Hide();
                 return;
             }
 
+            // Level/Rest sequences disable other canvases; ensure ours is drawable again.
+            EnsureCanvasEnabled();
+            panelRoot.SetActive(true);
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
-            Debug.Log($"[RoomChoiceUI] Showing {choiceButtons.Count} room choices.", this);
+            Debug.Log($"[RoomChoiceUI] Showing {activeCards.Count} authored room choices.", this);
         }
 
         public void Hide()
         {
-            for (int i = 0; i < choiceButtons.Count; i++)
-            {
-                if (choiceButtons[i] != null)
-                {
-                    choiceButtons[i].onClick.RemoveAllListeners();
-                }
-            }
-
-            choiceButtons.Clear();
-
-            if (canvasRoot != null)
-            {
-                Destroy(canvasRoot);
-                canvasRoot = null;
-            }
-
-            ReleaseInputLock();
+            ClearCardClicks();
+            activeCards.Clear();
+            HideImmediate();
         }
 
-        private void CreateChoiceCard(Transform parent, RoomChoiceOffer offer, int index)
+        private void HideImmediate()
         {
-            RoomData room = offer.Room;
-            Color accent = ResolveKindColor(offer.Kind);
-
-            GameObject card = CreateRect($"Choice_{index}_{offer.Kind}", parent);
-            Image cardImage = card.AddComponent<Image>();
-            cardImage.color = new Color(0.12f, 0.14f, 0.18f, 1f);
-
-            Outline outline = card.AddComponent<Outline>();
-            outline.effectColor = accent;
-            outline.effectDistance = new Vector2(3f, -3f);
-
-            Button button = card.AddComponent<Button>();
-            button.targetGraphic = cardImage;
-            ColorBlock colors = button.colors;
-            colors.highlightedColor = Color.Lerp(cardImage.color, accent, 0.35f);
-            colors.pressedColor = Color.Lerp(cardImage.color, accent, 0.55f);
-            colors.selectedColor = colors.highlightedColor;
-            button.colors = colors;
-
-            VerticalLayoutGroup cardLayout = card.AddComponent<VerticalLayoutGroup>();
-            cardLayout.padding = new RectOffset(18, 18, 22, 22);
-            cardLayout.spacing = 12f;
-            cardLayout.childAlignment = TextAnchor.UpperCenter;
-            cardLayout.childControlWidth = true;
-            cardLayout.childControlHeight = false;
-            cardLayout.childForceExpandWidth = true;
-            cardLayout.childForceExpandHeight = false;
-
-            GameObject kindBadge = CreateRect("KindBadge", card.transform);
-            LayoutElement badgeLayout = kindBadge.AddComponent<LayoutElement>();
-            badgeLayout.preferredHeight = 42f;
-            Image badgeImage = kindBadge.AddComponent<Image>();
-            badgeImage.color = accent;
-
-            TextMeshProUGUI kindLabel = CreateText("Kind", kindBadge.transform, offer.Kind.ToString().ToUpperInvariant(), 20f, FontStyles.Bold);
-            kindLabel.alignment = TextAlignmentOptions.Center;
-            kindLabel.color = new Color(0.08f, 0.08f, 0.1f, 1f);
-            StretchToParent(kindLabel.rectTransform);
-
-            if (room.OfferIcon != null)
+            if (panelRoot != null)
             {
-                GameObject iconGo = CreateRect("Icon", card.transform);
-                LayoutElement iconLayout = iconGo.AddComponent<LayoutElement>();
-                iconLayout.preferredHeight = 96f;
-                Image iconImage = iconGo.AddComponent<Image>();
-                iconImage.sprite = room.OfferIcon;
-                iconImage.preserveAspect = true;
-                iconImage.raycastTarget = false;
+                panelRoot.SetActive(false);
             }
-
-            TextMeshProUGUI nameLabel = CreateText("Name", card.transform, offer.DisplayName, 24f, FontStyles.Bold);
-            nameLabel.alignment = TextAlignmentOptions.Center;
-            nameLabel.color = Color.white;
-
-            if (offer.ShowsDifficulty)
-            {
-                Color diffColor = ResolveDifficultyColor(offer.Difficulty);
-                TextMeshProUGUI diffLabel = CreateText(
-                    "Difficulty",
-                    card.transform,
-                    offer.Difficulty.ToString().ToUpperInvariant(),
-                    18f,
-                    FontStyles.Bold);
-                diffLabel.alignment = TextAlignmentOptions.Center;
-                diffLabel.color = diffColor;
-            }
-
-            if (!string.IsNullOrWhiteSpace(offer.RewardLabel))
-            {
-                TextMeshProUGUI rewardLabel = CreateText(
-                    "Reward",
-                    card.transform,
-                    offer.RewardLabel,
-                    16f,
-                    FontStyles.Normal);
-                rewardLabel.alignment = TextAlignmentOptions.Center;
-                rewardLabel.color = new Color(0.85f, 0.9f, 0.7f, 1f);
-            }
-            else
-            {
-                string zoneText = room.ZoneMode == ZoneMode.SafeZone ? "Safe Zone" : "Combat Zone";
-                TextMeshProUGUI zoneLabel = CreateText("Zone", card.transform, zoneText, 16f, FontStyles.Normal);
-                zoneLabel.alignment = TextAlignmentOptions.Center;
-                zoneLabel.color = new Color(0.75f, 0.8f, 0.86f, 1f);
-            }
-
-            TextMeshProUGUI hint = CreateText("Hint", card.transform, "Click to enter", 15f, FontStyles.Italic);
-            hint.alignment = TextAlignmentOptions.Center;
-            hint.color = new Color(accent.r, accent.g, accent.b, 0.95f);
-
-            RoomChoiceOffer captured = offer;
-            button.onClick.AddListener(() => HandleChoiceClicked(captured, button));
-            choiceButtons.Add(button);
         }
 
-        private void HandleChoiceClicked(RoomChoiceOffer offer, Button source)
+        private void EnsureCanvasEnabled()
+        {
+            Canvas canvas = GetComponent<Canvas>();
+            if (canvas == null && panelRoot != null)
+            {
+                canvas = panelRoot.GetComponentInParent<Canvas>();
+            }
+
+            if (canvas != null && !canvas.enabled)
+            {
+                canvas.enabled = true;
+            }
+        }
+
+        private void HandleChoiceClicked(RoomChoiceOffer offer, RoomChoiceCardView source)
         {
             if (choiceCommitted || !offer.IsValid)
             {
@@ -294,18 +219,12 @@ namespace Project.UI
 
             choiceCommitted = true;
 
-            for (int i = 0; i < choiceButtons.Count; i++)
+            for (int i = 0; i < activeCards.Count; i++)
             {
-                if (choiceButtons[i] != null)
-                {
-                    choiceButtons[i].interactable = false;
-                }
+                activeCards[i]?.SetInteractable(false);
             }
 
-            if (source != null)
-            {
-                source.interactable = false;
-            }
+            source?.SetInteractable(false);
 
             string roomId = offer.RoomId;
             string entranceId = offer.Room.DefaultEntranceId;
@@ -332,75 +251,49 @@ namespace Project.UI
             }
         }
 
+        private void AutoWireIfNeeded()
+        {
+            if (panelRoot == null)
+            {
+                Transform panel = transform.Find("Panel");
+                if (panel == null)
+                {
+                    panel = transform.Find("Canvas/Panel");
+                }
+
+                if (panel != null)
+                {
+                    panelRoot = panel.gameObject;
+                }
+                else if (transform.childCount > 0)
+                {
+                    panelRoot = gameObject;
+                }
+            }
+
+            if (cards == null || cards.Length == 0)
+            {
+                cards = GetComponentsInChildren<RoomChoiceCardView>(true);
+            }
+        }
+
+        private void ClearCardClicks()
+        {
+            if (cards == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < cards.Length; i++)
+            {
+                cards[i]?.ClearClick();
+            }
+        }
+
         private static void ResetExitTriggers()
         {
             SceneTransitionManager.ResetAllExitTriggers();
-        }
-
-        private static Color ResolveDifficultyColor(RouteDifficulty difficulty)
-        {
-            switch (difficulty)
-            {
-                case RouteDifficulty.Easy: return new Color(0.35f, 0.85f, 0.45f, 1f);
-                case RouteDifficulty.Medium: return new Color(0.95f, 0.86f, 0.28f, 1f);
-                case RouteDifficulty.Hard: return new Color(1f, 0.55f, 0.2f, 1f);
-                default: return Color.white;
-            }
-        }
-
-        private static Color ResolveKindColor(RoomKind kind)
-        {
-            switch (kind)
-            {
-                case RoomKind.Elite: return new Color(0.95f, 0.62f, 0.2f, 1f);
-                case RoomKind.Shop: return new Color(0.3f, 0.78f, 0.98f, 1f);
-                case RoomKind.Reward: return new Color(0.45f, 0.9f, 0.4f, 1f);
-                case RoomKind.Boss: return new Color(0.78f, 0.28f, 0.95f, 1f);
-                case RoomKind.Level: return new Color(0.98f, 0.86f, 0.28f, 1f);
-                default: return new Color(0.92f, 0.32f, 0.32f, 1f);
-            }
-        }
-
-        private void AcquireInputLock()
-        {
-            if (hasInputLock) return;
-            InputLockManager.Lock();
-            hasInputLock = true;
-        }
-
-        private void ReleaseInputLock()
-        {
-            if (!hasInputLock) return;
-            InputLockManager.Unlock();
-            hasInputLock = false;
-        }
-
-        private static TextMeshProUGUI CreateText(string name, Transform parent, string text, float fontSize, FontStyles style)
-        {
-            GameObject textObject = CreateRect(name, parent);
-            TextMeshProUGUI label = textObject.AddComponent<TextMeshProUGUI>();
-            label.text = text;
-            label.fontSize = fontSize;
-            label.fontStyle = style;
-            label.textWrappingMode = TextWrappingModes.Normal;
-            label.overflowMode = TextOverflowModes.Ellipsis;
-            label.raycastTarget = false;
-            return label;
-        }
-
-        private static GameObject CreateRect(string name, Transform parent)
-        {
-            GameObject obj = new GameObject(name, typeof(RectTransform));
-            obj.transform.SetParent(parent, false);
-            return obj;
-        }
-
-        private static void StretchToParent(RectTransform rect)
-        {
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
+            Instance?.ClearCommittedChoice();
         }
 
         private static void EnsureEventSystem()

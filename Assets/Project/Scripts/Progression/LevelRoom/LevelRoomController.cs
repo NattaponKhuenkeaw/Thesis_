@@ -256,6 +256,13 @@ namespace Project.Progression.LevelRoom
                     continue;
                 }
 
+                // Room choice stays armed at the exit; do not bury it under the claim sequence.
+                if (canvas.GetComponentInParent<Project.UI.RoomChoiceUI>() != null
+                    || canvas.GetComponent<Project.UI.RoomChoiceUI>() != null)
+                {
+                    continue;
+                }
+
                 canvas.enabled = false;
                 if (!disabledCanvases.Contains(canvas))
                 {

@@ -5,8 +5,8 @@ namespace Project.Core.ZoneState
 {
     /// <summary>
     /// Rolls BlazBlue-style next-room offers (default 3).
-    /// Shop / Level appear on cadence. Combat fills the rest.
-    /// Elite/Reward only fill when those RoomData entries exist — never fallback into Shop/Level.
+    /// Shop / Level / Rest appear on cadence. Combat fills the rest.
+    /// Elite/Reward only fill when those RoomData entries exist — never fallback into Shop/Level/Rest.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class RoomChoiceDirector : MonoBehaviour
@@ -22,6 +22,7 @@ namespace Project.Core.ZoneState
         [SerializeField, Min(1)] private int offerCount = 3;
         [SerializeField, Min(1)] private int shopEveryClears = 3;
         [SerializeField, Min(1)] private int levelEveryClears = 4;
+        [SerializeField, Min(1)] private int restEveryClears = 5;
         [SerializeField] private List<RoomKind> defaultFillKinds = new List<RoomKind>
         {
             RoomKind.Combat,
@@ -32,6 +33,7 @@ namespace Project.Core.ZoneState
         [Header("Runtime")]
         [SerializeField, Min(0)] private int clearsSinceShopOpportunity;
         [SerializeField, Min(0)] private int clearsSinceLevelOpportunity;
+        [SerializeField, Min(0)] private int clearsSinceRestOpportunity;
 
         private readonly List<RoomData> candidateBuffer = new List<RoomData>(16);
         private readonly List<RoomChoiceOffer> offerBuffer = new List<RoomChoiceOffer>(4);
@@ -102,6 +104,7 @@ namespace Project.Core.ZoneState
         {
             clearsSinceShopOpportunity = 0;
             clearsSinceLevelOpportunity = 0;
+            clearsSinceRestOpportunity = 0;
             offerBuffer.Clear();
             visitedRoomIds.Clear();
             RunProgressionManager.EnsureInstance()?.ResetRun();
@@ -135,13 +138,20 @@ namespace Project.Core.ZoneState
 
             clearsSinceShopOpportunity = Mathf.Max(0, clearsSinceShopOpportunity + 1);
             clearsSinceLevelOpportunity = Mathf.Max(0, clearsSinceLevelOpportunity + 1);
+            clearsSinceRestOpportunity = Mathf.Max(0, clearsSinceRestOpportunity + 1);
 
             bool includeShop = clearsSinceShopOpportunity >= shopEveryClears;
             bool includeLevel = clearsSinceLevelOpportunity >= levelEveryClears;
+            // Rest replaces post-boss biome heal: always offer after Boss, plus cadence.
+            bool includeRest = clearsSinceRestOpportunity >= restEveryClears
+                || (clearedRoom != null && clearedRoom.RoomKind == RoomKind.Boss);
 
-            IReadOnlyList<RoomChoiceOffer> offers = GenerateOffers(excludeRoomId, includeShop, includeLevel);
+            IReadOnlyList<RoomChoiceOffer> offers = GenerateOffers(
+                excludeRoomId,
+                includeShop,
+                includeLevel,
+                includeRest);
 
-            // Only consume cadence when the offer was actually placed.
             if (includeShop && OfferBufferContainsKind(RoomKind.Shop))
             {
                 clearsSinceShopOpportunity = 0;
@@ -152,11 +162,16 @@ namespace Project.Core.ZoneState
                 clearsSinceLevelOpportunity = 0;
             }
 
+            if (includeRest && OfferBufferContainsKind(RoomKind.Rest))
+            {
+                clearsSinceRestOpportunity = 0;
+            }
+
             return offers;
         }
 
         /// <summary>
-        /// Leave-path for Shop/Level/other SafeZones. Does not advance shop/level cadence.
+        /// Leave-path for Shop/Level/Rest/other SafeZones. Does not advance cadence.
         /// Still respects boss due and never softlocks when combat pool is exhausted.
         /// </summary>
         public IReadOnlyList<RoomChoiceOffer> GenerateLeaveOffersFromSafeRoom(string excludeRoomId = null)
@@ -169,7 +184,7 @@ namespace Project.Core.ZoneState
             RoomData currentRoom = ResolveRoom(excludeRoomId);
             if (currentRoom != null && !string.IsNullOrWhiteSpace(currentRoom.RoomId))
             {
-                // Level (and other one-shot safes) should not reappear forever via revisit fallback.
+                // Level/Rest (and other one-shot safes) should not reappear forever via revisit fallback.
                 if (currentRoom.RoomKind != RoomKind.Shop)
                 {
                     visitedRoomIds.Add(currentRoom.RoomId);
@@ -184,21 +199,38 @@ namespace Project.Core.ZoneState
                 return offerBuffer;
             }
 
-            IReadOnlyList<RoomChoiceOffer> offers = GenerateOffers(excludeRoomId, includeShop: false, includeLevel: false);
+            IReadOnlyList<RoomChoiceOffer> offers = GenerateOffers(
+                excludeRoomId,
+                includeShop: false,
+                includeLevel: false,
+                includeRest: false);
             if (offers != null && offers.Count > 0)
             {
                 return offers;
             }
 
-            return GenerateOffersAllowingRevisits(excludeRoomId, includeShop: false, includeLevel: false);
+            return GenerateOffersAllowingRevisits(
+                excludeRoomId,
+                includeShop: false,
+                includeLevel: false,
+                includeRest: false);
         }
 
         public IReadOnlyList<RoomChoiceOffer> GenerateOffers(string excludeRoomId, bool includeShop)
         {
-            return GenerateOffers(excludeRoomId, includeShop, includeLevel: false);
+            return GenerateOffers(excludeRoomId, includeShop, includeLevel: false, includeRest: false);
         }
 
         public IReadOnlyList<RoomChoiceOffer> GenerateOffers(string excludeRoomId, bool includeShop, bool includeLevel)
+        {
+            return GenerateOffers(excludeRoomId, includeShop, includeLevel, includeRest: false);
+        }
+
+        public IReadOnlyList<RoomChoiceOffer> GenerateOffers(
+            string excludeRoomId,
+            bool includeShop,
+            bool includeLevel,
+            bool includeRest)
         {
             if (EnsureMapData() == null)
             {
@@ -219,6 +251,11 @@ namespace Project.Core.ZoneState
             if (includeLevel)
             {
                 TryAddOfferOfKind(RoomKind.Level, excludeRoomId);
+            }
+
+            if (includeRest)
+            {
+                TryAddOfferOfKind(RoomKind.Rest, excludeRoomId);
             }
 
             int guard = 0;
@@ -243,7 +280,7 @@ namespace Project.Core.ZoneState
 
             ShuffleOffers();
             Debug.Log(
-                $"[RoomChoiceDirector] Generated {offerBuffer.Count} offers (shop={includeShop}, level={includeLevel}, visited={visitedRoomIds.Count}, revisits={allowRevisits}).",
+                $"[RoomChoiceDirector] Generated {offerBuffer.Count} offers (shop={includeShop}, level={includeLevel}, rest={includeRest}, visited={visitedRoomIds.Count}, revisits={allowRevisits}).",
                 this);
             return offerBuffer;
         }
@@ -254,13 +291,22 @@ namespace Project.Core.ZoneState
         /// </summary>
         public IReadOnlyList<RoomChoiceOffer> GenerateOffersAllowingRevisits(string excludeRoomId, bool includeShop)
         {
-            return GenerateOffersAllowingRevisits(excludeRoomId, includeShop, includeLevel: false);
+            return GenerateOffersAllowingRevisits(excludeRoomId, includeShop, includeLevel: false, includeRest: false);
         }
 
         public IReadOnlyList<RoomChoiceOffer> GenerateOffersAllowingRevisits(
             string excludeRoomId,
             bool includeShop,
             bool includeLevel)
+        {
+            return GenerateOffersAllowingRevisits(excludeRoomId, includeShop, includeLevel, includeRest: false);
+        }
+
+        public IReadOnlyList<RoomChoiceOffer> GenerateOffersAllowingRevisits(
+            string excludeRoomId,
+            bool includeShop,
+            bool includeLevel,
+            bool includeRest)
         {
             if (EnsureMapData() == null)
             {
@@ -271,11 +317,12 @@ namespace Project.Core.ZoneState
 
             HashSet<string> savedVisited = new HashSet<string>(visitedRoomIds);
             visitedRoomIds.Clear();
-            // Keep one-shot safes (Level) blocked even during combat revisit softlock recovery.
+            // Keep one-shot safes (Level/Rest) blocked even during combat revisit softlock recovery.
             foreach (string id in savedVisited)
             {
                 RoomData visited = ResolveRoom(id);
-                if (visited != null && visited.RoomKind == RoomKind.Level)
+                if (visited != null
+                    && (visited.RoomKind == RoomKind.Level || visited.RoomKind == RoomKind.Rest))
                 {
                     visitedRoomIds.Add(id);
                 }
@@ -284,7 +331,11 @@ namespace Project.Core.ZoneState
             allowRevisits = true;
             try
             {
-                IReadOnlyList<RoomChoiceOffer> offers = GenerateOffers(excludeRoomId, includeShop, includeLevel);
+                IReadOnlyList<RoomChoiceOffer> offers = GenerateOffers(
+                    excludeRoomId,
+                    includeShop,
+                    includeLevel,
+                    includeRest);
                 if (offers.Count == 0)
                 {
                     Debug.LogWarning(
@@ -332,7 +383,10 @@ namespace Project.Core.ZoneState
 
         private static bool IsCadenceOnlyKind(RoomKind kind)
         {
-            return kind == RoomKind.Shop || kind == RoomKind.Level || kind == RoomKind.Boss;
+            return kind == RoomKind.Shop
+                || kind == RoomKind.Level
+                || kind == RoomKind.Rest
+                || kind == RoomKind.Boss;
         }
 
         private MapSO EnsureMapData()
@@ -402,6 +456,7 @@ namespace Project.Core.ZoneState
 
                 if (room.RoomKind == RoomKind.Boss
                     || room.RoomKind == RoomKind.Level
+                    || room.RoomKind == RoomKind.Rest
                     || (room.RoomKind == RoomKind.Shop && !allowShopInAnyFallback))
                 {
                     candidateBuffer.RemoveAt(i);

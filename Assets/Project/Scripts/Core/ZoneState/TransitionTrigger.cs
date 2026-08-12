@@ -1,16 +1,18 @@
 using UnityEngine;
+using Project.UI;
 
 namespace Project.Core.ZoneState
 {
     /// <summary>
-    /// Exit / portal trigger. By default opens the room-choice UI when the exit is unlocked.
+    /// Exit / portal trigger. By default opens the room-choice UI while the player stands in the zone
+    /// (proximity show/hide, like Shop/Level/Rest floating prompts). Walking away dismisses the UI.
     /// Set a fixed destination and disable openRoomChoiceUi for direct hops (e.g. debug).
     /// </summary>
     [RequireComponent(typeof(Collider2D))]
     public class TransitionTrigger : MonoBehaviour
     {
         [Header("Room Choice (BlazBlue)")]
-        [Tooltip("When true and exit is unlocked, walking in opens the next-room choice UI.")]
+        [Tooltip("When true and exit is unlocked, standing in the exit shows next-room choices. Leaving hides them.")]
         [SerializeField] private bool openRoomChoiceUi = true;
 
         [Header("Fixed Destination (Optional)")]
@@ -67,14 +69,32 @@ namespace Project.Core.ZoneState
 
         private void OnTriggerStay2D(Collider2D other)
         {
-            // Needed after ResetTrigger while the player is still overlapping the exit.
+            // Keep offers visible while overlapping; also covers ResetTrigger while still inside.
             TryHandlePlayerExit(other);
+        }
+
+        private void OnTriggerExit2D(Collider2D other)
+        {
+            if (!openRoomChoiceUi)
+            {
+                return;
+            }
+
+            PlayerCharacter player = other.GetComponentInParent<PlayerCharacter>();
+            if (player == null)
+            {
+                return;
+            }
+
+            RoomChoiceUI ui = RoomChoiceUI.Instance;
+            if (ui != null)
+            {
+                ui.HideFromProximityExit();
+            }
         }
 
         private void TryHandlePlayerExit(Collider2D other)
         {
-            if (hasTriggered) return;
-
             PlayerCharacter player = other.GetComponentInParent<PlayerCharacter>();
             if (player == null || player.IsDead)
             {
@@ -83,20 +103,18 @@ namespace Project.Core.ZoneState
 
             if (exitGate != null && !exitGate.IsExitAvailable)
             {
-                Debug.Log("[TransitionTrigger] Exit is still locked; request ignored.", this);
                 return;
             }
 
             if (openRoomChoiceUi)
             {
-                hasTriggered = true;
-                Debug.Log("[TransitionTrigger] Player reached exit. Opening room choice UI.", this);
-                if (!RoomExitPresenter.TryShowChoiceUi())
-                {
-                    hasTriggered = false;
-                    Debug.LogWarning("[TransitionTrigger] Failed to open room choice UI.", this);
-                }
+                // Proximity UI: do not latch hasTriggered — leaving the zone dismisses the panel.
+                RoomExitPresenter.TryShowChoiceUi();
+                return;
+            }
 
+            if (hasTriggered)
+            {
                 return;
             }
 
