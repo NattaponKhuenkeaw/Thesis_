@@ -244,6 +244,11 @@ public class EnemyWorldUI : MonoBehaviour
         }
     }
 
+    public void RefreshHealthDisplay()
+    {
+        UpdateHealthBar();
+    }
+
     private void UpdateHealthBar()
     {
         if (!showHealthBar || healthSlider == null || enemyController == null)

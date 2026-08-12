@@ -4,14 +4,16 @@ using UnityEngine;
 namespace Project.Core.ZoneState
 {
     /// <summary>
-    /// Tracks combat-room depth for the current run and decides when the boss is due.
+    /// Tracks combat-room depth and biome index for the current run.
     /// Depth increments only on Combat/Elite clears. Shop/Reward/Safe do not count.
+    /// Clearing Boss advances biome (+12% enemy basic stats) and resets the segment depth.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class RunProgressionManager : MonoBehaviour
     {
         private const string DefaultMapResourcePath = "MapSO/Test_MapSO";
         private const string DefaultBossRoomId = "Boss_01";
+        private const float DefaultBiomeStatBonus = 0.12f;
 
         public static RunProgressionManager Instance { get; private set; }
 
@@ -19,9 +21,16 @@ namespace Project.Core.ZoneState
         [Tooltip("Combat/Elite rooms cleared in the current segment.")]
         public int currentRoomDepth;
 
+        [Tooltip("0-based biome index. Increments when a Boss room is cleared.")]
+        public int currentBiomeIndex;
+
         [Tooltip("After this many Combat/Elite clears, the next exit offers only the boss.")]
         [Min(1)]
         public int roomsBeforeBoss = 3;
+
+        [Header("Difficulty Curve")]
+        [Tooltip("Enemy basic stats (HP / ATK / DEF) gain this fraction per biome. Biome 0 = 1.0x, Biome 1 = 1.12x.")]
+        [SerializeField, Min(0f)] private float biomeBasicStatBonus = DefaultBiomeStatBonus;
 
         [Header("Room Pool")]
         [Tooltip("Optional explicit combat room ids for GetNextRoomId(). Empty = use MapSO Combat offers.")]
@@ -36,6 +45,46 @@ namespace Project.Core.ZoneState
         public bool IsBossDue => currentRoomDepth >= roomsBeforeBoss;
         public int RoomsBeforeBoss => roomsBeforeBoss;
         public string BossRoomId => bossRoomId;
+        public int CurrentBiomeIndex => Mathf.Max(0, currentBiomeIndex);
+        public float BiomeBasicStatBonus => Mathf.Max(0f, biomeBasicStatBonus);
+
+        /// <summary>
+        /// Multiplier for enemy basic stats in the current biome.
+        /// Biome 0 = 1.0, Biome 1 = 1.12, Biome 2 = 1.24, ...
+        /// </summary>
+        public float EnemyBasicStatMultiplier => ResolveEnemyBasicStatMultiplier(CurrentBiomeIndex, BiomeBasicStatBonus);
+
+        public static float ResolveEnemyBasicStatMultiplier(int biomeIndex, float bonusPerBiome = DefaultBiomeStatBonus)
+        {
+            int safeBiome = Mathf.Max(0, biomeIndex);
+            float bonus = Mathf.Max(0f, bonusPerBiome);
+            return 1f + (safeBiome * bonus);
+        }
+
+        public static float GetActiveEnemyBasicStatMultiplier()
+        {
+            RunProgressionManager progression = Instance ?? EnsureInstance();
+            return progression != null ? progression.EnemyBasicStatMultiplier : 1f;
+        }
+
+        /// <summary>
+        /// Scales enemy HP / ATK / DEF for the active biome. No-op at biome 0.
+        /// </summary>
+        public static void ApplyBiomeDifficultyToEnemy(EnemyController enemy)
+        {
+            if (enemy == null)
+            {
+                return;
+            }
+
+            float multiplier = GetActiveEnemyBasicStatMultiplier();
+            if (Mathf.Approximately(multiplier, 1f))
+            {
+                return;
+            }
+
+            enemy.ApplyBasicStatMultiplier(multiplier);
+        }
 
         private void Awake()
         {
@@ -102,6 +151,11 @@ namespace Project.Core.ZoneState
             if (clearedRoom.RoomKind == RoomKind.Boss)
             {
                 currentRoomDepth = 0;
+                currentBiomeIndex = Mathf.Max(0, currentBiomeIndex + 1);
+                Debug.Log(
+                    $"[RunProgressionManager] Boss cleared. Biome -> {currentBiomeIndex} " +
+                    $"(enemy basic stats x{EnemyBasicStatMultiplier:0.##}).",
+                    this);
                 return;
             }
 
@@ -119,6 +173,7 @@ namespace Project.Core.ZoneState
         public void ResetRun()
         {
             currentRoomDepth = 0;
+            currentBiomeIndex = 0;
         }
 
         /// <summary>

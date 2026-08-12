@@ -15,7 +15,8 @@ namespace Project.Core.ZoneState
         Elite = 1,
         Shop = 2,
         Reward = 3,
-        Boss = 4
+        Boss = 4,
+        Level = 5
     }
 
     public interface IZoneStateListener

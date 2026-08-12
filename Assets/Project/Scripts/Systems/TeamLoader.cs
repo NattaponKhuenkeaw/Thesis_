@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -58,9 +59,20 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     [Header("Switch Cooldown")]
     [Min(0f)] public float switchCooldownDuration = 1.5f;
 
+    [Header("Active Defeat Recovery")]
+    [Tooltip("How long to play the death animation before removing the KO'd character.")]
+    [SerializeField, Min(0f)] private float defeatDeathAnimSeconds = 1.25f;
+    [Tooltip("Short pause after the death anim before switching to the survivor.")]
+    [SerializeField, Min(0f)] private float defeatSwitchDelaySeconds = 0.35f;
+
     [Header("Runtime State")]
     [SerializeField] private int currentIndex = 0;
     [SerializeField] private float lastSwitchTime = -999f;
+
+    private bool isHandlingActiveDefeat;
+
+    public bool IsHandlingActiveDefeat => isHandlingActiveDefeat;
+    private Coroutine activeDefeatRoutine;
 
     private readonly Dictionary<CharacterObject, DeployedCharacterRuntime> deployedCharacterRuntimes =
         new Dictionary<CharacterObject, DeployedCharacterRuntime>();
@@ -265,12 +277,17 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             return false;
         }
 
+        if (isHandlingActiveDefeat)
+        {
+            return false;
+        }
+
         if (currentIndex == index)
         {
             return false;
         }
 
-        // Knocked-out characters stay out for the rest of the run.
+        // Removed/KO characters are no longer on the team snapshot.
         if (!IsCharacterAliveFromInventory(teamSnapshot[index]))
         {
             return false;
@@ -323,6 +340,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
         CharacterObject character = teamSnapshot[index];
         return character != null
+            && !isHandlingActiveDefeat
             && index != currentIndex
             && IsCharacterAliveFromInventory(character)
             && !IsSwitchOnCooldown;
@@ -335,7 +353,11 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         return FindAnyLivingIndex(excludeCharacter) >= 0;
     }
 
-    public bool TrySwitchToNextLivingCharacterAfterActiveDefeat()
+    /// <summary>
+    /// Starts death-anim → delete defeated teammate → compact survivors to index 0 → switch.
+    /// Returns false when no living teammate remains (caller should raise team wipe).
+    /// </summary>
+    public bool TryBeginActiveDefeatRecovery()
     {
         ResolveDependencies();
         SyncTeamSnapshotFromInventory();
@@ -345,56 +367,155 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             return false;
         }
 
-        CharacterObject defeatedCharacter = playerCharacter.characterObject ?? CurrentCharacter;
-        PersistDefeatedCharacterHp(defeatedCharacter);
-
-        int defeatedIndex = FindCharacterIndex(defeatedCharacter);
-        if (defeatedIndex >= 0)
+        if (isHandlingActiveDefeat)
         {
-            currentIndex = defeatedIndex;
-            runInventory?.SetActiveTeamSlotIndex(currentIndex);
-            NotifyCharacterHealthUpdated(defeatedCharacter);
+            return true;
         }
 
-        int nextLivingIndex = FindNextLivingIndex(
-            defeatedIndex >= 0 ? defeatedIndex : currentIndex,
-            defeatedCharacter);
-        if (nextLivingIndex < 0)
+        CharacterObject defeatedCharacter = playerCharacter.characterObject ?? CurrentCharacter;
+        if (!HasAnyLivingCharacter(defeatedCharacter))
         {
             return false;
         }
 
-        currentIndex = nextLivingIndex;
-        runInventory?.SetActiveTeamSlotIndex(currentIndex);
-        lastSwitchTime = Time.time;
-
-        LoadCurrentCharacter(forceReload: true);
-        playerCharacter.Animator?.SetDie(false);
-        playerCharacter.StateMachine?.InputBuffer?.ClearAll();
-        if (playerCharacter.StateMachine != null)
+        if (activeDefeatRoutine != null)
         {
-            playerCharacter.StateMachine.ChangeState(playerCharacter.StateMachine.IdleState);
+            StopCoroutine(activeDefeatRoutine);
         }
 
-        SnapPlayerToGround();
-        NotifyAllCharacterResources();
-
-        CharacterObject nextCharacter = CurrentCharacter;
-        string displayName = nextCharacter != null && nextCharacter.metaData != null && !string.IsNullOrWhiteSpace(nextCharacter.metaData.displayName)
-            ? nextCharacter.metaData.displayName
-            : (nextCharacter != null ? nextCharacter.name : "Unknown");
-        Debug.Log($"[TeamLoader] Active character was defeated. Switched to next living character: {displayName}", this);
+        activeDefeatRoutine = StartCoroutine(ActiveDefeatRecoveryRoutine(defeatedCharacter));
         return true;
     }
 
-    private void PersistDefeatedCharacterHp(CharacterObject defeatedCharacter)
+    /// <summary>
+    /// Legacy name kept for callers/tests. Prefer <see cref="TryBeginActiveDefeatRecovery"/>.
+    /// </summary>
+    public bool TrySwitchToNextLivingCharacterAfterActiveDefeat()
     {
-        if (defeatedCharacter == null || runInventory == null)
+        return TryBeginActiveDefeatRecovery();
+    }
+
+    private IEnumerator ActiveDefeatRecoveryRoutine(CharacterObject defeatedCharacter)
+    {
+        isHandlingActiveDefeat = true;
+
+        try
+        {
+            if (playerCharacter != null && playerCharacter.StateMachine != null)
+            {
+                playerCharacter.StateMachine.ChangeState(playerCharacter.StateMachine.DeadState);
+            }
+
+            if (defeatDeathAnimSeconds > 0f)
+            {
+                yield return new WaitForSecondsRealtime(defeatDeathAnimSeconds);
+            }
+
+            if (defeatSwitchDelaySeconds > 0f)
+            {
+                yield return new WaitForSecondsRealtime(defeatSwitchDelaySeconds);
+            }
+
+            ResolveDependencies();
+            SyncTeamSnapshotFromInventory();
+
+            int defeatedIndex = FindCharacterIndex(defeatedCharacter);
+            if (defeatedIndex >= 0)
+            {
+                currentIndex = defeatedIndex;
+            }
+
+            int nextLivingIndex = FindNextLivingIndex(
+                defeatedIndex >= 0 ? defeatedIndex : currentIndex,
+                defeatedCharacter);
+            if (nextLivingIndex < 0 || teamSnapshot == null)
+            {
+                playerCharacter?.RaiseTeamWipeAfterDefeat();
+                yield break;
+            }
+
+            CharacterObject preferredSurvivor = teamSnapshot[nextLivingIndex];
+            if (runInventory == null)
+            {
+                playerCharacter?.RaiseTeamWipeAfterDefeat();
+                yield break;
+            }
+
+            if (!runInventory.TryRemoveDefeatedTeamCharacter(defeatedCharacter, preferredSurvivor, out int newActiveIndex)
+                || newActiveIndex < 0)
+            {
+                // Survivors still exist — never raise wipe (that softlocks RunEnd while this flag is set).
+                Debug.LogError(
+                    "[TeamLoader] Failed to remove defeated teammate from inventory while survivors remain. " +
+                    "Forcing switch without backpack delete.",
+                    this);
+                SyncTeamSnapshotFromInventory();
+                int livingIndex = FindCharacterIndex(preferredSurvivor);
+                if (livingIndex < 0)
+                {
+                    livingIndex = FindAnyLivingIndex(defeatedCharacter);
+                }
+
+                if (livingIndex < 0)
+                {
+                    playerCharacter?.RaiseTeamWipeAfterDefeat();
+                    yield break;
+                }
+
+                currentIndex = livingIndex;
+                runInventory.SetActiveTeamSlotIndex(livingIndex);
+            }
+            else
+            {
+                SyncTeamSnapshotFromInventory();
+                currentIndex = 0;
+                runInventory.SetActiveTeamSlotIndex(0);
+            }
+
+            lastSwitchTime = Time.time;
+            ForgetDefeatedCharacterRuntime(defeatedCharacter);
+            ReconcileAlwaysRuntimeEffects();
+            RebuildRuntimeStats();
+
+            LoadCurrentCharacter(forceReload: true);
+            if (playerCharacter != null)
+            {
+                playerCharacter.Animator?.SetDie(false);
+                playerCharacter.StateMachine?.InputBuffer?.ClearAll();
+                if (playerCharacter.StateMachine != null)
+                {
+                    playerCharacter.StateMachine.ChangeState(playerCharacter.StateMachine.IdleState);
+                }
+            }
+
+            SnapPlayerToGround();
+            NotifyAllCharacterResources();
+            NotifyTeamChanged();
+
+            CharacterObject nextCharacter = CurrentCharacter;
+            string displayName = nextCharacter != null && nextCharacter.metaData != null && !string.IsNullOrWhiteSpace(nextCharacter.metaData.displayName)
+                ? nextCharacter.metaData.displayName
+                : (nextCharacter != null ? nextCharacter.name : "Unknown");
+            Debug.Log($"[TeamLoader] Active character defeated and removed. Switched to survivor at index 0: {displayName}", this);
+        }
+        finally
+        {
+            isHandlingActiveDefeat = false;
+            activeDefeatRoutine = null;
+        }
+    }
+
+    private void ForgetDefeatedCharacterRuntime(CharacterObject defeatedCharacter)
+    {
+        if (defeatedCharacter == null)
         {
             return;
         }
 
-        runInventory.SetRunCharacterCurrentHP(defeatedCharacter, 0f);
+        deployedCharacterRuntimes.Remove(defeatedCharacter);
+        characterCombatRuntimeStates.Remove(defeatedCharacter);
+        ultimateWindowModifiers.Remove(defeatedCharacter);
+        defaultUnlockedPotentialNodes.Remove(defeatedCharacter);
     }
 
     private void SnapPlayerToGround()
@@ -675,7 +796,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     }
 
     /// <summary>
-    /// Full HP + revive for every deployed teammate. Used after boss clear during scene transition.
+    /// Full HP for every deployed teammate. Kept for Rest / explicit restore flows (not post-boss biome).
     /// </summary>
     public void HealAndReviveEntireTeam()
     {
@@ -1146,8 +1267,36 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         return state.currentHP > 0.01f;
     }
 
-    private int FindCharacterIndex(CharacterObject character) =>
-        (character == null || teamSnapshot == null) ? -1 : Array.IndexOf(teamSnapshot, character);
+    private int FindCharacterIndex(CharacterObject character)
+    {
+        if (character == null || teamSnapshot == null)
+        {
+            return -1;
+        }
+
+        int direct = Array.IndexOf(teamSnapshot, character);
+        if (direct >= 0)
+        {
+            return direct;
+        }
+
+        if (string.IsNullOrWhiteSpace(character.characterId))
+        {
+            return -1;
+        }
+
+        for (int i = 0; i < teamSnapshot.Length; i++)
+        {
+            CharacterObject slotted = teamSnapshot[i];
+            if (slotted != null
+                && string.Equals(slotted.characterId, character.characterId, StringComparison.Ordinal))
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
 
     private void NotifyTeamChanged()
     {

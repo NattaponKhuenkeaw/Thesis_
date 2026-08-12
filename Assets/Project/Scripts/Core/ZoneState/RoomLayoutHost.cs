@@ -122,9 +122,11 @@ namespace Project.Core.ZoneState
             ClearActiveLayout(restoreBakedContent: false);
             SetBakedSceneContentActive(false);
 
+            // Assign ActiveRoom before Instantiate so RoomWaveManager Awake/trigger
+            // resolution can read EncounterSO instead of latching an empty legacy wave list.
+            activeRoom = room;
             activeLayoutInstance = Instantiate(room.LayoutPrefab, layoutRoot);
             activeLayoutInstance.name = $"{room.LayoutPrefab.name}_Runtime";
-            activeRoom = room;
 
             Debug.Log($"[RoomLayoutHost] Mounted room '{room.RoomId}' from prefab '{room.LayoutPrefab.name}'.", this);
             return true;

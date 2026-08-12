@@ -300,18 +300,27 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
     }
 
     /// <summary>
-    /// Active character knockout: try a living teammate first. Only raise OnDied
-    /// (RunEnd / team wipe) when nobody left can continue the run.
+    /// Active character knockout: play death, remove from run team/backpack, then
+    /// recover onto a compacted survivor at index 0. Only raise OnDied (RunEnd /
+    /// team wipe) when nobody left can continue the run.
     /// </summary>
     private void HandleCharacterDefeated()
     {
         TeamLoader teamLoader = TeamLoader.Instance ?? UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
-        if (teamLoader != null && teamLoader.TrySwitchToNextLivingCharacterAfterActiveDefeat())
+        if (teamLoader != null && teamLoader.TryBeginActiveDefeatRecovery())
         {
-            // Shared body recovered onto another living character — do not end the run.
+            // Death anim + remove + switch runs asynchronously on TeamLoader.
             return;
         }
 
+        RaiseTeamWipeAfterDefeat();
+    }
+
+    /// <summary>
+    /// Terminal team-wipe path after the active character dies with no survivors.
+    /// </summary>
+    internal void RaiseTeamWipeAfterDefeat()
+    {
         OnDied?.Invoke();
 
         if (StateMachine != null && IsDead)

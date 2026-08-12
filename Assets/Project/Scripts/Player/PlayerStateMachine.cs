@@ -36,6 +36,7 @@ public class PlayerStateMachine : MonoBehaviour
     public PlayerHitstunState HitstunState { get; private set; }
     public PlayerDeadState DeadState { get; private set; }
     public PlayerIntroState IntroState { get; private set; }
+    public PlayerExitState ExitState { get; private set; }
 
     // =========================================================
     // Debug Configuration
@@ -841,6 +842,7 @@ public class PlayerStateMachine : MonoBehaviour
         HitstunState = new PlayerHitstunState(playerCharacter, this);
         DeadState = new PlayerDeadState(playerCharacter, this);
         IntroState = new PlayerIntroState(playerCharacter, this);
+        ExitState = new PlayerExitState(playerCharacter, this);
     }
 
     private PlayerState ResolveBasicAttackState()

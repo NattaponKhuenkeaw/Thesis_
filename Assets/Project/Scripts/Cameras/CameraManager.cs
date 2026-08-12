@@ -153,6 +153,11 @@ public class CameraManager : MonoBehaviour
     private CinemachineBlendDefinition _cachedBrainBlend;
     private Vector3 _cachedExploreDamping;
     private bool _isTemporarilySnappedToPlayer;
+    private bool _isTemporarilyFocused;
+    private Transform _cachedFocusExploreFollow;
+    private Transform _cachedFocusExploreLookAt;
+    private Transform _cachedFocusStaticFollow;
+    private Transform _cachedFocusStaticLookAt;
     private float _originalExploreSize = -1f;
     private float _originalCombatSize = -1f;
     private float _originalStaticSize = -1f;
@@ -670,6 +675,108 @@ public class CameraManager : MonoBehaviour
             SetExploreMode();
         }
 
+        NotifyPlayerWarp(Vector3.zero);
+    }
+
+    /// <summary>
+    /// Temporarily frames an authored Transform (Level-room display, etc.) above room cameras.
+    /// Pair with <see cref="EndTemporaryFocus"/>.
+    /// </summary>
+    public void BeginTemporaryFocus(Transform focusTarget, float blendSeconds = 0.35f)
+    {
+        if (focusTarget == null)
+        {
+            return;
+        }
+
+        EndTemporaryPlayerSnap();
+
+        if (!_isTemporarilyFocused)
+        {
+            if (_exploreCam != null)
+            {
+                _cachedFocusExploreFollow = _exploreCam.Follow;
+                _cachedFocusExploreLookAt = _exploreCam.LookAt;
+            }
+
+            if (_staticCam != null)
+            {
+                _cachedFocusStaticFollow = _staticCam.Follow;
+                _cachedFocusStaticLookAt = _staticCam.LookAt;
+            }
+
+            if (_brain != null)
+            {
+                _cachedBrainBlend = _brain.DefaultBlend;
+                _hasCachedBrainBlend = true;
+            }
+        }
+
+        _isTemporarilyFocused = true;
+
+        if (_brain != null)
+        {
+            float blend = Mathf.Max(0f, blendSeconds);
+            _brain.DefaultBlend = blend <= 0f
+                ? new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.Cut, 0f)
+                : new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.EaseInOut, blend);
+        }
+
+        if (_exploreCam != null)
+        {
+            _exploreCam.Follow = focusTarget;
+            _exploreCam.LookAt = focusTarget;
+            _exploreCam.Priority = _activePriority + 100;
+        }
+
+        if (_combatCam != null)
+        {
+            _combatCam.Priority = _inactivePriority;
+        }
+
+        if (_staticCam != null)
+        {
+            _staticCam.Follow = focusTarget;
+            _staticCam.LookAt = focusTarget;
+            _staticCam.Priority = _inactivePriority;
+        }
+
+        if (_ultimateCam != null)
+        {
+            _ultimateCam.Priority = _inactivePriority;
+        }
+
+        NotifyPlayerWarp(Vector3.zero);
+    }
+
+    public void EndTemporaryFocus()
+    {
+        if (!_isTemporarilyFocused)
+        {
+            return;
+        }
+
+        _isTemporarilyFocused = false;
+
+        if (_exploreCam != null)
+        {
+            _exploreCam.Follow = _cachedFocusExploreFollow != null ? _cachedFocusExploreFollow : _playerTransform;
+            _exploreCam.LookAt = _cachedFocusExploreLookAt != null ? _cachedFocusExploreLookAt : _playerTransform;
+        }
+
+        if (_staticCam != null)
+        {
+            _staticCam.Follow = _cachedFocusStaticFollow;
+            _staticCam.LookAt = _cachedFocusStaticLookAt;
+        }
+
+        if (_brain != null && _hasCachedBrainBlend)
+        {
+            _brain.DefaultBlend = _cachedBrainBlend;
+        }
+
+        RoomData currentRoom = _zoneStateProvider != null ? _zoneStateProvider.CurrentRoom : null;
+        UpdateCameraForRoom(currentRoom);
         NotifyPlayerWarp(Vector3.zero);
     }
 

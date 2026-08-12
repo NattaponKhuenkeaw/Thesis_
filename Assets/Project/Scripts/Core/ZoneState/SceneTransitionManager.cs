@@ -17,6 +17,7 @@ namespace Project.Core.ZoneState
         private const string ZoneStateProviderResourcePath = "CombatSO/ZoneStateProvider";
         private const string MapDataResourcePath = "MapSO/Test_MapSO";
         private const float MaxIntroWaitSeconds = 10f;
+        private const float MaxExitWaitSeconds = 6f;
 
         public static SceneTransitionManager Instance { get; private set; }
 
@@ -39,7 +40,6 @@ namespace Project.Core.ZoneState
         private bool isTransitioning = false;
         private List<Canvas> disabledCanvases = new List<Canvas>();
         private SceneBoundaryController activeBoundaryController;
-        private bool pendingTeamHealOnTransition;
 
         public bool IsCurrentRoomExitAvailable
         {
@@ -117,7 +117,7 @@ namespace Project.Core.ZoneState
         /// </summary>
         public void TransitionToScene(string sceneName, string entranceId)
         {
-            BeginTransition(ResolveRoom(sceneName), sceneName, entranceId);
+            TryTransitionToScene(sceneName, entranceId);
         }
 
         public void TransitionToRoom(string roomId)
@@ -127,24 +127,28 @@ namespace Project.Core.ZoneState
 
         public void TransitionToRoom(string roomId, string entranceId)
         {
-            BeginTransition(ResolveRoom(roomId), roomId, entranceId);
+            TryTransitionToRoom(roomId, entranceId);
+        }
+
+        public bool TryTransitionToRoom(string roomId, string entranceId = "")
+        {
+            return TryBeginTransition(ResolveRoom(roomId), roomId, entranceId);
+        }
+
+        public bool TryTransitionToScene(string sceneName, string entranceId = "")
+        {
+            return TryBeginTransition(ResolveRoom(sceneName), sceneName, entranceId);
         }
 
         /// <summary>
-        /// Queues a full-team heal/revive for the next transition load.
-        /// Used by boss death flow so restore never happens inside the boss arena.
+        /// Starts a room transition when idle. Returns false if a transition is already running.
         /// </summary>
-        public void RequestTeamHealOnNextTransition()
-        {
-            pendingTeamHealOnTransition = true;
-        }
-
-        private void BeginTransition(RoomData room, string fallbackKey, string entranceId)
+        public bool TryBeginTransition(RoomData room, string fallbackKey, string entranceId)
         {
             if (isTransitioning)
             {
                 Debug.LogWarning("[SceneTransitionManager] Transition already in progress. Ignoring request.");
-                return;
+                return false;
             }
 
             string targetEntrance = string.IsNullOrEmpty(entranceId) ? "Default" : entranceId;
@@ -164,6 +168,7 @@ namespace Project.Core.ZoneState
             bool useLayoutSwap = CanSwapLayout(room);
             Debug.Log($"[SceneTransitionManager] Transition requested: {SceneManager.GetActiveScene().name} -> '{loadKey}' (room={(room != null ? room.RoomId : "missing")}, layoutSwap={useLayoutSwap}), entrance='{targetEntrance}'.");
             StartCoroutine(TransitionRoutine(loadKey, room, targetEntrance, useLayoutSwap));
+            return true;
         }
 
         /// <summary>
@@ -194,10 +199,26 @@ namespace Project.Core.ZoneState
 
         private static bool CanSwapLayout(RoomData room)
         {
-            return room != null
-                && room.UsesLayoutSwap
-                && RoomLayoutHost.Instance != null
-                && RoomLayoutHost.Instance.isActiveAndEnabled;
+            if (room == null
+                || !room.UsesLayoutSwap
+                || RoomLayoutHost.Instance == null
+                || !RoomLayoutHost.Instance.isActiveAndEnabled)
+            {
+                return false;
+            }
+
+            // Only swap in-place when already inside the room's shell scene.
+            // Level/Shop use dedicated scenes and must full-load even if a host exists.
+            string targetScene = room.SceneName;
+            if (string.IsNullOrWhiteSpace(targetScene))
+            {
+                return true;
+            }
+
+            return string.Equals(
+                SceneManager.GetActiveScene().name,
+                targetScene,
+                System.StringComparison.Ordinal);
         }
 
         private IEnumerator TransitionRoutine(string sceneName, RoomData targetRoom, string entranceId, bool useLayoutSwap)
@@ -206,12 +227,15 @@ namespace Project.Core.ZoneState
             Time.timeScale = 1f;
             // Mutable: may become true after post-load layout mount (Lobby -> Boss).
             bool layoutActive = useLayoutSwap;
+            bool reachedDestination = false;
 
             Project.UI.InputLockManager.Lock();
             Debug.Log($"[SceneTransitionManager] Transition started. Target='{sceneName}', Entrance='{entranceId}', LayoutSwap={useLayoutSwap}.");
 
             try
             {
+                EnsureFadeOverlay();
+
                 if (transitionOutSFX != null && GameAudioManager.Instance != null)
                 {
                     GameAudioManager.Instance.PlayHitSFX(transitionOutSFX);
@@ -222,7 +246,20 @@ namespace Project.Core.ZoneState
                 disabledCanvases.Clear();
                 DisableAllSceneCanvases();
 
+                // Walk-out cinematic before fade so Shop/safe-room leaves do not hard-cut.
+                yield return StartCoroutine(PlayExitWalkRoutine());
+                if (WasExitWalkAbortedByDeath())
+                {
+                    Debug.LogWarning(
+                        "[SceneTransitionManager] Exit walk aborted because the player died mid-leave. Cancelling transition.",
+                        this);
+                    ActiveRouteOffer.Clear();
+                    yield break;
+                }
+
+                // Every room change (scene load OR layout swap) fades to full black first.
                 yield return StartCoroutine(FadeOverlayRoutine(0f, 1f));
+                SetFadeAlpha(1f);
 
                 if (useLayoutSwap)
                 {
@@ -262,6 +299,10 @@ namespace Project.Core.ZoneState
                     yield return null;
                     Debug.Log($"[SceneTransitionManager] Scene load complete. ActiveScene='{SceneManager.GetActiveScene().name}'. Reacquiring transition input lock.");
 
+                    // Scene load can destroy overlay references if hierarchy changed; keep fade black.
+                    EnsureFadeOverlay();
+                    SetFadeAlpha(1f);
+
                     Project.UI.InputLockManager.ResetLocks();
                     Project.UI.InputLockManager.Lock();
 
@@ -298,14 +339,9 @@ namespace Project.Core.ZoneState
                     Debug.LogWarning("[SceneTransitionManager] ZoneStateProvider is missing; target room could not be broadcast.");
                 }
 
-                // Post-boss restore: apply after the next room exists so the player arrives full HP.
-                if (pendingTeamHealOnTransition)
-                {
-                    pendingTeamHealOnTransition = false;
-                    ApplyPendingTeamHeal();
-                }
-
                 DisableAllSceneCanvases();
+                EnsureFadeOverlay();
+                SetFadeAlpha(1f);
 
                 PlayerCharacter player = Object.FindFirstObjectByType<PlayerCharacter>();
                 EntrancePoint targetEntrance = FindEntrancePoint(entranceId);
@@ -331,64 +367,76 @@ namespace Project.Core.ZoneState
                     GameAudioManager.Instance.PlayHitSFX(transitionInSFX);
                 }
 
-                StartCoroutine(FadeOverlayRoutine(1f, 0f));
-
-                if (player != null && targetEntrance != null)
+                // Start intro under black, then fade in so every room enter reveals with a fade.
+                if (player != null && targetEntrance != null && player.StateMachine != null && player.StateMachine.IntroState != null)
                 {
-                    Debug.Log($"[SceneTransitionManager] Preparing intro. StateMachine={(player.StateMachine != null ? "present" : "missing")}.");
-                    if (player.StateMachine != null)
-                    {
-                        Debug.Log($"[SceneTransitionManager] IntroState={(player.StateMachine.IntroState != null ? "present" : "missing")}.");
-                        if (player.StateMachine.IntroState != null)
-                        {
-                            player.StateMachine.IntroState.TargetEntrance = targetEntrance;
-                            player.StateMachine.ChangeState(player.StateMachine.IntroState);
-                            Debug.Log($"[SceneTransitionManager] Intro started. CurrentState={player.StateMachine.CurrentStateId}, TargetStop={targetEntrance.StopPosition}.");
-                        }
-                        else
-                        {
-                            Debug.LogWarning("[SceneTransitionManager] Player StateMachine has no IntroState; skipping transition intro.");
-                        }
-
-                        float introStartedAt = Time.unscaledTime;
-                        while (player != null
-                            && player.StateMachine != null
-                            && player.StateMachine.CurrentStateId == PlayerStateId.Intro)
-                        {
-                            if (Time.unscaledTime - introStartedAt > MaxIntroWaitSeconds)
-                            {
-                                Debug.LogWarning($"[SceneTransitionManager] IntroState did not finish within {MaxIntroWaitSeconds:F1}s. PlayerPosition={(player != null ? player.transform.position.ToString() : "missing")}. Forcing Idle so transition can release input and UI.");
-                                player.StateMachine.ChangeState(player.StateMachine.IdleState);
-                                break;
-                            }
-
-                            yield return null;
-                        }
-
-                        if (player != null && player.StateMachine != null)
-                        {
-                            Debug.Log($"[SceneTransitionManager] Intro finished. CurrentState={player.StateMachine.CurrentStateId}.");
-                        }
-                    }
+                    player.StateMachine.IntroState.TargetEntrance = targetEntrance;
+                    player.StateMachine.ChangeState(player.StateMachine.IntroState);
+                    Debug.Log($"[SceneTransitionManager] Intro started under fade. CurrentState={player.StateMachine.CurrentStateId}, TargetStop={targetEntrance.StopPosition}.");
+                }
+                else if (player == null || targetEntrance == null)
+                {
+                    Debug.LogWarning("[SceneTransitionManager] Skipping intro because player or entrance lookup failed.");
                 }
                 else
                 {
-                    Debug.LogWarning("[SceneTransitionManager] Skipping intro because player or entrance lookup failed.");
+                    Debug.LogWarning("[SceneTransitionManager] Player StateMachine has no IntroState; skipping transition intro.");
+                }
+
+                yield return StartCoroutine(FadeOverlayRoutine(1f, 0f));
+                reachedDestination = true;
+
+                if (player != null && player.StateMachine != null)
+                {
+                    float introStartedAt = Time.unscaledTime;
+                    while (player != null
+                        && player.StateMachine != null
+                        && player.StateMachine.CurrentStateId == PlayerStateId.Intro)
+                    {
+                        if (Time.unscaledTime - introStartedAt > MaxIntroWaitSeconds)
+                        {
+                            Debug.LogWarning($"[SceneTransitionManager] IntroState did not finish within {MaxIntroWaitSeconds:F1}s. PlayerPosition={(player != null ? player.transform.position.ToString() : "missing")}. Forcing Idle so transition can release input and UI.");
+                            player.StateMachine.ChangeState(player.StateMachine.IdleState);
+                            break;
+                        }
+
+                        yield return null;
+                    }
+
+                    if (player != null && player.StateMachine != null)
+                    {
+                        Debug.Log($"[SceneTransitionManager] Intro finished. CurrentState={player.StateMachine.CurrentStateId}.");
+                    }
                 }
             }
             finally
             {
-                activeBoundaryController?.CompleteIntro();
+                // Always re-resolve: prior layout/scene controllers may be Unity fake-null
+                // after a load, and C# ?. does not treat destroyed UnityObjects as null.
+                activeBoundaryController = ResolveBoundaryControllerAfterTransition(layoutActive);
+                if (activeBoundaryController == null)
+                {
+                    activeBoundaryController = Object.FindFirstObjectByType<SceneBoundaryController>();
+                }
 
-                // Safe rooms (shop / reward) have no clear gate — unlock exit after intro.
+                if (activeBoundaryController != null)
+                {
+                    activeBoundaryController.CompleteIntro();
+                }
+
+                // Safe rooms (shop / level / reward) have no clear gate — unlock exit after intro.
                 if (targetRoom != null && targetRoom.ZoneMode == ZoneMode.SafeZone)
                 {
-                    if (activeBoundaryController == null)
+                    if (activeBoundaryController != null)
                     {
-                        activeBoundaryController = ResolveCurrentBoundaryController();
+                        activeBoundaryController.SetExitAvailable(true, playFeedback: false);
+                    }
+                    else
+                    {
+                        Debug.LogWarning(
+                            $"[SceneTransitionManager] SafeZone '{targetRoom.RoomId}' has no SceneBoundaryController; exit stayed locked.");
                     }
 
-                    activeBoundaryController?.SetExitAvailable(true, playFeedback: false);
                     RoomExitPresenter.PrepareOffersForSafeRoom(targetRoom.RoomId);
                     Debug.Log($"[SceneTransitionManager] SafeZone '{targetRoom.RoomId}' exit unlocked.");
                 }
@@ -397,7 +445,145 @@ namespace Project.Core.ZoneState
                 Project.UI.InputLockManager.Unlock();
                 Time.timeScale = 1f;
                 isTransitioning = false;
+                // Re-arm exits after abort softlocks (esp. Shop full-scene leave failures).
+                ResetAllExitTriggers();
+
+                // Abort after fade-out must not leave the screen stuck black.
+                if (!reachedDestination)
+                {
+                    EnsureFadeOverlay();
+                    StartCoroutine(FadeOverlayRoutine(GetFadeAlpha(), 0f));
+                }
+
                 Debug.Log("[SceneTransitionManager] Transition cleanup complete. Scene canvases restored, input unlocked, time scale reset.");
+            }
+        }
+
+        private static IEnumerator PlayExitWalkRoutine()
+        {
+            PlayerCharacter player = Object.FindFirstObjectByType<PlayerCharacter>();
+            if (player == null || player.StateMachine == null || player.StateMachine.ExitState == null)
+            {
+                yield break;
+            }
+
+            if (player.IsDead || player.StateMachine.CurrentStateId == PlayerStateId.Dead)
+            {
+                yield break;
+            }
+
+            TransitionTrigger exitTrigger = FindNearestExitTrigger(player.transform.position);
+            float facing = player.Movement != null ? player.Movement.FacingDirection : 1f;
+            Vector3 target;
+            if (exitTrigger != null)
+            {
+                target = exitTrigger.transform.position;
+                float towardExit = Mathf.Sign(target.x - player.transform.position.x);
+                if (Mathf.Abs(towardExit) < 0.01f)
+                {
+                    towardExit = facing;
+                }
+
+                // Always step a little past the exit so leave does not hard-cut while overlapping.
+                target.x += towardExit * 2.5f;
+            }
+            else
+            {
+                target = player.transform.position + new Vector3(facing * 2.5f, 0f, 0f);
+            }
+
+            PlayerExitState exitState = player.StateMachine.ExitState;
+            exitState.TargetPosition = target;
+            SceneBoundaryController boundary = Object.FindFirstObjectByType<SceneBoundaryController>();
+            boundary?.PrepareForExit(target);
+            player.StateMachine.ChangeState(exitState);
+            Debug.Log($"[SceneTransitionManager] Exit walk started toward {target}.");
+
+            float exitStartedAt = Time.unscaledTime;
+            while (player != null
+                && player.StateMachine != null
+                && player.StateMachine.CurrentStateId == PlayerStateId.Exit)
+            {
+                if (Time.unscaledTime - exitStartedAt > MaxExitWaitSeconds)
+                {
+                    Debug.LogWarning("[SceneTransitionManager] ExitState timed out; forcing exit complete before fade.");
+                    exitState.ForceComplete();
+                    break;
+                }
+
+                yield return null;
+            }
+
+            if (player == null || player.StateMachine == null)
+            {
+                yield break;
+            }
+
+            if (WasExitWalkAbortedByDeath(player))
+            {
+                yield break;
+            }
+
+            // Hitstun (or any non-Exit leave) interrupted the walk — snap-finish so fade does not
+            // carry a mid-hitstun / mid-dead body into the next room by accident.
+            if (!exitState.FinishedNormally
+                && player.StateMachine.CurrentStateId != PlayerStateId.Dead
+                && !player.IsDead)
+            {
+                Debug.LogWarning(
+                    "[SceneTransitionManager] Exit walk interrupted; forcing snap-complete before fade.",
+                    player);
+                exitState.ForceComplete();
+            }
+        }
+
+        private static bool WasExitWalkAbortedByDeath(PlayerCharacter player = null)
+        {
+            player ??= Object.FindFirstObjectByType<PlayerCharacter>();
+            if (player == null)
+            {
+                return true;
+            }
+
+            if (player.IsDead || player.StateMachine?.CurrentStateId == PlayerStateId.Dead)
+            {
+                return true;
+            }
+
+            TeamLoader teamLoader = TeamLoader.Instance ?? Object.FindFirstObjectByType<TeamLoader>();
+            return teamLoader != null && teamLoader.IsHandlingActiveDefeat;
+        }
+
+        private static TransitionTrigger FindNearestExitTrigger(Vector3 fromPosition)
+        {
+            TransitionTrigger[] triggers = Object.FindObjectsByType<TransitionTrigger>(FindObjectsSortMode.None);
+            TransitionTrigger nearest = null;
+            float bestSqr = float.MaxValue;
+            for (int i = 0; i < triggers.Length; i++)
+            {
+                TransitionTrigger trigger = triggers[i];
+                if (trigger == null)
+                {
+                    continue;
+                }
+
+                float sqr = (trigger.transform.position - fromPosition).sqrMagnitude;
+                if (sqr < bestSqr)
+                {
+                    bestSqr = sqr;
+                    nearest = trigger;
+                }
+            }
+
+            return nearest;
+        }
+
+        public static void ResetAllExitTriggers()
+        {
+            TransitionTrigger[] triggers = Object.FindObjectsByType<TransitionTrigger>(FindObjectsSortMode.None);
+            for (int i = 0; i < triggers.Length; i++)
+            {
+                triggers[i]?.ResetTrigger();
             }
         }
 
@@ -415,30 +601,31 @@ namespace Project.Core.ZoneState
             return Object.FindFirstObjectByType<SceneBoundaryController>();
         }
 
-        private static void ApplyPendingTeamHeal()
-        {
-            TeamLoader teamLoader = TeamLoader.Instance ?? Object.FindFirstObjectByType<TeamLoader>();
-            if (teamLoader == null)
-            {
-                Debug.LogWarning("[SceneTransitionManager] Pending team heal requested but TeamLoader is missing.");
-                return;
-            }
-
-            teamLoader.HealAndReviveEntireTeam();
-            Debug.Log("[SceneTransitionManager] Applied post-boss team heal/revive during transition load.");
-        }
-
         private IEnumerator FadeOverlayRoutine(float startAlpha, float targetAlpha)
         {
-            if (fadeImage == null) yield break;
+            EnsureFadeOverlay();
+            if (fadeImage == null)
+            {
+                yield break;
+            }
+
+            float duration = Mathf.Max(0f, fadeDuration);
+            Color color = fadeImage.color;
+            color.a = startAlpha;
+            fadeImage.color = color;
+
+            if (duration <= 0f)
+            {
+                color.a = targetAlpha;
+                fadeImage.color = color;
+                yield break;
+            }
 
             float elapsed = 0f;
-            Color color = fadeImage.color;
-
-            while (elapsed < fadeDuration)
+            while (elapsed < duration)
             {
-                elapsed += Time.deltaTime;
-                float progress = Mathf.Clamp01(elapsed / fadeDuration);
+                elapsed += Time.unscaledDeltaTime;
+                float progress = Mathf.Clamp01(elapsed / duration);
                 color.a = Mathf.Lerp(startAlpha, targetAlpha, progress);
                 fadeImage.color = color;
                 yield return null;
@@ -446,6 +633,44 @@ namespace Project.Core.ZoneState
 
             color.a = targetAlpha;
             fadeImage.color = color;
+        }
+
+        private void SetFadeAlpha(float alpha)
+        {
+            EnsureFadeOverlay();
+            if (fadeImage == null)
+            {
+                return;
+            }
+
+            Color color = fadeImage.color;
+            color.a = Mathf.Clamp01(alpha);
+            fadeImage.color = color;
+        }
+
+        private float GetFadeAlpha()
+        {
+            return fadeImage != null ? fadeImage.color.a : 0f;
+        }
+
+        private void EnsureFadeOverlay()
+        {
+            if (fadeImage != null && transitionCanvas != null)
+            {
+                if (!transitionCanvas.gameObject.activeSelf)
+                {
+                    transitionCanvas.gameObject.SetActive(true);
+                }
+
+                if (!transitionCanvas.enabled)
+                {
+                    transitionCanvas.enabled = true;
+                }
+
+                return;
+            }
+
+            CreateFadeOverlay();
         }
 
         private void DisableAllSceneCanvases()
@@ -506,6 +731,7 @@ namespace Project.Core.ZoneState
 
         private SceneBoundaryController ResolveCurrentBoundaryController()
         {
+            // Unity destroyed objects compare equal to null via overloaded ==.
             if (activeBoundaryController == null && RoomLayoutHost.Instance != null)
             {
                 activeBoundaryController = RoomLayoutHost.Instance.FindBoundaryController();
@@ -521,8 +747,15 @@ namespace Project.Core.ZoneState
 
         private void CreateFadeOverlay()
         {
+            if (transitionCanvas != null)
+            {
+                Destroy(transitionCanvas.gameObject);
+                transitionCanvas = null;
+                fadeImage = null;
+            }
+
             GameObject canvasObj = new GameObject("TransitionCanvas");
-            canvasObj.transform.SetParent(this.transform);
+            canvasObj.transform.SetParent(this.transform, false);
             transitionCanvas = canvasObj.AddComponent<Canvas>();
             transitionCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
             transitionCanvas.sortingOrder = 9999;
@@ -534,7 +767,7 @@ namespace Project.Core.ZoneState
             canvasObj.AddComponent<GraphicRaycaster>();
 
             GameObject imageObj = new GameObject("FadeOverlay");
-            imageObj.transform.SetParent(canvasObj.transform);
+            imageObj.transform.SetParent(canvasObj.transform, false);
             fadeImage = imageObj.AddComponent<Image>();
 
             fadeImage.color = new Color(0f, 0f, 0f, 0f);

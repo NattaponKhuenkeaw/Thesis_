@@ -1281,6 +1281,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9ba9828af59af34993ad53d8aef9874, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.TransitionTrigger
+  openRoomChoiceUi: 1
+  targetRoomId: 
   targetSceneName: combat_1
   targetEntranceId: Default
   debugColor: {r: 0.2, g: 0.8, b: 1, a: 0.4}
@@ -1494,9 +1496,10 @@ MonoBehaviour:
   runInventory: {fileID: 0}
   metaProgression: {fileID: 0}
   mapData: {fileID: 0}
+  zoneStateProvider: {fileID: 0}
   lobbySceneName: Test_Lobby
   firstDungeonSceneName: Test_Playground
-  firstDungeonEntranceId: Default
+  boundaryFadeDuration: 0.35
   minimumTeamMembers: 1
   requireAllTeamSlotsFilled: 0
 --- !u!223 &1845395691 stripped
@@ -1891,6 +1894,26 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6265637736664146838, guid: 35c30a4832336874f83c1d60b7c60b70, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6363781894412670994, guid: 35c30a4832336874f83c1d60b7c60b70, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6363781894412670994, guid: 35c30a4832336874f83c1d60b7c60b70, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6363781894412670994, guid: 35c30a4832336874f83c1d60b7c60b70, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6363781894412670994, guid: 35c30a4832336874f83c1d60b7c60b70, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6363781894412670994, guid: 35c30a4832336874f83c1d60b7c60b70, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}

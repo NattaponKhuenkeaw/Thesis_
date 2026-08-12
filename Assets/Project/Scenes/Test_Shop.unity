@@ -6529,7 +6529,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9ba9828af59af34993ad53d8aef9874, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.TransitionTrigger
-  targetSceneName: Test_Playground
+  openRoomChoiceUi: 1
+  targetRoomId: 
+  targetSceneName: 
   targetEntranceId: Default
   debugColor: {r: 0.2, g: 0.8, b: 1, a: 0.4}
 --- !u!21 &1571766231

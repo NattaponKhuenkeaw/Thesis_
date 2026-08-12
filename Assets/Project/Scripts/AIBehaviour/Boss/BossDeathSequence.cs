@@ -10,7 +10,7 @@ namespace Project.AIBehaviour.Boss
 {
     /// <summary>
     /// Orchestrates boss kill juice → hazard clear → energy orb reward → click-to-continue.
-    /// Team heal/revive is deferred to <see cref="SceneTransitionManager"/> (not in the boss arena).
+    /// Post-boss biome heal is intentionally omitted; Rest room owns team restore.
     /// </summary>
     public sealed class BossDeathSequence : MonoBehaviour
     {
@@ -24,7 +24,8 @@ namespace Project.AIBehaviour.Boss
 
         [Header("Energy Orb")]
         [SerializeField] private BossEnergyOrb energyOrbPrefab;
-        [SerializeField] private float orbBurstDuration = 0.28f;
+        [SerializeField] private float orbBurstDuration = 0.35f;
+        [SerializeField, Min(0f)] private float orbHoverDuration = 0.85f;
         [SerializeField] private float orbHomingDuration = 0.75f;
         [SerializeField] private float orbBurstDistance = 1.2f;
         [SerializeField] private float orbBurstHeight = 0.9f;
@@ -168,7 +169,7 @@ namespace Project.AIBehaviour.Boss
             bool orbDone = false;
             SpawnEnergyOrb(orbSpawn, () => orbDone = true);
 
-            float orbTimeout = orbBurstDuration + orbHomingDuration + 2f;
+            float orbTimeout = orbBurstDuration + orbHoverDuration + orbHomingDuration + 2f;
             float orbWaitStarted = Time.unscaledTime;
             while (!orbDone && Time.unscaledTime - orbWaitStarted < orbTimeout)
                 yield return null;
@@ -176,7 +177,7 @@ namespace Project.AIBehaviour.Boss
             // Ensure offers exist even if RoomWaveManager finished slightly later.
             EnsureNextRoomOffersPrepared();
 
-            // 3) Free movement + prompt. Heal is NOT applied here.
+            // 3) Free movement + prompt. No automatic team heal on biome change.
             BossDeathPromptUI.EnsureInstance().Show(continuePrompt);
             waitingForClick = true;
             sequenceRoutine = null;
@@ -236,7 +237,12 @@ namespace Project.AIBehaviour.Boss
                 orb = go.AddComponent<BossEnergyOrb>();
             }
 
-            orb.ConfigureTiming(orbBurstDuration, orbHomingDuration, orbBurstDistance, orbBurstHeight);
+            orb.ConfigureTiming(
+                orbBurstDuration,
+                orbHoverDuration,
+                orbHomingDuration,
+                orbBurstDistance,
+                orbBurstHeight);
             if (onAbsorbed != null)
                 orb.OnAbsorbed += onAbsorbed;
             orb.Launch(playerTransform, spawnPosition);
@@ -277,9 +283,9 @@ namespace Project.AIBehaviour.Boss
             }
 
             // Lobby is a run-boundary load, not a mid-run MapSO hop.
+            // Biome-start heal removed: Rest room is the intentional heal source.
             if (useRunBoundaryForLobby && IsLobbyDestination(roomId))
             {
-                ApplyTeamHealNow();
                 GameRunManager runManager = GameRunManager.Instance ?? FindFirstObjectByType<GameRunManager>();
                 if (runManager != null && runManager.ReturnToLobby())
                 {
@@ -301,8 +307,6 @@ namespace Project.AIBehaviour.Boss
                 return;
             }
 
-            // Heal/revive is applied during the load, not in this arena.
-            SceneTransitionManager.Instance.RequestTeamHealOnNextTransition();
             SceneTransitionManager.Instance.TransitionToRoom(roomId, entranceId);
         }
 
@@ -318,18 +322,6 @@ namespace Project.AIBehaviour.Boss
 
             return string.Equals(roomId.Trim(), lobbyName, System.StringComparison.OrdinalIgnoreCase)
                 || string.Equals(roomId.Trim(), "Lobby", System.StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static void ApplyTeamHealNow()
-        {
-            TeamLoader teamLoader = TeamLoader.Instance ?? FindFirstObjectByType<TeamLoader>();
-            if (teamLoader == null)
-            {
-                Debug.LogWarning("[BossDeathSequence] Team heal skipped; TeamLoader missing.");
-                return;
-            }
-
-            teamLoader.HealAndReviveEntireTeam();
         }
 
         private bool TryResolveNextRoom(out string roomId, out string entranceId)
@@ -364,6 +356,7 @@ namespace Project.AIBehaviour.Boss
             if (!pick.IsValid || string.IsNullOrWhiteSpace(pick.Room.RoomId))
                 return false;
 
+            ActiveRouteOffer.Set(pick);
             roomId = pick.Room.RoomId;
             if (string.IsNullOrWhiteSpace(entranceId))
                 entranceId = pick.Room.DefaultEntranceId;

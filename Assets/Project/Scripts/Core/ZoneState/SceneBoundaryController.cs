@@ -74,6 +74,22 @@ namespace Project.Core.ZoneState
             AlignEntranceWall(_lockedLeftWorld);
         }
 
+        /// <summary>
+        /// Briefly expands the exit-side playable edge so <see cref="PlayerExitState"/>
+        /// can walk a short distance past the trigger before fade-out.
+        /// </summary>
+        public void PrepareForExit(Vector3 exitTarget)
+        {
+            if (!Initialize())
+            {
+                return;
+            }
+
+            float exitRight = Mathf.Max(_currentRightWorld, exitTarget.x + _exitPadding);
+            ApplyHorizontalBounds(_currentLeftWorld, exitRight);
+            AlignExitWall(exitRight);
+        }
+
         public void SetExitAvailable(bool available, bool playFeedback = true)
         {
             if (!Initialize())

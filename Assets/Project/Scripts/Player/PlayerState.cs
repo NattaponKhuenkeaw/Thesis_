@@ -23,6 +23,7 @@ public enum PlayerStateId
     Hitstun,
     Dead,
     Intro,
+    Exit,
     Landing
 }
 

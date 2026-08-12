@@ -31,6 +31,43 @@ public class EnemyController : MonoBehaviour
     public float damageRes = 0f;
     public bool isEliteOrBoss = false;
 
+    /// <summary>
+    /// Scales basic combat stats (maxHP / attackDamage / defense) and syncs currentHP to the new max.
+    /// Used by biome difficulty curve after spawn.
+    /// </summary>
+    public void ApplyBasicStatMultiplier(float multiplier)
+    {
+        if (multiplier <= 0f || Mathf.Approximately(multiplier, 1f))
+        {
+            return;
+        }
+
+        maxHP *= multiplier;
+        attackDamage *= multiplier;
+        defense *= multiplier;
+        currentHP = maxHP;
+        NotifyHealthPresentationRefreshed();
+    }
+
+    /// <summary>
+    /// Refresh world/boss HP UI after maxHP changes outside the normal damage path (e.g. biome scale).
+    /// </summary>
+    public void NotifyHealthPresentationRefreshed()
+    {
+        if (worldUI == null)
+        {
+            worldUI = GetComponentInChildren<EnemyWorldUI>(true);
+        }
+
+        worldUI?.RefreshHealthDisplay();
+
+        Project.UI.BossHealthHUD bossHud = Project.UI.BossHealthHUD.Instance;
+        if (bossHud != null)
+        {
+            bossHud.RefreshIfBound(this);
+        }
+    }
+
     [Header("Super Armor (Trash)")]
     [Tooltip("If true, this enemy starts in orange Super Armor (BBEE trash wall).")]
     [SerializeField] private bool startArmored = false;

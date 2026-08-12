@@ -54,7 +54,7 @@ namespace Project.Core.ZoneState
         }
 
         /// <summary>
-        /// Prepares leave-offers for SafeZone rooms without advancing the shop clear counter.
+        /// Prepares leave-offers for SafeZone rooms without advancing shop/level cadence.
         /// </summary>
         public static void PrepareOffersForSafeRoom(string excludeRoomId = null)
         {
@@ -68,7 +68,7 @@ namespace Project.Core.ZoneState
                 return;
             }
 
-            IReadOnlyList<RoomChoiceOffer> offers = director.GenerateOffers(excludeRoomId, includeShop: false);
+            IReadOnlyList<RoomChoiceOffer> offers = director.GenerateLeaveOffersFromSafeRoom(excludeRoomId);
             if (offers == null || offers.Count == 0)
             {
                 Debug.LogWarning("[RoomExitPresenter] No leave offers generated for safe room.");
@@ -94,7 +94,8 @@ namespace Project.Core.ZoneState
             if (offers == null || offers.Count == 0)
             {
                 // Fallback if exit was reached without a prior clear-prep (e.g. debug).
-                offers = director.GenerateOffersAfterClear();
+                // Prefer leave-safe regeneration over GenerateOffersAfterClear (which mutates clear cadence).
+                offers = director.GenerateLeaveOffersFromSafeRoom(excludeRoomId: null);
             }
 
             if (offers == null || offers.Count == 0)
@@ -115,7 +116,7 @@ namespace Project.Core.ZoneState
             }
 
             ui.Show(offers);
-            return true;
+            return ui.IsShowing;
         }
 
         private static void EnsureDirector()

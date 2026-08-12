@@ -52,7 +52,26 @@ namespace Project.Core.ZoneState
             exitGate = gate;
         }
 
+        /// <summary>
+        /// Allows the player to re-enter the exit after a failed leave attempt.
+        /// </summary>
+        public void ResetTrigger()
+        {
+            hasTriggered = false;
+        }
+
         private void OnTriggerEnter2D(Collider2D other)
+        {
+            TryHandlePlayerExit(other);
+        }
+
+        private void OnTriggerStay2D(Collider2D other)
+        {
+            // Needed after ResetTrigger while the player is still overlapping the exit.
+            TryHandlePlayerExit(other);
+        }
+
+        private void TryHandlePlayerExit(Collider2D other)
         {
             if (hasTriggered) return;
 
@@ -87,17 +106,25 @@ namespace Project.Core.ZoneState
                 return;
             }
 
-            hasTriggered = true;
-
+            bool started;
             if (!string.IsNullOrWhiteSpace(targetRoomId))
             {
                 Debug.Log($"[TransitionTrigger] Player entered exit portal. Transitioning to room '{targetRoomId}'");
-                SceneTransitionManager.Instance.TransitionToRoom(targetRoomId, targetEntranceId);
+                started = SceneTransitionManager.Instance.TryTransitionToRoom(targetRoomId, targetEntranceId);
+            }
+            else
+            {
+                Debug.Log($"[TransitionTrigger] Player entered exit portal. Transitioning to '{targetSceneName}'");
+                started = SceneTransitionManager.Instance.TryTransitionToScene(targetSceneName, targetEntranceId);
+            }
+
+            if (!started)
+            {
+                Debug.LogWarning("[TransitionTrigger] Transition did not start; exit trigger left armed.", this);
                 return;
             }
 
-            Debug.Log($"[TransitionTrigger] Player entered exit portal. Transitioning to '{targetSceneName}'");
-            SceneTransitionManager.Instance.TransitionToScene(targetSceneName, targetEntranceId);
+            hasTriggered = true;
         }
 
         private void OnDrawGizmos()

@@ -155,6 +155,13 @@ namespace Project.UI
                 CreateChoiceCard(row.transform, offers[i], i);
             }
 
+            if (choiceButtons.Count == 0)
+            {
+                Debug.LogWarning("[RoomChoiceUI] Offers were present but none were valid; aborting show.", this);
+                Hide();
+                return;
+            }
+
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
             Debug.Log($"[RoomChoiceUI] Showing {choiceButtons.Count} room choices.", this);
@@ -237,24 +244,50 @@ namespace Project.UI
             nameLabel.alignment = TextAlignmentOptions.Center;
             nameLabel.color = Color.white;
 
-            string zoneText = room.ZoneMode == ZoneMode.SafeZone ? "Safe Zone" : "Combat Zone";
-            TextMeshProUGUI zoneLabel = CreateText("Zone", card.transform, zoneText, 16f, FontStyles.Normal);
-            zoneLabel.alignment = TextAlignmentOptions.Center;
-            zoneLabel.color = new Color(0.75f, 0.8f, 0.86f, 1f);
+            if (offer.ShowsDifficulty)
+            {
+                Color diffColor = ResolveDifficultyColor(offer.Difficulty);
+                TextMeshProUGUI diffLabel = CreateText(
+                    "Difficulty",
+                    card.transform,
+                    offer.Difficulty.ToString().ToUpperInvariant(),
+                    18f,
+                    FontStyles.Bold);
+                diffLabel.alignment = TextAlignmentOptions.Center;
+                diffLabel.color = diffColor;
+            }
+
+            if (!string.IsNullOrWhiteSpace(offer.RewardLabel))
+            {
+                TextMeshProUGUI rewardLabel = CreateText(
+                    "Reward",
+                    card.transform,
+                    offer.RewardLabel,
+                    16f,
+                    FontStyles.Normal);
+                rewardLabel.alignment = TextAlignmentOptions.Center;
+                rewardLabel.color = new Color(0.85f, 0.9f, 0.7f, 1f);
+            }
+            else
+            {
+                string zoneText = room.ZoneMode == ZoneMode.SafeZone ? "Safe Zone" : "Combat Zone";
+                TextMeshProUGUI zoneLabel = CreateText("Zone", card.transform, zoneText, 16f, FontStyles.Normal);
+                zoneLabel.alignment = TextAlignmentOptions.Center;
+                zoneLabel.color = new Color(0.75f, 0.8f, 0.86f, 1f);
+            }
 
             TextMeshProUGUI hint = CreateText("Hint", card.transform, "Click to enter", 15f, FontStyles.Italic);
             hint.alignment = TextAlignmentOptions.Center;
             hint.color = new Color(accent.r, accent.g, accent.b, 0.95f);
 
-            string roomId = offer.RoomId;
-            string entranceId = room.DefaultEntranceId;
-            button.onClick.AddListener(() => HandleChoiceClicked(roomId, entranceId, button));
+            RoomChoiceOffer captured = offer;
+            button.onClick.AddListener(() => HandleChoiceClicked(captured, button));
             choiceButtons.Add(button);
         }
 
-        private void HandleChoiceClicked(string roomId, string entranceId, Button source)
+        private void HandleChoiceClicked(RoomChoiceOffer offer, Button source)
         {
-            if (choiceCommitted || string.IsNullOrWhiteSpace(roomId))
+            if (choiceCommitted || !offer.IsValid)
             {
                 return;
             }
@@ -274,16 +307,45 @@ namespace Project.UI
                 source.interactable = false;
             }
 
+            string roomId = offer.RoomId;
+            string entranceId = offer.Room.DefaultEntranceId;
+            ActiveRouteOffer.Set(offer);
+
             Debug.Log($"[RoomChoiceUI] Selected room '{roomId}'.", this);
             Hide();
 
             if (SceneTransitionManager.Instance == null)
             {
                 Debug.LogError("[RoomChoiceUI] SceneTransitionManager.Instance is missing.", this);
+                ActiveRouteOffer.Clear();
+                choiceCommitted = false;
+                ResetExitTriggers();
                 return;
             }
 
-            SceneTransitionManager.Instance.TransitionToRoom(roomId, entranceId);
+            if (!SceneTransitionManager.Instance.TryTransitionToRoom(roomId, entranceId))
+            {
+                Debug.LogWarning($"[RoomChoiceUI] Transition to '{roomId}' was rejected; re-arming exit triggers.", this);
+                ActiveRouteOffer.Clear();
+                choiceCommitted = false;
+                ResetExitTriggers();
+            }
+        }
+
+        private static void ResetExitTriggers()
+        {
+            SceneTransitionManager.ResetAllExitTriggers();
+        }
+
+        private static Color ResolveDifficultyColor(RouteDifficulty difficulty)
+        {
+            switch (difficulty)
+            {
+                case RouteDifficulty.Easy: return new Color(0.35f, 0.85f, 0.45f, 1f);
+                case RouteDifficulty.Medium: return new Color(0.95f, 0.86f, 0.28f, 1f);
+                case RouteDifficulty.Hard: return new Color(1f, 0.55f, 0.2f, 1f);
+                default: return Color.white;
+            }
         }
 
         private static Color ResolveKindColor(RoomKind kind)
@@ -294,6 +356,7 @@ namespace Project.UI
                 case RoomKind.Shop: return new Color(0.3f, 0.78f, 0.98f, 1f);
                 case RoomKind.Reward: return new Color(0.45f, 0.9f, 0.4f, 1f);
                 case RoomKind.Boss: return new Color(0.78f, 0.28f, 0.95f, 1f);
+                case RoomKind.Level: return new Color(0.98f, 0.86f, 0.28f, 1f);
                 default: return new Color(0.92f, 0.32f, 0.32f, 1f);
             }
         }

@@ -100,6 +100,17 @@ namespace Project.UI
             SetVisible(boss.IsAlive);
         }
 
+        public void RefreshIfBound(EnemyController boss)
+        {
+            if (boss == null || boundBoss != boss)
+            {
+                return;
+            }
+
+            UpdateHealthBar(immediateLerp: true);
+            SetVisible(boss.IsAlive);
+        }
+
         public void Unbind(EnemyController boss)
         {
             if (boss == null || boundBoss != boss)

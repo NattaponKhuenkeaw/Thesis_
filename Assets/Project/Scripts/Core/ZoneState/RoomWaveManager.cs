@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using Project.Core.RunEnd;
+using Project.ShopSystem;
 
 namespace Project.Core.ZoneState
 {
     /// <summary>
     /// Starts a combat encounter from a trigger, spawns configured enemy waves,
     /// and unlocks the room exit after the final wave is defeated.
-    /// Prefers <see cref="RoomData.Encounter"/> when present; otherwise uses Inspector waves.
+    /// Prefers <see cref="ActiveRouteOffer"/> generated encounter, then
+    /// <see cref="RoomData.Encounter"/>, then Inspector waves.
     /// </summary>
     [RequireComponent(typeof(Collider2D))]
     public class RoomWaveManager : MonoBehaviour
@@ -81,6 +83,17 @@ namespace Project.Core.ZoneState
 
         private void OnTriggerEnter2D(Collider2D other)
         {
+            TryStartFromPlayerTrigger(other);
+        }
+
+        private void OnTriggerStay2D(Collider2D other)
+        {
+            // Covers teleport / remount cases where Enter was missed while overlapping.
+            TryStartFromPlayerTrigger(other);
+        }
+
+        private void TryStartFromPlayerTrigger(Collider2D other)
+        {
             if ((startOnlyOnce && hasStarted) || !IsPlayer(other))
             {
                 return;
@@ -96,10 +109,21 @@ namespace Project.Core.ZoneState
                 return;
             }
 
-            hasStarted = true;
             spawnedAnyEnemy = false;
             spawnedBossEnemy = false;
             ResolveEncounterSource();
+
+            if (runtimeWaves.Count == 0)
+            {
+                // Do not latch hasStarted / auto-clear — empty resolve is usually a race
+                // (ActiveRoom not ready) or missing Encounter data, not a legit clear.
+                Debug.LogError(
+                    "[RoomWaveManager] StartEncounter resolved zero waves. Leaving encounter unarmed so a later valid start can retry.",
+                    this);
+                return;
+            }
+
+            hasStarted = true;
 
             if (waveRoutine != null)
             {
@@ -139,6 +163,13 @@ namespace Project.Core.ZoneState
         {
             runtimeWaves.Clear();
             runtimeDelayBetweenWaves = delayBetweenWaves;
+
+            GeneratedEncounter generated = ActiveRouteOffer.GetEncounterForActiveRoom();
+            if (generated != null && generated.HasWaves)
+            {
+                ApplyGeneratedEncounter(generated);
+                return;
+            }
 
             EncounterSO encounter = ResolveActiveEncounter();
             if (encounter != null && encounter.Waves != null && encounter.Waves.Count > 0)
@@ -209,8 +240,81 @@ namespace Project.Core.ZoneState
             }
         }
 
+        private void ApplyGeneratedEncounter(GeneratedEncounter generated)
+        {
+            EnsureSpawnSlots();
+            runtimeDelayBetweenWaves = generated.DelayBetweenWaves;
+
+            for (int w = 0; w < generated.Waves.Count; w++)
+            {
+                GeneratedEncounter.Wave sourceWave = generated.Waves[w];
+                Wave runtimeWave = new Wave
+                {
+                    name = sourceWave != null && !string.IsNullOrWhiteSpace(sourceWave.Name)
+                        ? sourceWave.Name
+                        : $"Wave {w + 1}",
+                    enemies = new List<SpawnEntry>()
+                };
+
+                if (sourceWave?.Enemies == null)
+                {
+                    runtimeWaves.Add(runtimeWave);
+                    continue;
+                }
+
+                for (int e = 0; e < sourceWave.Enemies.Count; e++)
+                {
+                    GeneratedEncounter.SpawnEntry entry = sourceWave.Enemies[e];
+                    if (entry == null || entry.EnemyPrefab == null)
+                    {
+                        continue;
+                    }
+
+                    if (spawnSlots == null || spawnSlots.Length == 0)
+                    {
+                        Debug.LogWarning(
+                            $"[RoomWaveManager] Generated encounter wave {w + 1} entry '{entry.EnemyPrefab.name}' skipped; no spawn slots.",
+                            this);
+                        continue;
+                    }
+
+                    int slotIndex = entry.SpawnSlotIndex;
+                    if (slotIndex < 0 || slotIndex >= spawnSlots.Length || spawnSlots[slotIndex] == null)
+                    {
+                        // Remap out-of-range / null slots instead of dropping the enemy.
+                        slotIndex = e % spawnSlots.Length;
+                        if (spawnSlots[slotIndex] == null)
+                        {
+                            Debug.LogWarning(
+                                $"[RoomWaveManager] Generated encounter wave {w + 1} entry '{entry.EnemyPrefab.name}' has no valid spawn slot.",
+                                this);
+                            continue;
+                        }
+
+                        Debug.LogWarning(
+                            $"[RoomWaveManager] Remapped spawnSlotIndex {entry.SpawnSlotIndex} -> {slotIndex} for '{entry.EnemyPrefab.name}'.",
+                            this);
+                    }
+
+                    runtimeWave.enemies.Add(new SpawnEntry
+                    {
+                        enemyPrefab = entry.EnemyPrefab,
+                        spawnPoint = spawnSlots[slotIndex]
+                    });
+                }
+
+                // Never latch empty waves — that auto-clears rooms and grants rewards.
+                if (runtimeWave.enemies.Count > 0)
+                {
+                    runtimeWaves.Add(runtimeWave);
+                }
+            }
+        }
+
         private static EncounterSO ResolveActiveEncounter()
         {
+            // Authored RoomData.Encounter remains a fallback (boss / debug).
+            // Generated combat content prefers ActiveRouteOffer.
             RoomData room = RoomLayoutHost.Instance != null ? RoomLayoutHost.Instance.ActiveRoom : null;
             return room != null ? room.Encounter : null;
         }
@@ -323,6 +427,7 @@ namespace Project.Core.ZoneState
 
                 enemy.OnDied -= HandleEnemyDied;
                 enemy.OnDied += HandleEnemyDied;
+                RunProgressionManager.ApplyBiomeDifficultyToEnemy(enemy);
                 activeEnemies.Add(enemy);
                 spawnedAnyEnemy = true;
 
@@ -379,10 +484,18 @@ namespace Project.Core.ZoneState
             }
 
             roomCleared = true;
-            if (spawnedAnyEnemy)
+            if (!spawnedAnyEnemy)
             {
-                NotifyRunEndRoomCleared();
+                Debug.LogWarning(
+                    "[RoomWaveManager] CompleteRoom called with no spawned enemies; skipping reward/exit unlock to avoid free clears.",
+                    this);
+                hasStarted = false;
+                roomCleared = false;
+                return;
             }
+
+            NotifyRunEndRoomCleared();
+            TryGrantActiveRouteReward();
 
             bool bossFlow = useBossDeathFlow || spawnedBossEnemy || IsCurrentRoomBoss();
             if (bossFlow)
@@ -396,6 +509,46 @@ namespace Project.Core.ZoneState
 
             RoomExitPresenter.RevealExits(portalsRoot, unlockSceneExitOnClear);
             onRoomCleared?.Invoke();
+        }
+
+        private void TryGrantActiveRouteReward()
+        {
+            RoomData room = RoomLayoutHost.Instance != null ? RoomLayoutHost.Instance.ActiveRoom : null;
+            string roomId = room != null ? room.RoomId : null;
+            if (!ActiveRouteOffer.TryGetForRoom(roomId, out RoomChoiceOffer offer) || offer.Reward == null)
+            {
+                return;
+            }
+
+            PlayerRunInventory inventory = TeamLoader.Instance != null
+                ? TeamLoader.Instance.RunInventory
+                : null;
+            if (inventory == null)
+            {
+                inventory = Resources.Load<PlayerRunInventory>("InventorySO/PlayerRunInventory");
+            }
+
+            if (inventory == null)
+            {
+                Debug.LogWarning("[RoomWaveManager] Could not grant route reward; PlayerRunInventory missing.", this);
+                ActiveRouteOffer.Clear();
+                return;
+            }
+
+            if (offer.Reward.Coins > 0)
+            {
+                inventory.AddCurrency(offer.Reward.Coins);
+            }
+
+            if (offer.Reward.GrantsArtifact && offer.Reward.Artifact != null)
+            {
+                inventory.TryAddItem(offer.Reward.Artifact);
+            }
+
+            Debug.Log(
+                $"[RoomWaveManager] Granted route reward for '{offer.RoomId}': {offer.Reward.BuildLabel()}.",
+                this);
+            ActiveRouteOffer.Clear();
         }
 
         private static bool IsCurrentRoomBoss()
