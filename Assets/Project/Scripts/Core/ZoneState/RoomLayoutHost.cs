@@ -120,6 +120,7 @@ namespace Project.Core.ZoneState
 
             CaptureDefaultBakedContentIfEmpty();
             ClearActiveLayout(restoreBakedContent: false);
+            DespawnOrphanCombatEnemies();
             SetBakedSceneContentActive(false);
 
             // Assign ActiveRoom before Instantiate so RoomWaveManager Awake/trigger
@@ -272,6 +273,34 @@ namespace Project.Core.ZoneState
             if (bakedSceneContent.Length > 0)
             {
                 Debug.Log($"[RoomLayoutHost] Captured {bakedSceneContent.Length} baked scene content object(s) to hide during layout mounts.", this);
+            }
+        }
+
+        /// <summary>
+        /// Combat spawns used to live at scene root. Layout swap destroyed the wave manager
+        /// but left trash enemies behind into the next room (including Boss).
+        /// </summary>
+        private static void DespawnOrphanCombatEnemies()
+        {
+            EnemyController[] enemies = Object.FindObjectsByType<EnemyController>(
+                FindObjectsInactive.Exclude,
+                FindObjectsSortMode.None);
+            int destroyed = 0;
+            for (int i = 0; i < enemies.Length; i++)
+            {
+                EnemyController enemy = enemies[i];
+                if (enemy == null)
+                {
+                    continue;
+                }
+
+                Destroy(enemy.gameObject);
+                destroyed++;
+            }
+
+            if (destroyed > 0)
+            {
+                Debug.Log($"[RoomLayoutHost] Despawned {destroyed} orphan combat enem(ies) before mounting next layout.");
             }
         }
     }

@@ -78,7 +78,20 @@ namespace Project.Core.ZoneState
 
         private void OnDisable()
         {
+            if (waveRoutine != null)
+            {
+                StopCoroutine(waveRoutine);
+                waveRoutine = null;
+            }
+
             UnsubscribeActiveEnemies();
+            DestroyTrackedEnemies();
+        }
+
+        private void OnDestroy()
+        {
+            UnsubscribeActiveEnemies();
+            DestroyTrackedEnemies();
         }
 
         private void OnTriggerEnter2D(Collider2D other)
@@ -164,11 +177,15 @@ namespace Project.Core.ZoneState
             runtimeWaves.Clear();
             runtimeDelayBetweenWaves = delayBetweenWaves;
 
-            GeneratedEncounter generated = ActiveRouteOffer.GetEncounterForActiveRoom();
-            if (generated != null && generated.HasWaves)
+            // Boss rooms always use RoomData.Encounter — never a leftover combat RouteOffer.
+            if (!IsCurrentRoomBoss())
             {
-                ApplyGeneratedEncounter(generated);
-                return;
+                GeneratedEncounter generated = ActiveRouteOffer.GetEncounterForActiveRoom();
+                if (generated != null && generated.HasWaves)
+                {
+                    ApplyGeneratedEncounter(generated);
+                    return;
+                }
             }
 
             EncounterSO encounter = ResolveActiveEncounter();
@@ -417,11 +434,16 @@ namespace Project.Core.ZoneState
                     continue;
                 }
 
-                GameObject enemyObject = Instantiate(entry.enemyPrefab, entry.spawnPoint.position, entry.spawnPoint.rotation);
+                GameObject enemyObject = Instantiate(
+                    entry.enemyPrefab,
+                    entry.spawnPoint.position,
+                    entry.spawnPoint.rotation,
+                    transform);
                 EnemyController enemy = enemyObject.GetComponentInChildren<EnemyController>();
                 if (enemy == null)
                 {
                     Debug.LogWarning($"[RoomWaveManager] Spawned prefab '{entry.enemyPrefab.name}' has no EnemyController.", this);
+                    Destroy(enemyObject);
                     continue;
                 }
 
@@ -578,6 +600,23 @@ namespace Project.Core.ZoneState
                     activeEnemies[i].OnDied -= HandleEnemyDied;
                 }
             }
+        }
+
+        private void DestroyTrackedEnemies()
+        {
+            for (int i = 0; i < activeEnemies.Count; i++)
+            {
+                EnemyController enemy = activeEnemies[i];
+                if (enemy == null)
+                {
+                    continue;
+                }
+
+                enemy.OnDied -= HandleEnemyDied;
+                Destroy(enemy.gameObject);
+            }
+
+            activeEnemies.Clear();
         }
 
         private bool IsPlayer(Collider2D other)

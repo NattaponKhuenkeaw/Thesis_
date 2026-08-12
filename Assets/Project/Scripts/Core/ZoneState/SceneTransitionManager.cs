@@ -17,7 +17,9 @@ namespace Project.Core.ZoneState
         private const string ZoneStateProviderResourcePath = "CombatSO/ZoneStateProvider";
         private const string MapDataResourcePath = "MapSO/Test_MapSO";
         private const float MaxIntroWaitSeconds = 10f;
-        private const float MaxExitWaitSeconds = 6f;
+        private const float MaxExitWaitSeconds = 1.75f;
+        private const float ExitWalkPastDistance = 2.0f;
+        private const float ExitWalkMaxDistance = 3.5f;
 
         public static SceneTransitionManager Instance { get; private set; }
 
@@ -231,6 +233,9 @@ namespace Project.Core.ZoneState
 
             Project.UI.InputLockManager.Lock();
             Debug.Log($"[SceneTransitionManager] Transition started. Target='{sceneName}', Entrance='{entranceId}', LayoutSwap={useLayoutSwap}.");
+
+            // Burn one-shot safes (Level/Rest) on leave, not on SafeZone enter offer prep.
+            RoomChoiceDirector.Instance?.NotifyLeavingRoom(ResolveCurrentRoomIdForLeave());
 
             try
             {
@@ -480,23 +485,14 @@ namespace Project.Core.ZoneState
                 yield break;
             }
 
-            const float pastExitDistance = 2.5f;
             TransitionTrigger exitTrigger = ResolveExitTriggerForWalk(player.transform.position);
-            Vector3 target = player.transform.position;
-            if (exitTrigger != null)
+            Vector3 target = ResolveExitWalkTarget(player.transform.position, exitTrigger);
+
+            // Already at / past the step-out point — skip the cinematic walk.
+            if (Mathf.Abs(target.x - player.transform.position.x) <= 0.35f)
             {
-                Collider2D exitCollider = exitTrigger.ExitCollider;
-                // Exit is authored on the right. Always walk past the outward edge.
-                // Do not use Sign(trigger - player): standing past the trigger center
-                // (common while facing into the room) would send the player back inward.
-                float outwardEdgeX = exitCollider != null
-                    ? exitCollider.bounds.max.x
-                    : exitTrigger.transform.position.x;
-                target.x = outwardEdgeX + pastExitDistance;
-            }
-            else
-            {
-                target.x = player.transform.position.x + pastExitDistance;
+                Debug.Log("[SceneTransitionManager] Exit walk skipped; player already at exit step-out.", this);
+                yield break;
             }
 
             PlayerExitState exitState = player.StateMachine.ExitState;
@@ -505,7 +501,7 @@ namespace Project.Core.ZoneState
                 ?? Object.FindFirstObjectByType<SceneBoundaryController>();
             boundary?.PrepareForExit(target);
             player.StateMachine.ChangeState(exitState);
-            Debug.Log($"[SceneTransitionManager] Exit walk started toward {target}.");
+            Debug.Log($"[SceneTransitionManager] Exit walk started toward {target} (from {player.transform.position}).");
 
             float exitStartedAt = Time.unscaledTime;
             while (player != null
@@ -545,20 +541,63 @@ namespace Project.Core.ZoneState
             }
         }
 
-        private TransitionTrigger ResolveExitTriggerForWalk(Vector3 fromPosition)
+        private static Vector3 ResolveExitWalkTarget(Vector3 playerPosition, TransitionTrigger exitTrigger)
         {
-            SceneBoundaryController boundary = ResolveCurrentBoundaryController()
-                ?? Object.FindFirstObjectByType<SceneBoundaryController>();
-            if (boundary != null)
+            Vector3 target = playerPosition;
+            float walkSign = 1f;
+
+            if (exitTrigger != null)
             {
-                TransitionTrigger boundExit = boundary.ExitTrigger;
-                if (boundExit != null)
+                Collider2D exitCollider = exitTrigger.ExitCollider;
+                float outwardEdgeX = exitCollider != null
+                    ? exitCollider.bounds.max.x
+                    : exitTrigger.transform.position.x;
+
+                // Prefer stepping past the exit edge, but never send the player across the room
+                // (wrong/shell trigger or huge collider made leaves feel like a freeze).
+                walkSign = outwardEdgeX >= playerPosition.x - 0.01f ? 1f : -1f;
+                float desired = outwardEdgeX + (walkSign * ExitWalkPastDistance);
+                float delta = desired - playerPosition.x;
+                if (Mathf.Abs(delta) > ExitWalkMaxDistance)
                 {
-                    return boundExit;
+                    desired = playerPosition.x + (Mathf.Sign(delta) * ExitWalkMaxDistance);
                 }
+
+                // Already past the outward edge: just take a short step further out.
+                if ((walkSign > 0f && playerPosition.x >= outwardEdgeX)
+                    || (walkSign < 0f && playerPosition.x <= outwardEdgeX))
+                {
+                    desired = playerPosition.x + (walkSign * ExitWalkPastDistance);
+                }
+
+                target.x = desired;
+                return target;
             }
 
-            return FindNearestExitTrigger(fromPosition);
+            target.x = playerPosition.x + ExitWalkPastDistance;
+            return target;
+        }
+
+        private TransitionTrigger ResolveExitTriggerForWalk(Vector3 fromPosition)
+        {
+            TransitionTrigger nearest = FindNearestExitTrigger(fromPosition);
+            SceneBoundaryController boundary = ResolveCurrentBoundaryController()
+                ?? Object.FindFirstObjectByType<SceneBoundaryController>();
+            TransitionTrigger boundExit = boundary != null ? boundary.ExitTrigger : null;
+            if (boundExit == null)
+            {
+                return nearest;
+            }
+
+            if (nearest == null || nearest == boundExit)
+            {
+                return boundExit;
+            }
+
+            // Hybrid shells can leave a stale/far exit on the boundary ref — prefer the near one.
+            float boundDist = Mathf.Abs(boundExit.transform.position.x - fromPosition.x);
+            float nearDist = Mathf.Abs(nearest.transform.position.x - fromPosition.x);
+            return boundDist > nearDist + 2f ? nearest : boundExit;
         }
 
         private static bool WasExitWalkAbortedByDeath(PlayerCharacter player = null)
@@ -576,6 +615,31 @@ namespace Project.Core.ZoneState
 
             TeamLoader teamLoader = TeamLoader.Instance ?? Object.FindFirstObjectByType<TeamLoader>();
             return teamLoader != null && teamLoader.IsHandlingActiveDefeat;
+        }
+
+        private static string ResolveCurrentRoomIdForLeave()
+        {
+            if (RoomLayoutHost.Instance != null && RoomLayoutHost.Instance.ActiveRoom != null)
+            {
+                return RoomLayoutHost.Instance.ActiveRoom.RoomId;
+            }
+
+            if (Instance != null && Instance.mapData != null)
+            {
+                RoomData byScene = Instance.mapData.ResolveRoom(SceneManager.GetActiveScene().name);
+                if (byScene != null)
+                {
+                    return byScene.RoomId;
+                }
+            }
+
+            ZoneStateProvider provider = Resources.Load<ZoneStateProvider>(ZoneStateProviderResourcePath);
+            if (provider != null && provider.CurrentRoom != null)
+            {
+                return provider.CurrentRoom.RoomId;
+            }
+
+            return SceneManager.GetActiveScene().name;
         }
 
         private static TransitionTrigger FindNearestExitTrigger(Vector3 fromPosition)

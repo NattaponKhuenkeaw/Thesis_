@@ -99,7 +99,7 @@ namespace Project.Core.ZoneState
             if (offers == null || offers.Count == 0)
             {
                 // Fallback if exit was reached without a prior clear-prep (e.g. debug).
-                // Prefer leave-safe regeneration over GenerateOffersAfterClear (which mutates clear cadence).
+                // Prefer leave-safe regeneration over GenerateOffersAfterClear (which advances the act).
                 offers = director.GenerateLeaveOffersFromSafeRoom(excludeRoomId: null);
             }
 

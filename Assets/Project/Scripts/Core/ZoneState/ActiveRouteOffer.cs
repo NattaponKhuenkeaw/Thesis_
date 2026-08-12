@@ -58,7 +58,15 @@ namespace Project.Core.ZoneState
             }
 
             RoomData active = RoomLayoutHost.Instance != null ? RoomLayoutHost.Instance.ActiveRoom : null;
-            if (active != null && !string.Equals(active.RoomId, selected.RoomId, System.StringComparison.Ordinal))
+            // Require an active room match. Returning the previous combat encounter while
+            // ActiveRoom is briefly null (or mismatched) spawned trash into Boss layouts.
+            if (active == null
+                || !string.Equals(active.RoomId, selected.RoomId, System.StringComparison.Ordinal))
+            {
+                return null;
+            }
+
+            if (active.RoomKind == RoomKind.Boss)
             {
                 return null;
             }

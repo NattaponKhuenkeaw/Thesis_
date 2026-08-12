@@ -89,12 +89,15 @@ namespace Project.Core.ZoneState
                 }
             }
 
-            roomCleared = true;
-            if (hasTrackedEnemy)
+            // Empty / all-null lists must not free-clear. OnEnable used to call RevealExits
+            // immediately on Manager.prefab and Test_Rest, unlocking exits and advancing offers.
+            if (!hasTrackedEnemy)
             {
-                NotifyRunEndRoomCleared();
+                return;
             }
 
+            roomCleared = true;
+            NotifyRunEndRoomCleared();
             RoomExitPresenter.RevealExits(portalsRoot, unlockSceneExitOnClear);
         }
 

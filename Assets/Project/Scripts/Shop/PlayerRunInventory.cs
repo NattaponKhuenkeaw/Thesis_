@@ -487,7 +487,6 @@ namespace Project.ShopSystem
             // Keep the lobby team roster so the player can leave again; strip run loot,
             // run levels/effects, equipped run artifacts, and earned currency.
             CharacterObject[] teamSnapshot = GetTeamSnapshot();
-            int activeIndex = activeTeamSlotIndex;
             int previousGlobalLevel = _globalLevel;
 
             ownedItems.Clear();
@@ -496,7 +495,8 @@ namespace Project.ShopSystem
             currency = DefaultCurrency;
             _globalLevel = 1;
 
-            DeployTeam(teamSnapshot, activeIndex, artifactsBySlot: null);
+            // Always respawn controlling the main slot (index 0), not whoever died last.
+            DeployTeam(teamSnapshot, preferredIndex: 0, artifactsBySlot: null);
             AddUnlockedRosterItems(metaProgression);
             PostInventoryMutation(save: true);
             if (previousGlobalLevel != _globalLevel)

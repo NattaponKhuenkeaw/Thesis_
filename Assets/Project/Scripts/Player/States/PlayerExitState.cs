@@ -7,7 +7,7 @@ using UnityEngine;
 public class PlayerExitState : PlayerState
 {
     private const float ArrivalTolerance = 0.35f;
-    private const float MaxExitDurationSeconds = 6f;
+    private const float MaxExitDurationSeconds = 1.75f;
 
     private float exitStartedAt;
 

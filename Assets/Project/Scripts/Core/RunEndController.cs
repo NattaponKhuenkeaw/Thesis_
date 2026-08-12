@@ -234,6 +234,11 @@ namespace Project.Core.RunEnd
 
             ResolveDependencies();
             TeamLoader teamLoader = TeamLoader.Instance ?? FindFirstObjectByType<TeamLoader>();
+            if (runInventory != null)
+            {
+                runInventory.SetActiveTeamSlotIndex(0);
+            }
+
             if (teamLoader != null)
             {
                 RestoreTeamResources(teamLoader);

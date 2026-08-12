@@ -132,12 +132,17 @@ namespace Project.Core.ZoneState
             ResolveCameraDependencies();
             _exitTrigger.SetExitGate(this);
 
-            _lockedLeftWorld = _cameraBounds != null
-                ? _cameraBounds.bounds.min.x
-                : (_entranceWall != null ? _entranceWall.bounds.max.x : transform.position.x);
+            // Layout-authored walls are the source of truth. Using the shell camera bounds
+            // as locked-left (old behavior) snapped StartWall away from its prefab pose
+            // whenever the confiner belonged to Test_Rest / combat_1 instead of the layout.
+            _lockedLeftWorld = _entranceWall != null
+                ? _entranceWall.bounds.max.x
+                : (_cameraBounds != null ? _cameraBounds.bounds.min.x : transform.position.x);
             _lockedRightWorld = _exitTrigger.ExitCollider.bounds.min.x;
-            _currentLeftWorld = _cameraBounds != null ? _cameraBounds.bounds.min.x : _lockedLeftWorld;
-            _currentRightWorld = _cameraBounds != null ? _cameraBounds.bounds.max.x : _lockedRightWorld;
+            _currentLeftWorld = _lockedLeftWorld;
+            _currentRightWorld = _cameraBounds != null
+                ? Mathf.Max(_cameraBounds.bounds.max.x, _lockedRightWorld)
+                : _lockedRightWorld;
             _initialized = true;
 
             if (_cameraBounds == null)
@@ -145,6 +150,7 @@ namespace Project.Core.ZoneState
                 Debug.LogWarning($"[SceneBoundaryController] '{name}' found no BoxCollider2D used by CinemachineConfiner2D. Physical and logical exit gating will still work.", this);
             }
 
+            // Sync camera/confiner to the authored walls — do not drag walls to the shell camera.
             CompleteIntro();
             SetExitAvailable(false, playFeedback: false);
             return true;

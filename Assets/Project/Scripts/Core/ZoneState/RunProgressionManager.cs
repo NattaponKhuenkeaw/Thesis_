@@ -24,9 +24,9 @@ namespace Project.Core.ZoneState
         [Tooltip("0-based biome index. Increments when a Boss room is cleared.")]
         public int currentBiomeIndex;
 
-        [Tooltip("After this many Combat/Elite clears, the next exit offers only the boss.")]
+        [Tooltip("After this many Combat/Elite clears, boss becomes due (safety net; act template Boss node is primary). Synced from RoomChoiceDirector combat-node count when present.")]
         [Min(1)]
-        public int roomsBeforeBoss = 3;
+        public int roomsBeforeBoss = 4;
 
         [Header("Difficulty Curve")]
         [Tooltip("Enemy basic stats (HP / ATK / DEF) gain this fraction per biome. Biome 0 = 1.0x, Biome 1 = 1.12x.")]
@@ -242,10 +242,15 @@ namespace Project.Core.ZoneState
             return null;
         }
 
-        public bool TryResolveForcedBossRoom(MapSO catalog, out RoomData bossRoom)
+        /// <summary>
+        /// Resolves the configured boss room. When <paramref name="requireDue"/> is false,
+        /// returns the boss even if combat depth has not reached roomsBeforeBoss yet
+        /// (biome act template Boss node).
+        /// </summary>
+        public bool TryResolveForcedBossRoom(MapSO catalog, out RoomData bossRoom, bool requireDue = true)
         {
             bossRoom = null;
-            if (!IsBossDue)
+            if (requireDue && !IsBossDue)
             {
                 return false;
             }
