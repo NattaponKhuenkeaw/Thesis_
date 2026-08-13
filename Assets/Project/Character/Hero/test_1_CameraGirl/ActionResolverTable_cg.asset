@@ -34,7 +34,7 @@ MonoBehaviour:
     priority: 0
     conditions: []
     damageSourceStat: 0
-    actionDamageMultiplier: 2
+    actionDamageMultiplier: 1.5
     auraEnergyReward: 0
     comboTree:
       treeName: Combo
@@ -240,7 +240,7 @@ MonoBehaviour:
         juggleStunScale: 1
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 0
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: 194c6bfebe7f2a64aa0d7d214fc3d43c, type: 3}
         hitVFXType: 16
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
@@ -565,7 +565,7 @@ MonoBehaviour:
         knockupFrames: 30
         knockfallFrames: 25
         recoveryFrames: 22
-        horizontalSpeed: 5
+        horizontalSpeed: 10
         launchSpeed: 1
         useSnapToAnchor: 0
         snapOffset: {x: 1, y: 0}
@@ -614,7 +614,7 @@ MonoBehaviour:
         damageRatio: 1
         impactTier: 0
         useDeterministicReaction: 1
-        reactionKind: 2
+        reactionKind: 1
         impactFreezeFrames: 4
         knockbackFrames: 15
         knockupFrames: 12
@@ -680,8 +680,8 @@ MonoBehaviour:
         activeFrames: 5
         elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
-        offset: {x: 0.5363103, y: 2.3107314}
-        size: {x: 1.4081252, y: 3.0021358}
+        offset: {x: -0.025115252, y: 2.3107314}
+        size: {x: 2.6290107, y: 3.0021358}
         damageRatio: 0.1
         impactTier: 0
         useDeterministicReaction: 1
@@ -693,16 +693,16 @@ MonoBehaviour:
         recoveryFrames: 16
         horizontalSpeed: 3
         launchSpeed: 1
-        useSnapToAnchor: 0
-        snapOffset: {x: 0, y: 0}
+        useSnapToAnchor: 1
+        snapOffset: {x: 1.5, y: -1.2}
         landingBehavior: 1
         canAirJuggle: 1
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 10
-        hitSFX: {fileID: 8300000, guid: be42944712cebd14a9f9a6b13cb00fe6, type: 3}
-        hitVFXType: 15
+        hitSFX: {fileID: 8300000, guid: 332041b5ca70b034dad992b18618a489, type: 3}
+        hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
@@ -785,19 +785,11 @@ MonoBehaviour:
       data:
         entries:
         - label: SFX
-          clip: {fileID: 8300000, guid: 6dbe3ecbb7bf0fd47b365d1dd9ff2b49, type: 3}
+          clip: {fileID: 8300000, guid: 194c6bfebe7f2a64aa0d7d214fc3d43c, type: 3}
           triggerFrame: 5
           duration: 11
           channel: 1
-          volume: 0.5
-          pitchVariation: 1
-          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
-        - label: SFX
-          clip: {fileID: 8300000, guid: 42de5f418024ff8408960fa139cb75da, type: 3}
-          triggerFrame: 4
-          duration: 7
-          channel: 1
-          volume: 0.5
+          volume: 1
           pitchVariation: 1
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 1588256211525697650
@@ -829,7 +821,7 @@ MonoBehaviour:
       data:
         entries:
         - label: SFX
-          clip: {fileID: 8300000, guid: b4510c977ef2ada49a77f5984d6eeacc, type: 3}
+          clip: {fileID: 8300000, guid: d31ec08b5265662428731ea9c9904f88, type: 3}
           triggerFrame: 0
           duration: 26
           channel: 1
@@ -853,12 +845,28 @@ MonoBehaviour:
       data:
         entries:
         - label: SFX
-          clip: {fileID: 8300000, guid: 42de5f418024ff8408960fa139cb75da, type: 3}
+          clip: {fileID: 8300000, guid: 09f7d446d71638d48b24c24114dbf483, type: 3}
           triggerFrame: 0
           duration: 7
           channel: 1
           volume: 1
           pitchVariation: 2
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: 09f7d446d71638d48b24c24114dbf483, type: 3}
+          triggerFrame: 10
+          duration: 7
+          channel: 1
+          volume: 0.7
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: 60fea6f9cd755924ea53ea4a5b381699, type: 3}
+          triggerFrame: 27
+          duration: 10
+          channel: 1
+          volume: 1
+          pitchVariation: 1
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
     - rid: 1588256211525697662
       type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
@@ -1006,7 +1014,7 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 7
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: 9c7433f026bbb6d42886e2c785629571, type: 3}
         hitVFXType: 15
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
@@ -1039,7 +1047,7 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 7
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: 9c7433f026bbb6d42886e2c785629571, type: 3}
         hitVFXType: 15
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
@@ -1056,8 +1064,8 @@ MonoBehaviour:
         damageRatio: 0.05
         impactTier: 0
         useDeterministicReaction: 1
-        reactionKind: 0
-        impactFreezeFrames: 0
+        reactionKind: 1
+        impactFreezeFrames: 1
         knockbackFrames: 19
         knockupFrames: 15
         knockfallFrames: 12
@@ -1072,7 +1080,7 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 7
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: 9c7433f026bbb6d42886e2c785629571, type: 3}
         hitVFXType: 15
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
@@ -1089,13 +1097,13 @@ MonoBehaviour:
         damageRatio: 0.05
         impactTier: 0
         useDeterministicReaction: 1
-        reactionKind: 0
-        impactFreezeFrames: 0
+        reactionKind: 1
+        impactFreezeFrames: 1
         knockbackFrames: 19
         knockupFrames: 15
         knockfallFrames: 12
         recoveryFrames: 11
-        horizontalSpeed: 3
+        horizontalSpeed: 5
         launchSpeed: 1
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
@@ -1105,7 +1113,7 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 7
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: 9c7433f026bbb6d42886e2c785629571, type: 3}
         hitVFXType: 15
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
@@ -1128,7 +1136,7 @@ MonoBehaviour:
         knockupFrames: 15
         knockfallFrames: 12
         recoveryFrames: 11
-        horizontalSpeed: 3
+        horizontalSpeed: 10
         launchSpeed: 1
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
@@ -1138,7 +1146,7 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 7
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: 8f6ab12021ff39d4c869a546e444aa27, type: 3}
         hitVFXType: 15
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
@@ -1220,7 +1228,7 @@ MonoBehaviour:
         knockupFrames: 12
         knockfallFrames: 10
         recoveryFrames: 9
-        horizontalSpeed: 3
+        horizontalSpeed: 5
         launchSpeed: 1
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
@@ -1230,7 +1238,7 @@ MonoBehaviour:
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 6
-        hitSFX: {fileID: 0}
+        hitSFX: {fileID: 8300000, guid: b1470e36aa93aed4782bad8e2663c2b8, type: 3}
         hitVFXType: 18
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
@@ -1243,7 +1251,7 @@ MonoBehaviour:
           endFrame: 10
           taskType: 0
           easing: 1
-          position: {x: 1, y: 0.34, z: 0}
+          position: {x: 0.7, y: 0.34, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
         - startFrame: 30

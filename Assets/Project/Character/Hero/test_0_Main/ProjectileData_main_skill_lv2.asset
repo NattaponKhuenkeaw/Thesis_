@@ -84,7 +84,7 @@ MonoBehaviour:
         damageRatio: 0.2
         impactTier: 0
         useDeterministicReaction: 1
-        reactionKind: 2
+        reactionKind: 1
         impactFreezeFrames: 1
         knockbackFrames: 15
         knockupFrames: 12
