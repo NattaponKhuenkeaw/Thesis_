@@ -8,6 +8,7 @@ namespace Project.Progression
     public enum ProgressionFragmentType
     {
         CharacterPotential,
+        [Obsolete("Artifact fragments are retired. Retained only to deserialize legacy saves.")]
         ArtifactTranscendence
     }
 
@@ -60,6 +61,7 @@ namespace Project.Progression
     [Serializable]
     internal class SavedPlayerMetaProgressionData
     {
+        public int schemaVersion = 2;
         public List<ProgressionFragmentStack> fragments = new List<ProgressionFragmentStack>();
         public List<CharacterPotentialProgress> characterPotentials = new List<CharacterPotentialProgress>();
     }
@@ -73,9 +75,10 @@ namespace Project.Progression
             public IReadOnlyList<PotentialNodeDefinition> nodes;
         }
 
-        private const string SaveKey = "project.player_meta_progression.v1";
+        private const string SaveKey = "project.player_meta_progression.v2";
+        private const string LegacySaveKey = "project.player_meta_progression.v1";
 
-        [Header("Unused Upgrade Materials")]
+        [Header("Character Potential Fragments")]
         [SerializeField] private List<ProgressionFragmentStack> fragments = new List<ProgressionFragmentStack>();
 
         [Header("Permanent Character Potential")]
@@ -103,6 +106,7 @@ namespace Project.Progression
 
         public int GetFragmentCount(BaseItem sourceItem)
         {
+            if (sourceItem is ArtifactDefinition) return 0;
             string sourceId = GetSourceId(sourceItem);
             if (string.IsNullOrEmpty(sourceId))
             {
@@ -115,6 +119,7 @@ namespace Project.Progression
 
         public int GetFragmentCount(string sourceId, ProgressionFragmentType fragmentType = ProgressionFragmentType.CharacterPotential)
         {
+            if (fragmentType == ProgressionFragmentType.ArtifactTranscendence) return 0;
             if (string.IsNullOrWhiteSpace(sourceId))
             {
                 return 0;
@@ -126,7 +131,7 @@ namespace Project.Progression
 
         public void AddFragments(BaseItem sourceItem, int amount)
         {
-            if (sourceItem == null || amount <= 0)
+            if (sourceItem == null || sourceItem is ArtifactDefinition || amount <= 0)
             {
                 return;
             }
@@ -158,7 +163,7 @@ namespace Project.Progression
 
         public bool TrySpendFragments(BaseItem sourceItem, int amount)
         {
-            if (sourceItem == null || amount <= 0)
+            if (sourceItem == null || sourceItem is ArtifactDefinition || amount <= 0)
             {
                 return false;
             }
@@ -181,7 +186,8 @@ namespace Project.Progression
 
         public bool TrySpendFragments(string sourceId, ProgressionFragmentType fragmentType, int amount)
         {
-            if (string.IsNullOrWhiteSpace(sourceId) || amount <= 0)
+            if (fragmentType == ProgressionFragmentType.ArtifactTranscendence
+                || string.IsNullOrWhiteSpace(sourceId) || amount <= 0)
             {
                 return false;
             }
@@ -413,6 +419,12 @@ namespace Project.Progression
 
             hasLoadedPersistentState = true;
             string json = PlayerPrefs.GetString(SaveKey, string.Empty);
+            bool loadedLegacy = false;
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                json = PlayerPrefs.GetString(LegacySaveKey, string.Empty);
+                loadedLegacy = !string.IsNullOrWhiteSpace(json);
+            }
             if (string.IsNullOrWhiteSpace(json))
             {
                 EnsureData();
@@ -420,7 +432,12 @@ namespace Project.Progression
                 return;
             }
 
-            ImportJson(json);
+            int retiredArtifactFragments = ImportJsonInternal(json);
+            if (loadedLegacy || retiredArtifactFragments > 0)
+            {
+                Debug.Log($"PlayerMetaProgression: Migrated to v2 and omitted {retiredArtifactFragments} retired Artifact fragment(s). Character Potential data was preserved.");
+                SavePersistentState();
+            }
         }
 
         public void SavePersistentState()
@@ -478,8 +495,14 @@ namespace Project.Progression
 
         public void ImportJson(string json)
         {
+            ImportJsonInternal(json);
+        }
+
+        private int ImportJsonInternal(string json)
+        {
             EnsureData();
             isApplyingPersistentState = true;
+            int retiredArtifactFragments = 0;
             fragments.Clear();
             characterPotentials.Clear();
 
@@ -495,6 +518,12 @@ namespace Project.Progression
                             ProgressionFragmentStack stack = data.fragments[i];
                             if (stack == null || stack.quantity <= 0 || string.IsNullOrWhiteSpace(stack.sourceItemId))
                             {
+                                continue;
+                            }
+
+                            if (stack.fragmentType == ProgressionFragmentType.ArtifactTranscendence)
+                            {
+                                retiredArtifactFragments += Mathf.Max(0, stack.quantity);
                                 continue;
                             }
 
@@ -533,6 +562,7 @@ namespace Project.Progression
             isApplyingPersistentState = false;
             InvalidatePotentialCache();
             OnPotentialChanged?.Invoke(null);
+            return retiredArtifactFragments;
         }
 
         private void InvalidatePotentialCache(string characterId = null)
@@ -636,12 +666,13 @@ namespace Project.Progression
         private void EnsureData()
         {
             fragments ??= new List<ProgressionFragmentStack>();
+            fragments.RemoveAll(stack => stack != null && stack.fragmentType == ProgressionFragmentType.ArtifactTranscendence);
             characterPotentials ??= new List<CharacterPotentialProgress>();
         }
 
         private static ProgressionFragmentType GetFragmentType(BaseItem sourceItem)
         {
-            return sourceItem is Artifact
+            return sourceItem is ArtifactDefinition
                 ? ProgressionFragmentType.ArtifactTranscendence
                 : ProgressionFragmentType.CharacterPotential;
         }

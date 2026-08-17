@@ -1,0 +1,35 @@
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Serialization;
+
+namespace Project.InventorySystem.Items
+{
+    [CreateAssetMenu(fileName = "New Artifact", menuName = "Inventory/Artifact Definition", order = 1)]
+    public class ArtifactDefinition : BaseItem
+    {
+        [Header("Artifact Specifics")]
+        public bool isEquippable = true;
+
+        [TextArea(3, 5)]
+        public string passiveDescription = "Unique passive effect description here.";
+
+        [Header("Artifact Passive")]
+        [Tooltip("Immutable authored rules. Mutable cooldowns and stacks live on the equipped instance runtime.")]
+        public ArtifactPassiveSetDefinition passiveSet;
+
+        [Header("Passive Damage")]
+        [Tooltip("Optional separate on-hit damage ticks. These cannot critically hit.")]
+        public List<AdditionalDamageEffectDefinition> additionalDamageEffects = new List<AdditionalDamageEffectDefinition>();
+
+        [FormerlySerializedAs("bonusStats")]
+        [SerializeField, HideInInspector]
+        private CharacterStats legacyBonusStats;
+
+        public CharacterStats LegacyBonusStats => legacyBonusStats;
+
+        public void SetLegacyBonusStats(CharacterStats value)
+        {
+            legacyBonusStats = value;
+        }
+    }
+}

@@ -159,8 +159,13 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         if (characterObject == null)
             return;
 
+        float previousHP = currentHP;
         currentHP = Mathf.Clamp(value, 0f, MaxHP);
         deathEventRaised = currentHP <= 0f;
+        if (currentHP > previousHP)
+        {
+            OnHealed?.Invoke(currentHP - previousHP);
+        }
         NotifyHealthChanged();
     }
 
@@ -184,10 +189,7 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         float finalDamage = value;
         if (Stats != null)
         {
-            finalDamage = CombatFormula.CalculateIncomingDamage(
-                value,
-                Stats.defense,
-                Stats.damageReduction);
+            finalDamage = CombatFormula.CalculateIncomingDamage(value, Stats.defense);
         }
 
         TeamLoader teamLoader = TeamLoader.Instance;

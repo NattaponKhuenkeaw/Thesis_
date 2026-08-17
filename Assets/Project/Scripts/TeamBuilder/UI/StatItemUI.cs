@@ -12,9 +12,9 @@ namespace Project.TeamBuilder.UI
         /// <summary>
         /// Sets up the stat item display.
         /// </summary>
-        /// <param name="statName">Display name of the stat (e.g. "CDR", "Crit Rate").</param>
+        /// <param name="statName">Display name of the stat (for example, "CM" or "Crit Rate").</param>
         /// <param name="value">The bonus value to display.</param>
-        /// <param name="statKey">Lowercase key used to determine formatting (e.g. "cdr", "crit", "mastery", "resist").</param>
+        /// <param name="statKey">Catalog format key used to determine formatting.</param>
         public void Setup(string statName, float value, string statKey = "")
         {
             if (statNameText != null)

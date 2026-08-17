@@ -1,9 +1,14 @@
 // Force Unity compilation refresh
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [CreateAssetMenu(fileName = "RuntimeEffect_DamageInput", menuName = "Game/Runtime Effects/Damage Input Modifier", order = 14)]
 public class DamageInputRuntimeEffectDefinition : RuntimeEffectDefinition
 {
+    [HideInInspector]
+    public bool filterByDelivery;
+    [HideInInspector]
+    public DamageDelivery delivery = DamageDelivery.Primary;
     [HideInInspector]
     public bool filterByElement;
     [HideInInspector]
@@ -22,7 +27,8 @@ public class DamageInputRuntimeEffectDefinition : RuntimeEffectDefinition
     [HideInInspector]
     public bool ignoreDamageResistance;
     [HideInInspector]
-    public bool ignoreElementalIncomingModifiers;
+    [FormerlySerializedAs("ignoreElementalIncomingModifiers")]
+    public bool ignoreTypeReduction;
 
     public override void ModifyDamageInput(RuntimeEffectDamageInput input)
     {
@@ -50,9 +56,9 @@ public class DamageInputRuntimeEffectDefinition : RuntimeEffectDefinition
             input.defenderDamageResistance += parameters.defenderDamageResistancePercentAdd;
         }
 
-        if (parameters.ignoreElementalIncomingModifiers)
+        if (parameters.ignoreTypeReduction)
         {
-            input.ignoreElementalIncomingModifiers = true;
+            input.ignoreTypeReduction = true;
         }
     }
 
@@ -68,6 +74,8 @@ public class DamageInputRuntimeEffectDefinition : RuntimeEffectDefinition
         {
             filter = new RuntimeEffectDamageFilter
             {
+                filterByDelivery = filterByDelivery,
+                delivery = delivery,
                 filterByElement = filterByElement,
                 elementType = elementType,
                 filterByCategory = filterByCategory,
@@ -77,7 +85,7 @@ public class DamageInputRuntimeEffectDefinition : RuntimeEffectDefinition
             defenderDamageResistancePercentAdd = defenderDamageResistancePercentAdd,
             ignoreDefense = ignoreDefense,
             ignoreDamageResistance = ignoreDamageResistance,
-            ignoreElementalIncomingModifiers = ignoreElementalIncomingModifiers
+            ignoreTypeReduction = ignoreTypeReduction
         };
     }
 
@@ -88,6 +96,19 @@ public class DamageInputRuntimeEffectDefinition : RuntimeEffectDefinition
             return false;
         }
 
-        return parameters.filter == null || parameters.filter.Matches(context);
+        if (parameters.filter == null)
+        {
+            return context.damageDelivery == DamageDelivery.Primary;
+        }
+
+        if (!parameters.filter.Matches(context))
+        {
+            return false;
+        }
+
+        // Legacy source-side input modifiers had no delivery selector and are
+        // migrated to Primary coverage. Authors must opt in to secondary damage.
+        return parameters.filter.filterByDelivery
+            || context.damageDelivery == DamageDelivery.Primary;
     }
 }

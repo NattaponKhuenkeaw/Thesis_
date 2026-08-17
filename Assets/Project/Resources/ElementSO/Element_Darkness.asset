@@ -19,4 +19,3 @@ MonoBehaviour:
   dotDuration: 5
   dotDamageRatio: 0.35
   dotTickInterval: 1
-  maxStacks: 5

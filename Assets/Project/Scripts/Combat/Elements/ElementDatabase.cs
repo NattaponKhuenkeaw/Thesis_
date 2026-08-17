@@ -71,7 +71,6 @@ public class ElementDatabase : ScriptableObject
         fallback.dotDuration = 5f;
         fallback.dotDamageRatio = 0.3f;
         fallback.dotTickInterval = 1f;
-        fallback.maxStacks = 5;
 
         switch (type)
         {

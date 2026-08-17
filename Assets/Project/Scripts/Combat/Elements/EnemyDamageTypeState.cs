@@ -9,9 +9,8 @@ public class EnemyDamageTypeState : MonoBehaviour
         public float remainingDuration;
         public float tickTimer;
         public float tickInterval;
-        public float tickDamagePerStack;
-        public int stackCount;
-        public int maxStacks;
+        public float baseTickDamage;
+        public float snapshottedStrength;
         public CharacterObject sourceCharacter;
         public CharacterStats sourceStats;
         public bool allowCrit;
@@ -48,6 +47,7 @@ public class EnemyDamageTypeState : MonoBehaviour
 
     public void Initialize(EnemyElementalProfile enemyProfile)
     {
+        _enemy ??= GetComponent<EnemyController>();
         profile = enemyProfile;
         _activeDots.Clear();
         _runtimeModifiers.Clear();
@@ -90,6 +90,7 @@ public class EnemyDamageTypeState : MonoBehaviour
         CharacterObject sourceCharacter,
         bool allowCrit = false)
     {
+        _enemy ??= GetComponent<EnemyController>();
         if (damageType == ElementType.None || _enemy == null || !_enemy.IsAlive)
         {
             return;
@@ -102,20 +103,19 @@ public class EnemyDamageTypeState : MonoBehaviour
         }
 
         float attack = attackerStats != null ? Mathf.Max(0f, attackerStats.attack) : 10f;
-        float elementalMastery = attackerStats != null
-            ? Mathf.Max(0f, attackerStats.elementalMastery)
-            : 0f;
-        float tickDamage = attack
-            * Mathf.Max(0f, definition.dotDamageRatio)
-            * (1f + elementalMastery / 100f);
-        if (tickDamage <= 0f)
+        CharacterStats sourceStatsSnapshot = attackerStats != null
+            ? attackerStats.Clone()
+            : new CharacterStats { attack = attack };
+        float baseTickDamage = attack * Mathf.Max(0f, definition.dotDamageRatio);
+        float snapshottedStrength = baseTickDamage
+            * Mathf.Max(0f, 1f + sourceStatsSnapshot.dotMastery / 100f);
+        if (snapshottedStrength <= 0f)
         {
             return;
         }
 
         float duration = Mathf.Max(0.05f, definition.dotDuration);
         float tickInterval = Mathf.Max(0.05f, definition.dotTickInterval);
-        int maxStacks = definition.maxStacks > 0 ? definition.maxStacks : 5;
         ActiveDot existing = FindDot(damageType);
 
         if (existing == null)
@@ -125,30 +125,33 @@ public class EnemyDamageTypeState : MonoBehaviour
                 damageType = damageType,
                 remainingDuration = duration,
                 tickInterval = tickInterval,
-                tickDamagePerStack = tickDamage,
-                stackCount = 1,
-                maxStacks = maxStacks,
+                baseTickDamage = baseTickDamage,
+                snapshottedStrength = snapshottedStrength,
                 sourceCharacter = sourceCharacter,
-                sourceStats = attackerStats,
+                sourceStats = sourceStatsSnapshot,
                 allowCrit = allowCrit
             });
             return;
         }
 
-        if (existing.stackCount < existing.maxStacks)
+        if (snapshottedStrength > existing.snapshottedStrength + 0.001f)
         {
-            existing.stackCount++;
+            existing.remainingDuration = duration;
+            existing.tickTimer = 0f;
+            existing.tickInterval = tickInterval;
+            existing.baseTickDamage = baseTickDamage;
+            existing.snapshottedStrength = snapshottedStrength;
+            existing.sourceCharacter = sourceCharacter;
+            existing.sourceStats = sourceStatsSnapshot;
+            existing.allowCrit = allowCrit;
+            return;
         }
 
-        existing.remainingDuration = Mathf.Max(existing.remainingDuration, duration);
-        existing.tickInterval = tickInterval;
-        if (tickDamage > existing.tickDamagePerStack)
+        if (Mathf.Abs(snapshottedStrength - existing.snapshottedStrength) <= 0.001f)
         {
-            existing.tickDamagePerStack = tickDamage;
+            existing.remainingDuration = duration;
+            existing.allowCrit = existing.allowCrit || allowCrit;
         }
-        existing.sourceCharacter = sourceCharacter;
-        existing.sourceStats = attackerStats;
-        existing.allowCrit = existing.allowCrit || allowCrit;
     }
 
     public void ApplyRuntimeElementModifier(PassiveEnemyElementModifierDefinition effect)
@@ -225,32 +228,28 @@ public class EnemyDamageTypeState : MonoBehaviour
 
     private void ApplyDotDamage(ActiveDot dot)
     {
-        float totalTickDamage = dot.tickDamagePerStack * dot.stackCount;
-        bool isCrit = false;
-        if (dot.allowCrit && dot.sourceStats != null)
+        DamageRequest request = new DamageRequest
         {
-            float critRate = Mathf.Max(0f, dot.sourceStats.critRate);
-            float critDamage = Mathf.Max(0f, dot.sourceStats.critDamage);
-            isCrit = Random.Range(0f, 100f) <= critRate;
-            if (isCrit)
-            {
-                totalTickDamage *= (1f + (critDamage / 100f));
-            }
-        }
-
-        HitReactionData dotHit = HitReactionData.Default(totalTickDamage, Vector2.zero, 0f);
-        dotHit.damageIsFinal = false;
-        dotHit.damageRoutine = DamageRoutine.Dot;
+            target = _enemy,
+            sourceCharacter = dot.sourceCharacter,
+            sourceStats = dot.sourceStats,
+            baseDamage = dot.baseTickDamage,
+            defenderDefense = _enemy.defense,
+            defenderDamageResistance = _enemy.damageRes,
+            descriptor = new DamageDescriptor(
+                DamageDelivery.Dot,
+                dot.damageType,
+                dot.allowCrit ? DamageCriticalPolicy.Allow : DamageCriticalPolicy.Prevent),
+            category = AttackCategory.Normal,
+            actionId = "element-dot",
+            actionName = "Element DOT",
+            attackerPosition = transform.position
+        };
+        HitReactionData dotHit = HitReactionData.Default(0f, Vector2.zero, 0f);
+        dotHit.damageDelivery = DamageDelivery.Dot;
         dotHit.elementType = dot.damageType;
-        dotHit.isCriticalHit = isCrit;
         dotHit.flashFrames = 0;
-        dotHit.sourceCharacter = dot.sourceCharacter;
-        dotHit.sourceStats = dot.sourceStats;
-        dotHit.sourceCategory = AttackCategory.Normal;
-        dotHit.sourceActionId = "element-dot";
-        dotHit.sourceActionName = "Element DOT";
-
-        _enemy.TakeHit(dotHit, transform.position);
+        CombatDamageProcessor.Apply(request, dotHit, false);
     }
 
     private ActiveDot FindDot(ElementType damageType)

@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Project.InventorySystem.Artifacts;
 using Project.InventorySystem.Items;
 using Project.UI;
 using Project.TeamBuilder.UI.Interfaces;
@@ -16,7 +17,7 @@ namespace Project.TeamBuilder.UI.Panels
         [SerializeField] private TMP_Text characterLoreText;
         [SerializeField] private CharacterElementRoleUI elementRoleUI;
 
-        public void PopulateData(CharacterItem character, Artifact[] equippedArtifacts)
+        public void PopulateData(CharacterItem character, ArtifactInstance[] equippedArtifacts)
         {
             if (character == null || character.characterObjectData == null) return;
             var data = character.characterObjectData;

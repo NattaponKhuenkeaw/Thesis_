@@ -1,4 +1,5 @@
 using Project.InventorySystem.Items;
+using Project.InventorySystem.Artifacts;
 using Project.ShopSystem;
 
 namespace Project.Progression
@@ -14,18 +15,25 @@ namespace Project.Progression
 
     public readonly struct AcquisitionResult
     {
-        public AcquisitionResult(AcquisitionKind kind, BaseItem item, int fragmentAmount, string message)
+        public AcquisitionResult(
+            AcquisitionKind kind,
+            BaseItem item,
+            int fragmentAmount,
+            string message,
+            string artifactInstanceId = null)
         {
             Kind = kind;
             Item = item;
             FragmentAmount = fragmentAmount;
             Message = message;
+            ArtifactInstanceId = artifactInstanceId;
         }
 
         public AcquisitionKind Kind { get; }
         public BaseItem Item { get; }
         public int FragmentAmount { get; }
         public string Message { get; }
+        public string ArtifactInstanceId { get; }
         public bool Succeeded => Kind != AcquisitionKind.Rejected;
     }
 
@@ -44,7 +52,22 @@ namespace Project.Progression
                 return new AcquisitionResult(AcquisitionKind.Rejected, item, 0, "Invalid acquisition.");
             }
 
-            if (item is CharacterItem || item is Artifact)
+            if (item is ArtifactDefinition artifactDefinition)
+            {
+                if (!runInventory.TryAcquireArtifact(artifactDefinition, out ArtifactInstance instance))
+                {
+                    return new AcquisitionResult(AcquisitionKind.Rejected, item, 0, "Artifact generation failed.");
+                }
+
+                return new AcquisitionResult(
+                    AcquisitionKind.AddedRunArtifact,
+                    item,
+                    0,
+                    $"Acquired {item.itemName}.",
+                    instance.instanceId);
+            }
+
+            if (item is CharacterItem)
             {
                 return AcquireUniqueOrFragments(item, runInventory, metaProgression);
             }
@@ -71,10 +94,7 @@ namespace Project.Progression
                     return new AcquisitionResult(AcquisitionKind.Rejected, item, 0, "Inventory is full.");
                 }
 
-                AcquisitionKind addedKind = item is Artifact
-                    ? AcquisitionKind.AddedRunArtifact
-                    : AcquisitionKind.AddedRunCharacter;
-                return new AcquisitionResult(addedKind, item, 0, $"Acquired {item.itemName}.");
+                return new AcquisitionResult(AcquisitionKind.AddedRunCharacter, item, 0, $"Acquired {item.itemName}.");
             }
 
             if (metaProgression == null)

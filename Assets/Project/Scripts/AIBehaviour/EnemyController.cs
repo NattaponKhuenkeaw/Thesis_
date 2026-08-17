@@ -191,11 +191,28 @@ public class EnemyController : MonoBehaviour
     /// <summary>
     /// Full hit-reaction variant. Called by HitBoxDamage with frame-data-driven reaction.
     /// </summary>
-    public float TakeHit(HitReactionData reactionData, Vector2 attackerPosition)
+    public float TakeResolvedHit(HitReactionData reactionData, Vector2 attackerPosition)
+    {
+        return TakeHitInternal(reactionData, attackerPosition);
+    }
+
+    private void OnEnable()
+    {
+        RoomEnemyRegistry.Register(this);
+    }
+
+    private void OnDisable()
+    {
+        RoomEnemyRegistry.Unregister(this);
+    }
+
+    private float TakeHitInternal(
+        HitReactionData reactionData,
+        Vector2 attackerPosition)
     {
         if (!isAlive) return 0f;
 
-        bool isSeparateDamage = IsSeparateDamageRoutine(reactionData.damageRoutine);
+        bool isSeparateDamage = IsSecondaryDamage(reactionData.damageDelivery);
 
         if (!isSeparateDamage)
         {
@@ -208,17 +225,7 @@ public class EnemyController : MonoBehaviour
                 reactionData.impactTier = DamageImpactTier.Medium;
         }
 
-        float finalIncomingDamage = reactionData.damageIsFinal
-            ? reactionData.damage
-            : CombatFormula.CalculateIncomingDamage(
-                reactionData.damage,
-                defense,
-                damageRes,
-                reactionData.damageRoutine);
-        if (damageTypeState != null && !reactionData.ignoreElementalIncomingModifiers)
-        {
-            finalIncomingDamage = damageTypeState.ModifyIncomingDamage(reactionData.elementType, finalIncomingDamage);
-        }
+        float finalIncomingDamage = reactionData.damage;
 
         if (runtimeEffects != null)
         {
@@ -232,7 +239,7 @@ public class EnemyController : MonoBehaviour
                 actionName = reactionData.sourceActionName,
                 stepData = reactionData.sourceStepData,
                 elementType = reactionData.elementType,
-                damageRoutine = reactionData.damageRoutine,
+                damageDelivery = reactionData.damageDelivery,
                 isCriticalHit = reactionData.isCriticalHit,
                 damage = finalIncomingDamage
             };
@@ -323,9 +330,9 @@ public class EnemyController : MonoBehaviour
         return UnityEngine.Random.value > antiStunlockResistChance;
     }
 
-    private static bool IsSeparateDamageRoutine(DamageRoutine routine)
+    private static bool IsSecondaryDamage(DamageDelivery delivery)
     {
-        return routine == DamageRoutine.Particle || routine == DamageRoutine.Dot;
+        return delivery == DamageDelivery.Additional || delivery == DamageDelivery.Dot;
     }
 
     public void ResetComboCount()
@@ -346,19 +353,14 @@ public class EnemyController : MonoBehaviour
             if (damageTypeState == null)
             {
                 damageTypeState = GetComponent<EnemyDamageTypeState>();
+                if (damageTypeState == null)
+                {
+                    damageTypeState = gameObject.AddComponent<EnemyDamageTypeState>();
+                }
             }
 
             return damageTypeState;
         }
-    }
-
-    /// <summary>
-    /// Legacy overload for backward compatibility. Builds a default HitReactionData.
-    /// </summary>
-    public void TakeHit(float damage, Vector2 knockbackDirection, float knockbackForce)
-    {
-        HitReactionData data = HitReactionData.Default(damage, knockbackDirection, knockbackForce);
-        TakeHit(data, transform.position);
     }
 
     /// <summary>Trigger death sequence (also callable from DieAction node).</summary>

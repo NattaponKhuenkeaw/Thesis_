@@ -19,14 +19,16 @@ namespace Project.UI
         {
             string statKey = statName != null ? statName.ToLowerInvariant() : "";
 
-            bool isCDR = statKey.Contains("cdr") || statKey.Contains("cooldown");
-            bool isPercent = isCDR 
-                || statKey.Contains("crit") 
+            bool isPercent = statKey == "percent"
+                || statKey.Contains("crit")
                 || statKey.Contains("mastery") 
+                || statKey == "cm"
+                || statKey == "dm"
+                || statKey == "di"
+                || statKey == "adi"
+                || statKey == "aer"
                 || statKey.Contains("resist") 
-                || statKey.Contains("elemental") 
-                || statKey.Contains("ae")
-                || statKey.Contains("impact");
+                || statKey.Contains("ae");
 
             bool isBaseFlatBonusPercent = statKey.Contains("hp") 
                 || statKey.Contains("atk") 
@@ -35,23 +37,7 @@ namespace Project.UI
             if (isSingleValue)
             {
                 // For a single value, baseValue is the value to format
-                if (isCDR)
-                {
-                    if (useRichTextColor)
-                    {
-                        string colorTag = baseValue > 0.001f ? "#4ADE80" : "#EF4444";
-                        string sign = baseValue >= 0f ? "-" : "+";
-                        string formattedVal = FormatFloat(baseValue);
-                        return $"<color={colorTag}>{sign}{formattedVal}%</color>";
-                    }
-                    else
-                    {
-                        string sign = baseValue >= 0f ? "-" : "+";
-                        string formattedVal = FormatFloat(baseValue);
-                        return $"{sign}{formattedVal}%";
-                    }
-                }
-                else if (isPercent || isBaseFlatBonusPercent)
+                if (isPercent || isBaseFlatBonusPercent)
                 {
                     if (useRichTextColor)
                     {
@@ -86,33 +72,7 @@ namespace Project.UI
             }
 
             // Standard base + bonus formatting
-            if (isCDR)
-            {
-                float totalValue = baseValue + bonusValue;
-                string formattedTotal = totalValue.ToString("0.#");
-                if (useRichTextColor)
-                {
-                    if (Mathf.Abs(bonusValue) > 0.001f)
-                    {
-                        string colorTag = bonusValue > 0.001f ? "#4ADE80" : "#EF4444";
-                        string sign = bonusValue >= 0f ? "-" : "+";
-                        string formattedBonus = FormatFloat(bonusValue);
-                        return $"-{formattedTotal}% (<color={colorTag}>{sign}{formattedBonus}%</color>)";
-                    }
-                    return $"-{formattedTotal}%";
-                }
-                else
-                {
-                    if (Mathf.Abs(bonusValue) > 0.001f)
-                    {
-                        string sign = bonusValue >= 0f ? "-" : "+";
-                        string formattedBonus = FormatFloat(bonusValue);
-                        return $"-{formattedTotal}%({sign}{formattedBonus}%)";
-                    }
-                    return $"-{formattedTotal}%";
-                }
-            }
-            else if (isPercent)
+            if (isPercent)
             {
                 float totalValue = baseValue + bonusValue;
                 string formattedTotal = totalValue.ToString("0.#");
@@ -196,34 +156,21 @@ namespace Project.UI
         public static string FormatResolved(float baseValue, float finalValue, string statName, bool useRichTextColor = false)
         {
             string statKey = statName != null ? statName.ToLowerInvariant() : "";
-            bool isCDR = statKey.Contains("cdr") || statKey.Contains("cooldown");
-            bool isPercent = isCDR
+            bool isPercent = statKey == "percent"
                 || statKey.Contains("crit")
                 || statKey.Contains("mastery")
+                || statKey == "cm"
+                || statKey == "dm"
+                || statKey == "di"
+                || statKey == "adi"
+                || statKey == "aer"
                 || statKey.Contains("resist")
-                || statKey.Contains("elemental")
-                || statKey.Contains("ae")
-                || statKey.Contains("impact")
-                || statKey.Contains("reduction");
+                || statKey.Contains("ae");
 
             float delta = finalValue - baseValue;
             if (Mathf.Abs(delta) <= 0.001f)
             {
                 return Format(baseValue, 0f, statName, useRichTextColor);
-            }
-
-            if (isCDR)
-            {
-                string totalText = $"-{finalValue:0.#}%";
-                string sign = delta >= 0f ? "-" : "+";
-                string bonusText = $"{sign}{FormatFloat(delta)}%";
-                if (!useRichTextColor)
-                {
-                    return $"{totalText}({bonusText})";
-                }
-
-                string color = delta >= 0f ? "#4ADE80" : "#EF4444";
-                return $"{totalText} (<color={color}>{bonusText}</color>)";
             }
 
             if (isPercent)

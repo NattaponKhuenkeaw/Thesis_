@@ -22,7 +22,7 @@ public struct WorldTextRequest
     public WorldTextType type;
     public float amount;
     public string text;
-    public DamageRoutine damageRoutine;
+    public DamageDelivery damageDelivery;
     public DamageImpactTier impactTier;
     public ElementType elementType;
     public bool isCritical;

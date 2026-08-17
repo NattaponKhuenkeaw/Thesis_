@@ -1,3 +1,4 @@
+using Project.InventorySystem.Artifacts;
 using Project.InventorySystem.Items;
 
 namespace Project.TeamBuilder.UI.Interfaces
@@ -7,7 +8,7 @@ namespace Project.TeamBuilder.UI.Interfaces
         /// <summary>
         /// Populates the panel with data from the currently inspected character and their equipped artifacts.
         /// </summary>
-        void PopulateData(CharacterItem character, Artifact[] equippedArtifacts);
+        void PopulateData(CharacterItem character, ArtifactInstance[] equippedArtifacts);
 
         /// <summary>
         /// Called when the panel should become visible.

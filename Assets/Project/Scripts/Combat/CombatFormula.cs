@@ -2,104 +2,6 @@ using UnityEngine;
 
 public static class CombatFormula
 {
-    public static float CalculateResolvedDamage(
-        float baseDamage,
-        DamageRoutine routine,
-        ElementType elementType,
-        CharacterStats attackerStats,
-        float defenderDefense,
-        AttackCategory category,
-        out bool isCrit,
-        float defenderDamageResistance = 0f,
-        bool allowDotCrit = false,
-        bool allowParticleCrit = true)
-    {
-        float mitigatedDamage = CalculateIncomingDamage(
-            Mathf.Max(0f, baseDamage),
-            defenderDefense,
-            defenderDamageResistance,
-            routine);
-
-        bool canCrit = CanRoutineCrit(routine, allowDotCrit, allowParticleCrit);
-        float critRate = attackerStats != null ? Mathf.Max(0f, attackerStats.critRate) : 0f;
-        float critDamage = attackerStats != null ? Mathf.Max(0f, attackerStats.critDamage) : 50f;
-        isCrit = canCrit && Random.Range(0f, 100f) <= critRate;
-
-        float resolvedDamage = mitigatedDamage;
-
-        if (UsesElementalMasteryScaling(routine, elementType))
-        {
-            float elementalMastery = attackerStats != null
-                ? Mathf.Max(0f, attackerStats.elementalMastery)
-                : 0f;
-            resolvedDamage *= 1f + elementalMastery / 100f;
-        }
-
-        if (UsesPrimaryDamageScaling(routine))
-        {
-            if (category == AttackCategory.Ultimate)
-            {
-                float impact = attackerStats != null ? attackerStats.impact : 0f;
-                resolvedDamage *= 1f + impact / 100f;
-            }
-        }
-
-        if (isCrit)
-        {
-            resolvedDamage *= 1f + (critDamage / 100f);
-        }
-
-        return Mathf.Max(0f, resolvedDamage);
-    }
-
-    public static bool CanRoutineCrit(DamageRoutine routine, bool allowDotCrit = false, bool allowParticleCrit = true)
-    {
-        switch (routine)
-        {
-            case DamageRoutine.Physical:
-                return true;
-            case DamageRoutine.Particle:
-                return allowParticleCrit;
-            case DamageRoutine.Dot:
-                return allowDotCrit;
-            default:
-                return false;
-        }
-    }
-
-    private static bool UsesPrimaryDamageScaling(DamageRoutine routine)
-    {
-        return routine == DamageRoutine.Physical;
-    }
-
-    private static bool UsesElementalMasteryScaling(DamageRoutine routine, ElementType elementType)
-    {
-        if (routine == DamageRoutine.Particle || routine == DamageRoutine.Dot)
-        {
-            return true;
-        }
-        return routine == DamageRoutine.Physical && elementType != ElementType.None;
-    }
-
-    public static float CalculateOutgoingDamage(float baseAttack, float actionMultiplier, float critRate, float critDmg, float impact, bool isUlt, out bool isCrit)
-    {
-        float baseDamage = baseAttack * actionMultiplier;
-        
-        // Critical Roll
-        float roll = Random.Range(0f, 100f);
-        isCrit = roll <= critRate;
-        
-        float damageAfterCrit = isCrit ? baseDamage * (critDmg / 100f) : baseDamage;
-        
-        float outgoingDamage = damageAfterCrit;
-        if (isUlt)
-        {
-            outgoingDamage *= (1f + (impact / 100f));
-        }
-        
-        return outgoingDamage;
-    }
-
     public static float CalculateIncomingDamage(float incomingDamage, float defense)
     {
         return CalculateIncomingDamage(incomingDamage, defense, 0f);
@@ -120,27 +22,6 @@ public static class CombatFormula
         float damageAfterReduction = damageAfterDef * (1f - clampedReduction / 100f);
         
         return Mathf.Max(1f, damageAfterReduction);
-    }
-
-    public static float CalculateIncomingDamage(
-        float incomingDamage,
-        float defense,
-        float damageReductionPercent,
-        DamageRoutine routine)
-    {
-        if (incomingDamage <= 0f)
-        {
-            return 0f;
-        }
-
-        if (routine == DamageRoutine.Particle)
-        {
-            // Particle damage ignores both DEF and RES completely
-            return Mathf.Max(0f, incomingDamage);
-        }
-
-        float resolvedDefense = routine == DamageRoutine.Dot ? 0f : defense;
-        return CalculateIncomingDamage(incomingDamage, resolvedDefense, damageReductionPercent);
     }
 
     public static float CalculateCooldownDuration(float baseCooldown, float cooldownRatePercent)

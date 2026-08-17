@@ -14,8 +14,6 @@ public class HitBoxDamage : MonoBehaviour
     private float currentDamage = 1f;
     private float currentResolvedDamage = 1f;
     private bool currentIsCrit = false;
-    private bool currentIgnoreElementalIncomingModifiers = false;
-    private bool usePerEnemyDamageCalculation;
     private CharacterStats currentAttackerStats;
     private float currentSourceAttack;
     private bool currentIsSkillOrUltimate;
@@ -33,6 +31,8 @@ public class HitBoxDamage : MonoBehaviour
     private PlayerCombat rewardOwner;
     private CharacterObject rewardCharacter;
     private AuraEnergyRewardClaim auraEnergyRewardClaim;
+    private DamageRequest currentDamageRequest;
+    private DamageResult currentDamageResult;
 
     public float DamageValue => currentResolvedDamage;
 
@@ -87,8 +87,6 @@ public class HitBoxDamage : MonoBehaviour
         currentDamage = damage;
         currentResolvedDamage = damage;
         currentIsCrit = isCrit;
-        usePerEnemyDamageCalculation = false;
-        currentIgnoreElementalIncomingModifiers = false;
         currentNormalHitbox = hitbox;
         currentGrabHitbox = null;
         sourceCategory = category;
@@ -113,8 +111,6 @@ public class HitBoxDamage : MonoBehaviour
         currentDamage = damage;
         currentResolvedDamage = damage;
         currentIsCrit = isCrit;
-        usePerEnemyDamageCalculation = false;
-        currentIgnoreElementalIncomingModifiers = false;
         currentGrabHitbox = hitbox;
         currentNormalHitbox = null;
         sourceCategory = category;
@@ -139,8 +135,6 @@ public class HitBoxDamage : MonoBehaviour
         CharacterObject sourceCharacter,
         AuraEnergyRewardClaim actionRewardClaim)
     {
-        usePerEnemyDamageCalculation = attackerStats != null;
-        currentIgnoreElementalIncomingModifiers = false;
         currentAttackerStats = attackerStats;
         currentSourceAttack = Mathf.Max(0f, sourceAttack);
         currentIsSkillOrUltimate = isSkillOrUltimate;
@@ -195,16 +189,15 @@ public class HitBoxDamage : MonoBehaviour
             ? projectileOwner.AttackerPosition
             : movement != null ? (Vector2)movement.transform.position : (Vector2)transform.root.position;
 
-        float primaryDamageDealt = enemy.TakeHit(reactionData, attackerPosition);
+        float primaryDamageDealt = CombatDamageProcessor.ApplyResolved(
+            currentDamageRequest,
+            currentDamageResult,
+            reactionData,
+            true);
         bool hasDamageSource = HasDamageSource();
 
         if (hasDamageSource && primaryDamageDealt > 0f)
         {
-            enemy.DamageTypeState?.ApplyDot(
-                reactionData.elementType,
-                currentAttackerStats,
-                rewardCharacter);
-
             if (enemy.IsAlive)
             {
                 ApplyAdditionalDamage(enemy, attackerPosition, direction);
@@ -280,105 +273,54 @@ public class HitBoxDamage : MonoBehaviour
             UltimateFlashOverlay.Instance.PlayHitFlash();
         }
 
-        bool dealtDamage = hasDamageSource && primaryDamageDealt > 0f;
-        if (dealtDamage)
-        {
-            bool killedEnemy = !enemy.IsAlive;
-            passiveController?.NotifyHitDealt(
-                sourceCategory,
-                sourceActionId,
-                sourceActionName,
-                sourceStepData,
-                enemy,
-                reactionData.elementType,
-                reactionData.isCriticalHit,
-                primaryDamageDealt,
-                killedEnemy);
-
-            if (rewardOwner != null && rewardCharacter != null)
-            {
-                RuntimeEffectDamageContext runtimeHitContext = BuildRuntimeDamageContext(enemy, primaryDamageDealt, direction);
-                runtimeHitContext.elementType = reactionData.elementType;
-                runtimeHitContext.damageRoutine = reactionData.damageRoutine;
-                runtimeHitContext.isCriticalHit = reactionData.isCriticalHit;
-                runtimeHitContext.damageDealt = primaryDamageDealt;
-                runtimeHitContext.killedEnemy = killedEnemy;
-                rewardOwner.NotifyRuntimeHitDealt(rewardCharacter, runtimeHitContext);
-            }
-
-            rewardOwner?.NotifyResolvedEnemyHit(
-                rewardCharacter,
-                auraEnergyRewardClaim);
-        }
-
-
         projectileOwner?.RegisterSuccessfulHit(enemy);
     }
 
     private void ResolveDamageAgainstEnemy(EnemyController enemy)
     {
         currentResolvedDamage = currentDamage;
-        if (!usePerEnemyDamageCalculation || enemy == null)
+        if (enemy == null)
         {
             return;
         }
 
-        DamageRoutine routine = ResolvePrimaryDamageRoutine();
         ElementType elementType = ResolveElementType();
         CharacterStats resolvedAttackerStats = ResolveActionSpecificAttackerStats();
         RuntimeEffectDamageContext runtimeContext = BuildRuntimeDamageContext(enemy, currentDamage, Vector2.zero);
         runtimeContext.elementType = elementType;
-        runtimeContext.damageRoutine = routine;
+        runtimeContext.damageDelivery = DamageDelivery.Primary;
         RuntimeEffectDamageInput damageInput = BuildRuntimeDamageInput(runtimeContext, currentDamage, enemy);
         ApplyRuntimeDamageInputModifiers(damageInput);
         ApplyActionDamageInputModifiers(damageInput);
         runtimeContext.damage = damageInput.baseDamage;
-        float finalDamage = CombatFormula.CalculateResolvedDamage(
-            damageInput.baseDamage,
-            routine,
-            elementType,
-            resolvedAttackerStats,
-            damageInput.defenderDefense,
-            sourceCategory,
-            out currentIsCrit,
-            damageInput.defenderDamageResistance);
-
-        runtimeContext.isCriticalHit = currentIsCrit;
-        finalDamage = rewardOwner != null && rewardCharacter != null
-            ? rewardOwner.ModifyRuntimeOutgoingDamage(rewardCharacter, runtimeContext, finalDamage)
-            : finalDamage;
-
-        finalDamage = HasMatchingPassiveController()
-            ? passiveController.ModifyOutgoingDamage(runtimeContext, finalDamage)
-            : DeployedCharacterDamageModifierEvaluator.ModifyOutgoingDamage(
-                rewardCharacter,
-                runtimeContext,
-                finalDamage);
-
-        if (enemy.DamageTypeState != null && !damageInput.ignoreElementalIncomingModifiers)
+        currentDamageRequest = new DamageRequest
         {
-            finalDamage = enemy.DamageTypeState.ModifyIncomingDamage(elementType, finalDamage);
-            damageInput.ignoreElementalIncomingModifiers = true;
-        }
-
-        finalDamage = HasMatchingPassiveController()
-            ? passiveController.ModifyActionFinalDamage(
-                sourceCategory,
-                sourceActionId,
-                sourceActionName,
-                finalDamage,
-                currentIsCrit)
-            : DeployedCharacterDamageModifierEvaluator.ModifyFinalDamage(
-                rewardCharacter,
-                sourceCategory,
-                sourceActionId,
-                sourceActionName,
-                finalDamage,
-                currentIsCrit);
+            target = enemy,
+            sourceCharacter = rewardCharacter,
+            sourceStats = resolvedAttackerStats,
+            sourceCombat = rewardOwner,
+            sourcePassiveController = HasMatchingPassiveController() ? passiveController : null,
+            auraEnergyRewardClaim = auraEnergyRewardClaim,
+            baseDamage = damageInput.baseDamage,
+            defenderDefense = damageInput.defenderDefense,
+            defenderDamageResistance = damageInput.defenderDamageResistance,
+            descriptor = new DamageDescriptor(DamageDelivery.Primary, elementType),
+            category = sourceCategory,
+            actionId = sourceActionId,
+            actionName = sourceActionName,
+            stepData = sourceStepData,
+            attackerPosition = projectileOwner != null
+                ? projectileOwner.AttackerPosition
+                : movement != null ? (Vector2)movement.transform.position : (Vector2)transform.root.position,
+            hitDirection = GetHitDirection(),
+            ignoreTypeReduction = damageInput.ignoreTypeReduction
+        };
+        currentDamageResult = CombatDamageProcessor.Resolve(currentDamageRequest);
+        float finalDamage = currentDamageResult.Damage;
+        currentIsCrit = currentDamageResult.IsCriticalHit;
 
         currentResolvedDamage = Mathf.Max(0f, finalDamage);
         runtimeContext.damage = currentResolvedDamage;
-        currentIgnoreElementalIncomingModifiers = damageInput.ignoreElementalIncomingModifiers;
     }
 
     private bool HasDamageSource()
@@ -427,52 +369,43 @@ public class HitBoxDamage : MonoBehaviour
             RuntimeEffectDamageContext runtimeContext = BuildRuntimeDamageContext(enemy, baseDamage, direction);
             runtimeContext.sourceStats = liveSourceStats;
             runtimeContext.elementType = effect.elementType;
-            runtimeContext.damageRoutine = DamageRoutine.Particle;
+            runtimeContext.damageDelivery = DamageDelivery.Additional;
             runtimeContext.isCriticalHit = false;
             RuntimeEffectDamageInput damageInput = BuildRuntimeDamageInput(runtimeContext, baseDamage, enemy);
             ApplyRuntimeDamageInputModifiers(damageInput);
-            ApplyActionDamageInputModifiers(damageInput);
             runtimeContext.damage = damageInput.baseDamage;
-            float resolvedDamage = CombatFormula.CalculateResolvedDamage(
-                damageInput.baseDamage,
-                DamageRoutine.Particle,
-                effect.elementType,
-                liveSourceStats,
-                damageInput.defenderDefense,
-                AttackCategory.Normal,
-                out _,
-                damageInput.defenderDamageResistance);
-
-            if (resolvedDamage <= 0f)
-                continue;
-
-            HitReactionData additionalData = HitReactionData.Default(resolvedDamage, direction, 0f);
-            additionalData.damageIsFinal = true;
-            additionalData.ignoreElementalIncomingModifiers = damageInput.ignoreElementalIncomingModifiers;
-            additionalData.damageRoutine = DamageRoutine.Particle;
-            additionalData.elementType = effect.elementType;
-            additionalData.isCriticalHit = false;
+            DamageRequest request = new DamageRequest
+            {
+                target = enemy,
+                sourceCharacter = rewardCharacter,
+                sourceStats = liveSourceStats,
+                sourceCombat = rewardOwner,
+                baseDamage = damageInput.baseDamage,
+                defenderDefense = damageInput.defenderDefense,
+                defenderDamageResistance = damageInput.defenderDamageResistance,
+                descriptor = new DamageDescriptor(
+                    DamageDelivery.Additional,
+                    effect.elementType,
+                    DamageCriticalPolicy.Prevent),
+                category = sourceCategory,
+                actionId = sourceActionId,
+                actionName = sourceActionName,
+                stepData = sourceStepData,
+                attackerPosition = attackerPosition,
+                hitDirection = direction,
+                ignoreTypeReduction = damageInput.ignoreTypeReduction
+            };
+            HitReactionData additionalData = HitReactionData.Default(0f, direction, 0f);
             additionalData.flashFrames = 0;
             additionalData.impactTier = DamageImpactTier.Low;
-            PopulateRuntimeContext(ref additionalData);
-
-            float damageDealt = enemy.TakeHit(additionalData, attackerPosition);
+            float damageDealt = CombatDamageProcessor.Apply(request, additionalData, true);
 
             if (damageDealt > 0f)
             {
                 context.damageDealt = damageDealt;
                 effect.ConsumeTargetRuntimeEffectStacks(context);
-                enemy.DamageTypeState?.ApplyDot(
-                    additionalData.elementType,
-                    liveSourceStats,
-                    rewardCharacter);
             }
         }
-    }
-
-    private DamageRoutine ResolvePrimaryDamageRoutine()
-    {
-        return DamageRoutine.Physical;
     }
 
     private CharacterStats ResolveActionSpecificAttackerStats()
@@ -530,9 +463,7 @@ public class HitBoxDamage : MonoBehaviour
     {
         HitReactionData data = HitReactionData.Default(currentResolvedDamage, direction, 0f);
         data.isCriticalHit = currentIsCrit;
-        data.damageIsFinal = usePerEnemyDamageCalculation;
-        data.ignoreElementalIncomingModifiers = currentIgnoreElementalIncomingModifiers;
-        data.damageRoutine = ResolvePrimaryDamageRoutine();
+        data.damageDelivery = DamageDelivery.Primary;
         PopulateRuntimeContext(ref data);
         PopulateRuntimeEffectSourceContext(ref data);
 
@@ -581,9 +512,7 @@ public class HitBoxDamage : MonoBehaviour
     {
         HitReactionData data = HitReactionData.Default(currentResolvedDamage, direction, 0f);
         data.isCriticalHit = currentIsCrit;
-        data.damageIsFinal = usePerEnemyDamageCalculation;
-        data.ignoreElementalIncomingModifiers = currentIgnoreElementalIncomingModifiers;
-        data.damageRoutine = ResolvePrimaryDamageRoutine();
+        data.damageDelivery = DamageDelivery.Primary;
         PopulateRuntimeContext(ref data);
         PopulateRuntimeEffectSourceContext(ref data);
 
@@ -676,7 +605,7 @@ public class HitBoxDamage : MonoBehaviour
             actionName = sourceActionName,
             stepData = sourceStepData,
             elementType = ResolveElementType(),
-            damageRoutine = ResolvePrimaryDamageRoutine(),
+            damageDelivery = DamageDelivery.Primary,
             isCriticalHit = currentIsCrit,
             damage = damage,
             attackerPosition = projectileOwner != null
@@ -697,7 +626,7 @@ public class HitBoxDamage : MonoBehaviour
             baseDamage = baseDamage,
             defenderDefense = enemy != null ? enemy.defense : 0f,
             defenderDamageResistance = enemy != null ? enemy.damageRes : 0f,
-            ignoreElementalIncomingModifiers = false
+            ignoreTypeReduction = false
         };
     }
 

@@ -144,11 +144,11 @@ public class AdditionalDamageEffectDefinition
             PassiveModifierTarget.Defense => sourceStats.defense,
             PassiveModifierTarget.CritRate => sourceStats.critRate,
             PassiveModifierTarget.CritDamage => sourceStats.critDamage,
-            PassiveModifierTarget.ElementalMastery => sourceStats.elementalMastery,
-            PassiveModifierTarget.CooldownRate => sourceStats.cooldownRate,
-            PassiveModifierTarget.Impact => sourceStats.impact,
-            PassiveModifierTarget.AuraEnergyRecharge => sourceStats.aeRecharge,
-            PassiveModifierTarget.IncomingDamageTaken => sourceStats.damageReduction,
+            PassiveModifierTarget.DotMastery => sourceStats.dotMastery,
+            PassiveModifierTarget.CooldownMastery => sourceStats.cooldownMastery,
+            PassiveModifierTarget.DamageIncrease => sourceStats.damageIncrease,
+            PassiveModifierTarget.AdditionalDamageIncrease => sourceStats.additionalDamageIncrease,
+            PassiveModifierTarget.AuraEnergyRecharge => sourceStats.auraEnergyRecharge,
             _ => sourceStats.attack
         };
     }
@@ -167,11 +167,11 @@ public class AdditionalDamageEffectDefinition
             PassiveModifierTarget.Defense => sourceStats.defense,
             PassiveModifierTarget.CritRate => sourceStats.critRate,
             PassiveModifierTarget.CritDamage => sourceStats.critDamage,
-            PassiveModifierTarget.ElementalMastery => sourceStats.elementalMastery,
-            PassiveModifierTarget.CooldownRate => sourceStats.cooldownRate,
-            PassiveModifierTarget.Impact => sourceStats.impact,
-            PassiveModifierTarget.AuraEnergyRecharge => sourceStats.aeRecharge,
-            PassiveModifierTarget.IncomingDamageTaken => sourceStats.damageReduction,
+            PassiveModifierTarget.DotMastery => sourceStats.dotMastery,
+            PassiveModifierTarget.CooldownMastery => sourceStats.cooldownMastery,
+            PassiveModifierTarget.DamageIncrease => sourceStats.damageIncrease,
+            PassiveModifierTarget.AdditionalDamageIncrease => sourceStats.additionalDamageIncrease,
+            PassiveModifierTarget.AuraEnergyRecharge => sourceStats.auraEnergyRecharge,
             _ => sourceStats.attack
         };
     }

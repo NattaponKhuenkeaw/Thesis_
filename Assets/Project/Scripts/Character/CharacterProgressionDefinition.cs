@@ -12,26 +12,27 @@ public enum PotentialTrack
 
 public enum PassiveModifierTarget
 {
-    AttackStat,
-    BasicAttackDamage,
-    SkillDamage,
-    UltimateDamage,
-    UltimateDuration,
-    SkillCooldown,
-    UltimateCooldown,
-    ElementalBurnSelf,
-    ElementalBurnAllies,
-    MaxHP,
-    MoveSpeed,
-    Defense,
-    CritRate,
-    CritDamage,
-    ElementalMastery,
-    CooldownRate,
-    Impact,
-    AuraEnergyRecharge,
-    IncomingDamageTaken,
-    OutgoingDamage
+    AttackStat = 0,
+    BasicAttackDamage = 1,
+    SkillDamage = 2,
+    UltimateDamage = 3,
+    UltimateDuration = 4,
+    SkillCooldown = 5,
+    UltimateCooldown = 6,
+    ElementalBurnSelf = 7,
+    ElementalBurnAllies = 8,
+    MaxHP = 9,
+    MoveSpeed = 10,
+    Defense = 11,
+    CritRate = 12,
+    CritDamage = 13,
+    DotMastery = 14,
+    CooldownMastery = 15,
+    DamageIncrease = 16,
+    AuraEnergyRecharge = 17,
+    IncomingDamageTaken = 18,
+    OutgoingDamage = 19,
+    AdditionalDamageIncrease = 20
 }
 
 public enum PassiveEffectScope
@@ -419,7 +420,7 @@ public class PassiveActionModifierDefinition
     public float damageMultiplierValue = 0f;
     public PassiveValueModifierOperation criticalDamageOperation = PassiveValueModifierOperation.None;
     public float criticalDamageValue = 0f;
-    [Tooltip("Applied after base damage, defense, crit, elemental mastery, and impact are resolved.")]
+    [Tooltip("Applied after base damage, build-stat multipliers, critical damage, and mitigation are resolved.")]
     public PassiveValueModifierOperation finalDamageOperation = PassiveValueModifierOperation.None;
     public float finalDamageValue = 0f;
     public bool finalDamageRequiresCriticalHit = false;
@@ -433,7 +434,8 @@ public class PassiveActionModifierDefinition
     [Tooltip("When enabled, matching action hits bypass the defender's DEF calculation.")]
     public bool ignoreDefense = false;
     public bool ignoreDamageResistance = false;
-    public bool ignoreElementalIncomingModifiers = false;
+    [UnityEngine.Serialization.FormerlySerializedAs("ignoreElementalIncomingModifiers")]
+    public bool ignoreTypeReduction = false;
 
     [Header("Projectile Replacement")]
     public ProjectileType replacementProjectileType = ProjectileType.None;

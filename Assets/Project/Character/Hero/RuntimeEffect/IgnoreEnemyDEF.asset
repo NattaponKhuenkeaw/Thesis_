@@ -31,4 +31,4 @@ MonoBehaviour:
   defenderDamageResistancePercentAdd: 0
   ignoreDefense: 0
   ignoreDamageResistance: 0
-  ignoreElementalIncomingModifiers: 0
+  ignoreTypeReduction: 0

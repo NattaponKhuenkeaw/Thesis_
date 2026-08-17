@@ -200,9 +200,9 @@ public static class DeployedCharacterDamageModifierEvaluator
                     input.defenderDamageResistance = 0f;
                 }
 
-                if (modifier.ignoreElementalIncomingModifiers)
+                if (modifier.ignoreTypeReduction)
                 {
-                    input.ignoreElementalIncomingModifiers = true;
+                    input.ignoreTypeReduction = true;
                 }
             }
         }
@@ -296,10 +296,11 @@ public static class DeployedCharacterDamageModifierEvaluator
             PassiveModifierTarget.Defense => stats.defense,
             PassiveModifierTarget.CritRate => stats.critRate,
             PassiveModifierTarget.CritDamage => stats.critDamage,
-            PassiveModifierTarget.ElementalMastery => stats.elementalMastery,
-            PassiveModifierTarget.CooldownRate => stats.cooldownRate,
-            PassiveModifierTarget.Impact => stats.impact,
-            PassiveModifierTarget.AuraEnergyRecharge => stats.aeRecharge,
+            PassiveModifierTarget.DotMastery => stats.dotMastery,
+            PassiveModifierTarget.CooldownMastery => stats.cooldownMastery,
+            PassiveModifierTarget.DamageIncrease => stats.damageIncrease,
+            PassiveModifierTarget.AdditionalDamageIncrease => stats.additionalDamageIncrease,
+            PassiveModifierTarget.AuraEnergyRecharge => stats.auraEnergyRecharge,
             _ => stats.attack
         };
     }

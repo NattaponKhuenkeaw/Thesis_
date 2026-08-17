@@ -293,21 +293,21 @@ public class EnemyWorldUI : MonoBehaviour
             source = transform,
             canvasRoot = transform,
             template = damageText,
-            type = ResolveTextType(data.damageRoutine),
+            type = ResolveTextType(data.damageDelivery),
             amount = data.damage,
-            damageRoutine = data.damageRoutine,
+            damageDelivery = data.damageDelivery,
             impactTier = data.textImpactTier,
             elementType = data.elementType,
             isCritical = data.isCriticalHit
         });
     }
 
-    private static WorldTextType ResolveTextType(DamageRoutine routine)
+    private static WorldTextType ResolveTextType(DamageDelivery delivery)
     {
-        return routine switch
+        return delivery switch
         {
-            DamageRoutine.Dot => WorldTextType.Dot,
-            DamageRoutine.Particle => WorldTextType.Additional,
+            DamageDelivery.Dot => WorldTextType.Dot,
+            DamageDelivery.Additional => WorldTextType.Additional,
             _ => WorldTextType.Damage
         };
     }

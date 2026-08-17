@@ -21,13 +21,13 @@ MonoBehaviour:
     attack: 45
     defense: 37
     speed: 11
-    elementalMastery: 0
+    dotMastery: 0
     critRate: 5
     critDamage: 50
-    cooldownRate: 0
-    impact: 0
-    damageReduction: 0
-    aeRecharge: 0
+    cooldownMastery: 0
+    damageIncrease: 0
+    additionalDamageIncrease: 0
+    auraEnergyRecharge: 0
   metaData:
     displayName: Kyo
     description: "\u0E17\u0E32\u0E22\u0E32\u0E17\u0E15\u0E23\u0E30\u0E01\u0E39\u0E25\u0E04\u0E38\u0E0B\u0E32\u0E19\u0E32\u0E07\u0E34
@@ -209,7 +209,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -321,7 +321,7 @@ MonoBehaviour:
         energyCostValue: 0
         ignoreDefense: 0
         ignoreDamageResistance: 0
-        ignoreElementalIncomingModifiers: 0
+        ignoreTypeReduction: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
@@ -401,7 +401,7 @@ MonoBehaviour:
         energyCostValue: 0
         ignoreDefense: 0
         ignoreDamageResistance: 0
-        ignoreElementalIncomingModifiers: 0
+        ignoreTypeReduction: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
@@ -559,7 +559,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -659,7 +659,7 @@ MonoBehaviour:
                 defenderDamageResistancePercentAdd: 0
                 ignoreDefense: 0
                 ignoreDamageResistance: 0
-                ignoreElementalIncomingModifiers: 0
+                ignoreTypeReduction: 0
               overridePeriodicHeal: 0
               periodicHeal:
                 valueSource: 0
@@ -753,7 +753,7 @@ MonoBehaviour:
                 defenderDamageResistancePercentAdd: 0
                 ignoreDefense: 0
                 ignoreDamageResistance: 0
-                ignoreElementalIncomingModifiers: 0
+                ignoreTypeReduction: 0
               overridePeriodicHeal: 0
               periodicHeal:
                 valueSource: 0
@@ -867,7 +867,7 @@ MonoBehaviour:
         energyCostValue: 0
         ignoreDefense: 0
         ignoreDamageResistance: 0
-        ignoreElementalIncomingModifiers: 0
+        ignoreTypeReduction: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
@@ -926,7 +926,7 @@ MonoBehaviour:
         energyCostValue: 0
         ignoreDefense: 0
         ignoreDamageResistance: 0
-        ignoreElementalIncomingModifiers: 0
+        ignoreTypeReduction: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects:
@@ -1014,7 +1014,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -1109,7 +1109,7 @@ MonoBehaviour:
                 defenderDamageResistancePercentAdd: 0
                 ignoreDefense: 0
                 ignoreDamageResistance: 0
-                ignoreElementalIncomingModifiers: 0
+                ignoreTypeReduction: 0
               overridePeriodicHeal: 0
               periodicHeal:
                 valueSource: 0
@@ -1203,7 +1203,7 @@ MonoBehaviour:
                 defenderDamageResistancePercentAdd: 0
                 ignoreDefense: 0
                 ignoreDamageResistance: 0
-                ignoreElementalIncomingModifiers: 0
+                ignoreTypeReduction: 0
               overridePeriodicHeal: 1
               periodicHeal:
                 valueSource: 1
@@ -1368,7 +1368,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -1468,7 +1468,7 @@ MonoBehaviour:
                 defenderDamageResistancePercentAdd: 0
                 ignoreDefense: 0
                 ignoreDamageResistance: 0
-                ignoreElementalIncomingModifiers: 0
+                ignoreTypeReduction: 0
               overridePeriodicHeal: 0
               periodicHeal:
                 valueSource: 0
@@ -1562,7 +1562,7 @@ MonoBehaviour:
                 defenderDamageResistancePercentAdd: 0
                 ignoreDefense: 0
                 ignoreDamageResistance: 0
-                ignoreElementalIncomingModifiers: 0
+                ignoreTypeReduction: 0
               overridePeriodicHeal: 0
               periodicHeal:
                 valueSource: 0
@@ -1808,7 +1808,7 @@ MonoBehaviour:
               operation: 0
               sourceStat: 9
               statRatioValueSource: 0
-              value: 0.25
+              value: 25
             overrideDamageModifier: 0
             damageModifier:
               filter:
@@ -1829,7 +1829,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -2083,7 +2083,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
