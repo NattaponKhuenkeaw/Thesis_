@@ -182,6 +182,7 @@ namespace Project.Core
             TeamLoader teamLoader = TeamLoader.Instance ?? FindFirstObjectByType<TeamLoader>();
             if (teamLoader != null)
             {
+                teamLoader.CaptureRunStartTeam();
                 CharacterObject[] team = runInventory.GetTeamSnapshot();
                 Artifact[][] artifacts = BuildArtifactDataForDeploy(team.Length);
                 teamLoader.DeployLoadout(team, runInventory.ActiveTeamSlotIndex, artifacts);

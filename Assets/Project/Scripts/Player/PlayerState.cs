@@ -126,6 +126,23 @@ public abstract class PlayerState
     /// <summary>If true, player facing direction cannot be changed in this state.</summary>
     public virtual bool LocksFacing => false;
 
+    protected void BeginCinematicTraversal()
+    {
+        Buffer?.ClearAll();
+        player.Combat?.ResetCombo();
+        player.Combat?.ClearGrabbedEnemy();
+        player.Movement?.CancelAttackMotion();
+
+        Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+        }
+
+        player.Animator?.AbortCombatAnimation();
+        player.Animator?.SetDie(false);
+    }
+
     // =========================================================
     // Lifecycle
     // =========================================================

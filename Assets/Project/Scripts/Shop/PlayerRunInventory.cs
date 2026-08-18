@@ -223,6 +223,14 @@ namespace Project.ShopSystem
         [SerializeField] private RunTeamSlot[] teamSlots = new RunTeamSlot[DefaultTeamSlotCount];
         [SerializeField] private int activeTeamSlotIndex;
 
+        /// <summary>
+        /// Lobby loadout captured at run start. Mid-run KO compacting must not replace this on death.
+        /// Static copy survives a replacement TeamLoader / inventory instance in the same play session.
+        /// </summary>
+        [NonSerialized] private CharacterObject[] runStartTeamSnapshot;
+        [NonSerialized] private static CharacterObject[] sessionRunStartTeam;
+        [NonSerialized] private static bool pendingLobbyMainReset;
+
         [NonSerialized] private bool hasLoadedPersistentState;
         [NonSerialized] private bool isApplyingPersistentState;
         [NonSerialized] private Dictionary<string, BaseItem> itemIndexById;
@@ -468,6 +476,7 @@ namespace Project.ShopSystem
             }
 
             activeTeamSlotIndex = 0;
+            ClearRunStartTeamSnapshot();
             PostInventoryMutation(save: true);
             if (previousGlobalLevel != _globalLevel)
             {
@@ -483,10 +492,10 @@ namespace Project.ShopSystem
         public void ResetRunProgressForDeath(PlayerMetaProgression metaProgression = null)
         {
             EnsureInventoryData();
+            pendingLobbyMainReset = true;
 
-            // Keep the lobby team roster so the player can leave again; strip run loot,
-            // run levels/effects, equipped run artifacts, and earned currency.
-            CharacterObject[] teamSnapshot = GetTeamSnapshot();
+            // Restore the lobby roster, then put CharacterObject_main (char-0-main) in slot 0.
+            CharacterObject[] teamSnapshot = LeadTeamWithMainCharacter(ResolveDeathResetTeam());
             int previousGlobalLevel = _globalLevel;
 
             ownedItems.Clear();
@@ -495,8 +504,9 @@ namespace Project.ShopSystem
             currency = DefaultCurrency;
             _globalLevel = 1;
 
-            // Always respawn controlling the main slot (index 0), not whoever died last.
+            // Restore the lobby roster captured at run start, then control slot 0 (main).
             DeployTeam(teamSnapshot, preferredIndex: 0, artifactsBySlot: null);
+            activeTeamSlotIndex = GetMainCharacterSlotIndex();
             AddUnlockedRosterItems(metaProgression);
             PostInventoryMutation(save: true);
             if (previousGlobalLevel != _globalLevel)
@@ -567,6 +577,7 @@ namespace Project.ShopSystem
             }
 
             CharacterObject[] teamSnapshot = GetTeamSnapshot();
+            CaptureRunStartTeam(teamSnapshot);
             int activeIndex = activeTeamSlotIndex;
             Artifact[][] artifactSnapshot = BuildTeamArtifactSnapshot(teamSnapshot.Length);
 
@@ -618,6 +629,213 @@ namespace Project.ShopSystem
 
             activeTeamSlotIndex = ResolveActiveSlotIndex(preferredIndex);
             PostInventoryMutation(save: true);
+        }
+
+        public bool HasPendingLobbyMainReset => pendingLobbyMainReset;
+
+        public void RequestLobbyMainReset()
+        {
+            pendingLobbyMainReset = true;
+        }
+
+        public void ConsumeLobbyMainReset()
+        {
+            pendingLobbyMainReset = false;
+        }
+
+        /// <summary>
+        /// Store the lobby roster. Pass overwrite true at run start; false on scene Awake so compacting cannot replace it.
+        /// </summary>
+        public void RememberRunStartTeam(CharacterObject[] team, bool overwrite)
+        {
+            if (!overwrite && HasAnyCharacter(runStartTeamSnapshot))
+            {
+                return;
+            }
+
+            if (!overwrite && HasAnyCharacter(sessionRunStartTeam))
+            {
+                if (!HasAnyCharacter(runStartTeamSnapshot))
+                {
+                    runStartTeamSnapshot = CopyTeamArray(sessionRunStartTeam);
+                }
+
+                return;
+            }
+
+            CaptureRunStartTeam(team);
+        }
+
+        private void CaptureRunStartTeam(CharacterObject[] team)
+        {
+            if (!HasAnyCharacter(team))
+            {
+                return;
+            }
+
+            runStartTeamSnapshot = CopyTeamArray(team);
+            sessionRunStartTeam = CopyTeamArray(team);
+        }
+
+        public CharacterObject[] GetRunStartTeamOrCurrent()
+        {
+            return LeadTeamWithMainCharacter(ResolveDeathResetTeam());
+        }
+
+        public int GetMainCharacterSlotIndex()
+        {
+            EnsureRunData();
+            for (int i = 0; i < teamSlots.Length; i++)
+            {
+                if (IsMainCharacter(teamSlots[i] != null ? teamSlots[i].Character : null))
+                {
+                    return i;
+                }
+            }
+
+            return 0;
+        }
+
+        public bool IsMainCharacter(CharacterObject character)
+        {
+            if (character == null)
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(character.characterId)
+                && string.Equals(character.characterId, DefaultCharacterItemId, StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            return string.Equals(character.name, "CharacterObject_main", StringComparison.Ordinal);
+        }
+
+        private CharacterObject ResolveMainCharacter()
+        {
+            CharacterObject byId = ResolveCharacterById(DefaultCharacterItemId);
+            if (byId != null)
+            {
+                return byId;
+            }
+
+            CharacterItem defaultCharacterItem = Resources.Load<CharacterItem>(DefaultCharacterItemResourcePath);
+            if (defaultCharacterItem != null && defaultCharacterItem.characterObjectData != null)
+            {
+                return defaultCharacterItem.characterObjectData;
+            }
+
+            EnsureRunData();
+            for (int i = 0; i < teamSlots.Length; i++)
+            {
+                CharacterObject slotted = teamSlots[i] != null ? teamSlots[i].Character : null;
+                if (IsMainCharacter(slotted))
+                {
+                    return slotted;
+                }
+            }
+
+            return null;
+        }
+
+        private CharacterObject[] LeadTeamWithMainCharacter(CharacterObject[] team)
+        {
+            CharacterObject main = ResolveMainCharacter();
+            CharacterObject[] result = CopyTeamArray(team);
+
+            int mainIndex = -1;
+            for (int i = 0; i < result.Length; i++)
+            {
+                if (IsMainCharacter(result[i]) || (main != null && IsSameTeamCharacter(result[i], main)))
+                {
+                    mainIndex = i;
+                    break;
+                }
+            }
+
+            if (mainIndex < 0 && main != null)
+            {
+                CharacterObject[] withMain = new CharacterObject[Mathf.Max(DefaultTeamSlotCount, result.Length)];
+                withMain[0] = main;
+                int dest = 1;
+                for (int i = 0; i < result.Length && dest < withMain.Length; i++)
+                {
+                    if (result[i] == null || IsMainCharacter(result[i]) || IsSameTeamCharacter(result[i], main))
+                    {
+                        continue;
+                    }
+
+                    withMain[dest++] = result[i];
+                }
+
+                return withMain;
+            }
+
+            if (mainIndex > 0)
+            {
+                CharacterObject swap = result[0];
+                result[0] = result[mainIndex];
+                result[mainIndex] = swap;
+            }
+
+            return result;
+        }
+
+        private CharacterObject[] ResolveDeathResetTeam()
+        {
+            CharacterObject[] source = HasAnyCharacter(runStartTeamSnapshot)
+                ? runStartTeamSnapshot
+                : HasAnyCharacter(sessionRunStartTeam)
+                    ? sessionRunStartTeam
+                    : null;
+            if (source != null)
+            {
+                return CopyTeamArray(source);
+            }
+
+            return GetTeamSnapshot();
+        }
+
+        private void ClearRunStartTeamSnapshot()
+        {
+            runStartTeamSnapshot = null;
+            sessionRunStartTeam = null;
+            pendingLobbyMainReset = false;
+        }
+
+        private static bool HasAnyCharacter(CharacterObject[] team)
+        {
+            if (team == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < team.Length; i++)
+            {
+                if (team[i] != null)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static CharacterObject[] CopyTeamArray(CharacterObject[] team)
+        {
+            CharacterObject[] copy = new CharacterObject[Mathf.Max(DefaultTeamSlotCount, team != null ? team.Length : 0)];
+            if (team == null)
+            {
+                return copy;
+            }
+
+            for (int i = 0; i < team.Length && i < copy.Length; i++)
+            {
+                copy[i] = team[i];
+            }
+
+            return copy;
         }
 
         /// <summary>

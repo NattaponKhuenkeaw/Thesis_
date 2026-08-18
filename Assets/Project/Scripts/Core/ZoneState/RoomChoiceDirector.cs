@@ -24,6 +24,7 @@ namespace Project.Core.ZoneState
     public sealed class RoomChoiceDirector : MonoBehaviour
     {
         private const string DefaultMapResourcePath = "MapSO/Test_MapSO";
+        private const int RequiredChoiceCount = 3;
 
         public static RoomChoiceDirector Instance { get; private set; }
 
@@ -31,7 +32,8 @@ namespace Project.Core.ZoneState
         [SerializeField] private MapSO mapData;
 
         [Header("Offer Rules")]
-        [SerializeField, Min(1)] private int offerCount = 3;
+        [Tooltip("Normal route choices always show this many cards. Boss remains a single offer.")]
+        [SerializeField, Min(3)] private int offerCount = 3;
 
         [Tooltip("Biome route. Combat nodes deepen the run; Shop/Level/Rest inject one safe; Boss forces the boss room.")]
         [SerializeField] private List<BiomeActNode> biomeTemplate = new List<BiomeActNode>
@@ -93,8 +95,14 @@ namespace Project.Core.ZoneState
                 mapData = Resources.Load<MapSO>(DefaultMapResourcePath);
             }
 
+            EnsureOfferCount();
             EnsureTemplate();
             SyncBossDepthToTemplate();
+        }
+
+        private void OnValidate()
+        {
+            EnsureOfferCount();
         }
 
         private void OnDestroy()
@@ -115,6 +123,7 @@ namespace Project.Core.ZoneState
             lastSafeKindConsumed = (RoomKind)(-1);
             offerBuffer.Clear();
             visitedRoomIds.Clear();
+            EnsureOfferCount();
             EnsureTemplate();
             SyncBossDepthToTemplate();
             RunProgressionManager.EnsureInstance()?.ResetRun();
@@ -502,7 +511,19 @@ namespace Project.Core.ZoneState
             while (offerBuffer.Count < offerCount && guard++ < 32)
             {
                 if (!TryAddOfferOfKind(RoomKind.Combat, excludeRoomId)
+                    && !TryAddOfferOfKind(RoomKind.Elite, excludeRoomId)
                     && !TryAddAnyOffer(excludeRoomId))
+                {
+                    break;
+                }
+            }
+
+            // Unique layouts ran out (or MapSO only has 1–2 combat rooms). Pad with
+            // freshly rolled combat content so the player still sees 3 paths.
+            guard = 0;
+            while (offerBuffer.Count < offerCount && guard++ < 16)
+            {
+                if (!TryAddDuplicateCombatOffer(excludeRoomId))
                 {
                     break;
                 }
@@ -722,7 +743,7 @@ namespace Project.Core.ZoneState
                 return false;
             }
 
-            offerBuffer.Add(RouteOfferGenerator.BuildOffer(picked));
+            offerBuffer.Add(BuildRolledOffer(picked));
             usedRoomIds.Add(picked.RoomId);
             return true;
         }
@@ -770,8 +791,34 @@ namespace Project.Core.ZoneState
                 return false;
             }
 
-            offerBuffer.Add(RouteOfferGenerator.BuildOffer(picked));
+            offerBuffer.Add(BuildRolledOffer(picked));
             usedRoomIds.Add(picked.RoomId);
+            return true;
+        }
+
+        private bool TryAddDuplicateCombatOffer(string excludeRoomId)
+        {
+            mapData.CollectOfferCandidates(RoomKind.Combat, excludeRoomId, candidateBuffer);
+            if (candidateBuffer.Count == 0)
+            {
+                mapData.CollectOfferCandidates(RoomKind.Elite, excludeRoomId, candidateBuffer);
+            }
+
+            for (int i = candidateBuffer.Count - 1; i >= 0; i--)
+            {
+                if (candidateBuffer[i] == null)
+                {
+                    candidateBuffer.RemoveAt(i);
+                }
+            }
+
+            RoomData picked = PickWeighted(candidateBuffer);
+            if (picked == null)
+            {
+                return false;
+            }
+
+            offerBuffer.Add(BuildRolledOffer(picked));
             return true;
         }
 
@@ -786,7 +833,9 @@ namespace Project.Core.ZoneState
                     continue;
                 }
 
-                if (room.RoomKind == RoomKind.Shop)
+                if (room.RoomKind == RoomKind.Combat
+                    || room.RoomKind == RoomKind.Elite
+                    || room.RoomKind == RoomKind.Shop)
                 {
                     continue;
                 }
@@ -848,6 +897,53 @@ namespace Project.Core.ZoneState
                 offerBuffer[i] = offerBuffer[j];
                 offerBuffer[j] = tmp;
             }
+        }
+
+        private void EnsureOfferCount()
+        {
+            if (offerCount < RequiredChoiceCount)
+            {
+                offerCount = RequiredChoiceCount;
+            }
+        }
+
+        /// <summary>
+        /// Combat cards reroll a few times so the three paths are less likely to share
+        /// the same difficulty. Layout stays a corridor; the roll is the random part.
+        /// </summary>
+        private RoomChoiceOffer BuildRolledOffer(RoomData room)
+        {
+            RoomChoiceOffer offer = RouteOfferGenerator.BuildOffer(room);
+            if (!offer.HasGeneratedCombat)
+            {
+                return offer;
+            }
+
+            for (int attempt = 0; attempt < 3; attempt++)
+            {
+                if (!OfferBufferContainsDifficulty(offer.Difficulty))
+                {
+                    return offer;
+                }
+
+                offer = RouteOfferGenerator.BuildOffer(room);
+            }
+
+            return offer;
+        }
+
+        private bool OfferBufferContainsDifficulty(RouteDifficulty difficulty)
+        {
+            for (int i = 0; i < offerBuffer.Count; i++)
+            {
+                RoomChoiceOffer offer = offerBuffer[i];
+                if (offer.HasGeneratedCombat && offer.Difficulty == difficulty)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static bool IsSafeKind(RoomKind kind)

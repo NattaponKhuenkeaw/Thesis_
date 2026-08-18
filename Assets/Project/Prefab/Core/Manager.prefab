@@ -166,10 +166,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.RoomChoiceDirector
   mapData: {fileID: 0}
-  offerCount: 2
-  shopEveryClears: 3
-  defaultFillKinds: 000000000100000003000000
-  clearsSinceShopOpportunity: 0
+  offerCount: 3
+  actIndex: 0
+  pendingPostBossRest: 0
+  biomeHadShop: 0
+  biomeHadLevel: 0
+  biomeHadRest: 0
+  lastSafeKindConsumed: -1
 --- !u!1 &1566489620681877580
 GameObject:
   m_ObjectHideFlags: 0

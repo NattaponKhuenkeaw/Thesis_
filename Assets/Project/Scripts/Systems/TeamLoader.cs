@@ -69,7 +69,10 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     [SerializeField] private int currentIndex = 0;
     [SerializeField] private float lastSwitchTime = -999f;
 
+    private CharacterObject[] runStartTeamSnapshot;
+
     private bool isHandlingActiveDefeat;
+    private bool isRestoringLobbyMain;
 
     public bool IsHandlingActiveDefeat => isHandlingActiveDefeat;
     private Coroutine activeDefeatRoutine;
@@ -125,6 +128,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         ResolveDependencies();
         BootstrapRunInventoryTeam();
         SyncTeamSnapshotFromInventory();
+        runInventory?.RememberRunStartTeam(teamSnapshot, overwrite: false);
     }
 
     private void OnEnable()
@@ -134,6 +138,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         BindMetaProgressionEvents();
         CharacterEvents.OnCharacterStatsChanged += HandleCharacterStatsChanged;
         SyncTeamSnapshotFromInventory();
+        runInventory?.RememberRunStartTeam(teamSnapshot, overwrite: false);
         ReconcileAlwaysRuntimeEffects();
     }
 
@@ -150,8 +155,15 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         ResolveDependencies();
         BootstrapRunInventoryTeam();
         SyncTeamSnapshotFromInventory();
+        runInventory?.RememberRunStartTeam(teamSnapshot, overwrite: false);
         ReconcileAlwaysRuntimeEffects();
         RebuildRuntimeStats();
+        if (runInventory != null && runInventory.HasPendingLobbyMainReset)
+        {
+            RestoreLobbyStateAfterDeath();
+            return;
+        }
+
         LoadCurrentCharacter(forceReload: true);
     }
 
@@ -192,14 +204,93 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     public void LoadCurrentCharacter(bool forceReload = false)
     {
+        ResolveDependencies();
+        BindPlayerCharacter();
+        if (!isRestoringLobbyMain && runInventory != null && runInventory.HasPendingLobbyMainReset)
+        {
+            RestoreLobbyStateAfterDeath();
+            return;
+        }
+
         SyncTeamSnapshotFromInventory();
+        ApplyActiveSlotVisual(forceReload);
+    }
+
+    /// <summary>
+    /// Ignore leftover run identity and load a specific team slot onto the live player.
+    /// Pin the requested slot after inventory sync so a stale active index cannot win.
+    /// </summary>
+    public void ForceLoadSlot(int slotIndex, bool forceReload = true)
+    {
+        ResolveDependencies();
+        BindPlayerCharacter();
+        runInventory?.SetActiveTeamSlotIndex(slotIndex);
+        SyncTeamSnapshotFromInventory();
+        currentIndex = slotIndex;
+        runInventory?.SetActiveTeamSlotIndex(slotIndex);
+        ApplyActiveSlotVisual(forceReload);
+    }
+
+    public void CaptureRunStartTeam()
+    {
+        ResolveDependencies();
+        SyncTeamSnapshotFromInventory();
+        if (teamSnapshot == null || teamSnapshot.Length == 0)
+        {
+            return;
+        }
+
+        runStartTeamSnapshot = new CharacterObject[teamSnapshot.Length];
+        Array.Copy(teamSnapshot, runStartTeamSnapshot, teamSnapshot.Length);
+        runInventory?.RememberRunStartTeam(teamSnapshot, overwrite: true);
+    }
+
+    /// <summary>
+    /// Wipe → Lobby: restore the run-start roster and put CharacterObject_main on the player.
+    /// </summary>
+    public void ForceLobbyMainCharacter()
+    {
+        ResolveDependencies();
+        BindPlayerCharacter();
+        isHandlingActiveDefeat = false;
+        lastSwitchTime = -999f;
+
+        CharacterObject[] roster = runInventory != null
+            ? runInventory.GetRunStartTeamOrCurrent()
+            : CopyTeam(runStartTeamSnapshot);
+        if (CountCharacters(roster) == 0)
+        {
+            roster = CopyTeam(runStartTeamSnapshot);
+        }
+
+        if (CountCharacters(roster) > 0)
+        {
+            runInventory?.DeployTeam(roster, preferredIndex: 0, artifactsBySlot: null);
+        }
+
+        int mainSlot = runInventory != null ? runInventory.GetMainCharacterSlotIndex() : 0;
+        runInventory?.SetActiveTeamSlotIndex(mainSlot);
+        currentIndex = mainSlot;
+        ApplyCharacterSlotToAllPlayers(mainSlot);
+    }
+
+    private void ApplyActiveSlotVisual(bool forceReload)
+    {
         if (playerCharacter == null)
         {
             Debug.LogWarning("TeamLoader: PlayerCharacter is missing");
             return;
         }
 
-        int validIndex = ResolvePreferredIndex(CurrentCharacter);
+        int validIndex = currentIndex;
+        if (teamSnapshot == null
+            || validIndex < 0
+            || validIndex >= teamSnapshot.Length
+            || teamSnapshot[validIndex] == null)
+        {
+            validIndex = FindFirstOccupiedIndex();
+        }
+
         if (validIndex < 0)
         {
             currentIndex = -1;
@@ -238,6 +329,49 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             ? targetCharacter.metaData.displayName
             : targetCharacter.name;
         Debug.Log("Switched to: " + displayName);
+    }
+
+    private void ApplyCharacterSlotToAllPlayers(int slotIndex)
+    {
+        PlayerCharacter[] players = FindObjectsByType<PlayerCharacter>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        PlayerCharacter original = playerCharacter;
+        if (players == null || players.Length == 0)
+        {
+            ForceLoadSlot(slotIndex, forceReload: true);
+            return;
+        }
+
+        for (int i = 0; i < players.Length; i++)
+        {
+            if (players[i] == null)
+            {
+                continue;
+            }
+
+            BindActivePlayer(players[i]);
+            ForceLoadSlot(slotIndex, forceReload: true);
+        }
+
+        if (original != null)
+        {
+            BindActivePlayer(original);
+        }
+        else
+        {
+            BindPlayerCharacter();
+        }
+    }
+
+    private static CharacterObject[] CopyTeam(CharacterObject[] source)
+    {
+        if (source == null || source.Length == 0)
+        {
+            return Array.Empty<CharacterObject>();
+        }
+
+        CharacterObject[] copy = new CharacterObject[source.Length];
+        Array.Copy(source, copy, source.Length);
+        return copy;
     }
 
     public bool SwitchNext()
@@ -545,6 +679,88 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
                 rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
             }
         }
+    }
+
+    /// <summary>
+    /// Death → Lobby: bind the scene player, restore slot 0 (main), full HP, empty AE.
+    /// Rebuilds deployed runtimes so KO'd teammates who return with the lobby roster
+    /// show up on HUD again.
+    /// </summary>
+    public void RestoreLobbyStateAfterDeath(PlayerCharacter scenePlayer = null)
+    {
+        if (isRestoringLobbyMain)
+        {
+            return;
+        }
+
+        isRestoringLobbyMain = true;
+        try
+        {
+            if (scenePlayer != null)
+            {
+                BindActivePlayer(scenePlayer);
+            }
+            else
+            {
+                ResolveDependencies();
+                BindPlayerCharacter();
+            }
+
+            ForceLobbyMainCharacter();
+
+            CharacterObject[] team = GetTeamSnapshot();
+            for (int i = 0; i < team.Length; i++)
+            {
+                CharacterObject character = team[i];
+                if (character == null)
+                {
+                    continue;
+                }
+
+                float maxHp = GetCharacterMaxHP(character);
+                SetCharacterCurrentHP(character, maxHp);
+                SetCharacterCurrentAE(character, 0f);
+            }
+
+            ReconcileAlwaysRuntimeEffects();
+            RebuildRuntimeStats();
+            int mainSlot = runInventory != null ? runInventory.GetMainCharacterSlotIndex() : 0;
+            currentIndex = mainSlot;
+            runInventory?.SetActiveTeamSlotIndex(mainSlot);
+            ApplyCharacterSlotToAllPlayers(mainSlot);
+            NotifyTeamChanged();
+            NotifyAllCharacterResources();
+            ResetRuntimeTransientState();
+            runInventory?.ConsumeLobbyMainReset();
+
+            CharacterObject main = CurrentCharacter;
+            string displayName = main != null && main.metaData != null && !string.IsNullOrWhiteSpace(main.metaData.displayName)
+                ? main.metaData.displayName
+                : (main != null ? main.name : "none");
+            Debug.Log($"[TeamLoader] Death → Lobby restored CharacterObject_main: {displayName}", this);
+        }
+        finally
+        {
+            isRestoringLobbyMain = false;
+        }
+    }
+
+    public void BindActivePlayer(PlayerCharacter player)
+    {
+        if (player == null)
+        {
+            ResolveDependencies();
+            BindPlayerCharacter();
+            return;
+        }
+
+        if (playerCharacter != player)
+        {
+            UnbindPlayerCharacter();
+            playerCharacter = player;
+        }
+
+        BindPlayerCharacter();
     }
 
     public bool ContainsCharacter(CharacterObject character)
@@ -2166,9 +2382,16 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     private void BindPlayerCharacter()
     {
-        if (playerCharacter == null)
+        PlayerCharacter livePlayer = PlayerCharacter.Instance
+            ?? UnityEngine.Object.FindFirstObjectByType<PlayerCharacter>();
+        if (livePlayer != null && playerCharacter != livePlayer)
         {
-            playerCharacter = PlayerCharacter.Instance;
+            UnbindPlayerCharacter();
+            playerCharacter = livePlayer;
+        }
+        else if (playerCharacter == null)
+        {
+            playerCharacter = livePlayer;
         }
 
         if (playerCharacter == null)

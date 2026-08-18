@@ -1,4 +1,5 @@
 using UnityEngine;
+using Project.Core.ZoneState;
 
 /// <summary>
 /// Exit walk-out cinematic paired with <see cref="PlayerIntroState"/>.
@@ -10,10 +11,12 @@ public class PlayerExitState : PlayerState
     private const float MaxExitDurationSeconds = 1.75f;
 
     private float exitStartedAt;
+    private bool holdingAtTarget;
 
     public PlayerExitState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
     public override PlayerStateId StateId => PlayerStateId.Exit;
+    public override PlayerStatePriority Priority => PlayerStatePriority.System;
 
     public override bool AcceptsMoveInput => false;
     public override bool AcceptsDashInput => false;
@@ -31,15 +34,11 @@ public class PlayerExitState : PlayerState
     {
         base.Enter();
         FinishedNormally = false;
+        holdingAtTarget = false;
         exitStartedAt = Time.unscaledTime;
+        BeginCinematicTraversal();
         if (player.Movement != null)
         {
-            Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
-            if (rb != null)
-            {
-                rb.linearVelocity = Vector2.zero;
-            }
-
             player.Movement.SetHorizontalInput(0f);
         }
     }
@@ -48,7 +47,13 @@ public class PlayerExitState : PlayerState
     {
         if (player.Movement == null)
         {
-            fsm.ChangeState(fsm.IdleState);
+            CompleteExit(snapToTargetX: true);
+            return;
+        }
+
+        if (holdingAtTarget)
+        {
+            HoldAtTarget();
             return;
         }
 
@@ -78,6 +83,7 @@ public class PlayerExitState : PlayerState
     public override void Exit()
     {
         base.Exit();
+        holdingAtTarget = false;
         if (player.Movement != null)
         {
             player.Movement.SetHorizontalInput(0f);
@@ -91,7 +97,8 @@ public class PlayerExitState : PlayerState
     }
 
     /// <summary>
-    /// Snaps to the exit target and returns to Idle. Used when Exit was interrupted mid-walk.
+    /// Snaps to the exit target and holds Exit until the transition teleports the player.
+    /// Going back to Idle here lets leftover attack input walk through the opened exit wall.
     /// </summary>
     public void ForceComplete()
     {
@@ -100,16 +107,34 @@ public class PlayerExitState : PlayerState
 
     private void CompleteExit(bool snapToTargetX)
     {
+        fsm.InputBuffer?.ClearAll();
         if (player.Movement != null)
         {
             player.Movement.SetHorizontalInput(0f);
+            player.Movement.CancelAttackMotion();
             if (snapToTargetX)
             {
                 player.Movement.TeleportHorizontally(TargetPosition.x);
             }
         }
 
+        HoldAtTarget();
         FinishedNormally = true;
-        fsm.ChangeState(fsm.IdleState);
+        holdingAtTarget = true;
+    }
+
+    private void HoldAtTarget()
+    {
+        if (player.Movement != null)
+        {
+            player.Movement.SetHorizontalInput(0f);
+            player.Movement.CancelAttackMotion();
+        }
+
+        Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+        }
     }
 }

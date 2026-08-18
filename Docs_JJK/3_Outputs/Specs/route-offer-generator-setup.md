@@ -34,3 +34,6 @@ RoomChoiceDirector
 - Shop / Level / Boss offers do not generate combat content
 - Elite biases Medium/Hard
 - If `ActiveRouteOffer` is missing (debug travel), `RoomData.Encounter` / Inspector waves still work as fallback
+- Normal choices always roll **3 cards**. Combat layouts stay in the pool after a visit; only the current 3-card set avoids duplicate RoomIds, then pads with a fresh combat roll if needed
+- Boss remains a single offer
+- `Manager.prefab` `RoomChoiceDirector.offerCount` must stay at 3

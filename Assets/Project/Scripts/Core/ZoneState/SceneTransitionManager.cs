@@ -410,6 +410,7 @@ namespace Project.Core.ZoneState
 
                     if (player != null && player.StateMachine != null)
                     {
+                        player.StateMachine.InputBuffer?.ClearAll();
                         Debug.Log($"[SceneTransitionManager] Intro finished. CurrentState={player.StateMachine.CurrentStateId}.");
                     }
                 }
@@ -500,14 +501,20 @@ namespace Project.Core.ZoneState
             SceneBoundaryController boundary = ResolveCurrentBoundaryController()
                 ?? Object.FindFirstObjectByType<SceneBoundaryController>();
             boundary?.PrepareForExit(target);
+            player.StateMachine.InputBuffer?.ClearAll();
             player.StateMachine.ChangeState(exitState);
             Debug.Log($"[SceneTransitionManager] Exit walk started toward {target} (from {player.transform.position}).");
 
             float exitStartedAt = Time.unscaledTime;
             while (player != null
                 && player.StateMachine != null
-                && player.StateMachine.CurrentStateId == PlayerStateId.Exit)
+                && !exitState.FinishedNormally)
             {
+                if (WasExitWalkAbortedByDeath(player))
+                {
+                    yield break;
+                }
+
                 if (Time.unscaledTime - exitStartedAt > MaxExitWaitSeconds)
                 {
                     Debug.LogWarning("[SceneTransitionManager] ExitState timed out; forcing exit complete before fade.");

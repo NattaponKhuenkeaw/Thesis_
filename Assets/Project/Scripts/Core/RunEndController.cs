@@ -176,13 +176,8 @@ namespace Project.Core.RunEnd
             AppendFragmentRewardDeltas(snapshot);
             metaProgression?.SavePersistentState();
             runInventory?.ResetRunProgressForDeath(metaProgression);
-
-            // Step 1 (Not Perma): skip Run Result screen; return to Lobby immediately after death bookkeeping.
-            // if (runResultUI == null)
-            // {
-            //     runResultUI = gameObject.AddComponent<RunResultUI>();
-            // }
-            // runResultUI.Show(snapshot, ReturnToLobby);
+            TeamLoader teamLoader = TeamLoader.Instance ?? FindFirstObjectByType<TeamLoader>();
+            teamLoader?.ForceLobbyMainCharacter();
             ReturnToLobby();
         }
 
@@ -231,20 +226,42 @@ namespace Project.Core.RunEnd
         {
             yield return null;
             yield return null;
+            yield return null;
 
             ResolveDependencies();
             TeamLoader teamLoader = TeamLoader.Instance ?? FindFirstObjectByType<TeamLoader>();
+            PlayerCharacter player = ResolvePlayer();
+            float wait = 0f;
+            while (player == null && wait < 1f)
+            {
+                yield return null;
+                wait += Time.unscaledDeltaTime;
+                player = ResolvePlayer();
+                teamLoader ??= TeamLoader.Instance ?? FindFirstObjectByType<TeamLoader>();
+            }
+
             if (runInventory != null)
             {
-                runInventory.SetActiveTeamSlotIndex(0);
+                runInventory.RequestLobbyMainReset();
+                runInventory.SetActiveTeamSlotIndex(runInventory.GetMainCharacterSlotIndex());
             }
 
             if (teamLoader != null)
             {
-                RestoreTeamResources(teamLoader);
+                teamLoader.RestoreLobbyStateAfterDeath(player);
             }
 
-            PlayerCharacter player = ResolvePlayer();
+            yield return null;
+
+            player = ResolvePlayer();
+            teamLoader ??= TeamLoader.Instance ?? FindFirstObjectByType<TeamLoader>();
+            if (runInventory != null)
+            {
+                runInventory.SetActiveTeamSlotIndex(runInventory.GetMainCharacterSlotIndex());
+            }
+
+            teamLoader?.ForceLobbyMainCharacter();
+
             if (player != null)
             {
                 player.Animator?.SetDie(false);
@@ -354,31 +371,6 @@ namespace Project.Core.RunEnd
                     : $"{fragment.sourceItemId} Fragment";
                 snapshot.AddPermanentReward(key, label, delta);
             }
-        }
-
-        private void RestoreTeamResources(TeamLoader teamLoader)
-        {
-            if (teamLoader == null)
-            {
-                return;
-            }
-
-            CharacterObject[] team = teamLoader.GetTeamSnapshot();
-            for (int i = 0; i < team.Length; i++)
-            {
-                CharacterObject character = team[i];
-                if (character == null)
-                {
-                    continue;
-                }
-
-                // Lobby respawn: full HP so the player can move, empty AE (ultimate gauge).
-                float maxHp = teamLoader.GetCharacterMaxHP(character);
-                teamLoader.SetCharacterCurrentHP(character, maxHp);
-                teamLoader.SetCharacterCurrentAE(character, 0f);
-            }
-
-            teamLoader.LoadCurrentCharacter(forceReload: true);
         }
 
         private void CaptureFragmentBaseline()

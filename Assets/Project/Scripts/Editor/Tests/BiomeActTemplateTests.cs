@@ -36,5 +36,33 @@ public class BiomeActTemplateTests
             Object.DestroyImmediate(go);
         }
     }
+
+    [Test]
+    public void OfferCountIsAtLeastThree()
+    {
+        var go = new GameObject(nameof(BiomeActTemplateTests) + "_Offers");
+        try
+        {
+            RoomChoiceDirector director = go.AddComponent<RoomChoiceDirector>();
+            Assert.That(director.OfferCount, Is.GreaterThanOrEqualTo(3));
+        }
+        finally
+        {
+            Object.DestroyImmediate(go);
+        }
+    }
+
+#if UNITY_EDITOR
+    [Test]
+    public void ManagerPrefabOfferCountIsThree()
+    {
+        GameObject prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+            "Assets/Project/Prefab/Core/Manager.prefab");
+        Assert.That(prefab, Is.Not.Null, "Manager prefab missing.");
+        RoomChoiceDirector director = prefab.GetComponentInChildren<RoomChoiceDirector>(true);
+        Assert.That(director, Is.Not.Null, "RoomChoiceDirector missing on Manager prefab.");
+        Assert.That(director.OfferCount, Is.EqualTo(3));
+    }
+#endif
 }
 #endif
