@@ -1,0 +1,21 @@
+# โฟลเดอร์ระบบของ Unity (ไม่ต้องให้ AI อ่าน)
+Library/
+Temp/
+Obj/
+Build/
+Builds/
+Logs/
+MemoryCaptures/
+UserSettings/
+
+# ไฟล์ระบบของ Visual Studio
+.vs/
+.idea/
+*.csproj
+*.sln
+*.meta
+
+# โฟลเดอร์และไฟล์อื่นๆ ที่ไม่ต้องใช้
+Assets/Plugins/
+Assets/TextMesh Pro/
+repomix-output.*

@@ -17,6 +17,7 @@ namespace Project.Core.ZoneState
         {
             get
             {
+                EnsureRoomMatchesActiveScene();
                 if (currentRoom == null)
                 {
                     ResolveCurrentRoomFromActiveScene();
@@ -39,22 +40,52 @@ namespace Project.Core.ZoneState
             ResolveCurrentRoomFromActiveScene();
         }
 
+        /// <summary>
+        /// ScriptableObject state can linger across scene loads. Refresh when the active scene changed.
+        /// </summary>
+        private void EnsureRoomMatchesActiveScene()
+        {
+            string activeSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            if (string.IsNullOrEmpty(activeSceneName))
+            {
+                return;
+            }
+
+            if (currentRoom != null
+                && !string.IsNullOrWhiteSpace(currentRoom.SceneName)
+                && string.Equals(currentRoom.SceneName, activeSceneName, System.StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            RoomData previous = currentRoom;
+            ResolveCurrentRoomFromActiveScene();
+            if (currentRoom != previous)
+            {
+                OnRoomChanged?.Invoke(currentRoom);
+                OnZoneModeChanged?.Invoke(currentRoom != null ? currentRoom.ZoneMode : fallbackMode);
+            }
+        }
+
         private void ResolveCurrentRoomFromActiveScene()
         {
-            #if UNITY_EDITOR || true
-            if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != null)
+            if (RoomLayoutHost.Instance != null && RoomLayoutHost.Instance.ActiveRoom != null)
             {
-                string activeSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-                if (!string.IsNullOrEmpty(activeSceneName))
-                {
-                    MapSO mapData = Resources.Load<MapSO>("MapSO/Test_MapSO");
-                    if (mapData != null)
-                    {
-                        currentRoom = mapData.GetRoomData(activeSceneName);
-                    }
-                }
+                currentRoom = RoomLayoutHost.Instance.ActiveRoom;
+                return;
             }
-            #endif
+
+            string activeSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            if (string.IsNullOrEmpty(activeSceneName))
+            {
+                return;
+            }
+
+            MapSO mapData = Resources.Load<MapSO>("MapSO/Test_MapSO");
+            if (mapData != null)
+            {
+                currentRoom = mapData.ResolveRoom(activeSceneName);
+            }
         }
 
         public void SetCurrentRoom(RoomData room)

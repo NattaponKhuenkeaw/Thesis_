@@ -29,7 +29,7 @@ Transform:
   m_GameObject: {fileID: 1266016415736615074}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.4591899, y: 0.10617, z: 0}
+  m_LocalPosition: {x: 0.55, y: 0.10617, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -69,7 +69,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.109438896, y: -0.0038259923}
+  m_Offset: {x: 0.12, y: -0.0038259923}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -262,7 +262,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f9d41a6c2fe4cd6b33d2d31d7313e65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAttackHitbox
-  enemyController: {fileID: 0}
+  enemyController: {fileID: 655673979869406066}
+  attackProperty: 0
   triggerPlayerTakeDamageAnimation: 1
 --- !u!1 &8917136744719106790
 GameObject:
@@ -391,7 +392,7 @@ Rigidbody2D:
     m_Bits: 256
   m_Interpolate: 0
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 5
 --- !u!61 &7441673381418920329
 BoxCollider2D:
@@ -438,7 +439,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   m_Size: {x: 0.875, y: 1.6}
-  m_EdgeRadius: 0
+  m_EdgeRadius: 0.04
 --- !u!95 &5297919245514991578
 Animator:
   serializedVersion: 7
@@ -493,15 +494,24 @@ MonoBehaviour:
   defense: 0
   damageRes: 0
   isEliteOrBoss: 0
+  startArmored: 0
+  armoredDamageMultiplier: 0.35
+  armorDurability: 40
+  armoredTint: {r: 1, g: 0.55, b: 0.15, a: 1}
+  brokenStateDuration: 0.35
+  defenseState: 0
+  currentArmorDurability: 0
   isAlive: 1
   currentComboHits: 0
   antiStunlockComboThreshold: 4
   antiStunlockResistChance: 0.3
+  antiStunlockArmorDuration: 0
   rb: {fileID: 6597299547389863175}
   attackHitbox: {fileID: 3145967654918923133}
   bodyCollider: {fileID: 7441673381418920329}
   worldUI: {fileID: 0}
   hitReactionHandler: {fileID: -6515187417249938201}
+  destroyDelayOnDeath: 0
 --- !u!114 &4337216351384873233
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -627,7 +637,7 @@ MonoBehaviour:
   airJuggleSessionActive: 0
   groundLayers:
     serializedVersion: 2
-    m_Bits: 8
+    m_Bits: 520
   groundCheckDistance: 0.08
   groundNormalMinY: 0.25
 --- !u!114 &7560202951372101729

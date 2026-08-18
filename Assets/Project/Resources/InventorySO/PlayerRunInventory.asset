@@ -14,12 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Project.ShopSystem.PlayerRunInventory
   ownedItems:
   - {fileID: 11400000, guid: 588790c4612f0304f89d14fb2bd64923, type: 2}
-  - {fileID: 11400000, guid: 225e900f58aad0a409d9d02148d91571, type: 2}
-  - {fileID: 11400000, guid: 947559303eef7b740a2c21e5f5e600a9, type: 2}
-  - {fileID: 11400000, guid: 6811db41c79c43a41b3ff2f4a87eecb4, type: 2}
-  - {fileID: 11400000, guid: 6b2f112e2e15b20468e27601ac347a21, type: 2}
   itemStacks: []
-  currency: 2147404257
+  currency: 1000
   _globalLevel: 1
   _globalMaxLevel: 30
   runCharacters:
@@ -32,54 +28,11 @@ MonoBehaviour:
       defensePerLevel: 4.2
       maxHpPerLevel: 81
     currentHP: 813
-    currentAE: 48
-  - character: {fileID: 11400000, guid: 6e1cc08e7eba57845b7bac14d8757b51, type: 2}
-    upgrade:
-      level: 1
-      maxLevel: 30
-      currentExp: 0
-      attackPerLevel: 4.3
-      defensePerLevel: 4.8
-      maxHpPerLevel: 83
-    currentHP: 973
-    currentAE: 63
-  - character: {fileID: 11400000, guid: a2f28494c803e0b49a390a31a390a787, type: 2}
-    upgrade:
-      level: 1
-      maxLevel: 30
-      currentExp: 0
-      attackPerLevel: 7
-      defensePerLevel: 3.7
-      maxHpPerLevel: 79.5
-    currentHP: 783
-    currentAE: 70
-  - character: {fileID: 11400000, guid: 862c5f94563edd64bac74e8fbcce835c, type: 2}
-    upgrade:
-      level: 1
-      maxLevel: 30
-      currentExp: 0
-      attackPerLevel: 8
-      defensePerLevel: 4.5
-      maxHpPerLevel: 69.7
-    currentHP: -1
-    currentAE: -1
-  - character: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
-    upgrade:
-      level: 1
-      maxLevel: 30
-      currentExp: 0
-      attackPerLevel: 5.2
-      defensePerLevel: 4.4
-      maxHpPerLevel: 80
-    currentHP: 892
-    currentAE: 11
+    currentAE: 60
+    activeEffects: []
+    hasTickingEffects: 0
   teamSlots:
   - character: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
-    artifacts:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
-  - character: {fileID: 11400000, guid: 6e1cc08e7eba57845b7bac14d8757b51, type: 2}
     artifacts:
     - {fileID: 0}
     - {fileID: 0}
@@ -89,4 +42,9 @@ MonoBehaviour:
     - {fileID: 0}
     - {fileID: 0}
     - {fileID: 0}
-  activeTeamSlotIndex: 1
+  - character: {fileID: 0}
+    artifacts:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+  activeTeamSlotIndex: 0

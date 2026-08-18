@@ -841,7 +841,7 @@ namespace Project.TeamBuilder.UI
 
             foreach (BaseItem item in playerInventory.ownedItems)
             {
-                if (item is Artifact artifact && artifact != null && artifact.isEquippable && !ownedArtifacts.Contains(artifact))
+                if (item is Artifact artifact && artifact != null && !ownedArtifacts.Contains(artifact))
                 {
                     ownedArtifacts.Add(artifact);
                 }

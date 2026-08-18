@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60fd2ca7f56b62c45b42664e28129625, type: 3}
+  m_Name: RoomData_Boss_01
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.RoomData
+  roomId: Boss_01
+  sceneName: combat_1
+  layoutPrefab: {fileID: 5503952756468371482, guid: 8f2a6c4e1b9d4078a5e3c7d0f1a2b4c6, type: 3}
+  roomKind: 4
+  displayName: "Boss \u2014 Executioner"
+  offerIcon: {fileID: 0}
+  offerWeight: 1
+  includeInRandomOffers: 0
+  zoneMode: 1
+  defaultEntranceId: Default
+  useStaticCamera: 0
+  encounter: {fileID: 11400000, guid: e6fbd806925497cd1af4d8e706c1b529, type: 2}

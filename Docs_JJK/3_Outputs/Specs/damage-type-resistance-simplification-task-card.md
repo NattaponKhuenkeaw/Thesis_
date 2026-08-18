@@ -120,4 +120,4 @@ Next artifacts:
 
 - `Docs_JJK/3_Outputs/Specs/damage-type-resistance-simplification-design-spec.md`
 - `Docs_JJK/3_Outputs/Specs/damage-type-resistance-simplification-impact-analysis.md`
-- `Docs_JJK/3_Outputs/ADRs/006-hit-owned-damage-types-and-enemy-reductions.md`
+- `Docs_JJK/3_Outputs/ADRs/008-hit-owned-damage-types-and-enemy-reductions.md`

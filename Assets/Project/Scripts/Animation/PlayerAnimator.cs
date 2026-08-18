@@ -189,6 +189,24 @@ public class PlayerAnimator : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Drops a leftover attack/skill clip so Intro/Exit can play locomotion instead.
+    /// </summary>
+    public void AbortCombatAnimation()
+    {
+        ResetActionAnimationTarget();
+        if (anim == null)
+        {
+            return;
+        }
+
+        SafeResetTrigger(jumpHash);
+        SafeResetTrigger(dashHash);
+        SafeResetTrigger(landingHash);
+        anim.SetBool(isLandingHash, false);
+        anim.Play(groundedHash, 0, 0f);
+    }
+
     public void TriggerTakeDamage()
     {
         SafeSetTrigger(takeDamageHash);

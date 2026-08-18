@@ -1,3 +1,4 @@
+
 using UnityEngine;
 using UnityEngine.UI;
 using Project.Progression;
@@ -25,6 +26,24 @@ public class AdminConsole : MonoBehaviour
     public void KillAllEnemies()
     {
         Destroy(GameObject.FindGameObjectWithTag("Enemy"));
+    }
+
+    public void KillPlayer()
+    {
+        PlayerCharacter player = PlayerCharacter.Instance;
+        if (player == null)
+        {
+            player = FindFirstObjectByType<PlayerCharacter>();
+        }
+
+        if (player == null)
+        {
+            Debug.LogWarning("[AdminConsole] Cannot kill player because no PlayerCharacter was found.");
+            return;
+        }
+
+        player.ForceDeath();
+        Debug.Log("[AdminConsole] Player death triggered.");
     }
 
     public void HealPlayer()
@@ -86,4 +105,5 @@ public class AdminConsole : MonoBehaviour
             Debug.LogWarning("[AdminConsole] Current scene exit could not be unlocked.");
         }
     }
+
 }

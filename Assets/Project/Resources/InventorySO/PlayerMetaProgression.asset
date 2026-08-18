@@ -12,57 +12,82 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49a8e553d4c07b3459651c53e66b2fde, type: 3}
   m_Name: PlayerMetaProgression
   m_EditorClassIdentifier: Assembly-CSharp::Project.Progression.PlayerMetaProgression
+  metaCurrency: 0
   fragments:
+  - sourceItemId: ART-004
+    displayName: Memory-Draining Urn Fragment
+    fragmentType: 1
+    quantity: 1
+  - sourceItemId: ART-001
+    displayName: Blind's Boundless Ribbon Fragment
+    fragmentType: 1
+    quantity: 1
+  - sourceItemId: ART-006
+    displayName: Shroud of Deprivation Fragment
+    fragmentType: 1
+    quantity: 1
+  - sourceItemId: ART-007
+    displayName: Memory-Draining Urn Fragment
+    fragmentType: 1
+    quantity: 1
+  - sourceItemId: ART-003
+    displayName: Aura-Resonating Shard Fragment
+    fragmentType: 1
+    quantity: 1
   - sourceItemId: char_5_goenitz
     displayName: Goenitz Fragment
     fragmentType: 0
-    quantity: 98
-  - sourceItemId: char_3_shermie
-    displayName: Shermie Fragment
-    fragmentType: 0
-    quantity: 98
+    quantity: 87
   - sourceItemId: char_1_kyo
     displayName: Kyo Fragment
     fragmentType: 0
-    quantity: 98
-  - sourceItemId: char-0-main
-    displayName: Main Fragment
+    quantity: 87
+  - sourceItemId: char_3_shermie
+    displayName: Shermie Fragment
     fragmentType: 0
-    quantity: 98
+    quantity: 87
   - sourceItemId: Char_2_Rugal
     displayName: Rugal Fragment
     fragmentType: 0
-    quantity: 98
-  - sourceItemId: char-1-camera_girl
-    displayName: Camera Girl Fragment
+    quantity: 87
+  - sourceItemId: char_6_orochi
+    displayName: Orochi Fragment
     fragmentType: 0
-    quantity: 98
+    quantity: 99
+  - sourceItemId: char-0-main
+    displayName: Main Fragment
+    fragmentType: 0
+    quantity: 83
   characterPotentials:
-  - characterId: char_5_goenitz
-    skillLevel: 1
-    ultimateLevel: 0
-    passiveLevel: 0
-  - characterId: char_6_orochi
-    skillLevel: 1
-    ultimateLevel: 0
-    passiveLevel: 0
-  - characterId: char_1_kyo
-    skillLevel: 0
-    ultimateLevel: 0
-    passiveLevel: 1
-  - characterId: char_3_shermie
-    skillLevel: 0
-    ultimateLevel: 0
-    passiveLevel: 1
-  - characterId: Char_2_Rugal
-    skillLevel: 1
-    ultimateLevel: 0
-    passiveLevel: 0
   - characterId: char-0-main
-    skillLevel: 0
-    ultimateLevel: 1
-    passiveLevel: 0
-  - characterId: char-1-camera_girl
-    skillLevel: 1
-    ultimateLevel: 0
-    passiveLevel: 0
+    skillLevel: 4
+    ultimateLevel: 4
+    passiveLevel: 4
+  - characterId: char_6_orochi
+    skillLevel: 4
+    ultimateLevel: 4
+    passiveLevel: 4
+  - characterId: char_1_kyo
+    skillLevel: 4
+    ultimateLevel: 4
+    passiveLevel: 4
+  - characterId: char_5_goenitz
+    skillLevel: 4
+    ultimateLevel: 4
+    passiveLevel: 4
+  - characterId: char_3_shermie
+    skillLevel: 4
+    ultimateLevel: 4
+    passiveLevel: 4
+  - characterId: Char_2_Rugal
+    skillLevel: 4
+    ultimateLevel: 4
+    passiveLevel: 4
+  unlockedCharacterIds:
+  - char-0-main
+  - char_3_shermie
+  - char_1_kyo
+  - Char_2_Rugal
+  - char_5_goenitz
+  - char_6_orochi
+  permanentItems: []

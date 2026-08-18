@@ -16,14 +16,20 @@ public class EnemyWorldUI : MonoBehaviour
     [SerializeField] private float healthLerpDuration = 0.5f;
 
     [SerializeField] private bool hideCanvasOnDeath = true;
+    [Tooltip("When false, world HP sliders stay hidden (boss uses screen HUD instead). Attack warning still works.")]
+    [SerializeField] private bool showHealthBar = true;
 
     [Header("Attack Warning")]
     [SerializeField] private GameObject attackWarningIcon;
     [SerializeField] private float defaultAttackWarningDuration = 0.5f;
+    [SerializeField] private Color normalWarningColor = Color.white;
+    [SerializeField] private Color undodgeableWarningColor = new Color(0.72f, 0.25f, 1f, 1f);
 
     private Coroutine healthLerpCoroutine;
     private Coroutine attackWarningCoroutine;
     private Vector3 baseLocalScale = Vector3.one;
+    private Graphic attackWarningGraphic;
+    private SpriteRenderer attackWarningSprite;
 
     private void Reset()
     {
@@ -45,12 +51,14 @@ public class EnemyWorldUI : MonoBehaviour
             attackWarningIcon.SetActive(false);
         }
 
+        ApplyHealthBarVisibility();
         UpdateHealthBar();
     }
 
     private void OnEnable()
     {
         SubscribeToEnemyEvents();
+        ApplyHealthBarVisibility();
         UpdateHealthBar();
     }
 
@@ -201,12 +209,18 @@ public class EnemyWorldUI : MonoBehaviour
 
     public void ShowAttackWarning(float duration = -1f)
     {
+        ShowAttackWarning(duration, AttackWarningStyle.Normal);
+    }
+
+    public void ShowAttackWarning(float duration, AttackWarningStyle style)
+    {
         if (attackWarningIcon == null)
         {
             return;
         }
 
         float resolvedDuration = duration > 0f ? duration : defaultAttackWarningDuration;
+        ApplyWarningStyle(style);
 
         if (attackWarningCoroutine != null)
         {
@@ -230,9 +244,14 @@ public class EnemyWorldUI : MonoBehaviour
         }
     }
 
+    public void RefreshHealthDisplay()
+    {
+        UpdateHealthBar();
+    }
+
     private void UpdateHealthBar()
     {
-        if (healthSlider == null || enemyController == null)
+        if (!showHealthBar || healthSlider == null || enemyController == null)
         {
             return;
         }
@@ -260,6 +279,28 @@ public class EnemyWorldUI : MonoBehaviour
         }
     }
 
+    private void ApplyHealthBarVisibility()
+    {
+        if (healthSlider != null)
+        {
+            healthSlider.gameObject.SetActive(showHealthBar);
+        }
+
+        if (damageLerpSlider != null)
+        {
+            damageLerpSlider.gameObject.SetActive(showHealthBar);
+        }
+    }
+
+    /// <summary>
+    /// Bosses use screen-space HUD; call with false to hide world HP while keeping attack warning.
+    /// </summary>
+    public void SetShowHealthBar(bool visible)
+    {
+        showHealthBar = visible;
+        ApplyHealthBarVisibility();
+    }
+
     private IEnumerator HealthLerpRoutine(float targetValue)
     {
         yield return new WaitForSeconds(healthLerpDelay);
@@ -276,6 +317,25 @@ public class EnemyWorldUI : MonoBehaviour
 
         damageLerpSlider.value = targetValue;
         healthLerpCoroutine = null;
+    }
+
+    private void ApplyWarningStyle(AttackWarningStyle style)
+    {
+        Color color = style == AttackWarningStyle.Undodgeable
+            ? undodgeableWarningColor
+            : normalWarningColor;
+
+        if (attackWarningGraphic == null && attackWarningIcon != null)
+            attackWarningGraphic = attackWarningIcon.GetComponentInChildren<Graphic>(true);
+
+        if (attackWarningSprite == null && attackWarningIcon != null)
+            attackWarningSprite = attackWarningIcon.GetComponentInChildren<SpriteRenderer>(true);
+
+        if (attackWarningGraphic != null)
+            attackWarningGraphic.color = color;
+
+        if (attackWarningSprite != null)
+            attackWarningSprite.color = color;
     }
 
     private IEnumerator AttackWarningRoutine(float duration)

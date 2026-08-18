@@ -1,19 +1,27 @@
 using UnityEngine;
+using Project.UI;
 
 namespace Project.Core.ZoneState
 {
     /// <summary>
-    /// Place on a GameObject with a 2D Trigger Collider to represent a door or portal.
-    /// When the player overlaps, triggers transition to the target scene.
+    /// Exit / portal trigger. By default opens the room-choice UI while the player stands in the zone
+    /// (proximity show/hide, like Shop/Level/Rest floating prompts). Walking away dismisses the UI.
+    /// Set a fixed destination and disable openRoomChoiceUi for direct hops (e.g. debug).
     /// </summary>
     [RequireComponent(typeof(Collider2D))]
     public class TransitionTrigger : MonoBehaviour
     {
-        [Header("Scene Transition Settings")]
-        [Tooltip("The name of the scene to load.")]
+        [Header("Room Choice (BlazBlue)")]
+        [Tooltip("When true and exit is unlocked, standing in the exit shows next-room choices. Leaving hides them.")]
+        [SerializeField] private bool openRoomChoiceUi = true;
+
+        [Header("Fixed Destination (Optional)")]
+        [Tooltip("Used only when openRoomChoiceUi is false.")]
+        [SerializeField] private string targetRoomId;
+
+        [Tooltip("Used only when openRoomChoiceUi is false.")]
         [SerializeField] private string targetSceneName;
 
-        [Tooltip("Optional entrance ID to spawn at in the target scene.")]
         [SerializeField] private string targetEntranceId = "Default";
 
         [Header("Visuals (Optional)")]
@@ -46,32 +54,95 @@ namespace Project.Core.ZoneState
             exitGate = gate;
         }
 
+        /// <summary>
+        /// Allows the player to re-enter the exit after a failed leave attempt.
+        /// </summary>
+        public void ResetTrigger()
+        {
+            hasTriggered = false;
+        }
+
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (hasTriggered) return;
+            TryHandlePlayerExit(other);
+        }
 
-            // Check if the overlapping object is the player character
-            PlayerCharacter player = other.GetComponentInParent<PlayerCharacter>();
-            if (player != null && !player.IsDead)
+        private void OnTriggerStay2D(Collider2D other)
+        {
+            // Keep offers visible while overlapping; also covers ResetTrigger while still inside.
+            TryHandlePlayerExit(other);
+        }
+
+        private void OnTriggerExit2D(Collider2D other)
+        {
+            if (!openRoomChoiceUi)
             {
-                if (exitGate != null && !exitGate.IsExitAvailable)
-                {
-                    Debug.Log("[TransitionTrigger] Exit is still locked; transition request ignored.", this);
-                    return;
-                }
-
-                hasTriggered = true;
-                
-                if (SceneTransitionManager.Instance != null)
-                {
-                    Debug.Log($"[TransitionTrigger] Player entered exit portal. Transitioning to '{targetSceneName}'");
-                    SceneTransitionManager.Instance.TransitionToScene(targetSceneName, targetEntranceId);
-                }
-                else
-                {
-                    Debug.LogError("[TransitionTrigger] SceneTransitionManager Instance is missing in the scene!");
-                }
+                return;
             }
+
+            PlayerCharacter player = other.GetComponentInParent<PlayerCharacter>();
+            if (player == null)
+            {
+                return;
+            }
+
+            RoomChoiceUI ui = RoomChoiceUI.Instance;
+            if (ui != null)
+            {
+                ui.HideFromProximityExit();
+            }
+        }
+
+        private void TryHandlePlayerExit(Collider2D other)
+        {
+            PlayerCharacter player = other.GetComponentInParent<PlayerCharacter>();
+            if (player == null || player.IsDead)
+            {
+                return;
+            }
+
+            if (exitGate != null && !exitGate.IsExitAvailable)
+            {
+                return;
+            }
+
+            if (openRoomChoiceUi)
+            {
+                // Proximity UI: do not latch hasTriggered — leaving the zone dismisses the panel.
+                RoomExitPresenter.TryShowChoiceUi();
+                return;
+            }
+
+            if (hasTriggered)
+            {
+                return;
+            }
+
+            if (SceneTransitionManager.Instance == null)
+            {
+                Debug.LogError("[TransitionTrigger] SceneTransitionManager Instance is missing in the scene!");
+                return;
+            }
+
+            bool started;
+            if (!string.IsNullOrWhiteSpace(targetRoomId))
+            {
+                Debug.Log($"[TransitionTrigger] Player entered exit portal. Transitioning to room '{targetRoomId}'");
+                started = SceneTransitionManager.Instance.TryTransitionToRoom(targetRoomId, targetEntranceId);
+            }
+            else
+            {
+                Debug.Log($"[TransitionTrigger] Player entered exit portal. Transitioning to '{targetSceneName}'");
+                started = SceneTransitionManager.Instance.TryTransitionToScene(targetSceneName, targetEntranceId);
+            }
+
+            if (!started)
+            {
+                Debug.LogWarning("[TransitionTrigger] Transition did not start; exit trigger left armed.", this);
+                return;
+            }
+
+            hasTriggered = true;
         }
 
         private void OnDrawGizmos()

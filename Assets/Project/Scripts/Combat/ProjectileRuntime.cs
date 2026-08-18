@@ -529,6 +529,14 @@ public class ProjectileRuntime : MonoBehaviour
         ProcessTrackedEnemiesIfReady();
     }
 
+    /// <summary>
+    /// Immediately expires this projectile (used by boss-death hazard clear).
+    /// </summary>
+    public void ForceExpire()
+    {
+        Expire();
+    }
+
     private void Expire()
     {
         if (isExpired)

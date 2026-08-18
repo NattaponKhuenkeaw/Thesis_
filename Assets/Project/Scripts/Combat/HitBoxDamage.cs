@@ -571,6 +571,7 @@ public class HitBoxDamage : MonoBehaviour
             }
 
             data.breaksGrab = currentNormalHitbox.breaksGrab;
+            data.breaksArmor = currentNormalHitbox.breaksArmor;
         }
 
         ReactionResolver.ResolveAgainstTarget(enemy, ref data);

@@ -84,7 +84,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 1
+  m_PresetInfoIsWorld: 0
 --- !u!114 &8989140979044948225
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -122,9 +122,9 @@ MonoBehaviour:
   sortingOrder: 10000
   randomRangeX: {x: -0.35, y: 0.35}
   randomRangeY: {x: -0.1, y: 0.25}
-  popDownDistance: 0.28
   slideUpDistance: 0.65
   fadeInDuration: 0.12
+  scaleDownDuration: 0.24
   holdDuration: 0.28
   fadeOutDuration: 0.45
   popStartScaleMultiplier: 1.2
@@ -135,6 +135,8 @@ MonoBehaviour:
   mediumTierScale: 1.15
   heavyTierScale: 1.3
   ultimateTierScale: 1.6
+  damageAmountScaleReference: 1000
+  maxDamageAmountScaleBonus: 1
   damageStyle:
     color: {r: 1, g: 1, b: 1, a: 1}
     fontSize: 50
