@@ -47,5 +47,17 @@ namespace Project.Combat
         public void UnregisterProjectile(ProjectileRuntime projectile)
         {
         }
+
+        public void ClearAllActiveProjectiles()
+        {
+            if (runtimeManager != null)
+            {
+                runtimeManager.ClearAllActiveProjectiles();
+            }
+            else if (ProjectileVFXManager.Instance != null)
+            {
+                ProjectileVFXManager.Instance.ClearAllActiveProjectiles();
+            }
+        }
     }
 }

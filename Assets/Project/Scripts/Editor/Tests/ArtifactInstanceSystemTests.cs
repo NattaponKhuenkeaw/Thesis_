@@ -423,5 +423,59 @@ public class ArtifactInstanceSystemTests
         Assert.That(actual.additionalDamageIncrease, Is.EqualTo(expected.additionalDamageIncrease).Within(0.001f), context);
         Assert.That(actual.auraEnergyRecharge, Is.EqualTo(expected.auraEnergyRecharge).Within(0.001f), context);
     }
+
+    [Test]
+    public void AcquisitionOrderPreservesSequentialInsertion()
+    {
+        PlayerRunInventory inventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        try
+        {
+            Assert.That(inventory.TryAcquireArtifact(definition, out ArtifactInstance first, 100), Is.True);
+            Assert.That(inventory.TryAcquireArtifact(definition, out ArtifactInstance second, 101), Is.True);
+            Assert.That(inventory.TryAcquireArtifact(definition, out ArtifactInstance third, 102), Is.True);
+
+            Assert.That(first.acquisitionOrder, Is.LessThan(second.acquisitionOrder));
+            Assert.That(second.acquisitionOrder, Is.LessThan(third.acquisitionOrder));
+            Assert.That(inventory.ArtifactInstances[0].instanceId, Is.EqualTo(first.instanceId));
+            Assert.That(inventory.ArtifactInstances[2].instanceId, Is.EqualTo(third.instanceId));
+        }
+        finally
+        {
+            UnityEngine.Object.DestroyImmediate(inventory);
+        }
+    }
+
+    [Test]
+    public void SettingFavouriteDoesNotTriggerDestructiveArtifactsChangedEvent()
+    {
+        PlayerRunInventory inventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        try
+        {
+            Assert.That(inventory.TryAcquireArtifact(definition, out ArtifactInstance instance, 200), Is.True);
+
+            int fullResetCount = 0;
+            string favInstanceId = null;
+            bool favState = false;
+
+            inventory.OnArtifactsChanged += () => fullResetCount++;
+            inventory.OnArtifactFavouriteChanged += (id, state) =>
+            {
+                favInstanceId = id;
+                favState = state;
+            };
+
+            bool success = inventory.TrySetArtifactFavourite(instance.instanceId, true);
+
+            Assert.That(success, Is.True);
+            Assert.That(instance.isFavourite, Is.True);
+            Assert.That(favInstanceId, Is.EqualTo(instance.instanceId));
+            Assert.That(favState, Is.True);
+            Assert.That(fullResetCount, Is.Zero, "Toggling favorite should not trigger full OnArtifactsChanged grid reset.");
+        }
+        finally
+        {
+            UnityEngine.Object.DestroyImmediate(inventory);
+        }
+    }
 }
 #endif

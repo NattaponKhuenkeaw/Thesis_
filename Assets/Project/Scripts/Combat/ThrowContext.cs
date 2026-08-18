@@ -95,8 +95,13 @@ namespace CombatCore
         public void ReleaseClean()
         {
             SessionState = GrabSessionState.Releasing;
-            // Don't call enemy.ReleaseGrab here — the slam hitbox's
-            // NormalHitbox reaction will handle the transition naturally.
+            foreach (var enemy in grabbedEnemies)
+            {
+                if (enemy != null && enemy.IsAlive && enemy.IsGrabbed)
+                {
+                    enemy.ReleaseGrab(AttackerId);
+                }
+            }
             ClearInternal();
         }
 

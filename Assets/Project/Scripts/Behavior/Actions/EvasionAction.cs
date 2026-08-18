@@ -44,6 +44,11 @@ using Unity.Behavior;
         protected override Status OnUpdate()
         {
             if (Agent.Value == null) return Status.Failure;
+            if (m_Controller != null && (m_Controller.IsGrabbed || m_Controller.CurrentReactionState != EnemyReactionState.None))
+            {
+                m_AnimHandler?.SetSpeed(0f);
+                return Status.Failure;
+            }
 
             m_Timer += Time.deltaTime;
             float step = EvadeSpeed.Value * Time.deltaTime * m_Direction;

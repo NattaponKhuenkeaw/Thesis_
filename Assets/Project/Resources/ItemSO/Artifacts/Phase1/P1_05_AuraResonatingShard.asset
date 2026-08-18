@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Clashing Auras from player swaps release shockwaves of raw fighting
     spirit that Fiends fear.
   icon: {fileID: 21300000, guid: cae8a6bf811d9e848ba61b1d82ac6877, type: 3}
-  price: 0
+  price: 1100
   isEquippable: 1
   passiveDescription: 'Switching into the wearer applies Affliction to every living
     room enemy: -3% DEF and +2% DOT damage taken per stack, up to 10.'

@@ -26,6 +26,9 @@ public struct WorldTextRequest
     public DamageImpactTier impactTier;
     public ElementType elementType;
     public bool isCritical;
+    public CharacterStats sourceStats;
+    public float damageRatio;
+    public float sourceStatValue;
     public Vector3 offset;
     public Vector3 worldPosition;
     public bool useWorldPosition;
@@ -97,6 +100,8 @@ public class WorldTextUtility : MonoBehaviour
     [Header("Damage Scale")]
     [SerializeField] private float elementalDamageScaleMultiplier = 1.5f;
     [SerializeField] private float criticalScaleMultiplier = 1.5f;
+    [SerializeField] private float highRatioScaleMultiplier = 1.35f;
+    [SerializeField] private float highRatioThreshold = 1.0f;
     [SerializeField] private float lowTierScale = 1f;
     [SerializeField] private float mediumTierScale = 1.15f;
     [SerializeField] private float heavyTierScale = 1.3f;
@@ -432,26 +437,44 @@ public class WorldTextUtility : MonoBehaviour
         return style.color;
     }
 
+    public float ResolveHoldScaleForTest(WorldTextRequest request)
+    {
+        return ResolveHoldScale(request, GetStyle(request.type));
+    }
+
     private float ResolveHoldScale(WorldTextRequest request, WorldTextStyle style)
     {
         float scale = Mathf.Max(0.01f, style.scaleMultiplier);
 
-        // Additional Damage (Particle) uses its own standalone scale without inheriting primary impact tiers
-        if (request.type == WorldTextType.Additional)
+        // Additional and DOT Damage: Unique scaling based on damage ratio (>100% of source stat) and crit
+        if (request.type == WorldTextType.Additional || request.type == WorldTextType.Dot)
         {
+            if (IsHighDamageRatio(request))
+            {
+                scale *= Mathf.Max(0.01f, highRatioScaleMultiplier);
+            }
+
+            if (request.elementType != ElementType.None)
+            {
+                scale *= Mathf.Max(0.01f, elementalDamageScaleMultiplier);
+            }
+
+            if (request.isCritical)
+            {
+                scale *= Mathf.Max(0.01f, criticalScaleMultiplier);
+            }
+
             return scale;
         }
 
-        if (request.type != WorldTextType.Dot)
+        // Primary / Standard Damage
+        scale *= request.impactTier switch
         {
-            scale *= request.impactTier switch
-            {
-                DamageImpactTier.Medium => mediumTierScale,
-                DamageImpactTier.Heavy => heavyTierScale,
-                DamageImpactTier.Ultimate => ultimateTierScale,
-                _ => lowTierScale
-            };
-        }
+            DamageImpactTier.Medium => mediumTierScale,
+            DamageImpactTier.Heavy => heavyTierScale,
+            DamageImpactTier.Ultimate => ultimateTierScale,
+            _ => lowTierScale
+        };
 
         if (request.elementType != ElementType.None)
         {
@@ -465,6 +488,38 @@ public class WorldTextUtility : MonoBehaviour
 
         scale *= ResolveDamageAmountScale(request);
         return scale;
+    }
+
+    private bool IsHighDamageRatio(WorldTextRequest request)
+    {
+        // 1. Explicit damage ratio (e.g. 2.5 = 250% > 1.0)
+        if (request.damageRatio > 0f)
+        {
+            return request.damageRatio > highRatioThreshold;
+        }
+
+        // 2. Explicit source stat value (e.g. wearer ATK = 100, damage = 250 -> 2.5 > 1.0)
+        if (request.sourceStatValue > 0f)
+        {
+            return (request.amount / request.sourceStatValue) > highRatioThreshold;
+        }
+
+        // 3. Fallback to sourceStats (wearer ATK / DEF / HP)
+        if (request.sourceStats != null)
+        {
+            float sourceStat = request.sourceStats.attack;
+            if (sourceStat <= 0f)
+            {
+                sourceStat = Mathf.Max(request.sourceStats.defense, request.sourceStats.maxHP);
+            }
+
+            if (sourceStat > 0f)
+            {
+                return (request.amount / sourceStat) > highRatioThreshold;
+            }
+        }
+
+        return false;
     }
 
     private float ResolvePopScale(WorldTextRequest request, float holdScale)

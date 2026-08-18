@@ -1572,6 +1572,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
                 category = AttackCategory.Normal,
                 actionId = "dash",
                 actionName = "Dash",
+                damageRatio = effect.attackRatio + effect.sourceStatRatio,
+                sourceStatValue = sourceAttack,
                 attackerPosition = transform.position,
                 hitDirection = direction,
                 ignoreTypeReduction = damageInput.ignoreTypeReduction

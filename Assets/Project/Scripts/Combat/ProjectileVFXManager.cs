@@ -34,11 +34,58 @@ namespace Project.Combat
         private void OnEnable()
         {
             ProjectileFeedbackEvents.FeedbackRequested += OnProjectileFeedbackRequested;
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
         private void OnDisable()
         {
             ProjectileFeedbackEvents.FeedbackRequested -= OnProjectileFeedbackRequested;
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+        {
+            ClearAllActiveProjectiles();
+        }
+
+        public void ClearAllActiveProjectiles()
+        {
+            if (ownership.Count > 0)
+            {
+                var activePlayers = new List<GenericProjectilePlayer>(ownership.Keys);
+                for (int i = 0; i < activePlayers.Count; i++)
+                {
+                    GenericProjectilePlayer player = activePlayers[i];
+                    if (player != null)
+                    {
+                        Release(player);
+                    }
+                }
+
+                ownership.Clear();
+            }
+
+            // In case any runtime instances are active in the scene or under this manager
+            ProjectileRuntime[] activeRuntimes = FindObjectsByType<ProjectileRuntime>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            for (int i = 0; i < activeRuntimes.Length; i++)
+            {
+                ProjectileRuntime runtime = activeRuntimes[i];
+                if (runtime == null)
+                {
+                    continue;
+                }
+
+                GenericProjectilePlayer player = runtime.GetComponent<GenericProjectilePlayer>();
+                if (player != null && ownership.ContainsKey(player))
+                {
+                    Release(player);
+                }
+                else
+                {
+                    runtime.ResetRuntime();
+                    runtime.gameObject.SetActive(false);
+                }
+            }
         }
 
         public GenericProjectilePlayer SpawnProjectilePlayer(ProjectileType type, ProjectileSpawnContext context)

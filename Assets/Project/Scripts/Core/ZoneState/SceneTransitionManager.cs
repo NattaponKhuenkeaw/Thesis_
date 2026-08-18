@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Project.InventorySystem.Items;
+using Project.Combat;
 
 namespace Project.Core.ZoneState
 {
@@ -265,6 +266,7 @@ namespace Project.Core.ZoneState
                 // Every room change (scene load OR layout swap) fades to full black first.
                 yield return StartCoroutine(FadeOverlayRoutine(0f, 1f));
                 SetFadeAlpha(1f);
+                ProjectileVFXManager.Instance?.ClearAllActiveProjectiles();
 
                 if (useLayoutSwap)
                 {
@@ -276,6 +278,7 @@ namespace Project.Core.ZoneState
                     }
 
                     yield return null;
+                    ProjectileVFXManager.Instance?.ClearAllActiveProjectiles();
                     Debug.Log($"[SceneTransitionManager] Layout swap complete. ActiveRoom='{targetRoom.RoomId}'.");
                 }
                 else
@@ -302,6 +305,7 @@ namespace Project.Core.ZoneState
                     }
 
                     yield return null;
+                    ProjectileVFXManager.Instance?.ClearAllActiveProjectiles();
                     Debug.Log($"[SceneTransitionManager] Scene load complete. ActiveScene='{SceneManager.GetActiveScene().name}'. Reacquiring transition input lock.");
 
                     // Scene load can destroy overlay references if hierarchy changed; keep fade black.

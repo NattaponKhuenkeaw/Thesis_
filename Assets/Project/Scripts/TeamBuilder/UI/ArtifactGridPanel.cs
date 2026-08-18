@@ -91,7 +91,13 @@ namespace Project.TeamBuilder.UI
             if (sortDropdown != null)
             {
                 sortDropdown.ClearOptions();
-                sortDropdown.AddOptions(new List<string>(Enum.GetNames(typeof(ArtifactSortMode))));
+                List<string> displayOptions = new List<string>();
+                foreach (ArtifactSortMode mode in (ArtifactSortMode[])Enum.GetValues(typeof(ArtifactSortMode)))
+                {
+                    displayOptions.Add(GetSortModeDisplay(mode));
+                }
+                sortDropdown.AddOptions(displayOptions);
+                sortDropdown.SetValueWithoutNotify((int)query.sortMode);
                 sortDropdown.onValueChanged.RemoveListener(SetSortMode);
                 sortDropdown.onValueChanged.AddListener(SetSortMode);
             }
@@ -211,6 +217,10 @@ namespace Project.TeamBuilder.UI
         {
             favouriteMode = !favouriteMode;
             RefreshFavouriteModeVisual();
+            if (!favouriteMode)
+            {
+                RebuildQueryResults();
+            }
         }
 
         public void ExitFavouriteMode()
@@ -218,6 +228,7 @@ namespace Project.TeamBuilder.UI
             if (!favouriteMode) return;
             favouriteMode = false;
             RefreshFavouriteModeVisual();
+            RebuildQueryResults();
         }
 
         public void SetSortMode(int sortMode)
@@ -286,11 +297,29 @@ namespace Project.TeamBuilder.UI
                 if (playerInventory.TrySetArtifactFavourite(artifact.instanceId, next))
                 {
                     for (int i = 0; i < spawnedItems.Count; i++)
+                    {
                         if (spawnedItems[i]?.ArtifactData?.instanceId == artifact.instanceId)
+                        {
                             spawnedItems[i].SetFavouriteState(next);
+                            break;
+                        }
+                    }
                 }
                 return;
             }
+
+            if (artifact != null && artifact.isNew)
+            {
+                for (int i = 0; i < spawnedItems.Count; i++)
+                {
+                    if (spawnedItems[i]?.ArtifactData?.instanceId == artifact.instanceId)
+                    {
+                        spawnedItems[i].SetNewState(false);
+                        break;
+                    }
+                }
+            }
+
             OnArtifactClicked?.Invoke(artifact);
         }
 
@@ -522,6 +551,7 @@ namespace Project.TeamBuilder.UI
 
             if (inventorySubscribed || playerInventory == null) return;
             playerInventory.OnArtifactsChanged += HandleInventoryArtifactsChanged;
+            playerInventory.OnArtifactFavouriteChanged += HandleInventoryArtifactFavouriteChanged;
             inventorySubscribed = true;
         }
 
@@ -529,7 +559,20 @@ namespace Project.TeamBuilder.UI
         {
             if (!inventorySubscribed || playerInventory == null) return;
             playerInventory.OnArtifactsChanged -= HandleInventoryArtifactsChanged;
+            playerInventory.OnArtifactFavouriteChanged -= HandleInventoryArtifactFavouriteChanged;
             inventorySubscribed = false;
+        }
+
+        private void HandleInventoryArtifactFavouriteChanged(string instanceId, bool favourite)
+        {
+            for (int i = 0; i < spawnedItems.Count; i++)
+            {
+                if (spawnedItems[i]?.ArtifactData?.instanceId == instanceId)
+                {
+                    spawnedItems[i].SetFavouriteState(favourite);
+                    break;
+                }
+            }
         }
 
         private void HandleInventoryArtifactsChanged()

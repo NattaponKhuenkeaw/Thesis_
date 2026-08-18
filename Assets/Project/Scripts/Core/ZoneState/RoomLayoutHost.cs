@@ -1,4 +1,5 @@
 using UnityEngine;
+using Project.Combat;
 
 namespace Project.Core.ZoneState
 {
@@ -121,6 +122,7 @@ namespace Project.Core.ZoneState
             CaptureDefaultBakedContentIfEmpty();
             ClearActiveLayout(restoreBakedContent: false);
             DespawnOrphanCombatEnemies();
+            ProjectileVFXManager.Instance?.ClearAllActiveProjectiles();
             SetBakedSceneContentActive(false);
 
             // Assign ActiveRoom before Instantiate so RoomWaveManager Awake/trigger
@@ -140,6 +142,8 @@ namespace Project.Core.ZoneState
 
         private void ClearActiveLayout(bool restoreBakedContent)
         {
+            ProjectileVFXManager.Instance?.ClearAllActiveProjectiles();
+
             if (activeLayoutInstance != null)
             {
                 Destroy(activeLayoutInstance);

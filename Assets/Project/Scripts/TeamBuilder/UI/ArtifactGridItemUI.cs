@@ -74,7 +74,7 @@ namespace Project.TeamBuilder.UI
                 RefreshName();
 
                 string quality = ArtifactRollQuality.TryGetAverageQuality(artifact, rollTable, out float quality01)
-                    ? $"Q {quality01 * 100f:0.##}"
+                    ? $"Q • {quality01 * 100f:0.##}"
                     : "Q —";
                 int visibleLineCount = 0;
                 if (artifact.rolls != null)
@@ -82,7 +82,7 @@ namespace Project.TeamBuilder.UI
                     for (int i = 0; i < artifact.rolls.Count; i++)
                         if (ArtifactStatCatalog.IsPlayerVisible(artifact.rolls[i].statKind)) visibleLineCount++;
                 }
-                string summary = $"{visibleLineCount} lines • {quality}";
+                string summary = $"{quality}";
                 currentSummary = summary;
                 if (rollSummaryText != null)
                     rollSummaryText.text = summary;
@@ -101,6 +101,13 @@ namespace Project.TeamBuilder.UI
         {
             if (artifactData != null) artifactData.isFavourite = favourite;
             if (favouriteBadge != null) favouriteBadge.SetActive(favourite);
+            RefreshName();
+        }
+
+        public void SetNewState(bool isNew)
+        {
+            if (artifactData != null) artifactData.isNew = isNew;
+            if (newBadge != null) newBadge.SetActive(isNew);
             RefreshName();
         }
 

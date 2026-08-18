@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Project.Core.RunEnd;
 using Project.Core.ZoneState;
+using Project.InventorySystem.Artifacts;
 using Project.InventorySystem.Items;
 using Project.Progression;
 using Project.ShopSystem;
@@ -184,7 +185,7 @@ namespace Project.Core
             {
                 teamLoader.CaptureRunStartTeam();
                 CharacterObject[] team = runInventory.GetTeamSnapshot();
-                Artifact[][] artifacts = BuildArtifactDataForDeploy(team.Length);
+                ArtifactInstanceRef[][] artifacts = BuildArtifactDataForDeploy(team.Length);
                 teamLoader.DeployLoadout(team, runInventory.ActiveTeamSlotIndex, artifacts);
             }
 
@@ -350,17 +351,17 @@ namespace Project.Core
             Debug.Log($"[GameRunManager] SafeZone '{sceneName}' exit unlocked after boundary load.", this);
         }
 
-        private Artifact[][] BuildArtifactDataForDeploy(int slotCount)
+        private ArtifactInstanceRef[][] BuildArtifactDataForDeploy(int slotCount)
         {
             if (runInventory == null || slotCount <= 0)
             {
                 return null;
             }
 
-            Artifact[][] artifactData = new Artifact[slotCount][];
+            ArtifactInstanceRef[][] artifactData = new ArtifactInstanceRef[slotCount][];
             for (int i = 0; i < slotCount; i++)
             {
-                artifactData[i] = runInventory.GetEquippedArtifactsAt(i);
+                artifactData[i] = runInventory.GetEquippedArtifactRefsAt(i);
             }
 
             return artifactData;

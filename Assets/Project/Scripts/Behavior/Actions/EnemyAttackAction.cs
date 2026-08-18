@@ -103,6 +103,12 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         if (!m_AttackStarted && !m_Committed && m_Timer >= commitTime)
             BeginCommitment();
 
+        if (m_Controller.IsGrabbed)
+        {
+            m_Interrupted = true;
+            return Status.Failure;
+        }
+
         bool inReaction = m_Controller.CurrentReactionState != EnemyReactionState.None;
         if (inReaction && !m_Committed)
         {

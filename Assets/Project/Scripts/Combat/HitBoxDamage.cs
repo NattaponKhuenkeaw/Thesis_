@@ -391,6 +391,8 @@ public class HitBoxDamage : MonoBehaviour
                 actionId = sourceActionId,
                 actionName = sourceActionName,
                 stepData = sourceStepData,
+                damageRatio = effect.attackRatio + effect.sourceStatRatio,
+                sourceStatValue = liveSourceAttack,
                 attackerPosition = attackerPosition,
                 hitDirection = direction,
                 ignoreTypeReduction = damageInput.ignoreTypeReduction

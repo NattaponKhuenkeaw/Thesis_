@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using Project.InventorySystem.Artifacts;
 using Project.InventorySystem.Items;
+using Project.Progression;
 
 namespace Project.ShopSystem
 {
@@ -301,6 +302,14 @@ namespace Project.ShopSystem
         [NonSerialized] private int runtimeEffectMutationBatchDepth;
         [NonSerialized] private int initializedPlaySessionId = -1;
 
+        /// <summary>
+        /// Lobby loadout captured at run start. Mid-run KO compacting must not replace this on death.
+        /// Static copy survives a replacement TeamLoader / inventory instance in the same play session.
+        /// </summary>
+        [NonSerialized] private CharacterObject[] runStartTeamSnapshot;
+        [NonSerialized] private static CharacterObject[] sessionRunStartTeam;
+        [NonSerialized] private static bool pendingLobbyMainReset;
+
         public event Action<CharacterObject> OnRuntimeEffectsChanged;
         public event Action<int, int> OnGlobalLevelChanged;
         public event Action OnArtifactsChanged;
@@ -459,7 +468,6 @@ namespace Project.ShopSystem
             instance.isNew = false;
             SavePersistentState();
             OnArtifactFavouriteChanged?.Invoke(instanceId, favourite);
-            NotifyArtifactsChanged();
             return true;
         }
 
@@ -472,7 +480,6 @@ namespace Project.ShopSystem
 
             instance.isNew = false;
             SavePersistentState();
-            NotifyArtifactsChanged();
             return true;
         }
 
@@ -791,6 +798,7 @@ namespace Project.ShopSystem
             }
 
             activeTeamSlotIndex = 0;
+            ClearRunStartTeamSnapshot();
             PostInventoryMutation(save: true);
             if (previousGlobalLevel != _globalLevel)
             {
@@ -801,6 +809,523 @@ namespace Project.ShopSystem
         public void ResetRunProgress()
         {
             ClearInventory();
+        }
+
+        public void ResetRunProgressForDeath(PlayerMetaProgression metaProgression = null)
+        {
+            EnsureInventoryData();
+            pendingLobbyMainReset = true;
+
+            // Restore the lobby roster, then put CharacterObject_main (char-0-main) in slot 0.
+            CharacterObject[] teamSnapshot = LeadTeamWithMainCharacter(ResolveDeathResetTeam());
+            int previousGlobalLevel = _globalLevel;
+
+            ownedItems.Clear();
+            itemStacks.Clear();
+            runCharacters.Clear();
+            artifactInstances.Clear();
+            artifactInstancesById = null;
+            currency = DefaultCurrency;
+            _globalLevel = 1;
+
+            // Restore the lobby roster captured at run start, then control slot 0 (main).
+            DeployTeam(teamSnapshot, preferredIndex: 0, artifactsBySlot: null);
+            activeTeamSlotIndex = GetMainCharacterSlotIndex();
+            PostInventoryMutation(save: true);
+            if (previousGlobalLevel != _globalLevel)
+            {
+                OnGlobalLevelChanged?.Invoke(previousGlobalLevel, _globalLevel);
+            }
+        }
+
+        /// <summary>
+        /// Clears run-scoped loot/progression while keeping the currently deployed lobby team loadout.
+        /// </summary>
+        public bool TryPrepareForNewRun(int minimumTeamMembers, out string failureReason)
+        {
+            EnsureRunData();
+
+            int deployedCount = CountTeamCharacters();
+            if (deployedCount < Mathf.Max(1, minimumTeamMembers))
+            {
+                failureReason = $"Deploy at least {Mathf.Max(1, minimumTeamMembers)} team member(s) before starting a run.";
+                return false;
+            }
+
+            CharacterObject[] teamSnapshot = GetTeamSnapshot();
+            CaptureRunStartTeam(teamSnapshot);
+            int activeIndex = activeTeamSlotIndex;
+            ArtifactInstanceRef[][] artifactSnapshot = BuildTeamArtifactRefSnapshot(teamSnapshot.Length);
+
+            itemStacks.Clear();
+            currency = DefaultCurrency;
+            runCharacters.Clear();
+
+            for (int i = ownedItems.Count - 1; i >= 0; i--)
+            {
+                BaseItem item = ownedItems[i];
+                if (item == null || item is CharacterItem)
+                {
+                    continue;
+                }
+
+                ownedItems.RemoveAt(i);
+            }
+
+            DeployTeam(teamSnapshot, activeIndex, artifactSnapshot);
+            PostInventoryMutation(save: false);
+            failureReason = null;
+            return true;
+        }
+
+        public bool HasPendingLobbyMainReset => pendingLobbyMainReset;
+
+        public void RequestLobbyMainReset()
+        {
+            pendingLobbyMainReset = true;
+        }
+
+        public void ConsumeLobbyMainReset()
+        {
+            pendingLobbyMainReset = false;
+        }
+
+        /// <summary>
+        /// Store the lobby roster. Pass overwrite true at run start; false on scene Awake so compacting cannot replace it.
+        /// </summary>
+        public void RememberRunStartTeam(CharacterObject[] team, bool overwrite)
+        {
+            if (!overwrite && HasAnyCharacter(runStartTeamSnapshot))
+            {
+                return;
+            }
+
+            if (!overwrite && HasAnyCharacter(sessionRunStartTeam))
+            {
+                if (!HasAnyCharacter(runStartTeamSnapshot))
+                {
+                    runStartTeamSnapshot = CopyTeamArray(sessionRunStartTeam);
+                }
+
+                return;
+            }
+
+            CaptureRunStartTeam(team);
+        }
+
+        private void CaptureRunStartTeam(CharacterObject[] team)
+        {
+            if (!HasAnyCharacter(team))
+            {
+                return;
+            }
+
+            runStartTeamSnapshot = CopyTeamArray(team);
+            sessionRunStartTeam = CopyTeamArray(team);
+        }
+
+        public CharacterObject[] GetRunStartTeamOrCurrent()
+        {
+            return LeadTeamWithMainCharacter(ResolveDeathResetTeam());
+        }
+
+        public int GetMainCharacterSlotIndex()
+        {
+            EnsureRunData();
+            for (int i = 0; i < teamSlots.Length; i++)
+            {
+                if (IsMainCharacter(teamSlots[i] != null ? teamSlots[i].Character : null))
+                {
+                    return i;
+                }
+            }
+
+            return 0;
+        }
+
+        public bool IsMainCharacter(CharacterObject character)
+        {
+            if (character == null)
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(character.characterId)
+                && string.Equals(character.characterId, DefaultCharacterItemId, StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            return string.Equals(character.name, "CharacterObject_main", StringComparison.Ordinal);
+        }
+
+        private CharacterObject ResolveMainCharacter()
+        {
+            CharacterObject byId = ResolveCharacterById(DefaultCharacterItemId);
+            if (byId != null)
+            {
+                return byId;
+            }
+
+            CharacterItem defaultCharacterItem = Resources.Load<CharacterItem>(DefaultCharacterItemResourcePath);
+            if (defaultCharacterItem != null && defaultCharacterItem.characterObjectData != null)
+            {
+                return defaultCharacterItem.characterObjectData;
+            }
+
+            EnsureRunData();
+            for (int i = 0; i < teamSlots.Length; i++)
+            {
+                CharacterObject slotted = teamSlots[i] != null ? teamSlots[i].Character : null;
+                if (IsMainCharacter(slotted))
+                {
+                    return slotted;
+                }
+            }
+
+            return null;
+        }
+
+        private CharacterObject[] LeadTeamWithMainCharacter(CharacterObject[] team)
+        {
+            CharacterObject main = ResolveMainCharacter();
+            CharacterObject[] result = CopyTeamArray(team);
+
+            int mainIndex = -1;
+            for (int i = 0; i < result.Length; i++)
+            {
+                if (IsMainCharacter(result[i]) || (main != null && IsSameTeamCharacter(result[i], main)))
+                {
+                    mainIndex = i;
+                    break;
+                }
+            }
+
+            if (mainIndex < 0 && main != null)
+            {
+                CharacterObject[] withMain = new CharacterObject[Mathf.Max(DefaultTeamSlotCount, result.Length)];
+                withMain[0] = main;
+                int dest = 1;
+                for (int i = 0; i < result.Length && dest < withMain.Length; i++)
+                {
+                    if (result[i] == null || IsMainCharacter(result[i]) || IsSameTeamCharacter(result[i], main))
+                    {
+                        continue;
+                    }
+
+                    withMain[dest++] = result[i];
+                }
+
+                return withMain;
+            }
+
+            if (mainIndex > 0)
+            {
+                CharacterObject swap = result[0];
+                result[0] = result[mainIndex];
+                result[mainIndex] = swap;
+            }
+
+            return result;
+        }
+
+        private CharacterObject[] ResolveDeathResetTeam()
+        {
+            CharacterObject[] source = HasAnyCharacter(runStartTeamSnapshot)
+                ? runStartTeamSnapshot
+                : HasAnyCharacter(sessionRunStartTeam)
+                    ? sessionRunStartTeam
+                    : null;
+            if (source != null)
+            {
+                return CopyTeamArray(source);
+            }
+
+            return GetTeamSnapshot();
+        }
+
+        private void ClearRunStartTeamSnapshot()
+        {
+            runStartTeamSnapshot = null;
+            sessionRunStartTeam = null;
+            pendingLobbyMainReset = false;
+        }
+
+        private static bool HasAnyCharacter(CharacterObject[] team)
+        {
+            if (team == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < team.Length; i++)
+            {
+                if (team[i] != null)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static CharacterObject[] CopyTeamArray(CharacterObject[] team)
+        {
+            CharacterObject[] copy = new CharacterObject[Mathf.Max(DefaultTeamSlotCount, team != null ? team.Length : 0)];
+            if (team == null)
+            {
+                return copy;
+            }
+
+            for (int i = 0; i < team.Length && i < copy.Length; i++)
+            {
+                copy[i] = team[i];
+            }
+
+            return copy;
+        }
+
+        /// <summary>
+        /// Writes run HP into inventory only (does not push onto the active PlayerCharacter).
+        /// Used when knocking out the active character before searching for a living teammate.
+        /// </summary>
+        public void SetRunCharacterCurrentHP(CharacterObject character, float hp)
+        {
+            RunCharacterState state = GetOrCreateRunCharacterState(character);
+            if (state == null)
+            {
+                return;
+            }
+
+            state.currentHP = Mathf.Max(0f, hp);
+        }
+
+        /// <summary>
+        /// Writes run Aura Energy into inventory only (does not require TeamLoader UI notify).
+        /// </summary>
+        public void SetRunCharacterCurrentAE(CharacterObject character, float ae)
+        {
+            RunCharacterState state = GetOrCreateRunCharacterState(character);
+            if (state == null)
+            {
+                return;
+            }
+
+            state.currentAE = Mathf.Max(0f, ae);
+        }
+
+        /// <summary>
+        /// Removes a defeated teammate from the run team and backpack, clears their
+        /// equipped artifacts, and compacts survivors so the preferred
+        /// survivor lands at index 0.
+        /// </summary>
+        public bool TryRemoveDefeatedTeamCharacter(
+            CharacterObject defeatedCharacter,
+            CharacterObject preferredSurvivor,
+            out int newActiveIndex)
+        {
+            newActiveIndex = -1;
+            EnsureRunData();
+            if (defeatedCharacter == null)
+            {
+                return false;
+            }
+
+            int defeatedSlot = FindTeamSlot(defeatedCharacter);
+            if (defeatedSlot < 0)
+            {
+                return false;
+            }
+
+            teamSlots[defeatedSlot].SetArtifactRefs(null, DefaultArtifactSlotCount);
+
+            List<CharacterObject> survivors = new List<CharacterObject>(teamSlots.Length);
+            List<ArtifactInstanceRef[]> survivorArtifacts = new List<ArtifactInstanceRef[]>(teamSlots.Length);
+            for (int i = 0; i < teamSlots.Length; i++)
+            {
+                CharacterObject character = teamSlots[i].Character;
+                if (character == null || IsSameTeamCharacter(character, defeatedCharacter))
+                {
+                    continue;
+                }
+
+                // Drop any other 0-HP "ghost" slots so compact team only keeps living members.
+                if (!IsRunCharacterAlive(character))
+                {
+                    CharacterItem deadItem = FindOwnedCharacterItem(character);
+                    if (deadItem != null)
+                    {
+                        TryRemoveItem(deadItem);
+                    }
+
+                    RemoveRunCharacterState(character);
+                    continue;
+                }
+
+                survivors.Add(character);
+                survivorArtifacts.Add(teamSlots[i].GetArtifactRefsSnapshot(DefaultArtifactSlotCount));
+            }
+
+            if (survivors.Count == 0)
+            {
+                CharacterItem ownedDefeatItem = FindOwnedCharacterItem(defeatedCharacter);
+                if (ownedDefeatItem != null)
+                {
+                    TryRemoveItem(ownedDefeatItem);
+                }
+
+                RemoveRunCharacterState(defeatedCharacter);
+                DeployTeam(Array.Empty<CharacterObject>(), 0, null);
+                return false;
+            }
+
+            int preferIndex = 0;
+            if (preferredSurvivor != null)
+            {
+                preferIndex = survivors.FindIndex(c => IsSameTeamCharacter(c, preferredSurvivor));
+                if (preferIndex < 0)
+                {
+                    preferIndex = 0;
+                }
+            }
+
+            if (preferIndex > 0)
+            {
+                RotateList(survivors, preferIndex);
+                RotateList(survivorArtifacts, preferIndex);
+            }
+
+            CharacterItem characterItem = FindOwnedCharacterItem(defeatedCharacter);
+            if (characterItem != null)
+            {
+                TryRemoveItem(characterItem);
+            }
+
+            RemoveRunCharacterState(defeatedCharacter);
+
+            CharacterObject[] compacted = new CharacterObject[Mathf.Max(DefaultTeamSlotCount, survivors.Count)];
+            ArtifactInstanceRef[][] compactedArtifacts = new ArtifactInstanceRef[compacted.Length][];
+            for (int i = 0; i < survivors.Count; i++)
+            {
+                compacted[i] = survivors[i];
+                compactedArtifacts[i] = survivorArtifacts[i];
+            }
+
+            DeployTeam(compacted, preferredIndex: 0, compactedArtifacts);
+            newActiveIndex = 0;
+            return true;
+        }
+
+        private static void RotateList<T>(List<T> values, int startIndex)
+        {
+            if (values == null || values.Count == 0 || startIndex <= 0 || startIndex >= values.Count)
+            {
+                return;
+            }
+
+            T[] buffer = values.ToArray();
+            values.Clear();
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                values.Add(buffer[(startIndex + i) % buffer.Length]);
+            }
+        }
+
+        private CharacterItem FindOwnedCharacterItem(CharacterObject character)
+        {
+            if (character == null || ownedItems == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < ownedItems.Count; i++)
+            {
+                if (ownedItems[i] is CharacterItem characterItem
+                    && characterItem.characterObjectData == character)
+                {
+                    return characterItem;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(character.characterId))
+            {
+                BuildItemIndices();
+                if (characterItemsByCharacterId != null
+                    && characterItemsByCharacterId.TryGetValue(character.characterId, out CharacterItem byId)
+                    && ownedItems.Contains(byId))
+                {
+                    return byId;
+                }
+            }
+
+            return null;
+        }
+
+        private void RemoveRunCharacterState(CharacterObject character)
+        {
+            if (character == null || runCharacters == null)
+            {
+                return;
+            }
+
+            for (int i = runCharacters.Count - 1; i >= 0; i--)
+            {
+                RunCharacterState state = runCharacters[i];
+                if (state != null && state.character == character)
+                {
+                    runCharacters.RemoveAt(i);
+                }
+            }
+        }
+
+        private static bool IsSameTeamCharacter(CharacterObject a, CharacterObject b)
+        {
+            if (a == null || b == null)
+            {
+                return false;
+            }
+
+            if (a == b)
+            {
+                return true;
+            }
+
+            return !string.IsNullOrWhiteSpace(a.characterId)
+                && string.Equals(a.characterId, b.characterId, StringComparison.Ordinal);
+        }
+
+        private bool IsRunCharacterAlive(CharacterObject character)
+        {
+            if (character == null)
+            {
+                return false;
+            }
+
+            RunCharacterState state = GetRunCharacter(character);
+            if (state == null)
+            {
+                return true;
+            }
+
+            return state.currentHP < 0f || state.currentHP > 0.01f;
+        }
+
+
+
+        private ArtifactInstanceRef[][] BuildTeamArtifactRefSnapshot(int slotCount)
+        {
+            if (slotCount <= 0 || teamSlots == null)
+            {
+                return Array.Empty<ArtifactInstanceRef[]>();
+            }
+
+            ArtifactInstanceRef[][] snapshot = new ArtifactInstanceRef[slotCount][];
+            for (int i = 0; i < slotCount; i++)
+            {
+                snapshot[i] = GetEquippedArtifactRefsAt(i);
+            }
+
+            return snapshot;
         }
 
         public int AddGlobalLevels(int requestedLevels)
@@ -2364,6 +2889,7 @@ namespace Project.ShopSystem
                 {
                     SavedArtifactInstanceRecord record = data.artifactInstances[i];
                     if (record == null) continue;
+                    long order = record.acquisitionOrder > 0 ? record.acquisitionOrder : (i + 1);
                     TryAddArtifactInstanceInternal(new ArtifactInstance
                     {
                         instanceId = record.instanceId,
@@ -2371,7 +2897,7 @@ namespace Project.ShopSystem
                         rolls = record.rolls != null ? new List<ArtifactRoll>(record.rolls) : new List<ArtifactRoll>(),
                         isFavourite = record.isFavourite,
                         isNew = record.isNew,
-                        acquisitionOrder = record.acquisitionOrder,
+                        acquisitionOrder = order,
                         generationSeed = record.generationSeed
                     });
                 }
@@ -3107,12 +3633,13 @@ namespace Project.ShopSystem
         {
             artifactInstancesById = new Dictionary<string, ArtifactInstance>(StringComparer.Ordinal);
             long highestOrder = 0;
-            for (int i = artifactInstances.Count - 1; i >= 0; i--)
+            for (int i = 0; i < artifactInstances.Count; i++)
             {
                 ArtifactInstance instance = artifactInstances[i];
                 if (instance == null || string.IsNullOrWhiteSpace(instance.instanceId))
                 {
                     artifactInstances.RemoveAt(i);
+                    i--;
                     continue;
                 }
 
@@ -3120,6 +3647,7 @@ namespace Project.ShopSystem
                 if (artifactInstancesById.ContainsKey(instance.instanceId))
                 {
                     artifactInstances.RemoveAt(i);
+                    i--;
                     continue;
                 }
 
@@ -3148,6 +3676,10 @@ namespace Project.ShopSystem
             EnsureArtifactIndices();
             if (artifactInstancesById.ContainsKey(instance.instanceId)) return false;
             instance.rolls ??= new List<ArtifactRoll>();
+            if (instance.acquisitionOrder <= 0)
+            {
+                instance.acquisitionOrder = nextArtifactAcquisitionOrder++;
+            }
             artifactInstances.Add(instance);
             artifactInstancesById.Add(instance.instanceId, instance);
             nextArtifactAcquisitionOrder = Math.Max(nextArtifactAcquisitionOrder, instance.acquisitionOrder + 1);
@@ -3182,14 +3714,23 @@ namespace Project.ShopSystem
             EnsureArtifactIndices();
             int importedInstances = 0;
             int migratedLoadoutReferences = 0;
-            for (int i = ownedItems.Count - 1; i >= 0; i--)
+            List<ArtifactDefinition> legacyDefinitionsToImport = new List<ArtifactDefinition>();
+            for (int i = 0; i < ownedItems.Count; i++)
             {
-                if (ownedItems[i] is not ArtifactDefinition definition) continue;
+                if (ownedItems[i] is ArtifactDefinition definition)
+                {
+                    legacyDefinitionsToImport.Add(definition);
+                }
+            }
+            for (int i = 0; i < legacyDefinitionsToImport.Count; i++)
+            {
+                ArtifactDefinition definition = legacyDefinitionsToImport[i];
                 if (!HasArtifactDefinitionInstance(definition.id))
                 {
-                    if (TryAddArtifactInstanceInternal(CreateImportedArtifactInstance(definition))) importedInstances++;
+                    if (TryAddArtifactInstanceInternal(CreateImportedArtifactInstance(definition)))
+                        importedInstances++;
                 }
-                ownedItems.RemoveAt(i);
+                ownedItems.Remove(definition);
             }
 
             if (teamSlots == null) return;

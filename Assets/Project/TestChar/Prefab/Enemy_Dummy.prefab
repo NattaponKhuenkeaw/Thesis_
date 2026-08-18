@@ -29,6 +29,10 @@ PrefabInstance:
       value: 1e+9
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: worldUI
+      value: 
+      objectReference: {fileID: 7370303957854988513}
+    - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: currentHP
       value: 1e+9
       objectReference: {fileID: 0}
@@ -40,6 +44,10 @@ PrefabInstance:
       propertyPath: attackDamage
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: antiStunlockComboThreshold
+      value: 100
+      objectReference: {fileID: 0}
     - target: {fileID: 747579930720166297, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: -7
@@ -50,7 +58,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1266016415736615074, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2314218930864617724, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_AnchorMax.x
@@ -144,6 +152,10 @@ PrefabInstance:
     - target: {fileID: 4509040626867643977, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_SortingLayer
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4509040626867643977, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_SortingOrder
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 4509040626867643977, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_SortingLayerID
@@ -380,3 +392,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85361608430d3da42a1b3faa70dbb39f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
+--- !u!114 &7370303957854988513 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6651140555760832072, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+  m_PrefabInstance: {fileID: 4180762667386644137}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0f7f8a7a0a74b1b9e1c22e00b6de921, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyWorldUI
