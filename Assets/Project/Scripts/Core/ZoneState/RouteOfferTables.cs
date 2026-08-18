@@ -37,6 +37,8 @@ namespace Project.Core.ZoneState
         [Header("Spawn")]
         [SerializeField, Min(1)] private int defaultSpawnSlotCount = 3;
         [SerializeField, Min(0f)] private float delayBetweenWaves = 1.25f;
+        [SerializeField, Min(1)] private int aliveCap = 3;
+        [SerializeField, Min(0f)] private float spawnInterval = 0.35f;
         [Tooltip("When false, route clears never grant artifacts (coins only).")]
         [SerializeField] private bool grantArtifacts = false;
 
@@ -48,6 +50,8 @@ namespace Project.Core.ZoneState
 
         public int DefaultSpawnSlotCount => Mathf.Max(1, defaultSpawnSlotCount);
         public float DelayBetweenWaves => Mathf.Max(0f, delayBetweenWaves);
+        public int AliveCap => Mathf.Max(1, aliveCap);
+        public float SpawnInterval => Mathf.Max(0f, spawnInterval);
         public bool GrantArtifacts => grantArtifacts;
         public IReadOnlyList<DifficultyProfile> Profiles => profiles;
 

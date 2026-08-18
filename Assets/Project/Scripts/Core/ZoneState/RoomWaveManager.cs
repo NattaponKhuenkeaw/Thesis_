@@ -1,33 +1,27 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
 using Project.Core.RunEnd;
 using Project.ShopSystem;
 
 namespace Project.Core.ZoneState
 {
     /// <summary>
-    /// Starts a combat encounter from a trigger, spawns configured enemy waves,
-    /// and unlocks the room exit after the final wave is defeated.
-    /// Prefers <see cref="ActiveRouteOffer"/> generated encounter, then
-    /// <see cref="RoomData.Encounter"/>, then Inspector waves.
+    /// Starts a combat encounter from a trigger, spawns enemies, and unlocks
+    /// the room exit after the last chamber (or boss wave) is defeated.
+    /// Prefers <see cref="CombatStageController"/>, then <see cref="ActiveRouteOffer"/>,
+    /// then <see cref="RoomData.Encounter"/>.
     /// </summary>
     [RequireComponent(typeof(Collider2D))]
     public class RoomWaveManager : MonoBehaviour
     {
-        [System.Serializable]
-        public class SpawnEntry
+        private sealed class SpawnEntry
         {
-            [Tooltip("Enemy prefab to spawn. The prefab or one of its children must contain EnemyController.")]
             public GameObject enemyPrefab;
-
-            [Tooltip("Where this enemy should spawn.")]
             public Transform spawnPoint;
         }
 
-        [System.Serializable]
-        public class Wave
+        private sealed class Wave
         {
             public string name = "Wave";
             public List<SpawnEntry> enemies = new List<SpawnEntry>();
@@ -37,24 +31,22 @@ namespace Project.Core.ZoneState
         [SerializeField] private string playerTag = "Player";
         [SerializeField] private bool startOnlyOnce = true;
 
-        [Header("Waves (Legacy Fallback)")]
-        [Tooltip("Used only when ActiveRoom.Encounter is null.")]
-        [SerializeField] private List<Wave> waves = new List<Wave>();
-        [SerializeField] [Min(0f)] private float delayBetweenWaves = 1.5f;
-
         [Header("Spawn Slots")]
-        [Tooltip("Ordered layout spawn points. EncounterSO.spawnSlotIndex maps into this array. Auto-binds Spawn_0..N / BossSpawnPoint when empty.")]
+        [Tooltip("Ordered layout spawn points. EncounterSO.spawnSlotIndex maps into this array. Auto-binds Spawn_0..N / BossSpawnPoint when empty. CombatStageController overwrites this per chamber.")]
         [SerializeField] private Transform[] spawnSlots;
 
         [Header("Room Clear")]
         [SerializeField] private bool unlockSceneExitOnClear = true;
         [SerializeField] private GameObject portalsRoot;
-        [SerializeField] private UnityEvent onRoomCleared;
         [Tooltip("When true (or when a BossPatternController was in the wave), skip portal/choice UI and let BossDeathSequence handle continue.")]
         [SerializeField] private bool useBossDeathFlow;
 
         private readonly List<EnemyController> activeEnemies = new List<EnemyController>();
         private readonly List<Wave> runtimeWaves = new List<Wave>();
+        private EncounterPressureDirector pressureDirector;
+        private EncounterSpawnMode runtimeSpawnMode = EncounterSpawnMode.Burst;
+        private int runtimeAliveCap = 3;
+        private float runtimeSpawnInterval = 0.35f;
         private Collider2D triggerCollider;
         private Coroutine waveRoutine;
         private int currentWaveIndex = -1;
@@ -63,6 +55,8 @@ namespace Project.Core.ZoneState
         private bool roomCleared;
         private bool spawnedAnyEnemy;
         private bool spawnedBossEnemy;
+        private CombatStageController stageController;
+        private readonly List<Transform> occupiedSpawnSlots = new List<Transform>();
 
         private void Awake()
         {
@@ -124,9 +118,17 @@ namespace Project.Core.ZoneState
 
             spawnedAnyEnemy = false;
             spawnedBossEnemy = false;
+            pressureDirector = null;
+            runtimeSpawnMode = EncounterSpawnMode.Burst;
             ResolveEncounterSource();
 
-            if (runtimeWaves.Count == 0)
+            stageController = IsCurrentRoomBoss() ? null : FindStageController();
+            List<GameObject> stageQuota = CollectQuotaPrefabs();
+            bool stageCanStart = stageController != null
+                && stageController.ChamberCount > 0
+                && stageController.HasSpawnContent(stageQuota);
+
+            if (runtimeWaves.Count == 0 && !stageCanStart)
             {
                 // Do not latch hasStarted / auto-clear — empty resolve is usually a race
                 // (ActiveRoom not ready) or missing Encounter data, not a legit clear.
@@ -141,16 +143,222 @@ namespace Project.Core.ZoneState
             if (waveRoutine != null)
             {
                 StopCoroutine(waveRoutine);
+                waveRoutine = null;
             }
 
-            waveRoutine = StartCoroutine(WaveRoutine());
+            if (stageCanStart)
+            {
+                if (runtimeWaves.Count == 0)
+                {
+                    runtimeSpawnMode = EncounterSpawnMode.Pressure;
+                    runtimeAliveCap = 3;
+                    runtimeSpawnInterval = 0.35f;
+                }
+
+                if (stageController.TryBegin(this, stageQuota))
+                {
+                    return;
+                }
+            }
+
+            stageController = null;
+
+            if (runtimeWaves.Count == 0)
+            {
+                hasStarted = false;
+                Debug.LogError(
+                    "[RoomWaveManager] StartEncounter resolved zero waves. Leaving encounter unarmed so a later valid start can retry.",
+                    this);
+                return;
+            }
+
+            if (ShouldUsePressure())
+            {
+                waveRoutine = StartCoroutine(PressureRoutine());
+            }
+            else
+            {
+                waveRoutine = StartCoroutine(WaveRoutine());
+            }
+        }
+
+        public void BindSpawnSlots(Transform[] slots)
+        {
+            spawnSlots = slots;
+        }
+
+        /// <summary>
+        /// Runs one chamber's quota. Does not unlock the stage exit until the last chamber.
+        /// </summary>
+        public void StartChamber(IReadOnlyList<GameObject> quota, EncounterSO chamberEncounter = null)
+        {
+            if (waveRoutine != null)
+            {
+                StopCoroutine(waveRoutine);
+                waveRoutine = null;
+            }
+
+            DestroyTrackedEnemies();
+            occupiedSpawnSlots.Clear();
+
+            if (chamberEncounter != null)
+            {
+                runtimeSpawnMode = chamberEncounter.SpawnMode;
+                runtimeAliveCap = chamberEncounter.AliveCap;
+                runtimeSpawnInterval = chamberEncounter.SpawnInterval;
+            }
+
+            pressureDirector = quota != null && quota.Count > 0
+                ? new EncounterPressureDirector(runtimeAliveCap, quota)
+                : null;
+
+            if (pressureDirector == null || pressureDirector.Remaining == 0)
+            {
+                FinishCurrentEncounterSegment();
+                return;
+            }
+
+            if (ShouldUsePressure())
+            {
+                waveRoutine = StartCoroutine(PressureRoutine());
+                return;
+            }
+
+            waveRoutine = StartCoroutine(BurstChamberRoutine(quota));
+        }
+
+        private IEnumerator PressureRoutine()
+        {
+            if (pressureDirector == null)
+            {
+                FinishCurrentEncounterSegment();
+                yield break;
+            }
+
+            occupiedSpawnSlots.Clear();
+            int openingCount = Mathf.Min(pressureDirector.AliveCap, pressureDirector.Remaining);
+            int spawned = 0;
+            while (spawned < openingCount && pressureDirector.Remaining > 0)
+            {
+                GameObject prefab = pressureDirector.DequeueNext();
+                if (TrySpawnPrefab(prefab, pickSlotByRole: true))
+                {
+                    spawned++;
+                    continue;
+                }
+
+                pressureDirector.Requeue(prefab);
+                break;
+            }
+
+            while (!pressureDirector.IsCleared(CountLiving()))
+            {
+                int living = CountLiving();
+                if (pressureDirector.CanSpawn(living))
+                {
+                    OccupySlotsOfLiving();
+                    GameObject prefab = pressureDirector.DequeueNext();
+                    if (!TrySpawnPrefab(prefab, pickSlotByRole: true))
+                    {
+                        pressureDirector.Requeue(prefab);
+                    }
+                    if (runtimeSpawnInterval > 0f && !pressureDirector.IsCleared(CountLiving()))
+                    {
+                        yield return new WaitForSeconds(runtimeSpawnInterval);
+                    }
+
+                    continue;
+                }
+
+                yield return null;
+            }
+
+            FinishCurrentEncounterSegment();
+        }
+
+        private IEnumerator BurstChamberRoutine(IReadOnlyList<GameObject> quota)
+        {
+            if (quota == null || quota.Count == 0)
+            {
+                FinishCurrentEncounterSegment();
+                yield break;
+            }
+
+            occupiedSpawnSlots.Clear();
+            for (int i = 0; i < quota.Count; i++)
+            {
+                TrySpawnPrefab(quota[i], pickSlotByRole: true);
+            }
+
+            while (HasLivingEnemies())
+            {
+                yield return null;
+            }
+
+            FinishCurrentEncounterSegment();
+        }
+
+        private void FinishCurrentEncounterSegment()
+        {
+            waveRoutine = null;
+            if (stageController != null && stageController.HasRemainingChambers)
+            {
+                stageController.AdvanceAfterClear();
+                return;
+            }
+
+            CompleteRoom();
+        }
+
+        private CombatStageController FindStageController()
+        {
+            CombatStageController stage = GetComponentInParent<CombatStageController>();
+            if (stage != null)
+            {
+                return stage;
+            }
+
+            Transform root = transform.root;
+            if (root != null)
+            {
+                return root.GetComponentInChildren<CombatStageController>(true);
+            }
+
+            return GetComponentInChildren<CombatStageController>(true);
+        }
+
+        private bool ShouldUsePressure()
+        {
+            if (useBossDeathFlow || IsCurrentRoomBoss())
+            {
+                return false;
+            }
+
+            return runtimeSpawnMode == EncounterSpawnMode.Pressure
+                && pressureDirector != null
+                && pressureDirector.Remaining > 0;
+        }
+
+        private int CountLiving()
+        {
+            HasLivingEnemies();
+            int count = 0;
+            for (int i = 0; i < activeEnemies.Count; i++)
+            {
+                if (activeEnemies[i] != null && activeEnemies[i].IsAlive)
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
 
         private IEnumerator WaveRoutine()
         {
             if (runtimeWaves.Count == 0)
             {
-                CompleteRoom();
+                FinishCurrentEncounterSegment();
                 yield break;
             }
 
@@ -169,13 +377,17 @@ namespace Project.Core.ZoneState
                 }
             }
 
-            CompleteRoom();
+            FinishCurrentEncounterSegment();
         }
 
         private void ResolveEncounterSource()
         {
             runtimeWaves.Clear();
-            runtimeDelayBetweenWaves = delayBetweenWaves;
+            runtimeDelayBetweenWaves = 1.5f;
+            runtimeSpawnMode = EncounterSpawnMode.Burst;
+            runtimeAliveCap = 3;
+            runtimeSpawnInterval = 0.35f;
+            pressureDirector = null;
 
             // Boss rooms always use RoomData.Encounter — never a leftover combat RouteOffer.
             if (!IsCurrentRoomBoss())
@@ -193,6 +405,9 @@ namespace Project.Core.ZoneState
             {
                 EnsureSpawnSlots();
                 runtimeDelayBetweenWaves = encounter.DelayBetweenWaves;
+                runtimeSpawnMode = encounter.SpawnMode;
+                runtimeAliveCap = encounter.AliveCap;
+                runtimeSpawnInterval = encounter.SpawnInterval;
 
                 for (int w = 0; w < encounter.Waves.Count; w++)
                 {
@@ -227,33 +442,32 @@ namespace Project.Core.ZoneState
                             || entry.spawnSlotIndex >= spawnSlots.Length
                             || spawnSlots[entry.spawnSlotIndex] == null)
                         {
-                            Debug.LogWarning(
-                                $"[RoomWaveManager] Encounter wave {w + 1} entry '{entry.enemyPrefab.name}' has invalid spawnSlotIndex {entry.spawnSlotIndex}.",
-                                this);
-                            continue;
+                            if (encounter.SpawnMode != EncounterSpawnMode.Pressure)
+                            {
+                                Debug.LogWarning(
+                                    $"[RoomWaveManager] Encounter wave {w + 1} entry '{entry.enemyPrefab.name}' has invalid spawnSlotIndex {entry.spawnSlotIndex}.",
+                                    this);
+                                continue;
+                            }
                         }
+
+                        Transform spawnPoint = spawnSlots != null
+                            && entry.spawnSlotIndex >= 0
+                            && entry.spawnSlotIndex < spawnSlots.Length
+                            ? spawnSlots[entry.spawnSlotIndex]
+                            : null;
 
                         runtimeWave.enemies.Add(new SpawnEntry
                         {
                             enemyPrefab = entry.enemyPrefab,
-                            spawnPoint = spawnSlots[entry.spawnSlotIndex]
+                            spawnPoint = spawnPoint
                         });
                     }
 
                     runtimeWaves.Add(runtimeWave);
                 }
 
-                return;
-            }
-
-            if (waves == null)
-            {
-                return;
-            }
-
-            for (int i = 0; i < waves.Count; i++)
-            {
-                runtimeWaves.Add(waves[i]);
+                RebuildPressureDirector(runtimeAliveCap);
             }
         }
 
@@ -261,6 +475,9 @@ namespace Project.Core.ZoneState
         {
             EnsureSpawnSlots();
             runtimeDelayBetweenWaves = generated.DelayBetweenWaves;
+            runtimeSpawnMode = generated.SpawnMode;
+            runtimeAliveCap = Mathf.Max(1, generated.AliveCap);
+            runtimeSpawnInterval = Mathf.Max(0f, generated.SpawnInterval);
 
             for (int w = 0; w < generated.Waves.Count; w++)
             {
@@ -326,6 +543,8 @@ namespace Project.Core.ZoneState
                     runtimeWaves.Add(runtimeWave);
                 }
             }
+
+            RebuildPressureDirector(runtimeAliveCap);
         }
 
         private static EncounterSO ResolveActiveEncounter()
@@ -415,6 +634,38 @@ namespace Project.Core.ZoneState
             return null;
         }
 
+        private List<GameObject> CollectQuotaPrefabs()
+        {
+            List<GameObject> quota = new List<GameObject>(8);
+            for (int w = 0; w < runtimeWaves.Count; w++)
+            {
+                Wave wave = runtimeWaves[w];
+                if (wave?.enemies == null)
+                {
+                    continue;
+                }
+
+                for (int e = 0; e < wave.enemies.Count; e++)
+                {
+                    SpawnEntry entry = wave.enemies[e];
+                    if (entry != null && entry.enemyPrefab != null)
+                    {
+                        quota.Add(entry.enemyPrefab);
+                    }
+                }
+            }
+
+            return quota;
+        }
+
+        private void RebuildPressureDirector(int aliveCap)
+        {
+            List<GameObject> quota = CollectQuotaPrefabs();
+            pressureDirector = quota.Count > 0
+                ? new EncounterPressureDirector(aliveCap, quota)
+                : null;
+        }
+
         private void SpawnWave(Wave wave)
         {
             UnsubscribeActiveEnemies();
@@ -428,34 +679,102 @@ namespace Project.Core.ZoneState
             for (int i = 0; i < wave.enemies.Count; i++)
             {
                 SpawnEntry entry = wave.enemies[i];
-                if (entry == null || entry.enemyPrefab == null || entry.spawnPoint == null)
+                if (entry == null || entry.enemyPrefab == null)
                 {
                     Debug.LogWarning($"[RoomWaveManager] Skipping invalid spawn entry in wave {currentWaveIndex + 1}.", this);
                     continue;
                 }
 
-                GameObject enemyObject = Instantiate(
-                    entry.enemyPrefab,
-                    entry.spawnPoint.position,
-                    entry.spawnPoint.rotation,
-                    transform);
-                EnemyController enemy = enemyObject.GetComponentInChildren<EnemyController>();
-                if (enemy == null)
+                TrySpawnPrefab(entry.enemyPrefab, pickSlotByRole: false, fallbackPoint: entry.spawnPoint);
+            }
+        }
+
+        private bool TrySpawnPrefab(GameObject prefab, bool pickSlotByRole, Transform fallbackPoint = null)
+        {
+            if (prefab == null)
+            {
+                return false;
+            }
+
+            Transform spawnPoint = pickSlotByRole
+                ? ResolvePressureSpawnPoint(prefab, fallbackPoint)
+                : fallbackPoint;
+
+            if (spawnPoint == null)
+            {
+                Debug.LogWarning($"[RoomWaveManager] No spawn point for '{prefab.name}'.", this);
+                return false;
+            }
+
+            GameObject enemyObject = Instantiate(prefab, spawnPoint.position, spawnPoint.rotation);
+            EnemyController enemy = enemyObject.GetComponentInChildren<EnemyController>();
+            if (enemy == null)
+            {
+                Debug.LogWarning($"[RoomWaveManager] Spawned prefab '{prefab.name}' has no EnemyController.", this);
+                Destroy(enemyObject);
+                return false;
+            }
+
+            enemy.OnDied -= HandleEnemyDied;
+            enemy.OnDied += HandleEnemyDied;
+            RunProgressionManager.ApplyBiomeDifficultyToEnemy(enemy);
+            activeEnemies.Add(enemy);
+            spawnedAnyEnemy = true;
+            if (spawnPoint != null && !occupiedSpawnSlots.Contains(spawnPoint))
+            {
+                occupiedSpawnSlots.Add(spawnPoint);
+            }
+
+            if (enemy.GetComponentInChildren<Project.AIBehaviour.Boss.BossPatternController>(true) != null)
+            {
+                spawnedBossEnemy = true;
+            }
+
+            return true;
+        }
+
+        private Transform ResolvePressureSpawnPoint(GameObject prefab, Transform fallbackPoint)
+        {
+            EnsureSpawnSlots();
+            Vector3 reference = fallbackPoint != null ? fallbackPoint.position : transform.position;
+            PlayerCharacter player = PlayerCharacter.Instance;
+            if (player != null)
+            {
+                reference = player.transform.position;
+            }
+
+            bool preferFar = EncounterSpawnSlotPicker.PrefersFarSlot(prefab);
+            Transform picked = EncounterSpawnSlotPicker.Pick(
+                spawnSlots,
+                reference,
+                preferFar,
+                occupiedSpawnSlots);
+            return picked != null ? picked : fallbackPoint;
+        }
+
+        private void OccupySlotsOfLiving()
+        {
+            occupiedSpawnSlots.Clear();
+            if (spawnSlots == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < activeEnemies.Count; i++)
+            {
+                EnemyController enemy = activeEnemies[i];
+                if (enemy == null || !enemy.IsAlive)
                 {
-                    Debug.LogWarning($"[RoomWaveManager] Spawned prefab '{entry.enemyPrefab.name}' has no EnemyController.", this);
-                    Destroy(enemyObject);
                     continue;
                 }
 
-                enemy.OnDied -= HandleEnemyDied;
-                enemy.OnDied += HandleEnemyDied;
-                RunProgressionManager.ApplyBiomeDifficultyToEnemy(enemy);
-                activeEnemies.Add(enemy);
-                spawnedAnyEnemy = true;
-
-                if (enemy.GetComponentInChildren<Project.AIBehaviour.Boss.BossPatternController>(true) != null)
+                Transform nearest = EncounterSpawnSlotPicker.Pick(
+                    spawnSlots,
+                    enemy.transform.position,
+                    preferFar: false);
+                if (nearest != null && !occupiedSpawnSlots.Contains(nearest))
                 {
-                    spawnedBossEnemy = true;
+                    occupiedSpawnSlots.Add(nearest);
                 }
             }
         }
@@ -525,12 +844,10 @@ namespace Project.Core.ZoneState
                 // Progression + next offers still roll, but no portal / choice gate.
                 RoomExitPresenter.PrepareOffers();
                 Project.AIBehaviour.Boss.BossDeathSequence.EnsureInstance().NotifyBossRoomCleared();
-                onRoomCleared?.Invoke();
                 return;
             }
 
             RoomExitPresenter.RevealExits(portalsRoot, unlockSceneExitOnClear);
-            onRoomCleared?.Invoke();
         }
 
         private void TryGrantActiveRouteReward()
