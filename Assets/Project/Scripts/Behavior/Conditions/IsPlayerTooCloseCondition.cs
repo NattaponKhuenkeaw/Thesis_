@@ -18,8 +18,13 @@ using Unity.Behavior;
 
         public override bool IsTrue()
         {
-            if (Agent == null || Target == null) return false;
-            if (Agent.Value == null || Target.Value == null) return false;
-            return Vector2.Distance(Agent.Value.transform.position, Target.Value.transform.position) < TooCloseRange.Value;
+        if (Agent == null || Target == null) return false;
+        if (Agent.Value == null || Target.Value == null) return false;
+
+        EnemyController controller = Agent.Value.GetComponent<EnemyController>();
+        if (controller != null && controller.NeverEvade)
+            return false;
+
+        return Vector2.Distance(Agent.Value.transform.position, Target.Value.transform.position) < TooCloseRange.Value;
         }
     }

@@ -165,6 +165,42 @@ public class EnemyController : MonoBehaviour
     [Tooltip("Seconds before Destroy after Die(). Bosses set this so death anim can play.")]
     [SerializeField] private float destroyDelayOnDeath = 0f;
 
+    [Header("Combat Role")]
+    [SerializeField] private EnemyCombatRole combatRole = EnemyCombatRole.InterruptibleMelee;
+    [Tooltip("If > 0, overrides Behavior Graph AttackRange (use ~6-8 for ranged).")]
+    [SerializeField] private float attackRangeOverride = -1f;
+    [SerializeField] private float rangedShotSpeed = 8f;
+    [SerializeField] private float rangedShotLifetime = 2.5f;
+    [SerializeField] private Vector2 rangedSpawnOffset = new Vector2(0.85f, 0.15f);
+    [SerializeField, Min(0.05f)] private float rangedShotRadius = 0.18f;
+
+    public EnemyCombatRole CombatRole
+    {
+        get => combatRole;
+        set => combatRole = value;
+    }
+
+    public float AttackRangeOverride
+    {
+        get => attackRangeOverride;
+        set => attackRangeOverride = value;
+    }
+
+    public bool UninterruptibleOnceWindup => combatRole == EnemyCombatRole.CommitMelee;
+    public bool UsesRangedAttack => combatRole == EnemyCombatRole.RangedHold;
+    public bool NeverEvade => combatRole == EnemyCombatRole.RangedHold;
+    public bool ArmorDuringCommittedSwing => combatRole == EnemyCombatRole.CommitMelee;
+
+    public float ResolveAttackRange(float blackboardRange)
+    {
+        return attackRangeOverride > 0f ? attackRangeOverride : blackboardRange;
+    }
+
+    public float ResolveLungeDistance(float blackboardLunge)
+    {
+        return UsesRangedAttack ? 0f : blackboardLunge;
+    }
+
     // =========================================================
     // Unity Methods
     // =========================================================
@@ -179,6 +215,11 @@ public class EnemyController : MonoBehaviour
     {
         rb       = GetComponent<Rigidbody2D>();
         isAlive   = true;
+        if (rb != null)
+        {
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            rb.interpolation = RigidbodyInterpolation2D.None;
+        }
 
         spriteRenderers = GetComponentsInChildren<SpriteRenderer>();
         CacheOriginalColors();
@@ -721,6 +762,13 @@ public class EnemyController : MonoBehaviour
 
     public void SetBehaviorAgentActive(bool active)
     {
+        EnemyBehaviorBrain brain = GetComponent<EnemyBehaviorBrain>();
+        if (brain != null)
+        {
+            brain.SetAgentActive(active);
+            return;
+        }
+
         var behaviorAgent = GetComponent<BehaviorGraphAgent>();
         if (behaviorAgent != null)
         {
@@ -792,6 +840,58 @@ public class EnemyController : MonoBehaviour
             if (attackHitboxLR != null)
                 attackHitboxLR.enabled = active && isDebugActive;
         }
+    }
+
+    private static Sprite s_rangedShotSprite;
+
+    public void FireRangedShot(Transform target)
+    {
+        float facing = EnemyFacingUtil.GetFacingSign(transform);
+        Vector3 origin = transform.position + new Vector3(rangedSpawnOffset.x * facing, rangedSpawnOffset.y, 0f);
+        Vector2 direction = Vector2.right * facing;
+        if (target != null)
+        {
+            Vector2 toTarget = (Vector2)(target.position - origin);
+            if (toTarget.sqrMagnitude > 0.01f)
+                direction = toTarget.normalized;
+        }
+
+        GameObject shot = new GameObject("EnemyRangedShot");
+        shot.transform.position = origin;
+        shot.transform.localScale = Vector3.one * Mathf.Max(0.12f, rangedShotRadius * 2f);
+        shot.layer = 0;
+
+        SpriteRenderer sprite = shot.AddComponent<SpriteRenderer>();
+        sprite.sprite = GetRangedShotSprite();
+        sprite.color = new Color(0.35f, 0.85f, 1f, 1f);
+        sprite.sortingOrder = 520;
+
+        CircleCollider2D col = shot.AddComponent<CircleCollider2D>();
+        col.isTrigger = true;
+        col.radius = 0.5f;
+
+        Rigidbody2D shotBody = shot.AddComponent<Rigidbody2D>();
+        shotBody.bodyType = RigidbodyType2D.Kinematic;
+        shotBody.gravityScale = 0f;
+        shotBody.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+
+        EnemyRangedShot projectile = shot.AddComponent<EnemyRangedShot>();
+        projectile.Launch(this, direction, rangedShotSpeed, rangedShotLifetime);
+    }
+
+    private static Sprite GetRangedShotSprite()
+    {
+        if (s_rangedShotSprite != null)
+            return s_rangedShotSprite;
+
+        Texture2D tex = Texture2D.whiteTexture;
+        s_rangedShotSprite = Sprite.Create(
+            tex,
+            new Rect(0f, 0f, tex.width, tex.height),
+            new Vector2(0.5f, 0.5f),
+            4f);
+        s_rangedShotSprite.hideFlags = HideFlags.HideAndDontSave;
+        return s_rangedShotSprite;
     }
 
     private void EnsureAttackHitboxDebugLineRenderer()

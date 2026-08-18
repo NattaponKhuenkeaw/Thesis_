@@ -209,7 +209,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: maxHP
-      value: 100
+      value: 500
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: defense
@@ -217,11 +217,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: currentHP
-      value: 100
+      value: 500
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: damageRes
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: combatRole
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: attackDamage
@@ -229,24 +233,20 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: startArmored
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: armorDurability
       value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: armoredDamageMultiplier
-      value: 0.35
-      objectReference: {fileID: 0}
-    - target: {fileID: 4182337007799001123, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: attackProperty
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: hitReactionHandler
       value: 
       objectReference: {fileID: 2992548729297104892}
+    - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: armoredDamageMultiplier
+      value: 0.35
+      objectReference: {fileID: 0}
     - target: {fileID: 747579930720166297, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: -27
@@ -301,6 +301,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3145967654918923133, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Offset.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4182337007799001123, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: attackProperty
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4182337007799001123, guid: c135c5413a913c346868205d4f41acfe, type: 3}

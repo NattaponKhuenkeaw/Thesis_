@@ -32,4 +32,11 @@ public static class EnemyFacingUtil
     {
         return Mathf.Abs(a.x - b.x);
     }
+
+    public static float PlanarDistance(Vector3 a, Vector3 b)
+    {
+        float dx = a.x - b.x;
+        float dy = a.y - b.y;
+        return Mathf.Sqrt(dx * dx + dy * dy);
+    }
 }

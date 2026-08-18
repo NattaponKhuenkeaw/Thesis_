@@ -835,7 +835,8 @@ public class PlayerMovement : MonoBehaviour
     {
         UpdateAttackFacingLockOnState();
         if (TryHandleAttackFacingLockOn()) return;
-        bool canFace = fsm != null && (fsm.CurrentState is FrameDataPlayerState fd ? fd.AllowsFacing() : !fsm.CurrentState.LocksFacing);
+        bool canFace = fsm != null && fsm.CurrentState != null
+            && (fsm.CurrentState is FrameDataPlayerState fd ? fd.AllowsFacing() : !fsm.CurrentState.LocksFacing);
         // Facing responds to raw horizontal input above noise floor, bypassing dead zone
         if (canFace) { if (horizontalInput > 0.01f) SetFacingDirection(1, true); else if (horizontalInput < -0.01f) SetFacingDirection(-1, true); }
     }
