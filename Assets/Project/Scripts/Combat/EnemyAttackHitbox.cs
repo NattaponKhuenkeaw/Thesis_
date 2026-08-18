@@ -6,11 +6,17 @@ public class EnemyAttackHitbox : MonoBehaviour
     [Header("References")]
     [SerializeField] private EnemyController enemyController;
 
+    [Header("Attack Property")]
+    [Tooltip("Normal = dash i-frames work. Undodgeable/Grab = need true invuln or reposition.")]
+    [SerializeField] private EnemyAttackProperty attackProperty = EnemyAttackProperty.Normal;
+
     [Header("Settings")]
     [SerializeField] private bool triggerPlayerTakeDamageAnimation = true;
 
     private readonly HashSet<int> hitTargetsThisWindow = new HashSet<int>();
     private bool hitboxWindowActive;
+
+    public EnemyAttackProperty AttackProperty => attackProperty;
 
     private void Reset()
     {
@@ -36,6 +42,11 @@ public class EnemyAttackHitbox : MonoBehaviour
         {
             hitTargetsThisWindow.Clear();
         }
+    }
+
+    public void SetAttackProperty(EnemyAttackProperty property)
+    {
+        attackProperty = property;
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -78,7 +89,8 @@ public class EnemyAttackHitbox : MonoBehaviour
             return;
         }
 
-        if (!playerCharacter.TakeDamage(damage))
+        IncomingAttackContext context = IncomingAttackContext.FromEnemy(enemyController, attackProperty);
+        if (!playerCharacter.TakeDamage(damage, context))
             return;
 
         // Camera shake: player got hit

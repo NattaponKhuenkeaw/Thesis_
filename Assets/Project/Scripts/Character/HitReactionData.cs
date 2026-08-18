@@ -105,6 +105,11 @@ public struct HitReactionData
 
     public bool breaksGrab;
 
+    /// <summary>
+    /// If true, clears trash Super Armor on hit (BBEE-style armor break).
+    /// </summary>
+    public bool breaksArmor;
+
     // =========================================================
     // Damage Text Impact
     // =========================================================

@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60fd2ca7f56b62c45b42664e28129625, type: 3}
+  m_Name: RoomData_Combat_03
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.RoomData
+  roomId: Combat_03
+  sceneName: combat_1
+  layoutPrefab: {fileID: 293298765199739078, guid: 50ad6f52dcf442f4ab0d12849f9531e2, type: 3}
+  roomKind: 0
+  displayName: Combat 03
+  offerIcon: {fileID: 0}
+  offerWeight: 1
+  includeInRandomOffers: 1
+  zoneMode: 1
+  defaultEntranceId: Default
+  useStaticCamera: 0
+  encounter: {fileID: 11400000, guid: b3c8a5d36f21649ae7c1a5b4d3f8e296, type: 2}

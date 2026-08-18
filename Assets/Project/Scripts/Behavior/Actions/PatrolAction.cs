@@ -83,13 +83,9 @@ using Unity.Behavior;
             float newX = Mathf.MoveTowards(pos.x, m_TargetPosition.x, step);
             t.position = new Vector3(newX, pos.y, pos.z);
 
-            // Flip sprite to face direction
+            // Flip sprite to face direction (respect SpriteRenderer.flipX)
             float dirX = m_TargetPosition.x - pos.x;
-            if (Mathf.Abs(dirX) > 0.01f)
-            {
-                float targetRotY = dirX > 0f ? 0f : 180f;
-                t.eulerAngles = new Vector3(t.eulerAngles.x, targetRotY, t.eulerAngles.z);
-            }
+            EnemyFacingUtil.FaceHorizontal(t, dirX);
 
             m_AnimHandler?.SetSpeed(MoveSpeed.Value);
             return Status.Running;

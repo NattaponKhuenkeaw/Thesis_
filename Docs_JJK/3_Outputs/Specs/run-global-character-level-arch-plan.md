@@ -134,7 +134,7 @@ GetCharacterBaseStats(unownedCharacter)
 
 - `Assets/Project/Scripts/Progression/RunGlobalLevelReward.cs`
 - `Assets/Project/Scripts/Editor/Tests/RunGlobalLevelTests.cs`
-- `Docs_JJK/3_Outputs/ADRs/007-run-global-character-level-authority.md`
+- `Docs_JJK/3_Outputs/ADRs/009-run-global-character-level-authority.md`
 
 ### Modify
 
@@ -169,4 +169,4 @@ GetCharacterBaseStats(unownedCharacter)
 
 ## 14. ADR
 
-ADR-007 records the run-global persistent authority and extends ADR-005 without changing its deployed runtime-stat authority.
+ADR-009 records the run-global persistent authority and extends ADR-005 without changing its deployed runtime-stat authority.

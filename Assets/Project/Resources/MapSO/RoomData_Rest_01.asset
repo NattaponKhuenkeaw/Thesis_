@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 60fd2ca7f56b62c45b42664e28129625, type: 3}
+  m_Name: RoomData_Rest_01
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.RoomData
+  roomId: Rest_01
+  sceneName: Test_Rest
+  layoutPrefab: {fileID: 8730662962792035148, guid: 42ff74e58fda1cb40aabb51d102e986b, type: 3}
+  roomKind: 6
+  displayName: Rest Room
+  offerIcon: {fileID: 0}
+  offerWeight: 1
+  includeInRandomOffers: 1
+  zoneMode: 0
+  defaultEntranceId: Default
+  useStaticCamera: 1
+  encounter: {fileID: 0}

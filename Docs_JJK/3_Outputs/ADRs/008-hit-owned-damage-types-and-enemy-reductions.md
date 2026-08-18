@@ -1,4 +1,4 @@
-# ADR-006: Hit-Owned Damage Types and Enemy Reductions
+# ADR-008: Hit-Owned Damage Types and Enemy Reductions
 
 | Field | Value |
 | --- | --- |

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -59,9 +60,23 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     [Header("Switch Cooldown")]
     [Min(0f)] public float switchCooldownDuration = 1.5f;
 
+    [Header("Active Defeat Recovery")]
+    [Tooltip("How long to play the death animation before removing the KO'd character.")]
+    [SerializeField, Min(0f)] private float defeatDeathAnimSeconds = 1.25f;
+    [Tooltip("Short pause after the death anim before switching to the survivor.")]
+    [SerializeField, Min(0f)] private float defeatSwitchDelaySeconds = 0.35f;
+
     [Header("Runtime State")]
     [SerializeField] private int currentIndex = 0;
     [SerializeField] private float lastSwitchTime = -999f;
+
+    private CharacterObject[] runStartTeamSnapshot;
+
+    private bool isHandlingActiveDefeat;
+    private bool isRestoringLobbyMain;
+
+    public bool IsHandlingActiveDefeat => isHandlingActiveDefeat;
+    private Coroutine activeDefeatRoutine;
 
     private readonly Dictionary<CharacterObject, DeployedCharacterRuntime> deployedCharacterRuntimes =
         new Dictionary<CharacterObject, DeployedCharacterRuntime>();
@@ -114,6 +129,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         ResolveDependencies();
         BootstrapRunInventoryTeam();
         SyncTeamSnapshotFromInventory();
+        runInventory?.RememberRunStartTeam(teamSnapshot, overwrite: false);
     }
 
     private void OnEnable()
@@ -123,6 +139,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         BindMetaProgressionEvents();
         CharacterEvents.OnCharacterStatsChanged += HandleCharacterStatsChanged;
         SyncTeamSnapshotFromInventory();
+        runInventory?.RememberRunStartTeam(teamSnapshot, overwrite: false);
         ReconcileAlwaysRuntimeEffects();
     }
 
@@ -139,8 +156,15 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         ResolveDependencies();
         BootstrapRunInventoryTeam();
         SyncTeamSnapshotFromInventory();
+        runInventory?.RememberRunStartTeam(teamSnapshot, overwrite: false);
         ReconcileAlwaysRuntimeEffects();
         RebuildRuntimeStats();
+        if (runInventory != null && runInventory.HasPendingLobbyMainReset)
+        {
+            RestoreLobbyStateAfterDeath();
+            return;
+        }
+
         LoadCurrentCharacter(forceReload: true);
     }
 
@@ -181,14 +205,93 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     public void LoadCurrentCharacter(bool forceReload = false)
     {
+        ResolveDependencies();
+        BindPlayerCharacter();
+        if (!isRestoringLobbyMain && runInventory != null && runInventory.HasPendingLobbyMainReset)
+        {
+            RestoreLobbyStateAfterDeath();
+            return;
+        }
+
         SyncTeamSnapshotFromInventory();
+        ApplyActiveSlotVisual(forceReload);
+    }
+
+    /// <summary>
+    /// Ignore leftover run identity and load a specific team slot onto the live player.
+    /// Pin the requested slot after inventory sync so a stale active index cannot win.
+    /// </summary>
+    public void ForceLoadSlot(int slotIndex, bool forceReload = true)
+    {
+        ResolveDependencies();
+        BindPlayerCharacter();
+        runInventory?.SetActiveTeamSlotIndex(slotIndex);
+        SyncTeamSnapshotFromInventory();
+        currentIndex = slotIndex;
+        runInventory?.SetActiveTeamSlotIndex(slotIndex);
+        ApplyActiveSlotVisual(forceReload);
+    }
+
+    public void CaptureRunStartTeam()
+    {
+        ResolveDependencies();
+        SyncTeamSnapshotFromInventory();
+        if (teamSnapshot == null || teamSnapshot.Length == 0)
+        {
+            return;
+        }
+
+        runStartTeamSnapshot = new CharacterObject[teamSnapshot.Length];
+        Array.Copy(teamSnapshot, runStartTeamSnapshot, teamSnapshot.Length);
+        runInventory?.RememberRunStartTeam(teamSnapshot, overwrite: true);
+    }
+
+    /// <summary>
+    /// Wipe → Lobby: restore the run-start roster and put CharacterObject_main on the player.
+    /// </summary>
+    public void ForceLobbyMainCharacter()
+    {
+        ResolveDependencies();
+        BindPlayerCharacter();
+        isHandlingActiveDefeat = false;
+        lastSwitchTime = -999f;
+
+        CharacterObject[] roster = runInventory != null
+            ? runInventory.GetRunStartTeamOrCurrent()
+            : CopyTeam(runStartTeamSnapshot);
+        if (CountCharacters(roster) == 0)
+        {
+            roster = CopyTeam(runStartTeamSnapshot);
+        }
+
+        if (CountCharacters(roster) > 0)
+        {
+            runInventory?.DeployTeam(roster, preferredIndex: 0, artifactsBySlot: null);
+        }
+
+        int mainSlot = runInventory != null ? runInventory.GetMainCharacterSlotIndex() : 0;
+        runInventory?.SetActiveTeamSlotIndex(mainSlot);
+        currentIndex = mainSlot;
+        ApplyCharacterSlotToAllPlayers(mainSlot);
+    }
+
+    private void ApplyActiveSlotVisual(bool forceReload)
+    {
         if (playerCharacter == null)
         {
             Debug.LogWarning("TeamLoader: PlayerCharacter is missing");
             return;
         }
 
-        int validIndex = ResolvePreferredIndex(CurrentCharacter);
+        int validIndex = currentIndex;
+        if (teamSnapshot == null
+            || validIndex < 0
+            || validIndex >= teamSnapshot.Length
+            || teamSnapshot[validIndex] == null)
+        {
+            validIndex = FindFirstOccupiedIndex();
+        }
+
         if (validIndex < 0)
         {
             currentIndex = -1;
@@ -229,10 +332,53 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         Debug.Log("Switched to: " + displayName);
     }
 
+    private void ApplyCharacterSlotToAllPlayers(int slotIndex)
+    {
+        PlayerCharacter[] players = FindObjectsByType<PlayerCharacter>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        PlayerCharacter original = playerCharacter;
+        if (players == null || players.Length == 0)
+        {
+            ForceLoadSlot(slotIndex, forceReload: true);
+            return;
+        }
+
+        for (int i = 0; i < players.Length; i++)
+        {
+            if (players[i] == null)
+            {
+                continue;
+            }
+
+            BindActivePlayer(players[i]);
+            ForceLoadSlot(slotIndex, forceReload: true);
+        }
+
+        if (original != null)
+        {
+            BindActivePlayer(original);
+        }
+        else
+        {
+            BindPlayerCharacter();
+        }
+    }
+
+    private static CharacterObject[] CopyTeam(CharacterObject[] source)
+    {
+        if (source == null || source.Length == 0)
+        {
+            return Array.Empty<CharacterObject>();
+        }
+
+        CharacterObject[] copy = new CharacterObject[source.Length];
+        Array.Copy(source, copy, source.Length);
+        return copy;
+    }
+
     public bool SwitchNext()
     {
         SyncTeamSnapshotFromInventory();
-        int nextIndex = FindNextOccupiedIndex(currentIndex, 1);
+        int nextIndex = FindNextLivingIndex(currentIndex);
         if (nextIndex < 0)
         {
             return false;
@@ -244,7 +390,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     public bool SwitchPrevious()
     {
         SyncTeamSnapshotFromInventory();
-        int previousIndex = FindNextOccupiedIndex(currentIndex, -1);
+        int previousIndex = FindPreviousLivingIndex(currentIndex);
         if (previousIndex < 0)
         {
             return false;
@@ -266,7 +412,18 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             return false;
         }
 
+        if (isHandlingActiveDefeat)
+        {
+            return false;
+        }
+
         if (currentIndex == index)
+        {
+            return false;
+        }
+
+        // Removed/KO characters are no longer on the team snapshot.
+        if (!IsCharacterAliveFromInventory(teamSnapshot[index]))
         {
             return false;
         }
@@ -320,6 +477,194 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         return true;
     }
 
+    public bool CanSwitchToIndex(int index)
+    {
+        SyncTeamSnapshotFromInventory();
+        if (teamSnapshot == null || index < 0 || index >= teamSnapshot.Length)
+        {
+            return false;
+        }
+
+        CharacterObject character = teamSnapshot[index];
+        return character != null
+            && !isHandlingActiveDefeat
+            && index != currentIndex
+            && IsCharacterAliveFromInventory(character)
+            && !IsSwitchOnCooldown;
+    }
+
+    public bool HasAnyLivingCharacter(CharacterObject excludeCharacter = null)
+    {
+        ResolveDependencies();
+        SyncTeamSnapshotFromInventory();
+        return FindAnyLivingIndex(excludeCharacter) >= 0;
+    }
+
+    /// <summary>
+    /// Starts death-anim → delete defeated teammate → compact survivors to index 0 → switch.
+    /// Returns false when no living teammate remains (caller should raise team wipe).
+    /// </summary>
+    public bool TryBeginActiveDefeatRecovery()
+    {
+        ResolveDependencies();
+        SyncTeamSnapshotFromInventory();
+
+        if (teamSnapshot == null || teamSnapshot.Length == 0 || playerCharacter == null)
+        {
+            return false;
+        }
+
+        if (isHandlingActiveDefeat)
+        {
+            return true;
+        }
+
+        CharacterObject defeatedCharacter = playerCharacter.characterObject ?? CurrentCharacter;
+        if (!HasAnyLivingCharacter(defeatedCharacter))
+        {
+            return false;
+        }
+
+        if (activeDefeatRoutine != null)
+        {
+            StopCoroutine(activeDefeatRoutine);
+        }
+
+        activeDefeatRoutine = StartCoroutine(ActiveDefeatRecoveryRoutine(defeatedCharacter));
+        return true;
+    }
+
+    /// <summary>
+    /// Legacy name kept for callers/tests. Prefer <see cref="TryBeginActiveDefeatRecovery"/>.
+    /// </summary>
+    public bool TrySwitchToNextLivingCharacterAfterActiveDefeat()
+    {
+        return TryBeginActiveDefeatRecovery();
+    }
+
+    private IEnumerator ActiveDefeatRecoveryRoutine(CharacterObject defeatedCharacter)
+    {
+        isHandlingActiveDefeat = true;
+
+        try
+        {
+            if (playerCharacter != null && playerCharacter.StateMachine != null)
+            {
+                playerCharacter.StateMachine.ChangeState(playerCharacter.StateMachine.DeadState);
+            }
+
+            if (defeatDeathAnimSeconds > 0f)
+            {
+                yield return new WaitForSecondsRealtime(defeatDeathAnimSeconds);
+            }
+
+            if (defeatSwitchDelaySeconds > 0f)
+            {
+                yield return new WaitForSecondsRealtime(defeatSwitchDelaySeconds);
+            }
+
+            ResolveDependencies();
+            SyncTeamSnapshotFromInventory();
+
+            int defeatedIndex = FindCharacterIndex(defeatedCharacter);
+            if (defeatedIndex >= 0)
+            {
+                currentIndex = defeatedIndex;
+            }
+
+            int nextLivingIndex = FindNextLivingIndex(
+                defeatedIndex >= 0 ? defeatedIndex : currentIndex,
+                defeatedCharacter);
+            if (nextLivingIndex < 0 || teamSnapshot == null)
+            {
+                playerCharacter?.RaiseTeamWipeAfterDefeat();
+                yield break;
+            }
+
+            CharacterObject preferredSurvivor = teamSnapshot[nextLivingIndex];
+            if (runInventory == null)
+            {
+                playerCharacter?.RaiseTeamWipeAfterDefeat();
+                yield break;
+            }
+
+            if (!runInventory.TryRemoveDefeatedTeamCharacter(defeatedCharacter, preferredSurvivor, out int newActiveIndex)
+                || newActiveIndex < 0)
+            {
+                // Survivors still exist — never raise wipe (that softlocks RunEnd while this flag is set).
+                Debug.LogError(
+                    "[TeamLoader] Failed to remove defeated teammate from inventory while survivors remain. " +
+                    "Forcing switch without backpack delete.",
+                    this);
+                SyncTeamSnapshotFromInventory();
+                int livingIndex = FindCharacterIndex(preferredSurvivor);
+                if (livingIndex < 0)
+                {
+                    livingIndex = FindAnyLivingIndex(defeatedCharacter);
+                }
+
+                if (livingIndex < 0)
+                {
+                    playerCharacter?.RaiseTeamWipeAfterDefeat();
+                    yield break;
+                }
+
+                currentIndex = livingIndex;
+                runInventory.SetActiveTeamSlotIndex(livingIndex);
+            }
+            else
+            {
+                SyncTeamSnapshotFromInventory();
+                currentIndex = 0;
+                runInventory.SetActiveTeamSlotIndex(0);
+            }
+
+            lastSwitchTime = Time.time;
+            ForgetDefeatedCharacterRuntime(defeatedCharacter);
+            ReconcileAlwaysRuntimeEffects();
+            RebuildRuntimeStats();
+
+            LoadCurrentCharacter(forceReload: true);
+            if (playerCharacter != null)
+            {
+                playerCharacter.Animator?.SetDie(false);
+                playerCharacter.StateMachine?.InputBuffer?.ClearAll();
+                if (playerCharacter.StateMachine != null)
+                {
+                    playerCharacter.StateMachine.ChangeState(playerCharacter.StateMachine.IdleState);
+                }
+            }
+
+            SnapPlayerToGround();
+            NotifyAllCharacterResources();
+            NotifyTeamChanged();
+
+            CharacterObject nextCharacter = CurrentCharacter;
+            string displayName = nextCharacter != null && nextCharacter.metaData != null && !string.IsNullOrWhiteSpace(nextCharacter.metaData.displayName)
+                ? nextCharacter.metaData.displayName
+                : (nextCharacter != null ? nextCharacter.name : "Unknown");
+            Debug.Log($"[TeamLoader] Active character defeated and removed. Switched to survivor at index 0: {displayName}", this);
+        }
+        finally
+        {
+            isHandlingActiveDefeat = false;
+            activeDefeatRoutine = null;
+        }
+    }
+
+    private void ForgetDefeatedCharacterRuntime(CharacterObject defeatedCharacter)
+    {
+        if (defeatedCharacter == null)
+        {
+            return;
+        }
+
+        deployedCharacterRuntimes.Remove(defeatedCharacter);
+        characterCombatRuntimeStates.Remove(defeatedCharacter);
+        ultimateWindowModifiers.Remove(defeatedCharacter);
+        defaultUnlockedPotentialNodes.Remove(defeatedCharacter);
+    }
+
     private void SnapPlayerToGround()
     {
         if (playerCharacter == null) return;
@@ -347,6 +692,88 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
                 rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
             }
         }
+    }
+
+    /// <summary>
+    /// Death → Lobby: bind the scene player, restore slot 0 (main), full HP, empty AE.
+    /// Rebuilds deployed runtimes so KO'd teammates who return with the lobby roster
+    /// show up on HUD again.
+    /// </summary>
+    public void RestoreLobbyStateAfterDeath(PlayerCharacter scenePlayer = null)
+    {
+        if (isRestoringLobbyMain)
+        {
+            return;
+        }
+
+        isRestoringLobbyMain = true;
+        try
+        {
+            if (scenePlayer != null)
+            {
+                BindActivePlayer(scenePlayer);
+            }
+            else
+            {
+                ResolveDependencies();
+                BindPlayerCharacter();
+            }
+
+            ForceLobbyMainCharacter();
+
+            CharacterObject[] team = GetTeamSnapshot();
+            for (int i = 0; i < team.Length; i++)
+            {
+                CharacterObject character = team[i];
+                if (character == null)
+                {
+                    continue;
+                }
+
+                float maxHp = GetCharacterMaxHP(character);
+                SetCharacterCurrentHP(character, maxHp);
+                SetCharacterCurrentAE(character, 0f);
+            }
+
+            ReconcileAlwaysRuntimeEffects();
+            RebuildRuntimeStats();
+            int mainSlot = runInventory != null ? runInventory.GetMainCharacterSlotIndex() : 0;
+            currentIndex = mainSlot;
+            runInventory?.SetActiveTeamSlotIndex(mainSlot);
+            ApplyCharacterSlotToAllPlayers(mainSlot);
+            NotifyTeamChanged();
+            NotifyAllCharacterResources();
+            ResetRuntimeTransientState();
+            runInventory?.ConsumeLobbyMainReset();
+
+            CharacterObject main = CurrentCharacter;
+            string displayName = main != null && main.metaData != null && !string.IsNullOrWhiteSpace(main.metaData.displayName)
+                ? main.metaData.displayName
+                : (main != null ? main.name : "none");
+            Debug.Log($"[TeamLoader] Death → Lobby restored CharacterObject_main: {displayName}", this);
+        }
+        finally
+        {
+            isRestoringLobbyMain = false;
+        }
+    }
+
+    public void BindActivePlayer(PlayerCharacter player)
+    {
+        if (player == null)
+        {
+            ResolveDependencies();
+            BindPlayerCharacter();
+            return;
+        }
+
+        if (playerCharacter != player)
+        {
+            UnbindPlayerCharacter();
+            playerCharacter = player;
+        }
+
+        BindPlayerCharacter();
     }
 
     public bool ContainsCharacter(CharacterObject character)
@@ -593,20 +1020,39 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     public float GetCharacterCurrentHP(CharacterObject character)
     {
-        if (character == null || runInventory == null) return 0f;
-
-        if (playerCharacter != null && playerCharacter.characterObject == character)
-            return playerCharacter.CurrentHP;
-
-        var state = runInventory.GetRunCharacter(character);
-        if (state == null) return GetCharacterMaxHP(character);
-
-        if (state.currentHP < 0f) 
+        if (character == null)
         {
-            state.currentHP = GetCharacterMaxHP(character);
+            return 0f;
         }
 
-        return state.currentHP;
+        if (playerCharacter != null && playerCharacter.characterObject == character)
+        {
+            return playerCharacter.CurrentHP;
+        }
+
+        if (runInventory == null)
+        {
+            return GetCharacterMaxHP(character);
+        }
+
+        var state = runInventory.GetRunCharacter(character);
+        if (state == null)
+        {
+            return GetCharacterMaxHP(character);
+        }
+
+        if (state.currentHP < 0f)
+        {
+            float maxHp = GetCharacterMaxHP(character);
+            // Keep uninitialized until we have a positive max; do not stamp 0 or the
+            // character is treated as dead during team wipe / living searches.
+            if (maxHp > 0f)
+            {
+                state.currentHP = maxHp;
+            }
+        }
+
+        return state.currentHP < 0f ? GetCharacterMaxHP(character) : state.currentHP;
     }
 
     public void SetCharacterCurrentHP(CharacterObject character, float hp)
@@ -614,13 +1060,9 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         if (character == null || runInventory == null) return;
         
         float maxHp = GetCharacterMaxHP(character);
-        float clampedHp = Mathf.Clamp(hp, 0f, maxHp);
+        float clampedHp = Mathf.Clamp(hp, 0f, Mathf.Max(0f, maxHp));
         
-        var state = runInventory.GetRunCharacter(character);
-        if (state != null)
-        {
-            state.currentHP = clampedHp;
-        }
+        runInventory.SetRunCharacterCurrentHP(character, clampedHp);
         
         if (playerCharacter != null && playerCharacter.characterObject == character)
         {
@@ -632,10 +1074,74 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         NotifyCharacterHealthUpdated(character);
     }
 
+    /// <summary>
+    /// Full HP for every deployed teammate. Kept for Rest / explicit restore flows (not post-boss biome).
+    /// </summary>
+    public void HealAndReviveEntireTeam()
+    {
+        HealTeamByMaxHpPercent(1f);
+    }
+
+    /// <summary>
+    /// Heals every deployed teammate by a fraction of their Max HP (additive, clamped).
+    /// 1 = full heal, 0.3 ≈ BBEE-style Rest (~30% Max HP).
+    /// </summary>
+    public void HealTeamByMaxHpPercent(float percentOfMaxHp)
+    {
+        float percent = Mathf.Clamp01(percentOfMaxHp);
+        CharacterObject[] team = GetTeamSnapshot();
+        for (int i = 0; i < team.Length; i++)
+        {
+            CharacterObject character = team[i];
+            if (character == null)
+                continue;
+
+            float maxHp = GetCharacterMaxHP(character);
+            if (maxHp <= 0f)
+                continue;
+
+            float current = GetCharacterCurrentHP(character);
+            SetCharacterCurrentHP(character, current + (maxHp * percent));
+        }
+
+        if (playerCharacter != null)
+        {
+            playerCharacter.Animator?.SetDie(false);
+            if (playerCharacter.StateMachine != null
+                && playerCharacter.StateMachine.CurrentStateId == PlayerStateId.Dead)
+            {
+                playerCharacter.StateMachine.ChangeState(playerCharacter.StateMachine.IdleState);
+            }
+        }
+
+        LoadCurrentCharacter(forceReload: true);
+    }
+
     public float GetCharacterMaxHP(CharacterObject character)
     {
         CharacterStats stats = GetCharacterRuntimeStats(character);
-        return stats != null ? stats.maxHP : 0f;
+        if (stats != null && stats.maxHP > 0f)
+        {
+            return stats.maxHP;
+        }
+
+        if (character == null)
+        {
+            return 0f;
+        }
+
+        CharacterStats leveled = character.GetLeveledStats();
+        if (leveled != null && leveled.maxHP > 0f)
+        {
+            return leveled.maxHP;
+        }
+
+        return character.stats != null ? Mathf.Max(0f, character.stats.maxHP) : 0f;
+    }
+
+    public bool IsCharacterAlive(CharacterObject character)
+    {
+        return character != null && GetCharacterCurrentHP(character) > 0.01f;
     }
 
     public void ResetCharacterHP(CharacterObject character)
@@ -675,13 +1181,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
         float maxAE = GetCharacterMaxAE(character);
         float newAE = Mathf.Clamp(value, 0f, maxAE);
-        
-        var state = runInventory.GetRunCharacter(character);
-        if (state != null)
-        {
-            state.currentAE = newAE;
-        }
-        
+
+        runInventory.SetRunCharacterCurrentAE(character, newAE);
         OnCharacterAuraEnergyUpdated?.Invoke(character, newAE, maxAE);
     }
 
@@ -977,8 +1478,137 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         return -1;
     }
 
-    private int FindCharacterIndex(CharacterObject character) =>
-        (character == null || teamSnapshot == null) ? -1 : Array.IndexOf(teamSnapshot, character);
+    private int FindNextLivingIndex(int startIndex, CharacterObject excludeCharacter = null)
+    {
+        if (teamSnapshot == null || teamSnapshot.Length == 0)
+        {
+            return -1;
+        }
+
+        int index = Mathf.Clamp(startIndex, 0, teamSnapshot.Length - 1);
+        for (int i = 0; i < teamSnapshot.Length; i++)
+        {
+            index = (index + 1) % teamSnapshot.Length;
+            CharacterObject candidate = teamSnapshot[index];
+            if (candidate == null || candidate == excludeCharacter)
+            {
+                continue;
+            }
+
+            if (IsCharacterAliveFromInventory(candidate))
+            {
+                return index;
+            }
+        }
+
+        return -1;
+    }
+
+    private int FindPreviousLivingIndex(int startIndex, CharacterObject excludeCharacter = null)
+    {
+        if (teamSnapshot == null || teamSnapshot.Length == 0)
+        {
+            return -1;
+        }
+
+        int index = Mathf.Clamp(startIndex, 0, teamSnapshot.Length - 1);
+        for (int i = 0; i < teamSnapshot.Length; i++)
+        {
+            index = (index - 1 + teamSnapshot.Length) % teamSnapshot.Length;
+            CharacterObject candidate = teamSnapshot[index];
+            if (candidate == null || candidate == excludeCharacter)
+            {
+                continue;
+            }
+
+            if (IsCharacterAliveFromInventory(candidate))
+            {
+                return index;
+            }
+        }
+
+        return -1;
+    }
+
+    private int FindAnyLivingIndex(CharacterObject excludeCharacter = null)
+    {
+        if (teamSnapshot == null || teamSnapshot.Length == 0)
+        {
+            return -1;
+        }
+
+        for (int i = 0; i < teamSnapshot.Length; i++)
+        {
+            CharacterObject candidate = teamSnapshot[i];
+            if (candidate == null || candidate == excludeCharacter)
+            {
+                continue;
+            }
+
+            if (IsCharacterAliveFromInventory(candidate))
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    /// <summary>
+    /// Living check that always reads inventory (or max-HP fallback), never the
+    /// shared active PlayerCharacter body — safe while the active body is at 0 HP.
+    /// </summary>
+    private bool IsCharacterAliveFromInventory(CharacterObject character)
+    {
+        if (character == null)
+        {
+            return false;
+        }
+
+        if (runInventory == null)
+        {
+            return GetCharacterMaxHP(character) > 0.01f;
+        }
+
+        var state = runInventory.GetRunCharacter(character);
+        if (state == null || state.currentHP < 0f)
+        {
+            return GetCharacterMaxHP(character) > 0.01f;
+        }
+
+        return state.currentHP > 0.01f;
+    }
+
+    private int FindCharacterIndex(CharacterObject character)
+    {
+        if (character == null || teamSnapshot == null)
+        {
+            return -1;
+        }
+
+        int direct = Array.IndexOf(teamSnapshot, character);
+        if (direct >= 0)
+        {
+            return direct;
+        }
+
+        if (string.IsNullOrWhiteSpace(character.characterId))
+        {
+            return -1;
+        }
+
+        for (int i = 0; i < teamSnapshot.Length; i++)
+        {
+            CharacterObject slotted = teamSnapshot[i];
+            if (slotted != null
+                && string.Equals(slotted.characterId, character.characterId, StringComparison.Ordinal))
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
 
     private void NotifyTeamChanged()
     {
@@ -1823,9 +2453,16 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     private void BindPlayerCharacter()
     {
-        if (playerCharacter == null)
+        PlayerCharacter livePlayer = PlayerCharacter.Instance
+            ?? UnityEngine.Object.FindFirstObjectByType<PlayerCharacter>();
+        if (livePlayer != null && playerCharacter != livePlayer)
         {
-            playerCharacter = PlayerCharacter.Instance;
+            UnbindPlayerCharacter();
+            playerCharacter = livePlayer;
+        }
+        else if (playerCharacter == null)
+        {
+            playerCharacter = livePlayer;
         }
 
         if (playerCharacter == null)
@@ -1857,19 +2494,22 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             return;
         }
 
-        var state = runInventory.GetRunCharacter(playerCharacter.characterObject);
-        if (state != null)
-        {
-            state.currentHP = Mathf.Clamp(currentHp, 0f, maxHp);
-        }
+        float clampedHp = Mathf.Clamp(currentHp, 0f, Mathf.Max(0f, maxHp));
+        runInventory.SetRunCharacterCurrentHP(playerCharacter.characterObject, clampedHp);
 
         if (isApplyingRuntimeStats)
         {
             return;
         }
 
-        RefreshActiveConditionalStateEffects();
-        RefreshRuntimeStatsFromHealthChange(playerCharacter.characterObject);
+        // Knockout path: skip runtime-stat rebuild at 0 HP — it is unnecessary and
+        // has caused crashes while death / team-switch is mid-flight.
+        if (clampedHp > 0.01f)
+        {
+            RefreshActiveConditionalStateEffects();
+            RefreshRuntimeStatsFromHealthChange(playerCharacter.characterObject);
+        }
+
         NotifyCharacterHealthUpdated(playerCharacter.characterObject);
     }
 

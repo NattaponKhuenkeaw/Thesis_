@@ -104,6 +104,10 @@ public class NormalHitbox : HitboxBase
     [Header("Grab Interaction")]
     [Tooltip("If true, this hit will knock the enemy out of a grab session even if from the same owner.")]
     public bool breaksGrab = false;
+
+    [Header("Armor Interaction")]
+    [Tooltip("If true, this hit breaks trash Super Armor (orange armored state).")]
+    public bool breaksArmor = false;
 }
 
 // ─── Grab Hitbox ─────────────────────────────────────────

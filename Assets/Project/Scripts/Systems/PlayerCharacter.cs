@@ -169,12 +169,33 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         NotifyHealthChanged();
     }
 
+    public void ForceDeath()
+    {
+        if (characterObject == null || (IsDead && deathEventRaised))
+            return;
+
+        currentHP = 0f;
+        NotifyHealthChanged();
+
+        if (!deathEventRaised)
+        {
+            deathEventRaised = true;
+            ClearUltimateGaugeOnDeath();
+            HandleCharacterDefeated();
+        }
+    }
+
     public bool TakeDamage(float value)
+    {
+        return TakeDamage(value, default);
+    }
+
+    public bool TakeDamage(float value, IncomingAttackContext attackContext)
     {
         if (value <= 0f || IsDead)
             return false;
 
-        if (IsDamageInvulnerable || (Movement != null && Movement.IsInvincible()) || IsUltimateInvulnerable)
+        if (IsImmuneToIncomingAttack(attackContext))
         {
             OnDamageMissed?.Invoke();
             return false;
@@ -252,18 +273,75 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         if (currentHP <= 0f && !deathEventRaised)
         {
             deathEventRaised = true;
-            OnDied?.Invoke();
-
-            if (StateMachine != null)
-                StateMachine.ChangeState(StateMachine.DeadState);
+            ClearUltimateGaugeOnDeath();
+            HandleCharacterDefeated();
         }
-        else
+        else if (StateMachine != null && !IsDead)
         {
-            if (StateMachine != null && !IsDead)
-                StateMachine.ChangeState(StateMachine.HitstunState);
+            StateMachine.ChangeState(StateMachine.HitstunState);
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// True invulnerability beats every attack property.
+    /// Dash/dodge frames only beat <see cref="EnemyAttackProperty.Normal"/>.
+    /// </summary>
+    public bool IsImmuneToIncomingAttack(IncomingAttackContext attackContext)
+    {
+        if (IsDamageInvulnerable || IsUltimateInvulnerable)
+            return true;
+
+        bool hasDodgeFrames = Movement != null && Movement.IsInvincible();
+        if (attackContext.property == EnemyAttackProperty.Normal)
+            return hasDodgeFrames;
+
+        // Undodgeable / Grab ignore dash i-frames.
+        return false;
+    }
+
+    /// <summary>
+    /// Active character knockout: play death, remove from run team/backpack, then
+    /// recover onto a compacted survivor at index 0. Only raise OnDied (RunEnd /
+    /// team wipe) when nobody left can continue the run.
+    /// </summary>
+    private void HandleCharacterDefeated()
+    {
+        TeamLoader teamLoader = TeamLoader.Instance ?? UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
+        if (teamLoader != null && teamLoader.TryBeginActiveDefeatRecovery())
+        {
+            // Death anim + remove + switch runs asynchronously on TeamLoader.
+            return;
+        }
+
+        RaiseTeamWipeAfterDefeat();
+    }
+
+    /// <summary>
+    /// Terminal team-wipe path after the active character dies with no survivors.
+    /// </summary>
+    internal void RaiseTeamWipeAfterDefeat()
+    {
+        OnDied?.Invoke();
+
+        if (StateMachine != null && IsDead)
+            StateMachine.ChangeState(StateMachine.DeadState);
+    }
+
+    /// <summary>
+    /// Resets this character's Ultimate Aura Energy to 0 and notifies AE UI listeners.
+    /// </summary>
+    private void ClearUltimateGaugeOnDeath()
+    {
+        if (characterObject == null)
+            return;
+
+        TeamLoader teamLoader = TeamLoader.Instance;
+        if (teamLoader == null)
+            return;
+
+        teamLoader.SetCharacterCurrentAE(characterObject, 0f);
     }
 
     public bool TryCounter(GameObject attacker)

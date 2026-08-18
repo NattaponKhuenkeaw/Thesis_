@@ -2,7 +2,7 @@ using UnityEngine;
 using Project.Core.ZoneState;
 
 /// <summary>
-/// Intro state: cinematic state during room transition. The player is fully locked 
+/// Intro state: cinematic state during room transition. The player is fully locked
 /// and forced to run to the EntrancePoint.StopPosition.
 /// </summary>
 public class PlayerIntroState : PlayerState
@@ -15,8 +15,8 @@ public class PlayerIntroState : PlayerState
     public PlayerIntroState(PlayerCharacter player, PlayerStateMachine fsm) : base(player, fsm) { }
 
     public override PlayerStateId StateId => PlayerStateId.Intro;
+    public override PlayerStatePriority Priority => PlayerStatePriority.System;
 
-    // Reject all input during intro!
     public override bool AcceptsMoveInput => false;
     public override bool AcceptsDashInput => false;
     public override bool AcceptsJumpInput => false;
@@ -30,11 +30,9 @@ public class PlayerIntroState : PlayerState
     {
         base.Enter();
         introStartedAt = Time.unscaledTime;
+        BeginCinematicTraversal();
         if (player.Movement != null)
         {
-            var rb = player.GetComponent<Rigidbody2D>();
-            if (rb != null) rb.linearVelocity = Vector2.zero;
-            
             player.Movement.SetHorizontalInput(0f);
         }
     }
@@ -43,7 +41,7 @@ public class PlayerIntroState : PlayerState
     {
         if (player.Movement == null || TargetEntrance == null)
         {
-            fsm.ChangeState(fsm.IdleState);
+            CompleteIntro(snapToStopX: false);
             return;
         }
 
@@ -65,7 +63,6 @@ public class PlayerIntroState : PlayerState
             return;
         }
 
-        // Move towards target
         float sign = Mathf.Sign(directionToTarget);
         player.Movement.SnapFacingDirection((int)sign);
         player.Movement.SetHorizontalInput(sign);
@@ -78,23 +75,29 @@ public class PlayerIntroState : PlayerState
         if (player.Movement != null)
         {
             player.Movement.SetHorizontalInput(0f);
-            
-            var rb = player.GetComponent<Rigidbody2D>();
-            if (rb != null) rb.linearVelocity = Vector2.zero;
+
+            Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
+            if (rb != null)
+            {
+                rb.linearVelocity = Vector2.zero;
+            }
         }
     }
 
     private void CompleteIntro(bool snapToStopX)
     {
+        fsm.InputBuffer?.ClearAll();
         if (player.Movement != null)
         {
             player.Movement.SetHorizontalInput(0f);
+            player.Movement.CancelAttackMotion();
             if (snapToStopX && TargetEntrance != null)
             {
                 player.Movement.TeleportHorizontally(TargetEntrance.StopPosition.x);
             }
         }
 
+        Object.FindFirstObjectByType<SceneBoundaryController>()?.CompleteIntro();
         TargetEntrance = null;
         fsm.ChangeState(fsm.IdleState);
     }

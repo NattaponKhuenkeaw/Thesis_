@@ -94,6 +94,16 @@ public class CameraManager : MonoBehaviour
     [Tooltip("Radius of each enemy target for framing.")]
     [SerializeField] private float _enemyRadius = 1f;
 
+    [Header("Boss Combat Framing")]
+    [Tooltip("Ortho size range while an elite/boss is in the combat target group.")]
+    [SerializeField] private Vector2 _bossOrthoSizeRange = new Vector2(9.5f, 12f);
+
+    [Tooltip("Group framing size while fighting a boss (lower = more arena visible).")]
+    [SerializeField] [Range(0.15f, 0.9f)] private float _bossFramingSize = 0.32f;
+
+    [Tooltip("Target-group radius used for elite/boss bodies.")]
+    [SerializeField] private float _bossEnemyRadius = 2.75f;
+
     // =========================================================
     // Y Damping Settings (kept from original)
     // =========================================================
@@ -143,12 +153,22 @@ public class CameraManager : MonoBehaviour
     private CinemachineBlendDefinition _cachedBrainBlend;
     private Vector3 _cachedExploreDamping;
     private bool _isTemporarilySnappedToPlayer;
+    private bool _isTemporarilyFocused;
+    private Transform _cachedFocusExploreFollow;
+    private Transform _cachedFocusExploreLookAt;
+    private Transform _cachedFocusStaticFollow;
+    private Transform _cachedFocusStaticLookAt;
     private float _originalExploreSize = -1f;
     private float _originalCombatSize = -1f;
     private float _originalStaticSize = -1f;
     private float _originalUltimateSize = -1f;
     private bool _hasCachedBrainBlend = false;
     private Coroutine _ultimateZoomCoroutine;
+
+    private CinemachineGroupFraming _combatGroupFraming;
+    private Vector2 _defaultCombatOrthoSizeRange = new Vector2(6.8f, 8f);
+    private float _defaultCombatFramingSize = 0.47f;
+    private bool _bossFramingActive;
 
     public bool IsInCombat => _isInCombat;
     public bool IsLerpingYDamping { get; private set; }
@@ -258,8 +278,23 @@ public class CameraManager : MonoBehaviour
         if (_exploreCam != null)
             _explorePositionComposer = _exploreCam.GetComponent<CinemachinePositionComposer>();
 
+        CacheCombatGroupFraming();
+
         // Start in explore mode
         SetExploreMode();
+    }
+
+    private void CacheCombatGroupFraming()
+    {
+        if (_combatCam == null)
+            return;
+
+        _combatGroupFraming = _combatCam.GetComponent<CinemachineGroupFraming>();
+        if (_combatGroupFraming == null)
+            return;
+
+        _defaultCombatOrthoSizeRange = _combatGroupFraming.OrthoSizeRange;
+        _defaultCombatFramingSize = _combatGroupFraming.FramingSize;
     }
 
     private void Start()
@@ -357,6 +392,8 @@ public class CameraManager : MonoBehaviour
 
                 _engagedEnemies.Remove(enemy);
             }
+
+            RefreshBossCombatFraming();
         }
 
         // Return to explore mode if no engaged enemies remain
@@ -379,11 +416,12 @@ public class CameraManager : MonoBehaviour
         if (enemy == null) return;
 
         float targetWeight = weight < 0f ? _defaultEnemyWeight : weight;
+        float targetRadius = enemy.isEliteOrBoss ? _bossEnemyRadius : _enemyRadius;
 
         if (!_engagedEnemies.TryGetValue(enemy, out var ctx))
         {
             // Add enemy to target group with 0 weight natively to fade it in
-            AddToTargetGroup(enemy.transform, 0f, _enemyRadius);
+            AddToTargetGroup(enemy.transform, 0f, targetRadius);
             
             _engagedEnemies[enemy] = new EngagedEnemyContext
             {
@@ -399,7 +437,10 @@ public class CameraManager : MonoBehaviour
             // Update weight if already engaged, and cancel any "leaving" state
             ctx.targetMaxWeight = targetWeight;
             ctx.isLeaving = false;
+            UpdateTargetRadius(enemy.transform, targetRadius);
         }
+
+        RefreshBossCombatFraming();
 
         if (!_isInCombat)
         {
@@ -634,6 +675,108 @@ public class CameraManager : MonoBehaviour
             SetExploreMode();
         }
 
+        NotifyPlayerWarp(Vector3.zero);
+    }
+
+    /// <summary>
+    /// Temporarily frames an authored Transform (Level-room display, etc.) above room cameras.
+    /// Pair with <see cref="EndTemporaryFocus"/>.
+    /// </summary>
+    public void BeginTemporaryFocus(Transform focusTarget, float blendSeconds = 0.35f)
+    {
+        if (focusTarget == null)
+        {
+            return;
+        }
+
+        EndTemporaryPlayerSnap();
+
+        if (!_isTemporarilyFocused)
+        {
+            if (_exploreCam != null)
+            {
+                _cachedFocusExploreFollow = _exploreCam.Follow;
+                _cachedFocusExploreLookAt = _exploreCam.LookAt;
+            }
+
+            if (_staticCam != null)
+            {
+                _cachedFocusStaticFollow = _staticCam.Follow;
+                _cachedFocusStaticLookAt = _staticCam.LookAt;
+            }
+
+            if (_brain != null)
+            {
+                _cachedBrainBlend = _brain.DefaultBlend;
+                _hasCachedBrainBlend = true;
+            }
+        }
+
+        _isTemporarilyFocused = true;
+
+        if (_brain != null)
+        {
+            float blend = Mathf.Max(0f, blendSeconds);
+            _brain.DefaultBlend = blend <= 0f
+                ? new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.Cut, 0f)
+                : new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.EaseInOut, blend);
+        }
+
+        if (_exploreCam != null)
+        {
+            _exploreCam.Follow = focusTarget;
+            _exploreCam.LookAt = focusTarget;
+            _exploreCam.Priority = _activePriority + 100;
+        }
+
+        if (_combatCam != null)
+        {
+            _combatCam.Priority = _inactivePriority;
+        }
+
+        if (_staticCam != null)
+        {
+            _staticCam.Follow = focusTarget;
+            _staticCam.LookAt = focusTarget;
+            _staticCam.Priority = _inactivePriority;
+        }
+
+        if (_ultimateCam != null)
+        {
+            _ultimateCam.Priority = _inactivePriority;
+        }
+
+        NotifyPlayerWarp(Vector3.zero);
+    }
+
+    public void EndTemporaryFocus()
+    {
+        if (!_isTemporarilyFocused)
+        {
+            return;
+        }
+
+        _isTemporarilyFocused = false;
+
+        if (_exploreCam != null)
+        {
+            _exploreCam.Follow = _cachedFocusExploreFollow != null ? _cachedFocusExploreFollow : _playerTransform;
+            _exploreCam.LookAt = _cachedFocusExploreLookAt != null ? _cachedFocusExploreLookAt : _playerTransform;
+        }
+
+        if (_staticCam != null)
+        {
+            _staticCam.Follow = _cachedFocusStaticFollow;
+            _staticCam.LookAt = _cachedFocusStaticLookAt;
+        }
+
+        if (_brain != null && _hasCachedBrainBlend)
+        {
+            _brain.DefaultBlend = _cachedBrainBlend;
+        }
+
+        RoomData currentRoom = _zoneStateProvider != null ? _zoneStateProvider.CurrentRoom : null;
+        UpdateCameraForRoom(currentRoom);
         NotifyPlayerWarp(Vector3.zero);
     }
 
@@ -930,6 +1073,7 @@ public class CameraManager : MonoBehaviour
     private void ExitCombatMode()
     {
         _isInCombat = false;
+        RestoreDefaultCombatFraming();
 
         // Leave the Player inside the TargetGroup so the CombatCam doesn't snap
         // to (0,0), allowing Cinemachine to smoothly blend to the ExploreCam.
@@ -1001,6 +1145,63 @@ public class CameraManager : MonoBehaviour
                 break;
             }
         }
+    }
+
+    private void UpdateTargetRadius(Transform target, float radius)
+    {
+        if (_combatTargetGroup == null || target == null) return;
+
+        for (int i = 0; i < _combatTargetGroup.Targets.Count; i++)
+        {
+            if (_combatTargetGroup.Targets[i].Object == target)
+            {
+                var t = _combatTargetGroup.Targets[i];
+                t.Radius = radius;
+                _combatTargetGroup.Targets[i] = t;
+                break;
+            }
+        }
+    }
+
+    private void RefreshBossCombatFraming()
+    {
+        bool wantsBossFraming = false;
+        foreach (var kvp in _engagedEnemies)
+        {
+            EnemyController enemy = kvp.Key;
+            if (enemy != null && enemy.IsAlive && enemy.isEliteOrBoss && !kvp.Value.isLeaving)
+            {
+                wantsBossFraming = true;
+                break;
+            }
+        }
+
+        if (wantsBossFraming)
+            ApplyBossCombatFraming();
+        else
+            RestoreDefaultCombatFraming();
+    }
+
+    private void ApplyBossCombatFraming()
+    {
+        if (_combatGroupFraming == null)
+            CacheCombatGroupFraming();
+        if (_combatGroupFraming == null)
+            return;
+
+        _combatGroupFraming.OrthoSizeRange = _bossOrthoSizeRange;
+        _combatGroupFraming.FramingSize = _bossFramingSize;
+        _bossFramingActive = true;
+    }
+
+    private void RestoreDefaultCombatFraming()
+    {
+        if (!_bossFramingActive || _combatGroupFraming == null)
+            return;
+
+        _combatGroupFraming.OrthoSizeRange = _defaultCombatOrthoSizeRange;
+        _combatGroupFraming.FramingSize = _defaultCombatFramingSize;
+        _bossFramingActive = false;
     }
 
     private void CleanupNullTargets()
@@ -1112,6 +1313,11 @@ public class CameraManager : MonoBehaviour
             return detectionRadius;
         }
 
+        if (enemy.isEliteOrBoss)
+        {
+            return Mathf.Max(detectionRadius, 48f);
+        }
+
         var behaviorAgent = enemy.GetComponent<BehaviorGraphAgent>();
         if (behaviorAgent != null && behaviorAgent.GetVariable("DetectRadius", out BlackboardVariable<float> radiusVar) && radiusVar != null)
         {
@@ -1126,6 +1332,12 @@ public class CameraManager : MonoBehaviour
         if (enemy == null)
         {
             return false;
+        }
+
+        // Boss fights stay on combat framing for the whole encounter.
+        if (enemy.isEliteOrBoss)
+        {
+            return true;
         }
 
         EnemyReactionState reactionState = enemy.CurrentReactionState;

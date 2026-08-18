@@ -130,6 +130,13 @@ namespace Project.ShopSystem
 
             offer.MarkSold();
             OnShopOffersChanged?.Invoke();
+
+            // Floor shop has no clear gate; keep the SafeZone exit passable after purchases.
+            if (Project.Core.ZoneState.SceneTransitionManager.Instance != null)
+            {
+                Project.Core.ZoneState.SceneTransitionManager.Instance.SetCurrentRoomExitAvailable(true, playFeedback: false);
+            }
+
             return true;
         }
 

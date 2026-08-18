@@ -4,8 +4,7 @@ using UnityEngine;
 namespace Project.Core.ZoneState
 {
     /// <summary>
-    /// ScriptableObject representing the global list of rooms.
-    /// Provides central lookup matching scene names to their room data.
+    /// Global room catalog. Lookup by roomId (preferred) or sceneName (legacy).
     /// </summary>
     [CreateAssetMenu(fileName = "MapSO", menuName = "Project/Core/MapSO")]
     public class MapSO : ScriptableObject
@@ -15,21 +14,106 @@ namespace Project.Core.ZoneState
 
         public List<RoomData> Rooms => rooms;
 
-        /// <summary>
-        /// Retrieves the configuration data for a room by its scene name.
-        /// </summary>
-        public RoomData GetRoomData(string sceneName)
+        public RoomData ResolveRoom(string key)
         {
-            if (rooms == null) return null;
-
-            foreach (RoomData room in rooms)
+            if (string.IsNullOrWhiteSpace(key) || rooms == null)
             {
-                if (room != null && room.SceneName == sceneName)
+                return null;
+            }
+
+            RoomData byId = GetRoomById(key);
+            return byId != null ? byId : GetRoomData(key);
+        }
+
+        public RoomData GetRoomById(string roomId)
+        {
+            if (string.IsNullOrWhiteSpace(roomId) || rooms == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < rooms.Count; i++)
+            {
+                RoomData room = rooms[i];
+                if (room != null && string.Equals(room.RoomId, roomId, System.StringComparison.Ordinal))
                 {
                     return room;
                 }
             }
+
             return null;
+        }
+
+        public RoomData GetRoomData(string sceneName)
+        {
+            if (string.IsNullOrWhiteSpace(sceneName) || rooms == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < rooms.Count; i++)
+            {
+                RoomData room = rooms[i];
+                if (room != null && string.Equals(room.SceneName, sceneName, System.StringComparison.Ordinal))
+                {
+                    return room;
+                }
+            }
+
+            return null;
+        }
+
+        public void CollectOfferCandidates(RoomKind? kind, string excludeRoomId, List<RoomData> results)
+        {
+            results?.Clear();
+            if (rooms == null || results == null)
+            {
+                return;
+            }
+
+            RoomData excludedRoom = ResolveRoom(excludeRoomId);
+
+            for (int i = 0; i < rooms.Count; i++)
+            {
+                RoomData room = rooms[i];
+                if (room == null || !room.IncludeInRandomOffers || room.OfferWeight <= 0f)
+                {
+                    continue;
+                }
+
+                if (kind.HasValue && room.RoomKind != kind.Value)
+                {
+                    continue;
+                }
+
+                if (IsExcludedRoom(room, excludeRoomId, excludedRoom))
+                {
+                    continue;
+                }
+
+                results.Add(room);
+            }
+        }
+
+        private static bool IsExcludedRoom(RoomData room, string excludeKey, RoomData excludedRoom)
+        {
+            if (room == null)
+            {
+                return true;
+            }
+
+            if (excludedRoom != null && ReferenceEquals(room, excludedRoom))
+            {
+                return true;
+            }
+
+            if (string.IsNullOrWhiteSpace(excludeKey))
+            {
+                return false;
+            }
+
+            // Match RoomId only. Do not exclude by SceneName — hybrid combat rooms share combat_1.
+            return string.Equals(room.RoomId, excludeKey, System.StringComparison.Ordinal);
         }
     }
 }

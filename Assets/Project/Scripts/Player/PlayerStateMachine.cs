@@ -36,6 +36,7 @@ public class PlayerStateMachine : MonoBehaviour
     public PlayerHitstunState HitstunState { get; private set; }
     public PlayerDeadState DeadState { get; private set; }
     public PlayerIntroState IntroState { get; private set; }
+    public PlayerExitState ExitState { get; private set; }
 
     // =========================================================
     // Debug Configuration
@@ -70,6 +71,9 @@ public class PlayerStateMachine : MonoBehaviour
     /// Cheap enum check — no boxing, no type comparison.
     /// </summary>
     public PlayerStateId CurrentStateId => CurrentState != null ? CurrentState.StateId : PlayerStateId.None;
+
+    public bool IsCinematicTraversal =>
+        CurrentStateId == PlayerStateId.Intro || CurrentStateId == PlayerStateId.Exit;
 
     // =========================================================
     // Events
@@ -145,6 +149,20 @@ public class PlayerStateMachine : MonoBehaviour
         if (newState == CurrentState && !(newState is FrameDataPlayerState))
             return;
 
+        if (IsCinematicTraversal)
+        {
+            PlayerStateId nextId = newState.StateId;
+            bool allowed = nextId == PlayerStateId.Idle
+                || nextId == PlayerStateId.Dead
+                || nextId == PlayerStateId.Hitstun
+                || nextId == PlayerStateId.Intro
+                || nextId == PlayerStateId.Exit;
+            if (!allowed)
+            {
+                return;
+            }
+        }
+
         PlayerStateId prevId = CurrentStateId;
         context.previousState = prevId;
         context.wasAirborne = IsAirborneContext;
@@ -212,7 +230,7 @@ public class PlayerStateMachine : MonoBehaviour
 
     public bool TryConsumeBufferedSwitch()
     {
-        if (InputBuffer == null || teamLoader == null)
+        if (InputBuffer == null || teamLoader == null || IsCinematicTraversal)
             return false;
 
         if (!CanSwitchCharacter())
@@ -286,6 +304,11 @@ public class PlayerStateMachine : MonoBehaviour
     /// </summary>
     public void RouteMoveInput(Vector2 input)
     {
+        if (IsCinematicTraversal)
+        {
+            return;
+        }
+
         CurrentState?.OnMoveInput(input);
     }
 
@@ -295,7 +318,7 @@ public class PlayerStateMachine : MonoBehaviour
     /// </summary>
     public void RouteJumpInput()
     {
-        if (CurrentState == null) return;
+        if (CurrentState == null || IsCinematicTraversal) return;
         using ActionOutputRoutingScope outputRouting = BeginCurrentActionOutputRouting();
 
         // State-first: let the current state try to consume the input
@@ -367,7 +390,7 @@ public class PlayerStateMachine : MonoBehaviour
     /// </summary>
     public void RouteDashInput(float inputX)
     {
-        if (CurrentState == null) return;
+        if (CurrentState == null || IsCinematicTraversal) return;
         using ActionOutputRoutingScope outputRouting = BeginCurrentActionOutputRouting();
         if (CurrentState == DashState) return;
 
@@ -400,7 +423,7 @@ public class PlayerStateMachine : MonoBehaviour
     /// </summary>
     public void RouteAttackInput()
     {
-        if (CurrentState == null) return;
+        if (CurrentState == null || IsCinematicTraversal) return;
         using ActionOutputRoutingScope outputRouting = BeginCurrentActionOutputRouting();
 
         if (ShouldPrioritizeBufferedJumpBeforeCombat())
@@ -582,7 +605,7 @@ public class PlayerStateMachine : MonoBehaviour
     /// </summary>
     public void RouteSkillInput()
     {
-        if (CurrentState == null) return;
+        if (CurrentState == null || IsCinematicTraversal) return;
         using ActionOutputRoutingScope outputRouting = BeginCurrentActionOutputRouting();
 
         if (ShouldPrioritizeBufferedJumpBeforeCombat())
@@ -635,7 +658,7 @@ public class PlayerStateMachine : MonoBehaviour
     /// </summary>
     public void RouteUltimateInput()
     {
-        if (CurrentState == null) return;
+        if (CurrentState == null || IsCinematicTraversal) return;
         using ActionOutputRoutingScope outputRouting = BeginCurrentActionOutputRouting();
 
         InputBuffer.BufferUltimate();
@@ -850,6 +873,7 @@ public class PlayerStateMachine : MonoBehaviour
         HitstunState = new PlayerHitstunState(playerCharacter, this);
         DeadState = new PlayerDeadState(playerCharacter, this);
         IntroState = new PlayerIntroState(playerCharacter, this);
+        ExitState = new PlayerExitState(playerCharacter, this);
     }
 
     private PlayerState ResolveBasicAttackState()

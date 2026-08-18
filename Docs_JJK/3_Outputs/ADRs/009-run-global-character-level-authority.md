@@ -12,7 +12,7 @@ next_agent: implementation-agent
 blocked_by: []
 ---
 
-# ADR-007: Run-Global Character Level Authority
+# ADR-009: Run-Global Character Level Authority
 
 | Field | Value |
 | --- | --- |

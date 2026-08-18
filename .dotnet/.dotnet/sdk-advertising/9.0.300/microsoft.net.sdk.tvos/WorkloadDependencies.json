@@ -2,14 +2,14 @@
   "microsoft.net.sdk.tvos": {
     "workload": {
       "alias": [ "tvos" ],
-      "version": "26.2.9008"
+      "version": "26.5.9004"
     },
     "xcode": {
-      "version": "[26.3,)",
-      "recommendedVersion": "26.3"
+      "version": "[26.5,)",
+      "recommendedVersion": "26.5"
     },
     "sdk": {
-      "version": "26.2"
+      "version": "26.5"
     }
   }
 }

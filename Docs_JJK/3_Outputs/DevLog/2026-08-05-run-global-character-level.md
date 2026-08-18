@@ -9,7 +9,7 @@ Replaced the active per-character EXP progression path with one run-scoped level
 - Changed active Inspector and team level readouts to the concise shared `Lv.X/Y` presentation and disabled the individual EXP page route.
 - Retained and labeled the serialized individual level, EXP, Leveling Potion, and Character Level panel implementation as legacy migration code.
 - Rewrote the relevant GDD direction and specified the future safe `Level` room flow, failure recovery, and implementation boundary.
-- Added ADR-007, implementation/design artifacts, and an automated Run Global Level regression suite.
+- Added ADR-009, implementation/design artifacts, and an automated Run Global Level regression suite.
 - Verified Unity compilation, 12/12 focused tests, and 17/17 full EditMode tests in Unity 6000.3.4f1.
 
 ## Game Feel Notes
