@@ -17,6 +17,8 @@ public sealed class ParticleBehaviorRuntime
     private float _expiresAt;
     private float _nextPulseAt;
 
+    private bool _hasPulsed;
+
     public void Initialize(ArtifactPassiveRuntime source, ParticleBehaviorDefinition definition,
         DamageResolvedEvent? triggerEvent, TeamLoader teamLoader)
     {
@@ -26,20 +28,30 @@ public sealed class ParticleBehaviorRuntime
         _anchorEnemy = triggerEvent.HasValue ? triggerEvent.Value.target : null;
         _sourceStatsSnapshot = teamLoader.GetCharacterRuntimeStats(source.Wearer)?.Clone();
         _worldPosition = triggerEvent.HasValue ? triggerEvent.Value.hitPosition : ResolveWearerPosition();
-        _expiresAt = Time.time + Mathf.Max(0.01f, definition.lifetimeSeconds);
+        _expiresAt = Time.time + Mathf.Max(0.1f, definition.lifetimeSeconds);
         _nextPulseAt = Time.time;
+        _hasPulsed = false;
     }
 
     public bool Tick(float now)
     {
-        if (_source == null || _definition == null || now >= _expiresAt || !TryResolveCenter(out Vector2 center))
+        if (_source == null || _definition == null || !TryResolveCenter(out Vector2 center))
         {
             return false;
         }
 
-        if (now < _nextPulseAt) return true;
+        if (now >= _expiresAt && _hasPulsed)
+        {
+            return false;
+        }
+
+        if (now < _nextPulseAt && _hasPulsed) return true;
+
+        _hasPulsed = true;
         _nextPulseAt = now + Mathf.Max(0.05f, _definition.pulseIntervalSeconds);
         Pulse(center);
+
+        if (now >= _expiresAt) return false;
         return true;
     }
 
@@ -54,6 +66,7 @@ public sealed class ParticleBehaviorRuntime
         _worldPosition = Vector2.zero;
         _expiresAt = 0f;
         _nextPulseAt = 0f;
+        _hasPulsed = false;
     }
 
     private void Pulse(Vector2 center)
@@ -72,6 +85,11 @@ public sealed class ParticleBehaviorRuntime
             if (collider == null) continue;
             EnemyController enemy = collider.GetComponentInParent<EnemyController>();
             if (enemy != null && enemy.IsAlive) _pulseTargets.Add(enemy);
+        }
+
+        if (_pulseTargets.Count == 0 && _anchorEnemy != null && _anchorEnemy.IsAlive)
+        {
+            _pulseTargets.Add(_anchorEnemy);
         }
 
         ulong rootId = CombatEventHub.Shared.ReserveEventId();
@@ -178,10 +196,9 @@ public sealed class ParticleBehaviorRuntime
             CharacterObject target = team[i];
             if (target == null) continue;
             if (effect.target == ArtifactResponseTarget.Wearer && !ReferenceEquals(target, _source.Wearer)) continue;
-            if (effect.target == ArtifactResponseTarget.Allies && ReferenceEquals(target, _source.Wearer)) continue;
+            if (effect.target == ArtifactResponseTarget.Teammates && ReferenceEquals(target, _source.Wearer)) continue;
 
-            float currentHp = _teamLoader.GetCharacterCurrentHP(target);
-            _teamLoader.SetCharacterCurrentHP(target, currentHp + amount);
+            RuntimeEffectHealUtility.ApplyHeal(target, null, amount);
         }
 
         if (ArtifactPassiveRuntimeSystem.Instance != null && ArtifactPassiveRuntimeSystem.Instance.IsLoggingEnabled)
@@ -204,12 +221,13 @@ public sealed class ParticleBehaviorRuntime
                 return true;
             case ParticleAnchorPolicy.FollowWearer:
                 PlayerCharacter player = PlayerCharacter.Instance;
-                if (player == null || !ReferenceEquals(player.characterObject, _source.Wearer))
+                if (player != null)
                 {
-                    center = default;
-                    return false;
+                    _worldPosition = player.transform.position;
+                    center = _worldPosition;
+                    return true;
                 }
-                center = player.transform.position;
+                center = _worldPosition;
                 return true;
             default:
                 center = _worldPosition;
@@ -220,8 +238,6 @@ public sealed class ParticleBehaviorRuntime
     private Vector2 ResolveWearerPosition()
     {
         PlayerCharacter player = PlayerCharacter.Instance;
-        return player != null && ReferenceEquals(player.characterObject, _source.Wearer)
-            ? (Vector2)player.transform.position
-            : Vector2.zero;
+        return player != null ? (Vector2)player.transform.position : Vector2.zero;
     }
 }

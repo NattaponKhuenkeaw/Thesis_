@@ -1863,10 +1863,6 @@ PrefabInstance:
       propertyPath: targetCamera
       value: 
       objectReference: {fileID: 1263886174}
-    - target: {fileID: 6090851060313224835, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
-      propertyPath: m_Controller
-      value: 
-      objectReference: {fileID: 9100000, guid: 18ac1726ca931af428ba33088aee69e9, type: 2}
     - target: {fileID: 7851930121724842516, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: m_Name
       value: Player
@@ -4087,20 +4083,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 4658597864859123577, guid: 4059b75ef2995834d85c51b2352b454b, type: 3}
-      propertyPath: m_SortingOrder
-      value: 32767
-      objectReference: {fileID: 0}
-    - target: {fileID: 4750965548911395666, guid: 4059b75ef2995834d85c51b2352b454b, type: 3}
-      propertyPath: textRoot
-      value: 
-      objectReference: {fileID: 466441008288877482, guid: ee658c4409832a2469f6ee3f65d6febe, type: 3}
     - target: {fileID: 8013332541596223281, guid: 4059b75ef2995834d85c51b2352b454b, type: 3}
       propertyPath: m_Name
       value: WorldCanvas
       objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 4750965548911395666, guid: 4059b75ef2995834d85c51b2352b454b, type: 3}
+    m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

@@ -154,6 +154,34 @@ public class EnemyDamageTypeState : MonoBehaviour
         }
     }
 
+    public void ApplyCustomDot(
+        DotEffectDefinition dotDefinition,
+        float totalBaseDamage,
+        CharacterStats attackerStats,
+        CharacterObject sourceCharacter)
+    {
+        _enemy ??= GetComponent<EnemyController>();
+        if (dotDefinition == null || _enemy == null || !_enemy.IsAlive) return;
+
+        float duration = Mathf.Max(0.05f, dotDefinition.durationSeconds);
+        float tickInterval = Mathf.Max(0.05f, dotDefinition.tickIntervalSeconds);
+        int totalTicks = Mathf.Max(1, Mathf.RoundToInt(duration / tickInterval));
+        float baseTickDamage = totalBaseDamage / totalTicks;
+        float snapshottedStrength = baseTickDamage * Mathf.Max(0f, 1f + (attackerStats != null ? attackerStats.dotMastery / 100f : 0f));
+
+        _activeDots.Add(new ActiveDot
+        {
+            damageType = dotDefinition.elementType,
+            remainingDuration = duration,
+            tickInterval = tickInterval,
+            baseTickDamage = baseTickDamage,
+            snapshottedStrength = snapshottedStrength,
+            sourceCharacter = sourceCharacter,
+            sourceStats = attackerStats != null ? attackerStats.Clone() : null,
+            allowCrit = dotDefinition.criticalPolicy == DamageCriticalPolicy.Allow
+        });
+    }
+
     public void ApplyRuntimeElementModifier(PassiveEnemyElementModifierDefinition effect)
     {
         if (effect == null)

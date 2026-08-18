@@ -148,7 +148,7 @@ public class WorldTextUtility : MonoBehaviour
         fontSize = 42f,
         fontStyle = FontStyles.Bold,
         scaleMultiplier = 0.85f,
-        useElementColor = true
+        useElementColor = false
     };
 
     private readonly List<TMP_Text> textPool = new List<TMP_Text>();
@@ -278,7 +278,8 @@ public class WorldTextUtility : MonoBehaviour
         TMP_Text text;
         if (template != null)
         {
-            text = Instantiate(template, root);
+            text = Instantiate(template);
+            text.transform.SetParent(root, false);
             text.name = "WorldText";
         }
         else
@@ -417,7 +418,7 @@ public class WorldTextUtility : MonoBehaviour
 
     private Color ResolveColor(WorldTextRequest request, WorldTextStyle style)
     {
-        if (style.useElementColor)
+        if (style.useElementColor && request.elementType != ElementType.None)
         {
             ElementDatabase database = ElementDatabase.Load();
             if (database != null)
@@ -435,13 +436,22 @@ public class WorldTextUtility : MonoBehaviour
     {
         float scale = Mathf.Max(0.01f, style.scaleMultiplier);
 
-        scale *= request.impactTier switch
+        // Additional Damage (Particle) uses its own standalone scale without inheriting primary impact tiers
+        if (request.type == WorldTextType.Additional)
         {
-            DamageImpactTier.Medium => mediumTierScale,
-            DamageImpactTier.Heavy => heavyTierScale,
-            DamageImpactTier.Ultimate => ultimateTierScale,
-            _ => lowTierScale
-        };
+            return scale;
+        }
+
+        if (request.type != WorldTextType.Dot)
+        {
+            scale *= request.impactTier switch
+            {
+                DamageImpactTier.Medium => mediumTierScale,
+                DamageImpactTier.Heavy => heavyTierScale,
+                DamageImpactTier.Ultimate => ultimateTierScale,
+                _ => lowTierScale
+            };
+        }
 
         if (request.elementType != ElementType.None)
         {
@@ -476,9 +486,7 @@ public class WorldTextUtility : MonoBehaviour
 
     private static bool UsesDamageAmountScale(WorldTextType type)
     {
-        return type == WorldTextType.Damage
-            || type == WorldTextType.Dot
-            || type == WorldTextType.Additional;
+        return type == WorldTextType.Damage;
     }
 
     private WorldTextStyle GetStyle(WorldTextType type)

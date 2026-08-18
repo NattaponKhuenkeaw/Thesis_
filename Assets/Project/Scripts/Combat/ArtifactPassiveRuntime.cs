@@ -43,4 +43,6 @@ public sealed class ArtifactRuleRuntimeState
     public uint activationSequence;
     public ulong lastRootDamageEventId;
     public EnemyController storedTarget;
+    public float snapshottedSkillDamage;
+    public string storedActionId;
 }

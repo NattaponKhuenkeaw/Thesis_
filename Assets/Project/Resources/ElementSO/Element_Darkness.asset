@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ElementDefinition
   elementType: 3
   displayName: Darkness
-  damageTextColor: {r: 0.5, g: 0.1, b: 0.7, a: 1}
+  damageTextColor: {r: 0.71555984, g: 0.35088107, b: 0.8962264, a: 1}
   icon: {fileID: 0}
   dotDuration: 5
   dotDamageRatio: 0.35

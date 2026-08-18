@@ -131,17 +131,17 @@ stress-tested before balance lock.
 per-instance cooldown. The cooldown is wearer-wide, so a multi-target Skill marks only the first
 eligible target resolved by deterministic hit order.
 
-**Marked-hit response:** The first eligible non-DOT confirmed hit against the marked target creates
-an Explosion Splash centered on that target. Every enemy hit by the splash receives a 3-second
-Bleed DOT whose snapshotted total basis is `50%` of the wearer's confirmed triggering Skill damage.
+**Marked-hit response:** The first eligible non-DOT confirmed hit from a different action against the marked target triggers
+an Explosion Splash centered on that target, dealing instant AoE damage equal to `50%` of the wearer's confirmed triggering Skill damage.
+Every enemy hit by the splash also receives a 3-second Bleed DOT based on `30%` of the Artifact wearer's snapshotted ATK.
 The hit consumes Mark Injury.
 
-**Claw:** The deployed character whose eligible hit consumed Mark Injury receives Claw for 10
+**Claw:** The deployed character whose eligible hit consumed Mark Injury receives Claw for 5
 seconds. While Claw is active, each eligible confirmed non-DOT hit has a `50%` chance to apply a
 5-second Bleed DOT based on `30%` of the Artifact wearer's snapshotted ATK.
 
-**Terminal rules:** Explosion children, Bleed ticks, and Claw-applied Bleed cannot consume another
-Mark Injury or trigger Claw again from their own damage.
+**Terminal rules:** Explosion children, Bleed ticks, Claw-applied Bleed, and subsequent hits belonging
+to the same initiating Skill action cannot consume Mark Injury or trigger Claw again from their own damage.
 
 ### P1-A05 — Affliction Rotation Debuff
 

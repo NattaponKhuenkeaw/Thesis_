@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 4658597864859123577}
   - component: {fileID: 8174095804869119262}
   - component: {fileID: 8989140979044948225}
-  - component: {fileID: 4750965548911395666}
   m_Layer: 5
   m_Name: WorldCanvas
   m_TagString: Untagged
@@ -60,7 +59,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: -829059909
-  m_SortingOrder: 500
+  m_SortingOrder: 32767
   m_TargetDisplay: 0
 --- !u!114 &8174095804869119262
 MonoBehaviour:
@@ -102,72 +101,3 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
---- !u!114 &4750965548911395666
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8013332541596223281}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c0b042c3d7054e2ebb12d09e00d93734, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WorldTextUtility
-  textRoot: {fileID: 0}
-  defaultTextTemplate: {fileID: 0}
-  maxTextInstances: 40
-  defaultSize: {x: 220, y: 64}
-  runtimeCanvasScale: 0.01
-  sortingOrder: 10000
-  randomRangeX: {x: -0.35, y: 0.35}
-  randomRangeY: {x: -0.1, y: 0.25}
-  popDownDistance: 0.28
-  slideUpDistance: 0.65
-  fadeInDuration: 0.12
-  holdDuration: 0.28
-  fadeOutDuration: 0.45
-  popStartScaleMultiplier: 1.2
-  fadeEndScaleMultiplier: 0.82
-  elementalDamageScaleMultiplier: 1.5
-  criticalScaleMultiplier: 1.5
-  lowTierScale: 1
-  mediumTierScale: 1.15
-  heavyTierScale: 1.3
-  ultimateTierScale: 1.6
-  damageStyle:
-    color: {r: 1, g: 1, b: 1, a: 1}
-    fontSize: 50
-    fontStyle: 1
-    scaleMultiplier: 1
-    useElementColor: 1
-  dotStyle:
-    color: {r: 1, g: 0.55, b: 0.18, a: 1}
-    fontSize: 42
-    fontStyle: 1
-    scaleMultiplier: 0.85
-    useElementColor: 1
-  shieldStyle:
-    color: {r: 0.65, g: 0.7, b: 0.78, a: 1}
-    fontSize: 44
-    fontStyle: 1
-    scaleMultiplier: 0.95
-    useElementColor: 0
-  missedStyle:
-    color: {r: 0.85, g: 0.9, b: 1, a: 1}
-    fontSize: 42
-    fontStyle: 2
-    scaleMultiplier: 0.85
-    useElementColor: 0
-  healStyle:
-    color: {r: 0.35, g: 1, b: 0.45, a: 1}
-    fontSize: 44
-    fontStyle: 1
-    scaleMultiplier: 0.95
-    useElementColor: 0
-  additionalStyle:
-    color: {r: 0.78, g: 0.72, b: 1, a: 1}
-    fontSize: 42
-    fontStyle: 1
-    scaleMultiplier: 0.85
-    useElementColor: 1

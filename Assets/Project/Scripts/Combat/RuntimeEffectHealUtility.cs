@@ -24,13 +24,17 @@ public static class RuntimeEffectHealUtility
             return;
         }
 
-        if (targetPlayer != null && targetPlayer.characterObject == targetCharacter)
+        TeamLoader teamLoader = TeamLoader.Instance;
+        PlayerCharacter player = targetPlayer != null
+            ? targetPlayer
+            : (teamLoader != null && teamLoader.playerCharacter != null ? teamLoader.playerCharacter : PlayerCharacter.Instance);
+
+        if (player != null && (player.characterObject == targetCharacter || ReferenceEquals(player.characterObject, targetCharacter)))
         {
-            targetPlayer.Heal(amount);
+            player.Heal(amount);
             return;
         }
 
-        TeamLoader teamLoader = TeamLoader.Instance;
         if (teamLoader == null)
         {
             return;

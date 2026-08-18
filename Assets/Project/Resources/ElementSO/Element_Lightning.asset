@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ElementDefinition
   elementType: 1
   displayName: Lightning
-  damageTextColor: {r: 1, g: 0.92, b: 0.016, a: 1}
+  damageTextColor: {r: 1, g: 0.9094448, b: 0, a: 1}
   icon: {fileID: 0}
   dotDuration: 5
   dotDamageRatio: 0.3

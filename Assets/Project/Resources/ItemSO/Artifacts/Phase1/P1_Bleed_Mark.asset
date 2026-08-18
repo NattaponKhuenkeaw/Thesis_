@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: Bleed
   elementType: 2
   criticalPolicy: 2
-  durationSeconds: 3
+  durationSeconds: 1
   tickIntervalSeconds: 1
   stackingPolicy: 2
   maximumStacks: 1

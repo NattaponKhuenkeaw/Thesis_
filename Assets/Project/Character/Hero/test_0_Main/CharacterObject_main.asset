@@ -20,14 +20,14 @@ MonoBehaviour:
     maxHP: 813
     attack: 50
     defense: 38
-    speed: 10
-    dotMastery: 0
+    cooldownMastery: 0
     critRate: 5
     critDamage: 50
-    cooldownMastery: 0
+    dotMastery: 0
     damageIncrease: 0
     additionalDamageIncrease: 0
     auraEnergyRecharge: 0
+    speed: 9.5
   metaData:
     displayName: Main
     description: 
@@ -131,6 +131,8 @@ MonoBehaviour:
             overrideDamageModifier: 1
             damageModifier:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -140,6 +142,8 @@ MonoBehaviour:
             overrideDamageInput: 0
             damageInput:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -165,6 +169,8 @@ MonoBehaviour:
             overrideLifesteal: 0
             lifesteal:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -175,6 +181,8 @@ MonoBehaviour:
             overrideAdditionalDamage: 0
             additionalDamage:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -692,6 +700,8 @@ MonoBehaviour:
             overrideDamageModifier: 0
             damageModifier:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -701,6 +711,8 @@ MonoBehaviour:
             overrideDamageInput: 0
             damageInput:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -726,6 +738,8 @@ MonoBehaviour:
             overrideLifesteal: 0
             lifesteal:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -736,6 +750,8 @@ MonoBehaviour:
             overrideAdditionalDamage: 0
             additionalDamage:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -929,7 +945,8 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: main.passive.lv1
       nodeName: Void Area Tempo
-      description: While self is inside Void Area, own Movement Speed increases by 1
+      description: While self is inside Void Area, own Movement Speed increases by
+        1
       skillPanelDescriptionOverride: 'When Hit an Enemy with <b><color=#8B3DFF>Void</color></b>
         Debuff, will Increase own <b>DOT Mastery +10%</b> <color=#C0C0C0>(Stackable
         5 times)</color></i>
@@ -1006,8 +1023,7 @@ MonoBehaviour:
         Unlock the Basic Attack <i>State 4 - 6</i></color></size>
 
         <size=20><color=#C0C0C0>-
-        Allies inside <color=#8B3DFF>Void Area</color> gain <b>DOT Mastery
-        +20%</b></color></size>'
+        Allies inside <color=#8B3DFF>Void Area</color> gain <b>DOT Mastery +20%</b></color></size>'
       track: 2
       level: 3
       fragmentCost: 1
@@ -1043,11 +1059,10 @@ MonoBehaviour:
         Unlock the Basic Attack <i>State 4 - 6</i></color></size>
 
         <size=20><color=#C0C0C0>-
-        Allies inside <color=#8B3DFF>Void Area</color> gain <b>DOT Mastery
-        +20%</b></color></size>
+        Allies inside <color=#8B3DFF>Void Area</color> gain <b>DOT Mastery +20%</b></color></size>
 
-        <size=20><color=#C0C0C0>- Enemies inside
-        <color=#8B3DFF>Void Area</color> are Slowed by -30%</color></size>'
+        <size=20><color=#C0C0C0>-
+        Enemies inside <color=#8B3DFF>Void Area</color> are Slowed by -30%</color></size>'
       track: 2
       level: 4
       fragmentCost: 1

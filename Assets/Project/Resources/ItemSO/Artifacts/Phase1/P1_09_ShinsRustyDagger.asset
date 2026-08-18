@@ -19,9 +19,9 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 25f44d725976c2f46a83e2ad93aca1a9, type: 3}
   price: 0
   isEquippable: 1
-  passiveDescription: Critical Primary hits build up to 6 Focus (+5% Crit Damage
-    each), then arm a Thunder Strike for the next confirmed Primary hit. 2s cooldown
-    after consumption.
+  passiveDescription: Critical hits grant Focus (+5% Crit Damage per stack, max
+    5 stacks). At 5 stacks, creates a Thunder Strike dealing 250% ATK (+30% Crit Damage
+    scaling) Additional Damage and consumes all Focus.
   passiveSet: {fileID: 11400000, guid: 8d882d18f636f6b4eabc11e00f9b6ca0, type: 2}
   additionalDamageEffects: []
   legacyBonusStats:

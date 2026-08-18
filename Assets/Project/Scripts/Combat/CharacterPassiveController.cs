@@ -2216,7 +2216,7 @@ public class CharacterPassiveController : MonoBehaviour
 
         if (scope == PassiveEffectScope.Self)
         {
-            playerCharacter.Heal(value);
+            RuntimeEffectHealUtility.ApplyHeal(playerCharacter.characterObject, playerCharacter, value);
             return;
         }
 
@@ -2225,7 +2225,7 @@ public class CharacterPassiveController : MonoBehaviour
         {
             if (scope != PassiveEffectScope.Teammates)
             {
-                playerCharacter.Heal(value);
+                RuntimeEffectHealUtility.ApplyHeal(playerCharacter.characterObject, playerCharacter, value);
             }
             return;
         }
@@ -2243,14 +2243,12 @@ public class CharacterPassiveController : MonoBehaviour
             {
                 if (scope != PassiveEffectScope.Teammates)
                 {
-                    playerCharacter.Heal(value);
+                    RuntimeEffectHealUtility.ApplyHeal(character, playerCharacter, value);
                 }
                 continue;
             }
 
-            float maxHp = teamLoader.GetCharacterMaxHP(character);
-            float currentHp = teamLoader.GetCharacterCurrentHP(character);
-            teamLoader.SetCharacterCurrentHP(character, Mathf.Min(maxHp, currentHp + value));
+            RuntimeEffectHealUtility.ApplyHeal(character, null, value);
         }
     }
 

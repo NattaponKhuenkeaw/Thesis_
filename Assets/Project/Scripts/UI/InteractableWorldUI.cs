@@ -207,7 +207,8 @@ public class InteractableWorldUI : MonoBehaviour
             return null;
         }
 
-        GameObject instance = Instantiate(interactionTextPrefab, worldCanvasRoot);
+        GameObject instance = Instantiate(interactionTextPrefab);
+        instance.transform.SetParent(worldCanvasRoot, false);
         instance.name = $"InteractionText_{config.keyString}";
         return instance;
     }

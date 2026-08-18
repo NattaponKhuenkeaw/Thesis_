@@ -199,11 +199,6 @@ namespace Project.TeamBuilder.UI
 
             modeHandlers = GetComponentsInChildren<IZoneStateListener>(true);
 
-            if (artifactPreviewPanel != null)
-            {
-                artifactPreviewPanel.OnEquipRequested -= HandleArtifactEquipRequested;
-                artifactPreviewPanel.OnEquipRequested += HandleArtifactEquipRequested;
-            }
 
             // Initialize the grid panels
             if (inventoryPanel != null)
@@ -685,20 +680,12 @@ namespace Project.TeamBuilder.UI
                 targetSlot.ClearArtifact();
                 targetSlot.ParentSlot.RecalculateStats();
                 OnSlotChanged();
-                if (artifactPreviewPanel != null && artifactPreviewPanel.CurrentArtifact?.instanceId == artifact.instanceId)
-                {
-                    artifactPreviewPanel.SetEquipButtonState(true, "Equip");
-                }
                 return true;
             }
 
             // Equip to target slot (HandleArtifactDrop automatically un-equips from any other slot on team)
             targetSlot.ParentSlot.HandleArtifactDrop(targetSlot, artifact);
             ClearArtifactSwitchSelection();
-            if (artifactPreviewPanel != null && artifactPreviewPanel.CurrentArtifact?.instanceId == artifact.instanceId)
-            {
-                artifactPreviewPanel.SetEquipButtonState(true, "Unequip");
-            }
             return true;
         }
 
@@ -1224,10 +1211,6 @@ namespace Project.TeamBuilder.UI
                         playerInventory != null ? playerInventory.ArtifactRollTable : null);
                     playerInventory?.TryMarkArtifactSeen(artifact.instanceId);
 
-                    bool isEquippedOnSelected = selectedArtifactSwitchSlot != null
-                        && selectedArtifactSwitchSlot.GetArtifact() != null
-                        && string.Equals(selectedArtifactSwitchSlot.GetArtifact().instanceId, artifact.instanceId, StringComparison.Ordinal);
-                    artifactPreviewPanel.SetEquipButtonState(true, isEquippedOnSelected ? "Unequip" : "Equip");
                 }
                 else
                 {
@@ -1241,10 +1224,6 @@ namespace Project.TeamBuilder.UI
             TryEquipArtifact(artifact);
         }
 
-        private void HandleArtifactEquipRequested(ArtifactInstance artifact)
-        {
-            TryEquipArtifact(artifact);
-        }
 
         private void ApplyModeVisualState()
         {

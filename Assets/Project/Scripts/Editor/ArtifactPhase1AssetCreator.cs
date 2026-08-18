@@ -94,9 +94,11 @@ public static class ArtifactPhase1AssetCreator
         RuntimeEffectRecipe thresholdBenefit = StatRecipe(statFormula, "P1-A08-BENEFIT", -1f, false, 1,
             Stat(RuntimeEffectStatTarget.CritRate, RuntimeEffectStatOperation.Add, 17f),
             Stat(RuntimeEffectStatTarget.CritDamage, RuntimeEffectStatOperation.Add, 26f));
-        RuntimeEffectRecipe focus = StatRecipe(statFormula, "P1-A09-FOCUS", -1f, true, 6,
+        RuntimeEffectRecipe focus = StatRecipe(statFormula, "P1-A09-FOCUS", -1f, true, 5,
             Stat(RuntimeEffectStatTarget.CritDamage, RuntimeEffectStatOperation.Add, 5f));
 
+        RuntimeEffectRecipe markInjuryDebuff = StatRecipe(statFormula, "P1-A04-MARK-INJURY", -1f, false, 1);
+        RuntimeEffectRecipe clawBuff = StatRecipe(statFormula, "P1-A04-CLAW", 5f, false, 1);
         DotEffectDefinition markBleed = GetOrCreate<DotEffectDefinition>("P1_Bleed_Mark.asset");
         ConfigureDot(markBleed, "DOT-P1-A04-MARK", 3f);
         DotEffectDefinition clawBleed = GetOrCreate<DotEffectDefinition>("P1_Bleed_Claw.asset");
@@ -110,7 +112,7 @@ public static class ArtifactPhase1AssetCreator
         ConfigureParticle(throne, "PARTICLE-P1-A03", ParticleAnchorPolicy.FollowWearer, 10f, 2f,
             new ParticleRuntimeEffectDefinition { target = ArtifactResponseTarget.Wearer, recipe = throneMitigation },
             new ParticleDamageEffectDefinition { damageBasis = ArtifactDamageBasis.SourceAttack, ratio = 0.5f },
-            new ParticleHealFromDamageEffectDefinition { target = ArtifactResponseTarget.Team, confirmedDamageRatio = 0.5f });
+            new ParticleHealFromDamageEffectDefinition { target = ArtifactResponseTarget.Allies, confirmedDamageRatio = 0.5f });
 
         ParticleBehaviorDefinition wrath = GetOrCreate<ParticleBehaviorDefinition>("P1_A06_WrathOfDemon.asset");
         ConfigureParticle(wrath, "PARTICLE-P1-A06", ParticleAnchorPolicy.FollowTarget, 5f, 2f,
@@ -135,7 +137,7 @@ public static class ArtifactPhase1AssetCreator
                 content.fileName + "_PassiveSet.asset");
             passiveSet.stableId = content.id + "-PASSIVES";
             passiveSet.rules = BuildRules(index, markBleed, clawBleed, markExplosion, throne, wrath, thunder,
-                particleSupport, affliction, switchSupport, thresholdCurse, thresholdBenefit, focus);
+                particleSupport, affliction, switchSupport, thresholdCurse, thresholdBenefit, focus, clawBuff, markInjuryDebuff);
 
             ArtifactDefinition artifact = GetOrCreate<ArtifactDefinition>(content.fileName + ".asset");
             artifact.id = content.id;
@@ -158,7 +160,7 @@ public static class ArtifactPhase1AssetCreator
         EditorUtility.SetDirty(damageFormula);
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        Debug.Log("Artifact Phase 1: created or updated nine GDD replacement definitions.");
+        Debug.Log("Artifact Phase 1 assets created/updated successfully.");
     }
 
     private static List<ArtifactPassiveRuleDefinition> BuildRules(int index,
@@ -167,7 +169,8 @@ public static class ArtifactPhase1AssetCreator
         ParticleBehaviorDefinition wrath, ParticleBehaviorDefinition thunder,
         RuntimeEffectRecipe particleSupport, RuntimeEffectRecipe affliction,
         RuntimeEffectRecipe switchSupport, RuntimeEffectRecipe thresholdCurse,
-        RuntimeEffectRecipe thresholdBenefit, RuntimeEffectRecipe focus)
+        RuntimeEffectRecipe thresholdBenefit, RuntimeEffectRecipe focus,
+        RuntimeEffectRecipe clawBuff, RuntimeEffectRecipe markInjuryDebuff)
     {
         switch (index)
         {
@@ -189,14 +192,16 @@ public static class ArtifactPhase1AssetCreator
                 return Rules(
                     Rule("mark-on-skill-hit", ArtifactPassiveTrigger.DamageResolved,
                         DamageFilter(CombatDamageTag.Particle | CombatDamageTag.Explosion | CombatDamageTag.DotTick, AttackCategory.Skill, forbidden: true), Conditions(14f, 10f),
+                        new ApplyRuntimeEffectResponseDefinition { target = ArtifactResponseTarget.TriggerTarget, recipe = markInjuryDebuff },
                         new ModifyArtifactStateResponseDefinition { target = ArtifactResponseTarget.TriggerTarget, operation = ArtifactStateOperation.Arm }, Cooldown()),
                     Rule("consume-mark", ArtifactPassiveTrigger.DamageResolved,
-                        DamageFilter(CombatDamageTag.DotTick | CombatDamageTag.Explosion, forbidden: true), StoredTargetArmedConditions(),
-                        new ExplosionSplashResponseDefinition { target = ArtifactResponseTarget.TriggerTarget, definition = markExplosion },
-                        new ApplyDotResponseDefinition { target = ArtifactResponseTarget.RoomEnemies, definition = markBleed, damageBasis = ArtifactDamageBasis.ConfirmedDamage, ratio = 0.5f },
+                        DamageFilter(CombatDamageTag.Artifact | CombatDamageTag.Particle | CombatDamageTag.Explosion | CombatDamageTag.Splash | CombatDamageTag.DotApplication | CombatDamageTag.DotTick, forbidden: true, requireWearer: false), StoredTargetArmedConditions(),
+                        new ExplosionSplashResponseDefinition { target = ArtifactResponseTarget.TriggerTarget, definition = markExplosion, damageBasis = ArtifactDamageBasis.ConfirmedDamage, damageRatio = 0.5f, elementType = ElementType.Bleed, preserveParentElement = false },
+                        new ApplyDotResponseDefinition { target = ArtifactResponseTarget.SplashTargets, definition = markBleed, damageBasis = ArtifactDamageBasis.SourceAttack, ratio = 0.3f },
+                        new ApplyRuntimeEffectResponseDefinition { target = ArtifactResponseTarget.TriggerSource, recipe = clawBuff },
                         new ModifyArtifactStateResponseDefinition { target = ArtifactResponseTarget.TriggerTarget, operation = ArtifactStateOperation.ConsumeMark }),
                     Rule("claw-bleed", ArtifactPassiveTrigger.DamageResolved,
-                        DamageFilter(CombatDamageTag.DotTick | CombatDamageTag.Explosion, forbidden: true), Conditions(chance: 0.5f),
+                        DamageFilter(CombatDamageTag.Artifact | CombatDamageTag.Particle | CombatDamageTag.Explosion | CombatDamageTag.Splash | CombatDamageTag.DotApplication | CombatDamageTag.DotTick, forbidden: true, requireWearer: false), Conditions(chance: 0.5f),
                         new ApplyDotResponseDefinition { target = ArtifactResponseTarget.TriggerTarget, definition = clawBleed, ratio = 0.3f }));
             case 4:
                 return Rules(Rule("affliction-on-switch-in", ArtifactPassiveTrigger.CharacterSwitchCompleted,
@@ -218,13 +223,13 @@ public static class ArtifactPhase1AssetCreator
             default:
                 return Rules(
                     Rule("focus-on-critical", ArtifactPassiveTrigger.CriticalHitResolved,
-                        CriticalPrimaryFilter(), DisarmedStackConditions(6),
+                        CriticalPrimaryFilter(), DisarmedStackConditions(5),
                         new ApplyRuntimeEffectResponseDefinition { target = ArtifactResponseTarget.Wearer, recipe = focus },
                         new ModifyArtifactStateResponseDefinition { operation = ArtifactStateOperation.AddStacks }),
                     Rule("thunder-on-primary", ArtifactPassiveTrigger.DamageResolved,
-                        PrimaryFilter(), ArmedConditions(2f),
+                        PrimaryFilter(), ArmedConditions(0f),
                         new SpawnParticleResponseDefinition { target = ArtifactResponseTarget.TriggerTarget, definition = thunder },
-                        new ModifyArtifactStateResponseDefinition { operation = ArtifactStateOperation.Disarm }, Cooldown()));
+                        new ModifyArtifactStateResponseDefinition { operation = ArtifactStateOperation.Disarm }));
         }
     }
 
@@ -281,7 +286,7 @@ public static class ArtifactPhase1AssetCreator
     };
 
     private static CombatEventFilter DamageFilter(CombatDamageTag tags,
-        AttackCategory? category = null, bool forbidden = false)
+        AttackCategory? category = null, bool forbidden = false, bool requireWearer = true)
     {
         return new CombatEventFilter
         {
@@ -289,7 +294,8 @@ public static class ArtifactPhase1AssetCreator
             category = category ?? AttackCategory.Normal,
             requiredDamageTags = forbidden ? CombatDamageTag.None : tags,
             forbiddenDamageTags = forbidden ? tags : CombatDamageTag.None,
-            requirePositiveDamage = true
+            requirePositiveDamage = true,
+            requireWearerAsSource = requireWearer
         };
     }
 

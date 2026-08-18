@@ -16,7 +16,7 @@ MonoBehaviour:
   runtimePrefab: {fileID: 0}
   anchorPolicy: 0
   volume:
-    radius: 3
+    radius: 3.5
     targetLayers:
       serializedVersion: 2
       m_Bits: 0
@@ -28,8 +28,8 @@ MonoBehaviour:
     applyOnPulse: 1
     removeEffectsOnExit: 1
     targetCap: 0
-  lifetimeSeconds: 0.05
-  pulseIntervalSeconds: 0.05
+  lifetimeSeconds: 1
+  pulseIntervalSeconds: 1
   effects:
   - rid: 8312694232576164296
   references:
@@ -44,4 +44,4 @@ MonoBehaviour:
         descriptor:
           delivery: 2
           elementType: 1
-          criticalPolicy: 2
+          criticalPolicy: 1

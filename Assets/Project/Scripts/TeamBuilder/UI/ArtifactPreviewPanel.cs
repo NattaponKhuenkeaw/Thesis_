@@ -23,9 +23,6 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private TMP_Text loreText; // Optional lore/flavor text
         [SerializeField] private TMP_Text qualityText;
 
-        [Header("Equip Controls")]
-        [SerializeField] private Button equipButton;
-        [SerializeField] private TMP_Text equipButtonText;
 
         [Header("Behavior Settings")]
         [SerializeField] private bool closeOnOutsideClick = false;
@@ -41,7 +38,6 @@ namespace Project.TeamBuilder.UI
         private bool isOpen;
         private int openedFrame = -1;
 
-        public event Action<ArtifactInstance> OnEquipRequested;
         public bool IsOpen => isOpen;
         public ArtifactInstance CurrentArtifact => currentArtifact;
         public ArtifactDefinition CurrentDefinition => currentDefinition;
@@ -143,10 +139,6 @@ namespace Project.TeamBuilder.UI
                 qualityText.text = string.Empty;
             }
 
-            if (equipButton != null)
-            {
-                equipButton.gameObject.SetActive(false);
-            }
 
             ClearStatItems();
         }
@@ -173,17 +165,6 @@ namespace Project.TeamBuilder.UI
             }
         }
 
-        public void SetEquipButtonState(bool visible, string buttonLabel = "Equip")
-        {
-            if (equipButton != null)
-            {
-                equipButton.gameObject.SetActive(visible);
-                if (equipButtonText != null && !string.IsNullOrEmpty(buttonLabel))
-                {
-                    equipButtonText.text = buttonLabel;
-                }
-            }
-        }
 
         private void ResolveMissingReferences()
         {
@@ -199,68 +180,20 @@ namespace Project.TeamBuilder.UI
 
             for (int i = 0; i < buttons.Length; i++)
             {
-                if (buttons[i] != null
-                    && buttons[i].name.IndexOf("Ascend", StringComparison.OrdinalIgnoreCase) >= 0)
-                    buttons[i].gameObject.SetActive(false);
-            }
-
-            if (equipButton == null)
-            {
-                equipButton = FindButtonByName(buttons, "Equip", "EquipButton", "Use", "Confirm", "Select");
-                if (equipButton == null)
+                if (buttons[i] != null)
                 {
-                    equipButton = CreateRuntimeEquipButton();
+                    if (buttons[i].name.IndexOf("Ascend", StringComparison.OrdinalIgnoreCase) >= 0
+                        || buttons[i].name.IndexOf("Equip", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        buttons[i].gameObject.SetActive(false);
+                    }
                 }
-            }
-
-            if (equipButton != null)
-            {
-                equipButtonText ??= equipButton.GetComponentInChildren<TMP_Text>(true);
-                equipButton.onClick.RemoveListener(HandleEquipClicked);
-                equipButton.onClick.AddListener(HandleEquipClicked);
             }
 
             if (statItemContainer == null)
             {
                 Transform statsRoot = FindChildByName(transform, "Stats", "StatContainer", "Stat Item Container", "Content", "StatPanel");
                 statItemContainer = statsRoot != null ? statsRoot : transform;
-            }
-        }
-
-        private Button CreateRuntimeEquipButton()
-        {
-            GameObject buttonObj = new GameObject("ArtifactEquipButton", typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
-            buttonObj.transform.SetParent(transform, false);
-            RectTransform rect = buttonObj.GetComponent<RectTransform>();
-            rect.anchorMin = new Vector2(0.5f, 0f);
-            rect.anchorMax = new Vector2(0.5f, 0f);
-            rect.pivot = new Vector2(0.5f, 0f);
-            rect.anchoredPosition = new Vector2(0f, 10f);
-            rect.sizeDelta = new Vector2(160f, 40f);
-            buttonObj.GetComponent<Image>().color = new Color(0.2f, 0.55f, 0.3f, 0.95f);
-
-            GameObject textObj = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
-            textObj.transform.SetParent(buttonObj.transform, false);
-            RectTransform textRect = textObj.GetComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = Vector2.zero;
-            textRect.offsetMax = Vector2.zero;
-            TMP_Text label = textObj.GetComponent<TextMeshProUGUI>();
-            label.text = "Equip";
-            label.alignment = TextAlignmentOptions.Center;
-            label.fontSize = 20f;
-            label.fontStyle = FontStyles.Bold;
-            equipButtonText = label;
-
-            return buttonObj.GetComponent<Button>();
-        }
-
-        private void HandleEquipClicked()
-        {
-            if (currentArtifact != null)
-            {
-                OnEquipRequested?.Invoke(currentArtifact);
             }
         }
 
@@ -317,14 +250,6 @@ namespace Project.TeamBuilder.UI
                     : "Roll Quality —";
             }
 
-            if (equipButton != null)
-            {
-                equipButton.gameObject.SetActive(true);
-                if (equipButtonText != null)
-                {
-                    equipButtonText.text = "Equip";
-                }
-            }
         }
 
         private void AddStatItemIfNonZero(string statName, float value, string statKey = "")
