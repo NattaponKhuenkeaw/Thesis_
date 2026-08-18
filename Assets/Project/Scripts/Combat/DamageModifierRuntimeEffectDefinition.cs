@@ -4,6 +4,10 @@ using UnityEngine;
 public class DamageModifierRuntimeEffectDefinition : RuntimeEffectDefinition
 {
     [HideInInspector]
+    public bool filterByDelivery;
+    [HideInInspector]
+    public DamageDelivery delivery = DamageDelivery.Primary;
+    [HideInInspector]
     public bool filterByElement;
     [HideInInspector]
     public ElementType elementType = ElementType.None;
@@ -20,7 +24,7 @@ public class DamageModifierRuntimeEffectDefinition : RuntimeEffectDefinition
     public override float ModifyOutgoingDamage(RuntimeEffectDamageContext context, float currentDamage)
     {
         RuntimeEffectDamageModifierParameters parameters = ResolveParameters(context);
-        if (!Matches(context, parameters) || Mathf.Abs(parameters.outgoingDamagePercentAdd) <= Mathf.Epsilon)
+        if (!MatchesOutgoing(context, parameters) || Mathf.Abs(parameters.outgoingDamagePercentAdd) <= Mathf.Epsilon)
         {
             return currentDamage;
         }
@@ -51,6 +55,8 @@ public class DamageModifierRuntimeEffectDefinition : RuntimeEffectDefinition
         {
             filter = new RuntimeEffectDamageFilter
             {
+                filterByDelivery = filterByDelivery,
+                delivery = delivery,
                 filterByElement = filterByElement,
                 elementType = elementType,
                 filterByCategory = filterByCategory,
@@ -69,5 +75,21 @@ public class DamageModifierRuntimeEffectDefinition : RuntimeEffectDefinition
         }
 
         return parameters.filter == null || parameters.filter.Matches(context);
+    }
+
+    private static bool MatchesOutgoing(
+        RuntimeEffectDamageContext context,
+        RuntimeEffectDamageModifierParameters parameters)
+    {
+        if (!Matches(context, parameters))
+        {
+            return false;
+        }
+
+        // Compatibility migration: legacy outgoing effects had no delivery field,
+        // so their former unfiltered state now means Primary-only coverage.
+        return parameters.filter != null && parameters.filter.filterByDelivery
+            ? context.damageDelivery == parameters.filter.delivery
+            : context.damageDelivery == DamageDelivery.Primary;
     }
 }

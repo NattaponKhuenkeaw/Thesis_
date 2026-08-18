@@ -21,13 +21,13 @@ MonoBehaviour:
     attack: 26
     defense: 51
     speed: 6.5
-    elementalMastery: 0
+    dotMastery: 0
     critRate: 0
     critDamage: 20
-    cooldownRate: 0
-    impact: 0
-    damageReduction: 0
-    aeRecharge: 0
+    cooldownMastery: 0
+    damageIncrease: 0
+    additionalDamageIncrease: 0
+    auraEnergyRecharge: 0
   metaData:
     displayName: Shermie
     description: "\u0E2B\u0E19\u0E36\u0E48\u0E07\u0E43\u0E19\u0E2A\u0E35\u0E48\u0E08\u0E15\u0E38\u0E23\u0E40\u0E17\u0E1E\u0E41\u0E2B\u0E48\u0E07\u0E42\u0E2D\u0E42\u0E23\u0E08\u0E34\u0E17\u0E35\u0E48\u0E21\u0E32\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E2B\u0E19\u0E49\u0E32\u0E21\u0E49\u0E32\u0E1B\u0E34\u0E14\u0E15\u0E32
@@ -149,7 +149,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -278,7 +278,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -440,7 +440,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -576,7 +576,7 @@ MonoBehaviour:
         energyCostValue: 0
         ignoreDefense: 0
         ignoreDamageResistance: 0
-        ignoreElementalIncomingModifiers: 0
+        ignoreTypeReduction: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
@@ -630,7 +630,7 @@ MonoBehaviour:
         energyCostValue: 0
         ignoreDefense: 0
         ignoreDamageResistance: 0
-        ignoreElementalIncomingModifiers: 0
+        ignoreTypeReduction: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
@@ -700,7 +700,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -862,7 +862,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -1023,7 +1023,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 0
@@ -1184,7 +1184,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 0
@@ -1301,7 +1301,7 @@ MonoBehaviour:
         energyCostValue: 0
         ignoreDefense: 0
         ignoreDamageResistance: 0
-        ignoreElementalIncomingModifiers: 0
+        ignoreTypeReduction: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
@@ -1500,7 +1500,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 0
@@ -1702,7 +1702,7 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: shermie.passive.lv2
       nodeName: HP Mastery
-      description: Increase own Elemental Mastery by 1 for every 100 Max HP self
+      description: Increase own DOT Mastery by 1 for every 100 Max HP self
         has.
       skillPanelDescriptionOverride: 'When self is in Grab Session, gain Super Armor
 
@@ -1713,7 +1713,7 @@ MonoBehaviour:
         DMG equal to 8% of own Max HP<i>(cooldown 2 seconds)</i></color></size>
 
         <size=20><color=#C0C0C0>-
-        Increase own Elemental Mastery by 1% for every 100 Max HP self has
+        Increase own DOT Mastery by 1% for every 100 Max HP self has
 
         </color></size>'
       track: 2
@@ -1750,7 +1750,7 @@ MonoBehaviour:
         energyCostValue: 0
         ignoreDefense: 0
         ignoreDamageResistance: 0
-        ignoreElementalIncomingModifiers: 0
+        ignoreTypeReduction: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects:
@@ -1838,7 +1838,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -1997,7 +1997,7 @@ MonoBehaviour:
       skillPanelDescriptionOverride: "When self is in Grab Session, gain Super Armor\r\n\r\n<size=20><color=#C0C0C0>-
         Increase own Max HP +20%, and attacks deal additional <b><color=#00FFED>Echo</color></b>
         DMG equal to 8% of own Max HP<i>(cooldown 2 seconds)</i></color></size>\r\n<size=20><color=#C0C0C0>-
-        Increase own Elemental Mastery by 1% for every 100 Max HP self has</color></size>\r\n<size=20><color=#C0C0C0>-
+        Increase own DOT Mastery by 1% for every 100 Max HP self has</color></size>\r\n<size=20><color=#C0C0C0>-
         Everytime self successful grab enemy will able to Skill follow-up \u201CShermie
         Cute\u201D that deal additional 12% of own Max HP and Grant allies a <b>Shield</b>
         equal to 12% of Shermie Max HP for 30 seconds</color></size>"
@@ -2096,7 +2096,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 0
@@ -2214,7 +2214,7 @@ MonoBehaviour:
       skillPanelDescriptionOverride: "When self is in Grab Session, gain Super Armor\r\n\r\n<size=20><color=#C0C0C0>-
         Increase own Max HP +20%, and attacks deal additional <b><color=#00FFED>Echo</color></b>
         DMG equal to 8% of own Max HP<i>(cooldown 2 seconds)</i></color></size>\r\n<size=20><color=#C0C0C0>-
-        Increase own Elemental Mastery by 1% for every 100 Max HP self has</color></size>\r\n<size=20><color=#C0C0C0>-
+        Increase own DOT Mastery by 1% for every 100 Max HP self has</color></size>\r\n<size=20><color=#C0C0C0>-
         Everytime self successful grab enemy will able to Skill follow-up \u201CShermie
         Cute\u201D that deal additional 12% of own Max HP and Grant allies a <b>Shield</b>
         equal to 12% of Shermie Max HP for 30 seconds</color></size>\r\n<size=20><color=#C0C0C0>-

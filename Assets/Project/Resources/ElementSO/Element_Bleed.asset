@@ -14,9 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ElementDefinition
   elementType: 2
   displayName: Bleed
-  damageTextColor: {r: 0.85, g: 0.1, b: 0.1, a: 1}
+  damageTextColor: {r: 1, g: 0.11792451, b: 0.11792451, a: 1}
   icon: {fileID: 0}
   dotDuration: 6
   dotDamageRatio: 0.25
   dotTickInterval: 1
-  maxStacks: 5

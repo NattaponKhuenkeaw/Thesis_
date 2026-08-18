@@ -98,7 +98,7 @@ public class PlayerWorldUI : MonoBehaviour
             type = type,
             amount = amount,
             text = text,
-            damageRoutine = DamageRoutine.Physical,
+            damageDelivery = DamageDelivery.Primary,
             impactTier = DamageImpactTier.Low,
             elementType = ElementType.None,
             isCritical = false,

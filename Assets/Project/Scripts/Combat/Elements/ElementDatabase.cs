@@ -33,11 +33,27 @@ public class ElementDatabase : ScriptableObject
     public void InitializeLookup()
     {
         definitionMap = new Dictionary<ElementType, ElementDefinition>();
-        foreach (var def in definitions)
+        if (definitions != null)
         {
-            if (def != null && !definitionMap.ContainsKey(def.elementType))
+            foreach (var def in definitions)
             {
-                definitionMap.Add(def.elementType, def);
+                if (def != null && !definitionMap.ContainsKey(def.elementType))
+                {
+                    definitionMap.Add(def.elementType, def);
+                }
+            }
+        }
+
+        // Auto-discover any ElementDefinition assets in Resources/ElementSO/
+        ElementDefinition[] loaded = Resources.LoadAll<ElementDefinition>("ElementSO");
+        if (loaded != null)
+        {
+            foreach (var def in loaded)
+            {
+                if (def != null && !definitionMap.ContainsKey(def.elementType))
+                {
+                    definitionMap.Add(def.elementType, def);
+                }
             }
         }
     }
@@ -49,7 +65,7 @@ public class ElementDatabase : ScriptableObject
 
     public ElementDefinition GetDefinition(ElementType type)
     {
-        if (definitionMap == null)
+        if (definitionMap == null || definitionMap.Count == 0)
         {
             InitializeLookup();
         }
@@ -64,6 +80,14 @@ public class ElementDatabase : ScriptableObject
             return definition;
         }
 
+        // Direct lookup attempt in Resources
+        ElementDefinition direct = Resources.Load<ElementDefinition>($"ElementSO/Element_{type}");
+        if (direct != null)
+        {
+            definitionMap[type] = direct;
+            return direct;
+        }
+
         // Programmatic fallback if SO is missing in Resources
         ElementDefinition fallback = CreateInstance<ElementDefinition>();
         fallback.elementType = type;
@@ -71,7 +95,6 @@ public class ElementDatabase : ScriptableObject
         fallback.dotDuration = 5f;
         fallback.dotDamageRatio = 0.3f;
         fallback.dotTickInterval = 1f;
-        fallback.maxStacks = 5;
 
         switch (type)
         {

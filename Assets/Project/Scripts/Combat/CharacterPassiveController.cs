@@ -551,9 +551,9 @@ public class CharacterPassiveController : MonoBehaviour
                     input.defenderDamageResistance = 0f;
                 }
 
-                if (modifier.ignoreElementalIncomingModifiers)
+                if (modifier.ignoreTypeReduction)
                 {
-                    input.ignoreElementalIncomingModifiers = true;
+                    input.ignoreTypeReduction = true;
                 }
             }
         }
@@ -877,6 +877,16 @@ public class CharacterPassiveController : MonoBehaviour
         {
             activeHooks[i].hook.OnActionStarted(this, context);
         }
+
+        CharacterObject sourceCharacter = playerCharacter != null
+            ? playerCharacter.characterObject
+            : null;
+        CombatEventHub.Shared.Publish(new ActionStartedEvent(
+            sourceCharacter,
+            category,
+            actionId,
+            actionName,
+            stepData));
     }
 
     public void NotifyActionEnded(AttackCategory category, string actionId, string actionName, AttackStepData stepData)
@@ -1039,7 +1049,7 @@ public class CharacterPassiveController : MonoBehaviour
             TeamLoader teamLoader = TeamLoader.Instance;
             if (teamLoader != null)
             {
-                IReadOnlyList<Artifact> artifacts;
+                IReadOnlyList<ArtifactRuntimeSnapshot> artifacts;
                 if (teamLoader.TryGetDeployedCharacterRuntime(
                         playerCharacter.characterObject,
                         out DeployedCharacterRuntime deployedRuntime))
@@ -1048,14 +1058,14 @@ public class CharacterPassiveController : MonoBehaviour
                 }
                 else
                 {
-                    artifacts = teamLoader.GetEquippedArtifactsFor(playerCharacter.characterObject);
+                    artifacts = teamLoader.GetEquippedArtifactRuntimeSnapshotsFor(playerCharacter.characterObject);
                 }
 
                 if (artifacts != null)
                 {
                     for (int i = 0; i < artifacts.Count; i++)
                     {
-                        Artifact artifact = artifacts[i];
+                        ArtifactDefinition artifact = artifacts[i]?.Definition;
                         AddAdditionalDamageEffects(
                             artifact != null ? artifact.additionalDamageEffects : null,
                             ref effects);
@@ -2206,7 +2216,7 @@ public class CharacterPassiveController : MonoBehaviour
 
         if (scope == PassiveEffectScope.Self)
         {
-            playerCharacter.Heal(value);
+            RuntimeEffectHealUtility.ApplyHeal(playerCharacter.characterObject, playerCharacter, value);
             return;
         }
 
@@ -2215,7 +2225,7 @@ public class CharacterPassiveController : MonoBehaviour
         {
             if (scope != PassiveEffectScope.Teammates)
             {
-                playerCharacter.Heal(value);
+                RuntimeEffectHealUtility.ApplyHeal(playerCharacter.characterObject, playerCharacter, value);
             }
             return;
         }
@@ -2233,14 +2243,12 @@ public class CharacterPassiveController : MonoBehaviour
             {
                 if (scope != PassiveEffectScope.Teammates)
                 {
-                    playerCharacter.Heal(value);
+                    RuntimeEffectHealUtility.ApplyHeal(character, playerCharacter, value);
                 }
                 continue;
             }
 
-            float maxHp = teamLoader.GetCharacterMaxHP(character);
-            float currentHp = teamLoader.GetCharacterCurrentHP(character);
-            teamLoader.SetCharacterCurrentHP(character, Mathf.Min(maxHp, currentHp + value));
+            RuntimeEffectHealUtility.ApplyHeal(character, null, value);
         }
     }
 
@@ -2297,10 +2305,11 @@ public class CharacterPassiveController : MonoBehaviour
             PassiveModifierTarget.Defense => stats.defense,
             PassiveModifierTarget.CritRate => stats.critRate,
             PassiveModifierTarget.CritDamage => stats.critDamage,
-            PassiveModifierTarget.ElementalMastery => stats.elementalMastery,
-            PassiveModifierTarget.CooldownRate => stats.cooldownRate,
-            PassiveModifierTarget.Impact => stats.impact,
-            PassiveModifierTarget.AuraEnergyRecharge => stats.aeRecharge,
+            PassiveModifierTarget.DotMastery => stats.dotMastery,
+            PassiveModifierTarget.CooldownMastery => stats.cooldownMastery,
+            PassiveModifierTarget.DamageIncrease => stats.damageIncrease,
+            PassiveModifierTarget.AdditionalDamageIncrease => stats.additionalDamageIncrease,
+            PassiveModifierTarget.AuraEnergyRecharge => stats.auraEnergyRecharge,
             _ => stats.attack
         };
     }

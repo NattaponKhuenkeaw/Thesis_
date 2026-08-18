@@ -21,13 +21,13 @@ MonoBehaviour:
     attack: 59
     defense: 42
     speed: 6.5
-    elementalMastery: 0
+    dotMastery: 0
     critRate: 5
     critDamage: 50
-    cooldownRate: 0
-    impact: 0
-    damageReduction: 0
-    aeRecharge: 0
+    cooldownMastery: 0
+    damageIncrease: 0
+    additionalDamageIncrease: 0
+    auraEnergyRecharge: 0
   metaData:
     displayName: Orochi
     description: "Orochi is a deity whose purpose is to protect Gaia, considering
@@ -103,7 +103,7 @@ MonoBehaviour:
         energyCostValue: 0
         ignoreDefense: 1
         ignoreDamageResistance: 0
-        ignoreElementalIncomingModifiers: 0
+        ignoreTypeReduction: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
@@ -223,7 +223,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -341,7 +341,7 @@ MonoBehaviour:
         energyCostValue: 0
         ignoreDefense: 1
         ignoreDamageResistance: 0
-        ignoreElementalIncomingModifiers: 0
+        ignoreTypeReduction: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
@@ -421,7 +421,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -555,7 +555,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -675,13 +675,13 @@ MonoBehaviour:
       nodeId: orochi.skill.lv1
       nodeName: Dark Matter
       description: Skill grants 2 Dark Matter stacks. Each stack increases ATK and
-        Elemental Mastery by 5%. After dash, Dark Matter enables orochi.skill.ex
+        DOT Mastery by 5%. After dash, Dark Matter enables orochi.skill.ex
         for 5 seconds; using it consumes 1 stack.
       skillPanelDescriptionOverride: "Inflict <b><color=#8B3DFF>Void</color></b>
         DMG 300% of own ATK, <size=20><color=#C0C0C0>This attack ignores Enemy DEF</color></size>\r\n\r\n<size=20><color=#C0C0C0>-
         using 'Exorcism of Untouchable' grants 2 <b><color=#8B3DFF>Dark Matter</color></b>
         stacks</color></size>\n<size=19><color=#00ffff> \u2022  Dark Matter: Increases
-        ATK and Elemental Mastery by 5%. After dash, while self have Dark Matter
+        ATK and DOT Mastery by 5%. After dash, while self have Dark Matter
         will able to 'Revelo Omnino (Mid)' follow-up, using it consumes 1 stack(Max
         2 stackable)</color></size>"
       track: 0
@@ -775,7 +775,7 @@ MonoBehaviour:
         stacks</color></size>\r\n<size=20><color=#C0C0C0>- using 'Revelo Omnino (Mid)'
         heals 2% of own Max HP and reduces 'Exorcism of Untouchable' cooldown by
         1 second</color></size>\r\n<size=19><color=#00ffff> \u2022  Dark Matter:
-        Increases ATK and Elemental Mastery by 5%. After dash, while self have Dark
+        Increases ATK and DOT Mastery by 5%. After dash, while self have Dark
         Matter will able to 'Revelo Omnino (Mid)' follow-up, using it consumes 1
         stack(Max 2 stackable)</color></size>"
       track: 0
@@ -812,7 +812,7 @@ MonoBehaviour:
         energyCostValue: 0
         ignoreDefense: 0
         ignoreDamageResistance: 0
-        ignoreElementalIncomingModifiers: 0
+        ignoreTypeReduction: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
@@ -892,7 +892,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -1019,7 +1019,7 @@ MonoBehaviour:
         stacks</color></size>\r\n<size=20><color=#C0C0C0>- using 'Revelo Omnino (Mid)'
         heals 2% of own Max HP and reduces 'Exorcism of Untouchable' cooldown by
         1 second</color></size>\r\n<size=19><color=#00ffff> \u2022  Dark Matter:
-        Increases ATK and Elemental Mastery by 5%. After dash, while self have Dark
+        Increases ATK and DOT Mastery by 5%. After dash, while self have Dark
         Matter will able to 'Revelo Omnino (Mid)' follow-up, using it consumes 1
         stack(Max <b><color=#FFA500>4</color></b> stackable)</color></size>"
       track: 0
@@ -1056,7 +1056,7 @@ MonoBehaviour:
         energyCostValue: 0
         ignoreDefense: 1
         ignoreDamageResistance: 0
-        ignoreElementalIncomingModifiers: 0
+        ignoreTypeReduction: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
@@ -1221,7 +1221,7 @@ MonoBehaviour:
         Sky Fire EX' follow-up for 20 seconds. 'Tiral of Sky Fire EX' will <b><color=#74C365>Regenerate
         20% of damage dealt </color></b> and do additional <b><color=#8B3DFF>Void</color></b>
         DMG equal to 40% ATK on each non-critical hit</color>\r\n<size=19><color=#00ffff>
-        \u2022  Dark Matter: Increases ATK and Elemental Mastery by 5%. After dash,
+        \u2022  Dark Matter: Increases ATK and DOT Mastery by 5%. After dash,
         while self have Dark Matter will able to 'Revelo Omnino (Mid)' follow-up,
         using it consumes 1 stack(Max <b><color=#FFA500>4</color></b> stackable)</color></size></size>"
       track: 0
@@ -1316,7 +1316,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -1498,7 +1498,7 @@ MonoBehaviour:
         energyCostValue: 0
         ignoreDefense: 0
         ignoreDamageResistance: 0
-        ignoreElementalIncomingModifiers: 0
+        ignoreTypeReduction: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
@@ -1613,7 +1613,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -1762,7 +1762,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -1896,7 +1896,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -1986,7 +1986,7 @@ MonoBehaviour:
         reset the cooldown of \"Exorcism of Untounchable\"</color></size>\r\n<size=20><color=#C0C0C0>-
         Gain 2 <b><color=#8B3DFF>Dark Matter</color></b> before Ultimate. At 10 stacks,
         will gain <b><color=#8B3DFF>Orochimaru</color></b> for 20 seconds.</color></size>\r\n<size=19><color=#00ffff>\u2022 
-        Orochimaru: +200% Elemental Mastery, Decrease -100% DEF and -30% ATK, When
+        Orochimaru: +200% DOT Mastery, Decrease -100% DEF and -30% ATK, When
         hitting enemy with <b><color=#8B3DFF>Void</color></b> DMG apply <b><color=#8B3DFF>Sacrifice
         Mark</color></b>, up to 10 per enemy</color></size> "
       track: 1
@@ -2063,7 +2063,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -2223,7 +2223,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -2301,14 +2301,14 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: orochi.passive.lv2
       nodeName: Serpent Step
-      description: After Dash, gain 1 SPD for 5 seconds.
+      description: After Dash, gain 1 Movement Speed for 5 seconds.
       skillPanelDescriptionOverride: "Self Gain <b><color=#8B3DFF>Serpent on Earth</color></b>\r\n<size=19><color=#00ffff>
         \u2022 Serpent on Earth: Void attacks deal additional Void DMG equal to 150%
         of own ATK<color=#C0C0C0><i>(Cooldown 2 seconds)</i></color></color></size>\r\n\r\n<size=20><color=#C0C0C0>-
         Each <b><color=#8B3DFF>Dark Matter</color></b> stack Increase <b><color=#8B3DFF>Serpent
         on Earth</color></b> additional <b><color=#8B3DFF>Void</color></b> DMG by
         25% of own ATK</color></size>\r\n<size=20><color=#C0C0C0>- After Dash, gain
-        1 SPD for 5 seconds</color></size>"
+        1 Movement Speed for 5 seconds</color></size>"
       track: 2
       level: 2
       fragmentCost: 0
@@ -2383,7 +2383,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -2469,7 +2469,7 @@ MonoBehaviour:
         Each <b><color=#8B3DFF>Dark Matter</color></b> stack Increase <b><color=#8B3DFF>Serpent
         on Earth</color></b> additional <b><color=#8B3DFF>Void</color></b> DMG by
         25% of own ATK</color></size>\r\n<size=20><color=#C0C0C0>- After Dash, gain
-        1 SPD for 5 seconds</color></size>"
+        1 Movement Speed for 5 seconds</color></size>"
       track: 2
       level: 3
       fragmentCost: 0
@@ -2504,7 +2504,7 @@ MonoBehaviour:
         energyCostValue: 0
         ignoreDefense: 0
         ignoreDamageResistance: 0
-        ignoreElementalIncomingModifiers: 0
+        ignoreTypeReduction: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects:
@@ -2592,7 +2592,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -2708,7 +2708,7 @@ MonoBehaviour:
         Each <b><color=#8B3DFF>Dark Matter</color></b> stack Increase <b><color=#8B3DFF>Serpent
         on Earth</color></b> additional <b><color=#8B3DFF>Void</color></b> DMG by
         25% of own ATK</color></size>\r\n<size=20><color=#C0C0C0>- After Dash, gain
-        1 SPD for 5 seconds</color></size>\r\n<size=20><color=#C0C0C0>- While Orochimaru
+        1 Movement Speed for 5 seconds</color></size>\r\n<size=20><color=#C0C0C0>- While Orochimaru
         is active, unlock 'Supreme Divinity' ult follow-up. when use, consumes each
         target's Sacrifice stacks, dealing additional <b><color=#8B3DFF>Void</color></b>
         DMG equal to 250% of own ATK per stack. then remove Orochimaru</color></size>"

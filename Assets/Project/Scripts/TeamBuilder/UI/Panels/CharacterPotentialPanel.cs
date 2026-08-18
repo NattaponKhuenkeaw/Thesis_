@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using Project.InventorySystem.Artifacts;
 using Project.InventorySystem.Items;
 using Project.Progression;
 using Project.TeamBuilder.UI;
@@ -62,7 +63,7 @@ namespace Project.TeamBuilder.UI.Panels
 
         private CharacterItem _currentCharacterItem;
         private CharacterObject _currentCharacter;
-        private Artifact[] _currentArtifacts = Array.Empty<Artifact>();
+        private ArtifactInstance[] _currentArtifacts = Array.Empty<ArtifactInstance>();
         private PotentialNodeDefinition _selectedNode;
         private readonly List<PotentialNodeDefinition> _displayNodes = new List<PotentialNodeDefinition>(12);
         private bool _buttonsBound;
@@ -95,11 +96,11 @@ namespace Project.TeamBuilder.UI.Panels
             HandleUpgradeWindowOutsideClick();
         }
 
-        public void PopulateData(CharacterItem character, Artifact[] equippedArtifacts)
+        public void PopulateData(CharacterItem character, ArtifactInstance[] equippedArtifacts)
         {
             _currentCharacterItem = character;
             _currentCharacter = character != null ? character.characterObjectData : null;
-            _currentArtifacts = equippedArtifacts ?? Array.Empty<Artifact>();
+            _currentArtifacts = equippedArtifacts ?? Array.Empty<ArtifactInstance>();
             ResolveReferences();
             EnsureRuntimeFallbacks();
             BuildDisplayNodes();

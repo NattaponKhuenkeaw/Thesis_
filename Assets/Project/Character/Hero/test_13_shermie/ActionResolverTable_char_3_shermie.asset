@@ -687,7 +687,6 @@ MonoBehaviour:
         counterReaction:
           damage: 0
           isCriticalHit: 0
-          damageIsFinal: 0
           knockbackDirection: {x: 0, y: 0}
           reactionKind: 1
           reactionTiming:
@@ -724,20 +723,20 @@ MonoBehaviour:
           impactTier: 0
           textImpactTier: 0
           elementType: 0
-          damageRoutine: 0
+          damageDelivery: 0
           sourceCharacter: {fileID: 0}
           sourceStats:
             maxHP: 100
             attack: 10
             defense: 5
             speed: 10
-            elementalMastery: 0
+            dotMastery: 0
             critRate: 5
             critDamage: 50
-            cooldownRate: 0
-            impact: 0
-            damageReduction: 0
-            aeRecharge: 0
+            cooldownMastery: 0
+            damageIncrease: 0
+            additionalDamageIncrease: 0
+            auraEnergyRecharge: 0
           sourceCategory: 0
           sourceActionId: 
           sourceActionName: 
@@ -768,7 +767,7 @@ MonoBehaviour:
             - audio
             - hitbox
             - events
-          ignoreElementalIncomingModifiers: 0
+          ignoreTypeReduction: 0
     - rid: 1588256136747024488
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:

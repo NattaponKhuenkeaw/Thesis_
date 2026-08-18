@@ -3,6 +3,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Project.InventorySystem.Artifacts;
 using Project.InventorySystem.Items;
 using Project.ShopSystem;
 using Project.TeamBuilder.UI;
@@ -45,12 +46,12 @@ namespace Project.TeamBuilder.UI.Panels
 
         private CharacterObject _characterObject;
         private CharacterUpgrade _runUpgrade;
-        private Artifact[] _equippedArtifacts;
+        private ArtifactInstance[] _equippedArtifacts;
         private CharacterStats _artifactBonusStats = new CharacterStats();
         private Dictionary<Item, int> _simulatedConsumptions = new Dictionary<Item, int>();
         private Dictionary<Item, LevelingPotionSlotUI> _potionSlots = new Dictionary<Item, LevelingPotionSlotUI>();
 
-        public void PopulateData(CharacterItem character, Artifact[] equippedArtifacts)
+        public void PopulateData(CharacterItem character, ArtifactInstance[] equippedArtifacts)
         {
             ResolvePlayerInventory();
             _characterObject = character != null ? character.characterObjectData : null;
@@ -58,29 +59,11 @@ namespace Project.TeamBuilder.UI.Panels
             _equippedArtifacts = equippedArtifacts;
             _simulatedConsumptions.Clear();
 
-            _artifactBonusStats = new CharacterStats()
-            {
-                maxHP = 0, attack = 0, defense = 0, speed = 0, elementalMastery = 0,
-                critRate = 0, critDamage = 0, cooldownRate = 0, impact = 0, aeRecharge = 0
-            };
+            _artifactBonusStats = new CharacterStats();
             if (_equippedArtifacts != null)
             {
-                foreach (var art in _equippedArtifacts)
-                {
-                    if (art != null && art.bonusStats != null)
-                    {
-                        _artifactBonusStats.maxHP += art.bonusStats.maxHP;
-                        _artifactBonusStats.attack += art.bonusStats.attack;
-                        _artifactBonusStats.defense += art.bonusStats.defense;
-                        _artifactBonusStats.speed += art.bonusStats.speed;
-                        _artifactBonusStats.critRate += art.bonusStats.critRate;
-                        _artifactBonusStats.critDamage += art.bonusStats.critDamage;
-                        _artifactBonusStats.cooldownRate += art.bonusStats.cooldownRate;
-                        _artifactBonusStats.impact += art.bonusStats.impact;
-                        _artifactBonusStats.elementalMastery += art.bonusStats.elementalMastery;
-                        _artifactBonusStats.aeRecharge += art.bonusStats.aeRecharge;
-                    }
-                }
+                CharacterStats baseStats = _characterObject != null ? _characterObject.GetLeveledStats() : new CharacterStats();
+                ArtifactStatAggregator.Apply(_artifactBonusStats, baseStats, _equippedArtifacts);
             }
 
             if (levelUpButton != null)
@@ -243,13 +226,13 @@ namespace Project.TeamBuilder.UI.Panels
             SetStatLabel(hpLabel, "hp", currentLevelStats.maxHP, simLevelStats.maxHP, _artifactBonusStats.maxHP, isLevelUp);
             SetStatLabel(atkLabel, "atk", currentLevelStats.attack, simLevelStats.attack, _artifactBonusStats.attack, isLevelUp);
             SetStatLabel(defLabel, "def", currentLevelStats.defense, simLevelStats.defense, _artifactBonusStats.defense, isLevelUp);
-            SetStatLabel(spdLabel, "spd", currentLevelStats.speed, simLevelStats.speed, _artifactBonusStats.speed, isLevelUp);
+            SetStatLabel(spdLabel, "adi", currentLevelStats.additionalDamageIncrease, simLevelStats.additionalDamageIncrease, _artifactBonusStats.additionalDamageIncrease, isLevelUp);
             SetStatLabel(critRateLabel, "crit", currentLevelStats.critRate, simLevelStats.critRate, _artifactBonusStats.critRate, isLevelUp);
             SetStatLabel(critDmgLabel, "crit", currentLevelStats.critDamage, simLevelStats.critDamage, _artifactBonusStats.critDamage, isLevelUp);
-            SetStatLabel(cooldownLabel, "cdr", currentLevelStats.cooldownRate, simLevelStats.cooldownRate, _artifactBonusStats.cooldownRate, isLevelUp);
-            SetStatLabel(impactLabel, "impact", currentLevelStats.impact, simLevelStats.impact, _artifactBonusStats.impact, isLevelUp);
-            SetStatLabel(elemMasteryLabel, "elemental", currentLevelStats.elementalMastery, simLevelStats.elementalMastery, _artifactBonusStats.elementalMastery, isLevelUp);
-            SetStatLabel(aeMasteryLabel, "ae", currentLevelStats.aeRecharge * 100f, simLevelStats.aeRecharge * 100f, _artifactBonusStats.aeRecharge * 100f, isLevelUp);
+            SetStatLabel(cooldownLabel, "cm", currentLevelStats.cooldownMastery, simLevelStats.cooldownMastery, _artifactBonusStats.cooldownMastery, isLevelUp);
+            SetStatLabel(impactLabel, "di", currentLevelStats.damageIncrease, simLevelStats.damageIncrease, _artifactBonusStats.damageIncrease, isLevelUp);
+            SetStatLabel(elemMasteryLabel, "dm", currentLevelStats.dotMastery, simLevelStats.dotMastery, _artifactBonusStats.dotMastery, isLevelUp);
+            SetStatLabel(aeMasteryLabel, "aer", currentLevelStats.auraEnergyRecharge, simLevelStats.auraEnergyRecharge, _artifactBonusStats.auraEnergyRecharge, isLevelUp);
         }
 
         private void SetStatLabel(TMP_Text label, string statName, float currentBase, float simBase, float artifactBonus, bool isLevelUp)
@@ -257,9 +240,10 @@ namespace Project.TeamBuilder.UI.Panels
             if (label == null) return;
 
             string statKey = statName != null ? statName.ToLowerInvariant() : "";
-            bool isPercent = statKey.Contains("cdr") || statKey.Contains("cooldown") || statKey.Contains("crit") ||
-                             statKey.Contains("mastery") || statKey.Contains("resist") || statKey.Contains("elemental") ||
-                             statKey.Contains("ae") || statKey.Contains("impact");
+            bool isPercent = statKey.Contains("cooldown") || statKey.Contains("crit") ||
+                             statKey.Contains("mastery") || statKey.Contains("resist") ||
+                             statKey.Contains("ae") || statKey == "cm" ||
+                             statKey == "dm" || statKey == "di" || statKey == "adi" || statKey == "aer";
 
             string FormatSingle(float val)
             {

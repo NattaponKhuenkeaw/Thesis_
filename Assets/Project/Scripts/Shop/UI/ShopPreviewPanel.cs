@@ -66,7 +66,9 @@ namespace Project.ShopSystem.UI
             {
                 amountText.text = entry.Kind == ShopSellEntryKind.Fragment
                     ? $"Fragments: {entry.Quantity}"
-                    : $"Owned: {entry.Quantity}";
+                    : entry.Kind == ShopSellEntryKind.ArtifactInstance
+                        ? "Artifact Copy"
+                        : $"Owned: {entry.Quantity}";
             }
 
             if (actionButton != null)
@@ -104,7 +106,7 @@ namespace Project.ShopSystem.UI
                 typeName = "Character";
                 typeColor = characterTypeColor;
             }
-            else if (item is Artifact)
+            else if (item is ArtifactDefinition)
             {
                 typeName = "Artifact";
                 typeColor = artifactTypeColor;

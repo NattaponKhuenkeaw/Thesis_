@@ -21,13 +21,13 @@ MonoBehaviour:
     attack: 43
     defense: 41
     speed: 10
-    elementalMastery: 0
+    dotMastery: 0
     critRate: 5
     critDamage: 50
-    cooldownRate: 0
-    impact: 0
-    damageReduction: 0
-    aeRecharge: 0
+    cooldownMastery: 0
+    damageIncrease: 0
+    additionalDamageIncrease: 0
+    auraEnergyRecharge: 0
   metaData:
     displayName: Camera Girl
     description: 
@@ -150,7 +150,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 0
@@ -249,7 +249,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 0
@@ -349,7 +349,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 0
@@ -536,7 +536,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 0
@@ -698,7 +698,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 0
@@ -797,7 +797,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 0
@@ -892,7 +892,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 0
@@ -1002,7 +1002,7 @@ MonoBehaviour:
         energyCostValue: 0
         ignoreDefense: 0
         ignoreDamageResistance: 0
-        ignoreElementalIncomingModifiers: 0
+        ignoreTypeReduction: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 11400000, guid: 105d5c02a6338324293141794f01e1ed, type: 2}
       runtimeTagEffects: []
@@ -1060,7 +1060,7 @@ MonoBehaviour:
         energyCostValue: 0
         ignoreDefense: 0
         ignoreDamageResistance: 0
-        ignoreElementalIncomingModifiers: 0
+        ignoreTypeReduction: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
@@ -1119,7 +1119,7 @@ MonoBehaviour:
         energyCostValue: 0
         ignoreDefense: 0
         ignoreDamageResistance: 0
-        ignoreElementalIncomingModifiers: 0
+        ignoreTypeReduction: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 11400000, guid: a52aedf2b9dab6f44ad3f0980de374c1, type: 2}
       runtimeTagEffects: []
@@ -1278,7 +1278,7 @@ MonoBehaviour:
               defenderDamageResistancePercentAdd: 0
               ignoreDefense: 0
               ignoreDamageResistance: 0
-              ignoreElementalIncomingModifiers: 0
+              ignoreTypeReduction: 0
             overridePeriodicHeal: 0
             periodicHeal:
               valueSource: 1
@@ -1395,7 +1395,7 @@ MonoBehaviour:
         energyCostValue: 0
         ignoreDefense: 0
         ignoreDamageResistance: 0
-        ignoreElementalIncomingModifiers: 0
+        ignoreTypeReduction: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 11400000, guid: b74c4e0c5df54290a0f8d610fd6fd7a1, type: 2}
       runtimeTagEffects: []
@@ -1452,7 +1452,7 @@ MonoBehaviour:
         energyCostValue: 0
         ignoreDefense: 0
         ignoreDamageResistance: 0
-        ignoreElementalIncomingModifiers: 0
+        ignoreTypeReduction: 0
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 11400000, guid: 886ff6f25759d6747834ef2a7532fa16, type: 2}
       runtimeTagEffects: []
@@ -1498,15 +1498,15 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: main.passive.lv1
       nodeName: Void Area Tempo
-      description: While self is inside Void Area, own SPD increases by 1
+      description: While self is inside Void Area, own Movement Speed increases by 1
       skillPanelDescriptionOverride: 'When Hit an Enemy with <b><color=#8B3DFF>Void</color></b>
-        Debuff, will Increase own <b>Elemental Mastery +10%</b> <color=#C0C0C0>(Stackable
+        Debuff, will Increase own <b>DOT Mastery +10%</b> <color=#C0C0C0>(Stackable
         5 times)</color></i>
 
 
 
         <size=20><color=#C0C0C0>- While Self within
-        <color=#8B3DFF>Void Area</color>, Own <b> SPD Increase</b> +1</color></size>'
+        <color=#8B3DFF>Void Area</color>, Own <b>Movement Speed Increase</b> +1</color></size>'
       track: 2
       level: 1
       fragmentCost: 1
@@ -1530,13 +1530,13 @@ MonoBehaviour:
       nodeName: Chain Release
       description: Unlock State 4-6 of Basic Attack.
       skillPanelDescriptionOverride: 'When Hit an Enemy with <b><color=#8B3DFF>Void</color></b>
-        Debuff, will Increase own <b>Elemental Mastery +10%</b> <color=#C0C0C0>(Stackable
+        Debuff, will Increase own <b>DOT Mastery +10%</b> <color=#C0C0C0>(Stackable
         5 times)</color></i>
 
 
 
         <size=20><color=#C0C0C0>- While Self within
-        <color=#8B3DFF>Void Area</color>, Own <b> SPD Increase</b> +1</color></size>
+        <color=#8B3DFF>Void Area</color>, Own <b>Movement Speed Increase</b> +1</color></size>
 
         <size=20><color=#C0C0C0>-
         Unlock the Basic Attack <i>State 4 - 6</i></color></size>'
@@ -1561,21 +1561,21 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: main.passive.lv3
       nodeName: Void Area Formation
-      description: Allies inside Void Area gain Elemental Mastery +20.
+      description: Allies inside Void Area gain DOT Mastery +20.
       skillPanelDescriptionOverride: 'When Hit an Enemy with <b><color=#8B3DFF>Void</color></b>
-        Debuff, will Increase own <b>Elemental Mastery +10%</b> <color=#C0C0C0>(Stackable
+        Debuff, will Increase own <b>DOT Mastery +10%</b> <color=#C0C0C0>(Stackable
         5 times)</color></i>
 
 
 
         <size=20><color=#C0C0C0>- While Self within
-        <color=#8B3DFF>Void Area</color>, Own <b> SPD Increase</b> +1</color></size>
+        <color=#8B3DFF>Void Area</color>, Own <b>Movement Speed Increase</b> +1</color></size>
 
         <size=20><color=#C0C0C0>-
         Unlock the Basic Attack <i>State 4 - 6</i></color></size>
 
         <size=20><color=#C0C0C0>-
-        Allies inside <color=#8B3DFF>Void Area</color> gain <b>Elemental Mastery
+        Allies inside <color=#8B3DFF>Void Area</color> gain <b>DOT Mastery
         +20%</b></color></size>'
       track: 2
       level: 3
@@ -1600,19 +1600,19 @@ MonoBehaviour:
       nodeName: Void Slow
       description: Enemies inside Void Area are slowed by 30% via SlowAction status.
       skillPanelDescriptionOverride: 'When Hit an Enemy with <b><color=#8B3DFF>Void</color></b>
-        Debuff, will Increase own <b>Elemental Mastery +10%</b> <color=#C0C0C0>(Stackable
+        Debuff, will Increase own <b>DOT Mastery +10%</b> <color=#C0C0C0>(Stackable
         5 times)</color></i>
 
 
 
         <size=20><color=#C0C0C0>- While Self within
-        <color=#8B3DFF>Void Area</color>, Own <b> SPD Increase</b> +1</color></size>
+        <color=#8B3DFF>Void Area</color>, Own <b>Movement Speed Increase</b> +1</color></size>
 
         <size=20><color=#C0C0C0>-
         Unlock the Basic Attack <i>State 4 - 6</i></color></size>
 
         <size=20><color=#C0C0C0>-
-        Allies inside <color=#8B3DFF>Void Area</color> gain <b>Elemental Mastery
+        Allies inside <color=#8B3DFF>Void Area</color> gain <b>DOT Mastery
         +20%</b></color></size>
 
         <size=20><color=#C0C0C0>- Enemies inside

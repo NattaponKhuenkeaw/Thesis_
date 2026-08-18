@@ -1,0 +1,231 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d6089779d0cf4b4998f070e46b0f91a, type: 3}
+  m_Name: P1_09_ShinsRustyDagger_PassiveSet
+  m_EditorClassIdentifier: Assembly-CSharp::ArtifactPassiveSetDefinition
+  stableId: ART-P1-009-PASSIVES
+  rules:
+  - ruleId: focus-on-critical
+    stateKey: focus-thunder
+    trigger: 2
+    filter:
+      filterByCategory: 0
+      category: 0
+      filterByDelivery: 1
+      delivery: 0
+      requiredDamageTags: 0
+      forbiddenDamageTags: 36
+      requirePositiveDamage: 1
+      requireCriticalHit: 1
+      requireWearerAsSource: 1
+      switchRelation: 0
+    conditions:
+      cooldownSeconds: 0
+      durationSeconds: 0
+      intervalSeconds: 0
+      chance: 1
+      maximumStacks: 5
+      minimumHealthRatio: 0
+      maximumHealthRatio: 1
+      minimumHealthExclusive: 0
+      maximumHealthExclusive: 0
+      requireArmed: 0
+      requireDisarmed: 1
+      oncePerRootDamageEvent: 0
+      requireStoredTarget: 0
+    responses:
+    - rid: 8312694232576164308
+    - rid: 8312694232576164309
+    feedback:
+      feedbackId: focus-on-critical
+      showOwnerPulse: 1
+      showStatusIcon: 1
+      visualPrefab: {fileID: 0}
+      audioClip: {fileID: 0}
+  - ruleId: thunder-on-primary
+    stateKey: focus-thunder
+    trigger: 1
+    filter:
+      filterByCategory: 0
+      category: 0
+      filterByDelivery: 1
+      delivery: 0
+      requiredDamageTags: 0
+      forbiddenDamageTags: 36
+      requirePositiveDamage: 1
+      requireCriticalHit: 0
+      requireWearerAsSource: 1
+      switchRelation: 0
+    conditions:
+      cooldownSeconds: 2
+      durationSeconds: 0
+      intervalSeconds: 0
+      chance: 1
+      maximumStacks: 1
+      minimumHealthRatio: 0
+      maximumHealthRatio: 1
+      minimumHealthExclusive: 0
+      maximumHealthExclusive: 0
+      requireArmed: 1
+      requireDisarmed: 0
+      oncePerRootDamageEvent: 0
+      requireStoredTarget: 0
+    responses:
+    - rid: 8312694232576164310
+    - rid: 8312694232576164311
+    - rid: 8312694232576164312
+    feedback:
+      feedbackId: thunder-on-primary
+      showOwnerPulse: 1
+      showStatusIcon: 1
+      visualPrefab: {fileID: 0}
+      audioClip: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: 8312694232576164308
+      type: {class: ApplyRuntimeEffectResponseDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        target: 0
+        recipe:
+          recipeId: P1-A09-FOCUS
+          definition: {fileID: 11400000, guid: 47a11ab6ce4cfb246b90d883a0a4b0dd, type: 2}
+          presentation:
+            effectId: P1-A09-FOCUS
+            displayName: P1-A09-FOCUS
+            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 0
+            appliesOn: 0
+            durationType: 1
+            durationSeconds: 0
+            stackMode: 2
+            stackLimit: 5
+            refreshDurationOnReapply: 1
+            stackable: 1
+            removeOnOwnerDamaged: 0
+            stackKey: P1-A09-FOCUS
+          parameters:
+            overrideStatModifiers: 1
+            statModifiers:
+            - target: 6
+              operation: 0
+              sourceStat: 1
+              statRatioValueSource: 0
+              value: 5
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreTypeReduction: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+              tickInterval: 1
+            overrideHeal: 0
+            heal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              sourceRuntimeEffectStackKey: 
+              attackRatioPerSourceRuntimeEffectStack: 0
+              maxSourceRuntimeEffectStacks: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+          childRecipes: []
+        applications: 1
+    - rid: 8312694232576164309
+      type: {class: ModifyArtifactStateResponseDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        target: 0
+        operation: 0
+        amount: 1
+    - rid: 8312694232576164310
+      type: {class: SpawnParticleResponseDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        target: 4
+        definition: {fileID: 11400000, guid: c32a8d4b62db4c6449ed4d69704e5b27, type: 2}
+    - rid: 8312694232576164311
+      type: {class: ModifyArtifactStateResponseDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        target: 0
+        operation: 3
+        amount: 1
+    - rid: 8312694232576164312
+      type: {class: ModifyArtifactStateResponseDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        target: 0
+        operation: 4
+        amount: 1

@@ -13,15 +13,6 @@ MonoBehaviour:
   m_Name: CodexInventory
   m_EditorClassIdentifier: Assembly-CSharp::Project.InventorySystem.CodexInventory
   allItems:
-  - {fileID: 11400000, guid: 8dae9784a4112a44691459c99d1d3a64, type: 2}
-  - {fileID: 11400000, guid: 04606c51be389b14d93cef0d791fd30c, type: 2}
-  - {fileID: 11400000, guid: b1bb8bdcaab9a4c4c86350394a06d0ef, type: 2}
-  - {fileID: 11400000, guid: 0c19cb6fb2abbe346b6d4dc429d2e4d0, type: 2}
-  - {fileID: 11400000, guid: ebf8bba8c93cfd14290bddaa7dce2736, type: 2}
-  - {fileID: 11400000, guid: 68ba37ce923f66e48a0239356de067a9, type: 2}
-  - {fileID: 11400000, guid: 2d59be04fc8886642a4770b2b0971bee, type: 2}
-  - {fileID: 11400000, guid: 1b1c3cc942c0d6e44bc6bb3ae5ef3414, type: 2}
-  - {fileID: 11400000, guid: 1145849e0b6d2e440a771231cf407ddb, type: 2}
   - {fileID: 11400000, guid: bc26e0a53989a6d439beb924d07f61f8, type: 2}
   - {fileID: 11400000, guid: 6b2f112e2e15b20468e27601ac347a21, type: 2}
   - {fileID: 11400000, guid: 7067f23f35adada468f5f53a56908cbe, type: 2}
@@ -31,3 +22,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 588790c4612f0304f89d14fb2bd64923, type: 2}
   - {fileID: 11400000, guid: 225e900f58aad0a409d9d02148d91571, type: 2}
   - {fileID: 11400000, guid: 6811db41c79c43a41b3ff2f4a87eecb4, type: 2}
+  - {fileID: 11400000, guid: 1e9971f4885754f479cdf721859f9453, type: 2}
+  - {fileID: 11400000, guid: ccfa8ea866a04024bad7ad0396d572e2, type: 2}
+  - {fileID: 11400000, guid: 1558d6486ae841c40aa8c7811f27b9cf, type: 2}
+  - {fileID: 11400000, guid: c643d9ecfab841940a0ab53326bfd42b, type: 2}
+  - {fileID: 11400000, guid: 2655f34e3cf5e10459485e6762693592, type: 2}
+  - {fileID: 11400000, guid: 35b308b558dd12f43a25a443e1b26a5f, type: 2}
+  - {fileID: 11400000, guid: aa6307666f9e7a9488bd8a5830328196, type: 2}
+  - {fileID: 11400000, guid: 7f393853de1707840b2ec8563711a667, type: 2}
+  - {fileID: 11400000, guid: 06b87918b4e6326489694f5fbb800bab, type: 2}

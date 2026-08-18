@@ -14,21 +14,6 @@ public enum DamageImpactTier
 
 
 
-public enum DamageRoutine
-{
-    Physical,
-    Dot,
-    Particle,
-
-    // Legacy aliases
-    [System.Obsolete("Use Physical instead.")]
-    Normal = Physical,
-    [System.Obsolete("Use Physical instead.")]
-    Elemental = Physical,
-    [System.Obsolete("Use Particle instead.")]
-    Additional = Particle
-}
-
 public enum EnemyReactionKind
 {
     Flinch,
@@ -68,7 +53,6 @@ public struct HitReactionData
     // =========================================================
     public float damage;
     public bool isCriticalHit;
-    public bool damageIsFinal;
     public Vector2 knockbackDirection;
 
     // =========================================================
@@ -132,7 +116,7 @@ public struct HitReactionData
     public DamageImpactTier impactTier;
     public DamageImpactTier textImpactTier;
     public ElementType elementType;
-    public DamageRoutine damageRoutine;
+    public DamageDelivery damageDelivery;
 
     // =========================================================
     // Runtime Effect Source Context
@@ -143,7 +127,6 @@ public struct HitReactionData
     public string sourceActionId;
     public string sourceActionName;
     public AttackStepData sourceStepData;
-    public bool ignoreElementalIncomingModifiers;
 
     public int ImpactFreezeFrames => reactionTiming != null ? Mathf.Max(0, reactionTiming.startupFrames) : Mathf.Max(0, hitstunFrames);
     public int ActiveReactionFrames => reactionTiming != null ? Mathf.Max(0, reactionTiming.activeFrames) : Mathf.Max(0, knockbackFrames);
@@ -217,7 +200,6 @@ public struct HitReactionData
         {
             damage = damage,
             isCriticalHit = false,
-            damageIsFinal = false,
             knockbackDirection = direction,
             reactionKind = horizontal > 0f ? EnemyReactionKind.Knockback : EnemyReactionKind.Flinch,
             reactionTiming = CreateTiming(6, 15, 9),
@@ -245,7 +227,7 @@ public struct HitReactionData
             impactTier = DamageImpactTier.Low,
             textImpactTier = DamageImpactTier.Low,
             elementType = ElementType.None,
-            damageRoutine = DamageRoutine.Physical,
+            damageDelivery = DamageDelivery.Primary,
             sourceCategory = AttackCategory.Normal
         };
     }

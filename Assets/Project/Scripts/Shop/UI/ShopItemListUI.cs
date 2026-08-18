@@ -345,14 +345,14 @@ namespace Project.ShopSystem.UI
         private Color GetItemTypeColor(BaseItem item)
         {
             if (item is CharacterItem) return characterTypeColor;
-            if (item is Artifact) return artifactTypeColor;
+            if (item is ArtifactDefinition) return artifactTypeColor;
             return consumableTypeColor;
         }
 
         private static string GetTypeLabel(BaseItem item)
         {
             if (item is CharacterItem) return "Character";
-            if (item is Artifact) return "Artifact";
+            if (item is ArtifactDefinition) return "Artifact";
             return "Consumable";
         }
 

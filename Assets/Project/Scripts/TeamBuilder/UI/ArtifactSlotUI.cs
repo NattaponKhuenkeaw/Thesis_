@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using Project.InventorySystem.Artifacts;
 using Project.InventorySystem.Items;
 using Project.UI;
 
@@ -27,13 +28,20 @@ namespace Project.TeamBuilder.UI
         // =========================================================
         // Runtime State
         // =========================================================
-        private Artifact currentArtifact;
+        private ArtifactInstance currentArtifact;
+        private ArtifactDefinition currentDefinition;
         private TeamSlotUI parentSlot;
+        private bool isDropHighlighted;
+        private bool isSelectionDestination;
 
         // =========================================================
         // Properties
         // =========================================================
+        public ArtifactInstance CurrentArtifact => currentArtifact;
+        public ArtifactDefinition CurrentDefinition => currentDefinition;
         public TeamSlotUI ParentSlot => parentSlot;
+        public bool ReadOnly => readOnly;
+        public bool IsEmpty => currentArtifact == null;
 
         // =========================================================
         // Initialization
@@ -47,15 +55,16 @@ namespace Project.TeamBuilder.UI
         // =========================================================
         // Public Methods
         // =========================================================
-        public void SetArtifact(Artifact artifact)
+        public void SetArtifact(ArtifactInstance artifact, ArtifactDefinition definition)
         {
             currentArtifact = artifact;
+            currentDefinition = definition;
 
             if (artifactIcon != null)
             {
-                if (artifact != null && artifact.icon != null)
+                if (definition != null && definition.icon != null)
                 {
-                    artifactIcon.sprite = artifact.icon;
+                    artifactIcon.sprite = definition.icon;
                     artifactIcon.enabled = true;
                     artifactIcon.color = Color.white;
                 }
@@ -67,13 +76,14 @@ namespace Project.TeamBuilder.UI
 
             if (slotBackground != null)
             {
-                slotBackground.color = (artifact != null) ? filledSlotColor : emptySlotColor;
+                RefreshBackground();
             }
         }
 
         public void ClearArtifact()
         {
             currentArtifact = null;
+            currentDefinition = null;
 
             if (artifactIcon != null)
             {
@@ -83,11 +93,11 @@ namespace Project.TeamBuilder.UI
 
             if (slotBackground != null)
             {
-                slotBackground.color = emptySlotColor;
+                RefreshBackground();
             }
         }
 
-        public Artifact GetArtifact()
+        public ArtifactInstance GetArtifact()
         {
             return currentArtifact;
         }
@@ -95,6 +105,13 @@ namespace Project.TeamBuilder.UI
         public void SetReadOnly(bool value)
         {
             readOnly = value;
+            if (readOnly) SetSelectionDestination(false);
+        }
+
+        public void SetSelectionDestination(bool selected)
+        {
+            isSelectionDestination = selected;
+            RefreshBackground();
         }
 
         // =========================================================
@@ -112,14 +129,6 @@ namespace Project.TeamBuilder.UI
 
             if (readOnly || parentSlot == null) return;
 
-            // Handle drop from ArtifactGridItemUI
-            ArtifactGridItemUI gridItem = eventData.pointerDrag?.GetComponent<ArtifactGridItemUI>();
-            if (gridItem != null && gridItem.ArtifactData != null)
-            {
-                parentSlot.HandleArtifactDrop(this, gridItem.ArtifactData);
-                return;
-            }
-
             // Handle drop from another ArtifactSlotUI
             ArtifactSlotUI sourceSlot = eventData.pointerDrag?.GetComponent<ArtifactSlotUI>();
             if (sourceSlot != null && sourceSlot != this && sourceSlot.GetArtifact() != null)
@@ -135,10 +144,15 @@ namespace Project.TeamBuilder.UI
                 return;
             }
 
-            // Only Right-Click is supported now (to remove)
             if (eventData != null && eventData.button == PointerEventData.InputButton.Right)
             {
                 parentSlot.HandleArtifactSlotClicked(this, -1);
+                return;
+            }
+
+            if (eventData == null || eventData.button == PointerEventData.InputButton.Left)
+            {
+                parentSlot.HandleArtifactSlotClicked(this, 1);
             }
         }
 
@@ -148,6 +162,8 @@ namespace Project.TeamBuilder.UI
         public void OnBeginDrag(PointerEventData eventData)
         {
             if (readOnly || currentArtifact == null) return;
+
+            parentSlot?.HandleArtifactSlotDragStarted();
 
             if (rootCanvas == null)
             {
@@ -206,16 +222,24 @@ namespace Project.TeamBuilder.UI
         // =========================================================
         public void SetDropHighlight(bool highlighted)
         {
-            if (slotBackground != null)
+            isDropHighlighted = highlighted;
+            RefreshBackground();
+        }
+
+        private void RefreshBackground()
+        {
+            if (slotBackground == null) return;
+            if (isSelectionDestination)
             {
-                if (highlighted)
-                {
-                    slotBackground.color = new Color(1f, 1f, 1f, 0.5f); // Highlight color
-                }
-                else
-                {
-                    slotBackground.color = (currentArtifact != null) ? filledSlotColor : emptySlotColor;
-                }
+                slotBackground.color = Color.white;
+            }
+            else if (isDropHighlighted)
+            {
+                slotBackground.color = new Color(1f, 1f, 1f, 0.5f);
+            }
+            else
+            {
+                slotBackground.color = currentArtifact != null ? filledSlotColor : emptySlotColor;
             }
         }
     }

@@ -471,7 +471,7 @@ public class PassiveActionModifierDefinitionDrawer : FoldoutPropertyDrawer
         DrawValueModifier(ref position, property, "energyCostOperation", "energyCostValue");
         EffectDrawerUtility.Draw(ref position, Prop(property, "ignoreDefense"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "ignoreDamageResistance"));
-        EffectDrawerUtility.Draw(ref position, Prop(property, "ignoreElementalIncomingModifiers"));
+        EffectDrawerUtility.Draw(ref position, Prop(property, "ignoreTypeReduction"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "replacementProjectileType"));
         if (!EffectDrawerUtility.EnumEquals(Prop(property, "replacementProjectileType"), ProjectileType.None))
         {
@@ -500,7 +500,7 @@ public class PassiveActionModifierDefinitionDrawer : FoldoutPropertyDrawer
             + ValueModifierHeight(property, "energyCostOperation", "energyCostValue")
             + EffectDrawerUtility.Height(Prop(property, "ignoreDefense"))
             + EffectDrawerUtility.Height(Prop(property, "ignoreDamageResistance"))
-            + EffectDrawerUtility.Height(Prop(property, "ignoreElementalIncomingModifiers"))
+            + EffectDrawerUtility.Height(Prop(property, "ignoreTypeReduction"))
             + EffectDrawerUtility.Height(Prop(property, "replacementProjectileType"))
             + EffectDrawerUtility.Height(Prop(property, "requiredTags"))
             + EffectDrawerUtility.Height(Prop(property, "requiredCounters"));
@@ -544,13 +544,15 @@ public class RuntimeEffectDamageFilterDrawer : FoldoutPropertyDrawer
 {
     protected override void DrawExpanded(ref Rect position, SerializedProperty property)
     {
+        DrawFilter(ref position, property, "filterByDelivery", "delivery");
         DrawFilter(ref position, property, "filterByElement", "elementType");
         DrawFilter(ref position, property, "filterByCategory", "category");
     }
 
     protected override float GetExpandedHeight(SerializedProperty property)
     {
-        return FilterHeight(property, "filterByElement", "elementType")
+        return FilterHeight(property, "filterByDelivery", "delivery")
+            + FilterHeight(property, "filterByElement", "elementType")
             + FilterHeight(property, "filterByCategory", "category");
     }
 
@@ -711,7 +713,7 @@ public class RuntimeEffectDamageInputParametersDrawer : FoldoutPropertyDrawer
         EffectDrawerUtility.Draw(ref position, Prop(property, "defenderDamageResistancePercentAdd"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "ignoreDefense"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "ignoreDamageResistance"));
-        EffectDrawerUtility.Draw(ref position, Prop(property, "ignoreElementalIncomingModifiers"));
+        EffectDrawerUtility.Draw(ref position, Prop(property, "ignoreTypeReduction"));
     }
 
     protected override float GetExpandedHeight(SerializedProperty property)
@@ -721,7 +723,7 @@ public class RuntimeEffectDamageInputParametersDrawer : FoldoutPropertyDrawer
             + EffectDrawerUtility.Height(Prop(property, "defenderDamageResistancePercentAdd"))
             + EffectDrawerUtility.Height(Prop(property, "ignoreDefense"))
             + EffectDrawerUtility.Height(Prop(property, "ignoreDamageResistance"))
-            + EffectDrawerUtility.Height(Prop(property, "ignoreElementalIncomingModifiers"));
+            + EffectDrawerUtility.Height(Prop(property, "ignoreTypeReduction"));
     }
 }
 

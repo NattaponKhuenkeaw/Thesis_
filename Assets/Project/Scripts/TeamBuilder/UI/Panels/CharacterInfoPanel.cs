@@ -1,11 +1,14 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Project.InventorySystem.Artifacts;
 using Project.InventorySystem.Items;
 using Project.Progression;
+using Project.ShopSystem;
 using Project.UI;
 using Project.TeamBuilder.UI;
 using Project.TeamBuilder.UI.Interfaces;
+using UnityEngine.Serialization;
 
 namespace Project.TeamBuilder.UI.Panels
 {
@@ -24,19 +27,23 @@ namespace Project.TeamBuilder.UI.Panels
         [SerializeField] private TMP_Text hpText;
         [SerializeField] private TMP_Text atkText;
         [SerializeField] private TMP_Text defText;
-        [SerializeField] private TMP_Text spdText;
-        [SerializeField] private TMP_Text cdrText;
+        [FormerlySerializedAs("spdText")]
+        [SerializeField] private TMP_Text additionalDamageIncreaseText;
+        [FormerlySerializedAs("cdrText")]
+        [SerializeField] private TMP_Text cooldownMasteryText;
         [SerializeField] private TMP_Text critRateText;
         [SerializeField] private TMP_Text critDmgText;
-        [SerializeField] private TMP_Text elementalMasteryText;
-        [SerializeField] private TMP_Text impactText;
+        [FormerlySerializedAs("elementalMasteryText")]
+        [SerializeField] private TMP_Text dotMasteryText;
+        [FormerlySerializedAs("impactText")]
+        [SerializeField] private TMP_Text damageIncreaseText;
         [SerializeField] private TMP_Text AEgainText;
 
         [Header("Equipped Artifacts")]
         [SerializeField] private ArtifactSlotUI[] equippedArtifactSlots = new ArtifactSlotUI[3];
 
         private CharacterItem currentCharacterItem;
-        private Artifact[] currentEquippedArtifacts;
+        private ArtifactInstance[] currentEquippedArtifacts;
 
         private void OnEnable()
         {
@@ -68,7 +75,7 @@ namespace Project.TeamBuilder.UI.Panels
             }
         }
 
-        public void PopulateData(CharacterItem character, Artifact[] equippedArtifacts)
+        public void PopulateData(CharacterItem character, ArtifactInstance[] equippedArtifacts)
         {
             if (character == null || character.characterObjectData == null) return;
             currentCharacterItem = character;
@@ -109,22 +116,24 @@ namespace Project.TeamBuilder.UI.Panels
                 if (hpText != null) hpText.text = FormatStatValue(baseStats.maxHP, runtimeStats.maxHP, "hp");
                 if (atkText != null) atkText.text = FormatStatValue(baseStats.attack, runtimeStats.attack, "atk");
                 if (defText != null) defText.text = FormatStatValue(baseStats.defense, runtimeStats.defense, "def");
-                if (spdText != null) spdText.text = FormatStatValue(baseStats.speed, runtimeStats.speed, "spd");
-                if (cdrText != null) cdrText.text = FormatStatValue(baseStats.cooldownRate, runtimeStats.cooldownRate, "cdr");
+                if (additionalDamageIncreaseText != null) additionalDamageIncreaseText.text = FormatStatValue(baseStats.additionalDamageIncrease, runtimeStats.additionalDamageIncrease, "adi");
+                if (cooldownMasteryText != null) cooldownMasteryText.text = FormatStatValue(baseStats.cooldownMastery, runtimeStats.cooldownMastery, "cm");
                 if (critRateText != null) critRateText.text = FormatStatValue(baseStats.critRate, runtimeStats.critRate, "crit");
                 if (critDmgText != null) critDmgText.text = FormatStatValue(baseStats.critDamage, runtimeStats.critDamage, "crit");
-                if (elementalMasteryText != null) elementalMasteryText.text = FormatStatValue(baseStats.elementalMastery, runtimeStats.elementalMastery, "elemental");
-                if (impactText != null) impactText.text = FormatStatValue(baseStats.impact, runtimeStats.impact, "impact");
-                if (AEgainText != null) AEgainText.text = FormatStatValue(baseStats.aeRecharge * 100f, runtimeStats.aeRecharge * 100f, "ae");
+                if (dotMasteryText != null) dotMasteryText.text = FormatStatValue(baseStats.dotMastery, runtimeStats.dotMastery, "dm");
+                if (damageIncreaseText != null) damageIncreaseText.text = FormatStatValue(baseStats.damageIncrease, runtimeStats.damageIncrease, "di");
+                if (AEgainText != null) AEgainText.text = FormatStatValue(baseStats.auraEnergyRecharge, runtimeStats.auraEnergyRecharge, "aer");
             }
         }
 
-        private void PopulateEquippedArtifactSlots(Artifact[] equippedArtifacts)
+        private void PopulateEquippedArtifactSlots(ArtifactInstance[] equippedArtifacts)
         {
             if (equippedArtifactSlots == null)
             {
                 return;
             }
+
+            PlayerRunInventory runInventory = inspectScreenUI != null ? inspectScreenUI.ResolveRunInventory() : null;
 
             for (int i = 0; i < equippedArtifactSlots.Length; i++)
             {
@@ -135,8 +144,11 @@ namespace Project.TeamBuilder.UI.Panels
                 }
 
                 slot.SetReadOnly(true);
-                Artifact artifact = equippedArtifacts != null && i < equippedArtifacts.Length ? equippedArtifacts[i] : null;
-                slot.SetArtifact(artifact);
+                ArtifactInstance instance = equippedArtifacts != null && i < equippedArtifacts.Length ? equippedArtifacts[i] : null;
+                ArtifactDefinition definition = instance != null && runInventory != null
+                    ? runInventory.ResolveArtifactDefinition(instance.definitionId)
+                    : null;
+                slot.SetArtifact(instance, definition);
             }
         }
 

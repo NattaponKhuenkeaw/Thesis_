@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Project.InventorySystem.Items;
+using Project.InventorySystem.Artifacts;
 using Project.ShopSystem;
 
 namespace Project.TeamBuilder.UI
@@ -18,7 +19,7 @@ namespace Project.TeamBuilder.UI
         public bool hasDraftChanges { get; set; }
 
         private CharacterObject[] cachedTeamData;
-        private Artifact[][] cachedArtifactsBySlot;
+        private ArtifactInstanceRef[][] cachedArtifactsBySlot;
         private int cachedActiveIndex;
 
         private readonly Dictionary<CharacterObject, CharacterItem> runtimeCharacterItems = new Dictionary<CharacterObject, CharacterItem>();
@@ -61,8 +62,7 @@ namespace Project.TeamBuilder.UI
 
                 if (teamLoader != null)
                 {
-                    Artifact[] runtimeArtifacts = teamLoader.GetEquippedArtifactsAt(i);
-                    teamSlots[i].SetEquippedArtifacts(CloneArtifactArray(runtimeArtifacts));
+                    teamSlots[i].SetEquippedArtifacts(ResolveArtifactRefs(teamLoader.GetEquippedArtifactRefsAt(i)));
                 }
             }
 
@@ -97,7 +97,7 @@ namespace Project.TeamBuilder.UI
             hasDraftChanges = false;
         }
 
-        public void LoadDraftSnapshot(CharacterObject[] teamData, Artifact[][] artifactsBySlot, int activeIndex)
+        public void LoadDraftSnapshot(CharacterObject[] teamData, ArtifactInstanceRef[][] artifactsBySlot, int activeIndex)
         {
             if (playerInventory == null || teamData == null) return;
 
@@ -125,7 +125,7 @@ namespace Project.TeamBuilder.UI
 
                 if (artifactsBySlot != null && i < artifactsBySlot.Length)
                 {
-                    teamSlots[i].SetEquippedArtifacts(CloneArtifactArray(artifactsBySlot[i]));
+                    teamSlots[i].SetEquippedArtifacts(ResolveArtifactRefs(artifactsBySlot[i]));
                 }
             }
 
@@ -175,13 +175,13 @@ namespace Project.TeamBuilder.UI
             return teamData;
         }
 
-        public Artifact[][] BuildDraftArtifactData()
+        public ArtifactInstanceRef[][] BuildDraftArtifactData()
         {
-            Artifact[][] artifactsBySlot = new Artifact[teamSlots.Length][];
+            ArtifactInstanceRef[][] artifactsBySlot = new ArtifactInstanceRef[teamSlots.Length][];
             for (int i = 0; i < teamSlots.Length; i++)
             {
                 artifactsBySlot[i] = teamSlots[i] != null
-                    ? teamSlots[i].GetEquippedArtifacts()
+                    ? teamSlots[i].GetEquippedArtifactRefs()
                     : null;
             }
             return artifactsBySlot;
@@ -215,15 +215,18 @@ namespace Project.TeamBuilder.UI
             stagedActiveIndex = 0;
         }
 
-        private static Artifact[] CloneArtifactArray(Artifact[] source)
+        private ArtifactInstance[] ResolveArtifactRefs(ArtifactInstanceRef[] source)
         {
             if (source == null) return null;
-            Artifact[] clone = new Artifact[source.Length];
+            ArtifactInstance[] resolved = new ArtifactInstance[source.Length];
             for (int i = 0; i < source.Length; i++)
             {
-                clone[i] = source[i];
+                if (!source[i].IsEmpty && playerInventory != null)
+                {
+                    playerInventory.TryGetArtifactInstance(source[i].instanceId, out resolved[i]);
+                }
             }
-            return clone;
+            return resolved;
         }
     }
 }

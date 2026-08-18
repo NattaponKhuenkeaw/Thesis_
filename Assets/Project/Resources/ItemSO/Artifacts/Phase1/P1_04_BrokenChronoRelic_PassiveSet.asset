@@ -1,0 +1,392 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d6089779d0cf4b4998f070e46b0f91a, type: 3}
+  m_Name: P1_04_BrokenChronoRelic_PassiveSet
+  m_EditorClassIdentifier: Assembly-CSharp::ArtifactPassiveSetDefinition
+  stableId: ART-P1-004-PASSIVES
+  rules:
+  - ruleId: mark-on-skill-hit
+    stateKey: mark-injury
+    trigger: 1
+    filter:
+      filterByCategory: 1
+      category: 1
+      filterByDelivery: 0
+      delivery: 0
+      requiredDamageTags: 0
+      forbiddenDamageTags: 38
+      requirePositiveDamage: 1
+      requireCriticalHit: 0
+      requireWearerAsSource: 1
+      switchRelation: 0
+    conditions:
+      cooldownSeconds: 14
+      durationSeconds: 10
+      intervalSeconds: 0
+      chance: 1
+      maximumStacks: 1
+      minimumHealthRatio: 0
+      maximumHealthRatio: 1
+      minimumHealthExclusive: 0
+      maximumHealthExclusive: 0
+      requireArmed: 0
+      requireDisarmed: 0
+      oncePerRootDamageEvent: 0
+      requireStoredTarget: 0
+    responses:
+    - rid: 8312694232576164326
+    - rid: 8312694232576164320
+    - rid: 8312694232576164321
+    feedback:
+      feedbackId: mark-on-skill-hit
+      showOwnerPulse: 1
+      showStatusIcon: 1
+      visualPrefab: {fileID: 0}
+      audioClip: {fileID: 0}
+  - ruleId: consume-mark
+    stateKey: mark-injury
+    trigger: 1
+    filter:
+      filterByCategory: 0
+      category: 0
+      filterByDelivery: 0
+      delivery: 0
+      requiredDamageTags: 0
+      forbiddenDamageTags: 63
+      requirePositiveDamage: 1
+      requireCriticalHit: 0
+      requireWearerAsSource: 0
+      switchRelation: 0
+    conditions:
+      cooldownSeconds: 0
+      durationSeconds: 0
+      intervalSeconds: 0
+      chance: 1
+      maximumStacks: 1
+      minimumHealthRatio: 0
+      maximumHealthRatio: 1
+      minimumHealthExclusive: 0
+      maximumHealthExclusive: 0
+      requireArmed: 1
+      requireDisarmed: 0
+      oncePerRootDamageEvent: 0
+      requireStoredTarget: 1
+    responses:
+    - rid: 8312694232576164322
+    - rid: 8312694232576164323
+    - rid: 8312694232576164327
+    - rid: 8312694232576164324
+    feedback:
+      feedbackId: consume-mark
+      showOwnerPulse: 1
+      showStatusIcon: 1
+      visualPrefab: {fileID: 0}
+      audioClip: {fileID: 0}
+  - ruleId: claw-bleed
+    stateKey: claw-bleed
+    trigger: 1
+    filter:
+      filterByCategory: 0
+      category: 0
+      filterByDelivery: 0
+      delivery: 0
+      requiredDamageTags: 0
+      forbiddenDamageTags: 63
+      requirePositiveDamage: 1
+      requireCriticalHit: 0
+      requireWearerAsSource: 0
+      switchRelation: 0
+    conditions:
+      cooldownSeconds: 0
+      durationSeconds: 0
+      intervalSeconds: 0
+      chance: 0.5
+      maximumStacks: 1
+      minimumHealthRatio: 0
+      maximumHealthRatio: 1
+      minimumHealthExclusive: 0
+      maximumHealthExclusive: 0
+      requireArmed: 0
+      requireDisarmed: 0
+      oncePerRootDamageEvent: 0
+      requireStoredTarget: 0
+    responses:
+    - rid: 8312694232576164325
+    feedback:
+      feedbackId: claw-bleed
+      showOwnerPulse: 1
+      showStatusIcon: 1
+      visualPrefab: {fileID: 0}
+      audioClip: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: 8312694232576164320
+      type: {class: ModifyArtifactStateResponseDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        target: 4
+        operation: 2
+        amount: 1
+    - rid: 8312694232576164321
+      type: {class: ModifyArtifactStateResponseDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        target: 0
+        operation: 4
+        amount: 1
+    - rid: 8312694232576164322
+      type: {class: ExplosionSplashResponseDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        target: 4
+        definition: {fileID: 11400000, guid: 054e6465b6b38984db967e40a350f186, type: 2}
+        damageBasis: 3
+        damageRatio: 0.5
+        elementType: 2
+        preserveParentDelivery: 1
+        preserveParentElement: 0
+    - rid: 8312694232576164323
+      type: {class: ApplyDotResponseDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        target: 8
+        definition: {fileID: 11400000, guid: 9bc5528b84bcfad468477074f9473d73, type: 2}
+        damageBasis: 1
+        ratio: 0.3
+    - rid: 8312694232576164324
+      type: {class: ModifyArtifactStateResponseDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        target: 4
+        operation: 5
+        amount: 1
+    - rid: 8312694232576164325
+      type: {class: ApplyDotResponseDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        target: 4
+        definition: {fileID: 11400000, guid: d0ebff67564fde14cb445638be7ca6cb, type: 2}
+        damageBasis: 1
+        ratio: 0.3
+    - rid: 8312694232576164326
+      type: {class: ApplyRuntimeEffectResponseDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        target: 4
+        recipe:
+          recipeId: P1-A04-MARK-INJURY
+          definition: {fileID: 11400000, guid: 47a11ab6ce4cfb246b90d883a0a4b0dd, type: 2}
+          presentation:
+            effectId: P1-A04-MARK-INJURY
+            displayName: P1-A04-MARK-INJURY
+            icon: {fileID: 0}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 0
+            appliesOn: 0
+            durationType: 1
+            durationSeconds: 0
+            stackMode: 0
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: P1-A04-MARK-INJURY
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreTypeReduction: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+              tickInterval: 1
+            overrideHeal: 0
+            heal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              sourceRuntimeEffectStackKey: 
+              attackRatioPerSourceRuntimeEffectStack: 0
+              maxSourceRuntimeEffectStacks: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+          childRecipes: []
+        applications: 1
+    - rid: 8312694232576164327
+      type: {class: ApplyRuntimeEffectResponseDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        target: 7
+        recipe:
+          recipeId: P1-A04-CLAW
+          definition: {fileID: 11400000, guid: 47a11ab6ce4cfb246b90d883a0a4b0dd, type: 2}
+          presentation:
+            effectId: P1-A04-CLAW
+            displayName: P1-A04-CLAW
+            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 0
+            appliesOn: 0
+            durationType: 0
+            durationSeconds: 7
+            stackMode: 0
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: P1-A04-CLAW
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreTypeReduction: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+              tickInterval: 1
+            overrideHeal: 0
+            heal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              sourceRuntimeEffectStackKey: 
+              attackRatioPerSourceRuntimeEffectStack: 0
+              maxSourceRuntimeEffectStacks: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+          childRecipes: []
+        applications: 1

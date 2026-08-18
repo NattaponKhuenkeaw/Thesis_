@@ -31,7 +31,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 8039369968335461904}
   m_Father: {fileID: 658907713087886681}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &5710717605876365618
@@ -103,7 +104,7 @@ Animator:
   m_GameObject: {fileID: 340767069818909638}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 815b33a35641994489dd122eacb4e98d, type: 2}
+  m_Controller: {fileID: 9100000, guid: 38e3871755c7d8d46bbcaadba6a293a7, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -470,7 +471,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3331651315320733737}
-  - {fileID: 8039369968335461904}
   - {fileID: 7441811751699273072}
   - {fileID: 4181618984833220552}
   - {fileID: 319010091132421294}
@@ -1172,14 +1172,14 @@ MonoBehaviour:
     maxHP: 100
     attack: 10
     defense: 5
-    speed: 10
-    elementalMastery: 0
+    cooldownMastery: 0
     critRate: 5
     critDamage: 150
-    cooldownRate: 0
-    impact: 0
-    damageReduction: 0
-    aeRecharge: 1
+    dotMastery: 0
+    damageIncrease: 0
+    additionalDamageIncrease: 0
+    auraEnergyRecharge: 100
+    speed: 10
   postHitInvulnerabilityDuration: 0.4
 --- !u!114 &6196953050443969776
 MonoBehaviour:
@@ -1315,5 +1315,5 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 658907713087886681}
+  m_Father: {fileID: 3331651315320733737}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
