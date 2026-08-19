@@ -104,7 +104,7 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
             actionName = context.actionName,
             stepData = context.stepData,
             elementType = parameters.elementType,
-            damageRoutine = DamageRoutine.Additional,
+            damageDelivery = DamageDelivery.Additional,
             isCriticalHit = false,
             damage = baseDamage,
             attackerPosition = context.attackerPosition,
@@ -119,47 +119,30 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
         };
         ApplyRuntimeDamageInputModifiers(context.sourceCharacter, damageInput);
         additionalContext.damage = damageInput.baseDamage;
-
-        float resolvedDamage = CombatFormula.CalculateResolvedDamage(
-            damageInput.baseDamage,
-            DamageRoutine.Additional,
-            parameters.elementType,
-            formulaSourceStats,
-            damageInput.defenderDefense,
-            AttackCategory.Normal,
-            out _,
-            damageInput.defenderDamageResistance);
-
-        if (resolvedDamage <= 0f)
+        DamageRequest request = new DamageRequest
         {
-            return;
-        }
-
-        HitReactionData additionalData = HitReactionData.Default(resolvedDamage, context.hitDirection, 0f);
-        additionalData.damageIsFinal = true;
-        additionalData.ignoreElementalIncomingModifiers = damageInput.ignoreElementalIncomingModifiers;
-        additionalData.damageRoutine = DamageRoutine.Additional;
-        additionalData.elementType = parameters.elementType;
-        additionalData.isCriticalHit = false;
+            target = context.targetEnemy,
+            sourceCharacter = context.sourceCharacter,
+            sourceStats = formulaSourceStats,
+            baseDamage = damageInput.baseDamage,
+            defenderDefense = damageInput.defenderDefense,
+            defenderDamageResistance = damageInput.defenderDamageResistance,
+            descriptor = new DamageDescriptor(
+                DamageDelivery.Additional,
+                parameters.elementType,
+                DamageCriticalPolicy.Prevent),
+            category = context.category,
+            actionId = context.actionId,
+            actionName = context.actionName,
+            stepData = context.stepData,
+            attackerPosition = context.attackerPosition,
+            hitDirection = context.hitDirection,
+            ignoreTypeReduction = damageInput.ignoreTypeReduction
+        };
+        HitReactionData additionalData = HitReactionData.Default(0f, context.hitDirection, 0f);
         additionalData.flashFrames = 0;
         additionalData.impactTier = DamageImpactTier.Low;
-        additionalData.sourceCharacter = context.sourceCharacter;
-        additionalData.sourceStats = formulaSourceStats;
-        additionalData.sourceCategory = context.category;
-        additionalData.sourceActionId = context.actionId;
-        additionalData.sourceActionName = context.actionName;
-        additionalData.sourceStepData = context.stepData;
-
-        float damageDealt = context.targetEnemy.TakeHit(additionalData, context.attackerPosition);
-        if (damageDealt <= 0f)
-        {
-            return;
-        }
-
-        context.targetEnemy.DamageTypeState?.ApplyDot(
-            parameters.elementType,
-            formulaSourceStats,
-            context.sourceCharacter);
+        CombatDamageProcessor.Apply(request, additionalData, true);
     }
 
     private RuntimeEffectAdditionalDamageParameters ResolveParameters(RuntimeEffectDamageContext context)
@@ -266,13 +249,13 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
             RuntimeEffectStatTarget.MaxHP => sourceStats.maxHP,
             RuntimeEffectStatTarget.Speed => sourceStats.speed,
             RuntimeEffectStatTarget.Defense => sourceStats.defense,
-            RuntimeEffectStatTarget.ElementalMastery => sourceStats.elementalMastery,
+            RuntimeEffectStatTarget.DotMastery => sourceStats.dotMastery,
             RuntimeEffectStatTarget.CritRate => sourceStats.critRate,
             RuntimeEffectStatTarget.CritDamage => sourceStats.critDamage,
-            RuntimeEffectStatTarget.CooldownRate => sourceStats.cooldownRate,
-            RuntimeEffectStatTarget.Impact => sourceStats.impact,
-            RuntimeEffectStatTarget.AuraEnergyRecharge => sourceStats.aeRecharge,
-            RuntimeEffectStatTarget.DamageReduction => sourceStats.damageReduction,
+            RuntimeEffectStatTarget.CooldownMastery => sourceStats.cooldownMastery,
+            RuntimeEffectStatTarget.DamageIncrease => sourceStats.damageIncrease,
+            RuntimeEffectStatTarget.AdditionalDamageIncrease => sourceStats.additionalDamageIncrease,
+            RuntimeEffectStatTarget.AuraEnergyRecharge => sourceStats.auraEnergyRecharge,
             _ => sourceStats.attack
         };
     }

@@ -3,18 +3,17 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
+using Project.InventorySystem.Artifacts;
 using Project.InventorySystem.Items;
-using Project.UI;
 
 namespace Project.TeamBuilder.UI
 {
     /// <summary>
-    /// A draggable artifact cell in the Artifact Grid Inventory.
-    /// Implements Unity's drag interfaces to create a floating ghost during drag.
-    /// Also supports click to open the preview panel.
+    /// A selectable artifact cell in the Artifact Grid Inventory.
+    /// Equipped ArtifactSlotUI items remain the only draggable Artifact UI.
     /// </summary>
     [RequireComponent(typeof(CanvasGroup))]
-    public class ArtifactGridItemUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
+    public class ArtifactGridItemUI : MonoBehaviour, IPointerClickHandler
     {
         // =========================================================
         // UI References
@@ -24,6 +23,9 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private Image frameImage;
         [SerializeField] private TMP_Text nameText;
         [SerializeField] private GameObject equippedBadge; // Visual indicator when equipped
+        [SerializeField] private GameObject favouriteBadge;
+        [SerializeField] private GameObject newBadge;
+        [SerializeField] private TMP_Text rollSummaryText;
 
         [Header("Visual States")]
         [SerializeField] private Color normalFrameColor = new Color(0.8f, 0.7f, 0.4f, 1f);
@@ -33,39 +35,85 @@ namespace Project.TeamBuilder.UI
         // =========================================================
         // Runtime State
         // =========================================================
-        private Artifact artifactData;
+        private ArtifactInstance artifactData;
+        private ArtifactDefinition artifactDefinition;
         private CanvasGroup canvasGroup;
-        private Transform dragGhost;
-        private Canvas rootCanvas;
-        private bool isEquipped = false;
+        private string currentSummary;
+        private float lastClickTime;
+        private const float DoubleClickThreshold = 0.35f;
 
-        // Event for preview
-        public event Action<Artifact> OnClicked;
+        // Event for preview and double-click to equip
+        public event Action<ArtifactInstance> OnClicked;
+        public event Action<ArtifactInstance> OnDoubleClicked;
 
         // =========================================================
         // Properties
         // =========================================================
-        public Artifact ArtifactData => artifactData;
+        public ArtifactInstance ArtifactData => artifactData;
+        public ArtifactDefinition ArtifactDefinition => artifactDefinition;
 
         // =========================================================
         // Initialization
         // =========================================================
-        public void Init(Artifact artifact, Canvas canvas, bool alreadyEquipped = false)
+        public void Init(
+            ArtifactInstance artifact,
+            ArtifactDefinition definition,
+            Canvas canvas,
+            ArtifactRollTable rollTable,
+            bool alreadyEquipped = false)
         {
             artifactData = artifact;
-            rootCanvas = canvas;
+            artifactDefinition = definition;
             canvasGroup = GetComponent<CanvasGroup>();
 
             if (artifact != null)
             {
-                if (iconImage != null && artifact.icon != null)
-                    iconImage.sprite = artifact.icon;
+                if (iconImage != null && definition != null && definition.icon != null)
+                    iconImage.sprite = definition.icon;
 
-                if (nameText != null)
-                    nameText.text = artifact.itemName;
+                RefreshName();
+
+                string quality = ArtifactRollQuality.TryGetAverageQuality(artifact, rollTable, out float quality01)
+                    ? $"Q {quality01 * 100f:0.##}"
+                    : "Q —";
+                int visibleLineCount = 0;
+                if (artifact.rolls != null)
+                {
+                    for (int i = 0; i < artifact.rolls.Count; i++)
+                        if (ArtifactStatCatalog.IsPlayerVisible(artifact.rolls[i].statKind)) visibleLineCount++;
+                }
+                string summary = $"{visibleLineCount} lines • {quality}";
+                currentSummary = summary;
+                if (rollSummaryText != null)
+                    rollSummaryText.text = summary;
+                RefreshName();
+
+                if (favouriteBadge != null)
+                    favouriteBadge.SetActive(artifact.isFavourite);
+                if (newBadge != null)
+                    newBadge.SetActive(artifact.isNew);
             }
 
             SetEquippedState(alreadyEquipped);
+        }
+
+        public void SetFavouriteState(bool favourite)
+        {
+            if (artifactData != null) artifactData.isFavourite = favourite;
+            if (favouriteBadge != null) favouriteBadge.SetActive(favourite);
+            RefreshName();
+        }
+
+        private void RefreshName()
+        {
+            if (nameText == null || artifactData == null) return;
+            string displayName = artifactDefinition != null ? artifactDefinition.itemName : artifactData.definitionId;
+            string prefix = artifactData.isNew
+                ? (artifactData.isFavourite ? "NEW ★ " : "NEW ")
+                : (artifactData.isFavourite ? "★ " : string.Empty);
+            nameText.text = rollSummaryText == null && !string.IsNullOrEmpty(currentSummary)
+                ? $"{prefix}{displayName}\n{currentSummary}"
+                : $"{prefix}{displayName}";
         }
 
         /// <summary>
@@ -73,7 +121,6 @@ namespace Project.TeamBuilder.UI
         /// </summary>
         public void SetEquippedState(bool equipped)
         {
-            isEquipped = equipped;
             canvasGroup = canvasGroup != null ? canvasGroup : GetComponent<CanvasGroup>();
 
             if (equipped)
@@ -91,69 +138,21 @@ namespace Project.TeamBuilder.UI
         }
 
         // =========================================================
-        // Click Handler (Preview)
+        // Click Handler (Preview / Equip)
         // =========================================================
         public void OnPointerClick(PointerEventData eventData)
         {
             if (eventData.button == PointerEventData.InputButton.Left)
             {
+                float timeSinceLast = Time.unscaledTime - lastClickTime;
+                lastClickTime = Time.unscaledTime;
+
                 OnClicked?.Invoke(artifactData);
-            }
-        }
 
-        // =========================================================
-        // Drag Handlers
-        // =========================================================
-        public void OnBeginDrag(PointerEventData eventData)
-        {
-            if (artifactData == null) return;
-
-            if (rootCanvas == null)
-            {
-                rootCanvas = GetComponentInParent<Canvas>()?.rootCanvas;
-            }
-
-            if (rootCanvas == null)
-            {
-                Debug.LogWarning("ArtifactGridItemUI: Cannot drag because no root Canvas was found.");
-                return;
-            }
-
-            Sprite dragSprite = (iconImage != null) ? iconImage.sprite : null;
-            dragGhost = UIDragGhostHelper.CreateGhost(rootCanvas, dragSprite, new Vector2(60f, 60f), 0.85f, "ArtifactDragGhost");
-
-            // Make original semi-transparent during drag
-            if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
-            if (canvasGroup != null)
-            {
-                canvasGroup.alpha = 0.5f;
-                canvasGroup.blocksRaycasts = false;
-            }
-        }
-
-        public void OnDrag(PointerEventData eventData)
-        {
-            if (dragGhost == null) return;
-            UIDragGhostHelper.UpdatePosition(dragGhost, rootCanvas, eventData.position);
-        }
-
-        public void OnEndDrag(PointerEventData eventData)
-        {
-            UIDragGhostHelper.DestroyGhost(ref dragGhost);
-
-            // Restore original appearance based on equipped state
-            if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
-            if (canvasGroup != null)
-            {
-                if (!isEquipped)
+                if (timeSinceLast <= DoubleClickThreshold)
                 {
-                    canvasGroup.alpha = 1f;
+                    OnDoubleClicked?.Invoke(artifactData);
                 }
-                else
-                {
-                    canvasGroup.alpha = equippedAlpha;
-                }
-                canvasGroup.blocksRaycasts = true;
             }
         }
     }

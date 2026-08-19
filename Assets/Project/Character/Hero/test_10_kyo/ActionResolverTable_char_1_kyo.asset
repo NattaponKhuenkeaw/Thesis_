@@ -1,0 +1,2924 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec7b0a95c3b898f4080db07d37c47941, type: 3}
+  m_Name: ActionResolverTable_char_1_kyo
+  m_EditorClassIdentifier: Assembly-CSharp::ActionResolverTable
+  comboActions:
+  - actionId: kyo.basic.ground
+    actionName: Ground
+    context: 0
+    outputContext: 1
+    priority: 0
+    conditions: []
+    damageSourceStat: 0
+    actionDamageMultiplier: 4
+    auraEnergyReward: 0
+    comboTree:
+      treeName: Combo
+      comboResetDelay: 0.8
+      rootNode:
+        rid: 3251577252092051566
+  - actionId: kyo.basic.air
+    actionName: Air
+    context: 1
+    outputContext: 2
+    priority: 0
+    conditions: []
+    damageSourceStat: 0
+    actionDamageMultiplier: 2.5
+    auraEnergyReward: 0
+    comboTree:
+      treeName: Combo
+      comboResetDelay: 0.8
+      rootNode:
+        rid: 1588255892939997271
+  skillActions:
+  - actionId: kyo.skill.ground
+    actionName: Flame Gather
+    context: 0
+    outputContext: 1
+    priority: 1
+    conditions: []
+    damageSourceStat: 0
+    actionDamageMultiplier: 3.5
+    auraEnergyReward: 3
+    comboTree:
+      treeName: Combo
+      comboResetDelay: 0.8
+      rootNode:
+        rid: 1588255892939997283
+    cooldown: 7
+  - actionId: kyo.skill.air
+    actionName: Fireball
+    context: 1
+    outputContext: 2
+    priority: 1
+    conditions: []
+    damageSourceStat: 0
+    actionDamageMultiplier: 4
+    auraEnergyReward: 3
+    comboTree:
+      treeName: Combo
+      comboResetDelay: 0.8
+      rootNode:
+        rid: 1588255892939997282
+    cooldown: 7
+  ultimateActions:
+  - actionId: kyo.ultimate
+    actionName: "108 Shiki \u2022 Yami Barai"
+    context: 0
+    outputContext: 1
+    priority: 1
+    conditions: []
+    damageSourceStat: 0
+    actionDamageMultiplier: 7
+    auraEnergyReward: 3
+    comboTree:
+      treeName: Combo
+      comboResetDelay: 0.8
+      rootNode:
+        rid: 1588255892939997284
+    cooldown: 20
+    energyCost: 80
+    activationVFXType: 40
+    activationVFXPrefab: {fileID: 784361931337648594, guid: 4c0e5d975c6ec9341ac97977330a4775, type: 3}
+    activationVFXOffset: {x: 0, y: 2, z: 0}
+    activationVoice: {fileID: 0}
+    activationSFX: {fileID: 8300000, guid: a17ff62340838794aa61bcc8b4602cb1, type: 3}
+    voiceDelay: 0.1
+    useDashAfterImage: 1
+  - actionId: kyo.ultimate.ex
+    actionName: 182 Shiki
+    context: 0
+    outputContext: 1
+    priority: 10
+    conditions:
+    - rid: 3612912913179476115
+    damageSourceStat: 0
+    actionDamageMultiplier: 7
+    auraEnergyReward: 20
+    comboTree:
+      treeName: Combo
+      comboResetDelay: 0.8
+      rootNode:
+        rid: 3612912913179476104
+    cooldown: 0
+    energyCost: 0
+    activationVFXType: 0
+    activationVFXPrefab: {fileID: 0}
+    activationVFXOffset: {x: 0, y: 0, z: 0}
+    activationVoice: {fileID: 0}
+    activationSFX: {fileID: 0}
+    voiceDelay: 0.1
+    useDashAfterImage: 1
+  standaloneActions: []
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
+    - rid: 1588255892939997270
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 6
+        activeFrames: 2
+        elementType: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.39169496, y: 2.2068093}
+        size: {x: 1.418764, y: 1.550219}
+        damageRatio: 0.1
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 0
+        impactFreezeFrames: 0
+        knockbackFrames: 12
+        knockupFrames: 9
+        knockfallFrames: 8
+        recoveryFrames: 16
+        horizontalSpeed: 4
+        launchSpeed: 10
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 5
+        hitSFX: {fileID: 0}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+    - rid: 1588255892939997271
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 3
+          activeFrames: 28
+          recoveryFrames: 16
+          cancelWindowStartFrame: 44
+          loopActivePhase: 0
+          stepName: Air_Attack1
+          animationClip: {fileID: 7400000, guid: 496571fbe78c06b4abc0191b992f40b2, type: 2}
+          lockAirPosition: 1
+          autoChainToNext: 0
+          triggerWindows: []
+          motionData:
+            rid: 1588255892939997272
+          vfxData:
+            rid: -2
+          audioData:
+            rid: 1588255929706479731
+          hitData:
+            rid: 1588255892939997273
+          eventData:
+            rid: -2
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+          - audio
+          - events
+        routes: []
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 1588255892939997272
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - startFrame: 1
+          endFrame: 7
+          taskType: 0
+          easing: 16
+          position: {x: 0.5, y: 0.2, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 7
+          endFrame: 35
+          taskType: 0
+          easing: 16
+          position: {x: 0, y: 0.7, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 30
+          endFrame: 61
+          taskType: 0
+          easing: 1
+          position: {x: 0, y: -0.5, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 1588255892939997273
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 1588255892939997274
+        - rid: 1588255892939997275
+    - rid: 1588255892939997274
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 0
+        activeFrames: 4
+        elementType: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.80849195, y: 2.4835644}
+        size: {x: 2.1860638, y: 2.5911407}
+        damageRatio: 0.65
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 2
+        knockbackFrames: 8
+        knockupFrames: 15
+        knockfallFrames: 8
+        recoveryFrames: 8
+        horizontalSpeed: 3
+        launchSpeed: 3
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 1
+        juggleStunScale: 1
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 3
+        hitSFX: {fileID: 0}
+        hitVFXType: 16
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+    - rid: 1588255892939997275
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 23
+        activeFrames: 3
+        elementType: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.93545187, y: 2.725435}
+        size: {x: 2.3479483, y: 2.5007482}
+        damageRatio: 0.35
+        impactTier: 2
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 2
+        knockbackFrames: 8
+        knockupFrames: 20
+        knockfallFrames: 15
+        recoveryFrames: 10
+        horizontalSpeed: 3
+        launchSpeed: 5
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 1
+        juggleStunScale: 1
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 3
+        hitSFX: {fileID: 0}
+        hitVFXType: 16
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+    - rid: 1588255892939997282
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 9
+          activeFrames: 27
+          recoveryFrames: 6
+          cancelWindowStartFrame: 40
+          loopActivePhase: 0
+          stepName: "100 Shiki \u2022 Oniyaki"
+          animationClip: {fileID: 7400000, guid: cc96492e2a2ca1e44914f47b77cbd5da, type: 2}
+          lockAirPosition: 1
+          autoChainToNext: 0
+          triggerWindows: []
+          motionData:
+            rid: 1588255910640222318
+          vfxData:
+            rid: 1588255929706479781
+          audioData:
+            rid: 1588255929706479730
+          hitData:
+            rid: 1588255910640222319
+          eventData:
+            rid: -2
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+          - audio
+          - events
+        routes: []
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 1588255892939997283
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 16
+          activeFrames: 9
+          recoveryFrames: 20
+          cancelWindowStartFrame: 39
+          loopActivePhase: 0
+          stepName: "108 Shiki \u2022 Yami Barai"
+          animationClip: {fileID: 7400000, guid: 148508b662c0300409110df76e4f810f, type: 2}
+          lockAirPosition: 1
+          autoChainToNext: 1
+          triggerWindows: []
+          motionData:
+            rid: 1588255929706479747
+          vfxData:
+            rid: 3251577360560685201
+          audioData:
+            rid: 1588255929706479744
+          hitData:
+            rid: 1588255929706479745
+          eventData:
+            rid: -2
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+          - audio
+          - events
+        routes: []
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 1588255892939997284
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 13
+          activeFrames: 16
+          recoveryFrames: 17
+          cancelWindowStartFrame: 40
+          loopActivePhase: 0
+          stepName: Grab Dash
+          animationClip: {fileID: 7400000, guid: 538b5a7cc2829ae408c4418d6cd3f861, type: 2}
+          lockAirPosition: 1
+          autoChainToNext: 1
+          triggerWindows:
+          - rid: 3251577402691944747
+          motionData:
+            rid: 1588255892939997295
+          vfxData:
+            rid: 1588255929706479806
+          audioData:
+            rid: 1588255929706479712
+          hitData:
+            rid: 1588255892939997285
+          eventData:
+            rid: 3612912955328561274
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+          - audio
+          - events
+        routes: []
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 1588255892939997285
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 1588255892939997286
+    - rid: 1588255892939997286
+      type: {class: GrabHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 1
+        activeFrames: 16
+        elementType: 0
+        debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
+        offset: {x: 0.9520402, y: 0.7560394}
+        size: {x: 1.7284608, y: 1.5838614}
+        canGrabAirborne: 1
+        damageRatio: 0
+        impactFreezeFrames: 4
+        holdFrames: 24
+        recoveryFrames: 6
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        hitSFX: {fileID: 8300000, guid: d517d1ac88bbb2f48b4747a86083d9c5, type: 3}
+        hitVFXType: 100
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        impactTier: 0
+    - rid: 1588255892939997295
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - startFrame: 7
+          endFrame: 17
+          taskType: 0
+          easing: 15
+          position: {x: 0.5, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 17
+          endFrame: 26
+          taskType: 0
+          easing: 34
+          position: {x: 7, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 26
+          endFrame: 37
+          taskType: 0
+          easing: 16
+          position: {x: 1, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 1588255892939997338
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 1
+          activeFrames: 88
+          recoveryFrames: 1
+          cancelWindowStartFrame: 100
+          loopActivePhase: 0
+          stepName: 212 Shiki Kototsuki You
+          animationClip: {fileID: 7400000, guid: e4dbe8ad2e4eb1841865032d4f89eff1, type: 2}
+          lockAirPosition: 1
+          autoChainToNext: 1
+          triggerWindows: []
+          motionData:
+            rid: -2
+          vfxData:
+            rid: 1588255929706479795
+          audioData:
+            rid: 1588255929706479721
+          hitData:
+            rid: 1588255892939997353
+          eventData:
+            rid: 1588256211525697644
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+          - audio
+          - events
+        routes: []
+        defaultNext:
+          rid: 1588255892939997339
+        onGrabSuccessNode:
+          rid: 1588255892939997339
+    - rid: 1588255892939997339
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 20
+          activeFrames: 6
+          recoveryFrames: 13
+          cancelWindowStartFrame: 36
+          loopActivePhase: 0
+          stepName: R.E.D Kick
+          animationClip: {fileID: 7400000, guid: a36de9711e8cd9a46a70df996e055f29, type: 2}
+          lockAirPosition: 1
+          autoChainToNext: 0
+          triggerWindows: []
+          motionData:
+            rid: 1588255910640222299
+          vfxData:
+            rid: -2
+          audioData:
+            rid: 1588255929706479775
+          hitData:
+            rid: 1588255892939997369
+          eventData:
+            rid: 1588256211525697645
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+          - audio
+          - events
+        routes: []
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 1588255892939997353
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 1588255892939997355
+    - rid: 1588255892939997355
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 58
+        activeFrames: 7
+        elementType: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 1.0291088, y: 2.9201977}
+        size: {x: 1.933407, y: 1.360044}
+        damageRatio: 0.4
+        impactTier: 3
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 4
+        knockbackFrames: 15
+        knockupFrames: 12
+        knockfallFrames: 10
+        recoveryFrames: 20
+        horizontalSpeed: 7
+        launchSpeed: 3
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        hitSFX: {fileID: 8300000, guid: 706e1b9369e438b4b90929608e04a89d, type: 3}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 1
+    - rid: 1588255892939997369
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 1588255892939997370
+    - rid: 1588255892939997370
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 1
+        activeFrames: 5
+        elementType: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 1.662411, y: 1.3666884}
+        size: {x: 4.4219246, y: 2.4720218}
+        damageRatio: 0.6
+        impactTier: 3
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 15
+        knockbackFrames: 10
+        knockupFrames: 8
+        knockfallFrames: 7
+        recoveryFrames: 13
+        horizontalSpeed: 2
+        launchSpeed: 3
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 1
+        juggleStunScale: 1
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 4
+        hitSFX: {fileID: 0}
+        hitVFXType: 16
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+    - rid: 1588255910640222299
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - startFrame: 1
+          endFrame: 19
+          taskType: 0
+          easing: 34
+          position: {x: 1.5, y: 1.5, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 19
+          endFrame: 25
+          taskType: 0
+          easing: 1
+          position: {x: 1, y: 0.5, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 25
+          endFrame: 32
+          taskType: 0
+          easing: 16
+          position: {x: 1.5, y: -1.2, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 32
+          endFrame: 39
+          taskType: 0
+          easing: 1
+          position: {x: 1.5, y: -0.8, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 1588255910640222318
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - startFrame: 0
+          endFrame: 10
+          taskType: 0
+          easing: 34
+          position: {x: 0.5, y: 0.2, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 10
+          endFrame: 35
+          taskType: 0
+          easing: 1
+          position: {x: 0, y: 1.5, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 35
+          endFrame: 42
+          taskType: 0
+          easing: 1
+          position: {x: 0, y: -0.2, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 1588255910640222319
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 1588255910640222320
+        - rid: 1588255910640222321
+        - rid: 1588255910640222322
+        - rid: 1588255910640222323
+        - rid: 1588255910640222324
+        - rid: 1588255910640222325
+    - rid: 1588255910640222320
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 0
+        activeFrames: 4
+        elementType: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.9195292, y: 1.5627012}
+        size: {x: 1.4781201, y: 1.5171803}
+        damageRatio: 0.3
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 3
+        knockbackFrames: 13
+        knockupFrames: 10
+        knockfallFrames: 8
+        recoveryFrames: 8
+        horizontalSpeed: 3
+        launchSpeed: 3
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 1
+        juggleStunScale: 1
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 5
+        hitSFX: {fileID: 0}
+        hitVFXType: 16
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+    - rid: 1588255910640222321
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 4
+        activeFrames: 5
+        elementType: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 1.066226, y: 1.7311296}
+        size: {x: 1.8149769, y: 1.4845805}
+        damageRatio: 0.07
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 3
+        knockbackFrames: 13
+        knockupFrames: 10
+        knockfallFrames: 8
+        recoveryFrames: 8
+        horizontalSpeed: 3
+        launchSpeed: 1
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 1
+        juggleStunScale: 1
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 5
+        hitSFX: {fileID: 8300000, guid: bad3b04a9eb798c418e84527dfd6b260, type: 3}
+        hitVFXType: 16
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+    - rid: 1588255910640222322
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 9
+        activeFrames: 6
+        elementType: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.41556025, y: 2.4943933}
+        size: {x: 1.6991863, y: 1.4373637}
+        damageRatio: 0.11
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 0
+        knockbackFrames: 13
+        knockupFrames: 10
+        knockfallFrames: 8
+        recoveryFrames: 8
+        horizontalSpeed: 3
+        launchSpeed: 7
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 1
+        juggleStunScale: 1
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 5
+        hitSFX: {fileID: 8300000, guid: bad3b04a9eb798c418e84527dfd6b260, type: 3}
+        hitVFXType: 16
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+    - rid: 1588255910640222323
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 15
+        activeFrames: 5
+        elementType: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.116349936, y: 2.5917017}
+        size: {x: 2.8498783, y: 1.3496011}
+        damageRatio: 0.07
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 0
+        knockbackFrames: 13
+        knockupFrames: 10
+        knockfallFrames: 8
+        recoveryFrames: 8
+        horizontalSpeed: 3
+        launchSpeed: 3
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 1
+        juggleStunScale: 1
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 5
+        hitSFX: {fileID: 8300000, guid: bad3b04a9eb798c418e84527dfd6b260, type: 3}
+        hitVFXType: 16
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+    - rid: 1588255910640222324
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 20
+        activeFrames: 5
+        elementType: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.21688676, y: 2.6520238}
+        size: {x: 2.3002768, y: 1.4702454}
+        damageRatio: 0.05
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 0
+        knockbackFrames: 13
+        knockupFrames: 10
+        knockfallFrames: 8
+        recoveryFrames: 8
+        horizontalSpeed: 3
+        launchSpeed: 1
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 1
+        juggleStunScale: 1
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 5
+        hitSFX: {fileID: 8300000, guid: bad3b04a9eb798c418e84527dfd6b260, type: 3}
+        hitVFXType: 16
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+    - rid: 1588255910640222325
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 24
+        activeFrames: 3
+        elementType: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.0776701, y: 2.7475772}
+        size: {x: 4.3227234, y: 1.6667986}
+        damageRatio: 0.4
+        impactTier: 2
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 8
+        knockbackFrames: 13
+        knockupFrames: 10
+        knockfallFrames: 8
+        recoveryFrames: 17
+        horizontalSpeed: 1
+        launchSpeed: 5
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 1
+        juggleStunScale: 1
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 5
+        hitSFX: {fileID: 8300000, guid: bad3b04a9eb798c418e84527dfd6b260, type: 3}
+        hitVFXType: 16
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+    - rid: 1588255929706479712
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: Dashing
+          clip: {fileID: 8300000, guid: 593a0d385b8e842458eec6a9c0b82630, type: 3}
+          triggerFrame: 3
+          duration: 10
+          channel: 1
+          volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: c447de956826bf749985ff02ed393875, type: 3}
+          triggerFrame: 2
+          duration: 20
+          channel: 0
+          volume: 1
+          pitchVariation: 1.025
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 1588255929706479721
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: e674087b6c6473046800e12f19dbc2c3, type: 3}
+          triggerFrame: 59
+          duration: 8
+          channel: 3
+          volume: 1
+          pitchVariation: 0.95
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: 909e361ac0b0fae4daa80f9db36948df, type: 3}
+          triggerFrame: 1
+          duration: 14
+          channel: 3
+          volume: 0.5
+          pitchVariation: 0.85
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 1588255929706479730
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: e2db392aec607704d841a17fd9d613bb, type: 3}
+          triggerFrame: 0
+          duration: 31
+          channel: 0
+          volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 1588255929706479731
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: a9fb943645ae73145b18a47e03c048ea, type: 3}
+          triggerFrame: 3
+          duration: 2
+          channel: 0
+          volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: a9fb943645ae73145b18a47e03c048ea, type: 3}
+          triggerFrame: 23
+          duration: 2
+          channel: 0
+          volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 1588255929706479738
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: 593a0d385b8e842458eec6a9c0b82630, type: 3}
+          triggerFrame: 1
+          duration: 3
+          channel: 1
+          volume: 0.35
+          pitchVariation: 1.5
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: a9fb943645ae73145b18a47e03c048ea, type: 3}
+          triggerFrame: 1
+          duration: 20
+          channel: 0
+          volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 1588255929706479739
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: 593a0d385b8e842458eec6a9c0b82630, type: 3}
+          triggerFrame: 16
+          duration: 7
+          channel: 1
+          volume: 0.35
+          pitchVariation: 1.35
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: 593a0d385b8e842458eec6a9c0b82630, type: 3}
+          triggerFrame: 24
+          duration: 8
+          channel: 1
+          volume: 0.35
+          pitchVariation: 1.1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: aa2f17f3fd555b04cadabc9a4294673a, type: 3}
+          triggerFrame: 13
+          duration: 20
+          channel: 0
+          volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 1588255929706479744
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: 11ffd8b0e2c923c4981911da30c11c84, type: 3}
+          triggerFrame: 0
+          duration: 20
+          channel: 0
+          volume: 1
+          pitchVariation: 0.95
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 1588255929706479745
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 1588255929706479746
+    - rid: 1588255929706479746
+      type: {class: ProjectileSpawnHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 1
+        activeFrames: 3
+        elementType: 0
+        debugColor: {r: 0.42, g: 0.81, b: 1, a: 1}
+        projectileType: 0
+        projectileData: {fileID: 11400000, guid: 6b1d6a7d20195c940a7249e106a8cc1e, type: 2}
+        overrideSpawnOffset: 0
+        spawnOffset: {x: 1, y: 0}
+    - rid: 1588255929706479747
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - startFrame: 3
+          endFrame: 11
+          taskType: 0
+          easing: 34
+          position: {x: 0.7, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 1588255929706479775
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: 593a0d385b8e842458eec6a9c0b82630, type: 3}
+          triggerFrame: 1
+          duration: 10
+          channel: 1
+          volume: 1
+          pitchVariation: 1.5
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: 3510ebdb091dfd54da452294f83c2080, type: 3}
+          triggerFrame: 1
+          duration: 22
+          channel: 1
+          volume: 0.5
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 1588255929706479781
+      type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: VFX
+          vfxType: 102
+          vfxClip: {fileID: 0}
+          vfxPrefab: {fileID: 784361931337648594, guid: 4c0e5d975c6ec9341ac97977330a4775, type: 3}
+          triggerFrame: 8
+          duration: 28
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 8
+            position: {x: 0.5, y: -0.2, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          - frame: 18
+            position: {x: 0.69, y: 1.56, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
+        - label: VFX
+          vfxType: 103
+          vfxClip: {fileID: 0}
+          vfxPrefab: {fileID: 784361931337648594, guid: 4c0e5d975c6ec9341ac97977330a4775, type: 3}
+          triggerFrame: 24
+          duration: 14
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 0
+            position: {x: -0.1, y: 0.7, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          - frame: 0
+            position: {x: 0, y: 0, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
+    - rid: 1588255929706479795
+      type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: VFX
+          vfxType: 17
+          vfxClip: {fileID: 0}
+          vfxPrefab: {fileID: 784361931337648594, guid: 4c0e5d975c6ec9341ac97977330a4775, type: 3}
+          triggerFrame: 59
+          duration: 25
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 0
+            position: {x: 1, y: 1, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          - frame: 0
+            position: {x: 0, y: 0, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
+        - label: Dust Land
+          vfxType: 32
+          vfxClip: {fileID: 0}
+          vfxPrefab: {fileID: 784361931337648594, guid: 4c0e5d975c6ec9341ac97977330a4775, type: 3}
+          triggerFrame: 1
+          duration: 25
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 0
+            position: {x: 1, y: -1, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
+    - rid: 1588255929706479806
+      type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: Dust Dash
+          vfxType: 31
+          vfxClip: {fileID: 0}
+          vfxPrefab: {fileID: 0}
+          triggerFrame: 9
+          duration: 13
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 0
+            position: {x: -1, y: -0.7, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
+    - rid: 1588256211525697644
+      type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: Ultimate Sequence
+          eventType: 3
+          triggerFrame: 0
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          freezeWorld: 1
+          freezeDurationOverride: 0
+          timelineMode: 0
+          activationVFXType: 0
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 0, z: 0}
+          activationVoice: {fileID: 0}
+          activationSFX: {fileID: 0}
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0.4
+              endStrength: 0.08
+              duration: 0.14
+              pulseInterval: 0.025
+              slowMotion:
+                enabled: 0
+                timeScale: 0.35
+                duration: 0.08
+                delaySeconds: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          facingDirectionSettings:
+            mode: 0
+          enableUltimateZoom: 0
+          ultimateZoomSize: 5
+        - label: Ultimate Sequence
+          eventType: 2
+          triggerFrame: 68
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          freezeWorld: 1
+          freezeDurationOverride: 0
+          timelineMode: 0
+          activationVFXType: 0
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 0, z: 0}
+          activationVoice: {fileID: 0}
+          activationSFX: {fileID: 0}
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0
+              endStrength: 0
+              duration: 0
+              pulseInterval: 0.01
+              slowMotion:
+                enabled: 1
+                timeScale: 0.6
+                duration: 0.3
+                delaySeconds: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          facingDirectionSettings:
+            mode: 0
+          enableUltimateZoom: 0
+          ultimateZoomSize: 5
+    - rid: 1588256211525697645
+      type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: Ultimate Sequence
+          eventType: 3
+          triggerFrame: 0
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          freezeWorld: 1
+          freezeDurationOverride: 0
+          timelineMode: 0
+          activationVFXType: 0
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 0, z: 0}
+          activationVoice: {fileID: 0}
+          activationSFX: {fileID: 0}
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0.4
+              endStrength: 0.08
+              duration: 0.14
+              pulseInterval: 0.025
+              slowMotion:
+                enabled: 0
+                timeScale: 0.35
+                duration: 0.08
+                delaySeconds: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          facingDirectionSettings:
+            mode: 0
+          enableUltimateZoom: 0
+          ultimateZoomSize: 5
+        - label: Ultimate Sequence
+          eventType: 2
+          triggerFrame: 15
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          freezeWorld: 1
+          freezeDurationOverride: 0
+          timelineMode: 0
+          activationVFXType: 0
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 0, z: 0}
+          activationVoice: {fileID: 0}
+          activationSFX: {fileID: 0}
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0
+              endStrength: 0
+              duration: 0
+              pulseInterval: 0.01
+              slowMotion:
+                enabled: 1
+                timeScale: 0.6
+                duration: 1
+                delaySeconds: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          facingDirectionSettings:
+            mode: 0
+          enableUltimateZoom: 0
+          ultimateZoomSize: 5
+    - rid: 3251577252092051566
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 14
+          activeFrames: 8
+          recoveryFrames: 11
+          cancelWindowStartFrame: 29
+          loopActivePhase: 0
+          stepName: Attack1
+          animationClip: {fileID: 7400000, guid: e66884ccd7abf004d9e3a01f50fdaeea, type: 2}
+          lockAirPosition: 1
+          autoChainToNext: 0
+          triggerWindows: []
+          motionData:
+            rid: 3251577252092051575
+          vfxData:
+            rid: -2
+          audioData:
+            rid: 1588255929706479738
+          hitData:
+            rid: 3251577252092051569
+          eventData:
+            rid: -2
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+          - audio
+          - events
+        routes: []
+        defaultNext:
+          rid: 3251577252092051567
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 3251577252092051567
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 16
+          activeFrames: 13
+          recoveryFrames: 22
+          cancelWindowStartFrame: 46
+          loopActivePhase: 0
+          stepName: Attack2
+          animationClip: {fileID: 7400000, guid: 993cb42f21d604449b07755ebe632207, type: 2}
+          lockAirPosition: 1
+          autoChainToNext: 0
+          triggerWindows: []
+          motionData:
+            rid: 3251577252092051573
+          vfxData:
+            rid: -2
+          audioData:
+            rid: 1588255929706479739
+          hitData:
+            rid: 3251577252092051576
+          eventData:
+            rid: -2
+          componentOrder:
+          - motion
+          - vfx
+          - hitbox
+          - audio
+          - events
+        routes:
+        - rid: 3612912868654055573
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 3251577252092051569
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 3251577252092051570
+    - rid: 3251577252092051570
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 1
+        activeFrames: 4
+        elementType: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 1.1020966, y: 1.9555622}
+        size: {x: 1.7736158, y: 0.93169653}
+        damageRatio: 0.25
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 0
+        impactFreezeFrames: 1
+        knockbackFrames: 11
+        knockupFrames: 8
+        knockfallFrames: 7
+        recoveryFrames: 11
+        horizontalSpeed: 3
+        launchSpeed: 1
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 4
+        hitSFX: {fileID: 0}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+    - rid: 3251577252092051573
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - startFrame: 18
+          endFrame: 22
+          taskType: 0
+          easing: 16
+          position: {x: 0.5, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 23
+          endFrame: 27
+          taskType: 0
+          easing: 16
+          position: {x: 0.5, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 3251577252092051575
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - startFrame: 3
+          endFrame: 17
+          taskType: 0
+          easing: 16
+          position: {x: 0.7, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 3251577252092051576
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 3251577252092051578
+        - rid: 1588255892939997270
+        - rid: 3251577360560685200
+    - rid: 3251577252092051578
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 3
+        activeFrames: 3
+        elementType: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.28628784, y: 2.3803887}
+        size: {x: 1.3284358, y: 2.0338614}
+        damageRatio: 0.1
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 0
+        impactFreezeFrames: 1
+        knockbackFrames: 12
+        knockupFrames: 9
+        knockfallFrames: 8
+        recoveryFrames: 12
+        horizontalSpeed: 3
+        launchSpeed: 1
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 5
+        hitSFX: {fileID: 0}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+    - rid: 3251577360560685200
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 8
+        activeFrames: 4
+        elementType: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.48456204, y: 1.63021}
+        size: {x: 2.0094042, y: 1.0838954}
+        damageRatio: 0.15
+        impactTier: 1
+        useDeterministicReaction: 1
+        reactionKind: 1
+        impactFreezeFrames: 3
+        knockbackFrames: 24
+        knockupFrames: 9
+        knockfallFrames: 8
+        recoveryFrames: 12
+        horizontalSpeed: 3
+        launchSpeed: 1
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 5
+        hitSFX: {fileID: 0}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+    - rid: 3251577360560685201
+      type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: VFX
+          vfxType: 101
+          vfxClip: {fileID: 0}
+          vfxPrefab: {fileID: 0}
+          triggerFrame: 16
+          duration: 22
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 0
+            position: {x: 0.2, y: 0, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
+        - label: VFX
+          vfxType: 100
+          vfxClip: {fileID: 0}
+          vfxPrefab: {fileID: 0}
+          triggerFrame: 20
+          duration: 21
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 0
+            position: {x: 0.7, y: -0.85, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
+    - rid: 3251577402691944747
+      type: {class: TriggerWindow, ns: , asm: Assembly-CSharp}
+      data:
+        startFrame: 0
+        endFrame: -1
+        triggerConditions:
+        - rid: 3251577402691944754
+        targetNode:
+          rid: 1588255892939997338
+        priority: 10
+    - rid: 3251577402691944754
+      type: {class: GrabbedEnemyActionCondition, ns: , asm: Assembly-CSharp}
+      data:
+        requireGrabbedEnemy: 1
+    - rid: 3612912868654055573
+      type: {class: ComboRoute, ns: , asm: Assembly-CSharp}
+      data:
+        direction: 1
+        requireGrounded: 0
+        requireAirborne: 0
+        requireGrabbedEnemy: 0
+        requiredPreviousState: 0
+        conditions:
+        - rid: 3612912868654055574
+        targetNode:
+          rid: 3612912868654055575
+        priority: 0
+        allowImmediateInterrupt: 0
+    - rid: 3612912868654055574
+      type: {class: PotentialLevelActionCondition, ns: , asm: Assembly-CSharp}
+      data:
+        track: 2
+        comparison: 3
+        level: 2
+    - rid: 3612912868654055575
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 18
+          activeFrames: 6
+          recoveryFrames: 17
+          cancelWindowStartFrame: 35
+          loopActivePhase: 0
+          stepName: Attack3
+          animationClip: {fileID: 7400000, guid: d0491a51d558ead43a249b852c6f42a6, type: 2}
+          lockAirPosition: 1
+          autoChainToNext: 0
+          triggerWindows: []
+          motionData:
+            rid: 3612912868654055578
+          vfxData:
+            rid: -2
+          audioData:
+            rid: 3612912955328561276
+          hitData:
+            rid: 3612912868654055576
+          eventData:
+            rid: -2
+          componentOrder:
+          - motion
+          - vfx
+          - audio
+          - hitbox
+          - events
+        routes: []
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 3612912868654055576
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 3612912868654055577
+    - rid: 3612912868654055577
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 0
+        activeFrames: 3
+        elementType: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 0.99722207, y: 1.2020371}
+        size: {x: 1.6311111, y: 2.3251853}
+        damageRatio: 0.45
+        impactTier: 2
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 10
+        knockbackFrames: 15
+        knockupFrames: 12
+        knockfallFrames: 10
+        recoveryFrames: 9
+        horizontalSpeed: 1
+        launchSpeed: 5
+        useSnapToAnchor: 1
+        snapOffset: {x: 1, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 1
+        juggleStunScale: 1
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        hitSFX: {fileID: 0}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+    - rid: 3612912868654055578
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - startFrame: 12
+          endFrame: 21
+          taskType: 0
+          easing: 1
+          position: {x: 0.75, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 3612912913179476104
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 14
+          activeFrames: 21
+          recoveryFrames: 28
+          cancelWindowStartFrame: 49
+          loopActivePhase: 0
+          stepName: Start
+          animationClip: {fileID: 7400000, guid: 2f7044c31e7ed224db29f7de9050d41d, type: 2}
+          lockAirPosition: 1
+          autoChainToNext: 1
+          triggerWindows: []
+          motionData:
+            rid: -2
+          vfxData:
+            rid: -2
+          audioData:
+            rid: -2
+          hitData:
+            rid: -2
+          eventData:
+            rid: 3612912913179476113
+          componentOrder:
+          - motion
+          - vfx
+          - audio
+          - hitbox
+          - events
+        routes: []
+        defaultNext:
+          rid: 3612912913179476105
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 3612912913179476105
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 1
+          activeFrames: 2
+          recoveryFrames: 3
+          cancelWindowStartFrame: 5
+          loopActivePhase: 1
+          stepName: Loop
+          animationClip: {fileID: 7400000, guid: f8e91a9b960b3414b86944a16dbbaf09, type: 2}
+          lockAirPosition: 1
+          autoChainToNext: 1
+          triggerWindows:
+          - rid: 3612912913179476107
+          motionData:
+            rid: -2
+          vfxData:
+            rid: -2
+          audioData:
+            rid: -2
+          hitData:
+            rid: -2
+          eventData:
+            rid: -2
+          componentOrder:
+          - motion
+          - vfx
+          - audio
+          - hitbox
+          - events
+        routes: []
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 3612912913179476107
+      type: {class: TriggerWindow, ns: , asm: Assembly-CSharp}
+      data:
+        startFrame: 0
+        endFrame: -1
+        triggerConditions:
+        - rid: 3612912913179476108
+        targetNode:
+          rid: 3612912913179476109
+        priority: 0
+    - rid: 3612912913179476108
+      type: {class: WaitActionCondition, ns: , asm: Assembly-CSharp}
+      data:
+        waitUnit: 1
+        waitValue: 0.8
+    - rid: 3612912913179476109
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 2
+          activeFrames: 73
+          recoveryFrames: 21
+          cancelWindowStartFrame: 97
+          loopActivePhase: 0
+          stepName: Mid
+          animationClip: {fileID: 7400000, guid: 36346855f64d03f4fabac25f4b1a1d6c, type: 2}
+          lockAirPosition: 1
+          autoChainToNext: 1
+          triggerWindows: []
+          motionData:
+            rid: 3612912913179476116
+          vfxData:
+            rid: -2
+          audioData:
+            rid: 3612912913179476117
+          hitData:
+            rid: 3612912913179476118
+          eventData:
+            rid: 3612912913179476121
+          componentOrder:
+          - motion
+          - vfx
+          - audio
+          - hitbox
+          - events
+        routes: []
+        defaultNext:
+          rid: 3612912913179476123
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 3612912913179476113
+      type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: Ultimate Sequence
+          eventType: 0
+          triggerFrame: 0
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          freezeWorld: 1
+          freezeDurationOverride: 0
+          timelineMode: 1
+          activationVFXType: 41
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 1.2, z: 0}
+          activationVoice: {fileID: 8300000, guid: ef43c36354e8b5646b82bad20297704c, type: 3}
+          activationSFX: {fileID: 8300000, guid: 6047e38506eb20347b9750b41ccfda17, type: 3}
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0.4
+              endStrength: 0.08
+              duration: 0.14
+              pulseInterval: 0.025
+              slowMotion:
+                enabled: 0
+                timeScale: 0.35
+                duration: 0.08
+                delaySeconds: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          facingDirectionSettings:
+            mode: 0
+          enableUltimateZoom: 1
+          ultimateZoomSize: 5
+        - label: Ultimate Sequence
+          eventType: 2
+          triggerFrame: 0
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          freezeWorld: 1
+          freezeDurationOverride: 0
+          timelineMode: 0
+          activationVFXType: 0
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 0, z: 0}
+          activationVoice: {fileID: 0}
+          activationSFX: {fileID: 0}
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0
+              endStrength: 0
+              duration: 0
+              pulseInterval: 0.01
+              slowMotion:
+                enabled: 1
+                timeScale: 0.35
+                duration: 0.08
+                delaySeconds: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          facingDirectionSettings:
+            mode: 0
+          enableUltimateZoom: 0
+          ultimateZoomSize: 5
+        - label: Ultimate Sequence
+          eventType: 3
+          triggerFrame: 0
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          freezeWorld: 1
+          freezeDurationOverride: 0
+          timelineMode: 0
+          activationVFXType: 0
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 0, z: 0}
+          activationVoice: {fileID: 0}
+          activationSFX: {fileID: 0}
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0.4
+              endStrength: 0.08
+              duration: 0.14
+              pulseInterval: 0.025
+              slowMotion:
+                enabled: 0
+                timeScale: 0.35
+                duration: 0.08
+                delaySeconds: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          facingDirectionSettings:
+            mode: 0
+          enableUltimateZoom: 0
+          ultimateZoomSize: 5
+    - rid: 3612912913179476115
+      type: {class: RuntimeTagActionCondition, ns: , asm: Assembly-CSharp}
+      data:
+        tagType: 0
+        tag: kyo.ultimate.followup
+        shouldExist: 1
+        applyOnActionStart: 0
+    - rid: 3612912913179476116
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - startFrame: 14
+          endFrame: 19
+          taskType: 0
+          easing: 1
+          position: {x: 0.5, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 33
+          endFrame: 45
+          taskType: 0
+          easing: 1
+          position: {x: 1, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 3612912913179476117
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: 2f14a6c6887c0a14cad7929268517437, type: 3}
+          triggerFrame: 17
+          duration: 97
+          channel: 0
+          volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: d31ec08b5265662428731ea9c9904f88, type: 3}
+          triggerFrame: 13
+          duration: 20
+          channel: 1
+          volume: 0.7
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+        - label: SFX
+          clip: {fileID: 8300000, guid: 6c3502fbff0715446bb69a6b2f72d9de, type: 3}
+          triggerFrame: 48
+          duration: 20
+          channel: 1
+          volume: 0.7
+          pitchVariation: 1.2
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 3612912913179476118
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 3612912913179476119
+        - rid: 3612912913179476120
+    - rid: 3612912913179476119
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 16
+        activeFrames: 6
+        elementType: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 1.0466254, y: 1.4545364}
+        size: {x: 2.4457364, y: 3.045144}
+        damageRatio: 0.15
+        impactTier: 1
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 3
+        knockbackFrames: 12
+        knockupFrames: 10
+        knockfallFrames: 8
+        recoveryFrames: 7
+        horizontalSpeed: 0
+        launchSpeed: 5
+        useSnapToAnchor: 1
+        snapOffset: {x: 1, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 1
+        juggleStunScale: 1
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 5
+        hitSFX: {fileID: 8300000, guid: 7b0537a66e261d94cb8d73ed82048908, type: 3}
+        hitVFXType: 16
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+    - rid: 3612912913179476120
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 57
+        activeFrames: 6
+        elementType: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 1.1316686, y: 2.3559966}
+        size: {x: 3.4662578, y: 2.3988147}
+        damageRatio: 0.45
+        impactTier: 3
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 8
+        knockbackFrames: 12
+        knockupFrames: 10
+        knockfallFrames: 8
+        recoveryFrames: 7
+        horizontalSpeed: 1
+        launchSpeed: 10
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 1
+        juggleStunScale: 1
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 5
+        hitSFX: {fileID: 8300000, guid: 706e1b9369e438b4b90929608e04a89d, type: 3}
+        hitVFXType: 17
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+    - rid: 3612912913179476121
+      type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: Ultimate Sequence
+          eventType: 3
+          triggerFrame: 0
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          freezeWorld: 1
+          freezeDurationOverride: 0
+          timelineMode: 0
+          activationVFXType: 0
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 0, z: 0}
+          activationVoice: {fileID: 0}
+          activationSFX: {fileID: 0}
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0.4
+              endStrength: 0.08
+              duration: 0.14
+              pulseInterval: 0.025
+              slowMotion:
+                enabled: 0
+                timeScale: 0.35
+                duration: 0.08
+                delaySeconds: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          facingDirectionSettings:
+            mode: 0
+          enableUltimateZoom: 0
+          ultimateZoomSize: 5
+        - label: Ultimate Sequence
+          eventType: 2
+          triggerFrame: 65
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          freezeWorld: 1
+          freezeDurationOverride: 0
+          timelineMode: 0
+          activationVFXType: 0
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 0, z: 0}
+          activationVoice: {fileID: 0}
+          activationSFX: {fileID: 0}
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0.4
+              endStrength: 0.08
+              duration: 0.14
+              pulseInterval: 0.025
+              slowMotion:
+                enabled: 1
+                timeScale: 0.2
+                duration: 1
+                delaySeconds: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          facingDirectionSettings:
+            mode: 0
+          enableUltimateZoom: 0
+          ultimateZoomSize: 5
+    - rid: 3612912913179476123
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 1
+          activeFrames: 40
+          recoveryFrames: 1
+          cancelWindowStartFrame: 46
+          loopActivePhase: 0
+          stepName: End
+          animationClip: {fileID: 7400000, guid: 61d0d5028e587e642b2fa43927ee7f31, type: 2}
+          lockAirPosition: 1
+          autoChainToNext: 1
+          triggerWindows: []
+          motionData:
+            rid: -2
+          vfxData:
+            rid: 3612912935743782998
+          audioData:
+            rid: 3612912913179476136
+          hitData:
+            rid: -2
+          eventData:
+            rid: 3612912913179476135
+          componentOrder:
+          - motion
+          - vfx
+          - audio
+          - hitbox
+          - events
+        routes: []
+        defaultNext:
+          rid: 3612912913179476124
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 3612912913179476124
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 1
+          activeFrames: 36
+          recoveryFrames: 1
+          cancelWindowStartFrame: 42
+          loopActivePhase: 1
+          stepName: Loop
+          animationClip: {fileID: 7400000, guid: 5055cf3f0a7016040812404ee1cb2995, type: 2}
+          lockAirPosition: 1
+          autoChainToNext: 1
+          triggerWindows:
+          - rid: 3612912913179476125
+          motionData:
+            rid: -2
+          vfxData:
+            rid: 3612912913179476138
+          audioData:
+            rid: -2
+          hitData:
+            rid: -2
+          eventData:
+            rid: 3612912913179476133
+          componentOrder:
+          - motion
+          - vfx
+          - audio
+          - hitbox
+          - events
+        routes: []
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 3612912913179476125
+      type: {class: TriggerWindow, ns: , asm: Assembly-CSharp}
+      data:
+        startFrame: 0
+        endFrame: -1
+        triggerConditions:
+        - rid: 3612912913179476126
+        targetNode:
+          rid: 3612912913179476127
+        priority: 0
+    - rid: 3612912913179476126
+      type: {class: WaitActionCondition, ns: , asm: Assembly-CSharp}
+      data:
+        waitUnit: 1
+        waitValue: 0.4
+    - rid: 3612912913179476127
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 27
+          activeFrames: 28
+          recoveryFrames: 33
+          cancelWindowStartFrame: 85
+          loopActivePhase: 0
+          stepName: Finisher
+          animationClip: {fileID: 7400000, guid: b8cca25bf7a470b44bde613a400208a1, type: 2}
+          lockAirPosition: 1
+          autoChainToNext: 0
+          triggerWindows: []
+          motionData:
+            rid: 3612912913179476128
+          vfxData:
+            rid: 3612912935743782999
+          audioData:
+            rid: 3612912913179476132
+          hitData:
+            rid: 3612912913179476129
+          eventData:
+            rid: 3612912913179476134
+          componentOrder:
+          - motion
+          - vfx
+          - audio
+          - hitbox
+          - events
+        routes: []
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 3612912913179476128
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - startFrame: 26
+          endFrame: 33
+          taskType: 0
+          easing: 1
+          position: {x: 2, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+        - startFrame: 39
+          endFrame: 51
+          taskType: 0
+          easing: 1
+          position: {x: 0.2, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 3612912913179476129
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 3612912913179476130
+    - rid: 3612912913179476130
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 9
+        activeFrames: 7
+        elementType: 0
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 1.3229098, y: 2.0303285}
+        size: {x: 4.8409386, y: 2.5207257}
+        damageRatio: 0.4
+        impactTier: 3
+        useDeterministicReaction: 1
+        reactionKind: 2
+        impactFreezeFrames: 10
+        knockbackFrames: 15
+        knockupFrames: 12
+        knockfallFrames: 10
+        recoveryFrames: 9
+        horizontalSpeed: 5
+        launchSpeed: 2
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 1
+        juggleStunScale: 1
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        hitSFX: {fileID: 8300000, guid: 706e1b9369e438b4b90929608e04a89d, type: 3}
+        hitVFXType: 17
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+    - rid: 3612912913179476132
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: 67adba5f4b3314a4482068f47c891a3c, type: 3}
+          triggerFrame: 29
+          duration: 200
+          channel: 0
+          volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 3612912913179476133
+      type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: Ultimate Sequence
+          eventType: 3
+          triggerFrame: 0
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          freezeWorld: 1
+          freezeDurationOverride: 0
+          timelineMode: 0
+          activationVFXType: 0
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 0, z: 0}
+          activationVoice: {fileID: 0}
+          activationSFX: {fileID: 0}
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0.4
+              endStrength: 0.08
+              duration: 0.14
+              pulseInterval: 0.025
+              slowMotion:
+                enabled: 0
+                timeScale: 0.35
+                duration: 0.08
+                delaySeconds: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          facingDirectionSettings:
+            mode: 0
+          enableUltimateZoom: 0
+          ultimateZoomSize: 5
+    - rid: 3612912913179476134
+      type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: Ultimate Sequence
+          eventType: 3
+          triggerFrame: 0
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          freezeWorld: 1
+          freezeDurationOverride: 0
+          timelineMode: 0
+          activationVFXType: 0
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 0, z: 0}
+          activationVoice: {fileID: 0}
+          activationSFX: {fileID: 0}
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0.4
+              endStrength: 0.08
+              duration: 0.14
+              pulseInterval: 0.025
+              slowMotion:
+                enabled: 0
+                timeScale: 0.35
+                duration: 0.08
+                delaySeconds: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          facingDirectionSettings:
+            mode: 0
+          enableUltimateZoom: 0
+          ultimateZoomSize: 5
+        - label: Ultimate Sequence
+          eventType: 2
+          triggerFrame: 36
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          freezeWorld: 1
+          freezeDurationOverride: 0
+          timelineMode: 0
+          activationVFXType: 0
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 0, z: 0}
+          activationVoice: {fileID: 0}
+          activationSFX: {fileID: 0}
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0.4
+              endStrength: 0.08
+              duration: 0.14
+              pulseInterval: 0.025
+              slowMotion:
+                enabled: 0
+                timeScale: 0.2
+                duration: 0.1
+                delaySeconds: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          facingDirectionSettings:
+            mode: 0
+          enableUltimateZoom: 0
+          ultimateZoomSize: 5
+    - rid: 3612912913179476135
+      type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: Ultimate Sequence
+          eventType: 3
+          triggerFrame: 0
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          freezeWorld: 1
+          freezeDurationOverride: 0
+          timelineMode: 0
+          activationVFXType: 0
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 0, z: 0}
+          activationVoice: {fileID: 0}
+          activationSFX: {fileID: 0}
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0.4
+              endStrength: 0.08
+              duration: 0.14
+              pulseInterval: 0.025
+              slowMotion:
+                enabled: 0
+                timeScale: 0.35
+                duration: 0.08
+                delaySeconds: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          facingDirectionSettings:
+            mode: 0
+          enableUltimateZoom: 0
+          ultimateZoomSize: 5
+        - label: Ultimate Sequence
+          eventType: 2
+          triggerFrame: 0
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          freezeWorld: 1
+          freezeDurationOverride: 0
+          timelineMode: 0
+          activationVFXType: 0
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 0, z: 0}
+          activationVoice: {fileID: 0}
+          activationSFX: {fileID: 0}
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0
+              endStrength: 0
+              duration: 0
+              pulseInterval: 0.01
+              slowMotion:
+                enabled: 1
+                timeScale: 0.35
+                duration: 0.5
+                delaySeconds: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          facingDirectionSettings:
+            mode: 0
+          enableUltimateZoom: 0
+          ultimateZoomSize: 5
+    - rid: 3612912913179476136
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: 5c812a92ffa8c90479f16f64a635c9ff, type: 3}
+          triggerFrame: 1
+          duration: 200
+          channel: 0
+          volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 3612912913179476138
+      type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: VFX
+          vfxType: 105
+          vfxClip: {fileID: 0}
+          vfxPrefab: {fileID: 0}
+          triggerFrame: 0
+          duration: 200
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 0
+            position: {x: 0.5, y: -1.45, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          loopDuringActive: 1
+          adjustLayer: 0
+          fitScreenSize: 0
+        - label: VFX
+          vfxType: 107
+          vfxClip: {fileID: 0}
+          vfxPrefab: {fileID: 0}
+          triggerFrame: 0
+          duration: 200
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 0
+            position: {x: 0.25, y: -0.1, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
+    - rid: 3612912935743782998
+      type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: VFX
+          vfxType: 105
+          vfxClip: {fileID: 0}
+          vfxPrefab: {fileID: 0}
+          triggerFrame: 17
+          duration: 200
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 0
+            position: {x: 0.5, y: -1.45, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          loopDuringActive: 1
+          adjustLayer: 0
+          fitScreenSize: 0
+        - label: VFX
+          vfxType: 107
+          vfxClip: {fileID: 0}
+          vfxPrefab: {fileID: 0}
+          triggerFrame: 17
+          duration: 200
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 0
+            position: {x: 0.25, y: -0.1, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
+    - rid: 3612912935743782999
+      type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: VFX
+          vfxType: 106
+          vfxClip: {fileID: 0}
+          vfxPrefab: {fileID: 0}
+          triggerFrame: 26
+          duration: 29
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 0
+            position: {x: 0.5, y: -1.45, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          - frame: 10
+            position: {x: 0.8, y: -1.45, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
+        - label: VFX
+          vfxType: 105
+          vfxClip: {fileID: 0}
+          vfxPrefab: {fileID: 0}
+          triggerFrame: 0
+          duration: 26
+          trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
+          transformKeys:
+          - frame: 0
+            position: {x: 0.5, y: -1.45, z: 0}
+            rotation: {x: 0, y: 0, z: 0}
+            scale: {x: 1, y: 1, z: 1}
+          loopDuringActive: 0
+          adjustLayer: 0
+          fitScreenSize: 0
+    - rid: 3612912955328561274
+      type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: Ultimate Sequence
+          eventType: 0
+          triggerFrame: 0
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          freezeWorld: 1
+          freezeDurationOverride: 1.5
+          timelineMode: 0
+          activationVFXType: 40
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 1.5, z: 0}
+          activationVoice: {fileID: 8300000, guid: 57bd8ddfd659e374c9b31fa6943c3328, type: 3}
+          activationSFX: {fileID: 8300000, guid: ed0af5caac4022f4c863b2a5b665c05a, type: 3}
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0.4
+              endStrength: 0.08
+              duration: 0.14
+              pulseInterval: 0.025
+              slowMotion:
+                enabled: 0
+                timeScale: 0.35
+                duration: 0.08
+                delaySeconds: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          facingDirectionSettings:
+            mode: 0
+          enableUltimateZoom: 1
+          ultimateZoomSize: 5
+    - rid: 3612912955328561276
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: 3def1468090c32d4b9fa53fbd17cbae4, type: 3}
+          triggerFrame: 11
+          duration: 20
+          channel: 0
+          volume: 1
+          pitchVariation: 1
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}

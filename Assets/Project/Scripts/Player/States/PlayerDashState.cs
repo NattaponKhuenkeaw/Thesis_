@@ -3,7 +3,8 @@ using UnityEngine;
 /// <summary>
 /// Dash state: player is dashing (ground or air).
 /// Inherits FrameDataPlayerState for automatic phase tracking.
-/// During Recovery/Cancel phase, accepts buffered attack/jump inputs for cancel chains.
+/// Recovery accepts actions while keeping locomotion locked; Cancel opens
+/// the complete shared action window.
 /// </summary>
 public class PlayerDashState : FrameDataPlayerState
 {
@@ -14,7 +15,7 @@ public class PlayerDashState : FrameDataPlayerState
 
     // =========================================================
     // Capabilities — Startup/Active own the dash burst. A dash that started
-    // grounded returns normal locomotion control on its first Recovery frame.
+    // grounded returns normal locomotion control at its Cancel boundary.
     // =========================================================
     public override bool AcceptsMoveInput => true;
     public override bool AcceptsDashInput => false;
@@ -22,18 +23,17 @@ public class PlayerDashState : FrameDataPlayerState
     public override bool AcceptsAttackInput => true;
     public override bool AcceptsSkillInput => true;
     public override bool AcceptsUltimateInput => true;
-    public override bool LocksMovement => !IsRecoveryLocomotionOpen;
-    public override bool LocksFacing => !IsRecoveryLocomotionOpen;
+    public override bool LocksMovement => !IsCancelLocomotionOpen;
+    public override bool LocksFacing => !IsCancelLocomotionOpen;
 
     private bool dashStarted;
     private bool exitHandled;
     private bool startedGrounded;
 
-    // Cancel is the late portion of Recovery in the shared frame model. Keep
-    // grounded locomotion open through both phases so it cannot relock at the
-    // cancel-window boundary.
-    public bool IsRecoveryLocomotionOpen =>
-        startedGrounded && IsRecoveryOrCancelPhase;
+    // Ground Dash keeps locomotion authority locked through Recovery even
+    // though that phase may accept action interrupts.
+    public bool IsCancelLocomotionOpen =>
+        startedGrounded && currentPhase == ActionPhase.Cancel;
 
     // =========================================================
     // FrameDataPlayerState — provide frame data from DashData
@@ -41,13 +41,7 @@ public class PlayerDashState : FrameDataPlayerState
 
     protected override InterruptPolicy GetInterruptPolicy()
     {
-        InterruptPolicy policy = InterruptPolicy.Dash;
-        if (startedGrounded)
-        {
-            policy.recoveryGate = InputGate.AllowAll;
-        }
-
-        return policy;
+        return InterruptPolicy.Dash;
     }
 
     protected override ActionFrameData GetFrameData()
@@ -93,9 +87,10 @@ public class PlayerDashState : FrameDataPlayerState
 
     protected override void HandleInputDuringRecovery()
     {
+        // Recovery intentionally consumes only action buffers allowed by the
+        // Dash policy; InputGate continues to reject walk/facing control.
         TryConsumeAllowedBuffers();
     }
-
 
     // =========================================================
     // Custom Input — initiates dash physics (FSM defers here)

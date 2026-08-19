@@ -1,8 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Project.InventorySystem.Artifacts;
 using Project.InventorySystem.Items;
 using Project.ShopSystem;
 using Project.TeamBuilder.UI.Panels;
@@ -53,6 +55,7 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private Color pageTransitionFadeColor = Color.black;
 
         private CharacterItem currentCharacter;
+        private ArtifactInstance[] currentArtifactInstances = Array.Empty<ArtifactInstance>();
         private Artifact[] currentArtifacts = new Artifact[0];
         private readonly List<CharacterItem> availableCharacters = new List<CharacterItem>();
         private readonly List<CharacterGridItemUI> sliderItems = new List<CharacterGridItemUI>();
@@ -322,7 +325,7 @@ namespace Project.TeamBuilder.UI
             Open(targetChar);
         }
 
-        public void Open(CharacterItem character, Artifact[] equippedArtifacts = null)
+        public void Open(CharacterItem character, ArtifactInstance[] equippedArtifacts = null)
         {
             ZoneMode liveMode = zoneStateProvider != null ? zoneStateProvider.CurrentMode : ZoneMode.SafeZone;
             currentMode = liveMode;
@@ -334,7 +337,8 @@ namespace Project.TeamBuilder.UI
             RefreshAvailableCharacters();
             currentCharacter = character;
             selectedCharacterIndex = availableCharacters.IndexOf(character);
-            currentArtifacts = equippedArtifacts ?? ResolveEquippedArtifacts(character);
+            currentArtifactInstances = equippedArtifacts ?? ResolveEquippedArtifactInstances(character);
+            currentArtifacts = ResolveLegacyArtifacts(currentArtifactInstances);
             if (owningTeamUI == null)
             {
                 owningTeamUI = GetComponentInParent<TeamUI>();
@@ -370,7 +374,17 @@ namespace Project.TeamBuilder.UI
 
         public void Open(CharacterItem character)
         {
-            Open(character, null);
+            Open(character, (ArtifactInstance[])null);
+        }
+
+        public void RefreshCurrentArtifactInstances(ArtifactInstance[] equippedArtifacts, PlayerRunInventory inventory)
+        {
+            currentArtifactInstances = equippedArtifacts ?? Array.Empty<ArtifactInstance>();
+            currentArtifacts = ResolveLegacyArtifacts(currentArtifactInstances);
+            if (gameObject.activeSelf)
+            {
+                PopulateData();
+            }
         }
 
         public void RefreshCurrentArtifacts(Artifact[] equippedArtifacts)
@@ -516,7 +530,7 @@ namespace Project.TeamBuilder.UI
                     panel.Hide();
                 }
 
-                panel.PopulateData(currentCharacter, currentArtifacts);
+                panel.PopulateData(currentCharacter, currentArtifactInstances);
             }
         }
 
@@ -631,6 +645,45 @@ namespace Project.TeamBuilder.UI
 
             Artifact[] artifacts = teamLoader.GetEquippedArtifactsFor(character.characterObjectData);
             return artifacts ?? new Artifact[0];
+        }
+
+        public ArtifactInstance[] ResolveEquippedArtifactInstances(CharacterItem character)
+        {
+            if (character == null || character.characterObjectData == null)
+            {
+                return Array.Empty<ArtifactInstance>();
+            }
+
+            var runInv = ResolveRunInventory();
+            if (runInv != null)
+            {
+                int slotIndex = runInv.FindTeamSlot(character.characterObjectData);
+                if (slotIndex >= 0)
+                {
+                    return runInv.GetEquippedArtifactInstancesAt(slotIndex);
+                }
+            }
+            else if (teamLoader != null)
+            {
+                return teamLoader.GetEquippedArtifactInstancesFor(character.characterObjectData);
+            }
+
+            return Array.Empty<ArtifactInstance>();
+        }
+
+        private Artifact[] ResolveLegacyArtifacts(ArtifactInstance[] instances)
+        {
+            if (instances == null || instances.Length == 0) return new Artifact[0];
+            var runInv = ResolveRunInventory();
+            Artifact[] legacy = new Artifact[instances.Length];
+            for (int i = 0; i < instances.Length; i++)
+            {
+                ArtifactDefinition definition = runInv != null && instances[i] != null
+                    ? runInv.ResolveArtifactDefinition(instances[i].definitionId)
+                    : null;
+                legacy[i] = definition as Artifact;
+            }
+            return legacy;
         }
 
 
@@ -1063,7 +1116,7 @@ namespace Project.TeamBuilder.UI
             return character.GetLeveledStats();
         }
 
-        public CharacterStats ResolveCharacterRuntimeStats(CharacterObject character, Artifact[] equippedArtifacts = null)
+        public CharacterStats ResolveCharacterRuntimeStats(CharacterObject character, ArtifactInstance[] equippedArtifacts = null)
         {
             if (character == null) return null;
             if (equippedArtifacts == null && teamLoader != null && teamLoader.ContainsCharacter(character))
@@ -1072,6 +1125,30 @@ namespace Project.TeamBuilder.UI
             }
 
             CharacterStats stats = ResolveCharacterPermanentStats(character, equippedArtifacts);
+            if (stats == null)
+            {
+                return null;
+            }
+
+            if (equippedArtifacts != null && equippedArtifacts.Length > 0)
+            {
+                CharacterStats baseStats = ResolveCharacterBaseStats(character);
+                ArtifactStatAggregator.Apply(stats, baseStats, equippedArtifacts);
+            }
+
+            ResolveRunInventory()?.ApplyRuntimeEffectsToStats(character, stats);
+            return stats;
+        }
+
+        public CharacterStats ResolveCharacterRuntimeStats(CharacterObject character, Artifact[] equippedArtifacts)
+        {
+            if (character == null) return null;
+            if (equippedArtifacts == null && teamLoader != null && teamLoader.ContainsCharacter(character))
+            {
+                return teamLoader.GetCharacterRuntimeStats(character);
+            }
+
+            CharacterStats stats = ResolveCharacterPermanentStats(character);
             if (stats == null)
             {
                 return null;
@@ -1086,7 +1163,7 @@ namespace Project.TeamBuilder.UI
             return stats;
         }
 
-        public CharacterStats ResolveCharacterPermanentStats(CharacterObject character, Artifact[] equippedArtifacts = null)
+        public CharacterStats ResolveCharacterPermanentStats(CharacterObject character, ArtifactInstance[] equippedArtifacts = null)
         {
             if (character == null) return null;
             if (teamLoader != null && teamLoader.ContainsCharacter(character))
@@ -1095,12 +1172,12 @@ namespace Project.TeamBuilder.UI
             }
 
             CharacterStats stats = ResolveCharacterBaseStats(character);
-            if (stats == null)
-            {
-                return null;
-            }
-
             return stats;
+        }
+
+        public CharacterStats ResolveCharacterPermanentStats(CharacterObject character, Artifact[] equippedArtifacts)
+        {
+            return ResolveCharacterPermanentStats(character, (ArtifactInstance[])null);
         }
 
         private static void ApplyArtifactBonuses(CharacterStats stats, CharacterStats baseStats, Artifact[] equippedArtifacts)
@@ -1118,17 +1195,7 @@ namespace Project.TeamBuilder.UI
                     continue;
                 }
 
-                stats.maxHP += baseStats.maxHP * (artifact.bonusStats.maxHP / 100f);
-                stats.attack += baseStats.attack * (artifact.bonusStats.attack / 100f);
-                stats.defense += baseStats.defense * (artifact.bonusStats.defense / 100f);
-                stats.speed += artifact.bonusStats.speed;
-                stats.elementalMastery += artifact.bonusStats.elementalMastery;
-                stats.critRate += artifact.bonusStats.critRate;
-                stats.critDamage += artifact.bonusStats.critDamage;
-                stats.cooldownRate += artifact.bonusStats.cooldownRate;
-                stats.impact += artifact.bonusStats.impact;
-                stats.damageReduction += artifact.bonusStats.damageReduction;
-                stats.aeRecharge += artifact.bonusStats.aeRecharge;
+                stats.ApplyArtifactBonuses(baseStats, artifact.bonusStats);
             }
         }
 

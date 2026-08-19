@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d6089779d0cf4b4998f070e46b0f91a, type: 3}
+  m_Name: P1_06_RivalsBrokenCrest_PassiveSet
+  m_EditorClassIdentifier: Assembly-CSharp::ArtifactPassiveSetDefinition
+  stableId: ART-P1-006-PASSIVES
+  rules:
+  - ruleId: wrath-on-skill-hit
+    stateKey: wrath-on-skill-hit
+    trigger: 1
+    filter:
+      filterByCategory: 1
+      category: 1
+      filterByDelivery: 0
+      delivery: 0
+      requiredDamageTags: 0
+      forbiddenDamageTags: 38
+      requirePositiveDamage: 1
+      requireCriticalHit: 0
+      requireWearerAsSource: 1
+      switchRelation: 0
+    conditions:
+      cooldownSeconds: 10
+      durationSeconds: 5
+      intervalSeconds: 2
+      chance: 1
+      maximumStacks: 1
+      minimumHealthRatio: 0
+      maximumHealthRatio: 1
+      minimumHealthExclusive: 0
+      maximumHealthExclusive: 0
+      requireArmed: 0
+      requireDisarmed: 0
+      oncePerRootDamageEvent: 0
+      requireStoredTarget: 0
+    responses:
+    - rid: 8312694232576164303
+    - rid: 8312694232576164304
+    feedback:
+      feedbackId: wrath-on-skill-hit
+      showOwnerPulse: 1
+      showStatusIcon: 1
+      visualPrefab: {fileID: 0}
+      audioClip: {fileID: 0}
+  references:
+    version: 2
+    RefIds:
+    - rid: 8312694232576164303
+      type: {class: SpawnParticleResponseDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        target: 4
+        definition: {fileID: 11400000, guid: a26cf1186ed78c044b108242ef5fda59, type: 2}
+    - rid: 8312694232576164304
+      type: {class: ModifyArtifactStateResponseDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        target: 0
+        operation: 4
+        amount: 1

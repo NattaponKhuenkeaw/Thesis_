@@ -14,7 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ElementDatabase
   physicalDamageColor: {r: 1, g: 1, b: 1, a: 1}
   definitions:
-  - {fileID: 11400000, guid: 96545c02204198e4987fbfbc210b6444, type: 2}
-  - {fileID: 11400000, guid: 6dcfb5e1725a1e949bd3eb2c635555c6, type: 2}
-  - {fileID: 11400000, guid: 2a851deb5cd314340889f4f963a8aac8, type: 2}
-  - {fileID: 11400000, guid: accc9257de34ee5459220452fb558fee, type: 2}
+  - {fileID: 11400000, guid: ca83b1e73102da64db46525254b33f46, type: 2}
+  - {fileID: 11400000, guid: b31e21c34e4ed804cbb7d49c723bac00, type: 2}
+  - {fileID: 11400000, guid: 42a5ccbabf5fa1a4295dfee2ae7b67f5, type: 2}

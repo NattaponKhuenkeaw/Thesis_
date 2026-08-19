@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
+using Project.InventorySystem.Artifacts;
 using Project.InventorySystem.Items;
 using Project.Progression;
 using Project.ShopSystem;
@@ -40,7 +41,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     public static TeamLoader Instance { get; private set; }
 
     public const float DefaultUltimateAuraEnergyCost = 100f;
-    private const int DefaultTeamSize = 3;
+    private const int DefaultTeamSize = 2;
 
     public event Action OnTeamChanged;
     public event Action OnCurrentCharacterChanged;
@@ -445,10 +446,14 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             }
         }
 
+        CharacterObject outgoingCharacter = CurrentCharacter;
+        int outgoingSlotIndex = currentIndex;
         currentIndex = index;
         runInventory?.SetActiveTeamSlotIndex(currentIndex);
         lastSwitchTime = Time.time;
         LoadCurrentCharacter();
+        CharacterObject incomingCharacter = CurrentCharacter;
+        int incomingSlotIndex = currentIndex;
 
         // A successful Team Switch is always a Ground transition. The outgoing
         // Ground action may have lifted the shared Rigidbody through MotionData,
@@ -461,6 +466,14 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         {
             SnapPlayerToGround();
         }
+
+        Vector2 worldPosition = playerCharacter != null ? (Vector2)playerCharacter.transform.position : Vector2.zero;
+        CombatEventHub.Shared.Publish(new CharacterSwitchCompletedEvent(
+            outgoingCharacter,
+            incomingCharacter,
+            outgoingSlotIndex,
+            incomingSlotIndex,
+            worldPosition));
         return true;
     }
 
@@ -769,7 +782,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         return FindCharacterIndex(character) >= 0;
     }
 
-    public void DeployLoadout(CharacterObject[] newTeam, int preferredIndex, Artifact[][] artifactData = null)
+    public void DeployLoadout(CharacterObject[] newTeam, int preferredIndex, ArtifactInstanceRef[][] artifactData = null)
     {
         characterCombatRuntimeStates.Clear();
         ultimateWindowModifiers.Clear();
@@ -823,6 +836,56 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         LoadCurrentCharacter(forceReload: true);
         NotifyAllCharacterResources();
         ResetRuntimeTransientState();
+    }
+
+    public IReadOnlyList<ArtifactRuntimeSnapshot> GetEquippedArtifactRuntimeSnapshotsFor(CharacterObject character)
+    {
+        SyncTeamSnapshotFromInventory();
+        if (runInventory == null || character == null)
+        {
+            return Array.Empty<ArtifactRuntimeSnapshot>();
+        }
+
+        int slotIndex = runInventory.FindTeamSlot(character);
+        return slotIndex >= 0
+            ? runInventory.GetEquippedArtifactRuntimeSnapshotsAt(slotIndex)
+            : Array.Empty<ArtifactRuntimeSnapshot>();
+    }
+
+    public ArtifactInstanceRef[] GetEquippedArtifactRefsAt(int slotIndex)
+    {
+        SyncTeamSnapshotFromInventory();
+        if (runInventory == null || teamSnapshot == null || slotIndex < 0 || slotIndex >= teamSnapshot.Length)
+        {
+            return Array.Empty<ArtifactInstanceRef>();
+        }
+
+        return runInventory.GetEquippedArtifactRefsAt(slotIndex);
+    }
+
+    public ArtifactInstance[] GetEquippedArtifactInstancesFor(CharacterObject character)
+    {
+        SyncTeamSnapshotFromInventory();
+        if (runInventory == null || character == null)
+        {
+            return Array.Empty<ArtifactInstance>();
+        }
+
+        int slotIndex = runInventory.FindTeamSlot(character);
+        return slotIndex >= 0
+            ? runInventory.GetEquippedArtifactInstancesAt(slotIndex)
+            : Array.Empty<ArtifactInstance>();
+    }
+
+    public ArtifactInstance[] GetEquippedArtifactInstancesAt(int slotIndex)
+    {
+        SyncTeamSnapshotFromInventory();
+        if (runInventory == null || teamSnapshot == null || slotIndex < 0 || slotIndex >= teamSnapshot.Length)
+        {
+            return Array.Empty<ArtifactInstance>();
+        }
+
+        return runInventory.GetEquippedArtifactInstancesAt(slotIndex);
     }
 
     public Artifact[] GetEquippedArtifactsFor(CharacterObject character)
@@ -1003,7 +1066,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         
         if (playerCharacter != null && playerCharacter.characterObject == character)
         {
-            playerCharacter.ApplyCharacterData(clampedHp);
+            playerCharacter.SetCurrentHP(clampedHp);
             RefreshActiveConditionalStateEffects();
             RefreshRuntimeStatsFromHealthChange(character);
         }
@@ -1181,6 +1244,21 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         {
             metaProgression = Resources.Load<PlayerMetaProgression>("InventorySO/PlayerMetaProgression");
         }
+
+        if (Application.isPlaying)
+        {
+            ArtifactPassiveRuntimeSystem passiveSystem = ArtifactPassiveRuntimeSystem.Instance;
+            if (passiveSystem == null)
+            {
+                passiveSystem = FindFirstObjectByType<ArtifactPassiveRuntimeSystem>();
+                if (passiveSystem == null)
+                {
+                    GameObject host = new GameObject("ArtifactPassiveRuntimeSystem", typeof(ArtifactPassiveRuntimeSystem));
+                    passiveSystem = host.GetComponent<ArtifactPassiveRuntimeSystem>();
+                }
+            }
+            passiveSystem?.Initialize(this);
+        }
     }
 
     private void BootstrapRunInventoryTeam()
@@ -1343,7 +1421,11 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             NotifyCharacterHealthUpdated(playerCharacter.characterObject);
         }
 
-        NotifyCharacterHealthUpdated(changedCharacter);
+        if (changedCharacter != null && changedCharacter != playerCharacter?.characterObject)
+        {
+            NotifyCharacterHealthUpdated(changedCharacter);
+        }
+
         OnTeamChanged?.Invoke();
     }
 
@@ -1664,9 +1746,9 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             return;
         }
 
-        Artifact[] artifacts = runInventory != null
-            ? runInventory.GetEquippedArtifactsAt(resolvedSlotIndex)
-            : Array.Empty<Artifact>();
+        ArtifactRuntimeSnapshot[] artifacts = runInventory != null
+            ? runInventory.GetEquippedArtifactRuntimeSnapshotsAt(resolvedSlotIndex)
+            : Array.Empty<ArtifactRuntimeSnapshot>();
         if (deployedCharacterRuntimes.TryGetValue(
             character,
             out DeployedCharacterRuntime runtime))
@@ -1781,7 +1863,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
                     PassiveRuntimeEffectDefinition effect = effects[effectIndex];
                     if (effect == null
                         || effect.trigger != PassiveTriggerType.Always
-                        || effect.ResolvedEffect == null
+                        || !effect.HasValidEffect
                         || IsAlwaysRuntimeEffectSuperseded(sourceCharacter, node, effect)
                         || !ValidateAlwaysRuntimeEffect(effect))
                     {
@@ -1823,6 +1905,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             {
                 RuntimeEffectApplyTarget.Self => targetCharacter == sourceCharacter,
                 RuntimeEffectApplyTarget.Allies => true,
+                RuntimeEffectApplyTarget.Teammates => targetCharacter != sourceCharacter,
                 _ => false
             };
             if (!shouldApply || !MatchesRuntimeEffectTarget(effect, targetCharacter))
@@ -1844,12 +1927,22 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     private bool ValidateAlwaysRuntimeEffect(PassiveRuntimeEffectDefinition effect)
     {
-        RuntimeEffectDefinition definition = effect != null ? effect.ResolvedEffect : null;
-        RuntimeEffectRecipe recipe = effect != null ? effect.ResolvedRecipe : null;
+        if (effect == null)
+        {
+            return false;
+        }
+
+        if (effect.enableRandomBuffSelection)
+        {
+            return effect.randomBuffPool != null && effect.randomBuffPool.Exists(r => r != null && r.IsValid);
+        }
+
+        RuntimeEffectDefinition definition = effect.ResolvedEffect;
+        RuntimeEffectRecipe recipe = effect.ResolvedRecipe;
         bool valid = definition != null
             && RuntimeEffectRuntimeUtility.GetDurationType(definition, recipe) == RuntimeEffectDurationType.Forever
             && !RuntimeEffectRuntimeUtility.RemoveOnOwnerDamaged(definition, recipe);
-        if (!valid && effect != null && warnedInvalidAlwaysEffects.Add(effect))
+        if (!valid && warnedInvalidAlwaysEffects.Add(effect))
         {
             Debug.LogWarning(
                 $"TeamLoader: Always runtime effect '{definition?.name ?? "Missing"}' must be Forever and cannot remove on owner damage.");
@@ -1968,6 +2061,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         {
             PassiveEffectScope.Enemy => RuntimeEffectApplyTarget.Enemy,
             PassiveEffectScope.Allies => RuntimeEffectApplyTarget.Allies,
+            PassiveEffectScope.Teammates => RuntimeEffectApplyTarget.Teammates,
             _ => RuntimeEffectApplyTarget.Self
         };
     }
@@ -1993,44 +2087,19 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             ? runInventory.GetCharacterBaseStats(character)
             : (character != null ? character.GetLeveledStats() : new CharacterStats());
 
-        float baseLeveledHp = stats.maxHP;
-        float baseLeveledAtk = stats.attack;
-        float baseLeveledDef = stats.defense;
-
-        int artifactOwnerSlot = ResolveCharacterSlot(character, slotIndex);
-        Artifact[] slotArtifacts = includeArtifacts && runInventory != null && artifactOwnerSlot >= 0
-            ? runInventory.GetEquippedArtifactsAt(artifactOwnerSlot)
-            : Array.Empty<Artifact>();
-
-        float hpPercentBonus = 0f;
-        float atkPercentBonus = 0f;
-        float defPercentBonus = 0f;
-
-        for (int artifactIndex = 0; artifactIndex < slotArtifacts.Length; artifactIndex++)
+        if (includeArtifacts && runInventory != null)
         {
-            Artifact artifact = slotArtifacts[artifactIndex];
-            if (artifact == null || artifact.bonusStats == null)
+            int artifactOwnerSlot = ResolveCharacterSlot(character, slotIndex);
+            if (artifactOwnerSlot >= 0)
             {
-                continue;
+                ArtifactInstance[] slotArtifacts = runInventory.GetEquippedArtifactInstancesAt(artifactOwnerSlot);
+                if (slotArtifacts != null && slotArtifacts.Length > 0)
+                {
+                    CharacterStats cleanBase = stats.Clone();
+                    ArtifactStatAggregator.Apply(stats, cleanBase, slotArtifacts);
+                }
             }
-
-            hpPercentBonus += artifact.bonusStats.maxHP;
-            atkPercentBonus += artifact.bonusStats.attack;
-            defPercentBonus += artifact.bonusStats.defense;
-
-            stats.speed += artifact.bonusStats.speed;
-            stats.elementalMastery += artifact.bonusStats.elementalMastery;
-            stats.critRate += artifact.bonusStats.critRate;
-            stats.critDamage += artifact.bonusStats.critDamage;
-            stats.cooldownRate += artifact.bonusStats.cooldownRate;
-            stats.impact += artifact.bonusStats.impact;
-            stats.damageReduction += artifact.bonusStats.damageReduction;
-            stats.aeRecharge += artifact.bonusStats.aeRecharge;
         }
-
-        stats.maxHP = baseLeveledHp * (1f + hpPercentBonus / 100f);
-        stats.attack = baseLeveledAtk * (1f + atkPercentBonus / 100f);
-        stats.defense = baseLeveledDef * (1f + defPercentBonus / 100f);
         if (includePotentialModifiers)
         {
             ApplyPotentialStatModifiers(stats, character);
@@ -2211,8 +2280,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             case PassiveModifierTarget.MoveSpeed:
                 targetStats.speed = ApplyPotentialStatValue(targetStats.speed, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
                 break;
-            case PassiveModifierTarget.ElementalMastery:
-                targetStats.elementalMastery = ApplyPotentialStatValue(targetStats.elementalMastery, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
+            case PassiveModifierTarget.DotMastery:
+                targetStats.dotMastery = ApplyPotentialStatValue(targetStats.dotMastery, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
                 break;
             case PassiveModifierTarget.CritRate:
                 targetStats.critRate = ApplyPotentialStatValue(targetStats.critRate, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
@@ -2220,17 +2289,19 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             case PassiveModifierTarget.CritDamage:
                 targetStats.critDamage = ApplyPotentialStatValue(targetStats.critDamage, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
                 break;
-            case PassiveModifierTarget.CooldownRate:
-                targetStats.cooldownRate = ApplyPotentialStatValue(targetStats.cooldownRate, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
+            case PassiveModifierTarget.CooldownMastery:
+                targetStats.cooldownMastery = ApplyPotentialStatValue(targetStats.cooldownMastery, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
                 break;
-            case PassiveModifierTarget.Impact:
-                targetStats.impact = ApplyPotentialStatValue(targetStats.impact, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
+            case PassiveModifierTarget.DamageIncrease:
+                targetStats.damageIncrease = ApplyPotentialStatValue(targetStats.damageIncrease, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
+                break;
+            case PassiveModifierTarget.AdditionalDamageIncrease:
+                targetStats.additionalDamageIncrease = ApplyPotentialStatValue(targetStats.additionalDamageIncrease, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
                 break;
             case PassiveModifierTarget.AuraEnergyRecharge:
-                targetStats.aeRecharge = ApplyPotentialStatValue(targetStats.aeRecharge, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
+                targetStats.auraEnergyRecharge = ApplyPotentialStatValue(targetStats.auraEnergyRecharge, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
                 break;
             case PassiveModifierTarget.IncomingDamageTaken:
-                targetStats.damageReduction = ApplyPotentialStatValue(targetStats.damageReduction, modifier, sourceStats, sourceBaseStats, sourceRuntimeState);
                 break;
         }
     }
@@ -2308,11 +2379,11 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             PassiveModifierTarget.Defense => sourceStats.defense,
             PassiveModifierTarget.CritRate => sourceStats.critRate,
             PassiveModifierTarget.CritDamage => sourceStats.critDamage,
-            PassiveModifierTarget.ElementalMastery => sourceStats.elementalMastery,
-            PassiveModifierTarget.CooldownRate => sourceStats.cooldownRate,
-            PassiveModifierTarget.Impact => sourceStats.impact,
-            PassiveModifierTarget.AuraEnergyRecharge => sourceStats.aeRecharge,
-            PassiveModifierTarget.IncomingDamageTaken => sourceStats.damageReduction,
+            PassiveModifierTarget.DotMastery => sourceStats.dotMastery,
+            PassiveModifierTarget.CooldownMastery => sourceStats.cooldownMastery,
+            PassiveModifierTarget.DamageIncrease => sourceStats.damageIncrease,
+            PassiveModifierTarget.AdditionalDamageIncrease => sourceStats.additionalDamageIncrease,
+            PassiveModifierTarget.AuraEnergyRecharge => sourceStats.auraEnergyRecharge,
             _ => sourceStats.attack
         };
     }
@@ -2523,7 +2594,10 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     {
         if (character != null)
         {
-            OnCharacterHealthUpdated?.Invoke(character, GetCharacterCurrentHP(character), GetCharacterMaxHP(character));
+            float curHP = GetCharacterCurrentHP(character);
+            float maxHP = GetCharacterMaxHP(character);
+            OnCharacterHealthUpdated?.Invoke(character, curHP, maxHP);
+            CombatEventHub.Shared.Publish(new CharacterHealthChangedEvent(character, curHP, maxHP));
         }
     }
 

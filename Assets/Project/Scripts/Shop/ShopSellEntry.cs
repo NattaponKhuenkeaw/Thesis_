@@ -5,18 +5,20 @@ namespace Project.ShopSystem
     public enum ShopSellEntryKind
     {
         Unit,
-        Fragment
+        Fragment,
+        ArtifactInstance
     }
 
     public sealed class ShopSellEntry
     {
-        public ShopSellEntry(BaseItem item, ShopSellEntryKind kind, int quantity, int price, string displayName)
+        public ShopSellEntry(BaseItem item, ShopSellEntryKind kind, int quantity, int price, string displayName, string artifactInstanceId = null)
         {
             Item = item;
             Kind = kind;
             Quantity = quantity;
             Price = price;
             DisplayName = displayName;
+            ArtifactInstanceId = artifactInstanceId;
         }
 
         public BaseItem Item { get; }
@@ -24,5 +26,6 @@ namespace Project.ShopSystem
         public int Quantity { get; }
         public int Price { get; }
         public string DisplayName { get; }
+        public string ArtifactInstanceId { get; }
     }
 }

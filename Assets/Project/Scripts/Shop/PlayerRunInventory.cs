@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
+using Project.InventorySystem.Artifacts;
 using Project.InventorySystem.Items;
 using Project.Progression;
 
@@ -88,7 +90,9 @@ namespace Project.ShopSystem
         private const int DefaultArtifactSlotCount = 3;
 
         [SerializeField] private CharacterObject character;
-        [SerializeField] private Artifact[] artifacts = new Artifact[DefaultArtifactSlotCount];
+        [FormerlySerializedAs("artifacts")]
+        [SerializeField, HideInInspector] private Artifact[] legacyArtifacts = new Artifact[DefaultArtifactSlotCount];
+        [SerializeField] private ArtifactInstanceRef[] artifactRefs = new ArtifactInstanceRef[DefaultArtifactSlotCount];
 
         public CharacterObject Character
         {
@@ -98,35 +102,75 @@ namespace Project.ShopSystem
 
         public Artifact[] GetArtifactsSnapshot(int minimumSlots = DefaultArtifactSlotCount)
         {
-            EnsureArtifactCapacity(minimumSlots);
-            Artifact[] snapshot = new Artifact[artifacts.Length];
-            Array.Copy(artifacts, snapshot, artifacts.Length);
+            EnsureLegacyArtifactCapacity(minimumSlots);
+            Artifact[] snapshot = new Artifact[legacyArtifacts.Length];
+            Array.Copy(legacyArtifacts, snapshot, legacyArtifacts.Length);
             return snapshot;
         }
 
         public void SetArtifacts(Artifact[] source, int minimumSlots = DefaultArtifactSlotCount)
         {
             int artifactCount = Mathf.Max(minimumSlots, source != null ? source.Length : 0);
-            artifacts = new Artifact[artifactCount];
+            legacyArtifacts = new Artifact[artifactCount];
             if (source != null)
             {
-                Array.Copy(source, artifacts, Mathf.Min(source.Length, artifacts.Length));
+                Array.Copy(source, legacyArtifacts, Mathf.Min(source.Length, legacyArtifacts.Length));
             }
         }
 
-        private void EnsureArtifactCapacity(int minimumSlots)
+        public ArtifactInstanceRef[] GetArtifactRefsSnapshot(int minimumSlots = DefaultArtifactSlotCount)
         {
             int requiredCount = Mathf.Max(1, minimumSlots);
-            if (artifacts != null && artifacts.Length >= requiredCount)
+            EnsureArtifactRefCapacity(requiredCount);
+            ArtifactInstanceRef[] snapshot = new ArtifactInstanceRef[artifactRefs.Length];
+            Array.Copy(artifactRefs, snapshot, artifactRefs.Length);
+            return snapshot;
+        }
+
+        public void SetArtifactRefs(ArtifactInstanceRef[] source, int minimumSlots = DefaultArtifactSlotCount)
+        {
+            int count = Mathf.Max(minimumSlots, source != null ? source.Length : 0);
+            artifactRefs = new ArtifactInstanceRef[count];
+            if (source != null)
+            {
+                Array.Copy(source, artifactRefs, Mathf.Min(source.Length, artifactRefs.Length));
+            }
+        }
+
+        public void ClearLegacyArtifacts()
+        {
+            legacyArtifacts = Array.Empty<Artifact>();
+        }
+
+        private void EnsureLegacyArtifactCapacity(int minimumSlots)
+        {
+            int requiredCount = Mathf.Max(1, minimumSlots);
+            if (legacyArtifacts != null && legacyArtifacts.Length >= requiredCount)
             {
                 return;
             }
 
-            Artifact[] previousArtifacts = artifacts;
-            artifacts = new Artifact[requiredCount];
+            Artifact[] previousArtifacts = legacyArtifacts;
+            legacyArtifacts = new Artifact[requiredCount];
             if (previousArtifacts != null)
             {
-                Array.Copy(previousArtifacts, artifacts, Mathf.Min(previousArtifacts.Length, artifacts.Length));
+                Array.Copy(previousArtifacts, legacyArtifacts, Mathf.Min(previousArtifacts.Length, legacyArtifacts.Length));
+            }
+        }
+
+        private void EnsureArtifactRefCapacity(int minimumSlots)
+        {
+            int requiredCount = Mathf.Max(1, minimumSlots);
+            if (artifactRefs != null && artifactRefs.Length >= requiredCount)
+            {
+                return;
+            }
+
+            ArtifactInstanceRef[] previous = artifactRefs;
+            artifactRefs = new ArtifactInstanceRef[requiredCount];
+            if (previous != null)
+            {
+                Array.Copy(previous, artifactRefs, Mathf.Min(previous.Length, artifactRefs.Length));
             }
         }
     }
@@ -152,17 +196,32 @@ namespace Project.ShopSystem
     {
         public string characterId;
         public string[] artifactIds = Array.Empty<string>();
+        public string[] artifactInstanceIds = Array.Empty<string>();
+    }
+
+    [Serializable]
+    internal class SavedArtifactInstanceRecord
+    {
+        public string instanceId;
+        public string definitionId;
+        public List<ArtifactRoll> rolls = new List<ArtifactRoll>();
+        public bool isFavourite;
+        public bool isNew;
+        public long acquisitionOrder;
+        public int generationSeed;
     }
 
     [Serializable]
     internal class SavedPlayerRunInventoryData
     {
+        public int schemaVersion = 3;
         public int currency = 1000;
         public int globalLevel = 1;
         public int activeTeamSlotIndex;
         public List<SavedInventoryItemRecord> items = new List<SavedInventoryItemRecord>();
         public List<SavedRunCharacterRecord> runCharacters = new List<SavedRunCharacterRecord>();
         public List<SavedRunTeamSlotRecord> teamSlots = new List<SavedRunTeamSlotRecord>();
+        public List<SavedArtifactInstanceRecord> artifactInstances = new List<SavedArtifactInstanceRecord>();
     }
 
     [CreateAssetMenu(fileName = "New Player Run Inventory", menuName = "Inventory/Player Run Inventory", order = 12)]
@@ -183,10 +242,11 @@ namespace Project.ShopSystem
             }
         }
 
-        private const int DefaultTeamSlotCount = 3;
+        private const int DefaultTeamSlotCount = 2;
         private const int DefaultArtifactSlotCount = 3;
         private const int DefaultCurrency = 1000;
-        private const string SaveKey = "project.player_run_inventory.v2";
+        private const string SaveKey = "project.player_run_inventory.v3";
+        private const string LegacySaveKey = "project.player_run_inventory.v2";
         /// <summary>Step 1 (Not Perma): run inventory must not persist items/team/characters across sessions.</summary>
         private const bool PersistRunInventoryAcrossSessions = false;
         private const string DefaultCharacterItemId = "char-0-main";
@@ -197,6 +257,10 @@ namespace Project.ShopSystem
         [Header("Player Owned Items")]
         [Tooltip("Runtime-owned items for the current run. Character items represent roster ownership.")]
         public List<BaseItem> ownedItems = new List<BaseItem>();
+
+        [Header("Artifact Instances")]
+        [SerializeField] private List<ArtifactInstance> artifactInstances = new List<ArtifactInstance>();
+        [SerializeField] private ArtifactRollTable artifactRollTable;
 
         [Header("Stacked Items")]
         [Tooltip("Runtime stack quantities for stackable consumables.")]
@@ -234,6 +298,10 @@ namespace Project.ShopSystem
         [NonSerialized] private bool hasLoadedPersistentState;
         [NonSerialized] private bool isApplyingPersistentState;
         [NonSerialized] private Dictionary<string, BaseItem> itemIndexById;
+        [NonSerialized] private Dictionary<string, ArtifactDefinition> artifactDefinitionsById;
+        [NonSerialized] private Dictionary<string, ArtifactInstance> artifactInstancesById;
+        [NonSerialized] private ArtifactRollTable runtimeDefaultArtifactRollTable;
+        [NonSerialized] private long nextArtifactAcquisitionOrder = 1;
         [NonSerialized] private readonly Stack<float[]> runtimeEffectMultiplierSumPool = new Stack<float[]>();
         [NonSerialized] private readonly List<RuntimeEffectInstance> expiredRuntimeEffects = new List<RuntimeEffectInstance>();
         [NonSerialized] private readonly HashSet<CharacterObject> resolvingRuntimeStats = new HashSet<CharacterObject>();
@@ -246,6 +314,8 @@ namespace Project.ShopSystem
 
         public event Action<CharacterObject> OnRuntimeEffectsChanged;
         public event Action<int, int> OnGlobalLevelChanged;
+        public event Action OnArtifactsChanged;
+        public event Action<string, bool> OnArtifactFavouriteChanged;
         internal event Action<CharacterObject, bool> OnRuntimeEffectsChangedDetailed;
         public bool IsDispatchingRuntimeEffectStatChange { get; private set; }
 
@@ -255,6 +325,25 @@ namespace Project.ShopSystem
             {
                 EnsureRunData();
                 return itemStacks;
+            }
+        }
+
+        public IReadOnlyList<ArtifactInstance> ArtifactInstances
+        {
+            get
+            {
+                EnsureRunData();
+                return artifactInstances;
+            }
+        }
+
+        public ArtifactRollTable ArtifactRollTable
+        {
+            get
+            {
+                if (artifactRollTable != null) return artifactRollTable;
+                runtimeDefaultArtifactRollTable ??= Project.InventorySystem.Artifacts.ArtifactRollTable.CreateRuntimeDefault();
+                return runtimeDefaultArtifactRollTable;
             }
         }
 
@@ -327,6 +416,212 @@ namespace Project.ShopSystem
             TryAddItem(item);
         }
 
+        public bool TryAcquireArtifact(
+            ArtifactDefinition definition,
+            out ArtifactInstance instance,
+            int? seedOverride = null)
+        {
+            instance = null;
+            if (definition == null || string.IsNullOrWhiteSpace(definition.id))
+            {
+                return false;
+            }
+
+            EnsureRunData();
+            int seed = seedOverride ?? UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+            ArtifactRollGenerator generator = new ArtifactRollGenerator(ArtifactRollTable);
+            instance = generator.Generate(definition, nextArtifactAcquisitionOrder++, seed);
+            if (!TryAddArtifactInstanceInternal(instance))
+            {
+                instance = null;
+                return false;
+            }
+
+            SavePersistentState();
+            NotifyArtifactsChanged();
+            return true;
+        }
+
+        public bool TryGetArtifactInstance(string instanceId, out ArtifactInstance instance)
+        {
+            EnsureRunData();
+            EnsureArtifactIndices();
+            instance = null;
+            return !string.IsNullOrWhiteSpace(instanceId)
+                && artifactInstancesById.TryGetValue(instanceId, out instance);
+        }
+
+        public ArtifactDefinition ResolveArtifactDefinition(string definitionId)
+        {
+            EnsureArtifactDefinitionIndex();
+            artifactDefinitionsById.TryGetValue(definitionId ?? string.Empty, out ArtifactDefinition definition);
+            return definition;
+        }
+
+        public bool TrySetArtifactFavourite(string instanceId, bool favourite)
+        {
+            if (!TryGetArtifactInstance(instanceId, out ArtifactInstance instance)
+                || instance.isFavourite == favourite)
+            {
+                return false;
+            }
+
+            instance.isFavourite = favourite;
+            instance.isNew = false;
+            SavePersistentState();
+            OnArtifactFavouriteChanged?.Invoke(instanceId, favourite);
+            NotifyArtifactsChanged();
+            return true;
+        }
+
+        public bool TryMarkArtifactSeen(string instanceId)
+        {
+            if (!TryGetArtifactInstance(instanceId, out ArtifactInstance instance) || !instance.isNew)
+            {
+                return false;
+            }
+
+            instance.isNew = false;
+            SavePersistentState();
+            NotifyArtifactsChanged();
+            return true;
+        }
+
+        public bool TryRemoveArtifactInstance(string instanceId)
+        {
+            EnsureRunData();
+            if (string.IsNullOrWhiteSpace(instanceId) || IsArtifactEquipped(instanceId))
+            {
+                return false;
+            }
+
+            for (int i = 0; i < artifactInstances.Count; i++)
+            {
+                if (!string.Equals(artifactInstances[i]?.instanceId, instanceId, StringComparison.Ordinal))
+                    continue;
+
+                artifactInstances.RemoveAt(i);
+                RebuildArtifactInstanceIndex();
+                SavePersistentState();
+                NotifyArtifactsChanged();
+                return true;
+            }
+            return false;
+        }
+
+        public HashSet<string> GetEquippedArtifactInstanceIds(HashSet<string> destination = null)
+        {
+            EnsureRunData();
+            destination ??= new HashSet<string>(StringComparer.Ordinal);
+            destination.Clear();
+            for (int i = 0; i < teamSlots.Length; i++)
+            {
+                ArtifactInstanceRef[] refs = teamSlots[i]?.GetArtifactRefsSnapshot(DefaultArtifactSlotCount);
+                if (refs == null) continue;
+                for (int j = 0; j < refs.Length; j++)
+                    if (!refs[j].IsEmpty) destination.Add(refs[j].instanceId);
+            }
+            return destination;
+        }
+
+        public ArtifactInstanceRef[] GetEquippedArtifactRefsAt(int slotIndex)
+        {
+            EnsureRunData();
+            if (slotIndex < 0 || slotIndex >= teamSlots.Length || teamSlots[slotIndex] == null)
+                return Array.Empty<ArtifactInstanceRef>();
+            return teamSlots[slotIndex].GetArtifactRefsSnapshot(DefaultArtifactSlotCount);
+        }
+
+        public ArtifactInstance[] GetEquippedArtifactInstancesAt(int slotIndex)
+        {
+            ArtifactInstanceRef[] refs = GetEquippedArtifactRefsAt(slotIndex);
+            ArtifactInstance[] result = new ArtifactInstance[refs.Length];
+            for (int i = 0; i < refs.Length; i++)
+                TryGetArtifactInstance(refs[i].instanceId, out result[i]);
+            return result;
+        }
+
+        public void SetEquippedArtifactRefsAt(int slotIndex, ArtifactInstanceRef[] refs)
+        {
+            EnsureRunData();
+            if (slotIndex < 0 || slotIndex >= teamSlots.Length) return;
+
+            HashSet<string> seen = new HashSet<string>(StringComparer.Ordinal);
+            ArtifactInstanceRef[] sanitized = refs != null
+                ? new ArtifactInstanceRef[Mathf.Max(DefaultArtifactSlotCount, refs.Length)]
+                : new ArtifactInstanceRef[DefaultArtifactSlotCount];
+            for (int i = 0; refs != null && i < refs.Length && i < sanitized.Length; i++)
+            {
+                string id = refs[i].instanceId;
+                if (!string.IsNullOrWhiteSpace(id)
+                    && TryGetArtifactInstance(id, out _)
+                    && seen.Add(id))
+                {
+                    sanitized[i] = refs[i];
+                    artifactInstancesById[id].isNew = false;
+                }
+            }
+
+            for (int otherSlotIndex = 0; otherSlotIndex < teamSlots.Length; otherSlotIndex++)
+            {
+                if (otherSlotIndex == slotIndex || teamSlots[otherSlotIndex] == null) continue;
+                ArtifactInstanceRef[] otherRefs = teamSlots[otherSlotIndex].GetArtifactRefsSnapshot(DefaultArtifactSlotCount);
+                bool changed = false;
+                for (int i = 0; i < otherRefs.Length; i++)
+                {
+                    if (!otherRefs[i].IsEmpty && seen.Contains(otherRefs[i].instanceId))
+                    {
+                        otherRefs[i] = default;
+                        changed = true;
+                    }
+                }
+                if (changed) teamSlots[otherSlotIndex].SetArtifactRefs(otherRefs, DefaultArtifactSlotCount);
+            }
+
+            teamSlots[slotIndex].SetArtifactRefs(sanitized, DefaultArtifactSlotCount);
+            SavePersistentState();
+            NotifyArtifactsChanged();
+        }
+
+        private void NotifyArtifactsChanged()
+        {
+            if (OnArtifactsChanged == null) return;
+            Delegate[] invocationList = OnArtifactsChanged.GetInvocationList();
+            for (int i = 0; i < invocationList.Length; i++)
+            {
+                var del = invocationList[i];
+                if (del.Target is UnityEngine.Object unityObj && unityObj == null)
+                {
+                    OnArtifactsChanged -= (Action)del;
+                }
+                else
+                {
+                    try
+                    {
+                        ((Action)del)();
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogException(ex);
+                    }
+                }
+            }
+        }
+
+        public bool IsArtifactEquipped(string instanceId)
+        {
+            if (string.IsNullOrWhiteSpace(instanceId)) return false;
+            EnsureRunData();
+            for (int i = 0; i < teamSlots.Length; i++)
+            {
+                ArtifactInstanceRef[] refs = teamSlots[i]?.GetArtifactRefsSnapshot(DefaultArtifactSlotCount);
+                if (refs == null) continue;
+                for (int j = 0; j < refs.Length; j++)
+                    if (string.Equals(refs[j].instanceId, instanceId, StringComparison.Ordinal)) return true;
+            }
+            return false;
+        }
+
         public bool TryAddItem(BaseItem item, int amount = 1)
         {
             if (item == null || amount <= 0)
@@ -335,6 +630,15 @@ namespace Project.ShopSystem
             }
 
             EnsureRunData();
+
+            if (item is ArtifactDefinition artifactDefinition)
+            {
+                for (int i = 0; i < amount; i++)
+                {
+                    if (!TryAcquireArtifact(artifactDefinition, out _)) return false;
+                }
+                return true;
+            }
 
             bool added;
             if (IsStackable(item))
@@ -389,6 +693,11 @@ namespace Project.ShopSystem
 
             EnsureRunData();
 
+            if (item is ArtifactDefinition)
+            {
+                return true;
+            }
+
             if (IsStackable(item))
             {
                 InventoryStack stack = FindStack(item);
@@ -412,6 +721,12 @@ namespace Project.ShopSystem
             }
 
             EnsureRunData();
+
+            if (item is ArtifactDefinition)
+            {
+                // Artifact copies require an explicit instance selection.
+                return false;
+            }
 
             if (IsStackable(item))
             {
@@ -451,6 +766,14 @@ namespace Project.ShopSystem
 
             EnsureRunData();
 
+            if (item is ArtifactDefinition artifactDefinition)
+            {
+                int count = 0;
+                for (int i = 0; i < artifactInstances.Count; i++)
+                    if (string.Equals(artifactInstances[i]?.definitionId, artifactDefinition.id, StringComparison.Ordinal)) count++;
+                return count;
+            }
+
             if (IsStackable(item))
             {
                 InventoryStack stack = FindStack(item);
@@ -468,11 +791,14 @@ namespace Project.ShopSystem
             ownedItems.Clear();
             itemStacks.Clear();
             runCharacters.Clear();
+            artifactInstances.Clear();
+            artifactInstancesById = null;
             EnsureTeamSlotCapacity(DefaultTeamSlotCount);
             for (int i = 0; i < teamSlots.Length; i++)
             {
                 teamSlots[i].Character = null;
                 teamSlots[i].SetArtifacts(null, DefaultArtifactSlotCount);
+                teamSlots[i].SetArtifactRefs(null, DefaultArtifactSlotCount);
             }
 
             activeTeamSlotIndex = 0;
@@ -579,7 +905,7 @@ namespace Project.ShopSystem
             CharacterObject[] teamSnapshot = GetTeamSnapshot();
             CaptureRunStartTeam(teamSnapshot);
             int activeIndex = activeTeamSlotIndex;
-            Artifact[][] artifactSnapshot = BuildTeamArtifactSnapshot(teamSnapshot.Length);
+            ArtifactInstanceRef[][] artifactSnapshot = BuildTeamArtifactSnapshot(teamSnapshot.Length);
 
             itemStacks.Clear();
             currency = DefaultCurrency;
@@ -602,7 +928,7 @@ namespace Project.ShopSystem
             return true;
         }
 
-        public void DeployTeam(CharacterObject[] characters, int preferredIndex, Artifact[][] artifactsBySlot = null)
+        public void DeployTeam(CharacterObject[] characters, int preferredIndex, ArtifactInstanceRef[][] artifactsBySlot = null)
         {
             EnsureRunData();
 
@@ -611,6 +937,7 @@ namespace Project.ShopSystem
                 characters != null ? characters.Length : 0,
                 artifactsBySlot != null ? artifactsBySlot.Length : 0);
             EnsureTeamSlotCapacity(requestedSlotCount);
+            HashSet<string> deployedArtifactIds = new HashSet<string>(StringComparer.Ordinal);
 
             for (int i = 0; i < teamSlots.Length; i++)
             {
@@ -621,10 +948,24 @@ namespace Project.ShopSystem
                     GetOrCreateRunCharacterState(character);
                 }
 
-                Artifact[] sourceArtifacts = artifactsBySlot != null && i < artifactsBySlot.Length
+                ArtifactInstanceRef[] sourceArtifacts = artifactsBySlot != null && i < artifactsBySlot.Length
                     ? artifactsBySlot[i]
                     : null;
-                teamSlots[i].SetArtifacts(sourceArtifacts, DefaultArtifactSlotCount);
+                ArtifactInstanceRef[] sanitized = sourceArtifacts != null
+                    ? new ArtifactInstanceRef[Mathf.Max(DefaultArtifactSlotCount, sourceArtifacts.Length)]
+                    : new ArtifactInstanceRef[DefaultArtifactSlotCount];
+                for (int artifactIndex = 0; sourceArtifacts != null && artifactIndex < sourceArtifacts.Length; artifactIndex++)
+                {
+                    string instanceId = sourceArtifacts[artifactIndex].instanceId;
+                    if (!string.IsNullOrWhiteSpace(instanceId)
+                        && TryGetArtifactInstance(instanceId, out _)
+                        && deployedArtifactIds.Add(instanceId))
+                        sanitized[artifactIndex] = sourceArtifacts[artifactIndex];
+                    if (!string.IsNullOrWhiteSpace(instanceId)
+                        && artifactInstancesById.TryGetValue(instanceId, out ArtifactInstance equippedInstance))
+                        equippedInstance.isNew = false;
+                }
+                teamSlots[i].SetArtifactRefs(sanitized, DefaultArtifactSlotCount);
             }
 
             activeTeamSlotIndex = ResolveActiveSlotIndex(preferredIndex);
@@ -861,18 +1202,8 @@ namespace Project.ShopSystem
                 return false;
             }
 
-            Artifact[] defeatedArtifacts = GetEquippedArtifactsAt(defeatedSlot);
-            for (int i = 0; i < defeatedArtifacts.Length; i++)
-            {
-                Artifact artifact = defeatedArtifacts[i];
-                if (artifact != null)
-                {
-                    TryAddItem(artifact);
-                }
-            }
-
             List<CharacterObject> survivors = new List<CharacterObject>(teamSlots.Length);
-            List<Artifact[]> survivorArtifacts = new List<Artifact[]>(teamSlots.Length);
+            List<ArtifactInstanceRef[]> survivorArtifacts = new List<ArtifactInstanceRef[]>(teamSlots.Length);
             for (int i = 0; i < teamSlots.Length; i++)
             {
                 CharacterObject character = teamSlots[i].Character;
@@ -895,7 +1226,7 @@ namespace Project.ShopSystem
                 }
 
                 survivors.Add(character);
-                survivorArtifacts.Add(teamSlots[i].GetArtifactsSnapshot(DefaultArtifactSlotCount));
+                survivorArtifacts.Add(teamSlots[i].GetArtifactRefsSnapshot(DefaultArtifactSlotCount));
             }
 
             if (survivors.Count == 0)
@@ -936,7 +1267,7 @@ namespace Project.ShopSystem
             RemoveRunCharacterState(defeatedCharacter);
 
             CharacterObject[] compacted = new CharacterObject[Mathf.Max(DefaultTeamSlotCount, survivors.Count)];
-            Artifact[][] compactedArtifacts = new Artifact[compacted.Length][];
+            ArtifactInstanceRef[][] compactedArtifacts = new ArtifactInstanceRef[compacted.Length][];
             for (int i = 0; i < survivors.Count; i++)
             {
                 compacted[i] = survivors[i];
@@ -1041,13 +1372,32 @@ namespace Project.ShopSystem
 
         public Artifact[] GetEquippedArtifactsAt(int slotIndex)
         {
-            EnsureRunData();
-            if (slotIndex < 0 || slotIndex >= teamSlots.Length)
-            {
-                return Array.Empty<Artifact>();
-            }
+            ArtifactDefinition[] source = GetEquippedArtifactDefinitionsAt(slotIndex);
+            Artifact[] definitions = new Artifact[source.Length];
+            for (int i = 0; i < source.Length; i++) definitions[i] = source[i] as Artifact;
+            return definitions;
+        }
 
-            return teamSlots[slotIndex].GetArtifactsSnapshot(DefaultArtifactSlotCount);
+        public ArtifactDefinition[] GetEquippedArtifactDefinitionsAt(int slotIndex)
+        {
+            ArtifactInstance[] instances = GetEquippedArtifactInstancesAt(slotIndex);
+            ArtifactDefinition[] definitions = new ArtifactDefinition[instances.Length];
+            for (int i = 0; i < instances.Length; i++)
+                definitions[i] = ResolveArtifactDefinition(instances[i]?.definitionId);
+            return definitions;
+        }
+
+        public ArtifactRuntimeSnapshot[] GetEquippedArtifactRuntimeSnapshotsAt(int slotIndex)
+        {
+            ArtifactInstance[] instances = GetEquippedArtifactInstancesAt(slotIndex);
+            ArtifactRuntimeSnapshot[] snapshots = new ArtifactRuntimeSnapshot[instances.Length];
+            for (int i = 0; i < instances.Length; i++)
+            {
+                ArtifactInstance instance = instances[i];
+                if (instance != null)
+                    snapshots[i] = new ArtifactRuntimeSnapshot(instance, ResolveArtifactDefinition(instance.definitionId));
+            }
+            return snapshots;
         }
 
         public void SetEquippedArtifactsAt(int slotIndex, Artifact[] artifacts)
@@ -1083,16 +1433,12 @@ namespace Project.ShopSystem
             }
 
             EnsureRunData();
-            for (int i = 0; i < teamSlots.Length; i++)
+            for (int i = 0; i < artifactInstances.Count; i++)
             {
-                Artifact[] equippedArtifacts = teamSlots[i].GetArtifactsSnapshot(DefaultArtifactSlotCount);
-                for (int artifactIndex = 0; artifactIndex < equippedArtifacts.Length; artifactIndex++)
-                {
-                    if (equippedArtifacts[artifactIndex] == artifact)
-                    {
-                        return true;
-                    }
-                }
+                ArtifactInstance instance = artifactInstances[i];
+                if (instance != null
+                    && string.Equals(instance.definitionId, artifact.id, StringComparison.Ordinal)
+                    && IsArtifactEquipped(instance.instanceId)) return true;
             }
 
             return false;
@@ -1217,36 +1563,9 @@ namespace Project.ShopSystem
             int slotIndex = FindTeamSlot(character);
             if (slotIndex >= 0)
             {
-                Artifact[] artifacts = GetEquippedArtifactsAt(slotIndex);
-                float hpPercentBonus = 0f;
-                float atkPercentBonus = 0f;
-                float defPercentBonus = 0f;
-
-                for (int i = 0; i < artifacts.Length; i++)
-                {
-                    Artifact artifact = artifacts[i];
-                    if (artifact == null || artifact.bonusStats == null)
-                    {
-                        continue;
-                    }
-
-                    hpPercentBonus += artifact.bonusStats.maxHP;
-                    atkPercentBonus += artifact.bonusStats.attack;
-                    defPercentBonus += artifact.bonusStats.defense;
-
-                    stats.speed += artifact.bonusStats.speed;
-                    stats.elementalMastery += artifact.bonusStats.elementalMastery;
-                    stats.critRate += artifact.bonusStats.critRate;
-                    stats.critDamage += artifact.bonusStats.critDamage;
-                    stats.cooldownRate += artifact.bonusStats.cooldownRate;
-                    stats.impact += artifact.bonusStats.impact;
-                    stats.damageReduction += artifact.bonusStats.damageReduction;
-                    stats.aeRecharge += artifact.bonusStats.aeRecharge;
-                }
-
-                stats.maxHP = stats.maxHP * (1f + hpPercentBonus / 100f);
-                stats.attack = stats.attack * (1f + atkPercentBonus / 100f);
-                stats.defense = stats.defense * (1f + defPercentBonus / 100f);
+                ArtifactInstance[] artifacts = GetEquippedArtifactInstancesAt(slotIndex);
+                CharacterStats artifactBaseStats = stats.Clone();
+                ArtifactStatAggregator.Apply(stats, artifactBaseStats, artifacts);
             }
             // Live source-stat formulas may form a cross-character dependency cycle
             // (for example, A reads B's current stats while B reads A's). Keep the
@@ -1956,6 +2275,7 @@ namespace Project.ShopSystem
 
             SavedPlayerRunInventoryData data = new SavedPlayerRunInventoryData
             {
+                schemaVersion = 3,
                 currency = currency,
                 globalLevel = _globalLevel,
                 activeTeamSlotIndex = activeTeamSlotIndex
@@ -1995,6 +2315,26 @@ namespace Project.ShopSystem
                 });
             }
 
+            for (int i = 0; i < artifactInstances.Count; i++)
+            {
+                ArtifactInstance instance = artifactInstances[i];
+                if (instance == null
+                    || string.IsNullOrWhiteSpace(instance.instanceId)
+                    || string.IsNullOrWhiteSpace(instance.definitionId))
+                    continue;
+
+                data.artifactInstances.Add(new SavedArtifactInstanceRecord
+                {
+                    instanceId = instance.instanceId,
+                    definitionId = instance.definitionId,
+                    rolls = instance.rolls != null ? new List<ArtifactRoll>(instance.rolls) : new List<ArtifactRoll>(),
+                    isFavourite = instance.isFavourite,
+                    isNew = instance.isNew,
+                    acquisitionOrder = instance.acquisitionOrder,
+                    generationSeed = instance.generationSeed
+                });
+            }
+
             for (int i = 0; i < teamSlots.Length; i++)
             {
                 RunTeamSlot slot = teamSlots[i];
@@ -2003,11 +2343,13 @@ namespace Project.ShopSystem
                     characterId = slot != null && slot.Character != null ? slot.Character.characterId : string.Empty
                 };
 
-                Artifact[] artifacts = slot != null ? slot.GetArtifactsSnapshot(DefaultArtifactSlotCount) : Array.Empty<Artifact>();
-                savedSlot.artifactIds = new string[artifacts.Length];
-                for (int artifactIndex = 0; artifactIndex < artifacts.Length; artifactIndex++)
+                ArtifactInstanceRef[] artifactRefs = slot != null
+                    ? slot.GetArtifactRefsSnapshot(DefaultArtifactSlotCount)
+                    : Array.Empty<ArtifactInstanceRef>();
+                savedSlot.artifactInstanceIds = new string[artifactRefs.Length];
+                for (int artifactIndex = 0; artifactIndex < artifactRefs.Length; artifactIndex++)
                 {
-                    savedSlot.artifactIds[artifactIndex] = artifacts[artifactIndex] != null ? artifacts[artifactIndex].id : string.Empty;
+                    savedSlot.artifactInstanceIds[artifactIndex] = artifactRefs[artifactIndex].instanceId ?? string.Empty;
                 }
 
                 data.teamSlots.Add(savedSlot);
@@ -2050,6 +2392,12 @@ namespace Project.ShopSystem
             }
 
             string json = PlayerPrefs.GetString(SaveKey, string.Empty);
+            bool loadedLegacySave = false;
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                json = PlayerPrefs.GetString(LegacySaveKey, string.Empty);
+                loadedLegacySave = !string.IsNullOrWhiteSpace(json);
+            }
             if (string.IsNullOrWhiteSpace(json))
             {
                 EnsurePlayableState();
@@ -2074,6 +2422,10 @@ namespace Project.ShopSystem
             }
 
             ApplyPersistentState(data);
+            if (loadedLegacySave)
+            {
+                Debug.Log("PlayerRunInventory: Migrated v2 Artifact definition ownership to v3 Artifact instances. The v2 save remains available for rollback.");
+            }
             SavePersistentState();
         }
 
@@ -2081,6 +2433,8 @@ namespace Project.ShopSystem
         {
             if (ownedItems != null) ownedItems.Clear();
             if (itemStacks != null) itemStacks.Clear();
+            if (artifactInstances != null) artifactInstances.Clear();
+            artifactInstancesById?.Clear();
             if (runCharacters != null) runCharacters.Clear();
             if (teamSlots != null)
             {
@@ -2090,6 +2444,7 @@ namespace Project.ShopSystem
                     {
                         teamSlots[i].Character = null;
                         teamSlots[i].SetArtifacts(null, DefaultArtifactSlotCount);
+                        teamSlots[i].SetArtifactRefs(null, DefaultArtifactSlotCount);
                     }
                 }
             }
@@ -2541,10 +2896,31 @@ namespace Project.ShopSystem
             ownedItems.Clear();
             itemStacks.Clear();
             runCharacters.Clear();
+            artifactInstances.Clear();
+            artifactInstancesById = null;
             currency = Mathf.Max(0, data.currency);
             _globalLevel = Mathf.Clamp(data.globalLevel, 1, GlobalMaxLevel);
 
             BuildItemIndices();
+
+            if (data.artifactInstances != null)
+            {
+                for (int i = 0; i < data.artifactInstances.Count; i++)
+                {
+                    SavedArtifactInstanceRecord record = data.artifactInstances[i];
+                    if (record == null) continue;
+                    TryAddArtifactInstanceInternal(new ArtifactInstance
+                    {
+                        instanceId = record.instanceId,
+                        definitionId = record.definitionId,
+                        rolls = record.rolls != null ? new List<ArtifactRoll>(record.rolls) : new List<ArtifactRoll>(),
+                        isFavourite = record.isFavourite,
+                        isNew = record.isNew,
+                        acquisitionOrder = record.acquisitionOrder,
+                        generationSeed = record.generationSeed
+                    });
+                }
+            }
 
             if (data.items != null)
             {
@@ -2590,23 +2966,47 @@ namespace Project.ShopSystem
             }
 
             EnsureTeamSlotCapacity(data.teamSlots != null ? Mathf.Max(DefaultTeamSlotCount, data.teamSlots.Count) : DefaultTeamSlotCount);
+            HashSet<string> restoredArtifactIds = new HashSet<string>(StringComparer.Ordinal);
             for (int i = 0; i < teamSlots.Length; i++)
             {
                 SavedRunTeamSlotRecord record = data.teamSlots != null && i < data.teamSlots.Count ? data.teamSlots[i] : null;
                 CharacterObject character = ResolveCharacterById(record != null ? record.characterId : null);
                 teamSlots[i].Character = character;
 
-                Artifact[] artifacts = null;
-                if (record != null && record.artifactIds != null && record.artifactIds.Length > 0)
+                ArtifactInstanceRef[] refs = null;
+                if (record != null && record.artifactInstanceIds != null && record.artifactInstanceIds.Length > 0)
                 {
-                    artifacts = new Artifact[record.artifactIds.Length];
+                    refs = new ArtifactInstanceRef[record.artifactInstanceIds.Length];
+                    for (int artifactIndex = 0; artifactIndex < record.artifactInstanceIds.Length; artifactIndex++)
+                    {
+                        string instanceId = record.artifactInstanceIds[artifactIndex];
+                        EnsureArtifactIndices();
+                        if (!string.IsNullOrWhiteSpace(instanceId)
+                            && artifactInstancesById.ContainsKey(instanceId)
+                            && restoredArtifactIds.Add(instanceId))
+                            refs[artifactIndex] = new ArtifactInstanceRef(instanceId);
+                    }
+                }
+                else if (record != null && record.artifactIds != null && record.artifactIds.Length > 0)
+                {
+                    refs = new ArtifactInstanceRef[record.artifactIds.Length];
                     for (int artifactIndex = 0; artifactIndex < record.artifactIds.Length; artifactIndex++)
                     {
-                        artifacts[artifactIndex] = ResolveItemById(record.artifactIds[artifactIndex]) as Artifact;
+                        ArtifactDefinition definition = ResolveItemById(record.artifactIds[artifactIndex]) as ArtifactDefinition;
+                        if (definition == null) continue;
+                        ArtifactInstance instance = FindArtifactInstanceByDefinition(definition.id);
+                        if (instance == null)
+                        {
+                            instance = CreateImportedArtifactInstance(definition);
+                            TryAddArtifactInstanceInternal(instance);
+                        }
+                        if (restoredArtifactIds.Add(instance.instanceId))
+                            refs[artifactIndex] = new ArtifactInstanceRef(instance.instanceId);
                     }
                 }
 
-                teamSlots[i].SetArtifacts(artifacts, DefaultArtifactSlotCount);
+                teamSlots[i].SetArtifactRefs(refs, DefaultArtifactSlotCount);
+                teamSlots[i].ClearLegacyArtifacts();
             }
 
             activeTeamSlotIndex = data.activeTeamSlotIndex;
@@ -2639,6 +3039,7 @@ namespace Project.ShopSystem
             }
 
             EnsureTeamSlotCapacity(DefaultTeamSlotCount);
+            MigrateLegacyArtifactsInMemory();
             EnsurePlayableState();
         }
 
@@ -2759,6 +3160,8 @@ namespace Project.ShopSystem
                 ownedItems = new List<BaseItem>();
             }
 
+            artifactInstances ??= new List<ArtifactInstance>();
+
             if (itemStacks == null)
             {
                 itemStacks = new List<InventoryStack>();
@@ -2791,6 +3194,7 @@ namespace Project.ShopSystem
             }
 
             NormalizeLegacyStackEntries();
+            EnsureArtifactIndices();
         }
 
         private void EnsureTeamSlotCapacity(int minimumSlots)
@@ -3007,13 +3411,13 @@ namespace Project.ShopSystem
             return count;
         }
 
-        private Artifact[][] BuildTeamArtifactSnapshot(int slotCount)
+        private ArtifactInstanceRef[][] BuildTeamArtifactSnapshot(int slotCount)
         {
             int resolvedSlotCount = Mathf.Max(DefaultTeamSlotCount, slotCount, teamSlots != null ? teamSlots.Length : 0);
-            Artifact[][] snapshot = new Artifact[resolvedSlotCount][];
+            ArtifactInstanceRef[][] snapshot = new ArtifactInstanceRef[resolvedSlotCount][];
             for (int i = 0; i < resolvedSlotCount; i++)
             {
-                snapshot[i] = GetEquippedArtifactsAt(i);
+                snapshot[i] = GetEquippedArtifactRefsAt(i);
             }
 
             return snapshot;
@@ -3204,6 +3608,15 @@ namespace Project.ShopSystem
                 return;
             }
 
+            if (item is ArtifactDefinition artifactDefinition)
+            {
+                if (!HasArtifactDefinitionInstance(artifactDefinition.id))
+                {
+                    TryAddArtifactInstanceInternal(CreateImportedArtifactInstance(artifactDefinition));
+                }
+                return;
+            }
+
             if (!ownedItems.Contains(item))
             {
                 ownedItems.Add(item);
@@ -3217,13 +3630,16 @@ namespace Project.ShopSystem
 
         private void BuildItemIndices()
         {
-            if (itemIndexById != null && characterItemsByCharacterId != null)
+            if (itemIndexById != null
+                && characterItemsByCharacterId != null
+                && artifactDefinitionsById != null)
             {
                 return;
             }
 
             itemIndexById = new Dictionary<string, BaseItem>(StringComparer.Ordinal);
             characterItemsByCharacterId = new Dictionary<string, CharacterItem>(StringComparer.Ordinal);
+            artifactDefinitionsById = new Dictionary<string, ArtifactDefinition>(StringComparer.Ordinal);
 
             BaseItem[] allItems = Resources.LoadAll<BaseItem>("ItemSO");
             for (int i = 0; i < allItems.Length; i++)
@@ -3236,6 +3652,11 @@ namespace Project.ShopSystem
 
                 itemIndexById.Add(item.id, item);
 
+                if (item is ArtifactDefinition artifactDefinition)
+                {
+                    artifactDefinitionsById[item.id] = artifactDefinition;
+                }
+
                 if (item is CharacterItem characterItem
                     && characterItem.characterObjectData != null
                     && !string.IsNullOrWhiteSpace(characterItem.characterObjectData.characterId)
@@ -3243,6 +3664,144 @@ namespace Project.ShopSystem
                 {
                     characterItemsByCharacterId.Add(characterItem.characterObjectData.characterId, characterItem);
                 }
+            }
+        }
+
+        private void EnsureArtifactDefinitionIndex()
+        {
+            if (artifactDefinitionsById != null) return;
+            BuildItemIndices();
+
+            artifactDefinitionsById ??= new Dictionary<string, ArtifactDefinition>(StringComparer.Ordinal);
+        }
+
+        private void EnsureArtifactIndices()
+        {
+            artifactInstances ??= new List<ArtifactInstance>();
+            if (artifactInstancesById == null)
+            {
+                RebuildArtifactInstanceIndex();
+            }
+        }
+
+        private void RebuildArtifactInstanceIndex()
+        {
+            artifactInstancesById = new Dictionary<string, ArtifactInstance>(StringComparer.Ordinal);
+            long highestOrder = 0;
+            for (int i = artifactInstances.Count - 1; i >= 0; i--)
+            {
+                ArtifactInstance instance = artifactInstances[i];
+                if (instance == null || string.IsNullOrWhiteSpace(instance.instanceId))
+                {
+                    artifactInstances.RemoveAt(i);
+                    continue;
+                }
+
+                instance.rolls ??= new List<ArtifactRoll>();
+                if (artifactInstancesById.ContainsKey(instance.instanceId))
+                {
+                    artifactInstances.RemoveAt(i);
+                    continue;
+                }
+
+                artifactInstancesById.Add(instance.instanceId, instance);
+                if (instance.acquisitionOrder <= 0)
+                {
+                    instance.acquisitionOrder = ++highestOrder;
+                }
+                else
+                {
+                    highestOrder = Math.Max(highestOrder, instance.acquisitionOrder);
+                }
+            }
+            nextArtifactAcquisitionOrder = Math.Max(1, highestOrder + 1);
+        }
+
+        private bool TryAddArtifactInstanceInternal(ArtifactInstance instance)
+        {
+            if (instance == null
+                || string.IsNullOrWhiteSpace(instance.instanceId)
+                || string.IsNullOrWhiteSpace(instance.definitionId))
+            {
+                return false;
+            }
+
+            EnsureArtifactIndices();
+            if (artifactInstancesById.ContainsKey(instance.instanceId)) return false;
+            instance.rolls ??= new List<ArtifactRoll>();
+            artifactInstances.Add(instance);
+            artifactInstancesById.Add(instance.instanceId, instance);
+            nextArtifactAcquisitionOrder = Math.Max(nextArtifactAcquisitionOrder, instance.acquisitionOrder + 1);
+            return true;
+        }
+
+        private bool HasArtifactDefinitionInstance(string definitionId)
+        {
+            if (string.IsNullOrWhiteSpace(definitionId)) return false;
+            EnsureArtifactIndices();
+            for (int i = 0; i < artifactInstances.Count; i++)
+                if (string.Equals(artifactInstances[i]?.definitionId, definitionId, StringComparison.Ordinal)) return true;
+            return false;
+        }
+
+        private ArtifactInstance FindArtifactInstanceByDefinition(string definitionId)
+        {
+            if (string.IsNullOrWhiteSpace(definitionId)) return null;
+            EnsureArtifactIndices();
+            for (int i = 0; i < artifactInstances.Count; i++)
+                if (string.Equals(artifactInstances[i]?.definitionId, definitionId, StringComparison.Ordinal)) return artifactInstances[i];
+            return null;
+        }
+
+        private ArtifactInstance CreateImportedArtifactInstance(ArtifactDefinition definition)
+        {
+            return ArtifactLegacyImporter.Create(definition, nextArtifactAcquisitionOrder++);
+        }
+
+        private void MigrateLegacyArtifactsInMemory()
+        {
+            EnsureArtifactIndices();
+            int importedInstances = 0;
+            int migratedLoadoutReferences = 0;
+            for (int i = ownedItems.Count - 1; i >= 0; i--)
+            {
+                if (ownedItems[i] is not ArtifactDefinition definition) continue;
+                if (!HasArtifactDefinitionInstance(definition.id))
+                {
+                    if (TryAddArtifactInstanceInternal(CreateImportedArtifactInstance(definition))) importedInstances++;
+                }
+                ownedItems.RemoveAt(i);
+            }
+
+            if (teamSlots == null) return;
+            for (int slotIndex = 0; slotIndex < teamSlots.Length; slotIndex++)
+            {
+                RunTeamSlot slot = teamSlots[slotIndex];
+                if (slot == null) continue;
+                Artifact[] legacy = slot.GetArtifactsSnapshot(DefaultArtifactSlotCount);
+                ArtifactInstanceRef[] refs = slot.GetArtifactRefsSnapshot(DefaultArtifactSlotCount);
+                bool changed = false;
+                for (int i = 0; i < legacy.Length && i < refs.Length; i++)
+                {
+                    ArtifactDefinition definition = legacy[i];
+                    if (definition == null || !refs[i].IsEmpty) continue;
+                    ArtifactInstance instance = FindArtifactInstanceByDefinition(definition.id);
+                    if (instance == null)
+                    {
+                        instance = CreateImportedArtifactInstance(definition);
+                        if (TryAddArtifactInstanceInternal(instance)) importedInstances++;
+                    }
+                    refs[i] = new ArtifactInstanceRef(instance.instanceId);
+                    migratedLoadoutReferences++;
+                    changed = true;
+                }
+                if (changed) slot.SetArtifactRefs(refs, DefaultArtifactSlotCount);
+                slot.ClearLegacyArtifacts();
+            }
+
+            if (importedInstances > 0 || migratedLoadoutReferences > 0)
+            {
+                Debug.Log($"PlayerRunInventory: Imported {importedInstances} legacy Artifact instance(s) and migrated {migratedLoadoutReferences} loadout reference(s) without rerolling values.");
             }
         }
 

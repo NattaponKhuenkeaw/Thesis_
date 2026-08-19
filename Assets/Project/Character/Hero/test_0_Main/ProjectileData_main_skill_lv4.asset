@@ -77,14 +77,14 @@ MonoBehaviour:
       data:
         startFrameOffset: 0
         activeFrames: 3
-        elementType: 4
+        elementType: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0, y: 2.4}
         size: {x: 8, y: 5}
         damageRatio: 0.2
         impactTier: 0
         useDeterministicReaction: 1
-        reactionKind: 2
+        reactionKind: 1
         impactFreezeFrames: 1
         knockbackFrames: 15
         knockupFrames: 12

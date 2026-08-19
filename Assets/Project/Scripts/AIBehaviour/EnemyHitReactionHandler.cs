@@ -141,7 +141,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
         // If the enemy is grabbed by us and we hit them with a NON-Grab hitbox
         // (e.g. a projectile's NormalHitbox during a grab combo), absorb the hit
         // without changing the reaction state. The enemy stays grabbed.
-        // Damage and flash are already applied by EnemyController.TakeHit() before
+        // Damage and flash are already applied by EnemyController.TakeResolvedHit() before
         // this method is called, so we just need to return early.
         //
         // EXCEPTION: If the hitbox is explicitly marked as 'breaksGrab' (e.g. a slam/finisher),

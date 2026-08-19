@@ -1,6 +1,7 @@
 using Project.InventorySystem;
 using Project.InventorySystem.Items;
 using Project.Progression;
+using Project.InventorySystem.Artifacts;
 using Project.ShopSystem.UI;
 using System;
 using System.Collections.Generic;
@@ -238,6 +239,9 @@ namespace Project.ShopSystem
                 case ShopSellEntryKind.Fragment:
                     removed = metaProgression != null && metaProgression.TryRemoveFragments(entry.Item, 1);
                     break;
+                case ShopSellEntryKind.ArtifactInstance:
+                    removed = playerInventory.TryRemoveArtifactInstance(entry.ArtifactInstanceId);
+                    break;
                 case ShopSellEntryKind.Unit:
                 default:
                     removed = playerInventory.TryRemoveItem(entry.Item, 1);
@@ -279,16 +283,37 @@ namespace Project.ShopSystem
                     item.itemName));
             }
 
+            IReadOnlyList<ArtifactInstance> artifacts = playerInventory.ArtifactInstances;
+            for (int i = 0; i < artifacts.Count; i++)
+            {
+                ArtifactInstance instance = artifacts[i];
+                ArtifactDefinition definition = instance != null
+                    ? playerInventory.ResolveArtifactDefinition(instance.definitionId)
+                    : null;
+                if (definition == null || !CanSellArtifactInstance(instance, out _)) continue;
+
+                string quality = ArtifactRollQuality.TryGetAverageQuality(instance, playerInventory.ArtifactRollTable, out float quality01)
+                    ? $"Q {quality01 * 100f:0.##}"
+                    : "Q —";
+                entries.Add(new ShopSellEntry(
+                    definition,
+                    ShopSellEntryKind.ArtifactInstance,
+                    1,
+                    GetSellUnitPrice(definition),
+                    $"{definition.itemName} • {quality}",
+                    instance.instanceId));
+            }
+
             if (metaProgression == null)
             {
                 return entries;
             }
 
-            HashSet<BaseItem> fragmentItems = new HashSet<BaseItem>(ownedSnapshot.Where(item => item is Artifact || item is CharacterItem));
+            HashSet<BaseItem> fragmentItems = new HashSet<BaseItem>(ownedSnapshot.Where(item => item is CharacterItem));
             foreach (ProgressionFragmentStack stack in metaProgression.Fragments)
             {
                 BaseItem sourceItem = ResolveCodexItemById(stack != null ? stack.sourceItemId : null);
-                if (sourceItem == null || stack == null || stack.quantity <= 0)
+                if (sourceItem is not CharacterItem || stack == null || stack.quantity <= 0)
                 {
                     continue;
                 }
@@ -334,9 +359,12 @@ namespace Project.ShopSystem
                 return false;
             }
 
-            return entry.Kind == ShopSellEntryKind.Fragment
-                ? CanSellFragment(entry.Item, out failureMessage)
-                : CanSellUnit(entry.Item, out failureMessage);
+            return entry.Kind switch
+            {
+                ShopSellEntryKind.Fragment => CanSellFragment(entry.Item, out failureMessage),
+                ShopSellEntryKind.ArtifactInstance => CanSellArtifactInstanceId(entry.ArtifactInstanceId, out failureMessage),
+                _ => CanSellUnit(entry.Item, out failureMessage)
+            };
         }
 
         private bool CanSellUnit(BaseItem item, out string failureMessage)
@@ -376,6 +404,28 @@ namespace Project.ShopSystem
         {
             failureMessage = string.Empty;
             return metaProgression != null && item != null && metaProgression.GetFragmentCount(item) > 0;
+        }
+
+        private bool CanSellArtifactInstanceId(string instanceId, out string failureMessage)
+        {
+            if (playerInventory == null || !playerInventory.TryGetArtifactInstance(instanceId, out ArtifactInstance instance))
+            {
+                failureMessage = string.Empty;
+                return false;
+            }
+            return CanSellArtifactInstance(instance, out failureMessage);
+        }
+
+        private bool CanSellArtifactInstance(ArtifactInstance instance, out string failureMessage)
+        {
+            failureMessage = string.Empty;
+            if (instance == null) return false;
+            if (playerInventory.IsArtifactEquipped(instance.instanceId))
+            {
+                failureMessage = "Artifact is equipped!";
+                return false;
+            }
+            return true;
         }
 
         private int GetOwnedCharacterCount()
@@ -500,6 +550,11 @@ namespace Project.ShopSystem
                 return playerInventory.CanAddItem(item, amount);
             }
 
+            if (item is ArtifactDefinition)
+            {
+                return playerInventory.CanAddItem(item, amount);
+            }
+
             if (!playerInventory.HasItem(item))
             {
                 return playerInventory.CanAddItem(item);
@@ -513,7 +568,7 @@ namespace Project.ShopSystem
             return itemType switch
             {
                 ShopItemListType.Consumable => item is Item,
-                ShopItemListType.Artifact => item is Artifact,
+                ShopItemListType.Artifact => item is ArtifactDefinition,
                 ShopItemListType.Character => item is CharacterItem,
                 _ => false
             };

@@ -94,7 +94,7 @@ namespace Project.ShopSystem.UI
         private Color GetItemTypeColor(BaseItem item)
         {
             if (item is CharacterItem) return characterColor;
-            if (item is Artifact)      return artifactColor;
+            if (item is ArtifactDefinition) return artifactColor;
             return consumableColor; // Item (consumable) or any other fallback
         }
 

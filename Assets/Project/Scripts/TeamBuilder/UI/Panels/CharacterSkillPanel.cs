@@ -3,6 +3,7 @@ using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using Project.InventorySystem.Artifacts;
 using Project.InventorySystem.Items;
 using Project.Progression;
 using Project.TeamBuilder.UI.Interfaces;
@@ -17,7 +18,7 @@ namespace Project.TeamBuilder.UI.Panels
 
         private readonly List<SkillEntryView> entryViews = new List<SkillEntryView>();
 
-        public void PopulateData(CharacterItem character, Artifact[] equippedArtifacts)
+        public void PopulateData(CharacterItem character, ArtifactInstance[] equippedArtifacts)
         {
             if (character == null || character.characterObjectData == null)
             {

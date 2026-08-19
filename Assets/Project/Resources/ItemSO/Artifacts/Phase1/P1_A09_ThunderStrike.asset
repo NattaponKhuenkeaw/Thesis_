@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 437bd966ab4884c4d8b1701609490aca, type: 3}
+  m_Name: P1_A09_ThunderStrike
+  m_EditorClassIdentifier: Assembly-CSharp::ParticleBehaviorDefinition
+  stableId: PARTICLE-P1-A09
+  runtimePrefab: {fileID: 0}
+  anchorPolicy: 0
+  volume:
+    radius: 3.5
+    targetLayers:
+      serializedVersion: 2
+      m_Bits: 0
+  compatibility:
+    affectEnemies: 1
+    affectWearer: 0
+    affectAllies: 0
+    applyOnEnter: 0
+    applyOnPulse: 1
+    removeEffectsOnExit: 1
+    targetCap: 0
+  lifetimeSeconds: 1
+  pulseIntervalSeconds: 1
+  effects:
+  - rid: 8312694232576164296
+  references:
+    version: 2
+    RefIds:
+    - rid: 8312694232576164296
+      type: {class: ParticleDamageEffectDefinition, ns: , asm: Assembly-CSharp}
+      data:
+        damageBasis: 1
+        ratio: 2.5
+        critDamageScalingRatio: 0.3
+        descriptor:
+          delivery: 2
+          elementType: 1
+          criticalPolicy: 1

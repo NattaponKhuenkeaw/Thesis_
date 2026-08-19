@@ -12,33 +12,35 @@ public enum PotentialTrack
 
 public enum PassiveModifierTarget
 {
-    AttackStat,
-    BasicAttackDamage,
-    SkillDamage,
-    UltimateDamage,
-    UltimateDuration,
-    SkillCooldown,
-    UltimateCooldown,
-    ElementalBurnSelf,
-    ElementalBurnAllies,
-    MaxHP,
-    MoveSpeed,
-    Defense,
-    CritRate,
-    CritDamage,
-    ElementalMastery,
-    CooldownRate,
-    Impact,
-    AuraEnergyRecharge,
-    IncomingDamageTaken,
-    OutgoingDamage
+    AttackStat = 0,
+    BasicAttackDamage = 1,
+    SkillDamage = 2,
+    UltimateDamage = 3,
+    UltimateDuration = 4,
+    SkillCooldown = 5,
+    UltimateCooldown = 6,
+    ElementalBurnSelf = 7,
+    ElementalBurnAllies = 8,
+    MaxHP = 9,
+    MoveSpeed = 10,
+    Defense = 11,
+    CritRate = 12,
+    CritDamage = 13,
+    DotMastery = 14,
+    CooldownMastery = 15,
+    DamageIncrease = 16,
+    AuraEnergyRecharge = 17,
+    IncomingDamageTaken = 18,
+    OutgoingDamage = 19,
+    AdditionalDamageIncrease = 20
 }
 
 public enum PassiveEffectScope
 {
     Self,
     Allies,
-    Enemy
+    Enemy,
+    Teammates
 }
 
 public enum PassiveNumericOperation
@@ -105,9 +107,9 @@ public enum PassiveCounterOperation
 public enum StatusEffectType
 {
     Burn,
-    MemoryStagger,
-    AshDOT,
-    VoidDOT,
+    LightningDOT,
+    BleedDOT,
+    DarknessDOT,
     Confusion,
     SlowAction
 }
@@ -418,7 +420,7 @@ public class PassiveActionModifierDefinition
     public float damageMultiplierValue = 0f;
     public PassiveValueModifierOperation criticalDamageOperation = PassiveValueModifierOperation.None;
     public float criticalDamageValue = 0f;
-    [Tooltip("Applied after base damage, defense, crit, elemental mastery, and impact are resolved.")]
+    [Tooltip("Applied after base damage, build-stat multipliers, critical damage, and mitigation are resolved.")]
     public PassiveValueModifierOperation finalDamageOperation = PassiveValueModifierOperation.None;
     public float finalDamageValue = 0f;
     public bool finalDamageRequiresCriticalHit = false;
@@ -432,7 +434,8 @@ public class PassiveActionModifierDefinition
     [Tooltip("When enabled, matching action hits bypass the defender's DEF calculation.")]
     public bool ignoreDefense = false;
     public bool ignoreDamageResistance = false;
-    public bool ignoreElementalIncomingModifiers = false;
+    [UnityEngine.Serialization.FormerlySerializedAs("ignoreElementalIncomingModifiers")]
+    public bool ignoreTypeReduction = false;
 
     [Header("Projectile Replacement")]
     public ProjectileType replacementProjectileType = ProjectileType.None;
@@ -554,6 +557,14 @@ public class PassiveRuntimeEffectDefinition : ISerializationCallbackReceiver
     [Tooltip("When enabled, removes the required/runtime target tag after a successful application.")]
     public bool consumeRuntimeTagOnApply = false;
 
+    [Header("Random Buff Selection")]
+    [Tooltip("When enabled, triggering this effect randomly selects between minRandomBuffCount and maxRandomBuffCount recipes from randomBuffPool.")]
+    public bool enableRandomBuffSelection = false;
+    [Min(1)] public int minRandomBuffCount = 1;
+    [Min(1)] public int maxRandomBuffCount = 1;
+    public bool allowDuplicateRandomBuffs = false;
+    public List<RuntimeEffectRecipeData> randomBuffPool = new List<RuntimeEffectRecipeData>();
+
     [Header("Recipe")]
     [Tooltip("Formula plus this kit node's values, duration, stack, display, and remove policy.")]
     public RuntimeEffectRecipe recipe = new RuntimeEffectRecipe();
@@ -591,6 +602,30 @@ public class PassiveRuntimeEffectDefinition : ISerializationCallbackReceiver
         ? recipe
         : null;
 
+    public bool HasValidEffect
+    {
+        get
+        {
+            if (ResolvedEffect != null)
+            {
+                return true;
+            }
+
+            if (enableRandomBuffSelection && randomBuffPool != null)
+            {
+                for (int i = 0; i < randomBuffPool.Count; i++)
+                {
+                    if (randomBuffPool[i] != null && randomBuffPool[i].IsValid)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+    }
+
     public void OnBeforeSerialize()
     {
         NormalizeRecipe();
@@ -603,6 +638,21 @@ public class PassiveRuntimeEffectDefinition : ISerializationCallbackReceiver
 
     public void NormalizeRecipe()
     {
+        if (randomBuffPool != null)
+        {
+            for (int i = 0; i < randomBuffPool.Count; i++)
+            {
+                RuntimeEffectRecipeData subRecipe = randomBuffPool[i];
+                if (subRecipe != null && subRecipe.definition != null)
+                {
+                    subRecipe.policy ??= new RuntimeEffectApplicationPolicy();
+                    if (subRecipe.policy.appliesOn == RuntimeEffectApplyTarget.Self && scope != PassiveEffectScope.Self)
+                    {
+                        subRecipe.policy.appliesOn = ScopeToApplyTarget(scope);
+                    }
+                }
+            }
+        }
         if (recipe == null)
         {
             recipe = new RuntimeEffectRecipe();
@@ -661,6 +711,7 @@ public class PassiveRuntimeEffectDefinition : ISerializationCallbackReceiver
         {
             PassiveEffectScope.Enemy => RuntimeEffectApplyTarget.Enemy,
             PassiveEffectScope.Allies => RuntimeEffectApplyTarget.Allies,
+            PassiveEffectScope.Teammates => RuntimeEffectApplyTarget.Teammates,
             _ => RuntimeEffectApplyTarget.Self
         };
     }
@@ -854,6 +905,8 @@ public class RuntimeAreaEffectApplication : ISerializationCallbackReceiver
         ? recipe
         : null;
 
+    public bool HasValidEffect => ResolvedEffect != null;
+
     public void OnBeforeSerialize()
     {
         NormalizeRecipe();
@@ -924,6 +977,7 @@ public class RuntimeAreaEffectApplication : ISerializationCallbackReceiver
         {
             PassiveEffectScope.Enemy => RuntimeEffectApplyTarget.Enemy,
             PassiveEffectScope.Allies => RuntimeEffectApplyTarget.Allies,
+            PassiveEffectScope.Teammates => RuntimeEffectApplyTarget.Teammates,
             _ => RuntimeEffectApplyTarget.Self
         };
     }

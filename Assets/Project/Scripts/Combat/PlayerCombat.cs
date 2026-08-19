@@ -92,7 +92,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     private int hitboxActiveCount;
     private ActionPhase currentPhase = ActionPhase.None;
     private bool isAirCombo;
-    private Coroutine dashThroughDamageRoutine;
+    private Coroutine dashThroughDamageCoroutine;
 
     public PlayerCharacter PlayerCharacter => playerCharacter;
     public Vector2 FacingDirection => GetFacingDirection();
@@ -919,7 +919,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         CharacterStats stats = teamLoader.GetCharacterRuntimeStats(character);
         AuraEnergyRate auraEnergyRate = character.auraEnergyRate;
         float statMultiplier = stats != null
-            ? Mathf.Max(0f, 1f + stats.aeRecharge)
+            ? Mathf.Max(0f, 1f + stats.auraEnergyRecharge / 100f)
             : 1f;
 
         if (actionRewardClaim != null && actionRewardClaim.TryClaim())
@@ -1448,7 +1448,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
     private void HandleDashStart()
     {
         passiveController?.NotifyAfterDash();
-        StartDashThroughDamageRoutine();
+        StartDashThroughDamageCoroutine();
 
         if (isAirCombo && comboDepth > 0 && movement != null && !movement.IsGroundedForActionSelection())
             CancelCurrentAttackButKeepComboProgress();
@@ -1456,12 +1456,12 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             ResetCombo();
     }
 
-    private void StartDashThroughDamageRoutine()
+    private void StartDashThroughDamageCoroutine()
     {
-        if (dashThroughDamageRoutine != null)
+        if (dashThroughDamageCoroutine != null)
         {
-            StopCoroutine(dashThroughDamageRoutine);
-            dashThroughDamageRoutine = null;
+            StopCoroutine(dashThroughDamageCoroutine);
+            dashThroughDamageCoroutine = null;
         }
 
         PassiveDashThroughDamageDefinition[] effects = passiveController != null
@@ -1472,7 +1472,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             return;
         }
 
-        dashThroughDamageRoutine = StartCoroutine(ResolveDashThroughDamage(effects));
+        dashThroughDamageCoroutine = StartCoroutine(ResolveDashThroughDamage(effects));
     }
 
     private IEnumerator ResolveDashThroughDamage(PassiveDashThroughDamageDefinition[] effects)
@@ -1501,7 +1501,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             yield return null;
         }
 
-        dashThroughDamageRoutine = null;
+        dashThroughDamageCoroutine = null;
     }
 
     private bool TryApplyDashThroughDamage(EnemyController enemy, PassiveDashThroughDamageDefinition[] effects)
@@ -1538,7 +1538,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
                 actionId = "dash",
                 actionName = "Dash",
                 elementType = effect.elementType,
-                damageRoutine = DamageRoutine.Additional,
+                damageDelivery = DamageDelivery.Additional,
                 damage = baseDamage
             };
             RuntimeEffectDamageInput damageInput = new RuntimeEffectDamageInput
@@ -1555,41 +1555,30 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
                 playerCharacter.RuntimeEffects.ModifyDamageInput(damageInput);
             }
 
-            float resolvedDamage = CombatFormula.CalculateResolvedDamage(
-                damageInput.baseDamage,
-                DamageRoutine.Additional,
-                effect.elementType,
-                stats,
-                damageInput.defenderDefense,
-                AttackCategory.Normal,
-                out _,
-                damageInput.defenderDamageResistance);
-            if (resolvedDamage <= 0f)
-            {
-                continue;
-            }
-
             Vector2 direction = GetFacingDirection();
-            HitReactionData reactionData = HitReactionData.Default(resolvedDamage, direction, 0f);
-            reactionData.damageIsFinal = true;
-            reactionData.damageRoutine = DamageRoutine.Additional;
-            reactionData.elementType = effect.elementType;
-            reactionData.isCriticalHit = false;
-            reactionData.ignoreElementalIncomingModifiers = damageInput.ignoreElementalIncomingModifiers;
-            reactionData.sourceCharacter = character;
-            reactionData.sourceStats = stats;
-            reactionData.sourceCategory = AttackCategory.Normal;
-            reactionData.sourceActionId = "dash";
-            reactionData.sourceActionName = "Dash";
-
-            float damageDealt = enemy.TakeHit(reactionData, transform.position);
-            if (damageDealt > 0f)
+            DamageRequest request = new DamageRequest
             {
-                enemy.DamageTypeState?.ApplyDot(
+                target = enemy,
+                sourceCharacter = character,
+                sourceStats = stats,
+                sourceCombat = this,
+                baseDamage = damageInput.baseDamage,
+                defenderDefense = damageInput.defenderDefense,
+                defenderDamageResistance = damageInput.defenderDamageResistance,
+                descriptor = new DamageDescriptor(
+                    DamageDelivery.Additional,
                     effect.elementType,
-                    stats,
-                    character);
-            }
+                    DamageCriticalPolicy.Prevent),
+                category = AttackCategory.Normal,
+                actionId = "dash",
+                actionName = "Dash",
+                attackerPosition = transform.position,
+                hitDirection = direction,
+                ignoreTypeReduction = damageInput.ignoreTypeReduction
+            };
+            HitReactionData reactionData = HitReactionData.Default(0f, direction, 0f);
+            reactionData.flashFrames = 0;
+            float damageDealt = CombatDamageProcessor.Apply(request, reactionData, true);
             dealtDamage |= damageDealt > 0f;
         }
 
@@ -1741,7 +1730,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         {
             cooldown = CombatFormula.CalculateCooldownDuration(
                 baseValue,
-                playerCharacter.Stats.cooldownRate);
+                playerCharacter.Stats.cooldownMastery);
         }
 
         if (passiveController != null)

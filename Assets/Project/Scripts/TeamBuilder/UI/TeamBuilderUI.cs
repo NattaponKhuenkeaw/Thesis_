@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 using UnityEngine.EventSystems;
 using TMPro;
+using Project.InventorySystem.Artifacts;
 using Project.InventorySystem.Items;
 using Project.ShopSystem;
 using Project.UI;
@@ -38,7 +40,7 @@ namespace Project.TeamBuilder.UI
         [Header("Panels")]
         [SerializeField] private InventoryBuilderPanel inventoryPanel;
         [SerializeField] private ArtifactPreviewPanel artifactPreviewPanel;
-        [SerializeField] private TeamSlotUI[] teamSlots = new TeamSlotUI[3];
+        [SerializeField] private TeamSlotUI[] teamSlots = new TeamSlotUI[2];
         [SerializeField] private GameObject playerHolderButton;
         [SerializeField] private bool openGridPanelOnSafeZoneOpen = false;
 
@@ -76,6 +78,7 @@ namespace Project.TeamBuilder.UI
         private System.Action pendingCloseAfterDeploy;
         private bool isInventoryPanelOpen = false;
         private int selectedCharacterSwitchSlotIndex = -1;
+        private ArtifactSlotUI selectedArtifactSwitchSlot;
 
         // =========================================================
         // Properties
@@ -86,6 +89,7 @@ namespace Project.TeamBuilder.UI
         public int StagedActiveIndex => draftController != null ? draftController.stagedActiveIndex : 0;
         public InspectScreenUI InspectScreenUI => inspectScreenUI;
         public PlayerRunInventory RunInventory => playerInventory;
+        public PlayerRunInventory PlayerInventory => playerInventory;
 
         private void OnEnable()
         {
@@ -98,6 +102,7 @@ namespace Project.TeamBuilder.UI
 
         private void OnDisable()
         {
+            ClearArtifactSwitchSelection();
             if (zoneStateProvider != null)
             {
                 zoneStateProvider.OnZoneModeChanged -= HandleZoneChanged;
@@ -165,6 +170,7 @@ namespace Project.TeamBuilder.UI
                 teamLoader = FindFirstObjectByType<TeamLoader>();
             }
 
+
             if (owningTeamUI == null)
             {
                 owningTeamUI = GetComponentInParent<TeamUI>();
@@ -193,6 +199,7 @@ namespace Project.TeamBuilder.UI
 
             modeHandlers = GetComponentsInChildren<IZoneStateListener>(true);
 
+
             // Initialize the grid panels
             if (inventoryPanel != null)
             {
@@ -200,6 +207,7 @@ namespace Project.TeamBuilder.UI
                 inventoryPanel.SetVisible(false);
 
                 inventoryPanel.SubscribeToArtifactClicks(HandleArtifactClicked);
+                inventoryPanel.SubscribeToArtifactDoubleClicks(HandleArtifactDoubleClicked);
             }
 
             // Initialize each team slot
@@ -217,6 +225,8 @@ namespace Project.TeamBuilder.UI
         public void OnPanelOpened()
         {
             EnsureInitialized();
+            ClearArtifactSwitchSelection();
+            selectedCharacterSwitchSlotIndex = -1;
             if (isPanelSessionActive)
             {
                 draftController.RestoreCachedDraft();
@@ -259,6 +269,8 @@ namespace Project.TeamBuilder.UI
         public void OnPanelClosed()
         {
             pendingCloseAfterDeploy = null;
+            ClearArtifactSwitchSelection();
+            selectedCharacterSwitchSlotIndex = -1;
             if (inventoryPanel != null)
             {
                 inventoryPanel.CloseAll();
@@ -324,10 +336,11 @@ namespace Project.TeamBuilder.UI
         public void SetMode(ZoneMode mode)
         {
             currentMode = mode;
-            if (currentMode == ZoneMode.CombatZone && inventoryPanel != null)
+            if (currentMode == ZoneMode.CombatZone)
             {
-                inventoryPanel.CloseAll();
+                inventoryPanel?.CloseAll();
                 selectedCharacterSwitchSlotIndex = -1;
+                ClearArtifactSwitchSelection();
             }
 
             ApplyModeVisualState();
@@ -346,6 +359,7 @@ namespace Project.TeamBuilder.UI
             }
             isInventoryPanelOpen = false;
             selectedCharacterSwitchSlotIndex = -1;
+            ClearArtifactSwitchSelection();
             ApplyModeVisualState();
         }
 
@@ -375,6 +389,7 @@ namespace Project.TeamBuilder.UI
                     inventoryPanel.CloseAll();
                     inventoryPanel.SetVisible(false);
                     selectedCharacterSwitchSlotIndex = -1;
+                    ClearArtifactSwitchSelection();
                 }
             }
             ApplyModeVisualState();
@@ -402,6 +417,7 @@ namespace Project.TeamBuilder.UI
                 return;
             }
 
+            ClearArtifactSwitchSelection();
             if (inventoryPanel != null)
             {
                 inventoryPanel.SetVisible(true);
@@ -429,6 +445,7 @@ namespace Project.TeamBuilder.UI
                 return;
             }
 
+            ClearArtifactSwitchSelection();
             selectedCharacterSwitchSlotIndex = slotIndex;
             isInventoryPanelOpen = true;
 
@@ -492,6 +509,8 @@ namespace Project.TeamBuilder.UI
                 return;
             }
 
+            ClearArtifactSwitchSelection();
+            selectedCharacterSwitchSlotIndex = -1;
             if (inventoryPanel != null)
             {
                 inventoryPanel.SetVisible(true);
@@ -513,7 +532,175 @@ namespace Project.TeamBuilder.UI
                 inventoryPanel.CloseAll();
             }
             isInventoryPanelOpen = inventoryPanel != null && inventoryPanel.IsAnyPanelOpen;
+            ClearArtifactSwitchSelection();
             ApplyModeVisualState();
+        }
+
+        public void BeginArtifactSwitch(ArtifactSlotUI destinationSlot)
+        {
+            if (currentMode != ZoneMode.SafeZone)
+            {
+                CloseInventoryPanel();
+                return;
+            }
+
+            if (destinationSlot == null
+                || destinationSlot.ReadOnly
+                || destinationSlot.ParentSlot == null
+                || destinationSlot.ParentSlot.CurrentCharacter == null)
+            {
+                return;
+            }
+
+            ClearArtifactSwitchSelection();
+            selectedCharacterSwitchSlotIndex = -1;
+            if (artifactPreviewPanel != null)
+            {
+                if (destinationSlot.CurrentArtifact != null && playerInventory != null)
+                {
+                    artifactPreviewPanel.Open(
+                        destinationSlot.CurrentArtifact,
+                        playerInventory.ResolveArtifactDefinition(destinationSlot.CurrentArtifact.definitionId),
+                        playerInventory.ArtifactRollTable);
+                }
+                else
+                {
+                    artifactPreviewPanel.ShowEmpty();
+                }
+            }
+            selectedArtifactSwitchSlot = destinationSlot;
+            selectedArtifactSwitchSlot.SetSelectionDestination(true);
+            isInventoryPanelOpen = true;
+
+            if (inventoryPanel != null)
+            {
+                inventoryPanel.SetVisible(true);
+                if (!inventoryPanel.IsArtifactGridOpen)
+                {
+                    inventoryPanel.ToggleArtifactGrid();
+                }
+                panelOpenedFrame = Time.frameCount;
+                RefreshGrid();
+            }
+
+            ApplyModeVisualState();
+        }
+
+        public HashSet<string> GetDraftEquippedArtifactInstanceIds(HashSet<string> destination = null)
+        {
+            destination ??= new HashSet<string>(StringComparer.Ordinal);
+            destination.Clear();
+
+            if (teamSlots != null)
+            {
+                for (int i = 0; i < teamSlots.Length; i++)
+                {
+                    if (teamSlots[i] == null) continue;
+                    ArtifactInstance[] equipped = teamSlots[i].GetEquippedArtifacts();
+                    if (equipped == null) continue;
+                    for (int j = 0; j < equipped.Length; j++)
+                    {
+                        if (equipped[j] != null && !string.IsNullOrWhiteSpace(equipped[j].instanceId))
+                        {
+                            destination.Add(equipped[j].instanceId);
+                        }
+                    }
+                }
+            }
+            return destination;
+        }
+
+        public bool IsArtifactEquippedInDraft(string instanceId)
+        {
+            if (string.IsNullOrWhiteSpace(instanceId) || teamSlots == null) return false;
+            for (int i = 0; i < teamSlots.Length; i++)
+            {
+                if (teamSlots[i] == null) continue;
+                ArtifactInstance[] equipped = teamSlots[i].GetEquippedArtifacts();
+                if (equipped == null) continue;
+                for (int j = 0; j < equipped.Length; j++)
+                {
+                    if (equipped[j] != null && string.Equals(equipped[j].instanceId, instanceId, StringComparison.Ordinal))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public TeamSlotUI GetActiveOrFirstTeamSlot()
+        {
+            if (teamSlots == null || teamSlots.Length == 0) return null;
+            int activeIdx = StagedActiveIndex >= 0 && StagedActiveIndex < teamSlots.Length ? StagedActiveIndex : 0;
+            if (teamSlots[activeIdx] != null && teamSlots[activeIdx].CurrentCharacter != null)
+                return teamSlots[activeIdx];
+
+            for (int i = 0; i < teamSlots.Length; i++)
+            {
+                if (teamSlots[i] != null && teamSlots[i].CurrentCharacter != null)
+                    return teamSlots[i];
+            }
+            return teamSlots[0];
+        }
+
+        public bool TryAssignArtifactToSelectedSlot(ArtifactInstance incomingArtifact)
+        {
+            return TryEquipArtifact(incomingArtifact);
+        }
+
+        public bool TryEquipArtifact(ArtifactInstance artifact)
+        {
+            if (currentMode != ZoneMode.SafeZone || artifact == null)
+            {
+                return false;
+            }
+
+            ArtifactSlotUI targetSlot = selectedArtifactSwitchSlot;
+            if (targetSlot == null)
+            {
+                TeamSlotUI activeSlot = GetActiveOrFirstTeamSlot();
+                if (activeSlot != null)
+                {
+                    targetSlot = activeSlot.GetFirstEmptyOrFirstArtifactSlot();
+                }
+            }
+
+            if (targetSlot == null
+                || targetSlot.ReadOnly
+                || targetSlot.ParentSlot == null
+                || targetSlot.ParentSlot.CurrentCharacter == null)
+            {
+                return false;
+            }
+
+            // If already equipped on this exact target slot, unequip it
+            if (targetSlot.GetArtifact() != null && string.Equals(targetSlot.GetArtifact().instanceId, artifact.instanceId, StringComparison.Ordinal))
+            {
+                targetSlot.ClearArtifact();
+                targetSlot.ParentSlot.RecalculateStats();
+                OnSlotChanged();
+                return true;
+            }
+
+            // Equip to target slot (HandleArtifactDrop automatically un-equips from any other slot on team)
+            targetSlot.ParentSlot.HandleArtifactDrop(targetSlot, artifact);
+            ClearArtifactSwitchSelection();
+            return true;
+        }
+
+        public void CancelArtifactSwitch()
+        {
+            ClearArtifactSwitchSelection();
+        }
+
+        private void ClearArtifactSwitchSelection()
+        {
+            if (selectedArtifactSwitchSlot != null)
+            {
+                selectedArtifactSwitchSlot.SetSelectionDestination(false);
+                selectedArtifactSwitchSlot = null;
+            }
         }
 
         // =========================================================
@@ -544,7 +731,7 @@ namespace Project.TeamBuilder.UI
             return null;
         }
 
-        public bool IsArtifactEquippedOnTeam(Artifact artifact)
+        public bool IsArtifactEquippedOnTeam(ArtifactInstance artifact)
         {
             return FindSlotWithArtifact(artifact) != null;
         }
@@ -618,7 +805,7 @@ namespace Project.TeamBuilder.UI
             return ResolveCharacterBaseStats(character);
         }
 
-        public CharacterStats ResolveCharacterRuntimeStats(CharacterObject character, Artifact[] equippedArtifacts = null)
+        public CharacterStats ResolveCharacterRuntimeStats(CharacterObject character, ArtifactInstance[] equippedArtifacts = null)
         {
             if (character == null)
             {
@@ -638,7 +825,7 @@ namespace Project.TeamBuilder.UI
             return stats;
         }
 
-        public TeamSlotUI FindSlotWithArtifact(Artifact artifact)
+        public TeamSlotUI FindSlotWithArtifact(ArtifactInstance artifact)
         {
             if (artifact == null) return null;
 
@@ -662,7 +849,7 @@ namespace Project.TeamBuilder.UI
             TeamSlotUI slot = FindSlotWithCharacter(inspectScreenUI.CurrentCharacter);
             if (slot != null)
             {
-                inspectScreenUI.RefreshCurrentArtifacts(slot.GetEquippedArtifacts());
+                inspectScreenUI.RefreshCurrentArtifactInstances(slot.GetEquippedArtifacts(), playerInventory);
             }
         }
 
@@ -701,33 +888,9 @@ namespace Project.TeamBuilder.UI
             return teamLoader;
         }
 
-        private static void ApplyArtifactBonuses(CharacterStats stats, CharacterStats baseStats, Artifact[] equippedArtifacts)
+        private static void ApplyArtifactBonuses(CharacterStats stats, CharacterStats baseStats, ArtifactInstance[] equippedArtifacts)
         {
-            if (stats == null || baseStats == null || equippedArtifacts == null)
-            {
-                return;
-            }
-
-            for (int i = 0; i < equippedArtifacts.Length; i++)
-            {
-                Artifact artifact = equippedArtifacts[i];
-                if (artifact == null || artifact.bonusStats == null)
-                {
-                    continue;
-                }
-
-                stats.maxHP += baseStats.maxHP * (artifact.bonusStats.maxHP / 100f);
-                stats.attack += baseStats.attack * (artifact.bonusStats.attack / 100f);
-                stats.defense += baseStats.defense * (artifact.bonusStats.defense / 100f);
-                stats.speed += artifact.bonusStats.speed;
-                stats.elementalMastery += artifact.bonusStats.elementalMastery;
-                stats.critRate += artifact.bonusStats.critRate;
-                stats.critDamage += artifact.bonusStats.critDamage;
-                stats.cooldownRate += artifact.bonusStats.cooldownRate;
-                stats.impact += artifact.bonusStats.impact;
-                stats.damageReduction += artifact.bonusStats.damageReduction;
-                stats.aeRecharge += artifact.bonusStats.aeRecharge;
-            }
+            ArtifactStatAggregator.Apply(stats, baseStats, equippedArtifacts);
         }
 
         // =========================================================
@@ -797,11 +960,11 @@ namespace Project.TeamBuilder.UI
             ApplyModeVisualState();
         }
 
-        public bool TryResolveArtifactSelection(Artifact currentArtifact, int direction, out Artifact resolvedArtifact)
+        public bool TryResolveArtifactSelection(ArtifactInstance currentArtifact, int direction, out ArtifactInstance resolvedArtifact)
         {
             resolvedArtifact = currentArtifact;
 
-            List<Artifact> ownedArtifacts = GetOwnedArtifacts();
+            List<ArtifactInstance> ownedArtifacts = GetOwnedArtifacts();
             if (ownedArtifacts.Count == 0)
             {
                 resolvedArtifact = null;
@@ -831,20 +994,23 @@ namespace Project.TeamBuilder.UI
             return true;
         }
 
-        public List<Artifact> GetOwnedArtifacts()
+        public List<ArtifactInstance> GetOwnedArtifacts()
         {
-            List<Artifact> ownedArtifacts = new List<Artifact>();
-            if (playerInventory == null || playerInventory.ownedItems == null)
+            List<ArtifactInstance> ownedArtifacts = new List<ArtifactInstance>();
+            if (playerInventory == null)
             {
                 return ownedArtifacts;
             }
 
-            foreach (BaseItem item in playerInventory.ownedItems)
+            IReadOnlyList<ArtifactInstance> instances = playerInventory.ArtifactInstances;
+            for (int i = 0; i < instances.Count; i++)
             {
-                if (item is Artifact artifact && artifact != null && !ownedArtifacts.Contains(artifact))
-                {
-                    ownedArtifacts.Add(artifact);
-                }
+                ArtifactInstance instance = instances[i];
+                ArtifactDefinition definition = instance != null
+                    ? playerInventory.ResolveArtifactDefinition(instance.definitionId)
+                    : null;
+                if (instance != null && definition != null && definition.isEquippable)
+                    ownedArtifacts.Add(instance);
             }
 
             return ownedArtifacts;
@@ -980,7 +1146,7 @@ namespace Project.TeamBuilder.UI
         {
             draftController.NormalizeStagedActiveIndex();
             CharacterObject[] teamData = draftController.BuildDraftTeamData();
-            Artifact[][] artifactData = draftController.BuildDraftArtifactData();
+            ArtifactInstanceRef[][] artifactData = draftController.BuildDraftArtifactData();
 
             if (teamLoader != null)
             {
@@ -1033,13 +1199,31 @@ namespace Project.TeamBuilder.UI
             ApplyModeVisualState();
         }
 
-        private void HandleArtifactClicked(Artifact artifact)
+        private void HandleArtifactClicked(ArtifactInstance artifact)
         {
-            if (artifactPreviewPanel != null && artifact != null)
+            if (artifactPreviewPanel != null)
             {
-                artifactPreviewPanel.Open(artifact);
+                if (artifact != null)
+                {
+                    artifactPreviewPanel.Open(artifact, playerInventory != null
+                        ? playerInventory.ResolveArtifactDefinition(artifact.definitionId)
+                        : null,
+                        playerInventory != null ? playerInventory.ArtifactRollTable : null);
+                    playerInventory?.TryMarkArtifactSeen(artifact.instanceId);
+
+                }
+                else
+                {
+                    artifactPreviewPanel.ShowEmpty();
+                }
             }
         }
+
+        private void HandleArtifactDoubleClicked(ArtifactInstance artifact)
+        {
+            TryEquipArtifact(artifact);
+        }
+
 
         private void ApplyModeVisualState()
         {

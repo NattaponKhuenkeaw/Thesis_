@@ -719,7 +719,7 @@ public class ProjectileRuntime : MonoBehaviour
             RuntimeAreaEffectApplication application = ProjectileData.areaEffects[i];
             RuntimeEffectApplyTarget applyTarget = GetAreaApplyTarget(application);
             if (application == null
-                || application.ResolvedEffect == null
+                || !application.HasValidEffect
                 || applyTarget == RuntimeEffectApplyTarget.Enemy
                 || !IsAreaEffectUnlocked(application, activePlayer))
             {
@@ -738,6 +738,7 @@ public class ProjectileRuntime : MonoBehaviour
                 {
                     RuntimeEffectApplyTarget.Self => target == activePlayer.characterObject,
                     RuntimeEffectApplyTarget.Allies => true,
+                    RuntimeEffectApplyTarget.Teammates => target != activePlayer.characterObject,
                     _ => false
                 };
 
@@ -811,7 +812,7 @@ public class ProjectileRuntime : MonoBehaviour
                 RuntimeAreaEffectApplication application = ProjectileData.areaEffects[effectIndex];
                 RuntimeEffectApplyTarget applyTarget = GetAreaApplyTarget(application);
                 if (application == null
-                    || application.ResolvedEffect == null
+                    || !application.HasValidEffect
                     || applyTarget != RuntimeEffectApplyTarget.Enemy
                     || !IsAreaEffectUnlocked(application, activePlayer))
                 {
@@ -852,6 +853,7 @@ public class ProjectileRuntime : MonoBehaviour
             {
                 PassiveEffectScope.Enemy => RuntimeEffectApplyTarget.Enemy,
                 PassiveEffectScope.Allies => RuntimeEffectApplyTarget.Allies,
+                PassiveEffectScope.Teammates => RuntimeEffectApplyTarget.Teammates,
                 _ => RuntimeEffectApplyTarget.Self
             }
             : RuntimeEffectApplyTarget.Self;

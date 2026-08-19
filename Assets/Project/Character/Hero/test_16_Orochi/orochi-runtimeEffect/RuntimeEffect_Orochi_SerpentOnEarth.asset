@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3bdf08d063e841dbb4ae1c7506a33134, type: 3}
+  m_Name: RuntimeEffect_Orochi_SerpentOnEarth
+  m_EditorClassIdentifier: Assembly-CSharp::AdditionalDamageOnHitRuntimeEffectDefinition
+  effectId: orochi.serpent_on_earth
+  displayName: Serpent on Earth
+  icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+  fieldVisualPrefab: {fileID: 0}
+  kind: 0
+  appliesOn: 0
+  durationType: 1
+  durationSeconds: 0
+  refreshDurationOnReapply: 0
+  stackable: 0
+  removeOnOwnerDamaged: 0
+  filterByElement: 0
+  filterElementType: 0
+  filterByCategory: 0
+  filterCategory: 0
+  chance: 1
+  internalCooldown: 2
+  attackRatio: 1.5
+  sourceStatDamageSource: 1
+  sourceStatRatio: 0
+  targetMaxHpRatio: 0
+  sourceRuntimeEffectStackKey:
+  attackRatioPerSourceRuntimeEffectStack: 0
+  maxSourceRuntimeEffectStacks: 0
+  capTargetMaxHpDamage: 0
+  targetMaxHpDamageCapSource: 1
+  targetMaxHpDamageCapRatio: 1
+  elementType: 0

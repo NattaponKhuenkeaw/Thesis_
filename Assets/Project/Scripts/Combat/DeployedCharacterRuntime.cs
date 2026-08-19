@@ -1,23 +1,22 @@
 using System;
 using System.Collections.Generic;
-using Project.InventorySystem.Items;
 
 public sealed class DeployedCharacterRuntime
 {
     public CharacterObject Character { get; }
     public int SlotIndex { get; private set; }
     public CharacterStats EffectiveStats { get; private set; }
-    public IReadOnlyList<Artifact> EquippedArtifacts => equippedArtifacts;
+    public IReadOnlyList<ArtifactRuntimeSnapshot> EquippedArtifacts => equippedArtifacts;
     public CombatRuntimeState CombatState { get; }
     public uint StatsRevision { get; private set; }
 
-    private Artifact[] equippedArtifacts;
+    private ArtifactRuntimeSnapshot[] equippedArtifacts;
 
     public DeployedCharacterRuntime(
         CharacterObject character,
         int slotIndex,
         CharacterStats effectiveStats,
-        Artifact[] artifacts,
+        ArtifactRuntimeSnapshot[] artifacts,
         CombatRuntimeState combatState)
     {
         Character = character;
@@ -31,7 +30,7 @@ public sealed class DeployedCharacterRuntime
     public void UpdateStats(
         int slotIndex,
         CharacterStats effectiveStats,
-        Artifact[] artifacts)
+        ArtifactRuntimeSnapshot[] artifacts)
     {
         SlotIndex = slotIndex;
         EffectiveStats = effectiveStats;
@@ -39,14 +38,14 @@ public sealed class DeployedCharacterRuntime
         StatsRevision++;
     }
 
-    private static Artifact[] CopyArtifacts(Artifact[] artifacts)
+    private static ArtifactRuntimeSnapshot[] CopyArtifacts(ArtifactRuntimeSnapshot[] artifacts)
     {
         if (artifacts == null || artifacts.Length == 0)
         {
-            return Array.Empty<Artifact>();
+            return Array.Empty<ArtifactRuntimeSnapshot>();
         }
 
-        Artifact[] snapshot = new Artifact[artifacts.Length];
+        ArtifactRuntimeSnapshot[] snapshot = new ArtifactRuntimeSnapshot[artifacts.Length];
         Array.Copy(artifacts, snapshot, artifacts.Length);
         return snapshot;
     }

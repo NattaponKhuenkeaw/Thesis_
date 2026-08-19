@@ -139,7 +139,7 @@ namespace CombatCore
                         reactionOwnerId = AttackerId,
                     };
 
-                    enemy.TakeHit(knockdownData, enemy.transform.position);
+                    enemy.TakeResolvedHit(knockdownData, enemy.transform.position);
                 }
             }
             ClearInternal();

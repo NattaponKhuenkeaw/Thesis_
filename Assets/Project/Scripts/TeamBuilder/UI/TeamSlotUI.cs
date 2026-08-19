@@ -4,6 +4,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TMPro;
 using Project.InventorySystem.Items;
+using Project.InventorySystem.Artifacts;
 using Project.UI;
 using Project.Core.ZoneState;
 
@@ -238,7 +239,7 @@ namespace Project.TeamBuilder.UI
             }
 
             CharacterItem tempChar = currentCharacter;
-            Artifact[] tempArtifacts = GetEquippedArtifacts();
+            ArtifactInstance[] tempArtifacts = GetEquippedArtifacts();
 
             SetCharacter(other.currentCharacter);
             SetArtifacts(other.GetEquippedArtifacts());
@@ -376,6 +377,13 @@ namespace Project.TeamBuilder.UI
                     // Fallback if UIManager is not yet set up in the scene.
                     parentBuilder.InspectScreenUI.OpenInspectorWithCharacter(charName);
                 }
+
+                if (parentBuilder != null && parentBuilder.InspectScreenUI != null)
+                {
+                    parentBuilder.InspectScreenUI.RefreshCurrentArtifactInstances(
+                        GetEquippedArtifacts(),
+                        parentBuilder.PlayerInventory);
+                }
             }
             rmbHoldCoroutine = null;
         }
@@ -445,6 +453,7 @@ namespace Project.TeamBuilder.UI
 
             if (currentCharacter == null)
             {
+                parentBuilder.CancelArtifactSwitch();
                 slot.ClearArtifact();
                 return;
             }
@@ -455,10 +464,18 @@ namespace Project.TeamBuilder.UI
                 slot.ClearArtifact();
                 RecalculateStats();
                 parentBuilder.OnSlotChanged();
+                return;
             }
+
+            parentBuilder.BeginArtifactSwitch(slot);
         }
 
-        public void HandleArtifactDrop(ArtifactSlotUI targetSlot, Artifact newArtifact)
+        public void HandleArtifactSlotDragStarted()
+        {
+            parentBuilder?.CancelArtifactSwitch();
+        }
+
+        public void HandleArtifactDrop(ArtifactSlotUI targetSlot, ArtifactInstance newArtifact)
         {
             if (parentBuilder == null || currentCharacter == null || targetSlot == null || newArtifact == null) return;
 
@@ -483,7 +500,8 @@ namespace Project.TeamBuilder.UI
                 }
             }
 
-            targetSlot.SetArtifact(newArtifact);
+            targetSlot.SetArtifact(newArtifact, ResolveDefinition(newArtifact));
+            parentBuilder.PlayerInventory?.TryMarkArtifactSeen(newArtifact.instanceId);
             RecalculateStats();
             parentBuilder.OnSlotChanged();
         }
@@ -498,10 +516,11 @@ namespace Project.TeamBuilder.UI
                 return;
             }
 
-            Artifact temp = targetSlot.GetArtifact();
+            ArtifactInstance temp = targetSlot.GetArtifact();
+            ArtifactDefinition tempDefinition = targetSlot.CurrentDefinition;
             TeamSlotUI sourceParent = sourceSlot.ParentSlot;
-            targetSlot.SetArtifact(sourceSlot.GetArtifact());
-            sourceSlot.SetArtifact(temp);
+            targetSlot.SetArtifact(sourceSlot.GetArtifact(), sourceSlot.CurrentDefinition);
+            sourceSlot.SetArtifact(temp, tempDefinition);
 
             RecalculateStats();
             if (sourceParent != null && sourceParent != this)
@@ -511,13 +530,14 @@ namespace Project.TeamBuilder.UI
             parentBuilder.OnSlotChanged();
         }
 
-        public ArtifactSlotUI FindArtifactSlotWith(Artifact artifact)
+        public ArtifactSlotUI FindArtifactSlotWith(ArtifactInstance artifact)
         {
             if (artifact == null) return null;
 
             for (int i = 0; i < artifactSlots.Length; i++)
             {
-                if (artifactSlots[i] != null && artifactSlots[i].GetArtifact() == artifact)
+                ArtifactInstance equipped = artifactSlots[i] != null ? artifactSlots[i].GetArtifact() : null;
+                if (equipped != null && equipped.instanceId == artifact.instanceId)
                 {
                     return artifactSlots[i];
                 }
@@ -525,9 +545,20 @@ namespace Project.TeamBuilder.UI
             return null;
         }
 
-        public Artifact[] GetEquippedArtifacts()
+        public ArtifactSlotUI GetFirstEmptyOrFirstArtifactSlot()
         {
-            Artifact[] artifacts = new Artifact[artifactSlots.Length];
+            if (artifactSlots == null || artifactSlots.Length == 0) return null;
+            for (int i = 0; i < artifactSlots.Length; i++)
+            {
+                if (artifactSlots[i] != null && artifactSlots[i].IsEmpty)
+                    return artifactSlots[i];
+            }
+            return artifactSlots[0];
+        }
+
+        public ArtifactInstance[] GetEquippedArtifacts()
+        {
+            ArtifactInstance[] artifacts = new ArtifactInstance[artifactSlots.Length];
             for (int i = 0; i < artifactSlots.Length; i++)
             {
                 artifacts[i] = artifactSlots[i] != null ? artifactSlots[i].GetArtifact() : null;
@@ -536,24 +567,43 @@ namespace Project.TeamBuilder.UI
             return artifacts;
         }
 
-        public void SetEquippedArtifacts(Artifact[] artifacts)
+        public ArtifactInstanceRef[] GetEquippedArtifactRefs()
+        {
+            ArtifactInstanceRef[] refs = new ArtifactInstanceRef[artifactSlots.Length];
+            for (int i = 0; i < artifactSlots.Length; i++)
+            {
+                ArtifactInstance artifact = artifactSlots[i] != null ? artifactSlots[i].GetArtifact() : null;
+                refs[i] = new ArtifactInstanceRef(artifact != null ? artifact.instanceId : string.Empty);
+            }
+
+            return refs;
+        }
+
+        public void SetEquippedArtifacts(ArtifactInstance[] artifacts)
         {
             SetArtifacts(artifacts);
             RecalculateStats();
         }
 
-        private void SetArtifacts(Artifact[] artifacts)
+        private void SetArtifacts(ArtifactInstance[] artifacts)
         {
             for (int i = 0; i < artifactSlots.Length; i++)
             {
                 if (artifactSlots[i] != null)
                 {
-                    Artifact artifact = artifacts != null && i < artifacts.Length
+                    ArtifactInstance artifact = artifacts != null && i < artifacts.Length
                         ? artifacts[i]
                         : null;
-                    artifactSlots[i].SetArtifact(artifact);
+                    artifactSlots[i].SetArtifact(artifact, ResolveDefinition(artifact));
                 }
             }
+        }
+
+        private ArtifactDefinition ResolveDefinition(ArtifactInstance artifact)
+        {
+            return artifact != null && parentBuilder != null && parentBuilder.PlayerInventory != null
+                ? parentBuilder.PlayerInventory.ResolveArtifactDefinition(artifact.definitionId)
+                : null;
         }
 
         private void OnDisable()
@@ -772,12 +822,13 @@ namespace Project.TeamBuilder.UI
             trend += NormalizeDelta(previous.attack, next.attack);
             trend += NormalizeDelta(previous.defense, next.defense);
             trend += NormalizeDelta(previous.speed, next.speed);
-            trend += NormalizeDelta(previous.elementalMastery, next.elementalMastery);
+            trend += NormalizeDelta(previous.dotMastery, next.dotMastery);
             trend += NormalizeDelta(previous.critRate, next.critRate);
             trend += NormalizeDelta(previous.critDamage, next.critDamage);
-            trend += NormalizeDelta(previous.cooldownRate, next.cooldownRate);
-            trend += NormalizeDelta(previous.impact, next.impact);
-            trend += NormalizeDelta(previous.aeRecharge, next.aeRecharge);
+            trend += NormalizeDelta(previous.cooldownMastery, next.cooldownMastery);
+            trend += NormalizeDelta(previous.damageIncrease, next.damageIncrease);
+            trend += NormalizeDelta(previous.additionalDamageIncrease, next.additionalDamageIncrease);
+            trend += NormalizeDelta(previous.auraEnergyRecharge, next.auraEnergyRecharge);
             return trend;
         }
 

@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Project.InventorySystem.Artifacts;
 using Project.InventorySystem.Items;
-using Project.TeamBuilder.UI;
+using Project.ShopSystem;
 
 namespace Project.TeamBuilder.UI
 {
@@ -23,7 +25,6 @@ namespace Project.TeamBuilder.UI
         public bool IsArtifactGridOpen => artifactGridPanel != null && artifactGridPanel.gameObject.activeSelf;
         public bool IsAnyPanelOpen => IsCharacterGridOpen || IsArtifactGridOpen;
 
-
         public void Init(TeamBuilderUI teamBuilder, Canvas canvas)
         {
             parentTeamBuilder = teamBuilder;
@@ -36,13 +37,13 @@ namespace Project.TeamBuilder.UI
 
             if (artifactGridPanel != null)
             {
-                artifactGridPanel.Init(teamBuilder, canvas);
+                artifactGridPanel.Init(teamBuilder, canvas, teamBuilder != null ? teamBuilder.PlayerInventory : null);
             }
 
             CloseAll();
         }
 
-        public void Populate(List<CharacterItem> characters, List<Artifact> artifacts)
+        public void Populate(List<CharacterItem> characters, IReadOnlyList<ArtifactInstance> artifacts)
         {
             if (characterGridPanel != null)
             {
@@ -68,12 +69,21 @@ namespace Project.TeamBuilder.UI
             }
         }
 
-        public void SubscribeToArtifactClicks(System.Action<Artifact> callback)
+        public void SubscribeToArtifactClicks(Action<ArtifactInstance> callback)
         {
             if (artifactGridPanel != null)
             {
                 artifactGridPanel.OnArtifactClicked -= callback;
                 artifactGridPanel.OnArtifactClicked += callback;
+            }
+        }
+
+        public void SubscribeToArtifactDoubleClicks(Action<ArtifactInstance> callback)
+        {
+            if (artifactGridPanel != null)
+            {
+                artifactGridPanel.OnArtifactDoubleClicked -= callback;
+                artifactGridPanel.OnArtifactDoubleClicked += callback;
             }
         }
 

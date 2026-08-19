@@ -206,8 +206,6 @@ public class InputHandler_Player : MonoBehaviour
             stateMachine.InputBuffer.BufferSwitch(0);
         if (Keyboard.current.digit2Key.wasPressedThisFrame)
             stateMachine.InputBuffer.BufferSwitch(1);
-        if (Keyboard.current.digit3Key.wasPressedThisFrame)
-            stateMachine.InputBuffer.BufferSwitch(2);
 
         stateMachine.TryConsumeBufferedSwitch();
     }

@@ -1,14 +1,15 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
 using TMPro;
 using Project.InventorySystem.Items;
+using Project.InventorySystem.Artifacts;
 
 namespace Project.TeamBuilder.UI
 {
     /// <summary>
     /// Detail panel for inspecting an artifact. Overlays the screen and can be dismissed
-    /// by clicking outside its bounds.
+    /// by clicking outside its bounds or kept open permanently.
     /// </summary>
     [RequireComponent(typeof(RectTransform))]
     public class ArtifactPreviewPanel : MonoBehaviour
@@ -20,45 +21,78 @@ namespace Project.TeamBuilder.UI
         [SerializeField] private Transform statItemContainer;
         [SerializeField] private TMP_Text descriptionText;
         [SerializeField] private TMP_Text loreText; // Optional lore/flavor text
+        [SerializeField] private TMP_Text qualityText;
+
+
+        [Header("Behavior Settings")]
+        [SerializeField] private bool closeOnOutsideClick = false;
+        [SerializeField] private bool keepVisibleWhenEmpty = true;
 
         // =========================================================
         // Runtime State
         // =========================================================
         private RectTransform panelRect;
-        private Artifact currentArtifact;
+        private ArtifactInstance currentArtifact;
+        private ArtifactDefinition currentDefinition;
+        private ArtifactRollTable currentRollTable;
         private bool isOpen;
         private int openedFrame = -1;
 
         public bool IsOpen => isOpen;
+        public ArtifactInstance CurrentArtifact => currentArtifact;
+        public ArtifactDefinition CurrentDefinition => currentDefinition;
 
         private void Awake()
         {
             panelRect = GetComponent<RectTransform>();
             ResolveMissingReferences();
-            gameObject.SetActive(false);
-            isOpen = false;
+            if (keepVisibleWhenEmpty)
+            {
+                ShowEmpty();
+            }
+            else
+            {
+                gameObject.SetActive(false);
+                isOpen = false;
+            }
         }
 
         private void Update()
         {
-            if (!isOpen) return;
+            if (!isOpen || !closeOnOutsideClick) return;
             if (Time.frameCount == openedFrame) return;
 
-            // Dismiss when clicking outside the panel
+            // Dismiss when clicking outside the panel if closeOnOutsideClick is enabled
             if (UnityEngine.InputSystem.Pointer.current != null && UnityEngine.InputSystem.Pointer.current.press.wasPressedThisFrame)
             {
                 if (!RectTransformUtility.RectangleContainsScreenPoint(panelRect, UnityEngine.InputSystem.Pointer.current.position.ReadValue(), null))
                 {
-                    Close();
+                    if (keepVisibleWhenEmpty)
+                    {
+                        ShowEmpty();
+                    }
+                    else
+                    {
+                        Close();
+                    }
                 }
             }
         }
 
-        public void Open(Artifact artifact)
+        public void Open(ArtifactInstance artifact, ArtifactDefinition definition, ArtifactRollTable rollTable)
         {
-            if (artifact == null) return;
+            if (artifact == null || definition == null)
+            {
+                if (keepVisibleWhenEmpty)
+                {
+                    ShowEmpty();
+                }
+                return;
+            }
 
             currentArtifact = artifact;
+            currentDefinition = definition;
+            currentRollTable = rollTable;
             gameObject.SetActive(true);
             isOpen = true;
             openedFrame = Time.frameCount;
@@ -69,6 +103,46 @@ namespace Project.TeamBuilder.UI
             transform.SetAsLastSibling();
         }
 
+        public void ShowEmpty()
+        {
+            currentArtifact = null;
+            currentDefinition = null;
+            currentRollTable = null;
+            gameObject.SetActive(true);
+            isOpen = true;
+            openedFrame = Time.frameCount;
+            ResolveMissingReferences();
+
+            if (artifactIcon != null)
+            {
+                artifactIcon.sprite = null;
+                artifactIcon.enabled = false;
+            }
+
+            if (artifactNameText != null)
+            {
+                artifactNameText.text = "Select an Artifact";
+            }
+
+            if (descriptionText != null)
+            {
+                descriptionText.text = "Select an artifact to view its stats and effects.";
+            }
+
+            if (loreText != null)
+            {
+                loreText.text = string.Empty;
+            }
+
+            if (qualityText != null)
+            {
+                qualityText.text = string.Empty;
+            }
+
+
+            ClearStatItems();
+        }
+
         public void Close()
         {
             if (!isOpen) return;
@@ -76,72 +150,106 @@ namespace Project.TeamBuilder.UI
             gameObject.SetActive(false);
             isOpen = false;
             currentArtifact = null;
+            currentDefinition = null;
+            currentRollTable = null;
         }
 
-        private void ResolveMissingReferences()
+        public void ClearStatItems()
         {
-            TMP_Text[] texts = GetComponentsInChildren<TMP_Text>(true);
-            Image[] images = GetComponentsInChildren<Image>(true);
-
-            artifactNameText ??= FindTextByName(texts, "Name", "Title", "ArtifactName");
-            descriptionText ??= FindTextByName(texts, "Description", "Passive", "Effect", "Info");
-            loreText ??= FindTextByName(texts, "Lore", "Flavor");
-            artifactIcon ??= FindImageByName(images, "Icon", "ArtifactIcon");
-
-            if (statItemContainer == null)
-            {
-                Transform statsRoot = FindChildByName(transform, "Stats", "StatContainer", "Stat Item Container", "Content");
-                statItemContainer = statsRoot != null ? statsRoot : transform;
-            }
-        }
-
-        private void PopulateData()
-        {
-            if (currentArtifact == null) return;
-
-            if (artifactIcon != null && currentArtifact.icon != null)
-            {
-                artifactIcon.sprite = currentArtifact.icon;
-                artifactIcon.enabled = true;
-            }
-
-            if (artifactNameText != null)
-            {
-                artifactNameText.text = currentArtifact.itemName;
-            }
-
-            // Clear existing stat items
             if (statItemContainer != null)
             {
                 foreach (Transform child in statItemContainer)
                 {
                     Destroy(child.gameObject);
                 }
+            }
+        }
 
-                if (statItemPrefab != null && currentArtifact.bonusStats != null)
+
+        private void ResolveMissingReferences()
+        {
+            TMP_Text[] texts = GetComponentsInChildren<TMP_Text>(true);
+            Image[] images = GetComponentsInChildren<Image>(true);
+            Button[] buttons = GetComponentsInChildren<Button>(true);
+
+            artifactNameText ??= FindTextByName(texts, "Name", "Title", "ArtifactName", "p_Text");
+            descriptionText ??= FindTextByName(texts, "Description", "Passive", "Effect", "Info", "p_Desc");
+            loreText ??= FindTextByName(texts, "Lore", "Flavor");
+            qualityText ??= FindTextByName(texts, "Quality", "RollQuality", "headlv");
+            artifactIcon ??= FindImageByName(images, "Icon", "ArtifactIcon", "p_Icon");
+
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                if (buttons[i] != null)
                 {
-                    AddStatItemIfNonZero("HP", currentArtifact.bonusStats.maxHP, "hp");
-                    AddStatItemIfNonZero("ATK", currentArtifact.bonusStats.attack, "atk");
-                    AddStatItemIfNonZero("DEF", currentArtifact.bonusStats.defense, "def");
-                    AddStatItemIfNonZero("SPD", currentArtifact.bonusStats.speed, "spd");
-                    AddStatItemIfNonZero("Crit Rate", currentArtifact.bonusStats.critRate, "crit");
-                    AddStatItemIfNonZero("Crit DMG", currentArtifact.bonusStats.critDamage, "crit");
-                    AddStatItemIfNonZero("Cooldown Rate", currentArtifact.bonusStats.cooldownRate, "cdr");
-                    AddStatItemIfNonZero("Elemental Mastery", currentArtifact.bonusStats.elementalMastery, "elemental");
-                    AddStatItemIfNonZero("Impact", currentArtifact.bonusStats.impact, "impact");
-                    AddStatItemIfNonZero("AE Recharge", currentArtifact.bonusStats.aeRecharge * 100f, "ae");
+                    if (buttons[i].name.IndexOf("Ascend", StringComparison.OrdinalIgnoreCase) >= 0
+                        || buttons[i].name.IndexOf("Equip", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        buttons[i].gameObject.SetActive(false);
+                    }
+                }
+            }
+
+            if (statItemContainer == null)
+            {
+                Transform statsRoot = FindChildByName(transform, "Stats", "StatContainer", "Stat Item Container", "Content", "StatPanel");
+                statItemContainer = statsRoot != null ? statsRoot : transform;
+            }
+        }
+
+        private void PopulateData()
+        {
+            if (currentArtifact == null || currentDefinition == null) return;
+
+            if (artifactIcon != null && currentDefinition.icon != null)
+            {
+                artifactIcon.sprite = currentDefinition.icon;
+                artifactIcon.enabled = true;
+            }
+
+            if (artifactNameText != null)
+            {
+                artifactNameText.text = currentDefinition.itemName;
+            }
+
+            // Clear existing stat items
+            ClearStatItems();
+
+            if (statItemContainer != null && statItemPrefab != null && currentArtifact.rolls != null)
+            {
+                for (int i = 0; i < currentArtifact.rolls.Count; i++)
+                {
+                    ArtifactRoll roll = currentArtifact.rolls[i];
+                    if (!ArtifactStatCatalog.IsPlayerVisible(roll.statKind)) continue;
+                    AddStatItemIfNonZero(
+                        ArtifactStatCatalog.GetLabel(roll.statKind),
+                        roll.Value,
+                        ArtifactStatCatalog.GetFormatKey(roll.statKind));
                 }
             }
 
             if (descriptionText != null)
             {
-                descriptionText.text = currentArtifact.passiveDescription;
+                string qualityLabel = ArtifactRollQuality.TryGetAverageQuality(currentArtifact, currentRollTable, out float quality)
+                    ? $"Roll Quality {quality * 100f:0.##}"
+                    : "Roll Quality —";
+                descriptionText.text = string.IsNullOrWhiteSpace(currentDefinition.passiveDescription)
+                    ? qualityLabel
+                    : $"{qualityLabel}\n{currentDefinition.passiveDescription}";
             }
 
             if (loreText != null)
             {
-                loreText.text = currentArtifact.description;
+                loreText.text = currentDefinition.description;
             }
+
+            if (qualityText != null)
+            {
+                qualityText.text = ArtifactRollQuality.TryGetAverageQuality(currentArtifact, currentRollTable, out float quality)
+                    ? $"Roll Quality {quality * 100f:0.##}"
+                    : "Roll Quality —";
+            }
+
         }
 
         private void AddStatItemIfNonZero(string statName, float value, string statKey = "")
@@ -162,21 +270,30 @@ namespace Project.TeamBuilder.UI
             }
         }
 
+        private static Button FindButtonByName(Button[] buttons, params string[] names)
+        {
+            if (buttons == null || names == null) return null;
+            for (int i = 0; i < names.Length; i++)
+            {
+                for (int j = 0; j < buttons.Length; j++)
+                {
+                    if (buttons[j] != null && buttons[j].name.IndexOf(names[i], StringComparison.OrdinalIgnoreCase) >= 0)
+                        return buttons[j];
+                }
+            }
+            return null;
+        }
+
         private static TMP_Text FindTextByName(TMP_Text[] texts, params string[] names)
         {
-            if (texts == null || names == null)
-            {
-                return null;
-            }
+            if (texts == null || names == null) return null;
 
             for (int i = 0; i < names.Length; i++)
             {
                 for (int j = 0; j < texts.Length; j++)
                 {
-                    if (texts[j] != null && texts[j].name.IndexOf(names[i], System.StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
+                    if (texts[j] != null && texts[j].name.IndexOf(names[i], StringComparison.OrdinalIgnoreCase) >= 0)
                         return texts[j];
-                    }
                 }
             }
 
@@ -185,19 +302,14 @@ namespace Project.TeamBuilder.UI
 
         private static Image FindImageByName(Image[] images, params string[] names)
         {
-            if (images == null || names == null)
-            {
-                return null;
-            }
+            if (images == null || names == null) return null;
 
             for (int i = 0; i < names.Length; i++)
             {
                 for (int j = 0; j < images.Length; j++)
                 {
-                    if (images[j] != null && images[j].name.IndexOf(names[i], System.StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
+                    if (images[j] != null && images[j].name.IndexOf(names[i], StringComparison.OrdinalIgnoreCase) >= 0)
                         return images[j];
-                    }
                 }
             }
 
@@ -206,20 +318,15 @@ namespace Project.TeamBuilder.UI
 
         private static Transform FindChildByName(Transform root, params string[] names)
         {
-            if (root == null || names == null)
-            {
-                return null;
-            }
+            if (root == null || names == null) return null;
 
             Transform[] children = root.GetComponentsInChildren<Transform>(true);
             for (int i = 0; i < names.Length; i++)
             {
                 for (int j = 0; j < children.Length; j++)
                 {
-                    if (children[j] != null && children[j].name.IndexOf(names[i], System.StringComparison.OrdinalIgnoreCase) >= 0)
-                    {
+                    if (children[j] != null && children[j].name.IndexOf(names[i], StringComparison.OrdinalIgnoreCase) >= 0)
                         return children[j];
-                    }
                 }
             }
 

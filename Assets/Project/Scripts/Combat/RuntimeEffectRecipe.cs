@@ -31,6 +31,8 @@ public class RuntimeEffectApplicationPolicy
 [Serializable]
 public class RuntimeEffectDamageFilter
 {
+    public bool filterByDelivery;
+    public DamageDelivery delivery = DamageDelivery.Primary;
     public bool filterByElement;
     public ElementType elementType = ElementType.None;
     public bool filterByCategory;
@@ -39,6 +41,11 @@ public class RuntimeEffectDamageFilter
     public bool Matches(RuntimeEffectDamageContext context)
     {
         if (context == null)
+        {
+            return false;
+        }
+
+        if (filterByDelivery && context.damageDelivery != delivery)
         {
             return false;
         }
@@ -68,7 +75,8 @@ public class RuntimeEffectDamageInputParameters
     public float defenderDamageResistancePercentAdd;
     public bool ignoreDefense;
     public bool ignoreDamageResistance;
-    public bool ignoreElementalIncomingModifiers;
+    [UnityEngine.Serialization.FormerlySerializedAs("ignoreElementalIncomingModifiers")]
+    public bool ignoreTypeReduction;
 }
 
 [Serializable]
@@ -223,7 +231,7 @@ public class RuntimeEffectParameterSet
                 .Append(',')
                 .Append(damageInput.ignoreDamageResistance ? '1' : '0')
                 .Append(',')
-                .Append(damageInput.ignoreElementalIncomingModifiers ? '1' : '0')
+                .Append(damageInput.ignoreTypeReduction ? '1' : '0')
                 .Append(';');
         }
 
@@ -875,7 +883,7 @@ public static class RuntimeEffectRuntimeUtility
                 defenderDamageResistancePercentAdd = damageInput.defenderDamageResistancePercentAdd,
                 ignoreDefense = damageInput.ignoreDefense,
                 ignoreDamageResistance = damageInput.ignoreDamageResistance,
-                ignoreElementalIncomingModifiers = damageInput.ignoreElementalIncomingModifiers
+                ignoreTypeReduction = damageInput.ignoreTypeReduction
             };
             return;
         }

@@ -23,22 +23,23 @@ public enum RuntimeEffectApplyTarget
 {
     Self,
     Enemy,
-    Allies
+    Allies,
+    Teammates
 }
 
 public enum RuntimeEffectStatTarget
 {
-    MaxHP,
-    Attack,
-    Defense,
-    Speed,
-    ElementalMastery,
-    CritRate,
-    CritDamage,
-    CooldownRate,
-    Impact,
-    AuraEnergyRecharge,
-    DamageReduction
+    MaxHP = 0,
+    Attack = 1,
+    Defense = 2,
+    Speed = 3,
+    DotMastery = 4,
+    CritRate = 5,
+    CritDamage = 6,
+    CooldownMastery = 7,
+    DamageIncrease = 8,
+    AuraEnergyRecharge = 9,
+    AdditionalDamageIncrease = 11
 }
 
 public enum RuntimeEffectStatOperation
@@ -340,7 +341,7 @@ public sealed class RuntimeEffectDamageContext
     public string actionName;
     public AttackStepData stepData;
     public ElementType elementType;
-    public DamageRoutine damageRoutine;
+    public DamageDelivery damageDelivery;
     public bool isCriticalHit;
     public float damage;
     public float damageDealt;
@@ -356,7 +357,7 @@ public sealed class RuntimeEffectDamageInput
     public float baseDamage;
     public float defenderDefense;
     public float defenderDamageResistance;
-    public bool ignoreElementalIncomingModifiers;
+    public bool ignoreTypeReduction;
 }
 
 public abstract class RuntimeEffectDefinition : ScriptableObject
@@ -441,65 +442,35 @@ public abstract class RuntimeEffectDefinition : ScriptableObject
             return 0f;
         }
 
-        return stat switch
-        {
-            RuntimeEffectStatTarget.MaxHP => stats.maxHP,
-            RuntimeEffectStatTarget.Attack => stats.attack,
-            RuntimeEffectStatTarget.Defense => stats.defense,
-            RuntimeEffectStatTarget.Speed => stats.speed,
-            RuntimeEffectStatTarget.ElementalMastery => stats.elementalMastery,
-            RuntimeEffectStatTarget.CritRate => stats.critRate,
-            RuntimeEffectStatTarget.CritDamage => stats.critDamage,
-            RuntimeEffectStatTarget.CooldownRate => stats.cooldownRate,
-            RuntimeEffectStatTarget.Impact => stats.impact,
-            RuntimeEffectStatTarget.AuraEnergyRecharge => stats.aeRecharge,
-            RuntimeEffectStatTarget.DamageReduction => stats.damageReduction,
-            _ => 0f
-        };
+        return TryGetCombatStatId(stat, out CombatStatId id) ? stats.Get(id) : 0f;
     }
 
     public static void SetStat(CharacterStats stats, RuntimeEffectStatTarget stat, float value)
     {
-        if (stats == null)
+        if (stats != null && TryGetCombatStatId(stat, out CombatStatId id))
         {
-            return;
+            stats.Set(id, value);
         }
+    }
 
+    private static bool TryGetCombatStatId(RuntimeEffectStatTarget stat, out CombatStatId id)
+    {
         switch (stat)
         {
-            case RuntimeEffectStatTarget.MaxHP:
-                stats.maxHP = value;
-                break;
-            case RuntimeEffectStatTarget.Attack:
-                stats.attack = value;
-                break;
-            case RuntimeEffectStatTarget.Defense:
-                stats.defense = value;
-                break;
-            case RuntimeEffectStatTarget.Speed:
-                stats.speed = value;
-                break;
-            case RuntimeEffectStatTarget.ElementalMastery:
-                stats.elementalMastery = value;
-                break;
-            case RuntimeEffectStatTarget.CritRate:
-                stats.critRate = value;
-                break;
-            case RuntimeEffectStatTarget.CritDamage:
-                stats.critDamage = value;
-                break;
-            case RuntimeEffectStatTarget.CooldownRate:
-                stats.cooldownRate = value;
-                break;
-            case RuntimeEffectStatTarget.Impact:
-                stats.impact = value;
-                break;
-            case RuntimeEffectStatTarget.AuraEnergyRecharge:
-                stats.aeRecharge = value;
-                break;
-            case RuntimeEffectStatTarget.DamageReduction:
-                stats.damageReduction = value;
-                break;
+            case RuntimeEffectStatTarget.MaxHP: id = CombatStatId.MaxHP; return true;
+            case RuntimeEffectStatTarget.Attack: id = CombatStatId.Attack; return true;
+            case RuntimeEffectStatTarget.Defense: id = CombatStatId.Defense; return true;
+            case RuntimeEffectStatTarget.Speed: id = CombatStatId.Speed; return true;
+            case RuntimeEffectStatTarget.DotMastery: id = CombatStatId.DotMastery; return true;
+            case RuntimeEffectStatTarget.CritRate: id = CombatStatId.CritRate; return true;
+            case RuntimeEffectStatTarget.CritDamage: id = CombatStatId.CritDamage; return true;
+            case RuntimeEffectStatTarget.CooldownMastery: id = CombatStatId.CooldownMastery; return true;
+            case RuntimeEffectStatTarget.DamageIncrease: id = CombatStatId.DamageIncrease; return true;
+            case RuntimeEffectStatTarget.AuraEnergyRecharge: id = CombatStatId.AuraEnergyRecharge; return true;
+            case RuntimeEffectStatTarget.AdditionalDamageIncrease: id = CombatStatId.AdditionalDamageIncrease; return true;
+            default:
+                id = default;
+                return false;
         }
     }
 }

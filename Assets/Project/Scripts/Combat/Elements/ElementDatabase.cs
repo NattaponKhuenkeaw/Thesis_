@@ -33,11 +33,27 @@ public class ElementDatabase : ScriptableObject
     public void InitializeLookup()
     {
         definitionMap = new Dictionary<ElementType, ElementDefinition>();
-        foreach (var def in definitions)
+        if (definitions != null)
         {
-            if (def != null && !definitionMap.ContainsKey(def.elementType))
+            foreach (var def in definitions)
             {
-                definitionMap.Add(def.elementType, def);
+                if (def != null && !definitionMap.ContainsKey(def.elementType))
+                {
+                    definitionMap.Add(def.elementType, def);
+                }
+            }
+        }
+
+        // Auto-discover any ElementDefinition assets in Resources/ElementSO/
+        ElementDefinition[] loaded = Resources.LoadAll<ElementDefinition>("ElementSO");
+        if (loaded != null)
+        {
+            foreach (var def in loaded)
+            {
+                if (def != null && !definitionMap.ContainsKey(def.elementType))
+                {
+                    definitionMap.Add(def.elementType, def);
+                }
             }
         }
     }
@@ -49,7 +65,7 @@ public class ElementDatabase : ScriptableObject
 
     public ElementDefinition GetDefinition(ElementType type)
     {
-        if (definitionMap == null)
+        if (definitionMap == null || definitionMap.Count == 0)
         {
             InitializeLookup();
         }
@@ -59,12 +75,46 @@ public class ElementDatabase : ScriptableObject
             return null;
         }
 
-        if (definitionMap.TryGetValue(type, out var definition))
+        if (definitionMap.TryGetValue(type, out var definition) && definition != null)
         {
             return definition;
         }
 
-        return null;
+        // Direct lookup attempt in Resources
+        ElementDefinition direct = Resources.Load<ElementDefinition>($"ElementSO/Element_{type}");
+        if (direct != null)
+        {
+            definitionMap[type] = direct;
+            return direct;
+        }
+
+        // Programmatic fallback if SO is missing in Resources
+        ElementDefinition fallback = CreateInstance<ElementDefinition>();
+        fallback.elementType = type;
+        fallback.displayName = type.ToString();
+        fallback.dotDuration = 5f;
+        fallback.dotDamageRatio = 0.3f;
+        fallback.dotTickInterval = 1f;
+
+        switch (type)
+        {
+            case ElementType.Lightning:
+                fallback.damageTextColor = new Color(1f, 0.92f, 0.016f, 1f);
+                break;
+            case ElementType.Bleed:
+                fallback.damageTextColor = new Color(0.85f, 0.1f, 0.1f, 1f);
+                break;
+            case ElementType.Darkness:
+                fallback.damageTextColor = new Color(0.5f, 0.1f, 0.7f, 1f);
+                break;
+        }
+
+        if (definitionMap != null)
+        {
+            definitionMap[type] = fallback;
+        }
+
+        return fallback;
     }
 
     public Color GetDamageColor(ElementType type)

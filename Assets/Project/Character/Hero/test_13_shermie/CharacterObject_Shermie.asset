@@ -1,0 +1,2229 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 255da7e6c6e2e0147ab812b7ed3943c0, type: 3}
+  m_Name: CharacterObject_Shermie
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterObject
+  characterId: char_3_shermie
+  characterType: 0
+  characterRole: 5
+  previewPrefab: {fileID: 6597880524197938003, guid: 96bf72c00409004459e241e8c78d3b60, type: 3}
+  stats:
+    maxHP: 1250
+    attack: 26
+    defense: 51
+    speed: 6.5
+    dotMastery: 0
+    critRate: 0
+    critDamage: 20
+    cooldownMastery: 0
+    damageIncrease: 0
+    additionalDamageIncrease: 0
+    auraEnergyRecharge: 0
+  metaData:
+    displayName: Shermie
+    description: "\u0E2B\u0E19\u0E36\u0E48\u0E07\u0E43\u0E19\u0E2A\u0E35\u0E48\u0E08\u0E15\u0E38\u0E23\u0E40\u0E17\u0E1E\u0E41\u0E2B\u0E48\u0E07\u0E42\u0E2D\u0E42\u0E23\u0E08\u0E34\u0E17\u0E35\u0E48\u0E21\u0E32\u0E1E\u0E23\u0E49\u0E2D\u0E21\u0E2B\u0E19\u0E49\u0E32\u0E21\u0E49\u0E32\u0E1B\u0E34\u0E14\u0E15\u0E32
+      \u0E21\u0E35\u0E1A\u0E38\u0E04\u0E25\u0E34\u0E01\u0E02\u0E35\u0E49\u0E40\u0E25\u0E48\u0E19\u0E41\u0E25\u0E30\u0E14\u0E39\u0E40\u0E1B\u0E47\u0E19\u0E21\u0E34\u0E15\u0E23
+      \u0E41\u0E15\u0E48\u0E43\u0E19\u0E2A\u0E19\u0E32\u0E21\u0E23\u0E1A\u0E40\u0E18\u0E2D\u0E43\u0E0A\u0E49\u0E17\u0E31\u0E01\u0E29\u0E30\u0E01\u0E32\u0E23
+      \u0E17\u0E38\u0E48\u0E21 (Grappling) \u0E17\u0E35\u0E48\u0E17\u0E23\u0E07\u0E1E\u0E25\u0E31\u0E07\u0E41\u0E25\u0E30\u0E04\u0E27\u0E1A\u0E04\u0E38\u0E21\u0E2A\u0E32\u0E22\u0E1F\u0E49\u0E32\u0E2A\u0E35\u0E21\u0E48\u0E27\u0E07\u0E44\u0E14\u0E49\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E19\u0E48\u0E32\u0E01\u0E25\u0E31\u0E27"
+    portrait: {fileID: 21300000, guid: 6980df79b29645e4a9f7b01c22c621c5, type: 3}
+    animatorController: {fileID: 9100000, guid: b4f7f50e094f0f145a2251ad62172a8d, type: 2}
+  auraEnergyRate: 1
+  audioData: {fileID: 11400000, guid: 6991358fa89718147bf6ecce8bbac525, type: 2}
+  movementProfile: {fileID: 11400000, guid: 475fcb4220eff1746b3aa7806eb8c0a1, type: 2}
+  maxJumpOverride: -1
+  maxAirDashOverride: -1
+  _authoredFPS: 24
+  upgrade:
+    level: 1
+    maxLevel: 30
+    currentExp: 0
+    attackPerLevel: 4.7
+    defensePerLevel: 5.5
+    maxHpPerLevel: 95
+  _dashData:
+    animationClip: {fileID: 7400000, guid: a58bc557533fb294eb5db9217ac6de3d, type: 2}
+    startupFrames: 7
+    activeFrames: 43
+    recoveryFrames: 20
+    cancelWindowStartFrame: 60
+    dashSpeed: 6
+    cooldownFrames: 24
+  kitDefinition:
+    skill:
+      abilityId: shermie.skill
+      abilityName: Diamod Dust
+      icon: {fileID: 0}
+      description: 
+    ultimate:
+      abilityId: shermie.ultimate
+      abilityName: Shermie Carnival
+      icon: {fileID: 0}
+      description: 
+    passive:
+      abilityId: shermie.passive
+      abilityName: Shermie Love
+      icon: {fileID: 0}
+      description: When self is in Grab Session, gain Super Armor.
+    baseSkillNode:
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 1
+          filterByActionId: 1
+          actionId: shermie.skill
+          filterByActionName: 1
+          actionName: Diamod Dust
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredRuntimeEffectStacks: []
+        requiredValues: []
+        chance: 1
+        rollChancePerEnemyTarget: 0
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
+        recipe:
+          recipeId: shermie.skill.self_def
+          definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
+          presentation:
+            effectId: shermie.skill.self_def
+            displayName: Shermie Defense
+            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 0
+            appliesOn: 0
+            durationType: 0
+            durationSeconds: 20
+            stackMode: 1
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: shermie.skill.self_def
+          parameters:
+            overrideStatModifiers: 1
+            statModifiers:
+            - target: 2
+              operation: 1
+              sourceStat: 1
+              statRatioValueSource: 0
+              value: 1.5
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreTypeReduction: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+              tickInterval: 1
+            overrideHeal: 0
+            heal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              sourceRuntimeEffectStackKey: 
+              attackRatioPerSourceRuntimeEffectStack: 0
+              maxSourceRuntimeEffectStacks: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+          childRecipes: []
+        applicationMode: 0
+        applicationCount: 1
+        effect: {fileID: 0}
+        scope: 0
+        stackMode: 0
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        durationOverride: -1
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
+      - trigger: 3
+        filter:
+          filterByCategory: 1
+          category: 1
+          filterByActionId: 1
+          actionId: shermie.skill
+          filterByActionName: 1
+          actionName: Diamod Dust
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredRuntimeEffectStacks: []
+        requiredValues: []
+        chance: 1
+        rollChancePerEnemyTarget: 0
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
+        recipe:
+          recipeId: shermie.skill.echo_taken
+          definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
+          presentation:
+            effectId: shermie.skill.echo_taken
+            displayName: Echo Damage Taken
+            icon: {fileID: 0}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 1
+            appliesOn: 1
+            durationType: 0
+            durationSeconds: 20
+            stackMode: 1
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: shermie.skill.echo_taken
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 1
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 30
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreTypeReduction: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+              tickInterval: 1
+            overrideHeal: 0
+            heal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              sourceRuntimeEffectStackKey: 
+              attackRatioPerSourceRuntimeEffectStack: 0
+              maxSourceRuntimeEffectStacks: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+          childRecipes: []
+        applicationMode: 0
+        applicationCount: 1
+        effect: {fileID: 0}
+        scope: 0
+        stackMode: 0
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        durationOverride: -1
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: base.skill
+      nodeName: Base Skill
+      description: Inflict Echo 550% of ATK. Increase own DEF by 50% for 20 seconds.
+        Echo skill hits increase enemy Echo DMG taken by 30% for 20 seconds
+      skillPanelDescriptionOverride: Inflict <b><color=#00FFED>Echo</color></b> DMG
+        550% of ATK,<size=20><color=#C0C0C0> Increase own <b>DEF</b> +50% for 20
+        seconds, Skill hits Increase enemy <b><color=#00FFED>Echo</color></b> DMG
+        taken +30% for 20 seconds</color></size>
+      track: 0
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
+    baseUltimateNode:
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionId: 1
+          actionId: shermie.ultimate
+          filterByActionName: 1
+          actionName: Shermie Carnival
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredRuntimeEffectStacks: []
+        requiredValues: []
+        chance: 1
+        rollChancePerEnemyTarget: 0
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
+        recipe:
+          recipeId: shermie.ult.max_hp
+          definition: {fileID: 11400000, guid: 0beb3d683479a1a40bbc974c749b3211, type: 2}
+          presentation:
+            effectId: shermie.ult.max_hp
+            displayName: Shermie Max HP
+            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 0
+            appliesOn: 0
+            durationType: 0
+            durationSeconds: 20
+            stackMode: 0
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: shermie.ult.max_hp
+          parameters:
+            overrideStatModifiers: 1
+            statModifiers:
+            - target: 0
+              operation: 1
+              sourceStat: 0
+              statRatioValueSource: 0
+              value: 1.5
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreTypeReduction: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+              tickInterval: 1
+            overrideHeal: 0
+            heal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              sourceRuntimeEffectStackKey: 
+              attackRatioPerSourceRuntimeEffectStack: 0
+              maxSourceRuntimeEffectStacks: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+          childRecipes: []
+        applicationMode: 0
+        applicationCount: 1
+        effect: {fileID: 0}
+        scope: 0
+        stackMode: 0
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        durationOverride: -1
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: base.ultimate
+      nodeName: Base Ultimate
+      description: Inflict Echo 850% of ATK. Increase own Max HP by 50% for 20 seconds.
+      skillPanelDescriptionOverride: Inflict <b><color=#00FFED>Echo</color></b> DMG
+        850% of ATK,<size=20><color=#C0C0C0> Increase own Max HP +50% for 20 seconds</color></size>
+      track: 1
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
+    basePassiveNode:
+      statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: base.passive
+      nodeName: Shermie Love
+      description: When self is in Grab Session, gain Super Armor.
+      skillPanelDescriptionOverride: When self is in Grab Session, gain Super Armor.
+      track: 2
+      level: 0
+      fragmentCost: 0
+      unlockedByDefault: 1
+    potentialNodes:
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers:
+      - category: 1
+        actionId: 
+        actionName: Diamod Dust
+        stepName: 
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags: []
+        requiredCounters: []
+        damageMultiplierOperation: 3
+        damageMultiplierValue: 7
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        ignoreDefense: 0
+        ignoreDamageResistance: 0
+        ignoreTypeReduction: 0
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: shermie.skill.lv1
+      nodeName: Skill Damage Up
+      description: Skill damage multiplier becomes 700% of ATK
+      skillPanelDescriptionOverride: Inflict <b><color=#00FFED>Echo</color></b> DMG
+        <b><color=#FFA500>700%</color></b> of ATK,<size=20><color=#C0C0C0> Increase
+        own <b>DEF</b> +50% for 20 seconds, Skill hits Increase enemy <b><color=#00FFED>Echo</color></b>
+        DMG taken +30% for 20 seconds</color></size>
+      track: 0
+      level: 1
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers:
+      - category: 1
+        actionId: shermie.skill
+        actionName: 
+        stepName: 
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags: []
+        requiredCounters: []
+        damageMultiplierOperation: 0
+        damageMultiplierValue: 0
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 1
+        cooldownValue: 7
+        energyCostOperation: 0
+        energyCostValue: 0
+        ignoreDefense: 0
+        ignoreDamageResistance: 0
+        ignoreTypeReduction: 0
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
+      runtimeTagEffects: []
+      runtimeEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 1
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 1
+          actionName: Diamod Dust
+          filterByStepName: 1
+          stepName: Grab Dash
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredRuntimeEffectStacks: []
+        requiredValues: []
+        chance: 1
+        rollChancePerEnemyTarget: 0
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
+        recipe:
+          recipeId: shermie.skill.lv2.allies_shield
+          definition: {fileID: 11400000, guid: f67fcf8a3c9847789b376cfb328674e5, type: 2}
+          presentation:
+            effectId: shermie.skill.shield
+            displayName: Shermie Shield
+            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 2
+            appliesOn: 2
+            durationType: 0
+            durationSeconds: 20
+            stackMode: 1
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: 
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreTypeReduction: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+              tickInterval: 1
+            overrideHeal: 0
+            heal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              sourceRuntimeEffectStackKey: 
+              attackRatioPerSourceRuntimeEffectStack: 0
+              maxSourceRuntimeEffectStacks: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+            overrideShield: 1
+            shield:
+              valueSource: 0
+              valueRatio: 0.4
+              flatValue: 0
+              useSourceStats: 1
+          childRecipes: []
+        applicationMode: 0
+        applicationCount: 1
+        effect: {fileID: 0}
+        scope: 0
+        stackMode: 0
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        durationOverride: -1
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: shermie.skill.lv2
+      nodeName: Team Shield
+      description: Skill cooldown becomes 20 seconds, but grants allies a Shield
+        equal to 40% of Shermie Max HP for 30 seconds
+      skillPanelDescriptionOverride: 'Inflict <b><color=#00FFED>Echo</color></b>
+        DMG <b><color=#FFA500>700%</color></b> of ATK,<size=20><color=#C0C0C0> Increase
+        own <b>DEF</b> +50% for 20 seconds, Skill hits Increase enemy <b><color=#00FFED>Echo</color></b>
+        DMG taken +30% for 20 seconds</color></size>
+
+
+
+        <size=20><color=#C0C0C0>-
+        "Diamond Dust" Cooldown becomes 20 seconds, Grants allies a <b>Shield</b>
+        equal to 20% of Shermie Max HP for 20 seconds</color></size>'
+      track: 0
+      level: 2
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects:
+      - trigger: 3
+        filter:
+          filterByCategory: 1
+          category: 1
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 1
+          actionName: Diamod Dust
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredRuntimeEffectStacks: []
+        requiredValues: []
+        chance: 1
+        rollChancePerEnemyTarget: 0
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
+        recipe:
+          recipeId: shermie.skill.lv3.echo_taken
+          definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
+          presentation:
+            effectId: shermie.skill.echo_taken
+            displayName: Echo Damage Taken
+            icon: {fileID: 0}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 1
+            appliesOn: 1
+            durationType: 0
+            durationSeconds: 20
+            stackMode: 1
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: shermie.skill.echo_taken
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 1
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 50
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreTypeReduction: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+              tickInterval: 1
+            overrideHeal: 0
+            heal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              sourceRuntimeEffectStackKey: 
+              attackRatioPerSourceRuntimeEffectStack: 0
+              maxSourceRuntimeEffectStacks: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+          childRecipes: []
+        applicationMode: 0
+        applicationCount: 1
+        effect: {fileID: 0}
+        scope: 0
+        stackMode: 0
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        durationOverride: -1
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: shermie.skill.lv3
+      nodeName: Echo Crush
+      description: Skill Echo hits increase enemy Echo DMG taken by 50% for 20 seconds.
+      skillPanelDescriptionOverride: 'Inflict <b><color=#00FFED>Echo</color></b>
+        DMG <b><color=#FFA500>700%</color></b> of ATK,<size=20><color=#C0C0C0> Increase
+        own <b>DEF</b> +50% for 20 seconds, Skill hits Increase enemy <b><color=#00FFED>Echo</color></b>
+        DMG taken <b><color=#FFA500>+30%</color></b> for 20 seconds</color></size>
+
+
+
+        <size=20><color=#C0C0C0>-
+        "Diamond Dust" Cooldown becomes 20 seconds, Grants allies a <b>Shield</b>
+        equal to <b><color=#FFA500>20%</color></b> of Shermie Max HP for 20 seconds</color></size>'
+      track: 0
+      level: 3
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 1
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 1
+          stepName: Grab Dash
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredRuntimeEffectStacks: []
+        requiredValues: []
+        chance: 1
+        rollChancePerEnemyTarget: 0
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
+        recipe:
+          recipeId: shermie.skill.lv2.allies_shield
+          definition: {fileID: 11400000, guid: f67fcf8a3c9847789b376cfb328674e5, type: 2}
+          presentation:
+            effectId: shermie.skill.shield
+            displayName: Shield
+            icon: {fileID: 0}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 2
+            appliesOn: 2
+            durationType: 0
+            durationSeconds: 20
+            stackMode: 0
+            stackLimit: 0
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: 
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreTypeReduction: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              valueSource: 0
+              valueRatio: 0
+              flatValue: 0
+              useSourceStats: 0
+              tickInterval: 0
+            overrideHeal: 0
+            heal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0
+              lowHpThreshold: 0
+              lowHpMultiplier: 0
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              chance: 0
+              internalCooldown: 0
+              attackRatio: 0
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              sourceRuntimeEffectStackKey: 
+              attackRatioPerSourceRuntimeEffectStack: 0
+              maxSourceRuntimeEffectStacks: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 0
+              targetMaxHpDamageCapRatio: 0
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 0
+            overrideShield: 1
+            shield:
+              valueSource: 0
+              valueRatio: 0.4
+              flatValue: 0
+              useSourceStats: 1
+          childRecipes: []
+        applicationMode: 0
+        applicationCount: 1
+        effect: {fileID: 0}
+        scope: 0
+        stackMode: 0
+        stackLimit: 0
+        refreshDurationOnReapply: 0
+        durationOverride: 0
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: shermie.skill.lv4
+      nodeName: Skill Mastery
+      description: the Shield Effect become equal to 40% of Shermie Max HP
+      skillPanelDescriptionOverride: 'Inflict <b><color=#00FFED>Echo</color></b>
+        DMG <b><color=#FFA500>700%</color></b> of ATK,<size=20><color=#C0C0C0> Increase
+        own <b>DEF</b> +50% for 20 seconds, Skill hits Increase enemy <b><color=#00FFED>Echo</color></b>
+        DMG taken <b><color=#FFA500>+50%</color></b> for 20 seconds</color></size>
+
+
+
+        <size=20><color=#C0C0C0>-
+        "Diamond Dust" Cooldown becomes 20 seconds, Grants allies a <b>Shield</b>
+        equal to <b><color=#FFA500>40%</color></b> of Shermie Max HP for 20 seconds</color></size>'
+      track: 0
+      level: 4
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 1
+          stepName: Grab-Confirm
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredRuntimeEffectStacks: []
+        requiredValues: []
+        chance: 1
+        rollChancePerEnemyTarget: 0
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
+        recipe:
+          recipeId: 
+          definition: {fileID: 11400000, guid: b6e898288e674625a8fa031a11ef9929, type: 2}
+          presentation:
+            effectId: shermie.heal
+            displayName: Heal
+            icon: {fileID: 0}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 2
+            appliesOn: 0
+            durationType: 1
+            durationSeconds: 1
+            stackMode: 0
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: 
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreTypeReduction: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              valueSource: 0
+              valueRatio: 0.2
+              flatValue: 0
+              useSourceStats: 0
+              tickInterval: 1
+            overrideHeal: 1
+            heal:
+              valueSource: 0
+              valueRatio: 0.2
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0
+              lowHpThreshold: 0
+              lowHpMultiplier: 0
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              chance: 0
+              internalCooldown: 0
+              attackRatio: 0
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              sourceRuntimeEffectStackKey: 
+              attackRatioPerSourceRuntimeEffectStack: 0
+              maxSourceRuntimeEffectStacks: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 0
+              targetMaxHpDamageCapRatio: 0
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 0
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0
+              flatValue: 0
+              useSourceStats: 0
+          childRecipes: []
+        applicationMode: 0
+        applicationCount: 1
+        effect: {fileID: 0}
+        scope: 0
+        stackMode: 0
+        stackLimit: 0
+        refreshDurationOnReapply: 0
+        durationOverride: 0
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: shermie.ultimate.lv1
+      nodeName: Recovery
+      description: If self land ult, regenerate 20% of own Max HP
+      skillPanelDescriptionOverride: 'Inflict <b><color=#00FFED>Echo</color></b>
+        DMG <b><color=#FFA500>850%</color></b> of ATK,<size=20><color=#C0C0C0> Increase
+        own Max HP +50% for 20 seconds</color></size>
+
+
+
+        <size=20><color=#C0C0C0>-
+        If self land ult,<b><color=#74C365>Regenerate 20% of own Max HP</color></b></color></size>'
+      track: 1
+      level: 1
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers:
+      - category: 2
+        actionId: 
+        actionName: Shermie Carnival
+        stepName: 
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags: []
+        requiredCounters: []
+        damageMultiplierOperation: 3
+        damageMultiplierValue: 10
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        ignoreDefense: 0
+        ignoreDamageResistance: 0
+        ignoreTypeReduction: 0
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: shermie.ultimate.lv2
+      nodeName: Ultimate Damage Up
+      description: Ultimate damage multiplier becomes 1000% of ATK
+      skillPanelDescriptionOverride: 'Inflict <b><color=#00FFED>Echo</color></b>
+        DMG <b><color=#FFA500>1000%</color></b> of ATK,<size=20><color=#C0C0C0> Increase
+        own Max HP +50% for 20 seconds</color></size>
+
+
+
+        <size=20><color=#C0C0C0>-
+        If self land ult,<b><color=#74C365>Regenerate 20% of own Max HP</color></b></color></size>'
+      track: 1
+      level: 2
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionId: 1
+          actionId: shermie.ultimate
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        tag: shermie.ultimate.lv3.max_hp_echo_ready
+        addTag: 1
+        duration: 30
+        rememberEnemyTarget: 0
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects:
+      - filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionId: 1
+          actionId: shermie.ultimate
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 1
+          stepName: Step2-2
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 1
+          runtimeTag: shermie.ultimate.lv3.max_hp_echo_ready
+        chance: 1
+        internalCooldown: 0
+        criticalHitRequirement: 0
+        attackRatio: 0
+        sourceStatDamageSource: 9
+        sourceStatRatio: 0.2
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 9
+        targetMaxHpDamageCapRatio: 1
+        elementType: 0
+        consumeRuntimeTagOnTrigger: 1
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: shermie.ultimate.lv3
+      nodeName: Max HP Echo
+      description: Inflict additional Echo DMG equal to 20% of own Max HP
+      skillPanelDescriptionOverride: 'Inflict <b><color=#00FFED>Echo</color></b>
+        DMG <b><color=#FFA500>1000%</color></b> of ATK,<size=20><color=#C0C0C0> Increase
+        own Max HP +50% for 20 seconds</color></size>
+
+
+
+        <size=20><color=#C0C0C0>-
+        If self land ult,<b><color=#74C365>Regenerate 20% of own Max HP</color></b></color></size>
+
+        <size=20><color=#C0C0C0>-
+        Inflict additional <b><color=#00FFED>Echo</color></b> DMG equal to 20% of
+        own Max HP</color></size>'
+      track: 1
+      level: 3
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects:
+      - trigger: 3
+        filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionId: 1
+          actionId: shermie.ultimate
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        tag: shermie.ultimate.lv4.hit
+        addTag: 1
+        duration: 30
+        rememberEnemyTarget: 1
+      runtimeEffects:
+      - trigger: 2
+        filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionId: 1
+          actionId: shermie.ultimate
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 1
+          runtimeTag: shermie.ultimate.lv4.hit
+        requiredTags: []
+        requiredCounters: []
+        requiredRuntimeEffectStacks: []
+        requiredValues: []
+        chance: 0.6
+        rollChancePerEnemyTarget: 0
+        enemyTargetSource: 1
+        enemyTargetRuntimeTag: shermie.ultimate.lv4.hit
+        consumeRuntimeTagOnApply: 1
+        recipe:
+          recipeId: 
+          definition: {fileID: 11400000, guid: 8e99520f9fd3f4643aea5d83935b1864, type: 2}
+          presentation:
+            effectId: 
+            displayName: 
+            icon: {fileID: 0}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 1
+            appliesOn: 1
+            durationType: 0
+            durationSeconds: 15
+            stackMode: 0
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: 
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreTypeReduction: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              valueSource: 0
+              valueRatio: 0
+              flatValue: 0
+              useSourceStats: 0
+              tickInterval: 0
+            overrideHeal: 0
+            heal:
+              valueSource: 0
+              valueRatio: 0
+              flatValue: 0
+              useSourceStats: 0
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0
+              lowHpThreshold: 0
+              lowHpMultiplier: 0
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              chance: 0
+              internalCooldown: 0
+              attackRatio: 0
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              sourceRuntimeEffectStackKey: 
+              attackRatioPerSourceRuntimeEffectStack: 0
+              maxSourceRuntimeEffectStacks: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 0
+              targetMaxHpDamageCapRatio: 0
+              elementType: 0
+            overrideStatus: 1
+            status:
+              status: 1
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0
+              flatValue: 0
+              useSourceStats: 0
+          childRecipes: []
+        applicationMode: 0
+        applicationCount: 1
+        effect: {fileID: 0}
+        scope: 0
+        stackMode: 0
+        stackLimit: 0
+        refreshDurationOnReapply: 0
+        durationOverride: 0
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: shermie.ultimate.lv4
+      nodeName: Carnival Stun
+      description: On successful hit, after ult end there is a 60% chance that enemy
+        will stun for 15 seconds
+      skillPanelDescriptionOverride: 'Inflict <b><color=#00FFED>Echo</color></b>
+        DMG <b><color=#FFA500>1000%</color></b> of ATK,<size=20><color=#C0C0C0> Increase
+        own Max HP +50% for 20 seconds</color></size>
+
+
+
+        <size=20><color=#C0C0C0>-
+        If self land ult,<b><color=#74C365>Regenerate 20% of own Max HP</color></b></color></size>
+
+        <size=20><color=#C0C0C0>-
+        Inflict additional <b><color=#00FFED>Echo</color></b> DMG equal to 20% of
+        own Max HP</color></size>
+
+        <size=20><color=#C0C0C0>- On successful
+        hit, after ult end there is a 60% chance that enemy will <b>Stun</b> for
+        15 seconds</color></size>'
+      track: 1
+      level: 4
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers:
+      - target: 9
+        operation: 1
+        valueSource: 0
+        value: 1.2
+        sourceStat: 0
+        statRatioValueSource: 0
+        scaleValueByCounter: 0
+        valueCounterId: 
+        maxCounterScale: 0
+        scope: 0
+        filterOutgoingDamageByCategory: 0
+        outgoingDamageCategory: 0
+        requiredTags: []
+        requiredCounters: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects:
+      - filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        chance: 1
+        internalCooldown: 2.5
+        criticalHitRequirement: 0
+        attackRatio: 0
+        sourceStatDamageSource: 9
+        sourceStatRatio: 0.08
+        targetMaxHpRatio: 0
+        targetRuntimeEffectStackKey: 
+        attackRatioPerTargetRuntimeEffectStack: 0
+        maxTargetRuntimeEffectStacks: 0
+        consumeTargetRuntimeEffectStacksOnTrigger: 0
+        capTargetMaxHpDamage: 0
+        targetMaxHpDamageCapSource: 0
+        targetMaxHpDamageCapRatio: 0
+        elementType: 0
+        consumeRuntimeTagOnTrigger: 0
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: shermie.passive.lv1
+      nodeName: Max HP Echo
+      description: Increase own Max HP by 20%. When self attacks, deal additional
+        Echo DMG equal to 8% of own Max HP.
+      skillPanelDescriptionOverride: 'When self is in Grab Session, gain Super Armor
+
+
+
+        <size=20><color=#C0C0C0>-
+        Increase own Max HP +20%, and attacks deal additional <b><color=#00FFED>Echo</color></b>
+        DMG equal to 8% of own Max HP<i>(cooldown 2 seconds)<i></color></size>'
+      track: 2
+      level: 1
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers:
+      - target: 14
+        operation: 0
+        valueSource: 1
+        value: 0.01
+        sourceStat: 9
+        statRatioValueSource: 0
+        scaleValueByCounter: 0
+        valueCounterId: 
+        maxCounterScale: 0
+        scope: 0
+        filterOutgoingDamageByCategory: 0
+        outgoingDamageCategory: 0
+        requiredTags: []
+        requiredCounters: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects: []
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: shermie.passive.lv2
+      nodeName: HP Mastery
+      description: Increase own DOT Mastery by 1 for every 100 Max HP self
+        has.
+      skillPanelDescriptionOverride: 'When self is in Grab Session, gain Super Armor
+
+
+
+        <size=20><color=#C0C0C0>-
+        Increase own Max HP +20%, and attacks deal additional <b><color=#00FFED>Echo</color></b>
+        DMG equal to 8% of own Max HP<i>(cooldown 2 seconds)</i></color></size>
+
+        <size=20><color=#C0C0C0>-
+        Increase own DOT Mastery by 1% for every 100 Max HP self has
+
+        </color></size>'
+      track: 2
+      level: 2
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers:
+      - category: 1
+        actionId: shermie.skill.ex
+        actionName: 
+        stepName: 
+        unlocked: 1
+        priorityBonus: 100
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags:
+        - tag: shermie.cute.follow_up
+          expectedValue: 1
+        requiredCounters: []
+        damageMultiplierOperation: 0
+        damageMultiplierValue: 0
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        ignoreDefense: 0
+        ignoreDamageResistance: 0
+        ignoreTypeReduction: 0
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
+      runtimeTagEffects:
+      - trigger: 6
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        tag: shermie.cute.follow_up
+        addTag: 1
+        duration: 99999
+        rememberEnemyTarget: 0
+      runtimeEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 1
+          filterByActionId: 1
+          actionId: shermie.skill.ex
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        requiredTags: []
+        requiredCounters: []
+        requiredRuntimeEffectStacks: []
+        requiredValues: []
+        chance: 1
+        rollChancePerEnemyTarget: 0
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
+        recipe:
+          recipeId: shermie.passive.lv3.grab_shield
+          definition: {fileID: 11400000, guid: f67fcf8a3c9847789b376cfb328674e5, type: 2}
+          presentation:
+            effectId: shermie.grab.shield
+            displayName: Shermie Cute Shield
+            icon: {fileID: 0}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 0
+            appliesOn: 2
+            durationType: 0
+            durationSeconds: 20
+            stackMode: 1
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: shermie.shield
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreTypeReduction: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+              tickInterval: 1
+            overrideHeal: 0
+            heal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              sourceRuntimeEffectStackKey: 
+              attackRatioPerSourceRuntimeEffectStack: 0
+              maxSourceRuntimeEffectStacks: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+            overrideShield: 1
+            shield:
+              valueSource: 0
+              valueRatio: 0.12
+              flatValue: 0
+              useSourceStats: 1
+          childRecipes: []
+        applicationMode: 0
+        applicationCount: 1
+        effect: {fileID: 0}
+        scope: 0
+        stackMode: 0
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        durationOverride: -1
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
+      runtimeEffectStackLimitModifiers: []
+      counterEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 1
+          filterByActionId: 1
+          actionId: shermie.skill.ex
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        counterId: shermie.skill.ex.removal
+        operation: 0
+        value: 1
+      conditionalStateEffects:
+      - trigger: 0
+        filter:
+          filterByCategory: 1
+          category: 0
+          filterByActionId: 1
+          actionId: shermie.skill.ex
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        requiredTags:
+        - tag: shermie.cute.follow_up
+          expectedValue: 1
+        requiredCounters:
+        - counterId: shermie.skill.ex.removal
+          comparison: 3
+          value: 1
+        requiredRuntimeEffectStacks: []
+        requiredValues: []
+        runtimeTagEffects:
+        - trigger: 0
+          filter:
+            filterByCategory: 0
+            category: 0
+            filterByActionId: 0
+            actionId: 
+            filterByActionName: 0
+            actionName: 
+            filterByStepName: 0
+            stepName: 
+            filterByElement: 0
+            elementType: 0
+            requireRuntimeTag: 0
+            runtimeTag: 
+          tag: shermie.cute.follow_up
+          addTag: 0
+          duration: 0
+          rememberEnemyTarget: 0
+        counterEffects:
+        - trigger: 0
+          filter:
+            filterByCategory: 0
+            category: 0
+            filterByActionId: 0
+            actionId: 
+            filterByActionName: 0
+            actionName: 
+            filterByStepName: 0
+            stepName: 
+            filterByElement: 0
+            elementType: 0
+            requireRuntimeTag: 0
+            runtimeTag: 
+          counterId: shermie.skill.ex.removal
+          operation: 2
+          value: 1
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects: []
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: shermie.passive.lv3
+      nodeName: Shermie Cute
+      description: Successful grab grants allies a Shield equal to 12% of Shermie
+        Max HP for 30 seconds. Shermie Cute follow-up damage routing still needs
+        authored action gating.
+      skillPanelDescriptionOverride: "When self is in Grab Session, gain Super Armor\r\n\r\n<size=20><color=#C0C0C0>-
+        Increase own Max HP +20%, and attacks deal additional <b><color=#00FFED>Echo</color></b>
+        DMG equal to 8% of own Max HP<i>(cooldown 2 seconds)</i></color></size>\r\n<size=20><color=#C0C0C0>-
+        Increase own DOT Mastery by 1% for every 100 Max HP self has</color></size>\r\n<size=20><color=#C0C0C0>-
+        Everytime self successful grab enemy will able to Skill follow-up \u201CShermie
+        Cute\u201D that deal additional 12% of own Max HP and Grant allies a <b>Shield</b>
+        equal to 12% of Shermie Max HP for 30 seconds</color></size>"
+      track: 2
+      level: 3
+      fragmentCost: 1
+      unlockedByDefault: 0
+    - statModifiers: []
+      cooldownModifiers: []
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects:
+      - trigger: 9
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        requiredTags:
+        - tag: shermie.passive.lv4.cooldown
+          expectedValue: 0
+        requiredCounters: []
+        requiredRuntimeEffectStacks: []
+        requiredValues:
+        - subject: 0
+          metric: 0
+          comparison: 5
+          value: 0.3
+        chance: 1
+        rollChancePerEnemyTarget: 0
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
+        recipe:
+          recipeId: shermie.passive.lv4.shermie_love
+          definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
+          presentation:
+            effectId: shermie.passive.shermie_love
+            displayName: Shermie Love
+            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 0
+            appliesOn: 2
+            durationType: 0
+            durationSeconds: 30
+            stackMode: 0
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: shermie.passive.shermie_love
+          parameters:
+            overrideStatModifiers: 1
+            statModifiers:
+            - target: 0
+              operation: 1
+              sourceStat: 1
+              statRatioValueSource: 0
+              value: 1.2
+            - target: 1
+              operation: 1
+              sourceStat: 1
+              statRatioValueSource: 0
+              value: 1.2
+            - target: 2
+              operation: 1
+              sourceStat: 1
+              statRatioValueSource: 0
+              value: 1.2
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreTypeReduction: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+              tickInterval: 1
+            overrideHeal: 0
+            heal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0.5
+              lowHpThreshold: 0.3
+              lowHpMultiplier: 2
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              filter:
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              chance: 1
+              internalCooldown: 0
+              attackRatio: 0.2
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              sourceRuntimeEffectStackKey: 
+              attackRatioPerSourceRuntimeEffectStack: 0
+              maxSourceRuntimeEffectStacks: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 1
+              targetMaxHpDamageCapRatio: 1
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 5
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+          childRecipes: []
+        applicationMode: 0
+        applicationCount: 1
+        effect: {fileID: 0}
+        scope: 0
+        stackMode: 0
+        stackLimit: 1
+        refreshDurationOnReapply: 1
+        durationOverride: -1
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
+      runtimeEffectStackLimitModifiers: []
+      counterEffects: []
+      conditionalStateEffects: []
+      onHitStatusEffects: []
+      additionalDamageEffects: []
+      dashThroughDamageEffects: []
+      defensiveEffects: []
+      resourceEffects:
+      - trigger: 9
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+        requiredTags:
+        - tag: shermie.passive.lv4.cooldown
+          expectedValue: 0
+        requiredCounters: []
+        requiredRuntimeEffectStacks: []
+        requiredValues:
+        - subject: 0
+          metric: 0
+          comparison: 5
+          value: 0.3
+        chance: 1
+        effectType: 0
+        scope: 1
+        valueMode: 0
+        valueSource: 9
+        valueRatio: 0.4
+        flatValue: 0
+        runtimeTag: 
+        runtimeTagDuration: 0
+        cooldownActionId: 
+        cooldownActionName: 
+        cooldownTag: shermie.passive.lv4.cooldown
+        cooldownDuration: 180
+      enemyElementModifiers: []
+      passiveHookTypeName: 
+      nodeId: shermie.passive.lv4
+      nodeName: Crisis Love
+      description: When own HP is below 30%, immediately regenerate 40% of own Max
+        HP to all allies and grant Shermie Love. Cooldown 180 seconds.
+      skillPanelDescriptionOverride: "When self is in Grab Session, gain Super Armor\r\n\r\n<size=20><color=#C0C0C0>-
+        Increase own Max HP +20%, and attacks deal additional <b><color=#00FFED>Echo</color></b>
+        DMG equal to 8% of own Max HP<i>(cooldown 2 seconds)</i></color></size>\r\n<size=20><color=#C0C0C0>-
+        Increase own DOT Mastery by 1% for every 100 Max HP self has</color></size>\r\n<size=20><color=#C0C0C0>-
+        Everytime self successful grab enemy will able to Skill follow-up \u201CShermie
+        Cute\u201D that deal additional 12% of own Max HP and Grant allies a <b>Shield</b>
+        equal to 12% of Shermie Max HP for 30 seconds</color></size>\r\n<size=20><color=#C0C0C0>-
+        When own HP below 30% After being damaged, will Immediately <b><color=#74C365>Regenerate
+        40% of own Max HP to all allies</color></b> and Grant Increase <b>Shermie
+        Love</b> to allies for 30 seconds<i>(Cooldown 180 seconds)</i></color></size>\r\n<size=19><color=#00ffff>
+        \u2022  Shermie Love: Increase Basic Stat +20%</color></size>"
+      track: 2
+      level: 4
+      fragmentCost: 1
+      unlockedByDefault: 0
+  actionResolverTable: {fileID: 11400000, guid: 8b31e6f175b0958468f7ada8b8e14098, type: 2}

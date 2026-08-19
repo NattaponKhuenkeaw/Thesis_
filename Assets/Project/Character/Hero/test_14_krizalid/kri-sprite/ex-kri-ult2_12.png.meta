@@ -1,0 +1,715 @@
+fileFormatVersion: 2
+guid: 1f71c9e69397058409b5bb29ced5a9a0
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -7146222590796430357
+    second: ex-kri-ult2_12_0
+  - first:
+      213: 6844623618279518581
+    second: ex-kri-ult2_12_1
+  - first:
+      213: 4236502170678780046
+    second: ex-kri-ult2_12_2
+  - first:
+      213: 1309003568551542735
+    second: ex-kri-ult2_12_3
+  - first:
+      213: 5621478653551897185
+    second: ex-kri-ult2_12_4
+  - first:
+      213: -1753444049643334434
+    second: ex-kri-ult2_12_5
+  - first:
+      213: 1015040912471389201
+    second: ex-kri-ult2_12_6
+  - first:
+      213: -1456500141218358105
+    second: ex-kri-ult2_12_7
+  - first:
+      213: -5641379922988726398
+    second: ex-kri-ult2_12_8
+  - first:
+      213: 3322173883503841917
+    second: ex-kri-ult2_12_9
+  - first:
+      213: -941003876569818376
+    second: ex-kri-ult2_12_10
+  - first:
+      213: -7490246166024848143
+    second: ex-kri-ult2_12_11
+  - first:
+      213: -7897932552646127009
+    second: ex-kri-ult2_12_12
+  - first:
+      213: -6154656162924440798
+    second: ex-kri-ult2_12_13
+  - first:
+      213: 2291364637516922403
+    second: ex-kri-ult2_12_14
+  - first:
+      213: -2125396565370632148
+    second: ex-kri-ult2_12_15
+  - first:
+      213: -98492396363496562
+    second: ex-kri-ult2_12_16
+  - first:
+      213: -3259362865974181326
+    second: ex-kri-ult2_12_17
+  - first:
+      213: 6157765848312346368
+    second: ex-kri-ult2_12_18
+  - first:
+      213: 295707117298435011
+    second: ex-kri-ult2_12_19
+  - first:
+      213: 6773262471479943002
+    second: ex-kri-ult2_12_20
+  - first:
+      213: -7432565152371751066
+    second: ex-kri-ult2_12_21
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 7
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 40
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: ex-kri-ult2_12_0
+      rect:
+        serializedVersion: 2
+        x: 9
+        y: 175
+        width: 10
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: be305bd7a6483dc90800000000000000
+      internalID: -7146222590796430357
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ex-kri-ult2_12_1
+      rect:
+        serializedVersion: 2
+        x: 28
+        y: 185
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 571bccc9aecfcfe50800000000000000
+      internalID: 6844623618279518581
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ex-kri-ult2_12_2
+      rect:
+        serializedVersion: 2
+        x: 117
+        y: 169
+        width: 12
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e80ea7d37441bca30800000000000000
+      internalID: 4236502170678780046
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ex-kri-ult2_12_3
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 157
+        width: 12
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fcfbb396fc38a2210800000000000000
+      internalID: 1309003568551542735
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ex-kri-ult2_12_4
+      rect:
+        serializedVersion: 2
+        x: 19
+        y: 0
+        width: 96
+        height: 170
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 16ae6613d01830e40800000000000000
+      internalID: 5621478653551897185
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ex-kri-ult2_12_5
+      rect:
+        serializedVersion: 2
+        x: 22
+        y: 170
+        width: 12
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ed49c7f4de38aa7e0800000000000000
+      internalID: -1753444049643334434
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ex-kri-ult2_12_6
+      rect:
+        serializedVersion: 2
+        x: 29
+        y: 168
+        width: 10
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 114785cf456261e00800000000000000
+      internalID: 1015040912471389201
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ex-kri-ult2_12_7
+      rect:
+        serializedVersion: 2
+        x: 37
+        y: 167
+        width: 13
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ac9f53a6d879cbe0800000000000000
+      internalID: -1456500141218358105
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ex-kri-ult2_12_8
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 104
+        width: 36
+        height: 68
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2878c3f69dac5b1b0800000000000000
+      internalID: -5641379922988726398
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ex-kri-ult2_12_9
+      rect:
+        serializedVersion: 2
+        x: 99
+        y: 172
+        width: 8
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d729350ab8bba1e20800000000000000
+      internalID: 3322173883503841917
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ex-kri-ult2_12_10
+      rect:
+        serializedVersion: 2
+        x: 106
+        y: 171
+        width: 6
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8fa5accb5f1e0f2f0800000000000000
+      internalID: -941003876569818376
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ex-kri-ult2_12_11
+      rect:
+        serializedVersion: 2
+        x: 111
+        y: 171
+        width: 7
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1fc7bd90ccc4d0890800000000000000
+      internalID: -7490246166024848143
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ex-kri-ult2_12_12
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 170
+        width: 12
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f52988b3038e46290800000000000000
+      internalID: -7897932552646127009
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ex-kri-ult2_12_13
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 138
+        width: 8
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 223583e14d4469aa0800000000000000
+      internalID: -6154656162924440798
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ex-kri-ult2_12_14
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 135
+        width: 15
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 32e76166fff8ccf10800000000000000
+      internalID: 2291364637516922403
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ex-kri-ult2_12_15
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 145
+        width: 11
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c288f3aa5131182e0800000000000000
+      internalID: -2125396565370632148
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ex-kri-ult2_12_16
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 129
+        width: 8
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e834da5ffa512aef0800000000000000
+      internalID: -98492396363496562
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ex-kri-ult2_12_17
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 124
+        width: 11
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 23282830eba64c2d0800000000000000
+      internalID: -3259362865974181326
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ex-kri-ult2_12_18
+      rect:
+        serializedVersion: 2
+        x: 121
+        y: 130
+        width: 13
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 00770bee967c47550800000000000000
+      internalID: 6157765848312346368
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ex-kri-ult2_12_19
+      rect:
+        serializedVersion: 2
+        x: 123
+        y: 123
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3c3c0247e009a1400800000000000000
+      internalID: 295707117298435011
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ex-kri-ult2_12_20
+      rect:
+        serializedVersion: 2
+        x: 10
+        y: 106
+        width: 17
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a5fdb0fd4567ffd50800000000000000
+      internalID: 6773262471479943002
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ex-kri-ult2_12_21
+      rect:
+        serializedVersion: 2
+        x: 117
+        y: 104
+        width: 8
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6674fe29f593ad890800000000000000
+      internalID: -7432565152371751066
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      ex-kri-ult2_12_0: -7146222590796430357
+      ex-kri-ult2_12_1: 6844623618279518581
+      ex-kri-ult2_12_10: -941003876569818376
+      ex-kri-ult2_12_11: -7490246166024848143
+      ex-kri-ult2_12_12: -7897932552646127009
+      ex-kri-ult2_12_13: -6154656162924440798
+      ex-kri-ult2_12_14: 2291364637516922403
+      ex-kri-ult2_12_15: -2125396565370632148
+      ex-kri-ult2_12_16: -98492396363496562
+      ex-kri-ult2_12_17: -3259362865974181326
+      ex-kri-ult2_12_18: 6157765848312346368
+      ex-kri-ult2_12_19: 295707117298435011
+      ex-kri-ult2_12_2: 4236502170678780046
+      ex-kri-ult2_12_20: 6773262471479943002
+      ex-kri-ult2_12_21: -7432565152371751066
+      ex-kri-ult2_12_3: 1309003568551542735
+      ex-kri-ult2_12_4: 5621478653551897185
+      ex-kri-ult2_12_5: -1753444049643334434
+      ex-kri-ult2_12_6: 1015040912471389201
+      ex-kri-ult2_12_7: -1456500141218358105
+      ex-kri-ult2_12_8: -5641379922988726398
+      ex-kri-ult2_12_9: 3322173883503841917
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

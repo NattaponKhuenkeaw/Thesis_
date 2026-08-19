@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04534ec67238433a99a929885ae3a875, type: 3}
+  m_Name: P1_04_BrokenChronoRelic
+  m_EditorClassIdentifier: Assembly-CSharp::Project.InventorySystem.Items.ArtifactDefinition
+  id: ART-P1-004
+  itemName: Broken Chrono-Relic
+  description: In the Cursed Realm, time is your ultimate executioner. Run faster,
+    kill faster, or forget your name.
+  icon: {fileID: 21300000, guid: 3ed122e6e9a0b0e428a23d53ba9f97a6, type: 3}
+  price: 0
+  isEquippable: 1
+  passiveDescription: Skill damage marks one enemy. The next eligible hit consumes
+    the mark, creates Explosion Splash and Bleed, then grants Claw. 14s mark cooldown.
+  passiveSet: {fileID: 11400000, guid: 2f0a560080afa624fb6d7eee31cc9a1f, type: 2}
+  additionalDamageEffects: []
+  legacyBonusStats:
+    maxHP: 100
+    attack: 10
+    defense: 5
+    cooldownMastery: 0
+    critRate: 5
+    critDamage: 50
+    dotMastery: 0
+    damageIncrease: 0
+    additionalDamageIncrease: 0
+    auraEnergyRecharge: 0
+    speed: 10

@@ -1,0 +1,533 @@
+fileFormatVersion: 2
+guid: 4875e1f5689ffe740a6df0dd2f46afeb
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -1562246685977041562
+    second: Goenitz_projectile_vfx3_14_0
+  - first:
+      213: 6533199646811793293
+    second: Goenitz_projectile_vfx3_14_1
+  - first:
+      213: -9202617716980684728
+    second: Goenitz_projectile_vfx3_14_2
+  - first:
+      213: 5170871657854221873
+    second: Goenitz_projectile_vfx3_14_3
+  - first:
+      213: -4431302326307582846
+    second: Goenitz_projectile_vfx3_14_4
+  - first:
+      213: 6549686328197134353
+    second: Goenitz_projectile_vfx3_14_5
+  - first:
+      213: -5768802914344231575
+    second: Goenitz_projectile_vfx3_14_6
+  - first:
+      213: -2611434189987649827
+    second: Goenitz_projectile_vfx3_14_7
+  - first:
+      213: 6580982847329986279
+    second: Goenitz_projectile_vfx3_14_8
+  - first:
+      213: 9124078924145843576
+    second: Goenitz_projectile_vfx3_14_9
+  - first:
+      213: 3828984183875968661
+    second: Goenitz_projectile_vfx3_14_10
+  - first:
+      213: -1261416334958554425
+    second: Goenitz_projectile_vfx3_14_11
+  - first:
+      213: 2524591194600537870
+    second: Goenitz_projectile_vfx3_14_12
+  - first:
+      213: 6237226657256178427
+    second: Goenitz_projectile_vfx3_14_13
+  - first:
+      213: 8305019831055054755
+    second: Goenitz_projectile_vfx3_14_14
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 7
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 20
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 512
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 512
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Goenitz_projectile_vfx3_14_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 204
+        width: 17
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 665aece8ae8c15ae0800000000000000
+      internalID: -1562246685977041562
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goenitz_projectile_vfx3_14_1
+      rect:
+        serializedVersion: 2
+        x: 1
+        y: 172
+        width: 33
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d87ace2e6769aaa50800000000000000
+      internalID: 6533199646811793293
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goenitz_projectile_vfx3_14_2
+      rect:
+        serializedVersion: 2
+        x: 18
+        y: 200
+        width: 30
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 84866a7a1fbb94080800000000000000
+      internalID: -9202617716980684728
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goenitz_projectile_vfx3_14_3
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 129
+        width: 67
+        height: 54
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13e39895060a2c740800000000000000
+      internalID: 5170871657854221873
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goenitz_projectile_vfx3_14_4
+      rect:
+        serializedVersion: 2
+        x: 26
+        y: 181
+        width: 13
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 28c0314230ad082c0800000000000000
+      internalID: -4431302326307582846
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goenitz_projectile_vfx3_14_5
+      rect:
+        serializedVersion: 2
+        x: 11
+        y: 78
+        width: 99
+        height: 69
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1183c66830925ea50800000000000000
+      internalID: 6549686328197134353
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goenitz_projectile_vfx3_14_6
+      rect:
+        serializedVersion: 2
+        x: 20
+        y: 127
+        width: 25
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 96d1647505811ffa0800000000000000
+      internalID: -5768802914344231575
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goenitz_projectile_vfx3_14_7
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 28
+        width: 82
+        height: 81
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dd6e97fa07252cbd0800000000000000
+      internalID: -2611434189987649827
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goenitz_projectile_vfx3_14_8
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 16
+        width: 64
+        height: 47
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e6ea083809545b50800000000000000
+      internalID: 6580982847329986279
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goenitz_projectile_vfx3_14_9
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 62
+        width: 33
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 87d5758a07d3f9e70800000000000000
+      internalID: 9124078924145843576
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goenitz_projectile_vfx3_14_10
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 81
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 59e148214d8432530800000000000000
+      internalID: 3828984183875968661
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goenitz_projectile_vfx3_14_11
+      rect:
+        serializedVersion: 2
+        x: 68
+        y: 13
+        width: 43
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7c29be0d68c8e7ee0800000000000000
+      internalID: -1261416334958554425
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goenitz_projectile_vfx3_14_12
+      rect:
+        serializedVersion: 2
+        x: 75
+        y: 7
+        width: 17
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e0f7e3dc056290320800000000000000
+      internalID: 2524591194600537870
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goenitz_projectile_vfx3_14_13
+      rect:
+        serializedVersion: 2
+        x: 77
+        y: 0
+        width: 17
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf20a5939941f8650800000000000000
+      internalID: 6237226657256178427
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Goenitz_projectile_vfx3_14_14
+      rect:
+        serializedVersion: 2
+        x: 93
+        y: 4
+        width: 10
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3a77c92d88b514370800000000000000
+      internalID: 8305019831055054755
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Goenitz_projectile_vfx3_14_0: -1562246685977041562
+      Goenitz_projectile_vfx3_14_1: 6533199646811793293
+      Goenitz_projectile_vfx3_14_10: 3828984183875968661
+      Goenitz_projectile_vfx3_14_11: -1261416334958554425
+      Goenitz_projectile_vfx3_14_12: 2524591194600537870
+      Goenitz_projectile_vfx3_14_13: 6237226657256178427
+      Goenitz_projectile_vfx3_14_14: 8305019831055054755
+      Goenitz_projectile_vfx3_14_2: -9202617716980684728
+      Goenitz_projectile_vfx3_14_3: 5170871657854221873
+      Goenitz_projectile_vfx3_14_4: -4431302326307582846
+      Goenitz_projectile_vfx3_14_5: 6549686328197134353
+      Goenitz_projectile_vfx3_14_6: -5768802914344231575
+      Goenitz_projectile_vfx3_14_7: -2611434189987649827
+      Goenitz_projectile_vfx3_14_8: 6580982847329986279
+      Goenitz_projectile_vfx3_14_9: 9124078924145843576
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
