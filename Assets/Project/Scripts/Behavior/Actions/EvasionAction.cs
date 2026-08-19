@@ -49,7 +49,11 @@ using Unity.Behavior;
 
         protected override Status OnUpdate()
         {
-            if (Agent.Value == null) return Status.Failure;
+            if (Agent.Value == null || Target.Value == null)
+                return Status.Failure;
+
+            if (m_Controller != null && m_Controller.CurrentReactionState != EnemyReactionState.None)
+                return Status.Failure;
 
             m_Timer += Time.deltaTime;
             if (m_Locomotion != null)
@@ -59,9 +63,9 @@ using Unity.Behavior;
             else
                 Agent.Value.transform.position += new Vector3(EvadeSpeed.Value * Time.deltaTime * m_Direction, 0f, 0f);
 
-            // Flip sprite to face the direction of movement
-            float targetRotY = m_Direction > 0f ? 0f : 180f;
-            Agent.Value.transform.eulerAngles = new Vector3(Agent.Value.transform.eulerAngles.x, targetRotY, Agent.Value.transform.eulerAngles.z);
+            EnemyFacingUtil.FaceHorizontal(
+                Agent.Value.transform,
+                Target.Value.transform.position.x - Agent.Value.transform.position.x);
 
             if (m_Timer >= EvadeDuration.Value)
             {

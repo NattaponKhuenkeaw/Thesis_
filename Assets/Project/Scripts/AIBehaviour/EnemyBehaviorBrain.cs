@@ -68,6 +68,10 @@ public class EnemyBehaviorBrain : MonoBehaviour
         }
 
         agent.SetVariableValue(AgentKey, gameObject);
+        PlayerCharacter player = UnityEngine.Object.FindFirstObjectByType<PlayerCharacter>();
+        if (player != null)
+            agent.SetVariableValue(TargetKey, player.gameObject);
+
         if (agent.GetVariable(CanAttackKey, out BlackboardVariable<bool> canAttack) && canAttack != null)
         {
             canAttack.Value = true;

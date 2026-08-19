@@ -3,7 +3,7 @@ using UnityEngine;
 /// <summary>
 /// Shared facing helpers for side-scrolling enemies.
 /// Convention: euler Y = 0 faces +X, Y = 180 faces -X.
-/// Keep SpriteRenderer.flipX = false on enemy prefabs so visuals match hitboxes.
+/// Keep SpriteRenderer.flipX = false and localScale.x positive so visuals match hitboxes.
 /// </summary>
 public static class EnemyFacingUtil
 {
@@ -17,9 +17,25 @@ public static class EnemyFacingUtil
         return facingLeft ? -1f : 1f;
     }
 
+    public static void SanitizeScale(Transform transform)
+    {
+        if (transform == null)
+            return;
+
+        Vector3 scale = transform.localScale;
+        if (scale.x >= 0f)
+            return;
+
+        transform.localScale = new Vector3(Mathf.Abs(scale.x), scale.y, scale.z);
+    }
+
     public static void FaceHorizontal(Transform transform, float directionX, float threshold = 0.05f)
     {
-        if (transform == null || Mathf.Abs(directionX) < threshold)
+        if (transform == null)
+            return;
+
+        SanitizeScale(transform);
+        if (Mathf.Abs(directionX) < threshold)
             return;
 
         float targetRotY = directionX > 0f ? 0f : 180f;

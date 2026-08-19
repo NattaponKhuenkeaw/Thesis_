@@ -20,19 +20,12 @@ using Unity.Behavior;
 
         public override bool IsTrue()
         {
-            if (Agent == null || Target == null) return false;
-            if (Agent.Value == null || Target.Value == null) return false;
+            if (Agent == null || Target == null)
+                return false;
+            if (Agent.Value == null || Target.Value == null)
+                return false;
 
-            float dist = Vector2.Distance(Agent.Value.transform.position, Target.Value.transform.position);
-            if (dist > DetectRadius.Value) return false;
-
-            if (RequireLineOfSight.Value)
-            {
-                Vector2 dir = (Vector2)(Target.Value.transform.position - Agent.Value.transform.position);
-                RaycastHit2D hit = Physics2D.Raycast(Agent.Value.transform.position, dir.normalized, dist, ObstacleLayer);
-                if (hit.collider != null) return false; // something is blocking
-            }
-
+            // Trash enemies always know the player. Radius is no longer a search gate.
             return true;
         }
 

@@ -2768,11 +2768,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1212244669968072252, guid: d32935fed99d9a043b76c4b5c1b4e68b, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1212244669968072252, guid: d32935fed99d9a043b76c4b5c1b4e68b, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1870618680561606739, guid: d32935fed99d9a043b76c4b5c1b4e68b, type: 3}
       propertyPath: m_AnchorMax.y
@@ -2792,11 +2792,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1880477857585618517, guid: d32935fed99d9a043b76c4b5c1b4e68b, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1880477857585618517, guid: d32935fed99d9a043b76c4b5c1b4e68b, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2055598598442686516, guid: d32935fed99d9a043b76c4b5c1b4e68b, type: 3}
       propertyPath: m_Pivot.y
@@ -2864,11 +2864,11 @@ PrefabInstance:
       objectReference: {fileID: 11400000, guid: 014c3367673144d4cb2a3f82eb421115, type: 2}
     - target: {fileID: 6181267103791533293, guid: d32935fed99d9a043b76c4b5c1b4e68b, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6181267103791533293, guid: d32935fed99d9a043b76c4b5c1b4e68b, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7519174093949083380, guid: d32935fed99d9a043b76c4b5c1b4e68b, type: 3}
       propertyPath: m_LocalPosition.x
@@ -3772,6 +3772,8 @@ MonoBehaviour:
   _exitTrigger: {fileID: 171316424}
   _entrancePadding: 0.75
   _exitPadding: 0.75
+  _pinPlayerToScreenEdge: 1
+  _lookAheadFadeDistance: 3
   _cameraCueDistance: 3
   _cameraCueDuration: 0.65
 --- !u!1 &1841845422

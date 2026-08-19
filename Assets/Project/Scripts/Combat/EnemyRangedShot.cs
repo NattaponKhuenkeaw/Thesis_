@@ -55,10 +55,9 @@ public class EnemyRangedShot : MonoBehaviour
                 playerCharacter.TakeDamage(damage, context))
             {
                 if (CameraManager.instance != null)
-                {
                     CameraManager.instance.ShakeByImpact(DamageImpactTier.Low);
-                    CameraManager.instance.EnterCombat(owner);
-                }
+
+                owner.SetInCombat(true);
 
                 if (playerCharacter.Animator != null)
                     playerCharacter.Animator.TriggerTakeDamage();

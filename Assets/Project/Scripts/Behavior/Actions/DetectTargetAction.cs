@@ -8,7 +8,7 @@ namespace Unity.Behavior
     [Serializable, GeneratePropertyBag]
     [NodeDescription(
         name: "Detect Target",
-        description: "Scans for a target with a specific tag using an overlap circle and assigns it to the Target property.",
+        description: "Always knows the player location. Assigns the tagged target without a search radius.",
         story: "[Agent] detects target in [Radius] with [TargetTag] tag and stores in [Target]",
         category: "Action/Detection",
         id: "d1e2t3e4c5t6t7a8r9g0e1t2a3c4t5i6")]
@@ -17,27 +17,50 @@ namespace Unity.Behavior
         [SerializeReference] public BlackboardVariable<GameObject> Agent;
         [SerializeReference] public BlackboardVariable<float> Radius = new BlackboardVariable<float>(8f);
         [SerializeReference] public BlackboardVariable<GameObject> Target;
-        
+
         [Header("Detection Settings")]
         [SerializeReference] public BlackboardVariable<string> TargetTag = new BlackboardVariable<string>("Player");
 
         protected override Status OnUpdate()
         {
-            if (Agent.Value == null) return Status.Failure;
-            if (Target != null && Target.Value != null) return Status.Failure;
+            if (Agent.Value == null)
+                return Status.Failure;
 
-            Collider2D[] results = Physics2D.OverlapCircleAll(Agent.Value.transform.position, Radius.Value);
-            foreach (var col in results)
+            if (IsValidTarget(Target?.Value))
+                return Status.Success;
+
+            GameObject found = FindPlayer();
+            if (found == null)
+                return Status.Failure;
+
+            if (Target != null)
+                Target.Value = found;
+            return Status.Success;
+        }
+
+        private GameObject FindPlayer()
+        {
+            string tag = TargetTag != null && !string.IsNullOrEmpty(TargetTag.Value)
+                ? TargetTag.Value
+                : "Player";
+
+            PlayerCharacter playerCharacter = UnityEngine.Object.FindFirstObjectByType<PlayerCharacter>();
+            if (playerCharacter != null)
+                return playerCharacter.gameObject;
+
+            try
             {
-                if (col.CompareTag(TargetTag.Value))
-                {
-                    if (Target != null) Target.Value = col.gameObject;
-                    Debug.Log($"[DetectTarget] Found {col.gameObject.name} with tag {TargetTag.Value}");
-                    return Status.Success;
-                }
+                return GameObject.FindGameObjectWithTag(tag);
             }
+            catch (UnityException)
+            {
+                return null;
+            }
+        }
 
-            return Status.Failure;
+        private static bool IsValidTarget(GameObject target)
+        {
+            return target != null && target.activeInHierarchy;
         }
     }
 }

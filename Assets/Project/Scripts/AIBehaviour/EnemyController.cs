@@ -17,8 +17,8 @@ public class EnemyController : MonoBehaviour
     public event System.Action<HitReactionData> OnDamaged;
     /// <summary>Fired when HP reaches 0.</summary>
     public event System.Action OnDied;
-    /// <summary>Fired when the enemy's behavior state changes (via SetEnemyStateAction).</summary>
-    public event System.Action<State> OnStateChanged;
+    /// <summary>Fired when camera-facing combat presence changes.</summary>
+    public event System.Action<bool> OnCombatChanged;
 
     // =========================================================
     // Enemy Stats
@@ -113,6 +113,9 @@ public class EnemyController : MonoBehaviour
     public int CurrentReactionOwnerId =>
         hitReactionHandler != null ? hitReactionHandler.CurrentReactionOwnerId : 0;
 
+    /// <summary>True while this enemy should stay in the combat camera.</summary>
+    public bool InCombat { get; private set; }
+
     [Header("Combo State")]
     [SerializeField] private int currentComboHits = 0;
     public int CurrentComboHits => currentComboHits;
@@ -147,8 +150,6 @@ public class EnemyController : MonoBehaviour
     private Coroutine priorityResetCoroutine;
     private RuntimeEffectReceiver runtimeEffects;
     private EnemyDamageTypeState damageTypeState;
-    private SpriteRenderer attackHitboxSR;
-    private LineRenderer attackHitboxLR;
 
     /// <summary>Child hitbox collider used by AttackAction.</summary>
     public Collider2D attackHitbox;
@@ -166,6 +167,7 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private float destroyDelayOnDeath = 0f;
 
     [Header("Combat Role")]
+    [Tooltip("Enemy1/2/3 are EnemyCore variants. Change this role, range, and tint — do not duplicate the Behavior Graph.")]
     [SerializeField] private EnemyCombatRole combatRole = EnemyCombatRole.InterruptibleMelee;
     [Tooltip("If > 0, overrides Behavior Graph AttackRange (use ~6-8 for ranged).")]
     [SerializeField] private float attackRangeOverride = -1f;
@@ -215,10 +217,11 @@ public class EnemyController : MonoBehaviour
     {
         rb       = GetComponent<Rigidbody2D>();
         isAlive   = true;
+        EnemyFacingUtil.SanitizeScale(transform);
         if (rb != null)
         {
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-            rb.interpolation = RigidbodyInterpolation2D.None;
+            rb.interpolation = RigidbodyInterpolation2D.Interpolate;
         }
 
         spriteRenderers = GetComponentsInChildren<SpriteRenderer>();
@@ -236,10 +239,7 @@ public class EnemyController : MonoBehaviour
             runtimeEffects = gameObject.AddComponent<RuntimeEffectReceiver>();
 
         damageTypeState = GetComponent<EnemyDamageTypeState>();
-        if (damageTypeState == null)
-            damageTypeState = gameObject.AddComponent<EnemyDamageTypeState>();
 
-        // Start with hitbox disabled and cache debug renderers
         if (attackHitbox != null)
         {
             EnemyAttackHitbox damageHitbox = attackHitbox.GetComponent<EnemyAttackHitbox>();
@@ -249,56 +249,15 @@ public class EnemyController : MonoBehaviour
             damageHitbox.SetHitboxWindowActive(false);
             attackHitbox.enabled = false;
 
-            attackHitboxSR = attackHitbox.GetComponent<SpriteRenderer>();
-            attackHitboxLR = attackHitbox.GetComponent<LineRenderer>();
+            SpriteRenderer attackHitboxSprite = attackHitbox.GetComponent<SpriteRenderer>();
+            if (attackHitboxSprite != null)
+                attackHitboxSprite.enabled = false;
 
-            // SpriteRenderer ignores BoxCollider2D.offset, so it misleads hitbox tuning.
-            // Keep it disabled; LineRenderer follows the real collider center/size.
-            if (attackHitboxSR != null)
-                attackHitboxSR.enabled = false;
-
-            EnsureAttackHitboxDebugLineRenderer();
+            EnsureColliderDebugDrawer(attackHitbox.gameObject, new Color(1f, 0.15f, 0.1f, 1f));
         }
 
-        // Auto-attach hurtbox drawer to main body
-        if (bodyCollider != null && bodyCollider.GetComponent<ColliderDebugDrawer>() == null)
-        {
-            var drawer = bodyCollider.gameObject.AddComponent<ColliderDebugDrawer>();
-            drawer.debugColor = Color.yellow; // Yellow for enemies
-        }
-    }
-
-    void Update()
-    {
-        bool isDebugActive = CombatCore.TrainingDebugManager.IsActive;
-
-        // Runtime visualization for Game View
-        if (attackHitbox != null && attackHitbox.enabled)
-        {
-            bool showAttackDebug = isDebugActive;
-
-            // Never use SpriteRenderer for attack debug — it is centered on the transform,
-            // while damage uses BoxCollider2D.offset (different center).
-            if (attackHitboxSR != null)
-                attackHitboxSR.enabled = false;
-
-            if (attackHitboxLR != null)
-            {
-                attackHitboxLR.enabled = showAttackDebug;
-                if (showAttackDebug)
-                    DrawLineRenderer(attackHitboxLR);
-            }
-            else if (showAttackDebug)
-            {
-#if UNITY_EDITOR
-                DrawHitboxRuntime();
-#endif
-            }
-        }
-        else if (attackHitboxLR != null)
-        {
-            attackHitboxLR.enabled = false;
-        }
+        if (bodyCollider != null)
+            EnsureColliderDebugDrawer(bodyCollider.gameObject, Color.yellow);
     }
 
     // =========================================================
@@ -402,7 +361,7 @@ public class EnemyController : MonoBehaviour
             }
         }
 
-        // Fire event (AnimationHandler_Enemy triggers TakeDamage anim via this)
+        // Fire event (reaction pose is driven by EnemyHitReactionHandler → AnimationHandler_Enemy)
         OnDamaged?.Invoke(reactionData);
 
         // Separate damage intentionally skips reaction, flash, and behavior interruption.
@@ -642,13 +601,7 @@ public class EnemyController : MonoBehaviour
         get
         {
             if (damageTypeState == null)
-            {
                 damageTypeState = GetComponent<EnemyDamageTypeState>();
-                if (damageTypeState == null)
-                {
-                    damageTypeState = gameObject.AddComponent<EnemyDamageTypeState>();
-                }
-            }
 
             return damageTypeState;
         }
@@ -660,7 +613,7 @@ public class EnemyController : MonoBehaviour
     public void TakeHit(float damage, Vector2 knockbackDirection, float knockbackForce)
     {
         HitReactionData data = HitReactionData.Default(damage, knockbackDirection, knockbackForce);
-        TakeHit(data, transform.position);
+        TakeResolvedHit(data, transform.position);
     }
 
     /// <summary>
@@ -684,9 +637,7 @@ public class EnemyController : MonoBehaviour
 
         OnDied?.Invoke();
 
-        // Remove from combat camera when dead
-        if (CameraManager.instance != null)
-            CameraManager.instance.LeaveCombat(this);
+        SetInCombat(false);
 
         if (destroyDelayOnDeath > 0f)
             Destroy(gameObject, destroyDelayOnDeath);
@@ -799,12 +750,50 @@ public class EnemyController : MonoBehaviour
     }
 
     /// <summary>
-    /// Called by SetEnemyStateAction when the behavior graph transitions to a new state.
-    /// Broadcasts to listeners (e.g., CameraManager for Notice/Chase → combat cam).
+    /// Graph nodes still label Idle/Chase/etc. Camera and gameplay only care about combat presence.
+    /// </summary>
+    public void SetInCombat(bool inCombat)
+    {
+        if (!isAlive && inCombat)
+            return;
+
+        if (InCombat == inCombat)
+            return;
+
+        InCombat = inCombat;
+        OnCombatChanged?.Invoke(InCombat);
+
+        if (CameraManager.instance == null)
+            return;
+
+        if (InCombat)
+            CameraManager.instance.EnterCombat(this);
+        else
+            CameraManager.instance.LeaveCombat(this);
+    }
+
+    /// <summary>
+    /// Graph-label hook. Maps to <see cref="SetInCombat"/> so Behavior Graph does not become a second FSM.
     /// </summary>
     public void NotifyStateChanged(State newState)
     {
-        OnStateChanged?.Invoke(newState);
+        SetInCombat(IsCombatGraphLabel(newState));
+    }
+
+    public static bool IsCombatGraphLabel(State state)
+    {
+        switch (state)
+        {
+            case State.Notice:
+            case State.Chase:
+            case State.Attack:
+            case State.TakeDamage:
+            case State.Hitstun:
+            case State.Knockdown:
+                return true;
+            default:
+                return false;
+        }
     }
 
     public void TriggerAttackWarning(float duration = -1f)
@@ -843,13 +832,6 @@ public class EnemyController : MonoBehaviour
             EnemyAttackHitbox damageHitbox = attackHitbox.GetComponent<EnemyAttackHitbox>();
             if (damageHitbox != null)
                 damageHitbox.SetHitboxWindowActive(active);
-
-            // Toggle cached debug renderers
-            bool isDebugActive = CombatCore.TrainingDebugManager.IsActive;
-            if (attackHitboxSR != null)
-                attackHitboxSR.enabled = false;
-            if (attackHitboxLR != null)
-                attackHitboxLR.enabled = active && isDebugActive;
         }
     }
 
@@ -905,147 +887,16 @@ public class EnemyController : MonoBehaviour
         return s_rangedShotSprite;
     }
 
-    private void EnsureAttackHitboxDebugLineRenderer()
+    private static void EnsureColliderDebugDrawer(GameObject target, Color color)
     {
-        if (attackHitboxLR == null)
+        if (target == null)
             return;
 
-        if (attackHitboxLR.sharedMaterial == null)
-            attackHitboxLR.material = new Material(Shader.Find("Sprites/Default"));
+        ColliderDebugDrawer drawer = target.GetComponent<ColliderDebugDrawer>();
+        if (drawer == null)
+            drawer = target.AddComponent<ColliderDebugDrawer>();
 
-        attackHitboxLR.startColor = new Color(1f, 0.15f, 0.1f, 1f);
-        attackHitboxLR.endColor = new Color(1f, 0.15f, 0.1f, 1f);
-        attackHitboxLR.startWidth = 0.05f;
-        attackHitboxLR.endWidth = 0.05f;
-        attackHitboxLR.sortingOrder = 500;
-        attackHitboxLR.useWorldSpace = true;
-    }
-
-    // =========================================================
-    // Gizmos
-    // =========================================================
-#if UNITY_EDITOR
-    void OnDrawGizmos()
-    {
-        if (attackHitbox != null && attackHitbox.enabled)
-        {
-            Gizmos.color = Color.red;
-            Matrix4x4 oldMatrix = Gizmos.matrix;
-            Gizmos.matrix = attackHitbox.transform.localToWorldMatrix;
-
-            if (attackHitbox is BoxCollider2D box)
-            {
-                Gizmos.DrawWireCube((Vector3)box.offset, (Vector3)box.size);
-            }
-            else if (attackHitbox is CircleCollider2D circle)
-            {
-                Gizmos.DrawWireSphere((Vector3)circle.offset, circle.radius);
-            }
-
-            Gizmos.matrix = oldMatrix;
-        }
-    }
-
-    void OnDrawGizmosSelected()
-    {
-        // Also draw a faint version when selected but not attacking
-        if (attackHitbox != null && !attackHitbox.enabled)
-        {
-            Gizmos.color = new Color(1f, 0f, 0f, 0.2f);
-            Matrix4x4 oldMatrix = Gizmos.matrix;
-            Gizmos.matrix = attackHitbox.transform.localToWorldMatrix;
-
-            if (attackHitbox is BoxCollider2D box)
-            {
-                Gizmos.DrawWireCube((Vector3)box.offset, (Vector3)box.size);
-            }
-            else if (attackHitbox is CircleCollider2D circle)
-            {
-                Gizmos.DrawWireSphere((Vector3)circle.offset, circle.radius);
-            }
-
-            Gizmos.matrix = oldMatrix;
-        }
-    }
-
-    private void DrawHitboxRuntime()
-    {
-        Matrix4x4 matrix = attackHitbox.transform.localToWorldMatrix;
-        Color color = Color.red;
-
-        if (attackHitbox is BoxCollider2D box)
-        {
-            Vector3 size = box.size;
-            Vector3 offset = box.offset;
-
-            Vector3 p1 = matrix.MultiplyPoint3x4(offset + new Vector3(-size.x, -size.y) * 0.5f);
-            Vector3 p2 = matrix.MultiplyPoint3x4(offset + new Vector3(size.x, -size.y) * 0.5f);
-            Vector3 p3 = matrix.MultiplyPoint3x4(offset + new Vector3(size.x, size.y) * 0.5f);
-            Vector3 p4 = matrix.MultiplyPoint3x4(offset + new Vector3(-size.x, size.y) * 0.5f);
-
-            Debug.DrawLine(p1, p2, color);
-            Debug.DrawLine(p2, p3, color);
-            Debug.DrawLine(p3, p4, color);
-            Debug.DrawLine(p4, p1, color);
-        }
-        else if (attackHitbox is CircleCollider2D circle)
-        {
-            int segments = 20;
-            float angleStep = 360f / segments;
-            Vector3 prevPt = Vector3.zero;
-
-            for (int i = 0; i <= segments; i++)
-            {
-                float angle = i * angleStep * Mathf.Deg2Rad;
-                Vector3 pt = (Vector3)circle.offset + new Vector3(Mathf.Cos(angle), Mathf.Sin(angle)) * circle.radius;
-                Vector3 worldPt = matrix.MultiplyPoint3x4(pt);
-
-                if (i > 0) Debug.DrawLine(prevPt, worldPt, color);
-                prevPt = worldPt;
-            }
-        }
-    }
-#endif
-
-    private void DrawLineRenderer(LineRenderer lr)
-    {
-        if (attackHitbox is BoxCollider2D box)
-        {
-            lr.positionCount = 4;
-            lr.loop = true;
-
-            Vector2 size = box.size;
-            Vector2 offset = box.offset;
-
-            Vector3 p1 = offset + new Vector2(-size.x, -size.y) * 0.5f;
-            Vector3 p2 = offset + new Vector2(size.x, -size.y) * 0.5f;
-            Vector3 p3 = offset + new Vector2(size.x, size.y) * 0.5f;
-            Vector3 p4 = offset + new Vector2(-size.x, size.y) * 0.5f;
-
-            Transform t = attackHitbox.transform;
-            lr.SetPosition(0, t.TransformPoint(p1));
-            lr.SetPosition(1, t.TransformPoint(p2));
-            lr.SetPosition(2, t.TransformPoint(p3));
-            lr.SetPosition(3, t.TransformPoint(p4));
-        }
-        else if (attackHitbox is CircleCollider2D circle)
-        {
-            int segments = 36;
-            lr.positionCount = segments;
-            lr.loop = true;
-            float angleStep = 360f / segments;
-
-            Transform t = attackHitbox.transform;
-            Vector2 offset = circle.offset;
-            float radius = circle.radius;
-
-            for (int i = 0; i < segments; i++)
-            {
-                float angle = i * angleStep * Mathf.Deg2Rad;
-                Vector3 localPoint = offset + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
-                lr.SetPosition(i, t.TransformPoint(localPoint));
-            }
-        }
+        drawer.debugColor = color;
     }
 
     private Collider2D[] cachedColliders;

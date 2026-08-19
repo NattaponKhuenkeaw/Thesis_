@@ -72,9 +72,10 @@ public class CombatDamageTypeTests
     {
         GameObject enemyObject = new GameObject("Processor Reduction Test Enemy");
         EnemyController enemy = enemyObject.AddComponent<EnemyController>();
+        EnemyDamageTypeState state = enemyObject.AddComponent<EnemyDamageTypeState>();
         EnemyElementalProfile profile = ScriptableObject.CreateInstance<EnemyElementalProfile>();
         profile.lightningDamageReduction = 25f;
-        enemy.DamageTypeState.Initialize(profile);
+        state.Initialize(profile);
         DamageRequest request = CreateRequest(
             100f,
             DamageDelivery.Additional,
@@ -148,7 +149,7 @@ public class CombatDamageTypeTests
     {
         GameObject enemyObject = new GameObject("DOT Snapshot Test Enemy");
         EnemyController enemy = enemyObject.AddComponent<EnemyController>();
-        EnemyDamageTypeState state = enemy.DamageTypeState;
+        EnemyDamageTypeState state = enemyObject.AddComponent<EnemyDamageTypeState>();
         CharacterStats first = new CharacterStats { attack = 100f, dotMastery = 0f };
         CharacterStats equal = first.Clone();
         CharacterStats stronger = new CharacterStats { attack = 200f, dotMastery = 0f };

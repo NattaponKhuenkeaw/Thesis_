@@ -27,6 +27,7 @@ public enum EnemyDefenseState
 
 /// <summary>
 /// Prefab-authored combat kit. Shared Behavior Graph reads this instead of inlined node values.
+/// Enemy1 InterruptibleMelee, Enemy2 CommitMelee, Enemy3 RangedHold — variants of EnemyCore only.
 /// </summary>
 public enum EnemyCombatRole
 {

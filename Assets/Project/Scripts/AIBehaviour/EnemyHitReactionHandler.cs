@@ -15,6 +15,14 @@ public class EnemyHitReactionHandler : MonoBehaviour
     public float groundCheckDistance = 0.08f;
     public float groundNormalMinY = 0.25f;
 
+    [Header("Knockdown Finish")]
+    [Tooltip("Frames to hold the grounded knockdown pose before GetUp.")]
+    [SerializeField, Min(1)] private int knockdownHoldFrames = 12;
+    [Tooltip("Frames to play GetUp after knockdown.")]
+    [SerializeField, Min(1)] private int getUpFrames = 10;
+    [Tooltip("Low hits within this window count as consecutive. The 2nd Low hit knocks down.")]
+    [SerializeField, Min(0.05f)] private float lightHitStreakWindow = 0.85f;
+
     private EnemyController controller;
     private Rigidbody2D rb;
     private Animator animator;
@@ -34,6 +42,8 @@ public class EnemyHitReactionHandler : MonoBehaviour
     private int landingStateEnteredFrame = -1;
     private Vector3 impactFreezeAnchorPosition;
     private bool hasResolvedAirborneLanding;
+    private int consecutiveLightHits;
+    private float lastLightHitTime;
 
     private readonly RaycastHit2D[] groundHits = new RaycastHit2D[4];
 
@@ -187,6 +197,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
         }
         ApplyForcedFacing();
 
+        RegisterLightHitStreak(data);
         EnterState(EnemyReactionState.ImpactFreeze);
     }
 
@@ -205,7 +216,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
         if (currentReaction.RecoveryFrames > 0)
         {
             currentReactionFrame = currentReaction.ImpactFreezeFrames + currentReaction.ActiveReactionFrames + 1;
-            EnterState(EnemyReactionState.Recovering);
+            EnterState(EnemyReactionState.Knockdown);
         }
         else
         {
@@ -342,16 +353,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
     private void ProcessFlinchFrames(int totalEndFrame)
     {
-        if (currentState != EnemyReactionState.Recovering)
-        {
-            EnterState(EnemyReactionState.Recovering);
-            return;
-        }
-
-        if (currentReactionFrame > totalEndFrame)
-        {
-            CompleteReaction();
-        }
+        ProcessGroundedKnockdownGetUp();
     }
 
     private void ProcessKnockbackFrames(int activeEndFrame, int totalEndFrame)
@@ -367,16 +369,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
             return;
         }
 
-        if (currentState != EnemyReactionState.Recovering)
-        {
-            EnterState(EnemyReactionState.Recovering);
-            return;
-        }
-
-        if (currentReactionFrame > totalEndFrame)
-        {
-            CompleteReaction();
-        }
+        ProcessGroundedKnockdownGetUp();
     }
 
     private void ProcessKnockupFrames()
@@ -384,7 +377,6 @@ public class EnemyHitReactionHandler : MonoBehaviour
         int impactEnd = currentReaction.ImpactFreezeFrames;
         int knockupEnd = impactEnd + currentReaction.knockupFrames;
         int knockfallEnd = knockupEnd + currentReaction.knockfallFrames;
-        int totalEndFrame = knockfallEnd + currentReaction.RecoveryFrames;
 
         if (currentReactionFrame <= knockupEnd)
         {
@@ -420,16 +412,9 @@ public class EnemyHitReactionHandler : MonoBehaviour
                     rb.linearVelocity = new Vector2(rb.linearVelocity.x, Mathf.Min(0f, rb.linearVelocity.y));
                 }
 
-                if (currentReaction.landingBehavior == EnemyLandingBehavior.Knockdown)
+                if (currentState != EnemyReactionState.Knockdown)
                 {
-                    if (currentState != EnemyReactionState.Knockdown)
-                    {
-                        EnterState(EnemyReactionState.Knockdown);
-                    }
-                }
-                else if (currentState != EnemyReactionState.Recovering)
-                {
-                    EnterState(EnemyReactionState.Recovering);
+                    EnterState(EnemyReactionState.Knockdown);
                 }
             }
             else if (currentState != EnemyReactionState.Knockfall)
@@ -440,24 +425,14 @@ public class EnemyHitReactionHandler : MonoBehaviour
             return;
         }
 
-        if (currentState == EnemyReactionState.Knockdown && currentReactionFrame > Mathf.Max(knockfallEnd, landingStateEnteredFrame))
-        {
-            EnterState(EnemyReactionState.Recovering);
-            return;
-        }
-
-        if (currentState == EnemyReactionState.Recovering && currentReactionFrame > totalEndFrame)
-        {
-            CompleteReaction();
-            return;
-        }
+        ProcessGroundedKnockdownGetUp();
     }
 
     private void ProcessGrabFrames(int activeEndFrame, int totalEndFrame)
     {
         if (!HasValidGrabTarget())
         {
-            EnterState(EnemyReactionState.Recovering);
+            ProcessGroundedKnockdownGetUp();
             return;
         }
 
@@ -471,16 +446,60 @@ public class EnemyHitReactionHandler : MonoBehaviour
             return;
         }
 
-        if (currentState != EnemyReactionState.Recovering)
+        ProcessGroundedKnockdownGetUp();
+    }
+
+    private void ProcessGroundedKnockdownGetUp()
+    {
+        if (!ShouldFinishWithKnockdown())
         {
-            EnterState(EnemyReactionState.Recovering);
+            CompleteReaction();
             return;
         }
 
-        if (currentReactionFrame > totalEndFrame)
+        if (currentState != EnemyReactionState.Knockdown && currentState != EnemyReactionState.Recovering)
         {
-            CompleteReaction();
+            EnterState(EnemyReactionState.Knockdown);
+            return;
         }
+
+        int holdEndFrame = landingStateEnteredFrame + Mathf.Max(1, knockdownHoldFrames);
+        if (currentState == EnemyReactionState.Knockdown)
+        {
+            if (currentReactionFrame > holdEndFrame)
+                EnterState(EnemyReactionState.Recovering);
+            return;
+        }
+
+        int getUpEndFrame = holdEndFrame + Mathf.Max(1, getUpFrames);
+        if (currentReactionFrame > getUpEndFrame)
+            CompleteReaction();
+    }
+
+    private void RegisterLightHitStreak(in HitReactionData data)
+    {
+        if (data.reactionKind == EnemyReactionKind.Grab || data.textImpactTier > DamageImpactTier.Low)
+        {
+            consecutiveLightHits = 0;
+            return;
+        }
+
+        if (Time.time - lastLightHitTime > lightHitStreakWindow)
+            consecutiveLightHits = 0;
+
+        consecutiveLightHits++;
+        lastLightHitTime = Time.time;
+    }
+
+    private bool ShouldFinishWithKnockdown()
+    {
+        if (currentReaction.reactionKind == EnemyReactionKind.Grab)
+            return true;
+
+        if (currentReaction.textImpactTier > DamageImpactTier.Low)
+            return true;
+
+        return consecutiveLightHits >= 2;
     }
 
     private void MaintainCurrentStateMotion()
@@ -539,9 +558,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
         if (data.reactionKind != EnemyReactionKind.Grab)
         {
-            data.landingBehavior = data.landingBehavior == EnemyLandingBehavior.Recover && data.isKnockdown
-                ? EnemyLandingBehavior.Knockdown
-                : data.landingBehavior;
+            data.landingBehavior = EnemyLandingBehavior.Knockdown;
         }
 
         if (data.reactionKind == EnemyReactionKind.Grab)
@@ -1073,6 +1090,9 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
     private void CompleteReaction()
     {
+        if (currentState == EnemyReactionState.Knockdown || currentState == EnemyReactionState.Recovering)
+            consecutiveLightHits = 0;
+
         CleanupReaction();
         OnReactionComplete?.Invoke();
     }

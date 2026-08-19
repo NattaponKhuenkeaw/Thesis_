@@ -170,8 +170,8 @@ namespace Project.AIBehaviour.Boss
             if (bindScreenHealthHud && enemy != null)
                 BossHealthHUD.EnsureInstance().Bind(enemy, bossDisplayName);
 
-            if (enemy != null && CameraManager.instance != null)
-                CameraManager.instance.EnterCombat(enemy);
+            if (enemy != null)
+                enemy.SetInCombat(true);
 
             if (brainRoutine == null && isActiveAndEnabled)
                 brainRoutine = StartCoroutine(BrainLoop());
@@ -427,7 +427,7 @@ namespace Project.AIBehaviour.Boss
         {
             isBusy = true;
             animHandler?.SetSpeed(0f);
-            enemy.NotifyStateChanged(State.Attack);
+            enemy.SetInCombat(true);
 
             switch (patternId)
             {
@@ -922,15 +922,12 @@ namespace Project.AIBehaviour.Boss
             if (Mathf.Abs(dirX) <= 0.01f)
                 return;
 
-            // Match EnemyAttackAction facing (localScale.x).
-            Vector3 scale = transform.localScale;
-            scale.x = Mathf.Abs(scale.x) * Mathf.Sign(dirX);
-            transform.localScale = scale;
+            EnemyFacingUtil.FaceHorizontal(transform, dirX);
         }
 
         private float GetFacingSign()
         {
-            return transform.localScale.x >= 0f ? 1f : -1f;
+            return EnemyFacingUtil.GetFacingSign(transform);
         }
 
         private void EnsureFlashRenderersCached()

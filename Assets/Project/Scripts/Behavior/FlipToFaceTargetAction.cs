@@ -7,7 +7,7 @@ namespace Unity.Behavior
     [Serializable, GeneratePropertyBag]
     [NodeDescription(
         name: "Flip to Face Target",
-        description: "Flips the Transform's LocalScale.x to face the Target horizontally.",
+        description: "Rotates the Transform on Y (0 / 180) to face the Target horizontally.",
         story: "[Transform] flips to face [Target]",
         category: "Action/Transform",
         id: "a1b2c3d4e5f67890abcdef1234567890")]
@@ -46,23 +46,14 @@ namespace Unity.Behavior
 
         void ProcessFlip()
         {
-            if (Transform.Value == null || Target.Value == null) return;
+            if (Transform.Value == null || Target.Value == null)
+                return;
 
-            Vector3 scale = Transform.Value.localScale;
             float directionX = Target.Value.position.x - Transform.Value.position.x;
+            if (!FacingRightByDefault.Value)
+                directionX = -directionX;
 
-            // Threshold to avoid flickering when overlapping
-            if (Mathf.Abs(directionX) < 0.05f) return;
-
-            // If target is to the right (directionX > 0)
-            // If FacingRightByDefault is true, right=0, left=180.
-            // If FacingRightByDefault is false, right=180, left=0.
-            float targetRotY = (directionX > 0) ? (FacingRightByDefault.Value ? 0f : 180f) : (FacingRightByDefault.Value ? 180f : 0f);
-
-            if (!Mathf.Approximately(Transform.Value.eulerAngles.y, targetRotY))
-            {
-                Transform.Value.eulerAngles = new Vector3(Transform.Value.eulerAngles.x, targetRotY, Transform.Value.eulerAngles.z);
-            }
+            EnemyFacingUtil.FaceHorizontal(Transform.Value, directionX);
         }
     }
 }

@@ -25,6 +25,7 @@ using Unity.Behavior;
         if (controller != null && controller.NeverEvade)
             return false;
 
-        return Vector2.Distance(Agent.Value.transform.position, Target.Value.transform.position) < TooCloseRange.Value;
+        return EnemyFacingUtil.HorizontalDistance(Agent.Value.transform.position, Target.Value.transform.position)
+            < TooCloseRange.Value;
         }
     }
