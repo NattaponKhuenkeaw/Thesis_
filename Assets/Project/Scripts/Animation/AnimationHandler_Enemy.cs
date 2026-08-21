@@ -24,6 +24,7 @@ public class AnimationHandler_Enemy : MonoBehaviour
     private readonly int reactionStateHash = Animator.StringToHash("ReactionState");
     private readonly int airborneHash = Animator.StringToHash("IsAirborne");
     private readonly int grabbedHash = Animator.StringToHash("IsGrabbed");
+    private readonly int deadHash = Animator.StringToHash("Dead");
     private readonly int bossPhaseHash = Animator.StringToHash("BossPhase");
 
 
@@ -76,6 +77,10 @@ public class AnimationHandler_Enemy : MonoBehaviour
         if (enemyController != null && !enemyController.LastHitAppliedReaction)
             return;
 
+        // ReactionState drives Hurt/Launch/Fall/Knockdown/GetUp.
+        if (animParamHashes != null && animParamHashes.Contains(reactionStateHash))
+            return;
+
         TriggerTakeDamage();
     }
 
@@ -95,6 +100,9 @@ public class AnimationHandler_Enemy : MonoBehaviour
 
     public void TriggerDie()
     {
+        if (animParamHashes != null && animParamHashes.Contains(deadHash))
+            anim.SetBool(deadHash, true);
+
         if (animParamHashes != null && animParamHashes.Contains(dieHash))
             anim.SetTrigger(dieHash);
     }

@@ -213,10 +213,7 @@ public class HitBoxDamage : MonoBehaviour
 
         HitFeedbackEvents.Raise(activeHitbox, resolvedTier, hitPoint, direction, projectileData);
 
-        if (CameraManager.instance != null)
-        {
-            CameraManager.instance.EnterCombat(enemy);
-        }
+        enemy.SetInCombat(true);
 
         if (currentGrabHitbox != null)
         {

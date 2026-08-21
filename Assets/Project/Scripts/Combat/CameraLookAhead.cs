@@ -55,6 +55,10 @@ public class CameraLookAhead : MonoBehaviour
     private float proxyVelocityX     = 0f;
     private float currentHorizontalOffset = 0f;
     private float directionalCueOffset = 0f;
+    private bool confineHorizontal;
+    private float confineLeft;
+    private float confineRight;
+    private float confineFade = 3f;
     private int currentFacingDirection = 1;
     private int tweenId = -1;
     private Coroutine directionalCueRoutine;
@@ -125,7 +129,23 @@ public class CameraLookAhead : MonoBehaviour
         float   vy        = playerRigidbody.linearVelocity.y;
 
         // --- Horizontal: follow player X plus our look-ahead offset ---
-        float targetX = playerPos.x + currentHorizontalOffset + directionalCueOffset;
+        float lookAhead = currentHorizontalOffset;
+        if (confineHorizontal)
+        {
+            float fade = confineFade;
+            float distRight = confineRight - playerPos.x;
+            float distLeft = playerPos.x - confineLeft;
+            float scale = currentFacingDirection > 0
+                ? Mathf.Clamp01(distRight / fade)
+                : Mathf.Clamp01(distLeft / fade);
+            lookAhead *= scale;
+        }
+
+        float targetX = playerPos.x + lookAhead + directionalCueOffset;
+        if (confineHorizontal)
+        {
+            targetX = Mathf.Clamp(targetX, confineLeft, confineRight);
+        }
         currentProxyX = Mathf.SmoothDamp(
             currentProxyX,
             targetX,
@@ -154,6 +174,23 @@ public class CameraLookAhead : MonoBehaviour
             playerPos.y + currentOffsetY,
             transform.position.z
         );
+    }
+
+    /// <summary>
+    /// Fade horizontal look-ahead as the player approaches a room wall so the
+    /// tracking target does not pull the camera past the confiner.
+    /// </summary>
+    public void SetHorizontalConfine(float leftWorld, float rightWorld, float fadeDistance)
+    {
+        confineHorizontal = true;
+        confineLeft = leftWorld;
+        confineRight = rightWorld;
+        confineFade = Mathf.Max(0.01f, fadeDistance);
+    }
+
+    public void ClearHorizontalConfine()
+    {
+        confineHorizontal = false;
     }
 
     public void PlayDirectionalCue(float worldOffset, float duration)

@@ -54,7 +54,13 @@ namespace Project.Core.ZoneState
             }
 
             int slots = Mathf.Max(1, spawnSlotCount ?? tables.DefaultSpawnSlotCount);
-            GeneratedEncounter encounter = BuildEncounter(profile, tables.DelayBetweenWaves, slots);
+            GeneratedEncounter encounter = BuildEncounter(
+                profile,
+                tables.DelayBetweenWaves,
+                slots,
+                EncounterSpawnMode.Pressure,
+                tables.AliveCap,
+                tables.SpawnInterval);
             RouteReward reward = BuildReward(profile, tables);
 
             return new RoomChoiceOffer(room, difficulty, encounter, reward);
@@ -109,17 +115,44 @@ namespace Project.Core.ZoneState
             return profiles[profiles.Count - 1].difficulty;
         }
 
-        private static GeneratedEncounter BuildEncounter(
+        public static int CountEncounterEnemies(GeneratedEncounter encounter)
+        {
+            if (encounter?.Waves == null)
+            {
+                return 0;
+            }
+
+            int count = 0;
+            for (int w = 0; w < encounter.Waves.Count; w++)
+            {
+                GeneratedEncounter.Wave wave = encounter.Waves[w];
+                if (wave?.Enemies != null)
+                {
+                    count += wave.Enemies.Count;
+                }
+            }
+
+            return count;
+        }
+
+        public static GeneratedEncounter BuildEncounter(
             RouteOfferTables.DifficultyProfile profile,
             float delayBetweenWaves,
-            int spawnSlotCount)
+            int spawnSlotCount,
+            EncounterSpawnMode spawnMode = EncounterSpawnMode.Pressure,
+            int aliveCap = 3,
+            float spawnInterval = 0.35f)
         {
             GeneratedEncounter encounter = new GeneratedEncounter
             {
-                DelayBetweenWaves = delayBetweenWaves
+                DelayBetweenWaves = delayBetweenWaves,
+                SpawnMode = spawnMode,
+                AliveCap = Mathf.Max(1, aliveCap),
+                SpawnInterval = Mathf.Max(0f, spawnInterval)
             };
 
             int waveCount = Random.Range(profile.minWaves, profile.maxWaves + 1);
+            int slots = Mathf.Max(1, spawnSlotCount);
             for (int w = 0; w < waveCount; w++)
             {
                 GeneratedEncounter.Wave wave = new GeneratedEncounter.Wave
@@ -128,10 +161,9 @@ namespace Project.Core.ZoneState
                 };
 
                 int enemyCount = Random.Range(profile.minEnemiesPerWave, profile.maxEnemiesPerWave + 1);
-                enemyCount = Mathf.Clamp(enemyCount, 1, spawnSlotCount);
+                enemyCount = Mathf.Max(1, enemyCount);
 
-                // Prefer unique slots within a wave, then wrap if needed.
-                List<int> slotOrder = BuildShuffledSlots(spawnSlotCount);
+                List<int> slotOrder = BuildShuffledSlots(slots);
                 for (int e = 0; e < enemyCount; e++)
                 {
                     GameObject prefab = PickEnemy(profile.enemyPool);

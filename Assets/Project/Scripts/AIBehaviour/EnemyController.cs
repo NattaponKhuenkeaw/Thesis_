@@ -17,8 +17,8 @@ public class EnemyController : MonoBehaviour
     public event System.Action<HitReactionData> OnDamaged;
     /// <summary>Fired when HP reaches 0.</summary>
     public event System.Action OnDied;
-    /// <summary>Fired when the enemy's behavior state changes (via SetEnemyStateAction).</summary>
-    public event System.Action<State> OnStateChanged;
+    /// <summary>Fired when camera-facing combat presence changes.</summary>
+    public event System.Action<bool> OnCombatChanged;
 
     // =========================================================
     // Enemy Stats
@@ -68,6 +68,24 @@ public class EnemyController : MonoBehaviour
         }
     }
 
+    [Header("Super Armor (Trash)")]
+    [Tooltip("If true, this enemy starts in orange Super Armor (BBEE trash wall).")]
+    [SerializeField] private bool startArmored = false;
+    [Tooltip("Incoming damage multiplier while Armored.")]
+    [SerializeField, Range(0.05f, 1f)] private float armoredDamageMultiplier = 0.35f;
+    [Tooltip("Armor durability depleted by non-break hits. 0 = only breaksArmor hits clear armor.")]
+    [SerializeField, Min(0f)] private float armorDurability = 40f;
+    [SerializeField] private Color armoredTint = new Color(1f, 0.55f, 0.15f, 1f);
+    [SerializeField, Min(0f)] private float brokenStateDuration = 0.35f;
+
+    [Header("Runtime Defense")]
+    [SerializeField] private EnemyDefenseState defenseState = EnemyDefenseState.Normal;
+    [SerializeField] private float currentArmorDurability;
+
+    public EnemyDefenseState DefenseState => defenseState;
+    public bool IsArmored => defenseState == EnemyDefenseState.Armored;
+    public bool StartArmored => startArmored;
+
     // =========================================================
     // State
     // =========================================================
@@ -94,32 +112,20 @@ public class EnemyController : MonoBehaviour
         hitReactionHandler != null ? hitReactionHandler.CurrentState : EnemyReactionState.None;
     public int CurrentReactionOwnerId =>
         hitReactionHandler != null ? hitReactionHandler.CurrentReactionOwnerId : 0;
-    public bool IsGrabbed => hitReactionHandler != null && hitReactionHandler.IsGrabbed;
+
+    /// <summary>True while this enemy should stay in the combat camera.</summary>
+    public bool InCombat { get; private set; }
 
     [Header("Combo State")]
     [SerializeField] private int currentComboHits = 0;
     public int CurrentComboHits => currentComboHits;
     public bool LastHitAppliedReaction { get; private set; } = true;
 
-    [Header("Defense & Super Armor")]
-    [SerializeField] private EnemyDefenseState defenseState = EnemyDefenseState.Normal;
-    public EnemyDefenseState DefenseState => defenseState;
-    public bool IsArmored => defenseState == EnemyDefenseState.Armored;
-    public bool IsBroken => defenseState == EnemyDefenseState.Broken;
-    [Tooltip("Max armor durability. If 0, enemy does not start armored unless EnterArmored is called.")]
-    public float armorDurability = 0f;
-    [Tooltip("Current armor durability during runtime.")]
-    public float currentArmorDurability = 0f;
-    [Tooltip("How long (seconds) enemy stays Broken before returning to Normal. 0 = immediate.")]
-    public float brokenStateDuration = 0f;
-    [Tooltip("Sprite tint applied while armored.")]
-    public Color armoredTint = new Color(0.95f, 0.8f, 0.4f, 1f);
-
     [Header("Anti-Stunlock")]
     [SerializeField] private int antiStunlockComboThreshold = 4;
     [SerializeField] [Range(0f, 1f)] private float antiStunlockResistChance = 0.3f;
-    [Tooltip("Optional duration (seconds) of armor granted when anti-stunlock triggers. 0 = legacy single-hit resist.")]
-    [SerializeField] private float antiStunlockArmorDuration = 0f;
+    [Tooltip("After a successful anti-stunlock resist, skip hit-reactions for this many seconds so AI can swing. 0 = old one-hit resist only.")]
+    [SerializeField, Min(0f)] private float antiStunlockArmorDuration = 0f;
 
     /// <summary>
     /// When true, incoming hits still deal damage but skip hit-reactions / Behavior interruption.
@@ -127,11 +133,10 @@ public class EnemyController : MonoBehaviour
     /// </summary>
     [System.NonSerialized] public bool ignoreHitReactions;
 
-    private bool trashArmorOwnsIgnoreHitReactions;
-    private bool antiStunlockArmorActive;
     private Coroutine antiStunlockArmorCoroutine;
+    private bool antiStunlockArmorActive;
     private Coroutine brokenStateCoroutine;
-    private float destroyDelayOnDeath = 0f;
+    private bool trashArmorOwnsIgnoreHitReactions;
 
     // =========================================================
     // References
@@ -145,8 +150,6 @@ public class EnemyController : MonoBehaviour
     private Coroutine priorityResetCoroutine;
     private RuntimeEffectReceiver runtimeEffects;
     private EnemyDamageTypeState damageTypeState;
-    private SpriteRenderer attackHitboxSR;
-    private LineRenderer attackHitboxLR;
 
     /// <summary>Child hitbox collider used by AttackAction.</summary>
     public Collider2D attackHitbox;
@@ -159,27 +162,71 @@ public class EnemyController : MonoBehaviour
     [Header("Hit Reaction")]
     public EnemyHitReactionHandler hitReactionHandler;
 
+    [Header("Death")]
+    [Tooltip("Seconds before Destroy after Die(). Bosses set this so death anim can play.")]
+    [SerializeField] private float destroyDelayOnDeath = 0f;
+
+    [Header("Combat Role")]
+    [Tooltip("Enemy1/2/3 are EnemyCore variants. Change this role, range, and tint — do not duplicate the Behavior Graph.")]
+    [SerializeField] private EnemyCombatRole combatRole = EnemyCombatRole.InterruptibleMelee;
+    [Tooltip("If > 0, overrides Behavior Graph AttackRange (use ~6-8 for ranged).")]
+    [SerializeField] private float attackRangeOverride = -1f;
+    [SerializeField] private float rangedShotSpeed = 8f;
+    [SerializeField] private float rangedShotLifetime = 2.5f;
+    [SerializeField] private Vector2 rangedSpawnOffset = new Vector2(0.85f, 0.15f);
+    [SerializeField, Min(0.05f)] private float rangedShotRadius = 0.18f;
+
+    public EnemyCombatRole CombatRole
+    {
+        get => combatRole;
+        set => combatRole = value;
+    }
+
+    public float AttackRangeOverride
+    {
+        get => attackRangeOverride;
+        set => attackRangeOverride = value;
+    }
+
+    public bool UninterruptibleOnceWindup => combatRole == EnemyCombatRole.CommitMelee;
+    public bool UsesRangedAttack => combatRole == EnemyCombatRole.RangedHold;
+    public bool NeverEvade => combatRole == EnemyCombatRole.RangedHold;
+    public bool ArmorDuringCommittedSwing => combatRole == EnemyCombatRole.CommitMelee;
+
+    public float ResolveAttackRange(float blackboardRange)
+    {
+        return attackRangeOverride > 0f ? attackRangeOverride : blackboardRange;
+    }
+
+    public float ResolveLungeDistance(float blackboardLunge)
+    {
+        return UsesRangedAttack ? 0f : blackboardLunge;
+    }
+
     // =========================================================
     // Unity Methods
     // =========================================================
     void Start()
     {
         currentHP = maxHP;
+        if (startArmored)
+            EnterArmored(resetDurability: true);
     }
 
     void Awake()
     {
         rb       = GetComponent<Rigidbody2D>();
         isAlive   = true;
+        EnemyFacingUtil.SanitizeScale(transform);
+        if (rb != null)
+        {
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            rb.interpolation = RigidbodyInterpolation2D.Interpolate;
+        }
 
         spriteRenderers = GetComponentsInChildren<SpriteRenderer>();
         CacheOriginalColors();
         CacheOriginalSortingOrders();
-
-        if (armorDurability > 0f)
-        {
-            EnterArmored(resetDurability: true);
-        }
 
         if (hitReactionHandler == null)
             hitReactionHandler = GetComponent<EnemyHitReactionHandler>();
@@ -192,10 +239,7 @@ public class EnemyController : MonoBehaviour
             runtimeEffects = gameObject.AddComponent<RuntimeEffectReceiver>();
 
         damageTypeState = GetComponent<EnemyDamageTypeState>();
-        if (damageTypeState == null)
-            damageTypeState = gameObject.AddComponent<EnemyDamageTypeState>();
 
-        // Start with hitbox disabled and cache debug renderers
         if (attackHitbox != null)
         {
             EnemyAttackHitbox damageHitbox = attackHitbox.GetComponent<EnemyAttackHitbox>();
@@ -205,59 +249,15 @@ public class EnemyController : MonoBehaviour
             damageHitbox.SetHitboxWindowActive(false);
             attackHitbox.enabled = false;
 
-            attackHitboxSR = attackHitbox.GetComponent<SpriteRenderer>();
-            attackHitboxLR = attackHitbox.GetComponent<LineRenderer>();
+            SpriteRenderer attackHitboxSprite = attackHitbox.GetComponent<SpriteRenderer>();
+            if (attackHitboxSprite != null)
+                attackHitboxSprite.enabled = false;
 
-            if (attackHitboxSR != null)
-                attackHitboxSR.enabled = false;
-
-            EnsureAttackHitboxDebugLineRenderer();
+            EnsureColliderDebugDrawer(attackHitbox.gameObject, new Color(1f, 0.15f, 0.1f, 1f));
         }
 
-        // Auto-attach hurtbox drawer to main body
-        if (bodyCollider != null && bodyCollider.GetComponent<ColliderDebugDrawer>() == null)
-        {
-            var drawer = bodyCollider.gameObject.AddComponent<ColliderDebugDrawer>();
-            drawer.debugColor = Color.yellow; // Yellow for enemies
-        }
-    }
-
-    void Update()
-    {
-        bool isDebugActive = CombatCore.TrainingDebugManager.IsActive;
-
-        // Runtime visualization for Game View
-        if (attackHitbox != null && attackHitbox.enabled)
-        {
-            // Toggle visibility based on debug mode (using cached references)
-            if (attackHitboxSR != null) attackHitboxSR.enabled = isDebugActive;
-            if (attackHitboxLR != null) attackHitboxLR.enabled = isDebugActive;
-
-            if (isDebugActive)
-            {
-                // 1. Auto-scale SpriteRenderer to match Collider size
-                if (attackHitboxSR != null)
-                {
-                    if (attackHitbox is BoxCollider2D box)
-                    {
-                        attackHitboxSR.drawMode = SpriteDrawMode.Sliced;
-                        attackHitboxSR.size = box.size;
-                    }
-                }
-
-                // 2. Beautiful outline using LineRenderer
-                if (attackHitboxLR != null)
-                {
-                    DrawLineRenderer(attackHitboxLR);
-                }
-                else
-                {
-#if UNITY_EDITOR
-                    DrawHitboxRuntime();
-#endif
-                }
-            }
-        }
+        if (bodyCollider != null)
+            EnsureColliderDebugDrawer(bodyCollider.gameObject, Color.yellow);
     }
 
     // =========================================================
@@ -288,7 +288,6 @@ public class EnemyController : MonoBehaviour
     {
         if (!isAlive) return 0f;
 
-        bool alreadyIgnoringReactions = ignoreHitReactions;
         bool isSeparateDamage = IsSecondaryDamage(reactionData.damageDelivery);
 
         if (!isSeparateDamage)
@@ -322,13 +321,14 @@ public class EnemyController : MonoBehaviour
             };
             finalIncomingDamage = runtimeEffects.ModifyIncomingDamage(effectContext, finalIncomingDamage);
         }
-        reactionData.damage = finalIncomingDamage;
 
-        // Armor absorption (super armor / breakable guard on trash enemies)
-        if (IsArmored && !isSeparateDamage)
+        bool armoredHit = IsArmored && !isSeparateDamage;
+        if (armoredHit)
         {
-            ProcessArmorHit(breaksArmor: false, finalIncomingDamage);
+            finalIncomingDamage *= armoredDamageMultiplier;
         }
+
+        reactionData.damage = finalIncomingDamage;
 
         currentHP -= finalIncomingDamage;
         currentHP  = Mathf.Max(currentHP, 0f);
@@ -338,13 +338,14 @@ public class EnemyController : MonoBehaviour
             CombatCore.TrainingDebugStats.Instance.RecordHit(this, reactionData.sourceCharacter, finalIncomingDamage);
         }
 
-        bool shouldApplyReaction = !isSeparateDamage && ShouldApplyHitReaction(reactionData);
-        LastHitAppliedReaction = shouldApplyReaction;
-
-        if (reactionData.reactionKind == EnemyReactionKind.Grab && antiStunlockArmorActive)
+        if (armoredHit)
         {
-            StopAntiStunlockArmorWindow();
+            ProcessArmorHit(reactionData.breaksArmor, finalIncomingDamage);
         }
+
+        bool alreadyIgnoringReactions = ignoreHitReactions;
+        bool shouldApplyReaction = !isSeparateDamage && ShouldApplyHitReaction();
+        LastHitAppliedReaction = shouldApplyReaction;
 
         if (!shouldApplyReaction && !isSeparateDamage)
         {
@@ -360,7 +361,7 @@ public class EnemyController : MonoBehaviour
             }
         }
 
-        // Fire event (AnimationHandler_Enemy triggers TakeDamage anim via this)
+        // Fire event (reaction pose is driven by EnemyHitReactionHandler → AnimationHandler_Enemy)
         OnDamaged?.Invoke(reactionData);
 
         // Separate damage intentionally skips reaction, flash, and behavior interruption.
@@ -401,12 +402,8 @@ public class EnemyController : MonoBehaviour
         return finalIncomingDamage;
     }
 
-    private bool ShouldApplyHitReaction(HitReactionData reactionData)
+    private bool ShouldApplyHitReaction()
     {
-        // Grabs and throw-session hits always apply reaction / binding, even on bosses or super-armored enemies.
-        if (reactionData.reactionKind == EnemyReactionKind.Grab || IsGrabbed)
-            return true;
-
         if (ignoreHitReactions)
             return false;
 
@@ -604,13 +601,7 @@ public class EnemyController : MonoBehaviour
         get
         {
             if (damageTypeState == null)
-            {
                 damageTypeState = GetComponent<EnemyDamageTypeState>();
-                if (damageTypeState == null)
-                {
-                    damageTypeState = gameObject.AddComponent<EnemyDamageTypeState>();
-                }
-            }
 
             return damageTypeState;
         }
@@ -622,7 +613,7 @@ public class EnemyController : MonoBehaviour
     public void TakeHit(float damage, Vector2 knockbackDirection, float knockbackForce)
     {
         HitReactionData data = HitReactionData.Default(damage, knockbackDirection, knockbackForce);
-        TakeHitInternal(data, transform.position);
+        TakeResolvedHit(data, transform.position);
     }
 
     /// <summary>
@@ -646,9 +637,7 @@ public class EnemyController : MonoBehaviour
 
         OnDied?.Invoke();
 
-        // Remove from combat camera when dead
-        if (CameraManager.instance != null)
-            CameraManager.instance.LeaveCombat(this);
+        SetInCombat(false);
 
         if (destroyDelayOnDeath > 0f)
             Destroy(gameObject, destroyDelayOnDeath);
@@ -735,6 +724,13 @@ public class EnemyController : MonoBehaviour
 
     public void SetBehaviorAgentActive(bool active)
     {
+        EnemyBehaviorBrain brain = GetComponent<EnemyBehaviorBrain>();
+        if (brain != null)
+        {
+            brain.SetAgentActive(active);
+            return;
+        }
+
         var behaviorAgent = GetComponent<BehaviorGraphAgent>();
         if (behaviorAgent != null)
         {
@@ -754,12 +750,50 @@ public class EnemyController : MonoBehaviour
     }
 
     /// <summary>
-    /// Called by SetEnemyStateAction when the behavior graph transitions to a new state.
-    /// Broadcasts to listeners (e.g., CameraManager for Notice/Chase → combat cam).
+    /// Graph nodes still label Idle/Chase/etc. Camera and gameplay only care about combat presence.
+    /// </summary>
+    public void SetInCombat(bool inCombat)
+    {
+        if (!isAlive && inCombat)
+            return;
+
+        if (InCombat == inCombat)
+            return;
+
+        InCombat = inCombat;
+        OnCombatChanged?.Invoke(InCombat);
+
+        if (CameraManager.instance == null)
+            return;
+
+        if (InCombat)
+            CameraManager.instance.EnterCombat(this);
+        else
+            CameraManager.instance.LeaveCombat(this);
+    }
+
+    /// <summary>
+    /// Graph-label hook. Maps to <see cref="SetInCombat"/> so Behavior Graph does not become a second FSM.
     /// </summary>
     public void NotifyStateChanged(State newState)
     {
-        OnStateChanged?.Invoke(newState);
+        SetInCombat(IsCombatGraphLabel(newState));
+    }
+
+    public static bool IsCombatGraphLabel(State state)
+    {
+        switch (state)
+        {
+            case State.Notice:
+            case State.Chase:
+            case State.Attack:
+            case State.TakeDamage:
+            case State.Hitstun:
+            case State.Knockdown:
+                return true;
+            default:
+                return false;
+        }
     }
 
     public void TriggerAttackWarning(float duration = -1f)
@@ -798,157 +832,71 @@ public class EnemyController : MonoBehaviour
             EnemyAttackHitbox damageHitbox = attackHitbox.GetComponent<EnemyAttackHitbox>();
             if (damageHitbox != null)
                 damageHitbox.SetHitboxWindowActive(active);
-
-            // Toggle cached debug renderers
-            bool isDebugActive = CombatCore.TrainingDebugManager.IsActive;
-            if (attackHitboxSR != null)
-                attackHitboxSR.enabled = false;
-            if (attackHitboxLR != null)
-                attackHitboxLR.enabled = active && isDebugActive;
         }
     }
 
-    private void EnsureAttackHitboxDebugLineRenderer()
+    private static Sprite s_rangedShotSprite;
+
+    public void FireRangedShot(Transform target)
     {
-        if (attackHitboxLR == null)
+        float facing = EnemyFacingUtil.GetFacingSign(transform);
+        Vector3 origin = transform.position + new Vector3(rangedSpawnOffset.x * facing, rangedSpawnOffset.y, 0f);
+        Vector2 direction = Vector2.right * facing;
+        if (target != null)
+        {
+            Vector2 toTarget = (Vector2)(target.position - origin);
+            if (toTarget.sqrMagnitude > 0.01f)
+                direction = toTarget.normalized;
+        }
+
+        GameObject shot = new GameObject("EnemyRangedShot");
+        shot.transform.position = origin;
+        shot.transform.localScale = Vector3.one * Mathf.Max(0.12f, rangedShotRadius * 2f);
+        shot.layer = 0;
+
+        SpriteRenderer sprite = shot.AddComponent<SpriteRenderer>();
+        sprite.sprite = GetRangedShotSprite();
+        sprite.color = new Color(0.35f, 0.85f, 1f, 1f);
+        sprite.sortingOrder = 520;
+
+        CircleCollider2D col = shot.AddComponent<CircleCollider2D>();
+        col.isTrigger = true;
+        col.radius = 0.5f;
+
+        Rigidbody2D shotBody = shot.AddComponent<Rigidbody2D>();
+        shotBody.bodyType = RigidbodyType2D.Kinematic;
+        shotBody.gravityScale = 0f;
+        shotBody.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+
+        EnemyRangedShot projectile = shot.AddComponent<EnemyRangedShot>();
+        projectile.Launch(this, direction, rangedShotSpeed, rangedShotLifetime);
+    }
+
+    private static Sprite GetRangedShotSprite()
+    {
+        if (s_rangedShotSprite != null)
+            return s_rangedShotSprite;
+
+        Texture2D tex = Texture2D.whiteTexture;
+        s_rangedShotSprite = Sprite.Create(
+            tex,
+            new Rect(0f, 0f, tex.width, tex.height),
+            new Vector2(0.5f, 0.5f),
+            4f);
+        s_rangedShotSprite.hideFlags = HideFlags.HideAndDontSave;
+        return s_rangedShotSprite;
+    }
+
+    private static void EnsureColliderDebugDrawer(GameObject target, Color color)
+    {
+        if (target == null)
             return;
 
-        if (attackHitboxLR.sharedMaterial == null)
-            attackHitboxLR.material = new Material(Shader.Find("Sprites/Default"));
+        ColliderDebugDrawer drawer = target.GetComponent<ColliderDebugDrawer>();
+        if (drawer == null)
+            drawer = target.AddComponent<ColliderDebugDrawer>();
 
-        attackHitboxLR.startColor = new Color(1f, 0.15f, 0.1f, 1f);
-        attackHitboxLR.endColor = new Color(1f, 0.15f, 0.1f, 1f);
-        attackHitboxLR.startWidth = 0.05f;
-        attackHitboxLR.endWidth = 0.05f;
-        attackHitboxLR.sortingOrder = 500;
-        attackHitboxLR.useWorldSpace = true;
-    }
-
-    // =========================================================
-    // Gizmos
-    // =========================================================
-#if UNITY_EDITOR
-    void OnDrawGizmos()
-    {
-        if (attackHitbox != null && attackHitbox.enabled)
-        {
-            Gizmos.color = Color.red;
-            Matrix4x4 oldMatrix = Gizmos.matrix;
-            Gizmos.matrix = attackHitbox.transform.localToWorldMatrix;
-
-            if (attackHitbox is BoxCollider2D box)
-            {
-                Gizmos.DrawWireCube((Vector3)box.offset, (Vector3)box.size);
-            }
-            else if (attackHitbox is CircleCollider2D circle)
-            {
-                Gizmos.DrawWireSphere((Vector3)circle.offset, circle.radius);
-            }
-
-            Gizmos.matrix = oldMatrix;
-        }
-    }
-
-    void OnDrawGizmosSelected()
-    {
-        // Also draw a faint version when selected but not attacking
-        if (attackHitbox != null && !attackHitbox.enabled)
-        {
-            Gizmos.color = new Color(1f, 0f, 0f, 0.2f);
-            Matrix4x4 oldMatrix = Gizmos.matrix;
-            Gizmos.matrix = attackHitbox.transform.localToWorldMatrix;
-
-            if (attackHitbox is BoxCollider2D box)
-            {
-                Gizmos.DrawWireCube((Vector3)box.offset, (Vector3)box.size);
-            }
-            else if (attackHitbox is CircleCollider2D circle)
-            {
-                Gizmos.DrawWireSphere((Vector3)circle.offset, circle.radius);
-            }
-
-            Gizmos.matrix = oldMatrix;
-        }
-    }
-
-    private void DrawHitboxRuntime()
-    {
-        Matrix4x4 matrix = attackHitbox.transform.localToWorldMatrix;
-        Color color = Color.red;
-
-        if (attackHitbox is BoxCollider2D box)
-        {
-            Vector3 size = box.size;
-            Vector3 offset = box.offset;
-
-            Vector3 p1 = matrix.MultiplyPoint3x4(offset + new Vector3(-size.x, -size.y) * 0.5f);
-            Vector3 p2 = matrix.MultiplyPoint3x4(offset + new Vector3(size.x, -size.y) * 0.5f);
-            Vector3 p3 = matrix.MultiplyPoint3x4(offset + new Vector3(size.x, size.y) * 0.5f);
-            Vector3 p4 = matrix.MultiplyPoint3x4(offset + new Vector3(-size.x, size.y) * 0.5f);
-
-            Debug.DrawLine(p1, p2, color);
-            Debug.DrawLine(p2, p3, color);
-            Debug.DrawLine(p3, p4, color);
-            Debug.DrawLine(p4, p1, color);
-        }
-        else if (attackHitbox is CircleCollider2D circle)
-        {
-            int segments = 20;
-            float angleStep = 360f / segments;
-            Vector3 prevPt = Vector3.zero;
-
-            for (int i = 0; i <= segments; i++)
-            {
-                float angle = i * angleStep * Mathf.Deg2Rad;
-                Vector3 pt = (Vector3)circle.offset + new Vector3(Mathf.Cos(angle), Mathf.Sin(angle)) * circle.radius;
-                Vector3 worldPt = matrix.MultiplyPoint3x4(pt);
-
-                if (i > 0) Debug.DrawLine(prevPt, worldPt, color);
-                prevPt = worldPt;
-            }
-        }
-    }
-#endif
-
-    private void DrawLineRenderer(LineRenderer lr)
-    {
-        if (attackHitbox is BoxCollider2D box)
-        {
-            lr.positionCount = 4;
-            lr.loop = true;
-
-            Vector2 size = box.size;
-            Vector2 offset = box.offset;
-
-            Vector3 p1 = offset + new Vector2(-size.x, -size.y) * 0.5f;
-            Vector3 p2 = offset + new Vector2(size.x, -size.y) * 0.5f;
-            Vector3 p3 = offset + new Vector2(size.x, size.y) * 0.5f;
-            Vector3 p4 = offset + new Vector2(-size.x, size.y) * 0.5f;
-
-            Transform t = attackHitbox.transform;
-            lr.SetPosition(0, t.TransformPoint(p1));
-            lr.SetPosition(1, t.TransformPoint(p2));
-            lr.SetPosition(2, t.TransformPoint(p3));
-            lr.SetPosition(3, t.TransformPoint(p4));
-        }
-        else if (attackHitbox is CircleCollider2D circle)
-        {
-            int segments = 36;
-            lr.positionCount = segments;
-            lr.loop = true;
-            float angleStep = 360f / segments;
-
-            Transform t = attackHitbox.transform;
-            Vector2 offset = circle.offset;
-            float radius = circle.radius;
-
-            for (int i = 0; i < segments; i++)
-            {
-                float angle = i * angleStep * Mathf.Deg2Rad;
-                Vector3 localPoint = offset + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
-                lr.SetPosition(i, t.TransformPoint(localPoint));
-            }
-        }
+        drawer.debugColor = color;
     }
 
     private Collider2D[] cachedColliders;

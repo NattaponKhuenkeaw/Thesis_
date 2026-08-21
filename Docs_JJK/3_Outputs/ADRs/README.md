@@ -1,6 +1,6 @@
 # Architecture Decision Records Index
 
-> Last updated: 2026-08-18
+> Last updated: 2026-08-19
 
 ## Dependency Order
 
@@ -16,6 +16,8 @@ graph TD
     ADR008["ADR-008: Unified Player Damage Delivery"]
     ADR009["ADR-009: Artifact Definition and Instance Authority"]
     ADR010["ADR-010: Artifact Passive Event and Secondary-Effect Authority"]
+    ADR011["ADR-011: Boss Pattern Controller"]
+    ADR012["ADR-012: EncounterSO Layout Spawn Slots"]
     ADR001 --> ADR002
     ADR002 --> ADR004
     ADR004 --> ADR005
@@ -28,9 +30,13 @@ graph TD
     ADR005 --> ADR010
     ADR008 --> ADR010
     ADR009 --> ADR010
+    ADR006 --> ADR011
+    ADR011 --> ADR012
 ```
 
 _Update this diagram as ADRs are added. Show which decisions depend on others._
+
+Filenames for ADR-006/007/011/012 still use older numbers from the pre-merge branches. Index numbers above are canonical.
 
 ## ADR Registry
 
@@ -41,11 +47,13 @@ _Update this diagram as ADRs are added. Show which decisions depend on others._
 | [003](003-deterministic-player-state-owned-movement.md) | Deterministic State-Owned Player Movement | **Accepted** | Phase 1 | Implementation approved; awaiting human E2E feel approval |
 | [004](004-target-owned-runtime-state-channels.md) | Target-Owned Runtime State Channels | **Accepted** | Phase 2 | Target/channel ownership for shields and structural Runtime Effect reconciliation |
 | [005](005-deployed-character-live-stat-authority.md) | Deployed Character Live-Stat Authority | **Accepted** | Phase 2 | Runtime-only deployed records and explicit formula read policy |
-| [006](006-hit-owned-damage-types-and-enemy-reductions.md) | Hit-Owned Damage Types and Enemy Reductions | **Accepted** | Phase 2 | Approved with standalone per-element DOT configuration |
-| [007](007-run-global-character-level-authority.md) | Run-Global Character Level Authority | **Accepted** | Phase 2 | One run level feeds ADR-005 deployed stat records; individual EXP path is legacy |
+| [006](008-hit-owned-damage-types-and-enemy-reductions.md) | Hit-Owned Damage Types and Enemy Reductions | **Accepted** | Phase 2 | Approved with standalone per-element DOT configuration |
+| [007](009-run-global-character-level-authority.md) | Run-Global Character Level Authority | **Accepted** | Phase 2 | One run level feeds ADR-005 deployed stat records; individual EXP path is legacy |
 | [008](008-unified-player-damage-delivery.md) | Orthogonal Damage Delivery and Hit-Owned Type | **Accepted** | Phase 2 | One Primary/DOT/Additional request pipeline with DI/DM/ADI scaling |
 | [009](009-artifact-definition-instance-authority.md) | Artifact Definition and Instance Authority | **Accepted** | Phase 3 | Duplicate rolled instances, v3 persistence, Favourite/query flow, and deployed snapshots |
 | [010](010-artifact-passive-event-and-secondary-effect-authority.md) | Artifact Passive Event and Secondary-Effect Authority | **Accepted** | Phase 3 | Per-instance passive runtime, typed events, generic DOT, Projectile-independent Particle, and Explosion Splash |
+| [011](006-boss-pattern-controller.md) | Boss Pattern Controller | **Accepted** | Content / Boss | Bosses use pattern sequencer; Behavior Graph stays for trash enemies |
+| [012](007-encounter-so-layout-spawn-slots.md) | EncounterSO + Layout Spawn Slots | **Accepted** | Phase 3 | Waves from EncounterSO; positions stay on layout slots |
 
 ## Phase Mapping
 

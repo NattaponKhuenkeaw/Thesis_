@@ -49,42 +49,17 @@ namespace Unity.Behavior
 
         protected override Status OnStart()
         {
-            if (Agent.Value == null) return Status.Failure;
+            if (Agent.Value == null)
+                return Status.Failure;
 
-            // Resolve the exclamation mark GameObject
-            if (ExclamationMark?.Value != null)
-                m_Mark = ExclamationMark.Value;
-            else
-                m_Mark = FindChildByName(Agent.Value.transform, "ExclamationMark");
-
-            if (m_Mark == null)
-            {
-                Debug.LogWarning($"[NoticeExclamation] No 'ExclamationMark' GameObject found for {Agent.Value.name}.");
-                return Status.Success; // skip gracefully
-            }
-
-            if (s_PopCurve == null) s_PopCurve = new AnimationCurve(PopKeys);
-
-            m_Mark.SetActive(true);
-            m_Mark.transform.localScale = Vector3.zero;
-            m_Timer = 0f;
-
-            // Initial billboard alignment
-            UpdateBillboard();
-
-            // Face the player/target
             if (Target != null && Target.Value != null)
             {
                 float dirX = Target.Value.transform.position.x - Agent.Value.transform.position.x;
-                if (Mathf.Abs(dirX) > 0.01f)
-                {
-                    Vector3 scale = Agent.Value.transform.localScale;
-                    scale.x = Mathf.Abs(scale.x) * Mathf.Sign(dirX);
-                    Agent.Value.transform.localScale = scale;
-                }
+                EnemyFacingUtil.FaceHorizontal(Agent.Value.transform, dirX);
             }
 
-            return Status.Running;
+            // Enemies already know the player. Skip the search tell.
+            return Status.Success;
         }
 
         protected override Status OnUpdate()

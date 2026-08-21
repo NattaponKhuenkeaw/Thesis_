@@ -26,6 +26,20 @@ public enum EnemyDefenseState
 }
 
 /// <summary>
+/// Prefab-authored combat kit. Shared Behavior Graph reads this instead of inlined node values.
+/// Enemy1 InterruptibleMelee, Enemy2 CommitMelee, Enemy3 RangedHold — variants of EnemyCore only.
+/// </summary>
+public enum EnemyCombatRole
+{
+    /// <summary>Melee. Hits cancel windup and swing.</summary>
+    InterruptibleMelee = 0,
+    /// <summary>Melee. From telegraph start until recovery, hits deal damage but cannot stagger.</summary>
+    CommitMelee = 1,
+    /// <summary>Ranged shot. Holds ground when the player walks in; does not kite.</summary>
+    RangedHold = 2
+}
+
+/// <summary>
 /// Visual style for attack telegraph icons.
 /// </summary>
 public enum AttackWarningStyle

@@ -283,7 +283,8 @@ GameObject:
   - component: {fileID: 4337216351384873233}
   - component: {fileID: -1236378588940687432}
   - component: {fileID: -6515187417249938201}
-  - component: {fileID: 7560202951372101729}
+  - component: {fileID: 8128473920184738291}
+  - component: {fileID: 9128473920184738292}
   m_Layer: 8
   m_Name: EnemyCore
   m_TagString: Enemy
@@ -357,15 +358,15 @@ SpriteRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 4612047012486592167, guid: c47153249535e654994adfe81b7435ae, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1, y: 2}
+  m_Size: {x: 3, y: 3}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 0
+  m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
 --- !u!50 &6597299547389863175
 Rigidbody2D:
@@ -392,8 +393,8 @@ Rigidbody2D:
     m_Bits: 256
   m_Interpolate: 0
   m_SleepingMode: 1
-  m_CollisionDetection: 1
-  m_Constraints: 5
+  m_CollisionDetection: 0
+  m_Constraints: 4
 --- !u!61 &7441673381418920329
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -428,17 +429,17 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 0, y: 1.5}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 0.875, y: 0.5}
-    newSize: {x: 1, y: 2}
+    pivot: {x: 0.5, y: 0}
+    oldSize: {x: 3, y: 3}
+    newSize: {x: 3, y: 3}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 0.875, y: 1.6}
+  m_Size: {x: 1.28, y: 2.78}
   m_EdgeRadius: 0.04
 --- !u!95 &5297919245514991578
 Animator:
@@ -511,7 +512,13 @@ MonoBehaviour:
   bodyCollider: {fileID: 7441673381418920329}
   worldUI: {fileID: 0}
   hitReactionHandler: {fileID: -6515187417249938201}
-  destroyDelayOnDeath: 0
+  destroyDelayOnDeath: 0.4
+  combatRole: 0
+  attackRangeOverride: -1
+  rangedShotSpeed: 8
+  rangedShotLifetime: 2.5
+  rangedSpawnOffset: {x: 0.85, y: 0.15}
+  rangedShotRadius: 0.18
 --- !u!114 &4337216351384873233
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -640,7 +647,7 @@ MonoBehaviour:
     m_Bits: 520
   groundCheckDistance: 0.08
   groundNormalMinY: 0.25
---- !u!114 &7560202951372101729
+--- !u!114 &8128473920184738291
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -649,10 +656,29 @@ MonoBehaviour:
   m_GameObject: {fileID: 8917136744719106790}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f493f83c5c675934ab0bd8d51617d288, type: 3}
+  m_Script: {fileID: 11500000, guid: bb5ad8e5b39e96d4b8e7aea2002b81c3, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyDamageTypeState
-  profile: {fileID: 11400000, guid: 014c3367673144d4cb2a3f82eb421115, type: 2}
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyLocomotion
+  moveMode: 0
+  attackSlotOffset: {x: 1.5, y: 1.2}
+  arrivalThreshold: 0.2
+  faceTargetOnMove: 1
+--- !u!114 &9128473920184738292
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8917136744719106790}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70b0a229ad4990a49a3a777273224649, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyBehaviorBrain
+  agent: {fileID: 4337216351384873233}
+  enemy: {fileID: 655673979869406066}
+  locomotion: {fileID: 8128473920184738291}
+  enableAgentWhenNoBossDriver: 1
 --- !u!1001 &4539165287175780490
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -741,14 +767,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5851040234743239374, guid: 4127542f7c9a9c24dbdb64a3eae0aee1, type: 3}
-      propertyPath: m_AnchorMax.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5851040234743239374, guid: 4127542f7c9a9c24dbdb64a3eae0aee1, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 7112243602712229570, guid: 4127542f7c9a9c24dbdb64a3eae0aee1, type: 3}
       propertyPath: enemyController
       value: 
@@ -776,14 +794,6 @@ PrefabInstance:
     - target: {fileID: 8040880093381954366, guid: 4127542f7c9a9c24dbdb64a3eae0aee1, type: 3}
       propertyPath: m_Name
       value: EnemyWorldCanvasCore
-      objectReference: {fileID: 0}
-    - target: {fileID: 9126867885491975336, guid: 4127542f7c9a9c24dbdb64a3eae0aee1, type: 3}
-      propertyPath: m_AnchorMax.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 9126867885491975336, guid: 4127542f7c9a9c24dbdb64a3eae0aee1, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

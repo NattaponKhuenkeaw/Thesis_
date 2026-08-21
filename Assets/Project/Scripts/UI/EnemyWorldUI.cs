@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+[DefaultExecutionOrder(10000)]
 public class EnemyWorldUI : MonoBehaviour
 {
     [Header("References")]
@@ -27,9 +28,18 @@ public class EnemyWorldUI : MonoBehaviour
 
     private Coroutine healthLerpCoroutine;
     private Coroutine attackWarningCoroutine;
-    private Vector3 baseLocalScale = Vector3.one;
     private Graphic attackWarningGraphic;
     private SpriteRenderer attackWarningSprite;
+    private Transform followTarget;
+    private Vector3 worldFollowOffset;
+    private Vector3 worldFollowScale = Vector3.one;
+    private bool detachedFromEnemy;
+    private Canvas worldCanvas;
+    private GraphicRaycaster graphicRaycaster;
+    private Image healthFillImage;
+    private Image lerpFillImage;
+    private float displayedHealth;
+    private float displayedLerp;
 
     private void Reset()
     {
@@ -39,11 +49,7 @@ public class EnemyWorldUI : MonoBehaviour
     private void Awake()
     {
         CacheReferences();
-        baseLocalScale = new Vector3(
-            Mathf.Abs(transform.localScale.x),
-            Mathf.Abs(transform.localScale.y),
-            Mathf.Abs(transform.localScale.z));
-
+        PrepareHealthBarVisuals();
         HideTextTemplates();
 
         if (attackWarningIcon != null)
@@ -52,14 +58,19 @@ public class EnemyWorldUI : MonoBehaviour
         }
 
         ApplyHealthBarVisibility();
-        UpdateHealthBar();
+        SnapHealthVisuals();
+    }
+
+    private void Start()
+    {
+        DetachFromEnemyFacing();
     }
 
     private void OnEnable()
     {
         SubscribeToEnemyEvents();
         ApplyHealthBarVisibility();
-        UpdateHealthBar();
+        SnapHealthVisuals();
     }
 
     private void OnDisable()
@@ -71,6 +82,7 @@ public class EnemyWorldUI : MonoBehaviour
     private void LateUpdate()
     {
         KeepCanvasFacingForward();
+        ApplyHealthVisuals(ReadNormalizedHp(), displayedLerp);
     }
 
     private void CacheReferences()
@@ -78,6 +90,16 @@ public class EnemyWorldUI : MonoBehaviour
         if (enemyController == null)
         {
             enemyController = GetComponentInParent<EnemyController>();
+        }
+
+        if (worldCanvas == null)
+        {
+            worldCanvas = GetComponent<Canvas>();
+        }
+
+        if (graphicRaycaster == null)
+        {
+            graphicRaycaster = GetComponent<GraphicRaycaster>();
         }
 
         if (healthSlider == null)
@@ -125,6 +147,92 @@ public class EnemyWorldUI : MonoBehaviour
         }
     }
 
+    private void PrepareHealthBarVisuals()
+    {
+        UnnestLerpSlider();
+
+        healthFillImage = GetFillImage(healthSlider);
+        lerpFillImage = GetFillImage(damageLerpSlider);
+        ConvertToFilledImage(healthFillImage);
+        ConvertToFilledImage(lerpFillImage);
+
+        if (healthSlider != null)
+            healthSlider.enabled = false;
+        if (damageLerpSlider != null)
+            damageLerpSlider.enabled = false;
+
+        if (graphicRaycaster != null)
+            graphicRaycaster.ignoreReversedGraphics = false;
+
+        displayedHealth = ReadNormalizedHp();
+        displayedLerp = displayedHealth;
+    }
+
+    private void UnnestLerpSlider()
+    {
+        if (damageLerpSlider == null || healthSlider == null)
+            return;
+
+        Transform lerpTransform = damageLerpSlider.transform;
+        Transform healthTransform = healthSlider.transform;
+        if (!lerpTransform.IsChildOf(healthTransform))
+            return;
+
+        Transform canvasRoot = healthTransform.parent;
+        lerpTransform.SetParent(canvasRoot, false);
+
+        RectTransform healthRect = healthTransform as RectTransform;
+        RectTransform lerpRect = lerpTransform as RectTransform;
+        if (healthRect == null || lerpRect == null)
+            return;
+
+        lerpRect.anchorMin = healthRect.anchorMin;
+        lerpRect.anchorMax = healthRect.anchorMax;
+        lerpRect.pivot = healthRect.pivot;
+        lerpRect.anchoredPosition = healthRect.anchoredPosition;
+        lerpRect.sizeDelta = healthRect.sizeDelta;
+        lerpRect.localScale = Vector3.one;
+        lerpRect.localRotation = Quaternion.identity;
+        lerpRect.SetSiblingIndex(healthRect.GetSiblingIndex());
+    }
+
+    private static Image GetFillImage(Slider slider)
+    {
+        if (slider == null)
+            return null;
+
+        if (slider.fillRect != null)
+        {
+            Image fillImage = slider.fillRect.GetComponent<Image>();
+            if (fillImage != null)
+                return fillImage;
+        }
+
+        return slider.GetComponentInChildren<Image>(true);
+    }
+
+    private static void ConvertToFilledImage(Image image)
+    {
+        if (image == null)
+            return;
+
+        RectTransform rect = image.rectTransform;
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+        rect.localScale = Vector3.one;
+        rect.localRotation = Quaternion.identity;
+        rect.pivot = new Vector2(0.5f, 0.5f);
+
+        image.type = Image.Type.Filled;
+        image.fillMethod = Image.FillMethod.Horizontal;
+        // Canvas faces the camera with extra Y=180, so local left is screen-right.
+        image.fillOrigin = (int)Image.OriginHorizontal.Right;
+        image.fillClockwise = true;
+        image.fillAmount = 1f;
+    }
+
     private void HideTextTemplates()
     {
         if (damageText != null)
@@ -143,22 +251,74 @@ public class EnemyWorldUI : MonoBehaviour
         }
     }
 
+    private void DetachFromEnemyFacing()
+    {
+        if (detachedFromEnemy)
+            return;
+
+        followTarget = enemyController != null ? enemyController.transform : transform.parent;
+        if (followTarget == null || followTarget == transform)
+            return;
+
+        Vector3 delta = transform.position - followTarget.position;
+        worldFollowOffset = new Vector3(0f, delta.y, delta.z);
+        worldFollowScale = transform.lossyScale;
+        worldFollowScale.x = Mathf.Abs(worldFollowScale.x);
+        worldFollowScale.y = Mathf.Abs(worldFollowScale.y);
+        worldFollowScale.z = Mathf.Abs(worldFollowScale.z);
+
+        transform.SetParent(null, true);
+        detachedFromEnemy = true;
+        KeepCanvasFacingForward();
+    }
+
     private void KeepCanvasFacingForward()
     {
-        transform.rotation = Quaternion.identity;
-
-        Transform parent = transform.parent;
-        if (parent == null)
+        if (followTarget == null)
         {
-            transform.localScale = baseLocalScale;
+            if (detachedFromEnemy)
+                Destroy(gameObject);
             return;
         }
 
-        Vector3 parentLossyScale = parent.lossyScale;
-        transform.localScale = new Vector3(
-            baseLocalScale.x * (parentLossyScale.x < 0f ? -1f : 1f),
-            baseLocalScale.y * (parentLossyScale.y < 0f ? -1f : 1f),
-            baseLocalScale.z);
+        Camera cam = Camera.main;
+        Quaternion rotation = Quaternion.identity;
+        if (cam != null)
+        {
+            // Face the camera's front so World Canvas is not drawn mirrored from behind.
+            rotation = cam.transform.rotation * Quaternion.Euler(0f, 180f, 0f);
+            if (worldCanvas != null)
+                worldCanvas.worldCamera = cam;
+        }
+
+        transform.SetPositionAndRotation(followTarget.position + worldFollowOffset, rotation);
+        transform.localScale = worldFollowScale;
+    }
+
+    private float ReadNormalizedHp()
+    {
+        if (enemyController == null || enemyController.maxHP <= 0f)
+            return 0f;
+
+        return Mathf.Clamp01(enemyController.currentHP / enemyController.maxHP);
+    }
+
+    private void ApplyHealthVisuals(float health, float lerp)
+    {
+        displayedHealth = Mathf.Clamp01(health);
+        displayedLerp = Mathf.Max(displayedHealth, Mathf.Clamp01(lerp));
+
+        if (healthFillImage != null)
+            healthFillImage.fillAmount = displayedHealth;
+        if (lerpFillImage != null)
+            lerpFillImage.fillAmount = displayedLerp;
+    }
+
+    private void SnapHealthVisuals()
+    {
+        float hp = ReadNormalizedHp();
+        displayedLerp = hp;
+        ApplyHealthVisuals(hp, hp);
     }
 
     private void SubscribeToEnemyEvents()
@@ -203,7 +363,10 @@ public class EnemyWorldUI : MonoBehaviour
 
         if (hideCanvasOnDeath)
         {
-            gameObject.SetActive(false);
+            if (detachedFromEnemy)
+                Destroy(gameObject);
+            else
+                gameObject.SetActive(false);
         }
     }
 
@@ -214,10 +377,15 @@ public class EnemyWorldUI : MonoBehaviour
 
     public void ShowAttackWarning(float duration, AttackWarningStyle style)
     {
-        if (attackWarningIcon == null)
-        {
+        if (enemyController != null && !enemyController.IsAlive)
             return;
-        }
+
+        if (!EnsureCanvasCanRun())
+            return;
+
+        CacheReferences();
+        if (attackWarningIcon == null)
+            return;
 
         float resolvedDuration = duration > 0f ? duration : defaultAttackWarningDuration;
         ApplyWarningStyle(style);
@@ -225,6 +393,7 @@ public class EnemyWorldUI : MonoBehaviour
         if (attackWarningCoroutine != null)
         {
             StopCoroutine(attackWarningCoroutine);
+            attackWarningCoroutine = null;
         }
 
         attackWarningCoroutine = StartCoroutine(AttackWarningRoutine(resolvedDuration));
@@ -232,16 +401,24 @@ public class EnemyWorldUI : MonoBehaviour
 
     public void HideAttackWarning()
     {
-        if (attackWarningCoroutine != null)
-        {
+        if (attackWarningCoroutine != null && isActiveAndEnabled)
             StopCoroutine(attackWarningCoroutine);
-            attackWarningCoroutine = null;
-        }
+
+        attackWarningCoroutine = null;
 
         if (attackWarningIcon != null)
-        {
             attackWarningIcon.SetActive(false);
-        }
+    }
+
+    private bool EnsureCanvasCanRun()
+    {
+        if (enemyController != null && !enemyController.IsAlive)
+            return false;
+
+        if (!gameObject.activeSelf)
+            gameObject.SetActive(true);
+
+        return isActiveAndEnabled;
     }
 
     public void RefreshHealthDisplay()
@@ -251,31 +428,32 @@ public class EnemyWorldUI : MonoBehaviour
 
     private void UpdateHealthBar()
     {
-        if (!showHealthBar || healthSlider == null || enemyController == null)
+        if (!showHealthBar || enemyController == null)
         {
             return;
         }
 
-        healthSlider.minValue = 0f;
-        healthSlider.maxValue = 1f;
+        float normalizedHp = ReadNormalizedHp();
+        displayedHealth = normalizedHp;
+        ApplyHealthVisuals(displayedHealth, displayedLerp);
 
-        float normalizedHp = enemyController.maxHP > 0f
-            ? Mathf.Clamp01(enemyController.currentHP / enemyController.maxHP)
-            : 0f;
-
-        healthSlider.value = normalizedHp;
-
-        if (damageLerpSlider != null)
+        if (lerpFillImage == null)
         {
-            damageLerpSlider.minValue = 0f;
-            damageLerpSlider.maxValue = 1f;
+            displayedLerp = normalizedHp;
+            return;
+        }
 
+        if (EnsureCanvasCanRun())
+        {
             if (healthLerpCoroutine != null)
-            {
                 StopCoroutine(healthLerpCoroutine);
-            }
 
             healthLerpCoroutine = StartCoroutine(HealthLerpRoutine(normalizedHp));
+        }
+        else
+        {
+            displayedLerp = normalizedHp;
+            ApplyHealthVisuals(normalizedHp, normalizedHp);
         }
     }
 
@@ -306,16 +484,18 @@ public class EnemyWorldUI : MonoBehaviour
         yield return new WaitForSeconds(healthLerpDelay);
 
         float elapsed = 0f;
-        float startValue = damageLerpSlider.value;
+        float startValue = displayedLerp;
 
         while (elapsed < healthLerpDuration)
         {
             elapsed += Time.deltaTime;
-            damageLerpSlider.value = Mathf.Lerp(startValue, targetValue, elapsed / healthLerpDuration);
+            displayedLerp = Mathf.Lerp(startValue, targetValue, elapsed / healthLerpDuration);
+            ApplyHealthVisuals(displayedHealth, displayedLerp);
             yield return null;
         }
 
-        damageLerpSlider.value = targetValue;
+        displayedLerp = targetValue;
+        ApplyHealthVisuals(displayedHealth, displayedLerp);
         healthLerpCoroutine = null;
     }
 

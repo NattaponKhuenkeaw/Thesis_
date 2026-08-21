@@ -1631,6 +1631,8 @@ MonoBehaviour:
   _exitTrigger: {fileID: 1539196728}
   _entrancePadding: 0.75
   _exitPadding: 0.75
+  _pinPlayerToScreenEdge: 1
+  _lookAheadFadeDistance: 3
   _cameraCueDistance: 3
   _cameraCueDuration: 0.65
 --- !u!1 &1715479629 stripped

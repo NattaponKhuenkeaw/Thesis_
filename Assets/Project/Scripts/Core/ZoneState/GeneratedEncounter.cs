@@ -22,6 +22,9 @@ namespace Project.Core.ZoneState
         }
 
         public float DelayBetweenWaves = 1.25f;
+        public EncounterSpawnMode SpawnMode = EncounterSpawnMode.Pressure;
+        public int AliveCap = 3;
+        public float SpawnInterval = 0.35f;
         public readonly List<Wave> Waves = new List<Wave>(3);
 
         public bool HasWaves

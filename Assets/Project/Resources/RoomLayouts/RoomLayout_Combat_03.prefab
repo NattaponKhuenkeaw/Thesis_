@@ -527,17 +527,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.RoomWaveManager
   playerTag: Player
   startOnlyOnce: 1
-  waves: []
-  delayBetweenWaves: 1.5
   spawnSlots:
   - {fileID: 7149947601384892941}
   - {fileID: 476922877430316936}
   - {fileID: 230569937303324723}
   unlockSceneExitOnClear: 1
   portalsRoot: {fileID: 0}
-  onRoomCleared:
-    m_PersistentCalls:
-      m_Calls: []
   useBossDeathFlow: 0
 --- !u!1 &1525460629500478860
 GameObject:

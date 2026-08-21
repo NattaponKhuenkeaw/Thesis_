@@ -18,3 +18,6 @@ MonoBehaviour:
     - enemyPrefab: {fileID: 7125933182351504165, guid: 459b486a07c2f7142881a65b3a11b4ec, type: 3}
       spawnSlotIndex: 0
   delayBetweenWaves: 0
+  spawnMode: 1
+  aliveCap: 1
+  spawnInterval: 0

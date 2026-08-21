@@ -93,12 +93,10 @@ public class EnemyAttackHitbox : MonoBehaviour
         if (!playerCharacter.TakeDamage(damage, context))
             return;
 
-        // Camera shake: player got hit
         if (CameraManager.instance != null)
-        {
             CameraManager.instance.ShakeByImpact(DamageImpactTier.Low);
-            CameraManager.instance.EnterCombat(enemyController);
-        }
+
+        enemyController.SetInCombat(true);
 
         if (!triggerPlayerTakeDamageAnimation)
             return;
@@ -106,4 +104,34 @@ public class EnemyAttackHitbox : MonoBehaviour
         if (playerCharacter.Animator != null)
             playerCharacter.Animator.TriggerTakeDamage();
     }
+
+#if UNITY_EDITOR
+    private void OnDrawGizmos()
+    {
+        Collider2D hitbox = GetComponent<Collider2D>();
+        if (hitbox != null && hitbox.enabled)
+            DrawHitboxGizmo(hitbox, Color.red);
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Collider2D hitbox = GetComponent<Collider2D>();
+        if (hitbox != null && !hitbox.enabled)
+            DrawHitboxGizmo(hitbox, new Color(1f, 0f, 0f, 0.2f));
+    }
+
+    private static void DrawHitboxGizmo(Collider2D hitbox, Color color)
+    {
+        Gizmos.color = color;
+        Matrix4x4 oldMatrix = Gizmos.matrix;
+        Gizmos.matrix = hitbox.transform.localToWorldMatrix;
+
+        if (hitbox is BoxCollider2D box)
+            Gizmos.DrawWireCube((Vector3)box.offset, (Vector3)box.size);
+        else if (hitbox is CircleCollider2D circle)
+            Gizmos.DrawWireSphere((Vector3)circle.offset, circle.radius);
+
+        Gizmos.matrix = oldMatrix;
+    }
+#endif
 }

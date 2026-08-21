@@ -23,4 +23,4 @@ MonoBehaviour:
   zoneMode: 1
   defaultEntranceId: Default
   useStaticCamera: 0
-  encounter: {fileID: 11400000, guid: a2b7f4c25e105389d6b0f4a3c2e7d185, type: 2}
+  encounter: {fileID: 11400000, guid: 7c2e9f04b18a4d6e9f3c1a8b5d0e2471, type: 2}

@@ -16,31 +16,42 @@ public class ColliderDebugDrawer : MonoBehaviour
     void Awake()
     {
         targetCollider = GetComponent<Collider2D>();
-        
-        // Setup LineRenderer for runtime visualization
-        lr = gameObject.AddComponent<LineRenderer>();
+        lr = GetComponent<LineRenderer>();
+        if (lr == null)
+            lr = gameObject.AddComponent<LineRenderer>();
+
+        if (lr == null)
+            return;
+
         lr.startWidth = lineWidth;
         lr.endWidth = lineWidth;
         lr.positionCount = 0;
         lr.loop = true;
         lr.useWorldSpace = true;
-        
-        // Use a simple built-in shader for the line
-        lr.material = new Material(Shader.Find("Sprites/Default"));
+        lr.enabled = false;
+        lr.sortingOrder = 100;
+
+        Shader shader = Shader.Find("Sprites/Default");
+        if (shader == null)
+            shader = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default");
+
+        if (shader != null && lr.sharedMaterial == null)
+            lr.material = new Material(shader);
+
         lr.startColor = debugColor;
         lr.endColor = debugColor;
-        lr.sortingOrder = 100; // Draw on top
     }
 
     void Update()
     {
+        if (lr == null)
+            return;
+
         bool active = TrainingDebugManager.IsActive && targetCollider != null && targetCollider.enabled;
         lr.enabled = active;
 
         if (active)
-        {
             UpdateLinePositions();
-        }
     }
 
     private void UpdateLinePositions()

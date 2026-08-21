@@ -51,6 +51,7 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
     private bool m_Interrupted;
     private float m_LungeTravelled;
     private float m_LungeDir;
+    private float m_LungeStartX;
 
     protected override Status OnStart()
     {
@@ -86,6 +87,10 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         m_Interrupted = false;
         m_LungeTravelled = 0f;
         m_LungeDir = 0f;
+        m_LungeStartX = 0f;
+
+        if (m_Controller.UninterruptibleOnceWindup)
+            BeginCommitment();
 
         return Status.Running;
     }
@@ -96,21 +101,16 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
             return Status.Failure;
 
         float telegraphDuration = Mathf.Max(0f, WarningDuration != null ? WarningDuration.Value : 0.45f);
-        float commitFraction = Mathf.Clamp01(CommitTelegraphFraction != null ? CommitTelegraphFraction.Value : 0.35f);
+        float commitFraction = m_Controller.UninterruptibleOnceWindup
+            ? 1f
+            : Mathf.Clamp01(CommitTelegraphFraction != null ? CommitTelegraphFraction.Value : 0.35f);
         float commitTime = telegraphDuration * (1f - commitFraction);
 
-        // Commit late telegraph so mash cannot soft-cancel forever.
         if (!m_AttackStarted && !m_Committed && m_Timer >= commitTime)
             BeginCommitment();
 
-        if (m_Controller.IsGrabbed)
-        {
-            m_Interrupted = true;
-            return Status.Failure;
-        }
-
-        bool inReaction = m_Controller.CurrentReactionState != EnemyReactionState.None;
-        if (inReaction && !m_Committed)
+        // Hitstun always cancels unless this swing owns ignoreHitReactions (CommitMelee windup).
+        if (m_Controller.CurrentReactionState != EnemyReactionState.None)
         {
             m_Interrupted = true;
             return Status.Failure;
@@ -146,6 +146,8 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
     {
         m_Controller?.SetAttackHitboxActive(false);
         m_Controller?.HideAttackWarning();
+        if (m_Body != null && (m_Controller == null || m_Controller.CurrentReactionState == EnemyReactionState.None))
+            m_Body.linearVelocity = new Vector2(0f, m_Body.linearVelocity.y);
         EndCommitment();
 
         if (CanAttack != null)
@@ -186,8 +188,8 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
     private void BeginCommitment()
     {
         m_Committed = true;
-        bool useArmor = ArmorDuringSwing == null || ArmorDuringSwing.Value;
-        if (useArmor && m_Controller != null && !m_Controller.ignoreHitReactions)
+        bool useArmor = m_Controller != null && m_Controller.ArmorDuringCommittedSwing;
+        if (useArmor && !m_Controller.ignoreHitReactions)
         {
             m_Controller.ignoreHitReactions = true;
             m_OwnsAttackArmor = true;
@@ -214,10 +216,20 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
 
         m_Controller?.HideAttackWarning();
         m_AnimHandler?.TriggerAttack();
-        m_Controller?.SetAttackHitboxActive(true);
+
+        if (m_Controller != null && m_Controller.UsesRangedAttack)
+        {
+            m_Controller.SetAttackHitboxActive(false);
+            m_Controller.FireRangedShot(Target.Value != null ? Target.Value.transform : null);
+            m_HitboxDisabled = true;
+        }
+        else
+        {
+            m_Controller?.SetAttackHitboxActive(true);
+            m_HitboxDisabled = false;
+        }
 
         m_AttackStarted = true;
-        m_HitboxDisabled = false;
         m_AttackStartTime = m_Timer;
 
         float hitWindow = Mathf.Max(0.05f, HitWindowDuration != null ? HitWindowDuration.Value : 0.28f);
@@ -231,30 +243,41 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
             if (Mathf.Abs(dx) < 0.01f)
                 m_LungeDir = EnemyFacingUtil.GetFacingSign(Agent.Value.transform);
         }
+
+        m_LungeStartX = m_Body != null ? m_Body.position.x : Agent.Value.transform.position.x;
     }
 
     private void TickLunge()
     {
         float lungeDistance = Mathf.Max(0f, LungeDistance != null ? LungeDistance.Value : 0.55f);
+        if (m_Controller != null)
+            lungeDistance = m_Controller.ResolveLungeDistance(lungeDistance);
         if (lungeDistance <= 0f || Agent.Value == null || m_LungeDir == 0f)
             return;
 
         float hitWindow = Mathf.Max(0.05f, HitWindowDuration != null ? HitWindowDuration.Value : 0.28f);
         float elapsed = m_Timer - m_AttackStartTime;
         if (elapsed > hitWindow)
+        {
+            if (m_Body != null)
+                m_Body.linearVelocity = new Vector2(0f, m_Body.linearVelocity.y);
             return;
+        }
 
         float targetTravel = lungeDistance * Mathf.Clamp01(elapsed / hitWindow);
-        float step = targetTravel - m_LungeTravelled;
-        if (Mathf.Abs(step) < 0.0001f)
-            return;
-
-        Vector3 pos = Agent.Value.transform.position;
-        pos.x += step * m_LungeDir;
+        float desiredX = m_LungeStartX + m_LungeDir * targetTravel;
+        float stepDt = Mathf.Max(Time.fixedDeltaTime, 0.0001f);
         if (m_Body != null)
-            m_Body.MovePosition(pos);
+        {
+            float vx = (desiredX - m_Body.position.x) / stepDt;
+            m_Body.linearVelocity = new Vector2(vx, m_Body.linearVelocity.y);
+        }
         else
+        {
+            Vector3 pos = Agent.Value.transform.position;
+            pos.x = desiredX;
             Agent.Value.transform.position = pos;
+        }
 
         m_LungeTravelled = targetTravel;
     }

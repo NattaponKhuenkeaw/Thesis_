@@ -7,9 +7,8 @@ using Unity.Behavior;
 namespace Unity.Behavior
 {
     /// <summary>
-    /// Utility action: sets the EnemyState blackboard variable to a specified value.
-    /// Also notifies EnemyController (which broadcasts to CameraManager) when entering
-    /// combat-relevant states (Notice, Chase, Attack).
+    /// Utility action: sets the graph label on the EnemyState blackboard.
+    /// Combat camera uses EnemyController.InCombat, not this enum as an FSM.
     /// Returns Success immediately.
     /// </summary>
     [Serializable, GeneratePropertyBag]
@@ -29,28 +28,11 @@ namespace Unity.Behavior
         {
             EnemyState.Value = TargetState.Value;
 
-            // Notify EnemyController of the state change → CameraManager hooks here
             if (Agent != null && Agent.Value != null)
             {
                 EnemyController controller = Agent.Value.GetComponent<EnemyController>();
                 if (controller != null)
-                {
                     controller.NotifyStateChanged(TargetState.Value);
-
-                    // Auto-enter combat camera on combat-relevant states
-                    State state = TargetState.Value;
-                    if (state == State.Notice || state == State.Chase || state == State.Attack)
-                    {
-                        if (CameraManager.instance != null)
-                            CameraManager.instance.EnterCombat(controller);
-                    }
-                    // Auto-leave combat camera when enemy returns to passive states
-                    else if (state == State.Idle || state == State.Patrol)
-                    {
-                        if (CameraManager.instance != null)
-                            CameraManager.instance.LeaveCombat(controller);
-                    }
-                }
             }
 
             return Status.Success;

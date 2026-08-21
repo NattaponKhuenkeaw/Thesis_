@@ -48,7 +48,7 @@ namespace Project.Core.ZoneState
         [SerializeField] private bool useStaticCamera = false;
 
         [Header("Encounter (Optional)")]
-        [Tooltip("When set, RoomWaveManager spawns from this data into layout spawn slots. When null, uses Inspector waves on the layout.")]
+        [Tooltip("Fallback encounter when CombatStageController / RouteOffer has no palette. Boss rooms spawn from this asset.")]
         [SerializeField] private EncounterSO encounter;
 
         public string RoomId => string.IsNullOrWhiteSpace(roomId) ? sceneName : roomId;
