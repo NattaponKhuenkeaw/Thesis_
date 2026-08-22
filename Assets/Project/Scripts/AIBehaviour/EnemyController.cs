@@ -112,6 +112,7 @@ public class EnemyController : MonoBehaviour
         hitReactionHandler != null ? hitReactionHandler.CurrentState : EnemyReactionState.None;
     public int CurrentReactionOwnerId =>
         hitReactionHandler != null ? hitReactionHandler.CurrentReactionOwnerId : 0;
+    public bool IsGrabbed => hitReactionHandler != null && hitReactionHandler.IsGrabbed;
 
     /// <summary>True while this enemy should stay in the combat camera.</summary>
     public bool InCombat { get; private set; }
