@@ -20,6 +20,8 @@ namespace Project.Core.ZoneState
         private const float MaxExitWaitSeconds = 1.75f;
         private const float ExitWalkPastDistance = 2.0f;
         private const float ExitWalkMaxDistance = 3.5f;
+        private const float ExitWalkArrivalTolerance = 0.35f;
+        private const float ExitWalkWallSkin = 0.08f;
 
         public static SceneTransitionManager Instance { get; private set; }
 
@@ -358,6 +360,7 @@ namespace Project.Core.ZoneState
                 {
                     activeBoundaryController?.PrepareForIntro(targetEntrance);
                     Debug.Log($"[SceneTransitionManager] Teleporting player from {player.transform.position} to entrance spawn {targetEntrance.SpawnPosition}; stop point is {targetEntrance.StopPosition}.");
+                    Vector3 previousPosition = player.transform.position;
                     player.transform.position = targetEntrance.SpawnPosition;
 
                     Rigidbody2D rb = player.GetComponent<Rigidbody2D>();
@@ -365,6 +368,8 @@ namespace Project.Core.ZoneState
                     {
                         rb.linearVelocity = Vector2.zero;
                     }
+
+                    CameraManager.instance?.SnapToPlayerForRoomEnter(player.transform.position - previousPosition);
                 }
 
                 if (transitionInSFX != null && GameAudioManager.Instance != null)
@@ -486,21 +491,21 @@ namespace Project.Core.ZoneState
                 yield break;
             }
 
+            SceneBoundaryController boundary = ResolveCurrentBoundaryController()
+                ?? Object.FindFirstObjectByType<SceneBoundaryController>();
             TransitionTrigger exitTrigger = ResolveExitTriggerForWalk(player.transform.position);
-            Vector3 target = ResolveExitWalkTarget(player.transform.position, exitTrigger);
+            Vector3 target = ResolveExitWalkTarget(player, exitTrigger, boundary, out float walkSign);
 
-            // Already at / past the step-out point — skip the cinematic walk.
-            if (Mathf.Abs(target.x - player.transform.position.x) <= 0.35f)
+            // Already at / past the stop (just before ExitWall) — skip the cinematic walk.
+            float remaining = (target.x - player.transform.position.x) * walkSign;
+            if (remaining <= ExitWalkArrivalTolerance)
             {
-                Debug.Log("[SceneTransitionManager] Exit walk skipped; player already at exit step-out.", this);
+                Debug.Log("[SceneTransitionManager] Exit walk skipped; player already at exit stop.", this);
                 yield break;
             }
 
             PlayerExitState exitState = player.StateMachine.ExitState;
             exitState.TargetPosition = target;
-            SceneBoundaryController boundary = ResolveCurrentBoundaryController()
-                ?? Object.FindFirstObjectByType<SceneBoundaryController>();
-            boundary?.PrepareForExit(target);
             player.StateMachine.InputBuffer?.ClearAll();
             player.StateMachine.ChangeState(exitState);
             Debug.Log($"[SceneTransitionManager] Exit walk started toward {target} (from {player.transform.position}).");
@@ -548,10 +553,15 @@ namespace Project.Core.ZoneState
             }
         }
 
-        private static Vector3 ResolveExitWalkTarget(Vector3 playerPosition, TransitionTrigger exitTrigger)
+        private static Vector3 ResolveExitWalkTarget(
+            PlayerCharacter player,
+            TransitionTrigger exitTrigger,
+            SceneBoundaryController boundary,
+            out float walkSign)
         {
+            Vector3 playerPosition = player != null ? player.transform.position : Vector3.zero;
             Vector3 target = playerPosition;
-            float walkSign = 1f;
+            walkSign = 1f;
 
             if (exitTrigger != null)
             {
@@ -559,10 +569,30 @@ namespace Project.Core.ZoneState
                 float outwardEdgeX = exitCollider != null
                     ? exitCollider.bounds.max.x
                     : exitTrigger.transform.position.x;
-
-                // Prefer stepping past the exit edge, but never send the player across the room
-                // (wrong/shell trigger or huge collider made leaves feel like a freeze).
                 walkSign = outwardEdgeX >= playerPosition.x - 0.01f ? 1f : -1f;
+            }
+
+            Collider2D exitWall = boundary != null ? boundary.ExitWall : null;
+            if (exitWall != null)
+            {
+                float wallInnerX = walkSign >= 0f ? exitWall.bounds.min.x : exitWall.bounds.max.x;
+                float bodyExtent = player != null && player.Movement != null
+                    ? player.Movement.GetBodyExtentToward(walkSign)
+                    : 0.5f;
+                target.x = RoomBoundaryMath.ResolveStopBeforeWallX(
+                    wallInnerX,
+                    walkSign,
+                    bodyExtent,
+                    ExitWalkWallSkin);
+                return target;
+            }
+
+            if (exitTrigger != null)
+            {
+                Collider2D exitCollider = exitTrigger.ExitCollider;
+                float outwardEdgeX = exitCollider != null
+                    ? exitCollider.bounds.max.x
+                    : exitTrigger.transform.position.x;
                 float desired = outwardEdgeX + (walkSign * ExitWalkPastDistance);
                 float delta = desired - playerPosition.x;
                 if (Mathf.Abs(delta) > ExitWalkMaxDistance)
@@ -570,7 +600,6 @@ namespace Project.Core.ZoneState
                     desired = playerPosition.x + (Mathf.Sign(delta) * ExitWalkMaxDistance);
                 }
 
-                // Already past the outward edge: just take a short step further out.
                 if ((walkSign > 0f && playerPosition.x >= outwardEdgeX)
                     || (walkSign < 0f && playerPosition.x <= outwardEdgeX))
                 {

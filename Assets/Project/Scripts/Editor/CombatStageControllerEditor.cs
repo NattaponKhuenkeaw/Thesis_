@@ -9,15 +9,15 @@ namespace Project.EditorTools
     public sealed class CombatStageControllerEditor : Editor
     {
         private bool[] chamberOpen;
+        private bool advancedOpen;
 
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
 
             EditorGUILayout.HelpBox(
-                "Tune this component, not Scene Boundary Controller above.\n" +
-                "Each room: assign Encounter (types + weights) + Enemy Count.\n" +
-                "Turn on Scene View Gizmos to see room bounds.",
+                "Each room needs Enemy Count, walls, and spawn points.\n" +
+                "Enemy types come from the Easy / Medium / Hard card, not from this Inspector.",
                 MessageType.Info);
 
             SerializedProperty chambersProp = serializedObject.FindProperty("chambers");
@@ -45,7 +45,6 @@ namespace Project.EditorTools
             {
                 SerializedProperty chamber = chambersProp.GetArrayElementAtIndex(i);
                 SerializedProperty nameProp = chamber.FindPropertyRelative("name");
-                SerializedProperty encounterProp = chamber.FindPropertyRelative("encounter");
                 SerializedProperty countProp = chamber.FindPropertyRelative("enemyCount")
                     ?? chamber.FindPropertyRelative("enemyQuota");
 
@@ -53,13 +52,6 @@ namespace Project.EditorTools
                 string title = string.IsNullOrWhiteSpace(roomName)
                     ? $"Room {i + 1}"
                     : $"Room {i + 1}: {roomName}";
-                if (encounterProp != null
-                    && encounterProp.objectReferenceValue == null
-                    && countProp != null
-                    && countProp.intValue > 0)
-                {
-                    title += "  — no Encounter";
-                }
 
                 EditorGUILayout.Space(8f);
                 chamberOpen[i] = EditorGUILayout.BeginFoldoutHeaderGroup(chamberOpen[i], title);
@@ -67,7 +59,6 @@ namespace Project.EditorTools
                 {
                     EditorGUI.indentLevel++;
                     DrawRelative(chamber, "name", "Name");
-                    DrawRelative(chamber, "encounter", "Encounter");
                     if (countProp != null)
                     {
                         EditorGUILayout.PropertyField(countProp, new GUIContent("Enemy Count"));
@@ -89,6 +80,26 @@ namespace Project.EditorTools
             DrawRoot("corridorPadding");
             DrawRoot("drawSceneGuides");
             DrawRoot("gizmoHeight");
+
+            EditorGUILayout.Space(8f);
+            advancedOpen = EditorGUILayout.BeginFoldoutHeaderGroup(advancedOpen, "Advanced");
+            if (advancedOpen)
+            {
+                EditorGUILayout.HelpBox(
+                    "Leave these empty. Fill only to force a palette when entering this layout without a card.",
+                    MessageType.None);
+                for (int i = 0; i < chambersProp.arraySize; i++)
+                {
+                    SerializedProperty chamber = chambersProp.GetArrayElementAtIndex(i);
+                    string roomName = chamber.FindPropertyRelative("name")?.stringValue;
+                    string label = string.IsNullOrWhiteSpace(roomName)
+                        ? $"Room {i + 1} Encounter"
+                        : $"Room {i + 1} Encounter";
+                    DrawRelative(chamber, "encounter", label);
+                }
+            }
+
+            EditorGUILayout.EndFoldoutHeaderGroup();
 
             serializedObject.ApplyModifiedProperties();
 
@@ -140,7 +151,7 @@ namespace Project.EditorTools
         {
             if (stage == null || stage.Chambers == null || stage.Chambers.Count == 0)
             {
-                EditorGUILayout.HelpBox("Room Count is 0. Set it above, then assign an Encounter per room.", MessageType.Warning);
+                EditorGUILayout.HelpBox("Room Count is 0. Set it above, then assign walls and spawn points.", MessageType.Warning);
                 return;
             }
 
@@ -167,11 +178,6 @@ namespace Project.EditorTools
                 return "empty";
             }
 
-            if (chamber.encounter == null && chamber.enemyCount > 0)
-            {
-                return "assign Encounter";
-            }
-
             if (chamber.entranceWall == null || chamber.exitWall == null)
             {
                 return "missing left/right wall";
@@ -187,12 +193,7 @@ namespace Project.EditorTools
                 return "ready · 0 enemies (no fight)";
             }
 
-            if (chamber.encounter == null)
-            {
-                return $"ready · {chamber.enemyCount} · assign Encounter";
-            }
-
-            return $"ready · {chamber.enemyCount} · {chamber.encounter.name}";
+            return $"ready · {chamber.enemyCount} enemies";
         }
 
         private static bool HasSpawn(CombatStageController.Chamber chamber)

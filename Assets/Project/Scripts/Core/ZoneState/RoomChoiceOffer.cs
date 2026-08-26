@@ -2,7 +2,7 @@ namespace Project.Core.ZoneState
 {
     /// <summary>
     /// One next-room option after a room clear (BlazBlue-style UI).
-    /// Combat/Elite offers carry generated difficulty, encounter, and reward.
+    /// Combat/Elite offers carry difficulty and reward. Chamber layouts spawn from palettes.
     /// </summary>
     public readonly struct RoomChoiceOffer
     {
@@ -36,6 +36,6 @@ namespace Project.Core.ZoneState
 
         public string RewardLabel => Reward != null ? Reward.BuildLabel() : string.Empty;
 
-        public bool ShowsDifficulty => HasGeneratedCombat;
+        public bool ShowsDifficulty => Kind == RoomKind.Combat || Kind == RoomKind.Elite;
     }
 }

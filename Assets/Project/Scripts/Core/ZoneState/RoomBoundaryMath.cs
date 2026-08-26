@@ -44,5 +44,57 @@ namespace Project.Core.ZoneState
 
             return right > left + 0.001f;
         }
+
+        /// <summary>
+        /// Stop X just before a solid wall so the body does not rest against it.
+        /// <paramref name="walkSign"/> of +1 uses the wall's room-facing min X;
+        /// -1 uses max X.
+        /// </summary>
+        public static float ResolveStopBeforeWallX(
+            float wallInnerX,
+            float walkSign,
+            float bodyExtentTowardWall,
+            float skin)
+        {
+            float clearance = Mathf.Max(0.01f, bodyExtentTowardWall + Mathf.Max(0f, skin));
+            return walkSign >= 0f
+                ? wallInnerX - clearance
+                : wallInnerX + clearance;
+        }
+
+        public static bool IsStageExitWallName(string objectName)
+        {
+            if (string.IsNullOrWhiteSpace(objectName))
+            {
+                return false;
+            }
+
+            return string.Equals(objectName.Trim(), "Wall_Exit", System.StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static bool TryEncapsulateVertical(Collider2D[] colliders, out float bottom, out float top)
+        {
+            bottom = float.PositiveInfinity;
+            top = float.NegativeInfinity;
+            if (colliders == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < colliders.Length; i++)
+            {
+                Collider2D collider = colliders[i];
+                if (collider == null || !collider.enabled)
+                {
+                    continue;
+                }
+
+                Bounds bounds = collider.bounds;
+                bottom = Mathf.Min(bottom, bounds.min.y);
+                top = Mathf.Max(top, bounds.max.y);
+            }
+
+            return !float.IsInfinity(bottom) && top > bottom + 0.001f;
+        }
     }
 }
