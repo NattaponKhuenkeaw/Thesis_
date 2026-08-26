@@ -23,7 +23,7 @@ public sealed class EnemyLocomotionEditor : Editor
         else
         {
             EditorGUILayout.HelpBox(
-                "Move mode is Ground. Enemy1–3 stay on the ground. Enable Allow Non Ground Move only for Fly/Warp kits.",
+                "Move mode is Ground. Enemy1–3 stay on the ground and only attack targets on the same platform. Enable Allow Non Ground Move only for Fly/Warp kits.",
                 MessageType.Info);
         }
 

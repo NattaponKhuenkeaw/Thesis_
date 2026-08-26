@@ -26,4 +26,42 @@ public static class EnemyCombatRange
 
         return EnemyFacingUtil.HorizontalDistance(agent.transform.position, target.transform.position) <= range;
     }
+
+    /// <summary>
+    /// Aim at the body, not the transform pivot (often the feet).
+    /// </summary>
+    public static Vector3 GetAimPoint(Transform target)
+    {
+        if (target == null)
+            return Vector3.zero;
+
+        Collider2D body = ResolveAimCollider(target);
+        return body != null ? body.bounds.center : target.position;
+    }
+
+    private static Collider2D ResolveAimCollider(Transform target)
+    {
+        PlayerCharacter player = target.GetComponent<PlayerCharacter>()
+            ?? target.GetComponentInParent<PlayerCharacter>();
+        if (player != null)
+        {
+            Collider2D playerBody = player.GetComponent<Collider2D>();
+            if (playerBody != null)
+                return playerBody;
+        }
+
+        EnemyController enemy = target.GetComponent<EnemyController>()
+            ?? target.GetComponentInParent<EnemyController>();
+        if (enemy != null && enemy.bodyCollider != null)
+            return enemy.bodyCollider;
+
+        Collider2D[] colliders = target.GetComponentsInChildren<Collider2D>();
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            if (colliders[i] != null && !colliders[i].isTrigger)
+                return colliders[i];
+        }
+
+        return colliders.Length > 0 ? colliders[0] : null;
+    }
 }

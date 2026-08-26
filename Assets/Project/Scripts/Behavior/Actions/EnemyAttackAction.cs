@@ -40,6 +40,7 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
 
     private EnemyController m_Controller;
     private AnimationHandler_Enemy m_AnimHandler;
+    private EnemyLocomotion m_Locomotion;
     private Rigidbody2D m_Body;
     private float m_Timer;
     private float m_AttackStartTime;
@@ -61,10 +62,14 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         m_Controller = Agent.Value.GetComponent<EnemyController>();
         m_AnimHandler = Agent.Value.GetComponentInChildren<AnimationHandler_Enemy>();
         m_Body = Agent.Value.GetComponent<Rigidbody2D>();
+        m_Locomotion = Agent.Value.GetComponent<EnemyLocomotion>();
         if (m_Controller == null || m_AnimHandler == null)
             return Status.Failure;
 
         if (m_Controller.CurrentReactionState != EnemyReactionState.None)
+            return Status.Failure;
+
+        if (!CanReachTarget())
             return Status.Failure;
 
         if (CanAttack != null)
@@ -109,7 +114,7 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         if (!m_AttackStarted && !m_Committed && m_Timer >= commitTime)
             BeginCommitment();
 
-        // Hitstun always cancels unless this swing owns ignoreHitReactions (CommitMelee windup).
+        // Hitstun can still cancel interruptible melee. Range does not: once telegraph starts, the swing/shot fires.
         if (m_Controller.CurrentReactionState != EnemyReactionState.None)
         {
             m_Interrupted = true;
@@ -122,7 +127,10 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
             StartActualAttack();
 
         if (m_AttackStarted)
+        {
             TickLunge();
+            TickRecoveryStep();
+        }
 
         float hitWindow = Mathf.Max(0.05f, HitWindowDuration != null ? HitWindowDuration.Value : 0.28f);
         if (m_AttackStarted && !m_HitboxDisabled && (m_Timer - m_AttackStartTime) >= hitWindow)
@@ -172,6 +180,7 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
 
         m_Controller = null;
         m_AnimHandler = null;
+        m_Locomotion = null;
         m_Body = null;
     }
 
@@ -258,11 +267,7 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         float hitWindow = Mathf.Max(0.05f, HitWindowDuration != null ? HitWindowDuration.Value : 0.28f);
         float elapsed = m_Timer - m_AttackStartTime;
         if (elapsed > hitWindow)
-        {
-            if (m_Body != null)
-                m_Body.linearVelocity = new Vector2(0f, m_Body.linearVelocity.y);
             return;
-        }
 
         float targetTravel = lungeDistance * Mathf.Clamp01(elapsed / hitWindow);
         float desiredX = m_LungeStartX + m_LungeDir * targetTravel;
@@ -280,6 +285,44 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         }
 
         m_LungeTravelled = targetTravel;
+    }
+
+    private void TickRecoveryStep()
+    {
+        if (m_Controller != null && m_Controller.UsesRangedAttack)
+            return;
+        if (!m_HitboxDisabled || m_Locomotion == null || Target == null || Target.Value == null)
+            return;
+
+        float range = 1.5f;
+        if (m_Controller != null)
+            range = m_Controller.ResolveAttackRange(range);
+
+        Transform target = Target.Value.transform;
+        if (m_Locomotion.IsInAttackRangeOfTarget(target, range))
+        {
+            m_Locomotion.StopHorizontal();
+            FaceTarget();
+            return;
+        }
+
+        m_Locomotion.MoveTowardsTargetRange(target, range, 2.5f, Time.deltaTime);
+        FaceTarget();
+    }
+
+    private bool CanReachTarget()
+    {
+        if (m_Locomotion == null || Target == null || Target.Value == null)
+            return true;
+
+        float range = 1.5f;
+        if (m_Controller != null)
+            range = m_Controller.ResolveAttackRange(range);
+
+        if (m_Controller != null && m_Controller.UsesRangedAttack)
+            return m_Controller.HasClearStraightShot(Target.Value.transform, range);
+
+        return m_Locomotion.IsInAttackRangeOfTarget(Target.Value.transform, range);
     }
 
     private void FaceTarget()

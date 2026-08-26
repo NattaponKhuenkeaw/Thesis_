@@ -6,7 +6,7 @@ using Unity.Behavior;
 [Serializable, GeneratePropertyBag]
 [Condition(
     name: "Is Target In Attack Range",
-    description: "Returns Success if the Target is within AttackRange. Uses EnemyLocomotion slot distance when present.",
+    description: "Returns Success if the Target is within AttackRange on a reachable platform. Uses EnemyLocomotion slot distance when present.",
     story: "[Agent] is in attack range of [Target] ([AttackRange])",
     category: "Conditions/Combat",
     id: "a1b2c3d4e5f60002aabbccddeeff0002")]
@@ -21,10 +21,13 @@ public partial class IsPlayerInAttackRangeCondition : Condition
         if (Agent == null || Target == null) return false;
         if (Agent.Value == null || Target.Value == null) return false;
 
-        float range = AttackRange != null ? AttackRange.Value : 1.5f;
         EnemyController controller = Agent.Value.GetComponent<EnemyController>();
+        float range = AttackRange != null ? AttackRange.Value : 1.5f;
         if (controller != null)
             range = controller.ResolveAttackRange(range);
+
+        if (controller != null && controller.UsesRangedAttack)
+            return controller.HasClearStraightShot(Target.Value.transform, range);
 
         return EnemyCombatRange.IsInAttackRange(Agent.Value, Target.Value, range);
     }

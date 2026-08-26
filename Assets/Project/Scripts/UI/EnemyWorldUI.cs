@@ -40,6 +40,7 @@ public class EnemyWorldUI : MonoBehaviour
     private Image lerpFillImage;
     private float displayedHealth;
     private float displayedLerp;
+    private static Sprite solidFillSprite;
 
     private void Reset()
     {
@@ -225,12 +226,28 @@ public class EnemyWorldUI : MonoBehaviour
         rect.localRotation = Quaternion.identity;
         rect.pivot = new Vector2(0.5f, 0.5f);
 
+        // Builtin UISprite/Knob is 9-sliced; Filled clips those borders into black fades.
+        image.sprite = GetSolidFillSprite();
         image.type = Image.Type.Filled;
         image.fillMethod = Image.FillMethod.Horizontal;
-        // Canvas faces the camera with extra Y=180, so local left is screen-right.
-        image.fillOrigin = (int)Image.OriginHorizontal.Right;
+        // Remaining HP stays on screen-left; empty grows from the right (ซ้าย ← ขวา).
+        image.fillOrigin = (int)Image.OriginHorizontal.Left;
         image.fillClockwise = true;
         image.fillAmount = 1f;
+    }
+
+    private static Sprite GetSolidFillSprite()
+    {
+        if (solidFillSprite != null)
+            return solidFillSprite;
+
+        Texture2D texture = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+        texture.SetPixel(0, 0, Color.white);
+        texture.Apply();
+        texture.hideFlags = HideFlags.HideAndDontSave;
+        solidFillSprite = Sprite.Create(texture, new Rect(0f, 0f, 1f, 1f), new Vector2(0.5f, 0.5f), 1f);
+        solidFillSprite.hideFlags = HideFlags.HideAndDontSave;
+        return solidFillSprite;
     }
 
     private void HideTextTemplates()
