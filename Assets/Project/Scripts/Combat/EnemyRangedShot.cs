@@ -19,6 +19,11 @@ public class EnemyRangedShot : MonoBehaviour
             : Vector2.right * speed;
         lifeRemaining = Mathf.Max(0.05f, lifetime);
         consumed = false;
+        if (velocity.sqrMagnitude > 0.0001f)
+        {
+            float angle = Mathf.Atan2(velocity.y, velocity.x) * Mathf.Rad2Deg;
+            transform.rotation = Quaternion.Euler(0f, 0f, angle);
+        }
     }
 
     private void Update()

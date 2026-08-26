@@ -224,6 +224,10 @@ PrefabInstance:
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: kit
+      value: 
+      objectReference: {fileID: 11400000, guid: 7c1e4a8b9d2f4e06a3b5c7d9e1f20345, type: 2}
+    - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: combatRole
       value: 1
       objectReference: {fileID: 0}
@@ -235,10 +239,6 @@ PrefabInstance:
       propertyPath: startArmored
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: hitReactionHandler
-      value: 
-      objectReference: {fileID: 2992548729297104892}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: antiStunlockResistChance
       value: 0.3
@@ -646,17 +646,13 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: -6515187417249938201, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+    m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 5934746496802764893, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6947661304475291214}
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 8917136744719106790, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 2992548729297104892}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c135c5413a913c346868205d4f41acfe, type: 3}
 --- !u!114 &3682925780710360539 stripped
 MonoBehaviour:
@@ -674,26 +670,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 8917136744719106790, guid: c135c5413a913c346868205d4f41acfe, type: 3}
   m_PrefabInstance: {fileID: 4180762667386644137}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &2992548729297104892
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4739200647295624271}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bbe01cd655c2e554c89cebf251d6ec5b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyHitReactionHandler
-  currentState: 0
-  currentJuggleCount: 0
-  airJuggleSessionActive: 0
-  groundLayers:
-    serializedVersion: 2
-    m_Bits: 520
-  groundCheckDistance: 0.08
-  groundNormalMinY: 0.25
 --- !u!4 &7519174093949083380 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5934746496802764893, guid: c135c5413a913c346868205d4f41acfe, type: 3}

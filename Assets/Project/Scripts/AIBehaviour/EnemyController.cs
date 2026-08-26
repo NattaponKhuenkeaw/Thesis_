@@ -166,36 +166,72 @@ public class EnemyController : MonoBehaviour
     [Tooltip("Seconds before Destroy after Die(). Bosses set this so death anim can play.")]
     [SerializeField] private float destroyDelayOnDeath = 0f;
 
+    [Header("Combat Kit")]
+    [Tooltip("Optional EnemyKit asset. When assigned it owns the role, range, and ranged shot values below.")]
+    [SerializeField] private EnemyKit kit;
+
     [Header("Combat Role")]
     [Tooltip("Enemy1/2/3 are EnemyCore variants. Change this role, range, and tint — do not duplicate the Behavior Graph.")]
     [SerializeField] private EnemyCombatRole combatRole = EnemyCombatRole.InterruptibleMelee;
-    [Tooltip("If > 0, overrides Behavior Graph AttackRange (use ~6-8 for ranged).")]
+    [Tooltip("If > 0, overrides Behavior Graph AttackRange. For ranged this is also laser length and max shot reach.")]
     [SerializeField] private float attackRangeOverride = -1f;
-    [SerializeField] private float rangedShotSpeed = 8f;
-    [SerializeField] private float rangedShotLifetime = 2.5f;
+
+    [Header("Ranged Shot")]
+    [Tooltip("Bullet travel speed.")]
+    [SerializeField, Min(0.1f)] private float rangedShotSpeed = 8f;
+    [Tooltip("Seconds the bullet stays alive. Raise this if you lengthen range or lower speed.")]
+    [SerializeField, Min(0.05f)] private float rangedShotLifetime = 2.5f;
+    [Tooltip("World-space shot origin. Move this on the prefab to change where the laser and bullet start.")]
+    [SerializeField] private Transform rangedMuzzle;
+    [Tooltip("Used when Ranged Muzzle is empty. X flips with facing.")]
     [SerializeField] private Vector2 rangedSpawnOffset = new Vector2(0.85f, 0.15f);
+    [Tooltip("Optional bullet art. Leave empty for the default square.")]
+    [SerializeField] private Sprite rangedShotSprite;
+    [SerializeField] private Color rangedShotTint = Color.white;
     [SerializeField, Min(0.05f)] private float rangedShotRadius = 0.18f;
+    [SerializeField] private LayerMask rangedLineMask = ~0;
+
+    /// <summary>Kit asset that overrides the local role and ranged values. Null = use prefab values.</summary>
+    public EnemyKit Kit
+    {
+        get => kit;
+        set => kit = value;
+    }
 
     public EnemyCombatRole CombatRole
     {
-        get => combatRole;
+        get => kit != null ? kit.CombatRole : combatRole;
         set => combatRole = value;
     }
 
     public float AttackRangeOverride
     {
-        get => attackRangeOverride;
+        get => kit != null ? kit.AttackRange : attackRangeOverride;
         set => attackRangeOverride = value;
     }
 
-    public bool UninterruptibleOnceWindup => combatRole == EnemyCombatRole.CommitMelee;
-    public bool UsesRangedAttack => combatRole == EnemyCombatRole.RangedHold;
-    public bool NeverEvade => combatRole == EnemyCombatRole.RangedHold;
-    public bool ArmorDuringCommittedSwing => combatRole == EnemyCombatRole.CommitMelee;
+    private float ShotSpeed => kit != null ? kit.ShotSpeed : rangedShotSpeed;
+    private float ShotLifetime => kit != null ? kit.ShotLifetime : rangedShotLifetime;
+    private Sprite ShotSprite => kit != null ? kit.ShotSprite : rangedShotSprite;
+    private Color ShotTint => kit != null ? kit.ShotTint : rangedShotTint;
+    private float ShotRadius => kit != null ? kit.ShotRadius : rangedShotRadius;
+    private Vector2 MuzzleOffset => kit != null ? kit.MuzzleOffset : rangedSpawnOffset;
+    private LayerMask LineOfFireMask => kit != null ? kit.LineOfFireMask : rangedLineMask;
+
+    public bool UninterruptibleOnceWindup => CombatRole == EnemyCombatRole.CommitMelee;
+    public bool UsesRangedAttack => CombatRole == EnemyCombatRole.RangedHold;
+    public bool NeverEvade => CombatRole == EnemyCombatRole.RangedHold;
+    public Transform RangedMuzzle
+    {
+        get => rangedMuzzle;
+        set => rangedMuzzle = value;
+    }
+    public bool ArmorDuringCommittedSwing => CombatRole == EnemyCombatRole.CommitMelee;
 
     public float ResolveAttackRange(float blackboardRange)
     {
-        return attackRangeOverride > 0f ? attackRangeOverride : blackboardRange;
+        float range = AttackRangeOverride;
+        return range > 0f ? range : blackboardRange;
     }
 
     public float ResolveLungeDistance(float blackboardLunge)
@@ -629,6 +665,7 @@ public class EnemyController : MonoBehaviour
     {
         if (!isAlive) return;
         isAlive = false;
+        HideAttackWarning();
 
         StopAntiStunlockArmorWindow();
 
@@ -798,6 +835,13 @@ public class EnemyController : MonoBehaviour
 
     public void TriggerAttackWarning(float duration = -1f)
     {
+        if (UsesRangedAttack)
+        {
+            worldUI?.HideAttackWarning();
+            ShowRangedAimLaser();
+            return;
+        }
+
         AttackWarningStyle style = AttackWarningStyle.Normal;
         if (attackHitbox != null)
         {
@@ -815,6 +859,7 @@ public class EnemyController : MonoBehaviour
 
     public void HideAttackWarning()
     {
+        HideRangedAimLaser();
         worldUI?.HideAttackWarning();
     }
 
@@ -837,26 +882,89 @@ public class EnemyController : MonoBehaviour
 
     private static Sprite s_rangedShotSprite;
 
+    public Vector3 GetRangedMuzzleWorldPosition()
+    {
+        if (rangedMuzzle != null)
+        {
+            return rangedMuzzle.position;
+        }
+
+        Transform named = transform.Find("RangedMuzzle");
+        if (named != null)
+        {
+            rangedMuzzle = named;
+            return rangedMuzzle.position;
+        }
+
+        float facing = EnemyFacingUtil.GetFacingSign(transform);
+        Vector2 offset = MuzzleOffset;
+        return transform.position + new Vector3(offset.x * facing, offset.y, 0f);
+    }
+
+    public Vector2 GetRangedShotDirection()
+    {
+        return Vector2.right * EnemyFacingUtil.GetFacingSign(transform);
+    }
+
+    public bool HasClearStraightShot(Transform target, float attackRange)
+    {
+        if (!UsesRangedAttack || target == null)
+        {
+            return false;
+        }
+
+        float range = ResolveAttackRange(attackRange);
+        Vector3 origin = GetRangedMuzzleWorldPosition();
+        Vector2 direction = GetRangedShotDirection();
+        Collider2D targetBody = ResolveShotTargetCollider(target);
+        Vector3 aim = targetBody != null ? targetBody.bounds.center : EnemyCombatRange.GetAimPoint(target);
+
+        float along = Vector2.Dot((Vector2)(aim - origin), direction);
+        if (along <= 0.05f || along > range)
+        {
+            return false;
+        }
+
+        float beamHalf = Mathf.Max(0.12f, ShotRadius);
+        if (targetBody != null)
+        {
+            Bounds bounds = targetBody.bounds;
+            if (origin.y < bounds.min.y - beamHalf || origin.y > bounds.max.y + beamHalf)
+            {
+                return false;
+            }
+        }
+        else if (Mathf.Abs(aim.y - origin.y) > beamHalf * 2f)
+        {
+            return false;
+        }
+
+        return !IsStraightShotBlocked(origin, direction, along);
+    }
+
     public void FireRangedShot(Transform target)
     {
-        float facing = EnemyFacingUtil.GetFacingSign(transform);
-        Vector3 origin = transform.position + new Vector3(rangedSpawnOffset.x * facing, rangedSpawnOffset.y, 0f);
-        Vector2 direction = Vector2.right * facing;
-        if (target != null)
-        {
-            Vector2 toTarget = (Vector2)(target.position - origin);
-            if (toTarget.sqrMagnitude > 0.01f)
-                direction = toTarget.normalized;
-        }
+        HideRangedAimLaser();
+
+        Vector3 origin = GetRangedMuzzleWorldPosition();
+        Vector2 direction = GetRangedShotDirection();
 
         GameObject shot = new GameObject("EnemyRangedShot");
         shot.transform.position = origin;
-        shot.transform.localScale = Vector3.one * Mathf.Max(0.12f, rangedShotRadius * 2f);
+        Sprite customSprite = ShotSprite;
+        float radius = ShotRadius;
+        bool hasCustomSprite = customSprite != null;
+        float thickness = Mathf.Max(0.12f, radius * 2f);
+        shot.transform.localScale = hasCustomSprite
+            ? Vector3.one * Mathf.Max(0.2f, radius / 0.18f)
+            : new Vector3(thickness * 1.6f, thickness, 1f);
         shot.layer = 0;
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        shot.transform.rotation = Quaternion.Euler(0f, 0f, angle);
 
         SpriteRenderer sprite = shot.AddComponent<SpriteRenderer>();
-        sprite.sprite = GetRangedShotSprite();
-        sprite.color = new Color(0.35f, 0.85f, 1f, 1f);
+        sprite.sprite = hasCustomSprite ? customSprite : GetRangedShotSprite();
+        sprite.color = hasCustomSprite ? ShotTint : new Color(0.35f, 0.85f, 1f, 1f);
         sprite.sortingOrder = 520;
 
         CircleCollider2D col = shot.AddComponent<CircleCollider2D>();
@@ -868,8 +976,98 @@ public class EnemyController : MonoBehaviour
         shotBody.gravityScale = 0f;
         shotBody.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
+        float shotDistance = ResolveAttackRange(7f);
+        if (target != null)
+            shotDistance = Mathf.Max(shotDistance, Mathf.Abs(target.position.x - origin.x));
+        float speed = ShotSpeed;
+        float travelTime = shotDistance / Mathf.Max(0.1f, speed);
+        float lifetime = Mathf.Max(ShotLifetime, travelTime + 0.1f);
         EnemyRangedShot projectile = shot.AddComponent<EnemyRangedShot>();
-        projectile.Launch(this, direction, rangedShotSpeed, rangedShotLifetime);
+        projectile.Launch(this, direction, speed, lifetime);
+    }
+
+    private void ShowRangedAimLaser()
+    {
+        EnemyRangedAimLaser laser = GetComponent<EnemyRangedAimLaser>();
+        if (laser == null)
+        {
+            laser = gameObject.AddComponent<EnemyRangedAimLaser>();
+        }
+
+        float laserLength = ResolveAttackRange(7f);
+        PlayerCharacter player = UnityEngine.Object.FindFirstObjectByType<PlayerCharacter>();
+        if (player != null)
+        {
+            float toPlayer = Mathf.Abs(player.transform.position.x - GetRangedMuzzleWorldPosition().x);
+            laserLength = Mathf.Max(laserLength, toPlayer);
+        }
+
+        laser.Show(this, laserLength);
+    }
+
+    private void HideRangedAimLaser()
+    {
+        EnemyRangedAimLaser laser = GetComponent<EnemyRangedAimLaser>();
+        laser?.Hide();
+    }
+
+    private static Collider2D ResolveShotTargetCollider(Transform target)
+    {
+        if (target == null)
+        {
+            return null;
+        }
+
+        PlayerCharacter player = target.GetComponent<PlayerCharacter>()
+            ?? target.GetComponentInParent<PlayerCharacter>();
+        if (player != null)
+        {
+            Collider2D playerBody = player.GetComponent<Collider2D>();
+            if (playerBody != null)
+            {
+                return playerBody;
+            }
+        }
+
+        Collider2D[] colliders = target.GetComponentsInChildren<Collider2D>();
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            if (colliders[i] != null && !colliders[i].isTrigger)
+            {
+                return colliders[i];
+            }
+        }
+
+        return colliders.Length > 0 ? colliders[0] : null;
+    }
+
+    private bool IsStraightShotBlocked(Vector3 origin, Vector2 direction, float distance)
+    {
+        float probe = Mathf.Max(0.1f, distance);
+        Vector2 start = (Vector2)origin + direction * 0.04f;
+        RaycastHit2D[] hits = Physics2D.RaycastAll(start, direction, probe, LineOfFireMask);
+        for (int i = 0; i < hits.Length; i++)
+        {
+            Collider2D hit = hits[i].collider;
+            if (hit == null || hit.isTrigger)
+            {
+                continue;
+            }
+
+            if (hit.transform == transform || hit.transform.IsChildOf(transform))
+            {
+                continue;
+            }
+
+            if (hit.GetComponentInParent<PlayerCharacter>() != null)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     private static Sprite GetRangedShotSprite()
