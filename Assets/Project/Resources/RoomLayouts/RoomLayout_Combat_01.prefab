@@ -2909,6 +2909,7 @@ MonoBehaviour:
   _exitPadding: 0.75
   _pinPlayerToScreenEdge: 1
   _lookAheadFadeDistance: 3
+  _verticalPadding: 10
   _cameraCueDistance: 3
   _cameraCueDuration: 0.65
 --- !u!114 &2441125947886209623
@@ -2931,8 +2932,7 @@ MonoBehaviour:
     exitWall: {fileID: 5633693204425629752}
     enterTrigger: {fileID: 0}
     spawnRoot: {fileID: 514830101969370939}
-    spawnSlots:
-    - {fileID: 0}
+    spawnSlots: []
   - name: 02
     encounter: {fileID: 11400000, guid: 91a6e3b14d0f4278c5a9e3f2b1d6c074, type: 2}
     enemyCount: 6
@@ -3472,7 +3472,7 @@ GameObject:
   - component: {fileID: 5926917445232141497}
   - component: {fileID: 5312661117108004514}
   m_Layer: 3
-  m_Name: 'Wall '
+  m_Name: Wall_Exit
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
