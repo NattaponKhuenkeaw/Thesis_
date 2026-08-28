@@ -820,21 +820,19 @@ namespace Project.ShopSystem
             EnsureInventoryData();
             pendingLobbyMainReset = true;
 
-            // Restore the lobby roster, then put CharacterObject_main (char-0-main) in slot 0.
-            CharacterObject[] teamSnapshot = LeadTeamWithMainCharacter(ResolveDeathResetTeam());
+            CharacterObject[] lobbyTeam = ResolveDeathResetTeam();
             int previousGlobalLevel = _globalLevel;
 
-            ownedItems.Clear();
-            itemStacks.Clear();
             runCharacters.Clear();
             currency = DefaultCurrency;
             _globalLevel = 1;
-
-            // Restore the lobby roster captured at run start, then control slot 0 (main).
-            DeployTeam(teamSnapshot, preferredIndex: 0, artifactsBySlot: null);
-            activeTeamSlotIndex = GetMainCharacterSlotIndex();
+            StripNonCharacterRunLoot();
             AddUnlockedRosterItems(metaProgression);
-            PostInventoryMutation(save: true);
+            EnsureMainCharacterOwned();
+
+            CharacterObject[] restoredTeam = BuildOwnedDeathResetTeam(lobbyTeam);
+            DeployTeam(restoredTeam, preferredIndex: 0, artifactsBySlot: null);
+            SetActiveTeamSlotIndex(GetMainCharacterSlotIndex());
             if (previousGlobalLevel != _globalLevel)
             {
                 OnGlobalLevelChanged?.Invoke(previousGlobalLevel, _globalLevel);
@@ -907,20 +905,9 @@ namespace Project.ShopSystem
             int activeIndex = activeTeamSlotIndex;
             ArtifactInstanceRef[][] artifactSnapshot = BuildTeamArtifactSnapshot(teamSnapshot.Length);
 
-            itemStacks.Clear();
             currency = DefaultCurrency;
             runCharacters.Clear();
-
-            for (int i = ownedItems.Count - 1; i >= 0; i--)
-            {
-                BaseItem item = ownedItems[i];
-                if (item == null || item is CharacterItem)
-                {
-                    continue;
-                }
-
-                ownedItems.RemoveAt(i);
-            }
+            StripNonCharacterRunLoot();
 
             DeployTeam(teamSnapshot, activeIndex, artifactSnapshot);
             PostInventoryMutation(save: false);
@@ -985,7 +972,9 @@ namespace Project.ShopSystem
         }
 
         /// <summary>
-        /// Store the lobby roster. Pass overwrite true at run start; false on scene Awake so compacting cannot replace it.
+        /// Store the lobby roster. Pass overwrite true at run start so a later death
+        /// can restore that party. Do not call this on scene load — that freezes whatever
+        /// is currently on the inventory asset, including ghost CharacterObjects.
         /// </summary>
         public void RememberRunStartTeam(CharacterObject[] team, bool overwrite)
         {
@@ -1020,7 +1009,40 @@ namespace Project.ShopSystem
 
         public CharacterObject[] GetRunStartTeamOrCurrent()
         {
-            return LeadTeamWithMainCharacter(ResolveDeathResetTeam());
+            EnsureRunData();
+            EnsureMainCharacterOwned();
+            return BuildOwnedDeathResetTeam(ResolveDeathResetTeam());
+        }
+
+        /// <summary>
+        /// Guarantee Main is owned and sitting on the lobby team. Used after death
+        /// so TeamLoader can select that slot without re-deploying a snapshot.
+        /// </summary>
+        public void EnsureMainCharacterOnLobbyTeam()
+        {
+            EnsureRunData();
+            EnsureMainCharacterOwned();
+            if (HasMainCharacterDeployed())
+            {
+                return;
+            }
+
+            DeployTeam(BuildOwnedDeathResetTeam(GetTeamSnapshot()), preferredIndex: 0, artifactsBySlot: null);
+            SetActiveTeamSlotIndex(GetMainCharacterSlotIndex());
+        }
+
+        public bool HasMainCharacterDeployed()
+        {
+            EnsureRunData();
+            for (int i = 0; i < teamSlots.Length; i++)
+            {
+                if (IsMainCharacter(teamSlots[i] != null ? teamSlots[i].Character : null))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public int GetMainCharacterSlotIndex()
@@ -1136,6 +1158,57 @@ namespace Project.ShopSystem
             }
 
             return GetTeamSnapshot();
+        }
+
+        private CharacterObject[] BuildOwnedDeathResetTeam(CharacterObject[] lobbyTeam)
+        {
+            EnsureMainCharacterOwned();
+            CharacterObject[] led = LeadTeamWithMainCharacter(lobbyTeam);
+            CharacterObject[] ownedTeam = new CharacterObject[Mathf.Max(DefaultTeamSlotCount, led.Length)];
+            HashSet<CharacterObject> assigned = new HashSet<CharacterObject>();
+            int dest = 0;
+            for (int i = 0; i < led.Length && dest < ownedTeam.Length; i++)
+            {
+                CharacterItem ownedItem = FindOwnedCharacterItem(led[i]);
+                CharacterObject ownedCharacter = ownedItem != null ? ownedItem.characterObjectData : null;
+                if (ownedCharacter == null || !assigned.Add(ownedCharacter))
+                {
+                    continue;
+                }
+
+                ownedTeam[dest++] = ownedCharacter;
+            }
+
+            if (dest == 0)
+            {
+                CharacterObject main = ResolveMainCharacter();
+                if (main != null)
+                {
+                    ownedTeam[0] = main;
+                }
+            }
+
+            return ownedTeam;
+        }
+
+        private void StripNonCharacterRunLoot()
+        {
+            itemStacks.Clear();
+            if (ownedItems == null)
+            {
+                return;
+            }
+
+            for (int i = ownedItems.Count - 1; i >= 0; i--)
+            {
+                BaseItem item = ownedItems[i];
+                if (item == null || item is CharacterItem)
+                {
+                    continue;
+                }
+
+                ownedItems.RemoveAt(i);
+            }
         }
 
         private void ClearRunStartTeamSnapshot()
@@ -3277,13 +3350,13 @@ namespace Project.ShopSystem
                 return;
             }
 
-            HashSet<CharacterObject> ownedCharacters = new HashSet<CharacterObject>(GetOwnedCharactersInOrder());
             HashSet<CharacterObject> assignedCharacters = new HashSet<CharacterObject>();
             for (int i = 0; i < teamSlots.Length; i++)
             {
                 CharacterObject character = teamSlots[i].Character;
-                bool isKnownRunCharacter = character != null && FindRunCharacterState(character) != null;
-                if (character == null || (!ownedCharacters.Contains(character) && !isKnownRunCharacter) || assignedCharacters.Contains(character))
+                if (character == null
+                    || FindOwnedCharacterItem(character) == null
+                    || assignedCharacters.Contains(character))
                 {
                     teamSlots[i].Character = null;
                     teamSlots[i].SetArtifacts(null, DefaultArtifactSlotCount);
@@ -3344,11 +3417,11 @@ namespace Project.ShopSystem
 
         private void EnsureDefaultCharacterOwnership()
         {
-            if (GetOwnedCharacterCount() > 0 || GetKnownRunCharacterCount() > 0 || CountTeamCharacters() > 0)
-            {
-                return;
-            }
+            EnsureMainCharacterOwned();
+        }
 
+        private void EnsureMainCharacterOwned()
+        {
             CharacterItem defaultCharacterItem = Resources.Load<CharacterItem>(DefaultCharacterItemResourcePath);
             if (defaultCharacterItem == null)
             {
@@ -3356,15 +3429,7 @@ namespace Project.ShopSystem
                 return;
             }
 
-            if (!ownedItems.Contains(defaultCharacterItem))
-            {
-                ownedItems.Add(defaultCharacterItem);
-            }
-
-            if (defaultCharacterItem.characterObjectData != null)
-            {
-                GetOrCreateRunCharacterState(defaultCharacterItem.characterObjectData);
-            }
+            AddResolvedItem(defaultCharacterItem, 1);
         }
 
         private int ResolveActiveSlotIndex(int preferredIndex)

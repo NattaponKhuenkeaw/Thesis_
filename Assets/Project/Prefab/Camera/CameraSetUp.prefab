@@ -390,7 +390,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CameraLookAhead
   playerRigidbody: {fileID: 0}
   fallLookAheadTime: 0.35
-  maxFallOffset: 3
+  maxFallOffset: 8
   verticalReturnSmoothTime: 0.25
   horizontalLookAheadDistance: 2
   horizontalLookAheadDuration: 0.25

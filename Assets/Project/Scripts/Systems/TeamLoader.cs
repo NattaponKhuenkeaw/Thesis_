@@ -129,7 +129,6 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         ResolveDependencies();
         BootstrapRunInventoryTeam();
         SyncTeamSnapshotFromInventory();
-        runInventory?.RememberRunStartTeam(teamSnapshot, overwrite: false);
     }
 
     private void OnEnable()
@@ -139,7 +138,6 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         BindMetaProgressionEvents();
         CharacterEvents.OnCharacterStatsChanged += HandleCharacterStatsChanged;
         SyncTeamSnapshotFromInventory();
-        runInventory?.RememberRunStartTeam(teamSnapshot, overwrite: false);
         ReconcileAlwaysRuntimeEffects();
     }
 
@@ -156,7 +154,6 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         ResolveDependencies();
         BootstrapRunInventoryTeam();
         SyncTeamSnapshotFromInventory();
-        runInventory?.RememberRunStartTeam(teamSnapshot, overwrite: false);
         ReconcileAlwaysRuntimeEffects();
         RebuildRuntimeStats();
         if (runInventory != null && runInventory.HasPendingLobbyMainReset)
@@ -247,7 +244,9 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     }
 
     /// <summary>
-    /// Wipe → Lobby: restore the run-start roster and put CharacterObject_main on the player.
+    /// Wipe → Lobby: put CharacterObject_main on the live player.
+    /// Inventory already holds the owned lobby roster after death reset;
+    /// this must not DeployTeam from a CharacterObject snapshot.
     /// </summary>
     public void ForceLobbyMainCharacter()
     {
@@ -256,23 +255,19 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         isHandlingActiveDefeat = false;
         lastSwitchTime = -999f;
 
-        CharacterObject[] roster = runInventory != null
-            ? runInventory.GetRunStartTeamOrCurrent()
-            : CopyTeam(runStartTeamSnapshot);
-        if (CountCharacters(roster) == 0)
+        if (runInventory != null)
         {
-            roster = CopyTeam(runStartTeamSnapshot);
+            runInventory.EnsureMainCharacterOnLobbyTeam();
+            int mainSlot = runInventory.GetMainCharacterSlotIndex();
+            runInventory.SetActiveTeamSlotIndex(mainSlot);
+            currentIndex = mainSlot;
+            ApplyCharacterSlotToAllPlayers(mainSlot);
+            return;
         }
 
-        if (CountCharacters(roster) > 0)
-        {
-            runInventory?.DeployTeam(roster, preferredIndex: 0, artifactsBySlot: null);
-        }
-
-        int mainSlot = runInventory != null ? runInventory.GetMainCharacterSlotIndex() : 0;
-        runInventory?.SetActiveTeamSlotIndex(mainSlot);
-        currentIndex = mainSlot;
-        ApplyCharacterSlotToAllPlayers(mainSlot);
+        int fallbackSlot = 0;
+        currentIndex = fallbackSlot;
+        ApplyCharacterSlotToAllPlayers(fallbackSlot);
     }
 
     private void ApplyActiveSlotVisual(bool forceReload)

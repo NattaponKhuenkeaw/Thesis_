@@ -35,7 +35,7 @@ MonoBehaviour:
       attackPerLevel: 6.1
       defensePerLevel: 4.2
       maxHpPerLevel: 81
-    currentHP: 813
+    currentHP: 805.14105
     currentAE: 60
   - character: {fileID: 11400000, guid: 6e1cc08e7eba57845b7bac14d8757b51, type: 2}
     upgrade:
@@ -75,8 +75,8 @@ MonoBehaviour:
       attackPerLevel: 5.2
       defensePerLevel: 4.4
       maxHpPerLevel: 80
-    currentHP: 892
-    currentAE: 11
+    currentHP: 235.0658
+    currentAE: 80
   - character: {fileID: 11400000, guid: 27891cf9824752045b475995e212e47e, type: 2}
     upgrade:
       level: 1
@@ -100,8 +100,14 @@ MonoBehaviour:
   teamSlots:
   - character: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
     legacyArtifacts: []
-    artifactRefs: []
-  - character: {fileID: 11400000, guid: 6e1cc08e7eba57845b7bac14d8757b51, type: 2}
+    artifactRefs:
+    - instanceId: 
+    - instanceId: 
+    - instanceId: 
+  - character: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
     legacyArtifacts: []
-    artifactRefs: []
-  activeTeamSlotIndex: 0
+    artifactRefs:
+    - instanceId: 
+    - instanceId: 
+    - instanceId: 
+  activeTeamSlotIndex: 1

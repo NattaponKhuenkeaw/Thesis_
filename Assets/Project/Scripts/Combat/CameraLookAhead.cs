@@ -28,7 +28,7 @@ public class CameraLookAhead : MonoBehaviour
     public float fallLookAheadTime = 0.35f;
 
     [Tooltip("Maximum downward distance the proxy can sit below the player.")]
-    public float maxFallOffset = 3f;
+    public float maxFallOffset = 8f;
 
     [Tooltip("How fast the vertical offset returns to zero when not falling (SmoothDamp time).")]
     public float verticalReturnSmoothTime = 0.25f;
@@ -186,6 +186,31 @@ public class CameraLookAhead : MonoBehaviour
         confineLeft = leftWorld;
         confineRight = rightWorld;
         confineFade = Mathf.Max(0.01f, fadeDistance);
+
+        if (playerRigidbody != null && Mathf.Abs(currentProxyX - playerRigidbody.position.x) > 8f)
+        {
+            SnapToPlayer();
+        }
+    }
+
+    public void SnapToPlayer()
+    {
+        if (playerRigidbody == null)
+        {
+            return;
+        }
+
+        float playerX = playerRigidbody.position.x;
+        currentProxyX = confineHorizontal
+            ? Mathf.Clamp(playerX, confineLeft, confineRight)
+            : playerX;
+        proxyVelocityX = 0f;
+        currentOffsetY = 0f;
+        offsetVelocityY = 0f;
+        transform.position = new Vector3(
+            currentProxyX,
+            playerRigidbody.position.y,
+            transform.position.z);
     }
 
     public void ClearHorizontalConfine()

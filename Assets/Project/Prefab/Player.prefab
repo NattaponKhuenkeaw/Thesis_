@@ -883,6 +883,8 @@ MonoBehaviour:
   playerCharacter: {fileID: 729008942358398209}
   metaProgression: {fileID: 11400000, guid: f3d0c0c5246b7f04093bf9b8106bccef, type: 2}
   switchCooldownDuration: 0.7
+  defeatDeathAnimSeconds: 1.25
+  defeatSwitchDelaySeconds: 0.35
   currentIndex: 0
   lastSwitchTime: -999
 --- !u!1 &7291009428317185000
@@ -979,7 +981,7 @@ Rigidbody2D:
   m_LinearDamping: 0
   m_AngularDamping: 0.05
   m_GravityScale: 0
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: ab4107ff3a6369441bbf98222f3805bd, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0

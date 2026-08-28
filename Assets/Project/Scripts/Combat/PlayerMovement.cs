@@ -274,6 +274,35 @@ public class PlayerMovement : MonoBehaviour
         horizontalInput = Mathf.Clamp(inputX, -1f, 1f);
 
     /// <summary>
+    /// World-space extent from transform X to the solid collider edge in that direction.
+    /// Used so exit walks stop before the body hits a wall.
+    /// </summary>
+    public float GetBodyExtentToward(float horizontalSign)
+    {
+        float sign = horizontalSign >= 0f ? 1f : -1f;
+        float extent = 0.5f;
+        if (solidColliders == null)
+        {
+            return extent;
+        }
+
+        float originX = transform.position.x;
+        for (int i = 0; i < solidColliders.Length; i++)
+        {
+            Collider2D collider = solidColliders[i];
+            if (collider == null || !collider.enabled)
+            {
+                continue;
+            }
+
+            float edgeX = sign > 0f ? collider.bounds.max.x : collider.bounds.min.x;
+            extent = Mathf.Max(extent, Mathf.Abs(edgeX - originX));
+        }
+
+        return extent;
+    }
+
+    /// <summary>
     /// Called by PlayerJumpState whenever a ground jump or double jump begins.
     /// </summary>
     public void ConsumeJumpCount()
