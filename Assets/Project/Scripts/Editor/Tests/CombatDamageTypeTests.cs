@@ -187,6 +187,114 @@ public class CombatDamageTypeTests
         Object.DestroyImmediate(profile);
     }
 
+    [Test]
+    public void AdditionalDamageTextScale_FollowsDamageRatioAndCriticalRules()
+    {
+        GameObject go = new GameObject("WorldTextUtilityTest");
+        try
+        {
+            WorldTextUtility utility = go.AddComponent<WorldTextUtility>();
+            CharacterStats stats = new CharacterStats { attack = 100f };
+
+            // Low ratio (<= 100% of source ATK): normal base scale (0.85)
+            WorldTextRequest lowRatio = new WorldTextRequest
+            {
+                type = WorldTextType.Additional,
+                amount = 50f,
+                sourceStats = stats,
+                damageRatio = 0.5f,
+                elementType = ElementType.None,
+                isCritical = false
+            };
+            float lowScale = utility.ResolveHoldScaleForTest(lowRatio);
+            Assert.That(lowScale, Is.EqualTo(0.85f).Within(0.001f));
+
+            // High ratio (> 100% of source ATK, e.g. 250%): base scale * 1.35 = 1.1475
+            WorldTextRequest highRatio = new WorldTextRequest
+            {
+                type = WorldTextType.Additional,
+                amount = 250f,
+                sourceStats = stats,
+                damageRatio = 2.5f,
+                elementType = ElementType.None,
+                isCritical = false
+            };
+            float highScale = utility.ResolveHoldScaleForTest(highRatio);
+            Assert.That(highScale, Is.EqualTo(0.85f * 1.35f).Within(0.001f));
+
+            // High ratio + Crit allowed: base scale * 1.35 * 1.5 = 1.72125
+            WorldTextRequest highRatioCrit = new WorldTextRequest
+            {
+                type = WorldTextType.Additional,
+                amount = 250f,
+                sourceStats = stats,
+                damageRatio = 2.5f,
+                elementType = ElementType.None,
+                isCritical = true
+            };
+            float highCritScale = utility.ResolveHoldScaleForTest(highRatioCrit);
+            Assert.That(highCritScale, Is.EqualTo(0.85f * 1.35f * 1.5f).Within(0.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(go);
+        }
+    }
+
+    [Test]
+    public void DotDamageTextScale_FollowsDamageRatioAndCriticalRules()
+    {
+        GameObject go = new GameObject("WorldTextUtilityTest_DOT");
+        try
+        {
+            WorldTextUtility utility = go.AddComponent<WorldTextUtility>();
+            CharacterStats stats = new CharacterStats { attack = 100f };
+
+            // Low ratio DOT (<= 100% of source ATK, e.g. 30%): base scale (0.85)
+            WorldTextRequest lowRatio = new WorldTextRequest
+            {
+                type = WorldTextType.Dot,
+                amount = 30f,
+                sourceStats = stats,
+                damageRatio = 0.3f,
+                elementType = ElementType.None,
+                isCritical = false
+            };
+            float lowScale = utility.ResolveHoldScaleForTest(lowRatio);
+            Assert.That(lowScale, Is.EqualTo(0.85f).Within(0.001f));
+
+            // High ratio DOT (> 100% of source ATK, e.g. 150%): base scale * 1.35 = 1.1475
+            WorldTextRequest highRatio = new WorldTextRequest
+            {
+                type = WorldTextType.Dot,
+                amount = 150f,
+                sourceStats = stats,
+                damageRatio = 1.5f,
+                elementType = ElementType.None,
+                isCritical = false
+            };
+            float highScale = utility.ResolveHoldScaleForTest(highRatio);
+            Assert.That(highScale, Is.EqualTo(0.85f * 1.35f).Within(0.001f));
+
+            // High ratio DOT + Crit: base scale * 1.35 * 1.5 = 1.72125
+            WorldTextRequest highRatioCrit = new WorldTextRequest
+            {
+                type = WorldTextType.Dot,
+                amount = 150f,
+                sourceStats = stats,
+                damageRatio = 1.5f,
+                elementType = ElementType.None,
+                isCritical = true
+            };
+            float highCritScale = utility.ResolveHoldScaleForTest(highRatioCrit);
+            Assert.That(highCritScale, Is.EqualTo(0.85f * 1.35f * 1.5f).Within(0.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(go);
+        }
+    }
+
     private static DamageRequest CreateRequest(
         float baseDamage,
         DamageDelivery delivery,

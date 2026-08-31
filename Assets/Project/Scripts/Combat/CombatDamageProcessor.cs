@@ -182,6 +182,8 @@ public static class CombatDamageProcessor
         reactionData.sourceActionId = request.actionId;
         reactionData.sourceActionName = request.actionName;
         reactionData.sourceStepData = request.stepData;
+        reactionData.damageRatio = request.damageRatio;
+        reactionData.sourceStatValue = request.sourceStatValue;
 
         float damageDealt = request.target.TakeResolvedHit(reactionData, request.attackerPosition);
         if (damageDealt > 0f

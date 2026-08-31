@@ -241,6 +241,8 @@ namespace Project.AIBehaviour.Boss
         private void HandleDamaged(HitReactionData _)
         {
             EvaluatePhase();
+            if (enemy != null && enemy.IsGrabbed)
+                return;
             // Kill leftover launch/juggle if anything slipped through before armor applied.
             SuppressStaggerCarryover();
         }
@@ -300,6 +302,12 @@ namespace Project.AIBehaviour.Boss
             {
                 EvaluatePhase();
 
+                if (enemy.IsGrabbed)
+                {
+                    yield return wait;
+                    continue;
+                }
+
                 if (isBusy)
                 {
                     yield return wait;
@@ -336,6 +344,9 @@ namespace Project.AIBehaviour.Boss
             float elapsed = 0f;
             while (enemy != null && enemy.IsAlive && TryAcquireTarget() && elapsed < maxChaseDuration)
             {
+                if (enemy.IsGrabbed)
+                    yield break;
+
                 if (enemy.CurrentReactionState != EnemyReactionState.None)
                     SuppressStaggerCarryover();
 
@@ -411,7 +422,7 @@ namespace Project.AIBehaviour.Boss
 
         private IEnumerator ChaseTowardTargetStep()
         {
-            if (target == null)
+            if (target == null || (enemy != null && enemy.IsGrabbed))
                 yield break;
 
             FaceTarget();
@@ -632,7 +643,7 @@ namespace Project.AIBehaviour.Boss
             float t = 0f;
             while (t < timing.telegraphDuration)
             {
-                if (!enemy.IsAlive)
+                if (!enemy.IsAlive || (enemy != null && enemy.IsGrabbed))
                     yield break;
 
                 // Cleave may track the player; jump/charge commit facing at telegraph start.
@@ -701,7 +712,7 @@ namespace Project.AIBehaviour.Boss
 
         private bool CanContinuePattern()
         {
-            return enemy != null && enemy.IsAlive;
+            return enemy != null && enemy.IsAlive && !enemy.IsGrabbed;
         }
 
         private void BeginArmored()
@@ -739,8 +750,8 @@ namespace Project.AIBehaviour.Boss
         {
             ApplyBossStaggerArmor();
 
-            // Don't fight Jump Smash kinematic flight.
-            if (physicsCached)
+            // Don't fight Jump Smash kinematic flight or grab session binding.
+            if (physicsCached || (enemy != null && enemy.IsGrabbed))
                 return;
 
             enemy?.hitReactionHandler?.ForceClearReaction(zeroVelocity: true);
@@ -853,7 +864,7 @@ namespace Project.AIBehaviour.Boss
 
             while (t < 1f)
             {
-                if (!enemy.IsAlive)
+                if (!enemy.IsAlive || (enemy != null && enemy.IsGrabbed))
                     yield break;
 
                 t += Time.fixedDeltaTime / duration;
@@ -899,6 +910,9 @@ namespace Project.AIBehaviour.Boss
 
         private void MoveBossPosition(Vector2 worldPos)
         {
+            if (enemy != null && enemy.IsGrabbed)
+                return;
+
             if (rb != null && rb.simulated)
             {
                 // MovePosition honors FreezePositionX; strip it so patterns can travel.

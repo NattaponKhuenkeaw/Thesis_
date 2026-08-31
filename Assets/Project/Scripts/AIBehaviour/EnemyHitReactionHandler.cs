@@ -1069,6 +1069,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
     {
         ExitImpactFreeze();
         ExitGrabbedState();
+        EnsureDynamicBody();
         currentState = EnemyReactionState.None;
         animationHandler?.SetReactionState(EnemyReactionState.None);
         currentReactionFrame = 0;
@@ -1104,11 +1105,24 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
     private void EnterImpactFreeze()
     {
-        if (currentReaction.useSnapToAnchor && currentReaction.reactionKind != EnemyReactionKind.Grab)
+        if (currentReaction.reactionKind == EnemyReactionKind.Grab)
+        {
+            if (rb != null)
+            {
+                originalBodyType = rb.bodyType;
+                originalGravityScale = rb.gravityScale;
+                rb.bodyType = RigidbodyType2D.Kinematic;
+                rb.gravityScale = 0f;
+                rb.linearVelocity = Vector2.zero;
+                rb.constraints = RigidbodyConstraints2D.None;
+            }
+            UpdateGrabbedBinding();
+        }
+        else if (currentReaction.useSnapToAnchor)
         {
             ApplySnapBinding();
         }
-        else if (currentReaction.snapToAttacker && currentReaction.reactionKind != EnemyReactionKind.Grab)
+        else if (currentReaction.snapToAttacker)
         {
             ApplyLegacySnap(attackerPos);
         }
@@ -1149,7 +1163,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
     private void EnterGrabbedState()
     {
-        if (controller != null)
+        if (controller != null && !controller.isEliteOrBoss)
         {
             controller.SetBehaviorAgentActive(false);
         }
@@ -1174,7 +1188,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
             return;
         }
 
-        if (controller != null)
+        if (controller != null && !controller.isEliteOrBoss)
         {
             controller.SetBehaviorAgentActive(true);
         }

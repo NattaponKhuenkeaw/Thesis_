@@ -555,7 +555,10 @@ public class EnemyWorldUI : MonoBehaviour
             damageDelivery = data.damageDelivery,
             impactTier = data.textImpactTier,
             elementType = data.elementType,
-            isCritical = data.isCriticalHit
+            isCritical = data.isCriticalHit,
+            sourceStats = data.sourceStats,
+            damageRatio = data.damageRatio,
+            sourceStatValue = data.sourceStatValue
         });
     }
 

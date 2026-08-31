@@ -351,14 +351,14 @@ public class ProjectileRuntime : MonoBehaviour
     {
         if (ProjectileData == null)
         {
-            return transform.position;
+            return (Vector2)transform.position + CurrentDirection;
         }
 
         Transform trackingTarget = ResolveTrackingTarget();
         if (trackingTarget == null)
         {
             ClearTrackingSamples();
-            return ProjectileData.ResolveTrackingFallbackPosition(spawnContext);
+            return (Vector2)transform.position + CurrentDirection;
         }
 
         Vector2 targetPosition = ProjectileData.ResolveTrackingReferencePosition(trackingTarget);
@@ -601,30 +601,19 @@ public class ProjectileRuntime : MonoBehaviour
             return;
         }
 
-        if (currentHitConsumesMaxHits
-            && !ProjectileData.UsesSharedHitCount()
-            && trackedEnemies.Count > 0
-            && !HasHittableTrackedEnemy())
-        {
-            if (ProjectileData.destroyWhenHitsExhausted)
-                Expire();
-            return;
-        }
-
         trackedEnemyBuffer.Clear();
+        trackedEnemies.RemoveWhere(enemy => enemy == null || !enemy.IsAlive);
+
         foreach (EnemyController enemy in trackedEnemies)
         {
-            if (enemy == null || !enemy.IsAlive || !IsEnemyTouchingTrigger(enemy))
+            if (IsEnemyTouchingTrigger(enemy))
             {
-                continue;
+                trackedEnemyBuffer.Add(enemy);
             }
-
-            trackedEnemyBuffer.Add(enemy);
         }
 
         if (trackedEnemyBuffer.Count == 0)
         {
-            trackedEnemies.Clear();
             return;
         }
 
@@ -661,15 +650,6 @@ public class ProjectileRuntime : MonoBehaviour
             && ProjectileData.destroyWhenHitsExhausted
             && currentHitConsumesMaxHits
             && spawnContext.remainingHits <= 0)
-        {
-            Expire();
-            return;
-        }
-
-        if (!ProjectileData.UsesSharedHitCount()
-            && ProjectileData.destroyWhenHitsExhausted
-            && currentHitConsumesMaxHits
-            && !HasHittableTrackedEnemy())
         {
             Expire();
         }
@@ -796,9 +776,11 @@ public class ProjectileRuntime : MonoBehaviour
     {
         PlayerCharacter activePlayer = PlayerCharacter.Instance;
         trackedEnemyBuffer.Clear();
+        trackedEnemies.RemoveWhere(enemy => enemy == null || !enemy.IsAlive);
+
         foreach (EnemyController enemy in trackedEnemies)
         {
-            if (enemy != null && enemy.IsAlive && IsEnemyTouchingTrigger(enemy))
+            if (IsEnemyTouchingTrigger(enemy))
             {
                 trackedEnemyBuffer.Add(enemy);
             }
@@ -871,19 +853,6 @@ public class ProjectileRuntime : MonoBehaviour
             : (PlayerCharacter.Instance != null ? PlayerCharacter.Instance.PassiveController : null);
 
         return passiveController != null && passiveController.IsNodeUnlocked(application.requiredNodeId);
-    }
-
-    private bool HasHittableTrackedEnemy()
-    {
-        foreach (EnemyController enemy in trackedEnemies)
-        {
-            if (enemy != null && enemy.IsAlive && GetRemainingHitsForEnemy(enemy) > 0)
-            {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private bool CanHitEnemy(EnemyController enemy)

@@ -291,7 +291,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 125.70697, y: -261.89}
+  m_AnchoredPosition: {x: 125.70697, y: -226.62001}
   m_SizeDelta: {x: 251.41394, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &9080442203922283585
@@ -2039,7 +2039,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: +1 Level Up
+  m_text: Level Up
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: c76e8317ce034f44aa4a67c18a082049, type: 2}
   m_sharedMaterial: {fileID: -2788837241560181309, guid: c76e8317ce034f44aa4a67c18a082049, type: 2}
@@ -3017,7 +3017,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1369800059319461099}
         m_TargetAssemblyTypeName: AdminConsole, Assembly-CSharp
-        m_MethodName: ClearState
+        m_MethodName: TriggerGlobalLevelUpEvent
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -4091,6 +4091,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d228550894ab4984998e044db70ddbc3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.TransitionButtonHelper
+  targetRoomId: 
   targetSceneName: Test_Playground
   targetEntranceId: Default
 --- !u!114 &3474768235107347733
@@ -4105,5 +4106,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d228550894ab4984998e044db70ddbc3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.TransitionButtonHelper
+  targetRoomId: 
   targetSceneName: Test_Shop
   targetEntranceId: Default

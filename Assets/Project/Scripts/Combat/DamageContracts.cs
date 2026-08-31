@@ -70,6 +70,8 @@ public struct DamageRequest
     public bool ignoreTypeReduction;
     public bool hasCriticalRoll;
     public float criticalRoll01;
+    public float damageRatio;
+    public float sourceStatValue;
 
     public DamageProcPolicy ResolveProcPolicy()
     {

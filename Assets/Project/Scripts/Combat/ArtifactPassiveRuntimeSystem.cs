@@ -453,6 +453,8 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
                         category = AttackCategory.Normal,
                         actionId = response.definition.stableId,
                         actionName = "Explosion Splash",
+                        damageRatio = response.damageRatio,
+                        sourceStatValue = ResolveSourceStats(runtime, damageEvent.Value.sourceCharacter) != null ? ResolveSourceStats(runtime, damageEvent.Value.sourceCharacter).attack : 0f,
                         attackerPosition = center,
                         hitDirection = ((Vector2)enemy.transform.position - center).normalized,
                         provenance = new DamageProvenance(0, damageEvent.Value.provenance.rootEventId, damageEvent.Value.provenance.rootEventId, 1,

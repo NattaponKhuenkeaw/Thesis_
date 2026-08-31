@@ -209,7 +209,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: maxHP
-      value: 500
+      value: 20000
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: defense
@@ -217,7 +217,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: currentHP
-      value: 500
+      value: 20000
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: damageRes
@@ -677,6 +677,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85361608430d3da42a1b3faa70dbb39f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
+--- !u!1 &4739200647295624271 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8917136744719106790, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+  m_PrefabInstance: {fileID: 4180762667386644137}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2992548729297104892
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4739200647295624271}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbe01cd655c2e554c89cebf251d6ec5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyHitReactionHandler
+  currentState: 0
+  currentJuggleCount: 0
+  airJuggleSessionActive: 0
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 520
+  groundCheckDistance: 0.08
+  groundNormalMinY: 0.25
+  knockdownHoldFrames: 12
+  getUpFrames: 10
+  lightHitStreakWindow: 0.85
 --- !u!4 &7519174093949083380 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 5934746496802764893, guid: c135c5413a913c346868205d4f41acfe, type: 3}

@@ -256,12 +256,15 @@ public class EnemyDamageTypeState : MonoBehaviour
 
     private void ApplyDotDamage(ActiveDot dot)
     {
+        float sourceAtk = dot.sourceStats != null ? Mathf.Max(0f, dot.sourceStats.attack) : 0f;
         DamageRequest request = new DamageRequest
         {
             target = _enemy,
             sourceCharacter = dot.sourceCharacter,
             sourceStats = dot.sourceStats,
             baseDamage = dot.baseTickDamage,
+            sourceStatValue = sourceAtk,
+            damageRatio = sourceAtk > 0f ? (dot.baseTickDamage / sourceAtk) : 0f,
             defenderDefense = _enemy.defense,
             defenderDamageResistance = _enemy.damageRes,
             descriptor = new DamageDescriptor(

@@ -135,6 +135,8 @@ public class AdditionalDamageOnHitRuntimeEffectDefinition : RuntimeEffectDefinit
             actionId = context.actionId,
             actionName = context.actionName,
             stepData = context.stepData,
+            damageRatio = resolvedAttackRatio + (parameters.sourceStatRatio > 0f ? parameters.sourceStatRatio : 0f),
+            sourceStatValue = sourceAttack,
             attackerPosition = context.attackerPosition,
             hitDirection = context.hitDirection,
             ignoreTypeReduction = damageInput.ignoreTypeReduction
