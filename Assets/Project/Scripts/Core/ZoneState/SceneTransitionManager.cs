@@ -22,7 +22,9 @@ namespace Project.Core.ZoneState
         private const float ExitWalkPastDistance = 2.0f;
         private const float ExitWalkMaxDistance = 3.5f;
         private const float ExitWalkArrivalTolerance = 0.35f;
-        private const float ExitWalkWallSkin = 0.08f;
+        // Stop far enough short of the wall that the pose reads as "waiting to leave"
+        // rather than "stuck against a collider".
+        private const float ExitWalkWallSkin = 0.6f;
 
         public static SceneTransitionManager Instance { get; private set; }
 
@@ -254,10 +256,13 @@ namespace Project.Core.ZoneState
                 disabledCanvases.Clear();
                 DisableAllSceneCanvases();
 
-                // Walk-out cinematic before fade so Shop/safe-room leaves do not hard-cut.
+                // Fade runs alongside the walk-out. Waiting for the walk first left the player
+                // visibly parked against the exit wall for the whole fade.
+                Coroutine exitFade = StartCoroutine(FadeOverlayRoutine(0f, 1f));
                 yield return StartCoroutine(PlayExitWalkRoutine());
                 if (WasExitWalkAbortedByDeath())
                 {
+                    StopCoroutine(exitFade);
                     Debug.LogWarning(
                         "[SceneTransitionManager] Exit walk aborted because the player died mid-leave. Cancelling transition.",
                         this);
@@ -266,7 +271,7 @@ namespace Project.Core.ZoneState
                 }
 
                 // Every room change (scene load OR layout swap) fades to full black first.
-                yield return StartCoroutine(FadeOverlayRoutine(0f, 1f));
+                yield return exitFade;
                 SetFadeAlpha(1f);
                 ProjectileVFXManager.Instance?.ClearAllActiveProjectiles();
 
