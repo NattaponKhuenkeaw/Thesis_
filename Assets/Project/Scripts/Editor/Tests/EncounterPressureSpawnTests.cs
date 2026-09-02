@@ -85,6 +85,71 @@ public class EncounterPressureSpawnTests
     }
 
     [Test]
+    public void ClearancePickerSkipsSlotsCrowdedByLivingEnemies()
+    {
+        var near = new GameObject("near");
+        var far = new GameObject("far");
+        try
+        {
+            near.transform.position = new Vector3(1f, 0f, 0f);
+            far.transform.position = new Vector3(10f, 0f, 0f);
+            Transform[] slots = { near.transform, far.transform };
+            Vector3 player = Vector3.zero;
+            var occupiedByBody = new List<Vector3> { new Vector3(1.2f, 0f, 0f) };
+
+            Transform melee = EncounterSpawnSlotPicker.PickWithClearance(
+                slots,
+                player,
+                preferFar: false,
+                blockedPositions: occupiedByBody,
+                minSeparation: 1.8f,
+                out bool isClear);
+
+            Assert.That(melee, Is.SameAs(far.transform), "melee must avoid the slot a body is standing on");
+            Assert.That(isClear, Is.True);
+        }
+        finally
+        {
+            Object.DestroyImmediate(near);
+            Object.DestroyImmediate(far);
+        }
+    }
+
+    [Test]
+    public void ClearancePickerReportsRoomiestSlotWhenEverySlotIsCrowded()
+    {
+        var near = new GameObject("near");
+        var far = new GameObject("far");
+        try
+        {
+            near.transform.position = new Vector3(1f, 0f, 0f);
+            far.transform.position = new Vector3(10f, 0f, 0f);
+            Transform[] slots = { near.transform, far.transform };
+            var bodies = new List<Vector3>
+            {
+                new Vector3(1.1f, 0f, 0f),
+                new Vector3(9.5f, 0f, 0f)
+            };
+
+            Transform picked = EncounterSpawnSlotPicker.PickWithClearance(
+                slots,
+                Vector3.zero,
+                preferFar: false,
+                blockedPositions: bodies,
+                minSeparation: 1.8f,
+                out bool isClear);
+
+            Assert.That(isClear, Is.False, "caller must know it has to nudge the spawn");
+            Assert.That(picked, Is.SameAs(far.transform), "roomiest slot wins when nothing is clear");
+        }
+        finally
+        {
+            Object.DestroyImmediate(near);
+            Object.DestroyImmediate(far);
+        }
+    }
+
+    [Test]
     public void PrefersFarSlotFollowsRangedHoldRole()
     {
         var melee = new GameObject("melee");
