@@ -4,12 +4,13 @@ using UnityEngine;
 using Unity.Behavior;
 
 /// <summary>
-/// Close into attack range. Ground and ranged hold at AttackRange; Fly uses the attack slot; Warp snaps once.
+/// Close into a stand-off slot. Ground melee queues on that slot; ranged holds a back line.
+/// Attack range is a separate check used by the attack nodes, not the signal that chase is done.
 /// </summary>
 [Serializable, GeneratePropertyBag]
 [NodeDescription(
     name: "Enemy Chase",
-    description: "Chases the Target. Ground/ranged stop at AttackRange. Fly approaches the attack slot. Warp snaps once.",
+    description: "Chases the Target to a stand-off slot. Ground melee queues there. Ranged holds a back line. Attack range is checked by the attack nodes, not here.",
     story: "[Agent] chases [Target] (stop at [AttackRange])",
     category: "Action/Enemy",
     id: "c1b2c3d4e5f60004aabbccddeeff0024")]
@@ -98,7 +99,7 @@ public partial class ChaseAction : Unity.Behavior.Action
             return Status.Running;
         }
 
-        if (m_Locomotion.IsInAttackRangeOfTarget(target, attackRange))
+        if (m_Locomotion.IsAtHoldSlot(target, attackRange))
         {
             m_AnimHandler?.SetSpeed(0f);
             m_Locomotion.StopHorizontal();

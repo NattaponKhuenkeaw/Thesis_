@@ -134,6 +134,34 @@ public class EnemyController : MonoBehaviour
     /// </summary>
     [System.NonSerialized] public bool ignoreHitReactions;
 
+    private bool facingLocked;
+    private float facingUnlockAt;
+
+    /// <summary>
+    /// True while an attack owns the facing. Every <see cref="EnemyFacingUtil.FaceHorizontal"/> caller
+    /// honours this, so locomotion and the Behavior graph cannot re-aim the swing once it is committed.
+    /// A timed hold can outlive the attack node so chase cannot snap-turn the instant the node ends.
+    /// </summary>
+    public bool FacingLocked => facingLocked && Time.time < facingUnlockAt;
+
+    public void LockFacing()
+    {
+        facingLocked = true;
+        facingUnlockAt = float.PositiveInfinity;
+    }
+
+    public void HoldCommittedFacing(float seconds)
+    {
+        facingLocked = true;
+        facingUnlockAt = Time.time + Mathf.Max(0f, seconds);
+    }
+
+    public void ReleaseFacing()
+    {
+        facingLocked = false;
+        facingUnlockAt = 0f;
+    }
+
     private Coroutine antiStunlockArmorCoroutine;
     private bool antiStunlockArmorActive;
     private Coroutine brokenStateCoroutine;
@@ -164,8 +192,8 @@ public class EnemyController : MonoBehaviour
     public EnemyHitReactionHandler hitReactionHandler;
 
     [Header("Death")]
-    [Tooltip("Seconds before Destroy after Die(). Bosses set this so death anim can play.")]
-    [SerializeField] private float destroyDelayOnDeath = 0f;
+    [Tooltip("Seconds the corpse stays before Destroy. Must cover the death clip or the enemy pops mid-animation. Enemy_Die.anim runs 0.4s; bosses raise this via ConfigureDeathDespawn.")]
+    [SerializeField, Min(0f)] private float destroyDelayOnDeath = 0.4f;
 
     [Header("Combat Kit")]
     [Tooltip("Optional EnemyKit asset. When assigned it owns the role, range, and ranged shot values below.")]
@@ -235,9 +263,68 @@ public class EnemyController : MonoBehaviour
         return range > 0f ? range : blackboardRange;
     }
 
+    /// <summary>
+    /// Horizontal stand-off used by chase. Separate from <see cref="ResolveAttackRange"/> so a ranged
+    /// kit can shoot across the room without walking into the melee pile to "arrive".
+    /// </summary>
+    public float ResolveHoldRange(float blackboardAttackRange)
+    {
+        float attackRange = Mathf.Max(0.1f, ResolveAttackRange(blackboardAttackRange));
+        float authored = kit != null ? kit.HoldRange : -1f;
+        if (authored >= 0f)
+            return authored;
+
+        if (UsesRangedAttack)
+            return Mathf.Min(attackRange, 7f);
+
+        return attackRange * 0.85f;
+    }
+
+    /// <summary>
+    /// Kits author a negative number to mean "not set here". Zero is a legitimate beat, so it must
+    /// not double as the unset marker the way <see cref="AttackRangeOverride"/> uses it.
+    /// </summary>
+    private static float ResolveKitTiming(float kitValue, float blackboardValue)
+    {
+        return kitValue >= 0f ? kitValue : blackboardValue;
+    }
+
+    public float ResolveWarningDuration(float blackboardValue)
+    {
+        return ResolveKitTiming(kit != null ? kit.WarningDuration : -1f, blackboardValue);
+    }
+
+    public float ResolveHitWindowDuration(float blackboardValue)
+    {
+        return ResolveKitTiming(kit != null ? kit.HitWindowDuration : -1f, blackboardValue);
+    }
+
+    public float ResolveAttackCooldown(float blackboardValue)
+    {
+        return ResolveKitTiming(kit != null ? kit.AttackCooldown : -1f, blackboardValue);
+    }
+
+    public float ResolveCommitTelegraphFraction(float blackboardValue)
+    {
+        return ResolveKitTiming(kit != null ? kit.CommitTelegraphFraction : -1f, blackboardValue);
+    }
+
+    public float ResolveInterruptCooldown(float blackboardValue)
+    {
+        return ResolveKitTiming(kit != null ? kit.InterruptCooldown : -1f, blackboardValue);
+    }
+
+    public float ResolveRecoveryPlantDuration(float blackboardValue)
+    {
+        return ResolveKitTiming(kit != null ? kit.RecoveryPlantDuration : -1f, blackboardValue);
+    }
+
     public float ResolveLungeDistance(float blackboardLunge)
     {
-        return UsesRangedAttack ? 0f : blackboardLunge;
+        if (UsesRangedAttack)
+            return 0f;
+
+        return ResolveKitTiming(kit != null ? kit.LungeDistance : -1f, blackboardLunge);
     }
 
     // =========================================================
@@ -317,6 +404,8 @@ public class EnemyController : MonoBehaviour
     private void OnDisable()
     {
         RoomEnemyRegistry.Unregister(this);
+        // A pooled enemy disabled mid-swing would otherwise come back unable to turn.
+        ReleaseFacing();
     }
 
     private float TakeHitInternal(
@@ -669,9 +758,21 @@ public class EnemyController : MonoBehaviour
         HideAttackWarning();
 
         StopAntiStunlockArmorWindow();
+        ReleaseFacing();
 
-        if (bodyCollider  != null) bodyCollider.enabled  = false;
-        if (attackHitbox  != null) attackHitbox.enabled  = false;
+        // Stop the graph before the animator is told to die, or an attack node still mid-swing
+        // retriggers its own animation on top of the death clip.
+        SetBehaviorAgentActive(false);
+
+        // Drop the drive but leave the corpse in the simulation. It still needs gravity and the
+        // body collider to land, and switching the collider off was what made dying enemies fall
+        // through the floor for the length of the death animation. Vertical speed is kept so a
+        // kill mid-juggle still arcs down instead of freezing in the air. Nothing can hit or
+        // target it once isAlive is false; the whole combat layer gates on that.
+        if (rb != null)
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+
+        if (attackHitbox != null) attackHitbox.enabled = false;
 
         OnDied?.Invoke();
 
@@ -920,8 +1021,11 @@ public class EnemyController : MonoBehaviour
         Collider2D targetBody = ResolveShotTargetCollider(target);
         Vector3 aim = targetBody != null ? targetBody.bounds.center : EnemyCombatRange.GetAimPoint(target);
 
-        float along = Vector2.Dot((Vector2)(aim - origin), direction);
-        if (along <= 0.05f || along > range)
+        float alongMuzzle = Vector2.Dot((Vector2)aim - (Vector2)origin, direction);
+        float alongBody = Vector2.Dot((Vector2)aim - (Vector2)transform.position, direction);
+        // Fail only when the target is behind the body or beyond shot range. Being behind the muzzle
+        // (player hugging the sprite) used to return false and freeze the ranged enemy in place.
+        if (alongBody <= 0.05f || alongBody > range)
         {
             return false;
         }
@@ -940,7 +1044,8 @@ public class EnemyController : MonoBehaviour
             return false;
         }
 
-        return !IsStraightShotBlocked(origin, direction, along);
+        float probe = alongMuzzle > 0.05f ? alongMuzzle : alongBody;
+        return !IsStraightShotBlocked(origin, direction, probe, target);
     }
 
     public void FireRangedShot(Transform target)
@@ -1042,11 +1147,14 @@ public class EnemyController : MonoBehaviour
         return colliders.Length > 0 ? colliders[0] : null;
     }
 
-    private bool IsStraightShotBlocked(Vector3 origin, Vector2 direction, float distance)
+    private bool IsStraightShotBlocked(Vector3 origin, Vector2 direction, float distance, Transform target)
     {
         float probe = Mathf.Max(0.1f, distance);
         Vector2 start = (Vector2)origin + direction * 0.04f;
         RaycastHit2D[] hits = Physics2D.RaycastAll(start, direction, probe, LineOfFireMask);
+        if (hits.Length > 1)
+            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
         for (int i = 0; i < hits.Length; i++)
         {
             Collider2D hit = hits[i].collider;
@@ -1060,15 +1168,38 @@ public class EnemyController : MonoBehaviour
                 continue;
             }
 
+            if (IsIntendedShotTarget(hit, target))
+            {
+                return false;
+            }
+
             if (hit.GetComponentInParent<PlayerCharacter>() != null)
             {
                 return false;
+            }
+
+            // Other enemies occupy the lane visually but must not own it. A melee pile in front of a
+            // ranged kit was the reason standing still looked like "the archer never fires".
+            if (hit.GetComponentInParent<EnemyController>() != null)
+            {
+                continue;
             }
 
             return true;
         }
 
         return false;
+    }
+
+    private static bool IsIntendedShotTarget(Collider2D hit, Transform target)
+    {
+        if (hit == null || target == null)
+            return false;
+
+        Transform hitTransform = hit.transform;
+        return hitTransform == target
+            || hitTransform.IsChildOf(target)
+            || target.IsChildOf(hitTransform);
     }
 
     private static Sprite GetRangedShotSprite()

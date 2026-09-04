@@ -30,16 +30,23 @@ public class EnemyLocomotion : MonoBehaviour
     [SerializeField, Min(0.05f)] private float groundProbeDistance = 0.22f;
     [SerializeField] private LayerMask groundLayers;
 
+    // Both distances below are measured against the body, which is 1.35 wide on Enemy1-3. Anything
+    // smaller reads two bodies as separate while they are visibly inside one another.
     [Header("Unstack")]
-    [Tooltip("If another enemy is closer than this on X, walk apart.")]
-    [SerializeField, Min(0.1f)] private float overlapRadius = 0.7f;
+    [Tooltip("If another enemy is closer than this on X, walk apart. Keep it at roughly the body width.")]
+    [SerializeField, Min(0.1f)] private float overlapRadius = 1.35f;
     [SerializeField, Min(0.1f)] private float unstackSpeed = 2.2f;
-    [SerializeField, Min(0.05f)] private float overlapSameY = 0.55f;
-    [SerializeField, Min(0.1f)] private float crowdSlotSpacing = 0.55f;
+    [SerializeField, Min(0.05f)] private float overlapSameY = 0.85f;
+    [Tooltip("Gap between queued bodies. Below the body width the formation asks them to stand inside each other.")]
+    [SerializeField, Min(0.1f)] private float crowdSlotSpacing = 1.5f;
     [Tooltip("Seconds overlap must last before they walk apart.")]
     [SerializeField, Min(0f)] private float overlapConfirmTime = 0.4f;
     [Tooltip("Once they start splitting, keep that direction this long so they do not flip every frame.")]
     [SerializeField, Min(0f)] private float unstackCommitTime = 0.45f;
+
+    // Two bodies within this much of the same distance count as tied, so they do not swap queue slots
+    // every frame while they jostle.
+    private const float CrowdRankEpsilon = 0.05f;
 
     private static readonly List<EnemyController> livingEnemies = new List<EnemyController>(16);
 
@@ -110,7 +117,7 @@ public class EnemyLocomotion : MonoBehaviour
         if (Mathf.Abs(dx) < 0.15f)
             side = EnemyFacingUtil.GetFacingSign(cachedTransform);
 
-        float x = targetPos.x + side * Mathf.Abs(attackSlotOffset.x) + ResolveCrowdSlotOffset();
+        float x = targetPos.x + side * (Mathf.Abs(attackSlotOffset.x) + ResolveCrowdSlotOffset(target, side));
         float y = moveMode == EnemyMoveMode.Ground ? self.y : targetPos.y + attackSlotOffset.y;
         return new Vector3(x, y, self.z);
     }
@@ -190,7 +197,9 @@ public class EnemyLocomotion : MonoBehaviour
     }
 
     /// <summary>
-    /// Walk or warp closer until within attack range, then hold. Never moves away from the target.
+    /// Walk to this body's stand-off slot. Chase is done when the body is on that slot, not when the
+    /// player merely falls inside attack range. Ranged will close from far away but will not back up
+    /// once the player has walked inside the hold band.
     /// </summary>
     public bool MoveTowardsTargetRange(Transform target, float attackRange, float speed, float deltaTime)
     {
@@ -198,30 +207,27 @@ public class EnemyLocomotion : MonoBehaviour
             return false;
 
         Cache();
-        Vector3 current = BodyPosition();
-        Vector3 targetPos = target.position;
+        if (!TryResolveHoldPoint(target, attackRange, out Vector3 holdPoint, out float holdGap, out float currentGap))
+            return false;
 
-        float range = Mathf.Max(0.1f, attackRange);
-        float distanceX = EnemyFacingUtil.HorizontalDistance(current, targetPos);
-        // Stay beside the player even while they jump. Same-platform is only required to actually strike.
-        if (distanceX <= range)
+        // Jumping puts the player on another platform without changing X. Stay put so melee does not
+        // stroll to a new slot while they are in the air; striking still requires same-platform.
+        if (moveMode == EnemyMoveMode.Ground
+            && !IsOnSamePlatform(target)
+            && currentGap <= Mathf.Max(0.1f, attackRange))
         {
             if (!IsUnstacking)
                 StopHorizontal();
-            return IsInAttackRangeOfTarget(target, attackRange);
+            return false;
         }
 
         bool rangedHold = enemy != null && enemy.UsesRangedAttack;
-        // Ranged never kites. Close in on the player; melee still uses a hold point in front.
-        float holdX = rangedHold
-            ? targetPos.x
-            : targetPos.x + (Mathf.Approximately(current.x - targetPos.x, 0f)
-                ? -EnemyFacingUtil.GetFacingSign(target)
-                : Mathf.Sign(current.x - targetPos.x)) * range * 0.85f;
-        holdX += ResolveCrowdSlotOffset();
-        Vector3 holdPoint = moveMode == EnemyMoveMode.Ground
-            ? new Vector3(holdX, current.y, current.z)
-            : new Vector3(holdX, targetPos.y + attackSlotOffset.y, current.z);
+        if (rangedHold && currentGap <= holdGap + arrivalThreshold)
+        {
+            if (!IsUnstacking)
+                StopHorizontal();
+            return true;
+        }
 
         if (moveMode == EnemyMoveMode.Warp)
         {
@@ -234,7 +240,55 @@ public class EnemyLocomotion : MonoBehaviour
         else
             DriveFly(holdPoint, Mathf.Max(0f, speed));
 
-        return IsInAttackRangeOfTarget(target, attackRange);
+        return EnemyFacingUtil.HorizontalDistance(BodyPosition(), holdPoint) <= arrivalThreshold;
+    }
+
+    public bool IsAtHoldSlot(Transform target, float attackRange)
+    {
+        Cache();
+        if (!TryResolveHoldPoint(target, attackRange, out Vector3 holdPoint, out float holdGap, out float currentGap))
+            return false;
+
+        if (moveMode == EnemyMoveMode.Ground && !IsOnSamePlatform(target))
+            return false;
+
+        bool rangedHold = enemy != null && enemy.UsesRangedAttack;
+        if (rangedHold)
+            return currentGap <= holdGap + arrivalThreshold;
+
+        return EnemyFacingUtil.HorizontalDistance(BodyPosition(), holdPoint) <= arrivalThreshold;
+    }
+
+    private bool TryResolveHoldPoint(
+        Transform target,
+        float attackRange,
+        out Vector3 holdPoint,
+        out float holdGap,
+        out float currentGap)
+    {
+        holdPoint = default;
+        holdGap = 0f;
+        currentGap = 0f;
+        if (target == null)
+            return false;
+
+        Vector3 current = BodyPosition();
+        Vector3 targetPos = target.position;
+        currentGap = EnemyFacingUtil.HorizontalDistance(current, targetPos);
+
+        float side = Mathf.Approximately(current.x - targetPos.x, 0f)
+            ? -EnemyFacingUtil.GetFacingSign(target)
+            : Mathf.Sign(current.x - targetPos.x);
+
+        float range = Mathf.Max(0.1f, attackRange);
+        holdGap = enemy != null ? enemy.ResolveHoldRange(range) : range * 0.85f;
+        holdGap += ResolveCrowdSlotOffset(target, side);
+
+        float holdX = targetPos.x + side * holdGap;
+        holdPoint = moveMode == EnemyMoveMode.Ground
+            ? new Vector3(holdX, current.y, current.z)
+            : new Vector3(holdX, targetPos.y + attackSlotOffset.y, current.z);
+        return true;
     }
 
     public void StopHorizontal()
@@ -605,35 +659,52 @@ public class EnemyLocomotion : MonoBehaviour
         return nearest != null;
     }
 
-    private float ResolveCrowdSlotOffset()
+    /// <summary>
+    /// Extra outward distance so a pack queues instead of piling onto one point. Rank comes from how
+    /// far each body already stands from the target, so the front slot belongs to whoever actually
+    /// got there first and nobody has to walk through a peer to reach its place.
+    /// </summary>
+    private float ResolveCrowdSlotOffset(Transform target, float side)
     {
         Cache();
-        if (enemy == null)
+        if (enemy == null || target == null)
             return 0f;
 
         Vector3 self = BodyPosition();
-        RoomEnemyRegistry.FillLiving(livingEnemies);
+        float targetX = target.position.x;
+        float selfGap = Mathf.Abs(self.x - targetX);
         int selfId = enemy.GetInstanceID();
-        int index = 0;
-        int count = 0;
+
+        RoomEnemyRegistry.FillLiving(livingEnemies);
+        int ahead = 0;
         for (int i = 0; i < livingEnemies.Count; i++)
         {
             EnemyController other = livingEnemies[i];
-            if (other == null || !other.IsAlive || other.GetComponent<EnemyLocomotion>() == null)
+            if (other == null || other == enemy || !other.IsAlive)
                 continue;
-            if (Mathf.Abs(other.transform.position.y - self.y) > overlapSameY + 0.4f)
+            if (other.GetComponent<EnemyLocomotion>() == null)
                 continue;
 
-            count++;
-            if (other.GetInstanceID() < selfId)
-                index++;
+            Vector3 otherPos = other.transform.position;
+            if (Mathf.Abs(otherPos.y - self.y) > samePlatformMaxY)
+                continue;
+            // A body on the far side of the target queues against that flank, not this one.
+            if (!Mathf.Approximately(Mathf.Sign(otherPos.x - targetX), side))
+                continue;
+
+            float otherGap = Mathf.Abs(otherPos.x - targetX);
+            if (otherGap < selfGap - CrowdRankEpsilon)
+            {
+                ahead++;
+            }
+            else if (Mathf.Abs(otherGap - selfGap) <= CrowdRankEpsilon && other.GetInstanceID() < selfId)
+            {
+                // Two bodies at the same distance would otherwise both claim the front slot and grind.
+                ahead++;
+            }
         }
 
-        if (count <= 1)
-            return 0f;
-
-        float center = (count - 1) * 0.5f;
-        return (index - center) * crowdSlotSpacing;
+        return ahead * crowdSlotSpacing;
     }
 
     private bool CanDriveMovement()

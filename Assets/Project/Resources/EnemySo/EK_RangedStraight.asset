@@ -14,6 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyKit
   combatRole: 2
   attackRange: 12
+  holdRange: 7
+  warningDuration: -1
+  hitWindowDuration: -1
+  attackCooldown: 3
+  lungeDistance: -1
+  commitTelegraphFraction: -1
+  interruptCooldown: -1
+  recoveryPlantDuration: 0.8
   shotSpeed: 10
   shotLifetime: 2.5
   shotSprite: {fileID: 0}
@@ -22,4 +30,4 @@ MonoBehaviour:
   muzzleOffset: {x: 0.85, y: 0.15}
   lineOfFireMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 521
