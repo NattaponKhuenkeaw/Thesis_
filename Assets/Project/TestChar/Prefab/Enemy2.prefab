@@ -208,6 +208,10 @@ PrefabInstance:
       value: 0.99853027
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: kit
+      value: 
+      objectReference: {fileID: 11400000, guid: 7c1e4a8b9d2f4e06a3b5c7d9e1f20345, type: 2}
+    - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: maxHP
       value: 500
       objectReference: {fileID: 0}
@@ -223,10 +227,6 @@ PrefabInstance:
       propertyPath: damageRes
       value: 10
       objectReference: {fileID: 0}
-    - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: kit
-      value: 
-      objectReference: {fileID: 11400000, guid: 7c1e4a8b9d2f4e06a3b5c7d9e1f20345, type: 2}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: combatRole
       value: 1
@@ -434,9 +434,21 @@ PrefabInstance:
       propertyPath: m_WasSpriteAssigned
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4636314233390107682, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4636314233390107682, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4990671833326289746, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5618151998514689905, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 66
       objectReference: {fileID: 0}
     - target: {fileID: 5637577748060009575, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -637,6 +649,14 @@ PrefabInstance:
     - target: {fileID: 7877829940090835900, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Parameters.widthCurve.m_Curve.Array.data[0].value
       value: 0.03750038
+      objectReference: {fileID: 0}
+    - target: {fileID: 8056175369050843716, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8056175369050843716, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8917136744719106790, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Name
