@@ -13,7 +13,6 @@ namespace Project.Core.RunEnd
     [DisallowMultipleComponent]
     public class RunEndController : MonoBehaviour
     {
-        private const string RunInventoryResourcePath = "InventorySO/PlayerRunInventory";
         private const string MetaProgressionResourcePath = "InventorySO/PlayerMetaProgression";
 
         public static RunEndController Instance { get; private set; }
@@ -398,9 +397,9 @@ namespace Project.Core.RunEnd
 
         private void ResolveDependencies()
         {
-            if (runInventory == null && Application.isPlaying)
+            if (runInventory == null)
             {
-                runInventory = Resources.Load<PlayerRunInventory>(RunInventoryResourcePath);
+                runInventory = GameRunManager.ResolveSharedRunInventory();
             }
 
             if (metaProgression == null && Application.isPlaying)

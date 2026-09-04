@@ -20,6 +20,7 @@ public class DeathResetOwnershipTests
 
             CharacterObject[] team = inventory.GetTeamSnapshot();
             Assert.That(inventory.HasMainCharacterDeployed(), Is.True);
+            Assert.That(inventory.IsMainCharacter(team[0]), Is.True);
             Assert.That(inventory.IsMainCharacter(team[inventory.GetMainCharacterSlotIndex()]), Is.True);
             Assert.That(TeamContains(team, ghost), Is.False);
             Assert.That(OwnsCharacterItem(inventory, ghost), Is.False);
@@ -50,6 +51,7 @@ public class DeathResetOwnershipTests
             inventory.ResetRunProgressForDeath();
 
             CharacterObject[] team = inventory.GetTeamSnapshot();
+            Assert.That(inventory.IsMainCharacter(team[0]), Is.True);
             Assert.That(inventory.IsMainCharacter(team[inventory.GetMainCharacterSlotIndex()]), Is.True);
             Assert.That(TeamContains(team, ally), Is.True);
             Assert.That(OwnsCharacterItem(inventory, ally), Is.True);
@@ -85,6 +87,79 @@ public class DeathResetOwnershipTests
         {
             inventory.ClearInventory();
             Object.DestroyImmediate(ghost);
+            Object.DestroyImmediate(inventory);
+        }
+    }
+
+    [Test]
+    public void DeathResetPutsMainInSlotZeroWhenSnapshotIsUnownedFirstAndSecond()
+    {
+        PlayerRunInventory inventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        CharacterObject first = ScriptableObject.CreateInstance<CharacterObject>();
+        first.name = "CharacterObject_1st";
+        first.characterId = "char-test-1st";
+        CharacterObject second = ScriptableObject.CreateInstance<CharacterObject>();
+        second.name = "CharacterObject_2nd";
+        second.characterId = "char-test-2nd";
+        try
+        {
+            inventory.RememberRunStartTeam(new[] { first, second }, overwrite: true);
+            inventory.ResetRunProgressForDeath();
+
+            CharacterObject[] team = inventory.GetTeamSnapshot();
+            Assert.That(inventory.IsMainCharacter(team[0]), Is.True);
+            Assert.That(TeamContains(team, first), Is.False);
+            Assert.That(TeamContains(team, second), Is.False);
+            Assert.That(OwnsCharacterItem(inventory, first), Is.False);
+            Assert.That(OwnsCharacterItem(inventory, second), Is.False);
+            Assert.That(OwnsMainCharacterItem(inventory), Is.True);
+        }
+        finally
+        {
+            inventory.ConsumeLobbyMainReset();
+            inventory.ClearInventory();
+            Object.DestroyImmediate(first);
+            Object.DestroyImmediate(second);
+            Object.DestroyImmediate(inventory);
+        }
+    }
+
+    [Test]
+    public void DeathResetDropsCharactersAcquiredAfterRunStart()
+    {
+        PlayerRunInventory inventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        CharacterObject lobbyAlly = ScriptableObject.CreateInstance<CharacterObject>();
+        lobbyAlly.name = "CharacterObject_1st";
+        lobbyAlly.characterId = "char-test-lobby-ally";
+        CharacterItem lobbyItem = ScriptableObject.CreateInstance<CharacterItem>();
+        lobbyItem.characterObjectData = lobbyAlly;
+        CharacterObject runPickup = ScriptableObject.CreateInstance<CharacterObject>();
+        runPickup.name = "CharacterObject_2nd";
+        runPickup.characterId = "char-test-run-pickup";
+        CharacterItem pickupItem = ScriptableObject.CreateInstance<CharacterItem>();
+        pickupItem.characterObjectData = runPickup;
+        try
+        {
+            inventory.ownedItems.Add(lobbyItem);
+            inventory.RememberRunStartTeam(new[] { lobbyAlly }, overwrite: true);
+            inventory.ownedItems.Add(pickupItem);
+            inventory.ResetRunProgressForDeath();
+
+            CharacterObject[] team = inventory.GetTeamSnapshot();
+            Assert.That(inventory.IsMainCharacter(team[0]), Is.True);
+            Assert.That(TeamContains(team, lobbyAlly), Is.True);
+            Assert.That(TeamContains(team, runPickup), Is.False);
+            Assert.That(OwnsCharacterItem(inventory, lobbyAlly), Is.True);
+            Assert.That(OwnsCharacterItem(inventory, runPickup), Is.False);
+        }
+        finally
+        {
+            inventory.ConsumeLobbyMainReset();
+            inventory.ClearInventory();
+            Object.DestroyImmediate(pickupItem);
+            Object.DestroyImmediate(runPickup);
+            Object.DestroyImmediate(lobbyItem);
+            Object.DestroyImmediate(lobbyAlly);
             Object.DestroyImmediate(inventory);
         }
     }

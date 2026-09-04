@@ -294,6 +294,7 @@ namespace Project.ShopSystem
         [NonSerialized] private CharacterObject[] runStartTeamSnapshot;
         [NonSerialized] private static CharacterObject[] sessionRunStartTeam;
         [NonSerialized] private static bool pendingLobbyMainReset;
+        [NonSerialized] private bool suppressAutoBootstrap;
 
         [NonSerialized] private bool hasLoadedPersistentState;
         [NonSerialized] private bool isApplyingPersistentState;
@@ -817,22 +818,35 @@ namespace Project.ShopSystem
 
         public void ResetRunProgressForDeath(PlayerMetaProgression metaProgression = null)
         {
+            _ = metaProgression;
             EnsureInventoryData();
             pendingLobbyMainReset = true;
 
             CharacterObject[] lobbyTeam = ResolveDeathResetTeam();
             int previousGlobalLevel = _globalLevel;
 
-            runCharacters.Clear();
-            currency = DefaultCurrency;
-            _globalLevel = 1;
-            StripNonCharacterRunLoot();
-            AddUnlockedRosterItems(metaProgression);
-            EnsureMainCharacterOwned();
+            suppressAutoBootstrap = true;
+            try
+            {
+                runCharacters.Clear();
+                currency = DefaultCurrency;
+                _globalLevel = 1;
+                StripNonCharacterRunLoot();
+                StripRunAcquiredCharacterItems(lobbyTeam);
+                artifactInstances.Clear();
+                artifactInstancesById = null;
+                ClearDeployedTeamSlots();
+            }
+            finally
+            {
+                suppressAutoBootstrap = false;
+            }
 
+            EnsureMainCharacterOwned();
             CharacterObject[] restoredTeam = BuildOwnedDeathResetTeam(lobbyTeam);
             DeployTeam(restoredTeam, preferredIndex: 0, artifactsBySlot: null);
             SetActiveTeamSlotIndex(GetMainCharacterSlotIndex());
+            ClearCapturedRunStartTeam();
             if (previousGlobalLevel != _globalLevel)
             {
                 OnGlobalLevelChanged?.Invoke(previousGlobalLevel, _globalLevel);
@@ -928,7 +942,8 @@ namespace Project.ShopSystem
 
             for (int i = 0; i < teamSlots.Length; i++)
             {
-                CharacterObject character = characters != null && i < characters.Length ? characters[i] : null;
+                CharacterObject requested = characters != null && i < characters.Length ? characters[i] : null;
+                CharacterObject character = ResolveOwnedTeamCharacter(requested);
                 teamSlots[i].Character = character;
                 if (character != null)
                 {
@@ -1015,19 +1030,14 @@ namespace Project.ShopSystem
         }
 
         /// <summary>
-        /// Guarantee Main is owned and sitting on the lobby team. Used after death
-        /// so TeamLoader can select that slot without re-deploying a snapshot.
+        /// Rebuild the lobby team from owned CharacterItems, with Main in slot 0.
+        /// Never keeps a CharacterObject that has no matching owned item.
         /// </summary>
         public void EnsureMainCharacterOnLobbyTeam()
         {
             EnsureRunData();
             EnsureMainCharacterOwned();
-            if (HasMainCharacterDeployed())
-            {
-                return;
-            }
-
-            DeployTeam(BuildOwnedDeathResetTeam(GetTeamSnapshot()), preferredIndex: 0, artifactsBySlot: null);
+            DeployTeam(BuildOwnedDeathResetTeam(ResolveDeathResetTeam()), preferredIndex: 0, artifactsBySlot: null);
             SetActiveTeamSlotIndex(GetMainCharacterSlotIndex());
         }
 
@@ -1102,49 +1112,6 @@ namespace Project.ShopSystem
             return null;
         }
 
-        private CharacterObject[] LeadTeamWithMainCharacter(CharacterObject[] team)
-        {
-            CharacterObject main = ResolveMainCharacter();
-            CharacterObject[] result = CopyTeamArray(team);
-
-            int mainIndex = -1;
-            for (int i = 0; i < result.Length; i++)
-            {
-                if (IsMainCharacter(result[i]) || (main != null && IsSameTeamCharacter(result[i], main)))
-                {
-                    mainIndex = i;
-                    break;
-                }
-            }
-
-            if (mainIndex < 0 && main != null)
-            {
-                CharacterObject[] withMain = new CharacterObject[Mathf.Max(DefaultTeamSlotCount, result.Length)];
-                withMain[0] = main;
-                int dest = 1;
-                for (int i = 0; i < result.Length && dest < withMain.Length; i++)
-                {
-                    if (result[i] == null || IsMainCharacter(result[i]) || IsSameTeamCharacter(result[i], main))
-                    {
-                        continue;
-                    }
-
-                    withMain[dest++] = result[i];
-                }
-
-                return withMain;
-            }
-
-            if (mainIndex > 0)
-            {
-                CharacterObject swap = result[0];
-                result[0] = result[mainIndex];
-                result[mainIndex] = swap;
-            }
-
-            return result;
-        }
-
         private CharacterObject[] ResolveDeathResetTeam()
         {
             CharacterObject[] source = HasAnyCharacter(runStartTeamSnapshot)
@@ -1163,14 +1130,20 @@ namespace Project.ShopSystem
         private CharacterObject[] BuildOwnedDeathResetTeam(CharacterObject[] lobbyTeam)
         {
             EnsureMainCharacterOwned();
-            CharacterObject[] led = LeadTeamWithMainCharacter(lobbyTeam);
-            CharacterObject[] ownedTeam = new CharacterObject[Mathf.Max(DefaultTeamSlotCount, led.Length)];
+            CharacterObject main = ResolveMainCharacter();
+            CharacterObject[] ownedTeam = new CharacterObject[Mathf.Max(DefaultTeamSlotCount, lobbyTeam != null ? lobbyTeam.Length : 0)];
             HashSet<CharacterObject> assigned = new HashSet<CharacterObject>();
             int dest = 0;
-            for (int i = 0; i < led.Length && dest < ownedTeam.Length; i++)
+
+            if (main != null && assigned.Add(main))
             {
-                CharacterItem ownedItem = FindOwnedCharacterItem(led[i]);
-                CharacterObject ownedCharacter = ownedItem != null ? ownedItem.characterObjectData : null;
+                ownedTeam[dest++] = main;
+            }
+
+            CharacterObject[] source = lobbyTeam ?? Array.Empty<CharacterObject>();
+            for (int i = 0; i < source.Length && dest < ownedTeam.Length; i++)
+            {
+                CharacterObject ownedCharacter = ResolveOwnedTeamCharacter(source[i]);
                 if (ownedCharacter == null || !assigned.Add(ownedCharacter))
                 {
                     continue;
@@ -1179,16 +1152,13 @@ namespace Project.ShopSystem
                 ownedTeam[dest++] = ownedCharacter;
             }
 
-            if (dest == 0)
-            {
-                CharacterObject main = ResolveMainCharacter();
-                if (main != null)
-                {
-                    ownedTeam[0] = main;
-                }
-            }
-
             return ownedTeam;
+        }
+
+        private CharacterObject ResolveOwnedTeamCharacter(CharacterObject character)
+        {
+            CharacterItem ownedItem = FindOwnedCharacterItem(character);
+            return ownedItem != null ? ownedItem.characterObjectData : null;
         }
 
         private void StripNonCharacterRunLoot()
@@ -1211,10 +1181,71 @@ namespace Project.ShopSystem
             }
         }
 
-        private void ClearRunStartTeamSnapshot()
+        private void StripRunAcquiredCharacterItems(CharacterObject[] lobbyTeam)
+        {
+            if (ownedItems == null)
+            {
+                return;
+            }
+
+            for (int i = ownedItems.Count - 1; i >= 0; i--)
+            {
+                if (ownedItems[i] is not CharacterItem characterItem)
+                {
+                    continue;
+                }
+
+                CharacterObject character = characterItem.characterObjectData;
+                if (IsMainCharacter(character) || TeamArrayContains(lobbyTeam, character))
+                {
+                    continue;
+                }
+
+                ownedItems.RemoveAt(i);
+                RemoveRunCharacterState(character);
+            }
+        }
+
+        private static bool TeamArrayContains(CharacterObject[] team, CharacterObject character)
+        {
+            if (team == null || character == null)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < team.Length; i++)
+            {
+                if (IsSameTeamCharacter(team[i], character))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void ClearDeployedTeamSlots()
+        {
+            EnsureTeamSlotCapacity(DefaultTeamSlotCount);
+            for (int i = 0; i < teamSlots.Length; i++)
+            {
+                teamSlots[i].Character = null;
+                teamSlots[i].SetArtifacts(null, DefaultArtifactSlotCount);
+                teamSlots[i].SetArtifactRefs(null, DefaultArtifactSlotCount);
+            }
+
+            activeTeamSlotIndex = 0;
+        }
+
+        private void ClearCapturedRunStartTeam()
         {
             runStartTeamSnapshot = null;
             sessionRunStartTeam = null;
+        }
+
+        private void ClearRunStartTeamSnapshot()
+        {
+            ClearCapturedRunStartTeam();
             pendingLobbyMainReset = false;
         }
 
@@ -1253,9 +1284,10 @@ namespace Project.ShopSystem
         }
 
         /// <summary>
-        /// Removes a defeated teammate from the run team and backpack, returns their
-        /// equipped artifacts to owned items, and compacts survivors so the preferred
-        /// survivor lands at index 0.
+        /// Removes a defeated teammate from the run team, returns their equipped
+        /// artifacts to inventory, and compacts survivors so the preferred survivor
+        /// lands at index 0. CharacterItem ownership is kept so a wipe can restore
+        /// the owned lobby roster without deploying CharacterObject ghosts.
         /// </summary>
         public bool TryRemoveDefeatedTeamCharacter(
             CharacterObject defeatedCharacter,
@@ -1285,15 +1317,9 @@ namespace Project.ShopSystem
                     continue;
                 }
 
-                // Drop any other 0-HP "ghost" slots so compact team only keeps living members.
+                // Drop any other 0-HP slots so compact team only keeps living members.
                 if (!IsRunCharacterAlive(character))
                 {
-                    CharacterItem deadItem = FindOwnedCharacterItem(character);
-                    if (deadItem != null)
-                    {
-                        TryRemoveItem(deadItem);
-                    }
-
                     RemoveRunCharacterState(character);
                     continue;
                 }
@@ -1304,14 +1330,17 @@ namespace Project.ShopSystem
 
             if (survivors.Count == 0)
             {
-                CharacterItem ownedDefeatItem = FindOwnedCharacterItem(defeatedCharacter);
-                if (ownedDefeatItem != null)
+                RemoveRunCharacterState(defeatedCharacter);
+                suppressAutoBootstrap = true;
+                try
                 {
-                    TryRemoveItem(ownedDefeatItem);
+                    DeployTeam(Array.Empty<CharacterObject>(), 0, null);
+                }
+                finally
+                {
+                    suppressAutoBootstrap = false;
                 }
 
-                RemoveRunCharacterState(defeatedCharacter);
-                DeployTeam(Array.Empty<CharacterObject>(), 0, null);
                 return false;
             }
 
@@ -1329,12 +1358,6 @@ namespace Project.ShopSystem
             {
                 RotateList(survivors, preferIndex);
                 RotateList(survivorArtifacts, preferIndex);
-            }
-
-            CharacterItem characterItem = FindOwnedCharacterItem(defeatedCharacter);
-            if (characterItem != null)
-            {
-                TryRemoveItem(characterItem);
             }
 
             RemoveRunCharacterState(defeatedCharacter);
@@ -3151,38 +3174,17 @@ namespace Project.ShopSystem
             }
 
             EnsureTeamSlotCapacity(DefaultTeamSlotCount);
-            EnsureDefaultCharacterOwnership();
             NormalizeRunCharacterStates();
             NormalizeTeamSlots();
-            if (CountTeamCharacters() == 0)
+            if (!suppressAutoBootstrap)
             {
-                FillTeamSlotsFromOwnedCharacters();
+                EnsureDefaultCharacterOwnership();
+                if (CountTeamCharacters() == 0)
+                {
+                    FillTeamSlotsFromOwnedCharacters();
+                }
             }
             activeTeamSlotIndex = ResolveActiveSlotIndex(activeTeamSlotIndex);
-        }
-
-        private void AddUnlockedRosterItems(PlayerMetaProgression metaProgression)
-        {
-            if (metaProgression == null)
-            {
-                return;
-            }
-
-            metaProgression.LoadPersistentStateIfNeeded();
-            CharacterItem[] characterItems = Resources.LoadAll<CharacterItem>("ItemSO");
-            for (int i = 0; i < characterItems.Length; i++)
-            {
-                CharacterItem characterItem = characterItems[i];
-                if (characterItem == null || characterItem.characterObjectData == null)
-                {
-                    continue;
-                }
-
-                if (metaProgression.IsCharacterUnlocked(characterItem))
-                {
-                    AddResolvedItem(characterItem, 1);
-                }
-            }
         }
 
         private bool ShouldPreferAuthoredBootstrapOverSavedData(SavedPlayerRunInventoryData data)
