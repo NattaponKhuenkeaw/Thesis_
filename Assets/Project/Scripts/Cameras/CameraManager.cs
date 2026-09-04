@@ -617,6 +617,15 @@ public class CameraManager : MonoBehaviour
             return;
         }
 
+        // Static rooms frame authored content, never the player. Snapping raised the explore
+        // camera with a zero-length blend, so entering a safe room popped to player framing
+        // and back within a few frames.
+        if (IsStaticCameraRoom())
+        {
+            NotifyPlayerWarp(Vector3.zero);
+            return;
+        }
+
         if (_temporaryPlayerSnapCoroutine != null)
         {
             StopCoroutine(_temporaryPlayerSnapCoroutine);
@@ -998,9 +1007,16 @@ public class CameraManager : MonoBehaviour
     // =========================================================
     // Private — Camera Mode Switching (Priority-Based)
     // =========================================================
+    private bool IsStaticCameraRoom()
+    {
+        return _zoneStateProvider != null
+            && _zoneStateProvider.CurrentRoom != null
+            && _zoneStateProvider.CurrentRoom.UseStaticCamera;
+    }
+
     private void SetExploreMode()
     {
-        if (_zoneStateProvider != null && _zoneStateProvider.CurrentRoom != null && _zoneStateProvider.CurrentRoom.UseStaticCamera)
+        if (IsStaticCameraRoom())
         {
             SetStaticMode();
             return;
@@ -1021,7 +1037,7 @@ public class CameraManager : MonoBehaviour
 
     private void SetCombatMode()
     {
-        if (_zoneStateProvider != null && _zoneStateProvider.CurrentRoom != null && _zoneStateProvider.CurrentRoom.UseStaticCamera)
+        if (IsStaticCameraRoom())
         {
             SetStaticMode();
             return;

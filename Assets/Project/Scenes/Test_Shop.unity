@@ -7556,6 +7556,9 @@ MonoBehaviour:
   _exitTrigger: {fileID: 1539196728}
   _entrancePadding: 0.75
   _exitPadding: 0.75
+  _pinPlayerToScreenEdge: 1
+  _lookAheadFadeDistance: 3
+  _verticalPadding: 10
   _cameraCueDistance: 3
   _cameraCueDuration: 0.65
 --- !u!1 &1722952145
@@ -11253,11 +11256,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 979919694387824128, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.49999368
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 979919694387824128, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 8.365223
+      value: 8.35
       objectReference: {fileID: 0}
     - target: {fileID: 1085931734417189504, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
       propertyPath: m_LocalPosition.y
