@@ -183,6 +183,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
             CancelCurrentReaction();
         }
 
+        RememberPlayablePhysics();
         currentReaction = data;
         attackerPos = attackerPosition;
         currentReactionFrame = 0;
@@ -1109,8 +1110,6 @@ public class EnemyHitReactionHandler : MonoBehaviour
         {
             if (rb != null)
             {
-                originalBodyType = rb.bodyType;
-                originalGravityScale = rb.gravityScale;
                 rb.bodyType = RigidbodyType2D.Kinematic;
                 rb.gravityScale = 0f;
                 rb.linearVelocity = Vector2.zero;
@@ -1170,8 +1169,6 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
         if (rb != null)
         {
-            originalBodyType = rb.bodyType;
-            originalGravityScale = rb.gravityScale;
             rb.bodyType = RigidbodyType2D.Kinematic;
             rb.gravityScale = 0f;
             rb.linearVelocity = Vector2.zero;
@@ -1205,6 +1202,26 @@ public class EnemyHitReactionHandler : MonoBehaviour
         }
     }
 
+    private void RememberPlayablePhysics()
+    {
+        if (rb == null)
+        {
+            return;
+        }
+
+        // Grab freeze already made the body kinematic with no gravity.
+        // Recapturing now would restore that frozen state after the ultimate ends.
+        if (rb.bodyType == RigidbodyType2D.Kinematic && rb.gravityScale <= 0f)
+        {
+            return;
+        }
+
+        originalBodyType = rb.bodyType;
+        originalGravityScale = rb.gravityScale;
+        originalConstraints = rb.constraints;
+        originalCollisionDetection = rb.collisionDetectionMode;
+    }
+
     private void EnsureDynamicBody()
     {
         if (rb == null)
@@ -1212,8 +1229,16 @@ public class EnemyHitReactionHandler : MonoBehaviour
             return;
         }
 
-        rb.bodyType = originalBodyType;
-        rb.gravityScale = originalGravityScale;
+        RigidbodyType2D restoredType = originalBodyType;
+        float restoredGravity = originalGravityScale;
+        if (restoredType == RigidbodyType2D.Kinematic && restoredGravity <= 0f)
+        {
+            restoredType = RigidbodyType2D.Dynamic;
+            restoredGravity = 1f;
+        }
+
+        rb.bodyType = restoredType;
+        rb.gravityScale = restoredGravity;
         rb.constraints = originalConstraints;
     }
 
