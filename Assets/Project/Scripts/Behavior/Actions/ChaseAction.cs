@@ -4,12 +4,13 @@ using UnityEngine;
 using Unity.Behavior;
 
 /// <summary>
-/// Close into attack range. Ground and ranged hold at AttackRange; Fly uses the attack slot; Warp snaps once.
+/// Close into a stand-off slot. Ground melee queues on that slot; ranged holds a back line.
+/// Attack range is a separate check used by the attack nodes, not the signal that chase is done.
 /// </summary>
 [Serializable, GeneratePropertyBag]
 [NodeDescription(
     name: "Enemy Chase",
-    description: "Chases the Target. Ground/ranged stop at AttackRange. Fly approaches the attack slot. Warp snaps once.",
+    description: "Chases the Target to a stand-off slot. Ground melee queues there. Ranged holds a back line. Attack range is checked by the attack nodes, not here.",
     story: "[Agent] chases [Target] (stop at [AttackRange])",
     category: "Action/Enemy",
     id: "c1b2c3d4e5f60004aabbccddeeff0024")]
@@ -92,24 +93,46 @@ public partial class ChaseAction : Unity.Behavior.Action
 
     private Status TickRangeApproach(Transform agent, Transform target, float attackRange)
     {
-        if (m_Locomotion.IsInAttackRangeOfTarget(target, attackRange))
+        if (m_Locomotion.IsUnstacking)
+        {
+            m_AnimHandler?.SetSpeed(ChaseSpeed.Value);
+            return Status.Running;
+        }
+
+        if (m_Locomotion.IsAtHoldSlot(target, attackRange))
         {
             m_AnimHandler?.SetSpeed(0f);
             m_Locomotion.StopHorizontal();
-            EnemyFacingUtil.FaceHorizontal(agent, target.position.x - agent.position.x);
+            FaceChaseTarget(agent, target);
             return Status.Success;
         }
 
         if (!m_Locomotion.CanWalkTo(target))
         {
             m_AnimHandler?.SetSpeed(ChaseSpeed.Value);
-            m_Locomotion.PatrolCurrentPlatform(ChaseSpeed.Value);
+            bool atPlayerX = m_Locomotion.MoveTowardsX(target.position.x, ChaseSpeed.Value);
+            if (atPlayerX)
+            {
+                m_AnimHandler?.SetSpeed(0f);
+                FaceChaseTarget(agent, target);
+            }
+
             return Status.Running;
         }
 
         m_AnimHandler?.SetSpeed(ChaseSpeed.Value);
         bool arrived = m_Locomotion.MoveTowardsTargetRange(target, attackRange, ChaseSpeed.Value, Time.deltaTime);
+        if (arrived)
+            FaceChaseTarget(agent, target);
         return arrived ? Status.Success : Status.Running;
+    }
+
+    private static void FaceChaseTarget(Transform agent, Transform target)
+    {
+        if (agent == null || target == null)
+            return;
+
+        EnemyFacingUtil.FaceHorizontal(agent, target.position.x - agent.position.x);
     }
 
     private Status TickSlotApproach(Transform target)
@@ -118,6 +141,8 @@ public partial class ChaseAction : Unity.Behavior.Action
         {
             m_AnimHandler?.SetSpeed(0f);
             m_Locomotion.StopHorizontal();
+            if (Agent.Value != null && Target.Value != null)
+                FaceChaseTarget(Agent.Value.transform, target);
             return Status.Success;
         }
 

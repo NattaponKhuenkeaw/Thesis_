@@ -4,8 +4,8 @@ using UnityEngine;
 using Unity.Behavior;
 
 /// <summary>
-/// Enemy melee attack with telegraph → committed swing → recovery.
-/// Commitment prevents mash-cancel during the swing (BBEE-like trash pressure).
+/// Enemy melee attack with telegraph → committed swing → recovery chase.
+/// Recovery plants on the swing facing for a beat, then chases. CanAttack stays shut until the node ends.
 /// </summary>
 [Serializable, GeneratePropertyBag]
 [NodeDescription(name: "Enemy Attack", story: "[Agent] attacks [Target]", category: "Action", id: "c1b2c3d4e5f60006aabbccddeeff0026")]
@@ -23,8 +23,14 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
     [Tooltip("How long the hitbox stays active after the attack starts (seconds).")]
     [SerializeReference] public BlackboardVariable<float> HitWindowDuration = new BlackboardVariable<float>(0.28f);
 
-    [Tooltip("Recovery after the swing before CanAttack opens again (seconds).")]
+    [Tooltip("Recovery after the swing before CanAttack opens again (seconds). Does not root the enemy.")]
     [SerializeReference] public BlackboardVariable<float> AttackCooldown = new BlackboardVariable<float>(0.75f);
+
+    [Tooltip("How fast to close on the player after the swing. Unwired = 3, matching the graph ChaseSpeed.")]
+    [SerializeReference] public BlackboardVariable<float> ChaseSpeed = new BlackboardVariable<float>(3f);
+
+    [Tooltip("Seconds to stay planted facing the swing after the hitbox closes, before turning to chase.")]
+    [SerializeReference] public BlackboardVariable<float> RecoveryPlantDuration = new BlackboardVariable<float>(0.8f);
 
     [Tooltip("If true, late telegraph + active frames ignore hit-reactions so the swing connects.")]
     [SerializeReference] public BlackboardVariable<bool> ArmorDuringSwing = new BlackboardVariable<bool>(true);
@@ -40,6 +46,7 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
 
     private EnemyController m_Controller;
     private AnimationHandler_Enemy m_AnimHandler;
+    private EnemyLocomotion m_Locomotion;
     private Rigidbody2D m_Body;
     private float m_Timer;
     private float m_AttackStartTime;
@@ -52,6 +59,8 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
     private float m_LungeTravelled;
     private float m_LungeDir;
     private float m_LungeStartX;
+    private bool m_RecoveryChaseStarted;
+    private float m_PlantUntil;
 
     protected override Status OnStart()
     {
@@ -61,18 +70,25 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         m_Controller = Agent.Value.GetComponent<EnemyController>();
         m_AnimHandler = Agent.Value.GetComponentInChildren<AnimationHandler_Enemy>();
         m_Body = Agent.Value.GetComponent<Rigidbody2D>();
+        m_Locomotion = Agent.Value.GetComponent<EnemyLocomotion>();
         if (m_Controller == null || m_AnimHandler == null)
             return Status.Failure;
 
         if (m_Controller.CurrentReactionState != EnemyReactionState.None)
             return Status.Failure;
 
+        if (!CanReachTarget())
+            return Status.Failure;
+
         if (CanAttack != null)
             CanAttack.Value = false;
 
+        // Aim once, then hold. The whole swing resolves in the direction the telegraph showed,
+        // so dashing behind the enemy during the wind-up is a real escape.
         FaceTarget();
+        m_Controller.LockFacing();
 
-        float telegraphDuration = Mathf.Max(0f, WarningDuration != null ? WarningDuration.Value : 0.45f);
+        float telegraphDuration = ResolveTelegraphDuration();
         if (telegraphDuration > 0f)
             m_Controller.TriggerAttackWarning(telegraphDuration);
 
@@ -88,6 +104,8 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         m_LungeTravelled = 0f;
         m_LungeDir = 0f;
         m_LungeStartX = 0f;
+        m_RecoveryChaseStarted = false;
+        m_PlantUntil = 0f;
 
         if (m_Controller.UninterruptibleOnceWindup)
             BeginCommitment();
@@ -100,16 +118,14 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         if (m_Controller == null)
             return Status.Failure;
 
-        float telegraphDuration = Mathf.Max(0f, WarningDuration != null ? WarningDuration.Value : 0.45f);
-        float commitFraction = m_Controller.UninterruptibleOnceWindup
-            ? 1f
-            : Mathf.Clamp01(CommitTelegraphFraction != null ? CommitTelegraphFraction.Value : 0.35f);
+        float telegraphDuration = ResolveTelegraphDuration();
+        float commitFraction = ResolveCommitFraction();
         float commitTime = telegraphDuration * (1f - commitFraction);
 
         if (!m_AttackStarted && !m_Committed && m_Timer >= commitTime)
             BeginCommitment();
 
-        // Hitstun always cancels unless this swing owns ignoreHitReactions (CommitMelee windup).
+        // Hitstun can still cancel interruptible melee. Range does not: once telegraph starts, the swing/shot fires.
         if (m_Controller.CurrentReactionState != EnemyReactionState.None)
         {
             m_Interrupted = true;
@@ -122,13 +138,19 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
             StartActualAttack();
 
         if (m_AttackStarted)
+        {
             TickLunge();
+            TickRecoveryStep();
+        }
 
-        float hitWindow = Mathf.Max(0.05f, HitWindowDuration != null ? HitWindowDuration.Value : 0.28f);
-        if (m_AttackStarted && !m_HitboxDisabled && (m_Timer - m_AttackStartTime) >= hitWindow)
+        float hitWindow = ResolveHitWindow();
+        if (m_AttackStarted && m_PlantUntil <= 0f && (m_Timer - m_AttackStartTime) >= hitWindow)
         {
             m_Controller.SetAttackHitboxActive(false);
             m_HitboxDisabled = true;
+            float plant = ResolvePlantDuration();
+            m_PlantUntil = Time.time + plant;
+            m_Controller.HoldCommittedFacing(plant);
         }
 
         if (m_AttackStarted && m_Timer >= m_PhaseEndTime)
@@ -146,16 +168,20 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
     {
         m_Controller?.SetAttackHitboxActive(false);
         m_Controller?.HideAttackWarning();
-        if (m_Body != null && (m_Controller == null || m_Controller.CurrentReactionState == EnemyReactionState.None))
+        if (m_Body != null && (m_Controller == null || m_Controller.CurrentReactionState == EnemyReactionState.None) && m_Interrupted)
             m_Body.linearVelocity = new Vector2(0f, m_Body.linearVelocity.y);
         EndCommitment();
+        if (m_Interrupted || !m_AttackStarted || m_PlantUntil <= 0f || Time.time >= m_PlantUntil)
+            m_Controller?.ReleaseFacing();
+        else
+            m_Controller?.HoldCommittedFacing(m_PlantUntil - Time.time);
 
         if (CanAttack != null)
         {
             if (m_Interrupted)
             {
                 // Keep gate closed briefly so cancelled telegraphs cannot soft-lock into spam.
-                float cd = Mathf.Max(0f, InterruptCooldown != null ? InterruptCooldown.Value : 0.35f);
+                float cd = ResolveInterruptGate();
                 EnemyController host = m_Controller;
                 BlackboardVariable<bool> canAttack = CanAttack;
                 if (cd <= 0f || host == null)
@@ -172,6 +198,7 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
 
         m_Controller = null;
         m_AnimHandler = null;
+        m_Locomotion = null;
         m_Body = null;
     }
 
@@ -183,6 +210,64 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         yield return new WaitForSeconds(delay);
         if (canAttack != null && host != null && host.isActiveAndEnabled)
             canAttack.Value = true;
+    }
+
+    // Every beat of the swing routes through the controller, which lets an EnemyKit retune one enemy
+    // without cloning the graph. A kit that leaves a value negative keeps the node's authored number,
+    // so these stay the shared defaults for anything that has not asked for its own rhythm.
+    // Reads what the graph node authored. Nodes only serialize the variables that were wired in the
+    // editor, so the ones left unwired arrive null here and fall back to these numbers.
+    private static float Authored(BlackboardVariable<float> variable, float fallback)
+    {
+        return variable != null ? variable.Value : fallback;
+    }
+
+    private float ResolveTelegraphDuration()
+    {
+        float authored = Authored(WarningDuration, 0.45f);
+        return Mathf.Max(0f, m_Controller != null ? m_Controller.ResolveWarningDuration(authored) : authored);
+    }
+
+    private float ResolveHitWindow()
+    {
+        float authored = Authored(HitWindowDuration, 0.28f);
+        return Mathf.Max(0.05f, m_Controller != null ? m_Controller.ResolveHitWindowDuration(authored) : authored);
+    }
+
+    private float ResolveRecovery()
+    {
+        float authored = Authored(AttackCooldown, 0.75f);
+        return Mathf.Max(0f, m_Controller != null ? m_Controller.ResolveAttackCooldown(authored) : authored);
+    }
+
+    private float ResolvePlantDuration()
+    {
+        float authored = Authored(RecoveryPlantDuration, 0.8f);
+        return Mathf.Max(0f, m_Controller != null
+            ? m_Controller.ResolveRecoveryPlantDuration(authored)
+            : authored);
+    }
+
+    private float ResolveInterruptGate()
+    {
+        float authored = Authored(InterruptCooldown, 0.35f);
+        return Mathf.Max(0f, m_Controller != null ? m_Controller.ResolveInterruptCooldown(authored) : authored);
+    }
+
+    private float ResolveCommitFraction()
+    {
+        // CommitMelee owns its whole telegraph by role, so no kit number can loosen it.
+        if (m_Controller != null && m_Controller.UninterruptibleOnceWindup)
+            return 1f;
+
+        float authored = Authored(CommitTelegraphFraction, 0.35f);
+        return Mathf.Clamp01(m_Controller != null ? m_Controller.ResolveCommitTelegraphFraction(authored) : authored);
+    }
+
+    private float ResolveLunge()
+    {
+        float authored = Authored(LungeDistance, 0.55f);
+        return Mathf.Max(0f, m_Controller != null ? m_Controller.ResolveLungeDistance(authored) : authored);
     }
 
     private void BeginCommitment()
@@ -212,7 +297,6 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
     private void StartActualAttack()
     {
         BeginCommitment();
-        FaceTarget();
 
         m_Controller?.HideAttackWarning();
         m_AnimHandler?.TriggerAttack();
@@ -232,37 +316,29 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         m_AttackStarted = true;
         m_AttackStartTime = m_Timer;
 
-        float hitWindow = Mathf.Max(0.05f, HitWindowDuration != null ? HitWindowDuration.Value : 0.28f);
-        float recovery = Mathf.Max(0f, AttackCooldown != null ? AttackCooldown.Value : 0.75f);
-        m_PhaseEndTime = m_AttackStartTime + hitWindow + recovery;
+        float hitWindow = ResolveHitWindow();
+        float recovery = ResolveRecovery();
+        float plant = ResolvePlantDuration();
+        m_PhaseEndTime = m_AttackStartTime + hitWindow + Mathf.Max(recovery, plant);
 
-        if (Target.Value != null && Agent.Value != null)
-        {
-            float dx = Target.Value.transform.position.x - Agent.Value.transform.position.x;
-            m_LungeDir = Mathf.Sign(dx);
-            if (Mathf.Abs(dx) < 0.01f)
-                m_LungeDir = EnemyFacingUtil.GetFacingSign(Agent.Value.transform);
-        }
+        // Lunge along the locked facing, not toward the live target. Reading the target here would
+        // send the enemy sliding backwards through the player who just dashed past it.
+        if (Agent.Value != null)
+            m_LungeDir = EnemyFacingUtil.GetFacingSign(Agent.Value.transform);
 
         m_LungeStartX = m_Body != null ? m_Body.position.x : Agent.Value.transform.position.x;
     }
 
     private void TickLunge()
     {
-        float lungeDistance = Mathf.Max(0f, LungeDistance != null ? LungeDistance.Value : 0.55f);
-        if (m_Controller != null)
-            lungeDistance = m_Controller.ResolveLungeDistance(lungeDistance);
+        float lungeDistance = ResolveLunge();
         if (lungeDistance <= 0f || Agent.Value == null || m_LungeDir == 0f)
             return;
 
-        float hitWindow = Mathf.Max(0.05f, HitWindowDuration != null ? HitWindowDuration.Value : 0.28f);
+        float hitWindow = ResolveHitWindow();
         float elapsed = m_Timer - m_AttackStartTime;
         if (elapsed > hitWindow)
-        {
-            if (m_Body != null)
-                m_Body.linearVelocity = new Vector2(0f, m_Body.linearVelocity.y);
             return;
-        }
 
         float targetTravel = lungeDistance * Mathf.Clamp01(elapsed / hitWindow);
         float desiredX = m_LungeStartX + m_LungeDir * targetTravel;
@@ -280,6 +356,58 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         }
 
         m_LungeTravelled = targetTravel;
+    }
+
+    // After the swing: plant on the committed facing, then chase. CanAttack stays shut for the
+    // rest of AttackCooldown even after they start running.
+    private void TickRecoveryStep()
+    {
+        if (!m_HitboxDisabled || m_Locomotion == null)
+            return;
+
+        if (!m_RecoveryChaseStarted)
+        {
+            if (Time.time < m_PlantUntil || m_Controller != null && m_Controller.FacingLocked)
+            {
+                m_Locomotion.StopHorizontal();
+                return;
+            }
+
+            m_RecoveryChaseStarted = true;
+        }
+
+        if (Target.Value == null)
+            return;
+
+        FaceTarget();
+        float speed = Mathf.Max(0f, Authored(ChaseSpeed, 3f));
+        if (speed <= 0f)
+            return;
+
+        Transform target = Target.Value.transform;
+        if (m_Controller != null && m_Controller.UsesRangedAttack)
+        {
+            float range = m_Controller.ResolveAttackRange(1.5f);
+            m_Locomotion.MoveTowardsTargetRange(target, range, speed, Time.deltaTime);
+            return;
+        }
+
+        m_Locomotion.MoveTowardsX(target.position.x, speed);
+    }
+
+    private bool CanReachTarget()
+    {
+        if (m_Locomotion == null || Target == null || Target.Value == null)
+            return true;
+
+        float range = 1.5f;
+        if (m_Controller != null)
+            range = m_Controller.ResolveAttackRange(range);
+
+        if (m_Controller != null && m_Controller.UsesRangedAttack)
+            return m_Controller.HasClearStraightShot(Target.Value.transform, range);
+
+        return m_Locomotion.IsInAttackRangeOfTarget(Target.Value.transform, range);
     }
 
     private void FaceTarget()

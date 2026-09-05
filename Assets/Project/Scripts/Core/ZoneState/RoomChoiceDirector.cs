@@ -914,7 +914,7 @@ namespace Project.Core.ZoneState
         private RoomChoiceOffer BuildRolledOffer(RoomData room)
         {
             RoomChoiceOffer offer = RouteOfferGenerator.BuildOffer(room);
-            if (!offer.HasGeneratedCombat)
+            if (!offer.ShowsDifficulty)
             {
                 return offer;
             }
@@ -937,7 +937,7 @@ namespace Project.Core.ZoneState
             for (int i = 0; i < offerBuffer.Count; i++)
             {
                 RoomChoiceOffer offer = offerBuffer[i];
-                if (offer.HasGeneratedCombat && offer.Difficulty == difficulty)
+                if (offer.ShowsDifficulty && offer.Difficulty == difficulty)
                 {
                     return true;
                 }

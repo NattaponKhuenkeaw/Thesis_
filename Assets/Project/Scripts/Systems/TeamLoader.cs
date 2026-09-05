@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
+using Project.Core;
 using Project.InventorySystem.Artifacts;
 using Project.InventorySystem.Items;
 using Project.Progression;
@@ -129,7 +130,6 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         ResolveDependencies();
         BootstrapRunInventoryTeam();
         SyncTeamSnapshotFromInventory();
-        runInventory?.RememberRunStartTeam(teamSnapshot, overwrite: false);
     }
 
     private void OnEnable()
@@ -139,7 +139,6 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         BindMetaProgressionEvents();
         CharacterEvents.OnCharacterStatsChanged += HandleCharacterStatsChanged;
         SyncTeamSnapshotFromInventory();
-        runInventory?.RememberRunStartTeam(teamSnapshot, overwrite: false);
         ReconcileAlwaysRuntimeEffects();
     }
 
@@ -156,7 +155,6 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         ResolveDependencies();
         BootstrapRunInventoryTeam();
         SyncTeamSnapshotFromInventory();
-        runInventory?.RememberRunStartTeam(teamSnapshot, overwrite: false);
         ReconcileAlwaysRuntimeEffects();
         RebuildRuntimeStats();
         if (runInventory != null && runInventory.HasPendingLobbyMainReset)
@@ -247,7 +245,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     }
 
     /// <summary>
-    /// Wipe → Lobby: restore the run-start roster and put CharacterObject_main on the player.
+    /// Wipe → Lobby: put CharacterObject_main on the live player by identity.
+    /// Slot 0 is not Main unless that slot actually holds CharacterObject_main.
     /// </summary>
     public void ForceLobbyMainCharacter()
     {
@@ -256,23 +255,31 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         isHandlingActiveDefeat = false;
         lastSwitchTime = -999f;
 
-        CharacterObject[] roster = runInventory != null
-            ? runInventory.GetRunStartTeamOrCurrent()
-            : CopyTeam(runStartTeamSnapshot);
-        if (CountCharacters(roster) == 0)
+        if (runInventory == null)
         {
-            roster = CopyTeam(runStartTeamSnapshot);
+            Debug.LogError("[TeamLoader] Cannot restore CharacterObject_main after death because PlayerRunInventory is missing.", this);
+            return;
         }
 
-        if (CountCharacters(roster) > 0)
+        runInventory.EnsureMainCharacterOnLobbyTeam();
+        int mainSlot = runInventory.GetMainCharacterSlotIndex();
+        CharacterObject main = runInventory.GetTeamCharacterAt(mainSlot);
+        if (!runInventory.IsMainCharacter(main))
         {
-            runInventory?.DeployTeam(roster, preferredIndex: 0, artifactsBySlot: null);
+            Debug.LogError("[TeamLoader] Death restore failed to deploy CharacterObject_main. Refusing to load slot 0 as a fallback.", this);
+            return;
         }
 
-        int mainSlot = runInventory != null ? runInventory.GetMainCharacterSlotIndex() : 0;
-        runInventory?.SetActiveTeamSlotIndex(mainSlot);
         currentIndex = mainSlot;
         ApplyCharacterSlotToAllPlayers(mainSlot);
+
+        if (playerCharacter != null && playerCharacter.characterObject != main)
+        {
+            playerCharacter.SetCharacter(
+                main,
+                GetCharacterCurrentHP(main),
+                GetCharacterRuntimeStats(main));
+        }
     }
 
     private void ApplyActiveSlotVisual(bool forceReload)
@@ -695,9 +702,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     }
 
     /// <summary>
-    /// Death → Lobby: bind the scene player, restore slot 0 (main), full HP, empty AE.
-    /// Rebuilds deployed runtimes so KO'd teammates who return with the lobby roster
-    /// show up on HUD again.
+    /// Death → Lobby: bind the scene player, restore CharacterObject_main, full HP, empty AE.
+    /// Rebuilds deployed runtimes so owned lobby teammates show up on HUD again.
     /// </summary>
     public void RestoreLobbyStateAfterDeath(PlayerCharacter scenePlayer = null)
     {
@@ -1229,15 +1235,20 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             playerCharacter = PlayerCharacter.Instance;
         }
 
-        if (runInventory == null && Application.isPlaying)
+        if (runInventory == null)
         {
-            runInventory = Resources.Load<PlayerRunInventory>("InventorySO/PlayerRunInventory");
+            runInventory = GameRunManager.ResolveSharedRunInventory();
         }
 
-        if (runInventory == null)
+        if (runInventory == null && !Application.isPlaying)
         {
             runInventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
             runInventory.hideFlags = HideFlags.DontSave;
+        }
+
+        if (runInventory == null && Application.isPlaying)
+        {
+            Debug.LogError("TeamLoader: PlayerRunInventory is missing. Refusing to create a throwaway inventory.", this);
         }
 
         if (metaProgression == null && Application.isPlaying)
@@ -1301,6 +1312,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         int previousIndex,
         out int targetIndex)
     {
+        _ = preferredCharacter;
         int slotCount = Mathf.Max(DefaultTeamSize, newTeam.Length);
         CharacterObject[] resolvedTeam = new CharacterObject[slotCount];
         Array.Copy(newTeam, resolvedTeam, Mathf.Min(newTeam.Length, resolvedTeam.Length));
@@ -1315,21 +1327,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             return resolvedTeam;
         }
 
-        CharacterObject fallbackCharacter = preferredCharacter ?? CurrentCharacter;
-        if (fallbackCharacter == null && playerCharacter != null)
-        {
-            fallbackCharacter = playerCharacter.characterObject;
-        }
-
-        if (fallbackCharacter == null)
-        {
-            targetIndex = -1;
-            return resolvedTeam;
-        }
-
-        int fallbackIndex = Mathf.Clamp(previousIndex, 0, resolvedTeam.Length - 1);
-        resolvedTeam[fallbackIndex] = fallbackCharacter;
-        targetIndex = fallbackIndex;
+        targetIndex = 0;
         return resolvedTeam;
     }
 

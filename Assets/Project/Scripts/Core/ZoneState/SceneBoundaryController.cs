@@ -35,6 +35,9 @@ namespace Project.Core.ZoneState
         [Tooltip("How quickly look-ahead fades out as the player approaches a wall.")]
         [Min(0.01f)] [SerializeField] private float _lookAheadFadeDistance = 3f;
 
+        [Tooltip("Extra camera travel above/below layout colliders so drops and high ledges stay on-screen.")]
+        [Min(0f)] [SerializeField] private float _verticalPadding = 10f;
+
         [Header("Exit Camera Feedback")]
         [Tooltip("Temporary additive rightward look distance when the exit becomes available.")]
         [Min(0f)] [SerializeField] private float _cameraCueDistance = 3f;
@@ -60,10 +63,17 @@ namespace Project.Core.ZoneState
         private float _currentLeftWorld;
         private float _currentRightWorld;
         private bool _initialized;
+        private Collider2D _stageExitWall;
+        private bool _searchedStageExitChild;
+        private bool _usesAuthoredStageExitChild;
 
         public bool IsExitAvailable { get; private set; }
 
         public TransitionTrigger ExitTrigger => _exitTrigger;
+
+        public Collider2D ExitWall => IsExitAvailable && _stageExitWall != null
+            ? _stageExitWall
+            : _exitWall;
 
         private void Awake()
         {
@@ -169,8 +179,13 @@ namespace Project.Core.ZoneState
                 return;
             }
 
+            if (_cameraBounds == null)
+            {
+                ResolveCameraDependencies();
+            }
+
             float introLeft = Mathf.Min(CameraLeft(), entrance.SpawnPosition.x - _entrancePadding);
-            ApplyHorizontalBounds(introLeft, _currentRightWorld, force: false);
+            ApplyHorizontalBounds(introLeft, _currentRightWorld, force: true);
             AlignEntranceWall(introLeft);
         }
 
@@ -181,13 +196,13 @@ namespace Project.Core.ZoneState
                 return;
             }
 
-            ApplyHorizontalBounds(CameraLeft(), _currentRightWorld, force: false);
+            ApplyHorizontalBounds(CameraLeft(), _currentRightWorld, force: true);
             AlignEntranceWall(_lockedLeftWorld);
         }
 
         /// <summary>
-        /// Briefly expands the exit-side playable edge so <see cref="PlayerExitState"/>
-        /// can walk a short distance past the trigger before fade-out.
+        /// Expands the exit-side playable edge and wall. The card-leave walk no longer
+        /// calls this; it stops before the current ExitWall instead of walking past it.
         /// </summary>
         public void PrepareForExit(Vector3 exitTarget)
         {
@@ -208,13 +223,24 @@ namespace Project.Core.ZoneState
                 return;
             }
 
+            CaptureStageExitWallIfNeeded();
             bool changed = IsExitAvailable != available;
             IsExitAvailable = available;
+
+            if (available)
+            {
+                PromoteStageExitWall();
+            }
 
             float targetRight = available ? ResolveUnlockedRight() : _lockedRightWorld;
 
             ApplyHorizontalBounds(CameraLeft(), targetRight, force: false);
-            AlignExitWall(targetRight);
+            // Multi-chamber layouts keep the authored EnvironmentDependency Wall_Exit in place.
+            // Only slide a wall when it is also the stage exit (single-room layouts).
+            if (!available || !_usesAuthoredStageExitChild)
+            {
+                AlignExitWall(targetRight);
+            }
 
             if (changed && available && playFeedback && _cameraLookAhead != null)
             {
@@ -234,17 +260,24 @@ namespace Project.Core.ZoneState
 
         private bool Initialize()
         {
-            if (_initialized)
-            {
-                return true;
-            }
-
             if (_exitTrigger != null)
             {
                 _exitTrigger.SetExitGate(this);
             }
 
+            CaptureStageExitWallIfNeeded();
             TryAssignWallsFromStage();
+            CaptureStageExitWallIfNeeded();
+            if (_initialized)
+            {
+                if (_cameraBounds == null)
+                {
+                    ResolveCameraDependencies();
+                }
+
+                return true;
+            }
+
             return ApplyLockedWalls(useExitTriggerFallback: true);
         }
 
@@ -291,6 +324,10 @@ namespace Project.Core.ZoneState
                 {
                     Debug.LogWarning($"[SceneBoundaryController] '{name}' found no BoxCollider2D used by CinemachineConfiner2D. Physical walls will still block.", this);
                 }
+            }
+            else if (_cameraBounds == null)
+            {
+                ResolveCameraDependencies();
             }
 
             IsExitAvailable = false;
@@ -340,6 +377,58 @@ namespace Project.Core.ZoneState
             {
                 _exitWall = right;
             }
+        }
+
+        private void CaptureStageExitWallIfNeeded()
+        {
+            if (!_searchedStageExitChild)
+            {
+                _searchedStageExitChild = true;
+                _stageExitWall = FindDirectChildStageExitWall();
+                _usesAuthoredStageExitChild = _stageExitWall != null;
+            }
+
+            if (_stageExitWall == null)
+            {
+                _stageExitWall = _exitWall;
+            }
+        }
+
+        private Collider2D FindDirectChildStageExitWall()
+        {
+            for (int i = 0; i < transform.childCount; i++)
+            {
+                Transform child = transform.GetChild(i);
+                if (child == null || !RoomBoundaryMath.IsStageExitWallName(child.name))
+                {
+                    continue;
+                }
+
+                Collider2D collider = child.GetComponent<Collider2D>();
+                if (collider != null)
+                {
+                    return collider;
+                }
+            }
+
+            return null;
+        }
+
+        private void PromoteStageExitWall()
+        {
+            CaptureStageExitWallIfNeeded();
+            if (_stageExitWall == null)
+            {
+                return;
+            }
+
+            if (_exitWall != null && _exitWall != _stageExitWall)
+            {
+                OpenDivider(_exitWall);
+            }
+
+            EnsureSolidWall(_stageExitWall);
+            _exitWall = _stageExitWall;
         }
 
         private static void EnsureSolidWall(Collider2D wall)
@@ -455,11 +544,32 @@ namespace Project.Core.ZoneState
             Vector2 offset = _cameraBounds.offset;
             size.x = localMax - localMin;
             offset.x = (localMin + localMax) * 0.5f;
+            ApplyVerticalBounds(boundsTransform, ref size, ref offset);
             _cameraBounds.size = size;
             _cameraBounds.offset = offset;
 
             ApplyPinToScreenEdge();
             InvalidateConfinerCaches();
+        }
+
+        private void ApplyVerticalBounds(Transform boundsTransform, ref Vector2 size, ref Vector2 offset)
+        {
+            Transform searchRoot = transform.parent != null ? transform.parent : transform;
+            Collider2D[] layoutColliders = searchRoot.GetComponentsInChildren<Collider2D>(true);
+            if (!RoomBoundaryMath.TryEncapsulateVertical(layoutColliders, out float bottomWorld, out float topWorld))
+            {
+                return;
+            }
+
+            float paddedBottom = bottomWorld - _verticalPadding;
+            float paddedTop = topWorld + _verticalPadding;
+            float sampleX = boundsTransform.position.x;
+            float bottomLocal = boundsTransform.InverseTransformPoint(new Vector3(sampleX, paddedBottom, 0f)).y;
+            float topLocal = boundsTransform.InverseTransformPoint(new Vector3(sampleX, paddedTop, 0f)).y;
+            float localMin = Mathf.Min(bottomLocal, topLocal);
+            float localMax = Mathf.Max(bottomLocal, topLocal);
+            size.y = localMax - localMin;
+            offset.y = (localMin + localMax) * 0.5f;
         }
 
         private void ApplyPinToScreenEdge()

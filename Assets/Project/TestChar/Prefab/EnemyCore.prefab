@@ -513,6 +513,7 @@ MonoBehaviour:
   worldUI: {fileID: 0}
   hitReactionHandler: {fileID: -6515187417249938201}
   destroyDelayOnDeath: 0.4
+  kit: {fileID: 0}
   combatRole: 0
   attackRangeOverride: -1
   rangedShotSpeed: 8

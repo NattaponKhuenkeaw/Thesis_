@@ -5,8 +5,9 @@ using UnityEngine;
 namespace Project.Core.ZoneState
 {
     /// <summary>
-    /// Single script that rolls difficulty + enemies + reward for a RouteOffer.
-    /// RoomData supplies layout/zone/camera only; combat content comes from here.
+    /// Rolls difficulty + reward for a RouteOffer.
+    /// Chamber layouts spawn from Easy/Medium/Hard Encounter palettes;
+    /// generated waves are only attached for single-room combat fallback.
     /// </summary>
     public static class RouteOfferGenerator
     {
@@ -53,15 +54,19 @@ namespace Project.Core.ZoneState
                 return new RoomChoiceOffer(room);
             }
 
-            int slots = Mathf.Max(1, spawnSlotCount ?? tables.DefaultSpawnSlotCount);
-            GeneratedEncounter encounter = BuildEncounter(
-                profile,
-                tables.DelayBetweenWaves,
-                slots,
-                EncounterSpawnMode.Pressure,
-                tables.AliveCap,
-                tables.SpawnInterval);
             RouteReward reward = BuildReward(profile, tables);
+            GeneratedEncounter encounter = null;
+            if (CombatRouteContent.ShouldAttachGeneratedWaves(room))
+            {
+                int slots = Mathf.Max(1, spawnSlotCount ?? tables.DefaultSpawnSlotCount);
+                encounter = BuildEncounter(
+                    profile,
+                    tables.DelayBetweenWaves,
+                    slots,
+                    EncounterSpawnMode.Pressure,
+                    tables.AliveCap,
+                    tables.SpawnInterval);
+            }
 
             return new RoomChoiceOffer(room, difficulty, encounter, reward);
         }

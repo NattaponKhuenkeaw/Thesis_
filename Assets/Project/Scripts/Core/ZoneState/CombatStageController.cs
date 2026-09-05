@@ -16,7 +16,7 @@ namespace Project.Core.ZoneState
         {
             public string name = "Room";
 
-            [Tooltip("Weighted type pool for this room. Rolls from Enemy Types on the asset.")]
+            [Tooltip("Optional override. Leave empty so the chosen card (Easy / Medium / Hard) picks Encounter_Easy / Medium / Hard.")]
             public EncounterSO encounter;
 
             [Tooltip("How many enemies spawn in this room.")]
@@ -153,7 +153,7 @@ namespace Project.Core.ZoneState
                 {
                     string roomName = chamber != null ? chamber.name : i.ToString();
                     Debug.LogError(
-                        $"[CombatStageController] Chamber {i} ('{roomName}') has Enemy Count {count} but no enemy types. Assign Encounter on this room.",
+                        $"[CombatStageController] Chamber {i} ('{roomName}') has Enemy Count {count} but no enemy types. Need Encounter_Easy/Medium/Hard from the card, or an Encounter on this room.",
                         this);
                 }
             }
@@ -170,9 +170,10 @@ namespace Project.Core.ZoneState
             IReadOnlyList<GameObject> stageQuota,
             int count)
         {
-            if (chamber != null && chamber.encounter != null && chamber.encounter.HasTypePool)
+            EncounterSO encounter = ResolveEncounter(chamber);
+            if (encounter != null && encounter.HasTypePool)
             {
-                return chamber.encounter.RollQuota(count);
+                return encounter.RollQuota(count);
             }
 
             return CombatStageQuotaSplitter.Take(stageQuota, count);
@@ -180,9 +181,10 @@ namespace Project.Core.ZoneState
 
         private static IReadOnlyList<GameObject> ResolvePool(Chamber chamber, IReadOnlyList<GameObject> stageQuota)
         {
-            if (chamber != null && chamber.encounter != null)
+            EncounterSO encounter = ResolveEncounter(chamber);
+            if (encounter != null)
             {
-                List<GameObject> palette = chamber.encounter.CollectPalettePrefabs();
+                List<GameObject> palette = encounter.CollectPalettePrefabs();
                 if (CountNonNull(palette) > 0)
                 {
                     return palette;
@@ -190,6 +192,11 @@ namespace Project.Core.ZoneState
             }
 
             return stageQuota;
+        }
+
+        private static EncounterSO ResolveEncounter(Chamber chamber)
+        {
+            return CombatRouteContent.ResolveChamberEncounter(chamber != null ? chamber.encounter : null);
         }
 
         private static int CountNonNull(IReadOnlyList<GameObject> prefabs)
@@ -305,7 +312,7 @@ namespace Project.Core.ZoneState
             IReadOnlyList<GameObject> quota = slices != null && index < slices.Length
                 ? slices[index]
                 : null;
-            waveManager.StartChamber(quota, chamber.encounter);
+            waveManager.StartChamber(quota, ResolveEncounter(chamber));
             return true;
         }
 

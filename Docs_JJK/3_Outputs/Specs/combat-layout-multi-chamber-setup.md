@@ -28,12 +28,12 @@
 2. **Exit Wall** — กำแพงขวา (ห้องติดกันใช้กำแพงเดียวกันได้: ขวาของห้อง 1 = ซ้ายของห้อง 2)
 3. **Enter Trigger** — ห้อง 2 เป็นต้นไป แนะนำให้มี BoxCollider2D เป็น Trigger **ในห้อง** (เลยกำแพงกั้นมาแล้ว ไม่ซ้อนกับกำแพง)
 4. **Spawn Root** — พาเรนต์ของ `Spawn_0`, `Spawn_1`, `Spawn_2` **ของห้องนั้นเท่านั้น**
-5. **Encounter** — คลังชนิดตัวของห้องนั้น ลาก `EncounterSO` (Enemy Types + Weight + Type Pick บน asset)
+5. **Encounter Override** — ไม่บังคับ. ใบ Easy / Medium / Hard เลือก `Encounter_Easy` / `_Medium` / `_Hard` ให้เอง
 6. **Enemy Count** — จำนวนศัตรูในห้องนั้น เช่น `3` ได้ 3 ตัว, `0` = ไม่มีไฟต์ เปิดทางต่อ
 
-ชนิดตัวอ่านจาก Encounter ของ**ห้องนั้น** แล้วสุ่มตาม Weight / Type Pick บน asset นั้น
-ถ้า Encounter ยังไม่ใส่ Enemy Types จะย้อนไปอ่าน Waves ใน asset นั้น
-ถ้าห้องไม่ลาก Encounter เลย จะใช้พูลจาก RouteOffer ของด่าน (fallback)
+ชนิดตัวอ่านจาก Encounter ของ**ความยากบนใบที่เลือก** แล้วสุ่มตาม Weight / Type Pick บน asset นั้น
+Encounter บนห้องย่อยใช้เฉพาะตอนเข้าแบบไม่มีใบ (debug) หรืออยากล็อกห้องนั้นให้ต่างจากใบ
+ถ้าห้องไม่ลาก Encounter และไม่มีใบเลือก จะใช้พูลสำรองจาก RouteOffer เฉพาะเลย์เอาต์ที่ไม่มี Chambers
 
 ห้องแรกใช้ Trigger ของ `RoomWaveManager` เริ่มไฟต์ได้ ไม่บังคับ Enter Trigger
 

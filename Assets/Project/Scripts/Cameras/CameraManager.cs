@@ -168,7 +168,10 @@ public class CameraManager : MonoBehaviour
     private CinemachineGroupFraming _combatGroupFraming;
     private Vector2 _defaultCombatOrthoSizeRange = new Vector2(6.8f, 8f);
     private float _defaultCombatFramingSize = 0.47f;
+    private float _defaultCombatFramingDamping = 2f;
     private bool _bossFramingActive;
+    private bool _fastVerticalFollow;
+    private Rigidbody2D _playerBody;
 
     public bool IsInCombat => _isInCombat;
     public bool IsLerpingYDamping { get; private set; }
@@ -295,6 +298,7 @@ public class CameraManager : MonoBehaviour
 
         _defaultCombatOrthoSizeRange = _combatGroupFraming.OrthoSizeRange;
         _defaultCombatFramingSize = _combatGroupFraming.FramingSize;
+        _defaultCombatFramingDamping = _combatGroupFraming.Damping;
     }
 
     private void Start()
@@ -319,6 +323,8 @@ public class CameraManager : MonoBehaviour
 
     private void LateUpdate()
     {
+        TickVerticalFollow();
+
         if (!_isInCombat || _combatTargetGroup == null || _playerTransform == null) 
             return;
 
@@ -557,7 +563,7 @@ public class CameraManager : MonoBehaviour
         return nearestEnemy;
     }
 
-    public void NotifyPlayerWarp(Vector3 positionDelta, bool resetDampingState = true)
+    public void NotifyPlayerWarp(Vector3 positionDelta)
     {
         if (_playerTransform == null)
         {
@@ -570,10 +576,7 @@ public class CameraManager : MonoBehaviour
             {
                 _exploreCam.OnTargetObjectWarped(_playerTransform, positionDelta);
             }
-            if (resetDampingState)
-            {
-                _exploreCam.PreviousStateIsValid = false;
-            }
+            _exploreCam.PreviousStateIsValid = false;
         }
 
         if (_combatCam != null)
@@ -582,17 +585,44 @@ public class CameraManager : MonoBehaviour
             {
                 _combatCam.OnTargetObjectWarped(_playerTransform, positionDelta);
             }
-            if (resetDampingState)
-            {
-                _combatCam.PreviousStateIsValid = false;
-            }
+            _combatCam.PreviousStateIsValid = false;
         }
     }
 
-    public void BeginTemporaryPlayerSnap(float duration, bool smoothTransition = true, float smoothTime = 0.15f)
+    /// <summary>
+    /// Room enter / layout swap: drop leftover combat framing and snap follow to the player.
+    /// </summary>
+    public void SnapToPlayerForRoomEnter(Vector3 warpDelta)
+    {
+        if (_playerTransform == null)
+        {
+            GameObject playerObj = GameObject.FindWithTag("Player");
+            if (playerObj != null)
+            {
+                _playerTransform = playerObj.transform;
+            }
+        }
+
+        ExitCombatMode();
+        CameraLookAhead lookAhead = Object.FindFirstObjectByType<CameraLookAhead>();
+        lookAhead?.SnapToPlayer();
+        NotifyPlayerWarp(warpDelta);
+        BeginTemporaryPlayerSnap(0.05f, smoothTransition: false);
+    }
+
+    public void BeginTemporaryPlayerSnap(float duration, bool smoothTransition = false, float smoothTime = 0.15f)
     {
         if (_exploreCam == null || _playerTransform == null)
         {
+            return;
+        }
+
+        // Static rooms frame authored content, never the player. Snapping raised the explore
+        // camera with a zero-length blend, so entering a safe room popped to player framing
+        // and back within a few frames.
+        if (IsStaticCameraRoom())
+        {
+            NotifyPlayerWarp(Vector3.zero);
             return;
         }
 
@@ -639,10 +669,7 @@ public class CameraManager : MonoBehaviour
             _ultimateCam.Priority = _inactivePriority;
         }
 
-        if (!smoothTransition)
-        {
-            NotifyPlayerWarp(Vector3.zero, resetDampingState: true);
-        }
+        NotifyPlayerWarp(Vector3.zero);
 
         if (duration > 0f)
         {
@@ -684,7 +711,7 @@ public class CameraManager : MonoBehaviour
             SetExploreMode();
         }
 
-        NotifyPlayerWarp(Vector3.zero, resetDampingState: false);
+        NotifyPlayerWarp(Vector3.zero);
     }
 
     /// <summary>
@@ -980,9 +1007,16 @@ public class CameraManager : MonoBehaviour
     // =========================================================
     // Private — Camera Mode Switching (Priority-Based)
     // =========================================================
+    private bool IsStaticCameraRoom()
+    {
+        return _zoneStateProvider != null
+            && _zoneStateProvider.CurrentRoom != null
+            && _zoneStateProvider.CurrentRoom.UseStaticCamera;
+    }
+
     private void SetExploreMode()
     {
-        if (_zoneStateProvider != null && _zoneStateProvider.CurrentRoom != null && _zoneStateProvider.CurrentRoom.UseStaticCamera)
+        if (IsStaticCameraRoom())
         {
             SetStaticMode();
             return;
@@ -1003,7 +1037,7 @@ public class CameraManager : MonoBehaviour
 
     private void SetCombatMode()
     {
-        if (_zoneStateProvider != null && _zoneStateProvider.CurrentRoom != null && _zoneStateProvider.CurrentRoom.UseStaticCamera)
+        if (IsStaticCameraRoom())
         {
             SetStaticMode();
             return;
@@ -1047,6 +1081,11 @@ public class CameraManager : MonoBehaviour
 
     private void HandleRoomChanged(RoomData room)
     {
+        if (room == null || !room.UseStaticCamera)
+        {
+            ExitCombatMode();
+        }
+
         UpdateCameraForRoom(room);
     }
 
@@ -1292,14 +1331,14 @@ public class CameraManager : MonoBehaviour
         {
             float firstBandT = Mathf.Clamp01(distanceToPlayer / detectionRadius);
             float weightFactor = Mathf.Lerp(1f, _firstRangeMinWeightFactor, firstBandT);
-            return ctx.targetMaxWeight * weightFactor;
+            return ScaleWeightByVerticalSeparation(enemy, ctx.targetMaxWeight * weightFactor);
         }
 
         if (distanceToPlayer <= secondRangeLimit || keepBeyondRange)
         {
             if (secondRangeLimit <= detectionRadius)
             {
-                return ctx.targetMaxWeight * _secondRangeMinWeightFactor;
+                return ScaleWeightByVerticalSeparation(enemy, ctx.targetMaxWeight * _secondRangeMinWeightFactor);
             }
 
             float clampedDistance = keepBeyondRange
@@ -1307,7 +1346,7 @@ public class CameraManager : MonoBehaviour
                 : distanceToPlayer;
             float secondBandT = Mathf.InverseLerp(detectionRadius, secondRangeLimit, clampedDistance);
             float weightFactor = Mathf.Lerp(_firstRangeMinWeightFactor, _secondRangeMinWeightFactor, secondBandT);
-            return ctx.targetMaxWeight * weightFactor;
+            return ScaleWeightByVerticalSeparation(enemy, ctx.targetMaxWeight * weightFactor);
         }
 
         shouldLeaveByRange = true;
@@ -1352,6 +1391,61 @@ public class CameraManager : MonoBehaviour
         EnemyReactionState reactionState = enemy.CurrentReactionState;
         return reactionState == EnemyReactionState.Knockup
             || reactionState == EnemyReactionState.Knockfall;
+    }
+
+    private float ScaleWeightByVerticalSeparation(EnemyController enemy, float weight)
+    {
+        if (enemy == null || enemy.isEliteOrBoss || _playerTransform == null)
+        {
+            return weight;
+        }
+
+        float verticalSeparation = Mathf.Abs(enemy.transform.position.y - _playerTransform.position.y);
+        if (verticalSeparation <= 4f)
+        {
+            return weight;
+        }
+
+        return weight * Mathf.Clamp01(Mathf.InverseLerp(12f, 4f, verticalSeparation));
+    }
+
+    private void TickVerticalFollow()
+    {
+        if (_playerTransform == null)
+        {
+            GameObject playerObj = GameObject.FindWithTag("Player");
+            if (playerObj != null)
+            {
+                _playerTransform = playerObj.transform;
+            }
+        }
+
+        if (_playerBody == null && _playerTransform != null)
+        {
+            _playerBody = _playerTransform.GetComponent<Rigidbody2D>();
+        }
+
+        if (_playerBody == null)
+        {
+            return;
+        }
+
+        Camera outputCamera = _brain != null ? _brain.OutputCamera : Camera.main;
+        float cameraY = outputCamera != null ? outputCamera.transform.position.y : _playerBody.position.y;
+        bool falling = _playerBody.linearVelocity.y < -0.8f;
+        bool farFromCamera = Mathf.Abs(_playerBody.position.y - cameraY) > 2.25f;
+        bool wantFast = falling || farFromCamera;
+        if (wantFast == _fastVerticalFollow)
+        {
+            return;
+        }
+
+        _fastVerticalFollow = wantFast;
+        LerpYDamping(wantFast);
+        if (_combatGroupFraming != null)
+        {
+            _combatGroupFraming.Damping = wantFast ? _fallPanAmount : _defaultCombatFramingDamping;
+        }
     }
 
     // =========================================================

@@ -49,7 +49,18 @@ namespace Unity.Behavior
             if (Transform.Value == null || Target.Value == null)
                 return;
 
-            float directionX = Target.Value.position.x - Transform.Value.position.x;
+            float directionX;
+            Rigidbody2D body = Transform.Value.GetComponent<Rigidbody2D>();
+            float vx = body != null ? body.linearVelocity.x : 0f;
+            if (Mathf.Abs(vx) > 0.08f)
+            {
+                directionX = vx;
+            }
+            else
+            {
+                directionX = Target.Value.position.x - Transform.Value.position.x;
+            }
+
             if (!FacingRightByDefault.Value)
                 directionX = -directionX;
 

@@ -134,6 +134,34 @@ public class EnemyController : MonoBehaviour
     /// </summary>
     [System.NonSerialized] public bool ignoreHitReactions;
 
+    private bool facingLocked;
+    private float facingUnlockAt;
+
+    /// <summary>
+    /// True while an attack owns the facing. Every <see cref="EnemyFacingUtil.FaceHorizontal"/> caller
+    /// honours this, so locomotion and the Behavior graph cannot re-aim the swing once it is committed.
+    /// A timed hold can outlive the attack node so chase cannot snap-turn the instant the node ends.
+    /// </summary>
+    public bool FacingLocked => facingLocked && Time.time < facingUnlockAt;
+
+    public void LockFacing()
+    {
+        facingLocked = true;
+        facingUnlockAt = float.PositiveInfinity;
+    }
+
+    public void HoldCommittedFacing(float seconds)
+    {
+        facingLocked = true;
+        facingUnlockAt = Time.time + Mathf.Max(0f, seconds);
+    }
+
+    public void ReleaseFacing()
+    {
+        facingLocked = false;
+        facingUnlockAt = 0f;
+    }
+
     private Coroutine antiStunlockArmorCoroutine;
     private bool antiStunlockArmorActive;
     private Coroutine brokenStateCoroutine;
@@ -164,44 +192,139 @@ public class EnemyController : MonoBehaviour
     public EnemyHitReactionHandler hitReactionHandler;
 
     [Header("Death")]
-    [Tooltip("Seconds before Destroy after Die(). Bosses set this so death anim can play.")]
-    [SerializeField] private float destroyDelayOnDeath = 0f;
+    [Tooltip("Seconds the corpse stays before Destroy. Must cover the death clip or the enemy pops mid-animation. Enemy_Die.anim runs 0.4s; bosses raise this via ConfigureDeathDespawn.")]
+    [SerializeField, Min(0f)] private float destroyDelayOnDeath = 0.4f;
+
+    [Header("Combat Kit")]
+    [Tooltip("Optional EnemyKit asset. When assigned it owns the role, range, and ranged shot values below.")]
+    [SerializeField] private EnemyKit kit;
 
     [Header("Combat Role")]
     [Tooltip("Enemy1/2/3 are EnemyCore variants. Change this role, range, and tint — do not duplicate the Behavior Graph.")]
     [SerializeField] private EnemyCombatRole combatRole = EnemyCombatRole.InterruptibleMelee;
-    [Tooltip("If > 0, overrides Behavior Graph AttackRange (use ~6-8 for ranged).")]
+    [Tooltip("If > 0, overrides Behavior Graph AttackRange. For ranged this is also laser length and max shot reach.")]
     [SerializeField] private float attackRangeOverride = -1f;
-    [SerializeField] private float rangedShotSpeed = 8f;
-    [SerializeField] private float rangedShotLifetime = 2.5f;
+
+    [Header("Ranged Shot")]
+    [Tooltip("Bullet travel speed.")]
+    [SerializeField, Min(0.1f)] private float rangedShotSpeed = 8f;
+    [Tooltip("Seconds the bullet stays alive. Raise this if you lengthen range or lower speed.")]
+    [SerializeField, Min(0.05f)] private float rangedShotLifetime = 2.5f;
+    [Tooltip("World-space shot origin. Move this on the prefab to change where the laser and bullet start.")]
+    [SerializeField] private Transform rangedMuzzle;
+    [Tooltip("Used when Ranged Muzzle is empty. X flips with facing.")]
     [SerializeField] private Vector2 rangedSpawnOffset = new Vector2(0.85f, 0.15f);
+    [Tooltip("Optional bullet art. Leave empty for the default square.")]
+    [SerializeField] private Sprite rangedShotSprite;
+    [SerializeField] private Color rangedShotTint = Color.white;
     [SerializeField, Min(0.05f)] private float rangedShotRadius = 0.18f;
+    [SerializeField] private LayerMask rangedLineMask = ~0;
+
+    /// <summary>Kit asset that overrides the local role and ranged values. Null = use prefab values.</summary>
+    public EnemyKit Kit
+    {
+        get => kit;
+        set => kit = value;
+    }
 
     public EnemyCombatRole CombatRole
     {
-        get => combatRole;
+        get => kit != null ? kit.CombatRole : combatRole;
         set => combatRole = value;
     }
 
     public float AttackRangeOverride
     {
-        get => attackRangeOverride;
+        get => kit != null ? kit.AttackRange : attackRangeOverride;
         set => attackRangeOverride = value;
     }
 
-    public bool UninterruptibleOnceWindup => combatRole == EnemyCombatRole.CommitMelee;
-    public bool UsesRangedAttack => combatRole == EnemyCombatRole.RangedHold;
-    public bool NeverEvade => combatRole == EnemyCombatRole.RangedHold;
-    public bool ArmorDuringCommittedSwing => combatRole == EnemyCombatRole.CommitMelee;
+    private float ShotSpeed => kit != null ? kit.ShotSpeed : rangedShotSpeed;
+    private float ShotLifetime => kit != null ? kit.ShotLifetime : rangedShotLifetime;
+    private Sprite ShotSprite => kit != null ? kit.ShotSprite : rangedShotSprite;
+    private Color ShotTint => kit != null ? kit.ShotTint : rangedShotTint;
+    private float ShotRadius => kit != null ? kit.ShotRadius : rangedShotRadius;
+    private Vector2 MuzzleOffset => kit != null ? kit.MuzzleOffset : rangedSpawnOffset;
+    private LayerMask LineOfFireMask => kit != null ? kit.LineOfFireMask : rangedLineMask;
+
+    public bool UninterruptibleOnceWindup => CombatRole == EnemyCombatRole.CommitMelee;
+    public bool UsesRangedAttack => CombatRole == EnemyCombatRole.RangedHold;
+    public bool NeverEvade => CombatRole == EnemyCombatRole.RangedHold;
+    public Transform RangedMuzzle
+    {
+        get => rangedMuzzle;
+        set => rangedMuzzle = value;
+    }
+    public bool ArmorDuringCommittedSwing => CombatRole == EnemyCombatRole.CommitMelee;
 
     public float ResolveAttackRange(float blackboardRange)
     {
-        return attackRangeOverride > 0f ? attackRangeOverride : blackboardRange;
+        float range = AttackRangeOverride;
+        return range > 0f ? range : blackboardRange;
+    }
+
+    /// <summary>
+    /// Horizontal stand-off used by chase. Separate from <see cref="ResolveAttackRange"/> so a ranged
+    /// kit can shoot across the room without walking into the melee pile to "arrive".
+    /// </summary>
+    public float ResolveHoldRange(float blackboardAttackRange)
+    {
+        float attackRange = Mathf.Max(0.1f, ResolveAttackRange(blackboardAttackRange));
+        float authored = kit != null ? kit.HoldRange : -1f;
+        if (authored >= 0f)
+            return authored;
+
+        if (UsesRangedAttack)
+            return Mathf.Min(attackRange, 7f);
+
+        return attackRange * 0.85f;
+    }
+
+    /// <summary>
+    /// Kits author a negative number to mean "not set here". Zero is a legitimate beat, so it must
+    /// not double as the unset marker the way <see cref="AttackRangeOverride"/> uses it.
+    /// </summary>
+    private static float ResolveKitTiming(float kitValue, float blackboardValue)
+    {
+        return kitValue >= 0f ? kitValue : blackboardValue;
+    }
+
+    public float ResolveWarningDuration(float blackboardValue)
+    {
+        return ResolveKitTiming(kit != null ? kit.WarningDuration : -1f, blackboardValue);
+    }
+
+    public float ResolveHitWindowDuration(float blackboardValue)
+    {
+        return ResolveKitTiming(kit != null ? kit.HitWindowDuration : -1f, blackboardValue);
+    }
+
+    public float ResolveAttackCooldown(float blackboardValue)
+    {
+        return ResolveKitTiming(kit != null ? kit.AttackCooldown : -1f, blackboardValue);
+    }
+
+    public float ResolveCommitTelegraphFraction(float blackboardValue)
+    {
+        return ResolveKitTiming(kit != null ? kit.CommitTelegraphFraction : -1f, blackboardValue);
+    }
+
+    public float ResolveInterruptCooldown(float blackboardValue)
+    {
+        return ResolveKitTiming(kit != null ? kit.InterruptCooldown : -1f, blackboardValue);
+    }
+
+    public float ResolveRecoveryPlantDuration(float blackboardValue)
+    {
+        return ResolveKitTiming(kit != null ? kit.RecoveryPlantDuration : -1f, blackboardValue);
     }
 
     public float ResolveLungeDistance(float blackboardLunge)
     {
-        return UsesRangedAttack ? 0f : blackboardLunge;
+        if (UsesRangedAttack)
+            return 0f;
+
+        return ResolveKitTiming(kit != null ? kit.LungeDistance : -1f, blackboardLunge);
     }
 
     // =========================================================
@@ -281,6 +404,8 @@ public class EnemyController : MonoBehaviour
     private void OnDisable()
     {
         RoomEnemyRegistry.Unregister(this);
+        // A pooled enemy disabled mid-swing would otherwise come back unable to turn.
+        ReleaseFacing();
     }
 
     private float TakeHitInternal(
@@ -630,11 +755,24 @@ public class EnemyController : MonoBehaviour
     {
         if (!isAlive) return;
         isAlive = false;
+        HideAttackWarning();
 
         StopAntiStunlockArmorWindow();
+        ReleaseFacing();
 
-        if (bodyCollider  != null) bodyCollider.enabled  = false;
-        if (attackHitbox  != null) attackHitbox.enabled  = false;
+        // Stop the graph before the animator is told to die, or an attack node still mid-swing
+        // retriggers its own animation on top of the death clip.
+        SetBehaviorAgentActive(false);
+
+        // Drop the drive but leave the corpse in the simulation. It still needs gravity and the
+        // body collider to land, and switching the collider off was what made dying enemies fall
+        // through the floor for the length of the death animation. Vertical speed is kept so a
+        // kill mid-juggle still arcs down instead of freezing in the air. Nothing can hit or
+        // target it once isAlive is false; the whole combat layer gates on that.
+        if (rb != null)
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+
+        if (attackHitbox != null) attackHitbox.enabled = false;
 
         OnDied?.Invoke();
 
@@ -799,6 +937,13 @@ public class EnemyController : MonoBehaviour
 
     public void TriggerAttackWarning(float duration = -1f)
     {
+        if (UsesRangedAttack)
+        {
+            worldUI?.HideAttackWarning();
+            ShowRangedAimLaser();
+            return;
+        }
+
         AttackWarningStyle style = AttackWarningStyle.Normal;
         if (attackHitbox != null)
         {
@@ -816,6 +961,7 @@ public class EnemyController : MonoBehaviour
 
     public void HideAttackWarning()
     {
+        HideRangedAimLaser();
         worldUI?.HideAttackWarning();
     }
 
@@ -838,26 +984,93 @@ public class EnemyController : MonoBehaviour
 
     private static Sprite s_rangedShotSprite;
 
+    public Vector3 GetRangedMuzzleWorldPosition()
+    {
+        if (rangedMuzzle != null)
+        {
+            return rangedMuzzle.position;
+        }
+
+        Transform named = transform.Find("RangedMuzzle");
+        if (named != null)
+        {
+            rangedMuzzle = named;
+            return rangedMuzzle.position;
+        }
+
+        float facing = EnemyFacingUtil.GetFacingSign(transform);
+        Vector2 offset = MuzzleOffset;
+        return transform.position + new Vector3(offset.x * facing, offset.y, 0f);
+    }
+
+    public Vector2 GetRangedShotDirection()
+    {
+        return Vector2.right * EnemyFacingUtil.GetFacingSign(transform);
+    }
+
+    public bool HasClearStraightShot(Transform target, float attackRange)
+    {
+        if (!UsesRangedAttack || target == null)
+        {
+            return false;
+        }
+
+        float range = ResolveAttackRange(attackRange);
+        Vector3 origin = GetRangedMuzzleWorldPosition();
+        Vector2 direction = GetRangedShotDirection();
+        Collider2D targetBody = ResolveShotTargetCollider(target);
+        Vector3 aim = targetBody != null ? targetBody.bounds.center : EnemyCombatRange.GetAimPoint(target);
+
+        float alongMuzzle = Vector2.Dot((Vector2)aim - (Vector2)origin, direction);
+        float alongBody = Vector2.Dot((Vector2)aim - (Vector2)transform.position, direction);
+        // Fail only when the target is behind the body or beyond shot range. Being behind the muzzle
+        // (player hugging the sprite) used to return false and freeze the ranged enemy in place.
+        if (alongBody <= 0.05f || alongBody > range)
+        {
+            return false;
+        }
+
+        float beamHalf = Mathf.Max(0.12f, ShotRadius);
+        if (targetBody != null)
+        {
+            Bounds bounds = targetBody.bounds;
+            if (origin.y < bounds.min.y - beamHalf || origin.y > bounds.max.y + beamHalf)
+            {
+                return false;
+            }
+        }
+        else if (Mathf.Abs(aim.y - origin.y) > beamHalf * 2f)
+        {
+            return false;
+        }
+
+        float probe = alongMuzzle > 0.05f ? alongMuzzle : alongBody;
+        return !IsStraightShotBlocked(origin, direction, probe, target);
+    }
+
     public void FireRangedShot(Transform target)
     {
-        float facing = EnemyFacingUtil.GetFacingSign(transform);
-        Vector3 origin = transform.position + new Vector3(rangedSpawnOffset.x * facing, rangedSpawnOffset.y, 0f);
-        Vector2 direction = Vector2.right * facing;
-        if (target != null)
-        {
-            Vector2 toTarget = (Vector2)(target.position - origin);
-            if (toTarget.sqrMagnitude > 0.01f)
-                direction = toTarget.normalized;
-        }
+        HideRangedAimLaser();
+
+        Vector3 origin = GetRangedMuzzleWorldPosition();
+        Vector2 direction = GetRangedShotDirection();
 
         GameObject shot = new GameObject("EnemyRangedShot");
         shot.transform.position = origin;
-        shot.transform.localScale = Vector3.one * Mathf.Max(0.12f, rangedShotRadius * 2f);
+        Sprite customSprite = ShotSprite;
+        float radius = ShotRadius;
+        bool hasCustomSprite = customSprite != null;
+        float thickness = Mathf.Max(0.12f, radius * 2f);
+        shot.transform.localScale = hasCustomSprite
+            ? Vector3.one * Mathf.Max(0.2f, radius / 0.18f)
+            : new Vector3(thickness * 1.6f, thickness, 1f);
         shot.layer = 0;
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        shot.transform.rotation = Quaternion.Euler(0f, 0f, angle);
 
         SpriteRenderer sprite = shot.AddComponent<SpriteRenderer>();
-        sprite.sprite = GetRangedShotSprite();
-        sprite.color = new Color(0.35f, 0.85f, 1f, 1f);
+        sprite.sprite = hasCustomSprite ? customSprite : GetRangedShotSprite();
+        sprite.color = hasCustomSprite ? ShotTint : new Color(0.35f, 0.85f, 1f, 1f);
         sprite.sortingOrder = 520;
 
         CircleCollider2D col = shot.AddComponent<CircleCollider2D>();
@@ -869,8 +1082,124 @@ public class EnemyController : MonoBehaviour
         shotBody.gravityScale = 0f;
         shotBody.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
+        float shotDistance = ResolveAttackRange(7f);
+        if (target != null)
+            shotDistance = Mathf.Max(shotDistance, Mathf.Abs(target.position.x - origin.x));
+        float speed = ShotSpeed;
+        float travelTime = shotDistance / Mathf.Max(0.1f, speed);
+        float lifetime = Mathf.Max(ShotLifetime, travelTime + 0.1f);
         EnemyRangedShot projectile = shot.AddComponent<EnemyRangedShot>();
-        projectile.Launch(this, direction, rangedShotSpeed, rangedShotLifetime);
+        projectile.Launch(this, direction, speed, lifetime);
+    }
+
+    private void ShowRangedAimLaser()
+    {
+        EnemyRangedAimLaser laser = GetComponent<EnemyRangedAimLaser>();
+        if (laser == null)
+        {
+            laser = gameObject.AddComponent<EnemyRangedAimLaser>();
+        }
+
+        float laserLength = ResolveAttackRange(7f);
+        PlayerCharacter player = UnityEngine.Object.FindFirstObjectByType<PlayerCharacter>();
+        if (player != null)
+        {
+            float toPlayer = Mathf.Abs(player.transform.position.x - GetRangedMuzzleWorldPosition().x);
+            laserLength = Mathf.Max(laserLength, toPlayer);
+        }
+
+        laser.Show(this, laserLength);
+    }
+
+    private void HideRangedAimLaser()
+    {
+        EnemyRangedAimLaser laser = GetComponent<EnemyRangedAimLaser>();
+        laser?.Hide();
+    }
+
+    private static Collider2D ResolveShotTargetCollider(Transform target)
+    {
+        if (target == null)
+        {
+            return null;
+        }
+
+        PlayerCharacter player = target.GetComponent<PlayerCharacter>()
+            ?? target.GetComponentInParent<PlayerCharacter>();
+        if (player != null)
+        {
+            Collider2D playerBody = player.GetComponent<Collider2D>();
+            if (playerBody != null)
+            {
+                return playerBody;
+            }
+        }
+
+        Collider2D[] colliders = target.GetComponentsInChildren<Collider2D>();
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            if (colliders[i] != null && !colliders[i].isTrigger)
+            {
+                return colliders[i];
+            }
+        }
+
+        return colliders.Length > 0 ? colliders[0] : null;
+    }
+
+    private bool IsStraightShotBlocked(Vector3 origin, Vector2 direction, float distance, Transform target)
+    {
+        float probe = Mathf.Max(0.1f, distance);
+        Vector2 start = (Vector2)origin + direction * 0.04f;
+        RaycastHit2D[] hits = Physics2D.RaycastAll(start, direction, probe, LineOfFireMask);
+        if (hits.Length > 1)
+            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+        for (int i = 0; i < hits.Length; i++)
+        {
+            Collider2D hit = hits[i].collider;
+            if (hit == null || hit.isTrigger)
+            {
+                continue;
+            }
+
+            if (hit.transform == transform || hit.transform.IsChildOf(transform))
+            {
+                continue;
+            }
+
+            if (IsIntendedShotTarget(hit, target))
+            {
+                return false;
+            }
+
+            if (hit.GetComponentInParent<PlayerCharacter>() != null)
+            {
+                return false;
+            }
+
+            // Other enemies occupy the lane visually but must not own it. A melee pile in front of a
+            // ranged kit was the reason standing still looked like "the archer never fires".
+            if (hit.GetComponentInParent<EnemyController>() != null)
+            {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsIntendedShotTarget(Collider2D hit, Transform target)
+    {
+        if (hit == null || target == null)
+            return false;
+
+        Transform hitTransform = hit.transform;
+        return hitTransform == target
+            || hitTransform.IsChildOf(target)
+            || target.IsChildOf(hitTransform);
     }
 
     private static Sprite GetRangedShotSprite()

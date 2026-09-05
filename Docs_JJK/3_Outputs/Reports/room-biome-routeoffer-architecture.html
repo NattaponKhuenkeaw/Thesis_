@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <title>ระบบห้อง · RouteOffer · Biome</title>
+  <style>
+    :root {
+      --ink: #1a1d21;
+      --muted: #4a5160;
+      --line: #d7dbe3;
+      --fill: #f4f6f9;
+      --accent: #1f4e8c;
+      --safe: #2c6e49;
+      --warn: #9a4a12;
+      --boss: #8b1e2d;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      color: var(--ink);
+      font: 11pt/1.55 "Leelawadee UI", "Segoe UI", Tahoma, sans-serif;
+    }
+    @page { size: A4; margin: 16mm 16mm 18mm 16mm; }
+    @media print {
+      body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .page-break { break-before: page; }
+      h2 { break-after: avoid; }
+      table, .card, .diagram, .act, .stat-row { break-inside: avoid; }
+    }
+    .wrap { max-width: 210mm; margin: 0 auto; padding: 12mm; }
+    @media print { .wrap { padding: 0; max-width: none; } }
+
+    header.hero {
+      border-bottom: 3px solid var(--accent);
+      padding-bottom: 14px;
+      margin-bottom: 18px;
+    }
+    .kicker {
+      color: var(--accent);
+      font-size: 9pt;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    h1 { font-size: 22pt; margin: 4px 0 6px; line-height: 1.2; }
+    .lead { color: var(--muted); margin: 0; }
+    .meta { margin-top: 10px; font-size: 9pt; color: var(--muted); }
+
+    .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 16px 0; }
+    .stat {
+      background: var(--fill);
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+    }
+    .stat b { display: block; font-size: 16pt; color: var(--accent); line-height: 1.1; }
+    .stat span { font-size: 8.5pt; color: var(--muted); }
+
+    h2 {
+      font-size: 14pt;
+      margin: 22px 0 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--line);
+    }
+    h3 { font-size: 11.5pt; margin: 16px 0 6px; color: var(--accent); }
+    p { margin: 0 0 8px; }
+    code {
+      font-family: Consolas, "Cascadia Mono", monospace;
+      font-size: 9.5pt;
+      background: var(--fill);
+      padding: 0 4px;
+    }
+    ul, ol { margin: 4px 0 10px; padding-left: 20px; }
+    li { margin: 2px 0; }
+
+    .callout {
+      background: #eef3fa;
+      border-left: 4px solid var(--accent);
+      padding: 10px 12px;
+      margin: 12px 0;
+    }
+    .callout strong { display: block; margin-bottom: 2px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9.5pt;
+      margin: 8px 0 14px;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 6px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: var(--fill); font-weight: 700; }
+    caption {
+      caption-side: bottom;
+      text-align: left;
+      color: var(--muted);
+      font-size: 8.5pt;
+      padding-top: 4px;
+    }
+
+    .diagram {
+      background: #fafbfc;
+      border: 1px solid var(--line);
+      padding: 10px 8px 4px;
+      margin: 10px 0 14px;
+    }
+    .diagram figcaption {
+      font-size: 8.5pt;
+      color: var(--muted);
+      margin: 4px 8px 6px;
+    }
+    .diagram svg { width: 100%; height: auto; display: block; }
+
+    .act { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin: 10px 0 6px; }
+    .act .n {
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 8px 6px;
+      min-height: 72px;
+    }
+    .act .n .i { font-size: 8pt; color: var(--muted); }
+    .act .n .k { font-weight: 700; font-size: 10pt; }
+    .act .n .d { font-size: 8pt; color: var(--muted); }
+    .act .n.safe { border-color: var(--safe); }
+    .act .n.boss { border-color: var(--boss); background: #fdf4f5; }
+    .act .n.combat { border-color: #9aa6b8; }
+
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .card { border: 1px solid var(--line); padding: 10px 12px; background: #fff; }
+    .card .tag {
+      float: right;
+      font-size: 8pt;
+      border: 1px solid var(--line);
+      padding: 1px 6px;
+      color: var(--muted);
+    }
+    .card h3 { margin-top: 0; }
+
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      font-size: 9pt;
+      margin: 8px 0 12px;
+    }
+    .flow .box {
+      border: 1px solid var(--line);
+      background: var(--fill);
+      padding: 6px 8px;
+    }
+    .flow .arrow { color: var(--muted); }
+
+    .bars { display: grid; gap: 6px; margin: 8px 0 6px; }
+    .bars .row { display: grid; grid-template-columns: 70px 1fr 48px; gap: 8px; align-items: center; font-size: 9pt; }
+    .bars .track { height: 14px; background: #e8ebf0; }
+    .bars .fill { height: 14px; background: var(--accent); }
+
+    footer.note { margin-top: 24px; font-size: 8.5pt; color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <div class="kicker">Thesis architecture brief</div>
+      <h1>ระบบห้อง · RouteOffer · Biome</h1>
+      <p class="lead">สรุปจากโค้ดจริงใน <code>Assets/Project/Scripts/Core/ZoneState</code> — สามระบบนี้เป็นวงเดียวกัน: Biome กำหนดว่าด่านนี้จะเสนออะไร, RouteOffer คือการ์ดเลือกห้องถัดไป, ระบบห้องคือการโหลด เล่น และเคลียร์ห้องนั้น</p>
+      <p class="meta">แหล่งข้อมูล: RoomChoiceDirector, RunProgressionManager, RouteOfferGenerator, RoomLayoutHost, SceneTransitionManager · 27 ส.ค. 2026</p>
+    </header>
+
+    <div class="stat-row">
+      <div class="stat"><b>3</b><span>ใบต่อการเลือกปกติ</span></div>
+      <div class="stat"><b>8</b><span>จุดใน biome act เริ่มต้น</span></div>
+      <div class="stat"><b>+12%</b><span>HP / ATK / DEF ต่อ biome</span></div>
+      <div class="stat"><b>1</b><span>ห้องปลอดภัยสูงสุดต่อชุดการ์ด</span></div>
+    </div>
+
+    <div class="callout">
+      <strong>ชื่อในโค้ด: RouteOffer = RoomChoiceOffer</strong>
+      คำที่ผู้เล่นเห็นคือ RouteOffer (การ์ด 3 ใบหลังเคลียร์ห้อง). struct คือ <code>RoomChoiceOffer</code> พก <code>RoomData</code> และถ้าเป็น Combat/Elite จะมี <code>RouteDifficulty</code> กับ <code>RouteReward</code> ด้วย
+    </div>
+
+    <h2>1. ภาพรวมวงรัน</h2>
+    <p>การ์ดถูกทอยตอนเคลียร์ห้อง แล้วแคชไว้ UI เปิดเมื่อผู้เล่นยืนที่ Exit ที่ปลดล็อกแล้ว เลือกใบ → จำใบนั้น → โหลดห้อง → เล่น → เคลียร์ แล้ววนใหม่</p>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 720 118" xmlns="http://www.w3.org/2000/svg" aria-label="วงรันเลือกห้อง">
+        <defs>
+          <marker id="arr" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#1f4e8c"/></marker>
+        </defs>
+        <g font-family="Segoe UI, Leelawadee UI, sans-serif" font-size="11" text-anchor="middle">
+          <rect x="8" y="28" width="92" height="40" rx="5" fill="#f4f6f9" stroke="#1f4e8c"/>
+          <text x="54" y="52">เคลียร์ห้อง</text>
+          <line x1="100" y1="48" x2="128" y2="48" stroke="#1f4e8c" marker-end="url(#arr)"/>
+
+          <rect x="132" y="28" width="108" height="40" rx="5" fill="#eef3fa" stroke="#1f4e8c"/>
+          <text x="186" y="52">Director ทอย 3 ใบ</text>
+          <line x1="240" y1="48" x2="268" y2="48" stroke="#1f4e8c" marker-end="url(#arr)"/>
+
+          <rect x="272" y="28" width="92" height="40" rx="5" fill="#f4f6f9" stroke="#9aa6b8"/>
+          <text x="318" y="52">ยืนที่ Exit</text>
+          <line x1="364" y1="48" x2="392" y2="48" stroke="#1f4e8c" marker-end="url(#arr)"/>
+
+          <rect x="396" y="28" width="92" height="40" rx="5" fill="#f4f6f9" stroke="#9aa6b8"/>
+          <text x="442" y="52">เลือกการ์ด</text>
+          <line x1="488" y1="48" x2="516" y2="48" stroke="#1f4e8c" marker-end="url(#arr)"/>
+
+          <rect x="520" y="28" width="92" height="40" rx="5" fill="#f4f6f9" stroke="#9aa6b8"/>
+          <text x="566" y="52">เข้าห้องใหม่</text>
+          <line x1="612" y1="48" x2="640" y2="48" stroke="#1f4e8c" marker-end="url(#arr)"/>
+
+          <rect x="644" y="28" width="68" height="40" rx="5" fill="#f4f6f9" stroke="#9aa6b8"/>
+          <text x="678" y="52">เล่นห้อง</text>
+        </g>
+        <path d="M678 68 L678 92 L54 92 L54 68" fill="none" stroke="#1f4e8c" stroke-dasharray="4 3"/>
+        <text x="360" y="108" text-anchor="middle" font-size="10" fill="#4a5160" font-family="Segoe UI, sans-serif">วนกลับไปเคลียร์ห้อง — ActiveRouteOffer จำใบที่เลือกจนกว่าจะเคลียร์หรือเปลี่ยนห้อง</text>
+      </svg>
+      <figcaption>รูปที่ 1 · วงรัน RouteOffer — ทอยใบตอนเคลียร์ เปิด UI ตอนยืนที่ทางออก</figcaption>
+    </figure>
+
+    <table>
+      <thead>
+        <tr><th>ชั้น</th><th>ไทป์</th><th>หน้าที่</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>แคตตาล็อก</td><td><code>MapSO</code> / <code>RoomData</code></td><td>ห้องมีอะไรบ้าง, ชนิด, เลย์เอาต์, น้ำหนักสุ่ม</td></tr>
+        <tr><td>เลือกเส้นทาง</td><td><code>RoomChoiceDirector</code></td><td>act ของ biome + กติกา 3 ใบ</td></tr>
+        <tr><td>เนื้อหาการ์ด</td><td><code>RouteOfferGenerator</code></td><td>ความยาก + รางวัล + พาเลตศัตรู</td></tr>
+        <tr><td>ใบที่เลือก</td><td><code>ActiveRouteOffer</code></td><td>จำการ์ดจนกว่าจะเคลียร์หรือเปลี่ยนห้อง</td></tr>
+        <tr><td>เล่นห้อง</td><td><code>RoomLayoutHost</code> / <code>CombatStageController</code></td><td>สลับเลย์เอาต์, หลายห้องย่อยในด่าน</td></tr>
+        <tr><td>ความก้าวหน้า</td><td><code>RunProgressionManager</code></td><td>depth, biome index, สเกลศัตรู</td></tr>
+        <tr><td>เดินทาง</td><td><code>SceneTransitionManager</code></td><td>เฟด, สลับเลย์เอาต์หรือโหลดซีน, แจ้งออกจากห้อง</td></tr>
+      </tbody>
+    </table>
+
+    <h2>2. ระบบห้อง</h2>
+    <p><code>RoomData</code> คือรายการในแคตตาล็อก ไม่ใช่ฉากที่เล่นอยู่แล้ว แต่ละห้องมี <code>RoomId</code>, <code>RoomKind</code>, <code>ZoneMode</code>, และทางเลือกโหลด:</p>
+    <ul>
+      <li><code>layoutPrefab</code> + ซีน shell เดิม → <strong>สลับเลย์เอาต์ในที่</strong> ผ่าน <code>RoomLayoutHost.MountRoom</code></li>
+      <li>Shop / Level ใช้ซีนแยก → <strong>โหลดซีนเต็ม</strong> แม้มี host อยู่</li>
+    </ul>
+    <p>Lobby ถูกใส่เป็น Shop แต่ <code>IncludeInRandomOffers = false</code> เพื่อไม่ให้การออกจากล็อบบี้ไปเผาโควต้า Shop ของ biome</p>
+
+    <h3>ชนิดห้อง</h3>
+    <table>
+      <thead>
+        <tr><th>RoomKind</th><th>Zone</th><th>ในพูลสุ่ม</th><th>ทำอะไร</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Combat</td><td>CombatZone</td><td>ใช่</td><td>หลายห้องย่อย + พาเลต Easy/Medium/Hard จากใบที่เลือก</td></tr>
+        <tr><td>Elite</td><td>CombatZone</td><td>ใช่</td><td>เหมือน Combat แต่ความยากเอนไป Medium/Hard</td></tr>
+        <tr><td>Shop</td><td>SafeZone</td><td>ใช่ (โหนด Shop)</td><td>ซื้อของ ทางออกปลดตอนเข้า</td></tr>
+        <tr><td>Level</td><td>SafeZone</td><td>one-shot ต่อ biome</td><td>รับ Run Global Level ครั้งเดียวต่อการเข้า</td></tr>
+        <tr><td>Rest</td><td>SafeZone</td><td>one-shot ต่อ biome</td><td>ฮีลทีมครั้งเดียวต่อการเข้า</td></tr>
+        <tr><td>Boss</td><td>CombatZone</td><td>ไม่สุ่ม</td><td>บังคับใบเดียว Boss_01 จาก EncounterSO ที่ใส่ในห้อง</td></tr>
+        <tr><td>Reward</td><td>SafeZone</td><td>ชนิดเก่า</td><td>นับเป็นห้องปลอดภัย ไม่ได้อยู่บน act เริ่มต้น</td></tr>
+      </tbody>
+    </table>
+
+    <h3>โหลดห้องและเคลียร์</h3>
+    <figure class="diagram">
+      <svg viewBox="0 0 720 220" xmlns="http://www.w3.org/2000/svg" aria-label="โหลดและเคลียร์ห้อง">
+        <g font-family="Segoe UI, Leelawadee UI, sans-serif" font-size="11">
+          <rect x="12" y="12" width="140" height="36" rx="4" fill="#eef3fa" stroke="#1f4e8c"/>
+          <text x="82" y="34" text-anchor="middle">เลือกการ์ด</text>
+
+          <rect x="190" y="12" width="200" height="36" rx="4" fill="#f4f6f9" stroke="#9aa6b8"/>
+          <text x="290" y="34" text-anchor="middle">NotifyLeavingRoom (เผา safe ถ้าเข้าจริง)</text>
+
+          <rect x="430" y="12" width="130" height="36" rx="4" fill="#f4f6f9" stroke="#9aa6b8"/>
+          <text x="495" y="34" text-anchor="middle">มี layoutPrefab?</text>
+
+          <rect x="590" y="4" width="118" height="28" rx="4" fill="#f4f6f9" stroke="#2c6e49"/>
+          <text x="649" y="22" text-anchor="middle">MountRoom</text>
+          <rect x="590" y="36" width="118" height="28" rx="4" fill="#f4f6f9" stroke="#9a4a12"/>
+          <text x="649" y="54" text-anchor="middle">LoadScene</text>
+
+          <rect x="12" y="88" width="150" height="36" rx="4" fill="#eef3fa" stroke="#1f4e8c"/>
+          <text x="87" y="110" text-anchor="middle">CombatZone</text>
+          <rect x="190" y="88" width="220" height="36" rx="4" fill="#f4f6f9" stroke="#9aa6b8"/>
+          <text x="300" y="110" text-anchor="middle">สู้ใน chamber ซ้าย → ขวา</text>
+          <rect x="440" y="88" width="268" height="36" rx="4" fill="#f4f6f9" stroke="#9aa6b8"/>
+          <text x="574" y="110" text-anchor="middle">ห้องกลาง: เปิดกำแพง — ยังไม่ขึ้นการ์ด</text>
+
+          <rect x="12" y="148" width="150" height="36" rx="4" fill="#eef3fa" stroke="#2c6e49"/>
+          <text x="87" y="170" text-anchor="middle">SafeZone</text>
+          <rect x="190" y="148" width="268" height="36" rx="4" fill="#f4f6f9" stroke="#2c6e49"/>
+          <text x="324" y="170" text-anchor="middle">ปลด Exit + PrepareOffersForSafeRoom</text>
+
+          <rect x="12" y="188" width="696" height="24" rx="4" fill="#fdf4f5" stroke="#8b1e2d"/>
+          <text x="360" y="204" text-anchor="middle">ห้องย่อยสุดท้ายเคลียร์แล้ว → ปลด Exit + PrepareOffers → ยืนที่ทางออกจึงโชว์ UI</text>
+        </g>
+        <g stroke="#1f4e8c" fill="none">
+          <line x1="152" y1="30" x2="190" y2="30"/>
+          <line x1="390" y1="30" x2="430" y2="30"/>
+        </g>
+      </svg>
+      <figcaption>รูปที่ 2 · โหลดห้องแล้วแยก CombatZone / SafeZone — การ์ด 3 ใบขึ้นหลังห้องย่อยสุดท้ายเท่านั้น</figcaption>
+    </figure>
+
+    <p>Combat spawn อ่านความยากจาก <code>ActiveRouteOffer</code> แล้วเลือก <code>Encounter_Easy</code> / <code>_Medium</code> / <code>_Hard</code> จำนวนศัตรูต่อห้องย่อยมาจาก <code>enemyCount</code> บน chamber ไม่ใช่จาก <code>RoomData.Encounter</code> (อันนั้นเป็น fallback / บอส)</p>
+    <p>หนึ่ง <code>RoomLayout_Combat_*</code> = หนึ่งด่าน หลาย chamber ไม่เท่ากับหลายห้องใน MapSO</p>
+
+    <h2 class="page-break">3. ระบบ RouteOffer</h2>
+    <p>หลังเคลียร์ <code>RoomExitPresenter.PrepareOffers()</code> เรียก <code>GenerateOffersAfterClear()</code> ทอยใบไว้ก่อน UI ยังไม่เปิด จนกว่าผู้เล่นจะยืนใน Exit (<code>TransitionTrigger.openRoomChoiceUi</code>)</p>
+
+    <div class="two">
+      <div class="card">
+        <span class="tag">เลื่อน act</span>
+        <h3>GenerateOffersAfterClear</h3>
+        <p>ใช้หลังเคลียร์ Combat / Elite / Boss ทำเครื่องหมายห้องที่เข้าแล้ว แจ้ง <code>RunProgressionManager</code> สร้างการ์ดชุดถัดไป แล้วเลื่อน <code>actIndex</code></p>
+      </div>
+      <div class="card">
+        <span class="tag">ไม่เลื่อน act</span>
+        <h3>GenerateLeaveOffersFromSafeRoom</h3>
+        <p>ใช้ตอนออก Shop / Level / Rest เคอร์เซอร์เลื่อนไปแล้วตอนที่ใบนั้นถูกเสนอหลังเคลียร์ห้องก่อนหน้า จะไม่ยัด safe ชนิดเดิมซ้ำตอนเดินออก</p>
+      </div>
+    </div>
+
+    <h3>กติกาใบ</h3>
+    <table>
+      <thead><tr><th>กติกา</th><th>พฤติกรรม</th></tr></thead>
+      <tbody>
+        <tr><td>จำนวนใบ</td><td>ทางเลือกปกติเสมอ 3 ใบ บอสเป็นใบเดียว</td></tr>
+        <tr><td>Safe ≤ 1</td><td>ในชุดเดียวกันมี Shop หรือ Level หรือ Rest ได้แค่ชนิดเดียว</td></tr>
+        <tr><td>โชว์ใบ ≠ ใช้โควต้า</td><td>มี Shop บนการ์ดแต่เลือก Combat แล้ว Shop ยังใช้ใน biome นั้นได้ เผาโควต้าตอนเข้าห้องจริงผ่าน <code>NotifyLeavingRoom</code></td></tr>
+        <tr><td>Combat / Elite / Shop</td><td>อยู่ในพูลซ้ำได้ ชุด 3 ใบปัจจุบันเลี่ยง RoomId ซ้ำก่อน แล้วค่อย pad Combat ถ้าเลย์เอาต์ไม่พอ</td></tr>
+        <tr><td>Level / Rest</td><td>RoomId เป็น one-shot ต่อ biome ปลดเมื่อขึ้น biome ใหม่</td></tr>
+        <tr><td>ความยากไม่ซ้ำ</td><td>การ์ด Combat reroll สูงสุด 3 ครั้ง เพื่อไม่ให้ Easy/Medium/Hard ซ้ำกันทั้งสามใบ</td></tr>
+        <tr><td>น้ำหนัก</td><td><code>PickWeighted</code> ใช้ <code>RoomData.OfferWeight</code> ห้องที่ <code>IncludeInRandomOffers = false</code> ไม่ถูกสุ่ม</td></tr>
+        <tr><td>บอส</td><td>โหนด Boss ในเทมเพลตบังคับ <code>Boss_01</code> depth เป็นเพดานสำรอง ห้ามดึงบอสมาเร็วเกินไป</td></tr>
+      </tbody>
+    </table>
+
+    <h3>สิ่งที่การ์ด Combat ทอย</h3>
+    <p><code>RouteOfferGenerator.BuildOffer</code> อ่าน <code>Resources/MapSO/RouteOfferTables</code> เลย์เอาต์ที่มี chamber สปอว์นจากพาเลตตามความยาก Generated waves ติดเฉพาะห้องไฟต์ที่ไม่มี <code>CombatStageController</code></p>
+    <table>
+      <thead>
+        <tr><th>Difficulty</th><th>น้ำหนักสุ่ม</th><th>Waves</th><th>เหรียญ</th><th>โอกาส Artifact</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Easy</td><td>40</td><td>1</td><td>30–60</td><td>5%</td></tr>
+        <tr><td>Medium</td><td>35</td><td>2</td><td>90–150</td><td>28%</td></tr>
+        <tr><td>Hard</td><td>25</td><td>3</td><td>180–280</td><td>55%</td></tr>
+      </tbody>
+      <caption>ค่าเริ่มต้นจาก RouteOfferTables.Reset() · Elite = 55% Hard / 45% Medium (ไม่สุ่ม Easy)</caption>
+    </table>
+    <p>เลือกใบ → <code>ActiveRouteOffer.Set(offer)</code> → <code>TransitionToRoom</code> ถ้าเข้าห้องแบบ debug โดยไม่มีใบ ระบบ fallback ไป encounter บน chamber หรือ <code>RoomData.Encounter</code></p>
+
+    <h2>4. ระบบ Biome ทั้งก้อน</h2>
+    <p>Biome ในโปรเจกต์นี้มีสองความหมายที่ทำงานคู่กัน</p>
+
+    <h3>4.1 Act template — โครงด่านใน biome</h3>
+    <p><code>RoomChoiceDirector.biomeTemplate</code> เป็นตัวตัดสินว่าชุดการ์ดถัดไปจะมีอะไรได้บ้าง <code>actIndex</code> เดินบนลิสต์นี้ ค่าเริ่มต้น 8 จุด:</p>
+
+    <div class="act">
+      <div class="n combat"><div class="i">0</div><div class="k">Combat</div><div class="d">depth +1</div></div>
+      <div class="n combat"><div class="i">1</div><div class="k">Combat</div><div class="d">depth +1</div></div>
+      <div class="n safe"><div class="i">2</div><div class="k">Shop</div><div class="d">ยัด safe 1 ใบ</div></div>
+      <div class="n combat"><div class="i">3</div><div class="k">Combat</div><div class="d">depth +1</div></div>
+      <div class="n safe"><div class="i">4</div><div class="k">Level</div><div class="d">one-shot / biome</div></div>
+      <div class="n combat"><div class="i">5</div><div class="k">Combat</div><div class="d">depth +1</div></div>
+      <div class="n safe"><div class="i">6</div><div class="k">Rest</div><div class="d">one-shot / biome</div></div>
+      <div class="n boss"><div class="i">7</div><div class="k">Boss</div><div class="d">ใบเดียว</div></div>
+    </div>
+    <p style="font-size:9pt;color:#4a5160;margin-bottom:12px;">Combat ก่อนบอส = 4 จุด · depth เป็นเพดานสำรอง (<code>roomsBeforeBoss = จำนวน Combat + 2</code>) เพื่อไม่ให้บอสแย่งคิว Shop / Level / Rest</p>
+
+    <ul>
+      <li><strong>Combat</strong> — ชุด 3 ใบเป็น Combat/Elite เป็นหลัก เคลียร์แล้ว <code>currentRoomDepth++</code></li>
+      <li><strong>Shop / Level / Rest</strong> — ยัดห้องปลอดภัย 1 ใบในชุดนั้น ถ้ายังไม่ถูกใช้ใน biome นี้</li>
+      <li><strong>Boss</strong> — บังคับ <code>Boss_01</code> เทมเพลตเป็นตัวตัดสิน</li>
+    </ul>
+    <p><code>actIndex</code> เดินหลัง <code>GenerateOffersAfterClear</code> (เคลียร์ไฟต์) ไม่เดินตอนออกจากห้องปลอดภัย</p>
+
+    <h3>4.2 Biome index — สเกลความยากระหว่าง biome</h3>
+    <p><code>RunProgressionManager.currentBiomeIndex</code> เริ่มที่ 0 เคลียร์ Combat/Elite → depth +1 เคลียร์ Boss → depth = 0 และ biome +1 สถานะศัตรูพื้นฐาน (HP / ATK / DEF) คูณ <code>1 + biome × 0.12</code> ตอนสปอว์นใน <code>RoomWaveManager</code> ไม่ใช่ตอนทอยการ์ด</p>
+
+    <div class="bars">
+      <div class="row"><span>Biome 0</span><div class="track"><div class="fill" style="width:67.6%"></div></div><span>1.00×</span></div>
+      <div class="row"><span>Biome 1</span><div class="track"><div class="fill" style="width:75.7%"></div></div><span>1.12×</span></div>
+      <div class="row"><span>Biome 2</span><div class="track"><div class="fill" style="width:83.8%"></div></div><span>1.24×</span></div>
+      <div class="row"><span>Biome 3</span><div class="track"><div class="fill" style="width:91.9%"></div></div><span>1.36×</span></div>
+      <div class="row"><span>Biome 4</span><div class="track"><div class="fill" style="width:100%"></div></div><span>1.48×</span></div>
+    </div>
+    <p style="font-size:8.5pt;color:#4a5160;">รูปที่ 3 · ตัวคูณศัตรูตาม biome · สูตร 1 + biome × 0.12 · แกนเทียบกับ 1.48×</p>
+
+    <h3>หลังบอส</h3>
+    <ol>
+      <li>เคลียร์บอส → <code>BeginNextBiome()</code> รีเซ็ต act, ธง Shop/Level/Rest และปลด visited ของ Level/Rest เพื่อให้รอบใหม่เสนอได้อีก</li>
+      <li><code>pendingPostBossRest</code> พยายามใส่ Rest ในใบถัดไป ถ้าไม่มีห้อง Rest ใน MapSO จะตกไปทอย act ปกติ</li>
+      <li>biome ใหม่เล่นเทมเพลต 8 จุดเดิมอีกครั้ง แต่ศัตรูแข็งขึ้น 12%</li>
+    </ol>
+    <p>รันใหม่ (<code>ResetRouteState</code>) รีเซ็ตทั้ง act, visited, depth และ biome กลับ 0</p>
+
+    <h2>5. สิ่งที่มักสับสน</h2>
+    <table>
+      <thead><tr><th>อย่าสับสน</th><th>ความจริงในโค้ด</th></tr></thead>
+      <tbody>
+        <tr><td>ห้องย่อยในเลย์เอาต์ กับ ห้องใน MapSO</td><td>3 chamber ใน <code>RoomLayout_Combat_01</code> คือ 1 RouteOffer</td></tr>
+        <tr><td>มี Shop บนการ์ด</td><td>ยังไม่ใช้โควต้า Shop จนกว่าจะเดินเข้า Shop จริง</td></tr>
+        <tr><td>Lobby เป็น Shop</td><td>เป็น Shop ในข้อมูล แต่ไม่ใช่ Shop ของ act เพราะ <code>IncludeInRandomOffers = false</code></td></tr>
+        <tr><td>บอสในพูลสุ่ม</td><td>บอสไม่สุ่ม director บังคับตอนถึงโหนด Boss</td></tr>
+      </tbody>
+    </table>
+
+    <h2>6. ใครเป็นเจ้าของอะไร</h2>
+    <table>
+      <thead><tr><th>ไทป์</th><th>เป็นเจ้าของ</th></tr></thead>
+      <tbody>
+        <tr><td><code>MapSO</code> / <code>RoomData</code></td><td>ห้องที่มีอยู่ ชนิด เลย์เอาต์ น้ำหนักสุ่ม</td></tr>
+        <tr><td><code>RoomChoiceDirector</code></td><td>เคอร์เซอร์ act, กติกา 3 ใบ, ห้องปลอดภัยที่เข้าแล้ว</td></tr>
+        <tr><td><code>RouteOfferGenerator</code></td><td>ความยาก รางวัล และคลื่นที่สร้างถ้าไม่มี chamber</td></tr>
+        <tr><td><code>ActiveRouteOffer</code></td><td>ใบที่ผู้เล่นเพิ่งเลือก</td></tr>
+        <tr><td><code>RoomLayoutHost</code></td><td>ติดตั้ง/ถอดเลย์เอาต์ใน run shell</td></tr>
+        <tr><td><code>CombatStageController</code></td><td>ด่านหลายห้องย่อย ห้องสุดท้ายปลดทางออก</td></tr>
+        <tr><td><code>RunProgressionManager</code></td><td>depth, biome index, เส้นโค้ง +12%</td></tr>
+        <tr><td><code>SceneTransitionManager</code></td><td>เฟด สลับเลย์เอาต์หรือโหลดซีน แจ้งออกจากห้อง</td></tr>
+      </tbody>
+    </table>
+
+    <footer class="note">
+      สรุปจากโค้ดใน <code>Assets/Project/Scripts/Core/ZoneState</code> และสเปก
+      <code>Docs_JJK/3_Outputs/Specs/route-offer-generator-setup.md</code>,
+      <code>run-progression-mvp-setup.md</code>,
+      <code>combat-layout-multi-chamber-setup.md</code>
+      · ไม่ได้ดึงจาก GDD เพราะส่วน biome/room offer ยังไม่มี @tag ใน GDD
+    </footer>
+  </div>
+</body>
+</html>

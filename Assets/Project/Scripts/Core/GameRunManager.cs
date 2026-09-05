@@ -67,6 +67,34 @@ namespace Project.Core
         public PlayerRunInventory RunInventory => runInventory;
         public PlayerMetaProgression MetaProgression => metaProgression;
 
+        public static PlayerRunInventory ResolveSharedRunInventory(PlayerRunInventory current = null)
+        {
+            if (current != null)
+            {
+                return current;
+            }
+
+            if (Instance != null)
+            {
+                if (Instance.runInventory == null && Application.isPlaying)
+                {
+                    Instance.runInventory = Resources.Load<PlayerRunInventory>(RunInventoryResourcePath);
+                }
+
+                if (Instance.runInventory != null)
+                {
+                    return Instance.runInventory;
+                }
+            }
+
+            if (!Application.isPlaying)
+            {
+                return null;
+            }
+
+            return Resources.Load<PlayerRunInventory>(RunInventoryResourcePath);
+        }
+
         private void Awake()
         {
             RootPersistentManager rootManager = GetComponentInParent<RootPersistentManager>();
@@ -408,9 +436,9 @@ namespace Project.Core
 
         private void ResolveDependencies()
         {
-            if (runInventory == null && Application.isPlaying)
+            if (runInventory == null)
             {
-                runInventory = Resources.Load<PlayerRunInventory>(RunInventoryResourcePath);
+                runInventory = ResolveSharedRunInventory();
             }
 
             if (metaProgression == null && Application.isPlaying)

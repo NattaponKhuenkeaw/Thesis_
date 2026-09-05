@@ -35,6 +35,12 @@ namespace Project.Core.ZoneState
         [Tooltip("Ordered layout spawn points. EncounterSO.spawnSlotIndex maps into this array. Auto-binds Spawn_0..N / BossSpawnPoint when empty. CombatStageController overwrites this per chamber.")]
         [SerializeField] private Transform[] spawnSlots;
 
+        [Header("Spawn Separation")]
+        [Tooltip("Minimum distance a new spawn must keep from every living enemy. Enemy body colliders are roughly 1.28 wide.")]
+        [SerializeField, Min(0f)] private float minSpawnSeparation = 1.8f;
+        [Tooltip("How far a spawn may slide sideways to find clear ground before giving up. Stays inside the span of the authored slots.")]
+        [SerializeField, Min(0f)] private float maxSpawnNudge = 2.5f;
+
         [Header("Room Clear")]
         [SerializeField] private bool unlockSceneExitOnClear = true;
         [SerializeField] private GameObject portalsRoot;
@@ -56,7 +62,7 @@ namespace Project.Core.ZoneState
         private bool spawnedAnyEnemy;
         private bool spawnedBossEnemy;
         private CombatStageController stageController;
-        private readonly List<Transform> occupiedSpawnSlots = new List<Transform>();
+        private readonly List<Vector3> livingEnemyPositions = new List<Vector3>();
 
         private void Awake()
         {
@@ -199,7 +205,6 @@ namespace Project.Core.ZoneState
             }
 
             DestroyTrackedEnemies();
-            occupiedSpawnSlots.Clear();
 
             if (chamberEncounter != null)
             {
@@ -235,7 +240,6 @@ namespace Project.Core.ZoneState
                 yield break;
             }
 
-            occupiedSpawnSlots.Clear();
             int openingCount = Mathf.Min(pressureDirector.AliveCap, pressureDirector.Remaining);
             int spawned = 0;
             while (spawned < openingCount && pressureDirector.Remaining > 0)
@@ -256,7 +260,6 @@ namespace Project.Core.ZoneState
                 int living = CountLiving();
                 if (pressureDirector.CanSpawn(living))
                 {
-                    OccupySlotsOfLiving();
                     GameObject prefab = pressureDirector.DequeueNext();
                     if (!TrySpawnPrefab(prefab, pickSlotByRole: true))
                     {
@@ -284,7 +287,6 @@ namespace Project.Core.ZoneState
                 yield break;
             }
 
-            occupiedSpawnSlots.Clear();
             for (int i = 0; i < quota.Count; i++)
             {
                 TrySpawnPrefab(quota[i], pickSlotByRole: true);
@@ -696,6 +698,8 @@ namespace Project.Core.ZoneState
                 return false;
             }
 
+            CollectLivingEnemyPositions();
+
             Transform spawnPoint = pickSlotByRole
                 ? ResolvePressureSpawnPoint(prefab, fallbackPoint)
                 : fallbackPoint;
@@ -706,7 +710,8 @@ namespace Project.Core.ZoneState
                 return false;
             }
 
-            GameObject enemyObject = Instantiate(prefab, spawnPoint.position, spawnPoint.rotation);
+            Vector3 spawnPosition = ResolveSeparatedPosition(spawnPoint, prefab);
+            GameObject enemyObject = Instantiate(prefab, spawnPosition, spawnPoint.rotation);
             EnemyController enemy = enemyObject.GetComponentInChildren<EnemyController>();
             if (enemy == null)
             {
@@ -720,10 +725,6 @@ namespace Project.Core.ZoneState
             RunProgressionManager.ApplyBiomeDifficultyToEnemy(enemy);
             activeEnemies.Add(enemy);
             spawnedAnyEnemy = true;
-            if (spawnPoint != null && !occupiedSpawnSlots.Contains(spawnPoint))
-            {
-                occupiedSpawnSlots.Add(spawnPoint);
-            }
 
             if (enemy.GetComponentInChildren<Project.AIBehaviour.Boss.BossPatternController>(true) != null)
             {
@@ -744,39 +745,130 @@ namespace Project.Core.ZoneState
             }
 
             bool preferFar = EncounterSpawnSlotPicker.PrefersFarSlot(prefab);
-            Transform picked = EncounterSpawnSlotPicker.Pick(
+            Transform picked = EncounterSpawnSlotPicker.PickWithClearance(
                 spawnSlots,
                 reference,
                 preferFar,
-                occupiedSpawnSlots);
+                livingEnemyPositions,
+                minSpawnSeparation,
+                out _);
             return picked != null ? picked : fallbackPoint;
         }
 
-        private void OccupySlotsOfLiving()
+        private void CollectLivingEnemyPositions()
         {
-            occupiedSpawnSlots.Clear();
-            if (spawnSlots == null)
-            {
-                return;
-            }
-
+            livingEnemyPositions.Clear();
             for (int i = 0; i < activeEnemies.Count; i++)
             {
                 EnemyController enemy = activeEnemies[i];
-                if (enemy == null || !enemy.IsAlive)
+                if (enemy != null && enemy.IsAlive)
+                {
+                    livingEnemyPositions.Add(enemy.transform.position);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Keeps a spawn off the bodies that are already standing there. Slides sideways
+        /// inside the span of the authored slots, so a crowded room never pushes an enemy
+        /// through a wall. Warns instead of stacking silently when the room runs out of space.
+        /// </summary>
+        private Vector3 ResolveSeparatedPosition(Transform spawnPoint, GameObject prefab)
+        {
+            Vector3 basePosition = spawnPoint.position;
+            if (minSpawnSeparation <= 0f || livingEnemyPositions.Count == 0)
+            {
+                return basePosition;
+            }
+
+            float baseClearance = EncounterSpawnSlotPicker.NearestBlockedDistance(
+                basePosition,
+                livingEnemyPositions);
+            if (baseClearance >= minSpawnSeparation)
+            {
+                return basePosition;
+            }
+
+            Vector3 best = basePosition;
+            float bestClearance = baseClearance;
+
+            if (TryGetNudgeRange(basePosition, out float minX, out float maxX))
+            {
+                float step = Mathf.Max(0.25f, minSpawnSeparation * 0.5f);
+                for (float offset = step; offset <= maxSpawnNudge + Mathf.Epsilon; offset += step)
+                {
+                    for (int sign = -1; sign <= 1; sign += 2)
+                    {
+                        float x = Mathf.Clamp(basePosition.x + (offset * sign), minX, maxX);
+                        Vector3 candidate = new Vector3(x, basePosition.y, basePosition.z);
+                        float clearance = EncounterSpawnSlotPicker.NearestBlockedDistance(
+                            candidate,
+                            livingEnemyPositions);
+                        if (clearance >= minSpawnSeparation)
+                        {
+                            return candidate;
+                        }
+
+                        if (clearance > bestClearance)
+                        {
+                            bestClearance = clearance;
+                            best = candidate;
+                        }
+                    }
+                }
+            }
+
+            Debug.LogWarning(
+                $"[RoomWaveManager] '{prefab.name}' had to spawn {bestClearance:0.00} from the nearest enemy " +
+                $"at '{spawnPoint.name}' (wanted {minSpawnSeparation:0.00}). This room needs more Spawn_N slots " +
+                "or wider spacing between them.",
+                this);
+            return best;
+        }
+
+        /// <summary>
+        /// Horizontal span the spawn may slide within, derived from the authored slots so the
+        /// result is always inside playable space.
+        /// </summary>
+        private bool TryGetNudgeRange(Vector3 basePosition, out float minX, out float maxX)
+        {
+            minX = basePosition.x;
+            maxX = basePosition.x;
+            if (spawnSlots == null || spawnSlots.Length == 0)
+            {
+                return false;
+            }
+
+            bool found = false;
+            for (int i = 0; i < spawnSlots.Length; i++)
+            {
+                Transform slot = spawnSlots[i];
+                if (slot == null)
                 {
                     continue;
                 }
 
-                Transform nearest = EncounterSpawnSlotPicker.Pick(
-                    spawnSlots,
-                    enemy.transform.position,
-                    preferFar: false);
-                if (nearest != null && !occupiedSpawnSlots.Contains(nearest))
+                float x = slot.position.x;
+                if (!found)
                 {
-                    occupiedSpawnSlots.Add(nearest);
+                    minX = x;
+                    maxX = x;
+                    found = true;
+                    continue;
                 }
+
+                minX = Mathf.Min(minX, x);
+                maxX = Mathf.Max(maxX, x);
             }
+
+            if (!found)
+            {
+                return false;
+            }
+
+            minX = Mathf.Min(minX, basePosition.x);
+            maxX = Mathf.Max(maxX, basePosition.x);
+            return maxX - minX > Mathf.Epsilon;
         }
 
         private void HandleEnemyDied()

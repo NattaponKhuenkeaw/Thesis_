@@ -38,6 +38,14 @@ public static class EnemyFacingUtil
         if (Mathf.Abs(directionX) < threshold)
             return;
 
+        // An attack in progress owns the facing. Checked here rather than in each caller because
+        // chase, patrol, evasion, locomotion and the Behavior graph flip node all reach this point.
+        // Searched through parents because the graph's flip node takes its Transform from the
+        // blackboard, which may point at a sprite child rather than the enemy root.
+        EnemyController controller = transform.GetComponentInParent<EnemyController>();
+        if (controller != null && controller.FacingLocked)
+            return;
+
         float targetRotY = directionX > 0f ? 0f : 180f;
         Vector3 euler = transform.eulerAngles;
         if (!Mathf.Approximately(euler.y, targetRotY))

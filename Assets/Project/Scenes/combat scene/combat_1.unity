@@ -172,8 +172,8 @@ MonoBehaviour:
   m_ShadowVolumeIntensityEnabled: 0
   m_ShadowVolumeIntensity: 0.75
   m_LocalBounds:
-    m_Center: {x: 1.9253998, y: 12.40155, z: 0}
-    m_Extent: {x: 32.4062, y: 14.597549, z: 0}
+    m_Center: {x: -4.37395, y: 3.6709995, z: 0}
+    m_Extent: {x: 22.881351, y: 24.829, z: 0}
   m_PointLightInnerAngle: 360
   m_PointLightOuterAngle: 360
   m_PointLightInnerRadius: 0
@@ -181,13 +181,15 @@ MonoBehaviour:
   m_ShapeLightParametricSides: 5
   m_ShapeLightParametricAngleOffset: 0
   m_ShapeLightParametricRadius: 1
-  m_ShapeLightFalloffSize: 0.5
+  m_ShapeLightFalloffSize: 0.45
   m_ShapeLightFalloffOffset: {x: 0, y: 0}
   m_ShapePath:
-  - {x: 33.78286, y: -1.6950364, z: 0}
-  - {x: 33.83145, y: 26.473776, z: 0}
-  - {x: -29.97982, y: 26.498344, z: 0}
-  - {x: -29.839218, y: -1.3881552, z: 0}
+  - {x: 17.663248, y: -20.45162, z: 0}
+  - {x: 18.009785, y: 10.784692, z: 0}
+  - {x: 18.058493, y: 27.74302, z: 0}
+  - {x: -26.686567, y: 28.049637, z: 0}
+  - {x: -26.80596, y: -20.708849, z: 0}
+  - {x: -4.7830114, y: -20.24124, z: 0}
 --- !u!4 &144767453
 Transform:
   m_ObjectHideFlags: 0
@@ -198,7 +200,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2.2375, y: 1.375, z: 1}
+  m_LocalScale: {x: 3.9778273, y: 2.444475, z: 1.7778}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -3228,11 +3230,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 979919694387824128, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.49999872
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 979919694387824128, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 8.365223
+      value: 3.1000004
       objectReference: {fileID: 0}
     - target: {fileID: 1085931734417189504, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
       propertyPath: m_LocalPosition.y
@@ -3324,7 +3326,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7003089252169759538, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
       propertyPath: orthographic size
-      value: 12
+      value: 5.5
       objectReference: {fileID: 0}
     - target: {fileID: 8926741243426994369, guid: af44945b279bb23448578cb9c9e44c37, type: 3}
       propertyPath: Lens.OrthographicSize

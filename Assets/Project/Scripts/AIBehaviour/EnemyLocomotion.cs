@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -16,6 +17,7 @@ public class EnemyLocomotion : MonoBehaviour
     [SerializeField] private Vector2 attackSlotOffset = new Vector2(1.5f, 1.2f);
 
     [SerializeField, Min(0.05f)] private float arrivalThreshold = 0.2f;
+    [Tooltip("While moving, face the walk direction. Attack still turns to the player when standing.")]
     [SerializeField] private bool faceTargetOnMove = true;
 
     [Tooltip("Leave off for Enemy1-3. Fly/Warp stay in code for later kits.")]
@@ -28,12 +30,35 @@ public class EnemyLocomotion : MonoBehaviour
     [SerializeField, Min(0.05f)] private float groundProbeDistance = 0.22f;
     [SerializeField] private LayerMask groundLayers;
 
+    // Both distances below are measured against the body, which is 1.35 wide on Enemy1-3. Anything
+    // smaller reads two bodies as separate while they are visibly inside one another.
+    [Header("Unstack")]
+    [Tooltip("If another enemy is closer than this on X, walk apart. Keep it at roughly the body width.")]
+    [SerializeField, Min(0.1f)] private float overlapRadius = 1.35f;
+    [SerializeField, Min(0.1f)] private float unstackSpeed = 2.2f;
+    [SerializeField, Min(0.05f)] private float overlapSameY = 0.85f;
+    [Tooltip("Gap between queued bodies. Below the body width the formation asks them to stand inside each other.")]
+    [SerializeField, Min(0.1f)] private float crowdSlotSpacing = 1.5f;
+    [Tooltip("Seconds overlap must last before they walk apart.")]
+    [SerializeField, Min(0f)] private float overlapConfirmTime = 0.4f;
+    [Tooltip("Once they start splitting, keep that direction this long so they do not flip every frame.")]
+    [SerializeField, Min(0f)] private float unstackCommitTime = 0.45f;
+
+    // Two bodies within this much of the same distance count as tied, so they do not swap queue slots
+    // every frame while they jostle.
+    private const float CrowdRankEpsilon = 0.05f;
+
+    private static readonly List<EnemyController> livingEnemies = new List<EnemyController>(16);
+
     private EnemyController enemy;
     private Rigidbody2D body;
     private Transform cachedTransform;
     private float cachedGravityScale = 1f;
     private float platformPatrolSign = 1f;
     private readonly RaycastHit2D[] groundHits = new RaycastHit2D[4];
+    private float overlapElapsed;
+    private float unstackUntil;
+    private float unstackSign;
 
     public EnemyMoveMode MoveMode => moveMode;
     public Vector2 AttackSlotOffset => attackSlotOffset;
@@ -87,11 +112,12 @@ public class EnemyLocomotion : MonoBehaviour
             return self;
 
         Vector3 targetPos = target.position;
-        float side = Mathf.Sign(self.x - targetPos.x);
-        if (Mathf.Approximately(side, 0f))
-            side = -EnemyFacingUtil.GetFacingSign(target);
+        float dx = self.x - targetPos.x;
+        float side = Mathf.Sign(dx);
+        if (Mathf.Abs(dx) < 0.15f)
+            side = EnemyFacingUtil.GetFacingSign(cachedTransform);
 
-        float x = targetPos.x + side * Mathf.Abs(attackSlotOffset.x);
+        float x = targetPos.x + side * (Mathf.Abs(attackSlotOffset.x) + ResolveCrowdSlotOffset(target, side));
         float y = moveMode == EnemyMoveMode.Ground ? self.y : targetPos.y + attackSlotOffset.y;
         return new Vector3(x, y, self.z);
     }
@@ -116,10 +142,27 @@ public class EnemyLocomotion : MonoBehaviour
             return false;
 
         Cache();
-        if (moveMode == EnemyMoveMode.Ground)
-            return EnemyFacingUtil.HorizontalDistance(BodyPosition(), target.position) <= attackRange;
+        if (moveMode != EnemyMoveMode.Ground)
+            return IsInAttackSlot(target, attackRange);
 
-        return IsInAttackSlot(target, attackRange);
+        if (!IsOnSamePlatform(target))
+            return false;
+
+        return EnemyFacingUtil.HorizontalDistance(BodyPosition(), target.position) <= attackRange;
+    }
+
+    public bool IsOnSamePlatform(Transform target)
+    {
+        if (moveMode != EnemyMoveMode.Ground)
+            return true;
+        if (target == null)
+            return false;
+
+        Cache();
+        float selfFoot = FootY(ResolveBodyCollider(), BodyPosition().y);
+        Collider2D targetCollider = target.GetComponentInChildren<Collider2D>();
+        float targetFoot = FootY(targetCollider, target.position.y);
+        return Mathf.Abs(targetFoot - selfFoot) <= samePlatformMaxY;
     }
 
     public void WarpToAttackSlot(Transform target)
@@ -142,8 +185,6 @@ public class EnemyLocomotion : MonoBehaviour
         Cache();
         Vector3 slot = ResolveAttackSlot(target);
         Vector3 current = BodyPosition();
-        if (faceTargetOnMove)
-            EnemyFacingUtil.FaceHorizontal(cachedTransform, target.position.x - current.x);
 
         if (moveMode == EnemyMoveMode.Ground)
         {
@@ -156,7 +197,9 @@ public class EnemyLocomotion : MonoBehaviour
     }
 
     /// <summary>
-    /// Walk or warp closer until within attack range, then hold. Never moves away from the target.
+    /// Walk to this body's stand-off slot. Chase is done when the body is on that slot, not when the
+    /// player merely falls inside attack range. Ranged will close from far away but will not back up
+    /// once the player has walked inside the hold band.
     /// </summary>
     public bool MoveTowardsTargetRange(Transform target, float attackRange, float speed, float deltaTime)
     {
@@ -164,28 +207,27 @@ public class EnemyLocomotion : MonoBehaviour
             return false;
 
         Cache();
-        if (IsInAttackRangeOfTarget(target, attackRange))
+        if (!TryResolveHoldPoint(target, attackRange, out Vector3 holdPoint, out float holdGap, out float currentGap))
+            return false;
+
+        // Jumping puts the player on another platform without changing X. Stay put so melee does not
+        // stroll to a new slot while they are in the air; striking still requires same-platform.
+        if (moveMode == EnemyMoveMode.Ground
+            && !IsOnSamePlatform(target)
+            && currentGap <= Mathf.Max(0.1f, attackRange))
         {
-            if (faceTargetOnMove)
-                EnemyFacingUtil.FaceHorizontal(cachedTransform, target.position.x - BodyPosition().x);
-            StopHorizontal();
-            return true;
+            if (!IsUnstacking)
+                StopHorizontal();
+            return false;
         }
 
-        Vector3 current = BodyPosition();
-        Vector3 targetPos = target.position;
-        if (faceTargetOnMove)
-            EnemyFacingUtil.FaceHorizontal(cachedTransform, targetPos.x - current.x);
-
-        float range = Mathf.Max(0.1f, attackRange);
-        float side = Mathf.Sign(current.x - targetPos.x);
-        if (Mathf.Approximately(side, 0f))
-            side = -EnemyFacingUtil.GetFacingSign(target);
-
-        float holdX = targetPos.x + side * range * 0.85f;
-        Vector3 holdPoint = moveMode == EnemyMoveMode.Ground
-            ? new Vector3(holdX, current.y, current.z)
-            : new Vector3(holdX, targetPos.y + attackSlotOffset.y, current.z);
+        bool rangedHold = enemy != null && enemy.UsesRangedAttack;
+        if (rangedHold && currentGap <= holdGap + arrivalThreshold)
+        {
+            if (!IsUnstacking)
+                StopHorizontal();
+            return true;
+        }
 
         if (moveMode == EnemyMoveMode.Warp)
         {
@@ -198,12 +240,63 @@ public class EnemyLocomotion : MonoBehaviour
         else
             DriveFly(holdPoint, Mathf.Max(0f, speed));
 
-        return IsInAttackRangeOfTarget(target, attackRange);
+        return EnemyFacingUtil.HorizontalDistance(BodyPosition(), holdPoint) <= arrivalThreshold;
+    }
+
+    public bool IsAtHoldSlot(Transform target, float attackRange)
+    {
+        Cache();
+        if (!TryResolveHoldPoint(target, attackRange, out Vector3 holdPoint, out float holdGap, out float currentGap))
+            return false;
+
+        if (moveMode == EnemyMoveMode.Ground && !IsOnSamePlatform(target))
+            return false;
+
+        bool rangedHold = enemy != null && enemy.UsesRangedAttack;
+        if (rangedHold)
+            return currentGap <= holdGap + arrivalThreshold;
+
+        return EnemyFacingUtil.HorizontalDistance(BodyPosition(), holdPoint) <= arrivalThreshold;
+    }
+
+    private bool TryResolveHoldPoint(
+        Transform target,
+        float attackRange,
+        out Vector3 holdPoint,
+        out float holdGap,
+        out float currentGap)
+    {
+        holdPoint = default;
+        holdGap = 0f;
+        currentGap = 0f;
+        if (target == null)
+            return false;
+
+        Vector3 current = BodyPosition();
+        Vector3 targetPos = target.position;
+        currentGap = EnemyFacingUtil.HorizontalDistance(current, targetPos);
+
+        float side = Mathf.Approximately(current.x - targetPos.x, 0f)
+            ? -EnemyFacingUtil.GetFacingSign(target)
+            : Mathf.Sign(current.x - targetPos.x);
+
+        float range = Mathf.Max(0.1f, attackRange);
+        holdGap = enemy != null ? enemy.ResolveHoldRange(range) : range * 0.85f;
+        holdGap += ResolveCrowdSlotOffset(target, side);
+
+        float holdX = targetPos.x + side * holdGap;
+        holdPoint = moveMode == EnemyMoveMode.Ground
+            ? new Vector3(holdX, current.y, current.z)
+            : new Vector3(holdX, targetPos.y + attackSlotOffset.y, current.z);
+        return true;
     }
 
     public void StopHorizontal()
     {
         Cache();
+        if (!CanDriveMovement() || IsUnstacking)
+            return;
+
         if (body != null)
             body.linearVelocity = new Vector2(0f, body.linearVelocity.y);
     }
@@ -211,6 +304,10 @@ public class EnemyLocomotion : MonoBehaviour
     public void SetHorizontalSpeed(float signedSpeed)
     {
         Cache();
+        if (!CanDriveMovement())
+            return;
+
+        FaceWalkDirection(signedSpeed);
         if (body != null)
         {
             body.linearVelocity = new Vector2(signedSpeed, body.linearVelocity.y);
@@ -226,6 +323,9 @@ public class EnemyLocomotion : MonoBehaviour
     public bool MoveTowardsX(float targetX, float speed)
     {
         Cache();
+        if (IsUnstacking)
+            return false;
+
         Vector3 current = BodyPosition();
         EnemyFacingUtil.FaceHorizontal(cachedTransform, targetX - current.x);
 
@@ -255,12 +355,6 @@ public class EnemyLocomotion : MonoBehaviour
             return false;
 
         Cache();
-        float selfFoot = FootY(ResolveBodyCollider(), BodyPosition().y);
-        Collider2D targetCollider = target.GetComponentInChildren<Collider2D>();
-        float targetFoot = FootY(targetCollider, target.position.y);
-        if (Mathf.Abs(targetFoot - selfFoot) > samePlatformMaxY)
-            return false;
-
         float dx = target.position.x - BodyPosition().x;
         if (Mathf.Abs(dx) <= arrivalThreshold)
             return true;
@@ -273,6 +367,69 @@ public class EnemyLocomotion : MonoBehaviour
         platformPatrolSign = Mathf.Sign(preferredDirectionX);
         if (Mathf.Approximately(platformPatrolSign, 0f))
             platformPatrolSign = 1f;
+    }
+
+    private void LateUpdate()
+    {
+        UnstackIfOverlapping();
+    }
+
+    /// <summary>
+    /// If another living enemy is overlapping, walk the opposite way.
+    /// Returns true when a split was applied.
+    /// </summary>
+    public bool UnstackIfOverlapping()
+    {
+        return UnstackIfOverlapping(Time.deltaTime);
+    }
+
+    public bool UnstackIfOverlapping(float deltaTime)
+    {
+        if (!CanDriveMovement())
+        {
+            overlapElapsed = 0f;
+            return false;
+        }
+
+        bool overlapping = TryResolveUnstackSign(out float sign);
+        if (IsUnstacking)
+        {
+            ApplyUnstackWalk(unstackSign);
+            return true;
+        }
+
+        if (!overlapping)
+        {
+            overlapElapsed = 0f;
+            return false;
+        }
+
+        overlapElapsed += Mathf.Max(0f, deltaTime);
+        if (overlapElapsed < overlapConfirmTime)
+            return false;
+
+        if (!HasGroundInDirection(sign))
+        {
+            sign = -sign;
+            if (!HasGroundInDirection(sign))
+            {
+                overlapElapsed = 0f;
+                return false;
+            }
+        }
+
+        unstackSign = sign;
+        unstackUntil = Time.time + unstackCommitTime;
+        overlapElapsed = 0f;
+        ApplyUnstackWalk(unstackSign);
+        return true;
+    }
+
+    public bool IsUnstacking => Time.time < unstackUntil;
+
+    private void ApplyUnstackWalk(float sign)
+    {
+        SetHorizontalSpeed(sign * unstackSpeed);
     }
 
     public void PatrolCurrentPlatform(float speed)
@@ -310,6 +467,9 @@ public class EnemyLocomotion : MonoBehaviour
 
     private void DriveGroundX(float targetX, float speed)
     {
+        if (!CanDriveMovement() || IsUnstacking)
+            return;
+
         Vector3 current = BodyPosition();
         float dx = targetX - current.x;
         if (Mathf.Abs(dx) <= arrivalThreshold)
@@ -319,6 +479,7 @@ public class EnemyLocomotion : MonoBehaviour
         }
 
         float dir = Mathf.Sign(dx);
+        FaceWalkDirection(dir);
         if (!HasGroundInDirection(dir))
         {
             StopHorizontal();
@@ -339,6 +500,9 @@ public class EnemyLocomotion : MonoBehaviour
 
     private void DriveFly(Vector3 target, float speed)
     {
+        if (!CanDriveMovement() || IsUnstacking)
+            return;
+
         ApplyModeGravity();
         Vector3 current = BodyPosition();
         Vector3 delta = target - current;
@@ -351,6 +515,7 @@ public class EnemyLocomotion : MonoBehaviour
             return;
         }
 
+        FaceWalkDirection(delta.x);
         if (body == null)
         {
             cachedTransform.position = Vector3.MoveTowards(current, target, speed * Time.deltaTime);
@@ -364,8 +529,19 @@ public class EnemyLocomotion : MonoBehaviour
         body.linearVelocity = vel;
     }
 
+    private void FaceWalkDirection(float directionX)
+    {
+        if (!faceTargetOnMove)
+            return;
+
+        EnemyFacingUtil.FaceHorizontal(cachedTransform, directionX);
+    }
+
     private void Teleport(Vector3 worldPosition)
     {
+        if (!CanDriveMovement())
+            return;
+
         if (body != null)
         {
             body.linearVelocity = Vector2.zero;
@@ -436,12 +612,114 @@ public class EnemyLocomotion : MonoBehaviour
         for (int i = 0; i < hitCount; i++)
         {
             RaycastHit2D hit = groundHits[i];
-            if (hit.collider == null || hit.collider == col)
+            if (hit.collider == null || IsActorCollider(hit.collider, col))
                 continue;
             if (hit.normal.y >= 0.25f)
                 return true;
         }
 
         return false;
+    }
+
+    private bool TryResolveUnstackSign(out float sign)
+    {
+        sign = 0f;
+        Cache();
+        if (enemy == null || !enemy.IsAlive)
+            return false;
+
+        Vector3 self = BodyPosition();
+        RoomEnemyRegistry.FillLiving(livingEnemies);
+        EnemyController nearest = null;
+        float nearestAbs = overlapRadius;
+        for (int i = 0; i < livingEnemies.Count; i++)
+        {
+            EnemyController other = livingEnemies[i];
+            if (other == null || other == enemy || !other.IsAlive)
+                continue;
+            if (other.GetComponent<EnemyLocomotion>() == null)
+                continue;
+
+            Vector3 otherPos = other.transform.position;
+            if (Mathf.Abs(otherPos.y - self.y) > overlapSameY)
+                continue;
+
+            float dx = self.x - otherPos.x;
+            float abs = Mathf.Abs(dx);
+            if (abs >= nearestAbs)
+                continue;
+
+            nearest = other;
+            nearestAbs = abs;
+            sign = abs > 0.04f
+                ? Mathf.Sign(dx)
+                : (enemy.GetInstanceID() > other.GetInstanceID() ? 1f : -1f);
+        }
+
+        return nearest != null;
+    }
+
+    /// <summary>
+    /// Extra outward distance so a pack queues instead of piling onto one point. Rank comes from how
+    /// far each body already stands from the target, so the front slot belongs to whoever actually
+    /// got there first and nobody has to walk through a peer to reach its place.
+    /// </summary>
+    private float ResolveCrowdSlotOffset(Transform target, float side)
+    {
+        Cache();
+        if (enemy == null || target == null)
+            return 0f;
+
+        Vector3 self = BodyPosition();
+        float targetX = target.position.x;
+        float selfGap = Mathf.Abs(self.x - targetX);
+        int selfId = enemy.GetInstanceID();
+
+        RoomEnemyRegistry.FillLiving(livingEnemies);
+        int ahead = 0;
+        for (int i = 0; i < livingEnemies.Count; i++)
+        {
+            EnemyController other = livingEnemies[i];
+            if (other == null || other == enemy || !other.IsAlive)
+                continue;
+            if (other.GetComponent<EnemyLocomotion>() == null)
+                continue;
+
+            Vector3 otherPos = other.transform.position;
+            if (Mathf.Abs(otherPos.y - self.y) > samePlatformMaxY)
+                continue;
+            // A body on the far side of the target queues against that flank, not this one.
+            if (!Mathf.Approximately(Mathf.Sign(otherPos.x - targetX), side))
+                continue;
+
+            float otherGap = Mathf.Abs(otherPos.x - targetX);
+            if (otherGap < selfGap - CrowdRankEpsilon)
+            {
+                ahead++;
+            }
+            else if (Mathf.Abs(otherGap - selfGap) <= CrowdRankEpsilon && other.GetInstanceID() < selfId)
+            {
+                // Two bodies at the same distance would otherwise both claim the front slot and grind.
+                ahead++;
+            }
+        }
+
+        return ahead * crowdSlotSpacing;
+    }
+
+    private bool CanDriveMovement()
+    {
+        Cache();
+        return enemy == null || enemy.CurrentReactionState == EnemyReactionState.None;
+    }
+
+    private static bool IsActorCollider(Collider2D hitCollider, Collider2D self)
+    {
+        if (hitCollider == null || hitCollider == self)
+            return true;
+
+        Transform owner = hitCollider.transform;
+        return owner.GetComponentInParent<EnemyController>() != null
+            || owner.GetComponentInParent<PlayerCharacter>() != null;
     }
 }

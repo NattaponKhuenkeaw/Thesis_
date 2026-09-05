@@ -23,5 +23,5 @@ MonoBehaviour:
   waves: []
   delayBetweenWaves: 1.1
   spawnMode: 0
-  aliveCap: 3
+  aliveCap: 4
   spawnInterval: 0.35

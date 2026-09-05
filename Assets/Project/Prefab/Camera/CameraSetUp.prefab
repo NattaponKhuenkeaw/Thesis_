@@ -121,7 +121,7 @@ MonoBehaviour:
     AmplitudeGain: 1
     FrequencyGain: 1
     Duration: 1
-    m_NoiseOffsets: {x: 0, y: 0, z: 0}
+    m_NoiseOffsets: {x: 43.275024, y: 969.9249, z: 231.7301}
 --- !u!114 &7023022325664135136
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -426,7 +426,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CameraLookAhead
   playerRigidbody: {fileID: 0}
   fallLookAheadTime: 0.35
-  maxFallOffset: 3
+  maxFallOffset: 8
   verticalReturnSmoothTime: 0.25
   horizontalLookAheadDistance: 2
   horizontalLookAheadDuration: 0.25
@@ -583,7 +583,7 @@ MonoBehaviour:
     AmplitudeGain: 1
     FrequencyGain: 1
     Duration: 1
-    m_NoiseOffsets: {x: 0, y: 0, z: 0}
+    m_NoiseOffsets: {x: -254.65002, y: 893.3916, z: 955.5359}
 --- !u!1 &4815327143407226409
 GameObject:
   m_ObjectHideFlags: 0
@@ -726,7 +726,7 @@ MonoBehaviour:
     AmplitudeGain: 1
     FrequencyGain: 1
     Duration: 1
-    m_NoiseOffsets: {x: 0, y: 0, z: 0}
+    m_NoiseOffsets: {x: 845.33545, y: -128.58713, z: -762.68225}
 --- !u!1 &5920246794387904018
 GameObject:
   m_ObjectHideFlags: 0
@@ -737,7 +737,6 @@ GameObject:
   m_Component:
   - component: {fileID: 3655588815262581242}
   - component: {fileID: 6857840902691700294}
-  - component: {fileID: 1969089598507765711}
   - component: {fileID: 2439884810989198141}
   m_Layer: 0
   m_Name: CinemachineCamera_Static
@@ -755,7 +754,7 @@ Transform:
   m_GameObject: {fileID: 5920246794387904018}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 2.4000003, z: -17}
+  m_LocalPosition: {x: 0.5, y: 8.35, z: -17}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -804,26 +803,6 @@ MonoBehaviour:
       BarrelClipping: 0.25
       Anamorphism: 0
   BlendHint: 0
---- !u!114 &1969089598507765711
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5920246794387904018}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f453f694addf4275988fac205bc91968, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineConfiner2D
-  BoundingShape2D: {fileID: 3592715534242637191}
-  Damping: 0
-  SlowingDistance: 5
-  OversizeWindow:
-    Enabled: 0
-    MaxWindowSize: 0
-    Padding: 0
-  m_LegacyMaxWindowSize: -2
 --- !u!114 &2439884810989198141
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -847,7 +826,7 @@ MonoBehaviour:
     AmplitudeGain: 1
     FrequencyGain: 1
     Duration: 1
-    m_NoiseOffsets: {x: 0, y: 0, z: 0}
+    m_NoiseOffsets: {x: -15.134216, y: 736.38745, z: -27.964722}
 --- !u!1 &8612412348540621060
 GameObject:
   m_ObjectHideFlags: 0
@@ -926,7 +905,7 @@ Transform:
   m_GameObject: {fileID: 8999929430782389086}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.5, y: 2.5, z: -17}
+  m_LocalPosition: {x: 0.5, y: 9.19, z: -17}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -967,7 +946,7 @@ Camera:
   far clip plane: 5000
   field of view: 40
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 12
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2

@@ -2,7 +2,13 @@
 
 ## Author a new encounter
 
-For **combat chambers** (multi-room layout): fill **Enemy Types** (prefab + Weight) and **Type Pick**. Assign that asset on `CombatStageController` → Chambers → Encounter, and set Enemy Count on the chamber.
+For **combat chambers** (multi-room layout): set **Enemy Count** on the chamber. The chosen RouteOffer card picks the palette:
+
+- Easy → `Encounter_Easy`
+- Medium → `Encounter_Medium`
+- Hard → `Encounter_Hard`
+
+Tune **Enemy Types / Weight / Alive Cap** on those three assets. Chamber **Encounter** is an optional override for debug / entering without a card.
 
 For **boss / single-room fallback**:
 
@@ -28,7 +34,7 @@ Boss layout:
 
 ## Fallback
 
-If a chamber has no Encounter, use `RoomData.Encounter`. Boss rooms always spawn from `RoomData.Encounter` (Burst waves). `RoomWaveManager` no longer has Inspector waves.
+Chamber combat uses the card's Easy / Medium / Hard palette. A chamber Encounter is only a fallback when no card is active. Boss rooms always spawn from `RoomData.Encounter` (Burst waves). `RoomWaveManager` no longer has Inspector waves.
 
 ## Difficulty palettes (combat)
 
@@ -42,13 +48,13 @@ Combat rooms no longer use one Encounter per layout. Author **Enemy Count** on t
 
 **Shuffle Bag** deals a shuffled mix from the weights, then reshuffles when the bag is empty. **Weighted Random** rolls every spawn independently (can repeat the same type more often).
 
-Drag Easy / Medium / Hard onto `CombatStageController` → Chambers → Encounter. If a chamber has no Encounter, it falls back to `RoomData.encounter`.
+Do not drag Easy / Medium / Hard onto each chamber. The card difficulty selects the asset at runtime.
 
-| RoomData fallback | Encounter |
-|-------------------|-----------|
-| Combat_01 | `Encounter_Easy` |
-| Combat_02, Combat_03 | `Encounter_Medium` |
-| Combat_04, Combat_05 | `Encounter_Hard` |
+`RoomData.Encounter` is unused for chamber combat while a card is active. It remains the no-card / boss fallback:
+
+| RoomData | Encounter |
+|----------|-----------|
+| Combat_01–05 | ignored when a RouteOffer card is active |
 | Boss_01 | `Encounter_Boss_Executioner` (Burst, 1 wave, slot 0) |
 
-Max concurrent in **Pressure** rooms is `aliveCap` (default **3**). Quota can be larger than the slot count; slots are reused. Boss stays **Burst** (one wave).
+Max concurrent in **Pressure** rooms is the palette's `aliveCap` (`Encounter_Easy` is 5, Medium/Hard are 3). Quota can be larger than the slot count; slots are reused. Boss stays **Burst** (one wave).
