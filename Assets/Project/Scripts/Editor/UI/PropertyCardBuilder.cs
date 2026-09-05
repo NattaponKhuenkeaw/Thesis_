@@ -1694,6 +1694,18 @@ namespace CombatEditor.UI
                 settings.snapCameraToPlayer = value;
                 MarkDirty();
             });
+            AddToggleField(inner, "Smooth Camera Transition", settings.smoothCameraTransition, value =>
+            {
+                RecordUndo("Toggle Teleport Smooth Camera");
+                settings.smoothCameraTransition = value;
+                MarkDirty();
+            });
+            AddFloatField(inner, "Camera Smooth Time", settings.cameraSmoothTime, value =>
+            {
+                RecordUndo("Edit Teleport Camera Smooth Time");
+                settings.cameraSmoothTime = Mathf.Max(0f, value);
+                MarkDirty();
+            });
             AddFloatField(inner, "Camera Snap Duration", settings.cameraSnapDuration, value =>
             {
                 RecordUndo("Edit Teleport Snap Duration");

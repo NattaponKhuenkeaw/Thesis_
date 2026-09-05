@@ -9,12 +9,122 @@ public class GameAudioManager : MonoBehaviour
 
     [Header("Pool Settings")]
     public int initialPoolSize = 10;
+
+    [Header("Volume Hierarchy")]
+    [SerializeField, Range(0f, 1f)] private float masterVolume = 1.0f;
+    [Tooltip("Master SFX volume. Default is 0.5 (-6 dB) to give headroom and prevent clipping during multi-hits.")]
+    [SerializeField, Range(0f, 1f)] private float sfxVolume = 0.5f;
+    [SerializeField, Range(0f, 1f)] private float voiceVolume = 0.8f;
+    [SerializeField, Range(0f, 1f)] private float bgmVolume = 0.6f;
+
+    [Header("Mixer Routing (Optional)")]
+    [SerializeField] private UnityEngine.Audio.AudioMixerGroup sfxMixerGroup;
+    [SerializeField] private UnityEngine.Audio.AudioMixerGroup voiceMixerGroup;
+    [SerializeField] private UnityEngine.Audio.AudioMixerGroup bgmMixerGroup;
+
+    [Header("Concurrency & Polyphony Limiter")]
+    [Tooltip("Max concurrent instances of the exact same AudioClip allowed in a single frame.")]
+    [SerializeField] private int maxSameClipPerFrame = 2;
+    [Tooltip("Volume multiplier applied to subsequent instances of the same sound played in the same frame.")]
+    [SerializeField, Range(0f, 1f)] private float duplicateClipDampenFactor = 0.6f;
+
+    private const string PrefKeyMaster = "Audio_MasterVolume";
+    private const string PrefKeySFX = "Audio_SFXVolume";
+    private const string PrefKeyVoice = "Audio_VoiceVolume";
+    private const string PrefKeyBGM = "Audio_BGMVolume";
+
+    private readonly Dictionary<AudioClip, int> frameClipCounts = new Dictionary<AudioClip, int>();
+    private int lastProcessedFrame = -1;
     
     private Queue<AudioSource> sourcePool = new Queue<AudioSource>();
     private AudioSource voiceSource; // Single instance to mutually exclude lines
 
+    public float MasterVolume
+    {
+        get => masterVolume;
+        set
+        {
+            masterVolume = Mathf.Clamp01(value);
+            PlayerPrefs.SetFloat(PrefKeyMaster, masterVolume);
+        }
+    }
+
+    public float SFXVolume
+    {
+        get => sfxVolume;
+        set
+        {
+            sfxVolume = Mathf.Clamp01(value);
+            PlayerPrefs.SetFloat(PrefKeySFX, sfxVolume);
+        }
+    }
+
+    public float VoiceVolume
+    {
+        get => voiceVolume;
+        set
+        {
+            voiceVolume = Mathf.Clamp01(value);
+            PlayerPrefs.SetFloat(PrefKeyVoice, voiceVolume);
+        }
+    }
+
+    public float BGMVolume
+    {
+        get => bgmVolume;
+        set
+        {
+            bgmVolume = Mathf.Clamp01(value);
+            PlayerPrefs.SetFloat(PrefKeyBGM, bgmVolume);
+        }
+    }
+
+    public float GetEffectiveSFXVolume(float baseVolume = 1f)
+    {
+        return Mathf.Clamp01(baseVolume) * sfxVolume * masterVolume;
+    }
+
+    public float GetEffectiveVoiceVolume(float baseVolume = 1f)
+    {
+        return Mathf.Clamp01(baseVolume) * voiceVolume * masterVolume;
+    }
+
+    private float CalculateConcurrencyVolumeModifier(AudioClip clip)
+    {
+        if (clip == null) return 1f;
+
+        int currentFrame = Time.frameCount;
+        if (currentFrame != lastProcessedFrame)
+        {
+            frameClipCounts.Clear();
+            lastProcessedFrame = currentFrame;
+        }
+
+        if (!frameClipCounts.TryGetValue(clip, out int count))
+        {
+            count = 0;
+        }
+
+        if (count >= maxSameClipPerFrame)
+        {
+            return 0f; // Drop duplicate sound exceeding frame limit to prevent ear-damaging volume spikes
+        }
+
+        frameClipCounts[clip] = count + 1;
+        return count == 0 ? 1f : Mathf.Pow(duplicateClipDampenFactor, count);
+    }
+
+    private void LoadSavedVolumes()
+    {
+        if (PlayerPrefs.HasKey(PrefKeyMaster)) masterVolume = PlayerPrefs.GetFloat(PrefKeyMaster);
+        if (PlayerPrefs.HasKey(PrefKeySFX)) sfxVolume = PlayerPrefs.GetFloat(PrefKeySFX);
+        if (PlayerPrefs.HasKey(PrefKeyVoice)) voiceVolume = PlayerPrefs.GetFloat(PrefKeyVoice);
+        if (PlayerPrefs.HasKey(PrefKeyBGM)) bgmVolume = PlayerPrefs.GetFloat(PrefKeyBGM);
+    }
+
     private void Awake()
     {
+        LoadSavedVolumes();
         string sourceSceneName = gameObject.scene.name;
         RootPersistentManager rootManager = GetComponentInParent<RootPersistentManager>();
         if (rootManager != null && rootManager.IsDuplicate)
@@ -58,18 +168,26 @@ public class GameAudioManager : MonoBehaviour
     {
         for (int i = 0; i < initialPoolSize; i++)
         {
-            sourcePool.Enqueue(CreateNewSource("PooledAudioSource"));
+            sourcePool.Enqueue(CreateNewSource("PooledAudioSource", false));
         }
 
-        voiceSource = CreateNewSource("VoiceAudioSource");
+        voiceSource = CreateNewSource("VoiceAudioSource", true);
     }
 
-    private AudioSource CreateNewSource(string namePrefix)
+    private AudioSource CreateNewSource(string namePrefix, bool isVoice = false)
     {
         GameObject go = new GameObject($"{namePrefix}_{System.Guid.NewGuid().ToString().Substring(0, 4)}");
         go.transform.SetParent(transform);
         AudioSource src = go.AddComponent<AudioSource>();
         src.playOnAwake = false;
+        if (isVoice && voiceMixerGroup != null)
+        {
+            src.outputAudioMixerGroup = voiceMixerGroup;
+        }
+        else if (!isVoice && sfxMixerGroup != null)
+        {
+            src.outputAudioMixerGroup = sfxMixerGroup;
+        }
         return src;
     }
 
@@ -79,7 +197,7 @@ public class GameAudioManager : MonoBehaviour
         {
             return sourcePool.Dequeue();
         }
-        return CreateNewSource("PooledAudioSource");
+        return CreateNewSource("PooledAudioSource", false);
     }
 
     private void ReturnSource(AudioSource src)
@@ -103,17 +221,20 @@ public class GameAudioManager : MonoBehaviour
             // Override previous voice
             voiceSource.Stop();
             voiceSource.clip = entry.clip;
-            voiceSource.volume = entry.volume;
+            voiceSource.volume = GetEffectiveVoiceVolume(entry.volume);
             voiceSource.pitch = entry.pitchVariation; // If we want to vary pitch
             voiceSource.ignoreListenerPause = false;
             voiceSource.Play();
         }
         else
         {
+            float concurrencyMod = CalculateConcurrencyVolumeModifier(entry.clip);
+            if (concurrencyMod <= 0.001f) return;
+
             // Action, Hit, etc.
             AudioSource src = GetSource();
             src.clip = entry.clip;
-            src.volume = entry.volume;
+            src.volume = GetEffectiveSFXVolume(entry.volume) * concurrencyMod;
             src.pitch = entry.pitchVariation;
             src.ignoreListenerPause = false;
             src.Play();
@@ -125,9 +246,12 @@ public class GameAudioManager : MonoBehaviour
     {
         if (clip == null) return;
 
+        float concurrencyMod = CalculateConcurrencyVolumeModifier(clip);
+        if (concurrencyMod <= 0.001f) return;
+
         AudioSource src = GetSource();
         src.clip = clip;
-        src.volume = volume;
+        src.volume = GetEffectiveSFXVolume(volume) * concurrencyMod;
         src.pitch = pitch;
         src.ignoreListenerPause = false;
         src.Play();
@@ -164,7 +288,7 @@ public class GameAudioManager : MonoBehaviour
         {
             voiceSource.Stop();
             voiceSource.clip = clip;
-            voiceSource.volume = 1f;
+            voiceSource.volume = GetEffectiveVoiceVolume(1f);
             voiceSource.pitch = 1f;
             voiceSource.ignoreListenerPause = true; // PLAY THROUGH FREEZE
             voiceSource.Play();
@@ -175,7 +299,7 @@ public class GameAudioManager : MonoBehaviour
         {
             AudioSource src = GetSource();
             src.clip = clip;
-            src.volume = 1f;
+            src.volume = GetEffectiveSFXVolume(1f);
             src.pitch = 1f;
             src.ignoreListenerPause = true; // PLAY THROUGH FREEZE
             src.Play();

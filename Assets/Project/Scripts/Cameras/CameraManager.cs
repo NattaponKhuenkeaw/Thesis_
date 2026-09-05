@@ -557,7 +557,7 @@ public class CameraManager : MonoBehaviour
         return nearestEnemy;
     }
 
-    public void NotifyPlayerWarp(Vector3 positionDelta)
+    public void NotifyPlayerWarp(Vector3 positionDelta, bool resetDampingState = true)
     {
         if (_playerTransform == null)
         {
@@ -570,7 +570,10 @@ public class CameraManager : MonoBehaviour
             {
                 _exploreCam.OnTargetObjectWarped(_playerTransform, positionDelta);
             }
-            _exploreCam.PreviousStateIsValid = false;
+            if (resetDampingState)
+            {
+                _exploreCam.PreviousStateIsValid = false;
+            }
         }
 
         if (_combatCam != null)
@@ -579,11 +582,14 @@ public class CameraManager : MonoBehaviour
             {
                 _combatCam.OnTargetObjectWarped(_playerTransform, positionDelta);
             }
-            _combatCam.PreviousStateIsValid = false;
+            if (resetDampingState)
+            {
+                _combatCam.PreviousStateIsValid = false;
+            }
         }
     }
 
-    public void BeginTemporaryPlayerSnap(float duration, bool smoothTransition = false, float smoothTime = 0.15f)
+    public void BeginTemporaryPlayerSnap(float duration, bool smoothTransition = true, float smoothTime = 0.15f)
     {
         if (_exploreCam == null || _playerTransform == null)
         {
@@ -633,7 +639,10 @@ public class CameraManager : MonoBehaviour
             _ultimateCam.Priority = _inactivePriority;
         }
 
-        NotifyPlayerWarp(Vector3.zero);
+        if (!smoothTransition)
+        {
+            NotifyPlayerWarp(Vector3.zero, resetDampingState: true);
+        }
 
         if (duration > 0f)
         {
@@ -675,7 +684,7 @@ public class CameraManager : MonoBehaviour
             SetExploreMode();
         }
 
-        NotifyPlayerWarp(Vector3.zero);
+        NotifyPlayerWarp(Vector3.zero, resetDampingState: false);
     }
 
     /// <summary>

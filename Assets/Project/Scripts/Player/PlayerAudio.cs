@@ -116,7 +116,9 @@ public class PlayerAudio : MonoBehaviour
             AudioSource source = isVoice ? loopVoiceSource : loopSFXSource;
             source.clip = clip;
             source.loop = true;
-            source.volume = volume;
+            source.volume = GameAudioManager.Instance != null
+                ? (isVoice ? GameAudioManager.Instance.GetEffectiveVoiceVolume(volume) : GameAudioManager.Instance.GetEffectiveSFXVolume(volume))
+                : volume;
             source.pitch = pitch;
             source.spatialBlend = 0f; // Force 2D
             source.Play();

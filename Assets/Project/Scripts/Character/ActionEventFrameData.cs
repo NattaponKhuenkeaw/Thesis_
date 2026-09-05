@@ -161,8 +161,14 @@ public class TeleportEventSettings
     [Tooltip("Horizontal spacing kept between the player and the target after teleporting.")]
     public float teleportOffsetX = 1.2f;
 
-    [Tooltip("If enabled, the camera cuts to the player for the duration of this event.")]
+    [Tooltip("If enabled, the camera cuts or eases to the player for the duration of this event.")]
     public bool snapCameraToPlayer = true;
+
+    [Tooltip("If enabled, uses smooth easing/damping to follow the teleport instead of an instantaneous hard cut.")]
+    public bool smoothCameraTransition = true;
+
+    [Tooltip("Duration of the smooth camera transition blend in seconds.")]
+    public float cameraSmoothTime = 0.15f;
 
     [Tooltip("How long the camera stays snapped to the player before returning to normal behavior.")]
     public float cameraSnapDuration = 0.12f;
