@@ -2,7 +2,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Project.Progression;
+using Project.UI;
 
+[RequireComponent(typeof(UIBlockPlayerClick))]
 public class AdminConsole : MonoBehaviour
 {
 
@@ -11,6 +13,14 @@ public class AdminConsole : MonoBehaviour
     [Header("Reset Systems")]
     [SerializeField] private Project.ShopSystem.PlayerRunInventory runInventory;
     [SerializeField] private Project.Progression.PlayerMetaProgression progressionInventory;
+
+    private void Awake()
+    {
+        if (GetComponent<UIBlockPlayerClick>() == null)
+        {
+            gameObject.AddComponent<UIBlockPlayerClick>();
+        }
+    }
 
     private void Start()
     {
@@ -21,8 +31,6 @@ public class AdminConsole : MonoBehaviour
     {
         Button[] buttons = GetComponentsInChildren<Button>(true);
         Button runBtn = null;
-        Button metaBtn = null;
-        Button templateBtn = null;
 
         foreach (var btn in buttons)
         {
@@ -36,11 +44,8 @@ public class AdminConsole : MonoBehaviour
             }
             else if (bName.Contains("MetaCurrency") || bText.Contains("Meta Currency"))
             {
-                metaBtn = btn;
-            }
-            else if (templateBtn == null && btn.gameObject.activeInHierarchy)
-            {
-                templateBtn = btn;
+                // Disable any legacy or cloned MetaCurrency buttons
+                btn.gameObject.SetActive(false);
             }
         }
 
@@ -48,28 +53,6 @@ public class AdminConsole : MonoBehaviour
         {
             runBtn.onClick.RemoveListener(AddRunCurrency1000);
             runBtn.onClick.AddListener(AddRunCurrency1000);
-        }
-
-        if (metaBtn == null && runBtn != null)
-        {
-            // Clone Run button to create Meta Currency button in the same layout
-            GameObject metaObj = Instantiate(runBtn.gameObject, runBtn.transform.parent);
-            metaObj.name = "AddMetaCurrency";
-            metaObj.SetActive(true);
-            metaBtn = metaObj.GetComponent<Button>();
-            metaBtn.onClick.RemoveAllListeners();
-            metaBtn.onClick.AddListener(AddMetaCurrency1000);
-
-            var metaText = metaObj.GetComponentInChildren<TMPro.TMP_Text>();
-            if (metaText != null)
-            {
-                metaText.text = "Add Meta Currency (+1000)";
-            }
-        }
-        else if (metaBtn != null)
-        {
-            metaBtn.onClick.RemoveListener(AddMetaCurrency1000);
-            metaBtn.onClick.AddListener(AddMetaCurrency1000);
         }
     }
 
@@ -159,30 +142,8 @@ public class AdminConsole : MonoBehaviour
         }
     }
 
-    public void AddMetaCurrency(int amount = 1000)
-    {
-        var meta = ResolveMetaProgression();
-        if (meta != null)
-        {
-            meta.AddMetaCurrency(amount);
-            Debug.Log($"[AdminConsole] Added {amount} Meta Currency. Current: {meta.MetaCurrency}");
-        }
-        else
-        {
-            Debug.LogWarning("[AdminConsole] Cannot add Meta Currency: PlayerMetaProgression not found.");
-        }
-    }
-
-    public void AddBothCurrencies(int amount = 1000)
-    {
-        AddRunCurrency(amount);
-        AddMetaCurrency(amount);
-    }
-
     public void AddRunCurrency1000() => AddRunCurrency(1000);
     public void AddRunCurrency10000() => AddRunCurrency(10000);
-    public void AddMetaCurrency1000() => AddMetaCurrency(1000);
-    public void AddMetaCurrency10000() => AddMetaCurrency(10000);
 
     /// <summary>
     /// Unity OnClick prototype for the future Level-room reward sequence.

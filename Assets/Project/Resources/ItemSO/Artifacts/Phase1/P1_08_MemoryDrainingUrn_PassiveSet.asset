@@ -99,7 +99,7 @@ MonoBehaviour:
           presentation:
             effectId: P1-A08-CURSE
             displayName: P1-A08-CURSE
-            icon: {fileID: 0}
+            icon: {fileID: 21300000, guid: c150d9129a915d64f9e8197922c09abe, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0
@@ -258,7 +258,7 @@ MonoBehaviour:
           presentation:
             effectId: P1-A08-BENEFIT
             displayName: P1-A08-BENEFIT
-            icon: {fileID: 0}
+            icon: {fileID: 21300000, guid: cdfdc962ef7310244b2344353c822d9f, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0

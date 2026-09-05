@@ -6,12 +6,12 @@ namespace Project.InventorySystem.Artifacts
 {
     public enum ArtifactSortMode
     {
+        Newest,
+        Oldest,
         FavouriteFirst,
         StatLineCount,
         AverageRollQuality,
         SelectedStatTotal,
-        Newest,
-        Oldest,
         DefinitionName,
         EquippedFirst,
         UnequippedFirst
@@ -42,7 +42,7 @@ namespace Project.InventorySystem.Artifacts
         {
             sortMode = ArtifactSortMode.Newest,
             descending = true,
-            minimumLineCount = 1,
+            minimumLineCount = 0,
             maximumLineCount = 4
         };
     }
@@ -69,11 +69,23 @@ namespace Project.InventorySystem.Artifacts
                 }
                 if (result != 0) return result;
 
-                // Deterministic tie-breaker: newest acquisition order first, then instance ID
-                result = right.acquisitionOrder.CompareTo(left.acquisitionOrder);
+                // Deterministic tie-breaker: newest acquisition order/time first, then instance ID
+                result = CompareAcquisitionTime(right, left);
                 if (result != 0) return result;
 
                 return string.CompareOrdinal(left.instanceId, right.instanceId);
+            }
+
+            private static int CompareAcquisitionTime(ArtifactInstance left, ArtifactInstance right)
+            {
+                if (left != null && right != null && left.collectedTimestampUtc > 0 && right.collectedTimestampUtc > 0)
+                {
+                    int timeCmp = left.collectedTimestampUtc.CompareTo(right.collectedTimestampUtc);
+                    if (timeCmp != 0) return timeCmp;
+                }
+                long leftOrder = left != null ? left.acquisitionOrder : 0;
+                long rightOrder = right != null ? right.acquisitionOrder : 0;
+                return leftOrder.CompareTo(rightOrder);
             }
 
             private int ComparePrimary(ArtifactInstance left, ArtifactInstance right)
@@ -89,7 +101,7 @@ namespace Project.InventorySystem.Artifacts
                     case ArtifactSortMode.SelectedStatTotal:
                         return SumStat(left, Query.selectedSortStat).CompareTo(SumStat(right, Query.selectedSortStat));
                     case ArtifactSortMode.Oldest:
-                        return right.acquisitionOrder.CompareTo(left.acquisitionOrder);
+                        return CompareAcquisitionTime(right, left);
                     case ArtifactSortMode.DefinitionName:
                     {
                         string nameA = ResolveDefinition?.Invoke(left.definitionId)?.itemName ?? left.definitionId ?? string.Empty;
@@ -102,7 +114,7 @@ namespace Project.InventorySystem.Artifacts
                         return (!IsEquipped(left)).CompareTo(!IsEquipped(right));
                     case ArtifactSortMode.Newest:
                     default:
-                        return left.acquisitionOrder.CompareTo(right.acquisitionOrder);
+                        return CompareAcquisitionTime(left, right);
                 }
             }
 
@@ -161,7 +173,7 @@ namespace Project.InventorySystem.Artifacts
             ISet<string> equippedIds)
         {
             int count = CountRolls(instance);
-            int min = query.minimumLineCount <= 0 ? 1 : query.minimumLineCount;
+            int min = query.minimumLineCount <= 0 ? 0 : query.minimumLineCount;
             int max = query.maximumLineCount <= 0 ? int.MaxValue : query.maximumLineCount;
             if (count < min || count > max) return false;
             if (!MatchesOptional(instance.isFavourite, query.favourite)) return false;

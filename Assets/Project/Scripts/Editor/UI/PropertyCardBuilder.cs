@@ -402,6 +402,12 @@ namespace CombatEditor.UI
                     phaseData.hitbox.elementType = (ElementType)value;
                     MarkDirty();
                 });
+                AddEnumFlagsField(parent, "Damage Tags", phaseData.hitbox.damageTags, value =>
+                {
+                    RecordUndo($"Edit {undoPrefix} Damage Tags");
+                    phaseData.hitbox.damageTags = (CombatDamageTag)value;
+                    MarkDirty();
+                });
                 AddColorField(parent, "Debug Color", phaseData.hitbox.debugColor, value =>
                 {
                     RecordUndo($"Edit {undoPrefix} Debug Color");
@@ -1694,18 +1700,6 @@ namespace CombatEditor.UI
                 settings.snapCameraToPlayer = value;
                 MarkDirty();
             });
-            AddToggleField(inner, "Smooth Camera Transition", settings.smoothCameraTransition, value =>
-            {
-                RecordUndo("Toggle Teleport Smooth Camera");
-                settings.smoothCameraTransition = value;
-                MarkDirty();
-            });
-            AddFloatField(inner, "Camera Smooth Time", settings.cameraSmoothTime, value =>
-            {
-                RecordUndo("Edit Teleport Camera Smooth Time");
-                settings.cameraSmoothTime = Mathf.Max(0f, value);
-                MarkDirty();
-            });
             AddFloatField(inner, "Camera Snap Duration", settings.cameraSnapDuration, value =>
             {
                 RecordUndo("Edit Teleport Snap Duration");
@@ -1959,6 +1953,12 @@ namespace CombatEditor.UI
                 {
                     RecordUndo("Edit Element Type");
                     hitbox.elementType = (ElementType)value;
+                    MarkDirty();
+                });
+                AddEnumFlagsField(inner, "Damage Tags", hitbox.damageTags, value =>
+                {
+                    RecordUndo("Edit Damage Tags");
+                    hitbox.damageTags = (CombatDamageTag)value;
                     MarkDirty();
                 });
 
@@ -2723,6 +2723,16 @@ namespace CombatEditor.UI
             VisualElement row = new VisualElement();
             row.AddToClassList("card-field-row");
             EnumField field = new EnumField(label, value);
+            field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
+            row.Add(field);
+            parent.Add(row);
+        }
+
+        private void AddEnumFlagsField(VisualElement parent, string label, Enum value, Action<Enum> onChange)
+        {
+            VisualElement row = new VisualElement();
+            row.AddToClassList("card-field-row");
+            EnumFlagsField field = new EnumFlagsField(label, value);
             field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
             row.Add(field);
             parent.Add(row);

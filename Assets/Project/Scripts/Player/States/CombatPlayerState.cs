@@ -574,10 +574,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
         if (settings.snapCameraToPlayer && CameraManager.instance != null)
         {
-            CameraManager.instance.BeginTemporaryPlayerSnap(
-                settings.cameraSnapDuration,
-                settings.smoothCameraTransition,
-                settings.cameraSmoothTime);
+            CameraManager.instance.BeginTemporaryPlayerSnap(settings.cameraSnapDuration);
         }
 
         TeleportPlayerNearTarget(target, settings);
@@ -623,14 +620,12 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         float resolvedOffset = Mathf.Max(0f, settings.teleportOffsetX);
         float destinationX = targetX - (horizontalDirection * resolvedOffset);
 
-        bool resetDamping = !settings.smoothCameraTransition;
-
         if (player.Movement != null)
         {
             Vector3 warpDelta = player.Movement.TeleportHorizontally(destinationX);
             player.Movement.SnapFacingDirection(horizontalDirection >= 0f ? 1 : -1);
             player.Combat?.HandleOwnerTeleported();
-            CameraManager.instance?.NotifyPlayerWarp(warpDelta, resetDampingState: resetDamping);
+            CameraManager.instance?.NotifyPlayerWarp(warpDelta);
         }
         else
         {
@@ -639,7 +634,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             player.transform.position = destination;
             Physics2D.SyncTransforms();
             player.Combat?.HandleOwnerTeleported();
-            CameraManager.instance?.NotifyPlayerWarp(warpDelta, resetDampingState: resetDamping);
+            CameraManager.instance?.NotifyPlayerWarp(warpDelta);
         }
     }
 

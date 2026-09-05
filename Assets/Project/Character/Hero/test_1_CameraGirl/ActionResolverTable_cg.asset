@@ -42,7 +42,7 @@ MonoBehaviour:
       rootNode:
         rid: 1588256193077837991
   skillActions:
-  - actionId: main.skill.dark_chain
+  - actionId: cg.skill
     actionName: Capture Da Soul
     context: 0
     outputContext: 0
@@ -57,6 +57,22 @@ MonoBehaviour:
       rootNode:
         rid: 1588256193077837992
     cooldown: 7
+  - actionId: cg.skill.ex
+    actionName: Shadow Attack
+    context: 0
+    outputContext: 0
+    priority: 0
+    conditions:
+    - rid: 7060639382869639293
+    damageSourceStat: 0
+    actionDamageMultiplier: 3.5
+    auraEnergyReward: 0
+    comboTree:
+      treeName: Combo
+      comboResetDelay: 0.8
+      rootNode:
+        rid: 7060639382869639287
+    cooldown: 0
   ultimateActions:
   - actionId: cg.ult
     actionName: Send Da Btch
@@ -144,6 +160,7 @@ MonoBehaviour:
         startFrameOffset: 0
         activeFrames: 5
         elementType: 0
+        damageTags: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.73862654, y: 1.4408524}
         size: {x: 1.5960404, y: 1.9701918}
@@ -171,6 +188,7 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256136747024577
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -218,6 +236,7 @@ MonoBehaviour:
         startFrameOffset: 6
         activeFrames: 6
         elementType: 0
+        damageTags: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.9269958, y: 1.5639287}
         size: {x: 4.696252, y: 3.6193118}
@@ -245,6 +264,7 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256162561392759
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -302,6 +322,7 @@ MonoBehaviour:
         startFrameOffset: 0
         activeFrames: 5
         elementType: 0
+        damageTags: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.9164111, y: 1.3354383}
         size: {x: 1.9984351, y: 2.5544248}
@@ -329,6 +350,7 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256193077837988
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
@@ -553,6 +575,7 @@ MonoBehaviour:
         startFrameOffset: 7
         activeFrames: 4
         elementType: 0
+        damageTags: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.04266739, y: 1.4082842}
         size: {x: 2.4200406, y: 3.1476989}
@@ -580,6 +603,7 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256193077838005
       type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -608,6 +632,7 @@ MonoBehaviour:
         startFrameOffset: 0
         activeFrames: 3
         elementType: 0
+        damageTags: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.7002583, y: 1.4658246}
         size: {x: 3.2558231, y: 2.5591278}
@@ -635,6 +660,7 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256193077838014
       type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -646,6 +672,7 @@ MonoBehaviour:
         startFrameOffset: 3
         activeFrames: 5
         elementType: 0
+        damageTags: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.5161705, y: 2.8986833}
         size: {x: 10.948589, y: 6.0871053}
@@ -673,12 +700,14 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256193077838035
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 0
         activeFrames: 5
         elementType: 0
+        damageTags: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.025115252, y: 2.3107314}
         size: {x: 2.6290107, y: 3.0021358}
@@ -706,6 +735,7 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 1588256193077838059
       type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -975,6 +1005,170 @@ MonoBehaviour:
         track: 2
         comparison: 3
         level: 2
+    - rid: 7060639382869639287
+      type: {class: ComboNode, ns: , asm: Assembly-CSharp}
+      data:
+        stepData:
+          startupFrames: 1
+          activeFrames: 24
+          recoveryFrames: 1
+          cancelWindowStartFrame: 25
+          loopActivePhase: 0
+          stepName: Shadow attack
+          animationClip: {fileID: 7400000, guid: af997704e0a683f418c56ff69c850ee9, type: 2}
+          lockAirPosition: 1
+          autoChainToNext: 0
+          triggerWindows: []
+          motionData:
+            rid: 7060639382869639288
+          vfxData:
+            rid: -2
+          audioData:
+            rid: 7060639382869639290
+          hitData:
+            rid: 7060639382869639289
+          eventData:
+            rid: 7060639382869639291
+          componentOrder:
+          - motion
+          - vfx
+          - audio
+          - hitbox
+          - events
+        routes: []
+        defaultNext:
+          rid: -2
+        onGrabSuccessNode:
+          rid: -2
+    - rid: 7060639382869639288
+      type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        keyframes:
+        - startFrame: 1
+          endFrame: 3
+          taskType: 0
+          easing: 1
+          position: {x: 1, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0}
+          scale: {x: 1, y: 1, z: 1}
+    - rid: 7060639382869639289
+      type: {class: HitFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        hitboxes:
+        - rid: 7060639382869639292
+    - rid: 7060639382869639290
+      type: {class: AudioFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: SFX
+          clip: {fileID: 8300000, guid: 9c626de2a9d03444cb898404238a5ed8, type: 3}
+          triggerFrame: 0
+          duration: 4
+          channel: 1
+          volume: 1
+          pitchVariation: 1.5
+          trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
+    - rid: 7060639382869639291
+      type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
+      data:
+        entries:
+        - label: Ultimate Sequence
+          eventType: 3
+          triggerFrame: 0
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          freezeWorld: 1
+          freezeDurationOverride: 0
+          timelineMode: 0
+          activationVFXType: 0
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 0, z: 0}
+          activationVoice: {fileID: 0}
+          activationSFX: {fileID: 0}
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0.4
+              endStrength: 0.08
+              duration: 0.14
+              pulseInterval: 0.025
+              slowMotion:
+                enabled: 0
+                timeScale: 0.35
+                duration: 0.08
+                delaySeconds: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          facingDirectionSettings:
+            mode: 0
+          enableUltimateZoom: 0
+          ultimateZoomSize: 5
+    - rid: 7060639382869639292
+      type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
+      data:
+        startFrameOffset: 0
+        activeFrames: 8
+        elementType: 4
+        damageTags: 2
+        debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
+        offset: {x: 1.157036, y: 1.4228604}
+        size: {x: 2.9106262, y: 3.11591}
+        damageRatio: 0.65
+        impactTier: 0
+        useDeterministicReaction: 1
+        reactionKind: 0
+        impactFreezeFrames: 0
+        knockbackFrames: 9
+        knockupFrames: 12
+        knockfallFrames: 10
+        recoveryFrames: 9
+        horizontalSpeed: 3
+        launchSpeed: 1
+        useSnapToAnchor: 0
+        snapOffset: {x: 0, y: 0}
+        landingBehavior: 1
+        canAirJuggle: 1
+        juggleLaunchScale: 0.85
+        juggleStunScale: 0.9
+        flashColor: {r: 1, g: 0, b: 0, a: 1}
+        flashFrames: 6
+        hitSFX: {fileID: 0}
+        hitVFXType: 0
+        hitVFXPrefab: {fileID: 0}
+        hitVFXOffset: {x: 0, y: 0}
+        breaksGrab: 0
+        breaksArmor: 0
+    - rid: 7060639382869639293
+      type: {class: RuntimeTagActionCondition, ns: , asm: Assembly-CSharp}
+      data:
+        tagType: 0
+        tag: w
+        shouldExist: 1
+        applyOnActionStart: 0
     - rid: 8312694097921703936
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -992,6 +1186,7 @@ MonoBehaviour:
         startFrameOffset: 11
         activeFrames: 4
         elementType: 0
+        damageTags: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.23655891, y: 1.325858}
         size: {x: 2.1472588, y: 2.6517158}
@@ -1019,12 +1214,14 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 8312694097921703938
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 15
         activeFrames: 4
         elementType: 0
+        damageTags: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.06547618, y: 1.3258576}
         size: {x: 2.3686597, y: 2.8127346}
@@ -1052,12 +1249,14 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 8312694097921703939
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 19
         activeFrames: 4
         elementType: 0
+        damageTags: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.0050935745, y: 1.2856028}
         size: {x: 2.28815, y: 2.8127341}
@@ -1085,12 +1284,14 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 8312694097921703940
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 22
         activeFrames: 1
         elementType: 0
+        damageTags: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.24662113, y: 1.2654756}
         size: {x: 2.2076416, y: 2.7322252}
@@ -1118,12 +1319,14 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 8312694097921703941
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
         startFrameOffset: 24
         activeFrames: 2
         elementType: 0
+        damageTags: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.27681375, y: 1.2956668}
         size: {x: 1.9459867, y: 2.7926068}
@@ -1151,6 +1354,7 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 8312694097921703942
       type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -1216,6 +1420,7 @@ MonoBehaviour:
         startFrameOffset: 19
         activeFrames: 8
         elementType: 0
+        damageTags: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.83019197, y: 0.85573465}
         size: {x: 3.6769354, y: 2.0737615}
@@ -1243,6 +1448,7 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0
     - rid: 8312694097921703944
       type: {class: MotionFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -1279,6 +1485,7 @@ MonoBehaviour:
         startFrameOffset: 17
         activeFrames: 3
         elementType: 0
+        damageTags: 0
         debugColor: {r: 0.42, g: 0.81, b: 1, a: 1}
         projectileType: 0
         projectileData: {fileID: 11400000, guid: 4b14a01658a80154d92da3812e8587c2, type: 2}

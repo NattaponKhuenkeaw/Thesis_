@@ -113,6 +113,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     private bool isApplyingRuntimeStats;
 
     public PlayerRunInventory RunInventory => runInventory;
+    public PlayerMetaProgression MetaProgression => metaProgression;
     public int CurrentIndex => currentIndex;
     public CharacterObject CurrentCharacter =>
         teamSnapshot != null && currentIndex >= 0 && currentIndex < teamSnapshot.Length
@@ -130,6 +131,10 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         ResolveDependencies();
         BootstrapRunInventoryTeam();
         SyncTeamSnapshotFromInventory();
+        if (CharacterCoordinatedActionSystem.Instance == null)
+        {
+            gameObject.AddComponent<CharacterCoordinatedActionSystem>();
+        }
     }
 
     private void OnEnable()
@@ -2222,6 +2227,11 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         }
 
         return false;
+    }
+
+    public IReadOnlyList<PotentialNodeDefinition> GetUnlockedPotentialNodes(CharacterObject sourceCharacter)
+    {
+        return EnumerateUnlockedPotentialNodes(sourceCharacter);
     }
 
     private IReadOnlyList<PotentialNodeDefinition> EnumerateUnlockedPotentialNodes(CharacterObject sourceCharacter)

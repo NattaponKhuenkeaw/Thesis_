@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StatRuntimeEffectDefinition
   effectId: orochi.sacrifice
   displayName: Sacrifice
-  icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+  icon: {fileID: 21300000, guid: c9f2959c90c2faf48a486f3c496dc182, type: 3}
   fieldVisualPrefab: {fileID: 0}
   kind: 1
   appliesOn: 1

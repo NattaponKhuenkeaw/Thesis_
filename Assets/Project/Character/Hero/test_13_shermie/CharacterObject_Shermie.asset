@@ -108,7 +108,7 @@ MonoBehaviour:
           presentation:
             effectId: shermie.skill.self_def
             displayName: Shermie Defense
-            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            icon: {fileID: 21300000, guid: 31d890a2823345a428cdd1e65dace3a2, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0
@@ -399,7 +399,7 @@ MonoBehaviour:
           presentation:
             effectId: shermie.ult.max_hp
             displayName: Shermie Max HP
-            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            icon: {fileID: 21300000, guid: f08d04cd066155e40889036a4fbd90d7, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0
@@ -664,7 +664,7 @@ MonoBehaviour:
           presentation:
             effectId: shermie.skill.shield
             displayName: Shermie Shield
-            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            icon: {fileID: 21300000, guid: b65856231aec2d045b334a9ddd88cf37, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 2
@@ -2045,7 +2045,7 @@ MonoBehaviour:
           presentation:
             effectId: shermie.passive.shermie_love
             displayName: Shermie Love
-            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            icon: {fileID: 21300000, guid: cfbe1f8648c517a4eb260aec9461e30e, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0

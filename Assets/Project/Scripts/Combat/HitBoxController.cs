@@ -50,7 +50,7 @@ public class HitBoxController : MonoBehaviour
     // =========================================================
     // Public Methods
     // =========================================================
-    public void ApplyHitbox(HitboxBase hitbox, float overrideFacing = 0f)
+    public void ApplyHitbox(HitboxBase hitbox, float overrideFacing = 0f, float sizeMultiplier = 1f)
     {
         if (hitbox == null)
             return;
@@ -59,6 +59,11 @@ public class HitBoxController : MonoBehaviour
         {
             // Non-spatial hitboxes (like projectile spawn markers) don't update collider geometry
             return;
+        }
+
+        if (sizeMultiplier > 0f && !Mathf.Approximately(sizeMultiplier, 1f))
+        {
+            size *= sizeMultiplier;
         }
 
         if (anchorMode == HitboxAnchorMode.Self)

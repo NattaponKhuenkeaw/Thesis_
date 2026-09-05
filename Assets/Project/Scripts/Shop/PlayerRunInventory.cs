@@ -208,6 +208,7 @@ namespace Project.ShopSystem
         public bool isFavourite;
         public bool isNew;
         public long acquisitionOrder;
+        public long collectedTimestampUtc;
         public int generationSeed;
     }
 
@@ -317,6 +318,7 @@ namespace Project.ShopSystem
         public event Action<int, int> OnGlobalLevelChanged;
         public event Action OnArtifactsChanged;
         public event Action<string, bool> OnArtifactFavouriteChanged;
+        public event Action<string> OnArtifactSeenChanged;
         internal event Action<CharacterObject, bool> OnRuntimeEffectsChangedDetailed;
         public bool IsDispatchingRuntimeEffectStatChange { get; private set; }
 
@@ -471,7 +473,6 @@ namespace Project.ShopSystem
             instance.isNew = false;
             SavePersistentState();
             OnArtifactFavouriteChanged?.Invoke(instanceId, favourite);
-            NotifyArtifactsChanged();
             return true;
         }
 
@@ -484,7 +485,7 @@ namespace Project.ShopSystem
 
             instance.isNew = false;
             SavePersistentState();
-            NotifyArtifactsChanged();
+            OnArtifactSeenChanged?.Invoke(instanceId);
             return true;
         }
 
@@ -2427,6 +2428,7 @@ namespace Project.ShopSystem
                     isFavourite = instance.isFavourite,
                     isNew = instance.isNew,
                     acquisitionOrder = instance.acquisitionOrder,
+                    collectedTimestampUtc = instance.collectedTimestampUtc,
                     generationSeed = instance.generationSeed
                 });
             }
@@ -3013,6 +3015,7 @@ namespace Project.ShopSystem
                         isFavourite = record.isFavourite,
                         isNew = record.isNew,
                         acquisitionOrder = record.acquisitionOrder,
+                        collectedTimestampUtc = record.collectedTimestampUtc,
                         generationSeed = record.generationSeed
                     });
                 }

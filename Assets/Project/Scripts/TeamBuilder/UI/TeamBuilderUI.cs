@@ -360,6 +360,10 @@ namespace Project.TeamBuilder.UI
             isInventoryPanelOpen = false;
             selectedCharacterSwitchSlotIndex = -1;
             ClearArtifactSwitchSelection();
+            if (artifactPreviewPanel != null)
+            {
+                artifactPreviewPanel.ShowEmpty();
+            }
             ApplyModeVisualState();
         }
 
@@ -445,6 +449,12 @@ namespace Project.TeamBuilder.UI
                 return;
             }
 
+            if (selectedCharacterSwitchSlotIndex == slotIndex && isInventoryPanelOpen && inventoryPanel != null && inventoryPanel.IsCharacterGridOpen)
+            {
+                CloseCharacterGridPanel();
+                return;
+            }
+
             ClearArtifactSwitchSelection();
             selectedCharacterSwitchSlotIndex = slotIndex;
             isInventoryPanelOpen = true;
@@ -455,10 +465,9 @@ namespace Project.TeamBuilder.UI
                 if (!inventoryPanel.IsCharacterGridOpen)
                 {
                     inventoryPanel.ToggleCharacterGrid();
+                    panelOpenedFrame = Time.frameCount;
+                    RefreshGrid();
                 }
-
-                panelOpenedFrame = Time.frameCount;
-                RefreshGrid();
             }
 
             ApplyModeVisualState();
@@ -533,6 +542,10 @@ namespace Project.TeamBuilder.UI
             }
             isInventoryPanelOpen = inventoryPanel != null && inventoryPanel.IsAnyPanelOpen;
             ClearArtifactSwitchSelection();
+            if (artifactPreviewPanel != null)
+            {
+                artifactPreviewPanel.ShowEmpty();
+            }
             ApplyModeVisualState();
         }
 
@@ -549,6 +562,12 @@ namespace Project.TeamBuilder.UI
                 || destinationSlot.ParentSlot == null
                 || destinationSlot.ParentSlot.CurrentCharacter == null)
             {
+                return;
+            }
+
+            if (selectedArtifactSwitchSlot == destinationSlot && isInventoryPanelOpen && inventoryPanel != null && inventoryPanel.IsArtifactGridOpen)
+            {
+                CloseArtifactGridPanel();
                 return;
             }
 
@@ -578,9 +597,13 @@ namespace Project.TeamBuilder.UI
                 if (!inventoryPanel.IsArtifactGridOpen)
                 {
                     inventoryPanel.ToggleArtifactGrid();
+                    panelOpenedFrame = Time.frameCount;
+                    RefreshGrid();
                 }
-                panelOpenedFrame = Time.frameCount;
-                RefreshGrid();
+                else
+                {
+                    inventoryPanel.RefreshInTeamStates();
+                }
             }
 
             ApplyModeVisualState();
@@ -1294,12 +1317,59 @@ namespace Project.TeamBuilder.UI
                 }
             }
 
+            if (teamSlots != null)
+            {
+                for (int i = 0; i < teamSlots.Length; i++)
+                {
+                    if (teamSlots[i] != null && teamSlots[i].gameObject.activeInHierarchy)
+                    {
+                        RectTransform slotRect = teamSlots[i].GetComponent<RectTransform>();
+                        if (IsPointerInsideRect(slotRect)) return false;
+
+                        ArtifactSlotUI[] childArtifactSlots = teamSlots[i].GetComponentsInChildren<ArtifactSlotUI>(true);
+                        for (int a = 0; a < childArtifactSlots.Length; a++)
+                        {
+                            if (childArtifactSlots[a] != null && childArtifactSlots[a].gameObject.activeInHierarchy)
+                            {
+                                RectTransform artSlotRect = childArtifactSlots[a].GetComponent<RectTransform>();
+                                if (IsPointerInsideRect(artSlotRect)) return false;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (selectedArtifactSwitchSlot != null && selectedArtifactSwitchSlot.gameObject.activeInHierarchy)
+            {
+                RectTransform activeSlotRect = selectedArtifactSwitchSlot.GetComponent<RectTransform>();
+                if (IsPointerInsideRect(activeSlotRect)) return false;
+            }
+
+            if (artifactPreviewPanel != null && artifactPreviewPanel.gameObject.activeInHierarchy)
+            {
+                RectTransform previewRect = artifactPreviewPanel.GetComponent<RectTransform>();
+                if (IsPointerInsideRect(previewRect)) return false;
+            }
+
+            if (inspectScreenUI != null && inspectScreenUI.gameObject.activeInHierarchy)
+            {
+                RectTransform inspectRect = inspectScreenUI.GetComponent<RectTransform>();
+                if (IsPointerInsideRect(inspectRect)) return false;
+            }
+
+            if (deployConfirmationPanel != null && deployConfirmationPanel.gameObject.activeInHierarchy)
+            {
+                RectTransform deployRect = deployConfirmationPanel.GetComponent<RectTransform>();
+                if (IsPointerInsideRect(deployRect)) return false;
+            }
+
             return true;
         }
 
         private bool IsPointerInsideRect(RectTransform targetRect)
         {
-            Vector2 pointerPosition = Pointer.current != null ? Pointer.current.position.ReadValue() : Vector2.zero;
+            if (targetRect == null || Pointer.current == null) return false;
+            Vector2 pointerPosition = Pointer.current.position.ReadValue();
             return IsScreenPointInsideRect(targetRect, pointerPosition);
         }
 

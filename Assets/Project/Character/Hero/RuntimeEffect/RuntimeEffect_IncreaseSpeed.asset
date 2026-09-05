@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StatRuntimeEffectDefinition
   effectId: orochi.dash_speed
   displayName: Serpent Step
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 07e8fffd4279e184887173ef1c1b2f68, type: 3}
   fieldVisualPrefab: {fileID: 0}
   kind: 0
   appliesOn: 0

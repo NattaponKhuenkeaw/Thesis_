@@ -310,7 +310,8 @@ public class HitBoxDamage : MonoBehaviour
                 ? projectileOwner.AttackerPosition
                 : movement != null ? (Vector2)movement.transform.position : (Vector2)transform.root.position,
             hitDirection = GetHitDirection(),
-            ignoreTypeReduction = damageInput.ignoreTypeReduction
+            ignoreTypeReduction = damageInput.ignoreTypeReduction,
+            provenance = new DamageProvenance(0, 0, 0, 0, null, ResolveDamageTags())
         };
         currentDamageResult = CombatDamageProcessor.Resolve(currentDamageRequest);
         float finalDamage = currentDamageResult.Damage;
@@ -392,7 +393,8 @@ public class HitBoxDamage : MonoBehaviour
                 sourceStatValue = liveSourceAttack,
                 attackerPosition = attackerPosition,
                 hitDirection = direction,
-                ignoreTypeReduction = damageInput.ignoreTypeReduction
+                ignoreTypeReduction = damageInput.ignoreTypeReduction,
+                provenance = new DamageProvenance(0, 0, 0, 0, null, ResolveDamageTags())
             };
             HitReactionData additionalData = HitReactionData.Default(0f, direction, 0f);
             additionalData.flashFrames = 0;
@@ -456,6 +458,26 @@ public class HitBoxDamage : MonoBehaviour
         return currentNormalHitbox != null
             ? currentNormalHitbox.elementType
             : ElementType.None;
+    }
+
+    private CombatDamageTag ResolveDamageTags()
+    {
+        CombatDamageTag tags = CombatDamageTag.None;
+        HitboxBase activeHitbox = (HitboxBase)currentGrabHitbox ?? currentNormalHitbox;
+        if (activeHitbox != null)
+        {
+            tags |= activeHitbox.damageTags;
+            if (activeHitbox.elementType == ElementType.Particle)
+            {
+                tags |= CombatDamageTag.Particle;
+            }
+        }
+        else if (ResolveElementType() == ElementType.Particle)
+        {
+            tags |= CombatDamageTag.Particle;
+        }
+
+        return tags;
     }
 
     private HitReactionData BuildReactionData(EnemyController enemy, Vector2 direction)
@@ -828,7 +850,13 @@ public class HitBoxDamage : MonoBehaviour
             return projectileOwner.CurrentDirection;
         }
 
-        if (movement != null && movement.FacingDirection == -1)
+        if (movement != null)
+        {
+            return movement.FacingDirection == -1 ? Vector2.left : Vector2.right;
+        }
+
+        float yRot = transform.eulerAngles.y;
+        if ((yRot > 90f && yRot < 270f) || transform.lossyScale.x < 0f)
         {
             return Vector2.left;
         }

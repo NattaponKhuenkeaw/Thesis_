@@ -720,6 +720,27 @@ public class EnemyController : MonoBehaviour
     public void ApplyStatus(StatusEffectType statusEffect, bool enabled = true)
     {
         runtimeEffects?.ApplyStatus(statusEffect, enabled);
+        if (statusEffect == StatusEffectType.Stun && enabled)
+        {
+            ApplyStun(2.5f);
+        }
+    }
+
+    public void ApplyStun(float durationSeconds)
+    {
+        if (!isAlive || durationSeconds <= 0f) return;
+        int frames = Mathf.RoundToInt(durationSeconds * CombatCore.FrameDataConstants.LOGIC_FPS);
+        HitReactionData stunData = new HitReactionData
+        {
+            damage = 0f,
+            hitstunFrames = frames,
+            reactionTiming = HitReactionData.CreateTiming(frames, 0, 0),
+            reactionKind = EnemyReactionKind.Flinch
+        };
+        if (hitReactionHandler != null)
+        {
+            hitReactionHandler.StartReaction(stunData, transform.position);
+        }
     }
 
     public EnemyDamageTypeState DamageTypeState

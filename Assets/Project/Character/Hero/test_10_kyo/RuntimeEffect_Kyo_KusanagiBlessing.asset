@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RuntimeEffectContainerDefinition
   effectId: kyo.kusanagi_blessing
   displayName: Kusanagi Blessing
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 51c5964352143e04bb120babdfccce13, type: 3}
   fieldVisualPrefab: {fileID: 0}
   kind: 0
   appliesOn: 0

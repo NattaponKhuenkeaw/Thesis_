@@ -477,5 +477,60 @@ public class ArtifactInstanceSystemTests
             UnityEngine.Object.DestroyImmediate(inventory);
         }
     }
+
+    [Test]
+    public void MarkingArtifactSeenDoesNotTriggerFullArtifactsChangedEvent()
+    {
+        PlayerRunInventory inventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        try
+        {
+            Assert.That(inventory.TryAcquireArtifact(definition, out ArtifactInstance instance, 200), Is.True);
+            Assert.That(instance.isNew, Is.True);
+
+            int fullResetCount = 0;
+            string seenInstanceId = null;
+
+            inventory.OnArtifactsChanged += () => fullResetCount++;
+            inventory.OnArtifactSeenChanged += id => seenInstanceId = id;
+
+            bool success = inventory.TryMarkArtifactSeen(instance.instanceId);
+
+            Assert.That(success, Is.True);
+            Assert.That(instance.isNew, Is.False);
+            Assert.That(seenInstanceId, Is.EqualTo(instance.instanceId));
+            Assert.That(fullResetCount, Is.Zero, "Marking artifact seen should not trigger full OnArtifactsChanged grid reset.");
+        }
+        finally
+        {
+            UnityEngine.Object.DestroyImmediate(inventory);
+        }
+    }
+
+    [Test]
+    public void QuerySortsNewestAndOldestByCollectedTimestampUtc()
+    {
+        long baseTicks = DateTime.UtcNow.Ticks;
+        ArtifactInstance early = new ArtifactInstance { instanceId = "early", definitionId = definition.id, collectedTimestampUtc = baseTicks - 10000 };
+        ArtifactInstance mid = new ArtifactInstance { instanceId = "mid", definitionId = definition.id, collectedTimestampUtc = baseTicks };
+        ArtifactInstance late = new ArtifactInstance { instanceId = "late", definitionId = definition.id, collectedTimestampUtc = baseTicks + 10000 };
+
+        List<ArtifactInstance> results = new List<ArtifactInstance>();
+
+        ArtifactInventoryQuery queryNewest = ArtifactInventoryQuery.Default;
+        queryNewest.sortMode = ArtifactSortMode.Newest;
+        queryNewest.descending = true;
+        ArtifactInventoryQueryEngine.Execute(new[] { mid, early, late }, queryNewest, table, _ => definition, new HashSet<string>(), results);
+        Assert.That(results[0].instanceId, Is.EqualTo("late"));
+        Assert.That(results[1].instanceId, Is.EqualTo("mid"));
+        Assert.That(results[2].instanceId, Is.EqualTo("early"));
+
+        ArtifactInventoryQuery queryOldest = ArtifactInventoryQuery.Default;
+        queryOldest.sortMode = ArtifactSortMode.Oldest;
+        queryOldest.descending = true;
+        ArtifactInventoryQueryEngine.Execute(new[] { mid, early, late }, queryOldest, table, _ => definition, new HashSet<string>(), results);
+        Assert.That(results[0].instanceId, Is.EqualTo("early"));
+        Assert.That(results[1].instanceId, Is.EqualTo("mid"));
+        Assert.That(results[2].instanceId, Is.EqualTo("late"));
+    }
 }
 #endif

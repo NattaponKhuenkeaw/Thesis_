@@ -111,7 +111,8 @@ public enum StatusEffectType
     BleedDOT,
     DarknessDOT,
     Confusion,
-    SlowAction
+    SlowAction,
+    Stun
 }
 
 [Serializable]
@@ -436,6 +437,12 @@ public class PassiveActionModifierDefinition
     public bool ignoreDamageResistance = false;
     [UnityEngine.Serialization.FormerlySerializedAs("ignoreElementalIncomingModifiers")]
     public bool ignoreTypeReduction = false;
+
+    [Header("Hitbox & Projectile Modification")]
+    [Tooltip("Multiplies the hitbox collider size for matching steps (e.g. 1.5 for 1.5x hitbox range). 1 = unchanged.")]
+    public float hitboxScaleMultiplier = 1f;
+    [Tooltip("Multiplies the projectile size/collider for matching steps (e.g. 1.5 for 1.5x radius/size). 1 = unchanged.")]
+    public float projectileScaleMultiplier = 1f;
 
     [Header("Projectile Replacement")]
     public ProjectileType replacementProjectileType = ProjectileType.None;
@@ -802,6 +809,78 @@ public class PassiveOnHitStatusEffectDefinition
     public StatusEffectType status = StatusEffectType.Burn;
     [Range(0f, 1f)] public float chance = 1f;
     public PassiveEffectScope scope = PassiveEffectScope.Enemy;
+    [Tooltip("Optional duration in seconds for status effects that support timed duration (e.g. Stun). 0 uses default.")]
+    [Min(0f)] public float durationSeconds = 0f;
+}
+
+[Serializable]
+public class PassiveCoordinatedActionDefinition
+{
+    [Tooltip("The action ID to execute (e.g. 'skill.ex'). Will search the character's ActionResolverTable.")]
+    public string actionId = "skill.ex";
+    [Tooltip("Fallback action name if actionId is not matched.")]
+    public string actionName;
+
+    [Tooltip("Chance to trigger on each qualifying ally attack (0.0 to 1.0).")]
+    [Range(0f, 1f)] public float triggerChance = 0.5f;
+
+    [Tooltip("Internal cooldown in seconds between triggers of this coordinated action effect (0 = no cooldown).")]
+    [Min(0f)] public float internalCooldown = 0f;
+
+    [Tooltip("Optional override for action damage multiplier as a ratio of source ATK (e.g. 4.0 = 400% ATK). If <= 0, uses ActionResolverTable data.")]
+    public float damageMultiplierOverride = 0f;
+
+    [Tooltip("Hitbox size multiplier for the spawned action (e.g. 1.5 = 1.5x bigger hitbox range).")]
+    public float hitboxScaleMultiplier = 1f;
+
+    [Tooltip("Aura Energy granted to the source character when this shadow attack hits an enemy (awarded at most once per execution).")]
+    public float auraEnergyRewardOnHit = 0f;
+
+    [Tooltip("Maximum simultaneous active shadow attacks allowed (1 = no spam).")]
+    [Min(1)] public int maxSimultaneousActive = 1;
+
+    [Tooltip("Visual tint color for the shadow clone.")]
+    public Color shadowColor = new Color(0.12f, 0.08f, 0.18f, 0.85f);
+
+    [Tooltip("Can this trigger while the source character is off-field?")]
+    public bool canTriggerOffField = true;
+
+    [Tooltip("Can this trigger while the source character is on-field?")]
+    public bool canTriggerOnField = true;
+
+    [Tooltip("Scope of triggering attacks: Allies = all team members; Teammates = teammates except self.")]
+    public PassiveEffectScope scope = PassiveEffectScope.Allies;
+
+    [Header("Requirements")]
+    public List<RuntimeTagRequirement> requiredTags = new List<RuntimeTagRequirement>();
+    public List<RuntimeCounterRequirement> requiredCounters = new List<RuntimeCounterRequirement>();
+
+    public bool RuntimeRequirementsMet(CombatRuntimeState runtimeState)
+    {
+        if (requiredTags != null)
+        {
+            for (int i = 0; i < requiredTags.Count; i++)
+            {
+                if (requiredTags[i] != null && !requiredTags[i].Matches(runtimeState))
+                {
+                    return false;
+                }
+            }
+        }
+
+        if (requiredCounters != null)
+        {
+            for (int i = 0; i < requiredCounters.Count; i++)
+            {
+                if (requiredCounters[i] != null && !requiredCounters[i].Matches(runtimeState))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
 }
 
 [Serializable]
@@ -1014,6 +1093,7 @@ public class CharacterEffectSetDefinition
     public List<PassiveDefensiveEffectDefinition> defensiveEffects = new List<PassiveDefensiveEffectDefinition>();
     public List<PassiveResourceEffectDefinition> resourceEffects = new List<PassiveResourceEffectDefinition>();
     public List<PassiveEnemyElementModifierDefinition> enemyElementModifiers = new List<PassiveEnemyElementModifierDefinition>();
+    public List<PassiveCoordinatedActionDefinition> coordinatedActionEffects = new List<PassiveCoordinatedActionDefinition>();
     public string passiveHookTypeName;
 }
 

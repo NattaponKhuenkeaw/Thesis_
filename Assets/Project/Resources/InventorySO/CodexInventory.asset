@@ -13,12 +13,10 @@ MonoBehaviour:
   m_Name: CodexInventory
   m_EditorClassIdentifier: Assembly-CSharp::Project.InventorySystem.CodexInventory
   allItems:
-  - {fileID: 11400000, guid: bc26e0a53989a6d439beb924d07f61f8, type: 2}
   - {fileID: 11400000, guid: 6b2f112e2e15b20468e27601ac347a21, type: 2}
   - {fileID: 11400000, guid: 7067f23f35adada468f5f53a56908cbe, type: 2}
   - {fileID: 11400000, guid: 077165c891eca7b4f8fa6a6ccf2751f2, type: 2}
   - {fileID: 11400000, guid: 947559303eef7b740a2c21e5f5e600a9, type: 2}
-  - {fileID: 11400000, guid: 890dffb705bf51748b2ec0257fa186fd, type: 2}
   - {fileID: 11400000, guid: 588790c4612f0304f89d14fb2bd64923, type: 2}
   - {fileID: 11400000, guid: 225e900f58aad0a409d9d02148d91571, type: 2}
   - {fileID: 11400000, guid: 6811db41c79c43a41b3ff2f4a87eecb4, type: 2}

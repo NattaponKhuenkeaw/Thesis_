@@ -15,7 +15,7 @@ MonoBehaviour:
   elementType: 2
   displayName: Bleed
   damageTextColor: {r: 1, g: 0.11792451, b: 0.11792451, a: 1}
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 5d6792348111a904e8eeb23157b075f4, type: 3}
   dotDuration: 6
   dotDamageRatio: 0.25
   dotTickInterval: 1

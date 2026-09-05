@@ -98,6 +98,7 @@ namespace Project.TeamBuilder.UI
                 }
                 sortDropdown.AddOptions(displayOptions);
                 sortDropdown.SetValueWithoutNotify((int)query.sortMode);
+                sortDropdown.RefreshShownValue();
                 sortDropdown.onValueChanged.RemoveListener(SetSortMode);
                 sortDropdown.onValueChanged.AddListener(SetSortMode);
             }
@@ -163,6 +164,7 @@ namespace Project.TeamBuilder.UI
 
                 if (cellUI != null)
                 {
+                    cellUI.transform.SetSiblingIndex(spawnedItems.Count);
                     bool isEquipped = equippedIds.Contains(artifact.instanceId);
                     cellUI.Init(artifact, definition, rootCanvas, playerInventory.ArtifactRollTable, isEquipped);
                     cellUI.OnClicked += HandleArtifactClicked;
@@ -265,7 +267,7 @@ namespace Project.TeamBuilder.UI
 
         public void SetLineCountFilter(int minimum, int maximum)
         {
-            query.minimumLineCount = Mathf.Clamp(minimum, 1, 4);
+            query.minimumLineCount = Mathf.Clamp(minimum, 0, 4);
             query.maximumLineCount = Mathf.Clamp(maximum, query.minimumLineCount, 4);
             RebuildQueryResults();
         }
@@ -369,7 +371,7 @@ namespace Project.TeamBuilder.UI
         private void CycleLineFilter()
         {
             runtimeLineFilter = (runtimeLineFilter + 1) % 5;
-            query.minimumLineCount = runtimeLineFilter == 0 ? 1 : runtimeLineFilter;
+            query.minimumLineCount = runtimeLineFilter == 0 ? 0 : runtimeLineFilter;
             query.maximumLineCount = runtimeLineFilter == 0 ? 4 : runtimeLineFilter;
             if (runtimeLineLabel != null) runtimeLineLabel.text = runtimeLineFilter == 0 ? "Lines: Any" : $"Lines: {runtimeLineFilter}";
             RebuildQueryResults();
@@ -535,6 +537,7 @@ namespace Project.TeamBuilder.UI
                 cell.transform.SetParent(gridParent, false);
                 cell.gameObject.SetActive(true);
             }
+            cell.transform.SetAsLastSibling();
             return cell;
         }
 
@@ -552,6 +555,7 @@ namespace Project.TeamBuilder.UI
             if (inventorySubscribed || playerInventory == null) return;
             playerInventory.OnArtifactsChanged += HandleInventoryArtifactsChanged;
             playerInventory.OnArtifactFavouriteChanged += HandleInventoryArtifactFavouriteChanged;
+            playerInventory.OnArtifactSeenChanged += HandleInventoryArtifactSeenChanged;
             inventorySubscribed = true;
         }
 
@@ -560,6 +564,7 @@ namespace Project.TeamBuilder.UI
             if (!inventorySubscribed || playerInventory == null) return;
             playerInventory.OnArtifactsChanged -= HandleInventoryArtifactsChanged;
             playerInventory.OnArtifactFavouriteChanged -= HandleInventoryArtifactFavouriteChanged;
+            playerInventory.OnArtifactSeenChanged -= HandleInventoryArtifactSeenChanged;
             inventorySubscribed = false;
         }
 
@@ -570,6 +575,18 @@ namespace Project.TeamBuilder.UI
                 if (spawnedItems[i]?.ArtifactData?.instanceId == instanceId)
                 {
                     spawnedItems[i].SetFavouriteState(favourite);
+                    break;
+                }
+            }
+        }
+
+        private void HandleInventoryArtifactSeenChanged(string instanceId)
+        {
+            for (int i = 0; i < spawnedItems.Count; i++)
+            {
+                if (spawnedItems[i]?.ArtifactData?.instanceId == instanceId)
+                {
+                    spawnedItems[i].SetNewState(false);
                     break;
                 }
             }

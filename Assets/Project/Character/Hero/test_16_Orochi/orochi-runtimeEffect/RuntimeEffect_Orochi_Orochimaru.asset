@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StatRuntimeEffectDefinition
   effectId: orochi.orochimaru
   displayName: Orochimaru
-  icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+  icon: {fileID: 21300000, guid: 5227730e5a906064c98ab5b39352553e, type: 3}
   fieldVisualPrefab: {fileID: 0}
   kind: 0
   appliesOn: 0

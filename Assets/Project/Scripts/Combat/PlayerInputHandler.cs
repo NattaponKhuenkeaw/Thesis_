@@ -1,5 +1,7 @@
 // Force Unity compilation refresh
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 /// <summary>
@@ -137,6 +139,7 @@ public class InputHandler_Player : MonoBehaviour
     {
         if (Project.UI.InputLockManager.IsLocked) return;
         if (!value.isPressed) return;
+        if (IsPointerOverClickBlockedUI()) return;
 
         if (!TryPrioritizeJumpBeforeCombatInput())
             return;
@@ -152,6 +155,8 @@ public class InputHandler_Player : MonoBehaviour
         if (Project.UI.InputLockManager.IsLocked) return;
         if (value.isPressed)
         {
+            if (IsPointerOverClickBlockedUI()) return;
+
             if (!TryPrioritizeJumpBeforeCombatInput())
                 return;
 
@@ -163,6 +168,7 @@ public class InputHandler_Player : MonoBehaviour
     public void OnUltimate(InputValue value)
     {
         if (Project.UI.InputLockManager.IsLocked) return;
+        if (InteractableWorldUI.IsPlayerInInteractableArea) return;
         if (value.isPressed)
         {
             stateMachine?.InputBuffer?.SetDirectionalInput(moveInput);
@@ -221,4 +227,87 @@ public class InputHandler_Player : MonoBehaviour
 
         return moveAction.ReadValue<Vector2>();
     }
+
+    private static readonly List<RaycastResult> s_UIRaycastResults = new List<RaycastResult>();
+
+    private bool IsPointerOverClickBlockedUI()
+    {
+        if (EventSystem.current == null)
+            return false;
+
+        bool isMouseActive = Mouse.current != null && (Mouse.current.leftButton.isPressed || Mouse.current.rightButton.isPressed || Mouse.current.leftButton.wasPressedThisFrame || Mouse.current.rightButton.wasPressedThisFrame);
+        bool isTouchActive = Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed;
+
+        // If neither mouse nor touch triggered this, don't block gamepad/keyboard inputs
+        if (!isMouseActive && !isTouchActive)
+            return false;
+
+        if (isTouchActive)
+        {
+            var touches = Touchscreen.current.touches;
+            for (int i = 0; i < touches.Count; i++)
+            {
+                var touch = touches[i];
+                if (touch.press.isPressed)
+                {
+                    PointerEventData touchData = new PointerEventData(EventSystem.current)
+                    {
+                        position = touch.position.ReadValue()
+                    };
+                    s_UIRaycastResults.Clear();
+                    EventSystem.current.RaycastAll(touchData, s_UIRaycastResults);
+                    if (ContainsClickBlockedUI(s_UIRaycastResults))
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        // Mouse pointer raycast
+        PointerEventData mouseData = new PointerEventData(EventSystem.current)
+        {
+            position = Mouse.current.position.ReadValue()
+        };
+        s_UIRaycastResults.Clear();
+        EventSystem.current.RaycastAll(mouseData, s_UIRaycastResults);
+
+        return ContainsClickBlockedUI(s_UIRaycastResults);
+    }
+
+    private static bool ContainsClickBlockedUI(List<RaycastResult> results)
+    {
+        for (int i = 0; i < results.Count; i++)
+        {
+            GameObject go = results[i].gameObject;
+            if (go == null) continue;
+
+            // 1. Explicit marker component attached to any individual UI (Navigation, Admin, RouteOffer, etc.)
+            if (go.GetComponentInParent<Project.UI.UIBlockPlayerClick>() != null)
+                return true;
+
+            // 2. Known individual interactive UI components
+            if (go.GetComponentInParent<AdminConsole>() != null)
+                return true;
+
+            if (go.GetComponentInParent<Project.UI.RoomChoiceUI>() != null)
+                return true;
+
+            // 3. Known UI hierarchies by name (Navigation bar, Admin, RouteOffer)
+            Transform current = go.transform;
+            while (current != null)
+            {
+                string name = current.name;
+                if (name.IndexOf("Navigation", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    name.IndexOf("Admin", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    name.IndexOf("RouteOffer", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return true;
+                }
+                current = current.parent;
+            }
+        }
+        return false;
+    }
+
+    private bool IsPointerOverUI() => IsPointerOverClickBlockedUI();
 }

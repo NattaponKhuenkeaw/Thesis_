@@ -15,7 +15,7 @@ MonoBehaviour:
   elementType: 3
   displayName: Darkness
   damageTextColor: {r: 0.71555984, g: 0.35088107, b: 0.8962264, a: 1}
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 88265c72bea22404f9cecbe00f301e94, type: 3}
   dotDuration: 5
   dotDamageRatio: 0.35
   dotTickInterval: 1

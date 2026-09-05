@@ -20,14 +20,14 @@ MonoBehaviour:
     maxHP: 651
     attack: 59
     defense: 42
-    speed: 6.5
-    dotMastery: 0
+    cooldownMastery: 0
     critRate: 5
     critDamage: 50
-    cooldownMastery: 0
+    dotMastery: 0
     damageIncrease: 0
     additionalDamageIncrease: 0
     auraEnergyRecharge: 0
+    speed: 6.5
   metaData:
     displayName: Orochi
     description: "Orochi is a deity whose purpose is to protect Gaia, considering
@@ -181,13 +181,18 @@ MonoBehaviour:
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
+        enableRandomBuffSelection: 0
+        minRandomBuffCount: 1
+        maxRandomBuffCount: 1
+        allowDuplicateRandomBuffs: 0
+        randomBuffPool: []
         recipe:
           recipeId: orochi.serpent_on_earth
           definition: {fileID: 11400000, guid: 5527da15b2ed4559a6d6bbdc2eea2994, type: 2}
           presentation:
             effectId: orochi.serpent_on_earth
             displayName: Serpent on Earth
-            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            icon: {fileID: 21300000, guid: 482fc8c03eab96142ab1a657d10cdcf7, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0
@@ -206,6 +211,8 @@ MonoBehaviour:
             overrideDamageModifier: 0
             damageModifier:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -215,6 +222,8 @@ MonoBehaviour:
             overrideDamageInput: 0
             damageInput:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -240,6 +249,8 @@ MonoBehaviour:
             overrideLifesteal: 0
             lifesteal:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -250,6 +261,8 @@ MonoBehaviour:
             overrideAdditionalDamage: 1
             additionalDamage:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -287,8 +300,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -369,13 +380,18 @@ MonoBehaviour:
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
+        enableRandomBuffSelection: 0
+        minRandomBuffCount: 1
+        maxRandomBuffCount: 1
+        allowDuplicateRandomBuffs: 0
+        randomBuffPool: []
         recipe:
           recipeId: orochi.dark_matter
           definition: {fileID: 11400000, guid: 6ed675cfdf0d458f93a3a18b9ea705db, type: 2}
           presentation:
             effectId: orochi.dark_matter
             displayName: Dark Matter
-            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            icon: {fileID: 21300000, guid: 8a2b4299f10073045b68107dfd3a03f5, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0
@@ -404,6 +420,8 @@ MonoBehaviour:
             overrideDamageModifier: 0
             damageModifier:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -413,6 +431,8 @@ MonoBehaviour:
             overrideDamageInput: 0
             damageInput:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -438,6 +458,8 @@ MonoBehaviour:
             overrideLifesteal: 0
             lifesteal:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -448,6 +470,8 @@ MonoBehaviour:
             overrideAdditionalDamage: 0
             additionalDamage:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -485,8 +509,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
       - trigger: 1
         filter:
           filterByCategory: 1
@@ -513,13 +535,18 @@ MonoBehaviour:
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
+        enableRandomBuffSelection: 0
+        minRandomBuffCount: 1
+        maxRandomBuffCount: 1
+        allowDuplicateRandomBuffs: 0
+        randomBuffPool: []
         recipe:
           recipeId: orochi.dark_matter
           definition: {fileID: 11400000, guid: 6ed675cfdf0d458f93a3a18b9ea705db, type: 2}
           presentation:
             effectId: orochi.dark_matter
             displayName: Dark Matter
-            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            icon: {fileID: 21300000, guid: 8a2b4299f10073045b68107dfd3a03f5, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0
@@ -538,6 +565,8 @@ MonoBehaviour:
             overrideDamageModifier: 0
             damageModifier:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -547,6 +576,8 @@ MonoBehaviour:
             overrideDamageInput: 0
             damageInput:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -572,6 +603,8 @@ MonoBehaviour:
             overrideLifesteal: 0
             lifesteal:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -582,6 +615,8 @@ MonoBehaviour:
             overrideAdditionalDamage: 0
             additionalDamage:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -619,8 +654,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects:
@@ -675,15 +708,14 @@ MonoBehaviour:
       nodeId: orochi.skill.lv1
       nodeName: Dark Matter
       description: Skill grants 2 Dark Matter stacks. Each stack increases ATK and
-        DOT Mastery by 5%. After dash, Dark Matter enables orochi.skill.ex
-        for 5 seconds; using it consumes 1 stack.
+        DOT Mastery by 5%. After dash, Dark Matter enables orochi.skill.ex for 5
+        seconds; using it consumes 1 stack.
       skillPanelDescriptionOverride: "Inflict <b><color=#8B3DFF>Void</color></b>
         DMG 300% of own ATK, <size=20><color=#C0C0C0>This attack ignores Enemy DEF</color></size>\r\n\r\n<size=20><color=#C0C0C0>-
         using 'Exorcism of Untouchable' grants 2 <b><color=#8B3DFF>Dark Matter</color></b>
         stacks</color></size>\n<size=19><color=#00ffff> \u2022  Dark Matter: Increases
-        ATK and DOT Mastery by 5%. After dash, while self have Dark Matter
-        will able to 'Revelo Omnino (Mid)' follow-up, using it consumes 1 stack(Max
-        2 stackable)</color></size>"
+        ATK and DOT Mastery by 5%. After dash, while self have Dark Matter will able
+        to 'Revelo Omnino (Mid)' follow-up, using it consumes 1 stack(Max 2 stackable)</color></size>"
       track: 0
       level: 1
       fragmentCost: 0
@@ -775,9 +807,9 @@ MonoBehaviour:
         stacks</color></size>\r\n<size=20><color=#C0C0C0>- using 'Revelo Omnino (Mid)'
         heals 2% of own Max HP and reduces 'Exorcism of Untouchable' cooldown by
         1 second</color></size>\r\n<size=19><color=#00ffff> \u2022  Dark Matter:
-        Increases ATK and DOT Mastery by 5%. After dash, while self have Dark
-        Matter will able to 'Revelo Omnino (Mid)' follow-up, using it consumes 1
-        stack(Max 2 stackable)</color></size>"
+        Increases ATK and DOT Mastery by 5%. After dash, while self have Dark Matter
+        will able to 'Revelo Omnino (Mid)' follow-up, using it consumes 1 stack(Max
+        2 stackable)</color></size>"
       track: 0
       level: 2
       fragmentCost: 0
@@ -840,13 +872,18 @@ MonoBehaviour:
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
+        enableRandomBuffSelection: 0
+        minRandomBuffCount: 1
+        maxRandomBuffCount: 1
+        allowDuplicateRandomBuffs: 0
+        randomBuffPool: []
         recipe:
           recipeId: orochi.dark_matter
           definition: {fileID: 11400000, guid: 6ed675cfdf0d458f93a3a18b9ea705db, type: 2}
           presentation:
             effectId: orochi.dark_matter
             displayName: Dark Matter
-            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            icon: {fileID: 21300000, guid: 8a2b4299f10073045b68107dfd3a03f5, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0
@@ -875,6 +912,8 @@ MonoBehaviour:
             overrideDamageModifier: 0
             damageModifier:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -884,6 +923,8 @@ MonoBehaviour:
             overrideDamageInput: 0
             damageInput:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -909,6 +950,8 @@ MonoBehaviour:
             overrideLifesteal: 0
             lifesteal:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -919,6 +962,8 @@ MonoBehaviour:
             overrideAdditionalDamage: 0
             additionalDamage:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -956,8 +1001,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects:
@@ -1019,9 +1062,9 @@ MonoBehaviour:
         stacks</color></size>\r\n<size=20><color=#C0C0C0>- using 'Revelo Omnino (Mid)'
         heals 2% of own Max HP and reduces 'Exorcism of Untouchable' cooldown by
         1 second</color></size>\r\n<size=19><color=#00ffff> \u2022  Dark Matter:
-        Increases ATK and DOT Mastery by 5%. After dash, while self have Dark
-        Matter will able to 'Revelo Omnino (Mid)' follow-up, using it consumes 1
-        stack(Max <b><color=#FFA500>4</color></b> stackable)</color></size>"
+        Increases ATK and DOT Mastery by 5%. After dash, while self have Dark Matter
+        will able to 'Revelo Omnino (Mid)' follow-up, using it consumes 1 stack(Max
+        <b><color=#FFA500>4</color></b> stackable)</color></size>"
       track: 0
       level: 3
       fragmentCost: 0
@@ -1221,9 +1264,9 @@ MonoBehaviour:
         Sky Fire EX' follow-up for 20 seconds. 'Tiral of Sky Fire EX' will <b><color=#74C365>Regenerate
         20% of damage dealt </color></b> and do additional <b><color=#8B3DFF>Void</color></b>
         DMG equal to 40% ATK on each non-critical hit</color>\r\n<size=19><color=#00ffff>
-        \u2022  Dark Matter: Increases ATK and DOT Mastery by 5%. After dash,
-        while self have Dark Matter will able to 'Revelo Omnino (Mid)' follow-up,
-        using it consumes 1 stack(Max <b><color=#FFA500>4</color></b> stackable)</color></size></size>"
+        \u2022  Dark Matter: Increases ATK and DOT Mastery by 5%. After dash, while
+        self have Dark Matter will able to 'Revelo Omnino (Mid)' follow-up, using
+        it consumes 1 stack(Max <b><color=#FFA500>4</color></b> stackable)</color></size></size>"
       track: 0
       level: 4
       fragmentCost: 0
@@ -1274,13 +1317,18 @@ MonoBehaviour:
         enemyTargetSource: 1
         enemyTargetRuntimeTag: orochi.ultimate.hit_targets
         consumeRuntimeTagOnApply: 1
+        enableRandomBuffSelection: 0
+        minRandomBuffCount: 1
+        maxRandomBuffCount: 1
+        allowDuplicateRandomBuffs: 0
+        randomBuffPool: []
         recipe:
           recipeId: orochi.ultimate.stun
           definition: {fileID: 11400000, guid: 84acdc164cbd4dd9ac7b72d4b70db475, type: 2}
           presentation:
             effectId: orochi.ultimate.stun
             displayName: Stun
-            icon: {fileID: 0}
+            icon: {fileID: 21300000, guid: 29265dc94a14bb648bd9faf348d666ec, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 1
@@ -1299,6 +1347,8 @@ MonoBehaviour:
             overrideDamageModifier: 0
             damageModifier:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1308,6 +1358,8 @@ MonoBehaviour:
             overrideDamageInput: 0
             damageInput:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1333,6 +1385,8 @@ MonoBehaviour:
             overrideLifesteal: 0
             lifesteal:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1343,6 +1397,8 @@ MonoBehaviour:
             overrideAdditionalDamage: 0
             additionalDamage:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1380,8 +1436,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -1561,13 +1615,18 @@ MonoBehaviour:
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
+        enableRandomBuffSelection: 0
+        minRandomBuffCount: 1
+        maxRandomBuffCount: 1
+        allowDuplicateRandomBuffs: 0
+        randomBuffPool: []
         recipe:
           recipeId: orochi.dark_matter
           definition: {fileID: 11400000, guid: 6ed675cfdf0d458f93a3a18b9ea705db, type: 2}
           presentation:
             effectId: orochi.dark_matter
             displayName: Dark Matter
-            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            icon: {fileID: 21300000, guid: 8a2b4299f10073045b68107dfd3a03f5, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0
@@ -1596,6 +1655,8 @@ MonoBehaviour:
             overrideDamageModifier: 0
             damageModifier:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1605,6 +1666,8 @@ MonoBehaviour:
             overrideDamageInput: 0
             damageInput:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1630,6 +1693,8 @@ MonoBehaviour:
             overrideLifesteal: 0
             lifesteal:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1640,6 +1705,8 @@ MonoBehaviour:
             overrideAdditionalDamage: 0
             additionalDamage:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1677,8 +1744,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
       - trigger: 2
         filter:
           filterByCategory: 1
@@ -1705,13 +1770,18 @@ MonoBehaviour:
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
+        enableRandomBuffSelection: 0
+        minRandomBuffCount: 1
+        maxRandomBuffCount: 1
+        allowDuplicateRandomBuffs: 0
+        randomBuffPool: []
         recipe:
           recipeId: orochi.orochimaru
           definition: {fileID: 11400000, guid: 7a6e0f60a8f34137a4e806fda032b811, type: 2}
           presentation:
             effectId: orochi.orochimaru
             displayName: Orochimaru
-            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            icon: {fileID: 21300000, guid: 5227730e5a906064c98ab5b39352553e, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0
@@ -1745,6 +1815,8 @@ MonoBehaviour:
             overrideDamageModifier: 0
             damageModifier:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1754,6 +1826,8 @@ MonoBehaviour:
             overrideDamageInput: 0
             damageInput:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1779,6 +1853,8 @@ MonoBehaviour:
             overrideLifesteal: 0
             lifesteal:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1789,6 +1865,8 @@ MonoBehaviour:
             overrideAdditionalDamage: 0
             additionalDamage:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1826,8 +1904,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
       - trigger: 3
         filter:
           filterByCategory: 0
@@ -1854,13 +1930,18 @@ MonoBehaviour:
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
+        enableRandomBuffSelection: 0
+        minRandomBuffCount: 1
+        maxRandomBuffCount: 1
+        allowDuplicateRandomBuffs: 0
+        randomBuffPool: []
         recipe:
           recipeId: orochi.sacrifice
           definition: {fileID: 11400000, guid: 0ef2d4938f8b43ac96e02fd497d01ee2, type: 2}
           presentation:
             effectId: orochi.sacrifice
             displayName: Sacrifice
-            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            icon: {fileID: 21300000, guid: c9f2959c90c2faf48a486f3c496dc182, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 1
@@ -1879,6 +1960,8 @@ MonoBehaviour:
             overrideDamageModifier: 0
             damageModifier:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1888,6 +1971,8 @@ MonoBehaviour:
             overrideDamageInput: 0
             damageInput:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1913,6 +1998,8 @@ MonoBehaviour:
             overrideLifesteal: 0
             lifesteal:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1923,6 +2010,8 @@ MonoBehaviour:
             overrideAdditionalDamage: 0
             additionalDamage:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1960,8 +2049,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
       runtimeEffectStackLimitModifiers:
       - effectIdOrStackKey: orochi.dark_matter
         stackLimit: 10
@@ -1986,8 +2073,8 @@ MonoBehaviour:
         reset the cooldown of \"Exorcism of Untounchable\"</color></size>\r\n<size=20><color=#C0C0C0>-
         Gain 2 <b><color=#8B3DFF>Dark Matter</color></b> before Ultimate. At 10 stacks,
         will gain <b><color=#8B3DFF>Orochimaru</color></b> for 20 seconds.</color></size>\r\n<size=19><color=#00ffff>\u2022 
-        Orochimaru: +200% DOT Mastery, Decrease -100% DEF and -30% ATK, When
-        hitting enemy with <b><color=#8B3DFF>Void</color></b> DMG apply <b><color=#8B3DFF>Sacrifice
+        Orochimaru: +200% DOT Mastery, Decrease -100% DEF and -30% ATK, When hitting
+        enemy with <b><color=#8B3DFF>Void</color></b> DMG apply <b><color=#8B3DFF>Sacrifice
         Mark</color></b>, up to 10 per enemy</color></size> "
       track: 1
       level: 4
@@ -2021,13 +2108,18 @@ MonoBehaviour:
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
+        enableRandomBuffSelection: 0
+        minRandomBuffCount: 1
+        maxRandomBuffCount: 1
+        allowDuplicateRandomBuffs: 0
+        randomBuffPool: []
         recipe:
           recipeId: orochi.serpent_on_earth
           definition: {fileID: 11400000, guid: 5527da15b2ed4559a6d6bbdc2eea2994, type: 2}
           presentation:
             effectId: orochi.serpent_on_earth
             displayName: Serpent on Earth
-            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            icon: {fileID: 21300000, guid: 482fc8c03eab96142ab1a657d10cdcf7, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0
@@ -2046,6 +2138,8 @@ MonoBehaviour:
             overrideDamageModifier: 0
             damageModifier:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -2055,6 +2149,8 @@ MonoBehaviour:
             overrideDamageInput: 0
             damageInput:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -2080,6 +2176,8 @@ MonoBehaviour:
             overrideLifesteal: 0
             lifesteal:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -2090,6 +2188,8 @@ MonoBehaviour:
             overrideAdditionalDamage: 1
             additionalDamage:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -2127,8 +2227,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -2181,13 +2279,18 @@ MonoBehaviour:
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
+        enableRandomBuffSelection: 0
+        minRandomBuffCount: 1
+        maxRandomBuffCount: 1
+        allowDuplicateRandomBuffs: 0
+        randomBuffPool: []
         recipe:
           recipeId: orochi.dash_speed
           definition: {fileID: 11400000, guid: 2e223c0eeb8f45a19d6e6b28d652fe31, type: 2}
           presentation:
             effectId: orochi.dash_speed
             displayName: Serpent Step
-            icon: {fileID: 0}
+            icon: {fileID: 21300000, guid: 69001df5862fa1d4ebbac9e05a26bf5f, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0
@@ -2206,6 +2309,8 @@ MonoBehaviour:
             overrideDamageModifier: 0
             damageModifier:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -2215,6 +2320,8 @@ MonoBehaviour:
             overrideDamageInput: 0
             damageInput:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -2240,6 +2347,8 @@ MonoBehaviour:
             overrideLifesteal: 0
             lifesteal:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -2250,6 +2359,8 @@ MonoBehaviour:
             overrideAdditionalDamage: 0
             additionalDamage:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -2287,8 +2398,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -2341,13 +2450,18 @@ MonoBehaviour:
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
+        enableRandomBuffSelection: 0
+        minRandomBuffCount: 1
+        maxRandomBuffCount: 1
+        allowDuplicateRandomBuffs: 0
+        randomBuffPool: []
         recipe:
           recipeId: orochi.serpent_on_earth
           definition: {fileID: 11400000, guid: 5527da15b2ed4559a6d6bbdc2eea2994, type: 2}
           presentation:
             effectId: orochi.serpent_on_earth
             displayName: Serpent on Earth
-            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            icon: {fileID: 21300000, guid: 482fc8c03eab96142ab1a657d10cdcf7, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0
@@ -2366,6 +2480,8 @@ MonoBehaviour:
             overrideDamageModifier: 0
             damageModifier:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -2375,6 +2491,8 @@ MonoBehaviour:
             overrideDamageInput: 0
             damageInput:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -2400,6 +2518,8 @@ MonoBehaviour:
             overrideLifesteal: 0
             lifesteal:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -2410,6 +2530,8 @@ MonoBehaviour:
             overrideAdditionalDamage: 1
             additionalDamage:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -2447,8 +2569,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -2550,13 +2670,18 @@ MonoBehaviour:
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
+        enableRandomBuffSelection: 0
+        minRandomBuffCount: 1
+        maxRandomBuffCount: 1
+        allowDuplicateRandomBuffs: 0
+        randomBuffPool: []
         recipe:
           recipeId: orochi.orochimaru
           definition: {fileID: 11400000, guid: 7a6e0f60a8f34137a4e806fda032b811, type: 2}
           presentation:
             effectId: orochi.orochimaru
             displayName: Orochimaru
-            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            icon: {fileID: 21300000, guid: 5227730e5a906064c98ab5b39352553e, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0
@@ -2575,6 +2700,8 @@ MonoBehaviour:
             overrideDamageModifier: 0
             damageModifier:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -2584,6 +2711,8 @@ MonoBehaviour:
             overrideDamageInput: 0
             damageInput:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -2609,6 +2738,8 @@ MonoBehaviour:
             overrideLifesteal: 0
             lifesteal:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -2619,6 +2750,8 @@ MonoBehaviour:
             overrideAdditionalDamage: 0
             additionalDamage:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -2656,8 +2789,6 @@ MonoBehaviour:
         durationOverride: -1
         overrideSourceCharacter: 0
         sourceCharacterId: 
-        filterByTargetElement: 0
-        targetElement: 0
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -2708,9 +2839,9 @@ MonoBehaviour:
         Each <b><color=#8B3DFF>Dark Matter</color></b> stack Increase <b><color=#8B3DFF>Serpent
         on Earth</color></b> additional <b><color=#8B3DFF>Void</color></b> DMG by
         25% of own ATK</color></size>\r\n<size=20><color=#C0C0C0>- After Dash, gain
-        1 Movement Speed for 5 seconds</color></size>\r\n<size=20><color=#C0C0C0>- While Orochimaru
-        is active, unlock 'Supreme Divinity' ult follow-up. when use, consumes each
-        target's Sacrifice stacks, dealing additional <b><color=#8B3DFF>Void</color></b>
+        1 Movement Speed for 5 seconds</color></size>\r\n<size=20><color=#C0C0C0>-
+        While Orochimaru is active, unlock 'Supreme Divinity' ult follow-up. when
+        use, consumes each target's Sacrifice stacks, dealing additional <b><color=#8B3DFF>Void</color></b>
         DMG equal to 250% of own ATK per stack. then remove Orochimaru</color></size>"
       track: 2
       level: 4

@@ -34,7 +34,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 5.1, y: -2.6}
+  m_AnchoredPosition: {x: 4, y: -2.6}
   m_SizeDelta: {x: 33.0266, y: 12.3387}
   m_Pivot: {x: 1, y: 0}
 --- !u!222 &5437740319739906537
@@ -67,8 +67,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: XX
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 4944a95da4f7b1d4486cf4d741f3a7f6, type: 2}
-  m_sharedMaterial: {fileID: 8521718487953109346, guid: 4944a95da4f7b1d4486cf4d741f3a7f6, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 7752f6644e1ebd6459cda217bd3b8f89, type: 2}
+  m_sharedMaterial: {fileID: 8293782056677331817, guid: 7752f6644e1ebd6459cda217bd3b8f89, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -92,8 +92,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 15
-  m_fontSizeBase: 15
+  m_fontSize: 13
+  m_fontSizeBase: 13
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -250,7 +250,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 25, y: 25}
+  m_SizeDelta: {x: 32, y: 32}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &878538354104695039
 CanvasRenderer:
@@ -273,7 +273,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.5235849, g: 0.91171455, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -303,5 +303,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RuntimeEffectIconUI
   iconImage: {fileID: 5469313837138174977}
-  durationFill: {fileID: 7444183326202386465}
   stackText: {fileID: 7907595814782650494}

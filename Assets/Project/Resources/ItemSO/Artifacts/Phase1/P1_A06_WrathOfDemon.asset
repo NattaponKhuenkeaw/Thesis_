@@ -46,7 +46,7 @@ MonoBehaviour:
           presentation:
             effectId: P1-A06-DAMAGE-TAKEN
             displayName: P1-A06-DAMAGE-TAKEN
-            icon: {fileID: 0}
+            icon: {fileID: 21300000, guid: 50e134dab34d29b46956f7a61a913a76, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0

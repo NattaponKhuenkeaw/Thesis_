@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RuntimeEffectContainerDefinition
   effectId: 
   displayName: 
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: cfbe1f8648c517a4eb260aec9461e30e, type: 3}
   fieldVisualPrefab: {fileID: 0}
   kind: 0
   appliesOn: 0

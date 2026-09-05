@@ -1,0 +1,124 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &5738211256067714213
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3007331662417215078}
+  - component: {fileID: 8795553743258663716}
+  - component: {fileID: 2107557268891159396}
+  m_Layer: 0
+  m_Name: UIManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3007331662417215078
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5738211256067714213}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -8.44829, y: 3.87032, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8795553743258663716
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5738211256067714213}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7132655c664c05d4b9b8540a662addcc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Project.UI.UIManager
+  teamBuilderUI: {fileID: 0}
+  inspectScreenUI: {fileID: 0}
+  teamUI: {fileID: 0}
+  zoneStateProvider: {fileID: 11400000, guid: becbee9470c028f4a8e6ee3f1b3c6383, type: 2}
+--- !u!114 &2107557268891159396
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5738211256067714213}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c0b042c3d7054e2ebb12d09e00d93734, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldTextUtility
+  textRoot: {fileID: 0}
+  defaultTextTemplate: {fileID: 0}
+  maxTextInstances: 40
+  defaultSize: {x: 220, y: 64}
+  runtimeCanvasScale: 0.01
+  sortingOrder: 10000
+  randomRangeX: {x: -0.35, y: 0.35}
+  randomRangeY: {x: -0.1, y: 0.25}
+  slideUpDistance: 0.65
+  fadeInDuration: 0.25
+  scaleDownDuration: 1
+  holdDuration: 0.02
+  fadeOutDuration: 0.45
+  popStartScaleMultiplier: 3
+  fadeEndScaleMultiplier: 0.82
+  elementalDamageScaleMultiplier: 1.5
+  criticalScaleMultiplier: 1.5
+  highRatioScaleMultiplier: 1.35
+  highRatioThreshold: 1
+  lowTierScale: 1
+  mediumTierScale: 1.15
+  heavyTierScale: 1.3
+  ultimateTierScale: 1.6
+  damageAmountScaleReference: 1000
+  maxDamageAmountScaleBonus: 0
+  damageStyle:
+    color: {r: 1, g: 1, b: 1, a: 1}
+    fontSize: 46
+    fontStyle: 1
+    scaleMultiplier: 1
+    useElementColor: 1
+  dotStyle:
+    color: {r: 1, g: 0.55, b: 0.18, a: 1}
+    fontSize: 42
+    fontStyle: 1
+    scaleMultiplier: 0.85
+    useElementColor: 1
+  shieldStyle:
+    color: {r: 0.65, g: 0.7, b: 0.78, a: 1}
+    fontSize: 44
+    fontStyle: 1
+    scaleMultiplier: 0.95
+    useElementColor: 0
+  missedStyle:
+    color: {r: 0.85, g: 0.9, b: 1, a: 1}
+    fontSize: 42
+    fontStyle: 2
+    scaleMultiplier: 0.85
+    useElementColor: 0
+  healStyle:
+    color: {r: 0.35, g: 1, b: 0.45, a: 1}
+    fontSize: 44
+    fontStyle: 1
+    scaleMultiplier: 0.95
+    useElementColor: 0
+  additionalStyle:
+    color: {r: 0.78, g: 0.72, b: 1, a: 1}
+    fontSize: 55
+    fontStyle: 1
+    scaleMultiplier: 0.85
+    useElementColor: 1

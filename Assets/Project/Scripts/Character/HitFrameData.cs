@@ -31,6 +31,7 @@ public abstract class HitboxBase
 
     [Header("Damage")]
     public ElementType elementType = ElementType.None;
+    public CombatDamageTag damageTags = CombatDamageTag.None;
 
     [Header("Debug")]
     public Color debugColor = Color.red;
