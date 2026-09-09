@@ -744,10 +744,11 @@ MonoBehaviour:
   sequenceCanvas: {fileID: 4876176849552575567}
   oneClaimPerVisit: 1
   cameraBlendSeconds: 0.35
+  cameraReturnBlendSeconds: 0.65
   cycleDurationSeconds: 1.4
   cycleStepSeconds: 0.12
   revealHoldSeconds: 0.85
-  restoreDelaySeconds: 0.2
+  restoreDelaySeconds: 0.45
   confirmClip: {fileID: 0}
   cycleClip: {fileID: 0}
   levelUpClip: {fileID: 0}

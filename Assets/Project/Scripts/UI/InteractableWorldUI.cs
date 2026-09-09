@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -37,7 +36,12 @@ public class InteractableWorldUI : MonoBehaviour
         public TMP_Text DescriptionText;
         public Vector3 BaseScale;
         public Vector3 CurrentVelocity;
-        public Coroutine ScaleCoroutine;
+        public bool IsScaling;
+        public float ScaleElapsed;
+        public float ScaleDuration;
+        public Vector3 ScaleStart;
+        public Vector3 ScaleEnd;
+        public System.Action ScaleComplete;
     }
 
     [Header("Settings")]
@@ -83,8 +87,24 @@ public class InteractableWorldUI : MonoBehaviour
         SetPromptActive(false);
     }
 
+    private void OnDisable()
+    {
+        isPlayerInRange = false;
+        playerTransform = null;
+        foreach (PromptRuntime prompt in prompts)
+        {
+            prompt.IsScaling = false;
+            prompt.ScaleComplete = null;
+            prompt.CurrentVelocity = Vector3.zero;
+        }
+        SetPromptActive(false);
+    }
+
     private void Update()
     {
+        foreach (PromptRuntime prompt in prompts)
+            TickScaleAnimation(prompt, Time.deltaTime);
+
         if (!isPlayerInRange || playerTransform == null)
         {
             return;
@@ -279,7 +299,7 @@ public class InteractableWorldUI : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (!other.CompareTag("Player") || isPlayerInRange)
+        if (!isActiveAndEnabled || !other.CompareTag("Player") || isPlayerInRange)
         {
             return;
         }
@@ -325,7 +345,11 @@ public class InteractableWorldUI : MonoBehaviour
             PromptRuntime prompt = prompts[i];
             if (prompt.Root != null)
             {
-                StartScaleAnimation(prompt, prompt.Root.transform.localScale.x, 0f, 0.15f, () => prompt.Root.SetActive(false));
+                StartScaleAnimation(prompt, 1f, 0f, 0.15f, () =>
+                {
+                    if (prompt.Root != null)
+                        prompt.Root.SetActive(false);
+                }, useCurrentScale: true);
             }
         }
 
@@ -340,36 +364,53 @@ public class InteractableWorldUI : MonoBehaviour
             + (playerTransform.forward * config.offsetFromPlayer.z);
     }
 
-    private void StartScaleAnimation(PromptRuntime prompt, float startScale, float endScale, float duration, System.Action onComplete = null)
+    private void StartScaleAnimation(PromptRuntime prompt, float startScale, float endScale, float duration,
+        System.Action onComplete = null, bool useCurrentScale = false)
     {
-        if (prompt.ScaleCoroutine != null)
+        prompt.IsScaling = false;
+        prompt.ScaleComplete = null;
+
+        if (prompt.Root == null)
+            return;
+
+        if (!isActiveAndEnabled || !gameObject.activeInHierarchy || duration <= 0f)
         {
-            StopCoroutine(prompt.ScaleCoroutine);
+            prompt.Root.transform.localScale = prompt.BaseScale * endScale;
+            onComplete?.Invoke();
+            return;
         }
 
-        prompt.ScaleCoroutine = StartCoroutine(ScaleAnimation(prompt, startScale, endScale, duration, onComplete));
+        // Physics exit callbacks can arrive during deactivation. Never start coroutines here.
+        prompt.ScaleStart = useCurrentScale ? prompt.Root.transform.localScale : prompt.BaseScale * startScale;
+        prompt.ScaleEnd = prompt.BaseScale * endScale;
+        prompt.ScaleDuration = duration;
+        prompt.ScaleElapsed = 0f;
+        prompt.ScaleComplete = onComplete;
+        prompt.Root.transform.localScale = prompt.ScaleStart;
+        prompt.IsScaling = true;
     }
 
-    private IEnumerator ScaleAnimation(PromptRuntime prompt, float startScale, float endScale, float duration, System.Action onComplete = null)
+    private static void TickScaleAnimation(PromptRuntime prompt, float deltaTime)
     {
-        float timer = 0f;
-        Vector3 initialScale = prompt.BaseScale * startScale;
-        Vector3 targetScale = prompt.BaseScale * endScale;
-
-        prompt.Root.transform.localScale = initialScale;
-
-        while (timer < duration)
+        if (!prompt.IsScaling)
+            return;
+        if (prompt.Root == null)
         {
-            timer += Time.deltaTime;
-            float t = Mathf.Clamp01(timer / duration);
-            float curve = 1f - Mathf.Pow(1f - t, 3f);
-
-            prompt.Root.transform.localScale = Vector3.Lerp(initialScale, targetScale, curve);
-            yield return null;
+            prompt.IsScaling = false;
+            prompt.ScaleComplete = null;
+            return;
         }
 
-        prompt.Root.transform.localScale = targetScale;
-        prompt.ScaleCoroutine = null;
+        prompt.ScaleElapsed += deltaTime;
+        float t = Mathf.Clamp01(prompt.ScaleElapsed / prompt.ScaleDuration);
+        float curve = 1f - Mathf.Pow(1f - t, 3f);
+        prompt.Root.transform.localScale = Vector3.Lerp(prompt.ScaleStart, prompt.ScaleEnd, curve);
+        if (t < 1f)
+            return;
+
+        prompt.IsScaling = false;
+        System.Action onComplete = prompt.ScaleComplete;
+        prompt.ScaleComplete = null;
         onComplete?.Invoke();
     }
 

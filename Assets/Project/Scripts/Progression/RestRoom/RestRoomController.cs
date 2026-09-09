@@ -28,8 +28,9 @@ namespace Project.Progression.RestRoom
 
         [Header("Timing (feel pass later)")]
         [SerializeField, Min(0.05f)] private float cameraBlendSeconds = 0.35f;
+        [SerializeField, Min(0.05f)] private float cameraReturnBlendSeconds = 0.65f;
         [SerializeField, Min(0.1f)] private float healHoldSeconds = 0.9f;
-        [SerializeField, Min(0f)] private float restoreDelaySeconds = 0.2f;
+        [SerializeField, Min(0f)] private float restoreDelaySeconds = 0.45f;
 
         [Header("Audio (optional)")]
         [SerializeField] private AudioClip confirmClip;
@@ -181,7 +182,7 @@ namespace Project.Progression.RestRoom
         {
             if (ownsCameraFocus && CameraManager.instance != null)
             {
-                CameraManager.instance.EndTemporaryFocus();
+                CameraManager.instance.EndTemporaryFocus(cameraReturnBlendSeconds);
                 ownsCameraFocus = false;
             }
 

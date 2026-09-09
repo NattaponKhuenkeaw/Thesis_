@@ -154,10 +154,10 @@ public class CameraManager : MonoBehaviour
     private Vector3 _cachedExploreDamping;
     private bool _isTemporarilySnappedToPlayer;
     private bool _isTemporarilyFocused;
-    private Transform _cachedFocusExploreFollow;
-    private Transform _cachedFocusExploreLookAt;
-    private Transform _cachedFocusStaticFollow;
-    private Transform _cachedFocusStaticLookAt;
+    private Coroutine _focusReturnCoroutine;
+    private CinemachineCamera _focusCam;
+    private CinemachineBlendDefinition _focusOriginalBlend;
+    private bool _hasFocusOriginalBlend;
     private float _originalExploreSize = -1f;
     private float _originalCombatSize = -1f;
     private float _originalStaticSize = -1f;
@@ -321,6 +321,12 @@ public class CameraManager : MonoBehaviour
         }
     }
 
+    private void OnDisable()
+    {
+        FinishPendingFocusReturn();
+        DisposeFocusCamera();
+    }
+
     private void LateUpdate()
     {
         TickVerticalFollow();
@@ -419,6 +425,8 @@ public class CameraManager : MonoBehaviour
     /// </summary>
     public void EnterCombat(EnemyController enemy, float weight = -1f)
     {
+        if (enemy == null || !enemy.IsTargetable)
+            return;
         if (enemy == null) return;
 
         float targetWeight = weight < 0f ? _defaultEnemyWeight : weight;
@@ -720,32 +728,25 @@ public class CameraManager : MonoBehaviour
     /// </summary>
     public void BeginTemporaryFocus(Transform focusTarget, float blendSeconds = 0.35f)
     {
-        if (focusTarget == null)
+        if (focusTarget == null || _exploreCam == null)
         {
             return;
         }
 
+        FinishPendingFocusReturn();
         EndTemporaryPlayerSnap();
 
         if (!_isTemporarilyFocused)
         {
-            if (_exploreCam != null)
-            {
-                _cachedFocusExploreFollow = _exploreCam.Follow;
-                _cachedFocusExploreLookAt = _exploreCam.LookAt;
-            }
-
-            if (_staticCam != null)
-            {
-                _cachedFocusStaticFollow = _staticCam.Follow;
-                _cachedFocusStaticLookAt = _staticCam.LookAt;
-            }
-
             if (_brain != null)
             {
-                _cachedBrainBlend = _brain.DefaultBlend;
-                _hasCachedBrainBlend = true;
+                _focusOriginalBlend = _brain.DefaultBlend;
+                _hasFocusOriginalBlend = true;
             }
+
+            // Reuse authored event framing without borrowing the player's live camera.
+            _focusCam = Instantiate(_exploreCam, _exploreCam.transform.parent);
+            _focusCam.name = "CinemachineCamera_EventFocus";
         }
 
         _isTemporarilyFocused = true;
@@ -758,34 +759,14 @@ public class CameraManager : MonoBehaviour
                 : new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.EaseInOut, blend);
         }
 
-        if (_exploreCam != null)
-        {
-            _exploreCam.Follow = focusTarget;
-            _exploreCam.LookAt = focusTarget;
-            _exploreCam.Priority = _activePriority + 100;
-        }
-
-        if (_combatCam != null)
-        {
-            _combatCam.Priority = _inactivePriority;
-        }
-
-        if (_staticCam != null)
-        {
-            _staticCam.Follow = focusTarget;
-            _staticCam.LookAt = focusTarget;
-            _staticCam.Priority = _inactivePriority;
-        }
-
-        if (_ultimateCam != null)
-        {
-            _ultimateCam.Priority = _inactivePriority;
-        }
-
-        NotifyPlayerWarp(Vector3.zero);
+        _focusCam.Follow = focusTarget;
+        _focusCam.LookAt = focusTarget;
+        _focusCam.Priority = _activePriority + 100;
+        _focusCam.gameObject.SetActive(true);
+        _focusCam.PreviousStateIsValid = false;
     }
 
-    public void EndTemporaryFocus()
+    public void EndTemporaryFocus(float blendSeconds = -1f)
     {
         if (!_isTemporarilyFocused)
         {
@@ -794,26 +775,56 @@ public class CameraManager : MonoBehaviour
 
         _isTemporarilyFocused = false;
 
-        if (_exploreCam != null)
-        {
-            _exploreCam.Follow = _cachedFocusExploreFollow != null ? _cachedFocusExploreFollow : _playerTransform;
-            _exploreCam.LookAt = _cachedFocusExploreLookAt != null ? _cachedFocusExploreLookAt : _playerTransform;
-        }
+        if (_brain != null && blendSeconds >= 0f)
+            _brain.DefaultBlend = blendSeconds == 0f
+                ? new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.Cut, 0f)
+                : new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.EaseInOut, blendSeconds);
 
-        if (_staticCam != null)
-        {
-            _staticCam.Follow = _cachedFocusStaticFollow;
-            _staticCam.LookAt = _cachedFocusStaticLookAt;
-        }
+        if (_focusCam != null)
+            _focusCam.Priority = int.MinValue;
 
-        if (_brain != null && _hasCachedBrainBlend)
-        {
-            _brain.DefaultBlend = _cachedBrainBlend;
-        }
+        if (_brain != null && isActiveAndEnabled)
+            _focusReturnCoroutine = StartCoroutine(DisposeAfterFocusBlend());
+        else
+            DisposeFocusCamera();
+    }
 
-        RoomData currentRoom = _zoneStateProvider != null ? _zoneStateProvider.CurrentRoom : null;
-        UpdateCameraForRoom(currentRoom);
-        NotifyPlayerWarp(Vector3.zero);
+    private IEnumerator DisposeAfterFocusBlend()
+    {
+        // Keep the outgoing camera on the display while its image is still in the blend.
+        yield return null;
+        while (_brain != null && _focusCam != null && _brain.IsLiveChild(_focusCam))
+            yield return null;
+
+        _focusReturnCoroutine = null;
+        DisposeFocusCamera();
+    }
+
+    private void DisposeFocusCamera()
+    {
+        _isTemporarilyFocused = false;
+        if (_focusCam != null)
+        {
+            _focusCam.gameObject.SetActive(false);
+            if (Application.isPlaying)
+                Destroy(_focusCam.gameObject);
+            else
+                DestroyImmediate(_focusCam.gameObject);
+            _focusCam = null;
+        }
+        if (_brain != null && _hasFocusOriginalBlend)
+            _brain.DefaultBlend = _focusOriginalBlend;
+        _hasFocusOriginalBlend = false;
+    }
+
+    private void FinishPendingFocusReturn()
+    {
+        if (_focusReturnCoroutine == null)
+            return;
+
+        StopCoroutine(_focusReturnCoroutine);
+        _focusReturnCoroutine = null;
+        DisposeFocusCamera();
     }
 
     // =========================================================
@@ -1081,6 +1092,8 @@ public class CameraManager : MonoBehaviour
 
     private void HandleRoomChanged(RoomData room)
     {
+        FinishPendingFocusReturn();
+        DisposeFocusCamera();
         if (room == null || !room.UseStaticCamera)
         {
             ExitCombatMode();

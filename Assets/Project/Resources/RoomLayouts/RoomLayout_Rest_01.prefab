@@ -744,8 +744,9 @@ MonoBehaviour:
   healPercentOfMaxHp: 0.3
   oneClaimPerVisit: 1
   cameraBlendSeconds: 0.35
+  cameraReturnBlendSeconds: 0.65
   healHoldSeconds: 0.9
-  restoreDelaySeconds: 0.2
+  restoreDelaySeconds: 0.45
   confirmClip: {fileID: 0}
   healClip: {fileID: 0}
   sfxVolume: 1
