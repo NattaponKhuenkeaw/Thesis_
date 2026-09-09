@@ -1172,25 +1172,6 @@ namespace Project.TeamBuilder.UI
                 }
             }
 
-            foreach (CharacterItem runtimeItem in draftController.GetRuntimeCharacterItems())
-            {
-                if (runtimeItem == null || runtimeItem.characterObjectData == null)
-                    continue;
-
-                bool alreadyOwned = false;
-                for (int i = 0; i < ownedCharacters.Count; i++)
-                {
-                    if (ownedCharacters[i] != null && ownedCharacters[i].characterObjectData == runtimeItem.characterObjectData)
-                    {
-                        alreadyOwned = true;
-                        break;
-                    }
-                }
-
-                if (!alreadyOwned)
-                    ownedCharacters.Add(runtimeItem);
-            }
-
             if (inventoryPanel != null)
             {
                 inventoryPanel.Populate(ownedCharacters, GetOwnedArtifacts());

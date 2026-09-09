@@ -214,7 +214,7 @@ namespace Project.Core
                 teamLoader.CaptureRunStartTeam();
                 CharacterObject[] team = runInventory.GetTeamSnapshot();
                 ArtifactInstanceRef[][] artifacts = BuildArtifactDataForDeploy(team.Length);
-                teamLoader.DeployLoadout(team, runInventory.ActiveTeamSlotIndex, artifacts);
+                teamLoader.DeployLoadout(team, runInventory.ActiveTeamSlotIndex, artifacts, resetHealthForNewRun: true);
             }
 
             SetPhase(GameRunPhase.InRun);

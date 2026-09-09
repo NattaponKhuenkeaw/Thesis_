@@ -175,8 +175,6 @@ namespace Project.Core.RunEnd
             AppendFragmentRewardDeltas(snapshot);
             metaProgression?.SavePersistentState();
             runInventory?.ResetRunProgressForDeath(metaProgression);
-            TeamLoader teamLoader = TeamLoader.Instance ?? FindFirstObjectByType<TeamLoader>();
-            teamLoader?.ForceLobbyMainCharacter();
             ReturnToLobby();
         }
 

@@ -135,6 +135,7 @@ namespace Project.TeamBuilder.UI
         public CharacterItem FindCharacterItem(CharacterObject charObj)
         {
             if (charObj == null) return null;
+            if (playerInventory != null && playerInventory.IsCharacterUnavailable(charObj)) return null;
 
             if (playerInventory != null)
             {
