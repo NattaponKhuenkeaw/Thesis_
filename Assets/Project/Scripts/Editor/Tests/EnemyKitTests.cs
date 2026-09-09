@@ -14,7 +14,7 @@ public class EnemyKitTests
         {
             Author(kit, EnemyCombatRole.RangedHold, 9f);
 
-            EnemyController enemy = go.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(go);
             enemy.CombatRole = EnemyCombatRole.InterruptibleMelee;
             enemy.AttackRangeOverride = 1.2f;
             enemy.Kit = kit;
@@ -40,7 +40,7 @@ public class EnemyKitTests
         {
             Author(kit, EnemyCombatRole.RangedHold, 9f);
 
-            EnemyController enemy = go.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(go);
             enemy.CombatRole = EnemyCombatRole.CommitMelee;
             enemy.AttackRangeOverride = 1.2f;
             enemy.Kit = kit;
@@ -66,7 +66,7 @@ public class EnemyKitTests
         {
             AuthorTiming(kit, ("warningDuration", 0.8f), ("attackCooldown", 1.1f));
 
-            EnemyController enemy = go.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(go);
             enemy.Kit = kit;
 
             Assert.That(enemy.ResolveWarningDuration(0.5f), Is.EqualTo(0.8f).Within(0.0001f));
@@ -88,7 +88,7 @@ public class EnemyKitTests
         {
             // A fresh kit authors no beat, so wearing one changes nothing until somebody fills a field.
             // This is what keeps per-enemy timing opt-in instead of a silent behaviour change.
-            EnemyController enemy = go.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(go);
             enemy.Kit = kit;
 
             Assert.That(enemy.ResolveWarningDuration(0.5f), Is.EqualTo(0.5f).Within(0.0001f));
@@ -114,7 +114,7 @@ public class EnemyKitTests
             // authored to swing with no recovery would silently inherit the graph's recovery instead.
             AuthorTiming(kit, ("attackCooldown", 0f), ("commitTelegraphFraction", 0f));
 
-            EnemyController enemy = go.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(go);
             enemy.Kit = kit;
 
             Assert.That(enemy.ResolveAttackCooldown(0.55f), Is.EqualTo(0f).Within(0.0001f));
@@ -137,7 +137,7 @@ public class EnemyKitTests
             Author(kit, EnemyCombatRole.RangedHold, 9f);
             AuthorTiming(kit, ("lungeDistance", 2f));
 
-            EnemyController enemy = go.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(go);
             enemy.Kit = kit;
 
             Assert.That(enemy.UsesRangedAttack, Is.True);
@@ -160,7 +160,7 @@ public class EnemyKitTests
             Author(kit, EnemyCombatRole.RangedHold, 12f);
             AuthorTiming(kit, ("holdRange", 8.5f));
 
-            EnemyController enemy = go.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(go);
             enemy.Kit = kit;
 
             Assert.That(enemy.ResolveHoldRange(12f), Is.EqualTo(8.5f).Within(0.0001f));

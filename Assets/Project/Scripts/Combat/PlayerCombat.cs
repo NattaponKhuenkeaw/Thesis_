@@ -423,7 +423,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
                 }
 
                 EnemyController enemy = hit.GetComponentInParent<EnemyController>();
-                if (enemy == null || !enemy.IsAlive)
+                if (enemy == null || !enemy.IsTargetable)
                 {
                     continue;
                 }
@@ -852,7 +852,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             grabHitbox = currentGrabHitbox;
         }
 
-        if (enemy == null || grabHitbox == null || !enemy.IsAlive)
+        if (enemy == null || grabHitbox == null || !enemy.IsTargetable)
         {
             return false;
         }
@@ -1487,7 +1487,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             for (int i = 0; i < hits.Length; i++)
             {
                 EnemyController enemy = hits[i] != null ? hits[i].GetComponentInParent<EnemyController>() : null;
-                if (enemy == null || !enemy.IsAlive || damagedEnemies.Contains(enemy))
+                if (enemy == null || !enemy.IsTargetable || damagedEnemies.Contains(enemy))
                 {
                     continue;
                 }
@@ -1785,7 +1785,7 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
     private bool CanProcessHitboxTarget(EnemyController enemy)
     {
-        if (enemy == null || !enemy.IsAlive)
+        if (enemy == null || !enemy.IsTargetable)
         {
             return false;
         }

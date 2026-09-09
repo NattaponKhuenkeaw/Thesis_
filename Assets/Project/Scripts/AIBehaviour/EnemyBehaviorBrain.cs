@@ -39,10 +39,10 @@ public class EnemyBehaviorBrain : MonoBehaviour
     {
         Cache();
         BindBlackboardSelf();
-        if (enableAgentWhenNoBossDriver && GetComponent<Project.AIBehaviour.Boss.BossPatternController>() == null)
-        {
-            SetAgentActive(true);
-        }
+
+        // Spawn lifecycle owns the first setup frame. The graph is enabled only after the
+        // EnemyController enters Active, preventing a node from targeting or moving a fresh spawn.
+        SetAgentActive(false);
     }
 
     public void SetAgentActive(bool active)
@@ -52,6 +52,19 @@ public class EnemyBehaviorBrain : MonoBehaviour
         {
             agent.enabled = active;
         }
+    }
+
+    /// <summary>
+    /// Enables the normal Behavior Graph only for non-boss enemies during the Active lifecycle.
+    /// BossPatternController remains the exclusive boss driver.
+    /// </summary>
+    public void SetAgentActiveForGameplay(bool active)
+    {
+        Cache();
+
+        bool hasBossDriver = GetComponent<Project.AIBehaviour.Boss.BossPatternController>() != null;
+        bool canRunGraph = enableAgentWhenNoBossDriver && !hasBossDriver;
+        SetAgentActive(active && canRunGraph);
     }
 
     public bool TrySetBlackboard<T>(string key, T value)

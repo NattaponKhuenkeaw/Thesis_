@@ -11,6 +11,92 @@ public class AnimationHandler_Enemy : MonoBehaviour
     public Animator anim;
     public EnemyController enemyController;
 
+    [Header("Lifecycle Animation (optional until clips are assigned)")]
+    [Tooltip("Full layer-0 state path, for example Base Layer.SpawnGround. Leave empty for legacy setup.")]
+    public string spawnGroundState = "";
+    public string spawnFallState = "";
+    public string deathState = "";
+    [Tooltip("Required return state when a spawn animation is configured.")]
+    public string activeState = "Base Layer.Idle";
+
+    private int lifecycleAnimationHash;
+    private int lifecycleAnimationFrame;
+    private bool lifecycleAnimationPlaying;
+    private AnimatorCullingMode previousCulling;
+
+    public bool HasLifecycleDeath => !string.IsNullOrWhiteSpace(deathState);
+
+    public void SetLifecyclePhase(EnemyLifecycleStateId phase)
+    {
+        if (anim == null)
+            anim = GetComponent<Animator>();
+        int hash = Animator.StringToHash("LifecyclePhase");
+        if (anim != null && anim.runtimeAnimatorController != null)
+        {
+            foreach (var parameter in anim.parameters)
+                if (parameter.nameHash == hash && parameter.type == AnimatorControllerParameterType.Int)
+                {
+                    anim.SetInteger(hash, (int)phase);
+                    break;
+                }
+        }
+    }
+
+    public bool PlayLifecycleAnimation(string statePath)
+    {
+        EndLifecycleAnimation();
+        if (string.IsNullOrWhiteSpace(statePath))
+            return false;
+        if (anim == null)
+            anim = GetComponent<Animator>();
+        int hash = Animator.StringToHash(statePath);
+        if (anim == null || !anim.isActiveAndEnabled || anim.runtimeAnimatorController == null || !anim.HasState(0, hash))
+        {
+            Debug.LogWarning($"{name}: Missing lifecycle Animator state '{statePath}'. Using lifecycle fallback.", this);
+            return false;
+        }
+
+        previousCulling = anim.cullingMode;
+        anim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+        anim.speed = 1f;
+        lifecycleAnimationHash = hash;
+        lifecycleAnimationFrame = Time.frameCount;
+        lifecycleAnimationPlaying = true;
+        anim.Play(hash, 0, 0f);
+        return true;
+    }
+
+    public bool IsLifecycleAnimationComplete()
+    {
+        if (!lifecycleAnimationPlaying)
+            return true;
+        if (anim == null || !anim.isActiveAndEnabled || Time.frameCount <= lifecycleAnimationFrame)
+            return false;
+        var state = anim.GetCurrentAnimatorStateInfo(0);
+        return state.fullPathHash == lifecycleAnimationHash && !state.loop && state.normalizedTime >= 1f;
+    }
+
+    public void EndLifecycleAnimation()
+    {
+        if (lifecycleAnimationPlaying && anim != null)
+            anim.cullingMode = previousCulling;
+        lifecycleAnimationPlaying = false;
+    }
+
+    public void ReturnFromSpawn()
+    {
+        bool hadAnimation = lifecycleAnimationPlaying;
+        EndLifecycleAnimation();
+        if (hadAnimation && anim != null && anim.runtimeAnimatorController != null)
+        {
+            int hash = Animator.StringToHash(activeState);
+            if (anim.HasState(0, hash))
+                anim.Play(hash, 0, 0f);
+            else
+                Debug.LogWarning($"{name}: Missing spawn return state '{activeState}'.", this);
+        }
+    }
+
     // =========================================================
     // Animator Hashes
     // =========================================================
@@ -86,7 +172,9 @@ public class AnimationHandler_Enemy : MonoBehaviour
 
     private void HandleDeath()
     {
-        TriggerDie();
+        // The lifecycle starts the authored death state after all death listeners clean up.
+        if (!HasLifecycleDeath)
+            TriggerDie();
     }
 
     // =========================================================

@@ -91,7 +91,19 @@ public class EnemyController : MonoBehaviour
     // =========================================================
     [Header("Runtime State (read-only)")]
     [SerializeField] private bool isAlive = true;
+    [SerializeField] private EnemyLifecycleStateId lifecycleState = EnemyLifecycleStateId.Spawn;
+    private EnemyLifecycleState lifecycleStateInstance;
+    private bool lifecycleStarted;
+    private bool hasStarted;
+    private bool spawnPhysicsPaused;
+    private bool simulatedBeforeSpawn;
+    private float deathDespawnAt;
+    private bool disabledDeathDespawnScheduled;
+
     public bool IsAlive => isAlive;
+    public EnemyLifecycleStateId LifecycleState => lifecycleState;
+    public bool IsGameplayActive => isActiveAndEnabled && isAlive && lifecycleState == EnemyLifecycleStateId.Active;
+    public bool IsTargetable => IsGameplayActive;
     public RuntimeEffectReceiver RuntimeEffects
     {
         get
@@ -183,7 +195,7 @@ public class EnemyController : MonoBehaviour
     /// <summary>Child hitbox collider used by AttackAction.</summary>
     public Collider2D attackHitbox;
 
-    /// <summary>Main body collider (disabled on death).</summary>
+    /// <summary>Main body collider; remains enabled during DieState so corpses keep their physics.</summary>
     public Collider2D bodyCollider;
 
     [SerializeField] private EnemyWorldUI worldUI;
@@ -194,6 +206,20 @@ public class EnemyController : MonoBehaviour
     [Header("Death")]
     [Tooltip("Seconds the corpse stays before Destroy. Must cover the death clip or the enemy pops mid-animation. Enemy_Die.anim runs 0.4s; bosses raise this via ConfigureDeathDespawn.")]
     [SerializeField, Min(0f)] private float destroyDelayOnDeath = 0.4f;
+
+    [Header("Spawn Presentation")]
+    [Tooltip("Detect ground at the authored spawn position. Airborne enemies fall without AI until grounded.")]
+    [SerializeField] private bool useSpawnPresentation;
+    [SerializeField] private LayerMask spawnGroundLayers;
+    [SerializeField, Min(0.005f)] private float spawnGroundDistance = 0.06f;
+    [Tooltip("Safety limit for missing ground or misconfigured animations. Does not activate airborne enemies.")]
+    [SerializeField, Min(1f)] private float lifecyclePresentationTimeout = 30f;
+    private AnimationHandler_Enemy lifecycleAnimation;
+    private bool spawnFalling;
+    private bool spawnAnimationPlaying;
+    private bool deathAnimationPlaying;
+    private bool deathAnimationWarned;
+    private readonly RaycastHit2D[] spawnGroundHits = new RaycastHit2D[16];
 
     [Header("Combat Kit")]
     [Tooltip("Optional EnemyKit asset. When assigned it owns the role, range, and ranged shot values below.")]
@@ -332,15 +358,31 @@ public class EnemyController : MonoBehaviour
     // =========================================================
     void Start()
     {
+        hasStarted = true;
+
+        // A controller can be killed before its first frame (for example by a scripted setup).
+        // Do not let Start resurrect that instance.
+        if (!isAlive || lifecycleState == EnemyLifecycleStateId.Despawn)
+        {
+            return;
+        }
+
         currentHP = maxHP;
         if (startArmored)
             EnterArmored(resetDurability: true);
+
+        BeginSpawnLifecycle();
     }
 
     void Awake()
     {
         rb       = GetComponent<Rigidbody2D>();
         isAlive   = true;
+        lifecycleState = EnemyLifecycleStateId.Spawn;
+        lifecycleStateInstance = null;
+        lifecycleStarted = false;
+        hasStarted = false;
+
         EnemyFacingUtil.SanitizeScale(transform);
         if (rb != null)
         {
@@ -384,6 +426,255 @@ public class EnemyController : MonoBehaviour
             EnsureColliderDebugDrawer(bodyCollider.gameObject, Color.yellow);
     }
 
+    private void Update()
+    {
+        if (!lifecycleStarted || lifecycleStateInstance == null)
+            return;
+
+        lifecycleStateInstance.Tick(Time.deltaTime);
+    }
+
+    /// <summary>
+    /// Places a newly spawned instance at its final location and keeps it out of gameplay for the
+    /// spawn setup frame. Room spawners call this before applying difficulty and before Active.
+    /// </summary>
+    public void InitializeSpawn(Vector3 position, Quaternion rotation)
+    {
+        // New instances only: a corpse may already have destruction scheduled.
+        if (!isAlive)
+            return;
+
+        if (lifecycleStateInstance != null)
+            lifecycleStateInstance.Exit();
+
+        transform.SetPositionAndRotation(position, rotation);
+        lifecycleState = EnemyLifecycleStateId.Spawn;
+        lifecycleStateInstance = null;
+        lifecycleStarted = false;
+        isAlive = true;
+        currentHP = maxHP;
+        currentComboHits = 0;
+        LastHitAppliedReaction = true;
+
+        SetInCombat(false);
+        SetAttackHitboxActive(false);
+        SetBehaviorAgentActive(false);
+
+        if (rb != null)
+            rb.linearVelocity = Vector2.zero;
+
+        if (hasStarted)
+            BeginSpawnLifecycle();
+    }
+
+    private void BeginSpawnLifecycle()
+    {
+        lifecycleStarted = true;
+        TransitionToLifecycleState(new EnemySpawnState(this));
+    }
+
+    private void TransitionToLifecycleState(EnemyLifecycleState nextState)
+    {
+        if (nextState == null)
+            return;
+
+        if (lifecycleStateInstance != null && lifecycleStateInstance.Id == nextState.Id)
+            return;
+
+        lifecycleStateInstance?.Exit();
+        lifecycleState = nextState.Id;
+        lifecycleStateInstance = nextState;
+        lifecycleStateInstance.Enter();
+    }
+
+    internal void TransitionToActiveLifecycle()
+    {
+        if (!isAlive || lifecycleState != EnemyLifecycleStateId.Spawn)
+            return;
+
+        TransitionToLifecycleState(new EnemyActiveState(this));
+    }
+
+    internal void TransitionToDespawnLifecycle()
+    {
+        if (lifecycleState != EnemyLifecycleStateId.Die)
+            return;
+
+        TransitionToLifecycleState(new EnemyDespawnState(this));
+    }
+
+    internal float DeathDespawnDelay => destroyDelayOnDeath;
+
+    internal bool HasSpawnGroundSupport()
+    {
+        if (bodyCollider == null || !bodyCollider.enabled)
+            return false;
+        var bounds = bodyCollider.bounds;
+        var filter = new ContactFilter2D();
+        filter.SetLayerMask(spawnGroundLayers.value != 0 ? spawnGroundLayers : LayerMask.GetMask("Ground", "OneWayPlatform"));
+        filter.useTriggers = false;
+        // Probe the feet, not the pivot. A side wall or another actor is not support.
+        int count = Physics2D.BoxCast(new Vector2(bounds.center.x, bounds.min.y + 0.025f),
+            new Vector2(Mathf.Max(0.01f, bounds.size.x * 0.8f), 0.02f), 0f,
+            Vector2.down, filter, spawnGroundHits, spawnGroundDistance + 0.025f);
+        for (int i = 0; i < count; i++)
+        {
+            var hit = spawnGroundHits[i];
+            if (hit.collider == null || hit.collider.transform.IsChildOf(transform)
+                || hit.collider.GetComponentInParent<EnemyController>() != null
+                || hit.collider.GetComponentInParent<PlayerCombat>() != null)
+                continue;
+            if (hit.normal.y >= 0.5f)
+                return true;
+        }
+        return false;
+    }
+
+    internal bool TickSpawnPresentation(float elapsed)
+    {
+        if (!useSpawnPresentation)
+            return true;
+        if (spawnFalling)
+        {
+            if (rb != null)
+                rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+            if (HasSpawnGroundSupport() && (rb == null || rb.linearVelocity.y <= 0.01f))
+                return true;
+        }
+        else if (!spawnAnimationPlaying || lifecycleAnimation == null || lifecycleAnimation.IsLifecycleAnimationComplete())
+            return true;
+
+        if (elapsed >= lifecyclePresentationTimeout)
+        {
+            Debug.LogWarning($"{name}: Spawn presentation timed out. Check ground layers, body collider and Animator state. Removing enemy instead of activating mid-air.", this);
+            Die();
+        }
+        return false;
+    }
+
+    internal bool IsDeathPresentationComplete(float elapsed)
+    {
+        if (elapsed < DeathDespawnDelay)
+            return false;
+        if (!deathAnimationPlaying || lifecycleAnimation == null || lifecycleAnimation.IsLifecycleAnimationComplete())
+            return true;
+        if (elapsed < Mathf.Max(DeathDespawnDelay, lifecyclePresentationTimeout))
+            return false;
+        if (!deathAnimationWarned)
+        {
+            deathAnimationWarned = true;
+            Debug.LogWarning($"{name}: Death animation timed out. Check non-looping state and transitions.", this);
+        }
+        return true;
+    }
+
+    internal void OnSpawnLifecycleEntered()
+    {
+        SetBehaviorAgentActive(false);
+        SetAttackHitboxActive(false);
+        HideAttackWarning();
+        HideRangedAimLaser();
+        SetInCombat(false);
+
+        lifecycleAnimation = GetComponentInChildren<AnimationHandler_Enemy>(true);
+        lifecycleAnimation?.SetLifecyclePhase(EnemyLifecycleStateId.Spawn);
+        if (bodyCollider == null)
+            bodyCollider = GetComponent<Collider2D>();
+        if (useSpawnPresentation)
+            Physics2D.SyncTransforms();
+        spawnFalling = useSpawnPresentation && !HasSpawnGroundSupport();
+        if (spawnFalling && (rb == null || rb.bodyType != RigidbodyType2D.Dynamic || rb.gravityScale <= 0f || bodyCollider == null))
+            Debug.LogWarning($"{name}: Air spawn needs a Dynamic Rigidbody2D with positive gravity and a body collider. Check prefab setup.", this);
+        spawnAnimationPlaying = useSpawnPresentation && lifecycleAnimation != null
+            && lifecycleAnimation.PlayLifecycleAnimation(spawnFalling ? lifecycleAnimation.spawnFallState : lifecycleAnimation.spawnGroundState);
+
+        if (rb != null)
+        {
+            simulatedBeforeSpawn = rb.simulated;
+            spawnPhysicsPaused = true;
+            rb.simulated = spawnFalling;
+            rb.linearVelocity = Vector2.zero;
+        }
+    }
+
+    internal void OnSpawnLifecycleExited()
+    {
+        if (rb != null && spawnPhysicsPaused)
+            rb.simulated = simulatedBeforeSpawn;
+        spawnPhysicsPaused = false;
+        if (isAlive)
+            lifecycleAnimation?.ReturnFromSpawn();
+        else
+            lifecycleAnimation?.EndLifecycleAnimation();
+    }
+
+    internal void OnActiveLifecycleEntered()
+    {
+        if (!isAlive)
+            return;
+
+        lifecycleAnimation?.SetLifecyclePhase(EnemyLifecycleStateId.Active);
+        SetBehaviorAgentActive(true);
+    }
+
+    internal void OnDieLifecycleEntered()
+    {
+        if (lifecycleAnimation == null)
+            lifecycleAnimation = GetComponentInChildren<AnimationHandler_Enemy>(true);
+        lifecycleAnimation?.SetLifecyclePhase(EnemyLifecycleStateId.Die);
+        deathDespawnAt = Time.time + DeathDespawnDelay;
+        HideAttackWarning();
+        HideRangedAimLaser();
+
+        StopAntiStunlockArmorWindow();
+        ReleaseFacing();
+
+        // Stop AI before the death event reaches animation/boss listeners.
+        SetBehaviorAgentActive(false);
+
+        // Preserve terrain support but stop the corpse blocking the player (including swaps).
+        int playerLayer = LayerMask.GetMask("Player");
+        foreach (var collider in GetComponentsInChildren<Collider2D>(true))
+        {
+            collider.excludeLayers = collider.excludeLayers.value | playerLayer;
+            collider.layerOverridePriority = int.MaxValue;
+        }
+
+        if (rb != null)
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+
+        SetAttackHitboxActive(false);
+
+        OnDied?.Invoke();
+        if (lifecycleAnimation == null)
+            lifecycleAnimation = GetComponentInChildren<AnimationHandler_Enemy>(true);
+        deathAnimationPlaying = lifecycleAnimation != null && lifecycleAnimation.PlayLifecycleAnimation(lifecycleAnimation.deathState);
+        if (lifecycleAnimation != null && lifecycleAnimation.HasLifecycleDeath && !deathAnimationPlaying)
+            lifecycleAnimation.TriggerDie();
+        SetInCombat(false);
+        ScheduleDespawnIfDisabled();
+    }
+
+    private void ScheduleDespawnIfDisabled()
+    {
+        if (!Application.isPlaying || isActiveAndEnabled || lifecycleState != EnemyLifecycleStateId.Die || disabledDeathDespawnScheduled)
+            return;
+
+        disabledDeathDespawnScheduled = true;
+        Destroy(gameObject, Mathf.Max(0f, deathDespawnAt - Time.time));
+    }
+
+    internal void OnDespawnLifecycleEntered()
+    {
+        SetBehaviorAgentActive(false);
+        SetAttackHitboxActive(false);
+        SetInCombat(false);
+
+        // No pooling exists yet. Despawn destroys the whole enemy instance only after DieState's
+        // animation window; no individual component is removed or recreated.
+        Destroy(gameObject);
+    }
+
     // =========================================================
     // Public API
     // =========================================================
@@ -403,6 +694,8 @@ public class EnemyController : MonoBehaviour
 
     private void OnDisable()
     {
+        ScheduleDespawnIfDisabled();
+        SetInCombat(false);
         RoomEnemyRegistry.Unregister(this);
         // A pooled enemy disabled mid-swing would otherwise come back unable to turn.
         ReleaseFacing();
@@ -412,7 +705,7 @@ public class EnemyController : MonoBehaviour
         HitReactionData reactionData,
         Vector2 attackerPosition)
     {
-        if (!isAlive) return 0f;
+        if (!isAlive || !IsGameplayActive) return 0f;
 
         bool isSeparateDamage = IsSecondaryDamage(reactionData.damageDelivery);
 
@@ -753,35 +1046,16 @@ public class EnemyController : MonoBehaviour
     /// <summary>Trigger death sequence (also callable from DieAction node).</summary>
     public void Die()
     {
-        if (!isAlive) return;
+        if (!isAlive
+            || lifecycleState == EnemyLifecycleStateId.Die
+            || lifecycleState == EnemyLifecycleStateId.Despawn)
+        {
+            return;
+        }
+
         isAlive = false;
-        HideAttackWarning();
-
-        StopAntiStunlockArmorWindow();
-        ReleaseFacing();
-
-        // Stop the graph before the animator is told to die, or an attack node still mid-swing
-        // retriggers its own animation on top of the death clip.
-        SetBehaviorAgentActive(false);
-
-        // Drop the drive but leave the corpse in the simulation. It still needs gravity and the
-        // body collider to land, and switching the collider off was what made dying enemies fall
-        // through the floor for the length of the death animation. Vertical speed is kept so a
-        // kill mid-juggle still arcs down instead of freezing in the air. Nothing can hit or
-        // target it once isAlive is false; the whole combat layer gates on that.
-        if (rb != null)
-            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
-
-        if (attackHitbox != null) attackHitbox.enabled = false;
-
-        OnDied?.Invoke();
-
-        SetInCombat(false);
-
-        if (destroyDelayOnDeath > 0f)
-            Destroy(gameObject, destroyDelayOnDeath);
-        else
-            Destroy(gameObject);
+        lifecycleStarted = true;
+        TransitionToLifecycleState(new EnemyDieState(this));
     }
 
     private void CacheOriginalColors()
@@ -863,17 +1137,24 @@ public class EnemyController : MonoBehaviour
 
     public void SetBehaviorAgentActive(bool active)
     {
+        // External reaction systems may ask to resume AI after a grab. Lifecycle still owns the
+        // final answer so a dying/spawning enemy cannot be reactivated by a late callback.
+        if (active && !IsGameplayActive)
+            return;
+
         EnemyBehaviorBrain brain = GetComponent<EnemyBehaviorBrain>();
         if (brain != null)
         {
-            brain.SetAgentActive(active);
+            brain.SetAgentActiveForGameplay(active);
             return;
         }
 
         var behaviorAgent = GetComponent<BehaviorGraphAgent>();
         if (behaviorAgent != null)
         {
-            behaviorAgent.enabled = active;
+            bool hasBossDriver = GetComponent<Project.AIBehaviour.Boss.BossPatternController>() != null;
+            if (!active || !hasBossDriver)
+                behaviorAgent.enabled = active;
         }
     }
 
@@ -893,7 +1174,7 @@ public class EnemyController : MonoBehaviour
     /// </summary>
     public void SetInCombat(bool inCombat)
     {
-        if (!isAlive && inCombat)
+        if (inCombat && !IsTargetable)
             return;
 
         if (InCombat == inCombat)
@@ -937,6 +1218,9 @@ public class EnemyController : MonoBehaviour
 
     public void TriggerAttackWarning(float duration = -1f)
     {
+        if (!IsGameplayActive)
+            return;
+
         if (UsesRangedAttack)
         {
             worldUI?.HideAttackWarning();
@@ -972,6 +1256,9 @@ public class EnemyController : MonoBehaviour
     /// <summary>Enable or disable the attack hitbox collider.</summary>
     public void SetAttackHitboxActive(bool active)
     {
+        if (active && !IsGameplayActive)
+            active = false;
+
         if (attackHitbox != null)
         {
             attackHitbox.enabled = active;

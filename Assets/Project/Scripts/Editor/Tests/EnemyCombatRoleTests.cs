@@ -10,7 +10,7 @@ public class EnemyCombatRoleTests
         var go = new GameObject(nameof(CommitMeleeLocksWindupButNotIdleProfile));
         try
         {
-            EnemyController enemy = go.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(go);
             enemy.CombatRole = EnemyCombatRole.CommitMelee;
 
             Assert.That(enemy.UninterruptibleOnceWindup, Is.True);
@@ -30,7 +30,7 @@ public class EnemyCombatRoleTests
         var go = new GameObject(nameof(InterruptibleMeleeHasNoSwingArmor));
         try
         {
-            EnemyController enemy = go.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(go);
             enemy.CombatRole = EnemyCombatRole.InterruptibleMelee;
 
             Assert.That(enemy.UninterruptibleOnceWindup, Is.False);
@@ -49,7 +49,7 @@ public class EnemyCombatRoleTests
         var go = new GameObject(nameof(RangedHoldUsesLongRangeAndDoesNotEvade));
         try
         {
-            EnemyController enemy = go.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(go);
             enemy.CombatRole = EnemyCombatRole.RangedHold;
             enemy.AttackRangeOverride = 7f;
 
@@ -72,7 +72,7 @@ public class EnemyCombatRoleTests
         try
         {
             agent.AddComponent<Rigidbody2D>();
-            EnemyController enemy = agent.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(agent);
             enemy.CombatRole = EnemyCombatRole.RangedHold;
             enemy.AttackRangeOverride = 7f;
             EnemyLocomotion locomotion = agent.AddComponent<EnemyLocomotion>();
@@ -100,7 +100,7 @@ public class EnemyCombatRoleTests
         var target = new GameObject(nameof(GroundMeleeDoesNotTreatHigherPlatformAsAttackRange) + "_Target");
         try
         {
-            EnemyController enemy = agent.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(agent);
             enemy.CombatRole = EnemyCombatRole.InterruptibleMelee;
             EnemyLocomotion locomotion = agent.AddComponent<EnemyLocomotion>();
 
@@ -125,7 +125,7 @@ public class EnemyCombatRoleTests
         try
         {
             agent.AddComponent<Rigidbody2D>();
-            EnemyController enemy = agent.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(agent);
             enemy.CombatRole = EnemyCombatRole.InterruptibleMelee;
             EnemyLocomotion locomotion = agent.AddComponent<EnemyLocomotion>();
 
@@ -152,7 +152,7 @@ public class EnemyCombatRoleTests
         var target = new GameObject(nameof(GroundMeleeTreatsSameFloorAsAttackRange) + "_Target");
         try
         {
-            EnemyController enemy = agent.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(agent);
             enemy.CombatRole = EnemyCombatRole.InterruptibleMelee;
             EnemyLocomotion locomotion = agent.AddComponent<EnemyLocomotion>();
 
@@ -176,7 +176,7 @@ public class EnemyCombatRoleTests
         var target = new GameObject(nameof(RangedHoldDoesNotShootAtPlayerOnHigherPlatform) + "_Target");
         try
         {
-            EnemyController enemy = agent.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(agent);
             enemy.CombatRole = EnemyCombatRole.RangedHold;
             enemy.AttackRangeOverride = 7f;
             EnemyLocomotion locomotion = agent.AddComponent<EnemyLocomotion>();
@@ -200,7 +200,7 @@ public class EnemyCombatRoleTests
         var target = new GameObject(nameof(GroundMeleeCanStrikeWhenLedgeWalkIsBlocked) + "_Target");
         try
         {
-            EnemyController enemy = agent.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(agent);
             enemy.CombatRole = EnemyCombatRole.InterruptibleMelee;
             EnemyLocomotion locomotion = agent.AddComponent<EnemyLocomotion>();
             agent.AddComponent<BoxCollider2D>();
@@ -246,7 +246,7 @@ public class EnemyCombatRoleTests
         var target = new GameObject(nameof(RangedShotDirectionIsFacingNotTowardRaisedTarget) + "_Target");
         try
         {
-            EnemyController enemy = agent.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(agent);
             enemy.CombatRole = EnemyCombatRole.RangedHold;
             agent.transform.position = Vector3.zero;
             target.transform.position = new Vector3(3f, 4f, 0f);
@@ -266,7 +266,7 @@ public class EnemyCombatRoleTests
         var agent = new GameObject(nameof(RangedMuzzleTransformSetsShotOrigin));
         try
         {
-            EnemyController enemy = agent.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(agent);
             enemy.CombatRole = EnemyCombatRole.RangedHold;
             var muzzle = new GameObject("RangedMuzzle");
             muzzle.transform.SetParent(agent.transform);
@@ -291,7 +291,7 @@ public class EnemyCombatRoleTests
         var target = new GameObject(nameof(RangedHoldOnlyAttacksWhenStraightLineHitsBody) + "_Target");
         try
         {
-            EnemyController enemy = agent.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(agent);
             enemy.CombatRole = EnemyCombatRole.RangedHold;
             enemy.AttackRangeOverride = 7f;
             EnemyLocomotion locomotion = agent.AddComponent<EnemyLocomotion>();
@@ -325,7 +325,7 @@ public class EnemyCombatRoleTests
         var target = new GameObject(nameof(RangedHoldIsNotInRangeWhenFartherThanAttackRange) + "_Target");
         try
         {
-            EnemyController enemy = agent.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(agent);
             enemy.CombatRole = EnemyCombatRole.RangedHold;
             enemy.AttackRangeOverride = 7f;
             EnemyLocomotion locomotion = agent.AddComponent<EnemyLocomotion>();
@@ -351,7 +351,7 @@ public class EnemyCombatRoleTests
         try
         {
             agent.AddComponent<Rigidbody2D>();
-            agent.AddComponent<EnemyController>();
+            EnemyLifecycleTestUtility.AddActive(agent);
             EnemyLocomotion locomotion = agent.AddComponent<EnemyLocomotion>();
             agent.transform.position = new Vector3(4f, 0f, 0f);
             target.transform.position = new Vector3(10f, 0f, 0f);
@@ -375,7 +375,7 @@ public class EnemyCombatRoleTests
         try
         {
             agent.AddComponent<Rigidbody2D>();
-            EnemyController enemy = agent.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(agent);
             EnemyLocomotion locomotion = agent.AddComponent<EnemyLocomotion>();
             agent.transform.position = new Vector3(4f, 0f, 0f);
             EnemyFacingUtil.FaceHorizontal(agent.transform, 1f);
@@ -397,7 +397,7 @@ public class EnemyCombatRoleTests
         var agent = new GameObject(nameof(ReleasingFacingLetsTheEnemyTurnAgain));
         try
         {
-            EnemyController enemy = agent.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(agent);
             EnemyFacingUtil.FaceHorizontal(agent.transform, 1f);
 
             enemy.LockFacing();
@@ -420,7 +420,7 @@ public class EnemyCombatRoleTests
         var agent = new GameObject(nameof(HoldCommittedFacingOutlivesTheAttackNode));
         try
         {
-            EnemyController enemy = agent.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(agent);
             EnemyFacingUtil.FaceHorizontal(agent.transform, 1f);
 
             enemy.HoldCommittedFacing(10f);
@@ -474,7 +474,7 @@ public class EnemyCombatRoleTests
         try
         {
             Rigidbody2D body = agent.AddComponent<Rigidbody2D>();
-            EnemyController enemy = agent.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(agent);
             enemy.CombatRole = EnemyCombatRole.RangedHold;
             enemy.AttackRangeOverride = 12f;
             EnemyLocomotion locomotion = agent.AddComponent<EnemyLocomotion>();
@@ -503,10 +503,10 @@ public class EnemyCombatRoleTests
         var target = new GameObject(nameof(AlliedBodiesDoNotBlockAStraightShot) + "_Target");
         try
         {
-            EnemyController enemy = agent.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(agent);
             enemy.CombatRole = EnemyCombatRole.RangedHold;
             enemy.AttackRangeOverride = 12f;
-            blocker.AddComponent<EnemyController>();
+            EnemyLifecycleTestUtility.AddActive(blocker);
             BoxCollider2D wall = blocker.AddComponent<BoxCollider2D>();
             wall.size = new Vector2(1.35f, 2.4f);
             BoxCollider2D body = target.AddComponent<BoxCollider2D>();
@@ -534,7 +534,7 @@ public class EnemyCombatRoleTests
         var target = new GameObject(nameof(HuggingPlayerStillCountsAsAClearShot) + "_Target");
         try
         {
-            EnemyController enemy = agent.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(agent);
             enemy.CombatRole = EnemyCombatRole.RangedHold;
             enemy.AttackRangeOverride = 12f;
             BoxCollider2D body = target.AddComponent<BoxCollider2D>();
@@ -562,7 +562,7 @@ public class EnemyCombatRoleTests
         var target = new GameObject(nameof(WorldGeometryStillBlocksAStraightShot) + "_Target");
         try
         {
-            EnemyController enemy = agent.AddComponent<EnemyController>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(agent);
             enemy.CombatRole = EnemyCombatRole.RangedHold;
             enemy.AttackRangeOverride = 12f;
             BoxCollider2D geometry = wall.AddComponent<BoxCollider2D>();
@@ -587,7 +587,7 @@ public class EnemyCombatRoleTests
 
     private static EnemyLocomotion BuildRegistered(GameObject host)
     {
-        EnemyController enemy = host.AddComponent<EnemyController>();
+        EnemyController enemy = EnemyLifecycleTestUtility.AddActive(host);
         EnemyLocomotion locomotion = host.AddComponent<EnemyLocomotion>();
         RoomEnemyRegistry.Register(enemy);
         return locomotion;

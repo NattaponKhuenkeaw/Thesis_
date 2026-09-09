@@ -13,8 +13,8 @@ public class EnemyUnstackTests
         {
             left.AddComponent<Rigidbody2D>();
             right.AddComponent<Rigidbody2D>();
-            EnemyController enemyA = left.AddComponent<EnemyController>();
-            EnemyController enemyB = right.AddComponent<EnemyController>();
+            EnemyController enemyA = EnemyLifecycleTestUtility.AddActive(left);
+            EnemyController enemyB = EnemyLifecycleTestUtility.AddActive(right);
             EnemyLocomotion locoA = left.AddComponent<EnemyLocomotion>();
             EnemyLocomotion locoB = right.AddComponent<EnemyLocomotion>();
 
@@ -105,7 +105,7 @@ public class EnemyUnstackTests
 
     private static EnemyLocomotion BuildEnemy(GameObject host)
     {
-        EnemyController enemy = host.AddComponent<EnemyController>();
+        EnemyController enemy = EnemyLifecycleTestUtility.AddActive(host);
         EnemyLocomotion locomotion = host.AddComponent<EnemyLocomotion>();
         RoomEnemyRegistry.Register(enemy);
         return locomotion;

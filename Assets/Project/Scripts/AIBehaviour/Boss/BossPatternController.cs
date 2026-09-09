@@ -170,11 +170,28 @@ namespace Project.AIBehaviour.Boss
             if (bindScreenHealthHud && enemy != null)
                 BossHealthHUD.EnsureInstance().Bind(enemy, bossDisplayName);
 
-            if (enemy != null)
-                enemy.SetInCombat(true);
+            // Spawn lifecycle blocks camera membership and the boss loop until Active.
+            StartBrainIfActive();
+        }
 
-            if (brainRoutine == null && isActiveAndEnabled)
-                brainRoutine = StartCoroutine(BrainLoop());
+        private void Update()
+        {
+            // OnEnable runs before EnemyController.Start, so retry once the spawn state enters Active.
+            StartBrainIfActive();
+        }
+
+        private void StartBrainIfActive()
+        {
+            if (enemy == null
+                || !isActiveAndEnabled
+                || !enemy.IsGameplayActive
+                || brainRoutine != null)
+            {
+                return;
+            }
+
+            enemy.SetInCombat(true);
+            brainRoutine = StartCoroutine(BrainLoop());
         }
 
         private void OnDisable()

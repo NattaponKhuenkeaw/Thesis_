@@ -393,7 +393,7 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
             Collider2D col = colliders[i];
             if (col == null) continue;
             EnemyController enemy = col.GetComponentInParent<EnemyController>();
-            if (enemy == null || !enemy.IsAlive) continue;
+            if (enemy == null || !enemy.IsTargetable) continue;
             if (response.definition.excludeOriginalTarget && ReferenceEquals(enemy, damageEvent.Value.target)) continue;
 
             if (!_lastSplashTargets.Contains(enemy))
@@ -437,7 +437,7 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
                 for (int i = 0; i < _lastSplashTargets.Count; i++)
                 {
                     EnemyController enemy = _lastSplashTargets[i];
-                    if (enemy == null || !enemy.IsAlive) continue;
+                    if (enemy == null || !enemy.IsTargetable) continue;
 
                     DamageRequest request = new DamageRequest
                     {
@@ -510,7 +510,7 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
 
         if (response.target == ArtifactResponseTarget.RoomEnemies)
         {
-            RoomEnemyRegistry.FillLiving(_roomEnemies);
+            RoomEnemyRegistry.FillTargetable(_roomEnemies);
             for (int i = 0; i < _roomEnemies.Count; i++)
             {
                 _roomEnemies[i].DamageTypeState?.ApplyCustomDot(
@@ -610,7 +610,7 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
         }
         if (response.target == ArtifactResponseTarget.RoomEnemies)
         {
-            RoomEnemyRegistry.FillLiving(_roomEnemies);
+            RoomEnemyRegistry.FillTargetable(_roomEnemies);
             for (int i = 0; i < _roomEnemies.Count; i++)
             {
                 _roomEnemies[i].RuntimeEffects.ApplyEffect(response.recipe, runtime.Wearer,

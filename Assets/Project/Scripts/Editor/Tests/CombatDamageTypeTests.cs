@@ -71,7 +71,7 @@ public class CombatDamageTypeTests
     public void ProcessorUsesEnemyTypeReductionExactlyOnce()
     {
         GameObject enemyObject = new GameObject("Processor Reduction Test Enemy");
-        EnemyController enemy = enemyObject.AddComponent<EnemyController>();
+        EnemyController enemy = EnemyLifecycleTestUtility.AddActive(enemyObject);
         EnemyDamageTypeState state = enemyObject.AddComponent<EnemyDamageTypeState>();
         EnemyElementalProfile profile = ScriptableObject.CreateInstance<EnemyElementalProfile>();
         profile.lightningDamageReduction = 25f;
@@ -148,7 +148,7 @@ public class CombatDamageTypeTests
     public void SameElementDotUsesStrongestSnapshotAndPreservesEqualCadence()
     {
         GameObject enemyObject = new GameObject("DOT Snapshot Test Enemy");
-        EnemyController enemy = enemyObject.AddComponent<EnemyController>();
+        EnemyController enemy = EnemyLifecycleTestUtility.AddActive(enemyObject);
         EnemyDamageTypeState state = enemyObject.AddComponent<EnemyDamageTypeState>();
         CharacterStats first = new CharacterStats { attack = 100f, dotMastery = 0f };
         CharacterStats equal = first.Clone();

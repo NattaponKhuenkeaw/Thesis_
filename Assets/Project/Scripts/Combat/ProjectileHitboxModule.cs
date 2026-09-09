@@ -103,7 +103,7 @@ public sealed class ProjectileHitboxModule
             return false;
         }
 
-        if (enemy == null || !enemy.IsAlive)
+        if (enemy == null || !enemy.IsTargetable)
         {
             return false;
         }

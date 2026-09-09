@@ -28,5 +28,11 @@ public static class RoomEnemyRegistry
             if (enemy.IsAlive) results.Add(enemy);
         }
     }
+
+    public static void FillTargetable(List<EnemyController> results)
+    {
+        FillLiving(results);
+        results.RemoveAll(enemy => !enemy.IsTargetable);
+    }
 }
 

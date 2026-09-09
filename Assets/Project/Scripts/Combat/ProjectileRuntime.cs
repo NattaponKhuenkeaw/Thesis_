@@ -606,7 +606,7 @@ public class ProjectileRuntime : MonoBehaviour
 
         foreach (EnemyController enemy in trackedEnemies)
         {
-            if (IsEnemyTouchingTrigger(enemy))
+            if (enemy.IsTargetable && IsEnemyTouchingTrigger(enemy))
             {
                 trackedEnemyBuffer.Add(enemy);
             }
@@ -780,7 +780,7 @@ public class ProjectileRuntime : MonoBehaviour
 
         foreach (EnemyController enemy in trackedEnemies)
         {
-            if (IsEnemyTouchingTrigger(enemy))
+            if (enemy.IsTargetable && IsEnemyTouchingTrigger(enemy))
             {
                 trackedEnemyBuffer.Add(enemy);
             }
@@ -857,7 +857,7 @@ public class ProjectileRuntime : MonoBehaviour
 
     private bool CanHitEnemy(EnemyController enemy)
     {
-        if (enemy == null || !enemy.IsAlive)
+        if (enemy == null || !enemy.IsTargetable)
         {
             return false;
         }
@@ -981,7 +981,7 @@ public class ProjectileRuntime : MonoBehaviour
         }
 
         EnemyController enemy = targetTransform.GetComponentInParent<EnemyController>();
-        if (enemy == null || !enemy.IsAlive)
+        if (enemy == null || !enemy.IsTargetable)
         {
             return false;
         }

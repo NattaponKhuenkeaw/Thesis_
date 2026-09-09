@@ -720,6 +720,9 @@ namespace Project.Core.ZoneState
                 return false;
             }
 
+            // The instance is already at its final ground spawn position; lifecycle handles the
+            // setup frame instead of hiding a fresh enemy in the sky or stripping components.
+            enemy.InitializeSpawn(spawnPosition, spawnPoint.rotation);
             enemy.OnDied -= HandleEnemyDied;
             enemy.OnDied += HandleEnemyDied;
             RunProgressionManager.ApplyBiomeDifficultyToEnemy(enemy);

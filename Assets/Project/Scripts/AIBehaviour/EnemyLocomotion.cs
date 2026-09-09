@@ -710,7 +710,8 @@ public class EnemyLocomotion : MonoBehaviour
     private bool CanDriveMovement()
     {
         Cache();
-        return enemy == null || enemy.CurrentReactionState == EnemyReactionState.None;
+        return enemy == null
+            || (enemy.IsGameplayActive && enemy.CurrentReactionState == EnemyReactionState.None);
     }
 
     private static bool IsActorCollider(Collider2D hitCollider, Collider2D self)

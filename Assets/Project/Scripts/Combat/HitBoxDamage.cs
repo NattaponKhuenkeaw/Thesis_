@@ -167,7 +167,7 @@ public class HitBoxDamage : MonoBehaviour
 
     public void ProcessHit(EnemyController enemy)
     {
-        if (enemy == null || hitEnemiesThisActivation.Contains(enemy))
+        if (enemy == null || !enemy.IsTargetable || hitEnemiesThisActivation.Contains(enemy))
         {
             return;
         }

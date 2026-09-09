@@ -84,7 +84,7 @@ public sealed class ParticleBehaviorRuntime
             Collider2D collider = _overlapBuffer[i];
             if (collider == null) continue;
             EnemyController enemy = collider.GetComponentInParent<EnemyController>();
-            if (enemy != null && enemy.IsAlive) _pulseTargets.Add(enemy);
+            if (enemy != null && enemy.IsTargetable) _pulseTargets.Add(enemy);
         }
 
         if (_pulseTargets.Count == 0 && _anchorEnemy != null && _anchorEnemy.IsAlive)

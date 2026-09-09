@@ -255,7 +255,7 @@ public sealed class ArtifactPassiveDiagnosticTests
 
         // 1. CharA Skill hit (300 dmg) marks enemy
         GameObject enemyObj = new GameObject("TestEnemy");
-        EnemyController enemy = enemyObj.AddComponent<EnemyController>();
+        EnemyController enemy = EnemyLifecycleTestUtility.AddActive(enemyObj);
 
         DamageResolvedEvent skillHit = new DamageResolvedEvent(
             new DamageProvenance(1, 1, 0, 0, null, CombatDamageTag.None),
@@ -366,7 +366,7 @@ public sealed class ArtifactPassiveDiagnosticTests
         ArtifactPassiveRuntime runtime = passiveSystem.ActiveRuntimes[0];
 
         GameObject enemyObj = new GameObject("TestEnemy_Mask");
-        EnemyController enemy = enemyObj.AddComponent<EnemyController>();
+        EnemyController enemy = EnemyLifecycleTestUtility.AddActive(enemyObj);
 
         // Particle owned by CharA deals damage to enemy
         DamageResolvedEvent particleHit = new DamageResolvedEvent(

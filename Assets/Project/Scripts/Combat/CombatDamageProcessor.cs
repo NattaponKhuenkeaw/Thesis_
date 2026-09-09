@@ -144,7 +144,7 @@ public static class CombatDamageProcessor
         HitReactionData reactionData,
         bool applyElementDot = true)
     {
-        if (request.target == null || !request.target.IsAlive)
+        if (request.target == null || !request.target.IsTargetable)
         {
             return 0f;
         }
@@ -159,7 +159,7 @@ public static class CombatDamageProcessor
         HitReactionData reactionData,
         bool applyElementDot = true)
     {
-        if (request.target == null || !request.target.IsAlive)
+        if (request.target == null || !request.target.IsTargetable)
         {
             return 0f;
         }
