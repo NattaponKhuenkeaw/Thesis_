@@ -120,6 +120,20 @@ public class RoomBoundaryMathTests
     }
 
     [Test]
+    public void SafeZoneDoesNotSlideExitWallOnUnlock()
+    {
+        Assert.That(RoomBoundaryMath.ShouldSlideExitWallOnUnlock(ZoneMode.SafeZone, false), Is.False);
+        Assert.That(RoomBoundaryMath.ShouldSlideExitWallOnUnlock(ZoneMode.SafeZone, true), Is.False);
+    }
+
+    [Test]
+    public void CombatSlidesExitWallUnlessAuthoredStageExitChild()
+    {
+        Assert.That(RoomBoundaryMath.ShouldSlideExitWallOnUnlock(ZoneMode.CombatZone, false), Is.True);
+        Assert.That(RoomBoundaryMath.ShouldSlideExitWallOnUnlock(ZoneMode.CombatZone, true), Is.False);
+    }
+
+    [Test]
     public void StopBeforeWallSitsRightOfLeftWall()
     {
         float stopX = RoomBoundaryMath.ResolveStopBeforeWallX(

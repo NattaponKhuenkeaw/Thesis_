@@ -62,6 +62,21 @@ namespace Project.Core.ZoneState
                 : wallInnerX + clearance;
         }
 
+        /// <summary>
+        /// Combat unlocks by sliding the solid exit wall to the new playable edge.
+        /// Safe Zone rooms keep the authored wall; only the camera/trigger unlock.
+        /// Multi-chamber combat also keeps a child named Wall_Exit in place.
+        /// </summary>
+        public static bool ShouldSlideExitWallOnUnlock(ZoneMode zoneMode, bool usesAuthoredStageExitChild)
+        {
+            if (zoneMode == ZoneMode.SafeZone)
+            {
+                return false;
+            }
+
+            return !usesAuthoredStageExitChild;
+        }
+
         public static bool IsStageExitWallName(string objectName)
         {
             if (string.IsNullOrWhiteSpace(objectName))

@@ -213,7 +213,10 @@ namespace Project.Core.ZoneState
 
             float exitRight = Mathf.Max(_currentRightWorld, exitTarget.x + _exitPadding);
             ApplyHorizontalBounds(CameraLeft(), exitRight, force: false);
-            AlignExitWall(exitRight);
+            if (ShouldSlideExitWallOnUnlock())
+            {
+                AlignExitWall(exitRight);
+            }
         }
 
         public void SetExitAvailable(bool available, bool playFeedback = true)
@@ -235,11 +238,16 @@ namespace Project.Core.ZoneState
             float targetRight = available ? ResolveUnlockedRight() : _lockedRightWorld;
 
             ApplyHorizontalBounds(CameraLeft(), targetRight, force: false);
-            // Multi-chamber layouts keep the authored EnvironmentDependency Wall_Exit in place.
-            // Only slide a wall when it is also the stage exit (single-room layouts).
-            if (!available || !_usesAuthoredStageExitChild)
+            if (available)
             {
-                AlignExitWall(targetRight);
+                if (ShouldSlideExitWallOnUnlock())
+                {
+                    AlignExitWall(targetRight);
+                }
+            }
+            else if (!IsSafeZoneLayout())
+            {
+                AlignExitWall(_lockedRightWorld);
             }
 
             if (changed && available && playFeedback && _cameraLookAhead != null)
@@ -429,6 +437,27 @@ namespace Project.Core.ZoneState
 
             EnsureSolidWall(_stageExitWall);
             _exitWall = _stageExitWall;
+        }
+
+        private bool ShouldSlideExitWallOnUnlock()
+        {
+            return RoomBoundaryMath.ShouldSlideExitWallOnUnlock(ResolveCurrentZoneMode(), _usesAuthoredStageExitChild);
+        }
+
+        private bool IsSafeZoneLayout()
+        {
+            return ResolveCurrentZoneMode() == ZoneMode.SafeZone;
+        }
+
+        private static ZoneMode ResolveCurrentZoneMode()
+        {
+            if (RoomLayoutHost.Instance != null && RoomLayoutHost.Instance.ActiveRoom != null)
+            {
+                return RoomLayoutHost.Instance.ActiveRoom.ZoneMode;
+            }
+
+            ZoneStateProvider provider = Resources.Load<ZoneStateProvider>("CombatSO/ZoneStateProvider");
+            return provider != null ? provider.CurrentMode : ZoneMode.CombatZone;
         }
 
         private static void EnsureSolidWall(Collider2D wall)
