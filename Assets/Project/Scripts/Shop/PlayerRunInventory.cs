@@ -1003,6 +1003,8 @@ namespace Project.ShopSystem
                 return false;
             }
 
+            // Keep defeat guards through deployment; only a prepared new run allows reacquisition.
+            defeatedCharactersThisRun.Clear();
             PostInventoryMutation(save: false);
             failureReason = null;
             return true;

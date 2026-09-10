@@ -109,6 +109,8 @@ public class DeathResetOwnershipTests
         Assert.That(inventory.GetTeamCharacterAt(0), Is.SameAs(main));
         Assert.That(Owns(main), Is.True);
         Assert.That(Owns(ally), Is.False);
+        Assert.That(inventory.IsCharacterDefeated(ally), Is.True);
+        Assert.That(inventory.TryAddItem(allyItem), Is.False);
         Assert.That(inventory.TryPrepareForNewRun(1, out string reason), Is.True, reason);
         Assert.That(inventory.IsDeathTeardown, Is.False);
         Assert.That(inventory.IsDeathLobby, Is.False);
@@ -118,6 +120,61 @@ public class DeathResetOwnershipTests
         Assert.That(Owns(main), Is.True);
         Assert.That(Owns(ally), Is.False);
         Assert.That(Contains(inventory.GetRunStartTeamOrCurrent(), ally), Is.False);
+
+        Assert.That(inventory.IsCharacterDefeated(ally), Is.False);
+        Assert.That(inventory.GetRunCharacter(ally), Is.Null);
+        Assert.That(inventory.CanAddItem(allyItem), Is.True);
+        Assert.That(inventory.TryAddItem(allyItem), Is.True);
+        Assert.That(Owns(ally), Is.True);
+
+        inventory.DeployTeam(new[] { main, ally }, 0);
+        inventory.SetRunCharacterCurrentHP(ally, 0f);
+        Assert.That(inventory.TryRemoveDefeatedTeamCharacter(ally, main, out _), Is.True);
+        Assert.That(inventory.IsCharacterDefeated(ally), Is.True);
+        Assert.That(Owns(ally), Is.False);
+        Assert.That(inventory.TryAddItem(allyItem), Is.False);
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void FailedNewRunKeepsAllDefeatLocks(bool restoreLobby)
+    {
+        inventory.SetRunCharacterCurrentHP(ally, 0f);
+        Assert.That(inventory.TryRemoveDefeatedTeamCharacter(ally, main, out _), Is.True);
+        inventory.SetRunCharacterCurrentHP(main, 0f);
+        Assert.That(inventory.TryRemoveDefeatedTeamCharacter(main, null, out _), Is.False);
+        inventory.ResetRunProgressForDeath();
+        if (restoreLobby)
+            inventory.EnsureMainCharacterOnLobbyTeam();
+
+        Assert.That(inventory.TryPrepareForNewRun(2, out string reason), Is.False);
+        Assert.That(reason, Is.Not.Empty);
+        Assert.That(inventory.IsDeathTeardown, Is.True);
+        Assert.That(inventory.IsDeathLobby, Is.EqualTo(restoreLobby));
+        Assert.That(inventory.IsCharacterDefeated(main), Is.True);
+        Assert.That(inventory.IsCharacterDefeated(ally), Is.True);
+        Assert.That(Owns(main), Is.EqualTo(restoreLobby));
+        Assert.That(Owns(ally), Is.False);
+        Assert.That(inventory.CanAddItem(allyItem), Is.False);
+        Assert.That(inventory.TryAddItem(allyItem), Is.False);
+        Assert.That(inventory.TryAddItem(mainItem), Is.False);
+    }
+
+    [Test]
+    public void NewRunWithSurvivingMainAllowsReacquiringDefeatedAlly()
+    {
+        inventory.SetRunCharacterCurrentHP(ally, 0f);
+        Assert.That(inventory.TryRemoveDefeatedTeamCharacter(ally, main, out _), Is.True);
+        Assert.That(inventory.IsDeathTeardown, Is.False);
+        Assert.That(inventory.TryAddItem(allyItem), Is.False);
+
+        Assert.That(inventory.TryPrepareForNewRun(1, out string reason), Is.True, reason);
+        Assert.That(Owns(main), Is.True);
+        Assert.That(Owns(ally), Is.False);
+        Assert.That(inventory.GetDeployedTeamMemberCount(), Is.EqualTo(1));
+        Assert.That(Contains(inventory.GetRunStartTeamOrCurrent(), ally), Is.False);
+        Assert.That(inventory.IsCharacterDefeated(ally), Is.False);
+        Assert.That(inventory.TryAddItem(allyItem), Is.True);
     }
 
     [Test]
