@@ -45,7 +45,8 @@ namespace Project.Progression
             BaseItem item,
             PlayerRunInventory runInventory,
             PlayerMetaProgression metaProgression,
-            int amount = 1)
+            int amount = 1,
+            int? biomeIndexOverride = null)
         {
             if (item == null || runInventory == null)
             {
@@ -54,7 +55,7 @@ namespace Project.Progression
 
             if (item is ArtifactDefinition artifactDefinition)
             {
-                if (!runInventory.TryAcquireArtifact(artifactDefinition, out ArtifactInstance instance))
+                if (!runInventory.TryAcquireArtifact(artifactDefinition, out ArtifactInstance instance, null, biomeIndexOverride))
                 {
                     return new AcquisitionResult(AcquisitionKind.Rejected, item, 0, "Artifact generation failed.");
                 }

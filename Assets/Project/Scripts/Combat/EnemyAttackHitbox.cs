@@ -89,7 +89,7 @@ public class EnemyAttackHitbox : MonoBehaviour
             return;
         }
 
-        IncomingAttackContext context = IncomingAttackContext.FromEnemy(enemyController, attackProperty);
+        IncomingAttackContext context = IncomingAttackContext.FromEnemy(enemyController, attackProperty, triggerPlayerTakeDamageAnimation);
         if (!playerCharacter.TakeDamage(damage, context))
             return;
 
@@ -97,12 +97,6 @@ public class EnemyAttackHitbox : MonoBehaviour
             CameraManager.instance.ShakeByImpact(DamageImpactTier.Low);
 
         enemyController.SetInCombat(true);
-
-        if (!triggerPlayerTakeDamageAnimation)
-            return;
-
-        if (playerCharacter.Animator != null)
-            playerCharacter.Animator.TriggerTakeDamage();
     }
 
 #if UNITY_EDITOR

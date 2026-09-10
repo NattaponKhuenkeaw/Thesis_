@@ -55,6 +55,7 @@ namespace Project.InventorySystem.Artifacts
         public long acquisitionOrder;
         public long collectedTimestampUtc;
         public int generationSeed;
+        public int acquisitionBiomeIndex;
 
         public ArtifactInstance Clone()
         {
@@ -67,7 +68,8 @@ namespace Project.InventorySystem.Artifacts
                 isNew = isNew,
                 acquisitionOrder = acquisitionOrder,
                 collectedTimestampUtc = collectedTimestampUtc,
-                generationSeed = generationSeed
+                generationSeed = generationSeed,
+                acquisitionBiomeIndex = acquisitionBiomeIndex
             };
         }
     }

@@ -70,7 +70,7 @@ MonoBehaviour:
             kind: 0
             appliesOn: 0
             durationType: 0
-            durationSeconds: 3
+            durationSeconds: 4
             stackMode: 2
             stackLimit: 10
             refreshDurationOnReapply: 1

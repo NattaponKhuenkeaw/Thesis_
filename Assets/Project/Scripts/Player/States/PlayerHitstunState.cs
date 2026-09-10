@@ -30,6 +30,11 @@ public class PlayerHitstunState : FrameDataPlayerState
     public override bool LocksMovement => true;
     public override bool LocksFacing => true;
 
+    /// <summary>
+    /// Player is already in hitstun, so incoming hits can re-stagger.
+    /// </summary>
+    public override bool CanBeInterruptedByDamage(IncomingAttackContext attackContext) => true;
+
     // =========================================================
     // FrameDataPlayerState — provide hitstun frame data
     // =========================================================

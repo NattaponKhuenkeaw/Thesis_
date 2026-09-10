@@ -532,5 +532,123 @@ public class ArtifactInstanceSystemTests
         Assert.That(results[1].instanceId, Is.EqualTo("mid"));
         Assert.That(results[2].instanceId, Is.EqualTo("late"));
     }
+
+    [Test]
+    public void BiomeRollQualityUpgradesAcrossBiomes()
+    {
+        ArtifactRollGenerator generator = new ArtifactRollGenerator(table);
+        const int samples = 500;
+
+        float totalQualityBiome0 = 0f;
+        int countBiome0 = 0;
+        for (int i = 0; i < samples; i++)
+        {
+            ArtifactInstance instance = generator.Generate(definition, i, i, 0);
+            if (ArtifactRollQuality.TryGetAverageQuality(instance, table, out float q))
+            {
+                totalQualityBiome0 += q;
+                countBiome0++;
+            }
+        }
+
+        float totalQualityBiome1 = 0f;
+        int countBiome1 = 0;
+        for (int i = 0; i < samples; i++)
+        {
+            ArtifactInstance instance = generator.Generate(definition, i, i + 5000, 1);
+            if (ArtifactRollQuality.TryGetAverageQuality(instance, table, out float q))
+            {
+                totalQualityBiome1 += q;
+                countBiome1++;
+            }
+        }
+
+        float totalQualityBiome2 = 0f;
+        int countBiome2 = 0;
+        for (int i = 0; i < samples; i++)
+        {
+            ArtifactInstance instance = generator.Generate(definition, i, i + 10000, 2);
+            if (ArtifactRollQuality.TryGetAverageQuality(instance, table, out float q))
+            {
+                totalQualityBiome2 += q;
+                countBiome2++;
+            }
+        }
+
+        float avg0 = totalQualityBiome0 / countBiome0;
+        float avg1 = totalQualityBiome1 / countBiome1;
+        float avg2 = totalQualityBiome2 / countBiome2;
+
+        Assert.That(avg1, Is.GreaterThan(avg0), $"Biome 1 quality ({avg1:F3}) must be higher than Biome 0 ({avg0:F3})");
+        Assert.That(avg2, Is.GreaterThan(avg1), $"Biome 2 (Biome 3 Phase) quality ({avg2:F3}) must be higher than Biome 1 ({avg1:F3})");
+    }
+
+    [Test]
+    public void BiomeBandWeightsMatchAuthoredProfiles()
+    {
+        IReadOnlyList<ArtifactAmountBand> b0 = table.GetAmountBandsForBiome(0);
+        IReadOnlyList<ArtifactAmountBand> b1 = table.GetAmountBandsForBiome(1);
+        IReadOnlyList<ArtifactAmountBand> b2 = table.GetAmountBandsForBiome(2);
+
+        Assert.That(b0.Count, Is.EqualTo(5));
+        Assert.That(b1.Count, Is.EqualTo(5));
+        Assert.That(b2.Count, Is.EqualTo(5));
+
+        // Biome 1: Band 0 (min) is 35, Band 4 (max) is 5
+        Assert.That(b0[0].weight, Is.EqualTo(35f));
+        Assert.That(b0[4].weight, Is.EqualTo(5f));
+
+        // Biome 2: Band 0 is 15, Band 2 is 35, Band 4 is 5
+        Assert.That(b1[0].weight, Is.EqualTo(15f));
+        Assert.That(b1[2].weight, Is.EqualTo(35f));
+
+        // Biome 3: Band 0 is 5, Band 3 is 35, Band 4 (max) is 25
+        Assert.That(b2[0].weight, Is.EqualTo(5f));
+        Assert.That(b2[3].weight, Is.EqualTo(35f));
+        Assert.That(b2[4].weight, Is.EqualTo(25f));
+    }
+
+    [Test]
+    public void NegativeBiomeClampsToBiomeZero()
+    {
+        IReadOnlyList<ArtifactAmountBand> negativeBands = table.GetAmountBandsForBiome(-5);
+        IReadOnlyList<ArtifactAmountBand> zeroBands = table.GetAmountBandsForBiome(0);
+        Assert.That(negativeBands[0].weight, Is.EqualTo(zeroBands[0].weight));
+        Assert.That(negativeBands[4].weight, Is.EqualTo(zeroBands[4].weight));
+    }
+
+    [Test]
+    public void OutOfRangeBiomeClampsToHighestAuthoredProfile()
+    {
+        IReadOnlyList<ArtifactAmountBand> highBands = table.GetAmountBandsForBiome(99);
+        IReadOnlyList<ArtifactAmountBand> b2 = table.GetAmountBandsForBiome(2);
+        Assert.That(highBands[4].weight, Is.EqualTo(b2[4].weight));
+    }
+
+    [Test]
+    public void ArtifactInstanceTracksAcquisitionBiome()
+    {
+        ArtifactRollGenerator generator = new ArtifactRollGenerator(table);
+        ArtifactInstance inst0 = generator.Generate(definition, 1, 100, 0);
+        ArtifactInstance inst2 = generator.Generate(definition, 2, 200, 2);
+
+        Assert.That(inst0.acquisitionBiomeIndex, Is.EqualTo(0));
+        Assert.That(inst2.acquisitionBiomeIndex, Is.EqualTo(2));
+    }
+
+    [Test]
+    public void InventoryAcquisitionPreservesBiomeOverride()
+    {
+        PlayerRunInventory inventory = ScriptableObject.CreateInstance<PlayerRunInventory>();
+        try
+        {
+            Assert.That(inventory.TryAcquireArtifact(definition, out ArtifactInstance inst, 100, 2), Is.True);
+            Assert.That(inst.acquisitionBiomeIndex, Is.EqualTo(2));
+        }
+        finally
+        {
+            UnityEngine.Object.DestroyImmediate(inventory);
+        }
+    }
 }
 #endif

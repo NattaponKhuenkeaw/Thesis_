@@ -210,6 +210,7 @@ namespace Project.ShopSystem
         public long acquisitionOrder;
         public long collectedTimestampUtc;
         public int generationSeed;
+        public int acquisitionBiomeIndex;
     }
 
     [Serializable]
@@ -422,7 +423,8 @@ namespace Project.ShopSystem
         public bool TryAcquireArtifact(
             ArtifactDefinition definition,
             out ArtifactInstance instance,
-            int? seedOverride = null)
+            int? seedOverride = null,
+            int? biomeIndexOverride = null)
         {
             instance = null;
             if (definition == null || string.IsNullOrWhiteSpace(definition.id))
@@ -432,8 +434,12 @@ namespace Project.ShopSystem
 
             EnsureRunData();
             int seed = seedOverride ?? UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+            int activeBiome = biomeIndexOverride
+                ?? (Project.Core.ZoneState.RunProgressionManager.Instance != null
+                    ? Project.Core.ZoneState.RunProgressionManager.Instance.CurrentBiomeIndex
+                    : 0);
             ArtifactRollGenerator generator = new ArtifactRollGenerator(ArtifactRollTable);
-            instance = generator.Generate(definition, nextArtifactAcquisitionOrder++, seed);
+            instance = generator.Generate(definition, nextArtifactAcquisitionOrder++, seed, activeBiome);
             if (!TryAddArtifactInstanceInternal(instance))
             {
                 instance = null;
@@ -2429,7 +2435,8 @@ namespace Project.ShopSystem
                     isNew = instance.isNew,
                     acquisitionOrder = instance.acquisitionOrder,
                     collectedTimestampUtc = instance.collectedTimestampUtc,
-                    generationSeed = instance.generationSeed
+                    generationSeed = instance.generationSeed,
+                    acquisitionBiomeIndex = instance.acquisitionBiomeIndex
                 });
             }
 
@@ -3016,7 +3023,8 @@ namespace Project.ShopSystem
                         isNew = record.isNew,
                         acquisitionOrder = record.acquisitionOrder,
                         collectedTimestampUtc = record.collectedTimestampUtc,
-                        generationSeed = record.generationSeed
+                        generationSeed = record.generationSeed,
+                        acquisitionBiomeIndex = record.acquisitionBiomeIndex
                     });
                 }
             }

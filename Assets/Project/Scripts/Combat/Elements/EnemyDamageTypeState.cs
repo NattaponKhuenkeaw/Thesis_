@@ -45,6 +45,18 @@ public class EnemyDamageTypeState : MonoBehaviour
         PruneExpiredRuntimeModifiers();
     }
 
+    public int ActiveDotCount => _activeDots.Count;
+
+    public bool HasActiveDot(ElementType damageType)
+    {
+        for (int i = 0; i < _activeDots.Count; i++)
+        {
+            if (_activeDots[i] != null && _activeDots[i].damageType == damageType)
+                return true;
+        }
+        return false;
+    }
+
     public void Initialize(EnemyElementalProfile enemyProfile)
     {
         _enemy ??= GetComponent<EnemyController>();

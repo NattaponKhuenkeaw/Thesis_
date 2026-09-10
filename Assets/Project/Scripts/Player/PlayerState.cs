@@ -126,6 +126,13 @@ public abstract class PlayerState
     /// <summary>If true, player facing direction cannot be changed in this state.</summary>
     public virtual bool LocksFacing => false;
 
+    /// <summary>
+    /// Whether incoming damage can interrupt this state into Hitstun.
+    /// Locomotion and idle states return true by default.
+    /// Action states override this to enforce pseudo super armor rules.
+    /// </summary>
+    public virtual bool CanBeInterruptedByDamage(IncomingAttackContext attackContext) => true;
+
     protected void BeginCinematicTraversal()
     {
         Buffer?.ClearAll();

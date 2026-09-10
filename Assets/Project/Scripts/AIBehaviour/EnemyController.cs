@@ -363,6 +363,8 @@ public class EnemyController : MonoBehaviour
             runtimeEffects = gameObject.AddComponent<RuntimeEffectReceiver>();
 
         damageTypeState = GetComponent<EnemyDamageTypeState>();
+        if (damageTypeState == null)
+            damageTypeState = gameObject.AddComponent<EnemyDamageTypeState>();
 
         if (attackHitbox != null)
         {
@@ -749,6 +751,8 @@ public class EnemyController : MonoBehaviour
         {
             if (damageTypeState == null)
                 damageTypeState = GetComponent<EnemyDamageTypeState>();
+            if (damageTypeState == null)
+                damageTypeState = gameObject.AddComponent<EnemyDamageTypeState>();
 
             return damageTypeState;
         }
