@@ -694,7 +694,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     }
 
     /// <summary>
-    /// Restores the controllable lobby Main with full HP and empty AE, without granting ownership.
+    /// Restores the owned lobby Main with full HP and empty AE at the Lobby boundary.
     /// </summary>
     public void RestoreLobbyStateAfterDeath(PlayerCharacter scenePlayer = null)
     {

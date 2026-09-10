@@ -281,9 +281,9 @@ namespace Project.ShopSystem
         [Header("Run Character State")]
         [Tooltip("LEGACY level/EXP records plus active per-character HP, AE, and runtime effects.")]
         [SerializeField] private List<RunCharacterState> runCharacters = new List<RunCharacterState>();
-        [SerializeField, HideInInspector] private List<CharacterObject> defeatedCharactersThisRun = new List<CharacterObject>();
-        [SerializeField, HideInInspector] private bool isDeathTeardown;
-        [SerializeField, HideInInspector] private bool isDeathLobby;
+        [NonSerialized] private List<CharacterObject> defeatedCharactersThisRun = new List<CharacterObject>();
+        [NonSerialized] private bool isDeathTeardown;
+        [NonSerialized] private bool isDeathLobby;
 
         [Header("Deployed Team")]
         [Tooltip("Run-owned team slots. Slots resolve to RunCharacterState; CharacterObject is identity only.")]
@@ -296,7 +296,7 @@ namespace Project.ShopSystem
         /// </summary>
         [NonSerialized] private CharacterObject[] runStartTeamSnapshot;
         [NonSerialized] private static CharacterObject[] sessionRunStartTeam;
-        [SerializeField, HideInInspector] private bool pendingLobbyMainReset;
+        [NonSerialized] private bool pendingLobbyMainReset;
         [NonSerialized] private bool suppressAutoBootstrap;
 
         [NonSerialized] private bool hasLoadedPersistentState;
@@ -986,12 +986,11 @@ namespace Project.ShopSystem
                 }
             }
 
-            // Only a validated New Run may lift the death guards and restore Main ownership.
-            isDeathTeardown = false;
-            isDeathLobby = false;
-            pendingLobbyMainReset = false;
-            defeatedCharactersThisRun.Clear();
-            AddResolvedItem(mainItem, 1);
+            if (!TryRestoreMainOwnershipForNewRun(mainItem, out failureReason))
+            {
+                return false;
+            }
+
             CaptureRunStartTeam(teamSnapshot);
 
             currency = DefaultCurrency;
@@ -999,6 +998,11 @@ namespace Project.ShopSystem
             StripNonCharacterRunLoot();
 
             DeployTeam(teamSnapshot, 0, artifactSnapshot);
+            if (FindOwnedCharacterItem(main) == null && !TryRestoreMainOwnershipForNewRun(mainItem, out failureReason))
+            {
+                return false;
+            }
+
             PostInventoryMutation(save: false);
             failureReason = null;
             return true;
@@ -1060,7 +1064,7 @@ namespace Project.ShopSystem
 
         public bool IsCharacterDefeated(CharacterObject character)
         {
-            if (character == null) return false;
+            if (character == null || defeatedCharactersThisRun == null) return false;
             foreach (CharacterObject defeated in defeatedCharactersThisRun)
             {
                 if (IsSameTeamCharacter(defeated, character)
@@ -1071,13 +1075,66 @@ namespace Project.ShopSystem
 
         public bool IsCharacterUnavailable(CharacterObject character)
         {
-            return character == null || (isDeathTeardown && !isDeathLobby)
-                || (IsCharacterDefeated(character) && !IsLobbyMainCharacter(character));
+            if (character == null) return true;
+            if (IsLobbyMainCharacter(character)) return false;
+            return IsCharacterDefeated(character);
         }
 
         private bool CannotAcquireCharacter(CharacterObject character)
         {
-            return IsCharacterDefeated(character) || (isDeathTeardown && IsMainCharacter(character));
+            if (character == null)
+            {
+                return true;
+            }
+
+            // Only the explicit New Run boundary clears a defeat during the same session.
+            if (IsMainCharacter(character))
+            {
+                return isDeathTeardown || IsCharacterDefeated(character);
+            }
+
+            return IsCharacterDefeated(character);
+        }
+
+        private bool TryRestoreMainOwnershipForNewRun(CharacterItem mainItem, out string failureReason)
+        {
+            failureReason = null;
+            isDeathTeardown = false;
+            isDeathLobby = false;
+            pendingLobbyMainReset = false;
+            defeatedCharactersThisRun ??= new List<CharacterObject>();
+            for (int i = defeatedCharactersThisRun.Count - 1; i >= 0; i--)
+            {
+                if (IsMainCharacter(defeatedCharactersThisRun[i]))
+                {
+                    defeatedCharactersThisRun.RemoveAt(i);
+                }
+            }
+
+            if (mainItem == null)
+            {
+                failureReason = "The Main character item is missing.";
+                return false;
+            }
+
+            if (!ownedItems.Contains(mainItem))
+            {
+                ownedItems.Add(mainItem);
+            }
+
+            CharacterObject main = mainItem.characterObjectData;
+            if (main != null)
+            {
+                GetOrCreateRunCharacterState(main);
+            }
+
+            if (FindOwnedCharacterItem(main) == null)
+            {
+                failureReason = "New Run started without Main in ownedItems.";
+                return false;
+            }
+
+            return true;
         }
 
         public void RequestLobbyMainReset()
@@ -1132,16 +1189,27 @@ namespace Project.ShopSystem
         }
 
         /// <summary>
-        /// Death Lobby deploys a controllable Main without granting run ownership.
+        /// Restore Main's team slot and owned item at the Lobby boundary, not during death teardown.
         /// </summary>
         public void EnsureMainCharacterOnLobbyTeam()
         {
             EnsureRunData();
             if (isDeathTeardown)
             {
+                CharacterItem mainItem = Resources.Load<CharacterItem>(DefaultCharacterItemResourcePath);
+                if (mainItem == null || mainItem.characterObjectData == null)
+                {
+                    Debug.LogError("PlayerRunInventory: Cannot restore Lobby Main because its CharacterItem is missing.");
+                    return;
+                }
+
                 isDeathLobby = true;
+                // Keep the old run's defeat guards until New Run. Only this explicit Lobby
+                // restore grants Main ownership; normal bootstrap must remain blocked.
+                if (!ownedItems.Contains(mainItem))
+                    ownedItems.Add(mainItem);
                 ClearDeployedTeamSlots();
-                teamSlots[0].Character = ResolveMainCharacter();
+                teamSlots[0].Character = mainItem.characterObjectData;
                 activeTeamSlotIndex = 0;
                 PostInventoryMutation(save: false);
                 return;
@@ -1510,6 +1578,7 @@ namespace Project.ShopSystem
         private void RecordCharacterDefeat(CharacterObject character)
         {
             if (character == null) return;
+            defeatedCharactersThisRun ??= new List<CharacterObject>();
             if (!IsCharacterDefeated(character)) defeatedCharactersThisRun.Add(character);
 
             for (int i = ownedItems.Count - 1; i >= 0; i--)
@@ -3343,6 +3412,7 @@ namespace Project.ShopSystem
                 ownedItems = new List<BaseItem>();
             }
 
+            defeatedCharactersThisRun ??= new List<CharacterObject>();
             artifactInstances ??= new List<ArtifactInstance>();
 
             if (itemStacks == null)
@@ -3540,10 +3610,7 @@ namespace Project.ShopSystem
                 return;
             }
 
-            if (!IsCharacterDefeated(defaultCharacterItem.characterObjectData))
-            {
-                AddResolvedItem(defaultCharacterItem, 1);
-            }
+            AddResolvedItem(defaultCharacterItem, 1);
         }
 
         private int ResolveActiveSlotIndex(int preferredIndex)

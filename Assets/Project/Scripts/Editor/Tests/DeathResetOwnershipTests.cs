@@ -107,7 +107,8 @@ public class DeathResetOwnershipTests
         Assert.That(inventory.GetDeployedTeamMemberCount(), Is.Zero);
         inventory.EnsureMainCharacterOnLobbyTeam();
         Assert.That(inventory.GetTeamCharacterAt(0), Is.SameAs(main));
-        Assert.That(Owns(main), Is.False);
+        Assert.That(Owns(main), Is.True);
+        Assert.That(Owns(ally), Is.False);
         Assert.That(inventory.TryPrepareForNewRun(1, out string reason), Is.True, reason);
         Assert.That(inventory.IsDeathTeardown, Is.False);
         Assert.That(inventory.IsDeathLobby, Is.False);
@@ -146,7 +147,7 @@ public class DeathResetOwnershipTests
     }
 
     [Test]
-    public void DeathLobbyRestoresPlayableMainWithoutOwnershipAfterNotificationConsumed()
+    public void DeathLobbyRestoresPlayableOwnedMainAfterNotificationConsumed()
     {
         inventory.ResetRunProgressForDeath();
         TeamLoader loader = CreateLoader(ally, out PlayerCharacter player);
@@ -160,7 +161,7 @@ public class DeathResetOwnershipTests
         inventory.DeployTeam(inventory.GetTeamSnapshot(), 0);
         Assert.That(inventory.GetTeamCharacterAt(0), Is.SameAs(main));
         Assert.That(inventory.IsDeathLobby, Is.True);
-        Assert.That(Owns(main), Is.False);
+        Assert.That(Owns(main), Is.True);
         Assert.That(inventory.TryAddItem(mainItem), Is.False);
         Assert.That(inventory.TryPrepareForNewRun(1, out string reason), Is.True, reason);
         loader.DeployLoadout(inventory.GetTeamSnapshot(), 0, resetHealthForNewRun: true);
@@ -171,7 +172,33 @@ public class DeathResetOwnershipTests
     }
 
     [Test]
-    public void FailedNewRunValidationDoesNotRestoreMainOwnership()
+    public void NewRunAlwaysPutsMainInOwnedItems()
+    {
+        inventory.ResetRunProgressForDeath();
+        Assert.That(Owns(main), Is.False);
+        inventory.EnsureMainCharacterOnLobbyTeam();
+        Assert.That(Owns(main), Is.True);
+        Assert.That(inventory.TryPrepareForNewRun(1, out string reason), Is.True, reason);
+        Assert.That(Owns(main), Is.True);
+        Assert.That(inventory.IsMainCharacter(inventory.GetTeamCharacterAt(0)), Is.True);
+        Assert.That(inventory.IsDeathTeardown, Is.False);
+        Assert.That(inventory.IsCharacterDefeated(main), Is.False);
+    }
+
+    [Test]
+    public void RepeatedNewRunPreparationDoesNotDuplicateMainOwnership()
+    {
+        inventory.ResetRunProgressForDeath();
+        for (int i = 0; i < 3; i++)
+        {
+            Assert.That(inventory.TryPrepareForNewRun(1, out string reason), Is.True, reason);
+            Assert.That(inventory.ownedItems.FindAll(item => item == mainItem).Count, Is.EqualTo(1));
+            Assert.That(inventory.IsMainCharacter(inventory.GetTeamCharacterAt(0)), Is.True);
+        }
+    }
+
+    [Test]
+    public void FailedNewRunValidationPreservesLobbyMainOwnership()
     {
         inventory.ResetRunProgressForDeath();
         inventory.EnsureMainCharacterOnLobbyTeam();
@@ -179,8 +206,37 @@ public class DeathResetOwnershipTests
         Assert.That(reason, Is.Not.Empty);
         Assert.That(inventory.IsDeathLobby, Is.True);
         Assert.That(inventory.IsCharacterDefeated(main), Is.True);
-        Assert.That(Owns(main), Is.False);
+        Assert.That(Owns(main), Is.True);
         Assert.That(inventory.GetDeployedTeamMemberCount(), Is.EqualTo(1));
+    }
+
+    [Test]
+    public void FailedNewRunBeforeLobbyDoesNotRestoreMainDuringTeardown()
+    {
+        inventory.ResetRunProgressForDeath();
+        Assert.That(inventory.TryPrepareForNewRun(3, out _), Is.False);
+        Assert.That(Owns(main), Is.False);
+        Assert.That(inventory.IsDeathTeardown, Is.True);
+        Assert.That(inventory.IsDeathLobby, Is.False);
+    }
+
+    [Test]
+    public void RepeatedLobbyRestoreKeepsExactlyOneOwnedMain()
+    {
+        inventory.SetRunCharacterCurrentHP(ally, 0f);
+        inventory.TryRemoveDefeatedTeamCharacter(ally, main, out _);
+        inventory.ResetRunProgressForDeath();
+        Assert.That(Owns(main), Is.False);
+        for (int i = 0; i < 3; i++)
+        {
+            inventory.EnsureMainCharacterOnLobbyTeam();
+            inventory.ConsumeLobbyMainReset();
+            inventory.LoadPersistentStateIfNeeded();
+            inventory.DeployTeam(inventory.GetTeamSnapshot(), 0);
+            Assert.That(inventory.ownedItems.FindAll(item => item == mainItem).Count, Is.EqualTo(1));
+            Assert.That(Owns(ally), Is.False);
+            Assert.That(inventory.GetTeamCharacterAt(0), Is.SameAs(main));
+        }
     }
 
     [Test]
@@ -194,6 +250,31 @@ public class DeathResetOwnershipTests
         Assert.That(inventory.TryPrepareForNewRun(2, out string reason), Is.True, reason);
         Assert.That(inventory.GetTeamCharacterAt(0), Is.SameAs(main));
         Assert.That(inventory.GetTeamCharacterAt(1), Is.SameAs(ally));
+    }
+
+    [Test]
+    public void OwnedLivingCharactersStillDeployAfterDeathTeardown()
+    {
+        inventory.ResetRunProgressForDeath();
+        Assert.That(inventory.IsDeathTeardown, Is.True);
+        Assert.That(inventory.IsDeathLobby, Is.False);
+        Assert.That(Owns(ally), Is.True);
+
+        inventory.DeployTeam(new[] { ally }, 0);
+        Assert.That(inventory.GetTeamCharacterAt(0), Is.SameAs(ally));
+        Assert.That(Owns(ally), Is.True);
+    }
+
+    [Test]
+    public void DeathLobbyDeployKeepsOwnedSurvivorInTeamSlots()
+    {
+        inventory.ResetRunProgressForDeath();
+        inventory.EnsureMainCharacterOnLobbyTeam();
+        inventory.DeployTeam(new[] { main, ally }, 0);
+        Assert.That(inventory.IsMainCharacter(inventory.GetTeamCharacterAt(0)), Is.True);
+        Assert.That(inventory.GetTeamCharacterAt(1), Is.SameAs(ally));
+        Assert.That(Owns(ally), Is.True);
+        Assert.That(Owns(main), Is.True);
     }
 
     [Test]
@@ -226,15 +307,14 @@ public class DeathResetOwnershipTests
     }
 
     [Test]
-    public void CachedLobbyMainItemCannotRestoreDefeatedMainInNextRunDraft()
+    public void LobbyMainItemCannotRestoreDefeatedMainInNextRunDraft()
     {
         inventory.ResetRunProgressForDeath();
         inventory.EnsureMainCharacterOnLobbyTeam();
         TeamDraftController draft = new TeamDraftController(inventory, null, Array.Empty<TeamSlotUI>());
         CharacterItem lobbyItem = draft.FindCharacterItem(main);
-        Assert.That(lobbyItem, Is.Not.Null);
-        temporaryObjects.Add(lobbyItem);
-        Assert.That(Owns(main), Is.False);
+        Assert.That(lobbyItem, Is.SameAs(mainItem));
+        Assert.That(Owns(main), Is.True);
         Assert.That(inventory.TryPrepareForNewRun(2, out string reason), Is.True, reason);
         inventory.SetRunCharacterCurrentHP(main, 0f);
         inventory.TryRemoveDefeatedTeamCharacter(main, ally, out _);
