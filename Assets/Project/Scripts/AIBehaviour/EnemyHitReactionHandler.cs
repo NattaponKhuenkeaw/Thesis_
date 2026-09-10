@@ -15,7 +15,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
     public float groundCheckDistance = 0.08f;
     public float groundNormalMinY = 0.25f;
 
-    [Header("Knockdown Finish")]
+    [Header("Reaction Recovery")]
     [Tooltip("Frames to hold the grounded knockdown pose before GetUp.")]
     [SerializeField, Min(1)] private int knockdownHoldFrames = 12;
     [Tooltip("Frames to play GetUp after knockdown.")]
@@ -111,7 +111,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
     public void StartReaction(HitReactionData data, Vector2 attackerPosition)
     {
-        NormalizeReactionData(ref data);
+        ReactionResolver.NormalizeForExecution(ref data);
 
         bool isGrabbedByAnotherOwner =
             currentState == EnemyReactionState.Grabbed &&
@@ -133,6 +133,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
         if (isReGrab)
         {
+            data.landingBehavior = ReactionResolver.ResolveRecovery(data, consecutiveLightHits);
             currentReaction = data;
             attackerPos = attackerPosition;
             
@@ -171,7 +172,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
         bool airborneJuggle = data.reactionKind == EnemyReactionKind.Knockup && IsAirJuggleContext();
         if (airborneJuggle)
         {
-            PrepareAirJuggle(ref data);
+            ReactionResolver.ApplyAirJuggle(ref data, ref currentJuggleCount);
         }
         else if (data.reactionKind != EnemyReactionKind.Grab && !IsAirJuggleContext())
         {
@@ -198,7 +199,9 @@ public class EnemyHitReactionHandler : MonoBehaviour
         }
         ApplyForcedFacing();
 
-        RegisterLightHitStreak(data);
+        ReactionResolver.ResolveAcceptedHitRecovery(
+            ref currentReaction, Time.time, lightHitStreakWindow,
+            ref consecutiveLightHits, ref lastLightHitTime);
         EnterState(EnemyReactionState.ImpactFreeze);
     }
 
@@ -354,7 +357,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
     private void ProcessFlinchFrames(int totalEndFrame)
     {
-        ProcessGroundedKnockdownGetUp();
+        ProcessRecoveryFrames();
     }
 
     private void ProcessKnockbackFrames(int activeEndFrame, int totalEndFrame)
@@ -370,7 +373,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
             return;
         }
 
-        ProcessGroundedKnockdownGetUp();
+        ProcessRecoveryFrames();
     }
 
     private void ProcessKnockupFrames()
@@ -413,6 +416,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
                     rb.linearVelocity = new Vector2(rb.linearVelocity.x, Mathf.Min(0f, rb.linearVelocity.y));
                 }
 
+                // Preserve the touchdown frame even when the resolved recovery skips the hold/get-up.
                 if (currentState != EnemyReactionState.Knockdown)
                 {
                     EnterState(EnemyReactionState.Knockdown);
@@ -426,14 +430,14 @@ public class EnemyHitReactionHandler : MonoBehaviour
             return;
         }
 
-        ProcessGroundedKnockdownGetUp();
+        ProcessRecoveryFrames();
     }
 
     private void ProcessGrabFrames(int activeEndFrame, int totalEndFrame)
     {
         if (!HasValidGrabTarget())
         {
-            ProcessGroundedKnockdownGetUp();
+            ProcessRecoveryFrames();
             return;
         }
 
@@ -447,12 +451,12 @@ public class EnemyHitReactionHandler : MonoBehaviour
             return;
         }
 
-        ProcessGroundedKnockdownGetUp();
+        ProcessRecoveryFrames();
     }
 
-    private void ProcessGroundedKnockdownGetUp()
+    private void ProcessRecoveryFrames()
     {
-        if (!ShouldFinishWithKnockdown())
+        if (currentReaction.landingBehavior != EnemyLandingBehavior.Knockdown)
         {
             CompleteReaction();
             return;
@@ -475,32 +479,6 @@ public class EnemyHitReactionHandler : MonoBehaviour
         int getUpEndFrame = holdEndFrame + Mathf.Max(1, getUpFrames);
         if (currentReactionFrame > getUpEndFrame)
             CompleteReaction();
-    }
-
-    private void RegisterLightHitStreak(in HitReactionData data)
-    {
-        if (data.reactionKind == EnemyReactionKind.Grab || data.textImpactTier > DamageImpactTier.Low)
-        {
-            consecutiveLightHits = 0;
-            return;
-        }
-
-        if (Time.time - lastLightHitTime > lightHitStreakWindow)
-            consecutiveLightHits = 0;
-
-        consecutiveLightHits++;
-        lastLightHitTime = Time.time;
-    }
-
-    private bool ShouldFinishWithKnockdown()
-    {
-        if (currentReaction.reactionKind == EnemyReactionKind.Grab)
-            return true;
-
-        if (currentReaction.textImpactTier > DamageImpactTier.Low)
-            return true;
-
-        return consecutiveLightHits >= 2;
     }
 
     private void MaintainCurrentStateMotion()
@@ -541,104 +519,6 @@ public class EnemyHitReactionHandler : MonoBehaviour
                 }
                 break;
         }
-    }
-
-    private void NormalizeReactionData(ref HitReactionData data)
-    {
-        if (data.reactionTiming == null)
-        {
-            int recoveryFrames = data.reactionKind == EnemyReactionKind.Grab ? 6 : 9;
-            data.reactionTiming = HitReactionData.CreateTiming(data.hitstunFrames, data.knockbackFrames, recoveryFrames);
-        }
-
-        if (data.reactionKind == EnemyReactionKind.Flinch &&
-            (data.isKnockdown || data.reactionVelocity != Vector2.zero || data.horizontalSpeed > 0f || data.launchSpeed > 0f))
-        {
-            data.reactionKind = HitReactionData.InferLegacyReactionKind(data.reactionVelocity, data.isKnockdown);
-        }
-
-        if (data.reactionKind != EnemyReactionKind.Grab)
-        {
-            data.landingBehavior = EnemyLandingBehavior.Knockdown;
-        }
-
-        if (data.reactionKind == EnemyReactionKind.Grab)
-        {
-            if (data.grabSocket == null && data.attackerTransform != null)
-            {
-                data.grabSocket = data.attackerTransform;
-            }
-
-            if (data.reactionTiming == null || data.reactionTiming.TotalFrames <= 0)
-            {
-                data.reactionTiming = HitReactionData.CreateTiming(4, 24, 6);
-            }
-        }
-
-        if (data.reactionOwnerId == 0 && data.attackerTransform != null)
-        {
-            data.reactionOwnerId = data.attackerTransform.root.GetInstanceID();
-        }
-
-        if (data.juggleLaunchScale <= 0f)
-        {
-            data.juggleLaunchScale = 1f;
-        }
-        else
-        {
-            // Authoring values above 1 cause exponential relaunch growth on long combos.
-            // Keep juggle scaling decay/hold-only so all characters share safe behavior.
-            data.juggleLaunchScale = Mathf.Min(data.juggleLaunchScale, 1f);
-        }
-
-        if (data.juggleStunScale <= 0f)
-        {
-            data.juggleStunScale = 1f;
-        }
-        else
-        {
-            // Same protection for juggle stun duration; follow-up hits should not extend
-            // airborne time beyond the original hit unless we explicitly build a new system for it.
-            data.juggleStunScale = Mathf.Min(data.juggleStunScale, 1f);
-        }
-    }
-
-    private void PrepareAirJuggle(ref HitReactionData data)
-    {
-        if (!data.canAirJuggle)
-        {
-            data.launchSpeed = 0f;
-            data.horizontalSpeed *= 0.5f;
-            data.landingBehavior = EnemyLandingBehavior.Knockdown;
-            data.canAirJuggle = false;
-            data.knockupFrames = 0;
-            data.reactionTiming = HitReactionData.CreateTiming(
-                data.ImpactFreezeFrames,
-                0,
-                data.RecoveryFrames);
-            return;
-        }
-
-        float launchScale = Mathf.Pow(data.juggleLaunchScale, currentJuggleCount);
-        float stunScale = Mathf.Pow(data.juggleStunScale, currentJuggleCount);
-
-        data.launchSpeed = Mathf.Max(0f, data.LaunchSpeed * launchScale);
-        data.horizontalSpeed = Mathf.Max(0f, data.HorizontalSpeed * Mathf.Lerp(1f, launchScale, 0.5f));
-
-        int scaledKnockupFrames = Mathf.Max(1, Mathf.RoundToInt(data.knockupFrames * stunScale));
-        int scaledKnockfallFrames = Mathf.Max(1, Mathf.RoundToInt(data.knockfallFrames * stunScale));
-        int scaledRecoveryFrames = Mathf.Max(0, Mathf.RoundToInt(data.RecoveryFrames * stunScale));
-
-        // Keep the authored frame fields in sync with the runtime timing object. ProcessKnockupFrames()
-        // uses these concrete values directly, so scaling only ActionFrameData is not enough.
-        data.knockupFrames = scaledKnockupFrames;
-        data.knockfallFrames = scaledKnockfallFrames;
-        data.reactionTiming = HitReactionData.CreateTiming(
-            data.ImpactFreezeFrames,
-            scaledKnockupFrames,
-            scaledRecoveryFrames);
-
-        currentJuggleCount++;
     }
 
     private void ApplyLegacySnap(Vector2 attackerPosition)
