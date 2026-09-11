@@ -158,6 +158,8 @@ public class CameraManager : MonoBehaviour
     private CinemachineCamera _focusCam;
     private CinemachineBlendDefinition _focusOriginalBlend;
     private bool _hasFocusOriginalBlend;
+    private Vector3 _focusReturnPosition;
+    private float _focusReturnSize;
     private float _originalExploreSize = -1f;
     private float _originalCombatSize = -1f;
     private float _originalStaticSize = -1f;
@@ -839,7 +841,8 @@ public class CameraManager : MonoBehaviour
     /// </summary>
     public void BeginTemporaryFocus(Transform focusTarget, float blendSeconds = 0.35f)
     {
-        if (focusTarget == null || _exploreCam == null)
+        CinemachineCamera sourceCam = _staticCam != null ? _staticCam : _exploreCam;
+        if (focusTarget == null || sourceCam == null)
         {
             return;
         }
@@ -855,8 +858,9 @@ public class CameraManager : MonoBehaviour
                 _hasFocusOriginalBlend = true;
             }
 
-            // Reuse authored event framing without borrowing the player's live camera.
-            _focusCam = Instantiate(_exploreCam, _exploreCam.transform.parent);
+            _focusReturnPosition = sourceCam.transform.position;
+            _focusReturnSize = sourceCam.Lens.OrthographicSize;
+            _focusCam = Instantiate(sourceCam, sourceCam.transform.parent);
             _focusCam.name = "CinemachineCamera_EventFocus";
         }
 
@@ -870,42 +874,103 @@ public class CameraManager : MonoBehaviour
                 : new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.EaseInOut, blend);
         }
 
-        _focusCam.Follow = focusTarget;
-        _focusCam.LookAt = focusTarget;
+        ConfigureEventFocusCamera(_focusCam, focusTarget);
         _focusCam.Priority = _activePriority + 100;
         _focusCam.gameObject.SetActive(true);
         _focusCam.PreviousStateIsValid = false;
     }
 
-    public void EndTemporaryFocus(float blendSeconds = -1f)
+    private void ConfigureEventFocusCamera(CinemachineCamera cam, Transform focusTarget)
     {
-        if (!_isTemporarilyFocused)
+        if (cam == null || focusTarget == null)
         {
             return;
         }
 
-        _isTemporarilyFocused = false;
+        CinemachineConfiner2D confiner = cam.GetComponent<CinemachineConfiner2D>();
+        if (confiner != null)
+        {
+            confiner.enabled = false;
+        }
 
-        if (_brain != null && blendSeconds >= 0f)
-            _brain.DefaultBlend = blendSeconds == 0f
-                ? new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.Cut, 0f)
-                : new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.EaseInOut, blendSeconds);
+        CinemachinePositionComposer composer = cam.GetComponent<CinemachinePositionComposer>();
+        if (composer != null)
+        {
+            composer.enabled = false;
+        }
 
-        if (_focusCam != null)
-            _focusCam.Priority = int.MinValue;
+        cam.Follow = null;
+        cam.LookAt = null;
 
-        if (_brain != null && isActiveAndEnabled)
-            _focusReturnCoroutine = StartCoroutine(DisposeAfterFocusBlend());
-        else
-            DisposeFocusCamera();
+        Vector3 sourcePosition = cam.transform.position;
+        Vector3 focusPosition = focusTarget.position;
+        cam.transform.position = new Vector3(focusPosition.x, focusPosition.y, sourcePosition.z);
+
+        if (_exploreCam != null)
+        {
+            SetCameraSize(cam, _exploreCam.Lens.OrthographicSize);
+        }
     }
 
-    private IEnumerator DisposeAfterFocusBlend()
+    public void EndTemporaryFocus(float blendSeconds = -1f)
     {
-        // Keep the outgoing camera on the display while its image is still in the blend.
-        yield return null;
-        while (_brain != null && _focusCam != null && _brain.IsLiveChild(_focusCam))
+        if (!_isTemporarilyFocused && _focusReturnCoroutine == null)
+        {
+            return;
+        }
+
+        float duration = blendSeconds >= 0f ? Mathf.Max(0f, blendSeconds) : 0f;
+        if (duration <= 0f || _focusCam == null || !isActiveAndEnabled)
+        {
+            FinishPendingFocusReturn();
+            DisposeFocusCamera();
+            return;
+        }
+
+        if (_focusReturnCoroutine != null)
+        {
+            return;
+        }
+
+        _focusReturnCoroutine = StartCoroutine(ReturnFocusToRoom(duration));
+    }
+
+    private IEnumerator ReturnFocusToRoom(float seconds)
+    {
+        CinemachineCamera cam = _focusCam;
+        if (cam == null)
+        {
+            _focusReturnCoroutine = null;
+            DisposeFocusCamera();
+            yield break;
+        }
+
+        if (_brain != null)
+        {
+            _brain.DefaultBlend = new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.Cut, 0f);
+        }
+
+        Vector3 startPos = cam.transform.position;
+        float startSize = cam.Lens.OrthographicSize;
+        Quaternion rotation = cam.transform.rotation;
+        float elapsed = 0f;
+        while (elapsed < seconds && cam != null)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / seconds));
+            Vector3 position = Vector3.Lerp(startPos, _focusReturnPosition, t);
+            cam.transform.SetPositionAndRotation(position, rotation);
+            SetCameraSize(cam, Mathf.Lerp(startSize, _focusReturnSize, t));
+            cam.PreviousStateIsValid = false;
             yield return null;
+        }
+
+        if (cam != null)
+        {
+            cam.transform.SetPositionAndRotation(_focusReturnPosition, rotation);
+            SetCameraSize(cam, _focusReturnSize);
+            cam.PreviousStateIsValid = false;
+        }
 
         _focusReturnCoroutine = null;
         DisposeFocusCamera();

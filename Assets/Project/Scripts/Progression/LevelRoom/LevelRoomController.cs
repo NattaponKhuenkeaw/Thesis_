@@ -151,6 +151,10 @@ namespace Project.Progression.LevelRoom
                 {
                     yield return new WaitForSecondsRealtime(restoreDelaySeconds);
                 }
+
+                // Keep the reveal on-screen while the camera returns. Swapping to
+                // claimed + restoring HUD on the same frame as zoom-out is the yank.
+                yield return StartCoroutine(ReturnCameraFocus());
             }
             finally
             {
@@ -207,11 +211,27 @@ namespace Project.Progression.LevelRoom
             }
         }
 
+        private IEnumerator ReturnCameraFocus()
+        {
+            if (!ownsCameraFocus || CameraManager.instance == null)
+            {
+                yield break;
+            }
+
+            float returnBlend = cameraReturnBlendSeconds;
+            CameraManager.instance.EndTemporaryFocus(returnBlend);
+            ownsCameraFocus = false;
+            if (returnBlend > 0f)
+            {
+                yield return new WaitForSecondsRealtime(returnBlend);
+            }
+        }
+
         private void ReleasePresentationOwnership()
         {
             if (ownsCameraFocus && CameraManager.instance != null)
             {
-                CameraManager.instance.EndTemporaryFocus(cameraReturnBlendSeconds);
+                CameraManager.instance.EndTemporaryFocus(0f);
                 ownsCameraFocus = false;
             }
 

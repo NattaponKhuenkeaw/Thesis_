@@ -128,6 +128,8 @@ namespace Project.Progression.RestRoom
                 {
                     yield return new WaitForSecondsRealtime(restoreDelaySeconds);
                 }
+
+                yield return StartCoroutine(ReturnCameraFocus());
             }
             finally
             {
@@ -178,11 +180,27 @@ namespace Project.Progression.RestRoom
             }
         }
 
+        private IEnumerator ReturnCameraFocus()
+        {
+            if (!ownsCameraFocus || CameraManager.instance == null)
+            {
+                yield break;
+            }
+
+            float returnBlend = cameraReturnBlendSeconds;
+            CameraManager.instance.EndTemporaryFocus(returnBlend);
+            ownsCameraFocus = false;
+            if (returnBlend > 0f)
+            {
+                yield return new WaitForSecondsRealtime(returnBlend);
+            }
+        }
+
         private void ReleasePresentationOwnership()
         {
             if (ownsCameraFocus && CameraManager.instance != null)
             {
-                CameraManager.instance.EndTemporaryFocus(cameraReturnBlendSeconds);
+                CameraManager.instance.EndTemporaryFocus(0f);
                 ownsCameraFocus = false;
             }
 

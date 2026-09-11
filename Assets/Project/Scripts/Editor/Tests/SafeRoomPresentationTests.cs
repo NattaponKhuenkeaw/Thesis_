@@ -31,13 +31,18 @@ public class SafeRoomPresentationTests
             explore.LookAt = player.transform;
             explore.Priority = 1;
             room.Priority = 20;
+            display.transform.position = new Vector3(1f, 6f, 0f);
             Set(manager, "_exploreCam", explore);
             Set(manager, "_staticCam", room);
 
             manager.BeginTemporaryFocus(display.transform);
             var focus = (CinemachineCamera)Get(manager, "_focusCam");
             Assert.That(focus, Is.Not.SameAs(explore));
-            Assert.That(focus.Follow, Is.SameAs(display.transform));
+            Assert.That(focus, Is.Not.SameAs(room));
+            Assert.That(focus.Follow, Is.Null);
+            Assert.That(focus.LookAt, Is.Null);
+            Assert.That(focus.transform.position.x, Is.EqualTo(1f).Within(0.001f));
+            Assert.That(focus.transform.position.y, Is.EqualTo(6f).Within(0.001f));
             Assert.That(explore.Follow, Is.SameAs(player.transform));
             Assert.That(explore.LookAt, Is.SameAs(player.transform));
             Assert.That(explore.Priority.Value, Is.EqualTo(1));
