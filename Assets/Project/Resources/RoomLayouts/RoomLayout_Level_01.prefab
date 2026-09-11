@@ -55,7 +55,6 @@ MonoBehaviour:
   _exitWall: {fileID: 5260163987564371815}
   _exitTrigger: {fileID: 2969418594399526609}
   _entrancePadding: 0.75
-  _exitPadding: 0.75
   _pinPlayerToScreenEdge: 1
   _lookAheadFadeDistance: 3
   _verticalPadding: 10
@@ -471,7 +470,7 @@ GameObject:
   - component: {fileID: 6285539994692888679}
   - component: {fileID: 2794778076426620968}
   m_Layer: 3
-  m_Name: 'Wall '
+  m_Name: Wall_Exit
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -486,8 +485,8 @@ Transform:
   m_GameObject: {fileID: 867690691747601719}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 31.9, y: -0.18779993, z: 0}
-  m_LocalScale: {x: 19.569239, y: 34.163948, z: 1}
+  m_LocalPosition: {x: 22.4866, y: -0.18779993, z: 0}
+  m_LocalScale: {x: 0.7416742, y: 34.163948, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 6356425361710450863}

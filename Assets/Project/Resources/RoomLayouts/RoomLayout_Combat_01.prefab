@@ -2976,7 +2976,6 @@ MonoBehaviour:
   _exitWall: {fileID: 5633693204425629752}
   _exitTrigger: {fileID: 8780875574367898341}
   _entrancePadding: 0.75
-  _exitPadding: 0.75
   _pinPlayerToScreenEdge: 1
   _lookAheadFadeDistance: 3
   _verticalPadding: 10
@@ -4611,8 +4610,8 @@ Transform:
   m_GameObject: {fileID: 7620265439836935514}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.2187, y: -1.7106, z: 0}
-  m_LocalScale: {x: 0.12878276, y: 0.12625247, z: 0.53317803}
+  m_LocalPosition: {x: -1.3305, y: -1.7106, z: 0}
+  m_LocalScale: {x: 0.1299418, y: 0.12625247, z: 0.53317803}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1709381489827580508}
@@ -5152,8 +5151,8 @@ Transform:
   m_GameObject: {fileID: 8291418527759027514}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -20.8797, y: -9.9119, z: 0}
-  m_LocalScale: {x: 106.35323, y: 13.053997, z: 1}
+  m_LocalPosition: {x: -20.9914, y: -9.9119, z: 0}
+  m_LocalScale: {x: 106.57658, y: 13.053997, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4329270391386500204}
