@@ -85,6 +85,7 @@ public class WorldTextUtility : MonoBehaviour
     [SerializeField] private Vector2 defaultSize = new Vector2(220f, 64f);
     [SerializeField] private float runtimeCanvasScale = 0.01f;
     [SerializeField] private int sortingOrder = 10000;
+    [SerializeField] private string worldSortingLayerName = "WorldUI";
 
     [Header("Motion")]
     [SerializeField] private Vector2 randomRangeX = new Vector2(-0.35f, 0.35f);
@@ -166,6 +167,7 @@ public class WorldTextUtility : MonoBehaviour
         }
 
         ResolveTextRoot();
+        ApplyResolvedCanvasSorting();
     }
 
     private void OnDestroy()
@@ -211,6 +213,7 @@ public class WorldTextUtility : MonoBehaviour
     {
         if (textRoot != null)
         {
+            ApplyResolvedCanvasSorting();
             return textRoot;
         }
 
@@ -218,6 +221,7 @@ public class WorldTextUtility : MonoBehaviour
         if (ownCanvas != null)
         {
             textRoot = ownCanvas.transform;
+            ApplyResolvedCanvasSorting();
             return textRoot;
         }
 
@@ -225,6 +229,7 @@ public class WorldTextUtility : MonoBehaviour
         if (childCanvas != null)
         {
             textRoot = childCanvas.transform;
+            ApplyResolvedCanvasSorting();
             return textRoot;
         }
 
@@ -237,14 +242,43 @@ public class WorldTextUtility : MonoBehaviour
 
         Canvas canvas = canvasObject.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.WorldSpace;
-        canvas.overrideSorting = true;
-        canvas.sortingOrder = sortingOrder;
+        canvas.worldCamera = Camera.main;
+        ApplyCanvasSorting(canvas);
 
         CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
         scaler.dynamicPixelsPerUnit = 1f;
 
         textRoot = canvasObject.transform;
         return textRoot;
+    }
+
+    private void ApplyResolvedCanvasSorting()
+    {
+        if (textRoot == null)
+        {
+            return;
+        }
+
+        Canvas canvas = textRoot.GetComponent<Canvas>() ?? textRoot.GetComponentInParent<Canvas>();
+        if (canvas != null)
+        {
+            ApplyCanvasSorting(canvas);
+        }
+    }
+
+    private void ApplyCanvasSorting(Canvas canvas)
+    {
+        if (canvas == null)
+        {
+            return;
+        }
+
+        canvas.overrideSorting = true;
+        canvas.sortingOrder = sortingOrder;
+        if (!string.IsNullOrEmpty(worldSortingLayerName))
+        {
+            canvas.sortingLayerName = worldSortingLayerName;
+        }
     }
 
     private TMP_Text GetPooledText(TMP_Text template)
