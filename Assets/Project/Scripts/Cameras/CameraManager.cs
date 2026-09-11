@@ -308,6 +308,8 @@ public class CameraManager : MonoBehaviour
             _zoneStateProvider.OnRoomChanged += HandleRoomChanged;
             UpdateCameraForRoom(_zoneStateProvider.CurrentRoom);
         }
+
+        SyncEngagedEnemiesFromRegistry();
     }
 
     private void OnDestroy()
@@ -330,64 +332,57 @@ public class CameraManager : MonoBehaviour
     private void LateUpdate()
     {
         TickVerticalFollow();
+        TickEngagedEnemies();
+    }
 
-        if (!_isInCombat || _combatTargetGroup == null || _playerTransform == null) 
+    private void TickEngagedEnemies()
+    {
+        if (_engagedEnemies.Count == 0)
+        {
+            RefreshCombatCameraMode(false);
             return;
+        }
 
+        bool anyFraming = false;
         List<EnemyController> toRemove = null;
-
-        // Process dynamic weights and range checks for each engaged enemy
         foreach (var kvp in _engagedEnemies)
         {
             EnemyController enemy = kvp.Key;
             EngagedEnemyContext ctx = kvp.Value;
-
-            // Handle destroyed or dead enemies
             bool isDestroyed = enemy == null;
-            if (isDestroyed || !enemy.IsAlive)
+            if (isDestroyed || !CanRemainEngaged(enemy))
             {
                 ctx.isLeaving = true;
             }
-            else if (ShouldKeepEnemyInCombatGroup(enemy))
-            {
-                ctx.isLeaving = false;
-            }
 
             float desiredWeight = 0f;
-
-            // Only calculate range-based weights if the enemy still exists
-            if (!ctx.isLeaving && !isDestroyed)
+            if (!ctx.isLeaving && !isDestroyed && _playerTransform != null)
             {
-                desiredWeight = EvaluateDesiredEnemyWeight(enemy, ctx, out bool shouldLeaveByRange);
-                if (shouldLeaveByRange)
-                {
-                    ctx.isLeaving = true;
-                }
+                desiredWeight = EvaluateDesiredEnemyWeight(enemy, ctx);
             }
 
-            // Smoothly move the current weight towards the desired weight (0 if leaving)
             ctx.currentWeight = Mathf.MoveTowards(ctx.currentWeight, desiredWeight, _weightLerpSpeed * Time.deltaTime);
-
-            // Apply to TargetGroup with null-safety
             if (!isDestroyed)
             {
                 UpdateTargetWeight(enemy.transform, ctx.currentWeight);
             }
             else
             {
-                // If the key is null, we can't update it, but we'll remove it below
-                ctx.currentWeight = 0f; 
+                ctx.currentWeight = 0f;
             }
 
-            // Removal criteria: if destroyed OR completely faded out while leaving
-            if (isDestroyed || (ctx.isLeaving && ctx.currentWeight <= 0.01f))
+            if (!ctx.isLeaving && (desiredWeight > FramingWeightEpsilon || ctx.currentWeight > FramingWeightEpsilon))
+            {
+                anyFraming = true;
+            }
+
+            if (isDestroyed || (ctx.isLeaving && ctx.currentWeight <= FramingWeightEpsilon))
             {
                 toRemove ??= new List<EnemyController>();
                 toRemove.Add(enemy);
             }
         }
 
-        // Clean up left enemies
         if (toRemove != null)
         {
             foreach (var enemy in toRemove)
@@ -398,7 +393,6 @@ public class CameraManager : MonoBehaviour
                 }
                 else
                 {
-                    // Full sweep for null transforms if the enemy object itself was lost
                     CleanupNullTargets();
                 }
 
@@ -408,11 +402,133 @@ public class CameraManager : MonoBehaviour
             RefreshBossCombatFraming();
         }
 
-        // Return to explore mode if no engaged enemies remain
-        if (_engagedEnemies.Count == 0)
+        RefreshCombatCameraMode(anyFraming && _engagedEnemies.Count > 0);
+    }
+
+    private const float FramingWeightEpsilon = 0.01f;
+
+    private bool ShouldUseCombatFraming()
+    {
+        if (_playerTransform == null)
+        {
+            return false;
+        }
+
+        foreach (var kvp in _engagedEnemies)
+        {
+            EnemyController enemy = kvp.Key;
+            EngagedEnemyContext ctx = kvp.Value;
+            if (enemy == null || ctx.isLeaving || !CanRemainEngaged(enemy))
+            {
+                continue;
+            }
+
+            if (ctx.currentWeight > FramingWeightEpsilon)
+            {
+                return true;
+            }
+
+            if (EvaluateDesiredEnemyWeight(enemy, ctx) > FramingWeightEpsilon)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool CanSwitchRoomCameras()
+    {
+        if (IsStaticCameraRoom() || _isTemporarilyFocused)
+        {
+            return false;
+        }
+
+        if (_ultimateCam != null && _ultimateCam.Priority.Value >= _activePriority)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private void RefreshCombatCameraMode(bool wantsFraming)
+    {
+        if (!CanSwitchRoomCameras())
+        {
+            return;
+        }
+
+        if (wantsFraming)
+        {
+            if (_isInCombat)
+            {
+                return;
+            }
+
+            _isInCombat = true;
+            EnsurePlayerInTargetGroup();
+            SetCombatMode();
+            return;
+        }
+
+        if (_isInCombat)
         {
             ExitCombatMode();
         }
+    }
+
+    private void ClearEngagedEnemies()
+    {
+        if (_engagedEnemies.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var kvp in _engagedEnemies)
+        {
+            if (kvp.Key != null)
+            {
+                RemoveFromTargetGroup(kvp.Key.transform);
+            }
+        }
+
+        _engagedEnemies.Clear();
+        CleanupNullTargets();
+        RefreshBossCombatFraming();
+    }
+
+    /// <summary>
+    /// Combat flags that fired before this camera existed are rebound here. Does not mark
+    /// idle room enemies as in combat.
+    /// </summary>
+    public void SyncEngagedEnemiesFromRegistry()
+    {
+        List<EnemyController> buffer = new List<EnemyController>();
+        RoomEnemyRegistry.FillTargetable(buffer);
+        for (int i = 0; i < buffer.Count; i++)
+        {
+            EnemyController enemy = buffer[i];
+            if (enemy != null && enemy.InCombat)
+            {
+                EnterCombat(enemy);
+            }
+        }
+    }
+
+    private static bool CanRemainEngaged(EnemyController enemy)
+    {
+        return enemy != null && enemy.IsTargetable && enemy.InCombat;
+    }
+
+    private static bool CanSelectEngagedTarget(EnemyController enemy, EngagedEnemyContext ctx, bool includeLeavingTargets)
+    {
+        if (!CanRemainEngaged(enemy) || ctx == null)
+        {
+            return false;
+        }
+
+        return includeLeavingTargets || !ctx.isLeaving;
     }
 
     // =========================================================
@@ -455,13 +571,7 @@ public class CameraManager : MonoBehaviour
         }
 
         RefreshBossCombatFraming();
-
-        if (!_isInCombat)
-        {
-            _isInCombat = true;
-            EnsurePlayerInTargetGroup();
-            SetCombatMode();
-        }
+        RefreshCombatCameraMode(ShouldUseCombatFraming());
     }
 
     /// <summary>
@@ -502,17 +612,17 @@ public class CameraManager : MonoBehaviour
         {
             EnemyController enemy = kvp.Key;
             EngagedEnemyContext ctx = kvp.Value;
-            if (enemy == null || !enemy.IsAlive)
-            {
-                continue;
-            }
-
-            if (!includeLeavingTargets && ctx.isLeaving)
+            if (!CanSelectEngagedTarget(enemy, ctx, includeLeavingTargets))
             {
                 continue;
             }
 
             float distanceSqr = ((Vector2)enemy.transform.position - fromPosition).sqrMagnitude;
+            if (!IsWithinQueryRange(enemy, distanceSqr, 0f))
+            {
+                continue;
+            }
+
             float enemyDirX = enemy.transform.position.x - fromPosition.x;
             
             // Penalize enemies behind the player heavily so they are only chosen if no one is in front
@@ -542,23 +652,23 @@ public class CameraManager : MonoBehaviour
     public EnemyController GetNearestEngagedEnemyInRadius(Vector2 fromPosition, float maxRadius = 0f, bool includeLeavingTargets = false)
     {
         EnemyController nearestEnemy = null;
-        float nearestDistanceSqr = maxRadius > 0f ? maxRadius * maxRadius : float.MaxValue;
+        float nearestDistanceSqr = float.MaxValue;
 
         foreach (var kvp in _engagedEnemies)
         {
             EnemyController enemy = kvp.Key;
             EngagedEnemyContext ctx = kvp.Value;
-            if (enemy == null || !enemy.IsAlive)
-            {
-                continue;
-            }
-
-            if (!includeLeavingTargets && ctx.isLeaving)
+            if (!CanSelectEngagedTarget(enemy, ctx, includeLeavingTargets))
             {
                 continue;
             }
 
             float distanceSqr = ((Vector2)enemy.transform.position - fromPosition).sqrMagnitude;
+            if (!IsWithinQueryRange(enemy, distanceSqr, maxRadius))
+            {
+                continue;
+            }
+
             if (distanceSqr > nearestDistanceSqr)
             {
                 continue;
@@ -611,6 +721,7 @@ public class CameraManager : MonoBehaviour
             }
         }
 
+        ClearEngagedEnemies();
         ExitCombatMode();
         CameraLookAhead lookAhead = Object.FindFirstObjectByType<CameraLookAhead>();
         lookAhead?.SnapToPlayer();
@@ -1094,11 +1205,8 @@ public class CameraManager : MonoBehaviour
     {
         FinishPendingFocusReturn();
         DisposeFocusCamera();
-        if (room == null || !room.UseStaticCamera)
-        {
-            ExitCombatMode();
-        }
-
+        ClearEngagedEnemies();
+        ExitCombatMode();
         UpdateCameraForRoom(room);
     }
 
@@ -1288,26 +1396,20 @@ public class CameraManager : MonoBehaviour
         EnemyController bestEnemy = null;
         float bestWeight = float.MinValue;
         float bestDistanceSqr = float.MaxValue;
-        float maxRadiusSqr = maxRadius > 0f ? maxRadius * maxRadius : float.MaxValue;
         float resolvedFacing = facingSign < 0f ? -1f : 1f;
 
         foreach (var kvp in _engagedEnemies)
         {
             EnemyController enemy = kvp.Key;
             EngagedEnemyContext ctx = kvp.Value;
-            if (enemy == null || !enemy.IsAlive)
-            {
-                continue;
-            }
-
-            if (!includeLeavingTargets && ctx.isLeaving)
+            if (!CanSelectEngagedTarget(enemy, ctx, includeLeavingTargets))
             {
                 continue;
             }
 
             Vector2 toEnemy = (Vector2)enemy.transform.position - fromPosition;
             float distanceSqr = toEnemy.sqrMagnitude;
-            if (distanceSqr > maxRadiusSqr)
+            if (!IsWithinQueryRange(enemy, distanceSqr, maxRadius))
             {
                 continue;
             }
@@ -1331,10 +1433,8 @@ public class CameraManager : MonoBehaviour
         return bestEnemy;
     }
 
-    private float EvaluateDesiredEnemyWeight(EnemyController enemy, EngagedEnemyContext ctx, out bool shouldLeaveByRange)
+    private float EvaluateDesiredEnemyWeight(EnemyController enemy, EngagedEnemyContext ctx)
     {
-        shouldLeaveByRange = false;
-
         float detectionRadius = Mathf.Max(0.01f, GetEnemyDetectionRadius(enemy));
         float secondRangeLimit = detectionRadius + Mathf.Max(0f, _secondRangeExtension);
         float distanceToPlayer = Vector2.Distance(_playerTransform.position, enemy.transform.position);
@@ -1362,8 +1462,13 @@ public class CameraManager : MonoBehaviour
             return ScaleWeightByVerticalSeparation(enemy, ctx.targetMaxWeight * weightFactor);
         }
 
-        shouldLeaveByRange = true;
         return 0f;
+    }
+
+    private bool IsWithinQueryRange(EnemyController enemy, float distanceSqr, float maxRadius)
+    {
+        float limit = maxRadius > 0f ? maxRadius : GetEnemyDetectionRadius(enemy);
+        return distanceSqr <= limit * limit;
     }
 
     private float GetEnemyDetectionRadius(EnemyController enemy)

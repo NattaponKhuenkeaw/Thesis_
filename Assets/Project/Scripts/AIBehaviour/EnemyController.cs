@@ -1178,7 +1178,13 @@ public class EnemyController : MonoBehaviour
             return;
 
         if (InCombat == inCombat)
+        {
+            // Camera may have been missing on the first edge, or membership may have been
+            // dropped while the flag stayed true. Rebind without changing combat state.
+            if (inCombat)
+                CameraManager.instance?.EnterCombat(this);
             return;
+        }
 
         InCombat = inCombat;
         OnCombatChanged?.Invoke(InCombat);

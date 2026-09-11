@@ -26,16 +26,37 @@ namespace Unity.Behavior
 
         protected override Status OnStart()
         {
-            EnemyState.Value = TargetState.Value;
-
-            if (Agent != null && Agent.Value != null)
+            if (TargetState == null)
             {
-                EnemyController controller = Agent.Value.GetComponent<EnemyController>();
+                return Status.Success;
+            }
+
+            if (EnemyState != null)
+            {
+                EnemyState.Value = TargetState.Value;
+            }
+
+            GameObject host = ResolveCombatHost(Agent, this.GameObject);
+            if (host != null)
+            {
+                EnemyController controller = host.GetComponent<EnemyController>();
                 if (controller != null)
+                {
                     controller.NotifyStateChanged(TargetState.Value);
+                }
             }
 
             return Status.Success;
+        }
+
+        public static GameObject ResolveCombatHost(BlackboardVariable<GameObject> agent, GameObject graphObject)
+        {
+            if (agent != null && agent.Value != null)
+            {
+                return agent.Value;
+            }
+
+            return graphObject;
         }
     }
 }
