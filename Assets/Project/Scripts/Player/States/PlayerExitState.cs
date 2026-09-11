@@ -3,7 +3,7 @@ using Project.Core.ZoneState;
 
 /// <summary>
 /// Exit walk-out cinematic paired with <see cref="PlayerIntroState"/>.
-/// Locks input and runs the player toward an authored exit target before the fade/load.
+/// Locks input and runs the player past the opened exit before the fade/load.
 /// </summary>
 public class PlayerExitState : PlayerState
 {

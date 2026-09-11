@@ -87,6 +87,35 @@ namespace Project.Core.ZoneState
             return string.Equals(objectName.Trim(), "Wall_Exit", System.StringComparison.OrdinalIgnoreCase);
         }
 
+        /// <summary>
+        /// Leave-walk X past the door. Does not stop at a solid exit wall.
+        /// If the player is already past the outward edge, they still walk <paramref name="pastDistance"/>.
+        /// </summary>
+        public static float ResolveLeaveWalkTargetX(
+            float playerX,
+            float outwardEdgeX,
+            float walkSign,
+            float pastDistance,
+            float maxDistance)
+        {
+            float sign = walkSign >= 0f ? 1f : -1f;
+            float travel = Mathf.Max(0f, pastDistance);
+            float desired = outwardEdgeX + (sign * travel);
+            if ((sign > 0f && playerX >= outwardEdgeX) || (sign < 0f && playerX <= outwardEdgeX))
+            {
+                desired = playerX + (sign * travel);
+            }
+
+            float cap = Mathf.Max(0f, maxDistance);
+            float delta = desired - playerX;
+            if (Mathf.Abs(delta) > cap)
+            {
+                desired = playerX + (Mathf.Sign(delta) * cap);
+            }
+
+            return desired;
+        }
+
         public static bool TryEncapsulateVertical(Collider2D[] colliders, out float bottom, out float top)
         {
             bottom = float.PositiveInfinity;

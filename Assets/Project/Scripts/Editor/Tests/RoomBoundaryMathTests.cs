@@ -144,5 +144,42 @@ public class RoomBoundaryMathTests
         Assert.That(stopX, Is.EqualTo(-4f + 0.5f + 0.1f).Within(0.001f));
         Assert.That(stopX, Is.GreaterThan(-4f));
     }
+
+    [Test]
+    public void LeaveWalkGoesPastDoorNotStopBeforeWall()
+    {
+        float targetX = RoomBoundaryMath.ResolveLeaveWalkTargetX(
+            playerX: 8f,
+            outwardEdgeX: 12f,
+            walkSign: 1f,
+            pastDistance: 2f,
+            maxDistance: 3.5f);
+        Assert.That(targetX, Is.EqualTo(12f + 2f).Within(0.001f));
+        Assert.That(targetX, Is.GreaterThan(12f));
+    }
+
+    [Test]
+    public void LeaveWalkCapsDistanceFromPlayer()
+    {
+        float targetX = RoomBoundaryMath.ResolveLeaveWalkTargetX(
+            playerX: 0f,
+            outwardEdgeX: 20f,
+            walkSign: 1f,
+            pastDistance: 2f,
+            maxDistance: 3.5f);
+        Assert.That(targetX, Is.EqualTo(3.5f).Within(0.001f));
+    }
+
+    [Test]
+    public void LeaveWalkStillMovesWhenAlreadyPastDoor()
+    {
+        float targetX = RoomBoundaryMath.ResolveLeaveWalkTargetX(
+            playerX: 13f,
+            outwardEdgeX: 12f,
+            walkSign: 1f,
+            pastDistance: 2f,
+            maxDistance: 3.5f);
+        Assert.That(targetX, Is.EqualTo(15f).Within(0.001f));
+    }
 }
 #endif

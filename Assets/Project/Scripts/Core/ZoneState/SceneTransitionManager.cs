@@ -22,9 +22,6 @@ namespace Project.Core.ZoneState
         private const float ExitWalkPastDistance = 2.0f;
         private const float ExitWalkMaxDistance = 3.5f;
         private const float ExitWalkArrivalTolerance = 0.35f;
-        // Stop far enough short of the wall that the pose reads as "waiting to leave"
-        // rather than "stuck against a collider".
-        private const float ExitWalkWallSkin = 0.6f;
 
         public static SceneTransitionManager Instance { get; private set; }
 
@@ -502,10 +499,11 @@ namespace Project.Core.ZoneState
 
             SceneBoundaryController boundary = ResolveCurrentBoundaryController()
                 ?? Object.FindFirstObjectByType<SceneBoundaryController>();
+            boundary?.OpenExitForLeave();
             TransitionTrigger exitTrigger = ResolveExitTriggerForWalk(player.transform.position);
-            Vector3 target = ResolveExitWalkTarget(player, exitTrigger, boundary, out float walkSign);
+            Vector3 target = ResolveExitWalkTarget(player, exitTrigger, out float walkSign);
 
-            // Already at / past the stop (just before ExitWall) — skip the cinematic walk.
+            // Already at / past the leave stop — skip the cinematic walk.
             float remaining = (target.x - player.transform.position.x) * walkSign;
             if (remaining <= ExitWalkArrivalTolerance)
             {
@@ -565,61 +563,28 @@ namespace Project.Core.ZoneState
         private static Vector3 ResolveExitWalkTarget(
             PlayerCharacter player,
             TransitionTrigger exitTrigger,
-            SceneBoundaryController boundary,
             out float walkSign)
         {
             Vector3 playerPosition = player != null ? player.transform.position : Vector3.zero;
             Vector3 target = playerPosition;
             walkSign = 1f;
 
+            float outwardEdgeX = playerPosition.x;
             if (exitTrigger != null)
             {
                 Collider2D exitCollider = exitTrigger.ExitCollider;
-                float outwardEdgeX = exitCollider != null
+                outwardEdgeX = exitCollider != null
                     ? exitCollider.bounds.max.x
                     : exitTrigger.transform.position.x;
                 walkSign = outwardEdgeX >= playerPosition.x - 0.01f ? 1f : -1f;
             }
 
-            Collider2D exitWall = boundary != null ? boundary.ExitWall : null;
-            if (exitWall != null)
-            {
-                float wallInnerX = walkSign >= 0f ? exitWall.bounds.min.x : exitWall.bounds.max.x;
-                float bodyExtent = player != null && player.Movement != null
-                    ? player.Movement.GetBodyExtentToward(walkSign)
-                    : 0.5f;
-                target.x = RoomBoundaryMath.ResolveStopBeforeWallX(
-                    wallInnerX,
-                    walkSign,
-                    bodyExtent,
-                    ExitWalkWallSkin);
-                return target;
-            }
-
-            if (exitTrigger != null)
-            {
-                Collider2D exitCollider = exitTrigger.ExitCollider;
-                float outwardEdgeX = exitCollider != null
-                    ? exitCollider.bounds.max.x
-                    : exitTrigger.transform.position.x;
-                float desired = outwardEdgeX + (walkSign * ExitWalkPastDistance);
-                float delta = desired - playerPosition.x;
-                if (Mathf.Abs(delta) > ExitWalkMaxDistance)
-                {
-                    desired = playerPosition.x + (Mathf.Sign(delta) * ExitWalkMaxDistance);
-                }
-
-                if ((walkSign > 0f && playerPosition.x >= outwardEdgeX)
-                    || (walkSign < 0f && playerPosition.x <= outwardEdgeX))
-                {
-                    desired = playerPosition.x + (walkSign * ExitWalkPastDistance);
-                }
-
-                target.x = desired;
-                return target;
-            }
-
-            target.x = playerPosition.x + ExitWalkPastDistance;
+            target.x = RoomBoundaryMath.ResolveLeaveWalkTargetX(
+                playerPosition.x,
+                outwardEdgeX,
+                walkSign,
+                ExitWalkPastDistance,
+                ExitWalkMaxDistance);
             return target;
         }
 

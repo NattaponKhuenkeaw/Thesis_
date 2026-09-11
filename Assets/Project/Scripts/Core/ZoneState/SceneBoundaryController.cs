@@ -25,9 +25,6 @@ namespace Project.Core.ZoneState
         [Tooltip("Extra space beyond an outside entrance spawn during PlayerIntroState.")]
         [Min(0f)] [SerializeField] private float _entrancePadding = 0.75f;
 
-        [Tooltip("Extra walk space beyond the exit after the room is cleared.")]
-        [Min(0f)] [SerializeField] private float _exitPadding = 0.75f;
-
         [Header("Camera")]
         [Tooltip("When true, confiner slowing is removed so the player sits on the screen edge at a wall.")]
         [SerializeField] private bool _pinPlayerToScreenEdge = true;
@@ -157,6 +154,36 @@ namespace Project.Core.ZoneState
             dividerWall.isTrigger = true;
         }
 
+        /// <summary>
+        /// Hide the stage exit wall so the leave walk can pass the door.
+        /// Call only when the player starts leaving the room, not on room clear.
+        /// </summary>
+        public void OpenExitForLeave()
+        {
+            if (!Initialize())
+            {
+                return;
+            }
+
+            CaptureStageExitWallIfNeeded();
+            HideLeaveWall(_stageExitWall);
+            if (_exitWall != _stageExitWall)
+            {
+                HideLeaveWall(_exitWall);
+            }
+        }
+
+        private static void HideLeaveWall(Collider2D wall)
+        {
+            if (wall == null)
+            {
+                return;
+            }
+
+            wall.enabled = false;
+            wall.gameObject.SetActive(false);
+        }
+
         private void OnDestroy()
         {
             if (s_activeBinder != this)
@@ -211,7 +238,7 @@ namespace Project.Core.ZoneState
                 return;
             }
 
-            float exitRight = Mathf.Max(_currentRightWorld, exitTarget.x + _exitPadding);
+            float exitRight = Mathf.Max(_currentRightWorld, exitTarget.x);
             ApplyHorizontalBounds(CameraLeft(), exitRight, force: false);
             if (ShouldSlideExitWallOnUnlock())
             {
@@ -260,10 +287,10 @@ namespace Project.Core.ZoneState
         {
             if (_exitTrigger != null && _exitTrigger.ExitCollider != null)
             {
-                return _exitTrigger.ExitCollider.bounds.max.x + _exitPadding;
+                return _exitTrigger.ExitCollider.bounds.max.x;
             }
 
-            return _lockedRightWorld + Mathf.Max(2f, _exitPadding);
+            return _lockedRightWorld;
         }
 
         private bool Initialize()
