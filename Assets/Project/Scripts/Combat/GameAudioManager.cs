@@ -103,7 +103,7 @@ public class GameAudioManager : MonoBehaviour
             // Override previous voice
             voiceSource.Stop();
             voiceSource.clip = entry.clip;
-            voiceSource.volume = entry.volume;
+            voiceSource.volume = entry.volume * GameSettings.SfxVolume;
             voiceSource.pitch = entry.pitchVariation; // If we want to vary pitch
             voiceSource.ignoreListenerPause = false;
             voiceSource.Play();
@@ -113,7 +113,7 @@ public class GameAudioManager : MonoBehaviour
             // Action, Hit, etc.
             AudioSource src = GetSource();
             src.clip = entry.clip;
-            src.volume = entry.volume;
+            src.volume = entry.volume * GameSettings.SfxVolume;
             src.pitch = entry.pitchVariation;
             src.ignoreListenerPause = false;
             src.Play();
@@ -127,7 +127,7 @@ public class GameAudioManager : MonoBehaviour
 
         AudioSource src = GetSource();
         src.clip = clip;
-        src.volume = volume;
+        src.volume = volume * GameSettings.SfxVolume;
         src.pitch = pitch;
         src.ignoreListenerPause = false;
         src.Play();
@@ -164,7 +164,7 @@ public class GameAudioManager : MonoBehaviour
         {
             voiceSource.Stop();
             voiceSource.clip = clip;
-            voiceSource.volume = 1f;
+            voiceSource.volume = GameSettings.SfxVolume;
             voiceSource.pitch = 1f;
             voiceSource.ignoreListenerPause = true; // PLAY THROUGH FREEZE
             voiceSource.Play();
@@ -175,7 +175,7 @@ public class GameAudioManager : MonoBehaviour
         {
             AudioSource src = GetSource();
             src.clip = clip;
-            src.volume = 1f;
+            src.volume = GameSettings.SfxVolume;
             src.pitch = 1f;
             src.ignoreListenerPause = true; // PLAY THROUGH FREEZE
             src.Play();

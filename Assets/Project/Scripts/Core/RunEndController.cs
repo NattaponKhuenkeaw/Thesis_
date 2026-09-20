@@ -16,6 +16,7 @@ namespace Project.Core.RunEnd
         private const string MetaProgressionResourcePath = "InventorySO/PlayerMetaProgression";
 
         public static RunEndController Instance { get; private set; }
+        public bool IsHandlingDeath => isHandlingDeath || waitingForRespawnScene;
 
         [Header("Dependencies")]
         [SerializeField] private PlayerRunInventory runInventory;

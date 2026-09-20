@@ -327,7 +327,7 @@ namespace Project.TeamBuilder.UI
             {
                 ClosePanel();
             }
-            else
+            else if (!PauseMenuController.IsOpen)
             {
                 OpenPanel();
             }

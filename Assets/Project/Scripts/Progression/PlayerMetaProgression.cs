@@ -117,6 +117,11 @@ namespace Project.Progression
         public int MetaCurrency => Mathf.Max(0, metaCurrency);
         public event Action<string> OnPotentialChanged;
 
+        public static bool HasPersistentSave()
+        {
+            return PlayerPrefs.HasKey(SaveKey) || PlayerPrefs.HasKey(LegacySaveKey);
+        }
+
         public bool CanAffordMetaCurrency(int amount)
         {
             return amount <= 0 || MetaCurrency >= amount;

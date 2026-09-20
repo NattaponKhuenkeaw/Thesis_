@@ -832,6 +832,21 @@ namespace Project.ShopSystem
             ClearInventory();
         }
 
+        /// <summary>
+        /// Menu Continue / New Game always start in Lobby with authored run state.
+        /// Meta progression is owned separately and is not cleared here.
+        /// </summary>
+        public void ResetRunStateForMenuStart()
+        {
+            hasLoadedPersistentState = true;
+            isDeathTeardown = false;
+            isDeathLobby = false;
+            pendingLobbyMainReset = false;
+            suppressAutoBootstrap = false;
+            ClearInventory();
+            EnsurePlayableState();
+        }
+
         public void ResetRunProgressForDeath(PlayerMetaProgression metaProgression = null)
         {
             _ = metaProgression;

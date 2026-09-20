@@ -45,6 +45,8 @@ namespace Project.Core.ZoneState
         private List<Canvas> disabledCanvases = new List<Canvas>();
         private SceneBoundaryController activeBoundaryController;
 
+        public bool IsTransitioning => isTransitioning;
+
         public bool IsCurrentRoomExitAvailable
         {
             get

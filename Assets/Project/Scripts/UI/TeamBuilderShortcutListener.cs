@@ -11,6 +11,11 @@ namespace Project.UI
 
         private void Update()
         {
+            if (PauseMenuController.IsOpen)
+            {
+                return;
+            }
+
             if (Keyboard.current != null
                 && toggleKey != Key.None
                 && Keyboard.current[toggleKey].wasPressedThisFrame)

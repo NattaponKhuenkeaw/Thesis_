@@ -29,10 +29,12 @@ public class GameFreezeManager : MonoBehaviour
     private int currentFreezeFramesRemaining;
     private int nextFreezeTokenId = 1;
     private int activeScopedFreezeTokenId;
+    private int pauseHoldCount;
     private float defaultFixedDeltaTime;
 
     public bool IsTimeFrozen => Time.timeScale <= 0f;
     public bool HasActiveScopedFreeze => activeScopedFreezeTokenId != 0;
+    public bool IsPauseHeld => pauseHoldCount > 0;
 
     private void Awake()
     {
@@ -166,12 +168,46 @@ public class GameFreezeManager : MonoBehaviour
         // Use WaitForSecondsRealtime because Time.timeScale is 0
         yield return new WaitForSecondsRealtime(seconds);
 
-        Time.timeScale = 1f;
-        Time.fixedDeltaTime = defaultFixedDeltaTime;
         currentFreezeFramesRemaining = 0;
         freezeCoroutine = null;
-        
+        if (!IsPauseHeld && !HasActiveScopedFreeze)
+        {
+            Time.timeScale = 1f;
+            Time.fixedDeltaTime = defaultFixedDeltaTime;
+        }
+
         onComplete?.Invoke();
+    }
+
+    public void BeginPauseHold()
+    {
+        pauseHoldCount++;
+        StopSlowMotion(false);
+        if (freezeCoroutine != null)
+        {
+            StopCoroutine(freezeCoroutine);
+            freezeCoroutine = null;
+            currentFreezeFramesRemaining = 0;
+        }
+
+        Time.timeScale = 0f;
+    }
+
+    public void EndPauseHold()
+    {
+        if (pauseHoldCount > 0)
+        {
+            pauseHoldCount--;
+        }
+
+        if (IsPauseHeld || HasActiveScopedFreeze)
+        {
+            Time.timeScale = 0f;
+            return;
+        }
+
+        Time.timeScale = 1f;
+        Time.fixedDeltaTime = defaultFixedDeltaTime > 0f ? defaultFixedDeltaTime : 0.02f;
     }
 
     public void PlaySlowMotion(float timeScale, float duration, float delaySeconds = 0f)
@@ -231,10 +267,16 @@ public class GameFreezeManager : MonoBehaviour
         }
 
         StopSlowMotion(false);
-        Time.timeScale = 1f;
-        Time.fixedDeltaTime = defaultFixedDeltaTime;
         currentFreezeFramesRemaining = 0;
         activeScopedFreezeTokenId = 0;
+        if (IsPauseHeld)
+        {
+            Time.timeScale = 0f;
+            return;
+        }
+
+        Time.timeScale = 1f;
+        Time.fixedDeltaTime = defaultFixedDeltaTime;
     }
 
     private void StopSlowMotion(bool restoreTimeScale)
