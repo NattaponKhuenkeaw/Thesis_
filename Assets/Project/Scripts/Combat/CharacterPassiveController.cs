@@ -832,6 +832,68 @@ public class CharacterPassiveController : MonoBehaviour
             out replacementProjectileData);
     }
 
+    public float ModifyHitboxScale(
+        AttackCategory category,
+        string actionId,
+        string actionName,
+        string stepName,
+        float baseScale = 1f)
+    {
+        float scale = baseScale;
+        foreach (PotentialNodeDefinition node in GetActiveNodes())
+        {
+            List<PassiveActionModifierDefinition> modifiers = node != null ? node.actionModifiers : null;
+            if (modifiers == null)
+            {
+                continue;
+            }
+
+            for (int i = 0; i < modifiers.Count; i++)
+            {
+                PassiveActionModifierDefinition modifier = modifiers[i];
+                if (modifier != null
+                    && modifier.Matches(category, actionId, actionName, stepName, runtimeState)
+                    && modifier.hitboxScaleMultiplier > 0f)
+                {
+                    scale *= modifier.hitboxScaleMultiplier;
+                }
+            }
+        }
+
+        return scale;
+    }
+
+    public float ModifyProjectileScale(
+        AttackCategory category,
+        string actionId,
+        string actionName,
+        string stepName,
+        float baseScale = 1f)
+    {
+        float scale = baseScale;
+        foreach (PotentialNodeDefinition node in GetActiveNodes())
+        {
+            List<PassiveActionModifierDefinition> modifiers = node != null ? node.actionModifiers : null;
+            if (modifiers == null)
+            {
+                continue;
+            }
+
+            for (int i = 0; i < modifiers.Count; i++)
+            {
+                PassiveActionModifierDefinition modifier = modifiers[i];
+                if (modifier != null
+                    && modifier.Matches(category, actionId, actionName, stepName, runtimeState)
+                    && modifier.projectileScaleMultiplier > 0f)
+                {
+                    scale *= modifier.projectileScaleMultiplier;
+                }
+            }
+        }
+
+        return scale;
+    }
+
     public int GetStartingComboDepthOverride(AttackCategory category, string actionId, string actionName)
     {
         int result = 0;
@@ -1237,11 +1299,19 @@ public class CharacterPassiveController : MonoBehaviour
         PassiveTriggerType trigger,
         PassiveEventContext context)
     {
-        RuntimeEffectDefinition resolvedEffect = effect != null ? effect.ResolvedEffect : null;
-        if (ownerNode == null || ownerNode.level <= 0 || resolvedEffect == null)
+        if (ownerNode == null || effect == null)
         {
             return false;
         }
+
+        // Base nodes have level == 0, potential nodes have level >= 1.
+        // Allow level >= 0 so base nodes can be superseded by unlocked potential nodes.
+        if (ownerNode.level < 0)
+        {
+            return false;
+        }
+
+        RuntimeEffectDefinition resolvedEffect = effect.ResolvedEffect;
 
         foreach (PotentialNodeDefinition candidateNode in GetActiveNodes())
         {
@@ -1259,19 +1329,46 @@ public class CharacterPassiveController : MonoBehaviour
                 PassiveRuntimeEffectDefinition candidate = candidateNode.runtimeEffects[i];
                 if (candidate == null
                     || candidate.trigger != trigger
-                    || candidate.ResolvedEffect == null
                     || candidate.filter == null
                     || !candidate.filter.Matches(context))
                 {
                     continue;
                 }
 
-                if (string.Equals(
-                    candidate.ResolvedEffect.StableId,
-                    resolvedEffect.StableId,
-                    StringComparison.Ordinal))
+                // If owner effect uses a random buff pool (like baseSkillNode),
+                // a higher level node on the same track with matching trigger/filter supersedes it.
+                if (effect.enableRandomBuffSelection)
                 {
-                    return true;
+                    if (candidate.enableRandomBuffSelection || candidate.ResolvedEffect != null || (candidate.randomBuffPool != null && candidate.randomBuffPool.Count > 0))
+                    {
+                        return true;
+                    }
+                }
+
+                // If candidate uses a random buff pool and owner uses individual effect
+                if (candidate.enableRandomBuffSelection && resolvedEffect != null && candidate.randomBuffPool != null)
+                {
+                    for (int p = 0; p < candidate.randomBuffPool.Count; p++)
+                    {
+                        var poolEntry = candidate.randomBuffPool[p];
+                        if (poolEntry != null && poolEntry.definition != null &&
+                            string.Equals(poolEntry.definition.StableId, resolvedEffect.StableId, StringComparison.Ordinal))
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                // Standard 1-to-1 recipe superseding
+                if (resolvedEffect != null && candidate.ResolvedEffect != null)
+                {
+                    if (string.Equals(
+                        candidate.ResolvedEffect.StableId,
+                        resolvedEffect.StableId,
+                        StringComparison.Ordinal))
+                    {
+                        return true;
+                    }
                 }
             }
         }
@@ -2074,7 +2171,15 @@ public class CharacterPassiveController : MonoBehaviour
 
             if (effect.scope == PassiveEffectScope.Enemy)
             {
-                context.enemy.ApplyStatus(effect.status);
+                if (effect.status == StatusEffectType.Stun)
+                {
+                    float stunDuration = effect.durationSeconds > 0f ? effect.durationSeconds : 2.5f;
+                    context.enemy.ApplyStun(stunDuration);
+                }
+                else
+                {
+                    context.enemy.ApplyStatus(effect.status);
+                }
             }
             else if (effect.scope == PassiveEffectScope.Self && playerCharacter != null)
             {

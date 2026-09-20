@@ -390,4 +390,5 @@ public struct ProjectileSpawnContext
     public int remainingHits;
     public PlayerCombat sourceCombat;
     public CharacterObject sourceCharacter;
+    public float sizeMultiplier;
 }

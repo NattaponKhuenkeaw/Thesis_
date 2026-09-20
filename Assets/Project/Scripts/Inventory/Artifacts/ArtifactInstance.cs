@@ -53,7 +53,9 @@ namespace Project.InventorySystem.Artifacts
         public bool isFavourite;
         public bool isNew = true;
         public long acquisitionOrder;
+        public long collectedTimestampUtc;
         public int generationSeed;
+        public int acquisitionBiomeIndex;
 
         public ArtifactInstance Clone()
         {
@@ -65,7 +67,9 @@ namespace Project.InventorySystem.Artifacts
                 isFavourite = isFavourite,
                 isNew = isNew,
                 acquisitionOrder = acquisitionOrder,
-                generationSeed = generationSeed
+                collectedTimestampUtc = collectedTimestampUtc,
+                generationSeed = generationSeed,
+                acquisitionBiomeIndex = acquisitionBiomeIndex
             };
         }
     }

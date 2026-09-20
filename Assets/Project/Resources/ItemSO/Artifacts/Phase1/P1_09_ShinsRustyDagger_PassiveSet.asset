@@ -102,7 +102,7 @@ MonoBehaviour:
           presentation:
             effectId: P1-A09-FOCUS
             displayName: P1-A09-FOCUS
-            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            icon: {fileID: 21300000, guid: f91f31d1cfdfaac448d6c1fb1ae836d0, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0

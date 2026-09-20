@@ -94,3 +94,74 @@ MonoBehaviour:
   - normalizedMin: 0.8
     normalizedMax: 1
     weight: 5
+  biomeProfiles:
+  - biomeName: Biome 1
+    biomeIndex: 0
+    amountBands:
+    - normalizedMin: 0
+      normalizedMax: 0.2
+      weight: 35
+    - normalizedMin: 0.2
+      normalizedMax: 0.4
+      weight: 30
+    - normalizedMin: 0.4
+      normalizedMax: 0.6
+      weight: 20
+    - normalizedMin: 0.6
+      normalizedMax: 0.8
+      weight: 10
+    - normalizedMin: 0.8
+      normalizedMax: 1
+      weight: 5
+    lineCountWeights:
+    - 50
+    - 15
+    - 20
+    - 15
+  - biomeName: Biome 2
+    biomeIndex: 1
+    amountBands:
+    - normalizedMin: 0
+      normalizedMax: 0.2
+      weight: 15
+    - normalizedMin: 0.2
+      normalizedMax: 0.4
+      weight: 25
+    - normalizedMin: 0.4
+      normalizedMax: 0.6
+      weight: 35
+    - normalizedMin: 0.6
+      normalizedMax: 0.8
+      weight: 20
+    - normalizedMin: 0.8
+      normalizedMax: 1
+      weight: 5
+    lineCountWeights:
+    - 30
+    - 25
+    - 25
+    - 20
+  - biomeName: Biome 3
+    biomeIndex: 2
+    amountBands:
+    - normalizedMin: 0
+      normalizedMax: 0.2
+      weight: 5
+    - normalizedMin: 0.2
+      normalizedMax: 0.4
+      weight: 10
+    - normalizedMin: 0.4
+      normalizedMax: 0.6
+      weight: 25
+    - normalizedMin: 0.6
+      normalizedMax: 0.8
+      weight: 35
+    - normalizedMin: 0.8
+      normalizedMax: 1
+      weight: 25
+    lineCountWeights:
+    - 15
+    - 20
+    - 35
+    - 30
+

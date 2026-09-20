@@ -20,14 +20,14 @@ MonoBehaviour:
     maxHP: 783
     attack: 65
     defense: 22
-    speed: 6.5
-    dotMastery: 0
+    cooldownMastery: 0
     critRate: 5
     critDamage: 50
-    cooldownMastery: 0
+    dotMastery: 0
     damageIncrease: 0
     additionalDamageIncrease: 0
     auraEnergyRecharge: 0
+    speed: 6.5
   metaData:
     displayName: Goenitz
     description: "\u0E15\u0E31\u0E27\u0E25\u0E30\u0E04\u0E23\u0E40\u0E27\u0E2D\u0E23\u0E4C\u0E0A\u0E31\u0E19\u0E2A\u0E25\u0E31\u0E1A\u0E40\u0E1E\u0E28
@@ -251,13 +251,18 @@ MonoBehaviour:
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
+        enableRandomBuffSelection: 0
+        minRandomBuffCount: 1
+        maxRandomBuffCount: 1
+        allowDuplicateRandomBuffs: 0
+        randomBuffPool: []
         recipe:
           recipeId: 
           definition: {fileID: 11400000, guid: ad4fabc14e4967046a460f64619eaca3, type: 2}
           presentation:
             effectId: 
             displayName: Increase CRIT Chance
-            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            icon: {fileID: 21300000, guid: cdfdc962ef7310244b2344353c822d9f, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0
@@ -281,6 +286,8 @@ MonoBehaviour:
             overrideDamageModifier: 0
             damageModifier:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -290,6 +297,8 @@ MonoBehaviour:
             overrideDamageInput: 0
             damageInput:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -315,6 +324,8 @@ MonoBehaviour:
             overrideLifesteal: 0
             lifesteal:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -325,6 +336,8 @@ MonoBehaviour:
             overrideAdditionalDamage: 0
             additionalDamage:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -411,13 +424,18 @@ MonoBehaviour:
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
+        enableRandomBuffSelection: 0
+        minRandomBuffCount: 1
+        maxRandomBuffCount: 1
+        allowDuplicateRandomBuffs: 0
+        randomBuffPool: []
         recipe:
           recipeId: 
           definition: {fileID: 11400000, guid: 18cbcd66e506598448fbf7c3475802ae, type: 2}
           presentation:
             effectId: 
             displayName: Increase CRIT Damage
-            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            icon: {fileID: 21300000, guid: f91f31d1cfdfaac448d6c1fb1ae836d0, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0
@@ -441,6 +459,8 @@ MonoBehaviour:
             overrideDamageModifier: 0
             damageModifier:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -450,6 +470,8 @@ MonoBehaviour:
             overrideDamageInput: 0
             damageInput:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -475,6 +497,8 @@ MonoBehaviour:
             overrideLifesteal: 0
             lifesteal:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -485,6 +509,8 @@ MonoBehaviour:
             overrideAdditionalDamage: 0
             additionalDamage:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -684,6 +710,11 @@ MonoBehaviour:
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
+        enableRandomBuffSelection: 0
+        minRandomBuffCount: 1
+        maxRandomBuffCount: 1
+        allowDuplicateRandomBuffs: 0
+        randomBuffPool: []
         recipe:
           recipeId: echo.resistance
           definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
@@ -709,6 +740,8 @@ MonoBehaviour:
             overrideDamageModifier: 1
             damageModifier:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -718,6 +751,8 @@ MonoBehaviour:
             overrideDamageInput: 0
             damageInput:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -743,6 +778,8 @@ MonoBehaviour:
             overrideLifesteal: 0
             lifesteal:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -753,6 +790,8 @@ MonoBehaviour:
             overrideAdditionalDamage: 0
             additionalDamage:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1018,13 +1057,18 @@ MonoBehaviour:
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
+        enableRandomBuffSelection: 0
+        minRandomBuffCount: 1
+        maxRandomBuffCount: 1
+        allowDuplicateRandomBuffs: 0
+        randomBuffPool: []
         recipe:
           recipeId: 
           definition: {fileID: 11400000, guid: 5f0e9114d9634764c88b13d6b1fabf92, type: 2}
           presentation:
             effectId: 
             displayName: Wind Frenzy
-            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            icon: {fileID: 21300000, guid: a0f6e0c212e97ce499d022a0d26d1794, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0
@@ -1043,6 +1087,8 @@ MonoBehaviour:
             overrideDamageModifier: 0
             damageModifier:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1052,6 +1098,8 @@ MonoBehaviour:
             overrideDamageInput: 0
             damageInput:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1077,6 +1125,8 @@ MonoBehaviour:
             overrideLifesteal: 0
             lifesteal:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1087,6 +1137,8 @@ MonoBehaviour:
             overrideAdditionalDamage: 0
             additionalDamage:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1153,6 +1205,8 @@ MonoBehaviour:
               overrideDamageModifier: 0
               damageModifier:
                 filter:
+                  filterByDelivery: 0
+                  delivery: 0
                   filterByElement: 0
                   elementType: 0
                   filterByCategory: 0
@@ -1162,6 +1216,8 @@ MonoBehaviour:
               overrideDamageInput: 0
               damageInput:
                 filter:
+                  filterByDelivery: 0
+                  delivery: 0
                   filterByElement: 0
                   elementType: 0
                   filterByCategory: 0
@@ -1187,6 +1243,8 @@ MonoBehaviour:
               overrideLifesteal: 0
               lifesteal:
                 filter:
+                  filterByDelivery: 0
+                  delivery: 0
                   filterByElement: 0
                   elementType: 0
                   filterByCategory: 0
@@ -1197,6 +1255,8 @@ MonoBehaviour:
               overrideAdditionalDamage: 0
               additionalDamage:
                 filter:
+                  filterByDelivery: 0
+                  delivery: 0
                   filterByElement: 0
                   elementType: 0
                   filterByCategory: 0
@@ -1256,13 +1316,18 @@ MonoBehaviour:
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
+        enableRandomBuffSelection: 0
+        minRandomBuffCount: 1
+        maxRandomBuffCount: 1
+        allowDuplicateRandomBuffs: 0
+        randomBuffPool: []
         recipe:
           recipeId: 
           definition: {fileID: 11400000, guid: 67292c3f1e672744888738b073a6fd98, type: 2}
           presentation:
             effectId: 
             displayName: Wind Frenzy
-            icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+            icon: {fileID: 21300000, guid: cfbe1f8648c517a4eb260aec9461e30e, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
             kind: 0
@@ -1281,6 +1346,8 @@ MonoBehaviour:
             overrideDamageModifier: 0
             damageModifier:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1290,6 +1357,8 @@ MonoBehaviour:
             overrideDamageInput: 0
             damageInput:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1315,6 +1384,8 @@ MonoBehaviour:
             overrideLifesteal: 0
             lifesteal:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1325,6 +1396,8 @@ MonoBehaviour:
             overrideAdditionalDamage: 0
             additionalDamage:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1357,7 +1430,7 @@ MonoBehaviour:
             presentation:
               effectId: 
               displayName: Blizzard
-              icon: {fileID: 21300000, guid: 33dccf83b7f7f294992c97ebe1990464, type: 3}
+              icon: {fileID: 21300000, guid: cf5b4bf12bc47c44e9773030ca408416, type: 3}
               fieldVisualPrefab: {fileID: 0}
             policy:
               kind: 0
@@ -1426,6 +1499,8 @@ MonoBehaviour:
               overrideDamageModifier: 0
               damageModifier:
                 filter:
+                  filterByDelivery: 0
+                  delivery: 0
                   filterByElement: 0
                   elementType: 0
                   filterByCategory: 0
@@ -1435,6 +1510,8 @@ MonoBehaviour:
               overrideDamageInput: 0
               damageInput:
                 filter:
+                  filterByDelivery: 0
+                  delivery: 0
                   filterByElement: 0
                   elementType: 0
                   filterByCategory: 0
@@ -1460,6 +1537,8 @@ MonoBehaviour:
               overrideLifesteal: 0
               lifesteal:
                 filter:
+                  filterByDelivery: 0
+                  delivery: 0
                   filterByElement: 0
                   elementType: 0
                   filterByCategory: 0
@@ -1470,6 +1549,8 @@ MonoBehaviour:
               overrideAdditionalDamage: 0
               additionalDamage:
                 filter:
+                  filterByDelivery: 0
+                  delivery: 0
                   filterByElement: 0
                   elementType: 0
                   filterByCategory: 0
@@ -1581,6 +1662,11 @@ MonoBehaviour:
         enemyTargetSource: 0
         enemyTargetRuntimeTag: 
         consumeRuntimeTagOnApply: 0
+        enableRandomBuffSelection: 0
+        minRandomBuffCount: 1
+        maxRandomBuffCount: 1
+        allowDuplicateRandomBuffs: 0
+        randomBuffPool: []
         recipe:
           recipeId: 
           definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
@@ -1606,6 +1692,8 @@ MonoBehaviour:
             overrideDamageModifier: 1
             damageModifier:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1615,6 +1703,8 @@ MonoBehaviour:
             overrideDamageInput: 0
             damageInput:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1640,6 +1730,8 @@ MonoBehaviour:
             overrideLifesteal: 0
             lifesteal:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0
@@ -1650,6 +1742,8 @@ MonoBehaviour:
             overrideAdditionalDamage: 0
             additionalDamage:
               filter:
+                filterByDelivery: 0
+                delivery: 0
                 filterByElement: 0
                 elementType: 0
                 filterByCategory: 0

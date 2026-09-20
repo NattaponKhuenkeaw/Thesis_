@@ -11,6 +11,7 @@ namespace Project.UI
     /// Project → UI → Create Room Choice UI Prefab.
     /// </summary>
     [DisallowMultipleComponent]
+    [RequireComponent(typeof(UIBlockPlayerClick))]
     public sealed class RoomChoiceUI : MonoBehaviour
     {
         private const string ResourcesPrefabPath = "UI/RoomChoiceUI";
@@ -26,6 +27,7 @@ namespace Project.UI
 
         private readonly List<RoomChoiceCardView> activeCards = new List<RoomChoiceCardView>(4);
         private bool choiceCommitted;
+        private bool inputLockHeld;
 
         public bool IsShowing => panelRoot != null && panelRoot.activeSelf;
         public bool HasCommittedChoice => choiceCommitted;
@@ -39,12 +41,24 @@ namespace Project.UI
             }
 
             Instance = this;
+
+            if (GetComponent<UIBlockPlayerClick>() == null)
+            {
+                gameObject.AddComponent<UIBlockPlayerClick>();
+            }
+
             AutoWireIfNeeded();
             HideImmediate();
         }
 
         private void OnDestroy()
         {
+            if (inputLockHeld)
+            {
+                InputLockManager.Unlock();
+                inputLockHeld = false;
+            }
+
             if (Instance == this)
             {
                 Instance = null;
@@ -178,6 +192,13 @@ namespace Project.UI
             panelRoot.SetActive(true);
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
+
+            if (!inputLockHeld)
+            {
+                InputLockManager.Lock();
+                inputLockHeld = true;
+            }
+
             Debug.Log($"[RoomChoiceUI] Showing {activeCards.Count} authored room choices.", this);
         }
 
@@ -190,6 +211,12 @@ namespace Project.UI
 
         private void HideImmediate()
         {
+            if (inputLockHeld)
+            {
+                InputLockManager.Unlock();
+                inputLockHeld = false;
+            }
+
             if (panelRoot != null)
             {
                 panelRoot.SetActive(false);

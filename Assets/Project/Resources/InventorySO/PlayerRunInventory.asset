@@ -13,395 +13,289 @@ MonoBehaviour:
   m_Name: PlayerRunInventory
   m_EditorClassIdentifier: Assembly-CSharp::Project.ShopSystem.PlayerRunInventory
   ownedItems:
-  - {fileID: 11400000, guid: 6b2f112e2e15b20468e27601ac347a21, type: 2}
-  - {fileID: 11400000, guid: 225e900f58aad0a409d9d02148d91571, type: 2}
-  - {fileID: 11400000, guid: 6811db41c79c43a41b3ff2f4a87eecb4, type: 2}
-  - {fileID: 11400000, guid: 947559303eef7b740a2c21e5f5e600a9, type: 2}
-  - {fileID: 11400000, guid: 7067f23f35adada468f5f53a56908cbe, type: 2}
-  - {fileID: 11400000, guid: 077165c891eca7b4f8fa6a6ccf2751f2, type: 2}
   - {fileID: 11400000, guid: 588790c4612f0304f89d14fb2bd64923, type: 2}
+  - {fileID: 11400000, guid: 225e900f58aad0a409d9d02148d91571, type: 2}
+  - {fileID: 11400000, guid: 6b2f112e2e15b20468e27601ac347a21, type: 2}
+  - {fileID: 11400000, guid: 947559303eef7b740a2c21e5f5e600a9, type: 2}
+  - {fileID: 11400000, guid: 077165c891eca7b4f8fa6a6ccf2751f2, type: 2}
+  - {fileID: 11400000, guid: 6811db41c79c43a41b3ff2f4a87eecb4, type: 2}
+  - {fileID: 11400000, guid: 7067f23f35adada468f5f53a56908cbe, type: 2}
   artifactInstances:
-  - instanceId: 477c4d6d5fc241e486aab30c5fbd10d9
-    definitionId: ART-P1-002
+  - instanceId: 9485e674a55f413189c82810a4c6f3ce
+    definitionId: ART-P1-008
     rolls:
-    - statKind: 0
-      valueUnits: 955
+    - statKind: 24
+      valueUnits: 4488
       source: 0
-    - statKind: 25
-      valueUnits: 4125
+    - statKind: 26
+      valueUnits: 1852
       source: 0
     isFavourite: 0
     isNew: 0
     acquisitionOrder: 1
-    generationSeed: -1511162563
-  - instanceId: 18087adc2fdc408fb45828a0b1eac2cb
-    definitionId: ART-P1-005
+    collectedTimestampUtc: 639242375146154994
+    generationSeed: 1576991289
+  - instanceId: 746bdfab9b1f4f42bb825bb4fb839e29
+    definitionId: ART-P1-007
     rolls:
-    - statKind: 23
-      valueUnits: 924
+    - statKind: 21
+      valueUnits: 1734
       source: 0
-    isFavourite: 0
+    - statKind: 10
+      valueUnits: 1110
+      source: 0
+    - statKind: 21
+      valueUnits: 1683
+      source: 0
+    isFavourite: 1
     isNew: 0
     acquisitionOrder: 2
-    generationSeed: 84124832
-  - instanceId: 97b4679bdf254efd8011902efffa847f
-    definitionId: ART-P1-004
+    collectedTimestampUtc: 639242375173451641
+    generationSeed: -1248079794
+  - instanceId: 14fb89a0049e419ba4188300fa68248e
+    definitionId: ART-P1-001
     rolls:
-    - statKind: 23
-      valueUnits: 2085
+    - statKind: 12
+      valueUnits: 3761
       source: 0
     isFavourite: 0
     isNew: 0
     acquisitionOrder: 3
-    generationSeed: -1144858604
-  - instanceId: 378f354685bc4c61addda7f13cc9ec27
-    definitionId: ART-P1-008
+    collectedTimestampUtc: 639242375194572375
+    generationSeed: -994186296
+  - instanceId: eb9b30501e984bc48534e0131b9e578d
+    definitionId: ART-P1-002
     rolls:
-    - statKind: 21
-      valueUnits: 1184
+    - statKind: 20
+      valueUnits: 1846
+      source: 0
+    - statKind: 2
+      valueUnits: 41
       source: 0
     isFavourite: 0
     isNew: 0
     acquisitionOrder: 4
-    generationSeed: 1955962459
-  - instanceId: 960da7f18f9c4b8c96aaad9ffbbf1f7c
-    definitionId: ART-P1-007
+    collectedTimestampUtc: 639242375215088360
+    generationSeed: 754027483
+  - instanceId: 9c4aefaf2b0c4d8490ebb8b6c35cc006
+    definitionId: ART-P1-003
     rolls:
-    - statKind: 12
-      valueUnits: 3418
+    - statKind: 23
+      valueUnits: 1785
       source: 0
-    - statKind: 26
-      valueUnits: 3418
-      source: 0
-    - statKind: 25
-      valueUnits: 2470
-      source: 0
-    - statKind: 21
-      valueUnits: 580
-      source: 0
-    isFavourite: 1
+    isFavourite: 0
     isNew: 0
     acquisitionOrder: 5
-    generationSeed: 1449023883
-  - instanceId: f9b56762297944888cc634c23f25140f
-    definitionId: ART-P1-009
+    collectedTimestampUtc: 639242375237014808
+    generationSeed: 501045960
+  - instanceId: df67d95ca2b84ecda3241fd7200dc309
+    definitionId: ART-P1-005
     rolls:
-    - statKind: 26
-      valueUnits: 2079
+    - statKind: 1
+      valueUnits: 90
+      source: 0
+    - statKind: 25
+      valueUnits: 1544
       source: 0
     isFavourite: 0
     isNew: 0
     acquisitionOrder: 6
-    generationSeed: -1169255332
-  - instanceId: ad1c9d29783c44a4b419ca0731000b4a
-    definitionId: ART-P1-006
+    collectedTimestampUtc: 639242375255834284
+    generationSeed: 684398962
+  - instanceId: cf7d05cc53b445c28949ba8e47a1b5c5
+    definitionId: ART-P1-002
     rolls:
+    - statKind: 21
+      valueUnits: 1467
+      source: 0
+    - statKind: 0
+      valueUnits: 582
+      source: 0
     - statKind: 26
-      valueUnits: 3493
-      source: 0
-    - statKind: 11
-      valueUnits: 805
-      source: 0
-    - statKind: 12
-      valueUnits: 3678
+      valueUnits: 2355
       source: 0
     isFavourite: 1
     isNew: 0
     acquisitionOrder: 7
-    generationSeed: 874334796
-  - instanceId: 6ad328576aaf4b1aa98744d733c7a3cb
-    definitionId: ART-P1-002
+    collectedTimestampUtc: 639242375276698473
+    generationSeed: 603326579
+  - instanceId: c7d2ee2e8527476085e1cd141b95d671
+    definitionId: ART-P1-007
     rolls:
-    - statKind: 25
-      valueUnits: 4193
+    - statKind: 24
+      valueUnits: 2466
       source: 0
-    - statKind: 10
-      valueUnits: 1073
-      source: 0
-    isFavourite: 1
+    isFavourite: 0
     isNew: 0
     acquisitionOrder: 8
-    generationSeed: 2081510199
-  - instanceId: d7bb074645e346dbbb7dfc04788a868d
-    definitionId: ART-P1-003
+    collectedTimestampUtc: 639242375491537837
+    generationSeed: -756199105
+  - instanceId: 88e1b5f28c854fab9bcb867cbbb33c0c
+    definitionId: ART-P1-004
     rolls:
-    - statKind: 12
-      valueUnits: 2134
+    - statKind: 26
+      valueUnits: 2251
       source: 0
     isFavourite: 0
     isNew: 0
     acquisitionOrder: 9
-    generationSeed: -2127543742
-  - instanceId: a1ee4f33a39e44c1bae4bc2937d2ae01
-    definitionId: ART-P1-008
+    collectedTimestampUtc: 639242386995999107
+    generationSeed: 1883902895
+  - instanceId: b7bfab2a74ea448c853212c372a42540
+    definitionId: ART-P1-009
     rolls:
-    - statKind: 1
-      valueUnits: 33
+    - statKind: 0
+      valueUnits: 602
       source: 0
     isFavourite: 0
     isNew: 0
     acquisitionOrder: 10
-    generationSeed: -428555319
-  - instanceId: df9d56ec4588404ca2c985d24ef3ac8a
-    definitionId: ART-P1-004
+    collectedTimestampUtc: 639242387108937485
+    generationSeed: 467442064
+  - instanceId: b6865f0bf69c480db48487b4dc8210e5
+    definitionId: ART-P1-002
     rolls:
-    - statKind: 22
-      valueUnits: 975
+    - statKind: 1
+      valueUnits: 27
+      source: 0
+    - statKind: 0
+      valueUnits: 309
+      source: 0
+    - statKind: 1
+      valueUnits: 29
+      source: 0
+    - statKind: 20
+      valueUnits: 1471
       source: 0
     isFavourite: 0
     isNew: 0
     acquisitionOrder: 11
-    generationSeed: 1343681652
-  - instanceId: 167928787c7b477c9c4e0062d3fac034
-    definitionId: ART-P1-002
+    collectedTimestampUtc: 639242387481148628
+    generationSeed: -1817061895
+  - instanceId: 23e2b7a997de41478038388e888435f4
+    definitionId: ART-P1-006
     rolls:
-    - statKind: 11
-      valueUnits: 983
+    - statKind: 21
+      valueUnits: 832
       source: 0
-    - statKind: 0
-      valueUnits: 674
-      source: 0
-    - statKind: 20
-      valueUnits: 534
-      source: 0
-    - statKind: 23
-      valueUnits: 1233
-      source: 0
-    isFavourite: 1
+    isFavourite: 0
     isNew: 0
     acquisitionOrder: 12
-    generationSeed: -1890375628
-  - instanceId: 380a736fea47428984b8a85333293612
-    definitionId: ART-P1-009
+    collectedTimestampUtc: 639242393899367015
+    generationSeed: 503238857
+  - instanceId: 1c15679bb072461d8eea1f05cfd31953
+    definitionId: ART-P1-006
     rolls:
-    - statKind: 22
-      valueUnits: 1671
+    - statKind: 24
+      valueUnits: 1098
       source: 0
-    - statKind: 1
-      valueUnits: 34
+    - statKind: 10
+      valueUnits: 1761
       source: 0
-    - statKind: 11
-      valueUnits: 1128
+    - statKind: 0
+      valueUnits: 1018
       source: 0
-    - statKind: 12
-      valueUnits: 1208
+    - statKind: 20
+      valueUnits: 1310
       source: 0
-    isFavourite: 1
+    isFavourite: 0
     isNew: 0
     acquisitionOrder: 13
-    generationSeed: 1574013594
-  - instanceId: 23c03590e24443969cc32bc8a9cd4692
-    definitionId: ART-P1-009
-    rolls:
-    - statKind: 21
-      valueUnits: 962
-      source: 0
-    isFavourite: 0
-    isNew: 0
-    acquisitionOrder: 14
-    generationSeed: -1101293522
-  - instanceId: 8c8842ebd5024d289561e0e80bd22af7
-    definitionId: ART-P1-005
-    rolls:
-    - statKind: 23
-      valueUnits: 887
-      source: 0
-    isFavourite: 0
-    isNew: 0
-    acquisitionOrder: 15
-    generationSeed: 36630511
-  - instanceId: be65f3d51a4b4ae782e14a882e4827bd
-    definitionId: ART-P1-008
-    rolls:
-    - statKind: 10
-      valueUnits: 2371
-      source: 0
-    isFavourite: 0
-    isNew: 0
-    acquisitionOrder: 16
-    generationSeed: 632181441
-  - instanceId: 43bc30484265453eb8555290a0cd7081
-    definitionId: ART-P1-005
-    rolls:
-    - statKind: 11
-      valueUnits: 2751
-      source: 0
-    isFavourite: 1
-    isNew: 0
-    acquisitionOrder: 17
-    generationSeed: -1898939829
-  - instanceId: 739ad6fa6c1847e5a729560d9015231f
-    definitionId: ART-P1-003
+    collectedTimestampUtc: 639242393975157640
+    generationSeed: -449359608
+  - instanceId: f08525423d7d4e358476a213bee1bea9
+    definitionId: ART-P1-007
     rolls:
     - statKind: 20
-      valueUnits: 2403
+      valueUnits: 773
       source: 0
-    - statKind: 26
-      valueUnits: 937
-      source: 0
-    - statKind: 10
-      valueUnits: 1564
-      source: 0
-    - statKind: 26
-      valueUnits: 1499
-      source: 0
-    isFavourite: 1
-    isNew: 0
-    acquisitionOrder: 18
-    generationSeed: 377013349
-  - instanceId: 603fc049bb3642b2bc1615ecaba0c4a4
-    definitionId: ART-P1-001
-    rolls:
-    - statKind: 21
-      valueUnits: 2178
-      source: 0
-    isFavourite: 0
-    isNew: 0
-    acquisitionOrder: 19
-    generationSeed: -851507218
-  - instanceId: 08e886105ca442b1bc6b9fd7a465285d
-    definitionId: ART-P1-004
-    rolls:
-    - statKind: 26
-      valueUnits: 2191
-      source: 0
-    isFavourite: 0
-    isNew: 0
-    acquisitionOrder: 20
-    generationSeed: -1580835715
-  - instanceId: a0f8d0c26eb24afc81c468a855012258
-    definitionId: ART-P1-001
-    rolls:
-    - statKind: 10
-      valueUnits: 2405
-      source: 0
-    isFavourite: 0
-    isNew: 0
-    acquisitionOrder: 21
-    generationSeed: -565664387
-  - instanceId: 212ce719dafa489fb61f732b1a4cec2b
-    definitionId: ART-P1-001
-    rolls:
-    - statKind: 25
-      valueUnits: 3728
-      source: 0
-    isFavourite: 0
-    isNew: 0
-    acquisitionOrder: 22
-    generationSeed: -245527164
-  - instanceId: 36b19f491f6f4f00a5730126757e8045
-    definitionId: ART-P1-001
-    rolls:
-    - statKind: 22
-      valueUnits: 1283
-      source: 0
-    - statKind: 23
-      valueUnits: 2650
-      source: 0
-    - statKind: 21
-      valueUnits: 1091
-      source: 0
-    isFavourite: 1
-    isNew: 0
-    acquisitionOrder: 23
-    generationSeed: -1729269015
-  - instanceId: 03e0ed63d76742c6a6747cadcb8865ef
-    definitionId: ART-P1-004
-    rolls:
-    - statKind: 2
-      valueUnits: 44
-      source: 0
-    - statKind: 2
-      valueUnits: 116
-      source: 0
-    - statKind: 22
-      valueUnits: 949
-      source: 0
-    isFavourite: 0
-    isNew: 0
-    acquisitionOrder: 24
-    generationSeed: 1255125961
-  - instanceId: 6813ba30aff94772a9f5a0811049e9f9
-    definitionId: ART-P1-004
-    rolls:
     - statKind: 0
-      valueUnits: 253
+      valueUnits: 824
+      source: 0
+    - statKind: 20
+      valueUnits: 836
+      source: 0
+    - statKind: 0
+      valueUnits: 511
       source: 0
     isFavourite: 0
-    isNew: 0
-    acquisitionOrder: 25
-    generationSeed: -895215782
-  - instanceId: 3b74826eede9489bbf78fc1c6674e091
-    definitionId: ART-P1-004
+    isNew: 1
+    acquisitionOrder: 14
+    collectedTimestampUtc: 639242402367973850
+    generationSeed: 1652349727
+  - instanceId: aaee9f609af64d9a908c439d23a7851d
+    definitionId: ART-P1-005
     rolls:
     - statKind: 12
-      valueUnits: 2212
+      valueUnits: 2081
+      source: 0
+    - statKind: 10
+      valueUnits: 2430
+      source: 0
+    - statKind: 20
+      valueUnits: 681
       source: 0
     isFavourite: 0
-    isNew: 0
-    acquisitionOrder: 26
-    generationSeed: 28104657
-  - instanceId: 6d68c2a5186e483cab5fb541a8d3607c
-    definitionId: ART-P1-004
+    isNew: 1
+    acquisitionOrder: 15
+    collectedTimestampUtc: 639242402430034519
+    generationSeed: 196737709
+  - instanceId: 65d95e45369c4e1389a88c00408abe4f
+    definitionId: ART-P1-009
     rolls:
-    - statKind: 23
-      valueUnits: 2237
+    - statKind: 10
+      valueUnits: 1260
       source: 0
-    - statKind: 22
-      valueUnits: 613
+    - statKind: 20
+      valueUnits: 1152
       source: 0
-    - statKind: 2
-      valueUnits: 73
-      source: 0
-    isFavourite: 1
-    isNew: 0
-    acquisitionOrder: 27
-    generationSeed: 1956794571
-  - instanceId: b6bd2948767b4761a333016bbd0988a1
-    definitionId: ART-P1-008
-    rolls:
-    - statKind: 23
-      valueUnits: 1844
-      source: 0
-    isFavourite: 0
-    isNew: 0
-    acquisitionOrder: 28
-    generationSeed: -131885629
-  - instanceId: 77e5731e3bcd4dcca7f1f8f2b52a595d
-    definitionId: ART-P1-008
-    rolls:
-    - statKind: 25
-      valueUnits: 1855
-      source: 0
-    - statKind: 23
-      valueUnits: 1496
-      source: 0
-    - statKind: 26
-      valueUnits: 1371
+    - statKind: 24
+      valueUnits: 1694
       source: 0
     - statKind: 0
-      valueUnits: 390
+      valueUnits: 341
       source: 0
-    isFavourite: 1
+    isFavourite: 0
+    isNew: 1
+    acquisitionOrder: 16
+    collectedTimestampUtc: 639242402968039850
+    generationSeed: 1495353332
+  - instanceId: 46509b21716e4db3bf541de16c70cfb8
+    definitionId: ART-P1-008
+    rolls:
+    - statKind: 10
+      valueUnits: 1113
+      source: 0
+    - statKind: 26
+      valueUnits: 1779
+      source: 0
+    - statKind: 12
+      valueUnits: 984
+      source: 0
+    - statKind: 11
+      valueUnits: 1492
+      source: 0
+    isFavourite: 0
     isNew: 0
-    acquisitionOrder: 29
-    generationSeed: -429443609
+    acquisitionOrder: 17
+    collectedTimestampUtc: 639242403099010763
+    generationSeed: -914473961
   artifactRollTable: {fileID: 11400000, guid: acf4a418dd90362438e80ff299bc7b30, type: 2}
   itemStacks: []
-  currency: 2147138100
+  currency: 2147002912
   _globalLevel: 1
   _globalMaxLevel: 30
   runCharacters:
-  - character: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
+  - character: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
     upgrade:
       level: 1
       maxLevel: 30
       currentExp: 0
-      attackPerLevel: 5.2
-      defensePerLevel: 4.4
-      maxHpPerLevel: 80
-    currentHP: 1033.8026
-    currentAE: 29
+      attackPerLevel: 6.1
+      defensePerLevel: 4.2
+      maxHpPerLevel: 81
+    currentHP: 1060.503
+    currentAE: 100
   - character: {fileID: 11400000, guid: 6e1cc08e7eba57845b7bac14d8757b51, type: 2}
     upgrade:
       level: 1
@@ -410,18 +304,18 @@ MonoBehaviour:
       attackPerLevel: 4.3
       defensePerLevel: 4.8
       maxHpPerLevel: 83
-    currentHP: 1364.1586
-    currentAE: 65
-  - character: {fileID: 11400000, guid: 862c5f94563edd64bac74e8fbcce835c, type: 2}
+    currentHP: 444.6311
+    currentAE: 62
+  - character: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
     upgrade:
       level: 1
       maxLevel: 30
       currentExp: 0
-      attackPerLevel: 8
-      defensePerLevel: 4.5
-      maxHpPerLevel: 69.7
-    currentHP: 1459.2
-    currentAE: 55.1808
+      attackPerLevel: 5.2
+      defensePerLevel: 4.4
+      maxHpPerLevel: 80
+    currentHP: 892
+    currentAE: 62
   - character: {fileID: 11400000, guid: a2f28494c803e0b49a390a31a390a787, type: 2}
     upgrade:
       level: 1
@@ -430,18 +324,8 @@ MonoBehaviour:
       attackPerLevel: 7
       defensePerLevel: 3.7
       maxHpPerLevel: 79.5
-    currentHP: -1
-    currentAE: -1
-  - character: {fileID: 11400000, guid: 27891cf9824752045b475995e212e47e, type: 2}
-    upgrade:
-      level: 1
-      maxLevel: 30
-      currentExp: 0
-      attackPerLevel: 5.7
-      defensePerLevel: 4.8
-      maxHpPerLevel: 82.85
-    currentHP: -1
-    currentAE: -1
+    currentHP: 1000
+    currentAE: 0
   - character: {fileID: 11400000, guid: c9c99302d3f5d8a43b612bd108aa3f05, type: 2}
     upgrade:
       level: 1
@@ -452,27 +336,37 @@ MonoBehaviour:
       maxHpPerLevel: 95
     currentHP: -1
     currentAE: -1
-  - character: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
+  - character: {fileID: 11400000, guid: 862c5f94563edd64bac74e8fbcce835c, type: 2}
     upgrade:
       level: 1
       maxLevel: 30
       currentExp: 0
-      attackPerLevel: 6.1
-      defensePerLevel: 4.2
-      maxHpPerLevel: 81
-    currentHP: -1
-    currentAE: -1
+      attackPerLevel: 8
+      defensePerLevel: 4.5
+      maxHpPerLevel: 69.7
+    currentHP: 651
+    currentAE: 47
+  - character: {fileID: 11400000, guid: 27891cf9824752045b475995e212e47e, type: 2}
+    upgrade:
+      level: 1
+      maxLevel: 30
+      currentExp: 0
+      attackPerLevel: 5.7
+      defensePerLevel: 4.8
+      maxHpPerLevel: 82.85
+    currentHP: 1093.2001
+    currentAE: 10
   teamSlots:
-  - character: {fileID: 11400000, guid: 862c5f94563edd64bac74e8fbcce835c, type: 2}
+  - character: {fileID: 11400000, guid: a2f28494c803e0b49a390a31a390a787, type: 2}
     legacyArtifacts: []
     artifactRefs:
-    - instanceId: f9b56762297944888cc634c23f25140f
-    - instanceId: 380a736fea47428984b8a85333293612
-    - instanceId: 77e5731e3bcd4dcca7f1f8f2b52a595d
+    - instanceId: b7bfab2a74ea448c853212c372a42540
+    - instanceId: 9485e674a55f413189c82810a4c6f3ce
+    - instanceId: 46509b21716e4db3bf541de16c70cfb8
   - character: {fileID: 11400000, guid: 6e1cc08e7eba57845b7bac14d8757b51, type: 2}
     legacyArtifacts: []
     artifactRefs:
-    - instanceId: 43bc30484265453eb8555290a0cd7081
-    - instanceId: 6d68c2a5186e483cab5fb541a8d3607c
-    - instanceId: 960da7f18f9c4b8c96aaad9ffbbf1f7c
+    - instanceId: 746bdfab9b1f4f42bb825bb4fb839e29
+    - instanceId: c7d2ee2e8527476085e1cd141b95d671
+    - instanceId: 23e2b7a997de41478038388e888435f4
   activeTeamSlotIndex: 0

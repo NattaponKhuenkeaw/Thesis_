@@ -107,6 +107,9 @@ public class ElementDatabase : ScriptableObject
             case ElementType.Darkness:
                 fallback.damageTextColor = new Color(0.5f, 0.1f, 0.7f, 1f);
                 break;
+            case ElementType.Particle:
+                fallback.damageTextColor = new Color(0.78f, 0.72f, 1f, 1f);
+                break;
         }
 
         if (definitionMap != null)

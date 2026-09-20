@@ -104,6 +104,12 @@ public static class ArtifactPhase1AssetCreator
         DotEffectDefinition clawBleed = GetOrCreate<DotEffectDefinition>("P1_Bleed_Claw.asset");
         ConfigureDot(clawBleed, "DOT-P1-A04-CLAW", 5f);
 
+        InfusionRuntimeEffectDefinition toxicFormula = GetOrCreate<InfusionRuntimeEffectDefinition>("P1_ToxicInfusionFormula.asset");
+        toxicFormula.effectId = "P1-A01-TOXIC";
+        toxicFormula.displayName = "Toxic Infusion";
+        toxicFormula.infusedElementType = ElementType.Darkness;
+        RuntimeEffectRecipe toxicInfusion = InfusionRecipe(toxicFormula, "P1-A01-TOXIC", 10f);
+
         ExplosionSplashDefinition markExplosion = GetOrCreate<ExplosionSplashDefinition>("P1_A04_MarkExplosion.asset");
         markExplosion.stableId = "SPLASH-P1-A04";
         markExplosion.radius = 3f;
@@ -137,7 +143,7 @@ public static class ArtifactPhase1AssetCreator
                 content.fileName + "_PassiveSet.asset");
             passiveSet.stableId = content.id + "-PASSIVES";
             passiveSet.rules = BuildRules(index, markBleed, clawBleed, markExplosion, throne, wrath, thunder,
-                particleSupport, affliction, switchSupport, thresholdCurse, thresholdBenefit, focus, clawBuff, markInjuryDebuff);
+                particleSupport, affliction, switchSupport, thresholdCurse, thresholdBenefit, focus, clawBuff, markInjuryDebuff, toxicInfusion);
 
             ArtifactDefinition artifact = GetOrCreate<ArtifactDefinition>(content.fileName + ".asset");
             artifact.id = content.id;
@@ -150,6 +156,7 @@ public static class ArtifactPhase1AssetCreator
             EditorUtility.SetDirty(artifact);
         }
 
+        EditorUtility.SetDirty(toxicFormula);
         EditorUtility.SetDirty(markBleed);
         EditorUtility.SetDirty(clawBleed);
         EditorUtility.SetDirty(markExplosion);
@@ -170,14 +177,15 @@ public static class ArtifactPhase1AssetCreator
         RuntimeEffectRecipe particleSupport, RuntimeEffectRecipe affliction,
         RuntimeEffectRecipe switchSupport, RuntimeEffectRecipe thresholdCurse,
         RuntimeEffectRecipe thresholdBenefit, RuntimeEffectRecipe focus,
-        RuntimeEffectRecipe clawBuff, RuntimeEffectRecipe markInjuryDebuff)
+        RuntimeEffectRecipe clawBuff, RuntimeEffectRecipe markInjuryDebuff,
+        RuntimeEffectRecipe toxicInfusion)
     {
         switch (index)
         {
             case 0:
                 return Rules(Rule("toxic-on-ultimate", ArtifactPassiveTrigger.ActionStarted,
                     Filter(AttackCategory.Ultimate), Conditions(20f, 10f),
-                    new InfuseDamageTypeResponseDefinition { target = ArtifactResponseTarget.Allies, elementType = ElementType.Darkness, durationSeconds = 10f },
+                    new ApplyRuntimeEffectResponseDefinition { target = ArtifactResponseTarget.Teammates, recipe = toxicInfusion },
                     Cooldown()));
             case 1:
                 return Rules(Rule("particle-support-stack", ArtifactPassiveTrigger.DamageResolved,
@@ -201,7 +209,7 @@ public static class ArtifactPhase1AssetCreator
                         new ApplyRuntimeEffectResponseDefinition { target = ArtifactResponseTarget.TriggerSource, recipe = clawBuff },
                         new ModifyArtifactStateResponseDefinition { target = ArtifactResponseTarget.TriggerTarget, operation = ArtifactStateOperation.ConsumeMark }),
                     Rule("claw-bleed", ArtifactPassiveTrigger.DamageResolved,
-                        DamageFilter(CombatDamageTag.Artifact | CombatDamageTag.Particle | CombatDamageTag.Explosion | CombatDamageTag.Splash | CombatDamageTag.DotApplication | CombatDamageTag.DotTick, forbidden: true, requireWearer: false), Conditions(chance: 0.5f),
+                        DamageFilter(CombatDamageTag.Artifact | CombatDamageTag.Particle | CombatDamageTag.Explosion | CombatDamageTag.Splash | CombatDamageTag.DotApplication | CombatDamageTag.DotTick, forbidden: true, requireWearer: false), Conditions(),
                         new ApplyDotResponseDefinition { target = ArtifactResponseTarget.TriggerTarget, definition = clawBleed, ratio = 0.3f }));
             case 4:
                 return Rules(Rule("affliction-on-switch-in", ArtifactPassiveTrigger.CharacterSwitchCompleted,
@@ -445,6 +453,28 @@ public static class ArtifactPhase1AssetCreator
                     incomingDamageTakenPercentAdd = incomingDamagePercentAdd
                 }
             }
+        };
+    }
+
+    private static RuntimeEffectRecipe InfusionRecipe(InfusionRuntimeEffectDefinition definition,
+        string id, float duration)
+    {
+        return new RuntimeEffectRecipe
+        {
+            recipeId = id,
+            definition = definition,
+            presentation = new RuntimeEffectPresentation { effectId = id, displayName = "Toxic Infusion" },
+            policy = new RuntimeEffectApplicationPolicy
+            {
+                durationType = duration < 0f ? RuntimeEffectDurationType.Forever : RuntimeEffectDurationType.Seconds,
+                durationSeconds = Mathf.Max(0f, duration),
+                stackable = false,
+                stackMode = RuntimeEffectStackMode.Override,
+                stackLimit = 1,
+                refreshDurationOnReapply = true,
+                stackKey = id
+            },
+            parameters = new RuntimeEffectParameterSet()
         };
     }
 

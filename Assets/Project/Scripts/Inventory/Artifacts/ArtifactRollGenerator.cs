@@ -38,11 +38,31 @@ namespace Project.InventorySystem.Artifacts
             ArtifactDefinition definition,
             long acquisitionOrder,
             int seed,
+            string instanceId)
+        {
+            return Generate(definition, acquisitionOrder, seed, 0, instanceId);
+        }
+
+        public ArtifactInstance Generate(
+            ArtifactDefinition definition,
+            long acquisitionOrder,
+            int seed,
+            int biomeIndex = 0,
             string instanceId = null)
         {
             if (definition == null) throw new ArgumentNullException(nameof(definition));
 
-            return Generate(definition, acquisitionOrder, new SeededArtifactRandom(seed), seed, instanceId);
+            return Generate(definition, acquisitionOrder, new SeededArtifactRandom(seed), seed, biomeIndex, instanceId);
+        }
+
+        public ArtifactInstance Generate(
+            ArtifactDefinition definition,
+            long acquisitionOrder,
+            IArtifactRandom random,
+            int generationSeed,
+            string instanceId)
+        {
+            return Generate(definition, acquisitionOrder, random, generationSeed, 0, instanceId);
         }
 
         public ArtifactInstance Generate(
@@ -50,24 +70,29 @@ namespace Project.InventorySystem.Artifacts
             long acquisitionOrder,
             IArtifactRandom random,
             int generationSeed = 0,
+            int biomeIndex = 0,
             string instanceId = null)
         {
             if (definition == null) throw new ArgumentNullException(nameof(definition));
             if (random == null) throw new ArgumentNullException(nameof(random));
+            int safeBiome = Mathf.Max(0, biomeIndex);
             ArtifactInstance instance = new ArtifactInstance
             {
                 instanceId = string.IsNullOrWhiteSpace(instanceId) ? Guid.NewGuid().ToString("N") : instanceId,
                 definitionId = definition.id,
                 acquisitionOrder = acquisitionOrder,
+                collectedTimestampUtc = DateTime.UtcNow.Ticks,
                 generationSeed = generationSeed,
+                acquisitionBiomeIndex = safeBiome,
                 isNew = true
             };
 
-            int lineCount = table.RollStatLineCount(random.Next01());
+            int lineCount = table.RollStatLineCount(random.Next01(), safeBiome);
+            IReadOnlyList<ArtifactAmountBand> bands = table.GetAmountBandsForBiome(safeBiome);
             for (int i = 0; i < lineCount; i++)
             {
                 ArtifactStatRollDefinition stat = SelectStat(random);
-                ArtifactAmountBand band = SelectBand(random);
+                ArtifactAmountBand band = SelectBand(random, bands);
                 int valueUnits = RollUnits(stat, band, random.Next01());
                 instance.rolls.Add(new ArtifactRoll(stat.statKind, valueUnits, ArtifactRollSource.Generated));
             }
@@ -101,7 +126,12 @@ namespace Project.InventorySystem.Artifacts
 
         private ArtifactAmountBand SelectBand(IArtifactRandom random)
         {
-            IReadOnlyList<ArtifactAmountBand> bands = table.AmountBands;
+            return SelectBand(random, table.AmountBands);
+        }
+
+        private ArtifactAmountBand SelectBand(IArtifactRandom random, IReadOnlyList<ArtifactAmountBand> bands)
+        {
+            if (bands == null || bands.Count == 0) bands = table.AmountBands;
             float total = 0f;
             for (int i = 0; i < bands.Count; i++) total += Mathf.Max(0f, bands[i].weight);
 

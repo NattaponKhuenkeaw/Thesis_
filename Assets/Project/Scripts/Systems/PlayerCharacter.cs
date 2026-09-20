@@ -265,20 +265,31 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         RuntimeEffects?.RemoveEffectsOnOwnerDamaged();
         teamLoader?.RunInventory?.RemoveRuntimeEffectsOnOwnerDamaged(characterObject);
 
-        if (Combat != null && Combat.activeThrowContext != null)
-        {
-            Combat.activeThrowContext.BreakGrab();
-        }
-
         if (currentHP <= 0f && !deathEventRaised)
         {
+            if (Combat != null && Combat.activeThrowContext != null)
+            {
+                Combat.activeThrowContext.BreakGrab();
+            }
+
             deathEventRaised = true;
             ClearUltimateGaugeOnDeath();
             HandleCharacterDefeated();
         }
         else if (StateMachine != null && !IsDead)
         {
-            StateMachine.ChangeState(StateMachine.HitstunState);
+            bool canInterrupt = StateMachine.CurrentState == null
+                || StateMachine.CurrentState.CanBeInterruptedByDamage(attackContext);
+
+            if (canInterrupt && attackContext.canTriggerHitReaction)
+            {
+                if (Combat != null && Combat.activeThrowContext != null)
+                {
+                    Combat.activeThrowContext.BreakGrab();
+                }
+
+                StateMachine.ChangeState(StateMachine.HitstunState);
+            }
         }
 
         return true;

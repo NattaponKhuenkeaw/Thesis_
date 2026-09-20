@@ -402,6 +402,12 @@ namespace CombatEditor.UI
                     phaseData.hitbox.elementType = (ElementType)value;
                     MarkDirty();
                 });
+                AddEnumFlagsField(parent, "Damage Tags", phaseData.hitbox.damageTags, value =>
+                {
+                    RecordUndo($"Edit {undoPrefix} Damage Tags");
+                    phaseData.hitbox.damageTags = (CombatDamageTag)value;
+                    MarkDirty();
+                });
                 AddColorField(parent, "Debug Color", phaseData.hitbox.debugColor, value =>
                 {
                     RecordUndo($"Edit {undoPrefix} Debug Color");
@@ -1949,6 +1955,12 @@ namespace CombatEditor.UI
                     hitbox.elementType = (ElementType)value;
                     MarkDirty();
                 });
+                AddEnumFlagsField(inner, "Damage Tags", hitbox.damageTags, value =>
+                {
+                    RecordUndo("Edit Damage Tags");
+                    hitbox.damageTags = (CombatDamageTag)value;
+                    MarkDirty();
+                });
 
                 if (hitbox is NormalHitbox normalHitbox)
                 {
@@ -2711,6 +2723,16 @@ namespace CombatEditor.UI
             VisualElement row = new VisualElement();
             row.AddToClassList("card-field-row");
             EnumField field = new EnumField(label, value);
+            field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
+            row.Add(field);
+            parent.Add(row);
+        }
+
+        private void AddEnumFlagsField(VisualElement parent, string label, Enum value, Action<Enum> onChange)
+        {
+            VisualElement row = new VisualElement();
+            row.AddToClassList("card-field-row");
+            EnumFlagsField field = new EnumFlagsField(label, value);
             field.RegisterValueChangedCallback(evt => onChange(evt.newValue));
             row.Add(field);
             parent.Add(row);

@@ -47,19 +47,20 @@ public sealed class ProjectileHitboxModule
         activeContext = context;
         runtime.SetCurrentHitConsumesMaxHits(consumeMaxHits);
 
+        float sizeMult = context.sizeMultiplier > 0f ? context.sizeMultiplier : 1f;
         if (hitbox == null)
         {
             Vector2 passiveOffset = runtime.ProjectileData != null
                 ? runtime.ProjectileData.ResolvePassiveColliderOffset(facing)
                 : Vector2.zero;
             Vector2 passiveSize = runtime.ProjectileData != null
-                ? runtime.ProjectileData.travelColliderSize
-                : Vector2.one * 0.5f;
+                ? runtime.ProjectileData.travelColliderSize * sizeMult
+                : Vector2.one * 0.5f * sizeMult;
             ConfigurePassiveCollider(passiveOffset, passiveSize);
             return false;
         }
 
-        hitBoxController.ApplyHitbox(hitbox, facing);
+        hitBoxController.ApplyHitbox(hitbox, facing, sizeMult);
         hitBoxController.ConfigureAnchoring(HitboxAnchorMode.Self, runtime.transform);
         hitBoxDamage.ResetActivationState();
 
@@ -115,9 +116,10 @@ public sealed class ProjectileHitboxModule
 
     public void RefreshColliderGeometry(float facing)
     {
+        float sizeMult = activeContext.sizeMultiplier > 0f ? activeContext.sizeMultiplier : 1f;
         if (activeHitbox != null)
         {
-            hitBoxController.ApplyHitbox(activeHitbox, facing);
+            hitBoxController.ApplyHitbox(activeHitbox, facing, sizeMult);
             return;
         }
 
@@ -125,7 +127,7 @@ public sealed class ProjectileHitboxModule
         {
             ConfigurePassiveCollider(
                 runtime.ProjectileData.ResolvePassiveColliderOffset(facing),
-                runtime.ProjectileData.travelColliderSize);
+                runtime.ProjectileData.travelColliderSize * sizeMult);
         }
     }
 

@@ -21,6 +21,12 @@ public sealed class ArtifactPassiveDiagnosticTests
     private CharacterObject charA;
     private CharacterObject charB;
 
+    [OneTimeSetUp]
+    public void OneTimeSetUp()
+    {
+        ArtifactPhase1AssetCreator.CreateOrUpdateApprovedAssets();
+    }
+
     [SetUp]
     public void SetUp()
     {
@@ -167,6 +173,9 @@ public sealed class ArtifactPassiveDiagnosticTests
 
         // charA casts Ultimate
         CombatEventHub.Shared.Publish(new ActionStartedEvent(charA, AttackCategory.Ultimate, "ult-1", "BlindUltimate", null));
+
+        // Teammate charB should now have the Toxic buff in RunInventory
+        Assert.That(HasRuntimeEffect(runInventory, charB, "P1-A01-TOXIC"), Is.True, "Teammate charB should receive Toxic Infusion buff.");
 
         // Damage from ally charB should now be infused with Darkness
         DamageDescriptor outgoing = new DamageDescriptor(DamageDelivery.Primary, ElementType.None);
@@ -349,7 +358,32 @@ public sealed class ArtifactPassiveDiagnosticTests
         var runCharB = runInventory.GetRunCharacter(charB);
         Assert.That(runCharB.ActiveEffects.Any(e => e.recipe?.recipeId == "P1-A04-CLAW"), Is.True, "Consuming character (CharB) should receive Claw buff.");
 
+        // 5. CharB (now having Claw buff) hits a different enemy (enemy2) -> enemy2 receives Claw Bleed DOT!
+        GameObject enemy2Obj = new GameObject("TestEnemy2");
+        EnemyController enemy2 = enemy2Obj.AddComponent<EnemyController>();
+
+        DamageResolvedEvent charBHitEnemy2 = new DamageResolvedEvent(
+            new DamageProvenance(4, 4, 0, 0, null, CombatDamageTag.None),
+            new DamageDescriptor(DamageDelivery.Primary, ElementType.None),
+            DamageProcPolicy.TriggerArtifactRules,
+            charB,
+            null,
+            enemy2,
+            AttackCategory.Normal,
+            "charB-basic-2",
+            50f,
+            50f,
+            false,
+            false,
+            Vector2.zero);
+
+        CombatEventHub.Shared.Publish(charBHitEnemy2);
+
+        Assert.That(enemy2.DamageTypeState.ActiveDotCount, Is.GreaterThan(0), "Enemy 2 should receive Bleed DOT from CharB's Claw buff.");
+        Assert.That(enemy2.DamageTypeState.HasActiveDot(ElementType.Bleed), Is.True, "Enemy 2 should have Bleed DOT active.");
+
         UnityEngine.Object.DestroyImmediate(enemyObj);
+        UnityEngine.Object.DestroyImmediate(enemy2Obj);
     }
 
     [Test]
@@ -393,6 +427,33 @@ public sealed class ArtifactPassiveDiagnosticTests
         Assert.That(runCharB.ActiveEffects.Any(e => e.recipe?.recipeId == "P1-A02-ATK"), Is.True, "Ally (CharB) should receive Team ATK buff.");
 
         UnityEngine.Object.DestroyImmediate(enemyObj);
+    }
+
+    [Test]
+    public void ParticleBehaviorRuntime_CreatesDebugVisualizerWithLineAndSpriteRenderer()
+    {
+        ArtifactDefinition scales = Resources.Load<ArtifactDefinition>("ItemSO/Artifacts/Phase1/P1_03_SoulMerchantsScales");
+        Assert.That(scales, Is.Not.Null);
+
+        runInventory.TryAcquireArtifact(scales, out ArtifactInstance acquired, 1);
+        runInventory.DeployTeam(new[] { charA, charB }, 0);
+        runInventory.SetEquippedArtifactRefsAt(0, new[] { new ArtifactInstanceRef(acquired.instanceId) });
+
+        passiveSystem.Initialize(teamLoader);
+
+        ParticleBehaviorRuntime runtime = new ParticleBehaviorRuntime();
+        ParticleBehaviorDefinition throneDef = scales.passiveSet.rules[0].responses
+            .OfType<SpawnParticleResponseDefinition>()
+            .FirstOrDefault()?.definition;
+        Assert.That(throneDef, Is.Not.Null);
+
+        runtime.Initialize(passiveSystem.ActiveRuntimes[0], throneDef, null, teamLoader);
+
+        Assert.That(runtime.Visualizer, Is.Not.Null, "Visualizer GameObject should be created.");
+        Assert.That(runtime.Visualizer.GetComponent<LineRenderer>(), Is.Not.Null, "LineRenderer should be attached.");
+        Assert.That(runtime.Visualizer.GetComponent<SpriteRenderer>(), Is.Not.Null, "SpriteRenderer should be attached.");
+
+        runtime.CleanupVisualizer();
     }
 }
 #endif

@@ -108,6 +108,8 @@ public class CameraManager : MonoBehaviour
     // Y Damping Settings (kept from original)
     // =========================================================
     [Header("Y Damping Settings")]
+    [Tooltip("If true, dynamic step damping changes will be triggered on vertical falls. Defaults to false (single source of truth via CameraLookAhead proxy target).")]
+    [SerializeField] private bool _enableLegacyDynamicDamping = false;
     [SerializeField] private float _fallPanAmount = 0.25f;
     [SerializeField] private float _normYPanAmount = 2f;
     [SerializeField] private float _fallYPanTime = 0.35f;
@@ -1592,7 +1594,7 @@ public class CameraManager : MonoBehaviour
         return weight * Mathf.Clamp01(Mathf.InverseLerp(12f, 4f, verticalSeparation));
     }
 
-    private void TickVerticalFollow()
+    private void EnsurePlayerReferences()
     {
         if (_playerTransform == null)
         {
@@ -1606,6 +1608,18 @@ public class CameraManager : MonoBehaviour
         if (_playerBody == null && _playerTransform != null)
         {
             _playerBody = _playerTransform.GetComponent<Rigidbody2D>();
+        }
+    }
+
+    private void TickVerticalFollow()
+    {
+        EnsurePlayerReferences();
+
+        // Architectural design: vertical fall leading is delegated to CameraLookAhead (Proxy Target)
+        // to ensure mathematically seamless C1 damping without velocity spikes or threshold fluttering.
+        if (!_enableLegacyDynamicDamping)
+        {
+            return;
         }
 
         if (_playerBody == null)

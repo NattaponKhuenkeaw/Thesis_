@@ -81,6 +81,28 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
     {
         ArtifactPassiveRuntimeSystem system = _instance;
         if (system == null || sourceCharacter == null) return descriptor;
+
+        // Check recipe-based infusion buff in RunInventory
+        if (system._teamLoader?.RunInventory != null)
+        {
+            var runChar = system._teamLoader.RunInventory.GetRunCharacter(sourceCharacter);
+            if (runChar != null)
+            {
+                var effects = runChar.ActiveEffects;
+                for (int i = 0; i < effects.Count; i++)
+                {
+                    RuntimeEffectInstance effect = effects[i];
+                    if (effect == null || effect.IsExpired) continue;
+                    if (effect.definition is InfusionRuntimeEffectDefinition infusionEffect)
+                    {
+                        descriptor.elementType = infusionEffect.infusedElementType;
+                        return descriptor;
+                    }
+                }
+            }
+        }
+
+        // Fallback to legacy dictionary
         if (!system._infusions.TryGetValue(sourceCharacter, out InfusionState infusion)) return descriptor;
         if (Time.time >= infusion.expiresAt)
         {
@@ -285,9 +307,14 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
                     continue;
                 }
             }
-            if (rule.ruleId == "claw-bleed" && !HasActiveRuntimeEffect(combatEvent.sourceCharacter != null ? combatEvent.sourceCharacter : runtime.Wearer, "P1-A04-CLAW"))
+            if (rule.ruleId == "claw-bleed")
             {
-                continue;
+                bool sourceHasClaw = combatEvent.sourceCharacter != null && HasActiveRuntimeEffect(combatEvent.sourceCharacter, "P1-A04-CLAW");
+                bool wearerHasClaw = HasActiveRuntimeEffect(runtime.Wearer, "P1-A04-CLAW");
+                if (!sourceHasClaw && !wearerHasClaw)
+                {
+                    continue;
+                }
             }
             if (rule.conditions.oncePerRootDamageEvent)
             {
@@ -434,6 +461,8 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
                     element,
                     DamageCriticalPolicy.Prevent);
 
+                SpawnExplosionVisual(center, response.definition != null ? response.definition.radius : 3f, element);
+
                 for (int i = 0; i < _lastSplashTargets.Count; i++)
                 {
                     EnemyController enemy = _lastSplashTargets[i];
@@ -479,14 +508,13 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
         CharacterObject attacker = damageEvent.HasValue && damageEvent.Value.sourceCharacter != null
             ? damageEvent.Value.sourceCharacter
             : runtime.Wearer;
-        CharacterStats sourceStats = ResolveSourceStats(runtime, attacker);
+        CharacterStats sourceStats = ResolveSourceStats(runtime, attacker) ?? ResolveSourceStats(runtime, runtime.Wearer);
         float baseDamage = ResolveDotBaseDamage(response, damageEvent, sourceStats, state);
         if (baseDamage <= 0f) return;
 
         if (response.target == ArtifactResponseTarget.TriggerTarget && damageEvent.HasValue && damageEvent.Value.target != null)
         {
-            damageEvent.Value.target.DamageTypeState?.ApplyCustomDot(
-                response.definition, baseDamage, sourceStats, attacker);
+            ApplyDotToEnemy(damageEvent.Value.target, response.definition, baseDamage, sourceStats, attacker);
             return;
         }
 
@@ -496,14 +524,12 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
             {
                 for (int i = 0; i < _lastSplashTargets.Count; i++)
                 {
-                    _lastSplashTargets[i]?.DamageTypeState?.ApplyCustomDot(
-                        response.definition, baseDamage, sourceStats, attacker);
+                    ApplyDotToEnemy(_lastSplashTargets[i], response.definition, baseDamage, sourceStats, attacker);
                 }
             }
             else if (damageEvent.HasValue && damageEvent.Value.target != null)
             {
-                damageEvent.Value.target.DamageTypeState?.ApplyCustomDot(
-                    response.definition, baseDamage, sourceStats, attacker);
+                ApplyDotToEnemy(damageEvent.Value.target, response.definition, baseDamage, sourceStats, attacker);
             }
             return;
         }
@@ -513,10 +539,21 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
             RoomEnemyRegistry.FillTargetable(_roomEnemies);
             for (int i = 0; i < _roomEnemies.Count; i++)
             {
-                _roomEnemies[i].DamageTypeState?.ApplyCustomDot(
-                    response.definition, baseDamage, sourceStats, attacker);
+                ApplyDotToEnemy(_roomEnemies[i], response.definition, baseDamage, sourceStats, attacker);
             }
         }
+    }
+
+    private static void ApplyDotToEnemy(EnemyController enemy, DotEffectDefinition definition,
+        float baseDamage, CharacterStats sourceStats, CharacterObject attacker)
+    {
+        if (enemy == null) return;
+        EnemyDamageTypeState damageTypeState = enemy.DamageTypeState;
+        if (damageTypeState == null)
+        {
+            damageTypeState = enemy.GetComponent<EnemyDamageTypeState>() ?? enemy.gameObject.AddComponent<EnemyDamageTypeState>();
+        }
+        damageTypeState?.ApplyCustomDot(definition, baseDamage, sourceStats, attacker);
     }
 
     private static float ResolveDotBaseDamage(ApplyDotResponseDefinition response,
@@ -806,5 +843,75 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
         }
         _runtimes.Remove(runtime);
         _runtimesByInstance.Remove(runtime.InstanceId);
+    }
+
+    private static Sprite s_explosionSprite;
+
+    private static Sprite GetOrCreateExplosionSprite()
+    {
+        if (s_explosionSprite != null) return s_explosionSprite;
+        int size = 64;
+        Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        tex.filterMode = FilterMode.Bilinear;
+        tex.wrapMode = TextureWrapMode.Clamp;
+        float center = (size - 1) * 0.5f;
+        float radius = center;
+        Color[] colors = new Color[size * size];
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                float dist = Vector2.Distance(new Vector2(x, y), new Vector2(center, center));
+                float alpha = Mathf.Clamp01(1f - (dist / radius));
+                alpha = Mathf.SmoothStep(0f, 1f, alpha);
+                colors[y * size + x] = new Color(1f, 1f, 1f, alpha);
+            }
+        }
+        tex.SetPixels(colors);
+        tex.Apply();
+        s_explosionSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
+        return s_explosionSprite;
+    }
+
+    private static void SpawnExplosionVisual(Vector2 center, float radius, ElementType element)
+    {
+        GameObject go = new GameObject("[DebugExplosionSplash]");
+        go.transform.position = center;
+
+        SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
+        sr.sprite = GetOrCreateExplosionSprite();
+        Color col = element == ElementType.Bleed
+            ? new Color(0.9f, 0.15f, 0.2f, 0.45f)
+            : new Color(1.0f, 0.6f, 0.15f, 0.45f);
+        sr.color = col;
+        go.transform.localScale = new Vector3(radius * 2f, radius * 2f, 1f);
+
+        LineRenderer lr = go.AddComponent<LineRenderer>();
+        lr.useWorldSpace = false;
+        lr.loop = true;
+        int segments = 32;
+        lr.positionCount = segments;
+        lr.startWidth = 0.06f;
+        lr.endWidth = 0.06f;
+        Shader shader = Shader.Find("Sprites/Default") ?? Shader.Find("Unlit/Color");
+        if (shader != null)
+        {
+            lr.material = new Material(shader);
+        }
+        Color lineCol = col;
+        lineCol.a = 0.9f;
+        lr.startColor = lineCol;
+        lr.endColor = lineCol;
+
+        Vector3[] positions = new Vector3[segments];
+        float angleStep = 360f / segments;
+        for (int i = 0; i < segments; i++)
+        {
+            float rad = Mathf.Deg2Rad * (i * angleStep);
+            positions[i] = new Vector3(Mathf.Cos(rad) * radius, Mathf.Sin(rad) * radius, 0f);
+        }
+        lr.SetPositions(positions);
+
+        UnityEngine.Object.Destroy(go, 0.35f);
     }
 }

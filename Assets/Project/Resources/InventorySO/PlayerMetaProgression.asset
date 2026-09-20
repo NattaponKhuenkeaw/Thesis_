@@ -14,20 +14,60 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Project.Progression.PlayerMetaProgression
   metaCurrency: 0
   fragments:
-  - sourceItemId: char_5_goenitz
-    displayName: Goenitz Fragment
+  - sourceItemId: char-1-camera_girl
+    displayName: Camera Girl Fragment
     fragmentType: 0
     quantity: 87
   - sourceItemId: char_1_kyo
     displayName: Kyo Fragment
     fragmentType: 0
-    quantity: 1
+    quantity: 87
+  - sourceItemId: char-0-main
+    displayName: Main Fragment
+    fragmentType: 0
+    quantity: 87
+  - sourceItemId: char_6_orochi
+    displayName: Orochi Fragment
+    fragmentType: 0
+    quantity: 99
+  - sourceItemId: char_3_shermie
+    displayName: Shermie Fragment
+    fragmentType: 0
+    quantity: 87
+  - sourceItemId: char_5_goenitz
+    displayName: Goenitz Fragment
+    fragmentType: 0
+    quantity: 87
+  - sourceItemId: Char_2_Rugal
+    displayName: Rugal Fragment
+    fragmentType: 0
+    quantity: 54
   characterPotentials:
-  - characterId: char_6_orochi
+  - characterId: char-1-camera_girl
+    skillLevel: 4
+    ultimateLevel: 4
+    passiveLevel: 4
+  - characterId: char-0-main
+    skillLevel: 4
+    ultimateLevel: 4
+    passiveLevel: 4
+  - characterId: char_1_kyo
     skillLevel: 4
     ultimateLevel: 4
     passiveLevel: 4
   - characterId: char_5_goenitz
+    skillLevel: 4
+    ultimateLevel: 4
+    passiveLevel: 4
+  - characterId: char_3_shermie
+    skillLevel: 4
+    ultimateLevel: 4
+    passiveLevel: 4
+  - characterId: char_6_orochi
+    skillLevel: 4
+    ultimateLevel: 4
+    passiveLevel: 4
+  - characterId: Char_2_Rugal
     skillLevel: 4
     ultimateLevel: 4
     passiveLevel: 4

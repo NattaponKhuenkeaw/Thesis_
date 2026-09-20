@@ -39,7 +39,15 @@ public sealed class ParticleBehaviorPool : MonoBehaviour
 
     private void OnDestroy()
     {
-        for (int i = 0; i < _active.Count; i++) _active[i].Reset();
+        for (int i = 0; i < _active.Count; i++)
+        {
+            _active[i].Reset();
+            _active[i].CleanupVisualizer();
+        }
+        while (_inactive.Count > 0)
+        {
+            _inactive.Pop().CleanupVisualizer();
+        }
         _active.Clear();
         _inactive.Clear();
     }

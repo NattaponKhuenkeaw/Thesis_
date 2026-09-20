@@ -178,13 +178,33 @@ public class CombatDamageTypeTests
         profile.lightningDamageReduction = 15f;
         profile.bleedDamageReduction = 20f;
         profile.darknessDamageReduction = 25f;
+        profile.particleDamageReduction = 30f;
 
         Assert.That(profile.GetDamageReductionPercent(ElementType.None), Is.EqualTo(10f));
         Assert.That(profile.GetDamageReductionPercent(ElementType.Lightning), Is.EqualTo(15f));
         Assert.That(profile.GetDamageReductionPercent(ElementType.Bleed), Is.EqualTo(20f));
         Assert.That(profile.GetDamageReductionPercent(ElementType.Darkness), Is.EqualTo(25f));
+        Assert.That(profile.GetDamageReductionPercent(ElementType.Particle), Is.EqualTo(30f));
 
         Object.DestroyImmediate(profile);
+    }
+
+    [Test]
+    public void ParticleDamageAppliesReductionAndMapsElementDefinition()
+    {
+        ElementDefinition particleDef = ElementDatabase.Load().GetDefinition(ElementType.Particle);
+        Assert.That(particleDef.elementType, Is.EqualTo(ElementType.Particle));
+
+        DamageRequest request = CreateRequest(100f, DamageDelivery.Primary, ElementType.Particle);
+        request.typeReductionPercent = 20f;
+        DamageResult result = CombatDamageResolver.Resolve(request);
+        Assert.That(result.Damage, Is.EqualTo(80));
+
+        NormalHitbox hitbox = new NormalHitbox();
+        hitbox.elementType = ElementType.Particle;
+        hitbox.damageTags = CombatDamageTag.Explosion;
+        Assert.That(hitbox.elementType, Is.EqualTo(ElementType.Particle));
+        Assert.That(hitbox.damageTags.HasFlag(CombatDamageTag.Explosion), Is.True);
     }
 
     [Test]

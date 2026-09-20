@@ -69,6 +69,30 @@ public class InteractableWorldUI : MonoBehaviour
     [Header("Additional Prompts")]
     [SerializeField] private PromptConfig[] promptConfigs;
 
+    private static readonly HashSet<InteractableWorldUI> s_ActiveInteractables = new HashSet<InteractableWorldUI>();
+
+    /// <summary>
+    /// True when the player is inside any active InteractableWorldUI trigger area.
+    /// Used to block input actions (such as Ultimate 'R') to prevent accidental consumption.
+    /// </summary>
+    public static bool IsPlayerInInteractableArea => s_ActiveInteractables.Count > 0;
+
+    static InteractableWorldUI()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStaticState()
+    {
+        s_ActiveInteractables.Clear();
+    }
+
+    private static void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+    {
+        s_ActiveInteractables.Clear();
+    }
+
     private readonly List<PromptRuntime> prompts = new List<PromptRuntime>();
     private Transform playerTransform;
     private Camera mainCamera;
@@ -306,6 +330,7 @@ public class InteractableWorldUI : MonoBehaviour
 
         playerTransform = other.transform;
         isPlayerInRange = true;
+        s_ActiveInteractables.Add(this);
 
         for (int i = 0; i < prompts.Count; i++)
         {
@@ -338,7 +363,11 @@ public class InteractableWorldUI : MonoBehaviour
             return;
         }
 
-        isPlayerInRange = false;
+        if (isPlayerInRange)
+        {
+            isPlayerInRange = false;
+            s_ActiveInteractables.Remove(this);
+        }
 
         for (int i = 0; i < prompts.Count; i++)
         {
@@ -354,6 +383,24 @@ public class InteractableWorldUI : MonoBehaviour
         }
 
         playerTransform = null;
+    }
+
+    private void OnDisable()
+    {
+        if (isPlayerInRange)
+        {
+            isPlayerInRange = false;
+            s_ActiveInteractables.Remove(this);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (isPlayerInRange)
+        {
+            isPlayerInRange = false;
+            s_ActiveInteractables.Remove(this);
+        }
     }
 
     private Vector3 GetPromptPosition(PromptConfig config)

@@ -5,11 +5,12 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Project.ShopSystem;
+using Project.Core.ZoneState;
 
 /// <summary>
 /// Player HUD that subscribes to PlayerCharacter HP and runtime effect events.
 /// </summary>
-public class PlayerHUD : MonoBehaviour
+public class PlayerHUD : MonoBehaviour, IZoneStateListener
 {
     private static readonly string[] HudRootNames = { "PlayerHP_UI", "PlayerUI" };
     private static readonly Dictionary<Transform, PlayerHUD> RuntimeEffectOwners = new Dictionary<Transform, PlayerHUD>();
@@ -30,6 +31,10 @@ public class PlayerHUD : MonoBehaviour
     [SerializeField] private float healthLerpDelay = 0.25f;
     [SerializeField] private float healthLerpDuration = 0.5f;
     [SerializeField] private Color shieldFillColor = new Color(0.58f, 0.58f, 0.58f, 0.85f);
+
+    [Header("Navigation & Zone")]
+    [SerializeField] private GameObject navigationRoot;
+    [SerializeField] private ZoneStateProvider zoneStateProvider;
 
     private RectTransform hudRoot;
     private Slider healthSlider;
@@ -56,6 +61,7 @@ public class PlayerHUD : MonoBehaviour
 
     private void Awake()
     {
+        EnsureZoneStateProvider();
         CacheReferences();
     }
 
@@ -69,13 +75,16 @@ public class PlayerHUD : MonoBehaviour
         runtimeEffectsDirty = true;
         RebindEvents();
         RebindRuntimeEffectEvents();
+        RebindZoneEvents();
         RefreshHUD();
+        UpdateNavigationVisibility();
     }
 
     private void OnDisable()
     {
         ReleaseRuntimeEffectOwnership();
         StopHealthLerp();
+        UnbindZoneEvents();
 
         if (subscribedPlayer != null)
         {
@@ -90,6 +99,11 @@ public class PlayerHUD : MonoBehaviour
             subscribedEffectInventory.OnRuntimeEffectsChanged -= HandleRuntimeEffectsChanged;
             subscribedEffectInventory = null;
         }
+    }
+
+    private void OnDestroy()
+    {
+        UnbindZoneEvents();
     }
 
     private void LateUpdate()
@@ -110,6 +124,11 @@ public class PlayerHUD : MonoBehaviour
         if (runtimeEffectsDirty)
         {
             RebuildRuntimeEffects();
+        }
+
+        if (Time.frameCount % 30 == 0)
+        {
+            UpdateNavigationVisibility();
         }
     }
 
@@ -143,7 +162,10 @@ public class PlayerHUD : MonoBehaviour
         CreateHudIfNeeded();
         RebindEvents();
         RebindRuntimeEffectEvents();
+        RebindZoneEvents();
         RefreshHUD();
+        EnsureNavigationClickBlocked();
+        UpdateNavigationVisibility();
     }
 
     private void RebindEvents()
@@ -679,7 +701,152 @@ public class PlayerHUD : MonoBehaviour
         else
         {
             EnsureShieldSlider();
+            EnsureNavigationClickBlocked();
         }
+    }
+
+    private GameObject FindNavigationRoot()
+    {
+        if (navigationRoot != null)
+            return navigationRoot;
+
+        Transform navTransform = null;
+        if (hudRoot != null)
+            navTransform = FindChildRecursive(hudRoot, "Navigation");
+        if (navTransform == null && targetCanvas != null)
+            navTransform = FindChildRecursive(targetCanvas.transform, "Navigation");
+        if (navTransform == null)
+            navTransform = FindChildRecursive(transform, "Navigation");
+
+        if (navTransform != null)
+        {
+            navigationRoot = navTransform.gameObject;
+        }
+
+        return navigationRoot;
+    }
+
+    private void EnsureNavigationClickBlocked()
+    {
+        GameObject navGo = FindNavigationRoot();
+        if (navGo != null && navGo.GetComponent<Project.UI.UIBlockPlayerClick>() == null)
+        {
+            navGo.AddComponent<Project.UI.UIBlockPlayerClick>();
+        }
+    }
+
+    private void EnsureZoneStateProvider()
+    {
+        if (zoneStateProvider == null)
+        {
+            zoneStateProvider = Resources.Load<ZoneStateProvider>("CombatSO/ZoneStateProvider");
+        }
+    }
+
+    private void RebindZoneEvents()
+    {
+        EnsureZoneStateProvider();
+        if (zoneStateProvider != null)
+        {
+            zoneStateProvider.OnZoneModeChanged -= HandleZoneModeChanged;
+            zoneStateProvider.OnZoneModeChanged += HandleZoneModeChanged;
+            zoneStateProvider.OnRoomChanged -= HandleRoomChanged;
+            zoneStateProvider.OnRoomChanged += HandleRoomChanged;
+        }
+
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= HandleSceneLoaded;
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += HandleSceneLoaded;
+    }
+
+    private void UnbindZoneEvents()
+    {
+        if (zoneStateProvider != null)
+        {
+            zoneStateProvider.OnZoneModeChanged -= HandleZoneModeChanged;
+            zoneStateProvider.OnRoomChanged -= HandleRoomChanged;
+        }
+
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= HandleSceneLoaded;
+    }
+
+    private void HandleZoneModeChanged(ZoneMode mode)
+    {
+        UpdateNavigationVisibility();
+    }
+
+    private void HandleRoomChanged(RoomData room)
+    {
+        UpdateNavigationVisibility();
+    }
+
+    private void HandleSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+    {
+        UpdateNavigationVisibility();
+    }
+
+    public void OnZoneChanged(ZoneMode newMode)
+    {
+        UpdateNavigationVisibility();
+    }
+
+    public void UpdateNavigationVisibility()
+    {
+        GameObject navGo = FindNavigationRoot();
+        if (navGo == null)
+            return;
+
+        bool isSafe = IsSafeRoom();
+        if (navGo.activeSelf != isSafe)
+        {
+            navGo.SetActive(isSafe);
+
+            if (!isSafe && Project.UI.UIManager.Instance != null)
+            {
+                Project.UI.UIManager.Instance.CloseAll();
+            }
+        }
+    }
+
+    public bool IsSafeRoom()
+    {
+        EnsureZoneStateProvider();
+
+        if (zoneStateProvider != null)
+        {
+            if (zoneStateProvider.CurrentMode == ZoneMode.CombatZone)
+                return false;
+
+            if (zoneStateProvider.CurrentMode == ZoneMode.SafeZone)
+            {
+                if (IsCombatSceneOrHostPresent())
+                    return false;
+
+                return true;
+            }
+        }
+
+        return !IsCombatSceneOrHostPresent();
+    }
+
+    private bool IsCombatSceneOrHostPresent()
+    {
+        if (UnityEngine.Object.FindFirstObjectByType<CombatStageController>() != null
+            || UnityEngine.Object.FindFirstObjectByType<RoomWaveManager>() != null)
+        {
+            return true;
+        }
+
+        string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        if (!string.IsNullOrEmpty(sceneName))
+        {
+            string lower = sceneName.ToLowerInvariant();
+            if (lower.Contains("combat") || lower.Contains("boss") || lower.Contains("fight"))
+                return true;
+            if (lower.Contains("shop") || lower.Contains("rest") || lower.Contains("lobby") || lower.Contains("level") || lower.Contains("safe"))
+                return false;
+        }
+
+        return false;
     }
 
     private void EnsureShieldSlider()

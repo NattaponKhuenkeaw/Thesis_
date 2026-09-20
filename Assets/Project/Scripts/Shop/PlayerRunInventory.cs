@@ -208,7 +208,9 @@ namespace Project.ShopSystem
         public bool isFavourite;
         public bool isNew;
         public long acquisitionOrder;
+        public long collectedTimestampUtc;
         public int generationSeed;
+        public int acquisitionBiomeIndex;
     }
 
     [Serializable]
@@ -320,6 +322,7 @@ namespace Project.ShopSystem
         public event Action<int, int> OnGlobalLevelChanged;
         public event Action OnArtifactsChanged;
         public event Action<string, bool> OnArtifactFavouriteChanged;
+        public event Action<string> OnArtifactSeenChanged;
         internal event Action<CharacterObject, bool> OnRuntimeEffectsChangedDetailed;
         public bool IsDispatchingRuntimeEffectStatChange { get; private set; }
 
@@ -423,7 +426,8 @@ namespace Project.ShopSystem
         public bool TryAcquireArtifact(
             ArtifactDefinition definition,
             out ArtifactInstance instance,
-            int? seedOverride = null)
+            int? seedOverride = null,
+            int? biomeIndexOverride = null)
         {
             instance = null;
             if (definition == null || string.IsNullOrWhiteSpace(definition.id))
@@ -433,8 +437,12 @@ namespace Project.ShopSystem
 
             EnsureRunData();
             int seed = seedOverride ?? UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+            int activeBiome = biomeIndexOverride
+                ?? (Project.Core.ZoneState.RunProgressionManager.Instance != null
+                    ? Project.Core.ZoneState.RunProgressionManager.Instance.CurrentBiomeIndex
+                    : 0);
             ArtifactRollGenerator generator = new ArtifactRollGenerator(ArtifactRollTable);
-            instance = generator.Generate(definition, nextArtifactAcquisitionOrder++, seed);
+            instance = generator.Generate(definition, nextArtifactAcquisitionOrder++, seed, activeBiome);
             if (!TryAddArtifactInstanceInternal(instance))
             {
                 instance = null;
@@ -474,7 +482,6 @@ namespace Project.ShopSystem
             instance.isNew = false;
             SavePersistentState();
             OnArtifactFavouriteChanged?.Invoke(instanceId, favourite);
-            NotifyArtifactsChanged();
             return true;
         }
 
@@ -487,7 +494,7 @@ namespace Project.ShopSystem
 
             instance.isNew = false;
             SavePersistentState();
-            NotifyArtifactsChanged();
+            OnArtifactSeenChanged?.Invoke(instanceId);
             return true;
         }
 
@@ -2620,7 +2627,9 @@ namespace Project.ShopSystem
                     isFavourite = instance.isFavourite,
                     isNew = instance.isNew,
                     acquisitionOrder = instance.acquisitionOrder,
-                    generationSeed = instance.generationSeed
+                    collectedTimestampUtc = instance.collectedTimestampUtc,
+                    generationSeed = instance.generationSeed,
+                    acquisitionBiomeIndex = instance.acquisitionBiomeIndex
                 });
             }
 
@@ -3206,7 +3215,9 @@ namespace Project.ShopSystem
                         isFavourite = record.isFavourite,
                         isNew = record.isNew,
                         acquisitionOrder = record.acquisitionOrder,
-                        generationSeed = record.generationSeed
+                        collectedTimestampUtc = record.collectedTimestampUtc,
+                        generationSeed = record.generationSeed,
+                        acquisitionBiomeIndex = record.acquisitionBiomeIndex
                     });
                 }
             }

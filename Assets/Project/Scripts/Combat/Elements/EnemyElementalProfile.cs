@@ -20,6 +20,10 @@ public class EnemyElementalProfile : ScriptableObject
     [Tooltip("Percentage reduction applied to Darkness damage.")]
     public float darknessDamageReduction;
 
+    [Range(0f, 95f)]
+    [Tooltip("Percentage reduction applied to Particle damage.")]
+    public float particleDamageReduction;
+
     public float GetDamageReductionPercent(ElementType damageType)
     {
         return damageType switch
@@ -27,6 +31,7 @@ public class EnemyElementalProfile : ScriptableObject
             ElementType.Lightning => lightningDamageReduction,
             ElementType.Bleed => bleedDamageReduction,
             ElementType.Darkness => darknessDamageReduction,
+            ElementType.Particle => particleDamageReduction,
             _ => physicalDamageReduction
         };
     }

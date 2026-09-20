@@ -56,13 +56,18 @@ public struct IncomingAttackContext
 {
     public EnemyAttackProperty property;
     public EnemyController sourceEnemy;
+    public bool canTriggerHitReaction;
 
-    public static IncomingAttackContext FromEnemy(EnemyController enemy, EnemyAttackProperty property)
+    public static IncomingAttackContext FromEnemy(
+        EnemyController enemy,
+        EnemyAttackProperty property,
+        bool canTriggerHitReaction = true)
     {
         return new IncomingAttackContext
         {
             sourceEnemy = enemy,
-            property = property
+            property = property,
+            canTriggerHitReaction = canTriggerHitReaction
         };
     }
 }

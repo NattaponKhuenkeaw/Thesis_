@@ -17,6 +17,7 @@ namespace Project.InventorySystem.Artifacts
                 instanceId = string.IsNullOrWhiteSpace(instanceId) ? Guid.NewGuid().ToString("N") : instanceId,
                 definitionId = definition != null ? definition.id : string.Empty,
                 acquisitionOrder = acquisitionOrder,
+                collectedTimestampUtc = DateTime.UtcNow.Ticks,
                 isNew = false
             };
 

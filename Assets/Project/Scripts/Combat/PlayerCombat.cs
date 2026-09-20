@@ -1062,6 +1062,14 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         CharacterObject sourceCharacter = playerCharacter != null ? playerCharacter.characterObject : null;
         CharacterStats stats = playerCharacter != null ? playerCharacter.Stats : null;
 
+        float projectileScale = passiveController != null
+            ? passiveController.ModifyProjectileScale(
+                currentAttackCategory,
+                currentActionId,
+                currentActionName,
+                currentStepData != null ? currentStepData.stepName : null)
+            : 1f;
+
         return new ProjectileSpawnContext
         {
             projectileType = projectileType,
@@ -1088,7 +1096,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             isSkillOrUltimate = currentAttackCategory == AttackCategory.Skill || currentAttackCategory == AttackCategory.Ultimate,
             remainingHits = remainingHits,
             sourceCombat = this,
-            sourceCharacter = sourceCharacter
+            sourceCharacter = sourceCharacter,
+            sizeMultiplier = projectileScale
         };
     }
 
@@ -1156,7 +1165,14 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
 
         if (normalHitbox != null && hitBoxController != null)
         {
-            hitBoxController.ApplyHitbox(normalHitbox);
+            float hitboxScale = passiveController != null
+                ? passiveController.ModifyHitboxScale(
+                    currentAttackCategory,
+                    currentActionId,
+                    currentActionName,
+                    currentStepData != null ? currentStepData.stepName : null)
+                : 1f;
+            hitBoxController.ApplyHitbox(normalHitbox, 0f, hitboxScale);
         }
 
         float baseDamage = GetBaseActionDamage(normalHitbox != null ? normalHitbox.damageRatio : 1f);
@@ -1193,7 +1209,14 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
             snapOffset = Vector2.zero, 
             recoveryFrames = grabHitbox.recoveryFrames 
         };
-        hitBoxController?.ApplyHitbox(grabHitbox);
+        float grabScale = passiveController != null
+            ? passiveController.ModifyHitboxScale(
+                currentAttackCategory,
+                currentActionId,
+                currentActionName,
+                currentStepData != null ? currentStepData.stepName : null)
+            : 1f;
+        hitBoxController?.ApplyHitbox(grabHitbox, 0f, grabScale);
 
         float baseDamage = GetBaseActionDamage(grabHitbox.damageRatio);
         hitBoxDamage?.SetGrabData(
@@ -1266,7 +1289,16 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         }
 
         if (activeHitbox != null)
-            hitBoxController.ApplyHitbox(activeHitbox);
+        {
+            float activeScale = passiveController != null
+                ? passiveController.ModifyHitboxScale(
+                    currentAttackCategory,
+                    currentActionId,
+                    currentActionName,
+                    currentStepData != null ? currentStepData.stepName : null)
+                : 1f;
+            hitBoxController.ApplyHitbox(activeHitbox, 0f, activeScale);
+        }
     }
 
     private void ProcessMotion(int frame)
