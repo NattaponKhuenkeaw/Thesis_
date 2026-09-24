@@ -117,9 +117,34 @@ namespace Project.TeamBuilder.UI.Panels
             Refresh();
         }
 
-        public void UpgradeSkillPotential() => TryUpgradeTrack(PotentialTrack.Skill);
-        public void UpgradeUltimatePotential() => TryUpgradeTrack(PotentialTrack.Ultimate);
-        public void UpgradePassivePotential() => TryUpgradeTrack(PotentialTrack.Passive);
+        public void UpgradeSkillPotential() => QueueLegacyUpgrade(PotentialTrack.Skill);
+        public void UpgradeUltimatePotential() => QueueLegacyUpgrade(PotentialTrack.Ultimate);
+        public void UpgradePassivePotential() => QueueLegacyUpgrade(PotentialTrack.Passive);
+
+        private bool _legacyUpgradeQueued;
+        private PotentialTrack _legacyUpgradeTrack;
+
+        private void QueueLegacyUpgrade(PotentialTrack track)
+        {
+            _legacyUpgradeQueued = true;
+            _legacyUpgradeTrack = track;
+        }
+
+        private void LateUpdate()
+        {
+            if (!_legacyUpgradeQueued)
+            {
+                return;
+            }
+
+            if (Pointer.current != null && Pointer.current.press.isPressed)
+            {
+                return;
+            }
+
+            _legacyUpgradeQueued = false;
+            TryUpgradeTrack(_legacyUpgradeTrack);
+        }
 
         public void ExitPotentialPanel()
         {

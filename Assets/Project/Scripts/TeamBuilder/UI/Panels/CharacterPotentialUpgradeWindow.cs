@@ -1,6 +1,7 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Project.InventorySystem.Items;
 using Project.Progression;
@@ -30,6 +31,7 @@ namespace Project.TeamBuilder.UI.Panels
         private PotentialNodeDefinition _node;
         private PlayerMetaProgression _metaProgression;
         private Action<PotentialNodeDefinition> _upgradeRequested;
+        private bool _upgradeQueued;
 
         private void Awake()
         {
@@ -129,8 +131,17 @@ namespace Project.TeamBuilder.UI.Panels
 
             if (upgradeButton != null)
             {
-                upgradeButton.gameObject.SetActive(!upgraded);
+                upgradeButton.gameObject.SetActive(true);
                 upgradeButton.interactable = state == CharacterPotentialNodeState.Upgradeable;
+                CanvasGroup buttonGroup = upgradeButton.GetComponent<CanvasGroup>();
+                if (buttonGroup == null)
+                {
+                    buttonGroup = upgradeButton.gameObject.AddComponent<CanvasGroup>();
+                }
+
+                buttonGroup.alpha = upgraded ? 0f : 1f;
+                buttonGroup.interactable = !upgraded;
+                buttonGroup.blocksRaycasts = !upgraded;
             }
 
             if (upgradeButtonText != null)
@@ -197,7 +208,48 @@ namespace Project.TeamBuilder.UI.Panels
 
         private void HandleUpgradeClicked()
         {
+            _upgradeQueued = true;
+        }
+
+        private void LateUpdate()
+        {
+            if (!_upgradeQueued)
+            {
+                return;
+            }
+
+            if (PointerIsHeld())
+            {
+                return;
+            }
+
+            _upgradeQueued = false;
             _upgradeRequested?.Invoke(_node);
+            ReleaseStuckPointer();
+        }
+
+        private static bool PointerIsHeld()
+        {
+            return UnityEngine.InputSystem.Pointer.current != null
+                && UnityEngine.InputSystem.Pointer.current.press.isPressed;
+        }
+
+        private static void ReleaseStuckPointer()
+        {
+            EventSystem eventSystem = EventSystem.current;
+            if (eventSystem == null)
+            {
+                return;
+            }
+
+            eventSystem.SetSelectedGameObject(null);
+            if (eventSystem.currentInputModule == null)
+            {
+                return;
+            }
+
+            eventSystem.currentInputModule.DeactivateModule();
+            eventSystem.currentInputModule.ActivateModule();
         }
 
         private void ResolveReferences()

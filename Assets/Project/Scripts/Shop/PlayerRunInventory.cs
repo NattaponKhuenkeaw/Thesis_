@@ -252,6 +252,8 @@ namespace Project.ShopSystem
         private const string SaveKey = "project.player_run_inventory.v3";
         private const string LegacySaveKey = "project.player_run_inventory.v2";
         private const string BossLobbySaveKey = "project.player_run_inventory.boss_lobby.v1";
+        private const string BossLobbyMetaSaveKey = "project.player_meta_progression.boss_lobby.v1";
+        private const string MetaProgressionResourcePath = "InventorySO/PlayerMetaProgression";
         /// <summary>Step 1 (Not Perma): run inventory must not persist items/team/characters across sessions.</summary>
         private const bool PersistRunInventoryAcrossSessions = false;
         private const string DefaultCharacterItemId = "char-0-main";
@@ -2597,6 +2599,12 @@ namespace Project.ShopSystem
             }
 
             PlayerPrefs.SetString(BossLobbySaveKey, JsonUtility.ToJson(CaptureRunSnapshot()));
+            PlayerMetaProgression meta = Resources.Load<PlayerMetaProgression>(MetaProgressionResourcePath);
+            if (meta != null)
+            {
+                PlayerPrefs.SetString(BossLobbyMetaSaveKey, meta.ExportJson());
+                meta.MarkCommitted();
+            }
             PlayerPrefs.Save();
         }
 
@@ -2623,6 +2631,7 @@ namespace Project.ShopSystem
             EnsureTeamSlotCapacity(DefaultTeamSlotCount);
             ApplyPersistentState(data);
             ApplyBossLobbyBiome(data.biomeIndex);
+            RestoreBossLobbyMeta();
             return true;
         }
 
@@ -2651,15 +2660,44 @@ namespace Project.ShopSystem
             progression?.SetCurrentBiomeIndex(biomeIndex);
         }
 
-        public void ClearBossLobbyCheckpoint()
+        public void RestoreBossLobbyMeta()
         {
-            if (!PlayerPrefs.HasKey(BossLobbySaveKey))
+            string json = PlayerPrefs.GetString(BossLobbyMetaSaveKey, string.Empty);
+            if (string.IsNullOrWhiteSpace(json))
             {
                 return;
             }
 
-            PlayerPrefs.DeleteKey(BossLobbySaveKey);
-            PlayerPrefs.Save();
+            PlayerMetaProgression meta = Resources.Load<PlayerMetaProgression>(MetaProgressionResourcePath);
+            if (meta == null)
+            {
+                return;
+            }
+
+            meta.ImportJson(json);
+            meta.MarkCommitted();
+            meta.SavePersistentState();
+        }
+
+        public void ClearBossLobbyCheckpoint()
+        {
+            bool changed = false;
+            if (PlayerPrefs.HasKey(BossLobbySaveKey))
+            {
+                PlayerPrefs.DeleteKey(BossLobbySaveKey);
+                changed = true;
+            }
+
+            if (PlayerPrefs.HasKey(BossLobbyMetaSaveKey))
+            {
+                PlayerPrefs.DeleteKey(BossLobbyMetaSaveKey);
+                changed = true;
+            }
+
+            if (changed)
+            {
+                PlayerPrefs.Save();
+            }
         }
 
         public void SavePersistentState()

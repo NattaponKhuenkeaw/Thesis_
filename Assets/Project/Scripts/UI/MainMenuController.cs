@@ -238,7 +238,7 @@ namespace Project.UI
             }
             else
             {
-                meta?.LoadPersistentStateIfNeeded();
+                meta?.ReloadPersistentState();
                 if (runInventory == null || !runInventory.TryRestoreBossLobbyCheckpoint())
                 {
                     runInventory?.ResetRunStateForMenuStart();

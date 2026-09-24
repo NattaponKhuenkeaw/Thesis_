@@ -108,6 +108,7 @@ namespace Project.Progression
 
         [NonSerialized] private bool hasLoadedPersistentState;
         [NonSerialized] private bool isApplyingPersistentState;
+        [NonSerialized] private string committedJson;
         [NonSerialized] private Dictionary<CharacterObject, UnlockedPotentialCacheEntry> unlockedPotentialCache;
 
         public IReadOnlyList<ProgressionFragmentStack> Fragments => fragments;
@@ -242,7 +243,6 @@ namespace Project.Progression
             }
 
             stack.quantity -= amount;
-            SavePersistentState();
             NotifyFragmentsChanged();
             return true;
         }
@@ -267,7 +267,6 @@ namespace Project.Progression
             }
 
             stack.quantity -= amount;
-            SavePersistentState();
             NotifyFragmentsChanged();
             return true;
         }
@@ -439,7 +438,6 @@ namespace Project.Progression
             if (changed)
             {
                 InvalidatePotentialCache(characterId);
-                SavePersistentState();
                 OnPotentialChanged?.Invoke(characterId);
             }
 
@@ -623,6 +621,30 @@ namespace Project.Progression
                 Debug.Log($"PlayerMetaProgression: Migrated to v2 and omitted {retiredArtifactFragments} retired Artifact fragment(s). Character Potential data was preserved.");
                 SavePersistentState();
             }
+
+            MarkCommitted();
+        }
+
+        public void MarkCommitted()
+        {
+            committedJson = ExportJson();
+        }
+
+        public void RevertToCommitted()
+        {
+            if (string.IsNullOrWhiteSpace(committedJson))
+            {
+                return;
+            }
+
+            ImportJson(committedJson);
+            SavePersistentState();
+        }
+
+        public void ReloadPersistentState()
+        {
+            hasLoadedPersistentState = false;
+            LoadPersistentStateIfNeeded();
         }
 
         public void SavePersistentState()

@@ -175,6 +175,7 @@ namespace Project.Core.RunEnd
             RunResultSnapshot snapshot = BuildSnapshot();
             AppendFragmentRewardDeltas(snapshot);
             metaProgression?.SavePersistentState();
+            metaProgression?.MarkCommitted();
             runInventory?.ResetRunProgressForDeath(metaProgression);
             ReturnToLobby();
         }

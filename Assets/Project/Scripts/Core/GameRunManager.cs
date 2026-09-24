@@ -238,6 +238,7 @@ namespace Project.Core
                 return false;
             }
 
+            runInventory.SaveBossLobbyCheckpoint();
             if (!runInventory.TryPrepareForNewRun(requiredTeamMembers, out failureReason))
             {
                 NotifyRunStartFailed(failureReason);

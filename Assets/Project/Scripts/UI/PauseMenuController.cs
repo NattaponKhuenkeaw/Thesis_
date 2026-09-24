@@ -222,11 +222,26 @@ namespace Project.UI
 
             PlayerMetaProgression meta = Resources.Load<PlayerMetaProgression>(MetaResourcePath);
             PlayerRunInventory runInventory = Resources.Load<PlayerRunInventory>(RunInventoryResourcePath);
-            meta?.SavePersistentState();
-            runInventory?.SaveBossLobbyCheckpoint();
+            if (IsLobbyCheckpointScene())
+            {
+                meta?.SavePersistentState();
+                runInventory?.SaveBossLobbyCheckpoint();
+            }
+            else
+            {
+                runInventory?.RestoreBossLobbyMeta();
+                meta?.RevertToCommitted();
+            }
             GameSettings.Save();
             TeardownRunSession();
             SceneManager.LoadScene(mainMenuSceneName);
+        }
+
+        private bool IsLobbyCheckpointScene()
+        {
+            GameRunManager run = GameRunManager.Instance;
+            string lobbyName = run != null ? run.LobbySceneName : "Test_Lobby";
+            return string.Equals(SceneManager.GetActiveScene().name, lobbyName, System.StringComparison.Ordinal);
         }
 
         private bool CanPause()
