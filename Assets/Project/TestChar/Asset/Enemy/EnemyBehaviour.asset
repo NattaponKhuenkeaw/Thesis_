@@ -1179,7 +1179,7 @@ MonoBehaviour:
         Name: MoveSpeed
         IsExposed: 1
         m_IsShared: 0
-        m_Value: 2
+        m_Value: 2.2
     - rid: 2092758187777196495
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
@@ -1696,7 +1696,7 @@ MonoBehaviour:
         Name: ChaseSpeed
         IsExposed: 1
         m_IsShared: 0
-        m_Value: 3
+        m_Value: 3.3
     - rid: 2092758188654067802
       type: {class: 'TypedVariableModel`1[[System.Single, mscorlib]]', ns: Unity.Behavior.GraphFramework, asm: Unity.Behavior.GraphFramework}
       data:
@@ -5004,7 +5004,7 @@ MonoBehaviour:
           m_Value0: 0
           m_Value1: 0
         Name: 
-        m_Value: 3
+        m_Value: 3.3
     - rid: 7789416556642435212
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
@@ -5052,7 +5052,7 @@ MonoBehaviour:
           m_Value0: 0
           m_Value1: 0
         Name: 
-        m_Value: 3
+        m_Value: 3.3
     - rid: 7789416556642435218
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
@@ -5185,7 +5185,7 @@ MonoBehaviour:
           m_Value0: 10566773716653545567
           m_Value1: 6437454537364379388
         Name: MoveSpeed
-        m_Value: 2
+        m_Value: 2.2
     - rid: 1588255640948048164
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
@@ -5193,7 +5193,7 @@ MonoBehaviour:
           m_Value0: 11195211134396819533
           m_Value1: 3061783449145760953
         Name: ChaseSpeed
-        m_Value: 3
+        m_Value: 3.3
     - rid: 1588255640948048165
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
@@ -5534,7 +5534,7 @@ MonoBehaviour:
           m_Value0: 0
           m_Value1: 0
         Name: 
-        m_Value: 3
+        m_Value: 3.3
     - rid: 7789416556642435322
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
@@ -6659,7 +6659,7 @@ MonoBehaviour:
         Name: MoveSpeed
         IsExposed: 1
         m_IsShared: 0
-        m_Value: 2
+        m_Value: 2.2
     - rid: 2729789875885441489
       type: {class: 'TypedVariableModel`1[[System.Single, mscorlib]]', ns: Unity.Behavior.GraphFramework, asm: Unity.Behavior.GraphFramework}
       data:
@@ -6669,7 +6669,7 @@ MonoBehaviour:
         Name: ChaseSpeed
         IsExposed: 1
         m_IsShared: 0
-        m_Value: 3
+        m_Value: 3.3
     - rid: 2729789875885441535
       type: {class: 'TypedVariableModel`1[[System.Single, mscorlib]]', ns: Unity.Behavior.GraphFramework, asm: Unity.Behavior.GraphFramework}
       data:
@@ -6813,7 +6813,7 @@ MonoBehaviour:
           m_Value0: 10566773716653545567
           m_Value1: 6437454537364379388
         Name: MoveSpeed
-        m_Value: 2
+        m_Value: 2.2
     - rid: 2729789875885441501
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
@@ -6821,7 +6821,7 @@ MonoBehaviour:
           m_Value0: 11195211134396819533
           m_Value1: 3061783449145760953
         Name: ChaseSpeed
-        m_Value: 3
+        m_Value: 3.3
     - rid: 2729789875885441548
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:

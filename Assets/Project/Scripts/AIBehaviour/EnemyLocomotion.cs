@@ -385,6 +385,12 @@ public class EnemyLocomotion : MonoBehaviour
 
     public bool UnstackIfOverlapping(float deltaTime)
     {
+        if (enemy != null && enemy.Kit != null && enemy.Kit.BodyCharge && enemy.FacingLocked)
+        {
+            overlapElapsed = 0f;
+            unstackUntil = 0f;
+            return false;
+        }
         if (!CanDriveMovement())
         {
             overlapElapsed = 0f;

@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: EK_MeleeCommit
   m_EditorClassIdentifier: Assembly-CSharp::EnemyKit
   combatRole: 1
-  attackRange: -1
-  holdRange: -1
-  warningDuration: -1
-  hitWindowDuration: -1
+  attackRange: 4
+  holdRange: 3.4
+  warningDuration: 0.8
+  hitWindowDuration: 0.4
   attackCooldown: 1.5
-  lungeDistance: -1
+  lungeDistance: 4
+  bodyCharge: 1
   commitTelegraphFraction: -1
   interruptCooldown: -1
   recoveryPlantDuration: 0.8

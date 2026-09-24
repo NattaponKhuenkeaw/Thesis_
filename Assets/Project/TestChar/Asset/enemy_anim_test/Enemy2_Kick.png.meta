@@ -1,0 +1,72 @@
+fileFormatVersion: 2
+guid: ae941006c72147c7881adc270bf01b01
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 21300000
+    second: Kick_2
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    enableMipMap: 0
+    sRGBTexture: 1
+  isReadable: 0
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  maxTextureSize: 2048
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 7
+  spritePivot: {x: 0.5, y: 0}
+  spritePixelsToUnits: 43
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteGenerateFallbackPhysicsShape: 0
+  textureType: 8
+  textureShape: 1
+  platformSettings: []
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Kick_2
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 0
+        width: 128
+        height: 128
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      spriteID: ae941006c72147c7881adc270bf01b01
+      internalID: 21300000
+      outline: []
+      physicsShape: []
+      bones: []
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    physicsShape: []
+    bones: []
+    spriteID: ae941006c72147c7881adc270bf01b01
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    nameFileIdTable:
+      Kick_2: 21300000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:

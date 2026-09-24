@@ -31,6 +31,29 @@ internal static class EnemyLifecycleTestUtility
 public class EnemyLifecycleTests
 {
     [Test]
+    public void ExecutionerPrefabWaitsForGroundBeforeActivatingAI()
+    {
+        var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+            "Assets/Project/TestChar/Prefab/Boss_Executioner.prefab");
+        Assert.That(prefab, Is.Not.Null);
+        var enemy = prefab.GetComponent<EnemyController>();
+        Assert.That(enemy, Is.Not.Null);
+        var data = new UnityEditor.SerializedObject(enemy);
+        Assert.That(data.FindProperty("useSpawnPresentation").boolValue, Is.True);
+        int mask = data.FindProperty("spawnGroundLayers").intValue;
+        Assert.That(mask & LayerMask.GetMask("Ground"), Is.Not.Zero);
+        var body = prefab.GetComponent<Rigidbody2D>();
+        Assert.That(body.bodyType, Is.EqualTo(RigidbodyType2D.Dynamic));
+        Assert.That(body.simulated, Is.True);
+        Assert.That(body.gravityScale, Is.GreaterThan(0f));
+        Assert.That(body.constraints & RigidbodyConstraints2D.FreezePositionY,
+            Is.EqualTo(RigidbodyConstraints2D.None));
+        Assert.That(enemy.bodyCollider, Is.Not.Null);
+        Assert.That(enemy.bodyCollider.enabled, Is.True);
+        Assert.That(enemy.bodyCollider.isTrigger, Is.False);
+    }
+
+    [Test]
     public void AuthoredAnimationWaitsForCompletionAndRestoresCulling()
     {
         var host = new GameObject("AnimatedEnemy");

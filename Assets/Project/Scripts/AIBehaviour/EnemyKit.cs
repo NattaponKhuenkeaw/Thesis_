@@ -28,6 +28,8 @@ public sealed class EnemyKit : ScriptableObject
     [SerializeField] private float attackCooldown = -1f;
     [Tooltip("Horizontal lunge along the committed facing during the active swing. Ranged roles ignore it.")]
     [SerializeField] private float lungeDistance = -1f;
+    [Tooltip("Use a body-sized hitbox and keep commitment armor through the short lunge. Recovery remains interruptible.")]
+    [SerializeField] private bool bodyCharge;
     [Tooltip("Fraction of the telegraph that becomes committed and armored, 0-1. CommitMelee ignores it and commits the whole telegraph.")]
     [SerializeField] private float commitTelegraphFraction = -1f;
     [Tooltip("Seconds to stay facing the swing after the hitbox closes, before turning to chase. 0.8 is a readable beat.")]
@@ -57,6 +59,7 @@ public sealed class EnemyKit : ScriptableObject
     public float HitWindowDuration => hitWindowDuration;
     public float AttackCooldown => attackCooldown;
     public float LungeDistance => lungeDistance;
+    public bool BodyCharge => bodyCharge && combatRole == EnemyCombatRole.CommitMelee;
     public float CommitTelegraphFraction => commitTelegraphFraction;
     public float InterruptCooldown => interruptCooldown;
     public float RecoveryPlantDuration => recoveryPlantDuration;

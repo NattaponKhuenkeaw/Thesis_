@@ -13,6 +13,46 @@ public class SafeRoomPresentationTests
     private const BindingFlags PrivateInstance = BindingFlags.Instance | BindingFlags.NonPublic;
 
     [Test]
+    public void BossRevealKeepsConfinerAndOnlyItsOwnerCanEndIt()
+    {
+        var host = new GameObject("BossRevealTest");
+        host.SetActive(false);
+        var exploreObject = new GameObject("Explore");
+        var boundsObject = new GameObject("Bounds");
+        var boss = new GameObject("Boss");
+        var other = new GameObject("OtherBoss");
+        CameraManager manager = null;
+        try
+        {
+            manager = host.AddComponent<CameraManager>();
+            var explore = exploreObject.AddComponent<CinemachineCamera>();
+            var confiner = exploreObject.AddComponent<CinemachineConfiner2D>();
+            confiner.BoundingShape2D = boundsObject.AddComponent<BoxCollider2D>();
+            Set(manager, "_exploreCam", explore);
+            manager.BeginTemporaryFocus(boss.transform, 0.5f, true);
+            Set(manager, "_bossSpawnFocusTarget", boss.transform);
+            var focus = (CinemachineCamera)Get(manager, "_focusCam");
+            Assert.That(focus.GetComponent<CinemachineConfiner2D>().enabled, Is.True);
+            Assert.That(focus.GetComponent<CinemachineConfiner2D>().BoundingShape2D,
+                Is.SameAs(confiner.BoundingShape2D));
+            manager.EndBossSpawnFocus(other.transform, 0f);
+            Assert.That(Get(manager, "_focusCam"), Is.SameAs(focus));
+            manager.EndBossSpawnFocus(boss.transform, 0f);
+            Assert.That(Get(manager, "_focusCam"), Is.Null);
+            Assert.That(Get(manager, "_bossSpawnFocusTarget"), Is.Null);
+        }
+        finally
+        {
+            if (manager != null) manager.EndTemporaryFocus();
+            Object.DestroyImmediate(host);
+            Object.DestroyImmediate(exploreObject);
+            Object.DestroyImmediate(boundsObject);
+            Object.DestroyImmediate(boss);
+            Object.DestroyImmediate(other);
+        }
+    }
+
+    [Test]
     public void EventFocusNeverRetargetsOrReprioritizesRoomCameras()
     {
         var host = new GameObject("FocusTest");

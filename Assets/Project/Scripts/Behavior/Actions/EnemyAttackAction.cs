@@ -61,6 +61,12 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
     private float m_LungeStartX;
     private bool m_RecoveryChaseStarted;
     private float m_PlantUntil;
+    private BoxCollider2D m_ChargeHitbox;
+    private Vector2 m_OriginalHitboxSize;
+    private Vector2 m_OriginalHitboxOffset;
+    private readonly RaycastHit2D[] m_ChargeHits = new RaycastHit2D[16];
+    private bool m_ChargeBlocked;
+    private bool IsBodyCharge => m_Controller != null && m_Controller.Kit != null && m_Controller.Kit.BodyCharge;
 
     protected override Status OnStart()
     {
@@ -106,6 +112,12 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         m_LungeStartX = 0f;
         m_RecoveryChaseStarted = false;
         m_PlantUntil = 0f;
+        m_ChargeBlocked = false;
+        if (IsBodyCharge)
+        {
+            StopChargeMotion();
+            m_AnimHandler.PlayBodyChargePose(false);
+        }
 
         if (m_Controller.UninterruptibleOnceWindup)
             BeginCommitment();
@@ -133,6 +145,8 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         }
 
         m_Timer += Time.deltaTime;
+        if (IsBodyCharge && !m_AttackStarted)
+            StopChargeMotion();
 
         if (!m_AttackStarted && m_Timer >= telegraphDuration)
             StartActualAttack();
@@ -144,10 +158,18 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         }
 
         float hitWindow = ResolveHitWindow();
-        if (m_AttackStarted && m_PlantUntil <= 0f && (m_Timer - m_AttackStartTime) >= hitWindow)
+        if (m_AttackStarted && m_PlantUntil <= 0f && ((m_Timer - m_AttackStartTime) >= hitWindow || m_ChargeBlocked))
         {
             m_Controller.SetAttackHitboxActive(false);
             m_HitboxDisabled = true;
+            if (IsBodyCharge)
+            {
+                StopChargeMotion();
+                EndCommitment();
+                RestoreChargeHitbox();
+                m_AnimHandler?.EndBodyChargePose();
+                m_PhaseEndTime = m_Timer + Mathf.Max(ResolveRecovery(), ResolvePlantDuration());
+            }
             float plant = ResolvePlantDuration();
             m_PlantUntil = Time.time + plant;
             m_Controller.HoldCommittedFacing(plant);
@@ -166,6 +188,10 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
 
     protected override void OnEnd()
     {
+        m_AnimHandler?.EndBodyChargePose();
+        if (IsBodyCharge && m_Controller.CurrentReactionState == EnemyReactionState.None)
+            StopChargeMotion();
+        RestoreChargeHitbox();
         m_Controller?.SetAttackHitboxActive(false);
         m_Controller?.HideAttackWarning();
         if (m_Body != null && (m_Controller == null || m_Controller.CurrentReactionState == EnemyReactionState.None) && m_Interrupted)
@@ -296,10 +322,16 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
 
     private void StartActualAttack()
     {
-        BeginCommitment();
+        // Ordinary committed swings keep windup-only armor. Body charges retain it
+        // through active movement, and release it as soon as recovery begins.
+        if (m_Controller != null && m_Controller.UninterruptibleOnceWindup && !IsBodyCharge)
+            EndCommitment();
+        else
+            BeginCommitment();
 
         m_Controller?.HideAttackWarning();
-        m_AnimHandler?.TriggerAttack();
+        if (!IsBodyCharge || m_AnimHandler == null || !m_AnimHandler.PlayBodyChargePose(true))
+            m_AnimHandler?.TriggerAttack();
 
         if (m_Controller != null && m_Controller.UsesRangedAttack)
         {
@@ -309,6 +341,8 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         }
         else
         {
+            if (IsBodyCharge)
+                ConfigureChargeHitbox();
             m_Controller?.SetAttackHitboxActive(true);
             m_HitboxDisabled = false;
         }
@@ -331,6 +365,11 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
 
     private void TickLunge()
     {
+        if (IsBodyCharge)
+        {
+            TickBodyCharge();
+            return;
+        }
         float lungeDistance = ResolveLunge();
         if (lungeDistance <= 0f || Agent.Value == null || m_LungeDir == 0f)
             return;
@@ -356,6 +395,78 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         }
 
         m_LungeTravelled = targetTravel;
+    }
+
+    private void StopChargeMotion()
+    {
+        if (m_Body != null)
+            m_Body.linearVelocity = new Vector2(0f, m_Body.linearVelocity.y);
+    }
+
+    private void TickBodyCharge()
+    {
+        if (m_HitboxDisabled || m_ChargeBlocked || m_Body == null)
+            return;
+
+        float remaining = ResolveLunge() - Mathf.Max(0f, (m_Body.position.x - m_LungeStartX) * m_LungeDir);
+        if (remaining <= 0.01f || m_Timer - m_AttackStartTime >= ResolveHitWindow())
+        {
+            m_ChargeBlocked = true;
+            StopChargeMotion();
+            return;
+        }
+
+        float step = Mathf.Max(Time.fixedDeltaTime, 0.0001f);
+        float speed = Mathf.Min(ResolveLunge() / ResolveHitWindow(), remaining / step);
+        Collider2D bodyCollider = m_Controller.bodyCollider;
+        if (bodyCollider != null)
+        {
+            ContactFilter2D filter = new ContactFilter2D();
+            filter.SetLayerMask(Physics2D.GetLayerCollisionMask(bodyCollider.gameObject.layer));
+            filter.useTriggers = false;
+            int count = bodyCollider.Cast(Vector2.right * m_LungeDir, filter, m_ChargeHits, speed * step + 0.03f);
+            for (int i = 0; i < count; i++)
+            {
+                RaycastHit2D hit = m_ChargeHits[i];
+                if (hit.collider == null || hit.normal.x * m_LungeDir >= -0.5f
+                    || hit.collider.GetComponentInParent<EnemyController>() != null
+                    || hit.collider.GetComponentInParent<PlayerCharacter>() != null)
+                    continue;
+                // Ground contact is not a wall. Never accumulate velocity trying to reach a point behind a wall.
+                speed = Mathf.Min(speed, Mathf.Max(0f, hit.distance - 0.03f) / step);
+                if (speed <= 0.01f)
+                    m_ChargeBlocked = true;
+            }
+        }
+        m_Body.linearVelocity = new Vector2(m_LungeDir * speed, m_Body.linearVelocity.y);
+    }
+
+    private void ConfigureChargeHitbox()
+    {
+        m_ChargeHitbox = m_Controller.attackHitbox as BoxCollider2D;
+        if (m_ChargeHitbox == null || m_Controller.bodyCollider == null)
+        {
+            m_ChargeHitbox = null;
+            return;
+        }
+        m_OriginalHitboxSize = m_ChargeHitbox.size;
+        m_OriginalHitboxOffset = m_ChargeHitbox.offset;
+        Bounds bounds = m_Controller.bodyCollider.bounds;
+        Transform hitTransform = m_ChargeHitbox.transform;
+        Vector3 scale = hitTransform.lossyScale;
+        m_ChargeHitbox.offset = hitTransform.InverseTransformPoint(bounds.center);
+        m_ChargeHitbox.size = new Vector2(
+            (bounds.size.x + 0.1f) / Mathf.Max(Mathf.Abs(scale.x), 0.0001f),
+            bounds.size.y / Mathf.Max(Mathf.Abs(scale.y), 0.0001f));
+    }
+
+    private void RestoreChargeHitbox()
+    {
+        if (m_ChargeHitbox == null)
+            return;
+        m_ChargeHitbox.size = m_OriginalHitboxSize;
+        m_ChargeHitbox.offset = m_OriginalHitboxOffset;
+        m_ChargeHitbox = null;
     }
 
     // After the swing: plant on the committed facing, then chase. CanAttack stays shut for the

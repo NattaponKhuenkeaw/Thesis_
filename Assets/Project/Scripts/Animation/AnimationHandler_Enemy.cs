@@ -22,6 +22,7 @@ public class AnimationHandler_Enemy : MonoBehaviour
     private int lifecycleAnimationHash;
     private int lifecycleAnimationFrame;
     private bool lifecycleAnimationPlaying;
+    private bool bodyChargeAnimationPlaying;
     private AnimatorCullingMode previousCulling;
 
     public bool HasLifecycleDeath => !string.IsNullOrWhiteSpace(deathState);
@@ -107,6 +108,7 @@ public class AnimationHandler_Enemy : MonoBehaviour
     private readonly int attackCleaveHash = Animator.StringToHash("AttackCleave");
     private readonly int attackJumpSmashHash = Animator.StringToHash("AttackJumpSmash");
     private readonly int attackChargeHash = Animator.StringToHash("AttackCharge");
+    private readonly int chargePhaseHash = Animator.StringToHash("ChargePhase");
     private readonly int reactionStateHash = Animator.StringToHash("ReactionState");
     private readonly int airborneHash = Animator.StringToHash("IsAirborne");
     private readonly int grabbedHash = Animator.StringToHash("IsGrabbed");
@@ -222,6 +224,41 @@ public class AnimationHandler_Enemy : MonoBehaviour
         }
 
         TriggerAttack();
+    }
+
+    // Motion time for Charge: 0 = crouch, 1 = rush; -1 exits the attack state.
+    public void SetBossChargePhase(float phase)
+    {
+        if (anim != null && animParamHashes != null && animParamHashes.Contains(chargePhaseHash))
+            anim.SetFloat(chargePhaseHash, phase);
+    }
+
+    public bool PlayBodyChargePose(bool rushing)
+    {
+        if (anim == null || !anim.isActiveAndEnabled || anim.runtimeAnimatorController == null)
+            return false;
+        int state = Animator.StringToHash(rushing ? "Base Layer.BodyChargeRush" : "Base Layer.BodyChargeWindup");
+        if (!anim.HasState(0, state))
+            return false;
+        anim.ResetTrigger(attackHash);
+        anim.Play(state, 0, 0f);
+        bodyChargeAnimationPlaying = true;
+        return true;
+    }
+
+    public void EndBodyChargePose()
+    {
+        if (!bodyChargeAnimationPlaying)
+            return;
+        bodyChargeAnimationPlaying = false;
+        // Death/reaction animations own the pose when an attack is interrupted.
+        if (enemyController == null || !enemyController.IsGameplayActive
+            || enemyController.CurrentReactionState != EnemyReactionState.None
+            || anim == null || !anim.isActiveAndEnabled || anim.runtimeAnimatorController == null)
+            return;
+        int idle = Animator.StringToHash(activeState);
+        if (anim.HasState(0, idle))
+            anim.Play(idle, 0, 0f);
     }
 
     public void SetBossPhase(int phase)

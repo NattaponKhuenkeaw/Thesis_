@@ -4,6 +4,115 @@ using UnityEngine;
 
 public class EnemyCombatRoleTests
 {
+    [TestCase("Crouch", "BodyChargeWindup")]
+    [TestCase("Kick", "BodyChargeRush")]
+    public void ChargePoseUsesNormalizedSpriteWithoutOverridingYellowTint(string pose, string stateName)
+    {
+        const string folder = "Assets/Project/TestChar/Asset/enemy_anim_test/";
+        AnimationClip clip = UnityEditor.AssetDatabase.LoadAssetAtPath<AnimationClip>(folder + "Enemy2_" + pose + ".anim");
+        Assert.That(clip, Is.Not.Null);
+        var bindings = UnityEditor.AnimationUtility.GetObjectReferenceCurveBindings(clip);
+        Assert.That(bindings.Length, Is.EqualTo(1));
+        Assert.That(bindings[0].propertyName, Is.EqualTo("m_Sprite"));
+        var keys = UnityEditor.AnimationUtility.GetObjectReferenceCurve(clip, bindings[0]);
+        Sprite sprite = keys[0].value as Sprite;
+        Assert.That(sprite, Is.Not.Null);
+        Assert.That(sprite.name, Is.EqualTo(pose + "_2"));
+        Assert.That(sprite.pixelsPerUnit, Is.EqualTo(43f));
+        Assert.That(sprite.pivot, Is.EqualTo(new Vector2(64f, 0f)));
+        Assert.That(UnityEditor.AnimationUtility.GetCurveBindings(clip), Is.Empty, "Pose must not override renderer tint or transform.");
+        var controller = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEditor.Animations.AnimatorController>(
+            "Assets/Project/TestChar/Animation/EnemyAnimatorController.controller");
+        bool found = false;
+        foreach (var state in controller.layers[0].stateMachine.states)
+            if (state.state.name == stateName)
+            {
+                Assert.That(state.state.motion, Is.EqualTo(clip));
+                Assert.That(state.state.transitions, Is.Empty, "Attack timing owns pose duration.");
+                found = true;
+            }
+        Assert.That(found, Is.True);
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void BodyChargeOptInControlsActiveArmorAndRestoresHitbox(bool bodyCharge)
+    {
+        var agent = new GameObject("ChargeTest");
+        var hitboxObject = new GameObject("Hitbox");
+        EnemyKit kit = ScriptableObject.CreateInstance<EnemyKit>();
+        try
+        {
+            JsonUtility.FromJsonOverwrite("{\"combatRole\":1,\"bodyCharge\":" + (bodyCharge ? "true" : "false") + "}", kit);
+            Rigidbody2D body = agent.AddComponent<Rigidbody2D>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(agent);
+            enemy.Kit = kit;
+            enemy.bodyCollider = agent.AddComponent<BoxCollider2D>();
+            hitboxObject.transform.SetParent(agent.transform);
+            hitboxObject.transform.localPosition = Vector3.right * 2f;
+            BoxCollider2D hitbox = hitboxObject.AddComponent<BoxCollider2D>();
+            hitbox.isTrigger = true;
+            hitbox.size = new Vector2(2f, 3f);
+            hitbox.offset = new Vector2(0.3f, 0.4f);
+            enemy.attackHitbox = hitbox;
+            Physics2D.SyncTransforms();
+
+            var action = new EnemyAttackAction();
+            action.Agent.Value = agent;
+            var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+            typeof(EnemyAttackAction).GetField("m_Controller", flags).SetValue(action, enemy);
+            typeof(EnemyAttackAction).GetField("m_Body", flags).SetValue(action, body);
+            typeof(EnemyAttackAction).GetMethod("BeginCommitment", flags).Invoke(action, null);
+            Assert.That(enemy.ignoreHitReactions, Is.True);
+            typeof(EnemyAttackAction).GetMethod("StartActualAttack", flags).Invoke(action, null);
+            Assert.That(enemy.ignoreHitReactions, Is.EqualTo(bodyCharge));
+            if (bodyCharge)
+            {
+                Assert.That(hitbox.transform.TransformPoint(hitbox.offset).x,
+                    Is.EqualTo(enemy.bodyCollider.bounds.center.x).Within(0.001f));
+                body.linearVelocity = new Vector2(10f, -2f);
+                typeof(EnemyAttackAction).GetField("m_Timer", flags).SetValue(action, 0.5f);
+                typeof(EnemyAttackAction).GetMethod("OnUpdate", flags).Invoke(action, null);
+                Assert.That(enemy.ignoreHitReactions, Is.False, "Recovery must be punishable.");
+                Assert.That(hitbox.enabled, Is.False);
+                Assert.That(body.linearVelocity.x, Is.Zero);
+            }
+            typeof(EnemyAttackAction).GetMethod("OnEnd", flags).Invoke(action, null);
+            Assert.That(enemy.ignoreHitReactions, Is.False);
+            Assert.That(hitbox.enabled, Is.False);
+            Assert.That(hitbox.size, Is.EqualTo(new Vector2(2f, 3f)));
+            Assert.That(hitbox.offset, Is.EqualTo(new Vector2(0.3f, 0.4f)));
+            if (bodyCharge)
+            {
+                Assert.That(body.linearVelocity.x, Is.Zero);
+                Assert.That(body.linearVelocity.y, Is.EqualTo(-2f));
+            }
+        }
+        finally
+        {
+            Object.DestroyImmediate(agent);
+            Object.DestroyImmediate(kit);
+        }
+    }
+
+    [Test]
+    public void Enemy2KitEnablesShortChargeWithoutChangingOtherKits()
+    {
+        EnemyKit charge = Resources.Load<EnemyKit>("EnemySo/EK_MeleeCommit");
+        Assert.That(charge, Is.Not.Null);
+        Assert.That(charge.BodyCharge, Is.True);
+        Assert.That(charge.LungeDistance, Is.EqualTo(4f));
+        Assert.That(charge.WarningDuration, Is.EqualTo(0.8f));
+        Assert.That(charge.HitWindowDuration, Is.EqualTo(0.4f));
+        Assert.That(charge.RecoveryPlantDuration, Is.EqualTo(0.8f));
+        EnemyKit melee = Resources.Load<EnemyKit>("EnemySo/EK_MeleeInterruptible");
+        Assert.That(melee, Is.Not.Null);
+        Assert.That(melee.BodyCharge, Is.False);
+        EnemyKit defaults = ScriptableObject.CreateInstance<EnemyKit>();
+        try { Assert.That(defaults.BodyCharge, Is.False); }
+        finally { Object.DestroyImmediate(defaults); }
+    }
+
     [Test]
     public void CommitMeleeLocksWindupButNotIdleProfile()
     {

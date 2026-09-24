@@ -17,11 +17,11 @@ MonoBehaviour:
   holdRange: -1
   warningDuration: -1
   hitWindowDuration: -1
-  attackCooldown: 1.5
+  attackCooldown: 3
   lungeDistance: -1
   commitTelegraphFraction: -1
-  interruptCooldown: -1
   recoveryPlantDuration: 0.8
+  interruptCooldown: -1
   shotSpeed: 8
   shotLifetime: 2.5
   shotSprite: {fileID: 0}
