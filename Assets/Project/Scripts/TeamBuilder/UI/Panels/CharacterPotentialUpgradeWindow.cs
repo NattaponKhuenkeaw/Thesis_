@@ -1,7 +1,6 @@
 using System;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Project.InventorySystem.Items;
 using Project.Progression;
@@ -225,31 +224,12 @@ namespace Project.TeamBuilder.UI.Panels
 
             _upgradeQueued = false;
             _upgradeRequested?.Invoke(_node);
-            ReleaseStuckPointer();
         }
 
         private static bool PointerIsHeld()
         {
             return UnityEngine.InputSystem.Pointer.current != null
                 && UnityEngine.InputSystem.Pointer.current.press.isPressed;
-        }
-
-        private static void ReleaseStuckPointer()
-        {
-            EventSystem eventSystem = EventSystem.current;
-            if (eventSystem == null)
-            {
-                return;
-            }
-
-            eventSystem.SetSelectedGameObject(null);
-            if (eventSystem.currentInputModule == null)
-            {
-                return;
-            }
-
-            eventSystem.currentInputModule.DeactivateModule();
-            eventSystem.currentInputModule.ActivateModule();
         }
 
         private void ResolveReferences()
