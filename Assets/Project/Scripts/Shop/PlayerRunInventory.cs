@@ -302,6 +302,7 @@ namespace Project.ShopSystem
         [NonSerialized] private CharacterObject[] runStartTeamSnapshot;
         [NonSerialized] private static CharacterObject[] sessionRunStartTeam;
         [NonSerialized] private bool pendingLobbyMainReset;
+        [NonSerialized] private bool deathForcesLevelOne;
         [NonSerialized] private bool suppressAutoBootstrap;
 
         [NonSerialized] private bool hasLoadedPersistentState;
@@ -866,6 +867,7 @@ namespace Project.ShopSystem
             isDeathTeardown = true;
             isDeathLobby = false;
             pendingLobbyMainReset = true;
+            deathForcesLevelOne = true;
 
             int previousGlobalLevel = _globalLevel;
 
@@ -895,6 +897,8 @@ namespace Project.ShopSystem
             }
 
             ClearCapturedRunStartTeam();
+            RunProgressionManager.EnsureInstance()?.ResetRun();
+            ClearBossLobbyCheckpoint();
             PostInventoryMutation(save: true);
             if (previousGlobalLevel != _globalLevel)
             {
@@ -1098,6 +1102,12 @@ namespace Project.ShopSystem
         }
 
         public bool HasPendingLobbyMainReset => pendingLobbyMainReset;
+        public bool DeathForcesLevelOne => deathForcesLevelOne;
+
+        public void ClearDeathForcesLevelOne()
+        {
+            deathForcesLevelOne = false;
+        }
         public bool IsDeathTeardown => isDeathTeardown;
         public bool IsDeathLobby => isDeathLobby;
 
@@ -2577,7 +2587,7 @@ namespace Project.ShopSystem
 
         /// <summary>
         /// Checkpoint written only when a boss clear returns to the lobby.
-        /// Death and menu New Game do not write this.
+        /// Death deletes it, so Continue starts at Level 1. Menu New Game deletes it too.
         /// </summary>
         public void SaveBossLobbyCheckpoint()
         {

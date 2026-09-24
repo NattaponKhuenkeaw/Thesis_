@@ -223,7 +223,7 @@ namespace Project.UI
             PlayerMetaProgression meta = Resources.Load<PlayerMetaProgression>(MetaResourcePath);
             PlayerRunInventory runInventory = Resources.Load<PlayerRunInventory>(RunInventoryResourcePath);
             meta?.SavePersistentState();
-            runInventory?.ResetRunStateForMenuStart();
+            runInventory?.SaveBossLobbyCheckpoint();
             GameSettings.Save();
             TeardownRunSession();
             SceneManager.LoadScene(mainMenuSceneName);

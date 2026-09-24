@@ -185,6 +185,13 @@ namespace Project.Core
         private static void RestoreBossLobbyBiome()
         {
             PlayerRunInventory inventory = Resources.Load<PlayerRunInventory>(RunInventoryResourcePath);
+            if (inventory != null && inventory.DeathForcesLevelOne)
+            {
+                inventory.ClearDeathForcesLevelOne();
+                RunProgressionManager.EnsureInstance()?.ResetRun();
+                return;
+            }
+
             if (inventory != null && inventory.TryReadBossLobbyBiome(out int biomeIndex))
             {
                 RunProgressionManager.EnsureInstance()?.SetCurrentBiomeIndex(biomeIndex);
@@ -239,8 +246,22 @@ namespace Project.Core
 
             isStartingRun = true;
 
+            int biomeIndex = RunProgressionManager.EnsureInstance() != null
+                ? RunProgressionManager.Instance.CurrentBiomeIndex
+                : 0;
+            bool keepBiome = !runInventory.DeathForcesLevelOne;
+
             RunEndController runEndController = RunEndController.Instance ?? FindFirstObjectByType<RunEndController>();
             runEndController?.ResetRunTracking();
+            if (keepBiome)
+            {
+                RunProgressionManager.EnsureInstance()?.SetCurrentBiomeIndex(biomeIndex);
+            }
+            else
+            {
+                runInventory.ClearDeathForcesLevelOne();
+                RunProgressionManager.EnsureInstance()?.ResetRun();
+            }
 
             TeamLoader teamLoader = TeamLoader.Instance ?? FindFirstObjectByType<TeamLoader>();
             if (teamLoader != null)
