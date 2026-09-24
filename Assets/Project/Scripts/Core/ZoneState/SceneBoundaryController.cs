@@ -15,6 +15,9 @@ namespace Project.Core.ZoneState
         [Tooltip("Solid wall on the entrance side. Room-facing edge = collider max X.")]
         [SerializeField] private Collider2D _entranceWall;
 
+        [Tooltip("After the fight trigger, camera left edge moves to this wall so the hallway drops out of frame. Leave empty for rooms with no pre-fight corridor.")]
+        [SerializeField] private Collider2D _fightEntranceWall;
+
         [Tooltip("Solid wall on the exit side. Room-facing edge = collider min X. Blocks leaving until the room is cleared.")]
         [SerializeField] private Collider2D _exitWall;
 
@@ -86,6 +89,28 @@ namespace Project.Core.ZoneState
             _entranceWall = entranceWall;
             _exitWall = exitWall;
             return ApplyLockedWalls(useExitTriggerFallback: false);
+        }
+
+        /// <summary>
+        /// Shrinks the camera to the fight arena. Call after the player has walked in
+        /// and can no longer return to a pre-fight hallway.
+        /// </summary>
+        public bool LockCameraToFightEntrance()
+        {
+            if (_fightEntranceWall == null || !Initialize())
+            {
+                return false;
+            }
+
+            _entranceWall = _fightEntranceWall;
+            if (!ApplyLockedWalls(useExitTriggerFallback: false))
+            {
+                return false;
+            }
+
+            _stageLeftWorld = _lockedLeftWorld;
+            ApplyHorizontalBounds(_lockedLeftWorld, _currentRightWorld, force: true);
+            return true;
         }
 
         /// <summary>

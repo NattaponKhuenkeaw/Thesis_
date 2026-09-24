@@ -158,6 +158,7 @@ public class CameraManager : MonoBehaviour
     private bool _isTemporarilyFocused;
     private Coroutine _focusReturnCoroutine;
     private CinemachineCamera _focusCam;
+    private Transform _bossSpawnFocusTarget;
     private CinemachineBlendDefinition _focusOriginalBlend;
     private bool _hasFocusOriginalBlend;
     private Vector3 _focusReturnPosition;
@@ -335,8 +336,34 @@ public class CameraManager : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (_bossSpawnFocusTarget != null && _focusCam != null && _focusReturnCoroutine == null)
+        {
+            Collider2D body = _bossSpawnFocusTarget.GetComponent<EnemyController>()?.bodyCollider;
+            Vector3 center = body != null ? body.bounds.center : _bossSpawnFocusTarget.position;
+            _focusCam.transform.position = new Vector3(center.x, center.y, _focusCam.transform.position.z);
+        }
         TickVerticalFollow();
         TickEngagedEnemies();
+        FitCombatZoomToRoom();
+    }
+
+    private void FitCombatZoomToRoom()
+    {
+        if (_combatCam == null || _combatGroupFraming == null)
+            return;
+
+        Vector2 range = _bossFramingActive ? _bossOrthoSizeRange : _defaultCombatOrthoSizeRange;
+        RoomData room = _zoneStateProvider != null ? _zoneStateProvider.CurrentRoom : null;
+        Camera output = _brain != null ? _brain.OutputCamera : Camera.main;
+        var confiner = _combatCam.GetComponent<CinemachineConfiner2D>();
+        if (room != null && room.RoomKind == RoomKind.Combat && !room.UseStaticCamera
+            && output != null && confiner != null && confiner.enabled
+            && confiner.BoundingShape2D is BoxCollider2D bounds && bounds.enabled)
+        {
+            range = RoomBoundaryMath.LimitCombatOrthoRange(range, bounds.bounds.size.x, output.aspect);
+        }
+
+        _combatGroupFraming.OrthoSizeRange = range;
     }
 
     private void TickEngagedEnemies()
@@ -841,9 +868,26 @@ public class CameraManager : MonoBehaviour
     /// Temporarily frames an authored Transform (Level-room display, etc.) above room cameras.
     /// Pair with <see cref="EndTemporaryFocus"/>.
     /// </summary>
-    public void BeginTemporaryFocus(Transform focusTarget, float blendSeconds = 0.35f)
+    public bool TryBeginBossSpawnFocus(Transform boss, float blendSeconds)
     {
-        CinemachineCamera sourceCam = _staticCam != null ? _staticCam : _exploreCam;
+        if (boss == null || !isActiveAndEnabled || _isTemporarilyFocused || _focusReturnCoroutine != null
+            || _exploreCam == null || !CanSwitchRoomCameras())
+            return false;
+
+        BeginTemporaryFocus(boss, blendSeconds, true);
+        _bossSpawnFocusTarget = boss;
+        return _focusCam != null;
+    }
+
+    public void EndBossSpawnFocus(Transform boss, float blendSeconds)
+    {
+        if (_bossSpawnFocusTarget == boss && boss != null)
+            EndTemporaryFocus(blendSeconds);
+    }
+
+    public void BeginTemporaryFocus(Transform focusTarget, float blendSeconds = 0.35f, bool bossSpawn = false)
+    {
+        CinemachineCamera sourceCam = bossSpawn ? _exploreCam : (_staticCam != null ? _staticCam : _exploreCam);
         if (focusTarget == null || sourceCam == null)
         {
             return;
@@ -877,6 +921,14 @@ public class CameraManager : MonoBehaviour
         }
 
         ConfigureEventFocusCamera(_focusCam, focusTarget);
+        if (bossSpawn)
+        {
+            var confiner = _focusCam.GetComponent<CinemachineConfiner2D>();
+            if (confiner != null)
+                confiner.enabled = true;
+        }
+        else
+            _bossSpawnFocusTarget = null;
         _focusCam.Priority = _activePriority + 100;
         _focusCam.gameObject.SetActive(true);
         _focusCam.PreviousStateIsValid = false;
@@ -958,6 +1010,13 @@ public class CameraManager : MonoBehaviour
         float elapsed = 0f;
         while (elapsed < seconds && cam != null)
         {
+            // The player can move during the reveal; return to the live gameplay camera.
+            if (_bossSpawnFocusTarget != null && _exploreCam != null)
+            {
+                CinemachineCamera destination = _isInCombat && _combatCam != null ? _combatCam : _exploreCam;
+                _focusReturnPosition = destination.State.GetFinalPosition();
+                _focusReturnSize = destination.State.Lens.OrthographicSize;
+            }
             elapsed += Time.unscaledDeltaTime;
             float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / seconds));
             Vector3 position = Vector3.Lerp(startPos, _focusReturnPosition, t);
@@ -980,6 +1039,7 @@ public class CameraManager : MonoBehaviour
 
     private void DisposeFocusCamera()
     {
+        _bossSpawnFocusTarget = null;
         _isTemporarilyFocused = false;
         if (_focusCam != null)
         {
@@ -1586,12 +1646,23 @@ public class CameraManager : MonoBehaviour
         }
 
         float verticalSeparation = Mathf.Abs(enemy.transform.position.y - _playerTransform.position.y);
-        if (verticalSeparation <= 4f)
+        return weight * VerticalFramingWeightScale(verticalSeparation);
+    }
+
+    /// <summary>
+    /// Enemies on another floor should not hold the combat camera.
+    /// Full weight within 2.5 units; none by 5.5 (about one platform drop).
+    /// </summary>
+    public static float VerticalFramingWeightScale(float verticalSeparation)
+    {
+        const float fullWeightSeparation = 2.5f;
+        const float zeroWeightSeparation = 5.5f;
+        if (verticalSeparation <= fullWeightSeparation)
         {
-            return weight;
+            return 1f;
         }
 
-        return weight * Mathf.Clamp01(Mathf.InverseLerp(12f, 4f, verticalSeparation));
+        return Mathf.Clamp01(Mathf.InverseLerp(zeroWeightSeparation, fullWeightSeparation, verticalSeparation));
     }
 
     private void EnsurePlayerReferences()

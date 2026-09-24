@@ -11,11 +11,11 @@ public class BiomeDifficultyCurveTests
     }
 
     [Test]
-    public void EachBiomeAddsTwelvePercent()
+    public void EachBiomeAddsTwentyPercent()
     {
-        Assert.That(RunProgressionManager.ResolveEnemyBasicStatMultiplier(1), Is.EqualTo(1.12f).Within(0.0001f));
-        Assert.That(RunProgressionManager.ResolveEnemyBasicStatMultiplier(2), Is.EqualTo(1.24f).Within(0.0001f));
-        Assert.That(RunProgressionManager.ResolveEnemyBasicStatMultiplier(3), Is.EqualTo(1.36f).Within(0.0001f));
+        Assert.That(RunProgressionManager.ResolveEnemyBasicStatMultiplier(1), Is.EqualTo(1.20f).Within(0.0001f));
+        Assert.That(RunProgressionManager.ResolveEnemyBasicStatMultiplier(2), Is.EqualTo(1.40f).Within(0.0001f));
+        Assert.That(RunProgressionManager.ResolveEnemyBasicStatMultiplier(3), Is.EqualTo(1.60f).Within(0.0001f));
     }
 
     [Test]

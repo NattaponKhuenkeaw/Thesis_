@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Project.ShopSystem;
 using Project.Core.ZoneState;
+using Project.Progression;
 
 /// <summary>
 /// Player HUD that subscribes to PlayerCharacter HP and runtime effect events.
@@ -28,6 +29,8 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
     [SerializeField] private Transform runtimeEffectContainer;
     [SerializeField] private RuntimeEffectIconUI runtimeEffectIconPrefab;
     [SerializeField] private Slider shieldSlider;
+    [SerializeField] private TMP_Text currencyText;
+    [SerializeField] private TMP_Text fragmentText;
     [SerializeField] private float healthLerpDelay = 0.25f;
     [SerializeField] private float healthLerpDuration = 0.5f;
     [SerializeField] private Color shieldFillColor = new Color(0.58f, 0.58f, 0.58f, 0.85f);
@@ -45,6 +48,8 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
     private Coroutine healthLerpCoroutine;
     private PlayerCharacter subscribedPlayer;
     private PlayerRunInventory subscribedEffectInventory;
+    private PlayerRunInventory subscribedCurrencyInventory;
+    private PlayerMetaProgression subscribedFragmentProgression;
     private readonly List<RuntimeEffectIconUI> runtimeEffectIcons = new List<RuntimeEffectIconUI>();
     private readonly List<RuntimeEffectDisplayEntry> runtimeEffectDisplayEntries = new List<RuntimeEffectDisplayEntry>();
     private readonly Dictionary<string, int> runtimeEffectStackIndexes = new Dictionary<string, int>(StringComparer.Ordinal);
@@ -75,6 +80,8 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
         runtimeEffectsDirty = true;
         RebindEvents();
         RebindRuntimeEffectEvents();
+        RebindCurrencyEvents();
+        RebindFragmentEvents();
         RebindZoneEvents();
         RefreshHUD();
         UpdateNavigationVisibility();
@@ -99,6 +106,9 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
             subscribedEffectInventory.OnRuntimeEffectsChanged -= HandleRuntimeEffectsChanged;
             subscribedEffectInventory = null;
         }
+
+        UnbindCurrencyEvents();
+        UnbindFragmentEvents();
     }
 
     private void OnDestroy()
@@ -119,6 +129,7 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
         if (HasCharacterIdentityChanged())
         {
             RefreshHUD();
+            RefreshFragmentDisplay();
         }
 
         if (runtimeEffectsDirty)
@@ -129,6 +140,8 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
         if (Time.frameCount % 30 == 0)
         {
             UpdateNavigationVisibility();
+            RefreshCurrencyDisplay();
+            RefreshFragmentDisplay();
         }
     }
 
@@ -160,10 +173,16 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
             return;
 
         CreateHudIfNeeded();
+        EnsureCurrencyText();
+        EnsureFragmentText();
         RebindEvents();
         RebindRuntimeEffectEvents();
+        RebindCurrencyEvents();
+        RebindFragmentEvents();
         RebindZoneEvents();
         RefreshHUD();
+        RefreshCurrencyDisplay();
+        RefreshFragmentDisplay();
         EnsureNavigationClickBlocked();
         UpdateNavigationVisibility();
     }
@@ -379,6 +398,305 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
         }
 
         return teamLoader != null ? teamLoader.RunInventory : null;
+    }
+
+    private void RebindCurrencyEvents()
+    {
+        PlayerRunInventory inventory = ResolveEffectInventory();
+        if (inventory == subscribedCurrencyInventory)
+        {
+            return;
+        }
+
+        UnbindCurrencyEvents();
+        subscribedCurrencyInventory = inventory;
+        if (subscribedCurrencyInventory != null)
+        {
+            subscribedCurrencyInventory.OnCurrencyChanged += HandleCurrencyChanged;
+        }
+
+        RefreshCurrencyDisplay();
+    }
+
+    private void UnbindCurrencyEvents()
+    {
+        if (subscribedCurrencyInventory == null)
+        {
+            return;
+        }
+
+        subscribedCurrencyInventory.OnCurrencyChanged -= HandleCurrencyChanged;
+        subscribedCurrencyInventory = null;
+    }
+
+    private void HandleCurrencyChanged(int currentCurrency)
+    {
+        RefreshCurrencyDisplay(currentCurrency);
+    }
+
+    private void RefreshCurrencyDisplay()
+    {
+        PlayerRunInventory inventory = subscribedCurrencyInventory != null
+            ? subscribedCurrencyInventory
+            : ResolveEffectInventory();
+        RefreshCurrencyDisplay(inventory != null ? inventory.currency : 0);
+    }
+
+    private void RefreshCurrencyDisplay(int currentCurrency)
+    {
+        EnsureCurrencyText();
+        if (currencyText == null)
+        {
+            return;
+        }
+
+        currencyText.raycastTarget = false;
+        currencyText.text = FormatRunCurrency(currentCurrency);
+    }
+
+    public static string FormatRunCurrency(int amount)
+    {
+        return $"${Mathf.Max(0, amount)}";
+    }
+
+    private void EnsureCurrencyText()
+    {
+        if (currencyText != null)
+        {
+            currencyText.raycastTarget = false;
+            return;
+        }
+
+        Transform searchRoot = hudRoot != null
+            ? hudRoot
+            : targetCanvas != null ? targetCanvas.transform : null;
+        Transform found = FindCurrencyTransform(searchRoot);
+        if (found == null && targetCanvas != null && searchRoot != targetCanvas.transform)
+        {
+            found = FindCurrencyTransform(targetCanvas.transform);
+        }
+
+        if (found != null)
+        {
+            currencyText = found.GetComponent<TMP_Text>();
+            if (currencyText != null)
+            {
+                currencyText.raycastTarget = false;
+            }
+
+            return;
+        }
+
+        currencyText = CreateFallbackCurrencyText();
+    }
+
+    private Transform FindCurrencyTransform(Transform parent)
+    {
+        return FindChildRecursive(parent, "RunCurrency")
+            ?? FindChildRecursive(parent, "Currency")
+            ?? FindChildRecursive(parent, "CurrencyText");
+    }
+
+    private TMP_Text CreateFallbackCurrencyText()
+    {
+        if (targetCanvas == null)
+        {
+            return null;
+        }
+
+        GameObject textObject = new GameObject(
+            "RunCurrency",
+            typeof(RectTransform),
+            typeof(CanvasRenderer),
+            typeof(TextMeshProUGUI));
+        textObject.transform.SetParent(targetCanvas.transform, false);
+
+        RectTransform rect = textObject.GetComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0f, 1f);
+        rect.anchorMax = new Vector2(0f, 1f);
+        rect.pivot = new Vector2(0f, 1f);
+        rect.anchoredPosition = new Vector2(32f, -24f);
+        rect.sizeDelta = new Vector2(280f, 48f);
+
+        TextMeshProUGUI text = textObject.GetComponent<TextMeshProUGUI>();
+        text.raycastTarget = false;
+        text.fontSize = 32f;
+        text.fontStyle = FontStyles.Bold;
+        text.alignment = TextAlignmentOptions.Left;
+        text.color = new Color(1f, 0.86f, 0.32f, 1f);
+        text.text = FormatRunCurrency(0);
+        if (hpText != null && hpText.font != null)
+        {
+            text.font = hpText.font;
+        }
+        else if (nameText != null && nameText.font != null)
+        {
+            text.font = nameText.font;
+        }
+
+        return text;
+    }
+
+    private void RebindFragmentEvents()
+    {
+        PlayerMetaProgression progression = ResolveMetaProgression();
+        if (progression == subscribedFragmentProgression)
+        {
+            return;
+        }
+
+        UnbindFragmentEvents();
+        subscribedFragmentProgression = progression;
+        if (subscribedFragmentProgression != null)
+        {
+            subscribedFragmentProgression.OnFragmentsChanged += HandleFragmentsChanged;
+        }
+
+        RefreshFragmentDisplay();
+    }
+
+    private void UnbindFragmentEvents()
+    {
+        if (subscribedFragmentProgression == null)
+        {
+            return;
+        }
+
+        subscribedFragmentProgression.OnFragmentsChanged -= HandleFragmentsChanged;
+        subscribedFragmentProgression = null;
+    }
+
+    private void HandleFragmentsChanged()
+    {
+        RefreshFragmentDisplay();
+    }
+
+    private PlayerMetaProgression ResolveMetaProgression()
+    {
+        if (teamLoader == null)
+        {
+            teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
+        }
+
+        if (teamLoader != null && teamLoader.MetaProgression != null)
+        {
+            return teamLoader.MetaProgression;
+        }
+
+        return Resources.Load<PlayerMetaProgression>("InventorySO/PlayerMetaProgression");
+    }
+
+    private void RefreshFragmentDisplay()
+    {
+        EnsureFragmentText();
+        if (fragmentText == null)
+        {
+            return;
+        }
+
+        fragmentText.raycastTarget = false;
+        PlayerMetaProgression progression = subscribedFragmentProgression != null
+            ? subscribedFragmentProgression
+            : ResolveMetaProgression();
+        string characterId = playerCharacter != null && playerCharacter.characterObject != null
+            ? playerCharacter.characterObject.characterId
+            : null;
+        int count = progression != null && !string.IsNullOrWhiteSpace(characterId)
+            ? progression.GetFragmentCount(characterId)
+            : 0;
+        fragmentText.text = FormatCharacterFragments(count);
+    }
+
+    public static string FormatCharacterFragments(int amount)
+    {
+        return $"Frag {Mathf.Max(0, amount)}";
+    }
+
+    private void EnsureFragmentText()
+    {
+        if (fragmentText != null)
+        {
+            fragmentText.raycastTarget = false;
+            return;
+        }
+
+        Transform searchRoot = hudRoot != null
+            ? hudRoot
+            : targetCanvas != null ? targetCanvas.transform : null;
+        Transform found = FindFragmentTransform(searchRoot);
+        if (found == null && targetCanvas != null && searchRoot != targetCanvas.transform)
+        {
+            found = FindFragmentTransform(targetCanvas.transform);
+        }
+
+        if (found != null)
+        {
+            fragmentText = found.GetComponent<TMP_Text>();
+            if (fragmentText != null)
+            {
+                fragmentText.raycastTarget = false;
+            }
+
+            return;
+        }
+
+        fragmentText = CreateFallbackFragmentText();
+    }
+
+    private Transform FindFragmentTransform(Transform parent)
+    {
+        return FindChildRecursive(parent, "RunFragments")
+            ?? FindChildRecursive(parent, "Fragments")
+            ?? FindChildRecursive(parent, "FragmentText");
+    }
+
+    private TMP_Text CreateFallbackFragmentText()
+    {
+        if (targetCanvas == null)
+        {
+            return null;
+        }
+
+        GameObject textObject = new GameObject(
+            "RunFragments",
+            typeof(RectTransform),
+            typeof(CanvasRenderer),
+            typeof(TextMeshProUGUI));
+        textObject.transform.SetParent(targetCanvas.transform, false);
+
+        RectTransform rect = textObject.GetComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0f, 1f);
+        rect.anchorMax = new Vector2(0f, 1f);
+        rect.pivot = new Vector2(0f, 1f);
+        RectTransform currencyRect = currencyText != null ? currencyText.rectTransform : null;
+        if (currencyRect != null)
+        {
+            rect.anchoredPosition = currencyRect.anchoredPosition + new Vector2(currencyRect.sizeDelta.x + 16f, 0f);
+            rect.sizeDelta = currencyRect.sizeDelta;
+        }
+        else
+        {
+            rect.anchoredPosition = new Vector2(328f, -24f);
+            rect.sizeDelta = new Vector2(280f, 48f);
+        }
+
+        TextMeshProUGUI text = textObject.GetComponent<TextMeshProUGUI>();
+        text.raycastTarget = false;
+        text.fontSize = currencyText != null ? currencyText.fontSize : 32f;
+        text.fontStyle = FontStyles.Bold;
+        text.alignment = TextAlignmentOptions.Left;
+        text.color = new Color(0.78f, 0.62f, 1f, 1f);
+        text.text = FormatCharacterFragments(0);
+        if (currencyText != null && currencyText.font != null)
+        {
+            text.font = currencyText.font;
+        }
+        else if (hpText != null && hpText.font != null)
+        {
+            text.font = hpText.font;
+        }
+
+        return text;
     }
 
     private void HandleRuntimeEffectsChanged(CharacterObject changedCharacter)
@@ -701,6 +1019,8 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
         else
         {
             EnsureShieldSlider();
+            EnsureCurrencyText();
+            EnsureFragmentText();
             EnsureNavigationClickBlocked();
         }
     }

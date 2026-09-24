@@ -147,7 +147,7 @@ namespace Project.Core.ZoneState
             for (int i = 0; i < chambers.Length; i++)
             {
                 Chamber chamber = chambers[i];
-                int count = chamber != null ? chamber.enemyCount : 0;
+                int count = ResolveChamberCount(chamber);
                 slices[i] = RollChamberQuota(chamber, stageQuota, count);
                 if (count > 0 && slices[i].Count == 0)
                 {
@@ -163,6 +163,18 @@ namespace Project.Core.ZoneState
             fighting = false;
             ArmEnterSensors();
             return BindAndStart(0);
+        }
+
+        private static int ResolveChamberCount(Chamber chamber)
+        {
+            int layoutCount = chamber != null ? chamber.enemyCount : 0;
+            EncounterSO encounter = ResolveEncounter(chamber);
+            if (encounter != null && encounter.ChamberQuota > 0)
+            {
+                return encounter.ChamberQuota;
+            }
+
+            return layoutCount;
         }
 
         private static List<GameObject> RollChamberQuota(

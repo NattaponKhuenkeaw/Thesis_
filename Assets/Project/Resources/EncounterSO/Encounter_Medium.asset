@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.EncounterSO
   enemyTypes:
   - prefab: {fileID: 4739200647295624271, guid: fe04a9cf17d368a4cbf256db61cc07e0, type: 3}
-    weight: 1
+    weight: 3
   - prefab: {fileID: 4739200647295624271, guid: e571f18fe08f66f48929b12c9c6e44b4, type: 3}
     weight: 2
   - prefab: {fileID: 4739200647295624271, guid: a8c4e91f3b7d4e6a9c2f1d0e8b5a4732, type: 3}
@@ -22,6 +22,7 @@ MonoBehaviour:
   typePickMode: 0
   waves: []
   delayBetweenWaves: 1.1
+  chamberQuota: 6
   spawnMode: 0
-  aliveCap: 4
+  aliveCap: 3
   spawnInterval: 0.35

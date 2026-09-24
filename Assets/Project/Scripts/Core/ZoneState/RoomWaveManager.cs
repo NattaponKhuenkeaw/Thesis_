@@ -169,6 +169,8 @@ namespace Project.Core.ZoneState
 
             stageController = null;
 
+            LockCameraToFightEntranceIfNeeded();
+
             if (runtimeWaves.Count == 0)
             {
                 hasStarted = false;
@@ -327,6 +329,20 @@ namespace Project.Core.ZoneState
             }
 
             return GetComponentInChildren<CombatStageController>(true);
+        }
+
+        private void LockCameraToFightEntranceIfNeeded()
+        {
+            SceneBoundaryController boundary = GetComponentInParent<SceneBoundaryController>();
+            if (boundary == null)
+            {
+                Transform root = transform.root;
+                boundary = root != null
+                    ? root.GetComponentInChildren<SceneBoundaryController>(true)
+                    : GetComponentInChildren<SceneBoundaryController>(true);
+            }
+
+            boundary?.LockCameraToFightEntrance();
         }
 
         private bool ShouldUsePressure()

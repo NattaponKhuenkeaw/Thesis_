@@ -116,6 +116,7 @@ namespace Project.Progression
         public IReadOnlyList<PermanentItemStack> PermanentItems => permanentItems;
         public int MetaCurrency => Mathf.Max(0, metaCurrency);
         public event Action<string> OnPotentialChanged;
+        public event Action OnFragmentsChanged;
 
         public static bool HasPersistentSave()
         {
@@ -224,6 +225,7 @@ namespace Project.Progression
             stack.displayName = BuildFragmentDisplayName(sourceItem);
             stack.quantity = Mathf.Max(0, stack.quantity + amount);
             SavePersistentState();
+            NotifyFragmentsChanged();
         }
 
         public bool TrySpendFragments(BaseItem sourceItem, int amount)
@@ -241,6 +243,7 @@ namespace Project.Progression
 
             stack.quantity -= amount;
             SavePersistentState();
+            NotifyFragmentsChanged();
             return true;
         }
 
@@ -265,6 +268,7 @@ namespace Project.Progression
 
             stack.quantity -= amount;
             SavePersistentState();
+            NotifyFragmentsChanged();
             return true;
         }
 
@@ -272,6 +276,12 @@ namespace Project.Progression
         {
             fragments.Clear();
             SavePersistentState();
+            NotifyFragmentsChanged();
+        }
+
+        private void NotifyFragmentsChanged()
+        {
+            OnFragmentsChanged?.Invoke();
         }
 
         public void ClearAllProgression()
@@ -285,6 +295,7 @@ namespace Project.Progression
             InvalidatePotentialCache();
             SavePersistentState();
             OnPotentialChanged?.Invoke(null);
+            NotifyFragmentsChanged();
         }
 
         public int AddPermanentItem(BaseItem item, int amount = 1)
@@ -817,6 +828,7 @@ namespace Project.Progression
             isApplyingPersistentState = false;
             InvalidatePotentialCache();
             OnPotentialChanged?.Invoke(null);
+            NotifyFragmentsChanged();
             return retiredArtifactFragments;
         }
 

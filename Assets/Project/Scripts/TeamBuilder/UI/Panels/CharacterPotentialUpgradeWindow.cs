@@ -124,7 +124,7 @@ namespace Project.TeamBuilder.UI.Panels
 
             if (fragmentText != null)
             {
-                fragmentText.text = $"({availableFragments}/{fragmentCost})";
+                fragmentText.text = $"Frag {availableFragments}/{fragmentCost}";
             }
 
             if (upgradeButton != null)

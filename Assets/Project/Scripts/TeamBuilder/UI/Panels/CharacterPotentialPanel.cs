@@ -34,6 +34,7 @@ namespace Project.TeamBuilder.UI.Panels
         [Header("Header")]
         [SerializeField] private Button exitButton;
         [SerializeField] private TMP_Text characterNameText;
+        [SerializeField] private TMP_Text fragmentOwnedText;
         [SerializeField] private TMP_Text elementRoleText;
         [SerializeField] private Image elementIcon;
         [SerializeField] private CharacterElementRoleUI elementRoleUI;
@@ -81,6 +82,7 @@ namespace Project.TeamBuilder.UI.Panels
             ResolveReferences();
             EnsureRuntimeFallbacks();
             BindButtons();
+            BindFragmentEvents();
             CloseUpgradeWindow();
             Refresh();
         }
@@ -88,6 +90,7 @@ namespace Project.TeamBuilder.UI.Panels
         private void OnDisable()
         {
             UnbindButtons();
+            UnbindFragmentEvents();
             CloseUpgradeWindow();
         }
 
@@ -211,6 +214,7 @@ namespace Project.TeamBuilder.UI.Panels
             if (_currentCharacter == null)
             {
                 if (characterNameText != null) characterNameText.text = "No Character";
+                if (fragmentOwnedText != null) fragmentOwnedText.text = PlayerHUD.FormatCharacterFragments(0);
                 if (elementRoleText != null) elementRoleText.text = string.Empty;
                 if (elementIcon != null) elementIcon.enabled = false;
                 if (elementRoleUI != null && elementRoleUI.transform.IsChildOf(transform))
@@ -224,6 +228,8 @@ namespace Project.TeamBuilder.UI.Panels
             {
                 characterNameText.text = ResolveCharacterDisplayName();
             }
+
+            PopulateOwnedFragments();
 
             PopulateElementRoleFallback();
 
@@ -475,6 +481,11 @@ namespace Project.TeamBuilder.UI.Panels
                 characterNameText = FindTextByNames("CharacterNameText", "HeaderNameText", "NameText", "CharacterName", "Name");
             }
 
+            if (fragmentOwnedText == null)
+            {
+                fragmentOwnedText = FindTextByNames("FragmentOwnedText", "OwnedFragmentText", "HeaderFragmentText");
+            }
+
             if (elementRoleText == null)
             {
                 elementRoleText = FindTextByNames("ElementRoleText", "AttributeRoleText", "AttributeText", "RoleText");
@@ -532,6 +543,85 @@ namespace Project.TeamBuilder.UI.Panels
         {
             EnsureUpgradeWindow();
             EnsureNodeSlots();
+            EnsureOwnedFragmentText();
+        }
+
+        private void EnsureOwnedFragmentText()
+        {
+            if (fragmentOwnedText != null || !createRuntimeFallbackNodes)
+            {
+                return;
+            }
+
+            fragmentOwnedText = CreateRuntimeText("FragmentOwnedText", 22f, FontStyles.Bold);
+        }
+
+        private TMP_Text CreateRuntimeText(string name, float fontSize, FontStyles fontStyle)
+        {
+            Transform parent = characterNameText != null ? characterNameText.transform.parent : transform;
+            GameObject textObject = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+            textObject.transform.SetParent(parent, false);
+            if (characterNameText != null)
+            {
+                textObject.transform.SetSiblingIndex(characterNameText.transform.GetSiblingIndex() + 1);
+            }
+
+            TextMeshProUGUI text = textObject.GetComponent<TextMeshProUGUI>();
+            text.fontSize = fontSize;
+            text.enableAutoSizing = true;
+            text.fontSizeMin = 14f;
+            text.fontSizeMax = fontSize;
+            text.fontStyle = fontStyle;
+            text.alignment = TextAlignmentOptions.Left;
+            text.color = new Color(0.78f, 0.62f, 1f, 1f);
+            text.raycastTarget = false;
+            if (characterNameText != null && characterNameText.font != null)
+            {
+                text.font = characterNameText.font;
+            }
+
+            return text;
+        }
+
+        private void BindFragmentEvents()
+        {
+            PlayerMetaProgression progression = GetMetaProgression();
+            if (progression == null)
+            {
+                return;
+            }
+
+            progression.OnFragmentsChanged -= HandleFragmentsChanged;
+            progression.OnFragmentsChanged += HandleFragmentsChanged;
+        }
+
+        private void UnbindFragmentEvents()
+        {
+            if (metaProgression == null)
+            {
+                return;
+            }
+
+            metaProgression.OnFragmentsChanged -= HandleFragmentsChanged;
+        }
+
+        private void HandleFragmentsChanged()
+        {
+            Refresh();
+        }
+
+        private void PopulateOwnedFragments()
+        {
+            if (fragmentOwnedText == null)
+            {
+                return;
+            }
+
+            PlayerMetaProgression progression = GetMetaProgression();
+            int count = progression != null && _currentCharacter != null
+                ? progression.GetFragmentCount(_currentCharacter.characterId)
+                : 0;
+            fragmentOwnedText.text = PlayerHUD.FormatCharacterFragments(count);
         }
 
         private void EnsureUpgradeWindow()

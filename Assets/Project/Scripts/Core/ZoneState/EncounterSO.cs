@@ -50,6 +50,8 @@ namespace Project.Core.ZoneState
         [SerializeField] [Min(0f)] private float delayBetweenWaves = 1.5f;
 
         [Header("Spawn Mode")]
+        [Tooltip("Enemies in one combat chamber. Weights should add up to this so the mix is exact. 0 keeps the layout Enemy Count.")]
+        [SerializeField, Min(0)] private int chamberQuota;
         [SerializeField] private EncounterSpawnMode spawnMode = EncounterSpawnMode.Pressure;
         [SerializeField, Min(1)] private int aliveCap = 3;
         [Tooltip("Delay between refill spawns after the opening group. The first group appears together.")]
@@ -59,6 +61,7 @@ namespace Project.Core.ZoneState
         public EncounterTypePickMode TypePickMode => typePickMode;
         public IReadOnlyList<Wave> Waves => waves;
         public float DelayBetweenWaves => delayBetweenWaves;
+        public int ChamberQuota => Mathf.Max(0, chamberQuota);
         public EncounterSpawnMode SpawnMode => spawnMode;
         public int AliveCap => Mathf.Max(1, aliveCap);
         public float SpawnInterval => Mathf.Max(0f, spawnInterval);

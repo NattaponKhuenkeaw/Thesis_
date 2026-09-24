@@ -233,13 +233,17 @@ namespace Project.UI
             if (clearMeta)
             {
                 meta?.ClearAllProgression();
+                runInventory?.ClearBossLobbyCheckpoint();
+                runInventory?.ResetRunStateForMenuStart();
             }
             else
             {
                 meta?.LoadPersistentStateIfNeeded();
+                if (runInventory == null || !runInventory.TryRestoreBossLobbyCheckpoint())
+                {
+                    runInventory?.ResetRunStateForMenuStart();
+                }
             }
-
-            runInventory?.ResetRunStateForMenuStart();
             GameSettings.Save();
             SceneManager.LoadScene(lobbySceneName);
         }

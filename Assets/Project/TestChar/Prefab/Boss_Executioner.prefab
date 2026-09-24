@@ -281,7 +281,7 @@ Transform:
   m_GameObject: {fileID: 2071910840456483453}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.4591899, y: 0.10617, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -321,7 +321,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 1.4, y: 0.2}
+  m_Offset: {x: 0, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -331,7 +331,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 2.6, y: 1.4}
+  m_Size: {x: 1.4, y: 1.35}
   m_EdgeRadius: 0
 --- !u!120 &266145209609190023
 LineRenderer:
@@ -1588,7 +1588,7 @@ SpriteRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: c4a81f2e9b7d4a6e8c0d1f3a5b7e9c2d, type: 3}
+  m_Sprite: {fileID: 21300000, guid: e8f1a001c1e4d4e68000000000000001, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1659,8 +1659,8 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_Size: {x: 1.1, y: 2.2}
+  m_Offset: {x: -0.2, y: 0.79}
+  m_Size: {x: 1.1, y: 1.5}
   m_Direction: 0
 --- !u!95 &7930964386240551380
 Animator:
@@ -1672,7 +1672,7 @@ Animator:
   m_GameObject: {fileID: 7125933182351504165}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 4e02fcb282a2b914095128beab41af51, type: 2}
+  m_Controller: {fileID: 9100000, guid: 8b2c3d4e5f607182930a1b2c3d4e1001, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -1698,6 +1698,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AnimationHandler_Enemy
   anim: {fileID: 7930964386240551380}
   enemyController: {fileID: 1263320084522743792}
+  spawnGroundState: Base Layer.SpawnGround
+  spawnFallState: Base Layer.SpawnFall
+  deathState: Base Layer.Death
+  activeState: Base Layer.Idle
 --- !u!114 &1263320084522743792
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1712,7 +1716,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
   maxHP: 800
   currentHP: 800
-  attackDamage: 150
+  attackDamage: 165
   defense: 500
   damageRes: 0
   isEliteOrBoss: 1
@@ -1725,6 +1729,12 @@ MonoBehaviour:
   bodyCollider: {fileID: 8080931167242553371}
   worldUI: {fileID: 8885465668968223634}
   hitReactionHandler: {fileID: 8495941937201704988}
+  useSpawnPresentation: 1
+  spawnGroundLayers:
+    serializedVersion: 2
+    m_Bits: 520
+  spawnGroundDistance: 0.06
+  lifecyclePresentationTimeout: 30
 --- !u!114 &3079058070875465000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1887,9 +1897,9 @@ MonoBehaviour:
   bindScreenHealthHud: 1
   useDefaultStats: 1
   defaultMaxHp: 800
-  defaultAttackDamage: 150
+  defaultAttackDamage: 165
   defaultDefense: 500
-  chaseSpeed: 2.2
+  chaseSpeed: 2.42
   cleaveRange: 2.4
   decideInterval: 0.2
   maxChaseDuration: 3.5
@@ -1902,22 +1912,22 @@ MonoBehaviour:
     activeDuration: 0.4
     recoveryDuration: 1.75
     hitbox: {fileID: 0}
-    hitboxLocalOffset: {x: 0.21, y: -0.07}
-    hitboxSizeOverride: {x: 1.08, y: 2.12}
+    hitboxLocalOffset: {x: 0.48, y: 0.715}
+    hitboxSizeOverride: {x: 1.4, y: 1.35}
   jumpSmash:
     telegraphDuration: 1.35
     activeDuration: 0.45
     recoveryDuration: 1.9
     hitbox: {fileID: 0}
-    hitboxLocalOffset: {x: -0.97, y: -0.72}
-    hitboxSizeOverride: {x: 3.28, y: 1.2}
+    hitboxLocalOffset: {x: 0, y: 0.445}
+    hitboxSizeOverride: {x: 2.1, y: 0.85}
   bullCharge:
     telegraphDuration: 1.1
     activeDuration: 0.55
     recoveryDuration: 1.5
     hitbox: {fileID: 0}
-    hitboxLocalOffset: {x: -0.03, y: -0.38}
-    hitboxSizeOverride: {x: 0.62, y: 2.12}
+    hitboxLocalOffset: {x: 0.32, y: 0.69}
+    hitboxSizeOverride: {x: 2.15, y: 1.3}
   jumpArcHeight: 3.5
   jumpTravelDuration: 0.75
   smashMarkerRadius: 1.9

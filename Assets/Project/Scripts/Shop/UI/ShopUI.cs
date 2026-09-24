@@ -27,6 +27,18 @@ namespace Project.ShopSystem.UI
 
         private List<ShopGridItemUI> spawnedSlots = new List<ShopGridItemUI>();
         private ShopTab currentTab = ShopTab.Sell;
+        private PlayerRunInventory subscribedCurrencyInventory;
+
+        private void OnEnable()
+        {
+            RebindCurrencyEvents();
+            UpdateCurrencyDisplay();
+        }
+
+        private void OnDisable()
+        {
+            UnbindCurrencyEvents();
+        }
 
         private void Start()
         {
@@ -156,9 +168,45 @@ namespace Project.ShopSystem.UI
 
         public void UpdateCurrencyDisplay()
         {
+            RebindCurrencyEvents();
             if (currencyText != null && shopManager != null && shopManager.playerInventory != null)
             {
-                currencyText.text = $"${shopManager.playerInventory.currency}";
+                currencyText.text = PlayerHUD.FormatRunCurrency(shopManager.playerInventory.currency);
+            }
+        }
+
+        private void RebindCurrencyEvents()
+        {
+            PlayerRunInventory inventory = shopManager != null ? shopManager.playerInventory : null;
+            if (inventory == subscribedCurrencyInventory)
+            {
+                return;
+            }
+
+            UnbindCurrencyEvents();
+            subscribedCurrencyInventory = inventory;
+            if (subscribedCurrencyInventory != null)
+            {
+                subscribedCurrencyInventory.OnCurrencyChanged += HandleCurrencyChanged;
+            }
+        }
+
+        private void UnbindCurrencyEvents()
+        {
+            if (subscribedCurrencyInventory == null)
+            {
+                return;
+            }
+
+            subscribedCurrencyInventory.OnCurrencyChanged -= HandleCurrencyChanged;
+            subscribedCurrencyInventory = null;
+        }
+
+        private void HandleCurrencyChanged(int currentCurrency)
+        {
+            if (currencyText != null)
+            {
+                currencyText.text = PlayerHUD.FormatRunCurrency(currentCurrency);
             }
         }
 

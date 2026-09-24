@@ -2,6 +2,7 @@ using System.Collections;
 using Project.Combat;
 using Project.Core;
 using Project.Core.ZoneState;
+using Project.ShopSystem;
 using Project.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -287,6 +288,8 @@ namespace Project.AIBehaviour.Boss
             if (useRunBoundaryForLobby && IsLobbyDestination(roomId))
             {
                 GameRunManager runManager = GameRunManager.Instance ?? FindFirstObjectByType<GameRunManager>();
+                PlayerRunInventory runInventory = Resources.Load<PlayerRunInventory>("InventorySO/PlayerRunInventory");
+                runInventory?.SaveBossLobbyCheckpoint();
                 if (runManager != null && runManager.ReturnToLobby())
                 {
                     Debug.Log("[BossDeathSequence] Returning to Lobby via GameRunManager.", this);

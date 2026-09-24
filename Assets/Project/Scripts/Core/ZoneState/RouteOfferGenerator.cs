@@ -64,7 +64,7 @@ namespace Project.Core.ZoneState
                     tables.DelayBetweenWaves,
                     slots,
                     EncounterSpawnMode.Pressure,
-                    tables.AliveCap,
+                    profile.aliveCap > 0 ? profile.aliveCap : tables.AliveCap,
                     tables.SpawnInterval);
             }
 

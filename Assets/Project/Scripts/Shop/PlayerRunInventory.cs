@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
+using Project.Core.ZoneState;
 using Project.InventorySystem.Artifacts;
 using Project.InventorySystem.Items;
 using Project.Progression;
@@ -219,6 +220,7 @@ namespace Project.ShopSystem
         public int schemaVersion = 3;
         public int currency = 1000;
         public int globalLevel = 1;
+        public int biomeIndex;
         public int activeTeamSlotIndex;
         public List<SavedInventoryItemRecord> items = new List<SavedInventoryItemRecord>();
         public List<SavedRunCharacterRecord> runCharacters = new List<SavedRunCharacterRecord>();
@@ -249,6 +251,7 @@ namespace Project.ShopSystem
         private const int DefaultCurrency = 1000;
         private const string SaveKey = "project.player_run_inventory.v3";
         private const string LegacySaveKey = "project.player_run_inventory.v2";
+        private const string BossLobbySaveKey = "project.player_run_inventory.boss_lobby.v1";
         /// <summary>Step 1 (Not Perma): run inventory must not persist items/team/characters across sessions.</summary>
         private const bool PersistRunInventoryAcrossSessions = false;
         private const string DefaultCharacterItemId = "char-0-main";
@@ -320,6 +323,7 @@ namespace Project.ShopSystem
 
         public event Action<CharacterObject> OnRuntimeEffectsChanged;
         public event Action<int, int> OnGlobalLevelChanged;
+        public event Action<int> OnCurrencyChanged;
         public event Action OnArtifactsChanged;
         public event Action<string, bool> OnArtifactFavouriteChanged;
         public event Action<string> OnArtifactSeenChanged;
@@ -877,7 +881,7 @@ namespace Project.ShopSystem
                 }
                 RecordCharacterDefeat(ResolveMainCharacter());
                 runCharacters.Clear();
-                currency = DefaultCurrency;
+                SetCurrency(DefaultCurrency);
                 _globalLevel = 1;
                 StripNonCharacterRunLoot();
                 StripRunAcquiredCharacterItems(lobbyTeam);
@@ -923,14 +927,30 @@ namespace Project.ShopSystem
 
         public void SpendCurrency(int amount)
         {
-            currency = Mathf.Max(0, currency - Mathf.Max(0, amount));
-            SavePersistentState();
+            SetCurrency(currency - Mathf.Max(0, amount));
         }
 
         public void AddCurrency(int amount)
         {
-            currency += Mathf.Max(0, amount);
+            SetCurrency(currency + Mathf.Max(0, amount));
+        }
+
+        private void SetCurrency(int amount)
+        {
+            int next = Mathf.Max(0, amount);
+            if (currency == next)
+            {
+                return;
+            }
+
+            currency = next;
             SavePersistentState();
+            NotifyCurrencyChanged();
+        }
+
+        private void NotifyCurrencyChanged()
+        {
+            OnCurrencyChanged?.Invoke(Mathf.Max(0, currency));
         }
 
         public bool HasDeployedTeam()
@@ -1015,7 +1035,7 @@ namespace Project.ShopSystem
 
             CaptureRunStartTeam(teamSnapshot);
 
-            currency = DefaultCurrency;
+            SetCurrency(DefaultCurrency);
             runCharacters.Clear();
             StripNonCharacterRunLoot();
 
@@ -2555,6 +2575,83 @@ namespace Project.ShopSystem
             context.instance = null;
         }
 
+        /// <summary>
+        /// Checkpoint written only when a boss clear returns to the lobby.
+        /// Death and menu New Game do not write this.
+        /// </summary>
+        public void SaveBossLobbyCheckpoint()
+        {
+            if (!Application.isPlaying || isApplyingPersistentState)
+            {
+                return;
+            }
+
+            PlayerPrefs.SetString(BossLobbySaveKey, JsonUtility.ToJson(CaptureRunSnapshot()));
+            PlayerPrefs.Save();
+        }
+
+        public bool TryRestoreBossLobbyCheckpoint()
+        {
+            string json = PlayerPrefs.GetString(BossLobbySaveKey, string.Empty);
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return false;
+            }
+
+            SavedPlayerRunInventoryData data = JsonUtility.FromJson<SavedPlayerRunInventoryData>(json);
+            if (data == null)
+            {
+                return false;
+            }
+
+            hasLoadedPersistentState = true;
+            isDeathTeardown = false;
+            isDeathLobby = false;
+            pendingLobbyMainReset = false;
+            suppressAutoBootstrap = false;
+            EnsureInventoryData();
+            EnsureTeamSlotCapacity(DefaultTeamSlotCount);
+            ApplyPersistentState(data);
+            ApplyBossLobbyBiome(data.biomeIndex);
+            return true;
+        }
+
+        public bool TryReadBossLobbyBiome(out int biomeIndex)
+        {
+            biomeIndex = 0;
+            string json = PlayerPrefs.GetString(BossLobbySaveKey, string.Empty);
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return false;
+            }
+
+            SavedPlayerRunInventoryData data = JsonUtility.FromJson<SavedPlayerRunInventoryData>(json);
+            if (data == null)
+            {
+                return false;
+            }
+
+            biomeIndex = Mathf.Max(0, data.biomeIndex);
+            return true;
+        }
+
+        private static void ApplyBossLobbyBiome(int biomeIndex)
+        {
+            RunProgressionManager progression = RunProgressionManager.EnsureInstance();
+            progression?.SetCurrentBiomeIndex(biomeIndex);
+        }
+
+        public void ClearBossLobbyCheckpoint()
+        {
+            if (!PlayerPrefs.HasKey(BossLobbySaveKey))
+            {
+                return;
+            }
+
+            PlayerPrefs.DeleteKey(BossLobbySaveKey);
+            PlayerPrefs.Save();
+        }
+
         public void SavePersistentState()
         {
             if (!ShouldUsePersistentStorage() || isApplyingPersistentState)
@@ -2568,12 +2665,21 @@ namespace Project.ShopSystem
             }
 
             EnsureRunData();
+            PlayerPrefs.SetString(SaveKey, JsonUtility.ToJson(CaptureRunSnapshot()));
+            PlayerPrefs.Save();
+        }
+
+        private SavedPlayerRunInventoryData CaptureRunSnapshot()
+        {
 
             SavedPlayerRunInventoryData data = new SavedPlayerRunInventoryData
             {
                 schemaVersion = 3,
                 currency = currency,
                 globalLevel = _globalLevel,
+                biomeIndex = RunProgressionManager.Instance != null
+                    ? RunProgressionManager.Instance.CurrentBiomeIndex
+                    : 0,
                 activeTeamSlotIndex = activeTeamSlotIndex
             };
 
@@ -2653,8 +2759,7 @@ namespace Project.ShopSystem
                 data.teamSlots.Add(savedSlot);
             }
 
-            PlayerPrefs.SetString(SaveKey, JsonUtility.ToJson(data));
-            PlayerPrefs.Save();
+            return data;
         }
 
         public void LoadPersistentStateIfNeeded()
@@ -3197,6 +3302,7 @@ namespace Project.ShopSystem
             artifactInstances.Clear();
             artifactInstancesById = null;
             currency = Mathf.Max(0, data.currency);
+            NotifyCurrencyChanged();
             _globalLevel = Mathf.Clamp(data.globalLevel, 1, GlobalMaxLevel);
 
             BuildItemIndices();

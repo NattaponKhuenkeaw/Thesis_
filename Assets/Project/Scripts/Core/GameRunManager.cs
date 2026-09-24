@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Project.Core.Lobby;
 using Project.Core.RunEnd;
 using Project.Core.ZoneState;
 using Project.InventorySystem.Artifacts;
@@ -55,6 +56,7 @@ namespace Project.Core
 
         [NonSerialized] private bool isStartingRun;
         [NonSerialized] private bool isBoundaryLoading;
+        [NonSerialized] private int lobbyBannerSceneHandle = int.MinValue;
         [NonSerialized] private GameRunPhase currentPhase = GameRunPhase.Lobby;
 
         private Canvas boundaryCanvas;
@@ -131,6 +133,7 @@ namespace Project.Core
             if (string.Equals(activeScene, lobbySceneName, StringComparison.Ordinal))
             {
                 ConfigureSafeZoneExitForScene(activeScene);
+                TryPlayLobbyLevelBanner(activeScene);
             }
         }
 
@@ -155,6 +158,37 @@ namespace Project.Core
         private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             ApplyPhaseForScene(scene.name, notify: true);
+            if (!isBoundaryLoading)
+            {
+                TryPlayLobbyLevelBanner(scene.name);
+            }
+        }
+
+        private void TryPlayLobbyLevelBanner(string sceneName)
+        {
+            if (!string.Equals(sceneName, lobbySceneName, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            int handle = SceneManager.GetActiveScene().handle;
+            if (handle == lobbyBannerSceneHandle)
+            {
+                return;
+            }
+
+            lobbyBannerSceneHandle = handle;
+            RestoreBossLobbyBiome();
+            LobbyLevelBanner.Play();
+        }
+
+        private static void RestoreBossLobbyBiome()
+        {
+            PlayerRunInventory inventory = Resources.Load<PlayerRunInventory>(RunInventoryResourcePath);
+            if (inventory != null && inventory.TryReadBossLobbyBiome(out int biomeIndex))
+            {
+                RunProgressionManager.EnsureInstance()?.SetCurrentBiomeIndex(biomeIndex);
+            }
         }
 
         /// <summary>
@@ -272,6 +306,7 @@ namespace Project.Core
 
             try
             {
+                disabledCanvases.Clear();
                 DisableAllSceneCanvases();
                 yield return FadeBoundaryOverlay(0f, 1f);
 
@@ -301,6 +336,7 @@ namespace Project.Core
                 ConfigureSafeZoneExitForScene(sceneName);
 
                 yield return FadeBoundaryOverlay(1f, 0f);
+                TryPlayLobbyLevelBanner(sceneName);
             }
             finally
             {
@@ -542,14 +578,18 @@ namespace Project.Core
 
         private void DisableAllSceneCanvases()
         {
-            disabledCanvases.Clear();
             Canvas[] canvases = FindObjectsByType<Canvas>(FindObjectsSortMode.None);
             for (int i = 0; i < canvases.Length; i++)
             {
                 Canvas canvas = canvases[i];
-                if (canvas != null && canvas != boundaryCanvas && canvas.enabled)
+                if (canvas == null || canvas == boundaryCanvas || !canvas.enabled)
                 {
-                    canvas.enabled = false;
+                    continue;
+                }
+
+                canvas.enabled = false;
+                if (!disabledCanvases.Contains(canvas))
+                {
                     disabledCanvases.Add(canvas);
                 }
             }

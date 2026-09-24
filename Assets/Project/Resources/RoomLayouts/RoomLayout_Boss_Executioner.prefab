@@ -142,6 +142,8 @@ MonoBehaviour:
   startOnlyOnce: 1
   spawnSlots:
   - {fileID: 8094037502590189038}
+  minSpawnSeparation: 1.8
+  maxSpawnNudge: 2.5
   unlockSceneExitOnClear: 0
   portalsRoot: {fileID: 4289945556266579237}
   useBossDeathFlow: 1
@@ -170,7 +172,7 @@ Transform:
   m_GameObject: {fileID: 1562523296701736931}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -10.5, y: 5.1, z: 0}
+  m_LocalPosition: {x: -15.2, y: 11, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -479,8 +481,8 @@ Transform:
   m_GameObject: {fileID: 2563255629795529842}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -9.4018, y: -6.6118994, z: 0}
-  m_LocalScale: {x: 125.9442, y: 13.054, z: 1}
+  m_LocalPosition: {x: -30.116, y: -6.6118994, z: 0}
+  m_LocalScale: {x: 84.51421, y: 13.054, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4372913699989260477}
@@ -731,12 +733,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.SceneBoundaryController
   _entranceWall: {fileID: 6602038564319063930}
+  _fightEntranceWall: {fileID: 1451654483381489583}
   _exitWall: {fileID: 6890009549473738514}
   _exitTrigger: {fileID: 3264874032675666807}
   _entrancePadding: 0.75
-  _exitPadding: 0.75
   _pinPlayerToScreenEdge: 1
   _lookAheadFadeDistance: 3
+  _verticalPadding: 10
   _cameraCueDistance: 3
   _cameraCueDuration: 0.65
 --- !u!1 &4083283299707377515
@@ -1276,7 +1279,7 @@ Transform:
   m_GameObject: {fileID: 8954656620700786448}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 52.7, y: 8, z: 0}
+  m_LocalPosition: {x: 11.3, y: 8, z: 0}
   m_LocalScale: {x: 1.5, y: 16, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

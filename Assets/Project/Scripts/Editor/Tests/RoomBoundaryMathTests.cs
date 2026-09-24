@@ -5,6 +5,24 @@ using UnityEngine;
 
 public class RoomBoundaryMathTests
 {
+    [TestCase(16f / 9f)]
+    [TestCase(21f / 9f)]
+    public void NarrowCombatRoomRetainsCameraTravel(float aspect)
+    {
+        const float width = 29.02f;
+        Vector2 range = RoomBoundaryMath.LimitCombatOrthoRange(new Vector2(6.8f, 8f), width, aspect);
+        Assert.That(range.x, Is.LessThanOrEqualTo(range.y));
+        Assert.That(width - 2f * range.y * aspect, Is.GreaterThanOrEqualTo(width * 0.15f - 0.001f));
+    }
+
+    [Test]
+    public void WiderRoomRestoresAuthoredCombatZoom()
+    {
+        Vector2 authored = new Vector2(6.8f, 8f);
+        Assert.That(RoomBoundaryMath.LimitCombatOrthoRange(authored, 60f, 16f / 9f), Is.EqualTo(authored));
+        Assert.That(RoomBoundaryMath.LimitCombatOrthoRange(authored, 0f, 16f / 9f), Is.EqualTo(authored));
+    }
+
     [Test]
     public void LockedXUsesEntranceMaxAndExitMin()
     {
@@ -180,6 +198,14 @@ public class RoomBoundaryMathTests
             pastDistance: 2f,
             maxDistance: 3.5f);
         Assert.That(targetX, Is.EqualTo(15f).Within(0.001f));
+    }
+
+    [Test]
+    public void VerticalFramingDropsEnemiesOnAnotherFloor()
+    {
+        Assert.That(CameraManager.VerticalFramingWeightScale(2f), Is.EqualTo(1f));
+        Assert.That(CameraManager.VerticalFramingWeightScale(7f), Is.EqualTo(0f));
+        Assert.That(CameraManager.VerticalFramingWeightScale(4f), Is.GreaterThan(0f).And.LessThan(1f));
     }
 }
 #endif

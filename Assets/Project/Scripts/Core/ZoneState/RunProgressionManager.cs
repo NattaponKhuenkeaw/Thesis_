@@ -6,14 +6,14 @@ namespace Project.Core.ZoneState
     /// <summary>
     /// Tracks combat-room depth and biome index for the current run.
     /// Depth increments only on Combat/Elite clears. Shop/Reward/Safe do not count.
-    /// Clearing Boss advances biome (+12% enemy basic stats) and resets the segment depth.
+    /// Clearing Boss advances biome (+20% enemy basic stats) and resets the segment depth.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class RunProgressionManager : MonoBehaviour
     {
         private const string DefaultMapResourcePath = "MapSO/Test_MapSO";
         private const string DefaultBossRoomId = "Boss_01";
-        private const float DefaultBiomeStatBonus = 0.12f;
+        private const float DefaultBiomeStatBonus = 0.20f;
 
         public static RunProgressionManager Instance { get; private set; }
 
@@ -29,7 +29,7 @@ namespace Project.Core.ZoneState
         public int roomsBeforeBoss = 4;
 
         [Header("Difficulty Curve")]
-        [Tooltip("Enemy basic stats (HP / ATK / DEF) gain this fraction per biome. Biome 0 = 1.0x, Biome 1 = 1.12x.")]
+        [Tooltip("Enemy basic stats (HP / ATK / DEF) gain this fraction per biome. Biome 0 = 1.0x, Biome 1 = 1.20x.")]
         [SerializeField, Min(0f)] private float biomeBasicStatBonus = DefaultBiomeStatBonus;
 
         [Header("Room Pool")]
@@ -50,7 +50,7 @@ namespace Project.Core.ZoneState
 
         /// <summary>
         /// Multiplier for enemy basic stats in the current biome.
-        /// Biome 0 = 1.0, Biome 1 = 1.12, Biome 2 = 1.24, ...
+        /// Biome 0 = 1.0, Biome 1 = 1.20, Biome 2 = 1.40, ...
         /// </summary>
         public float EnemyBasicStatMultiplier => ResolveEnemyBasicStatMultiplier(CurrentBiomeIndex, BiomeBasicStatBonus);
 
@@ -174,6 +174,11 @@ namespace Project.Core.ZoneState
         {
             currentRoomDepth = 0;
             currentBiomeIndex = 0;
+        }
+
+        public void SetCurrentBiomeIndex(int biomeIndex)
+        {
+            currentBiomeIndex = Mathf.Max(0, biomeIndex);
         }
 
         /// <summary>

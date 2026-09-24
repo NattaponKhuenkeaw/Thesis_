@@ -24,13 +24,17 @@ namespace Project.AIBehaviour.Boss
         [SerializeField] private string playerTag = PlayerTag;
 
         [Header("HUD")]
+        [SerializeField] private bool revealOnSpawn = true;
+        [SerializeField, Min(0f)] private float spawnPanDuration = 0.5f;
+        [SerializeField, Min(0f)] private float spawnRevealDuration = 1.2f;
+        [SerializeField, Min(0f)] private float spawnReturnDuration = 0.6f;
         [SerializeField] private string bossDisplayName = "Executioner";
         [SerializeField] private bool bindScreenHealthHud = true;
 
         [Header("Default Stats (applied once on Awake if useDefaultStats)")]
         [SerializeField] private bool useDefaultStats = true;
         [SerializeField] private float defaultMaxHp = 800f;
-        [SerializeField] private float defaultAttackDamage = 150f;
+        [SerializeField] private float defaultAttackDamage = 165f;
         [SerializeField] private float defaultDefense = 500f;
 
         [Header("Movement")]
@@ -98,6 +102,10 @@ namespace Project.AIBehaviour.Boss
 
         private Transform target;
         private Coroutine brainRoutine;
+        private Coroutine spawnRevealRoutine;
+        private bool spawnRevealStarted;
+        private bool spawnRevealPending;
+        private CameraManager spawnRevealCamera;
         private Coroutine flashRoutine;
         private int phase = 1;
         private bool isBusy;
@@ -171,6 +179,12 @@ namespace Project.AIBehaviour.Boss
                 BossHealthHUD.EnsureInstance().Bind(enemy, bossDisplayName);
 
             // Spawn lifecycle blocks camera membership and the boss loop until Active.
+            if (revealOnSpawn && !spawnRevealStarted && enemy != null && enemy.IsAlive)
+            {
+                spawnRevealStarted = true;
+                spawnRevealPending = true;
+                spawnRevealRoutine = StartCoroutine(RevealSpawn());
+            }
             StartBrainIfActive();
         }
 
@@ -185,6 +199,7 @@ namespace Project.AIBehaviour.Boss
             if (enemy == null
                 || !isActiveAndEnabled
                 || !enemy.IsGameplayActive
+                || spawnRevealPending
                 || brainRoutine != null)
             {
                 return;
@@ -196,6 +211,7 @@ namespace Project.AIBehaviour.Boss
 
         private void OnDisable()
         {
+            CancelSpawnReveal();
             if (bindScreenHealthHud && enemy != null && BossHealthHUD.Instance != null)
                 BossHealthHUD.Instance.Unbind(enemy);
 
@@ -266,6 +282,7 @@ namespace Project.AIBehaviour.Boss
 
         private void HandleDied()
         {
+            CancelSpawnReveal();
             isBusy = false;
             CleanupAttackState();
             RestorePhysics();
@@ -285,6 +302,7 @@ namespace Project.AIBehaviour.Boss
         /// </summary>
         public void ForceClearCombatHazards()
         {
+            CancelSpawnReveal();
             isBusy = false;
             CleanupAttackState();
             RestorePhysics();
@@ -295,6 +313,40 @@ namespace Project.AIBehaviour.Boss
                 StopCoroutine(brainRoutine);
                 brainRoutine = null;
             }
+        }
+
+        private IEnumerator RevealSpawn()
+        {
+            // Spawner applies the final position after OnEnable.
+            yield return null;
+            spawnRevealCamera = CameraManager.instance;
+            if (spawnRevealCamera != null && spawnRevealCamera.TryBeginBossSpawnFocus(transform, spawnPanDuration))
+            {
+                float elapsed = 0f;
+                while (enemy != null && enemy.IsAlive
+                    && (elapsed < spawnPanDuration + spawnRevealDuration || !enemy.IsGameplayActive))
+                {
+                    elapsed += Time.deltaTime;
+                    yield return null;
+                }
+                if (spawnRevealCamera != null)
+                    spawnRevealCamera.EndBossSpawnFocus(transform, spawnReturnDuration);
+                yield return new WaitForSecondsRealtime(spawnReturnDuration);
+            }
+            spawnRevealCamera = null;
+            spawnRevealPending = false;
+            spawnRevealRoutine = null;
+        }
+
+        private void CancelSpawnReveal()
+        {
+            if (spawnRevealRoutine != null)
+                StopCoroutine(spawnRevealRoutine);
+            spawnRevealRoutine = null;
+            if (spawnRevealCamera != null)
+                spawnRevealCamera.EndBossSpawnFocus(transform, 0f);
+            spawnRevealCamera = null;
+            spawnRevealPending = false;
         }
 
         private void EvaluatePhase()
@@ -552,6 +604,7 @@ namespace Project.AIBehaviour.Boss
         private IEnumerator RunBullCharge()
         {
             BossPatternTiming timing = bullCharge;
+            animHandler?.SetBossChargePhase(0f);
             // Commit facing at telegraph start; do not retarget during wind-up (see Telegraph).
             FaceTarget();
             float facing = GetFacingSign();
@@ -566,7 +619,6 @@ namespace Project.AIBehaviour.Boss
 
             enemy.HideAttackWarning();
             StopTelegraphFlash();
-            // Anim already started during telegraph wind-up / crouch.
 
             BeginArmored();
             ConfigureHitbox(timing);
@@ -574,6 +626,7 @@ namespace Project.AIBehaviour.Boss
 
             float maxTravel = ResolveChargeTravelDistance(facing);
             float traveled = 0f;
+            bool rushPoseStarted = false;
             while (traveled < maxTravel)
             {
                 if (!CanContinuePattern())
@@ -588,6 +641,14 @@ namespace Project.AIBehaviour.Boss
                 MoveBossPosition(new Vector2(current.x + facing * step, current.y));
                 traveled += step;
                 yield return waitFixed;
+
+                // MovePosition is deferred; don't show the rush pose before physics moves the boss.
+                Vector2 actual = rb != null && rb.simulated ? rb.position : (Vector2)transform.position;
+                if (!rushPoseStarted && CanContinuePattern() && Mathf.Abs(actual.x - current.x) > 0.0001f)
+                {
+                    animHandler?.SetBossChargePhase(1f);
+                    rushPoseStarted = true;
+                }
             }
 
             enemy.SetAttackHitboxActive(false);
@@ -640,6 +701,8 @@ namespace Project.AIBehaviour.Boss
 
         private IEnumerator Telegraph(BossPatternTiming timing, BossPatternId patternId, Vector3? markerWorldPos, float markerRadius)
         {
+            // Each pattern faces its target once before entering wind-up.
+            enemy.LockFacing();
             BeginArmored();
             enemy.SetAttackHitboxActive(false);
             enemy.TriggerAttackWarning(timing.telegraphDuration);
@@ -654,18 +717,11 @@ namespace Project.AIBehaviour.Boss
             if (patternId != BossPatternId.JumpSmash)
                 animHandler?.TriggerBossPattern(patternId);
 
-            bool lockFacing = patternId == BossPatternId.JumpSmash
-                || patternId == BossPatternId.BullCharge;
-
             float t = 0f;
             while (t < timing.telegraphDuration)
             {
                 if (!enemy.IsAlive || (enemy != null && enemy.IsGrabbed))
                     yield break;
-
-                // Cleave may track the player; jump/charge commit facing at telegraph start.
-                if (!lockFacing)
-                    FaceTarget();
 
                 t += Time.deltaTime;
                 yield return null;
@@ -745,8 +801,10 @@ namespace Project.AIBehaviour.Boss
 
         private void CleanupAttackState()
         {
+            animHandler?.SetBossChargePhase(-1f);
             if (enemy != null)
             {
+                enemy.ReleaseFacing();
                 enemy.SetAttackHitboxActive(false);
                 enemy.HideAttackWarning();
                 ApplyBossStaggerArmor();

@@ -28,6 +28,7 @@ namespace Project.Core.ZoneState
             [Min(1)] public int maxWaves = 1;
             [Min(1)] public int minEnemiesPerWave = 1;
             [Min(1)] public int maxEnemiesPerWave = 2;
+            [Min(1)] public int aliveCap = 3;
             [Min(0)] public int minCoins = 40;
             [Min(0)] public int maxCoins = 80;
             [Range(0f, 1f)] public float artifactChance = 0.1f;
@@ -90,8 +91,9 @@ namespace Project.Core.ZoneState
                     rollWeight = 40f,
                     minWaves = 1,
                     maxWaves = 1,
-                    minEnemiesPerWave = 1,
-                    maxEnemiesPerWave = 2,
+                    minEnemiesPerWave = 4,
+                    maxEnemiesPerWave = 4,
+                    aliveCap = 3,
                     minCoins = 30,
                     maxCoins = 60,
                     artifactChance = 0.05f
@@ -100,10 +102,11 @@ namespace Project.Core.ZoneState
                 {
                     difficulty = RouteDifficulty.Medium,
                     rollWeight = 35f,
-                    minWaves = 2,
-                    maxWaves = 2,
-                    minEnemiesPerWave = 2,
-                    maxEnemiesPerWave = 3,
+                    minWaves = 1,
+                    maxWaves = 1,
+                    minEnemiesPerWave = 6,
+                    maxEnemiesPerWave = 6,
+                    aliveCap = 3,
                     minCoins = 90,
                     maxCoins = 150,
                     artifactChance = 0.28f
@@ -112,10 +115,11 @@ namespace Project.Core.ZoneState
                 {
                     difficulty = RouteDifficulty.Hard,
                     rollWeight = 25f,
-                    minWaves = 3,
-                    maxWaves = 3,
-                    minEnemiesPerWave = 3,
-                    maxEnemiesPerWave = 3,
+                    minWaves = 1,
+                    maxWaves = 1,
+                    minEnemiesPerWave = 8,
+                    maxEnemiesPerWave = 8,
+                    aliveCap = 4,
                     minCoins = 180,
                     maxCoins = 280,
                     artifactChance = 0.55f
