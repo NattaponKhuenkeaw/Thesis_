@@ -301,7 +301,7 @@ Transform:
   m_GameObject: {fileID: 263753414887595837}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -8.501602, y: -7.31175, z: 0}
+  m_LocalPosition: {x: -8.501602, y: -17.6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3069,10 +3069,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.SceneBoundaryController
   _entranceWall: {fileID: 5228301183501575815}
+  _fightEntranceWall: {fileID: 0}
   _exitWall: {fileID: 5633693204425629752}
   _exitTrigger: {fileID: 8780875574367898341}
   _entrancePadding: 0.75
-  _exitPadding: 0.75
   _pinPlayerToScreenEdge: 1
   _lookAheadFadeDistance: 3
   _verticalPadding: 10
@@ -5109,8 +5109,8 @@ Transform:
   m_GameObject: {fileID: 7829191601762204332}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -56.7127, y: -17.8, z: 0}
-  m_LocalScale: {x: 33.50528, y: 13.053997, z: 1}
+  m_LocalPosition: {x: -52.2882, y: -17.8, z: 0}
+  m_LocalScale: {x: 42.354023, y: 13.053997, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 4329270391386500204}

@@ -2973,6 +2973,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.SceneBoundaryController
   _entranceWall: {fileID: 5228301183501575815}
+  _fightEntranceWall: {fileID: 0}
   _exitWall: {fileID: 5633693204425629752}
   _exitTrigger: {fileID: 8780875574367898341}
   _entrancePadding: 0.75

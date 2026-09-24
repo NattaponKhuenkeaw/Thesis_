@@ -113,6 +113,11 @@ public class InteractableWorldUI : MonoBehaviour
 
     private void OnDisable()
     {
+        if (isPlayerInRange)
+        {
+            s_ActiveInteractables.Remove(this);
+        }
+
         isPlayerInRange = false;
         playerTransform = null;
         foreach (PromptRuntime prompt in prompts)
@@ -383,15 +388,6 @@ public class InteractableWorldUI : MonoBehaviour
         }
 
         playerTransform = null;
-    }
-
-    private void OnDisable()
-    {
-        if (isPlayerInRange)
-        {
-            isPlayerInRange = false;
-            s_ActiveInteractables.Remove(this);
-        }
     }
 
     private void OnDestroy()

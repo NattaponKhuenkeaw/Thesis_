@@ -8,6 +8,17 @@ namespace Project.Core.ZoneState
     /// </summary>
     public static class RoomBoundaryMath
     {
+        public static Vector2 LimitCombatOrthoRange(Vector2 authoredRange, float width, float aspect)
+        {
+            if (width <= 0f || aspect <= 0f)
+                return authoredRange;
+
+            // Leave 15% of the chamber width available for horizontal camera travel.
+            float maximum = Mathf.Min(authoredRange.y, width * 0.85f / (2f * aspect));
+            maximum = Mathf.Max(0.01f, maximum);
+            return new Vector2(Mathf.Min(authoredRange.x, maximum), maximum);
+        }
+
         public static bool TryResolveLockedX(
             Collider2D entranceWall,
             Collider2D exitWall,

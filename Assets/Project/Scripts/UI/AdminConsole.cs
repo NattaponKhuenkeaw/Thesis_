@@ -9,6 +9,7 @@ public class AdminConsole : MonoBehaviour
 {
 
     [SerializeField] private GameObject enemyPrefab;
+    [SerializeField] private GameObject[] enemyPrefabs;
 
     [Header("Reset Systems")]
     [SerializeField] private Project.ShopSystem.PlayerRunInventory runInventory;
@@ -64,7 +65,50 @@ public class AdminConsole : MonoBehaviour
 
     public void SpawnEnemy()
     {
-        Instantiate(enemyPrefab, new Vector3(Random.Range(-10, 10), 0, 0), Quaternion.identity);
+        GameObject prefab = PickRandomEnemyPrefab();
+        if (prefab == null)
+        {
+            Debug.LogWarning("[AdminConsole] Cannot spawn enemy because no prefab is assigned.");
+            return;
+        }
+
+        Instantiate(prefab, new Vector3(Random.Range(-10, 10), 0, 0), Quaternion.identity);
+    }
+
+    private GameObject PickRandomEnemyPrefab()
+    {
+        int validCount = 0;
+        if (enemyPrefabs != null)
+        {
+            for (int i = 0; i < enemyPrefabs.Length; i++)
+            {
+                if (enemyPrefabs[i] != null)
+                {
+                    validCount++;
+                }
+            }
+        }
+
+        if (validCount > 0)
+        {
+            int pick = Random.Range(0, validCount);
+            for (int i = 0; i < enemyPrefabs.Length; i++)
+            {
+                if (enemyPrefabs[i] == null)
+                {
+                    continue;
+                }
+
+                if (pick == 0)
+                {
+                    return enemyPrefabs[i];
+                }
+
+                pick--;
+            }
+        }
+
+        return enemyPrefab;
     }
 
     public void KillAllEnemies()
