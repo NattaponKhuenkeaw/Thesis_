@@ -109,6 +109,7 @@ public class AnimationHandler_Enemy : MonoBehaviour
     private readonly int attackJumpSmashHash = Animator.StringToHash("AttackJumpSmash");
     private readonly int attackChargeHash = Animator.StringToHash("AttackCharge");
     private readonly int chargePhaseHash = Animator.StringToHash("ChargePhase");
+    private readonly int jumpPhaseHash = Animator.StringToHash("JumpPhase");
     private readonly int reactionStateHash = Animator.StringToHash("ReactionState");
     private readonly int airborneHash = Animator.StringToHash("IsAirborne");
     private readonly int grabbedHash = Animator.StringToHash("IsGrabbed");
@@ -231,6 +232,13 @@ public class AnimationHandler_Enemy : MonoBehaviour
     {
         if (anim != null && animParamHashes != null && animParamHashes.Contains(chargePhaseHash))
             anim.SetFloat(chargePhaseHash, phase);
+    }
+
+    // Motion time: 0 = takeoff, .25 = airborne, 1 = impact, -1 = finished.
+    public void SetBossJumpPhase(float phase)
+    {
+        if (anim != null && animParamHashes != null && animParamHashes.Contains(jumpPhaseHash))
+            anim.SetFloat(jumpPhaseHash, phase);
     }
 
     public bool PlayBodyChargePose(bool rushing)

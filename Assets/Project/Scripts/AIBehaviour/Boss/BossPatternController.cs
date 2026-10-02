@@ -573,10 +573,18 @@ namespace Project.AIBehaviour.Boss
             // Flight — no attack hitbox.
             enemy.HideAttackWarning();
             StopTelegraphFlash();
+            animHandler?.SetBossJumpPhase(0f);
             animHandler?.TriggerBossPattern(BossPatternId.JumpSmash);
             yield return JumpArc(lockPoint);
 
-            if (!CanContinuePattern())
+            // MovePosition is applied by physics; don't show impact on its request frame.
+            yield return waitFixed;
+            RestorePhysics();
+            float landingDeadline = Time.time + 3f;
+            while (CanContinuePattern() && !enemy.HasSpawnGroundSupport() && Time.time < landingDeadline)
+                yield return waitFixed;
+
+            if (!CanContinuePattern() || !enemy.HasSpawnGroundSupport())
             {
                 CleanupAttackState();
                 RestorePhysics();
@@ -585,6 +593,7 @@ namespace Project.AIBehaviour.Boss
             }
 
             // Impact AoE.
+            animHandler?.SetBossJumpPhase(1f);
             groundTelegraph?.Hide();
             yield return ActiveMeleeWindow(timing);
             RestorePhysics();
@@ -802,6 +811,7 @@ namespace Project.AIBehaviour.Boss
         private void CleanupAttackState()
         {
             animHandler?.SetBossChargePhase(-1f);
+            animHandler?.SetBossJumpPhase(-1f);
             if (enemy != null)
             {
                 enemy.ReleaseFacing();
@@ -944,6 +954,7 @@ namespace Project.AIBehaviour.Boss
 
                 t += Time.fixedDeltaTime / duration;
                 float u = Mathf.Clamp01(t);
+                animHandler?.SetBossJumpPhase(u < (1f / 3f) ? 0f : 0.25f);
                 Vector2 pos = Vector2.Lerp(start, end, u);
                 pos.y += jumpArcHeight * 4f * u * (1f - u);
                 MoveBossPosition(pos);
