@@ -29,8 +29,8 @@ MonoBehaviour:
       attackPerLevel: 6.1
       defensePerLevel: 4.2
       maxHpPerLevel: 81
-    currentHP: 174.08609
-    currentAE: 60
+    currentHP: 813
+    currentAE: 0
   teamSlots:
   - character: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
     legacyArtifacts: []
