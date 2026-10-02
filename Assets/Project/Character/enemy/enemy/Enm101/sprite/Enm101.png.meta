@@ -4,13 +4,40 @@ TextureImporter:
   internalIDToNameTable:
   - first:
       213: 81101001
-    second: Enm101_0
+    second: Enm101_Idle0
   - first:
       213: 81101002
-    second: Enm101_1
+    second: Enm101_Idle1
   - first:
       213: 81101003
-    second: Enm101_2
+    second: Enm101_Idle2
+  - first:
+      213: 81101004
+    second: Enm101_Idle3
+  - first:
+      213: 81101005
+    second: Enm101_Attack0
+  - first:
+      213: 81101006
+    second: Enm101_Attack1
+  - first:
+      213: 81101007
+    second: Enm101_Attack2
+  - first:
+      213: 81101008
+    second: Enm101_Hurt0
+  - first:
+      213: 81101009
+    second: Enm101_Hurt1
+  - first:
+      213: 81101010
+    second: Enm101_Hurt2
+  - first:
+      213: 81101011
+    second: Enm101_Hurt3
+  - first:
+      213: 81101012
+    second: Enm101_Launch
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -54,10 +81,10 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 2
   spriteExtrude: 1
-  spriteMeshType: 0
+  spriteMeshType: 1
   alignment: 7
   spritePivot: {x: 0.5, y: 0}
-  spritePixelsToUnits: 43
+  spritePixelsToUnits: 35
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 0
   alphaUsage: 1
@@ -132,15 +159,15 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Enm101_0
+      name: Enm101_Idle0
       rect:
         serializedVersion: 2
         x: 0
-        y: 128
+        y: 384
         width: 128
         height: 128
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
+      alignment: 9
+      pivot: {x: 0.5, y: 0.014206041}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -154,15 +181,15 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Enm101_1
+      name: Enm101_Idle1
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
+        x: 128
+        y: 384
         width: 128
         height: 128
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
+      alignment: 9
+      pivot: {x: 0.5, y: 0.014206041}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -176,15 +203,15 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Enm101_2
+      name: Enm101_Idle2
       rect:
         serializedVersion: 2
-        x: 128
-        y: 0
+        x: 256
+        y: 384
         width: 128
         height: 128
-      alignment: 7
-      pivot: {x: 0.5, y: 0}
+      alignment: 9
+      pivot: {x: 0.5, y: 0.014206041}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -193,6 +220,204 @@ TextureImporter:
       bones: []
       spriteID: 04d580cb000000010000000000000000
       internalID: 81101003
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm101_Idle3
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 384
+        width: 128
+        height: 128
+      alignment: 9
+      pivot: {x: 0.5, y: 0.014206041}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04d580cc000000010000000000000001
+      internalID: 81101004
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm101_Attack0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 256
+        width: 128
+        height: 128
+      alignment: 9
+      pivot: {x: 0.5, y: 0.014206041}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04d580cd000000010000000000000002
+      internalID: 81101005
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm101_Attack1
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 256
+        width: 128
+        height: 128
+      alignment: 9
+      pivot: {x: 0.5, y: 0.014206041}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04d580ce000000010000000000000003
+      internalID: 81101006
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm101_Attack2
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 256
+        width: 128
+        height: 128
+      alignment: 9
+      pivot: {x: 0.5, y: 0.014206041}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04d580cf000000010000000000000004
+      internalID: 81101007
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm101_Hurt0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 128
+        width: 128
+        height: 128
+      alignment: 9
+      pivot: {x: 0.5, y: 0.014206041}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04d580d0000000010000000000000005
+      internalID: 81101008
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm101_Hurt1
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 128
+        width: 128
+        height: 128
+      alignment: 9
+      pivot: {x: 0.5, y: 0.014206041}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04d580d1000000010000000000000006
+      internalID: 81101009
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm101_Hurt2
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 128
+        width: 128
+        height: 128
+      alignment: 9
+      pivot: {x: 0.5, y: 0.014206041}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04d580d2000000010000000000000007
+      internalID: 81101010
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm101_Hurt3
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 128
+        width: 128
+        height: 128
+      alignment: 9
+      pivot: {x: 0.5, y: 0.014206041}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04d580d3000000010000000000000008
+      internalID: 81101011
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Enm101_Launch
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 128
+        height: 128
+      alignment: 9
+      pivot: {x: 0.5, y: 0.014206041}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04d580d4000000010000000000000009
+      internalID: 81101012
       vertices: []
       indices: 
       edges: []
@@ -211,9 +436,18 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Enm101_0: 81101001
-      Enm101_1: 81101002
-      Enm101_2: 81101003
+      Enm101_Attack0: 81101005
+      Enm101_Attack1: 81101006
+      Enm101_Attack2: 81101007
+      Enm101_Hurt0: 81101008
+      Enm101_Hurt1: 81101009
+      Enm101_Hurt2: 81101010
+      Enm101_Hurt3: 81101011
+      Enm101_Idle0: 81101001
+      Enm101_Idle1: 81101002
+      Enm101_Idle2: 81101003
+      Enm101_Idle3: 81101004
+      Enm101_Launch: 81101012
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
