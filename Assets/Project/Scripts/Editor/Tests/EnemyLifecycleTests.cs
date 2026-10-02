@@ -34,7 +34,7 @@ public class EnemyLifecycleTests
     public void ExecutionerPrefabWaitsForGroundBeforeActivatingAI()
     {
         var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
-            "Assets/Project/TestChar/Prefab/Boss_Executioner.prefab");
+            "Assets/Project/Character/enemy/Boss/Executioner/Boss_Executioner.prefab");
         Assert.That(prefab, Is.Not.Null);
         var enemy = prefab.GetComponent<EnemyController>();
         Assert.That(enemy, Is.Not.Null);

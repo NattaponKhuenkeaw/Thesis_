@@ -8,7 +8,7 @@ public class EnemyCombatRoleTests
     [TestCase("Kick", "BodyChargeRush")]
     public void ChargePoseUsesNormalizedSpriteWithoutOverridingYellowTint(string pose, string stateName)
     {
-        const string folder = "Assets/Project/TestChar/Asset/enemy_anim_test/";
+        const string folder = "Assets/Project/Character/enemy/enemy/EnemyCore/animation/";
         AnimationClip clip = UnityEditor.AssetDatabase.LoadAssetAtPath<AnimationClip>(folder + "Enemy2_" + pose + ".anim");
         Assert.That(clip, Is.Not.Null);
         var bindings = UnityEditor.AnimationUtility.GetObjectReferenceCurveBindings(clip);
@@ -22,7 +22,7 @@ public class EnemyCombatRoleTests
         Assert.That(sprite.pivot, Is.EqualTo(new Vector2(64f, 0f)));
         Assert.That(UnityEditor.AnimationUtility.GetCurveBindings(clip), Is.Empty, "Pose must not override renderer tint or transform.");
         var controller = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEditor.Animations.AnimatorController>(
-            "Assets/Project/TestChar/Animation/EnemyAnimatorController.controller");
+            "Assets/Project/Character/enemy/enemy/EnemyCore/animation/EnemyAnimatorController.controller");
         bool found = false;
         foreach (var state in controller.layers[0].stateMachine.states)
             if (state.state.name == stateName)

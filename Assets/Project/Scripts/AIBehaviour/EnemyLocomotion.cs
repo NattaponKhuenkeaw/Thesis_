@@ -291,6 +291,30 @@ public class EnemyLocomotion : MonoBehaviour
         return true;
     }
 
+    /// <summary>
+    /// Fly in the plane toward a world point. Requires Allow Non Ground Move.
+    /// </summary>
+    public bool FlyTowards(Vector3 worldPoint, float speed)
+    {
+        Cache();
+        if (!allowNonGroundMove || speed <= 0f)
+            return false;
+
+        if (moveMode != EnemyMoveMode.Fly)
+            SetMoveMode(EnemyMoveMode.Fly);
+
+        worldPoint.z = BodyPosition().z;
+        DriveFly(worldPoint, speed);
+        return EnemyFacingUtil.PlanarDistance(BodyPosition(), worldPoint) <= arrivalThreshold;
+    }
+
+    public void StopMovement()
+    {
+        Cache();
+        if (body != null)
+            body.linearVelocity = Vector2.zero;
+    }
+
     public void StopHorizontal()
     {
         Cache();

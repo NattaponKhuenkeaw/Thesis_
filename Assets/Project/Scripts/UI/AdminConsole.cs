@@ -7,9 +7,11 @@ using Project.UI;
 [RequireComponent(typeof(UIBlockPlayerClick))]
 public class AdminConsole : MonoBehaviour
 {
-
     [SerializeField] private GameObject enemyPrefab;
     [SerializeField] private GameObject[] enemyPrefabs;
+    [SerializeField] private GameObject enemy101Prefab;
+    [SerializeField] private GameObject enemy102Prefab;
+    [SerializeField] private GameObject enemy103Prefab;
 
     [Header("Reset Systems")]
     [SerializeField] private Project.ShopSystem.PlayerRunInventory runInventory;
@@ -65,7 +67,26 @@ public class AdminConsole : MonoBehaviour
 
     public void SpawnEnemy()
     {
-        GameObject prefab = PickRandomEnemyPrefab();
+        SpawnPrefab(PickRandomEnemyPrefab());
+    }
+
+    public void SpawnEnemy101()
+    {
+        SpawnPrefab(enemy101Prefab != null ? enemy101Prefab : enemyPrefab);
+    }
+
+    public void SpawnEnemy102()
+    {
+        SpawnPrefab(enemy102Prefab);
+    }
+
+    public void SpawnEnemy103()
+    {
+        SpawnPrefab(enemy103Prefab);
+    }
+
+    private void SpawnPrefab(GameObject prefab)
+    {
         if (prefab == null)
         {
             Debug.LogWarning("[AdminConsole] Cannot spawn enemy because no prefab is assigned.");

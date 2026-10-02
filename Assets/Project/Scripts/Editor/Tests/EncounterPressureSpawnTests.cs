@@ -244,7 +244,7 @@ public class EncounterPressureSpawnTests
         Assert.That(tables.AliveCap, Is.EqualTo(3));
 
         GameObject enemy3 = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
-            "Assets/Project/TestChar/Prefab/Enemy3.prefab");
+            "Assets/Project/Character/enemy/enemy/EnemyCore/Enemy3.prefab");
         Assert.That(enemy3, Is.Not.Null);
 
         bool found = false;
