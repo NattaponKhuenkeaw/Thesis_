@@ -8,7 +8,7 @@ using Project.Core.ZoneState;
 public class PlayerExitState : PlayerState
 {
     private const float ArrivalTolerance = 0.35f;
-    private const float MaxExitDurationSeconds = 1.75f;
+    private const float MaxExitDurationSeconds = 4.5f;
 
     private float exitStartedAt;
     private bool holdingAtTarget;

@@ -35,6 +35,9 @@ namespace Project.Core.ZoneState
         [Tooltip("How quickly look-ahead fades out as the player approaches a wall.")]
         [Min(0.01f)] [SerializeField] private float _lookAheadFadeDistance = 3f;
 
+        [Tooltip("How long the camera frame eases open after a cleared wall unlocks. Room entry still cuts.")]
+        [Min(0f)] [SerializeField] private float _boundExpandDuration = 1.05f;
+
         [Tooltip("Extra camera travel above/below layout colliders so drops and high ledges stay on-screen.")]
         [Min(0f)] [SerializeField] private float _verticalPadding = 10f;
 
@@ -66,6 +69,11 @@ namespace Project.Core.ZoneState
         private Collider2D _stageExitWall;
         private bool _searchedStageExitChild;
         private bool _usesAuthoredStageExitChild;
+        private Coroutine _boundSlideRoutine;
+        private float _slideLeftFrom;
+        private float _slideLeftTo;
+        private float _slideRightFrom;
+        private float _slideRightTo;
 
         public bool IsExitAvailable { get; private set; }
 
@@ -216,6 +224,7 @@ namespace Project.Core.ZoneState
                 return;
             }
 
+            StopBoundSlide();
             RestoreSharedCamera();
             s_activeBinder = null;
             if (_cameraLookAhead != null)
@@ -596,6 +605,59 @@ namespace Project.Core.ZoneState
                 return;
             }
 
+            bool opensOutward = rightWorld > _currentRightWorld + BoundaryEpsilon
+                || leftWorld < _currentLeftWorld - BoundaryEpsilon;
+            if (!force && _boundExpandDuration > 0f && opensOutward)
+            {
+                _slideLeftFrom = _currentLeftWorld;
+                _slideRightFrom = _currentRightWorld;
+                _slideLeftTo = leftWorld;
+                _slideRightTo = rightWorld;
+                if (_boundSlideRoutine != null)
+                {
+                    StopCoroutine(_boundSlideRoutine);
+                }
+
+                _boundSlideRoutine = StartCoroutine(SlideBoundsOpen());
+                return;
+            }
+
+            StopBoundSlide();
+            CommitHorizontalBounds(leftWorld, rightWorld, force);
+        }
+
+        private void StopBoundSlide()
+        {
+            if (_boundSlideRoutine == null)
+            {
+                return;
+            }
+
+            StopCoroutine(_boundSlideRoutine);
+            _boundSlideRoutine = null;
+        }
+
+        private System.Collections.IEnumerator SlideBoundsOpen()
+        {
+            float duration = Mathf.Max(0.05f, _boundExpandDuration);
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(elapsed / duration));
+                CommitHorizontalBounds(
+                    Mathf.Lerp(_slideLeftFrom, _slideLeftTo, t),
+                    Mathf.Lerp(_slideRightFrom, _slideRightTo, t),
+                    force: true);
+                yield return null;
+            }
+
+            CommitHorizontalBounds(_slideLeftTo, _slideRightTo, force: true);
+            _boundSlideRoutine = null;
+        }
+
+        private void CommitHorizontalBounds(float leftWorld, float rightWorld, bool force)
+        {
             bool changed = force
                 || !Mathf.Approximately(_currentLeftWorld, leftWorld)
                 || !Mathf.Approximately(_currentRightWorld, rightWorld);

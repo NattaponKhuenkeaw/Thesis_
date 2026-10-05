@@ -18,9 +18,9 @@ namespace Project.Core.ZoneState
         private const string ZoneStateProviderResourcePath = "CombatSO/ZoneStateProvider";
         private const string MapDataResourcePath = "MapSO/Test_MapSO";
         private const float MaxIntroWaitSeconds = 10f;
-        private const float MaxExitWaitSeconds = 1.75f;
-        private const float ExitWalkPastDistance = 2.0f;
-        private const float ExitWalkMaxDistance = 3.5f;
+        private const float MaxExitWaitSeconds = 4.5f;
+        private const float ExitWalkPastDistance = 5.0f;
+        private const float ExitWalkMaxDistance = 16.0f;
         private const float ExitWalkArrivalTolerance = 0.35f;
 
         public static SceneTransitionManager Instance { get; private set; }

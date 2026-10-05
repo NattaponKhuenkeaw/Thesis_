@@ -189,6 +189,19 @@ public class RoomBoundaryMathTests
     }
 
     [Test]
+    public void LeaveWalkFromDeepInTheFrameStillClearsTheDoor()
+    {
+        float targetX = RoomBoundaryMath.ResolveLeaveWalkTargetX(
+            playerX: 0f,
+            outwardEdgeX: 9f,
+            walkSign: 1f,
+            pastDistance: 5f,
+            maxDistance: 16f);
+        Assert.That(targetX, Is.EqualTo(14f).Within(0.001f));
+        Assert.That(targetX, Is.GreaterThan(9f));
+    }
+
+    [Test]
     public void LeaveWalkStillMovesWhenAlreadyPastDoor()
     {
         float targetX = RoomBoundaryMath.ResolveLeaveWalkTargetX(
