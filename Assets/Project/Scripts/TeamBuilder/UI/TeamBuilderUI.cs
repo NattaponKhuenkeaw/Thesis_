@@ -70,6 +70,7 @@ namespace Project.TeamBuilder.UI
         // =========================================================
         // Runtime State
         // =========================================================
+        private static TeamBuilderUI activeInstance;
         private IZoneStateListener[] modeHandlers;
         private bool isInitialized = false;
         private int panelOpenedFrame = -1;
@@ -93,6 +94,7 @@ namespace Project.TeamBuilder.UI
 
         private void OnEnable()
         {
+            activeInstance = this;
             if (zoneStateProvider != null)
             {
                 zoneStateProvider.OnZoneModeChanged += HandleZoneChanged;
@@ -102,6 +104,11 @@ namespace Project.TeamBuilder.UI
 
         private void OnDisable()
         {
+            if (activeInstance == this)
+            {
+                activeInstance = null;
+            }
+
             ClearArtifactSwitchSelection();
             if (zoneStateProvider != null)
             {
@@ -318,7 +325,20 @@ namespace Project.TeamBuilder.UI
 
         public void ClosePanel()
         {
+            SaveDraftOnExit();
             OnPanelClosed();
+        }
+
+        public static bool TryCloseFromEscape()
+        {
+            TeamBuilderUI panel = activeInstance;
+            if (panel == null || !panel.isPanelSessionActive || !panel.isActiveAndEnabled)
+            {
+                return false;
+            }
+
+            panel.ClosePanel();
+            return true;
         }
 
         public void TogglePanel()
@@ -1121,10 +1141,22 @@ namespace Project.TeamBuilder.UI
             }
 
             EnsureInitialized();
-            draftController.SaveDraftCache();
-            pendingCloseAfterDeploy = closeAfterSave;
-            deployController.Show();
+            SaveDraftOnExit();
+            closeAfterSave?.Invoke();
             return true;
+        }
+
+        private void SaveDraftOnExit()
+        {
+            if (currentMode != ZoneMode.SafeZone || draftController == null)
+            {
+                return;
+            }
+
+            EnsureInitialized();
+            draftController.SaveDraftCache();
+            deployController?.Hide();
+            DeployDraftToRuntime();
         }
 
         public bool IsSlotRemovalDropTarget(PointerEventData eventData)

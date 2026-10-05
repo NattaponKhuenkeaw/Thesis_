@@ -3,6 +3,7 @@ using Project.Core.RunEnd;
 using Project.Core.ZoneState;
 using Project.Progression;
 using Project.ShopSystem;
+using Project.TeamBuilder.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -88,6 +89,11 @@ namespace Project.UI
         private void Update()
         {
             if (isLeaving || !PausePressedThisFrame())
+            {
+                return;
+            }
+
+            if (!isPaused && EscapePressedThisFrame() && TeamBuilderUI.TryCloseFromEscape())
             {
                 return;
             }
@@ -498,10 +504,15 @@ namespace Project.UI
             eventSystemObject.AddComponent<InputSystemUIInputModule>();
         }
 
-        private static bool PausePressedThisFrame()
+        private static bool EscapePressedThisFrame()
         {
             Keyboard keyboard = Keyboard.current;
-            if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame)
+            return keyboard != null && keyboard.escapeKey.wasPressedThisFrame;
+        }
+
+        private static bool PausePressedThisFrame()
+        {
+            if (EscapePressedThisFrame())
             {
                 return true;
             }
