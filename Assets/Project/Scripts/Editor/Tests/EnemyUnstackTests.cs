@@ -20,6 +20,7 @@ public class EnemyUnstackTests
 
             left.transform.position = Vector3.zero;
             right.transform.position = new Vector3(0.12f, 0f, 0f);
+            Physics2D.SyncTransforms();
             RoomEnemyRegistry.Register(enemyA);
             RoomEnemyRegistry.Register(enemyB);
 

@@ -72,5 +72,6 @@ public sealed class EnemyKit : ScriptableObject
     public Vector2 MuzzleOffset => muzzleOffset;
     public LayerMask LineOfFireMask => lineOfFireMask;
 
-    public bool UsesRangedAttack => combatRole == EnemyCombatRole.RangedHold;
+    public bool UsesRangedAttack => combatRole == EnemyCombatRole.RangedHold
+        || combatRole == EnemyCombatRole.AimedRanged;
 }

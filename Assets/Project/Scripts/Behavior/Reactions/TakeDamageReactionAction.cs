@@ -130,8 +130,7 @@ namespace Unity.Behavior
             m_WaitingForReaction  = true;
             m_FallbackTimer      = 0f;
             if (IsTakingDamage != null) IsTakingDamage.Value = true;
-            if (m_Handler == null)
-                m_AnimHandler?.TriggerTakeDamage();
+            m_AnimHandler?.TriggerTakeDamage();
         }
     }
 }

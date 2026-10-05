@@ -19,6 +19,9 @@ public static class EnemyCombatRange
         if (controller != null)
             range = controller.ResolveAttackRange(attackRange);
 
+        if (controller != null && controller.CombatRole == EnemyCombatRole.ShieldGuard && controller.ShieldGuard != null)
+            return controller.ShieldGuard.CanEngage(target.transform);
+
         if (locomotion != null)
         {
             return locomotion.IsInAttackRangeOfTarget(target.transform, range);

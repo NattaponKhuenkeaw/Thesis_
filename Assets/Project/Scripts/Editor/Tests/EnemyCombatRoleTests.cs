@@ -466,6 +466,7 @@ public class EnemyCombatRoleTests
             target.transform.position = new Vector3(10f, 0f, 0f);
             EnemyFacingUtil.FaceHorizontal(agent.transform, 1f);
 
+            Physics2D.SyncTransforms();
             locomotion.MoveTowardsX(0f, 6f);
 
             Assert.That(EnemyFacingUtil.GetFacingSign(agent.transform), Is.EqualTo(-1f));
@@ -591,11 +592,45 @@ public class EnemyCombatRoleTests
             agent.transform.position = new Vector3(20f, 0f, 0f);
             target.transform.position = Vector3.zero;
 
+            Physics2D.SyncTransforms();
             Assert.That(enemy.ResolveHoldRange(12f), Is.EqualTo(7f).Within(0.0001f));
             Assert.That(locomotion.IsAtHoldSlot(target.transform, 12f), Is.False);
 
             locomotion.MoveTowardsTargetRange(target.transform, 12f, 6f, 0.16f);
             Assert.That(body.linearVelocity.x, Is.LessThan(-0.1f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(agent);
+            Object.DestroyImmediate(target);
+        }
+    }
+
+    [Test]
+    public void FlyingRangedHoldsAltitudeWithoutBackingOutOfTheShotBand()
+    {
+        var agent = new GameObject(nameof(FlyingRangedHoldsAltitudeWithoutBackingOutOfTheShotBand));
+        var target = new GameObject(nameof(FlyingRangedHoldsAltitudeWithoutBackingOutOfTheShotBand) + "_Target");
+        try
+        {
+            Rigidbody2D body = agent.AddComponent<Rigidbody2D>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(agent);
+            enemy.CombatRole = EnemyCombatRole.RangedHold;
+            enemy.AttackRangeOverride = 12f;
+            EnemyLocomotion locomotion = agent.AddComponent<EnemyLocomotion>();
+            var serialized = new UnityEditor.SerializedObject(locomotion);
+            serialized.FindProperty("moveMode").enumValueIndex = (int)EnemyMoveMode.Fly;
+            serialized.FindProperty("allowNonGroundMove").boolValue = true;
+            serialized.FindProperty("attackSlotOffset").vector2Value = new Vector2(1.5f, 1.2f);
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+
+            agent.transform.position = new Vector3(4f, 0f, 0f);
+            target.transform.position = Vector3.zero;
+
+            Assert.That(locomotion.IsAtHoldSlot(target.transform, 12f), Is.False);
+            locomotion.MoveTowardsTargetRange(target.transform, 12f, 6f, 0.16f);
+            Assert.That(body.linearVelocity.y, Is.GreaterThan(0.1f));
+            Assert.That(Mathf.Abs(body.linearVelocity.x), Is.LessThan(0.1f));
         }
         finally
         {

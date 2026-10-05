@@ -48,6 +48,7 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
     private AnimationHandler_Enemy m_AnimHandler;
     private EnemyLocomotion m_Locomotion;
     private Rigidbody2D m_Body;
+    private EnemyShieldGuard m_ShieldGuard;
     private float m_Timer;
     private float m_AttackStartTime;
     private float m_PhaseEndTime;
@@ -86,13 +87,24 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         if (!CanReachTarget())
             return Status.Failure;
 
+        m_ShieldGuard = m_Controller.CombatRole == EnemyCombatRole.ShieldGuard ? m_Controller.ShieldGuard : null;
+        if (m_ShieldGuard != null)
+        {
+            m_Interrupted = false;
+            if (!m_ShieldGuard.BeginGuard(Target.Value.transform))
+                return Status.Failure;
+            if (CanAttack != null)
+                CanAttack.Value = false;
+            return Status.Running;
+        }
+
         if (CanAttack != null)
             CanAttack.Value = false;
 
-        // Aim once, then hold. The whole swing resolves in the direction the telegraph showed,
-        // so dashing behind the enemy during the wind-up is a real escape.
+        // Melee locks its facing. Aimed projectiles track during the warning and commit on firing.
         FaceTarget();
         m_Controller.LockFacing();
+        m_Controller.BeginRangedAim(Target.Value != null ? Target.Value.transform : null);
 
         float telegraphDuration = ResolveTelegraphDuration();
         if (telegraphDuration > 0f)
@@ -129,6 +141,16 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
     {
         if (m_Controller == null)
             return Status.Failure;
+
+        if (m_ShieldGuard != null)
+        {
+            if (Target == null || Target.Value == null)
+            {
+                m_ShieldGuard.EndGuard();
+                return Status.Success;
+            }
+            return m_ShieldGuard.TickGuard(Time.deltaTime, Target.Value.transform) ? Status.Running : Status.Success;
+        }
 
         float telegraphDuration = ResolveTelegraphDuration();
         float commitFraction = ResolveCommitFraction();
@@ -188,12 +210,25 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
 
     protected override void OnEnd()
     {
+        if (m_ShieldGuard != null)
+        {
+            m_ShieldGuard.EndGuard();
+            if (CanAttack != null)
+                CanAttack.Value = true;
+            m_ShieldGuard = null;
+            m_Controller = null;
+            m_AnimHandler = null;
+            m_Locomotion = null;
+            m_Body = null;
+            return;
+        }
         m_AnimHandler?.EndBodyChargePose();
         if (IsBodyCharge && m_Controller.CurrentReactionState == EnemyReactionState.None)
             StopChargeMotion();
         RestoreChargeHitbox();
         m_Controller?.SetAttackHitboxActive(false);
         m_Controller?.HideAttackWarning();
+        m_Controller?.EndRangedAim();
         if (m_Body != null && (m_Controller == null || m_Controller.CurrentReactionState == EnemyReactionState.None) && m_Interrupted)
             m_Body.linearVelocity = new Vector2(0f, m_Body.linearVelocity.y);
         EndCommitment();
@@ -330,6 +365,7 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
             BeginCommitment();
 
         m_Controller?.HideAttackWarning();
+        m_Controller?.CommitRangedAim();
         if (!IsBodyCharge || m_AnimHandler == null || !m_AnimHandler.PlayBodyChargePose(true))
             m_AnimHandler?.TriggerAttack();
 
@@ -514,6 +550,9 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         float range = 1.5f;
         if (m_Controller != null)
             range = m_Controller.ResolveAttackRange(range);
+
+        if (m_Controller != null && m_Controller.CombatRole == EnemyCombatRole.ShieldGuard && m_Controller.ShieldGuard != null)
+            return m_Controller.ShieldGuard.CanEngage(Target.Value.transform);
 
         if (m_Controller != null && m_Controller.UsesRangedAttack)
             return m_Controller.HasClearStraightShot(Target.Value.transform, range);

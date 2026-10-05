@@ -544,7 +544,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6799058080861486406, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.73
+      value: 0.35
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Size.x
@@ -681,6 +681,46 @@ PrefabInstance:
     - target: {fileID: 8917136744719106790, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: -6515187417249938201, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: usePositionReactions
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -6515187417249938201, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: maximumReactionTravel
+      value: 1.2
+      objectReference: {fileID: 0}
+    - target: {fileID: -6515187417249938201, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: comboHitTravel
+      value: 0.22
+      objectReference: {fileID: 0}
+    - target: {fileID: -6515187417249938201, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: mediumHitTravel
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: -6515187417249938201, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: airFollowupTravel
+      value: 0.12
+      objectReference: {fileID: 0}
+    - target: {fileID: -6515187417249938201, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: airFollowupHold
+      value: 0.06
+      objectReference: {fileID: 0}
+    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: reactionAnimations.enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: reactionAnimations.comboAccentCharacter
+      value:
+      objectReference: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
+    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: reactionAnimations.knockdown
+      value: Base Layer.Hurt
+      objectReference: {fileID: 0}
+    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: reactionAnimations.getUp
+      value: Base Layer.Hurt
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

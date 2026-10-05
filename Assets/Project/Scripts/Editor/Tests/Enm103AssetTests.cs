@@ -8,14 +8,16 @@ public class Enm103AssetTests
     private const string Root = "Assets/Project/Character/enemy/enemy/Enm103/";
 
     [Test]
-    public void PrefabUsesChargeKitAndOverridesEveryBaseClip()
+    public void PrefabUsesShieldGuardKitAndOverridesEveryBaseClip()
     {
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(Root + "Enemy103.prefab");
         Assert.That(prefab, Is.Not.Null);
         var enemy = prefab.GetComponent<EnemyController>();
         Assert.That(enemy, Is.Not.Null);
         Assert.That(enemy.Kit, Is.EqualTo(AssetDatabase.LoadAssetAtPath<EnemyKit>(
-            "Assets/Project/Resources/EnemySo/EK_MeleeCommit.asset")));
+            "Assets/Project/Resources/EnemySo/EK_ShieldGuard.asset")));
+        Assert.That(enemy.CombatRole, Is.EqualTo(EnemyCombatRole.ShieldGuard));
+        Assert.That(prefab.GetComponent<EnemyShieldGuard>(), Is.Not.Null);
         var controller = prefab.GetComponent<Animator>().runtimeAnimatorController as AnimatorOverrideController;
         Assert.That(controller, Is.Not.Null);
         Assert.That(controller["Enemy2_Crouch"].name, Is.EqualTo("Enm103_Windup"));

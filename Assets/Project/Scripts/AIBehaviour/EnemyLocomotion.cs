@@ -20,7 +20,7 @@ public class EnemyLocomotion : MonoBehaviour
     [Tooltip("While moving, face the walk direction. Attack still turns to the player when standing.")]
     [SerializeField] private bool faceTargetOnMove = true;
 
-    [Tooltip("Leave off for Enemy1-3. Fly/Warp stay in code for later kits.")]
+    [Tooltip("Enable for Fly/Warp kits. Ground kits leave this off.")]
     [SerializeField] private bool allowNonGroundMove = false;
 
     [Header("Ground Reach")]
@@ -29,6 +29,17 @@ public class EnemyLocomotion : MonoBehaviour
     [SerializeField, Min(0.05f)] private float ledgeProbeDistance = 0.2f;
     [SerializeField, Min(0.05f)] private float groundProbeDistance = 0.22f;
     [SerializeField] private LayerMask groundLayers;
+
+    [Header("Fixed Height Flight")]
+    [Tooltip("Fly on X at one height above the spawn platform. Never follow the target's Y.")]
+    [SerializeField] private bool fixedHeightFlight;
+    [Tooltip("World-space clearance between the body feet and the supporting platform.")]
+    [SerializeField, Min(0.1f)] private float flightHeight = 1.5f;
+    [SerializeField, Min(0.01f)] private float flightGroundTolerance = 0.2f;
+    [SerializeField, Min(0.1f)] private float flightGroundSearchDistance = 20f;
+    [Tooltip("How far the flyer travels left and right once the target is already in shot range.")]
+    [SerializeField, Min(0.5f)] private float flightPatrolSpan = 6f;
+    [SerializeField, Min(0.1f)] private float flightPatrolSpeed = 3f;
 
     // Both distances below are measured against the body, which is 1.35 wide on Enemy1-3. Anything
     // smaller reads two bodies as separate while they are visibly inside one another.
@@ -59,9 +70,22 @@ public class EnemyLocomotion : MonoBehaviour
     private float overlapElapsed;
     private float unstackUntil;
     private float unstackSign;
+    private bool flightInitialized;
+    private float flightWorldY;
+    private float flightGroundY;
+    private RigidbodyConstraints2D flightOriginalConstraints;
+    private bool flightOwnsConstraints;
+    private bool flightReactionAllowsVertical;
+    private float flightPatrolAnchorX;
+    private float flightPatrolSign = 1f;
+    private PlayerCharacter flightPatrolPlayer;
 
     public EnemyMoveMode MoveMode => moveMode;
     public Vector2 AttackSlotOffset => attackSlotOffset;
+    public bool UsesFixedHeightFlight => allowNonGroundMove && moveMode == EnemyMoveMode.Fly && fixedHeightFlight;
+    public bool FlightInitialized => flightInitialized;
+    public float FlightWorldY => flightWorldY;
+    public bool HoldsFlightPlaneForReaction => UsesFixedHeightFlight && flightInitialized && !flightReactionAllowsVertical;
 
     private void Awake()
     {
@@ -104,6 +128,143 @@ public class EnemyLocomotion : MonoBehaviour
             moveMode = EnemyMoveMode.Ground;
     }
 
+    public bool PrepareSpawnFlight()
+    {
+        Cache();
+        ReleaseFlightConstraints();
+        flightInitialized = false;
+        if (!UsesFixedHeightFlight)
+            return false;
+
+        Collider2D collider = ResolveBodyCollider();
+        if (collider == null)
+            return false;
+
+        Physics2D.SyncTransforms();
+        Vector3 current = BodyPosition();
+        Vector2 origin = new Vector2(collider.bounds.center.x, Mathf.Max(current.y, collider.bounds.min.y) + 0.1f);
+        if (!TryFindFlightGround(origin, flightGroundSearchDistance, out float groundY))
+        {
+            Debug.LogWarning($"{name}: Fixed-height flight needs supporting ground below its spawn point.", this);
+            return false;
+        }
+
+        flightGroundY = groundY;
+        flightWorldY = groundY + flightHeight - (collider.bounds.min.y - current.y);
+        flightInitialized = true;
+        flightPatrolAnchorX = current.x;
+        flightPatrolSign = EnemyFacingUtil.GetFacingSign(cachedTransform);
+        current.y = flightWorldY;
+        cachedTransform.position = current;
+        if (body != null)
+        {
+            body.position = current;
+            body.linearVelocity = Vector2.zero;
+            flightOriginalConstraints = body.constraints;
+            flightOwnsConstraints = true;
+            body.constraints |= RigidbodyConstraints2D.FreezePositionY;
+            body.gravityScale = 0f;
+        }
+        Physics2D.SyncTransforms();
+        return true;
+    }
+
+    public void ReleaseFlightConstraints()
+    {
+        if (body != null && flightOwnsConstraints)
+        {
+            body.constraints = flightOriginalConstraints;
+            body.gravityScale = cachedGravityScale;
+        }
+        flightOwnsConstraints = false;
+    }
+
+    private void FixedUpdate()
+    {
+        if (!UsesFixedHeightFlight || !flightInitialized || body == null)
+            return;
+        if (enemy != null && !enemy.IsAlive)
+        {
+            ReleaseFlightConstraints();
+            return;
+        }
+        // Do not overwrite a MovePosition scheduled by the hit-reaction motor.
+        if (enemy != null && enemy.hitReactionHandler != null && enemy.hitReactionHandler.OwnsPositionReactionMotion)
+            return;
+        if (enemy != null && enemy.CurrentReactionState != EnemyReactionState.None && flightReactionAllowsVertical)
+        {
+            // Reaction/grab ownership must finish before locomotion resumes its flight plane.
+            ReleaseFlightConstraints();
+            return;
+        }
+        if (enemy == null || enemy.CurrentReactionState == EnemyReactionState.None)
+            flightReactionAllowsVertical = false;
+        if (!flightOwnsConstraints)
+        {
+            flightOriginalConstraints = body.constraints;
+            flightOwnsConstraints = true;
+        }
+        body.constraints |= RigidbodyConstraints2D.FreezePositionY;
+        body.gravityScale = 0f;
+        Vector2 position = body.position;
+        position.y = flightWorldY;
+        body.position = position;
+        float vx = body.linearVelocity.x;
+        if (TrySampleFlightPatrol(out float patrolVx))
+        {
+            if (Mathf.Abs(patrolVx) > 0.001f && !HasFlightSupport(patrolVx))
+            {
+                flightPatrolSign = -Mathf.Sign(patrolVx);
+                patrolVx = flightPatrolSign * flightPatrolSpeed;
+                if (!HasFlightSupport(patrolVx))
+                    patrolVx = 0f;
+            }
+
+            vx = patrolVx;
+        }
+        else if (!HasFlightSupport(0f) || (Mathf.Abs(vx) > 0.001f && !HasFlightSupport(vx)))
+        {
+            vx = 0f;
+        }
+
+        body.linearVelocity = new Vector2(vx, 0f);
+    }
+
+    private void OnDisable()
+    {
+        ReleaseFlightConstraints();
+    }
+
+    public void ConstrainFlightReaction(ref HitReactionData data)
+    {
+        if (!UsesFixedHeightFlight || !flightInitialized)
+            return;
+        // Grabs retain socket ownership. Ordinary hits keep the authored horizontal flight plane
+        // and cannot enter an airborne reaction that waits forever for a grounded landing.
+        flightReactionAllowsVertical = data.reactionKind == EnemyReactionKind.Grab;
+        if (flightReactionAllowsVertical)
+        {
+            ReleaseFlightConstraints();
+            return;
+        }
+        if (data.reactionKind == EnemyReactionKind.Knockup || data.isKnockdown || data.reactionVelocity.y > 0f)
+            data.reactionKind = EnemyReactionKind.Knockback;
+        data.launchSpeed = 0f;
+        data.reactionVelocity.y = 0f;
+        data.isKnockdown = false;
+        data.knockupFrames = 0;
+        data.knockfallFrames = 0;
+        data.canAirJuggle = false;
+        data.landingBehavior = EnemyLandingBehavior.Recover;
+        if (data.hasSnapWorldPosition)
+            data.snapWorldPosition.y = flightWorldY;
+        else
+        {
+            data.useSnapToAnchor = false;
+            data.snapToAttacker = false;
+        }
+    }
+
     public Vector3 ResolveAttackSlot(Transform target)
     {
         Cache();
@@ -118,7 +279,8 @@ public class EnemyLocomotion : MonoBehaviour
             side = EnemyFacingUtil.GetFacingSign(cachedTransform);
 
         float x = targetPos.x + side * (Mathf.Abs(attackSlotOffset.x) + ResolveCrowdSlotOffset(target, side));
-        float y = moveMode == EnemyMoveMode.Ground ? self.y : targetPos.y + attackSlotOffset.y;
+        float y = UsesFixedHeightFlight ? flightWorldY
+            : moveMode == EnemyMoveMode.Ground ? self.y : targetPos.y + attackSlotOffset.y;
         return new Vector3(x, y, self.z);
     }
 
@@ -224,6 +386,25 @@ public class EnemyLocomotion : MonoBehaviour
         bool rangedHold = enemy != null && enemy.UsesRangedAttack;
         if (rangedHold && currentGap <= holdGap + arrivalThreshold)
         {
+            if (UsesFixedHeightFlight)
+                return false;
+
+            if (moveMode == EnemyMoveMode.Fly)
+            {
+                float yError = Mathf.Abs(BodyPosition().y - holdPoint.y);
+                if (yError > arrivalThreshold)
+                {
+                    Vector3 hover = BodyPosition();
+                    hover.y = holdPoint.y;
+                    DriveFly(hover, Mathf.Max(0f, speed));
+                    return false;
+                }
+
+                if (!IsUnstacking)
+                    StopMovement();
+                return true;
+            }
+
             if (!IsUnstacking)
                 StopHorizontal();
             return true;
@@ -246,6 +427,8 @@ public class EnemyLocomotion : MonoBehaviour
     public bool IsAtHoldSlot(Transform target, float attackRange)
     {
         Cache();
+        if (enemy != null && enemy.ShieldGuard != null && enemy.ShieldGuard.CanEngage(target))
+            return true;
         if (!TryResolveHoldPoint(target, attackRange, out Vector3 holdPoint, out float holdGap, out float currentGap))
             return false;
 
@@ -254,7 +437,15 @@ public class EnemyLocomotion : MonoBehaviour
 
         bool rangedHold = enemy != null && enemy.UsesRangedAttack;
         if (rangedHold)
-            return currentGap <= holdGap + arrivalThreshold;
+        {
+            if (currentGap > holdGap + arrivalThreshold)
+                return false;
+
+            if (moveMode != EnemyMoveMode.Fly)
+                return true;
+
+            return Mathf.Abs(BodyPosition().y - holdPoint.y) <= arrivalThreshold;
+        }
 
         return EnemyFacingUtil.HorizontalDistance(BodyPosition(), holdPoint) <= arrivalThreshold;
     }
@@ -285,7 +476,9 @@ public class EnemyLocomotion : MonoBehaviour
         holdGap += ResolveCrowdSlotOffset(target, side);
 
         float holdX = targetPos.x + side * holdGap;
-        holdPoint = moveMode == EnemyMoveMode.Ground
+        holdPoint = UsesFixedHeightFlight
+            ? new Vector3(holdX, flightWorldY, current.z)
+            : moveMode == EnemyMoveMode.Ground
             ? new Vector3(holdX, current.y, current.z)
             : new Vector3(holdX, targetPos.y + attackSlotOffset.y, current.z);
         return true;
@@ -331,10 +524,13 @@ public class EnemyLocomotion : MonoBehaviour
         if (!CanDriveMovement())
             return;
 
+        if (UsesFixedHeightFlight && !HasFlightSupport(signedSpeed))
+            signedSpeed = 0f;
+
         FaceWalkDirection(signedSpeed);
         if (body != null)
         {
-            body.linearVelocity = new Vector2(signedSpeed, body.linearVelocity.y);
+            body.linearVelocity = new Vector2(signedSpeed, UsesFixedHeightFlight ? 0f : body.linearVelocity.y);
             return;
         }
 
@@ -409,6 +605,12 @@ public class EnemyLocomotion : MonoBehaviour
 
     public bool UnstackIfOverlapping(float deltaTime)
     {
+        if (enemy != null && enemy.ShieldGuard != null && enemy.ShieldGuard.IsEngaged)
+        {
+            overlapElapsed = 0f;
+            unstackUntil = 0f;
+            return false;
+        }
         if (enemy != null && enemy.Kit != null && enemy.Kit.BodyCharge && enemy.FacingLocked)
         {
             overlapElapsed = 0f;
@@ -535,6 +737,26 @@ public class EnemyLocomotion : MonoBehaviour
 
         ApplyModeGravity();
         Vector3 current = BodyPosition();
+        if (UsesFixedHeightFlight)
+        {
+            target.y = flightWorldY;
+            float dx = target.x - current.x;
+            float vx = Mathf.Clamp(dx / PhysicsStep(), -speed, speed);
+            if (!flightInitialized || Mathf.Abs(dx) <= arrivalThreshold || !HasFlightSupport(vx))
+            {
+                if (body != null)
+                    body.linearVelocity = Vector2.zero;
+                return;
+            }
+            FaceWalkDirection(dx);
+            if (body != null)
+            {
+                body.linearVelocity = new Vector2(vx, 0f);
+            }
+            else
+                cachedTransform.position = new Vector3(Mathf.MoveTowards(current.x, target.x, speed * Time.deltaTime), flightWorldY, current.z);
+            return;
+        }
         Vector3 delta = target - current;
         delta.z = 0f;
         float dist = delta.magnitude;
@@ -620,6 +842,8 @@ public class EnemyLocomotion : MonoBehaviour
 
     private bool HasGroundInDirection(float dirSign)
     {
+        if (UsesFixedHeightFlight)
+            return HasFlightSupport(dirSign);
         if (Mathf.Approximately(dirSign, 0f))
             return true;
 
@@ -649,6 +873,89 @@ public class EnemyLocomotion : MonoBehaviour
         }
 
         return false;
+    }
+
+    private bool TrySampleFlightPatrol(out float velocityX)
+    {
+        velocityX = 0f;
+        if (enemy == null || !enemy.IsGameplayActive || enemy.CurrentReactionState != EnemyReactionState.None)
+            return false;
+
+        if (enemy.IsRangedAiming)
+            return true;
+
+        float center = flightPatrolAnchorX;
+        if (TryGetFlightPatrolPlayer(out Transform player))
+        {
+            float range = enemy.ResolveAttackRange(enemy.Kit != null ? enemy.Kit.AttackRange : 12f);
+            if (EnemyFacingUtil.HorizontalDistance(body.position, player.position) > range)
+                return false;
+
+            center = player.position.x;
+        }
+
+        float half = flightPatrolSpan * 0.5f;
+        float x = body.position.x;
+        if (x >= center + half)
+            flightPatrolSign = -1f;
+        else if (x <= center - half)
+            flightPatrolSign = 1f;
+
+        velocityX = flightPatrolSign * flightPatrolSpeed;
+        FaceWalkDirection(velocityX);
+        return true;
+    }
+
+    private bool TryGetFlightPatrolPlayer(out Transform player)
+    {
+        player = null;
+        if (flightPatrolPlayer == null || !flightPatrolPlayer.isActiveAndEnabled)
+            flightPatrolPlayer = FindFirstObjectByType<PlayerCharacter>();
+
+        if (flightPatrolPlayer == null)
+            return false;
+
+        player = flightPatrolPlayer.transform;
+        return player != null;
+    }
+
+    public bool HasFlightSupport(float directionX)
+    {
+        if (!UsesFixedHeightFlight || !flightInitialized)
+            return false;
+        Collider2D collider = ResolveBodyCollider();
+        if (collider == null)
+            return false;
+        Bounds bounds = collider.bounds;
+        float lookahead = Mathf.Abs(directionX) > 0.001f
+            ? Mathf.Sign(directionX) * (bounds.extents.x + ledgeProbeDistance + Mathf.Abs(directionX) * PhysicsStep())
+            : 0f;
+        Vector2 origin = new Vector2(bounds.center.x + lookahead, bounds.min.y + 0.05f);
+        return TryFindFlightGround(origin, flightHeight + flightGroundTolerance + 0.1f, out float groundY)
+            && Mathf.Abs(groundY - flightGroundY) <= flightGroundTolerance;
+    }
+
+    private bool TryFindFlightGround(Vector2 origin, float distance, out float groundY)
+    {
+        groundY = 0f;
+        ContactFilter2D filter = new ContactFilter2D();
+        filter.SetLayerMask(groundLayers);
+        filter.useTriggers = false;
+        int count = Physics2D.Raycast(origin, Vector2.down, filter, groundHits, distance);
+        float nearest = float.PositiveInfinity;
+        bool found = false;
+        for (int i = 0; i < count; i++)
+        {
+            RaycastHit2D hit = groundHits[i];
+            if (hit.collider == null || hit.normal.y < 0.5f || IsActorCollider(hit.collider, ResolveBodyCollider()))
+                continue;
+            if (hit.distance >= nearest)
+                continue;
+            nearest = hit.distance;
+            groundY = hit.point.y;
+            found = true;
+        }
+        return found;
     }
 
     private bool TryResolveUnstackSign(out float sign)

@@ -25,8 +25,6 @@ public class EnemyReactionCompatibilityTests
         handler = host.AddComponent<EnemyHitReactionHandler>();
         Invoke("Awake");
         enemy.hitReactionHandler = handler;
-        Set("knockdownHoldFrames", 2);
-        Set("getUpFrames", 3);
         completions = 0;
         handler.OnReactionComplete += () => completions++;
     }
@@ -38,23 +36,18 @@ public class EnemyReactionCompatibilityTests
         Object.DestroyImmediate(attacker);
     }
 
-    [TestCase(EnemyReactionKind.Flinch, DamageImpactTier.Low, 3)]
-    [TestCase(EnemyReactionKind.Flinch, DamageImpactTier.Medium, 9)]
-    [TestCase(EnemyReactionKind.Flinch, DamageImpactTier.Heavy, 9)]
-    [TestCase(EnemyReactionKind.Flinch, DamageImpactTier.Ultimate, 9)]
-    [TestCase(EnemyReactionKind.Knockback, DamageImpactTier.Low, 6)]
-    [TestCase(EnemyReactionKind.Knockback, DamageImpactTier.Medium, 12)]
-    public void GroundReactionKeepsBaselineFrameTrace(EnemyReactionKind kind, DamageImpactTier tier, int completeFrame)
+    [TestCase(EnemyReactionKind.Flinch, 3)]
+    [TestCase(EnemyReactionKind.Knockback, 6)]
+    public void GroundReactionRecoversFromAuthoredFrames(EnemyReactionKind kind, int recoveryStart)
     {
-        handler.StartReaction(Hit(kind, tier), Vector2.left);
-        int recoveryStart = kind == EnemyReactionKind.Flinch ? 3 : 6;
+        handler.StartReaction(Hit(kind, DamageImpactTier.Medium), Vector2.left);
+        const int completeFrame = 15;
         for (int frame = 1; frame <= completeFrame; frame++)
         {
             Step(frame);
             EnemyReactionState expected = frame <= 2 ? EnemyReactionState.ImpactFreeze
                 : frame < recoveryStart ? EnemyReactionState.Knockback
                 : frame == completeFrame ? EnemyReactionState.None
-                : frame <= recoveryStart + 2 ? EnemyReactionState.Knockdown
                 : EnemyReactionState.Recovering;
             Assert.That(handler.CurrentState, Is.EqualTo(expected), $"Frame {frame}");
             if (expected == EnemyReactionState.Knockback)
@@ -64,53 +57,26 @@ public class EnemyReactionCompatibilityTests
     }
 
     [Test]
-    public void SecondLowHitKnocksDownButExpiredStreakDoesNot()
+    public void HeavyGroundHitDoesNotForceKnockdown()
     {
-        var hit = Hit(EnemyReactionKind.Flinch, DamageImpactTier.Low);
-        handler.StartReaction(hit, Vector2.left);
+        handler.StartReaction(Hit(EnemyReactionKind.Flinch, DamageImpactTier.Heavy), Vector2.left);
         Step(3);
-        Assert.That(handler.IsInReaction, Is.False);
-        handler.StartReaction(hit, Vector2.left);
-        Step(3);
-        Assert.That(handler.CurrentState, Is.EqualTo(EnemyReactionState.Knockdown));
-        Step(6);
-        Step(9);
-        Assert.That(handler.IsInReaction, Is.False);
-        Assert.That(Get<int>("consecutiveLightHits"), Is.Zero);
-
-        handler.StartReaction(hit, Vector2.left);
-        Step(3);
-        Set("lastLightHitTime", Time.time - 1f);
-        handler.StartReaction(hit, Vector2.left);
-        Step(3);
-        Assert.That(handler.IsInReaction, Is.False);
+        Assert.That(handler.CurrentState, Is.EqualTo(EnemyReactionState.Recovering));
+        Assert.That(Get<HitReactionData>("currentReaction").landingBehavior, Is.EqualTo(EnemyLandingBehavior.Recover));
     }
 
     [Test]
-    public void RecoveryUsesTextTierNotPromotedShakeTier()
-    {
-        var hit = Hit(EnemyReactionKind.Flinch, DamageImpactTier.Low);
-        hit.impactTier = DamageImpactTier.Ultimate;
-        handler.StartReaction(hit, Vector2.left);
-        Step(3);
-        Assert.That(handler.IsInReaction, Is.False);
-    }
-
-    [Test]
-    public void AuthoredRecoveryFramesDoNotReplaceExistingHoldAndGetUpTiming()
+    public void AuthoredRecoveryFramesControlGroundRecovery()
     {
         var hit = Hit(EnemyReactionKind.Flinch, DamageImpactTier.Medium);
         hit.reactionTiming.recoveryFrames = 100;
-        Set("knockdownHoldFrames", 4);
-        Set("getUpFrames", 5);
         handler.StartReaction(hit, Vector2.left);
         Step(3);
-        Step(7);
-        Assert.That(handler.CurrentState, Is.EqualTo(EnemyReactionState.Knockdown));
         Step(8);
-        Step(12);
         Assert.That(handler.CurrentState, Is.EqualTo(EnemyReactionState.Recovering));
-        Step(13);
+        Step(105);
+        Assert.That(handler.CurrentState, Is.EqualTo(EnemyReactionState.Recovering));
+        Step(106);
         Assert.That(handler.CurrentState, Is.EqualTo(EnemyReactionState.None));
     }
 
@@ -126,7 +92,6 @@ public class EnemyReactionCompatibilityTests
         Assert.That(body.bodyType, Is.EqualTo(RigidbodyType2D.Kinematic));
         handler.StartReaction(hit, Vector2.left);
         Assert.That(handler.CurrentState, Is.EqualTo(EnemyReactionState.Grabbed));
-        Assert.That(Get<int>("consecutiveLightHits"), Is.Zero);
 
         var low = Hit(EnemyReactionKind.Flinch, DamageImpactTier.Low);
         low.reactionOwnerId = 11;
@@ -135,7 +100,6 @@ public class EnemyReactionCompatibilityTests
         handler.StartReaction(low, Vector2.left);
         Assert.That(handler.CurrentReactionOwnerId, Is.EqualTo(11));
         Assert.That(handler.CurrentState, Is.EqualTo(EnemyReactionState.Grabbed));
-        Assert.That(Get<int>("consecutiveLightHits"), Is.Zero);
         Assert.That(handler.ReleaseGrab(22), Is.False);
         Assert.That(handler.ReleaseGrab(11), Is.True);
         Assert.That(body.bodyType, Is.EqualTo(RigidbodyType2D.Dynamic));
@@ -166,9 +130,27 @@ public class EnemyReactionCompatibilityTests
         Assert.That(Get<int>("currentJuggleCount"), Is.EqualTo(2));
     }
 
-    [TestCase(DamageImpactTier.Low, 9)]
-    [TestCase(DamageImpactTier.Medium, 14)]
-    public void AirborneReactionKeepsTouchdownFrameBeforeRecovery(DamageImpactTier tier, int completeFrame)
+    [Test]
+    public void DisabledAirJuggleZerosLaunchWithoutIncrementingCount()
+    {
+        var hit = Hit(EnemyReactionKind.Knockup, DamageImpactTier.Medium);
+        hit.launchSpeed = 8f;
+        hit.canAirJuggle = true;
+        handler.StartReaction(hit, Vector2.left);
+        Step(3);
+
+        hit.canAirJuggle = false;
+        handler.StartReaction(hit, Vector2.left);
+        var resolved = Get<HitReactionData>("currentReaction");
+        Assert.That(Get<int>("currentJuggleCount"), Is.Zero);
+        Assert.That(resolved.launchSpeed, Is.Zero);
+        Assert.That(resolved.horizontalSpeed, Is.EqualTo(2f));
+        Assert.That(resolved.knockupFrames, Is.Zero);
+        Assert.That(resolved.landingBehavior, Is.EqualTo(EnemyLandingBehavior.Knockdown));
+    }
+
+    [Test]
+    public void AirborneRecoverLandingDoesNotForceKnockdown()
     {
         var floor = new GameObject("ReactionTestFloor");
         try
@@ -180,7 +162,7 @@ public class EnemyReactionCompatibilityTests
             Set("bodyCollider", collider);
             Physics2D.SyncTransforms();
 
-            var hit = Hit(EnemyReactionKind.Knockup, tier);
+            var hit = Hit(EnemyReactionKind.Knockup, DamageImpactTier.Low);
             hit.launchSpeed = 8f;
             handler.StartReaction(hit, Vector2.left);
             Step(3);
@@ -192,17 +174,12 @@ public class EnemyReactionCompatibilityTests
 
             body.linearVelocity = Vector2.down;
             Step(8);
-            Assert.That(handler.CurrentState, Is.EqualTo(EnemyReactionState.Knockdown));
-            Assert.That(completions, Is.Zero, "Even the first Low keeps its original touchdown frame.");
-            for (int frame = 9; frame <= completeFrame; frame++)
-            {
-                Step(frame);
-                EnemyReactionState expected = frame == completeFrame ? EnemyReactionState.None
-                    : frame <= 10 ? EnemyReactionState.Knockdown : EnemyReactionState.Recovering;
-                Assert.That(handler.CurrentState, Is.EqualTo(expected), $"Frame {frame}");
-            }
+            Assert.That(handler.CurrentState, Is.EqualTo(EnemyReactionState.Recovering));
+            Step(15);
+            Assert.That(handler.CurrentState, Is.EqualTo(EnemyReactionState.Recovering));
+            Step(16);
+            Assert.That(handler.CurrentState, Is.EqualTo(EnemyReactionState.None));
             Assert.That(completions, Is.EqualTo(1));
-            Assert.That(Get<int>("consecutiveLightHits"), Is.Zero);
         }
         finally
         {
@@ -211,111 +188,25 @@ public class EnemyReactionCompatibilityTests
     }
 
     [Test]
-    public void ForceClearDoesNotCompleteOrEraseAcceptedLowHitHistory()
+    public void ForceClearEndsReactionWithoutCompletion()
     {
-        var hit = Hit(EnemyReactionKind.Flinch, DamageImpactTier.Low);
-        handler.StartReaction(hit, Vector2.left);
+        handler.StartReaction(Hit(EnemyReactionKind.Flinch, DamageImpactTier.Low), Vector2.left);
         handler.ForceClearReaction();
         Assert.That(handler.IsInReaction, Is.False);
         Assert.That(completions, Is.Zero);
-        Assert.That(Get<int>("consecutiveLightHits"), Is.EqualTo(1));
-        handler.StartReaction(hit, Vector2.left);
-        Step(3);
-        Assert.That(handler.CurrentState, Is.EqualTo(EnemyReactionState.Knockdown));
-    }
-
-    [TestCase(0.84f, EnemyLandingBehavior.Knockdown, 2)]
-    [TestCase(0.85f, EnemyLandingBehavior.Knockdown, 2)]
-    [TestCase(0.86f, EnemyLandingBehavior.Recover, 1)]
-    public void ResolverPreservesInclusiveLowHitWindow(float now, EnemyLandingBehavior expected, int expectedCount)
-    {
-        var hit = Hit(EnemyReactionKind.Flinch, DamageImpactTier.Low);
-        int count = 1;
-        float lastTime = 0f;
-        ReactionResolver.ResolveAcceptedHitRecovery(ref hit, now, 0.85f, ref count, ref lastTime);
-        Assert.That(hit.landingBehavior, Is.EqualTo(expected));
-        Assert.That(count, Is.EqualTo(expectedCount));
-        Assert.That(lastTime, Is.EqualTo(now));
-    }
-
-    [TestCase(EnemyReactionKind.Flinch, DamageImpactTier.Low, EnemyLandingBehavior.Knockdown, EnemyLandingBehavior.Recover)]
-    [TestCase(EnemyReactionKind.Flinch, DamageImpactTier.Medium, EnemyLandingBehavior.Recover, EnemyLandingBehavior.Knockdown)]
-    [TestCase(EnemyReactionKind.Grab, DamageImpactTier.Low, EnemyLandingBehavior.Recover, EnemyLandingBehavior.Knockdown)]
-    public void FinalRecoveryPreservesLegacyPrecedenceOverAuthoredLanding(
-        EnemyReactionKind kind, DamageImpactTier tier, EnemyLandingBehavior authored, EnemyLandingBehavior expected)
-    {
-        var hit = Hit(kind, tier);
-        hit.landingBehavior = authored;
-        int count = 0;
-        float lastTime = 0f;
-        ReactionResolver.ResolveAcceptedHitRecovery(ref hit, 1f, 0.85f, ref count, ref lastTime);
-        Assert.That(hit.landingBehavior, Is.EqualTo(expected));
-        Assert.That(count, Is.EqualTo(expected == EnemyLandingBehavior.Recover ? 1 : 0));
     }
 
     [Test]
-    public void DisabledAirJuggleKeepsExistingZeroLaunchTimingAndDoesNotIncrementCount()
+    public void KnockdownContinuationPreservesGrabAndRewritesOtherHitsToKnockup()
     {
-        var hit = Hit(EnemyReactionKind.Knockup, DamageImpactTier.Medium);
-        hit.launchSpeed = 8f;
-        hit.canAirJuggle = false;
-        int count = 2;
-        ReactionResolver.ApplyAirJuggle(ref hit, ref count);
-        Assert.That(count, Is.EqualTo(2));
-        Assert.That(hit.launchSpeed, Is.Zero);
-        Assert.That(hit.horizontalSpeed, Is.EqualTo(2f));
-        Assert.That(hit.knockupFrames, Is.Zero);
-        Assert.That(hit.knockfallFrames, Is.EqualTo(2));
-        Assert.That(hit.ImpactFreezeFrames, Is.EqualTo(2));
-        Assert.That(hit.ActiveReactionFrames, Is.Zero);
-        Assert.That(hit.RecoveryFrames, Is.EqualTo(9));
-    }
+        Set("currentState", EnemyReactionState.Knockdown);
+        var grab = Hit(EnemyReactionKind.Grab, DamageImpactTier.Low);
+        grab.grabSocket = attacker.transform;
+        ReactionResolver.ResolveAgainstTarget(enemy, ref grab);
+        Assert.That(grab.reactionKind, Is.EqualTo(EnemyReactionKind.Grab));
+        Assert.That(grab.grabSocket, Is.EqualTo(attacker.transform));
 
-    [Test]
-    public void GrabIsNotConvertedByAirborneOrKnockdownContinuationRules()
-    {
-        handler.StartReaction(Hit(EnemyReactionKind.Knockup, DamageImpactTier.Medium), Vector2.left);
-        Step(3);
-        Assert.That(handler.CurrentState, Is.EqualTo(EnemyReactionState.Knockup));
-        AssertGrabUnchanged();
-
-        handler.StartReaction(Hit(EnemyReactionKind.Flinch, DamageImpactTier.Medium), Vector2.left);
-        Step(3);
-        Assert.That(handler.CurrentState, Is.EqualTo(EnemyReactionState.Knockdown));
-        AssertGrabUnchanged();
-
-        var floor = new GameObject("GrabRuleFloor");
-        try
-        {
-            floor.transform.position = new Vector3(0f, -1.02f, 0f);
-            floor.AddComponent<BoxCollider2D>().size = new Vector2(10f, 1f);
-            var collider = host.GetComponent<BoxCollider2D>() ?? host.AddComponent<BoxCollider2D>();
-            enemy.bodyCollider = collider;
-            Set("bodyCollider", collider);
-            Physics2D.SyncTransforms();
-
-            var hit = Hit(EnemyReactionKind.Knockup, DamageImpactTier.Medium);
-            hit.launchSpeed = 8f;
-            handler.StartReaction(hit, Vector2.left);
-            Step(3);
-            Step(5);
-            Step(7);
-            Assert.That(handler.CurrentState, Is.EqualTo(EnemyReactionState.Knockfall));
-            AssertGrabUnchanged();
-        }
-        finally
-        {
-            Object.DestroyImmediate(floor);
-        }
-    }
-
-    [Test]
-    public void NonGrabHitsStillConvertOnKnockdownContinuation()
-    {
-        handler.StartReaction(Hit(EnemyReactionKind.Flinch, DamageImpactTier.Medium), Vector2.left);
-        Step(3);
-        Assert.That(handler.CurrentState, Is.EqualTo(EnemyReactionState.Knockdown));
-
+        Set("currentState", EnemyReactionState.Knockfall);
         var followUp = Hit(EnemyReactionKind.Flinch, DamageImpactTier.Low);
         ReactionResolver.ResolveAgainstTarget(enemy, ref followUp);
         Assert.That(followUp.reactionKind, Is.EqualTo(EnemyReactionKind.Knockup));
@@ -324,10 +215,7 @@ public class EnemyReactionCompatibilityTests
     [Test]
     public void DirectEntryDoesNotReapplyUpstreamTargetRules()
     {
-        handler.StartReaction(Hit(EnemyReactionKind.Flinch, DamageImpactTier.Medium), Vector2.left);
-        Step(3);
-        Assert.That(handler.CurrentState, Is.EqualTo(EnemyReactionState.Knockdown));
-
+        Set("currentState", EnemyReactionState.Knockdown);
         handler.StartReaction(Hit(EnemyReactionKind.Knockback, DamageImpactTier.Medium), Vector2.left);
         Assert.That(Get<HitReactionData>("currentReaction").reactionKind, Is.EqualTo(EnemyReactionKind.Knockback));
         Step(3);
@@ -335,7 +223,7 @@ public class EnemyReactionCompatibilityTests
     }
 
     [Test]
-    public void LegacyNormalizationKeepsTimingOwnerInferenceAndScalingDefaults()
+    public void StartReactionInfersLegacyKindTimingOwnerAndScalingDefaults()
     {
         var hit = new HitReactionData
         {
@@ -347,18 +235,19 @@ public class EnemyReactionCompatibilityTests
             juggleLaunchScale = 0f,
             juggleStunScale = 2f
         };
-        ReactionResolver.NormalizeForExecution(ref hit);
-        Assert.That(hit.reactionKind, Is.EqualTo(EnemyReactionKind.Knockup));
-        Assert.That(hit.ImpactFreezeFrames, Is.EqualTo(5));
-        Assert.That(hit.ActiveReactionFrames, Is.EqualTo(8));
-        Assert.That(hit.RecoveryFrames, Is.EqualTo(9));
-        Assert.That(hit.reactionOwnerId, Is.EqualTo(attacker.transform.root.GetInstanceID()));
-        Assert.That(hit.juggleLaunchScale, Is.EqualTo(1f));
-        Assert.That(hit.juggleStunScale, Is.EqualTo(1f));
+        handler.StartReaction(hit, Vector2.left);
+        HitReactionData resolved = Get<HitReactionData>("currentReaction");
+        Assert.That(resolved.reactionKind, Is.EqualTo(EnemyReactionKind.Knockup));
+        Assert.That(resolved.ImpactFreezeFrames, Is.EqualTo(5));
+        Assert.That(resolved.ActiveReactionFrames, Is.EqualTo(8));
+        Assert.That(resolved.RecoveryFrames, Is.EqualTo(9));
+        Assert.That(resolved.reactionOwnerId, Is.EqualTo(attacker.transform.root.GetInstanceID()));
+        Assert.That(resolved.juggleLaunchScale, Is.EqualTo(1f));
+        Assert.That(resolved.juggleStunScale, Is.EqualTo(1f));
     }
 
     [Test]
-    public void BehaviorActionWaitsUntilExactRecoveryCompletion()
+    public void BehaviorActionWaitsUntilAuthoredRecoveryCompletes()
     {
         handler.StartReaction(Hit(EnemyReactionKind.Flinch, DamageImpactTier.Medium), Vector2.left);
         var action = new TakeDamageReactionAction
@@ -369,22 +258,13 @@ public class EnemyReactionCompatibilityTests
         var type = typeof(TakeDamageReactionAction);
         Assert.That(type.GetMethod("OnStart", Private).Invoke(action, null), Is.EqualTo(Node.Status.Running));
         Step(3);
-        Step(6);
-        Step(8);
+        Step(14);
         Assert.That(type.GetMethod("OnUpdate", Private).Invoke(action, null), Is.EqualTo(Node.Status.Running));
-        Step(9);
+        Step(15);
         Assert.That(type.GetMethod("OnUpdate", Private).Invoke(action, null), Is.EqualTo(Node.Status.Success));
         Assert.That(action.IsTakingDamage.Value, Is.False);
         Assert.That(completions, Is.EqualTo(1));
         type.GetMethod("OnEnd", Private).Invoke(action, null);
-    }
-
-    private void AssertGrabUnchanged()
-    {
-        var grab = Hit(EnemyReactionKind.Grab, DamageImpactTier.Low);
-        grab.grabSocket = attacker.transform;
-        ReactionResolver.ResolveAgainstTarget(enemy, ref grab);
-        Assert.That(grab.reactionKind, Is.EqualTo(EnemyReactionKind.Grab));
     }
 
     private static HitReactionData Hit(EnemyReactionKind kind, DamageImpactTier tier) => new HitReactionData

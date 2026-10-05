@@ -36,7 +36,11 @@ public enum EnemyCombatRole
     /// <summary>Melee. During telegraph only, hits deal damage but cannot stagger. Swing and recovery are interruptible.</summary>
     CommitMelee = 1,
     /// <summary>Ranged shot. Holds ground when the player walks in; does not kite.</summary>
-    RangedHold = 2
+    RangedHold = 2,
+    /// <summary>Ranged shot aimed at the target during the warning, then fired without homing.</summary>
+    AimedRanged = 3,
+    /// <summary>Stationary frontal guard with delayed turns and a close-range counterattack.</summary>
+    ShieldGuard = 4
 }
 
 /// <summary>

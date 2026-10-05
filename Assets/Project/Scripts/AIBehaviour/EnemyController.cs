@@ -202,6 +202,12 @@ public class EnemyController : MonoBehaviour
 
     [Header("Hit Reaction")]
     public EnemyHitReactionHandler hitReactionHandler;
+    private EnemyLocomotion locomotion;
+    public EnemyShieldGuard ShieldGuard { get; private set; }
+    private Transform rangedAimTarget;
+    private Collider2D rangedAimTargetBody;
+    private Vector2 committedShotDirection;
+    private bool rangedAimCommitted;
 
     [Header("Death")]
     [Tooltip("Seconds the corpse stays before Destroy. Must cover the death clip or the enemy pops mid-animation. Enemy_Die.anim runs 0.4s; bosses raise this via ConfigureDeathDespawn.")]
@@ -274,8 +280,8 @@ public class EnemyController : MonoBehaviour
     private LayerMask LineOfFireMask => kit != null ? kit.LineOfFireMask : rangedLineMask;
 
     public bool UninterruptibleOnceWindup => CombatRole == EnemyCombatRole.CommitMelee;
-    public bool UsesRangedAttack => CombatRole == EnemyCombatRole.RangedHold;
-    public bool NeverEvade => CombatRole == EnemyCombatRole.RangedHold;
+    public bool UsesRangedAttack => CombatRole == EnemyCombatRole.RangedHold || CombatRole == EnemyCombatRole.AimedRanged;
+    public bool NeverEvade => UsesRangedAttack || CombatRole == EnemyCombatRole.ShieldGuard;
     public Transform RangedMuzzle
     {
         get => rangedMuzzle;
@@ -396,6 +402,8 @@ public class EnemyController : MonoBehaviour
 
         if (hitReactionHandler == null)
             hitReactionHandler = GetComponent<EnemyHitReactionHandler>();
+        locomotion = GetComponent<EnemyLocomotion>();
+        ShieldGuard = GetComponent<EnemyShieldGuard>();
 
         if (worldUI == null)
             worldUI = GetComponentInChildren<EnemyWorldUI>(true);
@@ -572,6 +580,10 @@ public class EnemyController : MonoBehaviour
 
     internal void OnSpawnLifecycleEntered()
     {
+        if (locomotion == null)
+            locomotion = GetComponent<EnemyLocomotion>();
+        ShieldGuard?.EndGuard();
+        EndRangedAim();
         SetBehaviorAgentActive(false);
         SetAttackHitboxActive(false);
         HideAttackWarning();
@@ -584,7 +596,8 @@ public class EnemyController : MonoBehaviour
             bodyCollider = GetComponent<Collider2D>();
         if (useSpawnPresentation)
             Physics2D.SyncTransforms();
-        spawnFalling = useSpawnPresentation && !HasSpawnGroundSupport();
+        bool flightReady = locomotion != null && locomotion.PrepareSpawnFlight();
+        spawnFalling = useSpawnPresentation && !flightReady && !HasSpawnGroundSupport();
         if (spawnFalling && (rb == null || rb.bodyType != RigidbodyType2D.Dynamic || rb.gravityScale <= 0f || bodyCollider == null))
             Debug.LogWarning($"{name}: Air spawn needs a Dynamic Rigidbody2D with positive gravity and a body collider. Check prefab setup.", this);
         spawnAnimationPlaying = useSpawnPresentation && lifecycleAnimation != null
@@ -621,6 +634,9 @@ public class EnemyController : MonoBehaviour
 
     internal void OnDieLifecycleEntered()
     {
+        ShieldGuard?.EndGuard();
+        locomotion?.ReleaseFlightConstraints();
+        EndRangedAim();
         if (lifecycleAnimation == null)
             lifecycleAnimation = GetComponentInChildren<AnimationHandler_Enemy>(true);
         lifecycleAnimation?.SetLifecyclePhase(EnemyLifecycleStateId.Die);
@@ -709,6 +725,12 @@ public class EnemyController : MonoBehaviour
     {
         if (!isAlive || !IsGameplayActive) return 0f;
 
+        if (ShieldGuard != null && ShieldGuard.BlocksHit(attackerPosition, reactionData.damageDelivery))
+        {
+            LastHitAppliedReaction = false;
+            return 0f;
+        }
+
         bool isSeparateDamage = IsSecondaryDamage(reactionData.damageDelivery);
 
         if (!isSeparateDamage)
@@ -783,6 +805,11 @@ public class EnemyController : MonoBehaviour
         }
 
         // Fire event (reaction pose is driven by EnemyHitReactionHandler → AnimationHandler_Enemy)
+        if (shouldApplyReaction)
+        {
+            ShieldGuard?.EndGuard();
+            locomotion?.ConstrainFlightReaction(ref reactionData);
+        }
         OnDamaged?.Invoke(reactionData);
 
         // Separate damage intentionally skips reaction, flash, and behavior interruption.
@@ -1323,7 +1350,45 @@ public class EnemyController : MonoBehaviour
 
     public Vector2 GetRangedShotDirection()
     {
+        if (CombatRole == EnemyCombatRole.AimedRanged)
+        {
+            if (rangedAimCommitted)
+                return committedShotDirection;
+            if (rangedAimTarget != null)
+                return ResolveAimedShotDirection(rangedAimTarget, rangedAimTargetBody);
+        }
         return Vector2.right * EnemyFacingUtil.GetFacingSign(transform);
+    }
+
+    public bool IsRangedAiming => rangedAimTarget != null && !rangedAimCommitted;
+
+    public void BeginRangedAim(Transform target)
+    {
+        rangedAimTarget = target;
+        rangedAimTargetBody = CombatRole == EnemyCombatRole.AimedRanged ? ResolveShotTargetCollider(target) : null;
+        rangedAimCommitted = false;
+    }
+
+    public void CommitRangedAim()
+    {
+        if (CombatRole != EnemyCombatRole.AimedRanged)
+            return;
+        committedShotDirection = GetRangedShotDirection();
+        rangedAimCommitted = true;
+    }
+
+    public void EndRangedAim()
+    {
+        rangedAimTarget = null;
+        rangedAimTargetBody = null;
+        rangedAimCommitted = false;
+    }
+
+    private Vector2 ResolveAimedShotDirection(Transform target, Collider2D targetBody)
+    {
+        Vector2 aim = targetBody != null ? (Vector2)targetBody.bounds.center : (Vector2)target.position;
+        Vector2 delta = aim - (Vector2)GetRangedMuzzleWorldPosition();
+        return delta.sqrMagnitude > 0.0001f ? delta.normalized : Vector2.right * EnemyFacingUtil.GetFacingSign(transform);
     }
 
     public bool HasClearStraightShot(Transform target, float attackRange)
@@ -1338,6 +1403,13 @@ public class EnemyController : MonoBehaviour
         Vector2 direction = GetRangedShotDirection();
         Collider2D targetBody = ResolveShotTargetCollider(target);
         Vector3 aim = targetBody != null ? targetBody.bounds.center : EnemyCombatRange.GetAimPoint(target);
+
+        if (CombatRole == EnemyCombatRole.AimedRanged)
+        {
+            Vector2 delta = (Vector2)(aim - origin);
+            return delta.sqrMagnitude <= range * range
+                && !IsStraightShotBlocked(origin, ResolveAimedShotDirection(target, targetBody), delta.magnitude, target);
+        }
 
         float alongMuzzle = Vector2.Dot((Vector2)aim - (Vector2)origin, direction);
         float alongBody = Vector2.Dot((Vector2)aim - (Vector2)transform.position, direction);
@@ -1371,6 +1443,8 @@ public class EnemyController : MonoBehaviour
         HideRangedAimLaser();
 
         Vector3 origin = GetRangedMuzzleWorldPosition();
+        if (CombatRole == EnemyCombatRole.AimedRanged && rangedAimTarget == null && target != null)
+            BeginRangedAim(target);
         Vector2 direction = GetRangedShotDirection();
 
         GameObject shot = new GameObject("EnemyRangedShot");

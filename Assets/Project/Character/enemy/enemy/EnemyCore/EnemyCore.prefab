@@ -643,6 +643,8 @@ MonoBehaviour:
   currentState: 0
   currentJuggleCount: 0
   airJuggleSessionActive: 0
+  usePositionReactions: 1
+  useLegacyReaction: 1
   groundLayers:
     serializedVersion: 2
     m_Bits: 520

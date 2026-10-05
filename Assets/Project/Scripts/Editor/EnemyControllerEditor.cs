@@ -81,7 +81,8 @@ public sealed class EnemyControllerEditor : Editor
             return kitAsset != null && kitAsset.UsesRangedAttack;
         }
 
-        return role != null && role.enumValueIndex == (int)EnemyCombatRole.RangedHold;
+        return role != null && (role.enumValueIndex == (int)EnemyCombatRole.RangedHold
+            || role.enumValueIndex == (int)EnemyCombatRole.AimedRanged);
     }
 
     private static HashSet<string> BuildHiddenSet(bool hasKit, bool ranged)
