@@ -88,6 +88,27 @@ public class DeathResetOwnershipTests
         Assert.That(inventory.TryAddItem(allyItem), Is.False);
     }
 
+    [Test]
+    public void ShopPurchaseReacquiresDefeatedAllyWithoutOpeningGenericAdd()
+    {
+        inventory.SetRunCharacterCurrentHP(ally, 0f);
+        Assert.That(inventory.TryRemoveDefeatedTeamCharacter(ally, main, out _), Is.True);
+        Assert.That(inventory.TryAddItem(allyItem), Is.False);
+
+        int currencyBefore = inventory.currency;
+        GameObject shopObject = new GameObject("ShopPurchaseTest");
+        temporaryObjects.Add(shopObject);
+        ShopManager shop = shopObject.AddComponent<ShopManager>();
+        shop.playerInventory = inventory;
+
+        Assert.That(shop.CanPurchaseOffer(allyItem, 1, 10), Is.True);
+        Assert.That(shop.TryPurchase(allyItem, 1, 10), Is.True);
+        Assert.That(Owns(ally), Is.True);
+        Assert.That(inventory.IsCharacterDefeated(ally), Is.False);
+        Assert.That(inventory.GetRunCharacter(ally), Is.Not.Null);
+        Assert.That(inventory.currency, Is.EqualTo(currencyBefore - 10));
+    }
+
     [TestCase(false)]
     [TestCase(true)]
     public void WipeThenLobbyThenNewRunNeverRestoresDefeatedAlly(bool mainDiesLast)

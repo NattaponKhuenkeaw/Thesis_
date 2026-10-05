@@ -204,6 +204,19 @@ namespace Project.ShopSystem
 
             if (playerInventory.CanAfford(purchasePrice))
             {
+                if (item is CharacterItem defeatedCharacter && playerInventory.CanReacquireDefeatedCharacter(defeatedCharacter))
+                {
+                    if (!playerInventory.TryReacquireDefeatedCharacter(defeatedCharacter))
+                    {
+                        Debug.Log($"Cannot acquire shop item: {item.itemName}");
+                        return false;
+                    }
+
+                    playerInventory.SpendCurrency(purchasePrice);
+                    Debug.Log($"Acquired {item.itemName}.");
+                    return true;
+                }
+
                 AcquisitionResult result = InventoryAcquisitionResolver.Acquire(item, playerInventory, metaProgression, purchaseQuantity);
                 if (result.Succeeded)
                 {
@@ -553,6 +566,11 @@ namespace Project.ShopSystem
             if (item is ArtifactDefinition)
             {
                 return playerInventory.CanAddItem(item, amount);
+            }
+
+            if (item is CharacterItem defeatedCharacter && playerInventory.CanReacquireDefeatedCharacter(defeatedCharacter))
+            {
+                return true;
             }
 
             if (!playerInventory.HasItem(item))

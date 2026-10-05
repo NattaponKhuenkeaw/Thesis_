@@ -1137,6 +1137,39 @@ namespace Project.ShopSystem
             return IsCharacterDefeated(character);
         }
 
+        public bool CanReacquireDefeatedCharacter(CharacterItem item)
+        {
+            if (item == null || item.characterObjectData == null || HasItem(item))
+            {
+                return false;
+            }
+
+            if (!IsCharacterDefeated(item.characterObjectData))
+            {
+                return false;
+            }
+
+            // A full wipe still owns the death flow. Buying Main there would skip the lobby reset.
+            return !IsMainCharacter(item.characterObjectData) || !isDeathTeardown;
+        }
+
+        public bool TryReacquireDefeatedCharacter(CharacterItem item)
+        {
+            if (!CanReacquireDefeatedCharacter(item))
+            {
+                return false;
+            }
+
+            ReleaseCharacterDefeat(item.characterObjectData);
+            if (TryAddItem(item))
+            {
+                return true;
+            }
+
+            RecordCharacterDefeat(item.characterObjectData);
+            return false;
+        }
+
         private bool CannotAcquireCharacter(CharacterObject character)
         {
             if (character == null)
@@ -1151,6 +1184,24 @@ namespace Project.ShopSystem
             }
 
             return IsCharacterDefeated(character);
+        }
+
+        private void ReleaseCharacterDefeat(CharacterObject character)
+        {
+            if (character == null || defeatedCharactersThisRun == null)
+            {
+                return;
+            }
+
+            for (int i = defeatedCharactersThisRun.Count - 1; i >= 0; i--)
+            {
+                CharacterObject defeated = defeatedCharactersThisRun[i];
+                if (IsSameTeamCharacter(defeated, character)
+                    || (IsMainCharacter(defeated) && IsMainCharacter(character)))
+                {
+                    defeatedCharactersThisRun.RemoveAt(i);
+                }
+            }
         }
 
         private bool TryRestoreMainOwnershipForNewRun(CharacterItem mainItem, out string failureReason)
