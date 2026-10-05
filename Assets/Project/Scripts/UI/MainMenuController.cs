@@ -1,5 +1,6 @@
 using Project.Core;
 using Project.Progression;
+using Project.Save;
 using Project.ShopSystem;
 using TMPro;
 using UnityEngine;
@@ -11,7 +12,7 @@ using UnityEngine.UI;
 namespace Project.UI
 {
     /// <summary>
-    /// Title screen: Continue / New Game / Settings / Quit.
+    /// Title screen: Play opens the save panel, plus Settings / Quit.
     /// UI lives on the scene Canvas so it can be edited in the editor.
     /// </summary>
     [DisallowMultipleComponent]
@@ -29,9 +30,8 @@ namespace Project.UI
         [SerializeField] private GameObject confirmPanel;
 
         [Header("Main Buttons")]
-        [SerializeField] private Button continueButton;
-        [SerializeField] private TextMeshProUGUI continueLabel;
-        [SerializeField] private Button newGameButton;
+        [SerializeField] private Button playButton;
+        [SerializeField] private SaveSelectPanel saveSelectPanel;
         [SerializeField] private Button settingsButton;
         [SerializeField] private Button quitButton;
 
@@ -74,7 +74,9 @@ namespace Project.UI
                 confirmPanel.SetActive(false);
             }
 
-            RefreshContinueState();
+            EnsureSavePanel();
+            BindSavePanel();
+            saveSelectPanel?.Hide();
             PlayMenuBgm();
         }
 
@@ -85,7 +87,18 @@ namespace Project.UI
                 return;
             }
 
-            if (KeyboardEscapePressed() && settingsPanel != null && settingsPanel.activeSelf)
+            if (!KeyboardEscapePressed())
+            {
+                return;
+            }
+
+            if (saveSelectPanel != null && saveSelectPanel.IsOpen)
+            {
+                saveSelectPanel.Hide();
+                return;
+            }
+
+            if (settingsPanel != null && settingsPanel.activeSelf)
             {
                 CloseSettings();
             }
@@ -93,33 +106,18 @@ namespace Project.UI
 
         private void OnDestroy()
         {
+            UnbindSavePanel();
             StopMenuBgm();
         }
 
-        public void OnContinueClicked()
+        public void OnPlayClicked()
         {
-            if (isLoading || !PlayerMetaProgression.HasPersistentSave())
+            if (isLoading || saveSelectPanel == null)
             {
                 return;
             }
 
-            StartLobby(clearMeta: false);
-        }
-
-        public void OnNewGameClicked()
-        {
-            if (isLoading)
-            {
-                return;
-            }
-
-            if (PlayerMetaProgression.HasPersistentSave())
-            {
-                ShowConfirm(true);
-                return;
-            }
-
-            StartLobby(clearMeta: true);
+            saveSelectPanel.Open();
         }
 
         public void OnSettingsClicked()
@@ -164,8 +162,7 @@ namespace Project.UI
 
         private void BindUi()
         {
-            BindButton(continueButton, OnContinueClicked);
-            BindButton(newGameButton, OnNewGameClicked);
+            BindButton(playButton, OnPlayClicked);
             BindButton(settingsButton, OnSettingsClicked);
             BindButton(quitButton, OnQuitClicked);
             BindButton(settingsBackButton, CloseSettings);
@@ -244,12 +241,96 @@ namespace Project.UI
                     runInventory?.ResetRunStateForMenuStart();
                 }
             }
+            runInventory?.PublishActiveSaveHeader();
             GameSettings.Save();
             SceneManager.LoadScene(lobbySceneName);
         }
 
+        private void BeginSaveSlot(int slotIndex, bool createNew)
+        {
+            if (isLoading)
+            {
+                return;
+            }
+
+            SaveSlotStore.EnsureMigrated();
+            SaveSlotStore.SetActive(slotIndex);
+            if (createNew)
+            {
+                SaveSlotStore.Delete(slotIndex);
+            }
+
+            StartLobby(clearMeta: createNew);
+        }
+
+        private void OnCreateSave(int slotIndex)
+        {
+            BeginSaveSlot(slotIndex, createNew: true);
+        }
+
+        private void OnPlaySave(int slotIndex)
+        {
+            BeginSaveSlot(slotIndex, createNew: false);
+        }
+
+        private void OnDeleteSave(int slotIndex)
+        {
+            if (isLoading)
+            {
+                return;
+            }
+
+            SaveSlotStore.Delete(slotIndex);
+            saveSelectPanel?.Refresh();
+        }
+
+        private void BindSavePanel()
+        {
+            if (saveSelectPanel == null)
+            {
+                return;
+            }
+
+            saveSelectPanel.CreateRequested += OnCreateSave;
+            saveSelectPanel.PlayRequested += OnPlaySave;
+            saveSelectPanel.DeleteRequested += OnDeleteSave;
+        }
+
+        private void UnbindSavePanel()
+        {
+            if (saveSelectPanel == null)
+            {
+                return;
+            }
+
+            saveSelectPanel.CreateRequested -= OnCreateSave;
+            saveSelectPanel.PlayRequested -= OnPlaySave;
+            saveSelectPanel.DeleteRequested -= OnDeleteSave;
+        }
+
+        private void EnsureSavePanel()
+        {
+            if (saveSelectPanel != null)
+            {
+                return;
+            }
+
+            SaveSelectPanel prefab = Resources.Load<SaveSelectPanel>("UI/SaveSelectPanel");
+            if (prefab == null)
+            {
+                return;
+            }
+
+            saveSelectPanel = Instantiate(prefab);
+        }
+
         private void ShowSettings(bool show)
         {
+            if (show && saveSelectPanel != null)
+            {
+                saveSelectPanel.Hide();
+            }
+
             if (settingsPanel != null)
             {
                 settingsPanel.SetActive(show);
@@ -298,20 +379,6 @@ namespace Project.UI
             if (fullscreenToggle != null)
             {
                 fullscreenToggle.SetIsOnWithoutNotify(GameSettings.Fullscreen);
-            }
-        }
-
-        private void RefreshContinueState()
-        {
-            bool hasSave = PlayerMetaProgression.HasPersistentSave();
-            if (continueButton != null)
-            {
-                continueButton.interactable = hasSave;
-            }
-
-            if (continueLabel != null)
-            {
-                continueLabel.color = hasSave ? Color.white : new Color(1f, 1f, 1f, 0.35f);
             }
         }
 

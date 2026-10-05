@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Project.InventorySystem.Items;
+using Project.Save;
 using UnityEngine;
 
 namespace Project.Progression
@@ -86,8 +87,7 @@ namespace Project.Progression
             public IReadOnlyList<PotentialNodeDefinition> nodes;
         }
 
-        private const string SaveKey = "project.player_meta_progression.v2";
-        private const string LegacySaveKey = "project.player_meta_progression.v1";
+        private static string SaveKey => SaveSlotStore.ActiveMetaKey;
         /// <summary>Step 1 (Not Perma): meta save keeps fragments/potential only - not permanent dungeon items.</summary>
         private const bool PersistPermanentItemsInMeta = false;
 
@@ -121,7 +121,8 @@ namespace Project.Progression
 
         public static bool HasPersistentSave()
         {
-            return PlayerPrefs.HasKey(SaveKey) || PlayerPrefs.HasKey(LegacySaveKey);
+            SaveSlotStore.EnsureMigrated();
+            return PlayerPrefs.HasKey(SaveKey);
         }
 
         public bool CanAffordMetaCurrency(int amount)
@@ -600,28 +601,35 @@ namespace Project.Progression
                 return;
             }
 
+            SaveSlotStore.EnsureMigrated();
             hasLoadedPersistentState = true;
             string json = PlayerPrefs.GetString(SaveKey, string.Empty);
-            bool loadedLegacy = false;
             if (string.IsNullOrWhiteSpace(json))
             {
-                json = PlayerPrefs.GetString(LegacySaveKey, string.Empty);
-                loadedLegacy = !string.IsNullOrWhiteSpace(json);
-            }
-            if (string.IsNullOrWhiteSpace(json))
-            {
-                EnsureData();
-                SavePersistentState();
+                ClearLoadedState();
                 return;
             }
 
             int retiredArtifactFragments = ImportJsonInternal(json);
-            if (loadedLegacy || retiredArtifactFragments > 0)
+            SavedPlayerMetaProgressionData loaded = JsonUtility.FromJson<SavedPlayerMetaProgressionData>(json);
+            if (retiredArtifactFragments > 0 || loaded == null || loaded.schemaVersion < 2)
             {
-                Debug.Log($"PlayerMetaProgression: Migrated to v2 and omitted {retiredArtifactFragments} retired Artifact fragment(s). Character Potential data was preserved.");
+                Debug.Log($"PlayerMetaProgression: Migrated slot save to v2 and omitted {retiredArtifactFragments} retired Artifact fragment(s). Character Potential data was preserved.");
                 SavePersistentState();
             }
 
+            MarkCommitted();
+        }
+
+        private void ClearLoadedState()
+        {
+            EnsureData();
+            fragments.Clear();
+            characterPotentials.Clear();
+            unlockedCharacterIds.Clear();
+            permanentItems.Clear();
+            metaCurrency = 0;
+            InvalidatePotentialCache();
             MarkCommitted();
         }
 
@@ -654,6 +662,7 @@ namespace Project.Progression
                 return;
             }
 
+            SaveSlotStore.EnsureMigrated();
             PlayerPrefs.SetString(SaveKey, ExportJson());
             PlayerPrefs.Save();
         }

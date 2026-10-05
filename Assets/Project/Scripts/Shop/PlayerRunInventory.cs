@@ -6,6 +6,7 @@ using Project.Core.ZoneState;
 using Project.InventorySystem.Artifacts;
 using Project.InventorySystem.Items;
 using Project.Progression;
+using Project.Save;
 
 namespace Project.ShopSystem
 {
@@ -251,8 +252,8 @@ namespace Project.ShopSystem
         private const int DefaultCurrency = 1000;
         private const string SaveKey = "project.player_run_inventory.v3";
         private const string LegacySaveKey = "project.player_run_inventory.v2";
-        private const string BossLobbySaveKey = "project.player_run_inventory.boss_lobby.v1";
-        private const string BossLobbyMetaSaveKey = "project.player_meta_progression.boss_lobby.v1";
+        private static string BossLobbySaveKey => SaveSlotStore.ActiveBossRunKey;
+        private static string BossLobbyMetaSaveKey => SaveSlotStore.ActiveBossMetaKey;
         private const string MetaProgressionResourcePath = "InventorySO/PlayerMetaProgression";
         /// <summary>Step 1 (Not Perma): run inventory must not persist items/team/characters across sessions.</summary>
         private const bool PersistRunInventoryAcrossSessions = false;
@@ -2598,6 +2599,7 @@ namespace Project.ShopSystem
                 return;
             }
 
+            SaveSlotStore.EnsureMigrated();
             PlayerPrefs.SetString(BossLobbySaveKey, JsonUtility.ToJson(CaptureRunSnapshot()));
             PlayerMetaProgression meta = Resources.Load<PlayerMetaProgression>(MetaProgressionResourcePath);
             if (meta != null)
@@ -2605,11 +2607,14 @@ namespace Project.ShopSystem
                 PlayerPrefs.SetString(BossLobbyMetaSaveKey, meta.ExportJson());
                 meta.MarkCommitted();
             }
+
+            PublishActiveSaveHeader();
             PlayerPrefs.Save();
         }
 
         public bool TryRestoreBossLobbyCheckpoint()
         {
+            SaveSlotStore.EnsureMigrated();
             string json = PlayerPrefs.GetString(BossLobbySaveKey, string.Empty);
             if (string.IsNullOrWhiteSpace(json))
             {
@@ -2638,6 +2643,7 @@ namespace Project.ShopSystem
         public bool TryReadBossLobbyBiome(out int biomeIndex)
         {
             biomeIndex = 0;
+            SaveSlotStore.EnsureMigrated();
             string json = PlayerPrefs.GetString(BossLobbySaveKey, string.Empty);
             if (string.IsNullOrWhiteSpace(json))
             {
@@ -2679,8 +2685,130 @@ namespace Project.ShopSystem
             meta.SavePersistentState();
         }
 
+        public void PublishActiveSaveHeader()
+        {
+            if (!Application.isPlaying)
+            {
+                return;
+            }
+
+            SaveSlotStore.EnsureMigrated();
+            SaveSlotStore.WriteActiveHeader(BuildSaveHeader());
+        }
+
+        public static bool TryBuildHeaderFromBossJson(string json, out SaveSlotHeader header)
+        {
+            header = null;
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return false;
+            }
+
+            SavedPlayerRunInventoryData data;
+            try
+            {
+                data = JsonUtility.FromJson<SavedPlayerRunInventoryData>(json);
+            }
+            catch (ArgumentException)
+            {
+                Debug.LogWarning("[PlayerRunInventory] Boss checkpoint preview is invalid. Original checkpoint data was preserved.");
+                return false;
+            }
+            if (data == null)
+            {
+                return false;
+            }
+
+            header = new SaveSlotHeader
+            {
+                biomeIndex = Mathf.Max(0, data.biomeIndex),
+                globalLevel = Mathf.Max(1, data.globalLevel),
+                currency = Mathf.Max(0, data.currency),
+                characterIds = new string[SaveSlotStore.PortraitCount],
+                dead = new bool[SaveSlotStore.PortraitCount]
+            };
+
+            if (data.teamSlots == null)
+            {
+                return true;
+            }
+
+            int count = Mathf.Min(SaveSlotStore.PortraitCount, data.teamSlots.Count);
+            for (int i = 0; i < count; i++)
+            {
+                SavedRunTeamSlotRecord slot = data.teamSlots[i];
+                string characterId = slot != null ? slot.characterId : null;
+                header.characterIds[i] = characterId;
+                header.dead[i] = IsSavedCharacterDead(data, characterId);
+            }
+
+            return true;
+        }
+
+        private SaveSlotHeader BuildSaveHeader()
+        {
+            EnsureRunData();
+            int biome = 0;
+            if (RunProgressionManager.Instance != null)
+            {
+                biome = RunProgressionManager.Instance.CurrentBiomeIndex;
+            }
+            else if (TryReadBossLobbyBiome(out int savedBiome))
+            {
+                biome = savedBiome;
+            }
+
+            SaveSlotHeader header = new SaveSlotHeader
+            {
+                biomeIndex = Mathf.Max(0, biome),
+                globalLevel = Mathf.Max(1, GlobalLevel),
+                currency = Mathf.Max(0, currency),
+                characterIds = new string[SaveSlotStore.PortraitCount],
+                dead = new bool[SaveSlotStore.PortraitCount]
+            };
+
+            int count = Mathf.Min(SaveSlotStore.PortraitCount, TeamSlotCount);
+            for (int i = 0; i < count; i++)
+            {
+                CharacterObject character = GetTeamCharacterAt(i);
+                if (character == null || string.IsNullOrWhiteSpace(character.characterId))
+                {
+                    continue;
+                }
+
+                header.characterIds[i] = character.characterId;
+                RunCharacterState state = GetTeamRunCharacterAt(i);
+                bool hpDead = state != null && state.currentHP >= 0f && state.currentHP <= 0.01f;
+                header.dead[i] = hpDead || IsCharacterDefeated(character);
+            }
+
+            return header;
+        }
+
+        private static bool IsSavedCharacterDead(SavedPlayerRunInventoryData data, string characterId)
+        {
+            if (data == null || data.runCharacters == null || string.IsNullOrWhiteSpace(characterId))
+            {
+                return false;
+            }
+
+            for (int i = 0; i < data.runCharacters.Count; i++)
+            {
+                SavedRunCharacterRecord record = data.runCharacters[i];
+                if (record == null || record.characterId != characterId)
+                {
+                    continue;
+                }
+
+                return record.currentHP >= 0f && record.currentHP <= 0.01f;
+            }
+
+            return false;
+        }
+
         public void ClearBossLobbyCheckpoint()
         {
+            SaveSlotStore.EnsureMigrated();
             bool changed = false;
             if (PlayerPrefs.HasKey(BossLobbySaveKey))
             {
