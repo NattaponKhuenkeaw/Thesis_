@@ -120,8 +120,7 @@ MonoBehaviour:
   enemyPrefabs:
   - {fileID: 4739200647295624271, guid: fe04a9cf17d368a4cbf256db61cc07e0, type: 3}
   - {fileID: 4739200647295624271, guid: e102f18fe08f66f48929b12c9c6e44b4, type: 3}
-  - {fileID: 4739200647295624271, guid: e571f18fe08f66f48929b12c9c6e44b4, type: 3}
-  - {fileID: 4739200647295624271, guid: a8c4e91f3b7d4e6a9c2f1d0e8b5a4732, type: 3}
+  - {fileID: 4739200647295624271, guid: eb38c2b1d2e38d94e5d8b2cb57b01406, type: 3}
   enemy101Prefab: {fileID: 4739200647295624271, guid: fe04a9cf17d368a4cbf256db61cc07e0, type: 3}
   enemy102Prefab: {fileID: 4739200647295624271, guid: e102f18fe08f66f48929b12c9c6e44b4, type: 3}
   enemy103Prefab: {fileID: 4739200647295624271, guid: eb38c2b1d2e38d94e5d8b2cb57b01406, type: 3}
@@ -2989,7 +2988,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 251.41394, y: 0}
+  m_SizeDelta: {x: 251.414, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &2896684889353881567
 CanvasRenderer:
@@ -5107,7 +5106,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7937761972795639852, guid: 44e8b3570c702404c96e550d6fdc50b1, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 251.41394
+      value: 251.414
       objectReference: {fileID: 0}
     - target: {fileID: 7937761972795639852, guid: 44e8b3570c702404c96e550d6fdc50b1, type: 3}
       propertyPath: m_SizeDelta.y

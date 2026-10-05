@@ -236,38 +236,57 @@ public class EncounterPressureSpawnTests
     }
 
     [Test]
-    public void RouteOfferTablesIncludeEnemy3AndPressureCap()
+    public void RouteOfferTablesUseAuthoredEnemiesNotEnemyCore()
     {
         RouteOfferTables tables = UnityEditor.AssetDatabase.LoadAssetAtPath<RouteOfferTables>(
             "Assets/Project/Resources/MapSO/RouteOfferTables.asset");
         Assert.That(tables, Is.Not.Null);
         Assert.That(tables.AliveCap, Is.EqualTo(3));
 
-        GameObject enemy3 = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+        GameObject enemy1 = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+            "Assets/Project/Character/enemy/enemy/Enm101/Enemy1.prefab");
+        GameObject enemy102 = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+            "Assets/Project/Character/enemy/enemy/Enm102/Enemy102.prefab");
+        GameObject enemy103 = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+            "Assets/Project/Character/enemy/enemy/Enm103/Enemy103.prefab");
+        GameObject coreEnemy2 = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+            "Assets/Project/Character/enemy/enemy/EnemyCore/Enemy2.prefab");
+        GameObject coreEnemy3 = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
             "Assets/Project/Character/enemy/enemy/EnemyCore/Enemy3.prefab");
-        Assert.That(enemy3, Is.Not.Null);
+        Assert.That(enemy1, Is.Not.Null);
+        Assert.That(enemy102, Is.Not.Null);
+        Assert.That(enemy103, Is.Not.Null);
 
-        bool found = false;
         IReadOnlyList<RouteOfferTables.DifficultyProfile> profiles = tables.Profiles;
+        Assert.That(profiles.Count, Is.GreaterThan(0));
         for (int p = 0; p < profiles.Count; p++)
         {
             List<RouteOfferTables.EnemyEntry> pool = profiles[p].enemyPool;
-            if (pool == null)
-            {
-                continue;
-            }
+            Assert.That(pool, Is.Not.Null);
+            Assert.That(PoolContains(pool, enemy1), Is.True, profiles[p].difficulty + " missing Enemy1.");
+            Assert.That(PoolContains(pool, enemy102), Is.True, profiles[p].difficulty + " missing Enemy102.");
+            Assert.That(PoolContains(pool, enemy103), Is.True, profiles[p].difficulty + " missing Enemy103.");
+            Assert.That(PoolContains(pool, coreEnemy2), Is.False, profiles[p].difficulty + " still spawns EnemyCore Enemy2.");
+            Assert.That(PoolContains(pool, coreEnemy3), Is.False, profiles[p].difficulty + " still spawns EnemyCore Enemy3.");
+        }
+    }
 
-            for (int i = 0; i < pool.Count; i++)
+    private static bool PoolContains(List<RouteOfferTables.EnemyEntry> pool, GameObject prefab)
+    {
+        if (prefab == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < pool.Count; i++)
+        {
+            if (pool[i] != null && pool[i].prefab == prefab)
             {
-                if (pool[i] != null && pool[i].prefab == enemy3)
-                {
-                    found = true;
-                    break;
-                }
+                return true;
             }
         }
 
-        Assert.That(found, Is.True, "Enemy3 missing from RouteOfferTables pools.");
+        return false;
     }
 #endif
 }

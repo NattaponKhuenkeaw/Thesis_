@@ -72,17 +72,35 @@ public class AdminConsole : MonoBehaviour
 
     public void SpawnEnemy101()
     {
-        SpawnPrefab(enemy101Prefab != null ? enemy101Prefab : enemyPrefab);
+        SpawnPrefab(ResolvePrefab(enemy101Prefab != null ? enemy101Prefab : enemyPrefab, Enemy1AssetPath));
     }
 
     public void SpawnEnemy102()
     {
-        SpawnPrefab(enemy102Prefab);
+        SpawnPrefab(ResolvePrefab(enemy102Prefab, Enemy102AssetPath));
     }
 
     public void SpawnEnemy103()
     {
-        SpawnPrefab(enemy103Prefab);
+        SpawnPrefab(ResolvePrefab(enemy103Prefab, Enemy103AssetPath));
+    }
+
+    private const string Enemy1AssetPath = "Assets/Project/Character/enemy/enemy/Enm101/Enemy1.prefab";
+    private const string Enemy102AssetPath = "Assets/Project/Character/enemy/enemy/Enm102/Enemy102.prefab";
+    private const string Enemy103AssetPath = "Assets/Project/Character/enemy/enemy/Enm103/Enemy103.prefab";
+
+    private static GameObject ResolvePrefab(GameObject assigned, string assetPath)
+    {
+        if (assigned != null)
+            return assigned;
+
+        // Variant conversion dropped the old root id, so a scene can keep a missing slot
+        // even after the prefab asset is repaired. The editor can still load by path.
+#if UNITY_EDITOR
+        return UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+#else
+        return null;
+#endif
     }
 
     private void SpawnPrefab(GameObject prefab)
@@ -129,7 +147,13 @@ public class AdminConsole : MonoBehaviour
             }
         }
 
-        return enemyPrefab;
+        GameObject fallback = ResolvePrefab(enemyPrefab, Enemy1AssetPath);
+        if (fallback != null)
+            return fallback;
+        fallback = ResolvePrefab(null, Enemy102AssetPath);
+        if (fallback != null)
+            return fallback;
+        return ResolvePrefab(null, Enemy103AssetPath);
     }
 
     public void KillAllEnemies()
