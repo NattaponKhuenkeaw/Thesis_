@@ -94,7 +94,7 @@ MonoBehaviour:
           startupFrames: 2
           activeFrames: 15
           recoveryFrames: 11
-          cancelWindowStartFrame: 25
+          cancelWindowStartFrame: 20
           loopActivePhase: 0
           stepName: Attack1
           animationClip: {fileID: 7400000, guid: b6fee8eee9433e84e8f83854d34360c3, type: 2}
@@ -150,14 +150,14 @@ MonoBehaviour:
         damageRatio: 0.15
         impactTier: 0
         useDeterministicReaction: 1
-        reactionKind: 1
+        reactionKind: 0
         impactFreezeFrames: 0
         knockbackFrames: 24
         knockupFrames: 18
         knockfallFrames: 15
         recoveryFrames: 14
-        horizontalSpeed: 3
-        launchSpeed: 1
+        horizontalSpeed: 0
+        launchSpeed: 0
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
@@ -177,8 +177,8 @@ MonoBehaviour:
         stepData:
           startupFrames: 11
           activeFrames: 12
-          recoveryFrames: 12
-          cancelWindowStartFrame: 33
+          recoveryFrames: 8
+          cancelWindowStartFrame: 27
           loopActivePhase: 0
           stepName: Attack3
           animationClip: {fileID: 7400000, guid: 851df54155449ce448a03fb6be4e1dce, type: 2}
@@ -215,7 +215,7 @@ MonoBehaviour:
           endFrame: 7
           taskType: 0
           easing: 1
-          position: {x: 1.5, y: 0, z: 0}
+          position: {x: 0.9, y: 0, z: 0}
           rotation: {x: 0, y: 0, z: 0}
           scale: {x: 1, y: 1, z: 1}
     - rid: 1588256136747024579
@@ -235,17 +235,17 @@ MonoBehaviour:
         damageRatio: 0.2
         impactTier: 1
         useDeterministicReaction: 1
-        reactionKind: 1
-        impactFreezeFrames: 7
+        reactionKind: 2
+        impactFreezeFrames: 2
         knockbackFrames: 12
-        knockupFrames: 11
-        knockfallFrames: 9
+        knockupFrames: 12
+        knockfallFrames: 14
         recoveryFrames: 8
-        horizontalSpeed: 7
-        launchSpeed: 5
+        horizontalSpeed: 7.5
+        launchSpeed: 8
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
-        landingBehavior: 1
+        landingBehavior: 0
         canAirJuggle: 1
         juggleLaunchScale: 1
         juggleStunScale: 1
@@ -282,7 +282,7 @@ MonoBehaviour:
           startupFrames: 1
           activeFrames: 17
           recoveryFrames: 13
-          cancelWindowStartFrame: 30
+          cancelWindowStartFrame: 21
           loopActivePhase: 0
           stepName: Attack2
           animationClip: {fileID: 7400000, guid: 16980d03d7e2f824ba2af7a0b368a8f0, type: 2}
@@ -352,7 +352,7 @@ MonoBehaviour:
         knockupFrames: 6
         knockfallFrames: 5
         recoveryFrames: 5
-        horizontalSpeed: 5
+        horizontalSpeed: 7
         launchSpeed: 1
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
@@ -385,7 +385,7 @@ MonoBehaviour:
         knockupFrames: 6
         knockfallFrames: 5
         recoveryFrames: 5
-        horizontalSpeed: 5
+        horizontalSpeed: 7
         launchSpeed: 1
         useSnapToAnchor: 0
         snapOffset: {x: 0.5, y: 0}

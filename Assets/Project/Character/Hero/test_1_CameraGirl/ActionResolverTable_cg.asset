@@ -167,14 +167,14 @@ MonoBehaviour:
         damageRatio: 0.08
         impactTier: 0
         useDeterministicReaction: 1
-        reactionKind: 1
+        reactionKind: 0
         impactFreezeFrames: 0
         knockbackFrames: 19
         knockupFrames: 15
         knockfallFrames: 13
         recoveryFrames: 13
-        horizontalSpeed: 3
-        launchSpeed: 1
+        horizontalSpeed: 0
+        launchSpeed: 0
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
@@ -243,17 +243,17 @@ MonoBehaviour:
         damageRatio: 0.02
         impactTier: 0
         useDeterministicReaction: 1
-        reactionKind: 1
+        reactionKind: 2
         impactFreezeFrames: 5
         knockbackFrames: 25
-        knockupFrames: 0
-        knockfallFrames: 0
-        recoveryFrames: 0
-        horizontalSpeed: 2
-        launchSpeed: 5
+        knockupFrames: 14
+        knockfallFrames: 12
+        recoveryFrames: 8
+        horizontalSpeed: 1.5
+        launchSpeed: 8
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
-        landingBehavior: 1
+        landingBehavior: 0
         canAirJuggle: 1
         juggleLaunchScale: 1
         juggleStunScale: 1
@@ -335,7 +335,7 @@ MonoBehaviour:
         knockupFrames: 0
         knockfallFrames: 0
         recoveryFrames: 8
-        horizontalSpeed: 5
+        horizontalSpeed: 2
         launchSpeed: 1
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
@@ -1263,14 +1263,14 @@ MonoBehaviour:
         damageRatio: 0.05
         impactTier: 0
         useDeterministicReaction: 1
-        reactionKind: 1
+        reactionKind: 0
         impactFreezeFrames: 1
         knockbackFrames: 19
         knockupFrames: 15
         knockfallFrames: 12
         recoveryFrames: 11
-        horizontalSpeed: 3
-        launchSpeed: 1
+        horizontalSpeed: 0
+        launchSpeed: 0
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
@@ -1298,14 +1298,14 @@ MonoBehaviour:
         damageRatio: 0.05
         impactTier: 0
         useDeterministicReaction: 1
-        reactionKind: 1
+        reactionKind: 0
         impactFreezeFrames: 1
         knockbackFrames: 19
         knockupFrames: 15
         knockfallFrames: 12
         recoveryFrames: 11
-        horizontalSpeed: 5
-        launchSpeed: 1
+        horizontalSpeed: 0
+        launchSpeed: 0
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}
         landingBehavior: 1
@@ -1339,7 +1339,7 @@ MonoBehaviour:
         knockupFrames: 15
         knockfallFrames: 12
         recoveryFrames: 11
-        horizontalSpeed: 10
+        horizontalSpeed: 4
         launchSpeed: 1
         useSnapToAnchor: 0
         snapOffset: {x: 0, y: 0}

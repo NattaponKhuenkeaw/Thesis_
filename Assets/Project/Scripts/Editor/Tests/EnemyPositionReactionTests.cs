@@ -359,4 +359,114 @@ public class EnemyReactionAnimationTests
         Assert.That(Pose, Is.EqualTo(Animator.StringToHash("Base Layer.Hurt")));
     }
 }
+public class PlayerComboReactionAuthoringTests
+{
+    [TestCase("enemy/EnemyCore/EnemyCore")]
+    [TestCase("enemy/EnemyCore/Enemy2")]
+    [TestCase("enemy/EnemyCore/Enemy3")]
+    [TestCase("enemy/EnemyCore/Enemy_Dummy")]
+    [TestCase("enemy/Enm101/Enemy1")]
+    [TestCase("enemy/Enm102/Enemy102")]
+    [TestCase("enemy/Enm103/Enemy103")]
+    [TestCase("Boss/Executioner/Boss_Executioner")]
+    public void EveryEnemyPrefabUsesPositionReactions(string path)
+    {
+        var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+            $"Assets/Project/Character/enemy/{path}.prefab");
+        Assert.That(prefab, Is.Not.Null);
+        var reaction = prefab.GetComponent<EnemyHitReactionHandler>();
+        Assert.That(reaction, Is.Not.Null);
+        Assert.That(reaction.UsesPositionReactions, Is.True);
+    }
+
+    [Test]
+    public void DummyUsesPositionMotionAndManualReactionAnimationWithShortRehitPause()
+    {
+        var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+            "Assets/Project/Character/enemy/enemy/EnemyCore/Enemy_Dummy.prefab");
+        Assert.That(prefab, Is.Not.Null);
+        var handler = prefab.GetComponent<EnemyHitReactionHandler>();
+        Assert.That(handler, Is.Not.Null);
+        var serialized = new UnityEditor.SerializedObject(handler);
+        Assert.That(serialized.FindProperty("usePositionReactions").boolValue, Is.True);
+        Assert.That(serialized.FindProperty("minimumLightImpactFreeze").intValue, Is.EqualTo(1));
+        Assert.That(serialized.FindProperty("minimumStrongImpactFreeze").intValue, Is.EqualTo(2));
+        Assert.That(serialized.FindProperty("airFollowupHold").floatValue, Is.EqualTo(.03f).Within(.001f));
+        var animation = prefab.GetComponent<AnimationHandler_Enemy>();
+        Assert.That(animation, Is.Not.Null);
+        Assert.That(animation.reactionAnimations.enabled, Is.True);
+        var animator = prefab.GetComponent<Animator>();
+        Assert.That(animator, Is.Not.Null);
+        Assert.That(animator.runtimeAnimatorController, Is.Not.Null);
+        Assert.That(GroundNode("main", 2).stepData.hitData.hitboxes[0], Is.TypeOf<NormalHitbox>());
+        Assert.That(((NormalHitbox)GroundNode("main", 2).stepData.hitData.hitboxes[0]).impactFreezeFrames, Is.EqualTo(2));
+    }
+
+    private static ComboNode GroundNode(string character, int index)
+    {
+        string folder = character == "main" ? "test_0_Main" : "test_1_CameraGirl";
+        string suffix = character == "main" ? "main" : "cg";
+        var table = UnityEditor.AssetDatabase.LoadAssetAtPath<ActionResolverTable>(
+            $"Assets/Project/Character/Hero/{folder}/ActionResolverTable_{suffix}.asset");
+        Assert.That(table, Is.Not.Null);
+        var node = table.comboActions[0].comboTree.rootNode;
+        for (int i = 0; i < index; i++) node = node.defaultNext;
+        Assert.That(node, Is.Not.Null);
+        return node;
+    }
+
+    [TestCase("main")]
+    [TestCase("camera")]
+    public void OpenerFlinchesAndMiddleHitKeepsTargetsClose(string character)
+    {
+        var opener = (NormalHitbox)GroundNode(character, 0).stepData.hitData.hitboxes[0];
+        Assert.That(opener.reactionKind, Is.EqualTo(EnemyReactionKind.Flinch));
+        Assert.That(opener.horizontalSpeed, Is.Zero);
+        foreach (var hitbox in GroundNode(character, 1).stepData.hitData.hitboxes)
+        {
+            var hit = (NormalHitbox)hitbox;
+            Assert.That(hit.reactionKind, Is.EqualTo(EnemyReactionKind.Knockback));
+            Assert.That(hit.horizontalSpeed, Is.EqualTo(character == "main" ? 7f : 2f));
+        }
+    }
+
+    [TestCase("main")]
+    [TestCase("camera")]
+    public void ThirdHitAuthorsLowLaunchWithRecoverLanding(string character)
+    {
+        var hit = (NormalHitbox)GroundNode(character, 2).stepData.hitData.hitboxes[0];
+        Assert.That(hit.reactionKind, Is.EqualTo(EnemyReactionKind.Knockup));
+        Assert.That(hit.launchSpeed, Is.EqualTo(8f));
+        Assert.That(hit.knockupFrames, Is.EqualTo(character == "main" ? 12 : 14));
+        Assert.That(hit.knockfallFrames, Is.GreaterThan(0));
+        Assert.That(hit.horizontalSpeed, Is.EqualTo(character == "main" ? 7.5f : 1.5f));
+        Assert.That(hit.landingBehavior, Is.EqualTo(EnemyLandingBehavior.Recover));
+        Assert.That(hit.canAirJuggle, Is.True);
+    }
+
+    [Test]
+    public void CameraRushFlinchesUntilItsSinglePushFinisher()
+    {
+        var hits = GroundNode("camera", 3).stepData.hitData.hitboxes;
+        Assert.That(hits.Count, Is.EqualTo(6));
+        for (int i = 0; i < hits.Count - 1; i++)
+            Assert.That(((NormalHitbox)hits[i]).reactionKind, Is.EqualTo(EnemyReactionKind.Flinch));
+        var finisher = (NormalHitbox)hits[hits.Count - 1];
+        Assert.That(finisher.reactionKind, Is.EqualTo(EnemyReactionKind.Knockback));
+        Assert.That(finisher.horizontalSpeed, Is.EqualTo(4f));
+    }
+
+    [TestCase(0, 20)]
+    [TestCase(1, 21)]
+    [TestCase(2, 27)]
+    public void MainFollowupWindowIsEarlierButPreservesActiveHitboxes(int index, int expectedFrame)
+    {
+        var step = GroundNode("main", index).stepData;
+        Assert.That(step.cancelWindowStartFrame, Is.EqualTo(expectedFrame));
+        Assert.That(step.cancelWindowStartFrame, Is.GreaterThanOrEqualTo(step.startupFrames + step.activeFrames));
+        foreach (var hitbox in step.hitData.hitboxes)
+            Assert.That(step.startupFrames + hitbox.startFrameOffset + hitbox.activeFrames,
+                Is.LessThanOrEqualTo(step.cancelWindowStartFrame));
+    }
+}
 #endif
