@@ -557,6 +557,9 @@ namespace Project.ShopSystem
                 return false;
             }
 
+            if (item is CharacterItem shopCharacter && !shopCharacter.availableInShop)
+                return false;
+
             int amount = Mathf.Max(1, quantity);
             if (item is Item)
             {
@@ -594,6 +597,9 @@ namespace Project.ShopSystem
 
         private bool ShouldExcludeFromShopRoll(BaseItem item)
         {
+            if (item is CharacterItem character && !character.availableInShop)
+                return true;
+
             if (!excludeOwnedItems || playerInventory == null || item == null || !playerInventory.HasItem(item))
             {
                 return false;

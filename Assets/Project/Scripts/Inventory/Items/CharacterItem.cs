@@ -7,6 +7,8 @@ namespace Project.InventorySystem.Items
     {
         [Header("Character Specifics")]
         public CharacterObject characterObjectData;
+        [Tooltip("Allow this character to appear and be purchased in shops.")]
+        public bool availableInShop = true;
 
         private void OnValidate()
         {
