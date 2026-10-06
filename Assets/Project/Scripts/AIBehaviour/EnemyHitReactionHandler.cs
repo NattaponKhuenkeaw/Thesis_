@@ -24,6 +24,9 @@ public class EnemyHitReactionHandler : MonoBehaviour
     [SerializeField, Range(0f, 0.2f)] private float airFollowupHold = 0.06f;
     [SerializeField, Min(0.1f)] private float maximumLaunchHeight = 2f;
     [SerializeField, Min(0f)] private float normalHitMinimumSpacing = 1.1f;
+    [SerializeField, Min(0.017f)] private float groundRecoilDuration = 0.1f;
+    [SerializeField, Min(0.017f)] private float launchRecoilDuration = 0.3f;
+    [SerializeField, Range(0.1f, 0.6f)] private float minimumLaunchRiseDuration = 0.48f;
     [SerializeField, Min(0.1f)] private float positionFallAcceleration = 12f;
     [SerializeField, Min(0)] private int minimumLightImpactFreeze = 3;
     [SerializeField, Min(0)] private int minimumStrongImpactFreeze = 5;
@@ -295,6 +298,17 @@ public class EnemyHitReactionHandler : MonoBehaviour
             if (positionAirFollowup && data.canAirJuggle && (int)data.impactTier < (int)DamageImpactTier.Heavy)
                 travel = Mathf.Min(travel, airFollowupTravel);
             positionMotion.BeginHit(data, travel, positionAirFollowup, airFollowupHold);
+            bool groundRecoil = !animationAirFollowup && (data.reactionKind == EnemyReactionKind.Flinch
+                || data.reactionKind == EnemyReactionKind.Knockback);
+            if (groundRecoil)
+                positionMotion.ShortenHorizontalTravel(groundRecoilDuration);
+            bool initialLaunch = !animationAirFollowup && !HoldsFlightPlane
+                && data.reactionKind == EnemyReactionKind.Knockup;
+            if (initialLaunch)
+            {
+                positionMotion.ConfigureLaunchArc(minimumLaunchRiseDuration);
+                positionMotion.ConfigureLaunchRecoil(launchRecoilDuration);
+            }
             positionMotion.SetFallAcceleration(positionFallAcceleration);
             if (data.sourceCategory == AttackCategory.Normal && !data.useSnapToAnchor && !data.snapToAttacker)
             {
@@ -303,6 +317,8 @@ public class EnemyHitReactionHandler : MonoBehaviour
                 positionMotion.EnsureMinimumSpacing(Mathf.Max(0f, needed));
             }
             int minimumFreeze = data.impactTier == DamageImpactTier.Low ? minimumLightImpactFreeze : minimumStrongImpactFreeze;
+            // Initial impacts start without an additional mandatory pause; authored hitstop still applies.
+            if (groundRecoil || initialLaunch) minimumFreeze = 0;
             currentReaction.reactionTiming = HitReactionData.CreateTiming(
                 Mathf.Max(minimumFreeze, data.ImpactFreezeFrames), data.ActiveReactionFrames, data.RecoveryFrames);
         }
@@ -516,7 +532,9 @@ public class EnemyHitReactionHandler : MonoBehaviour
         int knockfallEnd = knockupEnd + currentReaction.knockfallFrames;
         int totalEndFrame = knockfallEnd + currentReaction.RecoveryFrames;
 
-        if (currentReactionFrame <= knockupEnd)
+        if (positionMotion != null && !HoldsFlightPlane
+            ? positionMotion.IsRising
+            : currentReactionFrame <= knockupEnd)
         {
             hasResolvedAirborneLanding = false;
 
@@ -1365,6 +1383,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
         private float horizontalDuration;
         private float horizontalDistance;
         private float horizontalMoved;
+        private bool impactRecoil;
         private float verticalSpeed;
         private float verticalAcceleration = 20f;
         private float fallAcceleration = 20f;
@@ -1372,6 +1391,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
         private bool configured;
         private bool verticalMotionEnabled = true;
         private const float Skin = 0.01f;
+        public bool IsRising => verticalMotionEnabled && verticalSpeed > .001f;
 
         public PositionReactionMotion(Rigidbody2D body, Collider2D collider, LayerMask layers, float travel, float height)
         {
@@ -1399,6 +1419,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
             configured = true;
             horizontalTime = 0f;
             horizontalMoved = 0f;
+            impactRecoil = false;
             int frames = data.reactionKind == EnemyReactionKind.Knockup ? data.knockupFrames : data.ActiveReactionFrames;
             horizontalDuration = Mathf.Max(1f / FrameDataConstants.LOGIC_FPS, frames / (float)FrameDataConstants.LOGIC_FPS);
             horizontalDistance = data.reactionKind == EnemyReactionKind.Flinch ? 0f
@@ -1430,6 +1451,29 @@ public class EnemyHitReactionHandler : MonoBehaviour
             fallAcceleration = Mathf.Max(.1f, acceleration);
         }
 
+        public void ShortenHorizontalTravel(float duration)
+        {
+            // Keep authored travel distance and vertical motion independent of recoil speed.
+            impactRecoil = true;
+            horizontalDuration = Mathf.Min(horizontalDuration,
+                Mathf.Max(1f / FrameDataConstants.LOGIC_FPS, duration));
+        }
+
+        public void ConfigureLaunchRecoil(float duration)
+        {
+            impactRecoil = false;
+            horizontalDuration = Mathf.Max(1f / FrameDataConstants.LOGIC_FPS, duration);
+        }
+
+        public void ConfigureLaunchArc(float minimumRiseDuration)
+        {
+            if (!verticalMotionEnabled || verticalSpeed <= 0f) return;
+            float height = verticalSpeed * verticalSpeed / (2f * verticalAcceleration);
+            float riseDuration = Mathf.Max(verticalSpeed / verticalAcceleration, minimumRiseDuration);
+            verticalSpeed = 2f * height / riseDuration;
+            verticalAcceleration = verticalSpeed / riseDuration;
+        }
+
         public void SetVerticalMotionEnabled(bool enabled)
         {
             verticalMotionEnabled = enabled;
@@ -1455,19 +1499,31 @@ public class EnemyHitReactionHandler : MonoBehaviour
             {
                 horizontalTime += dt;
                 float u = Mathf.Clamp01(horizontalTime / horizontalDuration);
-                float desired = horizontalDistance * (1f - (1f - u) * (1f - u));
+                float remaining = 1f - u;
+                float progress = 1f - remaining * remaining;
+                if (impactRecoil) progress = 1f - remaining * remaining * remaining;
+                float desired = horizontalDistance * progress;
                 dx = Mathf.Max(0f, desired - horizontalMoved) * direction;
                 horizontalMoved = desired;
             }
             float movingTime = Mathf.Max(0f, dt - holdTime);
             holdTime = Mathf.Max(0f, holdTime - dt);
-            float acceleration = verticalSpeed > 0f ? verticalAcceleration : fallAcceleration;
-            float dy = verticalSpeed * movingTime - .5f * acceleration * movingTime * movingTime;
-            verticalSpeed -= acceleration * movingTime;
-            if (!verticalMotionEnabled)
+            float dy = 0f;
+            if (verticalMotionEnabled)
             {
-                dy = 0f;
-                verticalSpeed = 0f;
+                // Split a step at the apex so descent starts at zero speed, not ascent overshoot.
+                if (verticalSpeed > 0f)
+                {
+                    float riseTime = Mathf.Min(movingTime, verticalSpeed / verticalAcceleration);
+                    dy = verticalSpeed * riseTime - .5f * verticalAcceleration * riseTime * riseTime;
+                    verticalSpeed = Mathf.Max(0f, verticalSpeed - verticalAcceleration * riseTime);
+                    movingTime = Mathf.Max(0f, movingTime - riseTime);
+                }
+                if (movingTime > 0f)
+                {
+                    dy += verticalSpeed * movingTime - .5f * fallAcceleration * movingTime * movingTime;
+                    verticalSpeed -= fallAcceleration * movingTime;
+                }
             }
             dy = Mathf.Min(dy, Mathf.Max(0f, ceilingY - body.position.y));
             Vector2 delta = new Vector2(Clip(Vector2.right, dx), Clip(Vector2.up, dy));

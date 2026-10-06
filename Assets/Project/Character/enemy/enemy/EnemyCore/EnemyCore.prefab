@@ -644,6 +644,19 @@ MonoBehaviour:
   currentJuggleCount: 0
   airJuggleSessionActive: 0
   usePositionReactions: 1
+  maximumReactionTravel: 1.8
+  comboHitTravel: 1
+  mediumHitTravel: 1.7
+  airFollowupTravel: 0.2
+  airFollowupHold: 0.03
+  maximumLaunchHeight: 2
+  normalHitMinimumSpacing: 1.6
+  groundRecoilDuration: 0.1
+  launchRecoilDuration: 0.3
+  minimumLaunchRiseDuration: 0.48
+  positionFallAcceleration: 14
+  minimumLightImpactFreeze: 1
+  minimumStrongImpactFreeze: 2
   useLegacyReaction: 1
   groundLayers:
     serializedVersion: 2

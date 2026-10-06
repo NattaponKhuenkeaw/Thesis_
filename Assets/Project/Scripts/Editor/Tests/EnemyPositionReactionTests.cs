@@ -121,6 +121,80 @@ public class EnemyPositionReactionTests
     }
 
     [Test]
+    public void ShortGroundFlinchReachesSpacingWithoutShorteningHitstun()
+    {
+        Vector2 start = body.position;
+        var data = new HitReactionData { reactionKind = EnemyReactionKind.Flinch, knockbackFrames = 24 };
+        motorType.GetMethod("BeginHit").Invoke(motor, new object[] { data, 0f, false, 0f });
+        motorType.GetMethod("ShortenHorizontalTravel").Invoke(motor, new object[] { .1f });
+        motorType.GetMethod("EnsureMinimumSpacing").Invoke(motor, new object[] { .35f });
+        Tick(EnemyReactionState.ImpactFreeze, data, 5);
+        Assert.That(body.position.x, Is.EqualTo(start.x).Within(.002f));
+        Tick(EnemyReactionState.Recovering, data, 1);
+        Assert.That(body.position.x - start.x, Is.InRange(.17f, .18f));
+        Tick(EnemyReactionState.Recovering, data, 4);
+        Assert.That(body.position.x - start.x, Is.InRange(.34f, .36f));
+        Assert.That(data.ActiveReactionFrames, Is.EqualTo(24));
+    }
+
+    [Test]
+    public void ShortGroundKnockbackPreservesAuthoredDistance()
+    {
+        Vector2 start = body.position;
+        var data = new HitReactionData { reactionKind = EnemyReactionKind.Knockback, horizontalSpeed = .5f, knockbackFrames = 24 };
+        motorType.GetMethod("BeginHit").Invoke(motor, new object[] { data, .35f, false, 0f });
+        motorType.GetMethod("ShortenHorizontalTravel").Invoke(motor, new object[] { .1f });
+        Tick(EnemyReactionState.Knockback, data, 5);
+        Assert.That(body.position.x - start.x, Is.InRange(.19f, .21f));
+    }
+
+    [Test]
+    public void GroundRecoilDurationCannotExtendShortAuthoredMotion()
+    {
+        Vector2 start = body.position;
+        var data = new HitReactionData { reactionKind = EnemyReactionKind.Knockback, horizontalSpeed = 30f, knockbackFrames = 3 };
+        motorType.GetMethod("BeginHit").Invoke(motor, new object[] { data, .35f, false, 0f });
+        motorType.GetMethod("ShortenHorizontalTravel").Invoke(motor, new object[] { .1f });
+        Tick(EnemyReactionState.Knockback, data, 3);
+        Assert.That(body.position.x - start.x, Is.InRange(.34f, .36f));
+    }
+
+    [Test]
+    public void GroundImpactRecoilStartsStrongThenDecelerates()
+    {
+        Vector2 start = body.position;
+        var data = new HitReactionData { reactionKind = EnemyReactionKind.Knockback, horizontalSpeed = 30f, knockbackFrames = 24 };
+        motorType.GetMethod("BeginHit").Invoke(motor, new object[] { data, .35f, false, 0f });
+        motorType.GetMethod("ShortenHorizontalTravel").Invoke(motor, new object[] { .1f });
+        float previousPosition = start.x;
+        float previousStep = float.PositiveInfinity;
+        for (int i = 0; i < 5; i++)
+        {
+            Tick(EnemyReactionState.Knockback, data, 1);
+            float step = body.position.x - previousPosition;
+            Assert.That(step, Is.GreaterThan(0f).And.LessThan(previousStep));
+            previousStep = step;
+            previousPosition = body.position.x;
+        }
+        Assert.That(body.position.x - start.x, Is.InRange(.34f, .36f));
+    }
+
+    [Test]
+    public void LaunchAfterGroundRecoilUsesOriginalLaunchMotion()
+    {
+        var groundHit = new HitReactionData { reactionKind = EnemyReactionKind.Knockback, knockbackFrames = 24 };
+        motorType.GetMethod("BeginHit").Invoke(motor, new object[] { groundHit, .35f, false, 0f });
+        motorType.GetMethod("ShortenHorizontalTravel").Invoke(motor, new object[] { .1f });
+        var launch = new HitReactionData { reactionKind = EnemyReactionKind.Knockup, horizontalSpeed = 30f, launchSpeed = 100f, knockupFrames = 30 };
+        motorType.GetMethod("BeginHit").Invoke(motor, new object[] { launch, .35f, false, 0f });
+        Vector2 start = body.position;
+        Tick(EnemyReactionState.Knockup, launch, 1);
+        Assert.That(body.position.x - start.x, Is.InRange(.025f, .03f));
+        Tick(EnemyReactionState.Knockup, launch, 24);
+        Assert.That(body.position.y - start.y, Is.InRange(1.99f, 2.01f));
+    }
+
+    [Test]
     public void AirFollowupHoldsThenContinuesDescentWithoutRelaunching()
     {
         var data = new HitReactionData { reactionKind = EnemyReactionKind.Knockup, launchSpeed = 10, knockupFrames = 18, canAirJuggle = true };
@@ -132,6 +206,72 @@ public class EnemyPositionReactionTests
         Assert.That(Vector2.Distance(body.position, hitPosition), Is.LessThan(.003f));
         Tick(EnemyReactionState.Knockup, data, 6);
         Assert.That(body.position.y, Is.LessThan(hitPosition.y - .01f));
+    }
+
+    [Test]
+    public void LaunchSlowsTowardApexWithoutChangingHeightOrFallAcceleration()
+    {
+        Vector2 start = body.position;
+        var data = new HitReactionData { reactionKind = EnemyReactionKind.Knockup, horizontalSpeed = 7.5f, launchSpeed = 8f, knockupFrames = 12 };
+        motorType.GetMethod("BeginHit").Invoke(motor, new object[] { data, .35f, false, 0f });
+        motorType.GetMethod("SetFallAcceleration").Invoke(motor, new object[] { 12f });
+        motorType.GetMethod("ConfigureLaunchArc").Invoke(motor, new object[] { .48f });
+        motorType.GetMethod("ConfigureLaunchRecoil").Invoke(motor, new object[] { .3f });
+        Tick(EnemyReactionState.Knockup, data, 1);
+        Assert.That(body.position.y - start.y, Is.InRange(.06f, .07f));
+        Assert.That(body.position.x - start.x, Is.InRange(.04f, .05f));
+        float peak = body.position.y;
+        float previousRise = body.position.y - start.y;
+        for (int i = 1; i < 24; i++)
+        {
+            float previousY = body.position.y;
+            Tick(EnemyReactionState.Knockup, data, 1);
+            float rise = body.position.y - previousY;
+            Assert.That(rise, Is.GreaterThanOrEqualTo(0f).And.LessThan(previousRise));
+            previousRise = rise;
+            peak = Mathf.Max(peak, body.position.y);
+            if (i == 9)
+                Assert.That(body.position.x - start.x, Is.InRange(.30f, .32f));
+        }
+        Assert.That(peak - start.y, Is.InRange(.78f, .82f));
+        Assert.That(previousRise, Is.LessThan(.006f));
+        Tick(EnemyReactionState.Knockfall, data, 1);
+        Assert.That(body.position.y, Is.LessThan(peak));
+        Assert.That(peak - body.position.y, Is.LessThan(.005f));
+        Assert.That(body.position.x - start.x, Is.InRange(.34f, .36f));
+        float fall = (float)motorType.GetField("fallAcceleration", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(motor);
+        Assert.That(fall, Is.EqualTo(12f));
+    }
+
+    [Test]
+    public void ConfigureLaunchDoesNotRelaunchDescendingEnemyOrFlyingEnemy()
+    {
+        var data = new HitReactionData { reactionKind = EnemyReactionKind.Knockup, launchSpeed = 8f, knockupFrames = 12 };
+        Tick(EnemyReactionState.Knockup, data, 15);
+        var speedField = motorType.GetField("verticalSpeed", BindingFlags.NonPublic | BindingFlags.Instance);
+        float descendingSpeed = (float)speedField.GetValue(motor);
+        Assert.That(descendingSpeed, Is.LessThan(0f));
+        motorType.GetMethod("ConfigureLaunchArc").Invoke(motor, new object[] { .3f });
+        Assert.That((float)speedField.GetValue(motor), Is.EqualTo(descendingSpeed));
+        motorType.GetMethod("SetVerticalMotionEnabled").Invoke(motor, new object[] { false });
+        motorType.GetMethod("ConfigureLaunchArc").Invoke(motor, new object[] { .3f });
+        Vector2 start = body.position;
+        Tick(EnemyReactionState.Knockup, data, 5);
+        Assert.That(body.position.y, Is.EqualTo(start.y).Within(.002f));
+    }
+
+    [Test]
+    public void StepAcrossApexStartsDescentFromZeroVelocity()
+    {
+        var data = new HitReactionData { reactionKind = EnemyReactionKind.Knockup, launchSpeed = 8f, knockupFrames = 11 };
+        motorType.GetMethod("BeginHit").Invoke(motor, new object[] { data, 0f, false, 0f });
+        motorType.GetMethod("SetFallAcceleration").Invoke(motor, new object[] { 12f });
+        Tick(EnemyReactionState.Knockup, data, 9);
+        Assert.That((bool)motorType.GetProperty("IsRising").GetValue(motor), Is.True);
+        Tick(EnemyReactionState.Knockup, data, 1);
+        float speed = (float)motorType.GetField("verticalSpeed", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(motor);
+        Assert.That(speed, Is.EqualTo(-.2f).Within(.002f));
+        Assert.That((bool)motorType.GetProperty("IsRising").GetValue(motor), Is.False);
     }
 
     [Test]
