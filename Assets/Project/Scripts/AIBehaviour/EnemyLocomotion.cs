@@ -521,6 +521,8 @@ public class EnemyLocomotion : MonoBehaviour
     public void SetHorizontalSpeed(float signedSpeed)
     {
         Cache();
+        if (moveMode == EnemyMoveMode.Ground && enemy != null && enemy.Kit != null)
+            signedSpeed *= enemy.Kit.WalkingSpeedMultiplier;
         if (!CanDriveMovement())
             return;
 
@@ -699,6 +701,8 @@ public class EnemyLocomotion : MonoBehaviour
 
     private void DriveGroundX(float targetX, float speed)
     {
+        if (enemy != null && enemy.Kit != null)
+            speed *= enemy.Kit.WalkingSpeedMultiplier;
         if (!CanDriveMovement() || IsUnstacking)
             return;
 

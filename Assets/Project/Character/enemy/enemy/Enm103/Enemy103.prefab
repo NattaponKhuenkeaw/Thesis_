@@ -737,8 +737,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a612029e73444a169bf8264ca93e27c8, type: 3}
   m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyShieldGuard
-  detectionRadius: 7
-  frontAttackRange: 2.3
+  detectionRadius: 9
+  guardWaitDuration: 5
   sideDeadzone: 0.15
   rearRecheckDelay: 0.75
   turnDuration: 0.45

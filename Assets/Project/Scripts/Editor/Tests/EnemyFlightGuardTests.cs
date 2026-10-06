@@ -30,9 +30,45 @@ public class EnemyFlightGuardTests
         Assert.That(flyer.GetComponent<EnemyLocomotion>().UsesFixedHeightFlight, Is.True);
         Assert.That(guard.GetComponent<EnemyController>().CombatRole, Is.EqualTo(EnemyCombatRole.ShieldGuard));
         Assert.That(guard.GetComponent<EnemyShieldGuard>(), Is.Not.Null);
-        Assert.That(guard.GetComponent<EnemyController>().Kit.BodyCharge, Is.False);
+        Assert.That(guard.GetComponent<EnemyController>().Kit.BodyCharge, Is.True);
+        Assert.That(guard.GetComponent<EnemyController>().Kit.LungeDistance, Is.EqualTo(9f));
+        Assert.That(guard.GetComponent<EnemyController>().Kit.WalkingSpeedMultiplier, Is.EqualTo(.65f));
         Assert.That(Resources.Load<EnemyKit>("EnemySo/EK_MeleeCommit").BodyCharge, Is.True);
         Assert.That(Resources.Load<EnemyKit>("EnemySo/EK_RangedStraight").CombatRole, Is.EqualTo(EnemyCombatRole.RangedHold));
+    }
+
+    [TestCase("EnemyCore/EnemyCore")]
+    [TestCase("EnemyCore/Enemy2")]
+    [TestCase("EnemyCore/Enemy3")]
+    [TestCase("Enm101/Enemy1")]
+    [TestCase("Enm102/Enemy102")]
+    [TestCase("Enm103/Enemy103")]
+    public void RegularEnemiesUseTheTunedDummyReactionSettings(string prefabName)
+    {
+        const string root = "Assets/Project/Character/enemy/enemy/";
+        var dummy = AssetDatabase.LoadAssetAtPath<GameObject>(root + "EnemyCore/Enemy_Dummy.prefab");
+        var enemy = AssetDatabase.LoadAssetAtPath<GameObject>(root + prefabName + ".prefab");
+        Assert.That(dummy, Is.Not.Null);
+        Assert.That(enemy, Is.Not.Null);
+        var referenceHandler = dummy.GetComponent<EnemyHitReactionHandler>();
+        var handler = enemy.GetComponent<EnemyHitReactionHandler>();
+        Assert.That(referenceHandler, Is.Not.Null);
+        Assert.That(handler, Is.Not.Null);
+        Assert.That(handler.UsesPositionReactions, Is.True);
+        var reference = new SerializedObject(referenceHandler);
+        var settings = new SerializedObject(handler);
+        string[] floatProperties = {
+            "maximumReactionTravel", "comboHitTravel", "mediumHitTravel",
+            "airFollowupTravel", "airFollowupHold", "maximumLaunchHeight",
+            "normalHitMinimumSpacing", "groundRecoilDuration", "launchRecoilDuration",
+            "minimumLaunchRiseDuration", "positionFallAcceleration"
+        };
+        foreach (string property in floatProperties)
+            Assert.That(settings.FindProperty(property).floatValue,
+                Is.EqualTo(reference.FindProperty(property).floatValue).Within(.001f), property);
+        foreach (string property in new[] { "minimumLightImpactFreeze", "minimumStrongImpactFreeze" })
+            Assert.That(settings.FindProperty(property).intValue,
+                Is.EqualTo(reference.FindProperty(property).intValue), property);
     }
 
     [Test]
@@ -174,6 +210,77 @@ public class EnemyFlightGuardTests
     }
 
     [Test]
+    public void GuardBlocksRepeatedFrontHitsDuringWindupAndRush()
+    {
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        var target = Host("FrontComboTarget", enemy.transform.position + Vector3.right);
+        guard.BeginGuard(target.transform);
+        guard.TickGuard(4.41f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
+        float hp = enemy.currentHP;
+        var hit = HitReactionData.Default(10f, Vector2.left, 0f);
+        for (int i = 0; i < 10; i++)
+            Assert.That(enemy.TakeResolvedHit(hit, target.transform.position), Is.Zero);
+        Assert.That(enemy.currentHP, Is.EqualTo(hp));
+        Assert.That(enemy.CurrentComboHits, Is.Zero);
+        guard.TickGuard(.61f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Striking));
+        for (int i = 0; i < 10; i++)
+            Assert.That(enemy.TakeResolvedHit(hit, target.transform.position), Is.Zero);
+        Assert.That(enemy.currentHP, Is.EqualTo(hp));
+        Assert.That(enemy.LastHitAppliedReaction, Is.False);
+        guard.FinishStrike();
+        Assert.That(guard.ShieldRaised, Is.False);
+        Assert.That(enemy.TakeResolvedHit(hit, target.transform.position), Is.EqualTo(10f));
+    }
+
+    [Test]
+    public void ShieldRushStartsFromDistanceAndKeepsFacingAfterTargetDashesAway()
+    {
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        enemy.Kit = Resources.Load<EnemyKit>("EnemySo/EK_ShieldGuard");
+        var settings = new SerializedObject(guard);
+        settings.FindProperty("detectionRadius").floatValue = 9f;
+        settings.ApplyModifiedPropertiesWithoutUndo();
+        var target = Host("RushTarget", enemy.transform.position + Vector3.right * 6f);
+        guard.BeginGuard(target.transform);
+        guard.TickGuard(4.01f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
+        guard.TickGuard(1.01f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Striking));
+        target.transform.position = enemy.transform.position + Vector3.left * 15f;
+        Assert.That(enemy.FacingLocked, Is.True);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(1f));
+        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.Zero);
+        var action = new EnemyAttackAction();
+        action.Agent.Value = enemy.gameObject;
+        action.Target.Value = target;
+        typeof(EnemyAttackAction).GetField("m_Controller", Private).SetValue(action, enemy);
+        typeof(EnemyAttackAction).GetField("m_ShieldGuard", Private).SetValue(action, guard);
+        typeof(EnemyAttackAction).GetField("m_Body", Private).SetValue(action, enemy.rb);
+        typeof(EnemyAttackAction).GetField("m_HitboxDisabled", Private).SetValue(action, true);
+        typeof(EnemyAttackAction).GetMethod("OnUpdate", Private).Invoke(action, null);
+        Assert.That(enemy.rb.linearVelocity.x, Is.GreaterThan(0f));
+        guard.FinishStrike();
+        Assert.That(enemy.rb.linearVelocity.x, Is.Zero);
+        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.Not.Zero);
+        typeof(EnemyAttackAction).GetMethod("OnEnd", Private).Invoke(action, null);
+        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.Zero);
+        Assert.That(enemy.attackHitbox.enabled, Is.False);
+    }
+
+    [Test]
+    public void ShieldWalkSpeedIsReducedWithoutSlowingBodyCharge()
+    {
+        EnemyController enemy = Guard(out _);
+        enemy.Kit = Resources.Load<EnemyKit>("EnemySo/EK_ShieldGuard");
+        enemy.GetComponent<EnemyLocomotion>().SetHorizontalSpeed(4f);
+        Assert.That(enemy.rb.linearVelocity.x, Is.EqualTo(2.6f).Within(.001f));
+        Assert.That(enemy.Kit.LungeDistance / enemy.Kit.HitWindowDuration,
+            Is.EqualTo(18.75f).Within(.001f));
+    }
+
+    [Test]
     public void GuardWaitsBeforeTurningAndRemainsOpenUntilShieldRaisesAgain()
     {
         EnemyController enemy = Guard(out EnemyShieldGuard guard);
@@ -215,7 +322,7 @@ public class EnemyFlightGuardTests
     }
 
     [Test]
-    public void GuardOnlyAttacksNearbyFrontAndHasRecoveryOpening()
+    public void GuardWaitsFiveSecondsAndHasRecoveryOpening()
     {
         EnemyController enemy = Guard(out EnemyShieldGuard guard);
         var target = Host("AttackTarget", enemy.transform.position + Vector3.right * 5f);
@@ -223,7 +330,7 @@ public class EnemyFlightGuardTests
         guard.TickGuard(2f);
         Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Guarding));
         target.transform.position = enemy.transform.position + Vector3.right;
-        guard.TickGuard(0.01f);
+        guard.TickGuard(2.41f);
         Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
         guard.TickGuard(0.61f);
         Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Striking));
@@ -235,6 +342,83 @@ public class EnemyFlightGuardTests
         guard.TickGuard(0.81f);
         guard.TickGuard(0.01f);
         Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Guarding));
+    }
+
+    [Test]
+    public void GuardKeepsCountdownOutsideRangeAndStrikesImmediatelyOnReturn()
+    {
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        var target = Host("ReturningTarget", enemy.transform.position + Vector3.right * 5f);
+        guard.BeginGuard(target.transform);
+        guard.TickGuard(3f);
+        Vector3 waitingPosition = enemy.transform.position;
+        target.transform.position = enemy.transform.position + Vector3.right * 20f;
+        Assert.That(guard.TickGuard(2.1f), Is.True);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Guarding));
+        Assert.That(guard.ShieldRaised, Is.True);
+        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.Not.Zero);
+        Assert.That(enemy.rb.linearVelocity.x, Is.Zero);
+        Assert.That(enemy.transform.position, Is.EqualTo(waitingPosition));
+        target.transform.position = enemy.transform.position + Vector3.right * 5f;
+        guard.TickGuard(0f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Striking));
+        Assert.That(enemy.attackHitbox.enabled, Is.True);
+    }
+
+    [Test]
+    public void LeavingDuringWindupRetainsReadinessWithoutRushingOutOfRange()
+    {
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        var target = Host("WindupExitTarget", enemy.transform.position + Vector3.right * 5f);
+        guard.BeginGuard(target.transform);
+        guard.TickGuard(4.5f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
+        target.transform.position = enemy.transform.position + Vector3.right * 20f;
+        guard.TickGuard(.6f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Guarding));
+        Assert.That(enemy.attackHitbox.enabled, Is.False);
+        target.transform.position = enemy.transform.position + Vector3.right * 5f;
+        guard.TickGuard(0f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Striking));
+    }
+
+    [Test]
+    public void RecoveryFacesPlayerAndRestartsFullGuardCountdown()
+    {
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        var target = Host("NextRoundTarget", enemy.transform.position + Vector3.right * 5f);
+        guard.BeginGuard(target.transform);
+        guard.TickGuard(5f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Striking));
+        guard.FinishStrike();
+        target.transform.position = enemy.transform.position + Vector3.left * 5f;
+        guard.TickGuard(.81f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Guarding));
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(-1f));
+        guard.TickGuard(4.3f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Guarding));
+        guard.TickGuard(.11f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
+        guard.TickGuard(.61f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Striking));
+    }
+
+    [Test]
+    public void GuardDetectionAndAttackUseTheSameKitRange()
+    {
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        enemy.Kit = Resources.Load<EnemyKit>("EnemySo/EK_ShieldGuard");
+        var target = Host("RangeBoundaryTarget", enemy.transform.position + Vector3.right * 9f);
+        Assert.That(guard.EngagementRange, Is.EqualTo(enemy.Kit.AttackRange));
+        Assert.That(guard.CanEngage(target.transform), Is.True);
+        Assert.That(EnemyCombatRange.IsInAttackRange(enemy.gameObject, target, 1f), Is.True);
+        guard.BeginGuard(target.transform);
+        guard.TickGuard(5f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Striking));
+        guard.EndGuard();
+        target.transform.position += Vector3.right * .1f;
+        Assert.That(guard.CanEngage(target.transform), Is.False);
+        Assert.That(EnemyCombatRange.IsInAttackRange(enemy.gameObject, target, 1f), Is.False);
     }
 
     [Test]

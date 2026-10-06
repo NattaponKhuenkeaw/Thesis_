@@ -13,13 +13,14 @@ MonoBehaviour:
   m_Name: EK_ShieldGuard
   m_EditorClassIdentifier: Assembly-CSharp::EnemyKit
   combatRole: 4
-  attackRange: 7
-  holdRange: 6.5
-  warningDuration: 0.6
-  hitWindowDuration: 0.22
-  attackCooldown: 3
-  lungeDistance: 0
-  bodyCharge: 0
+  attackRange: 9
+  holdRange: 8
+  walkingSpeedMultiplier: 0.65
+  warningDuration: 1
+  hitWindowDuration: 0.48
+  attackCooldown: 3.5
+  lungeDistance: 9
+  bodyCharge: 1
   commitTelegraphFraction: 0
   interruptCooldown: 0.5
   recoveryPlantDuration: 0.8

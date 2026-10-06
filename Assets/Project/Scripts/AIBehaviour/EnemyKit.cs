@@ -16,6 +16,7 @@ public sealed class EnemyKit : ScriptableObject
 
     [Tooltip("Where this enemy stands to fight. Negative = melee uses 85% of attack range, ranged uses min(attack range, 7). Ranged must not use full shot range as a stop distance or the whole pack piles on the player.")]
     [SerializeField] private float holdRange = -1f;
+    [SerializeField, Min(0f)] private float walkingSpeedMultiplier = 1f;
 
     // Attack timing. Every value here is a per-enemy override: leave one negative and the Behavior
     // Graph node keeps deciding it, so a kit can retune a single beat without owning the rest.
@@ -59,7 +60,9 @@ public sealed class EnemyKit : ScriptableObject
     public float HitWindowDuration => hitWindowDuration;
     public float AttackCooldown => attackCooldown;
     public float LungeDistance => lungeDistance;
-    public bool BodyCharge => bodyCharge && combatRole == EnemyCombatRole.CommitMelee;
+    public bool BodyCharge => bodyCharge && (combatRole == EnemyCombatRole.CommitMelee
+        || combatRole == EnemyCombatRole.ShieldGuard);
+    public float WalkingSpeedMultiplier => Mathf.Max(0f, walkingSpeedMultiplier);
     public float CommitTelegraphFraction => commitTelegraphFraction;
     public float InterruptCooldown => interruptCooldown;
     public float RecoveryPlantDuration => recoveryPlantDuration;

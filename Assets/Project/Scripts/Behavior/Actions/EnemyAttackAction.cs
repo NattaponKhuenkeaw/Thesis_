@@ -91,6 +91,9 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         if (m_ShieldGuard != null)
         {
             m_Interrupted = false;
+            m_Timer = 0f;
+            m_HitboxDisabled = true;
+            m_ChargeBlocked = false;
             if (!m_ShieldGuard.BeginGuard(Target.Value.transform))
                 return Status.Failure;
             if (CanAttack != null)
@@ -149,7 +152,30 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
                 m_ShieldGuard.EndGuard();
                 return Status.Success;
             }
-            return m_ShieldGuard.TickGuard(Time.deltaTime, Target.Value.transform) ? Status.Running : Status.Success;
+            m_Timer += Time.deltaTime;
+            bool running = m_ShieldGuard.TickGuard(Time.deltaTime, Target.Value.transform);
+            if (running && m_ShieldGuard.Phase == EnemyShieldGuard.GuardPhase.Striking && IsBodyCharge)
+            {
+                if (m_HitboxDisabled)
+                {
+                    m_HitboxDisabled = false;
+                    m_ChargeBlocked = false;
+                    m_AttackStartTime = m_Timer;
+                    m_LungeDir = EnemyFacingUtil.GetFacingSign(Agent.Value.transform);
+                    m_LungeStartX = m_Body != null ? m_Body.position.x : Agent.Value.transform.position.x;
+                    ConfigureChargeHitbox();
+                }
+                TickBodyCharge();
+                if (m_ChargeBlocked) m_ShieldGuard.FinishStrike();
+            }
+            if (!running || m_ShieldGuard.Phase != EnemyShieldGuard.GuardPhase.Striking)
+            {
+                m_HitboxDisabled = true;
+                RestoreChargeHitbox();
+                if (m_Controller.CurrentReactionState == EnemyReactionState.None)
+                    StopChargeMotion();
+            }
+            return running ? Status.Running : Status.Success;
         }
 
         float telegraphDuration = ResolveTelegraphDuration();
@@ -213,6 +239,7 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         if (m_ShieldGuard != null)
         {
             m_ShieldGuard.EndGuard();
+            RestoreChargeHitbox();
             if (CanAttack != null)
                 CanAttack.Value = true;
             m_ShieldGuard = null;
