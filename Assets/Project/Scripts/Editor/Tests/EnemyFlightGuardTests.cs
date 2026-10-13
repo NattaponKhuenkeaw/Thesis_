@@ -405,7 +405,7 @@ public class EnemyFlightGuardTests
     }
 
     [Test]
-    public void GuardKeepsCountdownOutsideRangeAndStrikesImmediatelyOnReturn()
+    public void GuardKeepsCountdownButWarnsBeforeStrikingOnReturn()
     {
         EnemyController enemy = Guard(out EnemyShieldGuard guard);
         var target = Host("ReturningTarget", enemy.transform.position + Vector3.right * 5f);
@@ -421,12 +421,17 @@ public class EnemyFlightGuardTests
         Assert.That(enemy.transform.position, Is.EqualTo(waitingPosition));
         target.transform.position = enemy.transform.position + Vector3.right * 5f;
         guard.TickGuard(0f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
+        Assert.That(enemy.attackHitbox.enabled, Is.False);
+        guard.TickGuard(.3f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
+        guard.TickGuard(.31f);
         Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Striking));
         Assert.That(enemy.attackHitbox.enabled, Is.True);
     }
 
     [Test]
-    public void LeavingDuringWindupRetainsReadinessWithoutRushingOutOfRange()
+    public void LeavingDuringWindupCancelsAndReturnStartsAFullNewWarning()
     {
         EnemyController enemy = Guard(out EnemyShieldGuard guard);
         var target = Host("WindupExitTarget", enemy.transform.position + Vector3.right * 5f);
@@ -439,6 +444,11 @@ public class EnemyFlightGuardTests
         Assert.That(enemy.attackHitbox.enabled, Is.False);
         target.transform.position = enemy.transform.position + Vector3.right * 5f;
         guard.TickGuard(0f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
+        Assert.That(enemy.attackHitbox.enabled, Is.False);
+        guard.TickGuard(.59f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
+        guard.TickGuard(.02f);
         Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Striking));
     }
 
@@ -449,6 +459,8 @@ public class EnemyFlightGuardTests
         var target = Host("NextRoundTarget", enemy.transform.position + Vector3.right * 5f);
         guard.BeginGuard(target.transform);
         guard.TickGuard(5f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
+        guard.TickGuard(.61f);
         Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Striking));
         guard.FinishStrike();
         target.transform.position = enemy.transform.position + Vector3.left * 5f;
@@ -474,6 +486,8 @@ public class EnemyFlightGuardTests
         Assert.That(EnemyCombatRange.IsInAttackRange(enemy.gameObject, target, 1f), Is.True);
         guard.BeginGuard(target.transform);
         guard.TickGuard(5f);
+        Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Windup));
+        guard.TickGuard(1.01f);
         Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Striking));
         guard.EndGuard();
         target.transform.position += Vector3.right * .1f;

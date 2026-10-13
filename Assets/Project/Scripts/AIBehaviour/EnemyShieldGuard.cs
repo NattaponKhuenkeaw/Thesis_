@@ -25,6 +25,7 @@ public sealed class EnemyShieldGuard : MonoBehaviour
     private float phaseElapsed;
     private float rearElapsed;
     private float guardElapsed;
+    private float windupDuration;
     private bool hasTurned;
     private bool ownsPlant;
     private RigidbodyConstraints2D originalConstraints;
@@ -109,12 +110,11 @@ public sealed class EnemyShieldGuard : MonoBehaviour
                 }
                 else if (CanAttackTarget(side))
                 {
-                    if (guardElapsed >= guardWaitDuration)
-                        StartStrike();
-                    else if (guardElapsed >= Mathf.Max(0f, guardWaitDuration - enemy.ResolveWarningDuration(0.6f)))
+                    if (guardElapsed >= Mathf.Max(0f, guardWaitDuration - enemy.ResolveWarningDuration(0.6f)))
                     {
+                        windupDuration = Mathf.Max(.05f, enemy.ResolveWarningDuration(0.6f));
                         ChangePhase(GuardPhase.Windup);
-                        enemy.TriggerAttackWarning(guardWaitDuration - guardElapsed);
+                        enemy.TriggerAttackWarning(windupDuration);
                     }
                 }
                 break;
@@ -138,7 +138,7 @@ public sealed class EnemyShieldGuard : MonoBehaviour
                     enemy.HideAttackWarning();
                     ChangePhase(GuardPhase.Guarding);
                 }
-                else if (guardElapsed >= guardWaitDuration)
+                else if (phaseElapsed >= windupDuration)
                     StartStrike();
                 break;
             case GuardPhase.Striking:
