@@ -1514,6 +1514,7 @@ GameObject:
   - component: {fileID: 8495941937201704988}
   - component: {fileID: 6814936412620904915}
   - component: {fileID: 2430479337570867375}
+  - component: {fileID: 8128473920184738301}
   m_Layer: 8
   m_Name: Boss_Executioner
   m_TagString: Enemy
@@ -1521,6 +1522,25 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &8128473920184738301
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7125933182351504165}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f129a3ad402c4b5c99c61017b36eaa53, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyLifecycleVFX
+  dissolveMaterial: {fileID: 2100000, guid: 65dcc995f7414ecbb2e802026465ac03, type: 2}
+  particleMaterial: {fileID: 2100000, guid: d48d90a359394c83b3e76e9d81ac5410, type: 2}
+  spawnDuration: 0.85
+  deathFadeDuration: 0.8
+  deathPoseHold: 0.3
+  energyColor: {r: 0.65, g: 0.82, b: 0.85, a: 0.45}
+  particleCount: 48
 --- !u!4 &7445212938518311906
 Transform:
   m_ObjectHideFlags: 0
@@ -1714,6 +1734,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85361608430d3da42a1b3faa70dbb39f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
+  snapSpawnToGround: 1
+  spawnGroundSearchDistance: 30
   maxHP: 800
   currentHP: 800
   attackDamage: 165

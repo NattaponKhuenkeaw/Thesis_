@@ -285,6 +285,7 @@ GameObject:
   - component: {fileID: -6515187417249938201}
   - component: {fileID: 8128473920184738291}
   - component: {fileID: 9128473920184738292}
+  - component: {fileID: 8128473920184738300}
   m_Layer: 8
   m_Name: EnemyCore
   m_TagString: Enemy
@@ -489,6 +490,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85361608430d3da42a1b3faa70dbb39f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
+  snapSpawnToGround: 1
+  spawnGroundSearchDistance: 30
   maxHP: 100
   currentHP: 100
   attackDamage: 10
@@ -663,6 +666,25 @@ MonoBehaviour:
     m_Bits: 520
   groundCheckDistance: 0.08
   groundNormalMinY: 0.25
+--- !u!114 &8128473920184738300
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8917136744719106790}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f129a3ad402c4b5c99c61017b36eaa53, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyLifecycleVFX
+  dissolveMaterial: {fileID: 2100000, guid: 65dcc995f7414ecbb2e802026465ac03, type: 2}
+  particleMaterial: {fileID: 2100000, guid: d48d90a359394c83b3e76e9d81ac5410, type: 2}
+  spawnDuration: 0.55
+  deathFadeDuration: 0.45
+  deathPoseHold: 0.15
+  energyColor: {r: 0.65, g: 0.82, b: 0.85, a: 0.45}
+  particleCount: 28
 --- !u!114 &8128473920184738291
 MonoBehaviour:
   m_ObjectHideFlags: 0

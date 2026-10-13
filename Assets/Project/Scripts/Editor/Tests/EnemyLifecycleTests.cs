@@ -30,6 +30,119 @@ internal static class EnemyLifecycleTestUtility
 
 public class EnemyLifecycleTests
 {
+    [TestCase(1.2f)]
+    [TestCase(2f)]
+    public void GroundSpawnAlignsColliderFeetEvenWhenSpawnPointIsHigh(float scale)
+    {
+        var host = new GameObject("GroundSpawnAlignment");
+        var floor = new GameObject("SpawnFloor");
+        try
+        {
+            host.transform.position = new Vector3(2000f, 5f, 0f);
+            host.transform.localScale = Vector3.one * scale;
+            var body = host.AddComponent<Rigidbody2D>();
+            body.gravityScale = 0f;
+            var collider = host.AddComponent<BoxCollider2D>();
+            collider.size = new Vector2(1f, 2f);
+            collider.offset = new Vector2(0f, 1f);
+            var enemy = host.AddComponent<EnemyController>();
+            enemy.bodyCollider = collider;
+            EnemyLifecycleTestUtility.InitializeComponents(enemy);
+            var data = new UnityEditor.SerializedObject(enemy);
+            data.FindProperty("spawnGroundLayers").intValue = ~0;
+            data.ApplyModifiedPropertiesWithoutUndo();
+            floor.transform.position = new Vector3(2000f, -.5f, 0f);
+            floor.AddComponent<BoxCollider2D>().size = new Vector2(20f, 1f);
+            Physics2D.SyncTransforms();
+            Assert.That(enemy.TryPlaceSpawnOnGround(), Is.True);
+            Assert.That(collider.bounds.min.y, Is.EqualTo(.01f).Within(.002f));
+            Assert.That(host.transform.position.x, Is.EqualTo(2000f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(host);
+            Object.DestroyImmediate(floor);
+        }
+    }
+
+    [Test]
+    public void GroundSpawnWithNoTerrainDoesNotMoveToAnInventedFloor()
+    {
+        var host = new GameObject("UnsupportedSpawn");
+        try
+        {
+            host.transform.position = new Vector3(2000f, 500f, 0f);
+            host.AddComponent<BoxCollider2D>();
+            var enemy = host.AddComponent<EnemyController>();
+            Vector3 before = host.transform.position;
+            Assert.That(enemy.TryPlaceSpawnOnGround(), Is.False);
+            Assert.That(host.transform.position, Is.EqualTo(before));
+        }
+        finally { Object.DestroyImmediate(host); }
+    }
+
+    [TestCase("enemy/Enm101/Enemy1")]
+    [TestCase("enemy/Enm102/Enemy102")]
+    [TestCase("enemy/Enm103/Enemy103")]
+    [TestCase("Boss/Executioner/Boss_Executioner")]
+    public void ReleaseEnemiesHaveLifecycleVfxMaterials(string path)
+    {
+        var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+            "Assets/Project/Character/enemy/" + path + ".prefab");
+        Assert.That(prefab, Is.Not.Null);
+        var effect = prefab.GetComponent<EnemyLifecycleVFX>();
+        Assert.That(effect, Is.Not.Null);
+        var data = new UnityEditor.SerializedObject(effect);
+        Assert.That(data.FindProperty("dissolveMaterial").objectReferenceValue, Is.Not.Null);
+        Assert.That(data.FindProperty("particleMaterial").objectReferenceValue, Is.Not.Null);
+        Assert.That(effect.SpawnDuration, Is.GreaterThan(0f));
+    }
+
+    [Test]
+    public void LifecycleVfxWaitsForSpawnAndDeathAnimationBeforeCompleting()
+    {
+        var host = new GameObject("LifecycleVfxTiming");
+        try
+        {
+            var effect = host.AddComponent<EnemyLifecycleVFX>();
+            effect.BeginSpawn();
+            Assert.That(effect.TickSpawn(effect.SpawnDuration * .5f), Is.False);
+            Assert.That(effect.TickSpawn(effect.SpawnDuration), Is.True);
+            effect.FinishSpawn();
+            effect.BeginDeath();
+            Assert.That(effect.TickDeath(2f, false), Is.False);
+            Assert.That(effect.TickDeath(2f, true), Is.False);
+            Assert.That(effect.TickDeath(2f + effect.DeathFadeDuration + .01f, true), Is.True);
+        }
+        finally { Object.DestroyImmediate(host); }
+    }
+
+    [Test]
+    public void LifecycleVfxRestoresOriginalSpriteMaterialAndProperties()
+    {
+        var host = new GameObject("LifecycleVfxRestore");
+        try
+        {
+            var sprite = host.AddComponent<SpriteRenderer>();
+            Material original = sprite.sharedMaterial;
+            var block = new MaterialPropertyBlock();
+            block.SetFloat("_TestValue", 7f);
+            sprite.SetPropertyBlock(block);
+            var effect = host.AddComponent<EnemyLifecycleVFX>();
+            var data = new UnityEditor.SerializedObject(effect);
+            data.FindProperty("dissolveMaterial").objectReferenceValue =
+                UnityEditor.AssetDatabase.LoadAssetAtPath<Material>("Assets/Project/Resources/EnemyLifecycleDissolve.mat");
+            data.ApplyModifiedPropertiesWithoutUndo();
+            effect.BeginSpawn();
+            effect.TickSpawn(.2f);
+            effect.FinishSpawn();
+            Assert.That(sprite.sharedMaterial, Is.SameAs(original));
+            sprite.GetPropertyBlock(block);
+            Assert.That(block.GetFloat("_TestValue"), Is.EqualTo(7f));
+        }
+        finally { Object.DestroyImmediate(host); }
+    }
+
     private class RoomTraversalTestState : PlayerState
     {
         private readonly PlayerStateId id;

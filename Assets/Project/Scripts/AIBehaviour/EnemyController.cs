@@ -232,9 +232,13 @@ public class EnemyController : MonoBehaviour
     [SerializeField] private bool useSpawnPresentation;
     [SerializeField] private LayerMask spawnGroundLayers;
     [SerializeField, Min(0.005f)] private float spawnGroundDistance = 0.06f;
+    [SerializeField] private bool snapSpawnToGround;
+    [SerializeField, Min(1f)] private float spawnGroundSearchDistance = 30f;
+    private bool spawnPlacementFailed;
     [Tooltip("Safety limit for missing ground or misconfigured animations. Does not activate airborne enemies.")]
     [SerializeField, Min(1f)] private float lifecyclePresentationTimeout = 30f;
     private AnimationHandler_Enemy lifecycleAnimation;
+    private EnemyLifecycleVFX lifecycleVFX;
     private bool spawnFalling;
     private bool spawnAnimationPlaying;
     private bool deathAnimationPlaying;
@@ -595,19 +599,61 @@ public class EnemyController : MonoBehaviour
         return false;
     }
 
+    public bool TryPlaceSpawnOnGround()
+    {
+        if (bodyCollider == null) bodyCollider = GetComponent<Collider2D>();
+        if (bodyCollider == null || !bodyCollider.enabled || bodyCollider.isTrigger) return false;
+        Physics2D.SyncTransforms();
+        Bounds bounds = bodyCollider.bounds;
+        var filter = new ContactFilter2D();
+        filter.SetLayerMask(spawnGroundLayers.value != 0 ? spawnGroundLayers : LayerMask.GetMask("Ground", "OneWayPlatform"));
+        filter.useTriggers = false;
+        Vector2 origin = new Vector2(bounds.center.x, Mathf.Max(transform.position.y, bounds.min.y) + .5f);
+        int count = Physics2D.Raycast(origin, Vector2.down, filter, spawnGroundHits, spawnGroundSearchDistance);
+        float nearest = float.PositiveInfinity;
+        float groundY = 0f;
+        for (int i = 0; i < count; i++)
+        {
+            var hit = spawnGroundHits[i];
+            if (hit.collider == null || hit.normal.y < .5f || hit.distance >= nearest
+                || hit.collider.transform.IsChildOf(transform)
+                || hit.collider.GetComponentInParent<EnemyController>() != null
+                || hit.collider.GetComponentInParent<PlayerCharacter>() != null) continue;
+            nearest = hit.distance;
+            groundY = hit.point.y;
+        }
+        if (float.IsPositiveInfinity(nearest)) return false;
+        Vector3 position = transform.position;
+        position.y += groundY + .01f - bounds.min.y;
+        transform.position = position;
+        if (rb != null)
+        {
+            rb.position = position;
+            rb.linearVelocity = Vector2.zero;
+        }
+        Physics2D.SyncTransforms();
+        return true;
+    }
+
     internal bool TickSpawnPresentation(float elapsed)
     {
+        if (spawnPlacementFailed)
+        {
+            Die();
+            return false;
+        }
+        bool vfxFinished = lifecycleVFX == null || lifecycleVFX.TickSpawn(elapsed);
         if (!useSpawnPresentation)
-            return true;
+            return vfxFinished;
         if (spawnFalling)
         {
             if (rb != null)
                 rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
             if (HasSpawnGroundSupport() && (rb == null || rb.linearVelocity.y <= 0.01f))
-                return true;
+                return vfxFinished;
         }
         else if (!spawnAnimationPlaying || lifecycleAnimation == null || lifecycleAnimation.IsLifecycleAnimationComplete())
-            return true;
+            return vfxFinished;
 
         if (elapsed >= lifecyclePresentationTimeout)
         {
@@ -621,16 +667,19 @@ public class EnemyController : MonoBehaviour
     {
         if (elapsed < DeathDespawnDelay)
             return false;
-        if (!deathAnimationPlaying || lifecycleAnimation == null || lifecycleAnimation.IsLifecycleAnimationComplete())
-            return true;
-        if (elapsed < Mathf.Max(DeathDespawnDelay, lifecyclePresentationTimeout))
-            return false;
-        if (!deathAnimationWarned)
+        bool animationFinished = !deathAnimationPlaying || lifecycleAnimation == null
+            || lifecycleAnimation.IsLifecycleAnimationComplete();
+        if (!animationFinished && elapsed >= Mathf.Max(DeathDespawnDelay, lifecyclePresentationTimeout))
         {
-            deathAnimationWarned = true;
-            Debug.LogWarning($"{name}: Death animation timed out. Check non-looping state and transitions.", this);
+            if (!deathAnimationWarned)
+            {
+                deathAnimationWarned = true;
+                Debug.LogWarning($"{name}: Death animation timed out. Check non-looping state and transitions.", this);
+            }
+            animationFinished = true;
         }
-        return true;
+        bool vfxFinished = lifecycleVFX == null || lifecycleVFX.TickDeath(elapsed, animationFinished);
+        return animationFinished && vfxFinished;
     }
 
     internal void OnSpawnLifecycleEntered()
@@ -649,9 +698,14 @@ public class EnemyController : MonoBehaviour
         lifecycleAnimation?.SetLifecyclePhase(EnemyLifecycleStateId.Spawn);
         if (bodyCollider == null)
             bodyCollider = GetComponent<Collider2D>();
+        bool wantsFlight = locomotion != null && locomotion.UsesFixedHeightFlight;
+        spawnPlacementFailed = snapSpawnToGround && !wantsFlight && !TryPlaceSpawnOnGround();
         if (useSpawnPresentation)
             Physics2D.SyncTransforms();
         bool flightReady = locomotion != null && locomotion.PrepareSpawnFlight();
+        if (snapSpawnToGround && wantsFlight && !flightReady) spawnPlacementFailed = true;
+        if (spawnPlacementFailed)
+            Debug.LogWarning($"{name}: No supporting ground at spawn. Check Spawn_N position and ground layers; enemy will not activate in empty space.", this);
         spawnFalling = useSpawnPresentation && !flightReady && !HasSpawnGroundSupport();
         if (spawnFalling && (rb == null || rb.bodyType != RigidbodyType2D.Dynamic || rb.gravityScale <= 0f || bodyCollider == null))
             Debug.LogWarning($"{name}: Air spawn needs a Dynamic Rigidbody2D with positive gravity and a body collider. Check prefab setup.", this);
@@ -665,10 +719,13 @@ public class EnemyController : MonoBehaviour
             rb.simulated = spawnFalling;
             rb.linearVelocity = Vector2.zero;
         }
+        lifecycleVFX = GetComponent<EnemyLifecycleVFX>();
+        lifecycleVFX?.BeginSpawn();
     }
 
     internal void OnSpawnLifecycleExited()
     {
+        lifecycleVFX?.FinishSpawn();
         if (rb != null && spawnPhysicsPaused)
             rb.simulated = simulatedBeforeSpawn;
         spawnPhysicsPaused = false;
@@ -724,6 +781,8 @@ public class EnemyController : MonoBehaviour
         deathAnimationPlaying = lifecycleAnimation != null && lifecycleAnimation.PlayLifecycleAnimation(lifecycleAnimation.deathState);
         if (lifecycleAnimation != null && lifecycleAnimation.HasLifecycleDeath && !deathAnimationPlaying)
             lifecycleAnimation.TriggerDie();
+        if (lifecycleVFX == null) lifecycleVFX = GetComponent<EnemyLifecycleVFX>();
+        lifecycleVFX?.BeginDeath();
         SetInCombat(false);
         ScheduleDespawnIfDisabled();
     }
