@@ -16,6 +16,7 @@ public class PlayerMovement : MonoBehaviour
     private const float DashDecelerationStart = 0.55f;
     private const float DashEndSpeedRatio = 0.15f;
     private const int MaximumDropThroughFrames = 45;
+    private const float MovementWallSkin = 0.02f;
 
     private enum FallSession
     {
@@ -92,6 +93,7 @@ public class PlayerMovement : MonoBehaviour
     private readonly ContactPoint2D[] groundContactBuffer = new ContactPoint2D[8];
     private readonly RaycastHit2D[] oneWayCrossingBuffer = new RaycastHit2D[8];
     private readonly RaycastHit2D[] actionOutputGroundBuffer = new RaycastHit2D[8];
+    private readonly RaycastHit2D[] movementWallHits = new RaycastHit2D[64];
     private ContactFilter2D groundContactFilter;
     private ContactFilter2D oneWayContactFilter;
 
@@ -423,7 +425,8 @@ public class PlayerMovement : MonoBehaviour
         }
 
         Vector2 previousPosition = rb.position;
-        Vector2 nextPosition = new Vector2(targetX, previousPosition.y);
+        float travel = ClipHorizontalTravel(targetX - previousPosition.x);
+        Vector2 nextPosition = new Vector2(previousPosition.x + travel, previousPosition.y);
         Vector2 currentVelocity = rb.linearVelocity;
 
         rb.position = nextPosition;
@@ -870,9 +873,53 @@ public class PlayerMovement : MonoBehaviour
         float movementVelocityY = ResolveVerticalVelocity(baseVerticalVelocity, motionVelocityY);
 
         rb.linearVelocity = new Vector2(
-            movementVelocityX + motionVelocityX,
+            ClipHorizontalVelocity(movementVelocityX + motionVelocityX),
             movementVelocityY + motionVelocityY);
         lastAppliedMotionVelocityY = motionVelocityY;
+    }
+
+    private float ClipHorizontalVelocity(float velocity)
+    {
+        float step = Mathf.Max(Time.fixedDeltaTime, 0.001f);
+        return ClipHorizontalTravel(velocity * step) / step;
+    }
+
+    private float ClipHorizontalTravel(float travel)
+    {
+        if (rb == null || Mathf.Abs(travel) < 0.000001f) return travel;
+        if (solidColliders == null)
+            solidColliders = Array.FindAll(GetComponentsInChildren<Collider2D>(),
+                c => c != null && !c.isTrigger && c.attachedRigidbody == rb);
+
+        Vector2 direction = Vector2.right * Mathf.Sign(travel);
+        float distance = Mathf.Abs(travel);
+        float allowed = distance;
+        foreach (Collider2D body in solidColliders)
+        {
+            if (body == null || !body.enabled || !body.gameObject.activeInHierarchy
+                || body.isTrigger || body.attachedRigidbody != rb) continue;
+            int mask = Physics2D.GetLayerCollisionMask(body.gameObject.layer);
+            if (enemyLayer >= 0) mask &= ~(1 << enemyLayer);
+            var filter = new ContactFilter2D();
+            filter.SetLayerMask(mask);
+            filter.useTriggers = false;
+            int count = body.Cast(direction, filter, movementWallHits, distance + MovementWallSkin);
+            // A saturated buffer cannot guarantee that the nearest wall was returned.
+            if (count == movementWallHits.Length) return 0f;
+            for (int i = 0; i < count; i++)
+            {
+                RaycastHit2D hit = movementWallHits[i];
+                Collider2D obstacle = hit.collider;
+                if (obstacle == null || obstacle.attachedRigidbody == rb
+                    || obstacle.GetComponentInParent<EnemyController>() != null
+                    || Physics2D.GetIgnoreCollision(body, obstacle)
+                    || (obstacle.usedByEffector && obstacle.GetComponent<PlatformEffector2D>() != null)) continue;
+                // Tangential floor contacts and walls behind the player must not stop travel.
+                if (Vector2.Dot(hit.normal, direction) > -0.5f) continue;
+                allowed = Mathf.Min(allowed, Mathf.Max(0f, hit.distance - MovementWallSkin));
+            }
+        }
+        return Mathf.Sign(travel) * allowed;
     }
 
     private float ResolveVerticalVelocity(float currentVelocity, float motionVelocity)
@@ -1017,7 +1064,7 @@ public class PlayerMovement : MonoBehaviour
             DashEndSpeedRatio,
             decelerationProgress * decelerationProgress);
         rb.linearVelocity = new Vector2(
-            dashDir * dashData.dashSpeed * speedRatio,
+            ClipHorizontalVelocity(dashDir * dashData.dashSpeed * speedRatio),
             0f);
 
         if (enableDashAfterimage && Time.time - lastAfterimageTime >= dashAfterimageSpawnInterval)
