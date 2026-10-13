@@ -17,12 +17,12 @@ MonoBehaviour:
   holdRange: 5
   warningDuration: 0.7
   hitWindowDuration: 0.15
-  attackCooldown: 5
+  attackCooldown: 1.3
   lungeDistance: 0
   bodyCharge: 0
   commitTelegraphFraction: 0
   interruptCooldown: 0.5
-  recoveryPlantDuration: 0.8
+  recoveryPlantDuration: 1.3
   shotSpeed: 10
   shotLifetime: 2.5
   shotSprite: {fileID: 0}

@@ -49,6 +49,7 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
     private EnemyLocomotion m_Locomotion;
     private Rigidbody2D m_Body;
     private EnemyShieldGuard m_ShieldGuard;
+    private bool m_OwnsFlightAttack;
     private float m_Timer;
     private float m_AttackStartTime;
     private float m_PhaseEndTime;
@@ -71,6 +72,7 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
 
     protected override Status OnStart()
     {
+        m_OwnsFlightAttack = false;
         if (Agent.Value == null)
             return Status.Failure;
 
@@ -86,6 +88,12 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
 
         if (!CanReachTarget())
             return Status.Failure;
+
+        if (m_Locomotion != null && m_Locomotion.UsesRoamingFlight)
+        {
+            if (!m_Locomotion.BeginFlightAttack()) return Status.Failure;
+            m_OwnsFlightAttack = true;
+        }
 
         m_ShieldGuard = m_Controller.CombatRole == EnemyCombatRole.ShieldGuard ? m_Controller.ShieldGuard : null;
         if (m_ShieldGuard != null)
@@ -108,6 +116,7 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         FaceTarget();
         m_Controller.LockFacing();
         m_Controller.BeginRangedAim(Target.Value != null ? Target.Value.transform : null);
+        if (m_OwnsFlightAttack) m_Controller.CommitRangedAim();
 
         float telegraphDuration = ResolveTelegraphDuration();
         if (telegraphDuration > 0f)
@@ -144,6 +153,11 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
     {
         if (m_Controller == null)
             return Status.Failure;
+        if (m_OwnsFlightAttack && !m_Locomotion.FlightCombatReady)
+        {
+            m_Interrupted = true;
+            return Status.Failure;
+        }
 
         if (m_ShieldGuard != null)
         {
@@ -236,6 +250,11 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
 
     protected override void OnEnd()
     {
+        if (m_OwnsFlightAttack)
+        {
+            m_Locomotion?.EndFlightAttack(m_Interrupted || !m_AttackStarted);
+            m_OwnsFlightAttack = false;
+        }
         if (m_ShieldGuard != null)
         {
             m_ShieldGuard.EndGuard();

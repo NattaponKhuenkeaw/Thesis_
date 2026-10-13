@@ -40,6 +40,12 @@ public class EnemyLocomotion : MonoBehaviour
     [Tooltip("How far the flyer travels left and right once the target is already in shot range.")]
     [SerializeField, Min(0.5f)] private float flightPatrolSpan = 6f;
     [SerializeField, Min(0.1f)] private float flightPatrolSpeed = 3f;
+    [SerializeField] private bool roamingFlight;
+    [SerializeField] private Vector2 flightTargetDistance = new Vector2(3f, 5f);
+    [SerializeField, Min(0.1f)] private float flightTravelDuration = 1.1f;
+    [SerializeField, Min(0f)] private float flightArcHeight = 0.35f;
+    [SerializeField, Min(0f)] private float flightHeightVariation = 0.15f;
+    [SerializeField, Min(0f)] private float flightInterruptedRest = 1.2f;
 
     // Both distances below are measured against the body, which is 1.35 wide on Enemy1-3. Anything
     // smaller reads two bodies as separate while they are visibly inside one another.
@@ -79,13 +85,25 @@ public class EnemyLocomotion : MonoBehaviour
     private float flightPatrolAnchorX;
     private float flightPatrolSign = 1f;
     private PlayerCharacter flightPatrolPlayer;
+    private enum FlightBeat { Moving, Ready, Attacking, Resting }
+    private FlightBeat flightBeat;
+    private float flightBeatTime;
+    private Vector2 flightMoveStart;
+    private Vector2 flightMoveEnd;
+    private float flightMoveDuration;
+    private readonly RaycastHit2D[] flightWallHits = new RaycastHit2D[32];
 
     public EnemyMoveMode MoveMode => moveMode;
     public Vector2 AttackSlotOffset => attackSlotOffset;
     public bool UsesFixedHeightFlight => allowNonGroundMove && moveMode == EnemyMoveMode.Fly && fixedHeightFlight;
     public bool FlightInitialized => flightInitialized;
     public float FlightWorldY => flightWorldY;
-    public bool HoldsFlightPlaneForReaction => UsesFixedHeightFlight && flightInitialized && !flightReactionAllowsVertical;
+    public bool UsesRoamingFlight => UsesFixedHeightFlight && roamingFlight;
+    public bool FlightCombatReady => !UsesRoamingFlight || FlightPlayerReady();
+    public bool CanStartFlightAttack => !UsesRoamingFlight || (enemy != null && enemy.IsGameplayActive
+        && enemy.CurrentReactionState == EnemyReactionState.None && flightInitialized
+        && flightBeat == FlightBeat.Ready && FlightPlayerReady());
+    public bool HoldsFlightPlaneForReaction => UsesFixedHeightFlight && !roamingFlight && flightInitialized && !flightReactionAllowsVertical;
 
     private void Awake()
     {
@@ -154,6 +172,8 @@ public class EnemyLocomotion : MonoBehaviour
         flightInitialized = true;
         flightPatrolAnchorX = current.x;
         flightPatrolSign = EnemyFacingUtil.GetFacingSign(cachedTransform);
+        flightBeat = FlightBeat.Resting;
+        flightBeatTime = Random.Range(0.2f, 0.6f);
         current.y = flightWorldY;
         cachedTransform.position = current;
         if (body != null)
@@ -162,7 +182,7 @@ public class EnemyLocomotion : MonoBehaviour
             body.linearVelocity = Vector2.zero;
             flightOriginalConstraints = body.constraints;
             flightOwnsConstraints = true;
-            body.constraints |= RigidbodyConstraints2D.FreezePositionY;
+            if (!roamingFlight) body.constraints |= RigidbodyConstraints2D.FreezePositionY;
             body.gravityScale = 0f;
         }
         Physics2D.SyncTransforms();
@@ -186,6 +206,11 @@ public class EnemyLocomotion : MonoBehaviour
         if (enemy != null && !enemy.IsAlive)
         {
             ReleaseFlightConstraints();
+            return;
+        }
+        if (UsesRoamingFlight)
+        {
+            TickRoamingFlight(PhysicsStep());
             return;
         }
         // Do not overwrite a MovePosition scheduled by the hit-reaction motor.
@@ -239,6 +264,12 @@ public class EnemyLocomotion : MonoBehaviour
     {
         if (!UsesFixedHeightFlight || !flightInitialized)
             return;
+        if (UsesRoamingFlight)
+        {
+            flightReactionAllowsVertical = true;
+            ReleaseFlightConstraints();
+            return;
+        }
         // Grabs retain socket ownership. Ordinary hits keep the authored horizontal flight plane
         // and cannot enter an airborne reaction that waits forever for a grounded landing.
         flightReactionAllowsVertical = data.reactionKind == EnemyReactionKind.Grab;
@@ -369,6 +400,7 @@ public class EnemyLocomotion : MonoBehaviour
             return false;
 
         Cache();
+        if (UsesRoamingFlight) return IsAtHoldSlot(target, attackRange);
         if (!TryResolveHoldPoint(target, attackRange, out Vector3 holdPoint, out float holdGap, out float currentGap))
             return false;
 
@@ -427,6 +459,9 @@ public class EnemyLocomotion : MonoBehaviour
     public bool IsAtHoldSlot(Transform target, float attackRange)
     {
         Cache();
+        if (UsesRoamingFlight)
+            return target != null && CanStartFlightAttack
+                && EnemyFacingUtil.HorizontalDistance(BodyPosition(), target.position) <= attackRange;
         if (enemy != null && enemy.ShieldGuard != null && enemy.ShieldGuard.CanEngage(target))
             return true;
         if (!TryResolveHoldPoint(target, attackRange, out Vector3 holdPoint, out float holdGap, out float currentGap))
@@ -879,6 +914,134 @@ public class EnemyLocomotion : MonoBehaviour
         return false;
     }
 
+    private bool FlightPlayerReady()
+    {
+        if (!TryGetFlightPatrolPlayer(out _)) return false;
+        PlayerStateMachine state = flightPatrolPlayer.StateMachine;
+        return !flightPatrolPlayer.IsDead && state != null && state.CurrentState != null
+            && state.CurrentStateId != PlayerStateId.Intro
+            && state.CurrentStateId != PlayerStateId.Exit
+            && state.CurrentStateId != PlayerStateId.Dead;
+    }
+
+    public bool BeginFlightAttack()
+    {
+        if (!UsesRoamingFlight) return true;
+        if (!CanStartFlightAttack) return false;
+        flightBeat = FlightBeat.Attacking;
+        body.linearVelocity = Vector2.zero;
+        return true;
+    }
+
+    public void EndFlightAttack(bool interrupted)
+    {
+        if (!UsesRoamingFlight || flightBeat != FlightBeat.Attacking) return;
+        flightBeat = FlightBeat.Resting;
+        flightBeatTime = interrupted ? flightInterruptedRest : 0f;
+    }
+
+    private void TickRoamingFlight(float dt)
+    {
+        if (enemy == null) return;
+        if (enemy.CurrentReactionState != EnemyReactionState.None
+            || (enemy.hitReactionHandler != null && enemy.hitReactionHandler.OwnsPositionReactionMotion))
+        {
+            flightBeat = FlightBeat.Resting;
+            flightBeatTime = flightInterruptedRest;
+            return;
+        }
+        body.gravityScale = 0f;
+        body.linearVelocity = Vector2.zero;
+        if (!enemy.IsGameplayActive || !FlightPlayerReady())
+        {
+            flightBeat = FlightBeat.Resting;
+            flightBeatTime = 0.3f;
+            return;
+        }
+        if (flightBeat == FlightBeat.Resting)
+        {
+            flightBeatTime -= dt;
+            if (flightBeatTime <= 0f) SelectFlightDestination();
+            return;
+        }
+        if (flightBeat == FlightBeat.Ready)
+        {
+            flightBeatTime += dt;
+            if (flightBeatTime >= 1.5f) SelectFlightDestination();
+            return;
+        }
+        if (flightBeat != FlightBeat.Moving) return;
+        flightBeatTime += dt;
+        float t = Mathf.Clamp01(flightBeatTime / Mathf.Max(.1f, flightMoveDuration));
+        Vector2 next = Vector2.Lerp(flightMoveStart, flightMoveEnd, Mathf.SmoothStep(0f, 1f, t));
+        next.y += Mathf.Sin(t * Mathf.PI) * flightArcHeight;
+        Vector2 desired = next - body.position;
+        Vector2 safe = ClipFlightTravel(desired);
+        body.position += safe;
+        FaceWalkDirection(safe.x);
+        if ((safe - desired).sqrMagnitude > .0001f || t >= 1f)
+        {
+            flightBeat = FlightBeat.Ready;
+            flightBeatTime = 0f;
+            flightWorldY = body.position.y;
+        }
+    }
+
+    private void SelectFlightDestination()
+    {
+        if (!TryGetFlightPatrolPlayer(out Transform player)) return;
+        Collider2D collider = ResolveBodyCollider();
+        if (collider == null) return;
+        float footOffset = collider.bounds.min.y - body.position.y;
+        float side = Random.value < .5f ? -1f : 1f;
+        float minimum = Mathf.Max(1f, flightTargetDistance.x);
+        float maximum = Mathf.Max(minimum, flightTargetDistance.y);
+        // Reject gaps, different platforms and walls before committing to a destination.
+        for (int attempt = 0; attempt < 6; attempt++)
+        {
+            float x = player.position.x + side * Random.Range(minimum, maximum);
+            side = -side;
+            Vector2 probe = new Vector2(x, flightGroundY + flightGroundSearchDistance);
+            if (!TryFindFlightGround(probe, flightGroundSearchDistance + .1f, out float groundY)
+                || Mathf.Abs(groundY - flightGroundY) > flightGroundTolerance) continue;
+            float height = Mathf.Max(.2f, flightHeight + Random.Range(-flightHeightVariation, flightHeightVariation));
+            Vector2 destination = new Vector2(x, groundY + height - footOffset);
+            Vector2 delta = destination - body.position;
+            if ((ClipFlightTravel(delta) - delta).sqrMagnitude > .0001f) continue;
+            flightMoveStart = body.position;
+            flightMoveEnd = destination;
+            flightMoveDuration = Mathf.Max(flightTravelDuration, delta.magnitude / Mathf.Max(.1f, flightPatrolSpeed));
+            flightBeatTime = 0f;
+            flightBeat = FlightBeat.Moving;
+            return;
+        }
+        // A cramped room can still offer a shot without endlessly searching for a flight point.
+        flightBeat = FlightBeat.Ready;
+        flightBeatTime = 0f;
+    }
+
+    private Vector2 ClipFlightTravel(Vector2 delta)
+    {
+        float distance = delta.magnitude;
+        Collider2D collider = ResolveBodyCollider();
+        if (distance < .0001f || collider == null) return delta;
+        Vector2 direction = delta / distance;
+        var filter = new ContactFilter2D();
+        filter.SetLayerMask(Physics2D.GetLayerCollisionMask(collider.gameObject.layer));
+        filter.useTriggers = false;
+        int count = collider.Cast(direction, filter, flightWallHits, distance + .02f);
+        if (count == flightWallHits.Length) return Vector2.zero;
+        float allowed = distance;
+        for (int i = 0; i < count; i++)
+        {
+            var hit = flightWallHits[i];
+            if (IsActorCollider(hit.collider, collider) || Physics2D.GetIgnoreCollision(collider, hit.collider)
+                || Vector2.Dot(hit.normal, direction) > -.1f) continue;
+            allowed = Mathf.Min(allowed, Mathf.Max(0f, hit.distance - .02f));
+        }
+        return direction * allowed;
+    }
+
     private bool TrySampleFlightPatrol(out float velocityX)
     {
         velocityX = 0f;
@@ -1051,6 +1214,7 @@ public class EnemyLocomotion : MonoBehaviour
     private bool CanDriveMovement()
     {
         Cache();
+        if (UsesRoamingFlight) return false;
         return enemy == null
             || (enemy.IsGameplayActive && enemy.CurrentReactionState == EnemyReactionState.None);
     }

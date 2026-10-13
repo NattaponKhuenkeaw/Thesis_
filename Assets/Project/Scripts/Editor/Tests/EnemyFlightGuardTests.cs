@@ -28,6 +28,11 @@ public class EnemyFlightGuardTests
         Assert.That(guard, Is.Not.Null);
         Assert.That(flyer.GetComponent<EnemyController>().CombatRole, Is.EqualTo(EnemyCombatRole.AimedRanged));
         Assert.That(flyer.GetComponent<EnemyLocomotion>().UsesFixedHeightFlight, Is.True);
+        Assert.That(flyer.GetComponent<EnemyLocomotion>().UsesRoamingFlight, Is.True);
+        var flightSettings = new SerializedObject(flyer.GetComponent<EnemyLocomotion>());
+        Assert.That(flightSettings.FindProperty("flightHeight").floatValue, Is.EqualTo(3.2f));
+        Assert.That(flightSettings.FindProperty("flightArcHeight").floatValue, Is.EqualTo(1.2f));
+        Assert.That(flightSettings.FindProperty("flightHeightVariation").floatValue, Is.EqualTo(.8f));
         Assert.That(guard.GetComponent<EnemyController>().CombatRole, Is.EqualTo(EnemyCombatRole.ShieldGuard));
         Assert.That(guard.GetComponent<EnemyShieldGuard>(), Is.Not.Null);
         Assert.That(guard.GetComponent<EnemyController>().Kit.BodyCharge, Is.True);
@@ -69,6 +74,61 @@ public class EnemyFlightGuardTests
         foreach (string property in new[] { "minimumLightImpactFreeze", "minimumStrongImpactFreeze" })
             Assert.That(settings.FindProperty(property).intValue,
                 Is.EqualTo(reference.FindProperty(property).intValue), property);
+    }
+
+    [Test]
+    public void RoamingFlyerKeepsKnockupInsteadOfFlatteningTheCombo()
+    {
+        Ground(new Vector2(1000f, -0.5f), new Vector2(20f, 1f));
+        EnemyController enemy = Flyer(new Vector3(1000f, 0f, 0f));
+        EnemyLocomotion flight = enemy.GetComponent<EnemyLocomotion>();
+        var settings = new SerializedObject(flight);
+        settings.FindProperty("roamingFlight").boolValue = true;
+        settings.ApplyModifiedPropertiesWithoutUndo();
+        flight.PrepareSpawnFlight();
+        var hit = new HitReactionData { reactionKind = EnemyReactionKind.Knockup,
+            launchSpeed = 8f, knockupFrames = 12, knockfallFrames = 20, canAirJuggle = true };
+        flight.ConstrainFlightReaction(ref hit);
+        Assert.That(hit.reactionKind, Is.EqualTo(EnemyReactionKind.Knockup));
+        Assert.That(hit.launchSpeed, Is.EqualTo(8f));
+        Assert.That(hit.canAirJuggle, Is.True);
+        Assert.That(flight.HoldsFlightPlaneForReaction, Is.False);
+        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionY, Is.Zero);
+    }
+
+    [Test]
+    public void RoamingFlyerCannotAttackDuringItsInitialRest()
+    {
+        Ground(new Vector2(1000f, -0.5f), new Vector2(20f, 1f));
+        EnemyController enemy = Flyer(new Vector3(1000f, 0f, 0f));
+        EnemyLocomotion flight = enemy.GetComponent<EnemyLocomotion>();
+        var settings = new SerializedObject(flight);
+        settings.FindProperty("roamingFlight").boolValue = true;
+        settings.ApplyModifiedPropertiesWithoutUndo();
+        flight.PrepareSpawnFlight();
+        Assert.That(flight.CanStartFlightAttack, Is.False);
+        Assert.That(flight.BeginFlightAttack(), Is.False);
+    }
+
+    [Test]
+    public void RoamingFlightSweepStopsAtThinRoomWall()
+    {
+        Ground(new Vector2(1000f, -0.5f), new Vector2(20f, 1f));
+        EnemyController enemy = Flyer(new Vector3(1000f, 0f, 0f));
+        var wall = Host("ThinFlightWall", enemy.transform.position + Vector3.right * 2f);
+        var obstacle = wall.AddComponent<BoxCollider2D>();
+        obstacle.size = new Vector2(.01f, 10f);
+        Physics2D.SyncTransforms();
+        var flight = enemy.GetComponent<EnemyLocomotion>();
+        Vector2 safe = (Vector2)typeof(EnemyLocomotion).GetMethod("ClipFlightTravel", Private)
+            .Invoke(flight, new object[] { Vector2.right * 6f });
+        float gap = obstacle.bounds.min.x - enemy.bodyCollider.bounds.max.x;
+        Assert.That(safe.x, Is.EqualTo(gap - .02f).Within(.01f));
+        obstacle.isTrigger = true;
+        Physics2D.SyncTransforms();
+        safe = (Vector2)typeof(EnemyLocomotion).GetMethod("ClipFlightTravel", Private)
+            .Invoke(flight, new object[] { Vector2.right * 6f });
+        Assert.That(safe.x, Is.EqualTo(6f).Within(.001f));
     }
 
     [Test]
