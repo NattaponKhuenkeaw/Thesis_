@@ -30,6 +30,91 @@ internal static class EnemyLifecycleTestUtility
 
 public class EnemyLifecycleTests
 {
+    private class RoomTraversalTestState : PlayerState
+    {
+        private readonly PlayerStateId id;
+        public RoomTraversalTestState(PlayerCharacter player, PlayerStateMachine fsm, PlayerStateId id)
+            : base(player, fsm) { this.id = id; }
+        public override PlayerStateId StateId => id;
+    }
+
+    [TestCase(PlayerStateId.Intro, false)]
+    [TestCase(PlayerStateId.Exit, false)]
+    [TestCase(PlayerStateId.Idle, true)]
+    [TestCase(PlayerStateId.Attacking, true)]
+    [TestCase(PlayerStateId.Hitstun, true)]
+    [TestCase(PlayerStateId.Ultimate, true)]
+    public void EnemyCombatWaitsForTraversalButNotNormalPlayerActions(PlayerStateId stateId, bool ready)
+    {
+        PlayerCharacter previous = PlayerCharacter.Instance;
+        var playerHost = new GameObject("RoomTraversalPlayer");
+        var enemyHost = new GameObject("RoomTraversalEnemy");
+        var hitboxHost = new GameObject("RoomTraversalHitbox");
+        try
+        {
+            var player = playerHost.AddComponent<PlayerCharacter>();
+            var state = playerHost.AddComponent<PlayerStateMachine>();
+            player.StateMachine = state;
+            typeof(PlayerCharacter).GetProperty("Instance").SetValue(null, player);
+            typeof(PlayerStateMachine).GetProperty("CurrentState").SetValue(state,
+                new RoomTraversalTestState(player, state, stateId));
+            enemyHost.AddComponent<Rigidbody2D>().gravityScale = 0f;
+            enemyHost.AddComponent<BoxCollider2D>();
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(enemyHost);
+            hitboxHost.transform.SetParent(enemyHost.transform);
+            enemy.attackHitbox = hitboxHost.AddComponent<BoxCollider2D>();
+            Assert.That(enemy.IsGameplayActive, Is.True);
+            Assert.That(enemy.IsCombatReady, Is.EqualTo(ready));
+            enemy.SetAttackHitboxActive(true);
+            Assert.That(enemy.attackHitbox.enabled, Is.EqualTo(ready));
+            var locomotion = enemyHost.AddComponent<EnemyLocomotion>();
+            locomotion.SetHorizontalSpeed(3f);
+            Assert.That(enemy.rb.linearVelocity.x, Is.EqualTo(ready ? 3f : 0f).Within(.001f));
+        }
+        finally
+        {
+            Object.DestroyImmediate(hitboxHost);
+            Object.DestroyImmediate(enemyHost);
+            Object.DestroyImmediate(playerHost);
+            typeof(PlayerCharacter).GetProperty("Instance").SetValue(null, previous);
+        }
+    }
+
+    [Test]
+    public void DeferredEnemyBrainRequestResumesWhenIntroEnds()
+    {
+        PlayerCharacter previous = PlayerCharacter.Instance;
+        var playerHost = new GameObject("DeferredBrainPlayer");
+        var enemyHost = new GameObject("DeferredBrainEnemy");
+        const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+        try
+        {
+            var player = playerHost.AddComponent<PlayerCharacter>();
+            var state = playerHost.AddComponent<PlayerStateMachine>();
+            player.StateMachine = state;
+            typeof(PlayerCharacter).GetProperty("Instance").SetValue(null, player);
+            typeof(PlayerStateMachine).GetProperty("CurrentState").SetValue(state,
+                new RoomTraversalTestState(player, state, PlayerStateId.Intro));
+            EnemyController enemy = EnemyLifecycleTestUtility.AddActive(enemyHost);
+            var pending = typeof(EnemyController).GetField("resumeBehaviorAfterRoomTraversal", flags);
+            var tick = typeof(EnemyController).GetMethod("UpdateRoomTraversalPause", flags);
+            Assert.That(pending.GetValue(enemy), Is.EqualTo(true));
+            tick.Invoke(enemy, null);
+            Assert.That(pending.GetValue(enemy), Is.EqualTo(true));
+            typeof(PlayerStateMachine).GetProperty("CurrentState").SetValue(state,
+                new RoomTraversalTestState(player, state, PlayerStateId.Idle));
+            tick.Invoke(enemy, null);
+            Assert.That(enemy.IsCombatReady, Is.True);
+            Assert.That(pending.GetValue(enemy), Is.EqualTo(false));
+        }
+        finally
+        {
+            Object.DestroyImmediate(enemyHost);
+            Object.DestroyImmediate(playerHost);
+            typeof(PlayerCharacter).GetProperty("Instance").SetValue(null, previous);
+        }
+    }
+
     [Test]
     public void ExecutionerPrefabWaitsForGroundBeforeActivatingAI()
     {

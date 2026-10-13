@@ -208,6 +208,12 @@ public class EnemyLocomotion : MonoBehaviour
             ReleaseFlightConstraints();
             return;
         }
+        if (enemy != null && EnemyController.IsRoomTraversalBlockingCombat
+            && enemy.CurrentReactionState == EnemyReactionState.None)
+        {
+            body.linearVelocity = new Vector2(0f, roamingFlight ? 0f : body.linearVelocity.y);
+            return;
+        }
         if (UsesRoamingFlight)
         {
             TickRoamingFlight(PhysicsStep());
@@ -1216,7 +1222,7 @@ public class EnemyLocomotion : MonoBehaviour
         Cache();
         if (UsesRoamingFlight) return false;
         return enemy == null
-            || (enemy.IsGameplayActive && enemy.CurrentReactionState == EnemyReactionState.None);
+            || (enemy.IsCombatReady && enemy.CurrentReactionState == EnemyReactionState.None);
     }
 
     private static bool IsActorCollider(Collider2D hitCollider, Collider2D self)

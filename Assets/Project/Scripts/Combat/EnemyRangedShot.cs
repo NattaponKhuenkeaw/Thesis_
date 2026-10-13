@@ -41,7 +41,8 @@ public class EnemyRangedShot : MonoBehaviour
 
     private void TryHitPlayer(Collider2D other)
     {
-        if (consumed || owner == null || !owner.IsAlive || other == null)
+        if (consumed || owner == null || !owner.IsAlive || other == null
+            || EnemyController.IsRoomTraversalBlockingCombat)
             return;
 
         if (other.GetComponentInParent<EnemyController>() != null)

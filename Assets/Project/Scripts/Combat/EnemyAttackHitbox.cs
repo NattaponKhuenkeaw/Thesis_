@@ -67,7 +67,7 @@ public class EnemyAttackHitbox : MonoBehaviour
 
     private void TryDamagePlayer(Collider2D other)
     {
-        if (!hitboxWindowActive || enemyController == null || !enemyController.IsAlive)
+        if (!hitboxWindowActive || enemyController == null || !enemyController.IsCombatReady)
             return;
 
         PlayerCharacter playerCharacter = other.GetComponentInParent<PlayerCharacter>();

@@ -103,6 +103,20 @@ public class EnemyController : MonoBehaviour
     public bool IsAlive => isAlive;
     public EnemyLifecycleStateId LifecycleState => lifecycleState;
     public bool IsGameplayActive => isActiveAndEnabled && isAlive && lifecycleState == EnemyLifecycleStateId.Active;
+    public bool IsCombatReady => IsGameplayActive && !IsRoomTraversalBlockingCombat;
+    public static bool IsRoomTraversalBlockingCombat
+    {
+        get
+        {
+            PlayerCharacter player = PlayerCharacter.Instance;
+            if (player == null || !player.isActiveAndEnabled) return false;
+            PlayerStateMachine state = player.StateMachine;
+            return state == null || state.CurrentState == null || state.IsCinematicTraversal;
+        }
+    }
+    private bool resumeBehaviorAfterRoomTraversal;
+    private bool roomTraversalPauseApplied;
+    private bool restartBehaviorAfterRoomTraversal;
     public bool IsTargetable => IsGameplayActive;
     public RuntimeEffectReceiver RuntimeEffects
     {
@@ -442,6 +456,47 @@ public class EnemyController : MonoBehaviour
             return;
 
         lifecycleStateInstance.Tick(Time.deltaTime);
+        UpdateRoomTraversalPause();
+    }
+
+    private void UpdateRoomTraversalPause()
+    {
+        if (!IsGameplayActive) return;
+        if (IsRoomTraversalBlockingCombat)
+        {
+            if (!roomTraversalPauseApplied)
+            {
+                var agent = GetComponent<BehaviorGraphAgent>();
+                bool resume = resumeBehaviorAfterRoomTraversal || (agent != null && agent.enabled);
+                if (agent != null && agent.enabled && agent.Graph != null && agent.Graph.IsRunning)
+                {
+                    agent.End();
+                    restartBehaviorAfterRoomTraversal = true;
+                }
+                SetBehaviorAgentActive(false);
+                resumeBehaviorAfterRoomTraversal = resume;
+                roomTraversalPauseApplied = true;
+                ShieldGuard?.EndGuard();
+                SetAttackHitboxActive(false);
+                HideAttackWarning();
+                EndRangedAim();
+            }
+            if (rb != null && CurrentReactionState == EnemyReactionState.None)
+                rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+            return;
+        }
+        roomTraversalPauseApplied = false;
+        if (resumeBehaviorAfterRoomTraversal && CurrentReactionState == EnemyReactionState.None)
+        {
+            resumeBehaviorAfterRoomTraversal = false;
+            SetBehaviorAgentActive(true);
+            if (restartBehaviorAfterRoomTraversal)
+            {
+                var agent = GetComponent<BehaviorGraphAgent>();
+                if (agent != null && agent.enabled && agent.Graph != null) agent.Restart();
+                restartBehaviorAfterRoomTraversal = false;
+            }
+        }
     }
 
     /// <summary>
@@ -1193,6 +1248,12 @@ public class EnemyController : MonoBehaviour
         // final answer so a dying/spawning enemy cannot be reactivated by a late callback.
         if (active && !IsGameplayActive)
             return;
+        if (active && IsRoomTraversalBlockingCombat)
+        {
+            resumeBehaviorAfterRoomTraversal = true;
+            return;
+        }
+        if (!active) resumeBehaviorAfterRoomTraversal = false;
 
         EnemyBehaviorBrain brain = GetComponent<EnemyBehaviorBrain>();
         if (brain != null)
@@ -1276,7 +1337,7 @@ public class EnemyController : MonoBehaviour
 
     public void TriggerAttackWarning(float duration = -1f)
     {
-        if (!IsGameplayActive)
+        if (!IsCombatReady)
             return;
 
         if (UsesRangedAttack)
@@ -1314,7 +1375,7 @@ public class EnemyController : MonoBehaviour
     /// <summary>Enable or disable the attack hitbox collider.</summary>
     public void SetAttackHitboxActive(bool active)
     {
-        if (active && !IsGameplayActive)
+        if (active && !IsCombatReady)
             active = false;
 
         if (attackHitbox != null)
@@ -1440,6 +1501,7 @@ public class EnemyController : MonoBehaviour
 
     public void FireRangedShot(Transform target)
     {
+        if (!IsCombatReady) return;
         HideRangedAimLaser();
 
         Vector3 origin = GetRangedMuzzleWorldPosition();

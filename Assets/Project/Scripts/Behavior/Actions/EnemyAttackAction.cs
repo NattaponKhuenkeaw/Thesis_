@@ -80,7 +80,7 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         m_AnimHandler = Agent.Value.GetComponentInChildren<AnimationHandler_Enemy>();
         m_Body = Agent.Value.GetComponent<Rigidbody2D>();
         m_Locomotion = Agent.Value.GetComponent<EnemyLocomotion>();
-        if (m_Controller == null || m_AnimHandler == null)
+        if (m_Controller == null || m_AnimHandler == null || !m_Controller.IsCombatReady)
             return Status.Failure;
 
         if (m_Controller.CurrentReactionState != EnemyReactionState.None)
@@ -153,6 +153,12 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
     {
         if (m_Controller == null)
             return Status.Failure;
+        if (!m_Controller.IsCombatReady)
+        {
+            m_Interrupted = true;
+            return Status.Failure;
+        }
+
         if (m_OwnsFlightAttack && !m_Locomotion.FlightCombatReady)
         {
             m_Interrupted = true;

@@ -63,7 +63,7 @@ public sealed class EnemyShieldGuard : MonoBehaviour
     public bool BeginGuard(Transform candidate)
     {
         Cache();
-        if (enemy == null || !enemy.IsGameplayActive || !CanEngage(candidate))
+        if (enemy == null || !enemy.IsCombatReady || !CanEngage(candidate))
             return false;
         if (IsEngaged)
             EndGuard();
@@ -87,7 +87,7 @@ public sealed class EnemyShieldGuard : MonoBehaviour
             return false;
         if (currentTarget != null)
             target = currentTarget;
-        if (enemy == null || !enemy.IsGameplayActive || enemy.CurrentReactionState != EnemyReactionState.None
+        if (enemy == null || !enemy.IsCombatReady || enemy.CurrentReactionState != EnemyReactionState.None
             || target == null || !target.gameObject.activeInHierarchy)
         {
             EndGuard();

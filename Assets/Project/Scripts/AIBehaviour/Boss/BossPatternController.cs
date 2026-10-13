@@ -190,6 +190,15 @@ namespace Project.AIBehaviour.Boss
 
         private void Update()
         {
+            if (enemy != null && EnemyController.IsRoomTraversalBlockingCombat && brainRoutine != null)
+            {
+                StopCoroutine(brainRoutine);
+                brainRoutine = null;
+                isBusy = false;
+                CleanupAttackState();
+                RestorePhysics();
+                ZeroVelocity();
+            }
             // OnEnable runs before EnemyController.Start, so retry once the spawn state enters Active.
             StartBrainIfActive();
         }
@@ -198,7 +207,7 @@ namespace Project.AIBehaviour.Boss
         {
             if (enemy == null
                 || !isActiveAndEnabled
-                || !enemy.IsGameplayActive
+                || !enemy.IsCombatReady
                 || spawnRevealPending
                 || brainRoutine != null)
             {
