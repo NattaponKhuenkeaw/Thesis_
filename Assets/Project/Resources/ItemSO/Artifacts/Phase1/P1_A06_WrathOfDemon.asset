@@ -13,10 +13,17 @@ MonoBehaviour:
   m_Name: P1_A06_WrathOfDemon
   m_EditorClassIdentifier: Assembly-CSharp::ParticleBehaviorDefinition
   stableId: PARTICLE-P1-A06
-  runtimePrefab: {fileID: 0}
+  runtimePrefab: {fileID: 1114230597238529896, guid: 8adfb2c873bdbab4d80ada116a48ad86, type: 3}
   anchorPolicy: 2
   volume:
     radius: 3
+    verticalRadiusMultiplier: 1
+    centerOffset: {x: 0, y: 0}
+    anchorToGround: 0
+    groundLayers:
+      serializedVersion: 2
+      m_Bits: 0
+    groundProbeDistance: 12
     targetLayers:
       serializedVersion: 2
       m_Bits: 0

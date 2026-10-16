@@ -72,7 +72,8 @@ public class CombatDamageTypeTests
     {
         GameObject enemyObject = new GameObject("Processor Reduction Test Enemy");
         EnemyController enemy = EnemyLifecycleTestUtility.AddActive(enemyObject);
-        EnemyDamageTypeState state = enemyObject.AddComponent<EnemyDamageTypeState>();
+        // The active enemy helper already creates the state cached by the damage processor.
+        EnemyDamageTypeState state = enemyObject.GetComponent<EnemyDamageTypeState>();
         EnemyElementalProfile profile = ScriptableObject.CreateInstance<EnemyElementalProfile>();
         profile.lightningDamageReduction = 25f;
         state.Initialize(profile);

@@ -94,11 +94,15 @@ public static class ArtifactPhase1AssetCreator
         RuntimeEffectRecipe thresholdBenefit = StatRecipe(statFormula, "P1-A08-BENEFIT", -1f, false, 1,
             Stat(RuntimeEffectStatTarget.CritRate, RuntimeEffectStatOperation.Add, 17f),
             Stat(RuntimeEffectStatTarget.CritDamage, RuntimeEffectStatOperation.Add, 26f));
+        thresholdBenefit.policy.kind = RuntimeEffectKind.Effect;
         RuntimeEffectRecipe focus = StatRecipe(statFormula, "P1-A09-FOCUS", -1f, true, 5,
             Stat(RuntimeEffectStatTarget.CritDamage, RuntimeEffectStatOperation.Add, 5f));
 
-        RuntimeEffectRecipe markInjuryDebuff = StatRecipe(statFormula, "P1-A04-MARK-INJURY", -1f, false, 1);
+        RuntimeEffectRecipe markInjuryDebuff = StatRecipe(statFormula, "P1-A04-MARK-INJURY", 10f, false, 1);
+        markInjuryDebuff.policy.kind = RuntimeEffectKind.Debuff;
         RuntimeEffectRecipe clawBuff = StatRecipe(statFormula, "P1-A04-CLAW", 5f, false, 1);
+        ArtifactAdvancedVisualAssetCreator.Configure(markInjuryDebuff);
+        ArtifactAdvancedVisualAssetCreator.Configure(clawBuff);
         DotEffectDefinition markBleed = GetOrCreate<DotEffectDefinition>("P1_Bleed_Mark.asset");
         ConfigureDot(markBleed, "DOT-P1-A04-MARK", 3f);
         DotEffectDefinition clawBleed = GetOrCreate<DotEffectDefinition>("P1_Bleed_Claw.asset");
@@ -109,21 +113,34 @@ public static class ArtifactPhase1AssetCreator
         toxicFormula.displayName = "Toxic Infusion";
         toxicFormula.infusedElementType = ElementType.Darkness;
         RuntimeEffectRecipe toxicInfusion = InfusionRecipe(toxicFormula, "P1-A01-TOXIC", 10f);
+        FieldEffectVisualAssetCreator.ConfigureRecipeVisuals(toxicInfusion);
+        FieldEffectVisualAssetCreator.ConfigureRecipeVisuals(particleSupport);
+        FieldEffectVisualAssetCreator.ConfigureRecipeVisuals(affliction);
+        FieldEffectVisualAssetCreator.ConfigureRecipeVisuals(switchSupport);
 
         ExplosionSplashDefinition markExplosion = GetOrCreate<ExplosionSplashDefinition>("P1_A04_MarkExplosion.asset");
         markExplosion.stableId = "SPLASH-P1-A04";
-        markExplosion.radius = 3f;
+        markExplosion.radius = 2f;
+        markExplosion.verticalRadiusMultiplier = 1f;
+        markExplosion.centerOffset = Vector2.zero;
+        markExplosion.visualPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(FieldEffectVisualAssetCreator.Root + "/ChronoBloodExplosion.prefab");
 
         ParticleBehaviorDefinition throne = GetOrCreate<ParticleBehaviorDefinition>("P1_A03_ThroneBarrier.asset");
         ConfigureParticle(throne, "PARTICLE-P1-A03", ParticleAnchorPolicy.FollowWearer, 10f, 2f,
             new ParticleRuntimeEffectDefinition { target = ArtifactResponseTarget.Wearer, recipe = throneMitigation },
             new ParticleDamageEffectDefinition { damageBasis = ArtifactDamageBasis.SourceAttack, ratio = 0.5f },
             new ParticleHealFromDamageEffectDefinition { target = ArtifactResponseTarget.Allies, confirmedDamageRatio = 0.5f });
+        throne.runtimePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(FieldEffectVisualAssetCreator.Root + "/ScalesHexShield.prefab");
+        throne.volume.radius = 2f;
+        throne.volume.verticalRadiusMultiplier = 1f;
+        throne.volume.centerOffset = Vector2.zero;
+        throne.volume.anchorToGround = false;
 
         ParticleBehaviorDefinition wrath = GetOrCreate<ParticleBehaviorDefinition>("P1_A06_WrathOfDemon.asset");
         ConfigureParticle(wrath, "PARTICLE-P1-A06", ParticleAnchorPolicy.FollowTarget, 5f, 2f,
             new ParticleRuntimeEffectDefinition { target = ArtifactResponseTarget.ParticleTargets, recipe = wrathDamageTaken },
             new ParticleDamageEffectDefinition { damageBasis = ArtifactDamageBasis.SourceAttack, ratio = 2f });
+        wrath.runtimePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(FieldEffectVisualAssetCreator.Root + "/CrestDarkFlameMark.prefab");
 
         ParticleBehaviorDefinition thunder = GetOrCreate<ParticleBehaviorDefinition>("P1_A09_ThunderStrike.asset");
         ConfigureParticle(thunder, "PARTICLE-P1-A09", ParticleAnchorPolicy.WorldPosition, 0.05f, 0.05f,
@@ -135,6 +152,9 @@ public static class ArtifactPhase1AssetCreator
                 descriptor = new DamageDescriptor(DamageDelivery.Additional, ElementType.Lightning,
                     DamageCriticalPolicy.Prevent)
             });
+
+        thunder.runtimePrefab = AssetDatabase.LoadAssetAtPath<GameObject>(FieldEffectVisualAssetCreator.Root + "/DaggerThunderStrike.prefab");
+        ArtifactAdvancedVisualAssetCreator.ConfigureGroundAnchor(thunder);
 
         for (int index = 0; index < Content.Length; index++)
         {

@@ -776,7 +776,8 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
                 continue;
             }
 
-            if (RuntimeEffectRuntimeUtility.GetKind(effect) == RuntimeEffectKind.Effect)
+            if (!RuntimeEffectRuntimeUtility.HasTimedPresentation(effect)
+                || RuntimeEffectRuntimeUtility.GetKind(effect) == RuntimeEffectKind.Effect)
             {
                 continue;
             }

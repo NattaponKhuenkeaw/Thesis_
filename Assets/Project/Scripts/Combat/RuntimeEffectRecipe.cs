@@ -463,6 +463,12 @@ public static class RuntimeEffectRuntimeUtility
         return instance != null && instance.definition != null ? instance.definition.fieldVisualPrefab : null;
     }
 
+    public static bool HasTimedPresentation(RuntimeEffectInstance instance)
+    {
+        return instance != null && instance.definition != null && instance.UsesTimer
+            && instance.appliedDurationSeconds > 0f && !instance.IsExpired;
+    }
+
     public static RuntimeEffectKind GetKind(RuntimeEffectInstance instance)
     {
         RuntimeEffectRecipeData recipe = instance != null ? instance.recipe : null;

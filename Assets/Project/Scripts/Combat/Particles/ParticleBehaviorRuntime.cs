@@ -12,8 +12,11 @@ public sealed class ParticleBehaviorRuntime
     private ParticleBehaviorDefinition _definition;
     private TeamLoader _teamLoader;
     private EnemyController _anchorEnemy;
+    private PlayerCharacter _wearerAnchor;
+    private Collider2D _wearerBody;
     private CharacterStats _sourceStatsSnapshot;
     private Vector2 _worldPosition;
+    private Vector2 _fixedAreaCenter;
     private float _expiresAt;
     private float _nextPulseAt;
 
@@ -24,9 +27,12 @@ public sealed class ParticleBehaviorRuntime
     private LineRenderer _lineRenderer;
     private SpriteRenderer _spriteRenderer;
     private Color _baseColor;
+    private GameObject _visualizerPrefab;
+    private ArtifactAreaVisual _areaVisual;
     private static Sprite s_circleSprite;
 
     public GameObject Visualizer => _visualizerInstance;
+    public Vector2 AreaCenter { get; private set; }
 
     public void Initialize(ArtifactPassiveRuntime source, ParticleBehaviorDefinition definition,
         DamageResolvedEvent? triggerEvent, TeamLoader teamLoader)
@@ -36,16 +42,21 @@ public sealed class ParticleBehaviorRuntime
         _teamLoader = teamLoader;
         _anchorEnemy = triggerEvent.HasValue ? triggerEvent.Value.target : null;
         _sourceStatsSnapshot = teamLoader.GetCharacterRuntimeStats(source.Wearer)?.Clone();
-        _worldPosition = triggerEvent.HasValue ? triggerEvent.Value.hitPosition : ResolveWearerPosition();
+        _worldPosition = triggerEvent.HasValue
+            ? ArtifactAreaGeometry.TargetCenter(triggerEvent.Value.target, triggerEvent.Value.hitPosition)
+            : ResolveWearerPosition();
+        _fixedAreaCenter = ArtifactAreaGeometry.Center(_worldPosition, definition.volume);
+        AreaCenter = _fixedAreaCenter;
         _expiresAt = Time.time + Mathf.Max(0.1f, definition.lifetimeSeconds);
         _nextPulseAt = Time.time;
         _hasPulsed = false;
 
-        SetupVisualizer();
         if (TryResolveCenter(out Vector2 initialCenter))
         {
-            UpdateVisualizerPosition(initialCenter, Time.time);
+            AreaCenter = ResolveAreaCenter(initialCenter);
         }
+        SetupVisualizer();
+        UpdateVisualizerPosition(AreaCenter, Time.time);
     }
 
     public bool Tick(float now)
@@ -55,6 +66,8 @@ public sealed class ParticleBehaviorRuntime
             return false;
         }
 
+        center = ResolveAreaCenter(center);
+        AreaCenter = center;
         UpdateVisualizerPosition(center, now);
 
         if (now >= _expiresAt && _hasPulsed)
@@ -72,22 +85,30 @@ public sealed class ParticleBehaviorRuntime
         return true;
     }
 
-    public void Reset()
+    public void Reset(bool immediate = false)
     {
         _pulseTargets.Clear();
         _source = null;
         _definition = null;
         _teamLoader = null;
         _anchorEnemy = null;
+        _wearerAnchor = null;
+        _wearerBody = null;
         _sourceStatsSnapshot = null;
         _worldPosition = Vector2.zero;
+        _fixedAreaCenter = Vector2.zero;
         _expiresAt = 0f;
         _nextPulseAt = 0f;
         _hasPulsed = false;
 
         if (_visualizerInstance != null)
         {
-            _visualizerInstance.SetActive(false);
+            if (_areaVisual != null)
+            {
+                if (immediate) _areaVisual.ClearImmediately();
+                else _areaVisual.End();
+            }
+            else _visualizerInstance.SetActive(false);
         }
     }
 
@@ -95,10 +116,13 @@ public sealed class ParticleBehaviorRuntime
     {
         if (_visualizerInstance != null)
         {
-            UnityEngine.Object.Destroy(_visualizerInstance);
+            if (Application.isPlaying) UnityEngine.Object.Destroy(_visualizerInstance);
+            else UnityEngine.Object.DestroyImmediate(_visualizerInstance);
             _visualizerInstance = null;
             _lineRenderer = null;
             _spriteRenderer = null;
+            _areaVisual = null;
+            _visualizerPrefab = null;
         }
     }
 
@@ -108,8 +132,11 @@ public sealed class ParticleBehaviorRuntime
         _pulseTargets.Clear();
         int layerMask = _definition.volume.targetLayers.value;
         if (layerMask == 0) layerMask = Physics2D.AllLayers;
-        int count = Physics2D.OverlapCircleNonAlloc(center, _definition.volume.radius,
-            _overlapBuffer, layerMask);
+        Vector2 radii = ArtifactAreaGeometry.Radii(_definition.volume.radius, _definition.volume.verticalRadiusMultiplier);
+        bool stretched = radii.y > radii.x;
+        int count = stretched
+            ? Physics2D.OverlapBoxNonAlloc(center, radii * 2f, 0f, _overlapBuffer, layerMask)
+            : Physics2D.OverlapCircleNonAlloc(center, radii.x, _overlapBuffer, layerMask);
         int cap = _definition.compatibility.targetCap > 0
             ? _definition.compatibility.targetCap
             : int.MaxValue;
@@ -117,11 +144,13 @@ public sealed class ParticleBehaviorRuntime
         {
             Collider2D collider = _overlapBuffer[i];
             if (collider == null) continue;
+            if (stretched && !ArtifactAreaGeometry.Overlaps(collider, center, radii)) continue;
             EnemyController enemy = collider.GetComponentInParent<EnemyController>();
             if (enemy != null && enemy.IsTargetable) _pulseTargets.Add(enemy);
         }
 
-        if (_pulseTargets.Count == 0 && _anchorEnemy != null && _anchorEnemy.IsAlive)
+        if (_pulseTargets.Count == 0 && _anchorEnemy != null && _anchorEnemy.IsAlive
+            && (_anchorEnemy.bodyCollider == null || ArtifactAreaGeometry.Overlaps(_anchorEnemy.bodyCollider, center, radii)))
         {
             _pulseTargets.Add(_anchorEnemy);
         }
@@ -144,6 +173,8 @@ public sealed class ParticleBehaviorRuntime
         }
 
         // Pass 2: Apply runtime effects and damage-based heals
+        if (confirmedDamage > 0f && _areaVisual != null)
+            _areaVisual.Pulse(center, _definition.volume.radius, _definition.volume.verticalRadiusMultiplier);
         for (int effectIndex = 0; effectIndex < effects.Count; effectIndex++)
         {
             ParticleEffectDefinition effect = effects[effectIndex];
@@ -251,13 +282,13 @@ public sealed class ParticleBehaviorRuntime
                     center = default;
                     return false;
                 }
-                center = _anchorEnemy.transform.position;
+                center = ArtifactAreaGeometry.TargetCenter(_anchorEnemy, _worldPosition);
                 return true;
             case ParticleAnchorPolicy.FollowWearer:
                 PlayerCharacter player = PlayerCharacter.Instance;
                 if (player != null)
                 {
-                    _worldPosition = player.transform.position;
+                    _worldPosition = ResolveWearerPosition();
                     center = _worldPosition;
                     return true;
                 }
@@ -272,8 +303,18 @@ public sealed class ParticleBehaviorRuntime
     private Vector2 ResolveWearerPosition()
     {
         PlayerCharacter player = PlayerCharacter.Instance;
-        return player != null ? (Vector2)player.transform.position : Vector2.zero;
+        if (player == null) return Vector2.zero;
+        if (_wearerAnchor != player)
+        {
+            _wearerAnchor = player;
+            _wearerBody = player.GetComponent<Collider2D>();
+        }
+        return _wearerBody != null && _wearerBody.enabled
+            ? (Vector2)_wearerBody.bounds.center : (Vector2)player.transform.position;
     }
+
+    private Vector2 ResolveAreaCenter(Vector2 anchor) => _definition.anchorPolicy == ParticleAnchorPolicy.WorldPosition
+        ? _fixedAreaCenter : ArtifactAreaGeometry.Center(anchor, _definition.volume);
 
     private void SetupVisualizer()
     {
@@ -281,10 +322,28 @@ public sealed class ParticleBehaviorRuntime
 
         if (_definition.runtimePrefab != null)
         {
-            CleanupVisualizer();
-            _visualizerInstance = UnityEngine.Object.Instantiate(_definition.runtimePrefab);
+            if (_visualizerInstance == null || _visualizerPrefab != _definition.runtimePrefab)
+            {
+                CleanupVisualizer();
+                _visualizerPrefab = _definition.runtimePrefab;
+                _visualizerInstance = UnityEngine.Object.Instantiate(_visualizerPrefab);
+                _areaVisual = _visualizerInstance.GetComponent<ArtifactAreaVisual>();
+            }
+            _visualizerInstance.SetActive(true);
+            if (_areaVisual != null)
+            {
+                Transform actor = _definition.anchorPolicy == ParticleAnchorPolicy.FollowWearer
+                    ? PlayerCharacter.Instance != null ? PlayerCharacter.Instance.transform : null
+                    : _definition.anchorPolicy == ParticleAnchorPolicy.FollowTarget && _anchorEnemy != null
+                        ? _anchorEnemy.transform : null;
+                _areaVisual.Begin(AreaCenter, _definition.volume.radius, actor,
+                    actor != null ? actor.GetComponentInChildren<SpriteRenderer>() : null,
+                    _definition.volume.verticalRadiusMultiplier);
+            }
             return;
         }
+
+        if (_visualizerPrefab != null) CleanupVisualizer();
 
         if (_visualizerInstance == null)
         {
@@ -336,6 +395,11 @@ public sealed class ParticleBehaviorRuntime
     private void UpdateVisualizerPosition(Vector2 center, float now)
     {
         if (_visualizerInstance == null) return;
+        if (_areaVisual != null)
+        {
+            _areaVisual.SetCenter(center);
+            return;
+        }
         _visualizerInstance.transform.position = center;
 
         if (_spriteRenderer != null)

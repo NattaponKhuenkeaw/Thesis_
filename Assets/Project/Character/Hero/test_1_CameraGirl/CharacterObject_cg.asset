@@ -110,7 +110,7 @@ MonoBehaviour:
             effectId: increase.cr
             displayName: Increase Critical Rate
             icon: {fileID: 21300000, guid: cdfdc962ef7310244b2344353c822d9f, type: 3}
-            fieldVisualPrefab: {fileID: 0}
+            fieldVisualPrefab: {fileID: 6546502111151340656, guid: a12f9b710942a324999446928de2d9d9, type: 3}
           policy:
             kind: 0
             appliesOn: 3
@@ -217,7 +217,7 @@ MonoBehaviour:
             effectId: increase.cd
             displayName: Increase Critical Damage
             icon: {fileID: 21300000, guid: f91f31d1cfdfaac448d6c1fb1ae836d0, type: 3}
-            fieldVisualPrefab: {fileID: 0}
+            fieldVisualPrefab: {fileID: 6546502111151340656, guid: a12f9b710942a324999446928de2d9d9, type: 3}
           policy:
             kind: 0
             appliesOn: 3
@@ -522,7 +522,7 @@ MonoBehaviour:
             effectId: increase.atk
             displayName: Increase ATK
             icon: {fileID: 21300000, guid: d4df0f7647ca1a54cb524282484df503, type: 3}
-            fieldVisualPrefab: {fileID: 0}
+            fieldVisualPrefab: {fileID: 6546502111151340656, guid: a12f9b710942a324999446928de2d9d9, type: 3}
           policy:
             kind: 0
             appliesOn: 2
@@ -694,7 +694,7 @@ MonoBehaviour:
             effectId: increase.cr
             displayName: Increase Critical Rate
             icon: {fileID: 21300000, guid: cdfdc962ef7310244b2344353c822d9f, type: 3}
-            fieldVisualPrefab: {fileID: 0}
+            fieldVisualPrefab: {fileID: 6546502111151340656, guid: a12f9b710942a324999446928de2d9d9, type: 3}
           policy:
             kind: 0
             appliesOn: 3
@@ -841,7 +841,7 @@ MonoBehaviour:
             effectId: increase.cd
             displayName: Increase Critical Damage
             icon: {fileID: 21300000, guid: f91f31d1cfdfaac448d6c1fb1ae836d0, type: 3}
-            fieldVisualPrefab: {fileID: 0}
+            fieldVisualPrefab: {fileID: 6546502111151340656, guid: a12f9b710942a324999446928de2d9d9, type: 3}
           policy:
             kind: 0
             appliesOn: 3
@@ -1014,7 +1014,7 @@ MonoBehaviour:
             effectId: increase.cr
             displayName: Increase Critical Rate
             icon: {fileID: 21300000, guid: cdfdc962ef7310244b2344353c822d9f, type: 3}
-            fieldVisualPrefab: {fileID: 0}
+            fieldVisualPrefab: {fileID: 6546502111151340656, guid: a12f9b710942a324999446928de2d9d9, type: 3}
           policy:
             kind: 0
             appliesOn: 3
@@ -1161,7 +1161,7 @@ MonoBehaviour:
             effectId: increase.cd
             displayName: Increase Critical Damage
             icon: {fileID: 21300000, guid: f91f31d1cfdfaac448d6c1fb1ae836d0, type: 3}
-            fieldVisualPrefab: {fileID: 0}
+            fieldVisualPrefab: {fileID: 6546502111151340656, guid: a12f9b710942a324999446928de2d9d9, type: 3}
           policy:
             kind: 0
             appliesOn: 3
@@ -1333,7 +1333,7 @@ MonoBehaviour:
             effectId: increase.cr
             displayName: Increase Critical Rate
             icon: {fileID: 21300000, guid: cdfdc962ef7310244b2344353c822d9f, type: 3}
-            fieldVisualPrefab: {fileID: 0}
+            fieldVisualPrefab: {fileID: 6546502111151340656, guid: a12f9b710942a324999446928de2d9d9, type: 3}
           policy:
             kind: 0
             appliesOn: 2
@@ -1480,7 +1480,7 @@ MonoBehaviour:
             effectId: increase.cd
             displayName: Increase Critical Damage
             icon: {fileID: 21300000, guid: f91f31d1cfdfaac448d6c1fb1ae836d0, type: 3}
-            fieldVisualPrefab: {fileID: 0}
+            fieldVisualPrefab: {fileID: 6546502111151340656, guid: a12f9b710942a324999446928de2d9d9, type: 3}
           policy:
             kind: 0
             appliesOn: 2
