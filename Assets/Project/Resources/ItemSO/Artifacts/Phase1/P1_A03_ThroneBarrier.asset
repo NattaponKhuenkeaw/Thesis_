@@ -13,10 +13,17 @@ MonoBehaviour:
   m_Name: P1_A03_ThroneBarrier
   m_EditorClassIdentifier: Assembly-CSharp::ParticleBehaviorDefinition
   stableId: PARTICLE-P1-A03
-  runtimePrefab: {fileID: 0}
+  runtimePrefab: {fileID: 6294519582958236988, guid: 657d5a36337e3c94a8f15c99716aa237, type: 3}
   anchorPolicy: 1
   volume:
-    radius: 3
+    radius: 2
+    verticalRadiusMultiplier: 1
+    centerOffset: {x: 0, y: 0}
+    anchorToGround: 0
+    groundLayers:
+      serializedVersion: 2
+      m_Bits: 520
+    groundProbeDistance: 12
     targetLayers:
       serializedVersion: 2
       m_Bits: 0

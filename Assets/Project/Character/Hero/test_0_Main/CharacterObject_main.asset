@@ -229,6 +229,7 @@ MonoBehaviour:
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []
+      coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: base.skill
       nodeName: Base Skill
@@ -255,6 +256,7 @@ MonoBehaviour:
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []
+      coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: base.ultimate
       nodeName: Base Ultimate
@@ -342,6 +344,7 @@ MonoBehaviour:
         cooldownTag: 
         cooldownDuration: 0
       enemyElementModifiers: []
+      coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: base.passive
       nodeName: Base Passive
@@ -384,6 +387,8 @@ MonoBehaviour:
         ignoreDefense: 0
         ignoreDamageResistance: 0
         ignoreTypeReduction: 0
+        hitboxScaleMultiplier: 1
+        projectileScaleMultiplier: 1
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
@@ -397,6 +402,7 @@ MonoBehaviour:
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []
+      coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.skill.lv1
       nodeName: Chain Reward
@@ -442,6 +448,8 @@ MonoBehaviour:
         ignoreDefense: 0
         ignoreDamageResistance: 0
         ignoreTypeReduction: 0
+        hitboxScaleMultiplier: 1
+        projectileScaleMultiplier: 1
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 11400000, guid: 105d5c02a6338324293141794f01e1ed, type: 2}
       runtimeTagEffects: []
@@ -455,6 +463,7 @@ MonoBehaviour:
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []
+      coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.skill.lv2
       nodeName: Chain Echoes
@@ -500,6 +509,8 @@ MonoBehaviour:
         ignoreDefense: 0
         ignoreDamageResistance: 0
         ignoreTypeReduction: 0
+        hitboxScaleMultiplier: 1
+        projectileScaleMultiplier: 1
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
@@ -513,6 +524,7 @@ MonoBehaviour:
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []
+      coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.skill.lv3
       nodeName: Dark Chain
@@ -559,6 +571,8 @@ MonoBehaviour:
         ignoreDefense: 0
         ignoreDamageResistance: 0
         ignoreTypeReduction: 0
+        hitboxScaleMultiplier: 1
+        projectileScaleMultiplier: 1
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 11400000, guid: a52aedf2b9dab6f44ad3f0980de374c1, type: 2}
       runtimeTagEffects: []
@@ -572,6 +586,7 @@ MonoBehaviour:
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []
+      coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.skill.lv4
       nodeName: Chain Magnetism
@@ -624,6 +639,7 @@ MonoBehaviour:
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []
+      coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.ultimate.lv1
       nodeName: Void Area
@@ -798,6 +814,7 @@ MonoBehaviour:
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []
+      coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.ultimate.lv2
       nodeName: Void Area Break
@@ -843,6 +860,8 @@ MonoBehaviour:
         ignoreDefense: 0
         ignoreDamageResistance: 0
         ignoreTypeReduction: 0
+        hitboxScaleMultiplier: 1
+        projectileScaleMultiplier: 1
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 11400000, guid: b74c4e0c5df54290a0f8d610fd6fd7a1, type: 2}
       runtimeTagEffects: []
@@ -856,6 +875,7 @@ MonoBehaviour:
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []
+      coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.ultimate.lv3
       nodeName: Void Area Collapse
@@ -900,6 +920,8 @@ MonoBehaviour:
         ignoreDefense: 0
         ignoreDamageResistance: 0
         ignoreTypeReduction: 0
+        hitboxScaleMultiplier: 1
+        projectileScaleMultiplier: 1
         replacementProjectileType: 0
         replacementProjectileData: {fileID: 11400000, guid: 886ff6f25759d6747834ef2a7532fa16, type: 2}
       runtimeTagEffects: []
@@ -913,6 +935,7 @@ MonoBehaviour:
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []
+      coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.ultimate.lv4
       nodeName: Lasting Void Area
@@ -942,6 +965,7 @@ MonoBehaviour:
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []
+      coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.passive.lv1
       nodeName: Void Area Tempo
@@ -973,6 +997,7 @@ MonoBehaviour:
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []
+      coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.passive.lv2
       nodeName: Chain Release
@@ -1006,6 +1031,7 @@ MonoBehaviour:
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []
+      coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.passive.lv3
       nodeName: Void Area Formation
@@ -1042,6 +1068,7 @@ MonoBehaviour:
       defensiveEffects: []
       resourceEffects: []
       enemyElementModifiers: []
+      coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.passive.lv4
       nodeName: Void Slow

@@ -13,10 +13,17 @@ MonoBehaviour:
   m_Name: P1_A09_ThunderStrike
   m_EditorClassIdentifier: Assembly-CSharp::ParticleBehaviorDefinition
   stableId: PARTICLE-P1-A09
-  runtimePrefab: {fileID: 0}
+  runtimePrefab: {fileID: 7369003382845138934, guid: 62272bcd06e645e4c8a03ded824c8194, type: 3}
   anchorPolicy: 0
   volume:
     radius: 3.5
+    verticalRadiusMultiplier: 1
+    centerOffset: {x: 0, y: 0}
+    anchorToGround: 1
+    groundLayers:
+      serializedVersion: 2
+      m_Bits: 520
+    groundProbeDistance: 12
     targetLayers:
       serializedVersion: 2
       m_Bits: 0

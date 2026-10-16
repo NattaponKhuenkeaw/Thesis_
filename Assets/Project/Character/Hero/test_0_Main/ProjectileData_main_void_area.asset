@@ -85,6 +85,8 @@ MonoBehaviour:
         overrideDamageModifier: 0
         damageModifier:
           filter:
+            filterByDelivery: 0
+            delivery: 0
             filterByElement: 0
             elementType: 0
             filterByCategory: 0
@@ -94,6 +96,8 @@ MonoBehaviour:
         overrideDamageInput: 0
         damageInput:
           filter:
+            filterByDelivery: 0
+            delivery: 0
             filterByElement: 0
             elementType: 0
             filterByCategory: 0
@@ -119,6 +123,8 @@ MonoBehaviour:
         overrideLifesteal: 0
         lifesteal:
           filter:
+            filterByDelivery: 0
+            delivery: 0
             filterByElement: 0
             elementType: 0
             filterByCategory: 0
@@ -129,6 +135,8 @@ MonoBehaviour:
         overrideAdditionalDamage: 0
         additionalDamage:
           filter:
+            filterByDelivery: 0
+            delivery: 0
             filterByElement: 0
             elementType: 0
             filterByCategory: 0
@@ -193,6 +201,8 @@ MonoBehaviour:
         overrideDamageModifier: 0
         damageModifier:
           filter:
+            filterByDelivery: 0
+            delivery: 0
             filterByElement: 0
             elementType: 0
             filterByCategory: 0
@@ -202,6 +212,8 @@ MonoBehaviour:
         overrideDamageInput: 0
         damageInput:
           filter:
+            filterByDelivery: 0
+            delivery: 0
             filterByElement: 0
             elementType: 0
             filterByCategory: 0
@@ -227,6 +239,8 @@ MonoBehaviour:
         overrideLifesteal: 0
         lifesteal:
           filter:
+            filterByDelivery: 0
+            delivery: 0
             filterByElement: 0
             elementType: 0
             filterByCategory: 0
@@ -237,6 +251,8 @@ MonoBehaviour:
         overrideAdditionalDamage: 0
         additionalDamage:
           filter:
+            filterByDelivery: 0
+            delivery: 0
             filterByElement: 0
             elementType: 0
             filterByCategory: 0
@@ -296,6 +312,8 @@ MonoBehaviour:
         overrideDamageModifier: 0
         damageModifier:
           filter:
+            filterByDelivery: 0
+            delivery: 0
             filterByElement: 0
             elementType: 0
             filterByCategory: 0
@@ -305,6 +323,8 @@ MonoBehaviour:
         overrideDamageInput: 0
         damageInput:
           filter:
+            filterByDelivery: 0
+            delivery: 0
             filterByElement: 0
             elementType: 0
             filterByCategory: 0
@@ -330,6 +350,8 @@ MonoBehaviour:
         overrideLifesteal: 0
         lifesteal:
           filter:
+            filterByDelivery: 0
+            delivery: 0
             filterByElement: 0
             elementType: 0
             filterByCategory: 0
@@ -340,6 +362,8 @@ MonoBehaviour:
         overrideAdditionalDamage: 0
         additionalDamage:
           filter:
+            filterByDelivery: 0
+            delivery: 0
             filterByElement: 0
             elementType: 0
             filterByCategory: 0
@@ -397,9 +421,10 @@ MonoBehaviour:
         startFrameOffset: 0
         activeFrames: 3
         elementType: 0
+        damageTags: 0
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 0, y: 2}
-        size: {x: 45, y: 5}
+        size: {x: 45, y: 8}
         damageRatio: 0.36
         impactTier: 0
         useDeterministicReaction: 1
@@ -424,3 +449,4 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0

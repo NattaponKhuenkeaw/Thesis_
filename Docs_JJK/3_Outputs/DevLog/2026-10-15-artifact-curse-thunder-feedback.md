@@ -1,0 +1,23 @@
+# 2026-10-15 — Curse, Thunder and Ground Artifact Feedback
+
+User clarified that Scales keeps its pulse timing and anchors attacks to ground, while the body shield stays around the wearer. Chrono visualizes its existing damage/Bleed sequence without adding damage to the armed Mark. Dagger receives sky lightning and a ground spark area matching its saved radius.
+
+Added opt-in particle ground anchoring shared by actual damage queries and presentation, with supporting-surface filters, fallback and locked world-strike centers. Scales still uses radius 2. Dagger keeps radius 3.5, damage/crit-scaling, cooldown, interval and lifetime. The existing runtime resolves thunder immediately at its saved five-hit Focus threshold; visual work does not change that timing. Untimed Focus/Urn remain hidden.
+
+Added procedural curse skull/runic textures, body seal and damage sparks with event cleanup. Thunder uses shared materials, procedural line branches, bounded particles and a finite tail that survives ordinary volume expiry. Its bolt, glow, impact wave and ground sparks are yellow per the user's latest request. Added isolated preview columns and early-impact capture, plus geometry, sequence and lifecycle regressions.
+
+Unity compilation, targeted procedural regeneration and updated captures succeeded. A new isolated main-thread Unity test run passed all 29 selected artifact tests (zero failures/skips), written to Reports/FieldEffectVisuals/curse-thunder-tests.xml. The runner uses an empty additive scene and restores the previous scene; Test_Lobby remained dirty with 18 roots. This avoids the regular test-job save/reload prompt, which the user cancelled. Existing 84-test results predate this follow-up. No user scene, dependency or build setting was saved by this work. Final combat feel and crowded-combat profiling remain human review.
+
+## Bugs Found
+
+Unity reported a destroyed `ArtifactPassiveRuntimeSystem` being accessed from a damage callback during event dispatch. `OnDestroy` already unsubscribed the owner, but a callback copied into the current multicast invocation can still run once; the handler now exits for a destroyed or disabled owner, and explosion spawning repeats the guard at the Unity API boundary. Target-triggered artifact area damage, particle fields and their visuals now share the target body collider's bounds center, raising circles from the root pivot while keeping their centers aligned. Scales keeps its authored ground pulse. Unity recompiled the scripts; automated checks were not rerun for this follow-up.
+
+The Scales ring still extended below the floor when its circular radius expanded. Ground resolution now applies its authored +2 Y offset after finding support, raising both the damage query and ring by one radius so the circle starts at floor height and expands upward. Dagger retains its zero-offset ground sparks. Unity compilation is the verification for this adjustment; no automated test run was requested.
+
+## Latest Owner Correction: Collider Center and Crest
+
+The owner rejected the ground-relative Scales lift and requested expansion from the player collider center. Scales now has zero offset and no ground snap; both the hit query and world-space pulse use cached player-body bounds. Ground-offset geometry remains available for authored content, while Dagger keeps its ground strike.
+
+Added Rival's Broken Crest dark flame mark using its saved Wrath particle runtime. A distinct broken-crest glyph and bounded purple/black flames follow the target; confirmed damaging ticks trigger a brief glyph flash and subtle radius-3 wave/streaks. Existing skill trigger, damage/timing, damage-taken effect and cooldown are preserved. A five-column preview now includes Crest, and new focused regression cases cover the corrected Scales origin and Crest's actual saved sequence.
+
+Final validation: Unity 6000.3.4f1 batch compilation and isolated main-thread execution passed **31 tests, 0 failures, 0 skips**, with results in Reports/FieldEffectVisuals/scales-crest-tests.xml. Chrono/Dagger test actors were aligned with their supplied hit coordinates; the collider-center test explicitly sets the editor-only player reference. Rendered enter/loop/attack/exit captures were refreshed and inspected. Scales now expands concentrically from its body shield, and Crest's distinct purple glyph/dark flames follow the enemy and flash on actual damage ticks. Unity was closed when validation resumed, so the final run used a temporary hidden batch process that read the saved lobby, created/closed its isolated additive scene and exited successfully without saving a scene. The earlier failed run was superseded by the passing XML. In-game feel and crowded-combat profiling remain open.

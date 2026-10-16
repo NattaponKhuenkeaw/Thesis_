@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Project.ShopSystem;
 
 [DisallowMultipleComponent]
 public class RuntimeEffectReceiver : MonoBehaviour
@@ -15,6 +16,14 @@ public class RuntimeEffectReceiver : MonoBehaviour
     private readonly HashSet<RuntimeEffectInstance> retainedVisuals = new HashSet<RuntimeEffectInstance>();
     private readonly List<RuntimeEffectInstance> visualsToRemove = new List<RuntimeEffectInstance>();
     private readonly List<RuntimeEffectInstance> expiredEffects = new List<RuntimeEffectInstance>();
+    private readonly Dictionary<GameObject, FieldEffectVisual> _fieldVisuals =
+        new Dictionary<GameObject, FieldEffectVisual>();
+    private SpriteRenderer _visualReferenceSprite;
+    private TeamLoader _presentationTeam;
+    private PlayerRunInventory _presentationInventory;
+    private bool _changingTickEnabled;
+    private bool _presentationSuppressed;
+    private bool _presentationEventsBound;
 
     private PlayerCharacter playerCharacter;
     private EnemyController enemyController;
@@ -32,8 +41,27 @@ public class RuntimeEffectReceiver : MonoBehaviour
     private void Awake()
     {
         CacheTargets();
+        BindPresentationEvents();
         RecalculateTickingState();
     }
+
+    private void Start() => RefreshPresentation();
+
+    private void OnEnable()
+    {
+        if (!_changingTickEnabled)
+            RefreshPresentation();
+    }
+
+    private void OnDisable()
+    {
+        if (_changingTickEnabled)
+            return;
+        ClearPresentation();
+        UnbindPresentationEvents();
+    }
+
+    private void OnDestroy() => UnbindPresentationEvents();
 
     private void Update()
     {
@@ -552,6 +580,8 @@ public class RuntimeEffectReceiver : MonoBehaviour
 
     public void SyncVisuals(IReadOnlyList<RuntimeEffectInstance> sourceEffects)
     {
+        if (!gameObject.activeInHierarchy || _presentationSuppressed)
+            return;
         retainedVisuals.Clear();
         if (sourceEffects != null)
         {
@@ -842,7 +872,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
         }
 
         GameObject prefab = RuntimeEffectRuntimeUtility.GetFieldVisualPrefab(instance);
-        if (prefab == null)
+        if (prefab == null || !RuntimeEffectRuntimeUtility.HasTimedPresentation(instance))
         {
             DestroyVisual(instance);
             return;
@@ -859,9 +889,24 @@ public class RuntimeEffectReceiver : MonoBehaviour
             DestroyVisual(instance);
         }
 
-        GameObject visual = Instantiate(prefab, transform);
+        GameObject visual;
+        if (prefab.TryGetComponent<FieldEffectVisual>(out _))
+        {
+            // Different recipes retain independent gameplay state but share one presentation footprint.
+            if (!_fieldVisuals.TryGetValue(prefab, out FieldEffectVisual field) || field == null)
+            {
+                visual = Instantiate(prefab, transform);
+                field = visual.GetComponent<FieldEffectVisual>();
+                _fieldVisuals[prefab] = field;
+            }
+            visual = field.gameObject;
+            field.Begin(transform, _visualReferenceSprite);
+        }
+        else
+            visual = Instantiate(prefab, transform);
         activeVisuals[instance] = visual;
         activeVisualPrefabs[instance] = prefab;
+        SetTickingState(hasTickingEffects);
     }
 
     private void DestroyVisual(RuntimeEffectInstance instance)
@@ -871,16 +916,144 @@ public class RuntimeEffectReceiver : MonoBehaviour
             return;
         }
 
+        activeVisualPrefabs.TryGetValue(instance, out GameObject prefab);
         activeVisuals.Remove(instance);
         activeVisualPrefabs.Remove(instance);
         if (visual != null)
         {
-            Destroy(visual);
+            if (prefab != null && _fieldVisuals.TryGetValue(prefab, out FieldEffectVisual field)
+                && field != null && field.gameObject == visual)
+            {
+                foreach (GameObject retained in activeVisuals.Values)
+                    if (retained == visual)
+                        return;
+                field.End();
+            }
+            else
+                Destroy(visual);
         }
+    }
+
+    private void BindPresentationEvents()
+    {
+        if (!_presentationEventsBound)
+        {
+            if (playerCharacter != null)
+            {
+                playerCharacter.OnCharacterChanged += HandlePresentationCharacterChanged;
+                playerCharacter.OnDied += HandlePresentationDeath;
+            }
+            if (enemyController != null)
+                enemyController.OnDied += HandlePresentationDeath;
+            _presentationEventsBound = true;
+        }
+        TeamLoader team = playerCharacter != null ? TeamLoader.Instance : null;
+        if (_presentationTeam != team)
+        {
+            if (_presentationTeam != null)
+            {
+                _presentationTeam.OnTeamChanged -= RefreshPresentation;
+                _presentationTeam.OnCurrentCharacterChanged -= RefreshPresentation;
+            }
+            _presentationTeam = team;
+            if (_presentationTeam != null)
+            {
+                _presentationTeam.OnTeamChanged += RefreshPresentation;
+                _presentationTeam.OnCurrentCharacterChanged += RefreshPresentation;
+            }
+        }
+        PlayerRunInventory inventory = _presentationTeam != null ? _presentationTeam.RunInventory : null;
+        if (_presentationInventory != inventory)
+        {
+            if (_presentationInventory != null)
+                _presentationInventory.OnRuntimeEffectsChanged -= HandlePresentationEffectsChanged;
+            _presentationInventory = inventory;
+            if (_presentationInventory != null)
+                _presentationInventory.OnRuntimeEffectsChanged += HandlePresentationEffectsChanged;
+        }
+    }
+
+    private void UnbindPresentationEvents()
+    {
+        if (_presentationEventsBound)
+        {
+            if (playerCharacter != null)
+            {
+                playerCharacter.OnCharacterChanged -= HandlePresentationCharacterChanged;
+                playerCharacter.OnDied -= HandlePresentationDeath;
+            }
+            if (enemyController != null)
+                enemyController.OnDied -= HandlePresentationDeath;
+        }
+        if (_presentationTeam != null)
+        {
+            _presentationTeam.OnTeamChanged -= RefreshPresentation;
+            _presentationTeam.OnCurrentCharacterChanged -= RefreshPresentation;
+        }
+        if (_presentationInventory != null)
+            _presentationInventory.OnRuntimeEffectsChanged -= HandlePresentationEffectsChanged;
+        _presentationEventsBound = false;
+        _presentationTeam = null;
+        _presentationInventory = null;
+    }
+
+    private void HandlePresentationCharacterChanged(CharacterObject character)
+    {
+        // This shared player object now represents a different recipient; old ending tails cannot follow it.
+        ClearPresentation();
+        _presentationSuppressed = false;
+        RefreshPresentation();
+    }
+
+    private void HandlePresentationEffectsChanged(CharacterObject character)
+    {
+        if (playerCharacter != null && character == playerCharacter.characterObject)
+            RefreshPresentation();
+    }
+
+    private void HandlePresentationDeath()
+    {
+        _presentationSuppressed = true;
+        ClearPresentation();
+    }
+
+    private void RefreshPresentation()
+    {
+        CacheTargets();
+        BindPresentationEvents();
+        if (!gameObject.activeInHierarchy)
+            return;
+        if ((enemyController != null && !enemyController.IsAlive)
+            || (playerCharacter != null && playerCharacter.characterObject != null && playerCharacter.IsDead))
+        {
+            HandlePresentationDeath();
+            return;
+        }
+        _presentationSuppressed = false;
+        IReadOnlyList<RuntimeEffectInstance> effects = _presentationInventory != null && playerCharacter != null
+            ? _presentationInventory.GetActiveRuntimeEffects(playerCharacter.characterObject)
+            : activeEffects;
+        SyncVisuals(effects);
+    }
+
+    private void ClearPresentation()
+    {
+        foreach (GameObject visual in activeVisuals.Values)
+        {
+            if (visual != null && !visual.TryGetComponent<FieldEffectVisual>(out _))
+                Destroy(visual);
+        }
+        activeVisuals.Clear();
+        activeVisualPrefabs.Clear();
+        foreach (FieldEffectVisual field in _fieldVisuals.Values)
+            if (field != null)
+                field.ClearImmediately();
     }
 
     private void CacheTargets()
     {
+        if (_visualReferenceSprite == null)
+            _visualReferenceSprite = GetComponentInChildren<SpriteRenderer>(true);
         if (playerCharacter == null)
         {
             playerCharacter = GetComponent<PlayerCharacter>();
@@ -894,7 +1067,7 @@ public class RuntimeEffectReceiver : MonoBehaviour
 
     private void RaiseEffectsChanged()
     {
-        SyncVisuals(activeEffects);
+        RefreshPresentation();
         OnEffectsChanged?.Invoke();
     }
 
@@ -919,7 +1092,11 @@ public class RuntimeEffectReceiver : MonoBehaviour
         hasTickingEffects = value;
         if (Application.isPlaying)
         {
-            enabled = value;
+            // Indefinite effects still need enabled lifecycle callbacks; no ticking work is done for them.
+            bool needsEnabled = value || playerCharacter != null || _fieldVisuals.Count > 0;
+            _changingTickEnabled = true;
+            enabled = needsEnabled;
+            _changingTickEnabled = false;
         }
     }
 }

@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAudioData
   mappings:
   - stateId: 2
-    sfxVariants:
-    - {fileID: 8300000, guid: 676cf0b66e4756442beae3648beb2bd4, type: 3}
+    sfxVariants: []
     loopSFX: 1
     volumeSFX: 1
     pitchSFX: 1

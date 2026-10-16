@@ -181,14 +181,14 @@ MonoBehaviour:
           definition: {fileID: 11400000, guid: 47a11ab6ce4cfb246b90d883a0a4b0dd, type: 2}
           presentation:
             effectId: P1-A04-MARK-INJURY
-            displayName: P1-A04-MARK-INJURY
+            displayName: Marked
             icon: {fileID: 21300000, guid: 3ec882369273cee41b622549d63cc0df, type: 3}
-            fieldVisualPrefab: {fileID: 0}
+            fieldVisualPrefab: {fileID: 762538835650337115, guid: af29a9bb6d9e15f48bd22f2a368b9482, type: 3}
           policy:
-            kind: 0
+            kind: 1
             appliesOn: 0
-            durationType: 1
-            durationSeconds: 0
+            durationType: 0
+            durationSeconds: 10
             stackMode: 0
             stackLimit: 1
             refreshDurationOnReapply: 1
@@ -292,7 +292,7 @@ MonoBehaviour:
             effectId: P1-A04-CLAW
             displayName: P1-A04-CLAW
             icon: {fileID: 21300000, guid: 5d6792348111a904e8eeb23157b075f4, type: 3}
-            fieldVisualPrefab: {fileID: 0}
+            fieldVisualPrefab: {fileID: 5778136213596091941, guid: 38699bd4b4627954ebf580c35f963c48, type: 3}
           policy:
             kind: 0
             appliesOn: 0

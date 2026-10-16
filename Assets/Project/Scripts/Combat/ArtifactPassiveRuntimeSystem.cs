@@ -29,6 +29,8 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
     private readonly List<string> _staleInstanceIds = new List<string>();
     private readonly List<EnemyController> _roomEnemies = new List<EnemyController>();
     private readonly List<EnemyController> _lastSplashTargets = new List<EnemyController>();
+    private readonly List<(GameObject prefab, ArtifactAreaVisual view)> _explosionVisuals =
+        new List<(GameObject, ArtifactAreaVisual)>();
     private TeamLoader _teamLoader;
     private ParticleBehaviorPool _particlePool;
     private bool _subscribed;
@@ -199,6 +201,9 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
 
     private void HandleDamageResolved(DamageResolvedEvent combatEvent)
     {
+        // A multicast event can still invoke a delegate already copied for dispatch while its
+        // Unity owner is being destroyed. OnDestroy unsubscribes, and this guard covers that race.
+        if (this == null || !isActiveAndEnabled) return;
         if ((combatEvent.acceptedPolicy & DamageProcPolicy.TriggerArtifactRules) == 0) return;
         for (int runtimeIndex = 0; runtimeIndex < _runtimes.Count; runtimeIndex++)
         {
@@ -224,7 +229,7 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
                 ArtifactPassiveRuleDefinition rule = rules[ruleIndex];
                 if (rule.trigger != ArtifactPassiveTrigger.CharacterSwitchCompleted
                     || !MatchesSwitch(rule.filter, runtime.Wearer, combatEvent)
-                    || !CanActivate(runtime.Rules[ruleIndex], rule.conditions)) continue;
+                    || !CanActivate(runtime.Rules[ruleIndex], rule.conditions, Time.time)) continue;
                 Activate(runtime, rule, ruleIndex, null, combatEvent.incomingCharacter);
             }
         }
@@ -278,7 +283,7 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
             ArtifactPassiveRuleDefinition rule = rules[ruleIndex];
             if (rule.trigger != ArtifactPassiveTrigger.ActionStarted
                 || (rule.filter.filterByCategory && rule.filter.category != combatEvent.category)
-                || !CanActivate(runtime.Rules[ruleIndex], rule.conditions)) continue;
+                || !CanActivate(runtime.Rules[ruleIndex], rule.conditions, Time.time)) continue;
             Activate(runtime, rule, ruleIndex, null, null);
         }
     }
@@ -292,7 +297,7 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
             ArtifactPassiveRuleDefinition rule = rules[ruleIndex];
             ArtifactRuleRuntimeState state = runtime.Rules[ruleIndex];
             if (rule.trigger != trigger || !MatchesDamage(rule.filter, combatEvent, runtime.Wearer)
-                || !CanActivate(state, rule.conditions)) continue;
+                || !CanActivate(state, rule.conditions, Time.time)) continue;
             if (rule.conditions.requireStoredTarget
                 && !ReferenceEquals(state.storedTarget, combatEvent.target)) continue;
             if (rule.conditions.requireArmed)
@@ -392,7 +397,7 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
             if (!rule.conditions.requireArmed) continue;
             if (rule.conditions.requireStoredTarget) continue;
             ArtifactRuleRuntimeState state = runtime.Rules[ruleIndex];
-            if (!state.armed || !CanActivate(state, rule.conditions)) continue;
+            if (!state.armed || !CanActivate(state, rule.conditions, Time.time)) continue;
 
             Activate(runtime, rule, ruleIndex, damageEvent, null);
         }
@@ -403,15 +408,17 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
     {
         _lastSplashTargets.Clear();
         if (response.definition == null || !damageEvent.HasValue) return;
-        Vector2 center = damageEvent.Value.hitPosition;
-        if (center == Vector2.zero && damageEvent.Value.target != null)
-        {
-            center = (Vector2)damageEvent.Value.target.transform.position;
-        }
+        Vector2 center = ArtifactAreaGeometry.TargetCenter(damageEvent.Value.target,
+            damageEvent.Value.hitPosition);
+        center += response.definition.centerOffset;
 
         int layerMask = response.definition.targetLayers.value;
         if (layerMask == 0) layerMask = Physics2D.AllLayers;
-        Collider2D[] colliders = Physics2D.OverlapCircleAll(center, response.definition.radius, layerMask);
+        Vector2 radii = ArtifactAreaGeometry.Radii(response.definition.radius, response.definition.verticalRadiusMultiplier);
+        bool stretched = radii.y > radii.x;
+        Collider2D[] colliders = stretched
+            ? Physics2D.OverlapBoxAll(center, radii * 2f, 0f, layerMask)
+            : Physics2D.OverlapCircleAll(center, radii.x, layerMask);
         int cap = response.definition.targetCap > 0 ? response.definition.targetCap : int.MaxValue;
         int hitCount = 0;
 
@@ -419,6 +426,7 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
         {
             Collider2D col = colliders[i];
             if (col == null) continue;
+            if (stretched && !ArtifactAreaGeometry.Overlaps(col, center, radii)) continue;
             EnemyController enemy = col.GetComponentInParent<EnemyController>();
             if (enemy == null || !enemy.IsTargetable) continue;
             if (response.definition.excludeOriginalTarget && ReferenceEquals(enemy, damageEvent.Value.target)) continue;
@@ -430,7 +438,9 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
             hitCount++;
         }
 
-        if (_lastSplashTargets.Count == 0 && damageEvent.Value.target != null && !response.definition.excludeOriginalTarget)
+        if (_lastSplashTargets.Count == 0 && damageEvent.Value.target != null && !response.definition.excludeOriginalTarget
+            && (damageEvent.Value.target.bodyCollider == null
+                || ArtifactAreaGeometry.Overlaps(damageEvent.Value.target.bodyCollider, center, radii)))
         {
             _lastSplashTargets.Add(damageEvent.Value.target);
         }
@@ -461,7 +471,7 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
                     element,
                     DamageCriticalPolicy.Prevent);
 
-                SpawnExplosionVisual(center, response.definition != null ? response.definition.radius : 3f, element);
+                SpawnExplosionVisual(response.definition, center, element);
 
                 for (int i = 0; i < _lastSplashTargets.Count; i++)
                 {
@@ -763,15 +773,16 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
         }
     }
 
-    private static bool CanActivate(ArtifactRuleRuntimeState state, ArtifactPassiveConditionSet conditions)
+    private static bool CanActivate(ArtifactRuleRuntimeState state, ArtifactPassiveConditionSet conditions, float now)
     {
-        if (conditions.cooldownSeconds > 0f && Time.time < state.cooldownReadyAt) return false;
-        if (conditions.durationSeconds > 0f && state.expiresAt > 0f && Time.time > state.expiresAt)
+        if (conditions.cooldownSeconds > 0f && now < state.cooldownReadyAt) return false;
+        if (state.expiresAt > 0f && now >= state.expiresAt)
         {
             state.armed = false;
             state.storedTarget = null;
+            state.storedActionId = null;
+            state.snapshottedSkillDamage = 0f;
             state.expiresAt = 0f;
-            return false;
         }
         if (conditions.requireArmed && !state.armed) return false;
         if (conditions.requireDisarmed && state.armed) return false;
@@ -871,6 +882,37 @@ public sealed class ArtifactPassiveRuntimeSystem : MonoBehaviour
         tex.Apply();
         s_explosionSprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
         return s_explosionSprite;
+    }
+
+    private void SpawnExplosionVisual(ExplosionSplashDefinition definition, Vector2 center, ElementType element)
+    {
+        // Guard again at the Unity API boundary in case the owner is destroyed during a re-entrant proc.
+        if (this == null || !isActiveAndEnabled || definition == null) return;
+        if (definition.visualPrefab == null)
+        {
+            SpawnExplosionVisual(center, definition.radius, element);
+            return;
+        }
+        foreach (var entry in _explosionVisuals)
+            if (entry.prefab == definition.visualPrefab && entry.view != null && entry.view.IsFinished)
+            {
+                entry.view.Begin(center, definition.radius, verticalMultiplier: definition.verticalRadiusMultiplier);
+                return;
+            }
+        GameObject host = Instantiate(definition.visualPrefab, transform);
+        ArtifactAreaVisual view = host.GetComponent<ArtifactAreaVisual>();
+        if (view != null)
+        {
+            _explosionVisuals.Add((definition.visualPrefab, view));
+            view.Begin(center, definition.radius, verticalMultiplier: definition.verticalRadiusMultiplier);
+        }
+        else Destroy(host);
+    }
+
+    private void OnDisable()
+    {
+        foreach (var entry in _explosionVisuals)
+            if (entry.view != null) entry.view.ClearImmediately();
     }
 
     private static void SpawnExplosionVisual(Vector2 center, float radius, ElementType element)

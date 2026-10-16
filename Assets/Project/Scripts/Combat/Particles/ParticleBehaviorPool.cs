@@ -41,7 +41,7 @@ public sealed class ParticleBehaviorPool : MonoBehaviour
     {
         for (int i = 0; i < _active.Count; i++)
         {
-            _active[i].Reset();
+            _active[i].Reset(true);
             _active[i].CleanupVisualizer();
         }
         while (_inactive.Count > 0)
@@ -50,6 +50,17 @@ public sealed class ParticleBehaviorPool : MonoBehaviour
         }
         _active.Clear();
         _inactive.Clear();
+    }
+
+    private void OnDisable()
+    {
+        foreach (ParticleBehaviorRuntime runtime in _active)
+        {
+            runtime.Reset(true);
+            _inactive.Push(runtime);
+        }
+        _active.Clear();
+        foreach (ParticleBehaviorRuntime runtime in _inactive) runtime.Reset(true);
     }
 }
 

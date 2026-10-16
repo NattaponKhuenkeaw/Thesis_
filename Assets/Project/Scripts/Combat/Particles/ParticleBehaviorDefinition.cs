@@ -13,6 +13,11 @@ public enum ParticleAnchorPolicy
 public sealed class ParticleVolumeDefinition
 {
     [Min(0f)] public float radius = 3f;
+    [Range(1f, 5f)] public float verticalRadiusMultiplier = 1f;
+    public Vector2 centerOffset;
+    public bool anchorToGround;
+    public LayerMask groundLayers;
+    [Min(0f)] public float groundProbeDistance = 12f;
     public LayerMask targetLayers;
 }
 

@@ -3222,6 +3222,7 @@ GameObject:
   - component: {fileID: 6997223784082485435}
   - component: {fileID: 33534485504751847}
   - component: {fileID: 6958341370884274525}
+  - component: {fileID: 3507033888258373882}
   m_Layer: 0
   m_Name: RoomChoiceUI
   m_TagString: Untagged
@@ -3329,6 +3330,18 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &3507033888258373882
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8315413391718045874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72a62678bcb80104aa930ce49d49bd67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Project.UI.UIBlockPlayerClick
 --- !u!1 &8402480973856115045
 GameObject:
   m_ObjectHideFlags: 0

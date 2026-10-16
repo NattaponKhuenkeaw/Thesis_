@@ -243,7 +243,7 @@ MonoBehaviour:
         damageRatio: 0.02
         impactTier: 0
         useDeterministicReaction: 1
-        reactionKind: 2
+        reactionKind: 0
         impactFreezeFrames: 5
         knockbackFrames: 25
         knockupFrames: 14
@@ -1427,7 +1427,7 @@ MonoBehaviour:
         damageRatio: 0.22
         impactTier: 2
         useDeterministicReaction: 1
-        reactionKind: 1
+        reactionKind: 2
         impactFreezeFrames: 4
         knockbackFrames: 30
         knockupFrames: 12

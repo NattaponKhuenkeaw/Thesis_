@@ -261,7 +261,7 @@ MonoBehaviour:
             icon: {fileID: 21300000, guid: cdfdc962ef7310244b2344353c822d9f, type: 3}
             fieldVisualPrefab: {fileID: 0}
           policy:
-            kind: 0
+            kind: 2
             appliesOn: 0
             durationType: 1
             durationSeconds: 0

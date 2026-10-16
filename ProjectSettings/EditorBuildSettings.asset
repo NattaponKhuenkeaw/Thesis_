@@ -12,11 +12,8 @@ EditorBuildSettings:
     path: Assets/Project/Scenes/Test_Lobby.unity
     guid: a148dcd3fee0376418d8129a64e74e76
   - enabled: 1
-    path: Assets/Project/Scenes/combat scene/combat_1.unity
-    guid: 85064172a849916498c43db0e21367b6
-  - enabled: 1
-    path: Assets/Project/Scenes/Test_Level.unity
-    guid: d87fef39f7e5def4980044f7c3b942ce
+    path: Assets/Project/Scenes/Test_Game_Map.unity
+    guid: cc748d9b603c3f043abf6077464e9dac
   - enabled: 1
     path: Assets/Project/Scenes/Test_Rest.unity
     guid: 4bc6d42f99b28bb4f98dc9c955d29cc5
@@ -26,6 +23,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Project/Scenes/Test_Playground.unity
     guid: dae43fa0c18ca9f41828e9b69b4c16fc
+  - enabled: 1
+    path: Assets/Project/Scenes/combat scene/combat_1.unity
+    guid: 85064172a849916498c43db0e21367b6
+  - enabled: 1
+    path: Assets/Project/Scenes/Test_Level.unity
+    guid: d87fef39f7e5def4980044f7c3b942ce
   m_configObjects:
     com.unity.dt.app-ui: {fileID: 11400000, guid: 99f9c9493070a9d4c979a8fec7c5a8d3, type: 2}
   m_UseUCBPForAssetBundles: 0

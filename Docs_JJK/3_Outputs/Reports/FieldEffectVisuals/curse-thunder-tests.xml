@@ -1,0 +1,202 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<test-run runner="Unity main-thread test executor, isolated additive scene" result="Passed" total="29" passed="29" failed="0" skipped="0" start-time="2026-10-14 18:53:21Z" end-time="2026-10-14 18:53:22Z">
+  <test-suite type="TestSuite" id="1000" name="Thesis" fullname="Thesis" runstate="Runnable" testcasecount="408" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.438981" total="29" passed="29" failed="0" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <test-suite type="Assembly" id="1481" name="Assembly-CSharp-Editor.dll" fullname="C:/Users/Apricha/Documents/GitHub/Thesis_/Library/ScriptAssemblies/Assembly-CSharp-Editor.dll" runstate="Runnable" testcasecount="408" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.420405" total="29" passed="29" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="36724" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestFixture" id="1014" name="ArtifactAdvancedVisualTests" fullname="ArtifactAdvancedVisualTests" classname="ArtifactAdvancedVisualTests" runstate="Runnable" testcasecount="9" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.102953" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1021" name="BloodBurstIsBoundedAndFinishesForReuse" fullname="ArtifactAdvancedVisualTests.BloodBurstIsBoundedAndFinishesForReuse" methodname="BloodBurstIsBoundedAndFinishesForReuse" classname="ArtifactAdvancedVisualTests" runstate="Runnable" seed="902983603" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.043161" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1023" name="CircularShieldHasDepthArcsAndMotesWhichStopOnExit" fullname="ArtifactAdvancedVisualTests.CircularShieldHasDepthArcsAndMotesWhichStopOnExit" methodname="CircularShieldHasDepthArcsAndMotesWhichStopOnExit" classname="ArtifactAdvancedVisualTests" runstate="Runnable" seed="1714743392" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.009171" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1024" name="DisabledOrDestroyedActorClearsShieldImmediatelyAndZeroTimeFreezesMotion" fullname="ArtifactAdvancedVisualTests.DisabledOrDestroyedActorClearsShieldImmediatelyAndZeroTimeFreezesMotion" methodname="DisabledOrDestroyedActorClearsShieldImmediatelyAndZeroTimeFreezesMotion" classname="ArtifactAdvancedVisualTests" runstate="Runnable" seed="1844980327" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.002008" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1022" name="ExpiredMarkCannotBeConsumedByARuleWithoutItsOwnDuration" fullname="ArtifactAdvancedVisualTests.ExpiredMarkCannotBeConsumedByARuleWithoutItsOwnDuration" methodname="ExpiredMarkCannotBeConsumedByARuleWithoutItsOwnDuration" classname="ArtifactAdvancedVisualTests" runstate="Runnable" seed="1115116729" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.004394" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1020" name="ShieldHasSubtleLoopAndExpandsToTheExactWorldRadiusUnderScaledParents" fullname="ArtifactAdvancedVisualTests.ShieldHasSubtleLoopAndExpandsToTheExactWorldRadiusUnderScaledParents" methodname="ShieldHasSubtleLoopAndExpandsToTheExactWorldRadiusUnderScaledParents" classname="ArtifactAdvancedVisualTests" runstate="Runnable" seed="1345529036" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.003622" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1018" name="UntimedStatsRemainAppliedWithoutFieldOrStatusEntries" fullname="ArtifactAdvancedVisualTests.UntimedStatsRemainAppliedWithoutFieldOrStatusEntries" classname="ArtifactAdvancedVisualTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.020002" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <test-case id="1015" name="UntimedStatsRemainAppliedWithoutFieldOrStatusEntries(Forever,0.0f)" fullname="ArtifactAdvancedVisualTests.UntimedStatsRemainAppliedWithoutFieldOrStatusEntries(Forever,0.0f)" methodname="UntimedStatsRemainAppliedWithoutFieldOrStatusEntries" classname="ArtifactAdvancedVisualTests" runstate="Runnable" seed="1602234866" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.013746" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1016" name="UntimedStatsRemainAppliedWithoutFieldOrStatusEntries(Seconds,0.0f)" fullname="ArtifactAdvancedVisualTests.UntimedStatsRemainAppliedWithoutFieldOrStatusEntries(Seconds,0.0f)" methodname="UntimedStatsRemainAppliedWithoutFieldOrStatusEntries" classname="ArtifactAdvancedVisualTests" runstate="Runnable" seed="2055142752" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.003094" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1017" name="UntimedStatsRemainAppliedWithoutFieldOrStatusEntries(Instant,0.0f)" fullname="ArtifactAdvancedVisualTests.UntimedStatsRemainAppliedWithoutFieldOrStatusEntries(Instant,0.0f)" methodname="UntimedStatsRemainAppliedWithoutFieldOrStatusEntries" classname="ArtifactAdvancedVisualTests" runstate="Runnable" seed="1957324629" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.001357" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+        </test-suite>
+        <test-case id="1019" name="UrnBenefitIsAnUntimedEffectAndKeepsItsCritModifiers" fullname="ArtifactAdvancedVisualTests.UrnBenefitIsAnUntimedEffectAndKeepsItsCritModifiers" methodname="UrnBenefitIsAnUntimedEffectAndKeepsItsCritModifiers" classname="ArtifactAdvancedVisualTests" runstate="Runnable" seed="1195341947" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.002425" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1025" name="ArtifactAreaGeometryTests" fullname="ArtifactAreaGeometryTests" classname="ArtifactAreaGeometryTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.008630" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1032" name="RotatedBodyCanIntersectEllipseEvenWhenItsCenterIsOutside" fullname="ArtifactAreaGeometryTests.RotatedBodyCanIntersectEllipseEvenWhenItsCenterIsOutside" methodname="RotatedBodyCanIntersectEllipseEvenWhenItsCenterIsOutside" classname="ArtifactAreaGeometryTests" runstate="Runnable" seed="82687306" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.006087" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-suite type="ParameterizedMethod" id="1031" name="StretchedAreaIncludesTallBodiesAndRejectsEllipseCorners" fullname="ArtifactAreaGeometryTests.StretchedAreaIncludesTallBodiesAndRejectsEllipseCorners" classname="ArtifactAreaGeometryTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.001750" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <test-case id="1026" name="StretchedAreaIncludesTallBodiesAndRejectsEllipseCorners(0.0f,5.0f,2.0f,True)" fullname="ArtifactAreaGeometryTests.StretchedAreaIncludesTallBodiesAndRejectsEllipseCorners(0.0f,5.0f,2.0f,True)" methodname="StretchedAreaIncludesTallBodiesAndRejectsEllipseCorners" classname="ArtifactAreaGeometryTests" runstate="Runnable" seed="1437521373" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.000808" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1027" name="StretchedAreaIncludesTallBodiesAndRejectsEllipseCorners(0.0f,5.0f,1.0f,False)" fullname="ArtifactAreaGeometryTests.StretchedAreaIncludesTallBodiesAndRejectsEllipseCorners(0.0f,5.0f,1.0f,False)" methodname="StretchedAreaIncludesTallBodiesAndRejectsEllipseCorners" classname="ArtifactAreaGeometryTests" runstate="Runnable" seed="381077150" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.000478" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1028" name="StretchedAreaIncludesTallBodiesAndRejectsEllipseCorners(0.0f,7.0f,2.0f,False)" fullname="ArtifactAreaGeometryTests.StretchedAreaIncludesTallBodiesAndRejectsEllipseCorners(0.0f,7.0f,2.0f,False)" methodname="StretchedAreaIncludesTallBodiesAndRejectsEllipseCorners" classname="ArtifactAreaGeometryTests" runstate="Runnable" seed="207515390" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.000110" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1029" name="StretchedAreaIncludesTallBodiesAndRejectsEllipseCorners(2.9f,5.9f,2.0f,False)" fullname="ArtifactAreaGeometryTests.StretchedAreaIncludesTallBodiesAndRejectsEllipseCorners(2.9f,5.9f,2.0f,False)" methodname="StretchedAreaIncludesTallBodiesAndRejectsEllipseCorners" classname="ArtifactAreaGeometryTests" runstate="Runnable" seed="908205961" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.000073" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+          <test-case id="1030" name="StretchedAreaIncludesTallBodiesAndRejectsEllipseCorners(2.8f,0.0f,2.0f,True)" fullname="ArtifactAreaGeometryTests.StretchedAreaIncludesTallBodiesAndRejectsEllipseCorners(2.8f,0.0f,2.0f,True)" methodname="StretchedAreaIncludesTallBodiesAndRejectsEllipseCorners" classname="ArtifactAreaGeometryTests" runstate="Runnable" seed="1759109819" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.000072" asserts="0">
+            <properties>
+              <property name="retryIteration" value="0" />
+              <property name="repeatIteration" value="0" />
+            </properties>
+          </test-case>
+        </test-suite>
+      </test-suite>
+      <test-suite type="TestFixture" id="1033" name="ArtifactCurseThunderTests" fullname="ArtifactCurseThunderTests" classname="ArtifactCurseThunderTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.027559" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1037" name="CursedEnemyDamageFlashesMarkAndUnsubscribesOnRemoval" fullname="ArtifactCurseThunderTests.CursedEnemyDamageFlashesMarkAndUnsubscribesOnRemoval" methodname="CursedEnemyDamageFlashesMarkAndUnsubscribesOnRemoval" classname="ArtifactCurseThunderTests" runstate="Runnable" seed="1768572966" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.016996" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1034" name="GroundAnchorUsesNearestSupportAndIgnoresTriggers" fullname="ArtifactCurseThunderTests.GroundAnchorUsesNearestSupportAndIgnoresTriggers" methodname="GroundAnchorUsesNearestSupportAndIgnoresTriggers" classname="ArtifactCurseThunderTests" runstate="Runnable" seed="464890949" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.007264" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1035" name="GroundAnchorWithoutSupportKeepsTheAuthoredCenter" fullname="ArtifactCurseThunderTests.GroundAnchorWithoutSupportKeepsTheAuthoredCenter" methodname="GroundAnchorWithoutSupportKeepsTheAuthoredCenter" classname="ArtifactCurseThunderTests" runstate="Runnable" seed="1854941017" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.000397" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1036" name="ThunderMatchesSavedCircleAndCompletesItsTailUnderScaledParent" fullname="ArtifactCurseThunderTests.ThunderMatchesSavedCircleAndCompletesItsTailUnderScaledParent" methodname="ThunderMatchesSavedCircleAndCompletesItsTailUnderScaledParent" classname="ArtifactCurseThunderTests" runstate="Runnable" seed="1624201546" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.002234" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1381" name="FieldEffectArtifactSequenceTests" fullname="FieldEffectArtifactSequenceTests" classname="FieldEffectArtifactSequenceTests" runstate="Runnable" testcasecount="10" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.276713" total="10" passed="10" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1390" name="ChronoExplosionDamagesCircularAreaWhileRejectingCorners" fullname="FieldEffectArtifactSequenceTests.ChronoExplosionDamagesCircularAreaWhileRejectingCorners" methodname="ChronoExplosionDamagesCircularAreaWhileRejectingCorners" classname="FieldEffectArtifactSequenceTests" runstate="Runnable" seed="1862897710" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.085046" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1388" name="ChronoMarkExpiryEndsItsGlyphWithoutGivingClawOrBlood" fullname="FieldEffectArtifactSequenceTests.ChronoMarkExpiryEndsItsGlyphWithoutGivingClawOrBlood" methodname="ChronoMarkExpiryEndsItsGlyphWithoutGivingClawOrBlood" classname="FieldEffectArtifactSequenceTests" runstate="Runnable" seed="610107629" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.013532" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1387" name="ChronoMarksThenConsumesIntoBloodBurstAndTheExistingSevenSecondClaw" fullname="FieldEffectArtifactSequenceTests.ChronoMarksThenConsumesIntoBloodBurstAndTheExistingSevenSecondClaw" methodname="ChronoMarksThenConsumesIntoBloodBurstAndTheExistingSevenSecondClaw" classname="FieldEffectArtifactSequenceTests" runstate="Runnable" seed="2095374306" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.021695" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1391" name="DaggerSavedProcCreatesGroundThunderAndItsExactRadius" fullname="FieldEffectArtifactSequenceTests.DaggerSavedProcCreatesGroundThunderAndItsExactRadius" methodname="DaggerSavedProcCreatesGroundThunderAndItsExactRadius" classname="FieldEffectArtifactSequenceTests" runstate="Runnable" seed="869886904" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.027548" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1386" name="MaskDamagingParticlePulsesGivePowerUpToAlliesWithOneVisualAsStacksGrow" fullname="FieldEffectArtifactSequenceTests.MaskDamagingParticlePulsesGivePowerUpToAlliesWithOneVisualAsStacksGrow" methodname="MaskDamagingParticlePulsesGivePowerUpToAlliesWithOneVisualAsStacksGrow" classname="FieldEffectArtifactSequenceTests" runstate="Runnable" seed="574372438" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.017902" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1382" name="PlayerFieldVisualsFollowInventoryAndSwapsWithoutAStatusHud" fullname="FieldEffectArtifactSequenceTests.PlayerFieldVisualsFollowInventoryAndSwapsWithoutAStatusHud" methodname="PlayerFieldVisualsFollowInventoryAndSwapsWithoutAStatusHud" classname="FieldEffectArtifactSequenceTests" runstate="Runnable" seed="1461311355" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.062894" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1383" name="RibbonUltimateGivesAuthoredAlliesDarkFlamesForTheExistingDuration" fullname="FieldEffectArtifactSequenceTests.RibbonUltimateGivesAuthoredAlliesDarkFlamesForTheExistingDuration" methodname="RibbonUltimateGivesAuthoredAlliesDarkFlamesForTheExistingDuration" classname="FieldEffectArtifactSequenceTests" runstate="Runnable" seed="851433632" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.009895" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1389" name="ScalesEmptyPulseDoesNotAnimateAnAttackButConfirmedDamageDoes" fullname="FieldEffectArtifactSequenceTests.ScalesEmptyPulseDoesNotAnimateAnAttackButConfirmedDamageDoes" methodname="ScalesEmptyPulseDoesNotAnimateAnAttackButConfirmedDamageDoes" classname="FieldEffectArtifactSequenceTests" runstate="Runnable" seed="1499684092" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.018598" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1385" name="ShardStillAppliesIndefiniteAfflictionWithoutAContinuousFieldVisual" fullname="FieldEffectArtifactSequenceTests.ShardStillAppliesIndefiniteAfflictionWithoutAContinuousFieldVisual" methodname="ShardStillAppliesIndefiniteAfflictionWithoutAContinuousFieldVisual" classname="FieldEffectArtifactSequenceTests" runstate="Runnable" seed="1530330245" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.010406" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1384" name="ShroudSwitchOutGivesPowerUpToTheIncomingCharacter" fullname="FieldEffectArtifactSequenceTests.ShroudSwitchOutGivesPowerUpToTheIncomingCharacter" methodname="ShroudSwitchOutGivesPowerUpToTheIncomingCharacter" classname="FieldEffectArtifactSequenceTests" runstate="Runnable" seed="1847671112" result="Passed" start-time="2026-10-14 18:53:22Z" end-time="2026-10-14 18:53:22Z" duration="0.008254" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

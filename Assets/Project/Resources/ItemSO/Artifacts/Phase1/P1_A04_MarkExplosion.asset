@@ -12,8 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f50bd7409ce848d4fbf22db1af7f816e, type: 3}
   m_Name: P1_A04_MarkExplosion
   m_EditorClassIdentifier: Assembly-CSharp::ExplosionSplashDefinition
+  visualPrefab: {fileID: 4195498619523011829, guid: 4e4bf96ce9f7009479cf7c1da2a09eb4, type: 3}
   stableId: SPLASH-P1-A04
-  radius: 3
+  radius: 2
+  verticalRadiusMultiplier: 1
+  centerOffset: {x: 0, y: 0}
   targetLayers:
     serializedVersion: 2
     m_Bits: 0
