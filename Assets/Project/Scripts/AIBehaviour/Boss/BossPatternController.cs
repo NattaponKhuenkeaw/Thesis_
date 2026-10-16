@@ -90,6 +90,8 @@ namespace Project.AIBehaviour.Boss
         [SerializeField] private float chargeDistance = 40f;
         [Tooltip("Stop this far before the blocking wall collider.")]
         [SerializeField] private float chargeWallPadding = 0.35f;
+        [Tooltip("Duration of the three stopping poses, played within charge recovery.")]
+        [SerializeField, Min(0.01f)] private float chargeStopAnimationDuration = 0.36f;
 
         [Header("Telegraph Feedback")]
         [SerializeField] private bool flashDuringTelegraph = true;
@@ -602,9 +604,9 @@ namespace Project.AIBehaviour.Boss
             }
 
             // Impact AoE.
-            animHandler?.SetBossJumpPhase(1f);
+            animHandler?.SetBossJumpPhase(0.6f);
             groundTelegraph?.Hide();
-            yield return ActiveMeleeWindow(timing);
+            yield return ActiveMeleeWindow(timing, animateLanding: true);
             RestorePhysics();
 
             bool wantsChain = phase >= 2 && Random.value <= phase2ChainCleaveChance;
@@ -664,7 +666,7 @@ namespace Project.AIBehaviour.Boss
                 Vector2 actual = rb != null && rb.simulated ? rb.position : (Vector2)transform.position;
                 if (!rushPoseStarted && CanContinuePattern() && Mathf.Abs(actual.x - current.x) > 0.0001f)
                 {
-                    animHandler?.SetBossChargePhase(1f);
+                    animHandler?.SetBossChargePhase(0.3f);
                     rushPoseStarted = true;
                 }
             }
@@ -673,7 +675,7 @@ namespace Project.AIBehaviour.Boss
             RestoreHitboxTransform();
             EndArmored();
 
-            yield return Recovery(ResolveRecovery(timing));
+            yield return Recovery(ResolveRecovery(timing), animateChargeStop: CanContinuePattern());
         }
 
         /// <summary>
@@ -754,7 +756,7 @@ namespace Project.AIBehaviour.Boss
             return smashMarkerRadius;
         }
 
-        private IEnumerator ActiveMeleeWindow(BossPatternTiming timing)
+        private IEnumerator ActiveMeleeWindow(BossPatternTiming timing, bool animateLanding = false)
         {
             enemy.HideAttackWarning();
             StopTelegraphFlash();
@@ -768,6 +770,8 @@ namespace Project.AIBehaviour.Boss
             {
                 if (!CanContinuePattern())
                     break;
+                if (animateLanding)
+                    animHandler?.SetBossJumpPhase(Mathf.Lerp(0.6f, 0.99f, t / Mathf.Max(0.01f, timing.activeDuration)));
                 t += Time.deltaTime;
                 ZeroVelocity();
                 yield return null;
@@ -778,20 +782,31 @@ namespace Project.AIBehaviour.Boss
             EndArmored();
         }
 
-        private IEnumerator Recovery(float duration)
+        private IEnumerator Recovery(float duration, bool animateChargeStop = false)
         {
             CleanupAttackState();
             animHandler?.SetSpeed(0f);
 
+            float stopDuration = Mathf.Min(duration, Mathf.Max(0.01f, chargeStopAnimationDuration));
             float t = 0f;
             while (t < duration)
             {
                 if (!enemy.IsAlive)
                     yield break;
+                if (animateChargeStop)
+                {
+                    // Motion-time sampling keeps stopping poses out of the moving charge.
+                    animHandler?.SetBossChargePhase(t < stopDuration
+                        ? Mathf.Lerp(0.5f, 0.99f, t / stopDuration)
+                        : -1f);
+                }
                 t += Time.deltaTime;
                 ZeroVelocity();
                 yield return null;
             }
+
+            if (animateChargeStop)
+                animHandler?.SetBossChargePhase(-1f);
         }
 
         private float ResolveRecovery(BossPatternTiming timing)
