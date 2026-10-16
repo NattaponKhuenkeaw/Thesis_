@@ -44,6 +44,20 @@ public class EnemyFlightGuardTests
         Assert.That(Resources.Load<EnemyKit>("EnemySo/EK_RangedStraight").CombatRole, Is.EqualTo(EnemyCombatRole.RangedHold));
     }
 
+    [Test]
+    public void FlyerFiringClipCanOutlastTheShotWindowWithoutSlowingItsAttackCooldown()
+    {
+        var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(
+            "Assets/Project/Character/enemy/enemy/Enm102/animation/Enm102_Attack.anim");
+        EnemyKit kit = Resources.Load<EnemyKit>("EnemySo/EK_FlyingAimed");
+        Assert.That(clip, Is.Not.Null);
+        Assert.That(kit, Is.Not.Null);
+        Assert.That(clip.length, Is.EqualTo(.2f).Within(.001f));
+        Assert.That(clip.isLooping, Is.False);
+        Assert.That(kit.HitWindowDuration, Is.EqualTo(.15f));
+        Assert.That(kit.AttackCooldown, Is.EqualTo(1.3f));
+    }
+
     [TestCase("EnemyCore/EnemyCore")]
     [TestCase("EnemyCore/Enemy2")]
     [TestCase("EnemyCore/Enemy3")]

@@ -243,11 +243,15 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
                 m_PhaseEndTime = m_Timer + Mathf.Max(ResolveRecovery(), ResolvePlantDuration());
             }
             float plant = ResolvePlantDuration();
-            if (m_Controller.UsesRangedAttack && m_AnimHandler != null && m_AnimHandler.useRangedAttackPoses)
-                m_AnimHandler.EndBodyChargePose();
             m_PlantUntil = Time.time + plant;
             m_Controller.HoldCommittedFacing(plant);
         }
+
+        // Visual recovery can outlast the shot window without changing attack cadence.
+        if (m_AttackStarted && m_HitboxDisabled && m_Controller.UsesRangedAttack
+            && m_AnimHandler != null && m_AnimHandler.useRangedAttackPoses
+            && m_AnimHandler.IsRangedAttackPoseComplete())
+            m_AnimHandler.EndBodyChargePose();
 
         if (m_AttackStarted && m_Timer >= m_PhaseEndTime)
         {

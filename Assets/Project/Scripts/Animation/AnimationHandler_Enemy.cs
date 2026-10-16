@@ -344,6 +344,16 @@ public class AnimationHandler_Enemy : MonoBehaviour
             anim.speed = speedBeforeShieldPose;
     }
 
+    public bool IsRangedAttackPoseComplete()
+    {
+        if (!bodyChargeAnimationPlaying || anim == null || !anim.isActiveAndEnabled
+            || anim.runtimeAnimatorController == null)
+            return true;
+        var state = anim.GetCurrentAnimatorStateInfo(0);
+        return state.fullPathHash != Animator.StringToHash("Base Layer.BodyChargeRush")
+            || (!state.loop && state.normalizedTime >= 1f);
+    }
+
     public void EndBodyChargePose()
     {
         if (!bodyChargeAnimationPlaying)
