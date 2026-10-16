@@ -594,10 +594,10 @@ MonoBehaviour:
       type: {class: ComboNode, ns: , asm: Assembly-CSharp}
       data:
         stepData:
-          startupFrames: 12
+          startupFrames: 9
           activeFrames: 16
-          recoveryFrames: 22
-          cancelWindowStartFrame: 47
+          recoveryFrames: 26
+          cancelWindowStartFrame: 48
           loopActivePhase: 0
           stepName: Dark Chain
           animationClip: {fileID: 7400000, guid: 0317f3858efd2494ebd53095b4246805, type: 2}
@@ -951,7 +951,7 @@ MonoBehaviour:
         reactionKind: 1
         impactFreezeFrames: 0
         knockbackFrames: 13
-        knockupFrames: 10
+        knockupFrames: 11
         knockfallFrames: 9
         recoveryFrames: 8
         horizontalSpeed: 7
@@ -1514,8 +1514,8 @@ MonoBehaviour:
         entries:
         - label: SFX
           clip: {fileID: 8300000, guid: 6dbe3ecbb7bf0fd47b365d1dd9ff2b49, type: 3}
-          triggerFrame: 10
-          duration: 22
+          triggerFrame: 11
+          duration: 23
           channel: 1
           volume: 0.5
           pitchVariation: 1

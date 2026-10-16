@@ -1,10 +1,22 @@
 fileFormatVersion: 2
-guid: bfc51ba127975c8438d728475193631a
+guid: de18fbeadad6bdc45b9a6b479f4f8104
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 9155793846020773459
-    second: Ch101_Crouch_3_0
+      213: 672485840541896873
+    second: Ch1_ATK_5 1_0
+  - first:
+      213: -7921447131564487974
+    second: Ch1_ATK_5 1_1
+  - first:
+      213: -6211448992804289219
+    second: Ch1_ATK_5 1_2
+  - first:
+      213: -597774199457898250
+    second: Ch1_ATK_5 1_3
+  - first:
+      213: -8442255874088613825
+    second: Ch1_ATK_5 1_4
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -46,12 +58,12 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
-  alignment: 7
+  alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 27
+  spritePixelsToUnits: 115
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -72,7 +84,7 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 1024
+    maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
@@ -126,23 +138,111 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Ch101_Crouch_3_0
+      name: Ch1_ATK_5 1_0
       rect:
         serializedVersion: 2
-        x: 34
+        x: 0
         y: 0
-        width: 55
-        height: 53
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        width: 464
+        height: 424
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 35696c45ef9ef0f70800000000000000
-      internalID: 9155793846020773459
+      spriteID: 9a0daf91f46255900800000000000000
+      internalID: 672485840541896873
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ch1_ATK_5 1_1
+      rect:
+        serializedVersion: 2
+        x: 464
+        y: 0
+        width: 464
+        height: 424
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: adacf00bdcd511290800000000000000
+      internalID: -7921447131564487974
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ch1_ATK_5 1_2
+      rect:
+        serializedVersion: 2
+        x: 928
+        y: 0
+        width: 464
+        height: 424
+      alignment: 9
+      pivot: {x: 0.2, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d35417bfc008cc9a0800000000000000
+      internalID: -6211448992804289219
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ch1_ATK_5 1_3
+      rect:
+        serializedVersion: 2
+        x: 1392
+        y: 0
+        width: 464
+        height: 424
+      alignment: 9
+      pivot: {x: 0.2, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6f02b61688744b7f0800000000000000
+      internalID: -597774199457898250
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Ch1_ATK_5 1_4
+      rect:
+        serializedVersion: 2
+        x: 1856
+        y: 0
+        width: 464
+        height: 424
+      alignment: 9
+      pivot: {x: 0.2, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f384ef1f20517da80800000000000000
+      internalID: -8442255874088613825
       vertices: []
       indices: 
       edges: []
@@ -151,7 +251,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: 182ec5a5750d44d4698486f5bc84cebb
     internalID: 0
     vertices: []
     indices: 
@@ -159,9 +259,15 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries: []
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":5.0,"y":1.0},"gridSpriteSize":{"x":464.0,"y":424.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.0},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":9,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      Ch101_Crouch_3_0: 9155793846020773459
+      Ch1_ATK_5 1_0: 672485840541896873
+      Ch1_ATK_5 1_1: -7921447131564487974
+      Ch1_ATK_5 1_2: -6211448992804289219
+      Ch1_ATK_5 1_3: -597774199457898250
+      Ch1_ATK_5 1_4: -8442255874088613825
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

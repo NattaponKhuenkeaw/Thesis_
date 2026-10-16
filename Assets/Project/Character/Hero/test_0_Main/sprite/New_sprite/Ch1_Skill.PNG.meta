@@ -1,25 +1,22 @@
 fileFormatVersion: 2
-guid: 6651d121a4ede7a47b6d9526bc615c3c
+guid: 2bbffbb50fb8c904985f73228a04d983
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 2130642454329728944
-    second: Ch1_ATK_5_0
+      213: -8541206899849388758
+    second: Ch1_Skill_0
   - first:
-      213: 8476180804302054667
-    second: Ch1_ATK_5_1
+      213: -5194297024653713147
+    second: Ch1_Skill_1
   - first:
-      213: -7828900372157893531
-    second: Ch1_ATK_5_2
+      213: -5731814526065639474
+    second: Ch1_Skill_2
   - first:
-      213: 4332405344820172574
-    second: Ch1_ATK_5_3
+      213: -1993898797047311744
+    second: Ch1_Skill_3
   - first:
-      213: -3184583351392661562
-    second: Ch1_ATK_5_4
-  - first:
-      213: -674441665965894495
-    second: Ch1_ATK_5_5
+      213: -4700592542077160703
+    second: Ch1_Skill_4
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -87,7 +84,7 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 1024
+    maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
     textureCompression: 1
@@ -141,13 +138,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Ch1_ATK_5_0
+      name: Ch1_Skill_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 464
-        height: 408
+        width: 188
+        height: 376
       alignment: 9
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -156,20 +153,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 0bf90b90600919d10800000000000000
-      internalID: 2130642454329728944
+      spriteID: a2d9c5de399877980800000000000000
+      internalID: -8541206899849388758
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Ch1_ATK_5_1
+      name: Ch1_Skill_1
       rect:
         serializedVersion: 2
-        x: 464
+        x: 188
         y: 0
-        width: 464
-        height: 408
+        width: 188
+        height: 376
       alignment: 9
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -178,74 +175,30 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b05a864688171a570800000000000000
-      internalID: 8476180804302054667
+      spriteID: 501a5ab60662ae7b0800000000000000
+      internalID: -5194297024653713147
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Ch1_ATK_5_2
+      name: Ch1_Skill_2
       rect:
         serializedVersion: 2
-        x: 928
+        x: 376
         y: 0
-        width: 464
-        height: 408
+        width: 188
+        height: 376
       alignment: 9
-      pivot: {x: 0.2, y: 0}
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 564fa9f37982a5390800000000000000
-      internalID: -7828900372157893531
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Ch1_ATK_5_3
-      rect:
-        serializedVersion: 2
-        x: 1392
-        y: 0
-        width: 464
-        height: 408
-      alignment: 9
-      pivot: {x: 0.2, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: e17920105bbcf1c30800000000000000
-      internalID: 4332405344820172574
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Ch1_ATK_5_4
-      rect:
-        serializedVersion: 2
-        x: 1856
-        y: 0
-        width: 464
-        height: 408
-      alignment: 9
-      pivot: {x: 0.2, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 6cf0e9680561ec3d0800000000000000
-      internalID: -3184583351392661562
+      spriteID: ecffe679e018470b0800000000000000
+      internalID: -5731814526065639474
       vertices: []
       indices: 
       edges: []
@@ -254,7 +207,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 2bb60c0551f456144b65bc193570a89b
+    spriteID: 3257f630558f2c84f8a30034bcd8a58e
     internalID: 0
     vertices: []
     indices: 
@@ -264,13 +217,11 @@ TextureImporter:
     spriteCustomMetadata:
       entries:
       - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":false,"gridCellCount":{"x":5.0,"y":1.0},"gridSpriteSize":{"x":464.0,"y":408.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.30000001192092898,"y":0.0},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":9,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":3.0,"y":1.0},"gridSpriteSize":{"x":188.0,"y":376.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.0},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":9,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      Ch1_ATK_5_0: 2130642454329728944
-      Ch1_ATK_5_1: 8476180804302054667
-      Ch1_ATK_5_2: -7828900372157893531
-      Ch1_ATK_5_3: 4332405344820172574
-      Ch1_ATK_5_4: -3184583351392661562
+      Ch1_Skill_0: -8541206899849388758
+      Ch1_Skill_1: -5194297024653713147
+      Ch1_Skill_2: -5731814526065639474
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
