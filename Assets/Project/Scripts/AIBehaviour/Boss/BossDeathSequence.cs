@@ -10,7 +10,7 @@ using UnityEngine.InputSystem;
 namespace Project.AIBehaviour.Boss
 {
     /// <summary>
-    /// Orchestrates boss kill juice → hazard clear → energy orb reward → click-to-continue.
+    /// Clears hazards, plays the final-hit feedback, then waits for death presentation before continuing.
     /// Post-boss biome heal is intentionally omitted; Rest room owns team restore.
     /// </summary>
     public sealed class BossDeathSequence : MonoBehaviour
@@ -22,15 +22,12 @@ namespace Project.AIBehaviour.Boss
         [SerializeField, Range(0.01f, 0.99f)] private float slowMoTimeScale = 0.25f;
         [SerializeField, Min(0.01f)] private float slowMoDuration = 0.55f;
         [SerializeField, Min(0f)] private float postSlowMoHold = 0.15f;
+        [Tooltip("Maximum scaled seconds to wait for death animation and spirit dissolve before allowing continue.")]
+        [SerializeField, Min(1f)] private float deathPresentationTimeout = 10f;
 
-        [Header("Energy Orb")]
-        [SerializeField] private BossEnergyOrb energyOrbPrefab;
-        [SerializeField] private float orbBurstDuration = 0.35f;
-        [SerializeField, Min(0f)] private float orbHoverDuration = 0.85f;
-        [SerializeField] private float orbHomingDuration = 0.75f;
-        [SerializeField] private float orbBurstDistance = 1.2f;
-        [SerializeField] private float orbBurstHeight = 0.9f;
-        [SerializeField] private Vector3 orbSpawnOffset = new Vector3(0f, 0.75f, 0f);
+        [Header("Dissolve Shake")]
+        [SerializeField, Min(0f)] private float dissolveShakeStrength = 0.4f;
+        [SerializeField, Min(0f)] private float dissolveShakeDuration = 0.45f;
 
         [Header("Prompt / Transition")]
         [SerializeField] private string continuePrompt = "Left-click to continue";
@@ -47,7 +44,6 @@ namespace Project.AIBehaviour.Boss
         private Coroutine sequenceRoutine;
         private bool waitingForClick;
         private bool transitionRequested;
-        private Vector3 lastBossPosition;
         private bool roomOffersPrepared;
 
         public bool IsRunning => sequenceRoutine != null;
@@ -114,7 +110,6 @@ namespace Project.AIBehaviour.Boss
             transitionRequested = false;
             BossDeathPromptUI.Instance?.Hide();
 
-            lastBossPosition = boss != null ? boss.transform.position : Vector3.zero;
             roomOffersPrepared = false;
             sequenceRoutine = StartCoroutine(SequenceRoutine(boss));
         }
@@ -134,7 +129,6 @@ namespace Project.AIBehaviour.Boss
 
             // 1) The Kill — hit-stop then slow-mo (sequenced; freeze + delayed slow-mo fight over timeScale).
             ClearArenaHazards();
-            Vector3 orbSpawn = (boss != null ? boss.transform.position : lastBossPosition) + orbSpawnOffset;
 
             GameFreezeManager freeze = GameFreezeManager.Instance;
             if (freeze != null && hitStopFrames > 0)
@@ -163,17 +157,41 @@ namespace Project.AIBehaviour.Boss
                 freeze.RestoreTime();
             }
 
+            // DieState owns animation and spirit dissolve. Do not start another presentation here.
+            EnemyLifecycleVFX deathVFX = boss != null ? boss.GetComponent<EnemyLifecycleVFX>() : null;
+            bool dissolveShakePlayed = false;
+            float deathWait = 0f;
+            while (boss != null && boss.isActiveAndEnabled
+                && boss.LifecycleState != EnemyLifecycleStateId.Despawn
+                && deathWait < deathPresentationTimeout)
+            {
+                if (!dissolveShakePlayed && deathVFX != null && deathVFX.IsDeathDissolving)
+                {
+                    dissolveShakePlayed = true;
+                    if (dissolveShakeStrength > 0f && dissolveShakeDuration > 0f)
+                    {
+                        GameImpulseController.Instance.Play(new GameImpulseRequest
+                        {
+                            startStrength = dissolveShakeStrength,
+                            endStrength = dissolveShakeStrength * 0.15f,
+                            duration = dissolveShakeDuration,
+                            pulseInterval = 0.03f,
+                            slowMotion = new SlowMotionSettings { enabled = false }
+                        });
+                    }
+                }
+                deathWait += Time.deltaTime;
+                yield return null;
+            }
+
+            if (boss != null && boss.isActiveAndEnabled
+                && boss.LifecycleState != EnemyLifecycleStateId.Despawn)
+            {
+                Debug.LogWarning("[BossDeathSequence] Death presentation timed out; allowing continue.", this);
+            }
+
             if (postSlowMoHold > 0f)
                 yield return new WaitForSecondsRealtime(postSlowMoHold);
-
-            // 2) Reward orb (no floor loot scatter).
-            bool orbDone = false;
-            SpawnEnergyOrb(orbSpawn, () => orbDone = true);
-
-            float orbTimeout = orbBurstDuration + orbHoverDuration + orbHomingDuration + 2f;
-            float orbWaitStarted = Time.unscaledTime;
-            while (!orbDone && Time.unscaledTime - orbWaitStarted < orbTimeout)
-                yield return null;
 
             // Ensure offers exist even if RoomWaveManager finished slightly later.
             EnsureNextRoomOffersPrepared();
@@ -211,42 +229,19 @@ namespace Project.AIBehaviour.Boss
                     col.enabled = false;
             }
 
+            EnemyRangedShot[] enemyShots = FindObjectsByType<EnemyRangedShot>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            for (int i = 0; i < enemyShots.Length; i++)
+            {
+                enemyShots[i].gameObject.SetActive(false);
+                Destroy(enemyShots[i].gameObject);
+            }
+
             // Active projectiles (pooled).
             ProjectileRuntime[] projectiles = FindObjectsByType<ProjectileRuntime>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
             for (int i = 0; i < projectiles.Length; i++)
             {
                 projectiles[i]?.ForceExpire();
             }
-        }
-
-        private void SpawnEnergyOrb(Vector3 spawnPosition, System.Action onAbsorbed)
-        {
-            Transform playerTransform = null;
-            PlayerCharacter player = FindFirstObjectByType<PlayerCharacter>();
-            if (player != null)
-                playerTransform = player.transform;
-
-            BossEnergyOrb orb;
-            if (energyOrbPrefab != null)
-            {
-                orb = Instantiate(energyOrbPrefab, spawnPosition, Quaternion.identity);
-            }
-            else
-            {
-                GameObject go = new GameObject("BossEnergyOrb");
-                go.transform.position = spawnPosition;
-                orb = go.AddComponent<BossEnergyOrb>();
-            }
-
-            orb.ConfigureTiming(
-                orbBurstDuration,
-                orbHoverDuration,
-                orbHomingDuration,
-                orbBurstDistance,
-                orbBurstHeight);
-            if (onAbsorbed != null)
-                orb.OnAbsorbed += onAbsorbed;
-            orb.Launch(playerTransform, spawnPosition);
         }
 
         private void EnsureNextRoomOffersPrepared()
