@@ -142,6 +142,10 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
             StopChargeMotion();
             m_AnimHandler.PlayBodyChargePose(false);
         }
+        else if (m_Controller.UsesRangedAttack && m_AnimHandler.useRangedAttackPoses)
+        {
+            m_AnimHandler.PlayBodyChargePose(false);
+        }
 
         if (m_Controller.UninterruptibleOnceWindup)
             BeginCommitment();
@@ -239,6 +243,8 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
                 m_PhaseEndTime = m_Timer + Mathf.Max(ResolveRecovery(), ResolvePlantDuration());
             }
             float plant = ResolvePlantDuration();
+            if (m_Controller.UsesRangedAttack && m_AnimHandler != null && m_AnimHandler.useRangedAttackPoses)
+                m_AnimHandler.EndBodyChargePose();
             m_PlantUntil = Time.time + plant;
             m_Controller.HoldCommittedFacing(plant);
         }
@@ -418,7 +424,9 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
 
         m_Controller?.HideAttackWarning();
         m_Controller?.CommitRangedAim();
-        if (!IsBodyCharge || m_AnimHandler == null || !m_AnimHandler.PlayBodyChargePose(true))
+        bool usesAttackPoses = IsBodyCharge || (m_Controller != null && m_Controller.UsesRangedAttack
+            && m_AnimHandler != null && m_AnimHandler.useRangedAttackPoses);
+        if (!usesAttackPoses || m_AnimHandler == null || !m_AnimHandler.PlayBodyChargePose(true))
             m_AnimHandler?.TriggerAttack();
 
         if (m_Controller != null && m_Controller.UsesRangedAttack)

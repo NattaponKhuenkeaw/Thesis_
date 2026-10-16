@@ -31,10 +31,14 @@ public class EnemyLocomotion : MonoBehaviour
     [SerializeField] private LayerMask groundLayers;
 
     [Header("Fixed Height Flight")]
-    [Tooltip("Fly on X at one height above the spawn platform. Never follow the target's Y.")]
+    [Tooltip("Use platform-relative flight, or enable roaming player-relative height below.")]
     [SerializeField] private bool fixedHeightFlight;
     [Tooltip("World-space clearance between the body feet and the supporting platform.")]
     [SerializeField, Min(0.1f)] private float flightHeight = 1.5f;
+    [Tooltip("Roaming flight measures height above the player instead of the spawn platform.")]
+    [SerializeField] private bool flightHeightRelativeToPlayer;
+    [Tooltip("Scales the complete player-relative altitude, including variation and minimum head clearance.")]
+    [SerializeField, Min(1f)] private float flightHeightMultiplier = 1f;
     [SerializeField, Min(0.01f)] private float flightGroundTolerance = 0.2f;
     [SerializeField, Min(0.1f)] private float flightGroundSearchDistance = 20f;
     [Tooltip("How far the flyer travels left and right once the target is already in shot range.")]
@@ -91,6 +95,9 @@ public class EnemyLocomotion : MonoBehaviour
     private Vector2 flightMoveStart;
     private Vector2 flightMoveEnd;
     private float flightMoveDuration;
+    private float flightMovePlayerOffsetX;
+    private float flightMoveHeight;
+    private float flightTravelVelocityX;
     private readonly RaycastHit2D[] flightWallHits = new RaycastHit2D[32];
 
     public EnemyMoveMode MoveMode => moveMode;
@@ -104,6 +111,14 @@ public class EnemyLocomotion : MonoBehaviour
         && enemy.CurrentReactionState == EnemyReactionState.None && flightInitialized
         && flightBeat == FlightBeat.Ready && FlightPlayerReady());
     public bool HoldsFlightPlaneForReaction => UsesFixedHeightFlight && !roamingFlight && flightInitialized && !flightReactionAllowsVertical;
+
+    public bool TryGetFlightTravelFacing(out float directionX)
+    {
+        directionX = flightTravelVelocityX;
+        return UsesRoamingFlight && faceTargetOnMove && flightBeat == FlightBeat.Moving
+            && enemy != null && enemy.IsGameplayActive && enemy.CurrentReactionState == EnemyReactionState.None
+            && (enemy.hitReactionHandler == null || !enemy.hitReactionHandler.OwnsPositionReactionMotion);
+    }
 
     private void Awake()
     {
@@ -161,18 +176,24 @@ public class EnemyLocomotion : MonoBehaviour
         Physics2D.SyncTransforms();
         Vector3 current = BodyPosition();
         Vector2 origin = new Vector2(collider.bounds.center.x, Mathf.Max(current.y, collider.bounds.min.y) + 0.1f);
-        if (!TryFindFlightGround(origin, flightGroundSearchDistance, out float groundY))
+        bool followsPlayer = UsesRoamingFlight && flightHeightRelativeToPlayer
+            && TryGetFlightPatrolPlayer(out _);
+        if (!TryFindFlightGround(origin, flightGroundSearchDistance, out float groundY) && !followsPlayer)
         {
             Debug.LogWarning($"{name}: Fixed-height flight needs supporting ground below its spawn point.", this);
             return false;
         }
 
         flightGroundY = groundY;
-        flightWorldY = groundY + flightHeight - (collider.bounds.min.y - current.y);
+        float feetY = followsPlayer
+            ? ResolvePlayerFlightFeetY(flightPatrolPlayer.transform, flightHeight)
+            : groundY + flightHeight;
+        flightWorldY = feetY - (collider.bounds.min.y - current.y);
         flightInitialized = true;
         flightPatrolAnchorX = current.x;
         flightPatrolSign = EnemyFacingUtil.GetFacingSign(cachedTransform);
         flightBeat = FlightBeat.Resting;
+        flightTravelVelocityX = 0f;
         flightBeatTime = Random.Range(0.2f, 0.6f);
         current.y = flightWorldY;
         cachedTransform.position = current;
@@ -964,6 +985,9 @@ public class EnemyLocomotion : MonoBehaviour
             flightBeatTime = 0.3f;
             return;
         }
+        if (flightHeightRelativeToPlayer
+            && (flightBeat == FlightBeat.Resting || flightBeat == FlightBeat.Ready))
+            AdjustPlayerRelativeFlightHeight(dt);
         if (flightBeat == FlightBeat.Resting)
         {
             flightBeatTime -= dt;
@@ -977,15 +1001,41 @@ public class EnemyLocomotion : MonoBehaviour
             return;
         }
         if (flightBeat != FlightBeat.Moving) return;
+        TickFlightTravel(dt);
+    }
+
+    private void TickFlightTravel(float dt)
+    {
+        if (flightHeightRelativeToPlayer)
+        {
+            if (!TryGetFlightPatrolPlayer(out Transform player))
+            {
+                flightBeat = FlightBeat.Resting;
+                flightBeatTime = .3f;
+                return;
+            }
+            Collider2D collider = ResolveBodyCollider();
+            if (collider == null) return;
+            float footOffset = collider.bounds.min.y - body.position.y;
+            flightMoveEnd = new Vector2(player.position.x + flightMovePlayerOffsetX,
+                ResolvePlayerFlightFeetY(player, flightMoveHeight) - footOffset);
+        }
         flightBeatTime += dt;
         float t = Mathf.Clamp01(flightBeatTime / Mathf.Max(.1f, flightMoveDuration));
         Vector2 next = Vector2.Lerp(flightMoveStart, flightMoveEnd, Mathf.SmoothStep(0f, 1f, t));
         next.y += Mathf.Sin(t * Mathf.PI) * flightArcHeight;
+        // A moving endpoint must not pull the body faster than its authored flight speed.
+        if (flightHeightRelativeToPlayer)
+            next = Vector2.MoveTowards(body.position, next, Mathf.Max(.1f, flightPatrolSpeed) * dt);
         Vector2 desired = next - body.position;
         Vector2 safe = ClipFlightTravel(desired);
         body.position += safe;
-        FaceWalkDirection(safe.x);
-        if ((safe - desired).sqrMagnitude > .0001f || t >= 1f)
+        flightTravelVelocityX = safe.x / Mathf.Max(dt, .0001f);
+        FaceWalkDirection(flightTravelVelocityX);
+        bool arrived = flightHeightRelativeToPlayer
+            ? t >= 1f && Vector2.Distance(body.position, flightMoveEnd) <= arrivalThreshold
+            : t >= 1f;
+        if ((safe - desired).sqrMagnitude > .0001f || arrived)
         {
             flightBeat = FlightBeat.Ready;
             flightBeatTime = 0f;
@@ -1002,20 +1052,30 @@ public class EnemyLocomotion : MonoBehaviour
         float side = Random.value < .5f ? -1f : 1f;
         float minimum = Mathf.Max(1f, flightTargetDistance.x);
         float maximum = Mathf.Max(minimum, flightTargetDistance.y);
-        // Reject gaps, different platforms and walls before committing to a destination.
+        // Platform-bound flight rejects gaps; player-relative flight still sweeps room walls.
         for (int attempt = 0; attempt < 6; attempt++)
         {
             float x = player.position.x + side * Random.Range(minimum, maximum);
             side = -side;
-            Vector2 probe = new Vector2(x, flightGroundY + flightGroundSearchDistance);
-            if (!TryFindFlightGround(probe, flightGroundSearchDistance + .1f, out float groundY)
-                || Mathf.Abs(groundY - flightGroundY) > flightGroundTolerance) continue;
             float height = Mathf.Max(.2f, flightHeight + Random.Range(-flightHeightVariation, flightHeightVariation));
-            Vector2 destination = new Vector2(x, groundY + height - footOffset);
+            float feetY;
+            if (flightHeightRelativeToPlayer)
+                feetY = ResolvePlayerFlightFeetY(player, height);
+            else
+            {
+                Vector2 probe = new Vector2(x, flightGroundY + flightGroundSearchDistance);
+                if (!TryFindFlightGround(probe, flightGroundSearchDistance + .1f, out float groundY)
+                    || Mathf.Abs(groundY - flightGroundY) > flightGroundTolerance) continue;
+                feetY = groundY + height;
+            }
+            Vector2 destination = new Vector2(x, feetY - footOffset);
             Vector2 delta = destination - body.position;
             if ((ClipFlightTravel(delta) - delta).sqrMagnitude > .0001f) continue;
             flightMoveStart = body.position;
             flightMoveEnd = destination;
+            flightMovePlayerOffsetX = x - player.position.x;
+            flightMoveHeight = height;
+            flightTravelVelocityX = 0f;
             flightMoveDuration = Mathf.Max(flightTravelDuration, delta.magnitude / Mathf.Max(.1f, flightPatrolSpeed));
             flightBeatTime = 0f;
             flightBeat = FlightBeat.Moving;
@@ -1024,6 +1084,30 @@ public class EnemyLocomotion : MonoBehaviour
         // A cramped room can still offer a shot without endlessly searching for a flight point.
         flightBeat = FlightBeat.Ready;
         flightBeatTime = 0f;
+    }
+
+    private float ResolvePlayerFlightFeetY(Transform player, float height)
+    {
+        Collider2D playerBody = player.GetComponent<Collider2D>();
+        float headY = playerBody != null && playerBody.enabled && !playerBody.isTrigger
+            ? playerBody.bounds.max.y : player.position.y;
+        float altitude = Mathf.Max(height, headY + .35f - player.position.y);
+        return player.position.y + altitude * Mathf.Max(1f, flightHeightMultiplier);
+    }
+
+    private void AdjustPlayerRelativeFlightHeight(float dt)
+    {
+        if (!TryGetFlightPatrolPlayer(out Transform player)) return;
+        Collider2D collider = ResolveBodyCollider();
+        if (collider == null) return;
+        float feetY = collider.bounds.min.y;
+        // Keep the authored height variation, but leave the spawn plane when the player changes level.
+        float minimum = ResolvePlayerFlightFeetY(player, Mathf.Max(.2f, flightHeight - flightHeightVariation));
+        float maximum = ResolvePlayerFlightFeetY(player, flightHeight + flightHeightVariation);
+        float target = Mathf.Clamp(feetY, minimum, maximum);
+        float step = Mathf.MoveTowards(feetY, target, flightPatrolSpeed * dt) - feetY;
+        body.position += ClipFlightTravel(Vector2.up * step);
+        flightWorldY = body.position.y;
     }
 
     private Vector2 ClipFlightTravel(Vector2 delta)

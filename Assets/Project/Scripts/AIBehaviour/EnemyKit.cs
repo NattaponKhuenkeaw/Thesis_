@@ -44,6 +44,8 @@ public sealed class EnemyKit : ScriptableObject
     [SerializeField, Min(0.05f)] private float shotLifetime = 2.5f;
     [Tooltip("Optional bullet art. Empty = default square.")]
     [SerializeField] private Sprite shotSprite;
+    [SerializeField] private Sprite[] shotAnimation = new Sprite[0];
+    [SerializeField, Min(0.1f)] private float shotAnimationFPS = 10f;
     [SerializeField] private Color shotTint = Color.white;
     [SerializeField, Min(0.05f)] private float shotRadius = 0.18f;
     [Tooltip("Fallback muzzle offset when the prefab has no RangedMuzzle child. X flips with facing.")]
@@ -70,6 +72,8 @@ public sealed class EnemyKit : ScriptableObject
     public float ShotSpeed => Mathf.Max(0.1f, shotSpeed);
     public float ShotLifetime => Mathf.Max(0.05f, shotLifetime);
     public Sprite ShotSprite => shotSprite;
+    public Sprite[] ShotAnimation => shotAnimation;
+    public float ShotAnimationFPS => Mathf.Max(0.1f, shotAnimationFPS);
     public Color ShotTint => shotTint;
     public float ShotRadius => Mathf.Max(0.05f, shotRadius);
     public Vector2 MuzzleOffset => muzzleOffset;

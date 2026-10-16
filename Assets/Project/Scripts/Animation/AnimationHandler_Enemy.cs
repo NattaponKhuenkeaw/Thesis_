@@ -12,6 +12,8 @@ public class AnimationHandler_Enemy : MonoBehaviour
     public EnemyController enemyController;
     [Tooltip("Play the authored looping shield clip instead of holding a single pose.")]
     public bool animateShieldGuard;
+    [Tooltip("Use separate windup and firing clips for ranged attacks.")]
+    public bool useRangedAttackPoses;
 
     [System.Serializable]
     public class ReactionAnimationProfile

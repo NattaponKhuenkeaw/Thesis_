@@ -25,7 +25,12 @@ MonoBehaviour:
   recoveryPlantDuration: 1.3
   shotSpeed: 10
   shotLifetime: 2.5
-  shotSprite: {fileID: 0}
+  shotSprite: {fileID: 81102012, guid: e102a0b1c2d34e5f8091a2b3c4d5e6f7, type: 3}
+  shotAnimation:
+  - {fileID: 81102012, guid: e102a0b1c2d34e5f8091a2b3c4d5e6f7, type: 3}
+  - {fileID: 81102013, guid: e102a0b1c2d34e5f8091a2b3c4d5e6f7, type: 3}
+  - {fileID: 81102014, guid: e102a0b1c2d34e5f8091a2b3c4d5e6f7, type: 3}
+  shotAnimationFPS: 10
   shotTint: {r: 1, g: 1, b: 1, a: 1}
   shotRadius: 0.18
   muzzleOffset: {x: 0.6, y: 0.1}

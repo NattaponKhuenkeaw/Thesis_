@@ -31,6 +31,8 @@ public class EnemyFlightGuardTests
         Assert.That(flyer.GetComponent<EnemyLocomotion>().UsesRoamingFlight, Is.True);
         var flightSettings = new SerializedObject(flyer.GetComponent<EnemyLocomotion>());
         Assert.That(flightSettings.FindProperty("flightHeight").floatValue, Is.EqualTo(3.2f));
+        Assert.That(flightSettings.FindProperty("flightHeightMultiplier").floatValue, Is.EqualTo(1.728f));
+        Assert.That(flightSettings.FindProperty("flightHeightRelativeToPlayer").boolValue, Is.True);
         Assert.That(flightSettings.FindProperty("flightArcHeight").floatValue, Is.EqualTo(1.2f));
         Assert.That(flightSettings.FindProperty("flightHeightVariation").floatValue, Is.EqualTo(.8f));
         Assert.That(guard.GetComponent<EnemyController>().CombatRole, Is.EqualTo(EnemyCombatRole.ShieldGuard));
@@ -148,6 +150,148 @@ public class EnemyFlightGuardTests
         Assert.That(flight.ResolveAttackSlot(target.transform).y, Is.EqualTo(height));
         Assert.That(enemy.rb.linearVelocity.y, Is.Zero);
         Assert.That(enemy.rb.position.y, Is.EqualTo(height));
+    }
+
+    [TestCase(0f)]
+    [TestCase(8f)]
+    public void PlayerRelativeFlightDoesNotKeepTheSpawnHeight(float spawnY)
+    {
+        Ground(new Vector2(1000f, -.5f), new Vector2(20f, 1f));
+        EnemyController enemy = Flyer(new Vector3(1000f, spawnY, 0f));
+        EnemyLocomotion flight = enemy.GetComponent<EnemyLocomotion>();
+        var playerHost = Host("FlightHeightPlayer", new Vector3(1004f, 4f, 0f));
+        var playerBody = playerHost.AddComponent<BoxCollider2D>();
+        playerBody.size = new Vector2(1f, 2f);
+        playerBody.offset = Vector2.up;
+        var player = playerHost.AddComponent<PlayerCharacter>();
+        typeof(EnemyLocomotion).GetField("flightPatrolPlayer", Private).SetValue(flight, player);
+        var settings = new SerializedObject(flight);
+        settings.FindProperty("roamingFlight").boolValue = true;
+        settings.FindProperty("flightHeightRelativeToPlayer").boolValue = true;
+        settings.ApplyModifiedPropertiesWithoutUndo();
+        Physics2D.SyncTransforms();
+
+        Assert.That(flight.PrepareSpawnFlight(), Is.True);
+        Physics2D.SyncTransforms();
+        Assert.That(enemy.bodyCollider.bounds.min.y,
+            Is.EqualTo(playerBody.bounds.max.y + .35f).Within(.001f));
+        Assert.That(flight.HoldsFlightPlaneForReaction, Is.False);
+
+        float before = enemy.rb.position.y;
+        playerHost.transform.position += Vector3.up * 5f;
+        Physics2D.SyncTransforms();
+        typeof(EnemyLocomotion).GetMethod("AdjustPlayerRelativeFlightHeight", Private)
+            .Invoke(flight, new object[] { .1f });
+        Assert.That(enemy.rb.position.y, Is.GreaterThan(before));
+        Assert.That(enemy.rb.position.y - before, Is.LessThanOrEqualTo(.301f));
+        Physics2D.SyncTransforms();
+        typeof(EnemyLocomotion).GetMethod("SelectFlightDestination", Private).Invoke(flight, null);
+        Vector2 destination = (Vector2)typeof(EnemyLocomotion)
+            .GetField("flightMoveEnd", Private).GetValue(flight);
+        float footOffset = enemy.bodyCollider.bounds.min.y - enemy.rb.position.y;
+        Assert.That(destination.y + footOffset,
+            Is.GreaterThanOrEqualTo(playerBody.bounds.max.y + .35f - .001f));
+    }
+
+    [Test]
+    public void PlayerRelativeFlightCanChooseHeightWithoutGroundAtSpawn()
+    {
+        EnemyController enemy = Flyer(new Vector3(1000f, 0f, 0f));
+        EnemyLocomotion flight = enemy.GetComponent<EnemyLocomotion>();
+        var player = Host("FlightHeightPlayer", new Vector3(1004f, 3f, 0f))
+            .AddComponent<PlayerCharacter>();
+        typeof(EnemyLocomotion).GetField("flightPatrolPlayer", Private).SetValue(flight, player);
+        var settings = new SerializedObject(flight);
+        settings.FindProperty("roamingFlight").boolValue = true;
+        settings.FindProperty("flightHeightRelativeToPlayer").boolValue = true;
+        settings.ApplyModifiedPropertiesWithoutUndo();
+
+        Assert.That(flight.PrepareSpawnFlight(), Is.True);
+        Physics2D.SyncTransforms();
+        Assert.That(enemy.bodyCollider.bounds.min.y, Is.EqualTo(4.5f).Within(.001f));
+    }
+
+    [TestCase(2.4f)]
+    [TestCase(3.2f)]
+    [TestCase(4f)]
+    public void FlightHeightMultiplierRaisesEverySampleIncludingHeadClampedMinimum(float height)
+    {
+        Ground(new Vector2(1000f, -.5f), new Vector2(20f, 1f));
+        EnemyLocomotion flight = Flyer(new Vector3(1000f, 0f, 0f)).GetComponent<EnemyLocomotion>();
+        var player = Host("HeightReference", new Vector3(1004f, 10f, 0f));
+        var collider = player.AddComponent<BoxCollider2D>();
+        collider.size = new Vector2(1f, 2.6f);
+        collider.offset = Vector2.up * 1.3f;
+        Physics2D.SyncTransforms();
+        MethodInfo resolve = typeof(EnemyLocomotion).GetMethod("ResolvePlayerFlightFeetY", Private);
+        float before = (float)resolve.Invoke(flight, new object[] { player.transform, height });
+        var settings = new SerializedObject(flight);
+        settings.FindProperty("flightHeightMultiplier").floatValue = 1.2f;
+        settings.ApplyModifiedPropertiesWithoutUndo();
+
+        float after = (float)resolve.Invoke(flight, new object[] { player.transform, height });
+
+        Assert.That(after - player.transform.position.y,
+            Is.EqualTo((before - player.transform.position.y) * 1.2f).Within(.001f));
+        Assert.That(after, Is.GreaterThan(collider.bounds.max.y));
+    }
+
+    [TestCase(true, 1f)]
+    [TestCase(true, -1f)]
+    [TestCase(false, 1f)]
+    public void OnlyPlayerRelativeFlightUpdatesItsDestinationDuringTravel(bool followsPlayer, float directionX)
+    {
+        Ground(new Vector2(1000f, -.5f), new Vector2(20f, 1f));
+        EnemyController enemy = Flyer(new Vector3(1000f, 0f, 0f));
+        EnemyLocomotion flight = enemy.GetComponent<EnemyLocomotion>();
+        var playerHost = Host("MovingFlightTarget", new Vector3(1004f, 0f, 0f));
+        var playerBody = playerHost.AddComponent<BoxCollider2D>();
+        playerBody.size = new Vector2(1f, 2f);
+        playerBody.offset = Vector2.up;
+        var player = playerHost.AddComponent<PlayerCharacter>();
+        typeof(EnemyLocomotion).GetField("flightPatrolPlayer", Private).SetValue(flight, player);
+        var settings = new SerializedObject(flight);
+        settings.FindProperty("roamingFlight").boolValue = true;
+        settings.FindProperty("flightHeightRelativeToPlayer").boolValue = followsPlayer;
+        settings.ApplyModifiedPropertiesWithoutUndo();
+        Physics2D.SyncTransforms();
+        Assert.That(flight.PrepareSpawnFlight(), Is.True);
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, -directionX);
+        typeof(EnemyLocomotion).GetMethod("SelectFlightDestination", Private).Invoke(flight, null);
+        FieldInfo endpoint = typeof(EnemyLocomotion).GetField("flightMoveEnd", Private);
+        Vector2 oldDestination = (Vector2)endpoint.GetValue(flight);
+        Vector2 before = enemy.rb.position;
+        playerHost.transform.position += new Vector3(directionX * 12f, 4f, 0f);
+        Physics2D.SyncTransforms();
+        float duration = (float)typeof(EnemyLocomotion).GetField("flightMoveDuration", Private).GetValue(flight);
+        typeof(EnemyLocomotion).GetField("flightBeatTime", Private).SetValue(flight, duration);
+
+        typeof(EnemyLocomotion).GetMethod("TickFlightTravel", Private)
+            .Invoke(flight, new object[] { .001f });
+
+        Vector2 expected = oldDestination + (followsPlayer ? new Vector2(directionX * 12f, 4f) : Vector2.zero);
+        Assert.That(Vector2.Distance((Vector2)endpoint.GetValue(flight), expected), Is.LessThan(.001f));
+        if (followsPlayer)
+        {
+            Assert.That(Vector2.Distance(before, enemy.rb.position), Is.LessThanOrEqualTo(.0031f));
+            Assert.That((enemy.rb.position.x - before.x) * directionX, Is.GreaterThan(0f));
+            Assert.That(typeof(EnemyLocomotion).GetField("flightBeat", Private).GetValue(flight).ToString(),
+                Is.EqualTo("Moving"), "The old arrival timer must not complete the newly redirected flight.");
+            Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(directionX),
+                "Small position steps still need to turn toward travel.");
+            EnemyFacingUtil.FaceHorizontal(enemy.transform, -directionX * 10f);
+            Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(directionX),
+                "Graph target-facing must not override flight movement-facing.");
+            typeof(EnemyLocomotion).GetField("flightTravelVelocityX", Private).SetValue(flight, 0f);
+            EnemyFacingUtil.FaceHorizontal(enemy.transform, -directionX * 10f);
+            Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(directionX),
+                "Vertical flight should retain its horizontal facing.");
+            FieldInfo beat = typeof(EnemyLocomotion).GetField("flightBeat", Private);
+            beat.SetValue(flight, System.Enum.Parse(beat.FieldType, "Ready"));
+            EnemyFacingUtil.FaceHorizontal(enemy.transform, -directionX * 10f);
+            Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(-directionX),
+                "Once flight stops, aiming may face the target again.");
+        }
     }
 
     [TestCase(0.6f)]

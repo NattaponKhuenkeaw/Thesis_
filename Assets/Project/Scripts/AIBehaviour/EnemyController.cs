@@ -1603,6 +1603,11 @@ public class EnemyController : MonoBehaviour
         float lifetime = Mathf.Max(ShotLifetime, travelTime + 0.1f);
         EnemyRangedShot projectile = shot.AddComponent<EnemyRangedShot>();
         projectile.Launch(this, direction, speed, lifetime);
+        if (kit != null && kit.ShotAnimation != null && kit.ShotAnimation.Length > 0)
+        {
+            projectile.ConfigureAnimation(kit.ShotAnimation, kit.ShotAnimationFPS);
+            col.radius = radius / Mathf.Max(0.0001f, Mathf.Abs(shot.transform.localScale.x));
+        }
     }
 
     private void ShowRangedAimLaser()
