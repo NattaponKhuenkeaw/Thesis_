@@ -24,6 +24,9 @@ TextureImporter:
       213: 81101007
     second: Enm101_Attack2
   - first:
+      213: 81101013
+    second: Enm101_Attack3
+  - first:
       213: 81101008
     second: Enm101_Hurt0
   - first:
@@ -313,6 +316,28 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
+      name: Enm101_Attack3
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 256
+        width: 128
+        height: 128
+      alignment: 9
+      pivot: {x: 0.5, y: 0.014206041}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData:
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04d580d500000001000000000000000a
+      internalID: 81101013
+      vertices: []
+      indices:
+      edges: []
+      weights: []
+    - serializedVersion: 2
       name: Enm101_Hurt0
       rect:
         serializedVersion: 2
@@ -439,6 +464,7 @@ TextureImporter:
       Enm101_Attack0: 81101005
       Enm101_Attack1: 81101006
       Enm101_Attack2: 81101007
+      Enm101_Attack3: 81101013
       Enm101_Hurt0: 81101008
       Enm101_Hurt1: 81101009
       Enm101_Hurt2: 81101010
