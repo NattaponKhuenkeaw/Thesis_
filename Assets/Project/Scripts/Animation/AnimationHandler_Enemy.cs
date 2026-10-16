@@ -10,6 +10,8 @@ public class AnimationHandler_Enemy : MonoBehaviour
     [Header("Dependencies")]
     public Animator anim;
     public EnemyController enemyController;
+    [Tooltip("Play the authored looping shield clip instead of holding a single pose.")]
+    public bool animateShieldGuard;
 
     [System.Serializable]
     public class ReactionAnimationProfile
@@ -309,14 +311,23 @@ public class AnimationHandler_Enemy : MonoBehaviour
     {
         if (anim == null || !anim.isActiveAndEnabled || anim.runtimeAnimatorController == null)
             return;
-        int state = Animator.StringToHash("Base Layer.BodyChargeWindup");
+        int state = Animator.StringToHash(animateShieldGuard && !raised
+            ? activeState : "Base Layer.BodyChargeWindup");
         if (!anim.HasState(0, state))
             return;
+        bool wasPlaying = shieldPosePlaying;
         if (!shieldPosePlaying)
             speedBeforeShieldPose = anim.speed;
         shieldPosePlaying = true;
         bodyChargeAnimationPlaying = true;
         anim.ResetTrigger(attackHash);
+        if (animateShieldGuard)
+        {
+            if (!wasPlaying || anim.GetCurrentAnimatorStateInfo(0).fullPathHash != state)
+                anim.Play(state, 0, 0f);
+            anim.speed = speedBeforeShieldPose;
+            return;
+        }
         // The existing shield clip starts raised and ends in the open anticipation pose.
         anim.Play(state, 0, raised ? 0f : 0.8f);
         anim.speed = 0f;
