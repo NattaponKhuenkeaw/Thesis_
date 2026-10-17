@@ -10,6 +10,20 @@ public class EnemyRangedShot : MonoBehaviour
     private Vector2 velocity;
     private float lifeRemaining;
     private bool consumed;
+    private SpriteRenderer spriteRenderer;
+    private Sprite[] animationFrames;
+    private float animationFPS;
+    private float animationElapsed;
+
+    public void ConfigureAnimation(Sprite[] frames, float framesPerSecond)
+    {
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        animationFrames = frames;
+        animationFPS = Mathf.Max(0.1f, framesPerSecond);
+        animationElapsed = 0f;
+        if (spriteRenderer != null && frames != null && frames.Length > 0 && frames[0] != null)
+            spriteRenderer.sprite = frames[0];
+    }
 
     public void Launch(EnemyController source, Vector2 direction, float speed, float lifetime)
     {
@@ -30,6 +44,13 @@ public class EnemyRangedShot : MonoBehaviour
     {
         transform.position += (Vector3)(velocity * Time.deltaTime);
         lifeRemaining -= Time.deltaTime;
+        if (spriteRenderer != null && animationFrames != null && animationFrames.Length > 0)
+        {
+            animationElapsed += Time.deltaTime;
+            int index = Mathf.FloorToInt(animationElapsed * animationFPS) % animationFrames.Length;
+            if (animationFrames[index] != null)
+                spriteRenderer.sprite = animationFrames[index];
+        }
         if (lifeRemaining <= 0f)
             Destroy(gameObject);
     }

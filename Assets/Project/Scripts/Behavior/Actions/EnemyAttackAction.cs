@@ -142,6 +142,10 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
             StopChargeMotion();
             m_AnimHandler.PlayBodyChargePose(false);
         }
+        else if (m_Controller.UsesRangedAttack && m_AnimHandler.useRangedAttackPoses)
+        {
+            m_AnimHandler.PlayBodyChargePose(false);
+        }
 
         if (m_Controller.UninterruptibleOnceWindup)
             BeginCommitment();
@@ -242,6 +246,12 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
             m_PlantUntil = Time.time + plant;
             m_Controller.HoldCommittedFacing(plant);
         }
+
+        // Visual recovery can outlast the shot window without changing attack cadence.
+        if (m_AttackStarted && m_HitboxDisabled && m_Controller.UsesRangedAttack
+            && m_AnimHandler != null && m_AnimHandler.useRangedAttackPoses
+            && m_AnimHandler.IsRangedAttackPoseComplete())
+            m_AnimHandler.EndBodyChargePose();
 
         if (m_AttackStarted && m_Timer >= m_PhaseEndTime)
         {
@@ -418,7 +428,9 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
 
         m_Controller?.HideAttackWarning();
         m_Controller?.CommitRangedAim();
-        if (!IsBodyCharge || m_AnimHandler == null || !m_AnimHandler.PlayBodyChargePose(true))
+        bool usesAttackPoses = IsBodyCharge || (m_Controller != null && m_Controller.UsesRangedAttack
+            && m_AnimHandler != null && m_AnimHandler.useRangedAttackPoses);
+        if (!usesAttackPoses || m_AnimHandler == null || !m_AnimHandler.PlayBodyChargePose(true))
             m_AnimHandler?.TriggerAttack();
 
         if (m_Controller != null && m_Controller.UsesRangedAttack)

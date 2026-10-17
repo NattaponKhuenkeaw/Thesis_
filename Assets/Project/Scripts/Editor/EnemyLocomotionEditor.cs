@@ -27,6 +27,17 @@ public sealed class EnemyLocomotionEditor : Editor
                 if (serializedObject.FindProperty("fixedHeightFlight").boolValue)
                 {
                     EditorGUILayout.PropertyField(serializedObject.FindProperty("flightHeight"));
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty("roamingFlight"));
+                    if (serializedObject.FindProperty("roamingFlight").boolValue)
+                    {
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty("flightHeightRelativeToPlayer"));
+                        if (serializedObject.FindProperty("flightHeightRelativeToPlayer").boolValue)
+                            EditorGUILayout.PropertyField(serializedObject.FindProperty("flightHeightMultiplier"));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty("flightTargetDistance"));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty("flightTravelDuration"));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty("flightArcHeight"));
+                        EditorGUILayout.PropertyField(serializedObject.FindProperty("flightHeightVariation"));
+                    }
                     EditorGUILayout.PropertyField(serializedObject.FindProperty("flightPatrolSpan"));
                     EditorGUILayout.PropertyField(serializedObject.FindProperty("flightPatrolSpeed"));
                     EditorGUILayout.PropertyField(serializedObject.FindProperty("flightGroundTolerance"));

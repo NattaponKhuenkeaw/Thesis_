@@ -46,6 +46,15 @@ public static class EnemyFacingUtil
         if (controller != null && controller.FacingLocked)
             return;
 
+        // Position-driven flight has no Rigidbody velocity for graph-facing nodes to read.
+        EnemyLocomotion locomotion = controller != null ? controller.GetComponent<EnemyLocomotion>() : null;
+        if (locomotion != null && locomotion.TryGetFlightTravelFacing(out float travelDirectionX))
+        {
+            directionX = travelDirectionX;
+            if (Mathf.Abs(directionX) < threshold)
+                return;
+        }
+
         float targetRotY = directionX > 0f ? 0f : 180f;
         Vector3 euler = transform.eulerAngles;
         if (!Mathf.Approximately(euler.y, targetRotY))

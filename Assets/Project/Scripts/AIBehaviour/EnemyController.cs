@@ -839,7 +839,9 @@ public class EnemyController : MonoBehaviour
     {
         if (!isAlive || !IsGameplayActive) return 0f;
 
-        if (ShieldGuard != null && ShieldGuard.BlocksHit(attackerPosition, reactionData.damageDelivery))
+        // Grabs counter directional blocking; explicit reaction/armor immunity still applies below.
+        if (reactionData.reactionKind != EnemyReactionKind.Grab
+            && ShieldGuard != null && ShieldGuard.BlocksHit(attackerPosition, reactionData.damageDelivery))
         {
             LastHitAppliedReaction = false;
             return 0f;
@@ -1603,6 +1605,11 @@ public class EnemyController : MonoBehaviour
         float lifetime = Mathf.Max(ShotLifetime, travelTime + 0.1f);
         EnemyRangedShot projectile = shot.AddComponent<EnemyRangedShot>();
         projectile.Launch(this, direction, speed, lifetime);
+        if (kit != null && kit.ShotAnimation != null && kit.ShotAnimation.Length > 0)
+        {
+            projectile.ConfigureAnimation(kit.ShotAnimation, kit.ShotAnimationFPS);
+            col.radius = radius / Mathf.Max(0.0001f, Mathf.Abs(shot.transform.localScale.x));
+        }
     }
 
     private void ShowRangedAimLaser()

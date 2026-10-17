@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &8110202000000001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8110202000000002}
+  m_Layer: 0
+  m_Name: RangedMuzzle
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8110202000000002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8110202000000001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.15, y: 0.54, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7519174093949083380}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3923764654637166914
 GameObject:
   m_ObjectHideFlags: 0
@@ -236,6 +267,10 @@ PrefabInstance:
       value: 80
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: rangedMuzzle
+      value:
+      objectReference: {fileID: 8110202000000002}
+    - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: startArmored
       value: 0
       objectReference: {fileID: 0}
@@ -442,6 +477,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5297919245514991578, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_Controller
+      value:
+      objectReference: {fileID: 22100000, guid: c1020000000000aaa0b1c2d34e5f8091, type: 2}
     - target: {fileID: 5618151998514689905, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 66
@@ -534,6 +573,10 @@ PrefabInstance:
       propertyPath: m_Constraints
       value: 4
       objectReference: {fileID: 0}
+    - target: {fileID: 6597299547389863175, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_Interpolate
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6799058080861486406, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1.23
@@ -542,17 +585,49 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: 1.73
       objectReference: {fileID: 0}
-    - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: m_Size.x
-      value: 1.1
+    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: useRangedAttackPoses
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: reactionAnimations.getUp
+      value: Base Layer.Hurt
+      objectReference: {fileID: 0}
+    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: reactionAnimations.launch
+      value: Base Layer.AirHurt
+      objectReference: {fileID: 0}
+    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: reactionAnimations.enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: reactionAnimations.knockdown
+      value: Base Layer.Hurt
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: m_Size.y
+      propertyPath: m_Size.x
       value: 1.15
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_Size.y
+      value: 1.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Offset.y
-      value: 0.07
+      value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_EdgeRadius
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_SpriteTilingProperty.pivot.x
+      value: 0.43359375
+      objectReference: {fileID: 0}
+    - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_SpriteTilingProperty.pivot.y
+      value: 0.1921875
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_SpriteTilingProperty.newSize.x
@@ -658,29 +733,25 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5297919245514991578, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: m_Controller
-      value: 
-      objectReference: {fileID: 22100000, guid: c1020000000000aaa0b1c2d34e5f8091, type: 2}
-    - target: {fileID: 6597299547389863175, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: m_Interpolate
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: moveMode
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: allowNonGroundMove
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: fixedHeightFlight
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: flightHeight
       value: 3.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: flightHeightMultiplier
+      value: 1.728
+      objectReference: {fileID: 0}
+    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: flightHeightRelativeToPlayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: groundLayers
+      value: 520
       objectReference: {fileID: 0}
     - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: roamingFlight
@@ -691,16 +762,16 @@ PrefabInstance:
       value: 1.2
       objectReference: {fileID: 0}
     - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: flightHeightVariation
-      value: 0.8
+      propertyPath: fixedHeightFlight
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: groundLayers
-      value: 520
-      objectReference: {fileID: 0}
-    - target: {fileID: 9128473920184738292, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: enableAgentWhenNoBossDriver
+      propertyPath: allowNonGroundMove
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: flightHeightVariation
+      value: 0.8
       objectReference: {fileID: 0}
     - target: {fileID: 8917136744719106790, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Name
@@ -710,25 +781,16 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
-    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: reactionAnimations.enabled
+    - target: {fileID: 9128473920184738292, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: enableAgentWhenNoBossDriver
       value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: reactionAnimations.launch
-      value: Base Layer.AirHurt
-      objectReference: {fileID: 0}
-    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: reactionAnimations.knockdown
-      value: Base Layer.Hurt
-      objectReference: {fileID: 0}
-    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: reactionAnimations.getUp
-      value: Base Layer.Hurt
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 5934746496802764893, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8110202000000002}
     - targetCorrespondingSourceObject: {fileID: 5934746496802764893, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6947661304475291214}
