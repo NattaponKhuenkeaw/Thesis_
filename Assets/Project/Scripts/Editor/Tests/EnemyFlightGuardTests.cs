@@ -412,6 +412,73 @@ public class EnemyFlightGuardTests
         Assert.That(guard.ShieldRaised, Is.True);
     }
 
+    [TestCase(EnemyShieldGuard.GuardPhase.Guarding, false)]
+    [TestCase(EnemyShieldGuard.GuardPhase.Windup, false)]
+    [TestCase(EnemyShieldGuard.GuardPhase.Striking, false)]
+    [TestCase(EnemyShieldGuard.GuardPhase.Guarding, true)]
+    [TestCase(EnemyShieldGuard.GuardPhase.Windup, true)]
+    [TestCase(EnemyShieldGuard.GuardPhase.Striking, true)]
+    public void FrontGrabHitboxCountersShieldWithoutAllowingNormalHits(
+        EnemyShieldGuard.GuardPhase phase, bool isGrab)
+    {
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        var handler = enemy.gameObject.AddComponent<EnemyHitReactionHandler>();
+        typeof(EnemyHitReactionHandler).GetMethod("Awake", Private).Invoke(handler, null);
+        enemy.hitReactionHandler = handler;
+        var target = Host("FrontHitbox", enemy.transform.position + Vector3.right);
+        var hitbox = target.AddComponent<HitBoxDamage>();
+        guard.BeginGuard(target.transform);
+        if (phase != EnemyShieldGuard.GuardPhase.Guarding)
+            guard.TickGuard(5f);
+        if (phase == EnemyShieldGuard.GuardPhase.Striking)
+            guard.TickGuard(1f);
+        Assert.That(guard.Phase, Is.EqualTo(phase));
+        Assert.That(guard.ShieldRaised, Is.True);
+
+        if (isGrab)
+        {
+            hitbox.SetGrabData(10f, false, new GrabHitbox
+            {
+                canGrabAirborne = true,
+                impactFreezeFrames = 0,
+                holdFrames = 24,
+                flashFrames = 0
+            }, false, AttackCategory.Normal, "ShieldGrabTest", null, null);
+        }
+        else
+        {
+            hitbox.SetHitData(10f, false, false, 0f, 1f,
+                new NormalHitbox { flashFrames = 0 },
+                AttackCategory.Normal, "ShieldNormalTest", null, null);
+        }
+
+        float hp = enemy.currentHP;
+        hitbox.ProcessHit(enemy);
+
+        if (isGrab)
+        {
+            Assert.That(enemy.currentHP, Is.LessThan(hp));
+            Assert.That(enemy.LastHitAppliedReaction, Is.True);
+            Assert.That(handler.IsGrabbed, Is.True);
+            Assert.That(enemy.CurrentReactionState, Is.EqualTo(EnemyReactionState.ImpactFreeze));
+            Assert.That(enemy.CurrentReactionOwnerId, Is.EqualTo(target.GetInstanceID()));
+            Assert.That(guard.IsEngaged, Is.False);
+            Assert.That(guard.ShieldRaised, Is.False);
+            Assert.That(enemy.attackHitbox.enabled, Is.False);
+            Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX,
+                Is.EqualTo(RigidbodyConstraints2D.None));
+            Assert.That(enemy.FacingLocked, Is.False);
+        }
+        else
+        {
+            Assert.That(enemy.currentHP, Is.EqualTo(hp));
+            Assert.That(enemy.LastHitAppliedReaction, Is.False);
+            Assert.That(enemy.CurrentReactionState, Is.EqualTo(EnemyReactionState.None));
+            Assert.That(guard.Phase, Is.EqualTo(phase));
+            Assert.That(guard.ShieldRaised, Is.True);
+        }
+    }
+
     [Test]
     public void GuardRearHitDealsDamageAndReleasesPlant()
     {
