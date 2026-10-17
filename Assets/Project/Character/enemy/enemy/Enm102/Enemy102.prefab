@@ -268,7 +268,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: rangedMuzzle
-      value:
+      value: 
       objectReference: {fileID: 8110202000000002}
     - target: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: startArmored
@@ -479,7 +479,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5297919245514991578, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Controller
-      value:
+      value: 
       objectReference: {fileID: 22100000, guid: c1020000000000aaa0b1c2d34e5f8091, type: 2}
     - target: {fileID: 5618151998514689905, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -491,15 +491,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5934746496802764893, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_LocalScale.x
-      value: 2.2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5934746496802764893, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_LocalScale.y
-      value: 2.2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5934746496802764893, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_LocalScale.z
-      value: 2.2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5934746496802764893, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_LocalPosition.x
@@ -607,15 +607,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Size.x
-      value: 1.15
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Size.y
-      value: 1.1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Offset.y
-      value: 0.8
+      value: 1.27
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_EdgeRadius
@@ -636,6 +636,14 @@ PrefabInstance:
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_SpriteTilingProperty.newSize.y
       value: 0.41666666
+      objectReference: {fileID: 0}
+    - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_SpriteTilingProperty.oldSize.x
+      value: 5.12
+      objectReference: {fileID: 0}
+    - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_SpriteTilingProperty.oldSize.y
+      value: 5.12
       objectReference: {fileID: 0}
     - target: {fileID: 7675375483045177933, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_fontSize
@@ -742,14 +750,6 @@ PrefabInstance:
       value: 3.2
       objectReference: {fileID: 0}
     - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: flightHeightMultiplier
-      value: 1.728
-      objectReference: {fileID: 0}
-    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: flightHeightRelativeToPlayer
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: groundLayers
       value: 520
       objectReference: {fileID: 0}
@@ -772,6 +772,14 @@ PrefabInstance:
     - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: flightHeightVariation
       value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: flightHeightMultiplier
+      value: 1.728
+      objectReference: {fileID: 0}
+    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: flightHeightRelativeToPlayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8917136744719106790, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Name

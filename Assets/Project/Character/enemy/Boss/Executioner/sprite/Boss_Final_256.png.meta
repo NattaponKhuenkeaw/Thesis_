@@ -48,7 +48,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 9
   spritePivot: {x: 0.5, y: 0}
-  spritePixelsToUnits: 110
+  spritePixelsToUnits: 70
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -463,7 +463,7 @@ TextureImporter:
       alignment: 9
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -471,7 +471,7 @@ TextureImporter:
       spriteID: 04d5a7d9000000010000000000000000
       internalID: 81111001
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
@@ -485,7 +485,7 @@ TextureImporter:
       alignment: 9
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -493,7 +493,7 @@ TextureImporter:
       spriteID: 04d5a7da000000010000000000000000
       internalID: 81111002
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
@@ -507,7 +507,7 @@ TextureImporter:
       alignment: 9
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -515,7 +515,7 @@ TextureImporter:
       spriteID: 04d5a7db000000010000000000000000
       internalID: 81111003
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
@@ -529,7 +529,7 @@ TextureImporter:
       alignment: 9
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -537,7 +537,7 @@ TextureImporter:
       spriteID: 04d5a7dc000000010000000000000000
       internalID: 81111004
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
@@ -551,7 +551,7 @@ TextureImporter:
       alignment: 9
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -559,7 +559,7 @@ TextureImporter:
       spriteID: 04d5a7dd000000010000000000000000
       internalID: 81111005
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
@@ -573,7 +573,7 @@ TextureImporter:
       alignment: 9
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -581,7 +581,7 @@ TextureImporter:
       spriteID: 04d5a7de000000010000000000000000
       internalID: 81111006
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
@@ -595,7 +595,7 @@ TextureImporter:
       alignment: 9
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -603,7 +603,7 @@ TextureImporter:
       spriteID: 04d5a7df000000010000000000000000
       internalID: 81111007
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
@@ -617,7 +617,7 @@ TextureImporter:
       alignment: 9
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -625,7 +625,7 @@ TextureImporter:
       spriteID: 04d5a7e0000000010000000000000000
       internalID: 81111008
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
@@ -639,7 +639,7 @@ TextureImporter:
       alignment: 9
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -647,7 +647,7 @@ TextureImporter:
       spriteID: 04d5a7e1000000010000000000000000
       internalID: 81111009
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
@@ -661,7 +661,7 @@ TextureImporter:
       alignment: 9
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -669,7 +669,7 @@ TextureImporter:
       spriteID: 04d5a7e2000000010000000000000000
       internalID: 81111010
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
@@ -683,7 +683,7 @@ TextureImporter:
       alignment: 9
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -691,7 +691,7 @@ TextureImporter:
       spriteID: 04d5a7e3000000010000000000000000
       internalID: 81111011
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     - serializedVersion: 2
@@ -705,7 +705,7 @@ TextureImporter:
       alignment: 9
       pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
-      customData:
+      customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
@@ -713,7 +713,7 @@ TextureImporter:
       spriteID: 04d5a7e4000000010000000000000000
       internalID: 81111012
       vertices: []
-      indices:
+      indices: 
       edges: []
       weights: []
     outline: []
@@ -732,18 +732,6 @@ TextureImporter:
       - key: SpriteEditor.SliceSettings
         value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":256.0,"y":256.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      Boss_Rush2: 81111001
-      Boss_Rush3: 81111002
-      Boss_Rush4: 81111003
-      Boss_Walk0: 81111004
-      Boss_Walk1: 81111005
-      Boss_Walk2: 81111006
-      Boss_Walk3: 81111007
-      Boss_Walk4: 81111008
-      Boss_Walk5: 81111009
-      Boss_Walk6: 81111010
-      Boss_JumpImpact: 81111011
-      Boss_Hurt: 81111012
       Boss_Final_256_0: 225020477
       Boss_Final_256_1: 78193907
       Boss_Final_256_10: -2068504983
@@ -759,8 +747,20 @@ TextureImporter:
       Boss_Final_256_7: -219650870
       Boss_Final_256_8: -27339311
       Boss_Final_256_9: 899734058
+      Boss_Hurt: 81111012
+      Boss_JumpImpact: 81111011
+      Boss_Rush2: 81111001
+      Boss_Rush3: 81111002
+      Boss_Rush4: 81111003
+      Boss_Walk0: 81111004
+      Boss_Walk1: 81111005
+      Boss_Walk2: 81111006
+      Boss_Walk3: 81111007
+      Boss_Walk4: 81111008
+      Boss_Walk5: 81111009
+      Boss_Walk6: 81111010
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
   assetBundleName: 
-  assetBundleVariant:
+  assetBundleVariant: 

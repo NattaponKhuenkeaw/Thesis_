@@ -426,12 +426,12 @@ MonoBehaviour:
       data:
         stepData:
           startupFrames: 2
-          activeFrames: 6
-          recoveryFrames: 6
-          cancelWindowStartFrame: 13
+          activeFrames: 5
+          recoveryFrames: 5
+          cancelWindowStartFrame: 11
           loopActivePhase: 0
           stepName: air_attack1
-          animationClip: {fileID: 7400000, guid: a28414fc4c31356449c2884d1a0b0c93, type: 2}
+          animationClip: {fileID: 7400000, guid: e553ba7c362dc864c925c07bf7edb2e5, type: 2}
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows: []
@@ -615,7 +615,7 @@ MonoBehaviour:
       data:
         keyframes:
         - startFrame: 0
-          endFrame: 9
+          endFrame: 8
           taskType: 0
           easing: 34
           position: {x: 1, y: 0.1, z: 0}
@@ -640,11 +640,11 @@ MonoBehaviour:
         impactTier: 0
         useDeterministicReaction: 1
         reactionKind: 1
-        impactFreezeFrames: 4
-        knockbackFrames: 15
-        knockupFrames: 12
-        knockfallFrames: 10
-        recoveryFrames: 9
+        impactFreezeFrames: 3
+        knockbackFrames: 13
+        knockupFrames: 10
+        knockfallFrames: 9
+        recoveryFrames: 8
         horizontalSpeed: 3
         launchSpeed: 5
         useSnapToAnchor: 0
@@ -654,7 +654,7 @@ MonoBehaviour:
         juggleLaunchScale: 0.85
         juggleStunScale: 0.9
         flashColor: {r: 1, g: 0, b: 0, a: 1}
-        flashFrames: 6
+        flashFrames: 5
         hitSFX: {fileID: 0}
         hitVFXType: 0
         hitVFXPrefab: {fileID: 0}
@@ -964,7 +964,7 @@ MonoBehaviour:
         - label: SFX
           clip: {fileID: 8300000, guid: 81bf0a826d7d12147a6fed0cff16d78e, type: 3}
           triggerFrame: 0
-          duration: 15
+          duration: 13
           channel: 1
           volume: 1
           pitchVariation: 1

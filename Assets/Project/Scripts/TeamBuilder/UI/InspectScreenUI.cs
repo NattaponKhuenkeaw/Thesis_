@@ -335,8 +335,15 @@ namespace Project.TeamBuilder.UI
             }
 
             RefreshAvailableCharacters();
+            int characterIndex = availableCharacters.IndexOf(character);
+            if (characterIndex < 0)
+            {
+                character = availableCharacters.Count > 0 ? availableCharacters[0] : null;
+                characterIndex = character != null ? 0 : -1;
+            }
+
             currentCharacter = character;
-            selectedCharacterIndex = availableCharacters.IndexOf(character);
+            selectedCharacterIndex = characterIndex;
             currentArtifactInstances = equippedArtifacts ?? ResolveEquippedArtifactInstances(character);
             currentArtifacts = ResolveLegacyArtifacts(currentArtifactInstances);
             if (owningTeamUI == null)
