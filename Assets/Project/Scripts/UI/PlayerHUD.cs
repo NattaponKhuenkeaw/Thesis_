@@ -30,6 +30,7 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
     [SerializeField] private RuntimeEffectIconUI runtimeEffectIconPrefab;
     [SerializeField] private Slider shieldSlider;
     [SerializeField] private TMP_Text currencyText;
+    [Tooltip("Optional. Assign your own Fragment label; no label is created automatically.")]
     [SerializeField] private TMP_Text fragmentText;
     [SerializeField] private float healthLerpDelay = 0.25f;
     [SerializeField] private float healthLerpDuration = 0.5f;
@@ -81,8 +82,8 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
         RebindEvents();
         RebindRuntimeEffectEvents();
         RebindCurrencyEvents();
-        RebindFragmentEvents();
         RebindZoneEvents();
+        RebindFragmentEvents();
         RefreshHUD();
         UpdateNavigationVisibility();
     }
@@ -141,6 +142,7 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
         {
             UpdateNavigationVisibility();
             RefreshCurrencyDisplay();
+            RebindFragmentEvents();
             RefreshFragmentDisplay();
         }
     }
@@ -174,16 +176,15 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
 
         CreateHudIfNeeded();
         EnsureCurrencyText();
-        EnsureFragmentText();
         RebindEvents();
         RebindRuntimeEffectEvents();
         RebindCurrencyEvents();
-        RebindFragmentEvents();
         RebindZoneEvents();
         RefreshHUD();
         RefreshCurrencyDisplay();
-        RefreshFragmentDisplay();
         EnsureNavigationClickBlocked();
+        RebindFragmentEvents();
+        RefreshFragmentDisplay();
         UpdateNavigationVisibility();
     }
 
@@ -539,7 +540,7 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
 
     private void RebindFragmentEvents()
     {
-        PlayerMetaProgression progression = ResolveMetaProgression();
+        PlayerMetaProgression progression = fragmentText != null ? ResolveMetaProgression() : null;
         if (progression == subscribedFragmentProgression)
         {
             return;
@@ -549,7 +550,7 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
         subscribedFragmentProgression = progression;
         if (subscribedFragmentProgression != null)
         {
-            subscribedFragmentProgression.OnFragmentsChanged += HandleFragmentsChanged;
+            subscribedFragmentProgression.OnFragmentsChanged += RefreshFragmentDisplay;
         }
 
         RefreshFragmentDisplay();
@@ -557,18 +558,11 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
 
     private void UnbindFragmentEvents()
     {
-        if (subscribedFragmentProgression == null)
+        if (subscribedFragmentProgression != null)
         {
-            return;
+            subscribedFragmentProgression.OnFragmentsChanged -= RefreshFragmentDisplay;
+            subscribedFragmentProgression = null;
         }
-
-        subscribedFragmentProgression.OnFragmentsChanged -= HandleFragmentsChanged;
-        subscribedFragmentProgression = null;
-    }
-
-    private void HandleFragmentsChanged()
-    {
-        RefreshFragmentDisplay();
     }
 
     private PlayerMetaProgression ResolveMetaProgression()
@@ -578,17 +572,13 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
             teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
         }
 
-        if (teamLoader != null && teamLoader.MetaProgression != null)
-        {
-            return teamLoader.MetaProgression;
-        }
-
-        return Resources.Load<PlayerMetaProgression>("InventorySO/PlayerMetaProgression");
+        return teamLoader != null && teamLoader.MetaProgression != null
+            ? teamLoader.MetaProgression
+            : Resources.Load<PlayerMetaProgression>("InventorySO/PlayerMetaProgression");
     }
 
     private void RefreshFragmentDisplay()
     {
-        EnsureFragmentText();
         if (fragmentText == null)
         {
             return;
@@ -610,93 +600,6 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
     public static string FormatCharacterFragments(int amount)
     {
         return $"Frag {Mathf.Max(0, amount)}";
-    }
-
-    private void EnsureFragmentText()
-    {
-        if (fragmentText != null)
-        {
-            fragmentText.raycastTarget = false;
-            return;
-        }
-
-        Transform searchRoot = hudRoot != null
-            ? hudRoot
-            : targetCanvas != null ? targetCanvas.transform : null;
-        Transform found = FindFragmentTransform(searchRoot);
-        if (found == null && targetCanvas != null && searchRoot != targetCanvas.transform)
-        {
-            found = FindFragmentTransform(targetCanvas.transform);
-        }
-
-        if (found != null)
-        {
-            fragmentText = found.GetComponent<TMP_Text>();
-            if (fragmentText != null)
-            {
-                fragmentText.raycastTarget = false;
-            }
-
-            return;
-        }
-
-        fragmentText = CreateFallbackFragmentText();
-    }
-
-    private Transform FindFragmentTransform(Transform parent)
-    {
-        return FindChildRecursive(parent, "RunFragments")
-            ?? FindChildRecursive(parent, "Fragments")
-            ?? FindChildRecursive(parent, "FragmentText");
-    }
-
-    private TMP_Text CreateFallbackFragmentText()
-    {
-        if (targetCanvas == null)
-        {
-            return null;
-        }
-
-        GameObject textObject = new GameObject(
-            "RunFragments",
-            typeof(RectTransform),
-            typeof(CanvasRenderer),
-            typeof(TextMeshProUGUI));
-        textObject.transform.SetParent(targetCanvas.transform, false);
-
-        RectTransform rect = textObject.GetComponent<RectTransform>();
-        rect.anchorMin = new Vector2(0f, 1f);
-        rect.anchorMax = new Vector2(0f, 1f);
-        rect.pivot = new Vector2(0f, 1f);
-        RectTransform currencyRect = currencyText != null ? currencyText.rectTransform : null;
-        if (currencyRect != null)
-        {
-            rect.anchoredPosition = currencyRect.anchoredPosition + new Vector2(currencyRect.sizeDelta.x + 16f, 0f);
-            rect.sizeDelta = currencyRect.sizeDelta;
-        }
-        else
-        {
-            rect.anchoredPosition = new Vector2(328f, -24f);
-            rect.sizeDelta = new Vector2(280f, 48f);
-        }
-
-        TextMeshProUGUI text = textObject.GetComponent<TextMeshProUGUI>();
-        text.raycastTarget = false;
-        text.fontSize = currencyText != null ? currencyText.fontSize : 32f;
-        text.fontStyle = FontStyles.Bold;
-        text.alignment = TextAlignmentOptions.Left;
-        text.color = new Color(0.78f, 0.62f, 1f, 1f);
-        text.text = FormatCharacterFragments(0);
-        if (currencyText != null && currencyText.font != null)
-        {
-            text.font = currencyText.font;
-        }
-        else if (hpText != null && hpText.font != null)
-        {
-            text.font = hpText.font;
-        }
-
-        return text;
     }
 
     private void HandleRuntimeEffectsChanged(CharacterObject changedCharacter)
@@ -1021,7 +924,6 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
         {
             EnsureShieldSlider();
             EnsureCurrencyText();
-            EnsureFragmentText();
             EnsureNavigationClickBlocked();
         }
     }

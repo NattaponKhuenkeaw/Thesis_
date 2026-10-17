@@ -27,6 +27,7 @@ public sealed class EnemyLifecycleVFX : MonoBehaviour
 
     public float SpawnDuration => spawnDuration;
     public float DeathFadeDuration => deathFadeDuration;
+    public bool IsDeathDissolving => deathFadeStarted >= 0f;
 
     public void BeginSpawn()
     {

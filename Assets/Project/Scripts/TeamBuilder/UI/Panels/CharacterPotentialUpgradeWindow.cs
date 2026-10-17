@@ -15,8 +15,10 @@ namespace Project.TeamBuilder.UI.Panels
         [SerializeField] private TMP_Text descriptionText;
         [SerializeField] private TMP_Text stateText;
 
-        [Header("Fragment Requirement")]
+        [Header("Fragment Requirement (Optional)")]
+        [Tooltip("Optional container for your Fragment cost UI.")]
         [SerializeField] private GameObject fragmentRequirementObject;
+        [Tooltip("Optional. Assign your own Fragment label; no label is created automatically.")]
         [SerializeField] private TMP_Text fragmentText;
 
         [Header("Actions")]
@@ -90,15 +92,13 @@ namespace Project.TeamBuilder.UI.Panels
                 if (nodeLevelText != null) nodeLevelText.text = string.Empty;
                 if (descriptionText != null) descriptionText.text = string.Empty;
                 if (stateText != null) stateText.text = string.Empty;
-                if (fragmentRequirementObject != null) fragmentRequirementObject.SetActive(false);
+                SetFragmentRequirementVisible(false);
                 if (upgradeButton != null) upgradeButton.gameObject.SetActive(false);
                 if (upgradedStateObject != null) upgradedStateObject.SetActive(false);
                 return;
             }
 
             CharacterPotentialNodeState state = CharacterPotentialPanel.ResolveNodeState(_character, _metaProgression, _node);
-            int availableFragments = _metaProgression != null ? _metaProgression.GetFragmentCount(_character.characterId) : 0;
-            int fragmentCost = ResolveFragmentCost();
 
             if (nodeNameText != null)
             {
@@ -118,14 +118,13 @@ namespace Project.TeamBuilder.UI.Panels
             }
 
             bool upgraded = state == CharacterPotentialNodeState.Upgraded;
-            if (fragmentRequirementObject != null)
-            {
-                fragmentRequirementObject.SetActive(!upgraded);
-            }
-
+            SetFragmentRequirementVisible(!upgraded);
             if (fragmentText != null)
             {
-                fragmentText.text = $"Frag {availableFragments}/{fragmentCost}";
+                int availableFragments = _metaProgression != null
+                    ? _metaProgression.GetFragmentCount(_character.characterId)
+                    : 0;
+                fragmentText.text = $"Frag {availableFragments}/{ResolveFragmentCost()}";
             }
 
             if (upgradeButton != null)
@@ -160,7 +159,20 @@ namespace Project.TeamBuilder.UI.Panels
 
             if (stateText != null)
             {
-                stateText.text = ResolveStateMessage(state, availableFragments, fragmentCost);
+                stateText.text = ResolveStateMessage(state);
+            }
+        }
+
+        private void SetFragmentRequirementVisible(bool visible)
+        {
+            if (fragmentRequirementObject != null)
+            {
+                fragmentRequirementObject.SetActive(visible);
+            }
+
+            if (fragmentText != null)
+            {
+                fragmentText.gameObject.SetActive(visible);
             }
         }
 
@@ -174,22 +186,18 @@ namespace Project.TeamBuilder.UI.Panels
             PotentialNodeDefinition nextNode = _metaProgression != null
                 ? _metaProgression.GetNextPotentialNode(_character, _node.track)
                 : null;
-
-            if (nextNode != null && nextNode.level == _node.level)
-            {
-                return Mathf.Max(0, nextNode.fragmentCost);
-            }
-
-            return Mathf.Max(0, _node.fragmentCost);
+            return nextNode != null && nextNode.level == _node.level
+                ? Mathf.Max(0, nextNode.fragmentCost)
+                : Mathf.Max(0, _node.fragmentCost);
         }
 
-        private static string ResolveStateMessage(CharacterPotentialNodeState state, int availableFragments, int fragmentCost)
+        private static string ResolveStateMessage(CharacterPotentialNodeState state)
         {
             return state switch
             {
                 CharacterPotentialNodeState.Upgraded => "Upgraded",
                 CharacterPotentialNodeState.Upgradeable => "Ready to upgrade",
-                CharacterPotentialNodeState.InsufficientFragments => $"Need {Mathf.Max(0, fragmentCost - availableFragments)} more fragment",
+                CharacterPotentialNodeState.InsufficientFragments => "Locked",
                 _ => "Unlock previous potential first"
             };
         }
@@ -249,11 +257,6 @@ namespace Project.TeamBuilder.UI.Panels
                 nodeLevelText = FindTextByNames("NodeLevelText", "LevelText", "PotentialLevelText", "TrackLevelText");
             }
 
-            if (fragmentText == null)
-            {
-                fragmentText = FindTextByNames("FragmentText", "CostText", "ItemNeededText", "RequirementText");
-            }
-
             if (stateText == null)
             {
                 stateText = FindTextByNames("StateText", "StatusText", "LockedText");
@@ -274,11 +277,6 @@ namespace Project.TeamBuilder.UI.Panels
                 upgradeButtonText = upgradeButton.GetComponentInChildren<TMP_Text>(true);
             }
 
-            if (fragmentRequirementObject == null && fragmentText != null)
-            {
-                fragmentRequirementObject = fragmentText.gameObject;
-            }
-
             if (upgradedStateObject == null && upgradedStateText != null)
             {
                 upgradedStateObject = upgradedStateText.gameObject;
@@ -287,7 +285,7 @@ namespace Project.TeamBuilder.UI.Panels
 
         private void EnsureRuntimeLayout()
         {
-            if (nodeNameText != null && nodeLevelText != null && descriptionText != null && fragmentText != null && upgradeButton != null && upgradedStateText != null)
+            if (nodeNameText != null && nodeLevelText != null && descriptionText != null && upgradeButton != null && upgradedStateText != null)
             {
                 return;
             }
@@ -317,12 +315,6 @@ namespace Project.TeamBuilder.UI.Panels
             if (descriptionText == null)
             {
                 descriptionText = CreateRuntimeText("DescriptionText", 18f, FontStyles.Normal);
-            }
-
-            if (fragmentText == null)
-            {
-                fragmentText = CreateRuntimeText("FragmentText", 18f, FontStyles.Normal);
-                fragmentRequirementObject = fragmentText.gameObject;
             }
 
             if (stateText == null)

@@ -278,14 +278,14 @@ public class AnimationHandler_Enemy : MonoBehaviour
         TriggerAttack();
     }
 
-    // Motion time for Charge: 0 = crouch, 1 = rush; -1 exits the attack state.
+    // Motion time for Charge: 0 = prepare, .3 = rush, .5..1 = stop; -1 exits the state.
     public void SetBossChargePhase(float phase)
     {
         if (anim != null && animParamHashes != null && animParamHashes.Contains(chargePhaseHash))
             anim.SetFloat(chargePhaseHash, phase);
     }
 
-    // Motion time: 0 = takeoff, .25 = airborne, 1 = impact, -1 = finished.
+    // Motion time: 0 = takeoff, .25 = airborne, .6..1 = grounded impact, -1 = finished.
     public void SetBossJumpPhase(float phase)
     {
         if (anim != null && animParamHashes != null && animParamHashes.Contains(jumpPhaseHash))
