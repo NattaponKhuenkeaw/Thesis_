@@ -23,3 +23,5 @@ MonoBehaviour:
   zoneMode: 0
   defaultEntranceId: Default
   useStaticCamera: 0
+  backgroundMusic: {fileID: 8300000, guid: 7ff3bb4677d74ab8bcccd2c6f54c82fe, type: 3}
+  musicVolume: 1

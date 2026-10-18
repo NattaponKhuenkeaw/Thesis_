@@ -2,6 +2,8 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using Project.Core;
+using Project.Core.ZoneState;
+using UnityEngine.SceneManagement;
 
 public class GameAudioManager : MonoBehaviour
 {
@@ -22,6 +24,10 @@ public class GameAudioManager : MonoBehaviour
     [SerializeField] private UnityEngine.Audio.AudioMixerGroup voiceMixerGroup;
     [SerializeField] private UnityEngine.Audio.AudioMixerGroup bgmMixerGroup;
 
+    [Header("Background Music")]
+    [SerializeField] private ZoneStateProvider musicZoneState;
+    [SerializeField, Min(0f)] private float musicFadeDuration = 0.65f;
+
     [Header("Concurrency & Polyphony Limiter")]
     [Tooltip("Max concurrent instances of the exact same AudioClip allowed in a single frame.")]
     [SerializeField] private int maxSameClipPerFrame = 2;
@@ -38,6 +44,20 @@ public class GameAudioManager : MonoBehaviour
     
     private Queue<AudioSource> sourcePool = new Queue<AudioSource>();
     private AudioSource voiceSource; // Single instance to mutually exclude lines
+    private AudioSource musicSource;
+    private AudioClip requestedMusic;
+    private Coroutine musicRoutine;
+    private float musicBaseVolume = 1f;
+    private float musicFade = 1f;
+
+    public AudioClip CurrentMusic => musicSource != null ? musicSource.clip : null;
+
+    public static GameAudioManager EnsureInstance()
+    {
+        if (Instance != null) return Instance;
+        var existing = FindFirstObjectByType<GameAudioManager>();
+        return existing != null ? existing : new GameObject("GameAudioManager").AddComponent<GameAudioManager>();
+    }
 
     public float MasterVolume
     {
@@ -154,14 +174,142 @@ public class GameAudioManager : MonoBehaviour
         }
 
         InitializePool();
+        EnsureMusicSource();
+        if (musicZoneState == null)
+            musicZoneState = Resources.Load<ZoneStateProvider>("CombatSO/ZoneStateProvider");
+        if (musicZoneState != null)
+            musicZoneState.OnRoomChanged += HandleMusicRoomChanged;
+        SceneManager.sceneLoaded += HandleMusicSceneLoaded;
+    }
+
+    private void Start()
+    {
+        if (Instance == this)
+            RefreshRoomMusic();
+    }
+
+    private void Update()
+    {
+        RefreshMusicVolume();
     }
 
     private void OnDestroy()
     {
+        SceneManager.sceneLoaded -= HandleMusicSceneLoaded;
+        if (musicZoneState != null)
+            musicZoneState.OnRoomChanged -= HandleMusicRoomChanged;
         if (Instance == this)
         {
             Instance = null;
         }
+    }
+
+    private void EnsureMusicSource()
+    {
+        if (musicSource != null) return;
+        var host = new GameObject("MusicAudioSource");
+        host.transform.SetParent(transform, false);
+        musicSource = host.AddComponent<AudioSource>();
+        musicSource.playOnAwake = false;
+        musicSource.loop = true;
+        musicSource.spatialBlend = 0f;
+        musicSource.ignoreListenerPause = true;
+        musicSource.outputAudioMixerGroup = bgmMixerGroup;
+    }
+
+    private void HandleMusicSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        RefreshRoomMusic();
+    }
+
+    private void RefreshRoomMusic()
+    {
+        // The menu owns its authored track; it is not a MapSO room.
+        if (SceneManager.GetActiveScene().name == "MainMenu") return;
+        PlayRoomMusic(musicZoneState != null ? musicZoneState.CurrentRoom : null);
+    }
+
+    private void HandleMusicRoomChanged(RoomData room)
+    {
+        if (SceneManager.GetActiveScene().name != "MainMenu")
+            PlayRoomMusic(room);
+    }
+
+    public void PlayRoomMusic(RoomData room)
+    {
+        PlayMusic(room != null ? room.BackgroundMusic : null, room != null ? room.MusicVolume : 1f);
+    }
+
+    public void PlayMusic(AudioClip clip, float volume = 1f)
+    {
+        EnsureMusicSource();
+        musicBaseVolume = Mathf.Clamp01(volume);
+        if (requestedMusic == clip && (musicRoutine != null || musicSource.clip == clip))
+        {
+            RefreshMusicVolume();
+            return;
+        }
+
+        requestedMusic = clip;
+        if (musicRoutine != null)
+        {
+            StopCoroutine(musicRoutine);
+            musicRoutine = null;
+        }
+
+        if (!Application.isPlaying || musicFadeDuration <= 0f)
+        {
+            SetMusicClip(clip);
+            musicFade = 1f;
+            RefreshMusicVolume();
+            return;
+        }
+
+        musicRoutine = StartCoroutine(ChangeMusic(clip));
+    }
+
+    public void RefreshMusicVolume()
+    {
+        if (musicSource != null)
+            musicSource.volume = musicBaseVolume * bgmVolume * masterVolume * GameSettings.BgmVolume * musicFade;
+    }
+
+    private void SetMusicClip(AudioClip clip)
+    {
+        musicSource.Stop();
+        musicSource.clip = clip;
+        if (clip != null && Application.isPlaying)
+            musicSource.Play();
+    }
+
+    private IEnumerator ChangeMusic(AudioClip clip)
+    {
+        // Returning during fade-out keeps the same playback position instead of restarting the song.
+        if (musicSource.clip != clip)
+        {
+            if (musicSource.clip != null)
+                yield return FadeMusicTo(0f);
+            SetMusicClip(clip);
+            musicFade = 0f;
+        }
+        if (clip != null)
+            yield return FadeMusicTo(1f);
+        musicRoutine = null;
+    }
+
+    private IEnumerator FadeMusicTo(float target)
+    {
+        float start = musicFade;
+        float elapsed = 0f;
+        while (elapsed < musicFadeDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            musicFade = Mathf.Lerp(start, target, Mathf.Clamp01(elapsed / musicFadeDuration));
+            RefreshMusicVolume();
+            yield return null;
+        }
+        musicFade = target;
+        RefreshMusicVolume();
     }
 
     private void InitializePool()

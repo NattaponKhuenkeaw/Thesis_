@@ -4885,7 +4885,7 @@ MonoBehaviour:
   settingsBackButton: {fileID: 300017}
   confirmCancelButton: {fileID: 300018}
   confirmOkButton: {fileID: 300019}
-  menuBgm: {fileID: 0}
+  menuBgm: {fileID: 8300000, guid: 7ff3bb4677d74ab8bcccd2c6f54c82fe, type: 3}
   menuBgmSourceVolume: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

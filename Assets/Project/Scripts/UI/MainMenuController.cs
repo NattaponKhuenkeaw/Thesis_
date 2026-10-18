@@ -50,14 +50,12 @@ namespace Project.UI
         [SerializeField] private AudioClip menuBgm;
         [SerializeField, Range(0f, 1f)] private float menuBgmSourceVolume = 1f;
 
-        private AudioSource bgmSource;
         private bool isLoading;
 
         private void Awake()
         {
             GameSettings.Apply();
             EnsureEventSystem();
-            EnsureBgmSource();
             BindUi();
             if (mainPanel != null)
             {
@@ -107,7 +105,6 @@ namespace Project.UI
         private void OnDestroy()
         {
             UnbindSavePanel();
-            StopMenuBgm();
         }
 
         public void OnPlayClicked()
@@ -222,7 +219,6 @@ namespace Project.UI
 
             isLoading = true;
             ShowConfirm(false);
-            StopMenuBgm();
 
             PlayerMetaProgression meta = Resources.Load<PlayerMetaProgression>(MetaResourcePath);
             PlayerRunInventory runInventory = Resources.Load<PlayerRunInventory>(RunInventoryResourcePath);
@@ -382,45 +378,19 @@ namespace Project.UI
             }
         }
 
-        private void EnsureBgmSource()
-        {
-            bgmSource = gameObject.GetComponent<AudioSource>();
-            if (bgmSource == null)
-            {
-                bgmSource = gameObject.AddComponent<AudioSource>();
-            }
-
-            bgmSource.playOnAwake = false;
-            bgmSource.loop = true;
-            bgmSource.spatialBlend = 0f;
-        }
-
         private void PlayMenuBgm()
         {
-            if (bgmSource == null || menuBgm == null)
+            if (menuBgm == null)
             {
                 return;
             }
 
-            bgmSource.clip = menuBgm;
-            ApplyBgmVolume();
-            bgmSource.Play();
-        }
-
-        private void StopMenuBgm()
-        {
-            if (bgmSource != null && bgmSource.isPlaying)
-            {
-                bgmSource.Stop();
-            }
+            GameAudioManager.EnsureInstance().PlayMusic(menuBgm, menuBgmSourceVolume);
         }
 
         private void ApplyBgmVolume()
         {
-            if (bgmSource != null)
-            {
-                bgmSource.volume = menuBgmSourceVolume * GameSettings.BgmVolume;
-            }
+            GameAudioManager.Instance?.RefreshMusicVolume();
         }
 
         private static void EnsureEventSystem()
