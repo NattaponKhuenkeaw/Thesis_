@@ -213,6 +213,8 @@ public class EnemyController : MonoBehaviour
     public Collider2D bodyCollider;
 
     [SerializeField] private EnemyWorldUI worldUI;
+    private AudioSource attackWarningAudioSource;
+    private readonly EnemyAttackAudioCue attackAudioCue = new EnemyAttackAudioCue();
 
     [Header("Hit Reaction")]
     public EnemyHitReactionHandler hitReactionHandler;
@@ -461,6 +463,7 @@ public class EnemyController : MonoBehaviour
 
         lifecycleStateInstance.Tick(Time.deltaTime);
         UpdateRoomTraversalPause();
+        TickAttackSound(Time.deltaTime);
     }
 
     private void UpdateRoomTraversalPause()
@@ -826,6 +829,8 @@ public class EnemyController : MonoBehaviour
 
     private void OnDisable()
     {
+        attackAudioCue.Cancel();
+        StopAttackWarningAudio();
         ScheduleDespawnIfDisabled();
         SetInCombat(false);
         RoomEnemyRegistry.Unregister(this);
@@ -844,6 +849,8 @@ public class EnemyController : MonoBehaviour
             && ShieldGuard != null && ShieldGuard.BlocksHit(attackerPosition, reactionData.damageDelivery))
         {
             LastHitAppliedReaction = false;
+            if (Application.isPlaying && kit != null && kit.BlockSfx != null)
+                GameAudioManager.EnsureInstance().PlayHitSFX(kit.BlockSfx, kit.BlockSfxVolume);
             return 0f;
         }
 
@@ -923,6 +930,8 @@ public class EnemyController : MonoBehaviour
         // Fire event (reaction pose is driven by EnemyHitReactionHandler → AnimationHandler_Enemy)
         if (shouldApplyReaction)
         {
+            attackAudioCue.Cancel();
+            StopAttackWarningAudio();
             ShieldGuard?.EndGuard();
             locomotion?.ConstrainFlightReaction(ref reactionData);
         }
@@ -1401,6 +1410,9 @@ public class EnemyController : MonoBehaviour
         if (!IsCombatReady)
             return;
 
+        PrepareAttackSound(duration >= 0f ? duration : ResolveWarningDuration(.45f));
+        StartAttackWarningAudio();
+        TickAttackSound(0f);
         if (UsesRangedAttack)
         {
             worldUI?.HideAttackWarning();
@@ -1425,8 +1437,66 @@ public class EnemyController : MonoBehaviour
 
     public void HideAttackWarning()
     {
+        attackAudioCue.Cancel();
+        FinishAttackWarning();
+    }
+
+    // The strike transition hides the warning without cancelling an anticipated/delayed cue.
+    public void FinishAttackWarning()
+    {
+        StopAttackWarningAudio();
         HideRangedAimLaser();
         worldUI?.HideAttackWarning();
+    }
+
+    public void PrepareAttackSound(float windup)
+    {
+        attackAudioCue.Begin(Mathf.Max(0f, windup), kit != null ? kit.AttackSfxOffset : 0f);
+    }
+
+    public void PlayAttackSound()
+    {
+        if (attackAudioCue.Confirm(kit != null ? kit.AttackSfxOffset : 0f)) EmitAttackSound();
+    }
+
+    private void TickAttackSound(float deltaTime)
+    {
+        if (!IsCombatReady || CurrentReactionState != EnemyReactionState.None)
+        {
+            attackAudioCue.Cancel();
+            return;
+        }
+        if (attackAudioCue.Tick(deltaTime)) EmitAttackSound();
+    }
+
+    private void EmitAttackSound()
+    {
+        if (!Application.isPlaying || !IsCombatReady || kit == null || kit.AttackSfx == null) return;
+        StopAttackWarningAudio();
+        GameAudioManager.EnsureInstance().PlayHitSFX(kit.AttackSfx, kit.AttackSfxVolume);
+    }
+
+    private void StartAttackWarningAudio()
+    {
+        if (!Application.isPlaying || kit == null || kit.AttackWarningSfx == null) return;
+        if (attackWarningAudioSource != null && attackWarningAudioSource.isPlaying
+            && attackWarningAudioSource.clip == kit.AttackWarningSfx) return;
+        if (attackWarningAudioSource == null)
+        {
+            var host = new GameObject("AttackWarningAudio");
+            host.transform.SetParent(transform, false);
+            attackWarningAudioSource = host.AddComponent<AudioSource>();
+            attackWarningAudioSource.playOnAwake = false;
+        }
+        GameAudioManager.EnsureInstance().PlayControlledSFX(
+            attackWarningAudioSource, kit.AttackWarningSfx, kit.AttackWarningSfxVolume);
+    }
+
+    private void StopAttackWarningAudio()
+    {
+        if (attackWarningAudioSource == null) return;
+        attackWarningAudioSource.Stop();
+        attackWarningAudioSource.clip = null;
     }
 
     // =========================================================

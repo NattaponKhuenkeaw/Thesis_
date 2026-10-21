@@ -38,6 +38,16 @@ public sealed class EnemyKit : ScriptableObject
     [Tooltip("Seconds the attack gate stays shut after a telegraph is cancelled by a hit.")]
     [SerializeField] private float interruptCooldown = -1f;
 
+    [Header("Attack Audio")]
+    [SerializeField] private AudioClip attackWarningSfx;
+    [SerializeField, Range(0f, GameAudioManager.MaxSFXGain)] private float attackWarningSfxVolume = 1f;
+    [SerializeField] private AudioClip attackSfx;
+    [SerializeField, Range(0f, GameAudioManager.MaxSFXGain)] private float attackSfxVolume = 1f;
+    [Tooltip("Seconds relative to the strike/shot. Negative = earlier during windup (not before windup starts); positive = later. Pending sound is cancelled if the attack ends or is interrupted.")]
+    [SerializeField, Range(-2f, 2f)] private float attackSfxOffset;
+    [SerializeField] private AudioClip blockSfx;
+    [SerializeField, Range(0f, GameAudioManager.MaxSFXGain)] private float blockSfxVolume = 1f;
+
     [Header("Ranged Shot (ranged roles only)")]
     [SerializeField, Min(0.1f)] private float shotSpeed = 8f;
     [Tooltip("Seconds the bullet stays alive. Travel time is extended automatically when range is longer.")]
@@ -68,6 +78,13 @@ public sealed class EnemyKit : ScriptableObject
     public float CommitTelegraphFraction => commitTelegraphFraction;
     public float InterruptCooldown => interruptCooldown;
     public float RecoveryPlantDuration => recoveryPlantDuration;
+    public AudioClip AttackSfx => attackSfx;
+    public AudioClip AttackWarningSfx => attackWarningSfx;
+    public float AttackWarningSfxVolume => GameAudioManager.ClampSFXGain(attackWarningSfxVolume);
+    public float AttackSfxVolume => GameAudioManager.ClampSFXGain(attackSfxVolume);
+    public float AttackSfxOffset => float.IsNaN(attackSfxOffset) ? 0f : Mathf.Clamp(attackSfxOffset, -2f, 2f);
+    public AudioClip BlockSfx => blockSfx;
+    public float BlockSfxVolume => GameAudioManager.ClampSFXGain(blockSfxVolume);
 
     public float ShotSpeed => Mathf.Max(0.1f, shotSpeed);
     public float ShotLifetime => Mathf.Max(0.05f, shotLifetime);

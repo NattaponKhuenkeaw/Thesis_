@@ -95,6 +95,11 @@ public class EnemyLifecycleTests
         var data = new UnityEditor.SerializedObject(effect);
         Assert.That(data.FindProperty("dissolveMaterial").objectReferenceValue, Is.Not.Null);
         Assert.That(data.FindProperty("particleMaterial").objectReferenceValue, Is.Not.Null);
+        var dissolveSound = UnityEditor.AssetDatabase.LoadAssetAtPath<AudioClip>(
+            "Assets/Project/Audio/SFX/Shared_EnemyDissolve_ShopBuySuccess.wav");
+        Assert.That(dissolveSound, Is.Not.Null);
+        Assert.That(data.FindProperty("deathDissolveSfx").objectReferenceValue, Is.SameAs(dissolveSound));
+        Assert.That(data.FindProperty("deathDissolveSfxVolume").floatValue, Is.GreaterThan(0f));
         Assert.That(effect.SpawnDuration, Is.GreaterThan(0f));
     }
 
@@ -111,7 +116,12 @@ public class EnemyLifecycleTests
             effect.FinishSpawn();
             effect.BeginDeath();
             Assert.That(effect.TickDeath(2f, false), Is.False);
+            Assert.That(effect.IsDeathDissolving, Is.False);
             Assert.That(effect.TickDeath(2f, true), Is.False);
+            Assert.That(effect.IsDeathDissolving, Is.True);
+            Assert.That(effect.TickDeath(2f + effect.DeathFadeDuration * .5f, true), Is.False);
+            Assert.That(typeof(EnemyLifecycleVFX).GetField("deathFadeStarted", BindingFlags.Instance | BindingFlags.NonPublic)
+                .GetValue(effect), Is.EqualTo(2f), "Repeated ticks must not restart the dissolve or its audio.");
             Assert.That(effect.TickDeath(2f + effect.DeathFadeDuration + .01f, true), Is.True);
         }
         finally { Object.DestroyImmediate(host); }

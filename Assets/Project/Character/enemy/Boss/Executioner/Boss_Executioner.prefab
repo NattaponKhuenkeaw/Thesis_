@@ -524,7 +524,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAttackHitbox
   enemyController: {fileID: 0}
-  attackProperty: 0
   triggerPlayerTakeDamageAnimation: 1
 --- !u!1 &2190188609834864963
 GameObject:
@@ -1102,7 +1101,6 @@ MonoBehaviour:
   enemyController: {fileID: 1263320084522743792}
   healthSlider: {fileID: 2533221622604983537}
   damageLerpSlider: {fileID: 6943959254787443572}
-  floatingTextTemplate: {fileID: 2052835160874543342, guid: 81a1108083780be4b8207478c9c4f286, type: 3}
   damageText: {fileID: 5505057315458458451}
   healthLerpDelay: 0.75
   healthLerpDuration: 0.5
@@ -1110,8 +1108,6 @@ MonoBehaviour:
   showHealthBar: 0
   attackWarningIcon: {fileID: 6337558860210651023}
   defaultAttackWarningDuration: 0.5
-  normalWarningColor: {r: 1, g: 1, b: 1, a: 1}
-  undodgeableWarningColor: {r: 0.72, g: 0.25, b: 1, a: 1}
 --- !u!1 &5764163399050649374
 GameObject:
   m_ObjectHideFlags: 0
@@ -1526,6 +1522,27 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &8128473920184738301
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7125933182351504165}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f129a3ad402c4b5c99c61017b36eaa53, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyLifecycleVFX
+  dissolveMaterial: {fileID: 2100000, guid: 65dcc995f7414ecbb2e802026465ac03, type: 2}
+  particleMaterial: {fileID: 2100000, guid: d48d90a359394c83b3e76e9d81ac5410, type: 2}
+  spawnDuration: 0.85
+  deathFadeDuration: 0.8
+  deathPoseHold: 0.3
+  deathDissolveSfx: {fileID: 8300000, guid: d532de19063c45cf84ed497e15f27d29, type: 3}
+  deathDissolveSfxVolume: 1
+  energyColor: {r: 0.65, g: 0.82, b: 0.85, a: 0.45}
+  particleCount: 48
 --- !u!4 &7445212938518311906
 Transform:
   m_ObjectHideFlags: 0
@@ -1664,9 +1681,9 @@ CapsuleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 1.19}
-  m_Size: {x: 1.76, y: 2.42}
-  m_Direction: 1
+  m_Offset: {x: -0.2, y: 0.75}
+  m_Size: {x: 0.85, y: 1.5}
+  m_Direction: 0
 --- !u!95 &7930964386240551380
 Animator:
   serializedVersion: 7
@@ -1703,32 +1720,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AnimationHandler_Enemy
   anim: {fileID: 7930964386240551380}
   enemyController: {fileID: 1263320084522743792}
-  animateShieldGuard: 0
-  useRangedAttackPoses: 0
-  reactionAnimations:
-    enabled: 0
-    lightHurt: Base Layer.Hurt
-    heavyHurt: Base Layer.Hurt
-    launch: Base Layer.Launch
-    airHurt: Base Layer.AirHurt
-    fall: Base Layer.Fall
-    knockdown: Base Layer.Knockdown
-    getUp: Base Layer.GetUp
-    grabbed: Base Layer.Hurt
-    replayInterval: 0.12
-    transitionSeconds: 0.035
-    minimumPlaybackSpeed: 0.65
-    maximumPlaybackSpeed: 1.25
-    comboAccentCharacter: {fileID: 0}
-    comboFinisherStep: Attack3
-    lightRecoil: 0.07
-    finisherRecoil: 0.18
-    lightAccentDuration: 0.12
-    finisherAccentDuration: 0.22
-    lightLean: 5
-    finisherLean: 13
-    accentStretch: 0.04
-    finisherPoseStart: 0.25
   spawnGroundState: Base Layer.SpawnGround
   spawnFallState: Base Layer.SpawnFall
   deathState: Base Layer.Death
@@ -1745,52 +1736,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85361608430d3da42a1b3faa70dbb39f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  maxHP: 1000
-  currentHP: 1000
+  snapSpawnToGround: 1
+  spawnGroundSearchDistance: 30
+  maxHP: 800
+  currentHP: 800
   attackDamage: 165
   defense: 500
   damageRes: 0
   isEliteOrBoss: 1
-  startArmored: 0
-  armoredDamageMultiplier: 0.35
-  armorDurability: 40
-  armoredTint: {r: 1, g: 0.55, b: 0.15, a: 1}
-  brokenStateDuration: 0.35
-  defenseState: 0
-  currentArmorDurability: 0
   isAlive: 1
-  lifecycleState: 0
   currentComboHits: 0
   antiStunlockComboThreshold: 4
   antiStunlockResistChance: 0.3
-  antiStunlockArmorDuration: 0
   rb: {fileID: 149250144316134452}
   attackHitbox: {fileID: 6846097490722581378}
   bodyCollider: {fileID: 8080931167242553371}
   worldUI: {fileID: 8885465668968223634}
   hitReactionHandler: {fileID: 8495941937201704988}
-  destroyDelayOnDeath: 0.4
   useSpawnPresentation: 1
   spawnGroundLayers:
     serializedVersion: 2
     m_Bits: 520
   spawnGroundDistance: 0.06
-  snapSpawnToGround: 1
-  spawnGroundSearchDistance: 30
   lifecyclePresentationTimeout: 30
-  kit: {fileID: 0}
-  combatRole: 0
-  attackRangeOverride: -1
-  rangedShotSpeed: 8
-  rangedShotLifetime: 2.5
-  rangedMuzzle: {fileID: 0}
-  rangedSpawnOffset: {x: 0.85, y: 0.15}
-  rangedShotSprite: {fileID: 0}
-  rangedShotTint: {r: 1, g: 1, b: 1, a: 1}
-  rangedShotRadius: 0.18
-  rangedLineMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
 --- !u!114 &3079058070875465000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1914,25 +1882,13 @@ MonoBehaviour:
   currentState: 0
   currentJuggleCount: 0
   airJuggleSessionActive: 0
+  usePositionReactions: 1
+  useLegacyReaction: 1
   groundLayers:
     serializedVersion: 2
     m_Bits: 8
   groundCheckDistance: 0.08
   groundNormalMinY: 0.25
-  usePositionReactions: 1
-  maximumReactionTravel: 1.2
-  comboHitTravel: 0.22
-  mediumHitTravel: 0.7
-  airFollowupTravel: 0.12
-  airFollowupHold: 0.06
-  maximumLaunchHeight: 2
-  normalHitMinimumSpacing: 1.1
-  groundRecoilDuration: 0.1
-  launchRecoilDuration: 0.3
-  minimumLaunchRiseDuration: 0.48
-  positionFallAcceleration: 12
-  minimumLightImpactFreeze: 3
-  minimumStrongImpactFreeze: 5
 --- !u!114 &6814936412620904915
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1963,10 +1919,6 @@ MonoBehaviour:
   rb: {fileID: 149250144316134452}
   groundTelegraph: {fileID: 755331666093085811}
   playerTag: Player
-  revealOnSpawn: 1
-  spawnPanDuration: 0.5
-  spawnRevealDuration: 1.2
-  spawnReturnDuration: 0.6
   bossDisplayName: Executioner
   bindScreenHealthHud: 1
   useDefaultStats: 1
@@ -2002,36 +1954,29 @@ MonoBehaviour:
     hitbox: {fileID: 0}
     hitboxLocalOffset: {x: 0.32, y: 0.69}
     hitboxSizeOverride: {x: 2.15, y: 1.3}
+  cleaveSfx: {fileID: 8300000, guid: 37700b40ddc9be64da400c0b1f4ce210, type: 3}
+  cleaveSfxVolume: 1
+  cleaveSfxOffset: 0
+  attackWarningSfx: {fileID: 8300000, guid: c6e85dca8c101094aa2201316615848a, type: 3}
+  attackWarningSfxVolume: 1
+  chargeHitSfx: {fileID: 8300000, guid: c72b6c85cb3c6494e9bf5dd81f1e1541, type: 3}
+  chargeHitSfxVolume: 1
+  deathSfx: {fileID: 8300000, guid: 466af6103aa82dd499e6db4d8ce6007a, type: 3}
+  deathSfxVolume: 1
+  jumpTakeoffSfx: {fileID: 8300000, guid: 1e6e7dbb6df9b9249896227f97ef27d7, type: 3}
+  jumpTakeoffSfxVolume: 1
+  jumpLandSfx: {fileID: 8300000, guid: 088f6f638d9e76544953d526859c9bc3, type: 3}
+  jumpLandSfxVolume: 1
   jumpArcHeight: 3.5
   jumpTravelDuration: 0.75
   smashMarkerRadius: 1.9
   chargeSpeed: 16
   chargeDistance: 40
   chargeWallPadding: 0.35
-  chargeStopAnimationDuration: 0.36
   flashDuringTelegraph: 1
   telegraphFlashColor: {r: 1, g: 0.45, b: 0.35, a: 1}
   hitboxPreviewMode: 3
   previewRanges: 1
---- !u!114 &8128473920184738301
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7125933182351504165}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f129a3ad402c4b5c99c61017b36eaa53, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyLifecycleVFX
-  dissolveMaterial: {fileID: 2100000, guid: 65dcc995f7414ecbb2e802026465ac03, type: 2}
-  particleMaterial: {fileID: 2100000, guid: d48d90a359394c83b3e76e9d81ac5410, type: 2}
-  spawnDuration: 0.85
-  deathFadeDuration: 0.8
-  deathPoseHold: 0.3
-  energyColor: {r: 0.65, g: 0.82, b: 0.85, a: 0.45}
-  particleCount: 48
 --- !u!1 &8700736701967516624
 GameObject:
   m_ObjectHideFlags: 0
