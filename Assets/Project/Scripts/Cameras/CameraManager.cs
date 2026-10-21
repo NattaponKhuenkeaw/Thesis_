@@ -54,6 +54,8 @@ public class CameraManager : MonoBehaviour
     [Tooltip("Player transform. Auto-found by tag if left blank.")]
     [SerializeField] private Transform _playerTransform;
 
+    private CameraLookAhead _cameraLookAhead;
+
     // =========================================================
     // Camera Priorities
     // =========================================================
@@ -217,6 +219,12 @@ public class CameraManager : MonoBehaviour
             GameObject playerObj = GameObject.FindWithTag("Player");
             if (playerObj != null)
                 _playerTransform = playerObj.transform;
+        }
+
+        _cameraLookAhead = GetComponentInChildren<CameraLookAhead>(true);
+        if (_cameraLookAhead == null)
+        {
+            _cameraLookAhead = Object.FindFirstObjectByType<CameraLookAhead>();
         }
 
         // Auto-find impulse source
@@ -1386,16 +1394,46 @@ public class CameraManager : MonoBehaviour
     {
         if (_combatTargetGroup == null || _playerTransform == null) return;
 
-        // Check if player is already in the group
+        Transform playerCameraTarget = _cameraLookAhead != null
+            ? _cameraLookAhead.transform
+            : _playerTransform;
+
+        int proxyIndex = -1;
+        int playerIndex = -1;
+
         for (int i = 0; i < _combatTargetGroup.Targets.Count; i++)
         {
-            if (_combatTargetGroup.Targets[i].Object == _playerTransform)
-                return;
+            Transform target = _combatTargetGroup.Targets[i].Object;
+            if (target == playerCameraTarget)
+            {
+                proxyIndex = i;
+            }
+            else if (target == _playerTransform)
+            {
+                playerIndex = i;
+            }
+        }
+
+        if (proxyIndex >= 0)
+        {
+            if (playerIndex >= 0)
+            {
+                _combatTargetGroup.Targets.RemoveAt(playerIndex);
+            }
+            return;
+        }
+
+        if (playerIndex >= 0)
+        {
+            CinemachineTargetGroup.Target existingTarget = _combatTargetGroup.Targets[playerIndex];
+            existingTarget.Object = playerCameraTarget;
+            _combatTargetGroup.Targets[playerIndex] = existingTarget;
+            return;
         }
 
         _combatTargetGroup.Targets.Add(new CinemachineTargetGroup.Target
         {
-            Object = _playerTransform,
+            Object = playerCameraTarget,
             Weight = _playerWeight,
             Radius = _playerRadius
         });

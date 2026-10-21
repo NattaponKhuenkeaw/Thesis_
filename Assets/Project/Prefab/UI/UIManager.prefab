@@ -26,7 +26,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5738211256067714213}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -8.44829, y: 3.87032, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -62,11 +62,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WorldTextUtility
   textRoot: {fileID: 0}
-  defaultTextTemplate: {fileID: 0}
+  defaultTextTemplate: {fileID: 2052835160874543342, guid: 81a1108083780be4b8207478c9c4f286, type: 3}
   maxTextInstances: 40
   defaultSize: {x: 220, y: 64}
   runtimeCanvasScale: 0.01
   sortingOrder: 10000
+  worldSortingLayerName: WorldUI
   randomRangeX: {x: -0.35, y: 0.35}
   randomRangeY: {x: -0.1, y: 0.25}
   slideUpDistance: 0.65

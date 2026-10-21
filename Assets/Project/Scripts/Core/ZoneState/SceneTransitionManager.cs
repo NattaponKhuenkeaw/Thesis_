@@ -213,6 +213,16 @@ namespace Project.Core.ZoneState
                 return false;
             }
 
+            // Re-entering the current room is a restart, not a room hop. Reload the
+            // shell scene so scene-authored transforms and runtime parallax state reset
+            // together instead of only remounting the room prefab and wrapping the player.
+            RoomData activeRoom = RoomLayoutHost.Instance.ActiveRoom;
+            if (activeRoom != null
+                && string.Equals(activeRoom.RoomId, room.RoomId, System.StringComparison.Ordinal))
+            {
+                return false;
+            }
+
             // Only swap in-place when already inside the room's shell scene.
             // Level/Shop use dedicated scenes and must full-load even if a host exists.
             string targetScene = room.SceneName;
@@ -327,7 +337,13 @@ namespace Project.Core.ZoneState
                     {
                         RoomLayoutHost host = RoomLayoutHost.EnsureInActiveScene();
                         activeBoundaryController = null;
-                        if (host == null || !host.MountRoom(targetRoom))
+                        bool targetAlreadyMounted = host != null
+                            && host.ActiveRoom != null
+                            && string.Equals(
+                                host.ActiveRoom.RoomId,
+                                targetRoom.RoomId,
+                                System.StringComparison.Ordinal);
+                        if (host == null || (!targetAlreadyMounted && !host.MountRoom(targetRoom)))
                         {
                             Debug.LogError($"[SceneTransitionManager] Post-load layout mount failed for room '{targetRoom.RoomId}'.");
                             yield break;
@@ -335,7 +351,9 @@ namespace Project.Core.ZoneState
 
                         layoutActive = true;
                         yield return null;
-                        Debug.Log($"[SceneTransitionManager] Post-load layout mount complete. ActiveRoom='{targetRoom.RoomId}'.");
+                        Debug.Log(targetAlreadyMounted
+                            ? $"[SceneTransitionManager] Post-load bootstrap already mounted room '{targetRoom.RoomId}'."
+                            : $"[SceneTransitionManager] Post-load layout mount complete. ActiveRoom='{targetRoom.RoomId}'.");
                     }
                     else if (RoomLayoutHost.Instance != null)
                     {

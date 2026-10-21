@@ -10,6 +10,7 @@ public class EnemyWorldUI : MonoBehaviour
     [SerializeField] private EnemyController enemyController;
     [SerializeField] private Slider healthSlider;
     [SerializeField] private Slider damageLerpSlider;
+    [SerializeField] private TMP_Text floatingTextTemplate;
     [SerializeField] private TMP_Text damageText;
 
     [Header("HP Lerp Settings")]
@@ -549,7 +550,7 @@ public class EnemyWorldUI : MonoBehaviour
         {
             source = transform,
             canvasRoot = transform,
-            template = damageText,
+            template = floatingTextTemplate != null ? floatingTextTemplate : damageText,
             type = ResolveTextType(data.damageDelivery),
             amount = data.damage,
             damageDelivery = data.damageDelivery,

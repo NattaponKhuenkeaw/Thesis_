@@ -59,8 +59,8 @@ GameObject:
   - component: {fileID: 7111990659181474709}
   - component: {fileID: 3419202181910011112}
   - component: {fileID: 3419202181910011113}
-  - component: {fileID: 8871381574323264281}
   - component: {fileID: -8724967272555202555}
+  - component: {fileID: 1219802680302595215}
   m_Layer: 0
   m_Name: Manager
   m_TagString: Untagged
@@ -132,27 +132,6 @@ MonoBehaviour:
   deathDelaySeconds: 1.75
   lobbySceneName: Test_Lobby
   roomsCleared: 0
---- !u!114 &8871381574323264281
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 822730165316854140}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b80f2f8870291a444b310079fb8f2b03, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Project.Core.GameRunManager
-  runInventory: {fileID: 0}
-  metaProgression: {fileID: 0}
-  mapData: {fileID: 0}
-  zoneStateProvider: {fileID: 0}
-  lobbySceneName: Test_Lobby
-  firstDungeonSceneName: Test_Playground
-  boundaryFadeDuration: 0.35
-  minimumTeamMembers: 1
-  requireAllTeamSlotsFilled: 0
 --- !u!114 &-8724967272555202555
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -174,6 +153,27 @@ MonoBehaviour:
   biomeHadLevel: 0
   biomeHadRest: 0
   lastSafeKindConsumed: -1
+--- !u!114 &1219802680302595215
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 822730165316854140}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b80f2f8870291a444b310079fb8f2b03, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Core.GameRunManager
+  runInventory: {fileID: 0}
+  metaProgression: {fileID: 0}
+  mapData: {fileID: 0}
+  zoneStateProvider: {fileID: 0}
+  lobbySceneName: Test_Lobby
+  firstDungeonSceneName: Test_Playground
+  boundaryFadeDuration: 0.35
+  minimumTeamMembers: 1
+  requireAllTeamSlotsFilled: 0
 --- !u!1 &1566489620681877580
 GameObject:
   m_ObjectHideFlags: 0
@@ -185,6 +185,8 @@ GameObject:
   - component: {fileID: 2328885466388573497}
   - component: {fileID: 6754166015969975239}
   - component: {fileID: 4990774588960370306}
+  - component: {fileID: 3447371820336955670}
+  - component: {fileID: 3139381664238581268}
   m_Layer: 0
   m_Name: SceneManager
   m_TagString: Untagged
@@ -242,6 +244,42 @@ MonoBehaviour:
   portalsRoot: {fileID: 0}
   hidePortalsOnStart: 1
   unlockSceneExitOnClear: 1
+--- !u!114 &3447371820336955670
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1566489620681877580}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 362ae6814a52b0a42bf322d70eb7eafa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.RoomClearManager
+  enemies:
+  - {fileID: 0}
+  - {fileID: 0}
+  portalsRoot: {fileID: 0}
+  hidePortalsOnStart: 1
+  unlockSceneExitOnClear: 1
+--- !u!114 &3139381664238581268
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1566489620681877580}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35ea78aa0046e92469a44d780bf74653, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.RoomTravelDebug
+  mapData: {fileID: 0}
+  entranceId: Default
+  toggleKey: 103
+  showOnStart: 0
+  visible: 1
+  selectedIndex: 0
 --- !u!1 &3340296907417705203
 GameObject:
   m_ObjectHideFlags: 0
@@ -287,6 +325,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameAudioManager
   initialPoolSize: 10
+  masterVolume: 1
+  sfxVolume: 0.5
+  voiceVolume: 0.8
+  bgmVolume: 0.6
+  sfxMixerGroup: {fileID: 0}
+  voiceMixerGroup: {fileID: 0}
+  bgmMixerGroup: {fileID: 0}
+  maxSameClipPerFrame: 2
+  duplicateClipDampenFactor: 0.6
 --- !u!1 &4013156128408032732
 GameObject:
   m_ObjectHideFlags: 0

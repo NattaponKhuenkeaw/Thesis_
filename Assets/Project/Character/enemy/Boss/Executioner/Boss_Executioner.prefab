@@ -1102,6 +1102,7 @@ MonoBehaviour:
   enemyController: {fileID: 1263320084522743792}
   healthSlider: {fileID: 2533221622604983537}
   damageLerpSlider: {fileID: 6943959254787443572}
+  floatingTextTemplate: {fileID: 2052835160874543342, guid: 81a1108083780be4b8207478c9c4f286, type: 3}
   damageText: {fileID: 5505057315458458451}
   healthLerpDelay: 0.75
   healthLerpDuration: 0.5
@@ -1744,8 +1745,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85361608430d3da42a1b3faa70dbb39f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
-  maxHP: 800
-  currentHP: 800
+  maxHP: 1000
+  currentHP: 1000
   attackDamage: 165
   defense: 500
   damageRes: 0

@@ -26,9 +26,14 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
     [SerializeField] private PlayerCharacter playerCharacter;
     [SerializeField] private TeamLoader teamLoader;
     [SerializeField] private Canvas targetCanvas;
+    [SerializeField] private RectTransform hudRoot;
     [SerializeField] private Transform runtimeEffectContainer;
     [SerializeField] private RuntimeEffectIconUI runtimeEffectIconPrefab;
     [SerializeField] private Slider shieldSlider;
+    [SerializeField] private Slider healthSlider;
+    [SerializeField] private Slider healthLerpSlider;
+    [SerializeField] private TMP_Text nameText;
+    [SerializeField] private TMP_Text hpText;
     [SerializeField] private TMP_Text currencyText;
     [Tooltip("Optional. Assign your own Fragment label; no label is created automatically.")]
     [SerializeField] private TMP_Text fragmentText;
@@ -40,12 +45,7 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
     [SerializeField] private GameObject navigationRoot;
     [SerializeField] private ZoneStateProvider zoneStateProvider;
 
-    private RectTransform hudRoot;
-    private Slider healthSlider;
-    private Slider healthLerpSlider;
     private GameObject shieldSliderRoot;
-    private TMP_Text nameText;
-    private TMP_Text hpText;
     private Coroutine healthLerpCoroutine;
     private PlayerCharacter subscribedPlayer;
     private PlayerRunInventory subscribedEffectInventory;
@@ -153,10 +153,19 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
             playerCharacter = GetComponent<PlayerCharacter>();
 
         if (teamLoader == null)
-            teamLoader = UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
+            teamLoader = TeamLoader.Instance ?? UnityEngine.Object.FindFirstObjectByType<TeamLoader>();
 
-        if (targetCanvas == null || FindHudRoot(targetCanvas.transform) == null)
-            targetCanvas = FindTargetCanvas();
+        if (playerCharacter == null)
+            playerCharacter = teamLoader != null && teamLoader.playerCharacter != null
+                ? teamLoader.playerCharacter
+                : PlayerCharacter.Instance ?? UnityEngine.Object.FindFirstObjectByType<PlayerCharacter>();
+
+        if (targetCanvas == null)
+        {
+            targetCanvas = hudRoot != null ? hudRoot.GetComponentInParent<Canvas>() : null;
+            if (targetCanvas == null)
+                targetCanvas = FindTargetCanvas();
+        }
 
         if (runtimeEffectContainer == null && hudRoot != null)
         {
@@ -866,6 +875,9 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
 
     private Transform FindExistingHudRoot()
     {
+        if (hudRoot != null)
+            return hudRoot;
+
         if (targetCanvas != null)
         {
             Transform playerUi = FindHudRoot(targetCanvas.transform);
@@ -882,10 +894,11 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
         if (hudRoot == null)
             return;
 
-        Transform hpSlideTransform = FindChildRecursive(root, "HP_Slide");
-        if (hpSlideTransform != null)
+        if (healthSlider == null)
         {
-            healthSlider = hpSlideTransform.GetComponent<Slider>();
+            Transform hpSlideTransform = FindChildRecursive(root, "HP_Slide");
+            if (hpSlideTransform != null)
+                healthSlider = hpSlideTransform.GetComponent<Slider>();
         }
 
         Transform shieldSlideTransform = FindChildRecursive(root, "Shield_Slide")
@@ -897,20 +910,27 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
             shieldSliderRoot = shieldSlideTransform.gameObject;
         }
 
-        healthLerpSlider = FindHealthLerpSlider(root, healthSlider);
+        if (healthLerpSlider == null)
+            healthLerpSlider = FindHealthLerpSlider(root, healthSlider);
         if (healthLerpSlider != null && healthSlider != null)
         {
             healthLerpSlider.minValue = healthSlider.minValue;
             healthLerpSlider.maxValue = healthSlider.maxValue;
         }
 
-        Transform heroNameTransform = FindChildRecursive(root, "HeroName");
-        if (heroNameTransform != null)
-            nameText = heroNameTransform.GetComponent<TMP_Text>();
+        if (nameText == null)
+        {
+            Transform heroNameTransform = FindChildRecursive(root, "HeroName");
+            if (heroNameTransform != null)
+                nameText = heroNameTransform.GetComponent<TMP_Text>();
+        }
 
-        Transform hpTextTransform = FindChildRecursive(root, "HP");
-        if (hpTextTransform != null)
-            hpText = hpTextTransform.GetComponent<TMP_Text>();
+        if (hpText == null)
+        {
+            Transform hpTextTransform = FindChildRecursive(root, "HP");
+            if (hpTextTransform != null)
+                hpText = hpTextTransform.GetComponent<TMP_Text>();
+        }
 
         if (nameText == null || hpText == null || healthSlider == null)
         {

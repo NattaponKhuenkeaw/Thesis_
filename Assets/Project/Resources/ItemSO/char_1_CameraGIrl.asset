@@ -11,11 +11,11 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b5f3184f1b0bc8948a16175d985cfbed, type: 3}
   m_Name: char_1_CameraGIrl
-  availableInShop: 1
   m_EditorClassIdentifier: Assembly-CSharp::Project.InventorySystem.Items.CharacterItem
   id: char-1-camera_girl
-  itemName: Camera Girl
+  itemName: Yureka Rei
   description: 
-  icon: {fileID: 21300000, guid: 2a8a8c8314f308f47a71f5e50ea91e12, type: 3}
+  icon: {fileID: 5211705871417040898, guid: 3d6d8ece671a3c549b44302f8fbeb9f0, type: 3}
   price: 800
   characterObjectData: {fileID: 11400000, guid: 6e1cc08e7eba57845b7bac14d8757b51, type: 2}
+  availableInShop: 1

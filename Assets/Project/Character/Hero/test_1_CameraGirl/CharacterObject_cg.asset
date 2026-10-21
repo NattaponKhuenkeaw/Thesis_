@@ -29,7 +29,7 @@ MonoBehaviour:
     auraEnergyRecharge: 0
     speed: 9.5
   metaData:
-    displayName: Camera Girl
+    displayName: Yureka Rei
     description: 
     portrait: {fileID: 5211705871417040898, guid: 3d6d8ece671a3c549b44302f8fbeb9f0, type: 3}
     animatorController: {fileID: 9100000, guid: 18ac1726ca931af428ba33088aee69e9, type: 2}

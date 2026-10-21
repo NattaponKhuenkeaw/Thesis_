@@ -165,9 +165,10 @@ GameObject:
   - component: {fileID: 3561706058359218766}
   - component: {fileID: 5215209452743578796}
   - component: {fileID: 8596031810821568894}
+  - component: {fileID: 9024502101429301323}
   m_Layer: 0
   m_Name: CameraSetUp
-  m_TagString: Untagged
+  m_TagString: MainCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -227,6 +228,7 @@ MonoBehaviour:
   _bossOrthoSizeRange: {x: 9.5, y: 12}
   _bossFramingSize: 0.32
   _bossEnemyRadius: 2.75
+  _enableLegacyDynamicDamping: 0
   _fallPanAmount: 0.25
   _normYPanAmount: 2
   _fallYPanTime: 0.35
@@ -302,6 +304,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraShakeController
   impulseSource: {fileID: 5215209452743578796}
+--- !u!114 &9024502101429301323
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1596864833993384329}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6bc74aa9fb830e4a810576399f9feb3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Parallax.ParallaxController
+  _targetCamera: {fileID: 7003089252169759538}
+  _globalScrollScale: 1
+  _trackMovement: 1
 --- !u!1 &2148324154643441722
 GameObject:
   m_ObjectHideFlags: 0
@@ -328,7 +345,7 @@ Transform:
   m_GameObject: {fileID: 2148324154643441722}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.1, y: -0.5, z: 0}
+  m_LocalPosition: {x: 0.51, y: 2.2, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -368,7 +385,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.87336063, y: 7.288883}
+  m_Offset: {x: 0, y: 7.288883}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -378,7 +395,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 56.345505, y: 26.247314}
+  m_Size: {x: 42.92, y: 26.247314}
   m_EdgeRadius: 0
 --- !u!1 &3205738235914087533
 GameObject:
@@ -427,6 +444,7 @@ MonoBehaviour:
   playerRigidbody: {fileID: 0}
   fallLookAheadTime: 0.35
   maxFallOffset: 8
+  fallLookAheadSmoothTime: 0.08
   verticalReturnSmoothTime: 0.25
   horizontalLookAheadDistance: 2
   horizontalLookAheadDuration: 0.25
@@ -774,7 +792,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineCamera
   Priority:
     Enabled: 1
-    m_Value: 0
+    m_Value: 2
   OutputChannel: 1
   StandbyUpdate: 2
   m_StreamingVersion: 20241001
@@ -785,7 +803,7 @@ MonoBehaviour:
     CustomLookAtTarget: 0
   Lens:
     FieldOfView: 40
-    OrthographicSize: 11
+    OrthographicSize: 12
     NearClipPlane: 0.1
     FarClipPlane: 5000
     Dutch: 0
@@ -891,7 +909,7 @@ GameObject:
   - component: {fileID: 1021762006979300843}
   m_Layer: 0
   m_Name: MainCamera
-  m_TagString: Untagged
+  m_TagString: MainCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -905,7 +923,7 @@ Transform:
   m_GameObject: {fileID: 8999929430782389086}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.5, y: 9.19, z: -17}
+  m_LocalPosition: {x: 0.5, y: 8.35, z: -17}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1017,7 +1035,7 @@ MonoBehaviour:
     m_Bits: 1
   m_VolumeTrigger: {fileID: 0}
   m_VolumeFrameworkUpdateModeOption: 2
-  m_RenderPostProcessing: 0
+  m_RenderPostProcessing: 1
   m_Antialiasing: 0
   m_AntialiasingQuality: 2
   m_StopNaN: 0

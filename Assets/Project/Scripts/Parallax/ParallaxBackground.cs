@@ -23,26 +23,13 @@ namespace Project.Parallax
         private Vector3 _startCameraPosition;
         private float _textureUnitSizeX;
         private float _textureUnitSizeY;
+        private bool _warnedMissingCamera;
 
         private void Start()
         {
-            // Auto-find main camera if not assigned
-            if (targetCamera == null && Camera.main != null)
-            {
-                targetCamera = Camera.main.transform;
-            }
-
-            if (targetCamera != null)
-            {
-                _startCameraPosition = targetCamera.position;
-            }
-            else
-            {
-                Debug.LogWarning($"[ParallaxBackground] {name} could not find a target camera. Parallax disabled.");
-            }
-
             // Capture initial world position
             _startPosition = transform.position;
+            TryBindTargetCamera();
 
             // Calculate texture size for infinite looping from SpriteRenderer
             SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
@@ -63,7 +50,9 @@ namespace Project.Parallax
 
         private void LateUpdate()
         {
-            if (targetCamera == null) return;
+            // Room layouts can be instantiated before the scene camera is available.
+            // Retry only while unbound so prefab layers can recover without per-frame camera searches.
+            if (targetCamera == null && !TryBindTargetCamera()) return;
 
             // Calculate how far the camera has moved desde start
             Vector3 cameraPosition = targetCamera.position;
@@ -75,38 +64,31 @@ namespace Project.Parallax
             float moveX = travel.x * parallaxEffectMultiplier.x;
             float moveY = travel.y * parallaxEffectMultiplier.y;
 
-            // Apply the base parallax position
-            transform.position = new Vector3(
-                _startPosition.x + moveX,
-                _startPosition.y + moveY,
-                _startPosition.z
-            );
+            // Infinite looping is a periodic offset derived from total travel. Keep the
+            // authored start position fixed; accumulating total travel into it every frame
+            // causes runaway movement as soon as the camera has crossed one tile.
+            float loopOffsetX = 0f;
+            float loopOffsetY = 0f;
 
-            // 2. Handle Infinite Looping (Repositioning the 'start' point)
-            // We check the relative travel (how much the camera has passed the background)
-            // RelativeTravel = Travel * (1 - Multiplier)
+            // 2. Handle infinite looping by reducing relative travel to a whole-tile offset.
+            // The remainder stays within one tile, keeping the layer aligned with the camera.
             if (infiniteHorizontal && _textureUnitSizeX > 0)
             {
                 float relativeTravelX = travel.x * (1 - parallaxEffectMultiplier.x);
-                
-                if (Mathf.Abs(relativeTravelX) >= _textureUnitSizeX)
-                {
-                    // Shift the start position by whole texture units
-                    float offset = relativeTravelX % _textureUnitSizeX;
-                    _startPosition.x += (relativeTravelX - offset);
-                }
+                loopOffsetX = relativeTravelX - (relativeTravelX % _textureUnitSizeX);
             }
 
             if (infiniteVertical && _textureUnitSizeY > 0)
             {
                 float relativeTravelY = travel.y * (1 - parallaxEffectMultiplier.y);
-
-                if (Mathf.Abs(relativeTravelY) >= _textureUnitSizeY)
-                {
-                    float offset = relativeTravelY % _textureUnitSizeY;
-                    _startPosition.y += (relativeTravelY - offset);
-                }
+                loopOffsetY = relativeTravelY - (relativeTravelY % _textureUnitSizeY);
             }
+
+            transform.position = new Vector3(
+                _startPosition.x + moveX + loopOffsetX,
+                _startPosition.y + moveY + loopOffsetY,
+                _startPosition.z
+            );
         }
 
         /// <summary>
@@ -119,6 +101,31 @@ namespace Project.Parallax
             {
                 _startCameraPosition = targetCamera.position;
             }
+        }
+
+        private bool TryBindTargetCamera()
+        {
+            if (targetCamera == null)
+            {
+                Camera mainCamera = Camera.main;
+                if (mainCamera == null)
+                {
+                    if (!_warnedMissingCamera)
+                    {
+                        Debug.LogWarning($"[ParallaxBackground] {name} is waiting for a MainCamera-tagged camera.", this);
+                        _warnedMissingCamera = true;
+                    }
+
+                    return false;
+                }
+
+                targetCamera = mainCamera.transform;
+            }
+
+            _startCameraPosition = targetCamera.position;
+            _startPosition = transform.position;
+            _warnedMissingCamera = false;
+            return true;
         }
     }
 }

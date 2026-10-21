@@ -959,7 +959,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerWorldUI
   worldCanvasRoot: {fileID: 1136280265075140451}
   textOffset: {x: 0, y: 2.4, z: 0}
-  feedbackTextTemplate: {fileID: 6548917983498748032, guid: 54e2354327f3a23478525f9b4dedd10e, type: 3}
+  feedbackTextTemplate: {fileID: 2052835160874543342, guid: 81a1108083780be4b8207478c9c4f286, type: 3}
 --- !u!1 &5952287311886967453
 GameObject:
   m_ObjectHideFlags: 0
