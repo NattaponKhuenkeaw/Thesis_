@@ -8,6 +8,7 @@ using UnityEngine.SceneManagement;
 public class GameAudioManager : MonoBehaviour
 {
     public static GameAudioManager Instance { get; private set; }
+    public const float MaxSFXGain = 2f;
 
     [Header("Pool Settings")]
     public int initialPoolSize = 10;
@@ -101,7 +102,25 @@ public class GameAudioManager : MonoBehaviour
 
     public float GetEffectiveSFXVolume(float baseVolume = 1f)
     {
-        return Mathf.Clamp01(baseVolume) * sfxVolume * masterVolume * GameSettings.SfxVolume;
+        return CalculateSFXGain(baseVolume, sfxVolume, masterVolume, GameSettings.SfxVolume);
+    }
+
+    public static float ClampSFXGain(float gain)
+    {
+        return float.IsNaN(gain) ? 0f : Mathf.Clamp(gain, 0f, MaxSFXGain);
+    }
+
+    public static float CalculateSFXGain(float baseGain, float sfx, float master, float settings)
+    {
+        return ClampSFXGain(baseGain) * sfx * master * settings;
+    }
+
+    private static void PlaySFXSource(AudioSource source, AudioClip clip, float gain)
+    {
+        // AudioSource.volume stops at 1; the one-shot scale preserves authored boosts above 1.
+        source.volume = Mathf.Min(1f, gain);
+        if (gain > 1f) source.PlayOneShot(clip, gain);
+        else source.Play();
     }
 
     public float GetEffectiveVoiceVolume(float baseVolume = 1f)
@@ -382,12 +401,30 @@ public class GameAudioManager : MonoBehaviour
             // Action, Hit, etc.
             AudioSource src = GetSource();
             src.clip = entry.clip;
-            src.volume = GetEffectiveSFXVolume(entry.volume) * concurrencyMod;
             src.pitch = entry.pitchVariation;
             src.ignoreListenerPause = false;
-            src.Play();
+            PlaySFXSource(src, entry.clip, GetEffectiveSFXVolume(entry.volume) * concurrencyMod);
             StartCoroutine(ReturnSourceRoutine(src, entry.clip.length / Mathf.Max(0.01f, src.pitch)));
         }
+    }
+
+    // The caller owns this source and must stop it when its gameplay phase ends.
+    public void PlayControlledSFX(AudioSource source, AudioClip clip, float volume = 1f)
+    {
+        if (source == null || clip == null) return;
+        source.Stop();
+        float concurrencyMod = CalculateConcurrencyVolumeModifier(clip);
+        if (concurrencyMod <= 0.001f) return;
+        source.playOnAwake = false;
+        source.loop = false;
+        source.spatialBlend = 0f;
+        source.ignoreListenerPause = false;
+        source.outputAudioMixerGroup = sfxMixerGroup;
+        source.clip = clip;
+        source.pitch = 1f;
+        float gain = GetEffectiveSFXVolume(volume) * concurrencyMod;
+        source.volume = Mathf.Min(1f, gain);
+        if (Application.isPlaying) PlaySFXSource(source, clip, gain);
     }
 
     public void PlayHitSFX(AudioClip clip, float volume = 1f, float pitch = 1f)
@@ -399,10 +436,9 @@ public class GameAudioManager : MonoBehaviour
 
         AudioSource src = GetSource();
         src.clip = clip;
-        src.volume = GetEffectiveSFXVolume(volume) * concurrencyMod;
         src.pitch = pitch;
         src.ignoreListenerPause = false;
-        src.Play();
+        PlaySFXSource(src, clip, GetEffectiveSFXVolume(volume) * concurrencyMod);
         StartCoroutine(ReturnSourceRoutine(src, clip.length / Mathf.Max(0.01f, src.pitch)));
     }
 

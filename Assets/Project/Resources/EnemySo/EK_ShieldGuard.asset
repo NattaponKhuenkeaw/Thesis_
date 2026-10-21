@@ -23,4 +23,11 @@ MonoBehaviour:
   bodyCharge: 1
   commitTelegraphFraction: 0
   interruptCooldown: 0.5
+  attackWarningSfx: {fileID: 8300000, guid: b1257b76acc8551479ef923ee921fac7, type: 3}
+  attackWarningSfxVolume: 2
+  attackSfx: {fileID: 8300000, guid: c68d846354f7470182447e767a5b670e, type: 3}
+  attackSfxVolume: 1
+  attackSfxOffset: 0
+  blockSfx: {fileID: 0}
+  blockSfxVolume: 1
   recoveryPlantDuration: 0.8

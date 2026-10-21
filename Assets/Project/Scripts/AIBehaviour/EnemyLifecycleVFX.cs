@@ -8,6 +8,9 @@ public sealed class EnemyLifecycleVFX : MonoBehaviour
     [SerializeField, Min(.05f)] private float spawnDuration = .55f;
     [SerializeField, Min(.05f)] private float deathFadeDuration = .45f;
     [SerializeField, Min(0f)] private float deathPoseHold = .15f;
+    [Header("Dissolve Audio")]
+    [SerializeField] private AudioClip deathDissolveSfx;
+    [SerializeField, Range(0f, 1f)] private float deathDissolveSfxVolume = 1f;
     [SerializeField] private Color energyColor = new Color(.65f, .82f, .85f, .45f);
     [SerializeField, Range(8, 64)] private int particleCount = 28;
 
@@ -130,6 +133,8 @@ public sealed class EnemyLifecycleVFX : MonoBehaviour
         {
             if (!animationFinished || elapsed < deathPoseHold) return false;
             deathFadeStarted = elapsed;
+            if (Application.isPlaying && deathDissolveSfx != null)
+                GameAudioManager.EnsureInstance().PlayHitSFX(deathDissolveSfx, deathDissolveSfxVolume);
             EmitDeathSmoke("DeathSpiritFade", Mathf.Max(8, particleCount / 2), .6f);
         }
         float t = Mathf.Clamp01((elapsed - deathFadeStarted) / Mathf.Max(.05f, deathFadeDuration));

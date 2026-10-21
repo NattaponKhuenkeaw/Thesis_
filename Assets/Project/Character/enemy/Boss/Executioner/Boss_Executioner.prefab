@@ -1539,6 +1539,8 @@ MonoBehaviour:
   spawnDuration: 0.85
   deathFadeDuration: 0.8
   deathPoseHold: 0.3
+  deathDissolveSfx: {fileID: 8300000, guid: d532de19063c45cf84ed497e15f27d29, type: 3}
+  deathDissolveSfxVolume: 1
   energyColor: {r: 0.65, g: 0.82, b: 0.85, a: 0.45}
   particleCount: 48
 --- !u!4 &7445212938518311906
@@ -1952,6 +1954,19 @@ MonoBehaviour:
     hitbox: {fileID: 0}
     hitboxLocalOffset: {x: 0.32, y: 0.69}
     hitboxSizeOverride: {x: 2.15, y: 1.3}
+  cleaveSfx: {fileID: 8300000, guid: 37700b40ddc9be64da400c0b1f4ce210, type: 3}
+  cleaveSfxVolume: 1
+  cleaveSfxOffset: 0
+  attackWarningSfx: {fileID: 8300000, guid: c6e85dca8c101094aa2201316615848a, type: 3}
+  attackWarningSfxVolume: 1
+  chargeHitSfx: {fileID: 8300000, guid: c72b6c85cb3c6494e9bf5dd81f1e1541, type: 3}
+  chargeHitSfxVolume: 1
+  deathSfx: {fileID: 8300000, guid: 466af6103aa82dd499e6db4d8ce6007a, type: 3}
+  deathSfxVolume: 1
+  jumpTakeoffSfx: {fileID: 8300000, guid: 1e6e7dbb6df9b9249896227f97ef27d7, type: 3}
+  jumpTakeoffSfxVolume: 1
+  jumpLandSfx: {fileID: 8300000, guid: 088f6f638d9e76544953d526859c9bc3, type: 3}
+  jumpLandSfxVolume: 1
   jumpArcHeight: 3.5
   jumpTravelDuration: 0.75
   smashMarkerRadius: 1.9
