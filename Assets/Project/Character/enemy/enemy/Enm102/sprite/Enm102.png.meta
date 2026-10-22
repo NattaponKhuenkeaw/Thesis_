@@ -361,9 +361,9 @@ TextureImporter:
         x: 0
         y: 96
         width: 128
-        height: 160
+        height: 128
       alignment: 9
-      pivot: {x: 0.52734375, y: 0.106875}
+      pivot: {x: 0.52734375, y: 0.13359375}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData:
       outline: []
@@ -380,12 +380,12 @@ TextureImporter:
       name: Enm102_Shot0
       rect:
         serializedVersion: 2
-        x: 52
-        y: 50
-        width: 24
-        height: 24
+        x: 0
+        y: 0
+        width: 128
+        height: 128
       alignment: 9
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0.5, y: 0.484375}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData:
       outline: []
@@ -402,12 +402,12 @@ TextureImporter:
       name: Enm102_Shot1
       rect:
         serializedVersion: 2
-        x: 180
-        y: 50
-        width: 24
-        height: 24
+        x: 128
+        y: 0
+        width: 128
+        height: 128
       alignment: 9
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0.5, y: 0.484375}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData:
       outline: []
@@ -424,12 +424,12 @@ TextureImporter:
       name: Enm102_Shot2
       rect:
         serializedVersion: 2
-        x: 308
-        y: 50
-        width: 24
-        height: 24
+        x: 256
+        y: 0
+        width: 128
+        height: 128
       alignment: 9
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0.5, y: 0.484375}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData:
       outline: []
