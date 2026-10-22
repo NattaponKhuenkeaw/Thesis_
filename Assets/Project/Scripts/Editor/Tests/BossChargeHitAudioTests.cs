@@ -10,6 +10,53 @@ public class BossChargeHitAudioTests
     private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.NonPublic;
 
     [Test]
+    public void BossPrefabHasASeparateNamedChargeRushSound()
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(
+            "Assets/Project/Character/enemy/Boss/Executioner/Boss_Executioner.prefab");
+        Assert.That(prefab, Is.Not.Null);
+        var boss = prefab.GetComponent<BossPatternController>();
+        var rush = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Project/Audio/SFX/Boss_ChargeRush.mp3");
+        Assert.That(rush, Is.Not.Null);
+        Assert.That(boss.ChargeRushSfx, Is.SameAs(rush));
+        Assert.That(boss.ChargeRushSfx, Is.Not.SameAs(boss.ChargeHitSfx));
+        Assert.That(boss.ChargeRushSfx, Is.Not.SameAs(boss.AttackWarningSfx));
+        Assert.That(boss.ChargeRushSfxVolume, Is.GreaterThan(0f).And.LessThanOrEqualTo(GameAudioManager.MaxSFXGain));
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void ClearingOrDisablingBossStopsItsChargeWhooshWithoutStoppingOtherAudio(bool disableBoss)
+    {
+        var host = new GameObject("BossRushAudioCleanupTest");
+        host.SetActive(false);
+        var clip = AudioClip.Create("RushAudioTest", 128, 1, 44100, false);
+        try
+        {
+            var boss = host.AddComponent<BossPatternController>();
+            var rush = host.AddComponent<AudioSource>();
+            var otherHost = new GameObject("OtherAudio");
+            otherHost.transform.SetParent(host.transform, false);
+            var other = otherHost.AddComponent<AudioSource>();
+            rush.clip = clip;
+            other.clip = clip;
+            typeof(BossPatternController).GetField("chargeRushAudioSource", Flags).SetValue(boss, rush);
+            if (disableBoss)
+                typeof(BossPatternController).GetMethod("OnDisable", Flags).Invoke(boss, null);
+            else
+                boss.ForceClearCombatHazards();
+            Assert.That(rush.clip, Is.Null);
+            Assert.That(rush.isPlaying, Is.False);
+            Assert.That(other.clip, Is.SameAs(clip));
+        }
+        finally
+        {
+            Object.DestroyImmediate(host);
+            Object.DestroyImmediate(clip);
+        }
+    }
+
+    [Test]
     public void BossPrefabHasASeparateNamedChargeImpactSound()
     {
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(

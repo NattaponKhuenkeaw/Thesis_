@@ -1961,6 +1961,8 @@ MonoBehaviour:
   attackWarningSfxVolume: 1
   chargeHitSfx: {fileID: 8300000, guid: c72b6c85cb3c6494e9bf5dd81f1e1541, type: 3}
   chargeHitSfxVolume: 1
+  chargeRushSfx: {fileID: 8300000, guid: 1625ecd344064a428ed95fbae84371e8, type: 3}
+  chargeRushSfxVolume: 0.33
   deathSfx: {fileID: 8300000, guid: 466af6103aa82dd499e6db4d8ce6007a, type: 3}
   deathSfxVolume: 1
   jumpTakeoffSfx: {fileID: 8300000, guid: 1e6e7dbb6df9b9249896227f97ef27d7, type: 3}
