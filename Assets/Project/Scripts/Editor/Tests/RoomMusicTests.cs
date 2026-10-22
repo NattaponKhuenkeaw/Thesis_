@@ -87,7 +87,7 @@ public class RoomMusicTests
         Assert.That(manager.CurrentMusic, Is.SameAs(battleSong));
         manager.PlayRoomMusic(safeRoom);
         Assert.That(manager.CurrentMusic, Is.SameAs(safeRoom.BackgroundMusic));
-        Assert.That(host.GetComponentsInChildren<AudioSource>(true).Length, Is.EqualTo(1));
+        Assert.That(host.GetComponentsInChildren<AudioSource>(true).Length, Is.EqualTo(2), "Music and ambience have independent sources.");
         Assert.That(host.GetComponentInChildren<AudioSource>(true), Is.SameAs(source));
     }
 

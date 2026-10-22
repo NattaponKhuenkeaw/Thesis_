@@ -23,6 +23,8 @@ MonoBehaviour:
   zoneMode: 1
   backgroundMusic: {fileID: 8300000, guid: 2473e86c4ff645e0a8f7ade83475a910, type: 3}
   musicVolume: 1
+  ambience: {fileID: 8300000, guid: 953ebadc922942e59550d761a3656c21, type: 3}
+  ambienceVolume: 0.35
   defaultEntranceId: Default
   useStaticCamera: 0
   encounter: {fileID: 11400000, guid: 7c2e9f04b18a4d6e9f3c1a8b5d0e2471, type: 2}

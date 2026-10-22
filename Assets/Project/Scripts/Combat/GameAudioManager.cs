@@ -29,6 +29,9 @@ public class GameAudioManager : MonoBehaviour
     [SerializeField] private ZoneStateProvider musicZoneState;
     [SerializeField, Min(0f)] private float musicFadeDuration = 0.65f;
 
+    [Header("Room Ambience")]
+    [SerializeField, Min(0f)] private float ambienceFadeDuration = 0.65f;
+
     [Header("Concurrency & Polyphony Limiter")]
     [Tooltip("Max concurrent instances of the exact same AudioClip allowed in a single frame.")]
     [SerializeField] private int maxSameClipPerFrame = 2;
@@ -50,8 +53,15 @@ public class GameAudioManager : MonoBehaviour
     private Coroutine musicRoutine;
     private float musicBaseVolume = 1f;
     private float musicFade = 1f;
+    private AudioSource ambienceSource;
+    private AudioClip requestedAmbience;
+    private Coroutine ambienceRoutine;
+    private float ambienceBaseVolume = 1f;
+    private float requestedAmbienceVolume = 1f;
+    private float ambienceFade = 1f;
 
     public AudioClip CurrentMusic => musicSource != null ? musicSource.clip : null;
+    public AudioClip CurrentAmbience => ambienceSource != null ? ambienceSource.clip : null;
 
     public static GameAudioManager EnsureInstance()
     {
@@ -210,6 +220,7 @@ public class GameAudioManager : MonoBehaviour
     private void Update()
     {
         RefreshMusicVolume();
+        RefreshAmbienceVolume();
     }
 
     private void OnDestroy()
@@ -244,7 +255,11 @@ public class GameAudioManager : MonoBehaviour
     private void RefreshRoomMusic()
     {
         // The menu owns its authored track; it is not a MapSO room.
-        if (SceneManager.GetActiveScene().name == "MainMenu") return;
+        if (SceneManager.GetActiveScene().name == "MainMenu")
+        {
+            PlayAmbience(null);
+            return;
+        }
         PlayRoomMusic(musicZoneState != null ? musicZoneState.CurrentRoom : null);
     }
 
@@ -252,11 +267,14 @@ public class GameAudioManager : MonoBehaviour
     {
         if (SceneManager.GetActiveScene().name != "MainMenu")
             PlayRoomMusic(room);
+        else
+            PlayAmbience(null);
     }
 
     public void PlayRoomMusic(RoomData room)
     {
         PlayMusic(room != null ? room.BackgroundMusic : null, room != null ? room.MusicVolume : 1f);
+        PlayAmbience(room != null ? room.Ambience : null, room != null ? room.AmbienceVolume : 1f);
     }
 
     public void PlayMusic(AudioClip clip, float volume = 1f)
@@ -329,6 +347,92 @@ public class GameAudioManager : MonoBehaviour
         }
         musicFade = target;
         RefreshMusicVolume();
+    }
+
+    public void PlayAmbience(AudioClip clip, float volume = 1f)
+    {
+        requestedAmbienceVolume = Mathf.Clamp01(volume);
+        if (clip != null && ambienceSource != null && ambienceSource.clip == clip)
+            ambienceBaseVolume = requestedAmbienceVolume;
+        if (ambienceSource == null)
+        {
+            if (clip == null) return;
+            var host = new GameObject("AmbienceAudioSource");
+            host.transform.SetParent(transform, false);
+            ambienceSource = host.AddComponent<AudioSource>();
+            ambienceSource.playOnAwake = false;
+            ambienceSource.loop = true;
+            ambienceSource.spatialBlend = 0f;
+            ambienceSource.ignoreListenerPause = true;
+            ambienceSource.outputAudioMixerGroup = sfxMixerGroup;
+        }
+        if (requestedAmbience == clip && (ambienceRoutine != null || ambienceSource.clip == clip))
+        {
+            RefreshAmbienceVolume();
+            return;
+        }
+
+        requestedAmbience = clip;
+        if (ambienceRoutine != null)
+        {
+            StopCoroutine(ambienceRoutine);
+            ambienceRoutine = null;
+        }
+        if (!Application.isPlaying || ambienceFadeDuration <= 0f)
+        {
+            SetAmbienceClip(clip);
+            ambienceFade = 1f;
+            RefreshAmbienceVolume();
+            return;
+        }
+        ambienceRoutine = StartCoroutine(ChangeAmbience(clip));
+    }
+
+    public void RefreshAmbienceVolume()
+    {
+        if (ambienceSource != null)
+            ambienceSource.volume = GetEffectiveSFXVolume(ambienceBaseVolume) * ambienceFade;
+    }
+
+    private void SetAmbienceClip(AudioClip clip)
+    {
+        ambienceSource.Stop();
+        ambienceSource.clip = clip;
+        ambienceSource.volume = 0f;
+        if (clip != null)
+            ambienceBaseVolume = requestedAmbienceVolume;
+        if (clip != null && Application.isPlaying)
+            ambienceSource.Play();
+    }
+
+    private IEnumerator ChangeAmbience(AudioClip clip)
+    {
+        // Re-entering a room with the same atmosphere resumes the fade without restarting the loop.
+        if (ambienceSource.clip != clip)
+        {
+            if (ambienceSource.clip != null)
+                yield return FadeAmbienceTo(0f);
+            SetAmbienceClip(clip);
+            ambienceFade = 0f;
+        }
+        if (clip != null)
+            yield return FadeAmbienceTo(1f);
+        ambienceRoutine = null;
+    }
+
+    private IEnumerator FadeAmbienceTo(float target)
+    {
+        float start = ambienceFade;
+        float elapsed = 0f;
+        while (elapsed < ambienceFadeDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            ambienceFade = Mathf.Lerp(start, target, Mathf.Clamp01(elapsed / ambienceFadeDuration));
+            RefreshAmbienceVolume();
+            yield return null;
+        }
+        ambienceFade = target;
+        RefreshAmbienceVolume();
     }
 
     private void InitializePool()

@@ -25,3 +25,5 @@ MonoBehaviour:
   useStaticCamera: 1
   backgroundMusic: {fileID: 8300000, guid: 7ff3bb4677d74ab8bcccd2c6f54c82fe, type: 3}
   musicVolume: 1
+  ambience: {fileID: 8300000, guid: 953ebadc922942e59550d761a3656c21, type: 3}
+  ambienceVolume: 0.35
