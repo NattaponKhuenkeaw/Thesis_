@@ -171,13 +171,15 @@ public sealed class EnemyShieldGuard : MonoBehaviour
 
     private void StartStrike()
     {
-        enemy.HideAttackWarning();
+        enemy.FinishAttackWarning();
         ChangePhase(GuardPhase.Striking);
         enemy.SetAttackHitboxActive(true);
+        enemy.PlayAttackSound();
     }
 
     private void StartGuardRound()
     {
+        enemy.HideAttackWarning();
         guardElapsed = 0f;
         rearElapsed = 0f;
         enemy.ReleaseFacing();

@@ -26,7 +26,7 @@ MonoBehaviour:
   attackWarningSfxVolume: 1
   attackSfx: {fileID: 8300000, guid: ae8edbd22cef82645a2af8a997c315c5, type: 3}
   attackSfxVolume: 1
-  attackSfxOffset: -0.45
+  attackSfxOffset: 0
   blockSfx: {fileID: 0}
   blockSfxVolume: 1
   shotSpeed: 8
