@@ -35,6 +35,8 @@ namespace Project.Progression.LevelRoom
         [SerializeField] private AudioClip confirmClip;
         [SerializeField] private AudioClip cycleClip;
         [SerializeField] private AudioClip levelUpClip;
+        [Tooltip("Delay after revealing the upgrade, within the existing hold time.")]
+        [SerializeField, Min(0f)] private float levelUpSfxDelaySeconds = 0.25f;
         [SerializeField, Range(0f, 1f)] private float sfxVolume = 1f;
 
         private readonly List<Canvas> disabledCanvases = new List<Canvas>(16);
@@ -136,16 +138,26 @@ namespace Project.Progression.LevelRoom
                     runInventory.GlobalLevel,
                     runInventory.GlobalMaxLevel);
 
-                if (appliedLevels > 0)
-                {
-                    PlaySfx(levelUpClip);
-                }
-
                 Debug.Log(
                     $"[LevelRoomController] Rolled +{rolledLevels}, applied +{appliedLevels}, "
                     + $"Global Lv.{previousLevel} → Lv.{runInventory.GlobalLevel}.");
 
-                yield return new WaitForSecondsRealtime(revealHoldSeconds);
+                float audioDelay = appliedLevels > 0 && levelUpClip != null
+                    ? Mathf.Clamp(levelUpSfxDelaySeconds, 0f, revealHoldSeconds)
+                    : 0f;
+                if (audioDelay > 0f)
+                {
+                    yield return new WaitForSecondsRealtime(audioDelay);
+                }
+
+                if (appliedLevels > 0)
+                {
+                    PlaySfx(levelUpClip);
+                }
+                if (revealHoldSeconds > audioDelay)
+                {
+                    yield return new WaitForSecondsRealtime(revealHoldSeconds - audioDelay);
+                }
 
                 if (restoreDelaySeconds > 0f)
                 {

@@ -753,7 +753,8 @@ MonoBehaviour:
   restoreDelaySeconds: 0.45
   confirmClip: {fileID: 0}
   cycleClip: {fileID: 0}
-  levelUpClip: {fileID: 0}
+  levelUpClip: {fileID: 8300000, guid: 436f566a383e4f0f8e68856de507bf76, type: 3}
+  levelUpSfxDelaySeconds: 0.25
   sfxVolume: 1
 --- !u!1 &1512548921421583902
 GameObject:

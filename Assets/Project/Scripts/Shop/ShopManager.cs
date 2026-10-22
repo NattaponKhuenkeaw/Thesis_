@@ -28,6 +28,12 @@ namespace Project.ShopSystem
         [Tooltip("If true, only unowned items can appear in the shop.")]
         public bool excludeOwnedItems = true;
 
+        [Header("Purchase Audio")]
+        [SerializeField] private AudioClip purchaseSuccessSfx;
+        [SerializeField, Range(0f, 1f)] private float purchaseSuccessVolume = 1f;
+        [SerializeField] private AudioClip purchaseFailureSfx;
+        [SerializeField, Range(0f, 1f)] private float purchaseFailureVolume = 1f;
+
         [Header("Reroll")]
         [SerializeField, Min(0f)] private float rerollPriceIncreasePercent = 15f;
 
@@ -198,6 +204,7 @@ namespace Project.ShopSystem
 
             if (!CanAcquire(item, purchaseQuantity))
             {
+                PlayPurchaseAudio(false);
                 Debug.Log($"Cannot acquire shop item: {item.itemName}");
                 return false;
             }
@@ -208,11 +215,13 @@ namespace Project.ShopSystem
                 {
                     if (!playerInventory.TryReacquireDefeatedCharacter(defeatedCharacter))
                     {
+                        PlayPurchaseAudio(false);
                         Debug.Log($"Cannot acquire shop item: {item.itemName}");
                         return false;
                     }
 
                     playerInventory.SpendCurrency(purchasePrice);
+                    PlayPurchaseAudio(true);
                     Debug.Log($"Acquired {item.itemName}.");
                     return true;
                 }
@@ -221,16 +230,27 @@ namespace Project.ShopSystem
                 if (result.Succeeded)
                 {
                     playerInventory.SpendCurrency(purchasePrice);
+                    PlayPurchaseAudio(true);
                     Debug.Log(result.Message);
                     return true;
                 }
 
+                PlayPurchaseAudio(false);
                 Debug.Log(result.Message);
                 return false;
             }
 
+            PlayPurchaseAudio(false);
             Debug.Log($"Insufficient currency to buy: {item.itemName}");
             return false;
+        }
+
+        private void PlayPurchaseAudio(bool success)
+        {
+            AudioClip clip = success ? purchaseSuccessSfx : purchaseFailureSfx;
+            if (!Application.isPlaying || clip == null) return;
+            float volume = success ? purchaseSuccessVolume : purchaseFailureVolume;
+            GameAudioManager.EnsureInstance().PlayHitSFX(clip, volume);
         }
 
         /// <summary>

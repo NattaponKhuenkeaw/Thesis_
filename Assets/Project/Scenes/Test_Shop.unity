@@ -172,6 +172,10 @@ MonoBehaviour:
   - {fileID: 1664907335}
   itemsToDisplay: 30
   excludeOwnedItems: 1
+  purchaseSuccessSfx: {fileID: 8300000, guid: d532de19063c45cf84ed497e15f27d29, type: 3}
+  purchaseSuccessVolume: 1
+  purchaseFailureSfx: {fileID: 8300000, guid: 6c4b18aa0cf441ecb3618d9fe4b715f6, type: 3}
+  purchaseFailureVolume: 1
   rerollPriceIncreasePercent: 15
   currentShopItems: []
 --- !u!1 &93087970

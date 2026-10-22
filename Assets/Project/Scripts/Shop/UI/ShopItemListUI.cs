@@ -207,7 +207,8 @@ namespace Project.ShopSystem.UI
 
         private void TryBuyCurrentOffer()
         {
-            if (shopManager == null || currentItem == null || currentState == ShopItemListState.Sold)
+            if (shopManager == null || currentItem == null || !isPlayerInRange
+                || currentState != ShopItemListState.Open || InputLockManager.IsLocked)
             {
                 return;
             }
@@ -316,8 +317,8 @@ namespace Project.ShopSystem.UI
             if (buyButton != null)
             {
                 buyButton.gameObject.SetActive(true);
-                buyButton.interactable = shopManager != null
-                    && shopManager.CanPurchaseOffer(currentItem, currentQuantity, currentPrice);
+                // Keep attempts available so rejected purchases can play their feedback.
+                buyButton.interactable = shopManager != null && currentItem != null;
             }
 
             SendAnimatorTrigger(IsOpenHash);
