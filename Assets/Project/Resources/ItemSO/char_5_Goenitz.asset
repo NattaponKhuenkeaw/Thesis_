@@ -11,7 +11,6 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b5f3184f1b0bc8948a16175d985cfbed, type: 3}
   m_Name: char_5_Goenitz
-  availableInShop: 0
   m_EditorClassIdentifier: Assembly-CSharp::Project.InventorySystem.Items.CharacterItem
   id: char_5_goenitz
   itemName: Goenitz
@@ -23,3 +22,4 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: a46bfd9a10ea71648a6b27d01472a600, type: 3}
   price: 6500
   characterObjectData: {fileID: 11400000, guid: a2f28494c803e0b49a390a31a390a787, type: 2}
+  availableInShop: 0

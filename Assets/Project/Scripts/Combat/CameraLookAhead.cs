@@ -30,6 +30,9 @@ public class CameraLookAhead : MonoBehaviour
     [Tooltip("Maximum downward distance the proxy can sit below the player.")]
     public float maxFallOffset = 8f;
 
+    [Tooltip("How quickly the proxy moves down to lead a fall. Lower values make the camera anticipate fast falls sooner.")]
+    public float fallLookAheadSmoothTime = 0.08f;
+
     [Tooltip("How fast the vertical offset returns to zero when not falling (SmoothDamp time).")]
     public float verticalReturnSmoothTime = 0.25f;
 
@@ -162,11 +165,14 @@ public class CameraLookAhead : MonoBehaviour
             targetOffsetY = Mathf.Max(raw, -maxFallOffset); // clamp: must not exceed -maxFallOffset
         }
 
+        float offsetSmoothTime = vy < 0f
+            ? Mathf.Min(fallLookAheadSmoothTime, verticalReturnSmoothTime)
+            : verticalReturnSmoothTime;
         currentOffsetY = Mathf.SmoothDamp(
             currentOffsetY,
             targetOffsetY,
             ref offsetVelocityY,
-            Mathf.Max(verticalReturnSmoothTime, 0.01f)
+            Mathf.Max(offsetSmoothTime, 0.01f)
         );
 
         transform.position = new Vector3(

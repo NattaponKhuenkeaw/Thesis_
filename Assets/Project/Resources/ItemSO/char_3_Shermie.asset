@@ -11,7 +11,6 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b5f3184f1b0bc8948a16175d985cfbed, type: 3}
   m_Name: char_3_Shermie
-  availableInShop: 0
   m_EditorClassIdentifier: Assembly-CSharp::Project.InventorySystem.Items.CharacterItem
   id: char_3_shermie
   itemName: Shermie
@@ -22,3 +21,4 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 6980df79b29645e4a9f7b01c22c621c5, type: 3}
   price: 1800
   characterObjectData: {fileID: 11400000, guid: c9c99302d3f5d8a43b612bd108aa3f05, type: 2}
+  availableInShop: 0

@@ -11,7 +11,6 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b5f3184f1b0bc8948a16175d985cfbed, type: 3}
   m_Name: char_2_Rugal
-  availableInShop: 0
   m_EditorClassIdentifier: Assembly-CSharp::Project.InventorySystem.Items.CharacterItem
   id: Char_2_Rugal
   itemName: Rugal
@@ -22,3 +21,4 @@ MonoBehaviour:
   icon: {fileID: 5350120682723182771, guid: 5238c90a9a0a0d44382f4790e2d6f5e7, type: 3}
   price: 1350
   characterObjectData: {fileID: 11400000, guid: 27891cf9824752045b475995e212e47e, type: 2}
+  availableInShop: 0

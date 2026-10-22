@@ -446,6 +446,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5297919245514991578, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 22100000, guid: 45b7295dcf880586da768d0dceb71711, type: 2}
     - target: {fileID: 5618151998514689905, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 66
@@ -456,15 +460,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5934746496802764893, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.80325
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5934746496802764893, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.80325
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5934746496802764893, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.80325
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5934746496802764893, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_LocalPosition.x
@@ -546,21 +550,53 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: 1.73
       objectReference: {fileID: 0}
+    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: animateShieldGuard
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: reactionAnimations.fall
+      value: Base Layer.Hurt
+      objectReference: {fileID: 0}
+    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: reactionAnimations.getUp
+      value: Base Layer.Hurt
+      objectReference: {fileID: 0}
+    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: reactionAnimations.launch
+      value: Base Layer.Hurt
+      objectReference: {fileID: 0}
+    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: reactionAnimations.airHurt
+      value: Base Layer.Hurt
+      objectReference: {fileID: 0}
+    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: reactionAnimations.enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: reactionAnimations.knockdown
+      value: Base Layer.Hurt
+      objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Size.x
-      value: 1.35
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Size.y
-      value: 2.3
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_Offset.y
-      value: 1.15
+      value: 1.87
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_EdgeRadius
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_SpriteTilingProperty.pivot.y
+      value: 0.0078125
       objectReference: {fileID: 0}
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_SpriteTilingProperty.newSize.x
@@ -569,6 +605,14 @@ PrefabInstance:
     - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_SpriteTilingProperty.newSize.y
       value: 0.41666666
+      objectReference: {fileID: 0}
+    - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_SpriteTilingProperty.oldSize.x
+      value: 8.533334
+      objectReference: {fileID: 0}
+    - target: {fileID: 7441673381418920329, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: m_SpriteTilingProperty.oldSize.y
+      value: 8.533334
       objectReference: {fileID: 0}
     - target: {fileID: 7675375483045177933, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: m_fontSize
@@ -674,38 +718,6 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
-    - target: {fileID: 5297919245514991578, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: m_Controller
-      value: 
-      objectReference: {fileID: 22100000, guid: 45b7295dcf880586da768d0dceb71711, type: 2}
-    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: animateShieldGuard
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: reactionAnimations.enabled
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: reactionAnimations.launch
-      value: Base Layer.Hurt
-      objectReference: {fileID: 0}
-    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: reactionAnimations.airHurt
-      value: Base Layer.Hurt
-      objectReference: {fileID: 0}
-    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: reactionAnimations.fall
-      value: Base Layer.Hurt
-      objectReference: {fileID: 0}
-    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: reactionAnimations.knockdown
-      value: Base Layer.Hurt
-      objectReference: {fileID: 0}
-    - target: {fileID: 7275743346322329652, guid: c135c5413a913c346868205d4f41acfe, type: 3}
-      propertyPath: reactionAnimations.getUp
-      value: Base Layer.Hurt
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -722,7 +734,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 655673979869406066, guid: c135c5413a913c346868205d4f41acfe, type: 3}
   m_PrefabInstance: {fileID: 4180762667386644137}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 4739200647295624271}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 85361608430d3da42a1b3faa70dbb39f, type: 3}
@@ -743,11 +755,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a612029e73444a169bf8264ca93e27c8, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyShieldGuard
   detectionRadius: 9
-  guardWaitDuration: 5
   sideDeadzone: 0.15
+  guardWaitDuration: 5
   rearRecheckDelay: 0.75
   turnDuration: 0.45
 --- !u!4 &7519174093949083380 stripped

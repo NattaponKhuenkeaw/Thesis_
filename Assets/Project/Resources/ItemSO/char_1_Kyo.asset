@@ -11,7 +11,6 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b5f3184f1b0bc8948a16175d985cfbed, type: 3}
   m_Name: char_1_Kyo
-  availableInShop: 0
   m_EditorClassIdentifier: Assembly-CSharp::Project.InventorySystem.Items.CharacterItem
   id: char_1_kyo
   itemName: Kyo
@@ -23,3 +22,4 @@ MonoBehaviour:
   icon: {fileID: -9219516506285710656, guid: df43e2734be96af43b5920fcbfb63b39, type: 3}
   price: 500
   characterObjectData: {fileID: 11400000, guid: 1a54ddb31cb33ae42833d53a0597eefc, type: 2}
+  availableInShop: 0

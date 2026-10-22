@@ -917,8 +917,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: XXXX
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 4944a95da4f7b1d4486cf4d741f3a7f6, type: 2}
-  m_sharedMaterial: {fileID: 8521718487953109346, guid: 4944a95da4f7b1d4486cf4d741f3a7f6, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 1b2fdb289d38c5a49852fac97ab54c2f, type: 2}
+  m_sharedMaterial: {fileID: -8162456948530031662, guid: 1b2fdb289d38c5a49852fac97ab54c2f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1395,6 +1395,7 @@ MonoBehaviour:
   enemyController: {fileID: 0}
   healthSlider: {fileID: 2382504958199167067}
   damageLerpSlider: {fileID: 210306291652159245}
+  floatingTextTemplate: {fileID: 2052835160874543342, guid: 81a1108083780be4b8207478c9c4f286, type: 3}
   damageText: {fileID: 2732821143223411917}
   critDamageText: {fileID: 234416211816182142}
   damageTextRandomRangeX: {x: -40, y: 40}
