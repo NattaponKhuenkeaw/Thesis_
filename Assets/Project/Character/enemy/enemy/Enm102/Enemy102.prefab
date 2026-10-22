@@ -750,6 +750,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
+      propertyPath: flightPlayerRiseDelay
+      value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 8128473920184738291, guid: c135c5413a913c346868205d4f41acfe, type: 3}
       propertyPath: groundLayers
       value: 520
       objectReference: {fileID: 0}

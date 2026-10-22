@@ -37,6 +37,8 @@ public class EnemyLocomotion : MonoBehaviour
     [SerializeField, Min(0.1f)] private float flightHeight = 1.5f;
     [Tooltip("Roaming flight measures height above the player instead of the spawn platform.")]
     [SerializeField] private bool flightHeightRelativeToPlayer;
+    [Tooltip("Wait before rising with a jumping player. Zero keeps immediate height following.")]
+    [SerializeField, Min(0f)] private float flightPlayerRiseDelay;
     [Tooltip("Scales the complete player-relative altitude, including variation and minimum head clearance.")]
     [SerializeField, Min(1f)] private float flightHeightMultiplier = 1f;
     [SerializeField, Min(0.01f)] private float flightGroundTolerance = 0.2f;
@@ -89,6 +91,11 @@ public class EnemyLocomotion : MonoBehaviour
     private float flightPatrolAnchorX;
     private float flightPatrolSign = 1f;
     private PlayerCharacter flightPatrolPlayer;
+    private Transform flightHeightPlayer;
+    private float flightPlayerReferenceY;
+    private float flightPlayerRiseElapsed;
+    private bool flightPlayerRiseUnlocked;
+    private bool WaitingForPlayerRise => flightPlayerRiseDelay > 0f && flightPlayerRiseElapsed > 0f && !flightPlayerRiseUnlocked;
     private enum FlightBeat { Moving, Ready, Attacking, Resting }
     private FlightBeat flightBeat;
     private float flightBeatTime;
@@ -166,6 +173,9 @@ public class EnemyLocomotion : MonoBehaviour
         Cache();
         ReleaseFlightConstraints();
         flightInitialized = false;
+        flightHeightPlayer = null;
+        flightPlayerRiseElapsed = 0f;
+        flightPlayerRiseUnlocked = false;
         if (!UsesFixedHeightFlight)
             return false;
 
@@ -185,6 +195,7 @@ public class EnemyLocomotion : MonoBehaviour
         }
 
         flightGroundY = groundY;
+        if (followsPlayer) UpdatePlayerFlightHeightReference(flightPatrolPlayer.transform, 0f);
         float feetY = followsPlayer
             ? ResolvePlayerFlightFeetY(flightPatrolPlayer.transform, flightHeight)
             : groundY + flightHeight;
@@ -975,6 +986,8 @@ public class EnemyLocomotion : MonoBehaviour
         {
             flightBeat = FlightBeat.Resting;
             flightBeatTime = flightInterruptedRest;
+            flightPlayerRiseElapsed = 0f;
+            flightPlayerRiseUnlocked = false;
             return;
         }
         body.gravityScale = 0f;
@@ -985,19 +998,21 @@ public class EnemyLocomotion : MonoBehaviour
             flightBeatTime = 0.3f;
             return;
         }
+        if (flightHeightRelativeToPlayer && TryGetFlightPatrolPlayer(out Transform heightPlayer))
+            UpdatePlayerFlightHeightReference(heightPlayer, dt);
         if (flightHeightRelativeToPlayer
             && (flightBeat == FlightBeat.Resting || flightBeat == FlightBeat.Ready))
             AdjustPlayerRelativeFlightHeight(dt);
         if (flightBeat == FlightBeat.Resting)
         {
             flightBeatTime -= dt;
-            if (flightBeatTime <= 0f) SelectFlightDestination();
+            if (flightBeatTime <= 0f && !WaitingForPlayerRise) SelectFlightDestination();
             return;
         }
         if (flightBeat == FlightBeat.Ready)
         {
             flightBeatTime += dt;
-            if (flightBeatTime >= 1.5f) SelectFlightDestination();
+            if (flightBeatTime >= 1.5f && !WaitingForPlayerRise) SelectFlightDestination();
             return;
         }
         if (flightBeat != FlightBeat.Moving) return;
@@ -1017,7 +1032,7 @@ public class EnemyLocomotion : MonoBehaviour
             Collider2D collider = ResolveBodyCollider();
             if (collider == null) return;
             float footOffset = collider.bounds.min.y - body.position.y;
-            flightMoveEnd = new Vector2(player.position.x + flightMovePlayerOffsetX,
+            flightMoveEnd = new Vector2(WaitingForPlayerRise ? flightMoveEnd.x : player.position.x + flightMovePlayerOffsetX,
                 ResolvePlayerFlightFeetY(player, flightMoveHeight) - footOffset);
         }
         flightBeatTime += dt;
@@ -1092,7 +1107,40 @@ public class EnemyLocomotion : MonoBehaviour
         float headY = playerBody != null && playerBody.enabled && !playerBody.isTrigger
             ? playerBody.bounds.max.y : player.position.y;
         float altitude = Mathf.Max(height, headY + .35f - player.position.y);
-        return player.position.y + altitude * Mathf.Max(1f, flightHeightMultiplier);
+        float referenceY = flightPlayerRiseDelay > 0f && flightHeightPlayer == player
+            ? flightPlayerReferenceY : player.position.y;
+        return referenceY + altitude * Mathf.Max(1f, flightHeightMultiplier);
+    }
+
+    private void UpdatePlayerFlightHeightReference(Transform player, float dt)
+    {
+        float y = player.position.y;
+        if (flightHeightPlayer != player || flightPlayerRiseDelay <= 0f)
+        {
+            flightHeightPlayer = player;
+            flightPlayerReferenceY = y;
+            flightPlayerRiseElapsed = 0f;
+            flightPlayerRiseUnlocked = false;
+            return;
+        }
+        // After the grace period, follow the rest of this ascent without repeated pauses.
+        if (flightPlayerRiseUnlocked)
+        {
+            if (y < flightPlayerReferenceY - .01f) flightPlayerRiseUnlocked = false;
+            flightPlayerReferenceY = y;
+            return;
+        }
+        if (y <= flightPlayerReferenceY + .1f)
+        {
+            flightPlayerReferenceY = y;
+            flightPlayerRiseElapsed = 0f;
+            return;
+        }
+        flightPlayerRiseElapsed += Mathf.Max(0f, dt);
+        if (flightPlayerRiseElapsed < flightPlayerRiseDelay) return;
+        flightPlayerReferenceY = y;
+        flightPlayerRiseElapsed = 0f;
+        flightPlayerRiseUnlocked = true;
     }
 
     private void AdjustPlayerRelativeFlightHeight(float dt)

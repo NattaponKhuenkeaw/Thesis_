@@ -20,6 +20,84 @@ public class EnemyFlightGuardTests
     }
 
     [Test]
+    public void Authored102HasAPlayerRiseGracePeriod()
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Character/enemy/enemy/Enm102/Enemy102.prefab");
+        using (var data = new SerializedObject(prefab.GetComponent<EnemyLocomotion>()))
+            Assert.That(data.FindProperty("flightPlayerRiseDelay").floatValue, Is.EqualTo(.8f).Within(.001f));
+    }
+
+    [Test]
+    public void FlyerWaitsThroughContinuousJumpMotionThenFollowsWithoutRepeatedPauses()
+    {
+        EnemyLocomotion flight = RiseDelayFlyer(.8f, out Transform player);
+        MethodInfo update = typeof(EnemyLocomotion).GetMethod("UpdatePlayerFlightHeightReference", Private);
+        MethodInfo resolve = typeof(EnemyLocomotion).GetMethod("ResolvePlayerFlightFeetY", Private);
+        float original = (float)resolve.Invoke(flight, new object[] { player, 3f });
+        for (int i = 0; i < 7; i++)
+        {
+            player.position += Vector3.up * .3f;
+            update.Invoke(flight, new object[] { player, .1f });
+            Assert.That((float)resolve.Invoke(flight, new object[] { player, 3f }), Is.EqualTo(original).Within(.001f));
+            Assert.That((bool)typeof(EnemyLocomotion).GetProperty("WaitingForPlayerRise", Private).GetValue(flight), Is.True);
+        }
+        update.Invoke(flight, new object[] { player, .11f });
+        float released = (float)resolve.Invoke(flight, new object[] { player, 3f });
+        Assert.That(released, Is.EqualTo(original + 2.1f).Within(.001f));
+        player.position += Vector3.up * .3f;
+        update.Invoke(flight, new object[] { player, .02f });
+        Assert.That((float)resolve.Invoke(flight, new object[] { player, 3f }), Is.EqualTo(released + .3f).Within(.001f));
+    }
+
+    [Test]
+    public void LandingDuringRiseDelayCancelsThePendingHeightChange()
+    {
+        EnemyLocomotion flight = RiseDelayFlyer(.8f, out Transform player);
+        MethodInfo update = typeof(EnemyLocomotion).GetMethod("UpdatePlayerFlightHeightReference", Private);
+        MethodInfo resolve = typeof(EnemyLocomotion).GetMethod("ResolvePlayerFlightFeetY", Private);
+        Vector3 start = player.position;
+        float original = (float)resolve.Invoke(flight, new object[] { player, 3f });
+        player.position += Vector3.up * 2f;
+        update.Invoke(flight, new object[] { player, .5f });
+        player.position = start;
+        update.Invoke(flight, new object[] { player, .02f });
+        Assert.That((bool)typeof(EnemyLocomotion).GetProperty("WaitingForPlayerRise", Private).GetValue(flight), Is.False);
+        player.position += Vector3.up * 2f;
+        update.Invoke(flight, new object[] { player, .5f });
+        Assert.That((float)resolve.Invoke(flight, new object[] { player, 3f }), Is.EqualTo(original).Within(.001f));
+    }
+
+    [TestCase(0f)]
+    [TestCase(.8f)]
+    public void ChangingFlightTargetDoesNotReuseThePreviousPlayersHeight(float delay)
+    {
+        EnemyLocomotion flight = RiseDelayFlyer(delay, out Transform player);
+        var replacement = Host("ReplacementFlightHeightTarget", player.position + Vector3.up * 5f).transform;
+        typeof(EnemyLocomotion).GetMethod("UpdatePlayerFlightHeightReference", Private)
+            .Invoke(flight, new object[] { replacement, 0f });
+        Assert.That((float)typeof(EnemyLocomotion).GetMethod("ResolvePlayerFlightFeetY", Private)
+            .Invoke(flight, new object[] { replacement, 3f }), Is.EqualTo(replacement.position.y + 3f).Within(.001f));
+        Assert.That((bool)typeof(EnemyLocomotion).GetProperty("WaitingForPlayerRise", Private).GetValue(flight), Is.False);
+    }
+
+    private EnemyLocomotion RiseDelayFlyer(float delay, out Transform player)
+    {
+        Ground(new Vector2(1000f, -.5f), new Vector2(20f, 1f));
+        var flight = Flyer(new Vector3(1000f, 0f, 0f)).GetComponent<EnemyLocomotion>();
+        using (var data = new SerializedObject(flight))
+        {
+            data.FindProperty("roamingFlight").boolValue = true;
+            data.FindProperty("flightHeightRelativeToPlayer").boolValue = true;
+            data.FindProperty("flightPlayerRiseDelay").floatValue = delay;
+            data.ApplyModifiedPropertiesWithoutUndo();
+        }
+        player = Host("PlayerRiseReference", new Vector3(1004f, 0f, 0f)).transform;
+        typeof(EnemyLocomotion).GetMethod("UpdatePlayerFlightHeightReference", Private)
+            .Invoke(flight, new object[] { player, 0f });
+        return flight;
+    }
+
+    [Test]
     public void AuthoredPrefabsUseDedicatedFlightAndGuardKits()
     {
         var flyer = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Character/enemy/enemy/Enm102/Enemy102.prefab");
