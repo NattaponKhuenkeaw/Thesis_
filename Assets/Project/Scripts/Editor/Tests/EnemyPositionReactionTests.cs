@@ -408,22 +408,22 @@ public class EnemyReactionAnimationTests
     }
 
     [Test]
-    public void AccentDoesNotApplyToOtherCharactersSkillsAirFollowupsOrGrabs()
+    public void AcceptedHitsPulseAcrossSourcesAndAirFollowupsButNotGrabs()
     {
         var data = MainComboHit("Attack1");
         data.sourceCharacter = null;
         handler.BeginReactionAnimation(data, false);
         handler.SampleComboHitAccent(0f, out var offset, out _, out _);
-        Assert.That(offset, Is.EqualTo(Vector3.zero));
+        Assert.That(offset.x, Is.EqualTo(handler.reactionAnimations.lightRecoil));
         data = MainComboHit("Attack1");
         data.sourceCategory = AttackCategory.Skill;
         handler.BeginReactionAnimation(data, false);
         handler.SampleComboHitAccent(0f, out offset, out _, out _);
-        Assert.That(offset, Is.EqualTo(Vector3.zero));
+        Assert.That(offset.x, Is.EqualTo(handler.reactionAnimations.lightRecoil));
         data = MainComboHit("Attack1");
         handler.BeginReactionAnimation(data, true);
         handler.SampleComboHitAccent(0f, out offset, out _, out _);
-        Assert.That(offset, Is.EqualTo(Vector3.zero));
+        Assert.That(offset.x, Is.EqualTo(handler.reactionAnimations.lightRecoil));
         data.reactionKind = EnemyReactionKind.Grab;
         handler.BeginReactionAnimation(data, false);
         handler.SampleComboHitAccent(0f, out offset, out _, out _);
@@ -468,6 +468,148 @@ public class EnemyReactionAnimationTests
     }
 
     [Test]
+    public void LaterRehitCanReplayBeforeSixtyFivePercentOfTheClip()
+    {
+        var data = new HitReactionData { reactionKind = EnemyReactionKind.Flinch, knockbackFrames = 20 };
+        handler.BeginReactionAnimation(data, false);
+        handler.SetReactionState(EnemyReactionState.ImpactFreeze);
+        animator.Play("Base Layer.Hurt", 0, .3f);
+        animator.Update(0f);
+        SetPresentationField("reactionPoseStartedAt", Time.time - 1f);
+        handler.BeginReactionAnimation(data, false);
+        handler.SetReactionState(EnemyReactionState.ImpactFreeze);
+        Assert.That(animator.GetCurrentAnimatorStateInfo(0).normalizedTime, Is.EqualTo(0f).Within(.001f));
+    }
+
+    [Test]
+    public void RehitStillLetsTheFirstHurtPoseReadBeforeReplaying()
+    {
+        var data = MainComboHit("Attack1");
+        handler.BeginReactionAnimation(data, false);
+        handler.SetReactionState(EnemyReactionState.ImpactFreeze);
+        animator.Play("Base Layer.Hurt", 0, .1f);
+        animator.Update(0f);
+        SetPresentationField("reactionPoseStartedAt", Time.time - 1f);
+        handler.BeginReactionAnimation(data, false);
+        handler.SetReactionState(EnemyReactionState.ImpactFreeze);
+        Assert.That(animator.GetCurrentAnimatorStateInfo(0).normalizedTime, Is.EqualTo(.1f).Within(.001f));
+        handler.SampleComboHitAccent(0f, out var offset, out _, out _);
+        Assert.That(offset.x, Is.EqualTo(handler.reactionAnimations.lightRecoil));
+    }
+
+    private void StartPendingGroundReturn()
+    {
+        handler.BeginReactionAnimation(new HitReactionData { reactionKind = EnemyReactionKind.Flinch, knockbackFrames = 20 }, false);
+        handler.SetReactionState(EnemyReactionState.ImpactFreeze);
+        handler.SetReactionState(EnemyReactionState.None);
+        Assert.That(animator.GetInteger("ReactionState"), Is.Zero, "The visual bridge must not extend gameplay reaction state.");
+        Assert.That(GetPresentationField<bool>("reactionReturnPending"), Is.True);
+    }
+
+    private void SetPresentationField(string name, object value) => typeof(AnimationHandler_Enemy)
+        .GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).SetValue(handler, value);
+
+    private T GetPresentationField<T>(string name) => (T)typeof(AnimationHandler_Enemy)
+        .GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(handler);
+
+    private void TickPresentation(float now) => typeof(AnimationHandler_Enemy)
+        .GetMethod("TickReactionReturn", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(handler, new object[] { now });
+
+    [TestCase("Enm101/animation/Enm101Animator.overrideController")]
+    [TestCase("Enm102/animation/Enm102Animator.overrideController")]
+    [TestCase("Enm103/animation/Enm103Animator.overrideController")]
+    public void ShortGroundGapKeepsHurtWithoutAnAutomaticIdleTransition(string controllerPath)
+    {
+        animator.runtimeAnimatorController = UnityEditor.AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(Root + controllerPath);
+        animator.Rebind();
+        animator.Update(0f);
+        StartPendingGroundReturn();
+        float deadline = GetPresentationField<float>("reactionReturnAt");
+        TickPresentation(deadline - .01f);
+        animator.Update(.04f);
+        Assert.That(Pose, Is.EqualTo(Animator.StringToHash("Base Layer.Hurt")));
+        Assert.That(animator.IsInTransition(0), Is.False);
+        Assert.That(animator.GetBool("ManualReactionAnimation"), Is.True);
+
+        handler.BeginReactionAnimation(new HitReactionData { reactionKind = EnemyReactionKind.Flinch, knockbackFrames = 20 }, false);
+        handler.SetReactionState(EnemyReactionState.ImpactFreeze);
+        TickPresentation(deadline + 1f);
+        animator.Update(.01f);
+        Assert.That(Pose, Is.EqualTo(Animator.StringToHash("Base Layer.Hurt")));
+        Assert.That(GetPresentationField<bool>("reactionReturnPending"), Is.False);
+    }
+
+    [Test]
+    public void RepeatedCompletionDoesNotKeepExtendingTheVisualBridge()
+    {
+        StartPendingGroundReturn();
+        float deadline = GetPresentationField<float>("reactionReturnAt");
+        handler.SetReactionState(EnemyReactionState.None);
+        Assert.That(GetPresentationField<float>("reactionReturnAt"), Is.EqualTo(deadline));
+        TickPresentation(deadline);
+        animator.Update(.1f);
+        Assert.That(Pose, Is.EqualTo(Animator.StringToHash("Base Layer.Idle")));
+        Assert.That(animator.GetBool("ManualReactionAnimation"), Is.False);
+    }
+
+    [Test]
+    public void MovementDoesNotWaitForTheVisualBridge()
+    {
+        StartPendingGroundReturn();
+        handler.SetSpeed(1f);
+        Assert.That(GetPresentationField<bool>("reactionReturnPending"), Is.False);
+        Assert.That(animator.GetBool("ManualReactionAnimation"), Is.False);
+        Assert.That(animator.GetFloat("Speed"), Is.EqualTo(1f));
+    }
+
+    [Test]
+    public void AttackDoesNotWaitForTheVisualBridge()
+    {
+        StartPendingGroundReturn();
+        handler.TriggerAttack();
+        Assert.That(GetPresentationField<bool>("reactionReturnPending"), Is.False);
+        Assert.That(animator.GetBool("ManualReactionAnimation"), Is.False);
+        animator.Update(.1f);
+        animator.Update(.1f);
+        Assert.That(Pose, Is.EqualTo(Animator.StringToHash("Base Layer.Attack")));
+    }
+
+    [Test]
+    public void ChargeCancelsPendingReturnAndIsNotOverwrittenByIdle()
+    {
+        StartPendingGroundReturn();
+        float deadline = GetPresentationField<float>("reactionReturnAt");
+        Assert.That(handler.PlayBodyChargePose(true), Is.True);
+        TickPresentation(deadline + 1f);
+        animator.Update(0f);
+        Assert.That(Pose, Is.EqualTo(Animator.StringToHash("Base Layer.BodyChargeRush")));
+    }
+
+    [Test]
+    public void DeathCancelsPendingReturnAndIsNotOverwrittenByIdle()
+    {
+        StartPendingGroundReturn();
+        float deadline = GetPresentationField<float>("reactionReturnAt");
+        handler.TriggerDie();
+        TickPresentation(deadline + 1f);
+        animator.Update(.1f);
+        animator.Update(.1f);
+        Assert.That(Pose, Is.EqualTo(Animator.StringToHash("Base Layer.Die")));
+        Assert.That(GetPresentationField<bool>("reactionReturnPending"), Is.False);
+    }
+
+    [Test]
+    public void DisablingCancelsPendingReturnAndReleasesManualOwnership()
+    {
+        StartPendingGroundReturn();
+        handler.enabled = false;
+        typeof(AnimationHandler_Enemy).GetMethod("OnDisable", BindingFlags.Instance | BindingFlags.NonPublic)
+            .Invoke(handler, null);
+        Assert.That(GetPresentationField<bool>("reactionReturnPending"), Is.False);
+        Assert.That(animator.GetBool("ManualReactionAnimation"), Is.False);
+    }
+
+    [Test]
     public void AirFollowupUsesHurtInsteadOfReplayingLaunch()
     {
         var data = new HitReactionData { reactionKind = EnemyReactionKind.Knockup, knockupFrames = 20 };
@@ -488,6 +630,7 @@ public class EnemyReactionAnimationTests
         handler.BeginReactionAnimation(new HitReactionData { reactionKind = EnemyReactionKind.Flinch, knockbackFrames = 20 }, false);
         handler.SetReactionState(EnemyReactionState.ImpactFreeze);
         handler.SetReactionState(EnemyReactionState.None);
+        TickPresentation(GetPresentationField<float>("reactionReturnAt"));
         animator.Update(.1f);
         Assert.That(Pose, Is.EqualTo(Animator.StringToHash("Base Layer.Idle")));
         Assert.That(animator.GetFloat("ReactionPlaybackSpeed"), Is.EqualTo(1f));
