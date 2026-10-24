@@ -80,6 +80,79 @@ public class EnemyReactionCompatibilityTests
         Assert.That(handler.CurrentState, Is.EqualTo(EnemyReactionState.None));
     }
 
+    [TestCase(.80325f, 0f)]
+    [TestCase(.80325f, 180f)]
+    [TestCase(1.5f, 0f)]
+    [TestCase(1.5f, 180f)]
+    public void CenteredGrabAlignsVisualCoreAtDifferentSizesAndFacing(float scale, float yaw)
+    {
+        host.transform.localScale = Vector3.one * scale;
+        host.transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+        var collider = host.AddComponent<BoxCollider2D>();
+        collider.offset = new Vector2(0f, 1.15f);
+        enemy.bodyCollider = collider;
+        Invoke("Awake");
+        Vector2 adjustment = new Vector2(-.11f, .44f);
+        Set("grabCenterAdjustment", adjustment);
+        attacker.transform.position = new Vector3(100f, 4f, 0f);
+        attacker.transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+        attacker.transform.localScale = new Vector3(1.2f, .8f, 1f);
+        var hit = Hit(EnemyReactionKind.Grab, DamageImpactTier.Low);
+        hit.grabSocket = attacker.transform;
+        hit.grabOffset = new Vector2(.06f, 2.61f);
+        hit.snapOffset = new Vector2(4f, 2.5f);
+        hit.alignGrabToBodyCenter = true;
+        Set("currentReaction", hit);
+
+        Vector2 rootPosition = (Vector2)typeof(EnemyHitReactionHandler)
+            .GetMethod("ResolveGrabbedPosition", Private).Invoke(handler, new object[] { attacker.transform });
+        Vector2 coreOffset = host.transform.TransformVector(collider.offset + adjustment);
+        Vector2 chainCenter = attacker.transform.TransformPoint(hit.grabOffset);
+        Assert.That(Vector2.Distance(rootPosition + coreOffset, chainCenter), Is.LessThan(.0001f));
+
+        // A trap stays attached to its projectile when that projectile moves.
+        Vector2 shift = new Vector2(3f, -2f);
+        attacker.transform.position += (Vector3)shift;
+        Vector2 movedPosition = (Vector2)typeof(EnemyHitReactionHandler)
+            .GetMethod("ResolveGrabbedPosition", Private).Invoke(handler, new object[] { attacker.transform });
+        Assert.That(Vector2.Distance(movedPosition, rootPosition + shift), Is.LessThan(.0001f));
+    }
+
+    [Test]
+    public void CenteredGrabReleasesWhenProjectileDisablesInsteadOfFallingBackToCaster()
+    {
+        var socket = new GameObject("ExpiringChainTrap");
+        try
+        {
+            var hit = Hit(EnemyReactionKind.Grab, DamageImpactTier.Low);
+            hit.attackerTransform = attacker.transform;
+            hit.grabSocket = socket.transform;
+            hit.alignGrabToBodyCenter = true;
+            handler.StartReaction(hit, Vector2.left);
+            Step(3);
+            Assert.That(handler.CurrentState, Is.EqualTo(EnemyReactionState.Grabbed));
+            socket.SetActive(false);
+            Step(4);
+            Assert.That(handler.CurrentState, Is.EqualTo(EnemyReactionState.Recovering));
+            Assert.That(body.bodyType, Is.EqualTo(RigidbodyType2D.Dynamic));
+        }
+        finally { Object.DestroyImmediate(socket); }
+    }
+
+    [Test]
+    public void LegacyGrabKeepsPivotAndSnapOffsetEvenWithVisualCoreAdjustment()
+    {
+        Set("grabCenterAdjustment", new Vector2(-.11f, .44f));
+        attacker.transform.position = new Vector3(10f, 2f, 0f);
+        var hit = Hit(EnemyReactionKind.Grab, DamageImpactTier.Low);
+        hit.attackerTransform = attacker.transform;
+        hit.snapOffset = new Vector2(4f, 2.5f);
+        Set("currentReaction", hit);
+        Vector2 position = (Vector2)typeof(EnemyHitReactionHandler)
+            .GetMethod("ResolveGrabbedPosition", Private).Invoke(handler, new object[] { attacker.transform });
+        Assert.That(position, Is.EqualTo(new Vector2(14f, 4.5f)));
+    }
+
     [Test]
     public void RegrabAbsorptionAndForeignOwnerKeepOriginalSession()
     {

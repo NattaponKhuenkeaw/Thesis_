@@ -557,6 +557,56 @@ public class EnemyFlightGuardTests
         }
     }
 
+    [TestCase(false)]
+    [TestCase(true)]
+    public void ProjectileGrabUsesVisualAnchorOnlyWhenExplicitlyEnabled(bool centered)
+    {
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        var handler = enemy.gameObject.AddComponent<EnemyHitReactionHandler>();
+        typeof(EnemyHitReactionHandler).GetMethod("Awake", Private).Invoke(handler, null);
+        enemy.hitReactionHandler = handler;
+        var caster = Host("TrapCaster", enemy.transform.position + Vector3.right * 5f);
+        guard.BeginGuard(caster.transform);
+        var projectile = Host("ChainTrap", enemy.transform.position);
+        var runtime = projectile.AddComponent<ProjectileRuntime>();
+        var owner = projectile.AddComponent<Project.Combat.GenericProjectilePlayer>();
+        var data = ScriptableObject.CreateInstance<ProjectileData>();
+        created.Add(data);
+        data.playSpawnAnimation = false;
+        data.centerGrabbedTargets = centered;
+        data.grabCenterOffset = new Vector2(.06f, 2.61f);
+        data.routineHitbox.hitbox = new NormalHitbox
+        {
+            reactionKind = EnemyReactionKind.Grab,
+            useDeterministicReaction = true,
+            damageRatio = 1f,
+            flashFrames = 0,
+            impactFreezeFrames = 0,
+            snapOffset = new Vector2(4f, 2.5f)
+        };
+        runtime.Initialize(owner, null, ProjectileType.None, data, new ProjectileSpawnContext
+        {
+            casterTransform = caster.transform,
+            origin = projectile.transform.position,
+            direction = Vector2.right,
+            sourceAttack = 10f,
+            actionDamageMultiplier = 1f
+        });
+
+        projectile.GetComponent<HitBoxDamage>().ProcessHit(enemy);
+
+        var hit = (HitReactionData)typeof(EnemyHitReactionHandler)
+            .GetField("currentReaction", Private).GetValue(handler);
+        Assert.That(guard.IsEngaged, Is.False);
+        Assert.That(hit.reactionKind, Is.EqualTo(EnemyReactionKind.Grab));
+        Assert.That(hit.alignGrabToBodyCenter, Is.EqualTo(centered));
+        Assert.That(hit.grabSocket, Is.EqualTo(centered ? projectile.transform : caster.transform));
+        Assert.That(hit.attackerTransform, Is.EqualTo(caster.transform));
+        Assert.That(hit.reactionOwnerId, Is.EqualTo(caster.transform.root.GetInstanceID()));
+        if (centered)
+            Assert.That(hit.grabOffset, Is.EqualTo(data.grabCenterOffset));
+    }
+
     [Test]
     public void GuardRearHitDealsDamageAndReleasesPlant()
     {

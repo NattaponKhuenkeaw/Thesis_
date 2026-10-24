@@ -15,6 +15,10 @@ public class EnemyHitReactionHandler : MonoBehaviour
     public float groundCheckDistance = 0.08f;
     public float groundNormalMinY = 0.25f;
 
+    [Header("Grab Presentation")]
+    [Tooltip("Local adjustment from the body collider center to the visual core. Used only by centered projectile grabs.")]
+    [SerializeField] private Vector2 grabCenterAdjustment;
+
     [Header("Position Reaction")]
     [SerializeField] private bool usePositionReactions;
     [SerializeField, Min(0f)] private float maximumReactionTravel = 1.2f;
@@ -699,7 +703,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
         if (data.reactionKind == EnemyReactionKind.Grab)
         {
-            if (data.grabSocket == null && data.attackerTransform != null)
+            if (!data.alignGrabToBodyCenter && data.grabSocket == null && data.attackerTransform != null)
             {
                 data.grabSocket = data.attackerTransform;
             }
@@ -868,6 +872,8 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
     private bool HasValidGrabTarget()
     {
+        if (currentReaction.alignGrabToBodyCenter)
+            return currentReaction.grabSocket != null && currentReaction.grabSocket.gameObject.activeInHierarchy;
         return currentReaction.grabSocket != null || currentReaction.attackerTransform != null;
     }
 
@@ -922,6 +928,9 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
     private void UpdateGrabbedBinding()
     {
+        if (currentReaction.alignGrabToBodyCenter && !HasValidGrabTarget())
+            return;
+
         Transform bindTarget = currentReaction.grabSocket != null
             ? currentReaction.grabSocket
             : currentReaction.attackerTransform;
@@ -931,14 +940,13 @@ public class EnemyHitReactionHandler : MonoBehaviour
             return;
         }
 
-        Vector2 offset = currentReaction.grabOffset != Vector2.zero
-            ? currentReaction.grabOffset
-            : currentReaction.snapOffset;
+        if (currentReaction.alignGrabToBodyCenter)
+            transform.rotation = bindTarget.rotation;
 
-        float facing = GetAttackerFacingSign();
-        Vector2 targetPosition = (Vector2)bindTarget.position + new Vector2(offset.x * facing, offset.y);
+        MoveToReactionPosition(ResolveGrabbedPosition(bindTarget));
 
-        MoveToReactionPosition(targetPosition);
+        if (currentReaction.alignGrabToBodyCenter)
+            return;
 
         if (rb != null)
         {
@@ -948,6 +956,23 @@ public class EnemyHitReactionHandler : MonoBehaviour
         {
             transform.rotation = bindTarget.rotation;
         }
+    }
+
+    private Vector2 ResolveGrabbedPosition(Transform bindTarget)
+    {
+        if (currentReaction.alignGrabToBodyCenter)
+        {
+            Vector3 localCenter = bodyCollider != null
+                ? transform.InverseTransformPoint(bodyCollider.transform.TransformPoint(bodyCollider.offset))
+                : Vector3.zero;
+            Vector2 centerOffset = transform.TransformVector(localCenter + (Vector3)grabCenterAdjustment);
+            return (Vector2)bindTarget.TransformPoint(currentReaction.grabOffset) - centerOffset;
+        }
+
+        Vector2 offset = currentReaction.grabOffset != Vector2.zero
+            ? currentReaction.grabOffset
+            : currentReaction.snapOffset;
+        return (Vector2)bindTarget.position + new Vector2(offset.x * GetAttackerFacingSign(), offset.y);
     }
 
     private void MoveToReactionPosition(Vector2 targetPosition)

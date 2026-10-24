@@ -52,6 +52,8 @@ MonoBehaviour:
   stopOnImpact: 1
   destroyWhenHitsExhausted: 0
   destroyOnLifetimeExpire: 1
+  centerGrabbedTargets: 1
+  grabCenterOffset: {x: 0.06, y: 2.61}
   trackAreaOccupants: 0
   areaEffectRefreshInterval: 0.25
   areaEffects: []
