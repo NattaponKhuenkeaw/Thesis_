@@ -49,7 +49,7 @@ public class EnemyFlightGuardTests
         }
         Assert.That(flight.PrepareSpawnFlight(), Is.True);
         Assert.That(flight.GetComponent<EnemyController>().bodyCollider.bounds.min.y,
-            Is.EqualTo(3.168f).Within(.001f));
+            Is.EqualTo(3.8f).Within(.001f));
 
         player.transform.position += Vector3.up * jumpHeight;
         player.Movement.GroundState.Tick(false, 5f);
@@ -59,7 +59,7 @@ public class EnemyFlightGuardTests
         typeof(EnemyLocomotion).GetMethod("SelectFlightDestination", Private).Invoke(flight, null);
         var endpoint = typeof(EnemyLocomotion).GetField("flightMoveEnd", Private);
         Vector2 selected = (Vector2)endpoint.GetValue(flight);
-        Assert.That(selected.y, Is.InRange(3.168f - .2f, 3.168f + .2f));
+        Assert.That(selected.y, Is.InRange(3.8f - .2f, 3.8f + .2f));
 
         player.transform.position += new Vector3(5f, 4f, 0f);
         Physics2D.SyncTransforms();
@@ -67,6 +67,43 @@ public class EnemyFlightGuardTests
         var updated = (Vector2)endpoint.GetValue(flight);
         Assert.That(updated.x, Is.EqualTo(selected.x + 5f).Within(.001f));
         Assert.That(updated.y, Is.EqualTo(selected.y).Within(.001f));
+    }
+
+    [TestCase("test_0_Main", "main")]
+    [TestCase("test_1_CameraGirl", "cg")]
+    public void Authored102HighestFlightStillOverlapsAnOrdinarySingleJumpAirAttack(string folder, string suffix)
+    {
+        string root = $"Assets/Project/Character/Hero/{folder}/";
+        var character = AssetDatabase.LoadAssetAtPath<CharacterObject>(root + $"CharacterObject_{suffix}.asset");
+        var table = AssetDatabase.LoadAssetAtPath<ActionResolverTable>(root + $"ActionResolverTable_{suffix}.asset");
+        var air = table.comboActions.Find(action => action.context == CombatActionContext.Air);
+        var hit = (NormalHitbox)air.comboTree.rootNode.stepData.hitData.hitboxes[0];
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Character/enemy/enemy/Enm102/Enemy102.prefab");
+        using (var flight = new SerializedObject(prefab.GetComponent<EnemyLocomotion>()))
+        {
+            // Use a reachable mid-jump swing, not a frame-perfect hit at the apex or a double jump.
+            const float swingRise = 2f;
+            float rise = 0f;
+            float speed = character.movementProfile.jumpSpeed;
+            while (speed > 0f)
+            {
+                speed = Mathf.Max(0f, speed - character.movementProfile.riseDeceleration * Time.fixedDeltaTime);
+                rise += speed * Time.fixedDeltaTime;
+            }
+            Assert.That(rise, Is.GreaterThan(swingRise + .5f));
+            float height = flight.FindProperty("flightHeight").floatValue;
+            float variation = flight.FindProperty("flightHeightVariation").floatValue;
+            float arc = flight.FindProperty("flightArcHeight").floatValue;
+            var body = (BoxCollider2D)prefab.GetComponent<EnemyController>().bodyCollider;
+            float bodyHeight = body.size.y * prefab.transform.lossyScale.y;
+            foreach (float bottom in new[] { height - variation, height + variation + arc })
+            {
+                float overlap = Mathf.Min(swingRise + hit.offset.y + hit.size.y * .5f, bottom + bodyHeight)
+                    - Mathf.Max(swingRise + hit.offset.y - hit.size.y * .5f, bottom);
+                Assert.That(overlap, Is.GreaterThan(.3f), "Keep vertical hit overlap at both flight extremes.");
+            }
+            Assert.That(flight.FindProperty("flightHeightRelativeToPlayer").boolValue, Is.False);
+        }
     }
 
     [Test]
@@ -353,7 +390,7 @@ public class EnemyFlightGuardTests
         Assert.That(flyer.GetComponent<EnemyLocomotion>().UsesFixedHeightFlight, Is.True);
         Assert.That(flyer.GetComponent<EnemyLocomotion>().UsesRoamingFlight, Is.True);
         var flightSettings = new SerializedObject(flyer.GetComponent<EnemyLocomotion>());
-        Assert.That(flightSettings.FindProperty("flightHeight").floatValue, Is.EqualTo(3.168f));
+        Assert.That(flightSettings.FindProperty("flightHeight").floatValue, Is.EqualTo(3.8f));
         Assert.That(flightSettings.FindProperty("flightHeightMultiplier").floatValue, Is.EqualTo(1f));
         Assert.That(flightSettings.FindProperty("flightHeightRelativeToPlayer").boolValue, Is.False);
         Assert.That(flightSettings.FindProperty("flightArcHeight").floatValue, Is.EqualTo(.35f));
