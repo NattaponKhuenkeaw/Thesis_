@@ -952,6 +952,12 @@ public class EnemyHitReactionHandler : MonoBehaviour
 
     private void MoveToReactionPosition(Vector2 targetPosition)
     {
+        // Authored snap hits must use the same terrain sweep as ordinary recoil.
+        if (positionMotion != null && currentReaction.reactionKind != EnemyReactionKind.Grab)
+        {
+            positionMotion.MoveTo(targetPosition);
+            return;
+        }
         if (rb != null)
         {
             rb.linearVelocity = Vector2.zero;
@@ -1526,15 +1532,27 @@ public class EnemyHitReactionHandler : MonoBehaviour
                 }
             }
             dy = Mathf.Min(dy, Mathf.Max(0f, ceilingY - body.position.y));
-            Vector2 delta = new Vector2(Clip(Vector2.right, dx), Clip(Vector2.up, dy));
-            if (dy > 0f && (delta.y + .0001f < dy || body.position.y + delta.y >= ceilingY - .001f))
+            float startY = body.position.y;
+            Vector2 delta = MoveBy(new Vector2(dx, dy));
+            if (dy > 0f && (delta.y + .0001f < dy || startY + delta.y >= ceilingY - .001f))
                 verticalSpeed = Mathf.Min(0f, verticalSpeed);
             if (dy < 0f && delta.y > dy + .0001f) verticalSpeed = 0f;
+        }
+
+        public Vector2 MoveTo(Vector2 targetPosition)
+        {
+            return MoveBy(targetPosition - body.position);
+        }
+
+        private Vector2 MoveBy(Vector2 desired)
+        {
+            Vector2 delta = new Vector2(Clip(Vector2.right, desired.x), Clip(Vector2.up, desired.y));
             // Sweep the combined move as well to protect diagonal corners.
             float distance = delta.magnitude;
             if (distance > .00001f)
                 delta = delta.normalized * Clip(delta.normalized, distance);
             body.MovePosition(body.position + delta);
+            return delta;
         }
 
         private float Clip(Vector2 axis, float distance)
@@ -1543,6 +1561,7 @@ public class EnemyHitReactionHandler : MonoBehaviour
             Vector2 direction = axis * Mathf.Sign(distance);
             float allowed = Mathf.Abs(distance);
             int count = collider.Cast(direction, filter, hits, allowed + Skin);
+            if (count == hits.Length) return 0f;
             for (int i = 0; i < count; i++)
             {
                 var hit = hits[i];

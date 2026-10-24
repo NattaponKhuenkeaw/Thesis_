@@ -302,6 +302,116 @@ public class EnemyPositionReactionTests
     }
 
     [Test]
+    public void SnapReachesTheAuthoredTargetInOpenSpace()
+    {
+        Vector2 target = body.position + new Vector2(3f, -1.2f);
+        motorType.GetMethod("MoveTo").Invoke(motor, new object[] { target });
+        Physics2D.Simulate(.02f);
+        Assert.That(Vector2.Distance(body.position, target), Is.LessThan(.002f));
+    }
+
+    [Test]
+    public void SnapCannotCrossAThinWallEvenWhenItsDestinationIsClearBeyondIt()
+    {
+        obstacle = new GameObject("SnapWall");
+        obstacle.transform.position = actor.transform.position + Vector3.right * .8f;
+        var wall = obstacle.AddComponent<BoxCollider2D>();
+        wall.size = new Vector2(.05f, 10f);
+        Physics2D.SyncTransforms();
+        Vector2 target = body.position + Vector2.right * 4f;
+        motorType.GetMethod("MoveTo").Invoke(motor, new object[] { target });
+        Physics2D.Simulate(.02f);
+        Assert.That(actor.GetComponent<Collider2D>().bounds.max.x,
+            Is.LessThanOrEqualTo(wall.bounds.min.x + .005f));
+    }
+
+    [Test]
+    public void DownwardSnapCannotCrossAThinFloor()
+    {
+        obstacle = new GameObject("SnapFloor");
+        obstacle.transform.position = actor.transform.position + Vector3.down;
+        var floor = obstacle.AddComponent<BoxCollider2D>();
+        floor.size = new Vector2(20f, .05f);
+        Physics2D.SyncTransforms();
+        Vector2 target = body.position + new Vector2(1.5f, -4f);
+        for (int i = 0; i < 10; i++)
+        {
+            motorType.GetMethod("MoveTo").Invoke(motor, new object[] { target });
+            Physics2D.Simulate(.02f);
+            Assert.That(actor.GetComponent<Collider2D>().bounds.min.y,
+                Is.GreaterThanOrEqualTo(floor.bounds.max.y - .005f));
+        }
+    }
+
+    [TestCase(1f)]
+    [TestCase(-1f)]
+    public void CameragirlAttack5SnapCannotPushShieldEnemyIntoLayout02PolygonStep(float direction)
+    {
+        const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+        var shieldPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+            "Assets/Project/Character/enemy/enemy/Enm103/Enemy103.prefab");
+        var shieldBody = (BoxCollider2D)shieldPrefab.GetComponent<EnemyController>().bodyCollider;
+        var actorCollider = actor.GetComponent<BoxCollider2D>();
+        actor.layer = shieldPrefab.layer;
+        actor.transform.localScale = shieldPrefab.transform.localScale;
+        actorCollider.size = shieldBody.size;
+        actorCollider.offset = shieldBody.offset;
+        var layout = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(
+            "Assets/Project/Resources/RoomLayouts/RoomLayout_Combat_02.prefab");
+        Transform terrain = layout.transform.Find("EnvironmentDependency/Ground (1)");
+        Assert.That(terrain, Is.Not.Null);
+        Assert.That(terrain.GetComponent<PolygonCollider2D>(), Is.Not.Null);
+        obstacle = UnityEngine.Object.Instantiate(terrain.gameObject);
+        Vector3 terrainScale = obstacle.transform.localScale;
+        terrainScale.x *= direction;
+        obstacle.transform.localScale = terrainScale;
+        float halfWidth = actorCollider.size.x * actor.transform.localScale.x * .5f;
+        // The authored ledge rises at local x ~1.08, above its lower floor at y ~1.96.
+        obstacle.transform.position = new Vector3(
+            body.position.x + direction * (halfWidth + .08f) - 1.08f * terrainScale.x,
+            body.position.y - .02f - 1.96f * terrainScale.y, 0f);
+        Physics2D.SyncTransforms();
+        var polygon = obstacle.GetComponent<PolygonCollider2D>();
+        Assert.That(actorCollider.Distance(polygon).isOverlapped, Is.False, "Start outside the terrain.");
+
+        var table = UnityEditor.AssetDatabase.LoadAssetAtPath<ActionResolverTable>(
+            "Assets/Project/Character/Hero/test_1_CameraGirl/ActionResolverTable_cg.asset");
+        var node = table.comboActions[0].comboTree.rootNode;
+        for (int i = 0; i < 4; i++) node = node.defaultNext;
+        var authored = (NormalHitbox)node.stepData.hitData.hitboxes[0];
+        Assert.That(authored.useSnapToAnchor, Is.True);
+        var reaction = new HitReactionData
+        {
+            reactionKind = authored.reactionKind,
+            useSnapToAnchor = true,
+            hasSnapWorldPosition = true,
+            snapWorldPosition = body.position + Vector2.right * direction * 1.5f,
+            snapOffset = authored.snapOffset,
+            knockbackDirection = Vector2.right * direction
+        };
+        var controller = actor.AddComponent<EnemyController>();
+        controller.bodyCollider = actorCollider;
+        var handler = actor.AddComponent<EnemyHitReactionHandler>();
+        typeof(EnemyHitReactionHandler).GetMethod("Awake", flags).Invoke(handler, null);
+        typeof(EnemyHitReactionHandler).GetField("positionMotion", flags).SetValue(handler, motor);
+        typeof(EnemyHitReactionHandler).GetField("currentReaction", flags).SetValue(handler, reaction);
+        MethodInfo snap = typeof(EnemyHitReactionHandler).GetMethod("ApplySnapBinding", flags);
+        Vector2 start = body.position;
+        for (int i = 0; i < 30; i++)
+        {
+            snap.Invoke(handler, null);
+            Physics2D.Simulate(.02f);
+            var separation = actorCollider.Distance(polygon);
+            // Collider distance includes contact margins; reject penetration beyond the motor's .01 skin.
+            Assert.That(separation.distance, Is.GreaterThanOrEqualTo(-.01f),
+                $"Repeated snap {i}: position={body.position}, separation={separation.distance}, normal={separation.normal}, type={body.bodyType}");
+            Assert.That((body.position.x - start.x) * direction, Is.LessThan(.15f),
+                "Repeated hits must remain before the ledge rather than slowly crossing its wall.");
+        }
+        Assert.That(body.position.y, Is.GreaterThanOrEqualTo(9999.98f));
+    }
+
+    [Test]
     public void FlightPlaneReactionMovesHorizontallyWithoutFalling()
     {
         Vector2 start = body.position;
