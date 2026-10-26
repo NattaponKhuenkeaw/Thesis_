@@ -67,6 +67,7 @@ namespace Project.EditorTools
                     EditorGUILayout.Space(4f);
                     DrawRelative(chamber, "entranceWall", "Entrance Wall");
                     DrawRelative(chamber, "exitWall", "Exit Wall");
+                    DrawRelative(chamber, "additionalExitWalls", "Additional Exit Walls");
                     DrawRelative(chamber, "enterTrigger", "Enter Trigger");
                     DrawRelative(chamber, "spawnRoot", "Spawn Root");
                     DrawRelative(chamber, "spawnSlots", "Spawn Slots");

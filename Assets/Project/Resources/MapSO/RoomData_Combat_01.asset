@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Project.Core.ZoneState.RoomData
   roomId: Combat_01
   sceneName: combat_1
-  layoutPrefab: {fileID: 293298765199739078, guid: d84e240b6cbe1b94b981d992502b832c, type: 3}
+  layoutPrefab: {fileID: 1290592931944430994, guid: 96b4b07626565ff41b70ea3dadb8ca49, type: 3}
   roomKind: 0
   displayName: Combat 01
   offerIcon: {fileID: 0}
