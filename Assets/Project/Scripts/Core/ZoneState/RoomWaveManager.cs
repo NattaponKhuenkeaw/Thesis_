@@ -15,6 +15,8 @@ namespace Project.Core.ZoneState
     [RequireComponent(typeof(Collider2D))]
     public class RoomWaveManager : MonoBehaviour
     {
+        private enum SpawnResult { Spawned, Occupied, Invalid }
+
         private sealed class SpawnEntry
         {
             public GameObject enemyPrefab;
@@ -63,6 +65,7 @@ namespace Project.Core.ZoneState
         private bool spawnedBossEnemy;
         private CombatStageController stageController;
         private readonly List<Vector3> livingEnemyPositions = new List<Vector3>();
+        private readonly Dictionary<EnemyController, Vector3> spawnOrigins = new Dictionary<EnemyController, Vector3>();
 
         private void Awake()
         {
@@ -247,7 +250,8 @@ namespace Project.Core.ZoneState
             while (spawned < openingCount && pressureDirector.Remaining > 0)
             {
                 GameObject prefab = pressureDirector.DequeueNext();
-                if (TrySpawnPrefab(prefab, pickSlotByRole: true))
+                SpawnResult result = TrySpawnPrefab(prefab, pickSlotByRole: true);
+                if (result == SpawnResult.Spawned)
                 {
                     spawned++;
                     continue;
@@ -263,7 +267,7 @@ namespace Project.Core.ZoneState
                 if (pressureDirector.CanSpawn(living))
                 {
                     GameObject prefab = pressureDirector.DequeueNext();
-                    if (!TrySpawnPrefab(prefab, pickSlotByRole: true))
+                    if (TrySpawnPrefab(prefab, pickSlotByRole: true) != SpawnResult.Spawned)
                     {
                         pressureDirector.Requeue(prefab);
                     }
@@ -271,6 +275,7 @@ namespace Project.Core.ZoneState
                     {
                         yield return new WaitForSeconds(runtimeSpawnInterval);
                     }
+                    else yield return null;
 
                     continue;
                 }
@@ -291,7 +296,8 @@ namespace Project.Core.ZoneState
 
             for (int i = 0; i < quota.Count; i++)
             {
-                TrySpawnPrefab(quota[i], pickSlotByRole: true);
+                while (TrySpawnPrefab(quota[i], pickSlotByRole: true) == SpawnResult.Occupied)
+                    yield return null;
             }
 
             while (HasLivingEnemies())
@@ -382,7 +388,7 @@ namespace Project.Core.ZoneState
 
             for (currentWaveIndex = 0; currentWaveIndex < runtimeWaves.Count; currentWaveIndex++)
             {
-                SpawnWave(runtimeWaves[currentWaveIndex]);
+                yield return SpawnWave(runtimeWaves[currentWaveIndex]);
 
                 while (HasLivingEnemies())
                 {
@@ -684,14 +690,15 @@ namespace Project.Core.ZoneState
                 : null;
         }
 
-        private void SpawnWave(Wave wave)
+        private IEnumerator SpawnWave(Wave wave)
         {
             UnsubscribeActiveEnemies();
             activeEnemies.Clear();
+            spawnOrigins.Clear();
 
             if (wave == null || wave.enemies == null)
             {
-                return;
+                yield break;
             }
 
             for (int i = 0; i < wave.enemies.Count; i++)
@@ -703,15 +710,16 @@ namespace Project.Core.ZoneState
                     continue;
                 }
 
-                TrySpawnPrefab(entry.enemyPrefab, pickSlotByRole: false, fallbackPoint: entry.spawnPoint);
+                while (TrySpawnPrefab(entry.enemyPrefab, pickSlotByRole: false, fallbackPoint: entry.spawnPoint) == SpawnResult.Occupied)
+                    yield return null;
             }
         }
 
-        private bool TrySpawnPrefab(GameObject prefab, bool pickSlotByRole, Transform fallbackPoint = null)
+        private SpawnResult TrySpawnPrefab(GameObject prefab, bool pickSlotByRole, Transform fallbackPoint = null)
         {
             if (prefab == null)
             {
-                return false;
+                return SpawnResult.Invalid;
             }
 
             CollectLivingEnemyPositions();
@@ -723,17 +731,17 @@ namespace Project.Core.ZoneState
             if (spawnPoint == null)
             {
                 Debug.LogWarning($"[RoomWaveManager] No spawn point for '{prefab.name}'.", this);
-                return false;
+                return SpawnResult.Invalid;
             }
 
-            Vector3 spawnPosition = ResolveSeparatedPosition(spawnPoint, prefab);
+            if (!TryResolveSeparatedPosition(spawnPoint, out Vector3 spawnPosition)) return SpawnResult.Occupied;
             GameObject enemyObject = Instantiate(prefab, spawnPosition, spawnPoint.rotation);
             EnemyController enemy = enemyObject.GetComponentInChildren<EnemyController>();
             if (enemy == null)
             {
                 Debug.LogWarning($"[RoomWaveManager] Spawned prefab '{prefab.name}' has no EnemyController.", this);
                 Destroy(enemyObject);
-                return false;
+                return SpawnResult.Invalid;
             }
 
             // The instance is already at its final ground spawn position; lifecycle handles the
@@ -743,6 +751,7 @@ namespace Project.Core.ZoneState
             enemy.OnDied += HandleEnemyDied;
             RunProgressionManager.ApplyBiomeDifficultyToEnemy(enemy);
             activeEnemies.Add(enemy);
+            spawnOrigins[enemy] = spawnPosition;
             spawnedAnyEnemy = true;
 
             if (enemy.GetComponentInChildren<Project.AIBehaviour.Boss.BossPatternController>(true) != null)
@@ -750,7 +759,7 @@ namespace Project.Core.ZoneState
                 spawnedBossEnemy = true;
             }
 
-            return true;
+            return SpawnResult.Spawned;
         }
 
         private Transform ResolvePressureSpawnPoint(GameObject prefab, Transform fallbackPoint)
@@ -783,6 +792,13 @@ namespace Project.Core.ZoneState
                 if (enemy != null && enemy.IsAlive)
                 {
                     livingEnemyPositions.Add(enemy.transform.position);
+                    if (spawnOrigins.TryGetValue(enemy, out Vector3 origin))
+                    {
+                        // Flight and knockup move a body away from its ground marker. Reserve the
+                        // spawn origin and its current column so lifting cannot make that space look free.
+                        livingEnemyPositions.Add(origin);
+                        livingEnemyPositions.Add(new Vector3(enemy.transform.position.x, origin.y, origin.z));
+                    }
                 }
             }
         }
@@ -790,14 +806,15 @@ namespace Project.Core.ZoneState
         /// <summary>
         /// Keeps a spawn off the bodies that are already standing there. Slides sideways
         /// inside the span of the authored slots, so a crowded room never pushes an enemy
-        /// through a wall. Warns instead of stacking silently when the room runs out of space.
+        /// through a wall. If the room is full, the caller retains the quota and retries later.
         /// </summary>
-        private Vector3 ResolveSeparatedPosition(Transform spawnPoint, GameObject prefab)
+        private bool TryResolveSeparatedPosition(Transform spawnPoint, out Vector3 position)
         {
             Vector3 basePosition = spawnPoint.position;
+            position = basePosition;
             if (minSpawnSeparation <= 0f || livingEnemyPositions.Count == 0)
             {
-                return basePosition;
+                return true;
             }
 
             float baseClearance = EncounterSpawnSlotPicker.NearestBlockedDistance(
@@ -805,11 +822,8 @@ namespace Project.Core.ZoneState
                 livingEnemyPositions);
             if (baseClearance >= minSpawnSeparation)
             {
-                return basePosition;
+                return true;
             }
-
-            Vector3 best = basePosition;
-            float bestClearance = baseClearance;
 
             if (TryGetNudgeRange(basePosition, out float minX, out float maxX))
             {
@@ -825,24 +839,14 @@ namespace Project.Core.ZoneState
                             livingEnemyPositions);
                         if (clearance >= minSpawnSeparation)
                         {
-                            return candidate;
-                        }
-
-                        if (clearance > bestClearance)
-                        {
-                            bestClearance = clearance;
-                            best = candidate;
+                            position = candidate;
+                            return true;
                         }
                     }
                 }
             }
 
-            Debug.LogWarning(
-                $"[RoomWaveManager] '{prefab.name}' had to spawn {bestClearance:0.00} from the nearest enemy " +
-                $"at '{spawnPoint.name}' (wanted {minSpawnSeparation:0.00}). This room needs more Spawn_N slots " +
-                "or wider spacing between them.",
-                this);
-            return best;
+            return false;
         }
 
         /// <summary>
@@ -862,7 +866,7 @@ namespace Project.Core.ZoneState
             for (int i = 0; i < spawnSlots.Length; i++)
             {
                 Transform slot = spawnSlots[i];
-                if (slot == null)
+                if (slot == null || Mathf.Abs(slot.position.y - basePosition.y) > 0.25f)
                 {
                     continue;
                 }
@@ -899,6 +903,7 @@ namespace Project.Core.ZoneState
                     if (activeEnemies[i] != null)
                     {
                         activeEnemies[i].OnDied -= HandleEnemyDied;
+                        spawnOrigins.Remove(activeEnemies[i]);
                     }
 
                     activeEnemies.RemoveAt(i);
@@ -1045,6 +1050,7 @@ namespace Project.Core.ZoneState
             }
 
             activeEnemies.Clear();
+            spawnOrigins.Clear();
         }
 
         private bool IsPlayer(Collider2D other)

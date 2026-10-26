@@ -750,7 +750,8 @@ MonoBehaviour:
   healHoldSeconds: 0.9
   restoreDelaySeconds: 0.45
   confirmClip: {fileID: 0}
-  healClip: {fileID: 0}
+  healClip: {fileID: 8300000, guid: 1c77220349ae4ac29282d588a77e0693, type: 3}
+  healSfxDelaySeconds: 0.45
   sfxVolume: 1
 --- !u!1 &1512548921421583902
 GameObject:

@@ -683,6 +683,8 @@ MonoBehaviour:
   spawnDuration: 0.55
   deathFadeDuration: 0.45
   deathPoseHold: 0.15
+  deathDissolveSfx: {fileID: 8300000, guid: d532de19063c45cf84ed497e15f27d29, type: 3}
+  deathDissolveSfxVolume: 1
   energyColor: {r: 0.65, g: 0.82, b: 0.85, a: 0.45}
   particleCount: 28
 --- !u!114 &8128473920184738291

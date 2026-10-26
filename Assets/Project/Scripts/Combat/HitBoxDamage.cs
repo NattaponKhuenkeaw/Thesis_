@@ -185,6 +185,16 @@ public class HitBoxDamage : MonoBehaviour
             ? BuildGrabReactionData(direction)
             : BuildReactionData(enemy, direction);
 
+        ProjectileData grabProjectile = projectileOwner != null ? projectileOwner.ProjectileData : null;
+        if (reactionData.reactionKind == EnemyReactionKind.Grab
+            && grabProjectile != null && grabProjectile.centerGrabbedTargets)
+        {
+            // Visual traps own their anchor independently of the player's melee throw session.
+            reactionData.grabSocket = projectileOwner.transform;
+            reactionData.grabOffset = grabProjectile.grabCenterOffset;
+            reactionData.alignGrabToBodyCenter = true;
+        }
+
         Vector2 attackerPosition = projectileOwner != null
             ? projectileOwner.AttackerPosition
             : movement != null ? (Vector2)movement.transform.position : (Vector2)transform.root.position;
@@ -215,7 +225,7 @@ public class HitBoxDamage : MonoBehaviour
 
         enemy.SetInCombat(true);
 
-        if (currentGrabHitbox != null || reactionData.reactionKind == EnemyReactionKind.Grab)
+        if (currentGrabHitbox != null)
         {
             PlayerCombat activePlayerCombat = playerCombat;
             int ownerId;
@@ -527,11 +537,6 @@ public class HitBoxDamage : MonoBehaviour
         }
 
         ReactionResolver.ResolveAgainstTarget(enemy, ref data);
-        if (data.reactionKind == EnemyReactionKind.Grab)
-        {
-            BindGrabSocket(ref data);
-        }
-
         return data;
     }
 

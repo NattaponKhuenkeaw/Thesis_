@@ -51,6 +51,16 @@ namespace Project.Core.ZoneState
         [Tooltip("Fallback encounter when CombatStageController / RouteOffer has no palette. Boss rooms spawn from this asset.")]
         [SerializeField] private EncounterSO encounter;
 
+        [Header("Background Music")]
+        [Tooltip("Room music. Empty fades the previous room's track out.")]
+        [SerializeField] private AudioClip backgroundMusic;
+        [SerializeField, Range(0f, 1f)] private float musicVolume = 1f;
+
+        [Header("Ambience")]
+        [Tooltip("Looping room atmosphere, separate from music. Empty fades the previous ambience out.")]
+        [SerializeField] private AudioClip ambience;
+        [SerializeField, Range(0f, 1f)] private float ambienceVolume = 0.35f;
+
         public string RoomId => string.IsNullOrWhiteSpace(roomId) ? sceneName : roomId;
         public string SceneName => sceneName;
         public GameObject LayoutPrefab => layoutPrefab;
@@ -63,6 +73,10 @@ namespace Project.Core.ZoneState
         public string DefaultEntranceId => defaultEntranceId;
         public bool UseStaticCamera => useStaticCamera;
         public EncounterSO Encounter => encounter;
+        public AudioClip BackgroundMusic => backgroundMusic;
+        public float MusicVolume => Mathf.Clamp01(musicVolume);
+        public AudioClip Ambience => ambience;
+        public float AmbienceVolume => Mathf.Clamp01(ambienceVolume);
         public bool UsesLayoutSwap => layoutPrefab != null;
     }
 }

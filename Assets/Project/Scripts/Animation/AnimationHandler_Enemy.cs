@@ -28,10 +28,14 @@ public class AnimationHandler_Enemy : MonoBehaviour
         public string getUp = "Base Layer.GetUp";
         public string grabbed = "Base Layer.Hurt";
         [Min(0f)] public float replayInterval = 0.12f;
+        [Range(0f, 1f)] public float minimumReplayProgress = 0.2f;
+        [Tooltip("Keeps the ground hurt visual across short hit gaps without delaying AI or movement.")]
+        [Range(0f, 0.15f)] public float comboReleaseDelay = 0.08f;
         [Range(0f, 0.1f)] public float transitionSeconds = 0.035f;
         [Range(0.1f, 2f)] public float minimumPlaybackSpeed = 0.65f;
         [Range(0.1f, 2f)] public float maximumPlaybackSpeed = 1.25f;
-        [Header("Basic Combo Accent Pilot (visual only)")]
+        [Header("Hit Accents (visual only)")]
+        [Tooltip("Optional source character whose normal combo uses the stronger finisher accent.")]
         public CharacterObject comboAccentCharacter;
         public string comboFinisherStep = "Attack3";
         [Min(0f)] public float lightRecoil = 0.07f;
@@ -53,6 +57,9 @@ public class AnimationHandler_Enemy : MonoBehaviour
     private float reactionPoseStartedAt = float.NegativeInfinity;
     private bool comboAccent;
     private bool comboFinisher;
+    private bool hitAccent;
+    private bool reactionReturnPending;
+    private float reactionReturnAt;
     private float accentAge;
     private float accentDirection;
 
@@ -105,6 +112,7 @@ public class AnimationHandler_Enemy : MonoBehaviour
         }
 
         previousCulling = anim.cullingMode;
+        FinishReactionPresentation(false);
         anim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
         anim.speed = 1f;
         lifecycleAnimationHash = hash;
@@ -200,14 +208,30 @@ public class AnimationHandler_Enemy : MonoBehaviour
 
     void OnDisable()
     {
-        comboAccent = false;
-        reactionPoseHash = 0;
-        visualLandedKnockdown = false;
+        FinishReactionPresentation(false);
         if (enemyController != null)
         {
             enemyController.OnDamaged -= HandleDamageTaken;
             enemyController.OnDied -= HandleDeath;
         }
+    }
+
+    void LateUpdate()
+    {
+        TickReactionReturn(Time.time);
+    }
+
+    private void TickReactionReturn(float now)
+    {
+        if (!reactionReturnPending) return;
+        if (!UsesReactionAnimationProfile || lifecycleAnimationPlaying
+            || (enemyController != null && !enemyController.IsAlive))
+        {
+            FinishReactionPresentation(false);
+            return;
+        }
+        if (now >= reactionReturnAt)
+            FinishReactionPresentation(true);
     }
 
     // =========================================================
@@ -227,8 +251,7 @@ public class AnimationHandler_Enemy : MonoBehaviour
 
     private void HandleDeath()
     {
-        comboAccent = false;
-        reactionPoseHash = 0;
+        FinishReactionPresentation(false);
         EndShieldGuardPose();
         // The lifecycle starts the authored death state after all death listeners clean up.
         if (!HasLifecycleDeath)
@@ -246,6 +269,7 @@ public class AnimationHandler_Enemy : MonoBehaviour
 
     public void TriggerDie()
     {
+        FinishReactionPresentation(false);
         if (animParamHashes != null && animParamHashes.Contains(deadHash))
             anim.SetBool(deadHash, true);
 
@@ -255,6 +279,7 @@ public class AnimationHandler_Enemy : MonoBehaviour
 
     public void TriggerAttack()
     {
+        if (reactionReturnPending) FinishReactionPresentation(true);
         if (animParamHashes != null && animParamHashes.Contains(attackHash))
             anim.SetTrigger(attackHash);
     }
@@ -303,6 +328,7 @@ public class AnimationHandler_Enemy : MonoBehaviour
         int state = Animator.StringToHash(rushing ? "Base Layer.BodyChargeRush" : "Base Layer.BodyChargeWindup");
         if (!anim.HasState(0, state))
             return false;
+        if (reactionReturnPending) FinishReactionPresentation(false);
         anim.ResetTrigger(attackHash);
         anim.Play(state, 0, 0f);
         bodyChargeAnimationPlaying = true;
@@ -317,6 +343,7 @@ public class AnimationHandler_Enemy : MonoBehaviour
             ? activeState : "Base Layer.BodyChargeWindup");
         if (!anim.HasState(0, state))
             return;
+        if (reactionReturnPending) FinishReactionPresentation(false);
         bool wasPlaying = shieldPosePlaying;
         if (!shieldPosePlaying)
             speedBeforeShieldPose = anim.speed;
@@ -366,7 +393,10 @@ public class AnimationHandler_Enemy : MonoBehaviour
             return;
         int idle = Animator.StringToHash(activeState);
         if (anim.HasState(0, idle))
+        {
+            if (reactionReturnPending) FinishReactionPresentation(false);
             anim.Play(idle, 0, 0f);
+        }
     }
 
     public void SetBossPhase(int phase)
@@ -377,6 +407,8 @@ public class AnimationHandler_Enemy : MonoBehaviour
 
     public void SetSpeed(float speed)
     {
+        if (reactionReturnPending && Mathf.Abs(speed) > 0.15f)
+            FinishReactionPresentation(true);
         if (animParamHashes != null && animParamHashes.Contains(speedHash))
             anim.SetFloat(speedHash, speed);
     }
@@ -393,6 +425,7 @@ public class AnimationHandler_Enemy : MonoBehaviour
 
     public void BeginReactionAnimation(HitReactionData data, bool airborneFollowup)
     {
+        reactionReturnPending = false;
         visualReaction = data;
         visualAirFollowup = airborneFollowup;
         visualLandedKnockdown = false;
@@ -403,6 +436,7 @@ public class AnimationHandler_Enemy : MonoBehaviour
             && (data.reactionKind == EnemyReactionKind.Flinch || data.reactionKind == EnemyReactionKind.Knockback)
             && (step == "Attack1" || step == "Attack2" || step == reactionAnimations.comboFinisherStep);
         comboFinisher = comboAccent && step == reactionAnimations.comboFinisherStep;
+        hitAccent = UsesReactionAnimationProfile && data.reactionKind != EnemyReactionKind.Grab;
         accentAge = 0f;
         Vector3 away = data.attackerTransform != null ? transform.position - data.attackerTransform.position
             : new Vector3(data.knockbackDirection.x, 0f, 0f);
@@ -430,6 +464,8 @@ public class AnimationHandler_Enemy : MonoBehaviour
 
         if (!UsesReactionAnimationProfile)
         {
+            reactionReturnPending = false;
+            hitAccent = false;
             if (animParamHashes.Contains(manualReactionHash)) anim.SetBool(manualReactionHash, false);
             if (animParamHashes.Contains(reactionPlaybackHash)) anim.SetFloat(reactionPlaybackHash, 1f);
             reactionPoseHash = 0;
@@ -440,15 +476,26 @@ public class AnimationHandler_Enemy : MonoBehaviour
         if (state == EnemyReactionState.None)
         {
             comboAccent = false;
+            hitAccent = false;
             bool hadPose = reactionPoseHash != 0;
-            reactionPoseHash = 0;
             visualLandedKnockdown = false;
-            if (animParamHashes.Contains(reactionPlaybackHash)) anim.SetFloat(reactionPlaybackHash, 1f);
-            if (hadPose && (enemyController == null || enemyController.IsAlive)
-                && anim.isActiveAndEnabled && anim.HasState(0, Animator.StringToHash(activeState)))
-                anim.CrossFadeInFixedTime(activeState, reactionAnimations.transitionSeconds, 0);
+            // Bridge short gaps between ground hits without extending gameplay hitstun.
+            bool groundHurt = !visualAirFollowup
+                && (visualReaction.reactionKind == EnemyReactionKind.Flinch
+                    || visualReaction.reactionKind == EnemyReactionKind.Knockback);
+            bool canReturn = hadPose && (enemyController == null || enemyController.IsGameplayActive)
+                && anim.isActiveAndEnabled && !lifecycleAnimationPlaying;
+            if (canReturn && groundHurt && reactionAnimations.comboReleaseDelay > 0f)
+            {
+                if (!reactionReturnPending)
+                    reactionReturnAt = Time.time + reactionAnimations.comboReleaseDelay;
+                reactionReturnPending = true;
+            }
+            else
+                FinishReactionPresentation(canReturn);
             return;
         }
+        reactionReturnPending = false;
 
         bool heavyPose = comboAccent ? comboFinisher : (int)visualReaction.impactTier >= (int)DamageImpactTier.Medium;
         string hurt = heavyPose
@@ -505,7 +552,7 @@ public class AnimationHandler_Enemy : MonoBehaviour
         bool samePose = reactionPoseHash == hash;
         bool forceFinisherPose = impact && comboAccent && comboFinisher;
         if (samePose && !forceFinisherPose && (!impact || Time.time - reactionPoseStartedAt < reactionAnimations.replayInterval
-            || (current.fullPathHash == hash && current.normalizedTime < .65f)))
+            || (current.fullPathHash == hash && current.normalizedTime < reactionAnimations.minimumReplayProgress)))
             return;
 
         if (animParamHashes.Contains(reactionPlaybackHash)) anim.SetFloat(reactionPlaybackHash, 1f);
@@ -528,12 +575,26 @@ public class AnimationHandler_Enemy : MonoBehaviour
         reactionPoseStartedAt = Time.time;
     }
 
+    private void FinishReactionPresentation(bool returnToActive)
+    {
+        reactionReturnPending = false;
+        reactionPoseHash = 0;
+        comboAccent = false;
+        hitAccent = false;
+        visualLandedKnockdown = false;
+        if (anim == null || animParamHashes == null || anim.runtimeAnimatorController == null) return;
+        if (animParamHashes.Contains(manualReactionHash)) anim.SetBool(manualReactionHash, false);
+        if (animParamHashes.Contains(reactionPlaybackHash)) anim.SetFloat(reactionPlaybackHash, 1f);
+        if (returnToActive && anim.isActiveAndEnabled && anim.HasState(0, Animator.StringToHash(activeState)))
+            anim.CrossFadeInFixedTime(activeState, reactionAnimations.transitionSeconds, 0);
+    }
+
     public void SampleComboHitAccent(float deltaTime, out Vector3 offset, out Quaternion rotation, out Vector3 scale)
     {
         offset = Vector3.zero;
         rotation = Quaternion.identity;
         scale = Vector3.one;
-        if (!comboAccent || !UsesReactionAnimationProfile) return;
+        if (!hitAccent || !UsesReactionAnimationProfile) return;
         float duration = comboFinisher ? reactionAnimations.finisherAccentDuration : reactionAnimations.lightAccentDuration;
         float decay = 1f - Mathf.Clamp01(accentAge / Mathf.Max(.01f, duration));
         decay *= decay;

@@ -35,6 +35,8 @@ namespace Project.Progression.RestRoom
         [Header("Audio (optional)")]
         [SerializeField] private AudioClip confirmClip;
         [SerializeField] private AudioClip healClip;
+        [Tooltip("Delay after showing the heal result, within the existing hold time.")]
+        [SerializeField, Min(0f)] private float healSfxDelaySeconds = 0.45f;
         [SerializeField, Range(0f, 1f)] private float sfxVolume = 1f;
 
         private readonly List<Canvas> disabledCanvases = new List<Canvas>(16);
@@ -120,9 +122,19 @@ namespace Project.Progression.RestRoom
                     display?.ShowHealed(healPercentOfMaxHp);
                 }
 
-                PlaySfx(healClip);
+                float audioDelay = healClip != null
+                    ? Mathf.Clamp(healSfxDelaySeconds, 0f, healHoldSeconds)
+                    : 0f;
+                if (audioDelay > 0f)
+                {
+                    yield return new WaitForSecondsRealtime(audioDelay);
+                }
 
-                yield return new WaitForSecondsRealtime(healHoldSeconds);
+                PlaySfx(healClip);
+                if (healHoldSeconds > audioDelay)
+                {
+                    yield return new WaitForSecondsRealtime(healHoldSeconds - audioDelay);
+                }
 
                 if (restoreDelaySeconds > 0f)
                 {

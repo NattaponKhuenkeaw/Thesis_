@@ -22,4 +22,4 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 5fb82e61374e40c48a8a4b81cb817179, type: 3}
   price: 2550
   characterObjectData: {fileID: 11400000, guid: 3e719a5c1668a4e4794aae8a7a41c733, type: 2}
-  availableInShop: 1
+  availableInShop: 0

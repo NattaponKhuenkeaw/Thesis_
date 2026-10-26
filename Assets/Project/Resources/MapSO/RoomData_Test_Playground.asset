@@ -23,3 +23,5 @@ MonoBehaviour:
   zoneMode: 1
   defaultEntranceId: Default
   useStaticCamera: 0
+  ambience: {fileID: 8300000, guid: 953ebadc922942e59550d761a3656c21, type: 3}
+  ambienceVolume: 0.35

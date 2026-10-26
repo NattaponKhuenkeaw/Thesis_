@@ -13,51 +13,11 @@ MonoBehaviour:
   m_Name: PlayerMetaProgression
   m_EditorClassIdentifier: Assembly-CSharp::Project.Progression.PlayerMetaProgression
   metaCurrency: 0
-  fragments:
-  - sourceItemId: char_1_kyo
-    displayName: Kyo Fragment
-    fragmentType: 0
-    quantity: 88
-  - sourceItemId: char-0-main
-    displayName: Main Fragment
-    fragmentType: 0
-    quantity: 95
-  - sourceItemId: char_5_goenitz
-    displayName: Goenitz Fragment
-    fragmentType: 0
-    quantity: 87
-  - sourceItemId: char_6_orochi
-    displayName: Orochi Fragment
-    fragmentType: 0
-    quantity: 99
-  - sourceItemId: char_3_shermie
-    displayName: Shermie Fragment
-    fragmentType: 0
-    quantity: 87
-  - sourceItemId: Char_2_Rugal
-    displayName: Rugal Fragment
-    fragmentType: 0
-    quantity: 87
+  fragments: []
   characterPotentials:
-  - characterId: char_1_kyo
-    skillLevel: 4
-    ultimateLevel: 4
-    passiveLevel: 4
   - characterId: char-0-main
     skillLevel: 0
-    ultimateLevel: 2
-    passiveLevel: 2
-  - characterId: Char_2_Rugal
-    skillLevel: 4
-    ultimateLevel: 4
-    passiveLevel: 4
-  - characterId: char_3_shermie
-    skillLevel: 4
-    ultimateLevel: 4
-    passiveLevel: 4
-  - characterId: char_5_goenitz
-    skillLevel: 4
-    ultimateLevel: 4
-    passiveLevel: 4
+    ultimateLevel: 0
+    passiveLevel: 1
   unlockedCharacterIds: []
   permanentItems: []

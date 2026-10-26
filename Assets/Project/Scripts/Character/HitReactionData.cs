@@ -79,6 +79,7 @@ public struct HitReactionData
     public Transform attackerTransform;
     public Transform grabSocket;
     public Vector2 grabOffset;
+    public bool alignGrabToBodyCenter;
     public int reactionOwnerId;
 
     // =========================================================

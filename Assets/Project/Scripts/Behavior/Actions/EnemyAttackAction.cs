@@ -121,6 +121,8 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         float telegraphDuration = ResolveTelegraphDuration();
         if (telegraphDuration > 0f)
             m_Controller.TriggerAttackWarning(telegraphDuration);
+        else
+            m_Controller.PrepareAttackSound(0f);
 
         m_Controller.SetAttackHitboxActive(false);
         m_Timer = 0f;
@@ -426,7 +428,7 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
         else
             BeginCommitment();
 
-        m_Controller?.HideAttackWarning();
+        m_Controller?.FinishAttackWarning();
         m_Controller?.CommitRangedAim();
         bool usesAttackPoses = IsBodyCharge || (m_Controller != null && m_Controller.UsesRangedAttack
             && m_AnimHandler != null && m_AnimHandler.useRangedAttackPoses);
@@ -449,6 +451,8 @@ public partial class EnemyAttackAction : Unity.Behavior.Action
 
         m_AttackStarted = true;
         m_AttackStartTime = m_Timer;
+
+        m_Controller?.PlayAttackSound();
 
         float hitWindow = ResolveHitWindow();
         float recovery = ResolveRecovery();

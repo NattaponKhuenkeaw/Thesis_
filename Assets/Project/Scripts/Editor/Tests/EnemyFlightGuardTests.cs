@@ -20,6 +20,366 @@ public class EnemyFlightGuardTests
     }
 
     [Test]
+    public void Authored102WaitsForLandingInsteadOfFollowingJumps()
+    {
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Character/enemy/enemy/Enm102/Enemy102.prefab");
+        using (var data = new SerializedObject(prefab.GetComponent<EnemyLocomotion>()))
+        {
+            Assert.That(data.FindProperty("flightHeightRelativeToPlayer").boolValue, Is.False);
+            Assert.That(data.FindProperty("flightGroundSettleTime").floatValue, Is.EqualTo(.6f).Within(.001f));
+            Assert.That(data.FindProperty("flightPostAttackRest").floatValue, Is.EqualTo(1f).Within(.001f));
+        }
+    }
+
+    [TestCase(0f)] [TestCase(4f)] [TestCase(8f)]
+    public void Authored102KeepsItsGroundAltitudeWhenSelectingAndTrackingAnAirbornePlayer(float jumpHeight)
+    {
+        Ground(new Vector2(1000f, -.5f), new Vector2(100f, 1f));
+        var player = FlightPlayer(new Vector3(1004f, 0f, 0f));
+        var flight = GroundRoamer(new Vector3(1000f, 0f, 0f), player);
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Character/enemy/enemy/Enm102/Enemy102.prefab");
+        using (var source = new SerializedObject(prefab.GetComponent<EnemyLocomotion>()))
+        using (var settings = new SerializedObject(flight))
+        {
+            foreach (string property in new[] { "moveMode", "allowNonGroundMove", "fixedHeightFlight",
+                "roamingFlight", "flightHeightRelativeToPlayer", "flightHeight", "flightHeightVariation",
+                "flightArcHeight", "flightGroundSettleTime", "flightPatrolSpeed", "flightTargetDistance" })
+                settings.CopyFromSerializedProperty(source.FindProperty(property));
+            settings.ApplyModifiedPropertiesWithoutUndo();
+        }
+        Assert.That(flight.PrepareSpawnFlight(), Is.True);
+        Assert.That(flight.GetComponent<EnemyController>().bodyCollider.bounds.min.y,
+            Is.EqualTo(3.8f).Within(.001f));
+
+        player.transform.position += Vector3.up * jumpHeight;
+        player.Movement.GroundState.Tick(false, 5f);
+        Physics2D.SyncTransforms();
+        typeof(EnemyLocomotion).GetMethod("UpdateGroundFlightReference", Private)
+            .Invoke(flight, new object[] { 1f });
+        typeof(EnemyLocomotion).GetMethod("SelectFlightDestination", Private).Invoke(flight, null);
+        var endpoint = typeof(EnemyLocomotion).GetField("flightMoveEnd", Private);
+        Vector2 selected = (Vector2)endpoint.GetValue(flight);
+        Assert.That(selected.y, Is.InRange(3.8f - .2f, 3.8f + .2f));
+
+        player.transform.position += new Vector3(5f, 4f, 0f);
+        Physics2D.SyncTransforms();
+        typeof(EnemyLocomotion).GetMethod("TickFlightTravel", Private).Invoke(flight, new object[] { .1f });
+        var updated = (Vector2)endpoint.GetValue(flight);
+        Assert.That(updated.x, Is.EqualTo(selected.x + 5f).Within(.001f));
+        Assert.That(updated.y, Is.EqualTo(selected.y).Within(.001f));
+    }
+
+    [TestCase("test_0_Main", "main")]
+    [TestCase("test_1_CameraGirl", "cg")]
+    public void Authored102HighestFlightStillOverlapsAnOrdinarySingleJumpAirAttack(string folder, string suffix)
+    {
+        string root = $"Assets/Project/Character/Hero/{folder}/";
+        var character = AssetDatabase.LoadAssetAtPath<CharacterObject>(root + $"CharacterObject_{suffix}.asset");
+        var table = AssetDatabase.LoadAssetAtPath<ActionResolverTable>(root + $"ActionResolverTable_{suffix}.asset");
+        var air = table.comboActions.Find(action => action.context == CombatActionContext.Air);
+        var hit = (NormalHitbox)air.comboTree.rootNode.stepData.hitData.hitboxes[0];
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Character/enemy/enemy/Enm102/Enemy102.prefab");
+        using (var flight = new SerializedObject(prefab.GetComponent<EnemyLocomotion>()))
+        {
+            // Use a reachable mid-jump swing, not a frame-perfect hit at the apex or a double jump.
+            const float swingRise = 2f;
+            float rise = 0f;
+            float speed = character.movementProfile.jumpSpeed;
+            while (speed > 0f)
+            {
+                speed = Mathf.Max(0f, speed - character.movementProfile.riseDeceleration * Time.fixedDeltaTime);
+                rise += speed * Time.fixedDeltaTime;
+            }
+            Assert.That(rise, Is.GreaterThan(swingRise + .5f));
+            float height = flight.FindProperty("flightHeight").floatValue;
+            float variation = flight.FindProperty("flightHeightVariation").floatValue;
+            float arc = flight.FindProperty("flightArcHeight").floatValue;
+            var body = (BoxCollider2D)prefab.GetComponent<EnemyController>().bodyCollider;
+            float bodyHeight = body.size.y * prefab.transform.lossyScale.y;
+            foreach (float bottom in new[] { height - variation, height + variation + arc })
+            {
+                float overlap = Mathf.Min(swingRise + hit.offset.y + hit.size.y * .5f, bottom + bodyHeight)
+                    - Mathf.Max(swingRise + hit.offset.y - hit.size.y * .5f, bottom);
+                Assert.That(overlap, Is.GreaterThan(.3f), "Keep vertical hit overlap at both flight extremes.");
+            }
+            Assert.That(flight.FindProperty("flightHeightRelativeToPlayer").boolValue, Is.False);
+        }
+    }
+
+    [Test]
+    public void FlyerWaitsThroughContinuousJumpMotionThenFollowsWithoutRepeatedPauses()
+    {
+        EnemyLocomotion flight = RiseDelayFlyer(.8f, out Transform player);
+        MethodInfo update = typeof(EnemyLocomotion).GetMethod("UpdatePlayerFlightHeightReference", Private);
+        MethodInfo resolve = typeof(EnemyLocomotion).GetMethod("ResolvePlayerFlightFeetY", Private);
+        float original = (float)resolve.Invoke(flight, new object[] { player, 3f });
+        for (int i = 0; i < 7; i++)
+        {
+            player.position += Vector3.up * .3f;
+            update.Invoke(flight, new object[] { player, .1f });
+            Assert.That((float)resolve.Invoke(flight, new object[] { player, 3f }), Is.EqualTo(original).Within(.001f));
+            Assert.That((bool)typeof(EnemyLocomotion).GetProperty("WaitingForPlayerRise", Private).GetValue(flight), Is.True);
+        }
+        update.Invoke(flight, new object[] { player, .11f });
+        float released = (float)resolve.Invoke(flight, new object[] { player, 3f });
+        Assert.That(released, Is.EqualTo(original + 2.1f).Within(.001f));
+        player.position += Vector3.up * .3f;
+        update.Invoke(flight, new object[] { player, .02f });
+        Assert.That((float)resolve.Invoke(flight, new object[] { player, 3f }), Is.EqualTo(released + .3f).Within(.001f));
+    }
+
+    [Test]
+    public void LandingDuringRiseDelayCancelsThePendingHeightChange()
+    {
+        EnemyLocomotion flight = RiseDelayFlyer(.8f, out Transform player);
+        MethodInfo update = typeof(EnemyLocomotion).GetMethod("UpdatePlayerFlightHeightReference", Private);
+        MethodInfo resolve = typeof(EnemyLocomotion).GetMethod("ResolvePlayerFlightFeetY", Private);
+        Vector3 start = player.position;
+        float original = (float)resolve.Invoke(flight, new object[] { player, 3f });
+        player.position += Vector3.up * 2f;
+        update.Invoke(flight, new object[] { player, .5f });
+        player.position = start;
+        update.Invoke(flight, new object[] { player, .02f });
+        Assert.That((bool)typeof(EnemyLocomotion).GetProperty("WaitingForPlayerRise", Private).GetValue(flight), Is.False);
+        player.position += Vector3.up * 2f;
+        update.Invoke(flight, new object[] { player, .5f });
+        Assert.That((float)resolve.Invoke(flight, new object[] { player, 3f }), Is.EqualTo(original).Within(.001f));
+    }
+
+    [TestCase(0f)]
+    [TestCase(.8f)]
+    public void ChangingFlightTargetDoesNotReuseThePreviousPlayersHeight(float delay)
+    {
+        EnemyLocomotion flight = RiseDelayFlyer(delay, out Transform player);
+        var replacement = Host("ReplacementFlightHeightTarget", player.position + Vector3.up * 5f).transform;
+        typeof(EnemyLocomotion).GetMethod("UpdatePlayerFlightHeightReference", Private)
+            .Invoke(flight, new object[] { replacement, 0f });
+        Assert.That((float)typeof(EnemyLocomotion).GetMethod("ResolvePlayerFlightFeetY", Private)
+            .Invoke(flight, new object[] { replacement, 3f }), Is.EqualTo(replacement.position.y + 3f).Within(.001f));
+        Assert.That((bool)typeof(EnemyLocomotion).GetProperty("WaitingForPlayerRise", Private).GetValue(flight), Is.False);
+    }
+
+    private EnemyLocomotion RiseDelayFlyer(float delay, out Transform player)
+    {
+        Ground(new Vector2(1000f, -.5f), new Vector2(20f, 1f));
+        var flight = Flyer(new Vector3(1000f, 0f, 0f)).GetComponent<EnemyLocomotion>();
+        using (var data = new SerializedObject(flight))
+        {
+            data.FindProperty("roamingFlight").boolValue = true;
+            data.FindProperty("flightHeightRelativeToPlayer").boolValue = true;
+            data.FindProperty("flightPlayerRiseDelay").floatValue = delay;
+            data.ApplyModifiedPropertiesWithoutUndo();
+        }
+        player = Host("PlayerRiseReference", new Vector3(1004f, 0f, 0f)).transform;
+        typeof(EnemyLocomotion).GetMethod("UpdatePlayerFlightHeightReference", Private)
+            .Invoke(flight, new object[] { player, 0f });
+        return flight;
+    }
+
+    [TestCase(0f)]
+    [TestCase(12f)]
+    public void GroundAnchoredSpawnIgnoresThePlayersCurrentHeight(float playerY)
+    {
+        Ground(new Vector2(1000f, -.5f), new Vector2(50f, 1f));
+        PlayerCharacter player = FlightPlayer(new Vector3(1004f, playerY, 0f));
+        EnemyLocomotion flight = GroundRoamer(new Vector3(1000f, 0f, 0f), player);
+        Assert.That(flight.PrepareSpawnFlight(), Is.True);
+        Assert.That(flight.GetComponent<EnemyController>().bodyCollider.bounds.min.y,
+            Is.EqualTo(1.5f).Within(.001f));
+    }
+
+    [Test]
+    public void GroundAnchoredSpawnChecksTheWholeBodyAgainstPolygonScenery()
+    {
+        Ground(new Vector2(1000f, -.5f), new Vector2(50f, 1f));
+        EnemyLocomotion flight = GroundRoamer(new Vector3(1000f, 0f, 0f), null);
+        var wall = Host("FlightSpawnBuilding", new Vector3(1000f, 2f, 0f)).AddComponent<PolygonCollider2D>();
+        wall.gameObject.layer = LayerMask.NameToLayer("Ground");
+        wall.points = new[] { new Vector2(-1f, -2f), new Vector2(1f, -2f),
+            new Vector2(1f, 2f), new Vector2(-1f, 2f) };
+        Physics2D.SyncTransforms();
+        Assert.That(flight.PrepareSpawnFlight(), Is.True);
+        Physics2D.SyncTransforms();
+        var collider = flight.GetComponent<EnemyController>().bodyCollider;
+        Assert.That(collider.Distance(wall).isOverlapped, Is.False);
+        Assert.That(Mathf.Abs(flight.transform.position.x - 1000f), Is.InRange(1.5f, 3f));
+    }
+
+    [Test]
+    public void GroundAnchoredSpawnCanUseALowerClearanceUnderACeiling()
+    {
+        Ground(new Vector2(1000f, -.5f), new Vector2(50f, 1f));
+        EnemyLocomotion flight = GroundRoamer(new Vector3(1000f, 0f, 0f), null);
+        Ground(new Vector2(1000f, 2.8f), new Vector2(20f, 1f));
+        Assert.That(flight.PrepareSpawnFlight(), Is.True);
+        Assert.That(flight.GetComponent<EnemyController>().bodyCollider.bounds.max.y, Is.LessThan(2.3f));
+    }
+
+    [Test]
+    public void GroundAnchoredSpawnIgnoresEncounterTriggers()
+    {
+        Ground(new Vector2(1000f, -.5f), new Vector2(50f, 1f));
+        EnemyLocomotion flight = GroundRoamer(new Vector3(1000f, 0f, 0f), null);
+        var trigger = Host("FlightEncounterTrigger", new Vector3(1000f, 2f, 0f)).AddComponent<BoxCollider2D>();
+        trigger.size = new Vector2(20f, 10f);
+        trigger.isTrigger = true;
+        Physics2D.SyncTransforms();
+        Assert.That(flight.PrepareSpawnFlight(), Is.True);
+        Assert.That(flight.transform.position.x, Is.EqualTo(1000f).Within(.001f));
+        Assert.That(flight.GetComponent<EnemyController>().bodyCollider.bounds.min.y,
+            Is.EqualTo(1.5f).Within(.001f));
+    }
+
+    [Test]
+    public void GroundAnchoredSpawnFailsInsteadOfPlacingTheBodyInsideSolidTerrain()
+    {
+        Ground(new Vector2(1000f, -.5f), new Vector2(50f, 1f));
+        EnemyLocomotion flight = GroundRoamer(new Vector3(1000f, 0f, 0f), null);
+        Vector3 before = flight.transform.position;
+        Ground(new Vector2(1000f, 3f), new Vector2(20f, 6f));
+        UnityEngine.TestTools.LogAssert.Expect(LogType.Warning,
+            "FixedFlightEnemy: No clear supported flight spawn near the authored point.");
+        Assert.That(flight.PrepareSpawnFlight(), Is.False);
+        Assert.That(flight.FlightInitialized, Is.False);
+        Assert.That(flight.transform.position, Is.EqualTo(before));
+    }
+
+    [Test]
+    public void GroundAnchoredTravelTracksHorizontalMovementWithoutFollowingThePlayersJump()
+    {
+        Ground(new Vector2(1000f, -.5f), new Vector2(100f, 1f));
+        PlayerCharacter player = FlightPlayer(new Vector3(1004f, 0f, 0f));
+        EnemyLocomotion flight = GroundRoamer(new Vector3(1000f, 0f, 0f), player);
+        Assert.That(flight.PrepareSpawnFlight(), Is.True);
+        typeof(EnemyLocomotion).GetMethod("SelectFlightDestination", Private).Invoke(flight, null);
+        var destination = typeof(EnemyLocomotion).GetField("flightMoveEnd", Private);
+        Vector2 committed = (Vector2)destination.GetValue(flight);
+        player.transform.position += new Vector3(12f, 8f, 0f);
+        Physics2D.SyncTransforms();
+        typeof(EnemyLocomotion).GetMethod("TickFlightTravel", Private).Invoke(flight, new object[] { .1f });
+        Vector2 updated = (Vector2)destination.GetValue(flight);
+        Assert.That(updated.x, Is.EqualTo(committed.x + 12f).Within(.001f));
+        Assert.That(updated.y, Is.EqualTo(committed.y).Within(.001f));
+        Assert.That(committed.y, Is.InRange(1.3f, 1.7f));
+    }
+
+    [Test]
+    public void GroundAnchoredChaseStillClipsAgainstWallsWhenItsTargetMovesBeyondThem()
+    {
+        Ground(new Vector2(1000f, -.5f), new Vector2(100f, 1f));
+        var player = FlightPlayer(new Vector3(1004f, 0f, 0f));
+        var flight = GroundRoamer(new Vector3(1000f, 0f, 0f), player);
+        Assert.That(flight.PrepareSpawnFlight(), Is.True);
+        typeof(EnemyLocomotion).GetMethod("SelectFlightDestination", Private).Invoke(flight, null);
+        var wall = Ground(new Vector2(1006f, 5f), new Vector2(2f, 10f));
+        player.transform.position += Vector3.right * 15f;
+        Physics2D.SyncTransforms();
+        var tick = typeof(EnemyLocomotion).GetMethod("TickFlightTravel", Private);
+        var body = flight.GetComponent<EnemyController>().bodyCollider;
+        var beat = typeof(EnemyLocomotion).GetField("flightBeat", Private);
+        for (int frame = 0; frame < 100 && beat.GetValue(flight).ToString() == "Moving"; frame++)
+        {
+            tick.Invoke(flight, new object[] { .05f });
+            Physics2D.SyncTransforms();
+            Assert.That(body.Distance(wall).isOverlapped, Is.False);
+        }
+        Assert.That(body.bounds.max.x, Is.LessThanOrEqualTo(wall.bounds.min.x));
+        Assert.That(beat.GetValue(flight).ToString(), Is.EqualTo("Ready"));
+    }
+
+    [Test]
+    public void GroundAnchoredFlightChangesFloorOnlyAfterAStableLanding()
+    {
+        Ground(new Vector2(1000f, -.5f), new Vector2(50f, 1f));
+        PlayerCharacter player = FlightPlayer(new Vector3(1004f, 0f, 0f));
+        EnemyLocomotion flight = GroundRoamer(new Vector3(1000f, 0f, 0f), player);
+        Assert.That(flight.PrepareSpawnFlight(), Is.True);
+        Ground(new Vector2(1004f, 4.5f), new Vector2(3f, 1f));
+        player.transform.position = new Vector3(1004f, 5f, 0f);
+        player.Movement.GroundState.Tick(false, 5f);
+        Physics2D.SyncTransforms();
+        MethodInfo update = typeof(EnemyLocomotion).GetMethod("UpdateGroundFlightReference", Private);
+        FieldInfo floor = typeof(EnemyLocomotion).GetField("flightGroundY", Private);
+        update.Invoke(flight, new object[] { 2f });
+        Assert.That((float)floor.GetValue(flight), Is.EqualTo(0f).Within(.001f));
+        player.Movement.GroundState.Tick(true, 0f);
+        update.Invoke(flight, new object[] { .3f });
+        Assert.That((float)floor.GetValue(flight), Is.EqualTo(0f).Within(.001f));
+        // A brief touch followed by another jump must not accumulate landing time.
+        player.Movement.GroundState.Tick(false, 5f);
+        update.Invoke(flight, new object[] { .1f });
+        player.Movement.GroundState.Tick(true, 0f);
+        update.Invoke(flight, new object[] { .31f });
+        Assert.That((float)floor.GetValue(flight), Is.EqualTo(0f).Within(.001f));
+        update.Invoke(flight, new object[] { .3f });
+        Assert.That((float)floor.GetValue(flight), Is.EqualTo(5f).Within(.001f));
+        Assert.That(flight.GetComponent<EnemyController>().rb.position.y, Is.EqualTo(1.5f).Within(.001f),
+            "A new floor changes only the next destination, not the current body position.");
+    }
+
+    [Test]
+    public void GroundAnchoredFlightHoldsPositionWhileAttackingAndDuringPostAttackRest()
+    {
+        Ground(new Vector2(1000f, -.5f), new Vector2(50f, 1f));
+        PlayerCharacter player = FlightPlayer(new Vector3(1004f, 0f, 0f));
+        EnemyLocomotion flight = GroundRoamer(new Vector3(1000f, 0f, 0f), player);
+        Assert.That(flight.PrepareSpawnFlight(), Is.True);
+        FieldInfo beat = typeof(EnemyLocomotion).GetField("flightBeat", Private);
+        beat.SetValue(flight, System.Enum.Parse(beat.FieldType, "Ready"));
+        Assert.That(flight.BeginFlightAttack(), Is.True);
+        var body = flight.GetComponent<EnemyController>().rb;
+        Vector2 start = body.position;
+        player.transform.position += Vector3.up * 8f;
+        player.Movement.GroundState.Tick(false, 5f);
+        Physics2D.SyncTransforms();
+        MethodInfo tick = typeof(EnemyLocomotion).GetMethod("TickRoamingFlight", Private);
+        tick.Invoke(flight, new object[] { .5f });
+        Assert.That(body.position, Is.EqualTo(start));
+        flight.EndFlightAttack(false);
+        Assert.That((float)typeof(EnemyLocomotion).GetField("flightBeatTime", Private).GetValue(flight), Is.EqualTo(1f));
+        tick.Invoke(flight, new object[] { .8f });
+        Assert.That(body.position, Is.EqualTo(start));
+        Assert.That(beat.GetValue(flight).ToString(), Is.EqualTo("Resting"));
+        Assert.That(flight.CanStartFlightAttack, Is.False);
+    }
+
+    private EnemyLocomotion GroundRoamer(Vector3 position, PlayerCharacter player)
+    {
+        var flight = Flyer(position).GetComponent<EnemyLocomotion>();
+        using (var data = new SerializedObject(flight))
+        {
+            data.FindProperty("roamingFlight").boolValue = true;
+            data.FindProperty("flightHeightRelativeToPlayer").boolValue = false;
+            data.ApplyModifiedPropertiesWithoutUndo();
+        }
+        typeof(EnemyLocomotion).GetField("flightPatrolPlayer", Private).SetValue(flight, player);
+        return flight;
+    }
+
+    private PlayerCharacter FlightPlayer(Vector3 position)
+    {
+        var host = Host("GroundFlightPlayer", position);
+        var collider = host.AddComponent<BoxCollider2D>();
+        collider.offset = Vector2.up * .5f;
+        var movement = host.AddComponent<PlayerMovement>();
+        var player = host.AddComponent<PlayerCharacter>();
+        player.Movement = movement;
+        movement.GroundState.Tick(true, 0f);
+        using (var data = new SerializedObject(player))
+        {
+            data.FindProperty("currentHP").floatValue = 100f;
+            data.ApplyModifiedPropertiesWithoutUndo();
+        }
+        var state = host.AddComponent<PlayerStateMachine>();
+        state.playerCharacter = player;
+        state.showFsmLogs = false;
+        state.ChangeState(new PlayerIdleState(player, state));
+        player.StateMachine = state;
+        Physics2D.SyncTransforms();
+        return player;
+    }
+
+    [Test]
     public void AuthoredPrefabsUseDedicatedFlightAndGuardKits()
     {
         var flyer = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Character/enemy/enemy/Enm102/Enemy102.prefab");
@@ -30,11 +390,11 @@ public class EnemyFlightGuardTests
         Assert.That(flyer.GetComponent<EnemyLocomotion>().UsesFixedHeightFlight, Is.True);
         Assert.That(flyer.GetComponent<EnemyLocomotion>().UsesRoamingFlight, Is.True);
         var flightSettings = new SerializedObject(flyer.GetComponent<EnemyLocomotion>());
-        Assert.That(flightSettings.FindProperty("flightHeight").floatValue, Is.EqualTo(3.2f));
-        Assert.That(flightSettings.FindProperty("flightHeightMultiplier").floatValue, Is.EqualTo(1.728f));
-        Assert.That(flightSettings.FindProperty("flightHeightRelativeToPlayer").boolValue, Is.True);
-        Assert.That(flightSettings.FindProperty("flightArcHeight").floatValue, Is.EqualTo(1.2f));
-        Assert.That(flightSettings.FindProperty("flightHeightVariation").floatValue, Is.EqualTo(.8f));
+        Assert.That(flightSettings.FindProperty("flightHeight").floatValue, Is.EqualTo(3.8f));
+        Assert.That(flightSettings.FindProperty("flightHeightMultiplier").floatValue, Is.EqualTo(1f));
+        Assert.That(flightSettings.FindProperty("flightHeightRelativeToPlayer").boolValue, Is.False);
+        Assert.That(flightSettings.FindProperty("flightArcHeight").floatValue, Is.EqualTo(.35f));
+        Assert.That(flightSettings.FindProperty("flightHeightVariation").floatValue, Is.EqualTo(.2f));
         Assert.That(guard.GetComponent<EnemyController>().CombatRole, Is.EqualTo(EnemyCombatRole.ShieldGuard));
         Assert.That(guard.GetComponent<EnemyShieldGuard>(), Is.Not.Null);
         Assert.That(guard.GetComponent<EnemyController>().Kit.BodyCharge, Is.True);
@@ -253,7 +613,8 @@ public class EnemyFlightGuardTests
     [TestCase(true, 1f)]
     [TestCase(true, -1f)]
     [TestCase(false, 1f)]
-    public void OnlyPlayerRelativeFlightUpdatesItsDestinationDuringTravel(bool followsPlayer, float directionX)
+    [TestCase(false, -1f)]
+    public void BothFlightModesTrackHorizontalMovementButOnlyPlayerRelativeModeFollowsJumpHeight(bool followsPlayer, float directionX)
     {
         Ground(new Vector2(1000f, -.5f), new Vector2(20f, 1f));
         EnemyController enemy = Flyer(new Vector3(1000f, 0f, 0f));
@@ -283,29 +644,26 @@ public class EnemyFlightGuardTests
         typeof(EnemyLocomotion).GetMethod("TickFlightTravel", Private)
             .Invoke(flight, new object[] { .001f });
 
-        Vector2 expected = oldDestination + (followsPlayer ? new Vector2(directionX * 12f, 4f) : Vector2.zero);
+        Vector2 expected = oldDestination + new Vector2(directionX * 12f, followsPlayer ? 4f : 0f);
         Assert.That(Vector2.Distance((Vector2)endpoint.GetValue(flight), expected), Is.LessThan(.001f));
-        if (followsPlayer)
-        {
-            Assert.That(Vector2.Distance(before, enemy.rb.position), Is.LessThanOrEqualTo(.0031f));
-            Assert.That((enemy.rb.position.x - before.x) * directionX, Is.GreaterThan(0f));
-            Assert.That(typeof(EnemyLocomotion).GetField("flightBeat", Private).GetValue(flight).ToString(),
-                Is.EqualTo("Moving"), "The old arrival timer must not complete the newly redirected flight.");
-            Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(directionX),
-                "Small position steps still need to turn toward travel.");
-            EnemyFacingUtil.FaceHorizontal(enemy.transform, -directionX * 10f);
-            Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(directionX),
-                "Graph target-facing must not override flight movement-facing.");
-            typeof(EnemyLocomotion).GetField("flightTravelVelocityX", Private).SetValue(flight, 0f);
-            EnemyFacingUtil.FaceHorizontal(enemy.transform, -directionX * 10f);
-            Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(directionX),
-                "Vertical flight should retain its horizontal facing.");
-            FieldInfo beat = typeof(EnemyLocomotion).GetField("flightBeat", Private);
-            beat.SetValue(flight, System.Enum.Parse(beat.FieldType, "Ready"));
-            EnemyFacingUtil.FaceHorizontal(enemy.transform, -directionX * 10f);
-            Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(-directionX),
-                "Once flight stops, aiming may face the target again.");
-        }
+        Assert.That(Vector2.Distance(before, enemy.rb.position), Is.LessThanOrEqualTo(.0031f));
+        Assert.That((enemy.rb.position.x - before.x) * directionX, Is.GreaterThan(0f));
+        Assert.That(typeof(EnemyLocomotion).GetField("flightBeat", Private).GetValue(flight).ToString(),
+            Is.EqualTo("Moving"), "The old arrival timer must not complete the newly redirected flight.");
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(directionX),
+            "Small position steps still need to turn toward travel.");
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, -directionX * 10f);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(directionX),
+            "Graph target-facing must not override flight movement-facing.");
+        typeof(EnemyLocomotion).GetField("flightTravelVelocityX", Private).SetValue(flight, 0f);
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, -directionX * 10f);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(directionX),
+            "Vertical flight should retain its horizontal facing.");
+        FieldInfo beat = typeof(EnemyLocomotion).GetField("flightBeat", Private);
+        beat.SetValue(flight, System.Enum.Parse(beat.FieldType, "Ready"));
+        EnemyFacingUtil.FaceHorizontal(enemy.transform, -directionX * 10f);
+        Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(-directionX),
+            "Once flight stops, aiming may face the target again.");
     }
 
     [TestCase(0.6f)]
@@ -477,6 +835,56 @@ public class EnemyFlightGuardTests
             Assert.That(guard.Phase, Is.EqualTo(phase));
             Assert.That(guard.ShieldRaised, Is.True);
         }
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void ProjectileGrabUsesVisualAnchorOnlyWhenExplicitlyEnabled(bool centered)
+    {
+        EnemyController enemy = Guard(out EnemyShieldGuard guard);
+        var handler = enemy.gameObject.AddComponent<EnemyHitReactionHandler>();
+        typeof(EnemyHitReactionHandler).GetMethod("Awake", Private).Invoke(handler, null);
+        enemy.hitReactionHandler = handler;
+        var caster = Host("TrapCaster", enemy.transform.position + Vector3.right * 5f);
+        guard.BeginGuard(caster.transform);
+        var projectile = Host("ChainTrap", enemy.transform.position);
+        var runtime = projectile.AddComponent<ProjectileRuntime>();
+        var owner = projectile.AddComponent<Project.Combat.GenericProjectilePlayer>();
+        var data = ScriptableObject.CreateInstance<ProjectileData>();
+        created.Add(data);
+        data.playSpawnAnimation = false;
+        data.centerGrabbedTargets = centered;
+        data.grabCenterOffset = new Vector2(.06f, 2.61f);
+        data.routineHitbox.hitbox = new NormalHitbox
+        {
+            reactionKind = EnemyReactionKind.Grab,
+            useDeterministicReaction = true,
+            damageRatio = 1f,
+            flashFrames = 0,
+            impactFreezeFrames = 0,
+            snapOffset = new Vector2(4f, 2.5f)
+        };
+        runtime.Initialize(owner, null, ProjectileType.None, data, new ProjectileSpawnContext
+        {
+            casterTransform = caster.transform,
+            origin = projectile.transform.position,
+            direction = Vector2.right,
+            sourceAttack = 10f,
+            actionDamageMultiplier = 1f
+        });
+
+        projectile.GetComponent<HitBoxDamage>().ProcessHit(enemy);
+
+        var hit = (HitReactionData)typeof(EnemyHitReactionHandler)
+            .GetField("currentReaction", Private).GetValue(handler);
+        Assert.That(guard.IsEngaged, Is.False);
+        Assert.That(hit.reactionKind, Is.EqualTo(EnemyReactionKind.Grab));
+        Assert.That(hit.alignGrabToBodyCenter, Is.EqualTo(centered));
+        Assert.That(hit.grabSocket, Is.EqualTo(centered ? projectile.transform : caster.transform));
+        Assert.That(hit.attackerTransform, Is.EqualTo(caster.transform));
+        Assert.That(hit.reactionOwnerId, Is.EqualTo(caster.transform.root.GetInstanceID()));
+        if (centered)
+            Assert.That(hit.grabOffset, Is.EqualTo(data.grabCenterOffset));
     }
 
     [Test]
@@ -816,12 +1224,14 @@ public class EnemyFlightGuardTests
         return host;
     }
 
-    private void Ground(Vector2 position, Vector2 size)
+    private BoxCollider2D Ground(Vector2 position, Vector2 size)
     {
         var ground = Host("FlightGround", position);
         ground.layer = LayerMask.NameToLayer("Ground");
-        ground.AddComponent<BoxCollider2D>().size = size;
+        var collider = ground.AddComponent<BoxCollider2D>();
+        collider.size = size;
         Physics2D.SyncTransforms();
+        return collider;
     }
 }
 #endif

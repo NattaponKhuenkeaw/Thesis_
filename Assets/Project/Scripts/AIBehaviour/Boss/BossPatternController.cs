@@ -78,6 +78,42 @@ namespace Project.AIBehaviour.Boss
             hitboxSizeOverride = new Vector2(2.2f, 1.6f)
         };
 
+        [Header("Cleave Audio")]
+        [SerializeField] private AudioClip cleaveSfx;
+        [SerializeField, Range(0f, GameAudioManager.MaxSFXGain)] private float cleaveSfxVolume = 1f;
+        [Tooltip("Seconds relative to the cleave hitbox opening: negative = earlier during windup; positive = later. Cancelled if this attack ends.")]
+        [SerializeField, Range(-2f, 2f)] private float cleaveSfxOffset;
+
+        [Header("Attack Warning Audio")]
+        [Tooltip("Additional warning at the start of every attack windup. Layers over existing pattern sounds.")]
+        [SerializeField] private AudioClip attackWarningSfx;
+        [SerializeField, Range(0f, GameAudioManager.MaxSFXGain)] private float attackWarningSfxVolume = 1f;
+
+        [Header("Charge Hit Audio")]
+        [Tooltip("Only plays when Bull Charge successfully damages the player, not when the charge starts or misses.")]
+        [SerializeField] private AudioClip chargeHitSfx;
+        [SerializeField, Range(0f, GameAudioManager.MaxSFXGain)] private float chargeHitSfxVolume = 1f;
+
+        [Header("Charge Rush Audio")]
+        [Tooltip("Starts with actual Bull Charge movement and stops when the charge ends. Separate from player impact audio.")]
+        [SerializeField] private AudioClip chargeRushSfx;
+        [SerializeField, Range(0f, GameAudioManager.MaxSFXGain)] private float chargeRushSfxVolume = 1f;
+
+        [Header("Death Audio")]
+        [Tooltip("Plays once when the boss dies, before its separate spirit dissolve sound.")]
+        [SerializeField] private AudioClip deathSfx;
+        [SerializeField, Range(0f, GameAudioManager.MaxSFXGain)] private float deathSfxVolume = 1f;
+
+        [Header("Jump Takeoff Audio")]
+        [Tooltip("Plays once as Jump Smash starts moving, after its warning. Not a landing sound.")]
+        [SerializeField] private AudioClip jumpTakeoffSfx;
+        [SerializeField, Range(0f, GameAudioManager.MaxSFXGain)] private float jumpTakeoffSfxVolume = 1f;
+
+        [Header("Jump Landing Audio")]
+        [Tooltip("Plays once when Jump Smash confirms ground contact and starts its impact, even if it misses the player.")]
+        [SerializeField] private AudioClip jumpLandSfx;
+        [SerializeField, Range(0f, GameAudioManager.MaxSFXGain)] private float jumpLandSfxVolume = 1f;
+
         [Header("Jump Smash")]
         [SerializeField] private float jumpArcHeight = 3.5f;
         [SerializeField] private float jumpTravelDuration = 0.75f;
@@ -113,6 +149,11 @@ namespace Project.AIBehaviour.Boss
         private bool isBusy;
         private bool statsApplied;
         private bool pendingChainCleave;
+        private readonly EnemyAttackAudioCue cleaveAudioCue = new EnemyAttackAudioCue();
+        private float cleaveAudioUpdatedAt;
+        private bool deathAudioPlayed;
+        private AudioSource attackWarningAudioSource;
+        private AudioSource chargeRushAudioSource;
 
         private Collider2D activePatternHitbox;
         private Vector2 cachedHitboxOffset;
@@ -137,6 +178,25 @@ namespace Project.AIBehaviour.Boss
         public BossPatternTiming BullChargeTiming => bullCharge;
         public float CleaveRange => cleaveRange;
         public float ChargeDistance => chargeDistance;
+        public AudioClip CleaveSfx => cleaveSfx;
+        public float CleaveSfxVolume => GameAudioManager.ClampSFXGain(cleaveSfxVolume);
+        public float CleaveSfxOffset => cleaveSfxOffset;
+        public AudioClip AttackWarningSfx => attackWarningSfx;
+        public float AttackWarningSfxVolume => GameAudioManager.ClampSFXGain(attackWarningSfxVolume);
+        public AudioClip ChargeHitSfx => chargeHitSfx;
+        public float ChargeHitSfxVolume => GameAudioManager.ClampSFXGain(chargeHitSfxVolume);
+        public AudioClip ChargeRushSfx => chargeRushSfx;
+        public float ChargeRushSfxVolume => GameAudioManager.ClampSFXGain(chargeRushSfxVolume);
+        public AudioClip DeathSfx => deathSfx;
+        public float DeathSfxVolume => GameAudioManager.ClampSFXGain(deathSfxVolume);
+        public AudioClip JumpTakeoffSfx => jumpTakeoffSfx;
+        public float JumpTakeoffSfxVolume => GameAudioManager.ClampSFXGain(jumpTakeoffSfxVolume);
+        public AudioClip JumpLandSfx => jumpLandSfx;
+        public float JumpLandSfxVolume => GameAudioManager.ClampSFXGain(jumpLandSfxVolume);
+        public float JumpArcHeight => jumpArcHeight;
+        public float JumpTravelDuration => jumpTravelDuration;
+        public float ChargeSpeed => chargeSpeed;
+        public float ChargeStopAnimationDuration => chargeStopAnimationDuration;
 
         private void Reset()
         {
@@ -171,6 +231,7 @@ namespace Project.AIBehaviour.Boss
 
         private void OnEnable()
         {
+            if (enemy != null && enemy.IsAlive) deathAudioPlayed = false;
             if (enemy != null)
             {
                 enemy.OnDamaged += HandleDamaged;
@@ -203,6 +264,7 @@ namespace Project.AIBehaviour.Boss
             }
             // OnEnable runs before EnemyController.Start, so retry once the spawn state enters Active.
             StartBrainIfActive();
+            TickCleaveAudio();
         }
 
         private void StartBrainIfActive()
@@ -305,7 +367,16 @@ namespace Project.AIBehaviour.Boss
                 brainRoutine = null;
             }
 
+            PlayDeathAudio();
             BossDeathSequence.EnsureInstance().BeginFromBoss(enemy);
+        }
+
+        private void PlayDeathAudio()
+        {
+            if (!Application.isPlaying || deathAudioPlayed || enemy == null || enemy.IsAlive) return;
+            deathAudioPlayed = true;
+            if (deathSfx != null && DeathSfxVolume > 0f)
+                GameAudioManager.EnsureInstance().PlayHitSFX(deathSfx, DeathSfxVolume);
         }
 
         /// <summary>
@@ -552,6 +623,8 @@ namespace Project.AIBehaviour.Boss
                 yield break;
             }
 
+            cleaveAudioUpdatedAt = Time.time;
+            if (cleaveAudioCue.Confirm(cleaveSfxOffset)) EmitCleaveAudio();
             yield return ActiveMeleeWindow(timing);
 
             float recovery = usePhaseRecovery ? ResolveRecovery(timing) : 0f;
@@ -605,6 +678,8 @@ namespace Project.AIBehaviour.Boss
 
             // Impact AoE.
             animHandler?.SetBossJumpPhase(0.6f);
+            if (Application.isPlaying && jumpLandSfx != null && JumpLandSfxVolume > 0f)
+                GameAudioManager.EnsureInstance().PlayHitSFX(jumpLandSfx, JumpLandSfxVolume);
             groundTelegraph?.Hide();
             yield return ActiveMeleeWindow(timing, animateLanding: true);
             RestorePhysics();
@@ -642,6 +717,7 @@ namespace Project.AIBehaviour.Boss
 
             BeginArmored();
             ConfigureHitbox(timing);
+            enemy.attackHitbox?.GetComponent<EnemyAttackHitbox>()?.SetWindowImpactAudio(chargeHitSfx, chargeHitSfxVolume);
             enemy.SetAttackHitboxActive(true);
 
             float maxTravel = ResolveChargeTravelDistance(facing);
@@ -667,10 +743,12 @@ namespace Project.AIBehaviour.Boss
                 if (!rushPoseStarted && CanContinuePattern() && Mathf.Abs(actual.x - current.x) > 0.0001f)
                 {
                     animHandler?.SetBossChargePhase(0.3f);
+                    PlayChargeRushAudio();
                     rushPoseStarted = true;
                 }
             }
 
+            StopChargeRushAudio();
             enemy.SetAttackHitboxActive(false);
             RestoreHitboxTransform();
             EndArmored();
@@ -726,6 +804,7 @@ namespace Project.AIBehaviour.Boss
             BeginArmored();
             enemy.SetAttackHitboxActive(false);
             enemy.TriggerAttackWarning(timing.telegraphDuration);
+            PlayAttackWarningAudio();
 
             if (markerWorldPos.HasValue)
                 groundTelegraph?.Show(markerWorldPos.Value, markerRadius);
@@ -736,6 +815,13 @@ namespace Project.AIBehaviour.Boss
             // Wind-up anim cue at telegraph start for grounded swings / charge crouch.
             if (patternId != BossPatternId.JumpSmash)
                 animHandler?.TriggerBossPattern(patternId);
+
+            if (patternId == BossPatternId.HeavyCleave)
+            {
+                cleaveAudioCue.Begin(timing.telegraphDuration, cleaveSfxOffset);
+                cleaveAudioUpdatedAt = Time.time;
+                TickCleaveAudio();
+            }
 
             float t = 0f;
             while (t < timing.telegraphDuration)
@@ -834,6 +920,9 @@ namespace Project.AIBehaviour.Boss
 
         private void CleanupAttackState()
         {
+            cleaveAudioCue.Cancel();
+            StopAttackWarningAudio();
+            StopChargeRushAudio();
             animHandler?.SetBossChargePhase(-1f);
             animHandler?.SetBossJumpPhase(-1f);
             if (enemy != null)
@@ -847,6 +936,68 @@ namespace Project.AIBehaviour.Boss
             RestoreHitboxTransform();
             StopTelegraphFlash();
             groundTelegraph?.Hide();
+        }
+
+        private void PlayChargeRushAudio()
+        {
+            if (!Application.isPlaying || enemy == null || !enemy.IsCombatReady || enemy.IsGrabbed
+                || chargeRushSfx == null || ChargeRushSfxVolume <= 0f) return;
+            if (chargeRushAudioSource == null)
+            {
+                var host = new GameObject("BossChargeRushAudio");
+                host.transform.SetParent(transform, false);
+                chargeRushAudioSource = host.AddComponent<AudioSource>();
+                chargeRushAudioSource.playOnAwake = false;
+            }
+            GameAudioManager.EnsureInstance().PlayControlledSFX(chargeRushAudioSource, chargeRushSfx, ChargeRushSfxVolume);
+        }
+
+        private void StopChargeRushAudio()
+        {
+            if (chargeRushAudioSource == null) return;
+            chargeRushAudioSource.Stop();
+            chargeRushAudioSource.clip = null;
+        }
+
+        private void PlayAttackWarningAudio()
+        {
+            if (!Application.isPlaying || enemy == null || !enemy.IsCombatReady || enemy.IsGrabbed
+                || attackWarningSfx == null || AttackWarningSfxVolume <= 0f) return;
+            if (attackWarningAudioSource == null)
+            {
+                var host = new GameObject("BossAttackWarningAudio");
+                host.transform.SetParent(transform, false);
+                attackWarningAudioSource = host.AddComponent<AudioSource>();
+                attackWarningAudioSource.playOnAwake = false;
+            }
+            GameAudioManager.EnsureInstance().PlayControlledSFX(attackWarningAudioSource, attackWarningSfx, AttackWarningSfxVolume);
+        }
+
+        private void StopAttackWarningAudio()
+        {
+            if (attackWarningAudioSource == null) return;
+            attackWarningAudioSource.Stop();
+            attackWarningAudioSource.clip = null;
+        }
+
+        private void TickCleaveAudio()
+        {
+            float now = Time.time;
+            float deltaTime = Mathf.Max(0f, now - cleaveAudioUpdatedAt);
+            cleaveAudioUpdatedAt = now;
+            if (!isActiveAndEnabled || enemy == null || !enemy.IsCombatReady || enemy.IsGrabbed)
+            {
+                cleaveAudioCue.Cancel();
+                return;
+            }
+            if (cleaveAudioCue.Tick(deltaTime)) EmitCleaveAudio();
+        }
+
+        private void EmitCleaveAudio()
+        {
+            if (!Application.isPlaying || !isActiveAndEnabled || enemy == null || !enemy.IsCombatReady
+                || enemy.IsGrabbed || cleaveSfx == null) return;
+            GameAudioManager.EnsureInstance().PlayHitSFX(cleaveSfx, GameAudioManager.ClampSFXGain(cleaveSfxVolume));
         }
 
         private void ApplyBossStaggerArmor()
@@ -976,6 +1127,8 @@ namespace Project.AIBehaviour.Boss
                 if (!enemy.IsAlive || (enemy != null && enemy.IsGrabbed))
                     yield break;
 
+                if (t == 0f && Application.isPlaying && jumpTakeoffSfx != null && JumpTakeoffSfxVolume > 0f)
+                    GameAudioManager.EnsureInstance().PlayHitSFX(jumpTakeoffSfx, JumpTakeoffSfxVolume);
                 t += Time.fixedDeltaTime / duration;
                 float u = Mathf.Clamp01(t);
                 animHandler?.SetBossJumpPhase(u < (1f / 3f) ? 0f : 0.25f);

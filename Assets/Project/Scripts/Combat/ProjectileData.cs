@@ -238,6 +238,12 @@ public class ProjectileData : ScriptableObject
     public bool destroyWhenHitsExhausted = true;
     public bool destroyOnLifetimeExpire = true;
 
+    [Header("Grab Binding")]
+    [Tooltip("Bind Grab reactions to this projectile's visual anchor instead of the caster pivot.")]
+    public bool centerGrabbedTargets = false;
+    [Tooltip("Projectile-local point where the grabbed enemy's body center should be held.")]
+    public Vector2 grabCenterOffset = Vector2.zero;
+
     [Header("Area Effects")]
     public bool trackAreaOccupants = false;
     [Min(0.05f)] public float areaEffectRefreshInterval = 0.25f;

@@ -135,7 +135,7 @@ MonoBehaviour:
     acquisitionBiomeIndex: 0
   artifactRollTable: {fileID: 11400000, guid: acf4a418dd90362438e80ff299bc7b30, type: 2}
   itemStacks: []
-  currency: 999985130
+  currency: 999980712
   _globalLevel: 1
   _globalMaxLevel: 30
   runCharacters:
@@ -147,7 +147,7 @@ MonoBehaviour:
       attackPerLevel: 6.1
       defensePerLevel: 4.2
       maxHpPerLevel: 81
-    currentHP: 765.98303
+    currentHP: 813
     currentAE: 60
   - character: {fileID: 11400000, guid: 6e1cc08e7eba57845b7bac14d8757b51, type: 2}
     upgrade:
@@ -158,7 +158,7 @@ MonoBehaviour:
       defensePerLevel: 4.8
       maxHpPerLevel: 83
     currentHP: 973
-    currentAE: 53
+    currentAE: 38
   teamSlots:
   - character: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
     legacyArtifacts: []

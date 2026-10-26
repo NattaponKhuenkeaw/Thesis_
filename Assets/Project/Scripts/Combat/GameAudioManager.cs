@@ -2,10 +2,13 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using Project.Core;
+using Project.Core.ZoneState;
+using UnityEngine.SceneManagement;
 
 public class GameAudioManager : MonoBehaviour
 {
     public static GameAudioManager Instance { get; private set; }
+    public const float MaxSFXGain = 2f;
 
     [Header("Pool Settings")]
     public int initialPoolSize = 10;
@@ -21,6 +24,13 @@ public class GameAudioManager : MonoBehaviour
     [SerializeField] private UnityEngine.Audio.AudioMixerGroup sfxMixerGroup;
     [SerializeField] private UnityEngine.Audio.AudioMixerGroup voiceMixerGroup;
     [SerializeField] private UnityEngine.Audio.AudioMixerGroup bgmMixerGroup;
+
+    [Header("Background Music")]
+    [SerializeField] private ZoneStateProvider musicZoneState;
+    [SerializeField, Min(0f)] private float musicFadeDuration = 0.65f;
+
+    [Header("Room Ambience")]
+    [SerializeField, Min(0f)] private float ambienceFadeDuration = 0.65f;
 
     [Header("Concurrency & Polyphony Limiter")]
     [Tooltip("Max concurrent instances of the exact same AudioClip allowed in a single frame.")]
@@ -38,6 +48,27 @@ public class GameAudioManager : MonoBehaviour
     
     private Queue<AudioSource> sourcePool = new Queue<AudioSource>();
     private AudioSource voiceSource; // Single instance to mutually exclude lines
+    private AudioSource musicSource;
+    private AudioClip requestedMusic;
+    private Coroutine musicRoutine;
+    private float musicBaseVolume = 1f;
+    private float musicFade = 1f;
+    private AudioSource ambienceSource;
+    private AudioClip requestedAmbience;
+    private Coroutine ambienceRoutine;
+    private float ambienceBaseVolume = 1f;
+    private float requestedAmbienceVolume = 1f;
+    private float ambienceFade = 1f;
+
+    public AudioClip CurrentMusic => musicSource != null ? musicSource.clip : null;
+    public AudioClip CurrentAmbience => ambienceSource != null ? ambienceSource.clip : null;
+
+    public static GameAudioManager EnsureInstance()
+    {
+        if (Instance != null) return Instance;
+        var existing = FindFirstObjectByType<GameAudioManager>();
+        return existing != null ? existing : new GameObject("GameAudioManager").AddComponent<GameAudioManager>();
+    }
 
     public float MasterVolume
     {
@@ -81,7 +112,25 @@ public class GameAudioManager : MonoBehaviour
 
     public float GetEffectiveSFXVolume(float baseVolume = 1f)
     {
-        return Mathf.Clamp01(baseVolume) * sfxVolume * masterVolume * GameSettings.SfxVolume;
+        return CalculateSFXGain(baseVolume, sfxVolume, masterVolume, GameSettings.SfxVolume);
+    }
+
+    public static float ClampSFXGain(float gain)
+    {
+        return float.IsNaN(gain) ? 0f : Mathf.Clamp(gain, 0f, MaxSFXGain);
+    }
+
+    public static float CalculateSFXGain(float baseGain, float sfx, float master, float settings)
+    {
+        return ClampSFXGain(baseGain) * sfx * master * settings;
+    }
+
+    private static void PlaySFXSource(AudioSource source, AudioClip clip, float gain)
+    {
+        // AudioSource.volume stops at 1; the one-shot scale preserves authored boosts above 1.
+        source.volume = Mathf.Min(1f, gain);
+        if (gain > 1f) source.PlayOneShot(clip, gain);
+        else source.Play();
     }
 
     public float GetEffectiveVoiceVolume(float baseVolume = 1f)
@@ -154,14 +203,236 @@ public class GameAudioManager : MonoBehaviour
         }
 
         InitializePool();
+        EnsureMusicSource();
+        if (musicZoneState == null)
+            musicZoneState = Resources.Load<ZoneStateProvider>("CombatSO/ZoneStateProvider");
+        if (musicZoneState != null)
+            musicZoneState.OnRoomChanged += HandleMusicRoomChanged;
+        SceneManager.sceneLoaded += HandleMusicSceneLoaded;
+    }
+
+    private void Start()
+    {
+        if (Instance == this)
+            RefreshRoomMusic();
+    }
+
+    private void Update()
+    {
+        RefreshMusicVolume();
+        RefreshAmbienceVolume();
     }
 
     private void OnDestroy()
     {
+        SceneManager.sceneLoaded -= HandleMusicSceneLoaded;
+        if (musicZoneState != null)
+            musicZoneState.OnRoomChanged -= HandleMusicRoomChanged;
         if (Instance == this)
         {
             Instance = null;
         }
+    }
+
+    private void EnsureMusicSource()
+    {
+        if (musicSource != null) return;
+        var host = new GameObject("MusicAudioSource");
+        host.transform.SetParent(transform, false);
+        musicSource = host.AddComponent<AudioSource>();
+        musicSource.playOnAwake = false;
+        musicSource.loop = true;
+        musicSource.spatialBlend = 0f;
+        musicSource.ignoreListenerPause = true;
+        musicSource.outputAudioMixerGroup = bgmMixerGroup;
+    }
+
+    private void HandleMusicSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        RefreshRoomMusic();
+    }
+
+    private void RefreshRoomMusic()
+    {
+        // The menu owns its authored track; it is not a MapSO room.
+        if (SceneManager.GetActiveScene().name == "MainMenu")
+        {
+            PlayAmbience(null);
+            return;
+        }
+        PlayRoomMusic(musicZoneState != null ? musicZoneState.CurrentRoom : null);
+    }
+
+    private void HandleMusicRoomChanged(RoomData room)
+    {
+        if (SceneManager.GetActiveScene().name != "MainMenu")
+            PlayRoomMusic(room);
+        else
+            PlayAmbience(null);
+    }
+
+    public void PlayRoomMusic(RoomData room)
+    {
+        PlayMusic(room != null ? room.BackgroundMusic : null, room != null ? room.MusicVolume : 1f);
+        PlayAmbience(room != null ? room.Ambience : null, room != null ? room.AmbienceVolume : 1f);
+    }
+
+    public void PlayMusic(AudioClip clip, float volume = 1f)
+    {
+        EnsureMusicSource();
+        musicBaseVolume = Mathf.Clamp01(volume);
+        if (requestedMusic == clip && (musicRoutine != null || musicSource.clip == clip))
+        {
+            RefreshMusicVolume();
+            return;
+        }
+
+        requestedMusic = clip;
+        if (musicRoutine != null)
+        {
+            StopCoroutine(musicRoutine);
+            musicRoutine = null;
+        }
+
+        if (!Application.isPlaying || musicFadeDuration <= 0f)
+        {
+            SetMusicClip(clip);
+            musicFade = 1f;
+            RefreshMusicVolume();
+            return;
+        }
+
+        musicRoutine = StartCoroutine(ChangeMusic(clip));
+    }
+
+    public void RefreshMusicVolume()
+    {
+        if (musicSource != null)
+            musicSource.volume = musicBaseVolume * bgmVolume * masterVolume * GameSettings.BgmVolume * musicFade;
+    }
+
+    private void SetMusicClip(AudioClip clip)
+    {
+        musicSource.Stop();
+        musicSource.clip = clip;
+        if (clip != null && Application.isPlaying)
+            musicSource.Play();
+    }
+
+    private IEnumerator ChangeMusic(AudioClip clip)
+    {
+        // Returning during fade-out keeps the same playback position instead of restarting the song.
+        if (musicSource.clip != clip)
+        {
+            if (musicSource.clip != null)
+                yield return FadeMusicTo(0f);
+            SetMusicClip(clip);
+            musicFade = 0f;
+        }
+        if (clip != null)
+            yield return FadeMusicTo(1f);
+        musicRoutine = null;
+    }
+
+    private IEnumerator FadeMusicTo(float target)
+    {
+        float start = musicFade;
+        float elapsed = 0f;
+        while (elapsed < musicFadeDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            musicFade = Mathf.Lerp(start, target, Mathf.Clamp01(elapsed / musicFadeDuration));
+            RefreshMusicVolume();
+            yield return null;
+        }
+        musicFade = target;
+        RefreshMusicVolume();
+    }
+
+    public void PlayAmbience(AudioClip clip, float volume = 1f)
+    {
+        requestedAmbienceVolume = Mathf.Clamp01(volume);
+        if (clip != null && ambienceSource != null && ambienceSource.clip == clip)
+            ambienceBaseVolume = requestedAmbienceVolume;
+        if (ambienceSource == null)
+        {
+            if (clip == null) return;
+            var host = new GameObject("AmbienceAudioSource");
+            host.transform.SetParent(transform, false);
+            ambienceSource = host.AddComponent<AudioSource>();
+            ambienceSource.playOnAwake = false;
+            ambienceSource.loop = true;
+            ambienceSource.spatialBlend = 0f;
+            ambienceSource.ignoreListenerPause = true;
+            ambienceSource.outputAudioMixerGroup = sfxMixerGroup;
+        }
+        if (requestedAmbience == clip && (ambienceRoutine != null || ambienceSource.clip == clip))
+        {
+            RefreshAmbienceVolume();
+            return;
+        }
+
+        requestedAmbience = clip;
+        if (ambienceRoutine != null)
+        {
+            StopCoroutine(ambienceRoutine);
+            ambienceRoutine = null;
+        }
+        if (!Application.isPlaying || ambienceFadeDuration <= 0f)
+        {
+            SetAmbienceClip(clip);
+            ambienceFade = 1f;
+            RefreshAmbienceVolume();
+            return;
+        }
+        ambienceRoutine = StartCoroutine(ChangeAmbience(clip));
+    }
+
+    public void RefreshAmbienceVolume()
+    {
+        if (ambienceSource != null)
+            ambienceSource.volume = GetEffectiveSFXVolume(ambienceBaseVolume) * ambienceFade;
+    }
+
+    private void SetAmbienceClip(AudioClip clip)
+    {
+        ambienceSource.Stop();
+        ambienceSource.clip = clip;
+        ambienceSource.volume = 0f;
+        if (clip != null)
+            ambienceBaseVolume = requestedAmbienceVolume;
+        if (clip != null && Application.isPlaying)
+            ambienceSource.Play();
+    }
+
+    private IEnumerator ChangeAmbience(AudioClip clip)
+    {
+        // Re-entering a room with the same atmosphere resumes the fade without restarting the loop.
+        if (ambienceSource.clip != clip)
+        {
+            if (ambienceSource.clip != null)
+                yield return FadeAmbienceTo(0f);
+            SetAmbienceClip(clip);
+            ambienceFade = 0f;
+        }
+        if (clip != null)
+            yield return FadeAmbienceTo(1f);
+        ambienceRoutine = null;
+    }
+
+    private IEnumerator FadeAmbienceTo(float target)
+    {
+        float start = ambienceFade;
+        float elapsed = 0f;
+        while (elapsed < ambienceFadeDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            ambienceFade = Mathf.Lerp(start, target, Mathf.Clamp01(elapsed / ambienceFadeDuration));
+            RefreshAmbienceVolume();
+            yield return null;
+        }
+        ambienceFade = target;
+        RefreshAmbienceVolume();
     }
 
     private void InitializePool()
@@ -234,12 +505,30 @@ public class GameAudioManager : MonoBehaviour
             // Action, Hit, etc.
             AudioSource src = GetSource();
             src.clip = entry.clip;
-            src.volume = GetEffectiveSFXVolume(entry.volume) * concurrencyMod;
             src.pitch = entry.pitchVariation;
             src.ignoreListenerPause = false;
-            src.Play();
+            PlaySFXSource(src, entry.clip, GetEffectiveSFXVolume(entry.volume) * concurrencyMod);
             StartCoroutine(ReturnSourceRoutine(src, entry.clip.length / Mathf.Max(0.01f, src.pitch)));
         }
+    }
+
+    // The caller owns this source and must stop it when its gameplay phase ends.
+    public void PlayControlledSFX(AudioSource source, AudioClip clip, float volume = 1f)
+    {
+        if (source == null || clip == null) return;
+        source.Stop();
+        float concurrencyMod = CalculateConcurrencyVolumeModifier(clip);
+        if (concurrencyMod <= 0.001f) return;
+        source.playOnAwake = false;
+        source.loop = false;
+        source.spatialBlend = 0f;
+        source.ignoreListenerPause = false;
+        source.outputAudioMixerGroup = sfxMixerGroup;
+        source.clip = clip;
+        source.pitch = 1f;
+        float gain = GetEffectiveSFXVolume(volume) * concurrencyMod;
+        source.volume = Mathf.Min(1f, gain);
+        if (Application.isPlaying) PlaySFXSource(source, clip, gain);
     }
 
     public void PlayHitSFX(AudioClip clip, float volume = 1f, float pitch = 1f)
@@ -251,10 +540,9 @@ public class GameAudioManager : MonoBehaviour
 
         AudioSource src = GetSource();
         src.clip = clip;
-        src.volume = GetEffectiveSFXVolume(volume) * concurrencyMod;
         src.pitch = pitch;
         src.ignoreListenerPause = false;
-        src.Play();
+        PlaySFXSource(src, clip, GetEffectiveSFXVolume(volume) * concurrencyMod);
         StartCoroutine(ReturnSourceRoutine(src, clip.length / Mathf.Max(0.01f, src.pitch)));
     }
 

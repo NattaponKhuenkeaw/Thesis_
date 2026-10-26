@@ -15,6 +15,8 @@ public class EnemyAttackHitbox : MonoBehaviour
 
     private readonly HashSet<int> hitTargetsThisWindow = new HashSet<int>();
     private bool hitboxWindowActive;
+    private AudioClip windowImpactSfx;
+    private float windowImpactSfxVolume = 1f;
 
     public EnemyAttackProperty AttackProperty => attackProperty;
 
@@ -32,6 +34,7 @@ public class EnemyAttackHitbox : MonoBehaviour
     {
         hitboxWindowActive = false;
         hitTargetsThisWindow.Clear();
+        windowImpactSfx = null;
     }
 
     public void SetHitboxWindowActive(bool active)
@@ -42,6 +45,17 @@ public class EnemyAttackHitbox : MonoBehaviour
         {
             hitTargetsThisWindow.Clear();
         }
+        else
+        {
+            windowImpactSfx = null;
+        }
+    }
+
+    // Configure before opening the window; closing it prevents audio leaking into the next attack.
+    public void SetWindowImpactAudio(AudioClip clip, float volume = 1f)
+    {
+        windowImpactSfx = clip;
+        windowImpactSfxVolume = GameAudioManager.ClampSFXGain(volume);
     }
 
     public void SetAttackProperty(EnemyAttackProperty property)
@@ -90,8 +104,14 @@ public class EnemyAttackHitbox : MonoBehaviour
         }
 
         IncomingAttackContext context = IncomingAttackContext.FromEnemy(enemyController, attackProperty, triggerPlayerTakeDamageAnimation);
+        // A lethal hit can close the room/window during TakeDamage. Keep this confirmed hit's sound.
+        AudioClip impactSfx = windowImpactSfx;
+        float impactVolume = windowImpactSfxVolume;
         if (!playerCharacter.TakeDamage(damage, context))
             return;
+
+        if (Application.isPlaying && impactSfx != null)
+            GameAudioManager.EnsureInstance().PlayHitSFX(impactSfx, impactVolume);
 
         if (CameraManager.instance != null)
             CameraManager.instance.ShakeByImpact(DamageImpactTier.Low);

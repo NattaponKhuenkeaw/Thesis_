@@ -21,6 +21,10 @@ MonoBehaviour:
   offerWeight: 1
   includeInRandomOffers: 1
   zoneMode: 1
+  backgroundMusic: {fileID: 8300000, guid: 2473e86c4ff645e0a8f7ade83475a910, type: 3}
+  musicVolume: 1
+  ambience: {fileID: 8300000, guid: 953ebadc922942e59550d761a3656c21, type: 3}
+  ambienceVolume: 0.35
   defaultEntranceId: Default
   useStaticCamera: 0
   encounter: {fileID: 11400000, guid: 3d8a6c15e92f4b7a80c4d1e6f9a2b538, type: 2}
