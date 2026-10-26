@@ -39,7 +39,7 @@ namespace Project.Progression.RestRoom
 
         public void ShowHealing()
         {
-            SetNumber("♥", healingColor);
+            SetNumber("HP+", healingColor);
             SetStatus("Restoring team...");
         }
 
@@ -51,7 +51,7 @@ namespace Project.Progression.RestRoom
         public void ShowHealed(float percentOfMaxHp)
         {
             float percent = Mathf.Clamp01(percentOfMaxHp);
-            SetNumber("♥", doneColor);
+            SetNumber("HP+", doneColor);
             if (Mathf.Approximately(percent, 1f))
             {
                 SetStatus("Team restored");
@@ -64,7 +64,7 @@ namespace Project.Progression.RestRoom
 
         public void ShowClaimed()
         {
-            SetNumber("✓", idleColor);
+            SetNumber("OK", idleColor);
             SetStatus("Already rested");
         }
 
