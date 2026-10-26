@@ -4462,7 +4462,7 @@ MonoBehaviour:
   settingsPanel: {fileID: 300006}
   confirmPanel: {fileID: 300007}
   playButton: {fileID: 300008}
-  saveSelectPanel: {fileID: 0}
+  saveSelectPanel: {fileID: 320006, guid: 4a9d6c0e2b5f47c8a1d3e705f9b06241, type: 3}
   settingsButton: {fileID: 300011}
   quitButton: {fileID: 300012}
   masterSlider: {fileID: 300013}
