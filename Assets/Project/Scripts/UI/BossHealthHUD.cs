@@ -5,31 +5,40 @@ using UnityEngine.UI;
 
 namespace Project.UI
 {
-    /// <summary>
-    /// Screen-space boss HP bar (top-center). Bound by BossPatternController when a boss spawns.
-    /// Builds its panel at runtime so combat_1 does not need a pre-authored prefab.
-    /// </summary>
+    /// <summary>Prefab-authored screen HUD showing one colored boss health layer at a time.</summary>
     [DisallowMultipleComponent]
     public sealed class BossHealthHUD : MonoBehaviour
     {
-        private const int CanvasSortingOrder = 400;
-        private const string TransitionCanvasName = "TransitionCanvas";
-
+        private const string PrefabResourcePath = "UI/BossHealthHUD";
         public static BossHealthHUD Instance { get; private set; }
 
-        [SerializeField] private float healthLerpDelay = 0.25f;
-        [SerializeField] private float healthLerpDuration = 0.5f;
+        [Header("Prefab References")]
+        [SerializeField] private GameObject panelRoot;
+        [SerializeField] private Slider healthSlider;
+        [SerializeField] private Slider damageLerpSlider;
+        [SerializeField] private Image healthFill;
+        [SerializeField] private TMP_Text nameText;
+        [SerializeField] private TMP_Text remainingBarsText;
+
+        [Header("Health Layers (last layer first)")]
+        [SerializeField] private Color[] layerColors =
+        {
+            new Color(.9f, .18f, .24f),
+            new Color(1f, .48f, .16f),
+            new Color(1f, .8f, .22f),
+            new Color(.3f, .85f, .42f),
+            new Color(.18f, .8f, .9f)
+        };
+        [SerializeField] private float healthLerpDelay = .25f;
+        [SerializeField] private float healthLerpDuration = .5f;
 
         private EnemyController boundBoss;
-        private GameObject panelRoot;
-        private Slider healthSlider;
-        private Slider damageLerpSlider;
-        private TMP_Text nameText;
         private Coroutine healthLerpCoroutine;
-        private bool uiBuilt;
+        private int totalBars = 5;
+        private int displayedBars;
 
         public bool IsBound => boundBoss != null;
-        public bool IsVisible => panelRoot != null && panelRoot.activeSelf;
+        public bool IsVisible => panelRoot != null && panelRoot.activeInHierarchy;
 
         private void Awake()
         {
@@ -38,93 +47,70 @@ namespace Project.UI
                 Destroy(gameObject);
                 return;
             }
-
             Instance = this;
-            EnsureUiBuilt();
             SetVisible(false);
         }
 
         private void OnDestroy()
         {
-            if (Instance == this)
-                Instance = null;
+            if (Instance == this) Instance = null;
+            UnbindInternal();
+        }
 
-            UnbindInternal(clearOnly: true);
+        private void OnDisable() => StopHealthLerp();
 
-            if (panelRoot != null)
-            {
-                Destroy(panelRoot);
-                panelRoot = null;
-            }
+        private void OnEnable()
+        {
+            if (boundBoss != null) RefreshIfBound(boundBoss);
         }
 
         public static BossHealthHUD EnsureInstance()
         {
-            if (Instance != null)
-                return Instance;
-
-            BossHealthHUD existing = FindFirstObjectByType<BossHealthHUD>(FindObjectsInactive.Include);
+            if (Instance != null) return Instance;
+            var existing = FindFirstObjectByType<BossHealthHUD>(FindObjectsInactive.Include);
             if (existing != null)
             {
                 Instance = existing;
                 return existing;
             }
-
-            GameObject go = new GameObject("BossHealthHUD");
-            return go.AddComponent<BossHealthHUD>();
+            var prefab = Resources.Load<BossHealthHUD>(PrefabResourcePath);
+            if (prefab == null)
+            {
+                Debug.LogError("[BossHealthHUD] Missing Resources/UI/BossHealthHUD.prefab. No runtime UI will be generated.");
+                return null;
+            }
+            Instance = Instantiate(prefab);
+            return Instance;
         }
 
-        public void Bind(EnemyController boss, string displayName)
+        public void Bind(EnemyController boss, string displayName, int healthBars = 5)
         {
-            if (boss == null)
-            {
-                Debug.LogWarning("[BossHealthHUD] Bind called with null boss.", this);
-                return;
-            }
-
-            EnsureUiBuilt();
-
-            if (boundBoss != null && boundBoss != boss)
-                UnbindInternal(clearOnly: false);
-
+            if (boss == null) return;
+            UnbindInternal();
             boundBoss = boss;
-            boundBoss.OnDamaged -= HandleDamaged;
-            boundBoss.OnDamaged += HandleDamaged;
-            boundBoss.OnDied -= HandleDied;
-            boundBoss.OnDied += HandleDied;
-
+            totalBars = Mathf.Max(1, healthBars);
+            boss.OnDamaged += HandleDamaged;
+            boss.OnDied += HandleDied;
             if (nameText != null)
                 nameText.text = string.IsNullOrWhiteSpace(displayName) ? boss.name : displayName;
-
-            UpdateHealthBar(immediateLerp: true);
-            SetVisible(boss.IsAlive);
+            RefreshIfBound(boss);
         }
 
         public void RefreshIfBound(EnemyController boss)
         {
-            if (boss == null || boundBoss != boss)
-            {
-                return;
-            }
-
-            UpdateHealthBar(immediateLerp: true);
+            if (boss == null || boundBoss != boss) return;
+            UpdateHealthBar(true);
             SetVisible(boss.IsAlive);
         }
 
         public void Unbind(EnemyController boss)
         {
-            if (boss == null || boundBoss != boss)
-                return;
-
-            UnbindInternal(clearOnly: false);
+            if (boss != null && boundBoss == boss) UnbindInternal();
         }
 
-        public void Clear()
-        {
-            UnbindInternal(clearOnly: false);
-        }
+        public void Clear() => UnbindInternal();
 
-        private void UnbindInternal(bool clearOnly)
+        private void UnbindInternal()
         {
             if (boundBoss != null)
             {
@@ -132,240 +118,74 @@ namespace Project.UI
                 boundBoss.OnDied -= HandleDied;
                 boundBoss = null;
             }
-
             StopHealthLerp();
-
-            if (!clearOnly)
-                SetVisible(false);
+            SetVisible(false);
         }
 
-        private void HandleDamaged(HitReactionData _)
-        {
-            UpdateHealthBar(immediateLerp: false);
-        }
+        private void HandleDamaged(HitReactionData _) => UpdateHealthBar(false);
 
         private void HandleDied()
         {
-            UpdateHealthBar(immediateLerp: false);
+            UpdateHealthBar(true);
             SetVisible(false);
+        }
+
+        public static void CalculateLayers(float currentHp, float maxHp, int count, out int remaining, out float fill)
+        {
+            remaining = 0;
+            fill = 0f;
+            if (maxHp <= 0f || currentHp <= 0f) return;
+            count = Mathf.Max(1, count);
+            float layers = Mathf.Clamp(currentHp, 0f, maxHp) / (maxHp / count);
+            remaining = Mathf.Clamp(Mathf.CeilToInt(layers), 1, count);
+            fill = Mathf.Clamp01(layers - (remaining - 1));
         }
 
         private void UpdateHealthBar(bool immediateLerp)
         {
-            if (healthSlider == null || boundBoss == null)
-                return;
-
-            float normalizedHp = boundBoss.maxHP > 0f
-                ? Mathf.Clamp01(boundBoss.currentHP / boundBoss.maxHP)
-                : 0f;
-
-            healthSlider.minValue = 0f;
-            healthSlider.maxValue = 1f;
-            healthSlider.value = normalizedHp;
-
-            if (damageLerpSlider == null)
-                return;
-
-            damageLerpSlider.minValue = 0f;
-            damageLerpSlider.maxValue = 1f;
-
+            if (healthSlider == null || boundBoss == null) return;
+            CalculateLayers(boundBoss.currentHP, boundBoss.maxHP, totalBars, out int remaining, out float fill);
+            bool changedLayer = remaining != displayedBars;
+            displayedBars = remaining;
+            healthSlider.SetValueWithoutNotify(fill);
+            if (remainingBarsText != null) remainingBarsText.text = $"\u00d7{remaining}";
+            if (healthFill != null && layerColors != null && layerColors.Length > 0)
+                healthFill.color = layerColors[Mathf.Clamp(remaining - 1, 0, layerColors.Length - 1)];
             StopHealthLerp();
-
-            if (immediateLerp)
-            {
-                damageLerpSlider.value = normalizedHp;
-                return;
-            }
-
-            healthLerpCoroutine = StartCoroutine(HealthLerpRoutine(normalizedHp));
+            if (damageLerpSlider == null) return;
+            // A depleted layer immediately reveals the next color; never tween across a refill.
+            if (immediateLerp || changedLayer || damageLerpSlider.value < fill
+                || !Application.isPlaying || !isActiveAndEnabled)
+                damageLerpSlider.SetValueWithoutNotify(fill);
+            else
+                healthLerpCoroutine = StartCoroutine(HealthLerpRoutine(fill));
         }
 
         private IEnumerator HealthLerpRoutine(float targetValue)
         {
             yield return new WaitForSeconds(healthLerpDelay);
-
+            float start = damageLerpSlider.value;
             float elapsed = 0f;
-            float startValue = damageLerpSlider.value;
-
             while (elapsed < healthLerpDuration)
             {
                 elapsed += Time.deltaTime;
-                damageLerpSlider.value = Mathf.Lerp(startValue, targetValue, elapsed / healthLerpDuration);
+                damageLerpSlider.SetValueWithoutNotify(Mathf.Lerp(start, targetValue, elapsed / healthLerpDuration));
                 yield return null;
             }
-
-            damageLerpSlider.value = targetValue;
+            damageLerpSlider.SetValueWithoutNotify(targetValue);
             healthLerpCoroutine = null;
         }
 
         private void StopHealthLerp()
         {
-            if (healthLerpCoroutine == null)
-                return;
-
+            if (healthLerpCoroutine == null) return;
             StopCoroutine(healthLerpCoroutine);
             healthLerpCoroutine = null;
         }
 
         private void SetVisible(bool visible)
         {
-            if (panelRoot != null)
-                panelRoot.SetActive(visible);
-        }
-
-        private void EnsureUiBuilt()
-        {
-            if (uiBuilt && panelRoot != null)
-                return;
-
-            Transform canvasTransform = ResolveOrCreateCanvas();
-            BuildPanel(canvasTransform);
-            uiBuilt = true;
-        }
-
-        private Transform ResolveOrCreateCanvas()
-        {
-            Canvas preferred = null;
-            Canvas[] canvases = FindObjectsByType<Canvas>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-            for (int i = 0; i < canvases.Length; i++)
-            {
-                Canvas canvas = canvases[i];
-                if (canvas == null || canvas.renderMode != RenderMode.ScreenSpaceOverlay)
-                    continue;
-                if (canvas.name == TransitionCanvasName || canvas.name.Contains("Transition"))
-                    continue;
-                if (canvas.name == "AdminCanvas")
-                {
-                    preferred = canvas;
-                    break;
-                }
-
-                if (preferred == null)
-                    preferred = canvas;
-            }
-
-            if (preferred != null)
-                return preferred.transform;
-
-            GameObject canvasGo = new GameObject("BossHealthHUD_Canvas");
-            canvasGo.transform.SetParent(transform, false);
-            Canvas created = canvasGo.AddComponent<Canvas>();
-            created.renderMode = RenderMode.ScreenSpaceOverlay;
-            created.sortingOrder = CanvasSortingOrder;
-
-            CanvasScaler scaler = canvasGo.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920f, 1080f);
-            scaler.matchWidthOrHeight = 0.5f;
-            canvasGo.AddComponent<GraphicRaycaster>();
-            return canvasGo.transform;
-        }
-
-        private void BuildPanel(Transform parent)
-        {
-            if (panelRoot != null)
-                Destroy(panelRoot);
-
-            panelRoot = CreateRect("BossHealthBar", parent);
-            RectTransform panelRect = panelRoot.GetComponent<RectTransform>();
-            panelRect.anchorMin = new Vector2(0.5f, 1f);
-            panelRect.anchorMax = new Vector2(0.5f, 1f);
-            panelRect.pivot = new Vector2(0.5f, 1f);
-            panelRect.anchoredPosition = new Vector2(0f, -28f);
-            panelRect.sizeDelta = new Vector2(920f, 72f);
-
-            Image panelBg = panelRoot.AddComponent<Image>();
-            panelBg.color = new Color(0.05f, 0.05f, 0.07f, 0.72f);
-            panelBg.raycastTarget = false;
-
-            nameText = CreateText("BossName", panelRoot.transform, "Boss", 22f, FontStyles.Bold);
-            RectTransform nameRect = nameText.rectTransform;
-            nameRect.anchorMin = new Vector2(0f, 1f);
-            nameRect.anchorMax = new Vector2(1f, 1f);
-            nameRect.pivot = new Vector2(0.5f, 1f);
-            nameRect.anchoredPosition = new Vector2(0f, -4f);
-            nameRect.sizeDelta = new Vector2(-24f, 28f);
-            nameText.alignment = TextAlignmentOptions.Center;
-            nameText.color = new Color(0.95f, 0.9f, 0.82f, 1f);
-
-            GameObject barRoot = CreateRect("HpBar", panelRoot.transform);
-            RectTransform barRect = barRoot.GetComponent<RectTransform>();
-            barRect.anchorMin = new Vector2(0f, 0f);
-            barRect.anchorMax = new Vector2(1f, 0f);
-            barRect.pivot = new Vector2(0.5f, 0f);
-            barRect.anchoredPosition = new Vector2(0f, 10f);
-            barRect.sizeDelta = new Vector2(-36f, 22f);
-
-            GameObject track = CreateRect("Track", barRoot.transform);
-            RectTransform trackRect = track.GetComponent<RectTransform>();
-            StretchToParent(trackRect);
-            Image trackImage = track.AddComponent<Image>();
-            trackImage.color = new Color(0.12f, 0.12f, 0.14f, 0.95f);
-            trackImage.raycastTarget = false;
-
-            damageLerpSlider = CreateBarSlider("HealthLerp", barRoot.transform, new Color(0.75f, 0.55f, 0.2f, 0.95f));
-            healthSlider = CreateBarSlider("Health", barRoot.transform, new Color(0.78f, 0.12f, 0.14f, 1f));
-        }
-
-        private static Slider CreateBarSlider(string name, Transform parent, Color fillColor)
-        {
-            GameObject root = CreateRect(name, parent);
-            RectTransform rootRect = root.GetComponent<RectTransform>();
-            StretchToParent(rootRect);
-
-            Slider slider = root.AddComponent<Slider>();
-            slider.minValue = 0f;
-            slider.maxValue = 1f;
-            slider.value = 1f;
-            slider.interactable = false;
-            slider.transition = Selectable.Transition.None;
-
-            GameObject fillArea = CreateRect("Fill Area", root.transform);
-            RectTransform fillAreaRect = fillArea.GetComponent<RectTransform>();
-            StretchToParent(fillAreaRect);
-            fillAreaRect.offsetMin = Vector2.zero;
-            fillAreaRect.offsetMax = Vector2.zero;
-
-            GameObject fill = CreateRect("Fill", fillArea.transform);
-            RectTransform fillRect = fill.GetComponent<RectTransform>();
-            StretchToParent(fillRect);
-            Image fillImage = fill.AddComponent<Image>();
-            fillImage.color = fillColor;
-            fillImage.raycastTarget = false;
-
-            slider.fillRect = fillRect;
-            slider.targetGraphic = fillImage;
-            slider.direction = Slider.Direction.LeftToRight;
-            return slider;
-        }
-
-        private static TMP_Text CreateText(string name, Transform parent, string value, float size, FontStyles style)
-        {
-            GameObject go = CreateRect(name, parent);
-            TextMeshProUGUI text = go.AddComponent<TextMeshProUGUI>();
-            text.text = value;
-            text.fontSize = size;
-            text.fontStyle = style;
-            text.raycastTarget = false;
-            text.enableWordWrapping = false;
-            text.overflowMode = TextOverflowModes.Ellipsis;
-            return text;
-        }
-
-        private static GameObject CreateRect(string name, Transform parent)
-        {
-            GameObject go = new GameObject(name, typeof(RectTransform));
-            go.transform.SetParent(parent, false);
-            return go;
-        }
-
-        private static void StretchToParent(RectTransform rect)
-        {
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.offsetMin = Vector2.zero;
-            rect.offsetMax = Vector2.zero;
+            if (panelRoot != null) panelRoot.SetActive(visible);
         }
     }
 }

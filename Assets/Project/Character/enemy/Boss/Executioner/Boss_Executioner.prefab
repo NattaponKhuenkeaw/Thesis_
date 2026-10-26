@@ -1738,8 +1738,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyController
   snapSpawnToGround: 1
   spawnGroundSearchDistance: 30
-  maxHP: 800
-  currentHP: 800
+  maxHP: 4000
+  currentHP: 4000
   attackDamage: 165
   defense: 500
   damageRes: 0
@@ -1921,8 +1921,9 @@ MonoBehaviour:
   playerTag: Player
   bossDisplayName: Executioner
   bindScreenHealthHud: 1
+  healthBarCount: 5
   useDefaultStats: 1
-  defaultMaxHp: 800
+  defaultMaxHp: 4000
   defaultAttackDamage: 165
   defaultDefense: 500
   chaseSpeed: 2.42
