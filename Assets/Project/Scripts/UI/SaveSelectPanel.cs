@@ -16,6 +16,15 @@ namespace Project.UI
         [SerializeField] private Button closeButton;
         [SerializeField] private SaveSlotCardView[] slots = Array.Empty<SaveSlotCardView>();
 
+        [Header("Shared Save Actions (optional)")]
+        [SerializeField] private GameObject actionPanel;
+        [SerializeField] private Text actionTitleText;
+        [SerializeField] private Text actionCurrencyText;
+        [SerializeField] private Button actionPlayButton;
+        [SerializeField] private Button actionDeleteButton;
+        [SerializeField] private Button actionCancelButton;
+        private int selectedSlot = -1;
+
         private static Dictionary<string, Sprite> portraitByCharacterId;
 
         public event Action<int> CreateRequested;
@@ -30,6 +39,9 @@ namespace Project.UI
             {
                 closeButton.onClick.AddListener(Hide);
             }
+            if (actionPlayButton != null) actionPlayButton.onClick.AddListener(OnActionPlayPressed);
+            if (actionDeleteButton != null) actionDeleteButton.onClick.AddListener(OnActionDeletePressed);
+            if (actionCancelButton != null) actionCancelButton.onClick.AddListener(CloseActionPanels);
 
             if (slots == null)
             {
@@ -57,6 +69,9 @@ namespace Project.UI
             {
                 closeButton.onClick.RemoveListener(Hide);
             }
+            if (actionPlayButton != null) actionPlayButton.onClick.RemoveListener(OnActionPlayPressed);
+            if (actionDeleteButton != null) actionDeleteButton.onClick.RemoveListener(OnActionDeletePressed);
+            if (actionCancelButton != null) actionCancelButton.onClick.RemoveListener(CloseActionPanels);
         }
 
         public void Open()
@@ -84,6 +99,7 @@ namespace Project.UI
 
         public void Refresh()
         {
+            CloseActionPanels();
             SaveSlotStore.EnsureMigrated();
             if (slots == null)
             {
@@ -136,14 +152,30 @@ namespace Project.UI
 
         private void OnSlotPressed(int index)
         {
-            if (index < 0 || index >= SaveSlotStore.SlotCount || !SaveSlotStore.IsOccupied(index))
+            if (index < 0 || index >= SaveSlotStore.SlotCount) return;
+            if (!SaveSlotStore.IsOccupied(index))
             {
+                CloseActionPanels();
                 CreateRequested?.Invoke(index);
                 return;
             }
 
-            bool wasOpen = slots != null && index < slots.Length && slots[index] != null && slots[index].IsActionPanelVisible;
+            bool wasOpen = actionPanel != null
+                ? selectedSlot == index && actionPanel.activeSelf
+                : slots != null && index < slots.Length && slots[index] != null && slots[index].IsActionPanelVisible;
             CloseActionPanels();
+            if (!wasOpen && actionPanel != null)
+            {
+                selectedSlot = index;
+                if (actionTitleText != null) actionTitleText.text = $"Play Save {index + 1}?";
+                if (actionCurrencyText != null)
+                {
+                    SaveSlotStore.TryReadHeader(index, out SaveSlotHeader header);
+                    actionCurrencyText.text = (header != null ? header.currency : 0).ToString("N0");
+                }
+                actionPanel.SetActive(true);
+                return;
+            }
             if (!wasOpen && slots != null && index < slots.Length && slots[index] != null)
             {
                 slots[index].SetActionPanelVisible(true);
@@ -152,6 +184,8 @@ namespace Project.UI
 
         private void CloseActionPanels()
         {
+            selectedSlot = -1;
+            if (actionPanel != null) actionPanel.SetActive(false);
             if (slots == null)
             {
                 return;
@@ -161,6 +195,17 @@ namespace Project.UI
             {
                 slots[i]?.SetActionPanelVisible(false);
             }
+        }
+
+        private void OnActionPlayPressed() => RequestSelectedAction(PlayRequested);
+        private void OnActionDeletePressed() => RequestSelectedAction(DeleteRequested);
+
+        private void RequestSelectedAction(Action<int> request)
+        {
+            int index = selectedSlot;
+            bool valid = index >= 0 && index < SaveSlotStore.SlotCount && SaveSlotStore.IsOccupied(index);
+            CloseActionPanels();
+            if (valid) request?.Invoke(index);
         }
 
         private static Sprite PortraitFor(string characterId)

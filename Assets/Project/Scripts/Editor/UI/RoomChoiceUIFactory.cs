@@ -41,16 +41,7 @@ namespace Project.EditorTools
                 return;
             }
 
-            if (!AssetDatabase.CopyAsset(PrefabPath, ResourcesPrefabPath))
-            {
-                // CopyAsset fails if destination exists — replace manually.
-                AssetDatabase.DeleteAsset(ResourcesPrefabPath);
-                if (!AssetDatabase.CopyAsset(PrefabPath, ResourcesPrefabPath))
-                {
-                    Debug.LogError("[RoomChoiceUIFactory] Failed to copy prefab into Resources/UI.");
-                    return;
-                }
-            }
+            RuntimeUiPrefabLinkEditor.EnsureLink("RoomChoiceUI");
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -128,8 +119,8 @@ namespace Project.EditorTools
             panel.SetActive(false);
 
             SavePrefab(root, PrefabPath);
-            SavePrefab(root, ResourcesPrefabPath);
             Object.DestroyImmediate(root);
+            RuntimeUiPrefabLinkEditor.EnsureLink("RoomChoiceUI");
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();

@@ -51,6 +51,7 @@ namespace Project.UI
         [SerializeField, Range(0f, 1f)] private float menuBgmSourceVolume = 1f;
 
         private bool isLoading;
+        private bool ownsSavePanel;
 
         private void Awake()
         {
@@ -105,6 +106,11 @@ namespace Project.UI
         private void OnDestroy()
         {
             UnbindSavePanel();
+            if (ownsSavePanel && saveSelectPanel != null)
+            {
+                if (Application.isPlaying) Destroy(saveSelectPanel.gameObject);
+                else DestroyImmediate(saveSelectPanel.gameObject);
+            }
         }
 
         public void OnPlayClicked()
@@ -306,18 +312,22 @@ namespace Project.UI
 
         private void EnsureSavePanel()
         {
-            if (saveSelectPanel != null)
+            if (saveSelectPanel != null && saveSelectPanel.gameObject.scene.IsValid())
             {
                 return;
             }
 
-            SaveSelectPanel prefab = Resources.Load<SaveSelectPanel>("UI/SaveSelectPanel");
+            SaveSelectPanel prefab = saveSelectPanel != null
+                ? saveSelectPanel
+                : Resources.Load<SaveSelectPanel>("UI/SaveSelectPanel");
             if (prefab == null)
             {
+                Debug.LogError("[MainMenu] Missing authored SaveSelectPanel prefab.", this);
                 return;
             }
 
             saveSelectPanel = Instantiate(prefab);
+            ownsSavePanel = true;
         }
 
         private void ShowSettings(bool show)
