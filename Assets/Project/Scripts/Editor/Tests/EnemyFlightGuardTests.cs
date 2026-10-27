@@ -49,7 +49,7 @@ public class EnemyFlightGuardTests
         }
         Assert.That(flight.PrepareSpawnFlight(), Is.True);
         Assert.That(flight.GetComponent<EnemyController>().bodyCollider.bounds.min.y,
-            Is.EqualTo(3.8f).Within(.001f));
+            Is.EqualTo(6.8f).Within(.001f));
 
         player.transform.position += Vector3.up * jumpHeight;
         player.Movement.GroundState.Tick(false, 5f);
@@ -59,7 +59,7 @@ public class EnemyFlightGuardTests
         typeof(EnemyLocomotion).GetMethod("SelectFlightDestination", Private).Invoke(flight, null);
         var endpoint = typeof(EnemyLocomotion).GetField("flightMoveEnd", Private);
         Vector2 selected = (Vector2)endpoint.GetValue(flight);
-        Assert.That(selected.y, Is.InRange(3.8f - .2f, 3.8f + .2f));
+        Assert.That(selected.y, Is.InRange(6.8f - .2f, 6.8f + .2f));
 
         player.transform.position += new Vector3(5f, 4f, 0f);
         Physics2D.SyncTransforms();
@@ -71,7 +71,7 @@ public class EnemyFlightGuardTests
 
     [TestCase("test_0_Main", "main")]
     [TestCase("test_1_CameraGirl", "cg")]
-    public void Authored102HighestFlightStillOverlapsAnOrdinarySingleJumpAirAttack(string folder, string suffix)
+    public void Authored102HighestFlightStillOverlapsADoubleJumpAirAttack(string folder, string suffix)
     {
         string root = $"Assets/Project/Character/Hero/{folder}/";
         var character = AssetDatabase.LoadAssetAtPath<CharacterObject>(root + $"CharacterObject_{suffix}.asset");
@@ -81,8 +81,8 @@ public class EnemyFlightGuardTests
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Character/enemy/enemy/Enm102/Enemy102.prefab");
         using (var flight = new SerializedObject(prefab.GetComponent<EnemyLocomotion>()))
         {
-            // Use a reachable mid-jump swing, not a frame-perfect hit at the apex or a double jump.
-            const float swingRise = 2f;
+            // The higher flight clears Main's ground skill but remains below a comfortable double-jump swing.
+            const float swingRise = 5.2f;
             float rise = 0f;
             float speed = character.movementProfile.jumpSpeed;
             while (speed > 0f)
@@ -90,7 +90,9 @@ public class EnemyFlightGuardTests
                 speed = Mathf.Max(0f, speed - character.movementProfile.riseDeceleration * Time.fixedDeltaTime);
                 rise += speed * Time.fixedDeltaTime;
             }
-            Assert.That(rise, Is.GreaterThan(swingRise + .5f));
+            int jumps = character.maxJumpOverride >= 0 ? character.maxJumpOverride : character.movementProfile.maxJumpCount;
+            Assert.That(jumps, Is.GreaterThanOrEqualTo(2));
+            Assert.That(rise * 2f, Is.GreaterThan(swingRise + .5f));
             float height = flight.FindProperty("flightHeight").floatValue;
             float variation = flight.FindProperty("flightHeightVariation").floatValue;
             float arc = flight.FindProperty("flightArcHeight").floatValue;
@@ -103,6 +105,23 @@ public class EnemyFlightGuardTests
                 Assert.That(overlap, Is.GreaterThan(.3f), "Keep vertical hit overlap at both flight extremes.");
             }
             Assert.That(flight.FindProperty("flightHeightRelativeToPlayer").boolValue, Is.False);
+        }
+    }
+
+    [Test]
+    public void LowestAuthoredFlightClearsMainsGroundSkillArea()
+    {
+        var skill = AssetDatabase.LoadAssetAtPath<ProjectileData>(
+            "Assets/Project/Character/Hero/test_0_Main/ProjectileData_main_skill.asset");
+        var hit = (NormalHitbox)skill.ResolveRoutineHitbox();
+        float skillTop = skill.spawnOffset.y + hit.offset.y + hit.size.y * .5f;
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Character/enemy/enemy/Enm102/Enemy102.prefab");
+        using (var settings = new SerializedObject(prefab.GetComponent<EnemyLocomotion>()))
+        {
+            float lowestFeet = settings.FindProperty("flightHeight").floatValue
+                - settings.FindProperty("flightHeightVariation").floatValue;
+            Assert.That(lowestFeet - skillTop, Is.GreaterThan(.15f),
+                "Normal cruising on the same floor must clear the grounded skill, not drift into its hitbox.");
         }
     }
 
@@ -390,7 +409,7 @@ public class EnemyFlightGuardTests
         Assert.That(flyer.GetComponent<EnemyLocomotion>().UsesFixedHeightFlight, Is.True);
         Assert.That(flyer.GetComponent<EnemyLocomotion>().UsesRoamingFlight, Is.True);
         var flightSettings = new SerializedObject(flyer.GetComponent<EnemyLocomotion>());
-        Assert.That(flightSettings.FindProperty("flightHeight").floatValue, Is.EqualTo(3.8f));
+        Assert.That(flightSettings.FindProperty("flightHeight").floatValue, Is.EqualTo(6.8f));
         Assert.That(flightSettings.FindProperty("flightHeightMultiplier").floatValue, Is.EqualTo(1f));
         Assert.That(flightSettings.FindProperty("flightHeightRelativeToPlayer").boolValue, Is.False);
         Assert.That(flightSettings.FindProperty("flightArcHeight").floatValue, Is.EqualTo(.35f));
