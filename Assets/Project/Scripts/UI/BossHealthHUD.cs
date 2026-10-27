@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace Project.UI
 {
-    /// <summary>Prefab-authored screen HUD showing one colored boss health layer at a time.</summary>
+    /// <summary>Prefab-authored HUD with the next boss health color visible beneath the current layer.</summary>
     [DisallowMultipleComponent]
     public sealed class BossHealthHUD : MonoBehaviour
     {
@@ -17,6 +17,8 @@ namespace Project.UI
         [SerializeField] private Slider healthSlider;
         [SerializeField] private Slider damageLerpSlider;
         [SerializeField] private Image healthFill;
+        [SerializeField] private Image nextLayerFill;
+        [SerializeField] private Image damageTrailFill;
         [SerializeField] private TMP_Text nameText;
         [SerializeField] private TMP_Text remainingBarsText;
 
@@ -149,8 +151,16 @@ namespace Project.UI
             displayedBars = remaining;
             healthSlider.SetValueWithoutNotify(fill);
             if (remainingBarsText != null) remainingBarsText.text = $"\u00d7{remaining}";
-            if (healthFill != null && layerColors != null && layerColors.Length > 0)
-                healthFill.color = layerColors[Mathf.Clamp(remaining - 1, 0, layerColors.Length - 1)];
+            bool hasColors = layerColors != null && layerColors.Length > 0;
+            if (healthFill != null && hasColors)
+                healthFill.color = LayerColor(remaining);
+            if (nextLayerFill != null)
+            {
+                nextLayerFill.enabled = remaining > 1 && hasColors;
+                if (nextLayerFill.enabled) nextLayerFill.color = LayerColor(remaining - 1);
+            }
+            // A white damage trail would hide the next color; keep it only on the final layer.
+            if (damageTrailFill != null) damageTrailFill.enabled = remaining == 1;
             StopHealthLerp();
             if (damageLerpSlider == null) return;
             // A depleted layer immediately reveals the next color; never tween across a refill.
@@ -160,6 +170,8 @@ namespace Project.UI
             else
                 healthLerpCoroutine = StartCoroutine(HealthLerpRoutine(fill));
         }
+
+        private Color LayerColor(int remaining) => layerColors[Mathf.Clamp(remaining - 1, 0, layerColors.Length - 1)];
 
         private IEnumerator HealthLerpRoutine(float targetValue)
         {
