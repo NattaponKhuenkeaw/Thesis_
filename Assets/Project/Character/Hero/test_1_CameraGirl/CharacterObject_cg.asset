@@ -55,6 +55,14 @@ MonoBehaviour:
     dashSpeed: 25
     cooldownFrames: 24
   kitDefinition:
+    combatMeter:
+      counterId: 
+      cachedCounterId: 
+      displayName: 
+      pointsPerBox: 20
+      baseBoxes: 2
+      maximumBoxes: 5
+      fillColor: {r: 0.25, g: 0.9, b: 1, a: 1}
     skill:
       abilityId: 
       abilityName: 
@@ -71,6 +79,8 @@ MonoBehaviour:
       icon: {fileID: 0}
       description: 
     baseSkillNode:
+      meterCapacityModifiers: []
+      counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
@@ -90,6 +100,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         requiredTags: []
         requiredCounters: []
         requiredRuntimeEffectStacks: []
@@ -457,6 +468,8 @@ MonoBehaviour:
       fragmentCost: 0
       unlockedByDefault: 1
     baseUltimateNode:
+      meterCapacityModifiers: []
+      counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
@@ -482,6 +495,8 @@ MonoBehaviour:
       fragmentCost: 0
       unlockedByDefault: 1
     basePassiveNode:
+      meterCapacityModifiers: []
+      counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
@@ -501,6 +516,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         requiredTags: []
         requiredCounters: []
         requiredRuntimeEffectStacks: []
@@ -654,7 +670,9 @@ MonoBehaviour:
       fragmentCost: 0
       unlockedByDefault: 1
     potentialNodes:
-    - statModifiers: []
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
@@ -673,6 +691,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         requiredTags: []
         requiredCounters: []
         requiredRuntimeEffectStacks: []
@@ -820,6 +839,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         requiredTags: []
         requiredCounters: []
         requiredRuntimeEffectStacks: []
@@ -974,7 +994,9 @@ MonoBehaviour:
       level: 1
       fragmentCost: 1
       unlockedByDefault: 0
-    - statModifiers: []
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
@@ -993,6 +1015,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         requiredTags: []
         requiredCounters: []
         requiredRuntimeEffectStacks: []
@@ -1140,6 +1163,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         requiredTags: []
         requiredCounters: []
         requiredRuntimeEffectStacks: []
@@ -1293,7 +1317,9 @@ MonoBehaviour:
       level: 2
       fragmentCost: 1
       unlockedByDefault: 0
-    - statModifiers: []
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
@@ -1312,6 +1338,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         requiredTags: []
         requiredCounters: []
         requiredRuntimeEffectStacks: []
@@ -1459,6 +1486,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         requiredTags: []
         requiredCounters: []
         requiredRuntimeEffectStacks: []
@@ -1612,7 +1640,9 @@ MonoBehaviour:
       level: 3
       fragmentCost: 1
       unlockedByDefault: 0
-    - statModifiers: []
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
@@ -1634,6 +1664,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         status: 6
         chance: 0.4
         scope: 2
@@ -1654,7 +1685,9 @@ MonoBehaviour:
       level: 4
       fragmentCost: 1
       unlockedByDefault: 0
-    - statModifiers: []
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects:
@@ -1672,6 +1705,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         tag: cg.ult.shadow_assist
         addTag: 1
         duration: 15
@@ -1715,7 +1749,9 @@ MonoBehaviour:
       level: 1
       fragmentCost: 1
       unlockedByDefault: 0
-    - statModifiers: []
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects:
@@ -1733,6 +1769,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         tag: cg.ult.shadow_assist
         addTag: 1
         duration: 15
@@ -1774,7 +1811,9 @@ MonoBehaviour:
       level: 2
       fragmentCost: 1
       unlockedByDefault: 0
-    - statModifiers: []
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
       cooldownModifiers: []
       actionModifiers:
       - category: 2
@@ -1790,6 +1829,8 @@ MonoBehaviour:
         requiredCounters: []
         damageMultiplierOperation: 0
         damageMultiplierValue: 0
+        criticalRateOperation: 0
+        criticalRateValue: 0
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 0
@@ -1801,6 +1842,7 @@ MonoBehaviour:
         energyCostOperation: 0
         energyCostValue: 0
         ignoreDefense: 0
+        ignoreDefenseRequiresCriticalHit: 0
         ignoreDamageResistance: 0
         ignoreTypeReduction: 0
         hitboxScaleMultiplier: 1.5
@@ -1829,7 +1871,9 @@ MonoBehaviour:
       level: 3
       fragmentCost: 1
       unlockedByDefault: 0
-    - statModifiers: []
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects:
@@ -1847,6 +1891,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         tag: cg.ult.shadow_assist
         addTag: 1
         duration: 15
@@ -1889,7 +1934,9 @@ MonoBehaviour:
       level: 4
       fragmentCost: 1
       unlockedByDefault: 0
-    - statModifiers: []
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
@@ -1908,6 +1955,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         requiredTags: []
         requiredCounters: []
         requiredRuntimeEffectStacks: []
@@ -2056,7 +2104,9 @@ MonoBehaviour:
       level: 1
       fragmentCost: 1
       unlockedByDefault: 0
-    - statModifiers: []
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
@@ -2075,6 +2125,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         requiredTags: []
         requiredCounters: []
         requiredRuntimeEffectStacks: []
@@ -2223,7 +2274,9 @@ MonoBehaviour:
       level: 2
       fragmentCost: 1
       unlockedByDefault: 0
-    - statModifiers: []
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
       cooldownModifiers: []
       actionModifiers:
       - category: 0
@@ -2239,6 +2292,8 @@ MonoBehaviour:
         requiredCounters: []
         damageMultiplierOperation: 0
         damageMultiplierValue: 0
+        criticalRateOperation: 0
+        criticalRateValue: 0
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 0
@@ -2250,6 +2305,7 @@ MonoBehaviour:
         energyCostOperation: 0
         energyCostValue: 0
         ignoreDefense: 0
+        ignoreDefenseRequiresCriticalHit: 0
         ignoreDamageResistance: 0
         ignoreTypeReduction: 0
         hitboxScaleMultiplier: 1.5
@@ -2278,7 +2334,9 @@ MonoBehaviour:
       level: 3
       fragmentCost: 1
       unlockedByDefault: 0
-    - statModifiers: []
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
       cooldownModifiers: []
       actionModifiers:
       - category: 1
@@ -2296,6 +2354,8 @@ MonoBehaviour:
         requiredCounters: []
         damageMultiplierOperation: 0
         damageMultiplierValue: 0
+        criticalRateOperation: 0
+        criticalRateValue: 0
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 0
@@ -2307,6 +2367,7 @@ MonoBehaviour:
         energyCostOperation: 0
         energyCostValue: 0
         ignoreDefense: 0
+        ignoreDefenseRequiresCriticalHit: 0
         ignoreDamageResistance: 0
         ignoreTypeReduction: 0
         hitboxScaleMultiplier: 1
@@ -2328,6 +2389,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         tag: cg.skill.followup_window
         addTag: 1
         duration: 10
@@ -2353,4 +2415,13 @@ MonoBehaviour:
       level: 4
       fragmentCost: 1
       unlockedByDefault: 0
+  qteSwap:
+    enabled: 1
+    triggerActionIds:
+    - cg.skill
+    - cg.skill.ex
+    introActionKey: Ground
+    introStepName: Attack4
+    entryOffset: 3
+    readySfx: {fileID: 8300000, guid: 593a0d385b8e842458eec6a9c0b82630, type: 3}
   actionResolverTable: {fileID: 11400000, guid: 90f3f5c1e3c9d334a90282b1605414b6, type: 2}

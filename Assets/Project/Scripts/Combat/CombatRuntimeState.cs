@@ -201,6 +201,16 @@ public class CombatRuntimeState
         OnStateChanged?.Invoke();
     }
 
+    public bool TransferCounter(string sourceId, int cost, string destinationId, int reward = 1)
+    {
+        if (string.IsNullOrWhiteSpace(sourceId) || string.IsNullOrWhiteSpace(destinationId)
+            || sourceId == destinationId || cost <= 0 || reward <= 0 || GetCounter(sourceId) < cost)
+            return false;
+        ConsumeCounter(sourceId, cost);
+        AddCounter(destinationId, reward);
+        return true;
+    }
+
     public void Tick()
     {
         PruneExpiredTags();

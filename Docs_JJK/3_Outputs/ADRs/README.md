@@ -1,6 +1,6 @@
 # Architecture Decision Records Index
 
-> Last updated: 2026-08-19
+> Last updated: 2026-10-27
 
 ## Dependency Order
 
@@ -54,6 +54,7 @@ Filenames for ADR-006/007/011/012 still use older numbers from the pre-merge bra
 | [010](010-artifact-passive-event-and-secondary-effect-authority.md) | Artifact Passive Event and Secondary-Effect Authority | **Accepted** | Phase 3 | Per-instance passive runtime, typed events, generic DOT, Projectile-independent Particle, and Explosion Splash |
 | [011](006-boss-pattern-controller.md) | Boss Pattern Controller | **Accepted** | Content / Boss | Bosses use pattern sequencer; Behavior Graph stays for trash enemies |
 | [012](007-encounter-so-layout-spawn-slots.md) | EncounterSO + Layout Spawn Slots | **Accepted** | Phase 3 | Waves from EncounterSO; positions stay on layout slots |
+| [013](013-action-owned-camera-presentation.md) | Action-Owned Camera Presentation | **Accepted** | Combat presentation | User-approved Dimension Slash action-frame camera envelope |
 
 ## Phase Mapping
 

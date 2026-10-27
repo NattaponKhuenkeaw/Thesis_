@@ -167,7 +167,7 @@ public class TeamSwitchHUD : MonoBehaviour
         }
 
         // เช็คกฎเปลี่ยนตัว
-        if (stateMachine != null && !stateMachine.CanSwitchCharacter())
+        if (stateMachine != null && !stateMachine.CanSwitchCharacterTo(index))
         {
             Debug.Log("ไม่สามารถเปลี่ยนตัวได้ในจังหวะนี้!");
             return;

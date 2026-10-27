@@ -546,6 +546,12 @@ namespace CombatEditor.UI
                     step.cancelWindowStartFrame = value;
                     MarkDirty();
                 });
+                AddToggleField(body, "Sync Actor to Action Frames", step.syncAnimationToActionFrames, value =>
+                {
+                    RecordUndo("Edit Actor Frame Sync");
+                    step.syncAnimationToActionFrames = value;
+                    MarkDirty();
+                });
 
                 AddSeparator(body, "Behavior Flags");
                 AddToggleField(body, "Auto Chain to Next", step.autoChainToNext, value =>
@@ -682,6 +688,27 @@ namespace CombatEditor.UI
                     action.actionName = value;
                     MarkDirtyAndRebuild();
                 });
+
+                AddTextField(body, "Resource Counter", action.resourceCounterId, value => {
+                    RecordUndo("Edit Action Resource"); action.resourceCounterId = value; MarkDirty();
+                });
+                AddIntField(body, "Resource Cost", action.resourceCost, value => {
+                    RecordUndo("Edit Action Cost"); action.resourceCost = Mathf.Max(0, value); MarkDirty();
+                });
+                AddToggle(body, "Commit Dash Cooldown", action.commitsDash, value => {
+                    RecordUndo("Edit Dash Commitment"); action.commitsDash = value; MarkDirty();
+                });
+                AddToggle(body, "Reselect On Attack Input", action.reselectOnAttackInput, value => {
+                    RecordUndo("Edit Input Reselection"); action.reselectOnAttackInput = value; MarkDirty();
+                });
+                AddToggle(body, "Require Enemy Target", action.requiresEnemyTarget, value => {
+                    RecordUndo("Edit Target Requirement"); action.requiresEnemyTarget = value; MarkDirty();
+                });
+                AddFloatField(body, "Target Radius", action.GetTargetSearchRadius(), value => {
+                    RecordUndo("Edit Target Radius"); action.SetTargetSearchRadius(value); MarkDirty();
+                });
+                if (action.GetEntryTargetMotion() != null)
+                    body.Add(new HelpBox("Shared with the entry target-motion keyframe. Selection and movement use this same radius.", HelpBoxMessageType.Info));
 
                 AddEnumField(body, "Input Context", action.context, value => {
                     RecordUndo("Edit Input Context");
@@ -1220,8 +1247,42 @@ namespace CombatEditor.UI
                     {
                         RecordUndo("Edit Motion Task Type");
                         keyframe.taskType = (MotionTaskType)value;
-                        MarkDirty();
+                        MarkDirtyAndRebuild();
                     });
+                    if (keyframe.taskType == MotionTaskType.DashThroughTarget || keyframe.taskType == MotionTaskType.SnapToEnemy)
+                    {
+                        AddFloatField(inner, "Target Radius", keyframe.targetRadius, value => {
+                            RecordUndo("Edit Motion Target Radius");
+                            keyframe.targetRadius = Mathf.Max(0f, value);
+                            CombatAction owner = GetCurrentAction();
+                            if (owner?.GetEntryTargetMotion() == keyframe) owner.SetTargetSearchRadius(keyframe.targetRadius);
+                            MarkDirty();
+                        });
+                    }
+                    if (keyframe.taskType == MotionTaskType.DashThroughTarget)
+                    {
+                        AddToggle(inner, "Horizontal Only", keyframe.horizontalOnly, value => {
+                            RecordUndo("Edit Target Dash Axis"); keyframe.horizontalOnly = value; MarkDirty();
+                        });
+                        AddToggle(inner, "Align Held Target To Dash Height", keyframe.alignTargetToDashPlane, value => {
+                            RecordUndo("Edit Target Dash Height"); keyframe.alignTargetToDashPlane = value; MarkDirty();
+                        });
+                        AddFloatField(inner, "Minimum Travel Distance", keyframe.minimumTravelDistance, value => {
+                            RecordUndo("Edit Minimum Dash Travel"); keyframe.minimumTravelDistance = Mathf.Max(0f, value); MarkDirty();
+                        });
+                        AddFloatField(inner, "Pass Through Distance", keyframe.passThroughDistance, value => {
+                            RecordUndo("Edit Pass Through Distance"); keyframe.passThroughDistance = Mathf.Max(0f, value); MarkDirty();
+                        });
+                        AddToggle(inner, "Hold Target At Anchor", keyframe.holdTargetAtAnchor, value => {
+                            RecordUndo("Edit Target Hold"); keyframe.holdTargetAtAnchor = value; MarkDirty();
+                        });
+                        AddVector2Field(inner, "Target Anchor Offset", keyframe.targetAnchorOffset, value => {
+                            RecordUndo("Edit Target Anchor"); keyframe.targetAnchorOffset = value; MarkDirty();
+                        });
+                        AddToggle(inner, "Face Target On Arrival", keyframe.faceTargetOnArrival, value => {
+                            RecordUndo("Edit Arrival Facing"); keyframe.faceTargetOnArrival = value; MarkDirty();
+                        });
+                    }
                     AddEnumField(inner, "Easing", keyframe.easing, value =>
                     {
                         RecordUndo("Edit Motion Easing");
@@ -1524,6 +1585,10 @@ namespace CombatEditor.UI
                 {
                     entry.facingDirectionSettings = new FacingDirectionEventSettings();
                 }
+                if (entry.backgroundOverlayFlashSettings == null)
+                {
+                    entry.backgroundOverlayFlashSettings = new BackgroundOverlayFlashSettings();
+                }
 
                 BuildFoldoutCard($"Event #{idx + 1}: {entry.label}", $"event_entry_{idx}", entry.trackColor, inner =>
                 {
@@ -1572,6 +1637,14 @@ namespace CombatEditor.UI
 
                         case ActionEventType.SetFacingDirection:
                             BuildFacingDirectionActionEventFields(inner, entry);
+                            break;
+
+                        case ActionEventType.BackgroundOverlayFlash:
+                            BuildBackgroundOverlayFlashFields(inner, entry);
+                            break;
+
+                        case ActionEventType.ActionCameraMotion:
+                            BuildActionCameraMotionFields(inner, entry);
                             break;
                     }
                 }, () =>
@@ -1778,6 +1851,64 @@ namespace CombatEditor.UI
                 settings.mode = (ActionFacingMode)value;
                 MarkDirty();
             });
+        }
+
+        private void BuildBackgroundOverlayFlashFields(VisualElement inner, ActionEventEntry entry)
+        {
+            BackgroundOverlayFlashSettings settings = entry.backgroundOverlayFlashSettings ??= new BackgroundOverlayFlashSettings();
+            AddSeparator(inner, "Background Impact Flash");
+            AddIntField(inner, "Fade Out Frames", settings.fadeOutFrames, value =>
+            {
+                RecordUndo("Edit Impact Flash Fade Frames");
+                settings.fadeOutFrames = Mathf.Max(1, value);
+                MarkDirty();
+            });
+            AddColorField(inner, "Flash Color", settings.flashColor, value =>
+            {
+                RecordUndo("Edit Impact Flash Color");
+                settings.flashColor = value;
+                MarkDirty();
+            });
+            AddFloatField(inner, "Peak Alpha", settings.peakAlpha, value =>
+            {
+                RecordUndo("Edit Impact Flash Alpha");
+                settings.peakAlpha = Mathf.Clamp01(value);
+                MarkDirty();
+            });
+        }
+
+        private void BuildActionCameraMotionFields(VisualElement inner, ActionEventEntry entry)
+        {
+            var settings = entry.cameraMotionSettings ??= new ActionCameraMotionSettings();
+            settings.keys ??= new List<ActionCameraMotionSettings.Key>();
+            AddSeparator(inner, "Action-frame Camera Envelope");
+            foreach (var key in settings.keys)
+            {
+                AddIntField(inner, "Relative Frame", key.frame, value =>
+                {
+                    RecordUndo("Edit Camera Frame"); key.frame = Mathf.Max(0, value); MarkDirty();
+                });
+                AddFloatField(inner, "Size Multiplier", key.sizeMultiplier, value =>
+                {
+                    RecordUndo("Edit Camera Lens"); key.sizeMultiplier = Mathf.Clamp(value, 0.8f, 1f); MarkDirty();
+                });
+                AddFloatField(inner, "Horizontal Viewport Offset", key.horizontalViewportOffset, value =>
+                {
+                    RecordUndo("Edit Camera Offset"); key.horizontalViewportOffset = Mathf.Clamp(value, -0.03f, 0.03f); MarkDirty();
+                });
+            }
+            inner.Add(new Button(() =>
+            {
+                RecordUndo("Add Camera Key");
+                settings.keys.Add(new ActionCameraMotionSettings.Key { frame = settings.DurationFrames - 1 });
+                MarkDirtyAndRebuild();
+            }) { text = "Add Camera Key" });
+            if (settings.keys.Count > 0)
+                inner.Add(new Button(() =>
+                {
+                    RecordUndo("Remove Last Camera Key"); settings.keys.RemoveAt(settings.keys.Count - 1);
+                    MarkDirtyAndRebuild();
+                }) { text = "Remove Last Key" });
         }
 
         private void BuildGameImpulseRequestFields(VisualElement inner, GameImpulseRequest request, string undoPrefix)

@@ -65,6 +65,8 @@ public class CameraLookAhead : MonoBehaviour
     private int currentFacingDirection = 1;
     private int tweenId = -1;
     private Coroutine directionalCueRoutine;
+    private bool swapCenterActive;
+    private float swapCenterUntil;
 
     // =========================================================
     // Unity Methods
@@ -126,7 +128,14 @@ public class CameraLookAhead : MonoBehaviour
         if (playerRigidbody == null)
             return;
 
-        CheckFacingDirection();
+        bool holdSwapX = swapCenterActive && Time.unscaledTime < swapCenterUntil;
+        if (swapCenterActive && !holdSwapX)
+        {
+            swapCenterActive = false;
+            // Keep the new character centered after the handoff. Normal look-ahead resumes
+            // on the next facing change instead of being reapplied immediately on this frame.
+        }
+        if (!holdSwapX) CheckFacingDirection();
 
         Vector2 playerPos = playerRigidbody.position;
         float   vy        = playerRigidbody.linearVelocity.y;
@@ -149,12 +158,20 @@ public class CameraLookAhead : MonoBehaviour
         {
             targetX = Mathf.Clamp(targetX, confineLeft, confineRight);
         }
-        currentProxyX = Mathf.SmoothDamp(
-            currentProxyX,
-            targetX,
-            ref proxyVelocityX,
-            Mathf.Max(horizontalSmoothTime, 0.01f)
-        );
+        if (holdSwapX)
+        {
+            currentProxyX = targetX;
+            proxyVelocityX = 0f;
+        }
+        else
+        {
+            currentProxyX = Mathf.SmoothDamp(
+                currentProxyX,
+                targetX,
+                ref proxyVelocityX,
+                Mathf.Max(horizontalSmoothTime, 0.01f)
+            );
+        }
 
         // --- Vertical: push ahead (downward) only while falling ---
         float targetOffsetY = 0f;
@@ -217,6 +234,34 @@ public class CameraLookAhead : MonoBehaviour
             currentProxyX,
             playerRigidbody.position.y,
             transform.position.z);
+    }
+
+    public void ResetHorizontalForCharacterSwap(Rigidbody2D incomingBody, float centerSeconds)
+    {
+        if (incomingBody == null) return;
+        playerRigidbody = incomingBody;
+        if (tweenId >= 0 && LeanTween.isTweening(tweenId)) LeanTween.cancel(tweenId);
+        tweenId = -1;
+        if (directionalCueRoutine != null) StopCoroutine(directionalCueRoutine);
+        directionalCueRoutine = null;
+        directionalCueOffset = 0f;
+        currentHorizontalOffset = 0f;
+        currentFacingDirection = GetFacingDirection(incomingBody.transform);
+        swapCenterUntil = Time.unscaledTime + Mathf.Max(Time.unscaledDeltaTime, centerSeconds);
+        swapCenterActive = true;
+        currentProxyX = confineHorizontal
+            ? Mathf.Clamp(incomingBody.position.x, confineLeft, confineRight)
+            : incomingBody.position.x;
+        proxyVelocityX = 0f;
+        // Keep the vertical proxy and its fall anticipation continuous through the handoff.
+        transform.position = new Vector3(currentProxyX, transform.position.y, transform.position.z);
+    }
+
+    private static int GetFacingDirection(Transform target)
+    {
+        float yRot = target.eulerAngles.y % 360f;
+        if (yRot < 0f) yRot += 360f;
+        return yRot > 90f && yRot < 270f ? -1 : 1;
     }
 
     public void ClearHorizontalConfine()

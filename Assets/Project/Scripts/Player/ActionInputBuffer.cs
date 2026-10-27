@@ -47,6 +47,7 @@ public class ActionInputBuffer
     public bool HasSkillBuffer  => Time.time <= skillBufferedUntil;
     public bool HasUltimateBuffer => Time.time <= ultimateBufferedUntil;
     public bool HasSwitchBuffer => Time.time <= switchBufferedUntil;
+    public int BufferedSwitchTarget => HasSwitchBuffer ? switchTargetIndex : -1;
 
     /// <summary>Directional input at time the buffer was written.</summary>
     public Vector2 DirectionalInput => directionalSnapshot;

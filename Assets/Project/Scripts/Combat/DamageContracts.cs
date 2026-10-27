@@ -45,6 +45,7 @@ public struct DamageDescriptor
 public struct DamageRequest
 {
     public EnemyController target;
+    public CombatExecutionContext execution;
     public CharacterObject sourceCharacter;
     public ArtifactRuntimeSnapshot sourceArtifact;
     public CharacterStats sourceStats;

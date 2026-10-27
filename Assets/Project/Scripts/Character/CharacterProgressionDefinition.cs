@@ -101,7 +101,8 @@ public enum PassiveCounterOperation
     Set,
     Add,
     Subtract,
-    Reset
+    Reset,
+    Transfer
 }
 
 public enum StatusEffectType
@@ -137,8 +138,20 @@ public class PassiveTriggerFilter
     public bool requireRuntimeTag = false;
     public string runtimeTag;
 
+    [Tooltip("Only accepted on-field manual starts qualify; excludes free QTE intros and missing/stale execution provenance.")]
+    public bool requireManualOnFieldActionStart;
+
     public bool Matches(PassiveEventContext context)
     {
+        if (requireManualOnFieldActionStart)
+        {
+            CombatExecutionContext execution = context.actionStartExecution;
+            if (execution == null || !execution.IsOnField || execution.isQteIntro
+                || context.source == null || execution.owner != context.source.Combat
+                || execution.character != context.source.characterObject)
+                return false;
+        }
+
         if (filterByCategory && context.category != category)
         {
             return false;
@@ -419,6 +432,9 @@ public class PassiveActionModifierDefinition
     [Header("Action Runtime Values")]
     public PassiveValueModifierOperation damageMultiplierOperation = PassiveValueModifierOperation.None;
     public float damageMultiplierValue = 0f;
+    public PassiveValueModifierOperation criticalRateOperation = PassiveValueModifierOperation.None;
+    [Tooltip("Critical rate in percentage points, applied only to matching action hits.")]
+    public float criticalRateValue = 0f;
     public PassiveValueModifierOperation criticalDamageOperation = PassiveValueModifierOperation.None;
     public float criticalDamageValue = 0f;
     [Tooltip("Applied after base damage, build-stat multipliers, critical damage, and mitigation are resolved.")]
@@ -434,6 +450,8 @@ public class PassiveActionModifierDefinition
     [Header("Damage Input")]
     [Tooltip("When enabled, matching action hits bypass the defender's DEF calculation.")]
     public bool ignoreDefense = false;
+    [Tooltip("When enabled, Ignore Defense applies only to a matching hit that actually crits.")]
+    public bool ignoreDefenseRequiresCriticalHit = false;
     public bool ignoreDamageResistance = false;
     [UnityEngine.Serialization.FormerlySerializedAs("ignoreElementalIncomingModifiers")]
     public bool ignoreTypeReduction = false;
@@ -732,6 +750,17 @@ public class PassiveCounterEffectDefinition
     public string counterId;
     public PassiveCounterOperation operation = PassiveCounterOperation.Set;
     public int value = 0;
+    [Tooltip("Transfer spends Value from Counter Id and awards Destination Value to this counter only when affordable.")]
+    public string destinationCounterId;
+    [Min(1)] public int destinationValue = 1;
+}
+
+[Serializable]
+public class PassiveCounterGainModifierDefinition
+{
+    public string counterId;
+    [Min(0f)] public float multiplier = 1f;
+    public List<RuntimeEffectStackRequirement> requiredRuntimeEffectStacks = new List<RuntimeEffectStackRequirement>();
 }
 
 [Serializable]
@@ -1078,6 +1107,8 @@ public class PassiveEnemyElementModifierDefinition
 [Serializable]
 public class CharacterEffectSetDefinition
 {
+    public List<PassiveMeterCapacityModifier> meterCapacityModifiers = new List<PassiveMeterCapacityModifier>();
+    public List<PassiveCounterGainModifierDefinition> counterGainModifiers = new List<PassiveCounterGainModifierDefinition>();
     [Header("Effects")]
     public List<PassiveStatModifierDefinition> statModifiers = new List<PassiveStatModifierDefinition>();
     public List<PassiveCooldownModifierDefinition> cooldownModifiers = new List<PassiveCooldownModifierDefinition>();
@@ -1130,6 +1161,7 @@ public class CharacterAbilityDefinition
 [Serializable]
 public class CharacterKitDefinition : ISerializationCallbackReceiver
 {
+    public CombatMeterDefinition combatMeter = new CombatMeterDefinition();
     public const int MaxPotentialLevel = 4;
 
     [Header("Base Kit")]
@@ -1307,6 +1339,7 @@ public class CharacterKitDefinition : ISerializationCallbackReceiver
 [Serializable]
 public struct PassiveEventContext
 {
+    [NonSerialized] public CombatExecutionContext actionStartExecution;
     public AttackCategory category;
     public string actionId;
     public string actionName;

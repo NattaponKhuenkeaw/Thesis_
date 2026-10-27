@@ -121,6 +121,7 @@ public readonly struct CharacterHealthChangedEvent
 
 public readonly struct DamageResolvedEvent
 {
+    public readonly CombatExecutionContext execution;
     public readonly DamageProvenance provenance;
     public readonly DamageDescriptor descriptor;
     public readonly DamageProcPolicy acceptedPolicy;
@@ -139,8 +140,9 @@ public readonly struct DamageResolvedEvent
         DamageProcPolicy acceptedPolicy, CharacterObject sourceCharacter,
         ArtifactRuntimeSnapshot sourceArtifact, EnemyController target, AttackCategory category,
         string actionId, float baseDamage, float damageDealt, bool isCriticalHit, bool killedTarget,
-        Vector2 hitPosition)
+        Vector2 hitPosition, CombatExecutionContext execution = null)
     {
+        this.execution = execution;
         this.provenance = provenance;
         this.descriptor = descriptor;
         this.acceptedPolicy = acceptedPolicy;

@@ -19,7 +19,7 @@ using Project.Core.ZoneState;
 ///   ├── ConfinderBound                   [BoxCollider2D]
 ///   └── CameraLookAheadTarget            [CameraLookAhead]
 /// </summary>
-public class CameraManager : MonoBehaviour
+public partial class CameraManager : MonoBehaviour
 {
     // =========================================================
     // Singleton
@@ -327,6 +327,7 @@ public class CameraManager : MonoBehaviour
 
     private void OnDestroy()
     {
+        ClearActionCamera();
         if (instance == this)
             instance = null;
 
@@ -338,6 +339,7 @@ public class CameraManager : MonoBehaviour
 
     private void OnDisable()
     {
+        ClearActionCamera();
         FinishPendingFocusReturn();
         DisposeFocusCamera();
     }
@@ -478,7 +480,7 @@ public class CameraManager : MonoBehaviour
 
     private bool CanSwitchRoomCameras()
     {
-        if (IsStaticCameraRoom() || _isTemporarilyFocused)
+        if (IsStaticCameraRoom() || _isTemporarilyFocused || _isTemporarilySnappedToPlayer)
         {
             return false;
         }
@@ -768,6 +770,48 @@ public class CameraManager : MonoBehaviour
         BeginTemporaryPlayerSnap(0.05f, smoothTransition: false);
     }
 
+    public void ResetLookAheadForCharacterSwap(Rigidbody2D incomingBody, float centerSeconds)
+    {
+        ClearActionCamera();
+        if (incomingBody == null) return;
+        _playerTransform = incomingBody.transform;
+        if (_cameraLookAhead == null) _cameraLookAhead = Object.FindFirstObjectByType<CameraLookAhead>();
+        float duration = Mathf.Max(Time.unscaledDeltaTime, centerSeconds);
+        _cameraLookAhead?.ResetHorizontalForCharacterSwap(incomingBody, duration);
+        float release = _cameraLookAhead != null ? _cameraLookAhead.horizontalLookAheadDuration : 0.25f;
+        CenterQteIntroX(_exploreCam, incomingBody.transform, duration, release);
+        CenterQteIntroX(_combatCam, incomingBody.transform, duration, release);
+        CenterQteIntroX(_staticCam, incomingBody.transform, duration, release);
+        CenterQteIntroX(_ultimateCam, incomingBody.transform, duration, release);
+    }
+
+    private static void CenterQteIntroX(CinemachineCamera camera, Transform target, float duration, float release)
+    {
+        if (camera == null) return;
+        GetQteIntroCameraImpact(camera).CenterHorizontal(target, duration, release);
+    }
+
+    public void PlayQteIntroImpact(float sizeReduction, int frames)
+    {
+        if (sizeReduction <= 0f) return;
+        PlayQteIntroImpact(_exploreCam, sizeReduction, frames);
+        PlayQteIntroImpact(_combatCam, sizeReduction, frames);
+        PlayQteIntroImpact(_staticCam, sizeReduction, frames);
+        PlayQteIntroImpact(_ultimateCam, sizeReduction, frames);
+    }
+
+    private static void PlayQteIntroImpact(CinemachineCamera camera, float sizeReduction, int frames)
+    {
+        if (camera == null) return;
+        GetQteIntroCameraImpact(camera).Play(sizeReduction, frames);
+    }
+
+    private static QteIntroCameraImpact GetQteIntroCameraImpact(CinemachineCamera camera)
+    {
+        QteIntroCameraImpact impact = camera.GetComponent<QteIntroCameraImpact>();
+        return impact != null ? impact : camera.gameObject.AddComponent<QteIntroCameraImpact>();
+    }
+
     public void BeginTemporaryPlayerSnap(float duration, bool smoothTransition = false, float smoothTime = 0.15f)
     {
         if (_exploreCam == null || _playerTransform == null)
@@ -895,6 +939,7 @@ public class CameraManager : MonoBehaviour
 
     public void BeginTemporaryFocus(Transform focusTarget, float blendSeconds = 0.35f, bool bossSpawn = false)
     {
+        ClearActionCamera();
         CinemachineCamera sourceCam = bossSpawn ? _exploreCam : (_staticCam != null ? _staticCam : _exploreCam);
         if (focusTarget == null || sourceCam == null)
         {
@@ -1121,6 +1166,7 @@ public class CameraManager : MonoBehaviour
 
     public void SetUltimateZoom(bool enable, float size = 5f)
     {
+        if (enable) ClearActionCamera();
         // Stop any in-progress zoom coroutine
         if (_ultimateZoomCoroutine != null)
         {
@@ -1338,6 +1384,7 @@ public class CameraManager : MonoBehaviour
 
     private void HandleRoomChanged(RoomData room)
     {
+        ClearActionCamera();
         FinishPendingFocusReturn();
         DisposeFocusCamera();
         ClearEngagedEnemies();

@@ -1,0 +1,26 @@
+[
+  {
+    "Path": "Assets/Project/Resources/InventorySO/PlayerMetaProgression.asset",
+    "Unchanged": true
+  },
+  {
+    "Path": "Assets/Project/Scenes/Test_Playground.unity",
+    "Unchanged": false
+  },
+  {
+    "Path": "ProjectSettings/Physics2DSettings.asset",
+    "Unchanged": true
+  },
+  {
+    "Path": "Packages/manifest.json",
+    "Unchanged": true
+  },
+  {
+    "Path": "Assets/Project/Resources/InventorySO/PlayerRunInventory.asset",
+    "Unchanged": false
+  },
+  {
+    "Path": "ProjectSettings/TimeManager.asset",
+    "Unchanged": true
+  }
+]

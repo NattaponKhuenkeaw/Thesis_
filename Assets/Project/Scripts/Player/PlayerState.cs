@@ -24,7 +24,9 @@ public enum PlayerStateId
     Dead,
     Intro,
     Exit,
-    Landing
+    Landing,
+    DashAttack,
+    QteIntro
 }
 
 /// <summary>

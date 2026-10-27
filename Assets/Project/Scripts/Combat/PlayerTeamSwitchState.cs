@@ -33,7 +33,11 @@ public class PlayerTeamSwitchState : MonoBehaviour
     private float logicTimeCounter = 0f;
     private float lifetimeCounter = 0f;
     private const float LOGIC_FPS = 60f;
-    private const float MAX_CLONE_LIFETIME = 3.0f;
+    private float maximumCloneLifetime = 3f;
+    private MotionKeyframe capturedTargetMotion;
+    private Vector2 capturedTargetMotionDelta;
+    private Rigidbody2D cachedBody;
+    private Animator cachedCloneAnimator;
 
     public static PlayerTeamSwitchState Spawn(
         GameObject playerGameObject,
@@ -194,6 +198,9 @@ public class PlayerTeamSwitchState : MonoBehaviour
         sourceActionId = resolvedSourceActionId;
         sourceActionName = resolvedSourceActionName;
         attackCategory = category;
+        cachedBody = GetComponent<Rigidbody2D>();
+        if (resolvedSourceCombat != null && resolvedSourceCombat.movement != null)
+            resolvedSourceCombat.movement.TryGetResolvedTargetMotion(out capturedTargetMotion, out capturedTargetMotionDelta);
 
         // Capture source sprite world position and rotation BEFORE modifying executor root
         Vector3 sourceWorldPos = sourceSpriteRenderer != null ? sourceSpriteRenderer.transform.position : transform.position;
@@ -238,6 +245,7 @@ public class PlayerTeamSwitchState : MonoBehaviour
         if (animatorController != null)
         {
             Animator anim = visualClone.AddComponent<Animator>();
+            cachedCloneAnimator = anim;
             anim.runtimeAnimatorController = animatorController;
 
             PlayerCharacter player = PlayerCharacter.Instance;
@@ -252,6 +260,24 @@ public class PlayerTeamSwitchState : MonoBehaviour
         SetupHitbox();
 
         logicTimeCounter = (float)startFrame / LOGIC_FPS;
+        float clipLength = step?.animationClip != null ? step.animationClip.length : 0f;
+        maximumCloneLifetime = Mathf.Max(3f, GetMaxExecutionFrame() / LOGIC_FPS + clipLength + 3f);
+        RestoreOngoingHitbox(startFrame);
+        ProcessMotionData(startFrame);
+    }
+
+    private void RestoreOngoingHitbox(int frame)
+    {
+        if (actionStep?.hitData?.hitboxes == null) return;
+        int activeFrame = frame - actionStep.startupFrames - 1;
+        foreach (HitboxBase hitbox in actionStep.hitData.hitboxes)
+        {
+            if (!(hitbox is NormalHitbox normal) || activeFrame < hitbox.startFrameOffset
+                || activeFrame >= hitbox.startFrameOffset + hitbox.activeFrames) continue;
+            TriggerHitbox(hitbox);
+            if (sourceCombat?.hitBoxDamage != null && sourceCombat.hitBoxDamage.IsConfiguredFor(normal))
+                sourceCombat.hitBoxDamage.CopyHitHistoryTo(cloneHitboxDamage);
+        }
     }
 
     private void SetupHitbox()
@@ -313,7 +339,7 @@ public class PlayerTeamSwitchState : MonoBehaviour
     private void AdvanceFrames(float deltaTime)
     {
         lifetimeCounter += deltaTime;
-        if (lifetimeCounter >= MAX_CLONE_LIFETIME)
+        if (lifetimeCounter >= maximumCloneLifetime)
         {
             Terminate();
             return;
@@ -347,9 +373,9 @@ public class PlayerTeamSwitchState : MonoBehaviour
         if (frameSequenceDone)
         {
             bool animatorDone = true;
-            if (visualClone != null)
+            if (cachedCloneAnimator != null)
             {
-                Animator anim = visualClone.GetComponent<Animator>();
+                Animator anim = cachedCloneAnimator;
                 if (anim != null && anim.runtimeAnimatorController != null && !anim.IsInTransition(0))
                 {
                     AnimatorStateInfo stateInfo = anim.GetCurrentAnimatorStateInfo(0);
@@ -437,7 +463,7 @@ public class PlayerTeamSwitchState : MonoBehaviour
         }
 
         float currentOffsetX = EvaluateAuthoredMotionOffsetX(frame);
-        Rigidbody2D cloneRb = GetComponent<Rigidbody2D>();
+        Rigidbody2D cloneRb = cachedBody;
         if (cloneRb != null)
         {
             cloneRb.position = new Vector2(baselineRootPositionX + currentOffsetX, cloneRb.position.y);
@@ -487,8 +513,11 @@ public class PlayerTeamSwitchState : MonoBehaviour
 
         foreach (MotionKeyframe k in actionStep.motionData.keyframes)
         {
-            if (k == null || Mathf.Abs(k.position.x) < 0.0001f) continue;
-            float deltaX = k.position.x * dir;
+            if (k == null) continue;
+            // Targeted dash displacement was resolved against the original captured enemy,
+            // and must not revert to the generic authored fallback when control changes.
+            float deltaX = ReferenceEquals(k, capturedTargetMotion) ? capturedTargetMotionDelta.x : k.position.x * dir;
+            if (Mathf.Abs(deltaX) < 0.0001f) continue;
 
             if (frame <= k.startFrame)
             {

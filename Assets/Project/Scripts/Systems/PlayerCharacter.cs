@@ -438,6 +438,14 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
             return false;
         }
 
+        if (action.resourceCost > 0
+            && (PassiveController == null || string.IsNullOrWhiteSpace(action.resourceCounterId)
+                || PassiveController.RuntimeState.GetCounter(action.resourceCounterId) < action.resourceCost))
+            return false;
+        if (action.commitsDash && (Movement == null || !Movement.CanDash())) return false;
+        if (action.requiresEnemyTarget
+            && (Combat == null || Combat.FindNearestEnemyTarget(action.GetTargetSearchRadius()) == null)) return false;
+
         if (action is SkillAction skillAction
             && skillAction.cooldown > 0f
             && IsAbilitySlotOnCooldown(action.Category))
@@ -459,6 +467,12 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         }
 
         return true;
+    }
+
+    public bool TryCommitActionCounterCost(CombatAction action)
+    {
+        if (action == null || !IsActionAvailable(action)) return false;
+        return action.resourceCost <= 0 || PassiveController.RuntimeState.ConsumeCounter(action.resourceCounterId, action.resourceCost);
     }
 
     private bool IsAbilitySlotOnCooldown(AttackCategory category)
@@ -555,6 +569,7 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
 
     private void PrepareForCharacterSwitch()
     {
+        Combat?.InvalidateFieldExecutions();
         Combat?.ResetCombo();
         Movement?.CancelAttackMotion();
         StateMachine?.ResetForCharacterSwitch();

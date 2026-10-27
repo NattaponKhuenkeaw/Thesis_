@@ -17,7 +17,8 @@ public enum CombatActionOutputContext
 {
     MatchInput,
     Ground,
-    Air
+    Air,
+    Physical
 }
 
 public enum ActionDamageSourceStat
@@ -35,6 +36,17 @@ public abstract class CombatAction
     public string actionName = "New Action";
 
     public string ActionKey => !string.IsNullOrWhiteSpace(actionId) ? actionId : actionName;
+
+    [Header("Commit Requirements")]
+    public string resourceCounterId;
+    [Min(0)] public int resourceCost;
+    [Tooltip("Uses the normal dash availability, air dash quota and cooldown without playing its movement curve.")]
+    public bool commitsDash;
+    public bool requiresEnemyTarget;
+    [Tooltip("Normal attack inputs during Recovery/Cancel reselect an action, allowing repeated counter-funded standalone attacks.")]
+    public bool reselectOnAttackInput;
+    [Tooltip("Fallback radius for actions without targeted entry motion. Targeted entry motion owns the shared selection/movement range.")]
+    [Min(0f)] public float targetRadius = 8f;
     
     [Header("Locomotion Context")]
     [Tooltip("Environment context required when this action is selected.")]
@@ -60,6 +72,30 @@ public abstract class CombatAction
     public ComboTree comboTree;
 
     public abstract AttackCategory Category { get; }
+
+    public MotionKeyframe GetEntryTargetMotion()
+    {
+        AttackStepData step = comboTree?.rootNode?.stepData;
+        if (step == null && this is StandaloneAction standalone) step = standalone.GetEntryStep();
+        if (step?.motionData?.keyframes == null) return null;
+        MotionKeyframe first = null;
+        foreach (MotionKeyframe keyframe in step.motionData.keyframes)
+        {
+            if (keyframe == null || (keyframe.taskType != MotionTaskType.DashThroughTarget
+                && keyframe.taskType != MotionTaskType.SnapToEnemy)) continue;
+            if (first == null || keyframe.startFrame < first.startFrame) first = keyframe;
+        }
+        return first;
+    }
+
+    public float GetTargetSearchRadius() => Mathf.Max(0f, GetEntryTargetMotion()?.targetRadius ?? targetRadius);
+
+    public void SetTargetSearchRadius(float radius)
+    {
+        targetRadius = Mathf.Max(0f, radius);
+        MotionKeyframe motion = GetEntryTargetMotion();
+        if (motion != null) motion.targetRadius = targetRadius;
+    }
 
     public float ResolveHitDamageMultiplier(float damageRatio)
     {
@@ -266,7 +302,7 @@ public class StandaloneAction : CombatAction
     private const float DefaultStrikeSteeringStrength = 8f;
     private const float DefaultStrikeSteeringMaxRedirect = 3.5f;
 
-    public override AttackCategory Category => AttackCategory.Normal;
+    public override AttackCategory Category => triggerCategory;
 
     [Header("Legacy Match Conditions (Obsolete)")]
     [Obsolete("Use CombatAction.conditions instead")] public DirectionRequirement direction = DirectionRequirement.Down;

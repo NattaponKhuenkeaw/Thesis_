@@ -22,6 +22,16 @@ public class ActionResolver
     // Logging
     private PlayerStateMachine fsm;
 
+    public void BeginExplicitStep(CombatAction action, AttackStepData step, bool grounded)
+    {
+        Reset();
+        ActiveCombatAction = action;
+        activeActionStartedAirborne = !grounded;
+        // A terminal runtime node keeps the source tree and its follow-ups untouched.
+        currentNode = new ComboNode { stepData = step };
+        treeDepth = 1;
+    }
+
     public void SetLogger(PlayerStateMachine stateMachine)
     {
         fsm = stateMachine;
@@ -460,6 +470,10 @@ public class ActionResolver
         {
             return false;
         }
+
+        CombatRuntimeState counters = ctx.runtimeState ?? ctx.passiveController?.RuntimeState;
+        if (action.resourceCost > 0 && (counters == null || string.IsNullOrWhiteSpace(action.resourceCounterId)
+            || counters.GetCounter(action.resourceCounterId) < action.resourceCost)) return false;
 
         if (!ActionConditionUtility.AllMet(action.conditions, ctx))
         {

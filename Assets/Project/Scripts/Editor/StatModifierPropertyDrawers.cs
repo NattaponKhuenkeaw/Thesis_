@@ -459,6 +459,7 @@ public class PassiveActionModifierDefinitionDrawer : FoldoutPropertyDrawer
         EffectDrawerUtility.Draw(ref position, Prop(property, "replacementActionName"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "startingComboDepthOverride"));
         DrawValueModifier(ref position, property, "damageMultiplierOperation", "damageMultiplierValue");
+        DrawValueModifier(ref position, property, "criticalRateOperation", "criticalRateValue");
         DrawValueModifier(ref position, property, "criticalDamageOperation", "criticalDamageValue");
         DrawValueModifier(ref position, property, "finalDamageOperation", "finalDamageValue");
         SerializedProperty finalCrit = Prop(property, "finalDamageRequiresCriticalHit");
@@ -470,6 +471,7 @@ public class PassiveActionModifierDefinitionDrawer : FoldoutPropertyDrawer
         DrawValueModifier(ref position, property, "cooldownOperation", "cooldownValue");
         DrawValueModifier(ref position, property, "energyCostOperation", "energyCostValue");
         EffectDrawerUtility.Draw(ref position, Prop(property, "ignoreDefense"));
+        EffectDrawerUtility.Draw(ref position, Prop(property, "ignoreDefenseRequiresCriticalHit"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "ignoreDamageResistance"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "ignoreTypeReduction"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "replacementProjectileType"));
@@ -493,12 +495,14 @@ public class PassiveActionModifierDefinitionDrawer : FoldoutPropertyDrawer
             + EffectDrawerUtility.Height(Prop(property, "replacementActionName"))
             + EffectDrawerUtility.Height(Prop(property, "startingComboDepthOverride"))
             + ValueModifierHeight(property, "damageMultiplierOperation", "damageMultiplierValue")
+            + ValueModifierHeight(property, "criticalRateOperation", "criticalRateValue")
             + ValueModifierHeight(property, "criticalDamageOperation", "criticalDamageValue")
             + ValueModifierHeight(property, "finalDamageOperation", "finalDamageValue")
             + EffectDrawerUtility.Height(Prop(property, "auraEnergyRewardAdd"))
             + ValueModifierHeight(property, "cooldownOperation", "cooldownValue")
             + ValueModifierHeight(property, "energyCostOperation", "energyCostValue")
             + EffectDrawerUtility.Height(Prop(property, "ignoreDefense"))
+            + EffectDrawerUtility.Height(Prop(property, "ignoreDefenseRequiresCriticalHit"))
             + EffectDrawerUtility.Height(Prop(property, "ignoreDamageResistance"))
             + EffectDrawerUtility.Height(Prop(property, "ignoreTypeReduction"))
             + EffectDrawerUtility.Height(Prop(property, "replacementProjectileType"))
@@ -1051,6 +1055,8 @@ public class PassiveCounterEffectDefinitionDrawer : FoldoutPropertyDrawer
         EffectDrawerUtility.Draw(ref position, Prop(property, "counterId"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "operation"));
         EffectDrawerUtility.Draw(ref position, Prop(property, "value"));
+        EffectDrawerUtility.Draw(ref position, Prop(property, "destinationCounterId"));
+        EffectDrawerUtility.Draw(ref position, Prop(property, "destinationValue"));
     }
 
     protected override float GetExpandedHeight(SerializedProperty property)
@@ -1059,7 +1065,9 @@ public class PassiveCounterEffectDefinitionDrawer : FoldoutPropertyDrawer
             + EffectDrawerUtility.Height(Prop(property, "filter"))
             + EffectDrawerUtility.Height(Prop(property, "counterId"))
             + EffectDrawerUtility.Height(Prop(property, "operation"))
-            + EffectDrawerUtility.Height(Prop(property, "value"));
+            + EffectDrawerUtility.Height(Prop(property, "value"))
+            + EffectDrawerUtility.Height(Prop(property, "destinationCounterId"))
+            + EffectDrawerUtility.Height(Prop(property, "destinationValue"));
     }
 }
 

@@ -115,6 +115,9 @@ public class CharacterObject : ScriptableObject
     // =========================================================
     // Action Resolver (New Combo Tree System)
     // =========================================================
+    [Header("QTE Team Swap")]
+    public QteSwapDefinition qteSwap = new QteSwapDefinition();
+
     [Header("Action Resolver")]
     [Tooltip("Data-driven combo tree table. If null, legacy combo data is used as fallback.")]
     public ActionResolverTable actionResolverTable;

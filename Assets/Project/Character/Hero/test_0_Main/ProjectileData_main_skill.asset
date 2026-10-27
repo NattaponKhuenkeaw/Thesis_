@@ -52,6 +52,8 @@ MonoBehaviour:
   stopOnImpact: 1
   destroyWhenHitsExhausted: 0
   destroyOnLifetimeExpire: 1
+  centerGrabbedTargets: 0
+  grabCenterOffset: {x: 0, y: 0}
   trackAreaOccupants: 0
   areaEffectRefreshInterval: 0.25
   areaEffects: []
@@ -65,7 +67,7 @@ MonoBehaviour:
     vfxClip: {fileID: 7400000, guid: afe8147dda1b702479c521a01e64dd12, type: 2}
     audio: {fileID: 0}
     offset: {x: 0, y: 0}
-  impactVFXType: 15
+  impactVFXType: 10
   impactAudio: {fileID: 8300000, guid: 8f6ab12021ff39d4c869a546e444aa27, type: 3}
   references:
     version: 2

@@ -35,7 +35,7 @@ MonoBehaviour:
   trackDelaySeconds: 0
   trackingRadius: 0
   speed: 0
-  lifetime: 2
+  lifetime: 0.5
   maxHits: 2
   hitCountMode: 1
   routineHitbox:
@@ -80,6 +80,7 @@ MonoBehaviour:
         startFrameOffset: 0
         activeFrames: 3
         elementType: 0
+        damageTags: 0
         debugColor: {r: 0.84, g: 0.7, b: 1, a: 1}
         offset: {x: 0, y: 2}
         size: {x: 10, y: 5}
@@ -107,3 +108,4 @@ MonoBehaviour:
         hitVFXPrefab: {fileID: 0}
         hitVFXOffset: {x: 0, y: 0}
         breaksGrab: 0
+        breaksArmor: 0

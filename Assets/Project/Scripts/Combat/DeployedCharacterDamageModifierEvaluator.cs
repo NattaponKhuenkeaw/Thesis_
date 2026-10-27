@@ -3,6 +3,24 @@ using UnityEngine;
 
 public static class DeployedCharacterDamageModifierEvaluator
 {
+    public static float ModifyCriticalRate(CharacterObject sourceCharacter, AttackCategory category,
+        string actionId, string actionName, string stepName, float baseValue)
+    {
+        float result = baseValue;
+        if (!TryGetSourceData(sourceCharacter, out IReadOnlyList<PotentialNodeDefinition> nodes, out CombatRuntimeState runtimeState))
+            return Mathf.Clamp(result, 0f, 100f);
+        foreach (PotentialNodeDefinition node in nodes)
+        {
+            if (node?.actionModifiers == null) continue;
+            foreach (PassiveActionModifierDefinition modifier in node.actionModifiers)
+            {
+                if (modifier != null && modifier.Matches(category, actionId, actionName, stepName, runtimeState))
+                    result = ApplyValueModifier(result, modifier.criticalRateOperation, modifier.criticalRateValue);
+            }
+        }
+        return Mathf.Clamp(result, 0f, 100f);
+    }
+
     public static float ModifyCriticalDamage(
         CharacterObject sourceCharacter,
         AttackCategory category,
@@ -190,7 +208,7 @@ public static class DeployedCharacterDamageModifierEvaluator
                     continue;
                 }
 
-                if (modifier.ignoreDefense)
+                if (modifier.ignoreDefense && (!modifier.ignoreDefenseRequiresCriticalHit || input.context?.isCriticalHit == true))
                 {
                     input.defenderDefense = 0f;
                 }

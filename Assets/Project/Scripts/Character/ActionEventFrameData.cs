@@ -9,7 +9,9 @@ public enum ActionEventType
     TeleportToNearestEnemy,
     ScreenImpulse,
     AfterImage,
-    SetFacingDirection
+    SetFacingDirection,
+    BackgroundOverlayFlash,
+    ActionCameraMotion
 }
 
 public enum ActionFacingMode
@@ -91,6 +93,9 @@ public class ActionEventEntry
     [Header("Overlay Sequence")]
     public UltimateOverlaySequenceSettings overlaySettings = new UltimateOverlaySequenceSettings();
 
+    [Header("Background Impact Flash")]
+    public BackgroundOverlayFlashSettings backgroundOverlayFlashSettings = new BackgroundOverlayFlashSettings();
+
     [Header("Freeze Behavior")]
     public bool freezeWorld = true;
     [Tooltip("If greater than 0, overrides the freeze duration. Otherwise, the freeze lasts for the duration of the event sequence.")]
@@ -117,6 +122,9 @@ public class ActionEventEntry
     [Header("Facing Direction")]
     public FacingDirectionEventSettings facingDirectionSettings = new FacingDirectionEventSettings();
 
+    [Header("Action Camera Motion")]
+    public ActionCameraMotionSettings cameraMotionSettings = new ActionCameraMotionSettings();
+
     [Header("Ultimate Zoom Settings")]
     [Tooltip("If true, the camera will instantly zoom in on the player during the sequence.")]
     public bool enableUltimateZoom = false;
@@ -125,6 +133,9 @@ public class ActionEventEntry
 
     public int GetTimelineDurationFrames(int actionTotalFrames = -1)
     {
+        if (eventType == ActionEventType.ActionCameraMotion && cameraMotionSettings != null)
+            return cameraMotionSettings.DurationFrames;
+
         if (eventType == ActionEventType.UltimateOverlaySequence && overlaySettings != null)
         {
             return Mathf.Max(1, Mathf.CeilToInt(overlaySettings.GetTotalDurationSeconds() * FrameDataConstants.LOGIC_FPS));
@@ -148,8 +159,28 @@ public class ActionEventEntry
             return Mathf.Max(1, endFrame - triggerFrame + 1);
         }
 
+        if (eventType == ActionEventType.BackgroundOverlayFlash && backgroundOverlayFlashSettings != null)
+        {
+            return Mathf.Max(1, backgroundOverlayFlashSettings.fadeOutFrames);
+        }
+
         return 1;
     }
+}
+
+[Serializable]
+public class BackgroundOverlayFlashSettings
+{
+    [Tooltip("Number of logic frames for the white impact flash to fade back to transparent.")]
+    [Min(1)]
+    public int fadeOutFrames = 18;
+
+    [Tooltip("Color used by the fullscreen impact flash. White is the standard impact flash.")]
+    public Color flashColor = Color.white;
+
+    [Tooltip("Peak opacity of the flash when the event triggers.")]
+    [Range(0f, 1f)]
+    public float peakAlpha = 1f;
 }
 
 [Serializable]
@@ -246,6 +277,8 @@ public class ActionEventFrameData : ActionStepComponent
             }
 
             entry.triggerFrame = Mathf.RoundToInt(entry.triggerFrame * ratio);
+            if (entry.eventType == ActionEventType.ActionCameraMotion)
+                entry.cameraMotionSettings?.Rescale(ratio);
         }
     }
 }

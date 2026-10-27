@@ -13,11 +13,15 @@ MonoBehaviour:
   m_Name: PlayerMetaProgression
   m_EditorClassIdentifier: Assembly-CSharp::Project.Progression.PlayerMetaProgression
   metaCurrency: 0
-  fragments: []
+  fragments:
+  - sourceItemId: char-0-main
+    displayName: Asura Shin Fragment
+    fragmentType: 0
+    quantity: 884
   characterPotentials:
   - characterId: char-0-main
     skillLevel: 0
     ultimateLevel: 0
-    passiveLevel: 1
+    passiveLevel: 4
   unlockedCharacterIds: []
   permanentItems: []

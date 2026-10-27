@@ -893,7 +893,7 @@ public class AnimationEditorWindow : EditorWindow
 
         foreach (var entry in step.vfxData.entries)
         {
-            if (entry == null || (entry.vfxPrefab == null && entry.vfxType == Project.Combat.VFXType.None)) continue;
+            if (entry == null || (entry.vfxPrefab == null && entry.vfxType == Project.Combat.VFXType.None && entry.vfxClip == null)) continue;
 
             // Determine if VFX should be active
             bool shouldBeActive = false;
@@ -955,7 +955,7 @@ public class AnimationEditorWindow : EditorWindow
 
         GameObject prefab = entry.vfxPrefab;
         // Fallback to library generic prefab if direct prefab is null
-        if (prefab == null && entry.vfxType != Project.Combat.VFXType.None && Project.Combat.VFXManager.Instance != null)
+        if (prefab == null && (entry.vfxType != Project.Combat.VFXType.None || entry.vfxClip != null) && Project.Combat.VFXManager.Instance != null)
         {
             var generic = Project.Combat.VFXManager.Instance.VFXPrefab;
             if (generic != null) prefab = generic.gameObject;
@@ -1037,6 +1037,15 @@ public class AnimationEditorWindow : EditorWindow
     private void SampleVfxState(GameObject instance, VFXEntry entry, int relativeFrame)
     {
         float time = relativeFrame / FrameDataConstants.LOGIC_FPS;
+
+        if (entry.vfxClip != null && entry.vfxType == Project.Combat.VFXType.None)
+        {
+            if (!AnimationMode.InAnimationMode()) AnimationMode.StartAnimationMode();
+            AnimationMode.BeginSampling();
+            AnimationMode.SampleAnimationClip(instance, entry.vfxClip, time);
+            AnimationMode.EndSampling();
+            return;
+        }
 
         // 1. Process Animator if present
         var anim = instance.GetComponent<Animator>();
@@ -1278,6 +1287,16 @@ public class AnimationEditorWindow : EditorWindow
 
         AttackStepData step = GetCurrentStep();
         if (step == null) return;
+
+        if (step.eventData?.entries != null)
+            foreach (var cameraEvent in step.eventData.entries)
+                if (cameraEvent != null && cameraEvent.eventType == ActionEventType.ActionCameraMotion
+                    && cameraEvent.cameraMotionSettings != null && scrubberFrame >= cameraEvent.triggerFrame)
+                {
+                    cameraEvent.cameraMotionSettings.Sample(scrubberFrame - cameraEvent.triggerFrame, out float size, out float offset);
+                    Handles.Label(previewInstance.transform.position + Vector3.up * 4f,
+                        $"Camera size x{size:F3} / horizontal {offset:P2}");
+                }
         
         if (step.hitData != null && step.hitData.hitboxes != null && selectedSceneHitboxIndex >= step.hitData.hitboxes.Count)
             selectedSceneHitboxIndex = -1;

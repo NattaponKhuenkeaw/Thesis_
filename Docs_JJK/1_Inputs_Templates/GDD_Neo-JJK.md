@@ -295,8 +295,11 @@ Characters are tools in a simple loop:
 ### Swap Rules
 
 - **Team Swap Finish**: During an allowed action recovery/cancel window, swapping creates a background executor for the outgoing character's remaining action while the incoming character becomes active. The outgoing executor preserves the action's resolved stats, hitboxes, and motion, then disappears when the action ends.
-- **No Input Inheritance**: A switch clears the active input buffer. The incoming character begins from its normal locomotion state rather than continuing the previous character's queued chain.
+- **No Input Inheritance**: A switch clears the active input buffer. The incoming character begins from normal locomotion or, when a prepared QTE is accepted, its own authored intro. Outgoing combo inputs are never inherited.
 - **Availability**: Swapping is ground-only, respects the team swap cooldown, and cannot interrupt auto-chain steps, Dash/Jump, airborne states, hitstun, or death.
+- **QTE Team Swap**: Main's accepted Dimension Cut primary hit and CameraGirl's accepted Skill primary hit prepare eligible off-field teammates for five combat seconds. Further hits refresh expiry without stacking. Teammate portraits show a white scaling prompt and a separate remaining-window bar. A ready destination may swap during a grounded combat step after that step confirms a hit, while cooldown, input locks, auto-chain, grab, hitstun, death and traversal restrictions remain.
+- **QTE Entry**: Main uses the exact Dimension Cut attack data, without spending a cached cut; CameraGirl uses exact NA Attack4, without automatically continuing into Attack5. Entry spawns behind the outgoing character using that character's facing, with offsets Main 3 / CameraGirl 1, then faces the enemy. Terrain may clamp placement; gaps or blocked body clearance reject QTE placement and permit an ordinary swap only when otherwise legal. Intro and off-field hits cannot prepare another QTE.
+- **QTE Handoff Presentation**: Intro starts immediately with a brief strong slowdown (editable starting values 0.08x for 0.24 real seconds). The outgoing executor preserves current animation phase, active hit history and resolved targeted dash displacement, and continues through its remaining action/animation. Settings live on the Player prefab's TeamManager QteTeamSwapController; attack references and offsets live on CharacterObject.qteSwap.
 - **Optional** swap-in effect, such as small damage, shield, heal, buff, or particle burst depend on Character Passive or Artifact.
 
 ---
@@ -375,6 +378,13 @@ Run Global Level is casual, run-scoped growth shared by the complete character r
 - Each character has three tracks: **Skill**, **Ultimate**, and **Passive**. Each track has four sequential levels, for a maximum of **4/4 per track** and **12 upgrade nodes** per character.
 - Duplicate characters convert into that character's permanent Potential Fragments. The player spends those fragments in the Character Potential panel to unlock the next node in a track.
 - A node may modify stats, action behavior, cooldowns, Aura Energy, runtime effects, or conditional passives. Each track must be upgraded in order.
+
+#### Main: Dimension Slash (Approved Direction, Pending Implementation)
+
+- User-approved 2026-10-27: Passive Lv.4 unlocks a separate **Dimension Slash** action. Performing **five Dimension Cuts** opens a timed follow-up opportunity on the **Skill command**.
+- The action presents multiple slashing bursts followed by a giant Dimension Cut. Impact, rhythm and camera motion take inspiration from the supplied BBEEx clip; exact source-game internals are not asserted.
+- Generate new actor sprites as needed to echo the reference motion while keeping Main's existing `test_0_Main/sprite/New_sprite` proportions, costume, palette and pixel-art identity. Actor and VFX remain separate assets.
+- Preserve Main's existing Ultimate, cached Dimension Cut and existing Passive Lv.4 effects. Exact counter timing, opportunity duration, resource lifecycle and camera implementation remain proposals in `3_Outputs/Specs/main-dimension-slash-arch-plan.md` until architecture approval.
 
 ### Reward Categories
 

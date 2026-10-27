@@ -24,6 +24,11 @@ public class CharacterSwitchSlot : MonoBehaviour
     public Image followUpOverlay;
     [SerializeField] private GameObject aeGaugeVisual;
 
+    [Header("QTE Ready Prompt")]
+    public Image qteReadyOverlay;
+    public Image qteWindowFill;
+    private RectTransform qtePulseRect;
+
     private string lastCooldownText = string.Empty;
     private bool isCooldownVisible;
 
@@ -56,6 +61,7 @@ public class CharacterSwitchSlot : MonoBehaviour
             hpSlider = GetComponentInChildren<Slider>(true);
 
         RefreshCooldown(0f, 0f);
+        EnsureQtePrompt();
         RefreshFromHUD();
     }
 
@@ -168,6 +174,7 @@ public class CharacterSwitchSlot : MonoBehaviour
         if (teamLoader == null) return;
 
         bool isCurrent = teamLoader.CurrentCharacter == boundCharacter;
+        RefreshQtePrompt(teamLoader, isCurrent);
 
         // 1. aeGaugeVisual and aeOverlay (0 -> 1)
         if (aeGaugeVisual != null)
@@ -251,7 +258,7 @@ public class CharacterSwitchSlot : MonoBehaviour
         {
             if (stateMachine != null)
             {
-                isSwitchUnavailable = !stateMachine.CanSwitchCharacter(5);
+                isSwitchUnavailable = !stateMachine.CanSwitchCharacterTo(slotIndex);
             }
             else
             {
@@ -263,6 +270,71 @@ public class CharacterSwitchSlot : MonoBehaviour
         {
             unavailableOverlay.SetActive(!isCurrent && isSwitchUnavailable);
         }
+    }
+
+    private void EnsureQtePrompt()
+    {
+        if (characterIcon == null) return;
+        if (qteReadyOverlay == null)
+        {
+            var overlay = new GameObject("QTE Ready Overlay", typeof(RectTransform), typeof(Image));
+            overlay.transform.SetParent(characterIcon.transform, false);
+            qteReadyOverlay = overlay.GetComponent<Image>();
+            qteReadyOverlay.raycastTarget = false;
+            RectTransform rect = qteReadyOverlay.rectTransform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+        }
+        qtePulseRect = qteReadyOverlay.rectTransform;
+        if (qteWindowFill == null)
+        {
+            var timer = new GameObject("QTE Window Remaining", typeof(RectTransform), typeof(Image));
+            timer.transform.SetParent(characterIcon.transform, false);
+            qteWindowFill = timer.GetComponent<Image>();
+            qteWindowFill.raycastTarget = false;
+            RectTransform rect = qteWindowFill.rectTransform;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = new Vector2(1f, 0f);
+            rect.pivot = Vector2.zero;
+            rect.sizeDelta = new Vector2(0f, 3f);
+            rect.anchoredPosition = Vector2.zero;
+            qteWindowFill.color = Color.white;
+        }
+        qteReadyOverlay.gameObject.SetActive(false);
+        qteWindowFill.gameObject.SetActive(false);
+    }
+
+    private void RefreshQtePrompt(TeamLoader loader, bool isCurrent)
+    {
+        QteTeamSwapController qte = loader.QteSwaps;
+        float remaining = 0f;
+        float total = 0f;
+        bool ready = !isCurrent && qte != null && qte.TryGetWindow(boundCharacter, out remaining, out total);
+        bool actionable = ready && qte.CanHandoffTo(slotIndex);
+        if (qteReadyOverlay != null)
+        {
+            qteReadyOverlay.gameObject.SetActive(actionable);
+            if (actionable)
+            {
+                float pulse = qte.reduceUiMotion ? 0.5f : (Mathf.Sin(Time.unscaledTime * (Mathf.PI * 2f / 0.8f)) + 1f) * 0.5f;
+                qteReadyOverlay.color = new Color(1f, 1f, 1f, Mathf.Lerp(0.15f, 0.4f, pulse));
+                if (qtePulseRect != null) qtePulseRect.localScale = Vector3.one * Mathf.Lerp(1f, 1.1f, pulse);
+            }
+        }
+        if (qteWindowFill != null)
+        {
+            qteWindowFill.gameObject.SetActive(ready);
+            if (ready) qteWindowFill.rectTransform.anchorMax = new Vector2(Mathf.Clamp01(remaining / total), 0f);
+        }
+    }
+
+    private void OnDisable()
+    {
+        if (qteReadyOverlay != null) qteReadyOverlay.gameObject.SetActive(false);
+        if (qteWindowFill != null) qteWindowFill.gameObject.SetActive(false);
+        if (qtePulseRect != null) qtePulseRect.localScale = Vector3.one;
     }
 
     private static string FormatCooldownText(float seconds)

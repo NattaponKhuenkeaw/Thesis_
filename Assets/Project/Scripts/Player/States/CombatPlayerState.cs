@@ -12,6 +12,18 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     protected readonly ActionResolver resolver = new ActionResolver();
     protected ActionResolverTable resolverTable;
     protected bool hasStartedCooldown;
+    private CombatAction counterCostCommittedAction;
+    private ActionCameraToken _actionCameraToken;
+    private CameraManager _actionCameraOwner;
+
+    private void ReleaseActionCamera()
+    {
+        if (_actionCameraOwner != null) _actionCameraOwner.ReleaseActionCamera(_actionCameraToken);
+        _actionCameraOwner = null;
+        _actionCameraToken = default;
+    }
+
+    protected void ResetActionCounterCommitment() => counterCostCommittedAction = null;
 
     private readonly HashSet<ActionEventEntry> triggeredActionEvents = new HashSet<ActionEventEntry>();
     private readonly Dictionary<ActionEventEntry, Coroutine> activeAfterImageCoroutines = new Dictionary<ActionEventEntry, Coroutine>();
@@ -32,6 +44,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         resolverTable = player.characterObject != null ? player.characterObject.actionResolverTable : null;
         resolver.SetLogger(fsm);
         hasStartedCooldown = false;
+        ResetActionCounterCommitment();
         capturedOutputAction = null;
         capturedActionStartedGrounded = fsm.IsGroundedContext;
         hasCommittedActionOutput = false;
@@ -45,6 +58,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
     public override void Exit()
     {
+        ReleaseActionCamera();
         CommitResolvedActionOutput();
         EndActiveActionEventSequence();
         StopAfterImageTrails();
@@ -183,6 +197,20 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     // Combat Utilities
     // =========================================================
 
+    protected virtual bool IsQteIntroExecution => false;
+
+    protected void BeginQteIntro(CombatAction action, AttackStepData step, EnemyController target)
+    {
+        resolver.BeginExplicitStep(action, step, true);
+        counterCostCommittedAction = action;
+        InputContext context = BuildInputContext();
+        context.directionalInput = Vector2.zero;
+        ExecuteCombatStep(step, context, false);
+        player.Movement?.SetActionMotionTarget(target);
+        // Evaluate the new controller immediately so replacement never renders an idle pose.
+        player.Animator?.anim?.Update(0f);
+    }
+
     protected abstract AttackCategory GetAttackCategory();
 
     protected override ActionFrameData GetFrameData()
@@ -194,6 +222,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     {
         player.Combat?.ProcessFrameFromState(frame, phase);
         ProcessActionEvents(frame);
+        if (_actionCameraOwner != null) _actionCameraOwner.SampleActionCamera(_actionCameraToken, frame);
     }
 
     protected override bool ShouldAdvanceLogicFrames()
@@ -362,8 +391,17 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
     protected virtual void OnStepBoundaryActionResolved(CombatAction action) { }
 
-    protected void ExecuteCombatStep(AttackStepData step, InputContext ctx, bool isAutoChain)
+    protected bool ExecuteCombatStep(AttackStepData step, InputContext ctx, bool isAutoChain)
     {
+        CombatAction action = resolver.ActiveCombatAction;
+        if (step == null || action == null || player.Combat == null) return false;
+        bool beginsNewCounterAction = action != counterCostCommittedAction;
+        if (beginsNewCounterAction && action != null && action.resourceCost > 0
+            && !player.TryCommitActionCounterCost(action)) return false;
+        counterCostCommittedAction = action;
+        EnemyController target = beginsNewCounterAction && action != null && action.requiresEnemyTarget
+            ? player.Combat?.FindNearestEnemyTarget(action.GetTargetSearchRadius()) : null;
+        ReleaseActionCamera();
         EndActiveActionEventSequence();
         StopAfterImageTrails();
         triggeredActionEvents.Clear();
@@ -392,8 +430,11 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             GetAttackCategory(),
             resolver.ActiveCombatAction?.actionName,
             resolver.ActiveCombatAction?.actionId,
-            isAutoChain);
+            isAutoChain,
+            IsQteIntroExecution);
+        if (beginsNewCounterAction && target != null) player.Movement?.SetActionMotionTarget(target);
         RestartAction();
+        return true;
     }
 
     protected bool TryAutoChain()
@@ -479,7 +520,30 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             case ActionEventType.SetFacingDirection:
                 ApplyFacingDirectionEvent(entry);
                 break;
+
+            case ActionEventType.BackgroundOverlayFlash:
+                PlayBackgroundImpactFlash(entry);
+                break;
+
+            case ActionEventType.ActionCameraMotion:
+                ReleaseActionCamera();
+                _actionCameraOwner = CameraManager.instance;
+                if (_actionCameraOwner != null)
+                    _actionCameraToken = _actionCameraOwner.BeginActionCamera(player.Combat?.CurrentExecution,
+                        entry.cameraMotionSettings, entry.triggerFrame, player.Movement != null ? player.Movement.FacingDirection : 1);
+                break;
         }
+    }
+
+    private static void PlayBackgroundImpactFlash(ActionEventEntry entry)
+    {
+        if (entry == null || UltimateFlashOverlay.Instance == null)
+        {
+            return;
+        }
+
+        entry.backgroundOverlayFlashSettings ??= new BackgroundOverlayFlashSettings();
+        UltimateFlashOverlay.Instance.PlayImpactFlash(entry.backgroundOverlayFlashSettings);
     }
 
     private void ApplyFacingDirectionEvent(ActionEventEntry entry)

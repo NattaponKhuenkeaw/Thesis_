@@ -40,6 +40,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     }
 
     public static TeamLoader Instance { get; private set; }
+    public QteTeamSwapController QteSwaps { get; private set; }
+    public CharacterObject GetCharacterAtIndex(int index) => index >= 0 && index < teamSnapshot.Length ? teamSnapshot[index] : null;
 
     public const float DefaultUltimateAuraEnergyCost = 100f;
     private const int DefaultTeamSize = 2;
@@ -128,6 +130,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
     private void Awake()
     {
         Instance = this;
+        QteSwaps = GetComponent<QteTeamSwapController>();
+        if (QteSwaps == null) QteSwaps = gameObject.AddComponent<QteTeamSwapController>();
         ResolveDependencies();
         BootstrapRunInventoryTeam();
         SyncTeamSnapshotFromInventory();
@@ -418,79 +422,48 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     public bool SwitchToIndex(int index)
     {
-        SyncTeamSnapshotFromInventory();
-        if (teamSnapshot == null || teamSnapshot.Length == 0)
-        {
+        if (!CanSwitchToIndex(index) || playerCharacter == null || playerCharacter.StateMachine == null)
             return false;
-        }
 
-        if (index < 0 || index >= teamSnapshot.Length || teamSnapshot[index] == null)
-        {
-            return false;
-        }
+        PlayerStateMachine fsm = playerCharacter.StateMachine;
+        bool ordinaryAllowed = fsm.CanSwitchCharacter();
+        CombatAction introAction = null;
+        AttackStepData introStep = null;
+        EnemyController introTarget = null;
+        Vector2 introPosition = default;
+        int introFacing = 1;
+        bool useQte = QteSwaps != null && QteSwaps.TryPrepare(index, out introAction, out introStep,
+            out introTarget, out introPosition, out introFacing);
+        if (!ordinaryAllowed && !useQte) return false;
 
-        if (isHandlingActiveDefeat)
-        {
-            return false;
-        }
-
-        if (currentIndex == index)
-        {
-            return false;
-        }
-
-        // Removed/KO characters are no longer on the team snapshot.
-        if (!IsCharacterAliveFromInventory(teamSnapshot[index]))
-        {
-            return false;
-        }
-
-        if (IsSwitchOnCooldown)
-        {
-            return false;
-        }
-
-        if (playerCharacter != null
-            && playerCharacter.StateMachine != null
-            && (playerCharacter.StateMachine.CurrentStateId == PlayerStateId.Attacking
-                || playerCharacter.StateMachine.CurrentStateId == PlayerStateId.Skill
-                || playerCharacter.StateMachine.CurrentStateId == PlayerStateId.Ultimate))
+        if (fsm.CurrentState is CombatPlayerState)
         {
             SpawnPlayerTeamSwitchClone();
-            if (GameFreezeManager.Instance != null)
-            {
+            if (!useQte && GameFreezeManager.Instance != null)
                 GameFreezeManager.Instance.PlaySlowMotion(0.5f, 0.5f);
-            }
         }
 
         CharacterObject outgoingCharacter = CurrentCharacter;
         int outgoingSlotIndex = currentIndex;
+        QteSwaps?.Clear();
         currentIndex = index;
         runInventory?.SetActiveTeamSlotIndex(currentIndex);
         lastSwitchTime = Time.time;
         LoadCurrentCharacter();
-        CharacterObject incomingCharacter = CurrentCharacter;
-        int incomingSlotIndex = currentIndex;
+        fsm.SnapToGroundForCharacterSwitch();
 
-        // A successful Team Switch is always a Ground transition. The outgoing
-        // Ground action may have lifted the shared Rigidbody through MotionData,
-        // so resolve the incoming character against the floor unconditionally.
-        if (playerCharacter != null && playerCharacter.StateMachine != null)
+        if (useQte)
         {
-            playerCharacter.StateMachine.SnapToGroundForCharacterSwitch();
-        }
-        else
-        {
-            SnapPlayerToGround();
+            playerCharacter.Movement.ApplyQteGroundPosition(introPosition);
+            playerCharacter.Movement.SnapFacingDirection(introFacing);
+            fsm.InputBuffer?.ClearAll();
+            fsm.QteIntroState.Prepare(introAction, introStep, introTarget);
+            fsm.ChangeState(fsm.QteIntroState);
+            QteSwaps.PlayIntroHandoff();
         }
 
-        Vector2 worldPosition = playerCharacter != null ? (Vector2)playerCharacter.transform.position : Vector2.zero;
         CombatEventHub.Shared.Publish(new CharacterSwitchCompletedEvent(
-            outgoingCharacter,
-            incomingCharacter,
-            outgoingSlotIndex,
-            incomingSlotIndex,
-            worldPosition));
+            outgoingCharacter, CurrentCharacter, outgoingSlotIndex, currentIndex, playerCharacter.transform.position));
         return true;
     }
 
@@ -505,6 +478,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         CharacterObject character = teamSnapshot[index];
         return character != null
             && !isHandlingActiveDefeat
+            && (playerCharacter == null || !playerCharacter.IsDead)
             && index != currentIndex
             && IsCharacterAliveFromInventory(character)
             && !IsSwitchOnCooldown;
@@ -2647,6 +2621,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             activeState = playerCharacter.StateMachine.AttackState;
             category = AttackCategory.Normal;
         }
+
+        if (stateId == PlayerStateId.QteIntro) activeState = playerCharacter.StateMachine.QteIntroState;
 
         if (activeState == null)
         {

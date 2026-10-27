@@ -110,18 +110,21 @@ public class PlayerAttackState : CombatPlayerState
     {
         Buffer?.ConsumeAttack();
 
-        if (currentPhase == ActionPhase.None)
+        if (currentPhase == ActionPhase.None
+            || (IsRecoveryOrCancelPhase && resolver.ActiveCombatAction?.reselectOnAttackInput == true))
         {
             if (player.Combat != null && resolverTable != null)
             {
                 InputContext ctx = BuildInputContext();
 
-                if (!ctx.isGrounded && !player.Combat.CanStartAirCombo()) return;
+                if (currentPhase == ActionPhase.None && !ctx.isGrounded && !player.Combat.CanStartAirCombo()) return;
 
+                ResetActionCounterCommitment();
                 AttackStepData step = resolver.ResolveInitial(ctx, resolverTable);
 
                 if (step != null)
                 {
+                    if (IsRecoveryOrCancelPhase) player.Combat.ResetCombo();
                     player.Combat.SetAirCombo(resolver.IsAirCombo);
                     ExecuteCombatStep(step, ctx, false);
                 }

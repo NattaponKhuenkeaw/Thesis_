@@ -1,0 +1,190 @@
+{
+  "startedUtc": "2026-10-27T13:41:29.8317371Z",
+  "finished": true,
+  "pausePreservedWindow": true,
+  "expiredWindowFallsBack": true,
+  "startupDamageReleasesCamera": true,
+  "runs": [
+    {
+      "fpsCap": 30,
+      "targetSide": 1,
+      "primaryFrames": [
+        12,
+        20,
+        27,
+        33,
+        38,
+        42,
+        54
+      ],
+      "primaryDamage": 284.5,
+      "otherDamage": 20.700000762939453,
+      "hpLoss": 305.1875,
+      "hpAccountingError": -0.012500762939453125,
+      "observedFps": 17.142688751220703,
+      "duration": 1.8083510398864746,
+      "readyAfterFive": true,
+      "consumed": true,
+      "ended": true,
+      "cameraReleased": true,
+      "releaseSpritesAt54": [
+        "Actor_06"
+      ],
+      "cameraSizeAt54": [
+        6.5279998779296875
+      ]
+    },
+    {
+      "fpsCap": 30,
+      "targetSide": -1,
+      "primaryFrames": [
+        12,
+        20,
+        27,
+        33,
+        38,
+        42,
+        54
+      ],
+      "primaryDamage": 287.5,
+      "otherDamage": 41.400001525878906,
+      "hpLoss": 328.875,
+      "hpAccountingError": -0.02500152587890625,
+      "observedFps": 18.639747619628906,
+      "duration": 1.6631126403808594,
+      "readyAfterFive": true,
+      "consumed": true,
+      "ended": true,
+      "cameraReleased": true,
+      "releaseSpritesAt54": [
+        "Actor_06"
+      ],
+      "cameraSizeAt54": [
+        6.5279998779296875
+      ]
+    },
+    {
+      "fpsCap": 60,
+      "targetSide": 1,
+      "primaryFrames": [
+        12,
+        20,
+        27,
+        33,
+        38,
+        42,
+        54
+      ],
+      "primaryDamage": 287.5,
+      "otherDamage": 41.400001525878906,
+      "hpLoss": 328.875,
+      "hpAccountingError": -0.02500152587890625,
+      "observedFps": 17.55261993408203,
+      "duration": 1.823089599609375,
+      "readyAfterFive": true,
+      "consumed": true,
+      "ended": true,
+      "cameraReleased": true,
+      "releaseSpritesAt54": [
+        "Actor_06"
+      ],
+      "cameraSizeAt54": [
+        6.5279998779296875
+      ]
+    },
+    {
+      "fpsCap": 60,
+      "targetSide": -1,
+      "primaryFrames": [
+        12,
+        20,
+        27,
+        33,
+        38,
+        42,
+        54
+      ],
+      "primaryDamage": 287.5,
+      "otherDamage": 20.700000762939453,
+      "hpLoss": 308.1875,
+      "hpAccountingError": -0.012500762939453125,
+      "observedFps": 16.929920196533203,
+      "duration": 1.7720108032226562,
+      "readyAfterFive": true,
+      "consumed": true,
+      "ended": true,
+      "cameraReleased": true,
+      "releaseSpritesAt54": [
+        "Actor_06"
+      ],
+      "cameraSizeAt54": [
+        6.5279998779296875
+      ]
+    },
+    {
+      "fpsCap": 120,
+      "targetSide": 1,
+      "primaryFrames": [
+        12,
+        20,
+        27,
+        33,
+        38,
+        42,
+        54
+      ],
+      "primaryDamage": 299.0,
+      "otherDamage": 20.700000762939453,
+      "hpLoss": 319.6875,
+      "hpAccountingError": -0.012500762939453125,
+      "observedFps": 19.075233459472656,
+      "duration": 1.7299919128417969,
+      "readyAfterFive": true,
+      "consumed": true,
+      "ended": true,
+      "cameraReleased": true,
+      "releaseSpritesAt54": [
+        "Actor_06"
+      ],
+      "cameraSizeAt54": [
+        6.5279998779296875
+      ]
+    },
+    {
+      "fpsCap": 120,
+      "targetSide": -1,
+      "primaryFrames": [
+        12,
+        20,
+        27,
+        33,
+        38,
+        42,
+        54
+      ],
+      "primaryDamage": 299.0,
+      "otherDamage": 41.400001525878906,
+      "hpLoss": 340.375,
+      "hpAccountingError": -0.02500152587890625,
+      "observedFps": 18.05646324157715,
+      "duration": 1.8276004791259766,
+      "readyAfterFive": true,
+      "consumed": true,
+      "ended": true,
+      "cameraReleased": true,
+      "releaseSpritesAt54": [
+        "Actor_06"
+      ],
+      "cameraSizeAt54": [
+        6.5279998779296875
+      ]
+    }
+  ],
+  "tests": {
+    "total": "137",
+    "passed": "134",
+    "failed": "3",
+    "start-time": "2026-10-27 13:41:19Z",
+    "end-time": "2026-10-27 13:41:21Z"
+  }
+}

@@ -21,7 +21,6 @@ public class InputHandler_Player : MonoBehaviour
     public float dashBufferTime = 0.12f;
 
     private Vector2 moveInput;
-
     void Awake()
     {
         if (playerInput == null)
@@ -128,10 +127,9 @@ public class InputHandler_Player : MonoBehaviour
 
     public void OnDash(InputValue value)
     {
-        if (Project.UI.InputLockManager.IsLocked) return;
-        if (!value.isPressed) return;
-
-        // Route through FSM — it handles buffering internally
+        if (Project.UI.InputLockManager.IsLocked || !value.isPressed) return;
+        moveInput = GetLatestMoveInput();
+        stateMachine?.InputBuffer?.SetDirectionalInput(moveInput);
         stateMachine?.RouteDashInput(moveInput.x);
     }
 

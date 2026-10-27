@@ -55,6 +55,14 @@ MonoBehaviour:
     dashSpeed: 25
     cooldownFrames: 24
   kitDefinition:
+    combatMeter:
+      counterId: main.shadow
+      cachedCounterId: main.shadow.cached_cuts
+      displayName: Shadow Meter
+      pointsPerBox: 20
+      baseBoxes: 2
+      maximumBoxes: 5
+      fillColor: {r: 0.25, g: 0.9, b: 1, a: 1}
     skill:
       abilityId: main.skill.dark_chain
       abilityName: Dark Chain
@@ -68,11 +76,15 @@ MonoBehaviour:
         DMG 700% of ATK
     passive:
       abilityId: main.passive
-      abilityName: Revenge of Void
+      abilityName: Shadow Dimension
       icon: {fileID: 0}
-      description: When Hit an Enemy with <color=#8B3DFF>Void</color> Debuff, will
-        Increase own <b>DOT Mastery +10%</b> <color=#C0C0C0>(Stackable 5 times)</color></i>.
+      description: Land hits to build Shadow Meter. Each committed Dash spends one
+        ready 20-point box to cache a Dimension Cut. Normal Attack spends one cached
+        cut against an enemy; continue the combo to spend the remaining cuts. Stores
+        2 meter boxes, up to 5 through Potential.
     baseSkillNode:
+      meterCapacityModifiers: []
+      counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
@@ -92,6 +104,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         requiredTags: []
         requiredCounters: []
         requiredRuntimeEffectStacks: []
@@ -111,7 +124,7 @@ MonoBehaviour:
           definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
           presentation:
             effectId: decrease.void.resistence
-            displayName: Decrease Void Resistence
+            displayName: Damage Taken Increase
             icon: {fileID: 0}
             fieldVisualPrefab: {fileID: 0}
           policy:
@@ -119,12 +132,12 @@ MonoBehaviour:
             appliesOn: 1
             durationType: 0
             durationSeconds: 16
-            stackMode: 2
+            stackMode: 1
             stackLimit: 1
             refreshDurationOnReapply: 1
             stackable: 0
             removeOnOwnerDamaged: 0
-            stackKey: 
+            stackKey: main.skill.damage_taken
           parameters:
             overrideStatModifiers: 0
             statModifiers: []
@@ -242,6 +255,8 @@ MonoBehaviour:
       fragmentCost: 0
       unlockedByDefault: 1
     baseUltimateNode:
+      meterCapacityModifiers: []
+      counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
@@ -268,97 +283,182 @@ MonoBehaviour:
       fragmentCost: 0
       unlockedByDefault: 1
     basePassiveNode:
+      meterCapacityModifiers: []
+      counterGainModifiers: []
       statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
       runtimeEffects: []
       runtimeEffectStackLimitModifiers: []
-      counterEffects: []
+      counterEffects:
+      - trigger: 3
+        filter:
+          filterByCategory: 1
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 1
+          actionName: Ground
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+        counterId: main.shadow
+        operation: 1
+        value: 2
+        destinationCounterId: 
+        destinationValue: 1
+      - trigger: 3
+        filter:
+          filterByCategory: 1
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 1
+          actionName: Air
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+        counterId: main.shadow
+        operation: 1
+        value: 2
+        destinationCounterId: 
+        destinationValue: 1
+      - trigger: 3
+        filter:
+          filterByCategory: 1
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 1
+          stepName: Attack3
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+        counterId: main.shadow
+        operation: 1
+        value: 2
+        destinationCounterId: 
+        destinationValue: 1
+      - trigger: 3
+        filter:
+          filterByCategory: 1
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 1
+          stepName: Attack6
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+        counterId: main.shadow
+        operation: 1
+        value: 4
+        destinationCounterId: 
+        destinationValue: 1
+      - trigger: 3
+        filter:
+          filterByCategory: 1
+          category: 1
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+        counterId: main.shadow
+        operation: 1
+        value: 8
+        destinationCounterId: 
+        destinationValue: 1
+      - trigger: 3
+        filter:
+          filterByCategory: 1
+          category: 2
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+        counterId: main.shadow
+        operation: 1
+        value: 10
+        destinationCounterId: 
+        destinationValue: 1
+      - trigger: 7
+        filter:
+          filterByCategory: 0
+          category: 0
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+        counterId: main.shadow
+        operation: 4
+        value: 20
+        destinationCounterId: main.shadow.cached_cuts
+        destinationValue: 1
       conditionalStateEffects: []
       onHitStatusEffects: []
       additionalDamageEffects: []
       dashThroughDamageEffects: []
       defensiveEffects: []
-      resourceEffects:
-      - trigger: 3
-        filter:
-          filterByCategory: 1
-          category: 0
-          filterByActionId: 0
-          actionId: 
-          filterByActionName: 0
-          actionName: 
-          filterByStepName: 1
-          stepName: Attack3
-          filterByElement: 0
-          elementType: 0
-          requireRuntimeTag: 0
-          runtimeTag: 
-        requiredTags: []
-        requiredCounters: []
-        requiredRuntimeEffectStacks: []
-        requiredValues: []
-        chance: 1
-        effectType: 0
-        scope: 0
-        valueMode: 1
-        valueSource: 0
-        valueRatio: 0.15
-        flatValue: 0
-        runtimeTag: waive_next_ultimate_cost
-        runtimeTagDuration: 0
-        cooldownActionId: 
-        cooldownActionName: 
-        cooldownTag: 
-        cooldownDuration: 0
-      - trigger: 3
-        filter:
-          filterByCategory: 1
-          category: 0
-          filterByActionId: 0
-          actionId: 
-          filterByActionName: 0
-          actionName: 
-          filterByStepName: 1
-          stepName: Attack3
-          filterByElement: 0
-          elementType: 0
-          requireRuntimeTag: 0
-          runtimeTag: 
-        requiredTags: []
-        requiredCounters: []
-        requiredRuntimeEffectStacks: []
-        requiredValues: []
-        chance: 1
-        effectType: 1
-        scope: 0
-        valueMode: 0
-        valueSource: 0
-        valueRatio: 0
-        flatValue: 7
-        runtimeTag: waive_next_ultimate_cost
-        runtimeTagDuration: 0
-        cooldownActionId: 
-        cooldownActionName: 
-        cooldownTag: 
-        cooldownDuration: 0
+      resourceEffects: []
       enemyElementModifiers: []
       coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: base.passive
       nodeName: Base Passive
-      description: When hitting an enemy with Void debuff, gain stackable Elemental
-        Mastery.
-      skillPanelDescriptionOverride: When Hit an Enemy with <b><color=#8B3DFF>Void</color></b>
-        Debuff, will Increase own <b>DOT Mastery +10%</b> <color=#C0C0C0>(Stackable
-        5 times)</color></i>
+      description: Land hits to build Shadow Meter. Each committed Dash spends one
+        ready 20-point box to cache a Dimension Cut. Normal Attack spends one cached
+        cut against an enemy; continue the combo to spend the remaining cuts. Stores
+        2 meter boxes, up to 5 through Potential.
+      skillPanelDescriptionOverride: Land hits to build Shadow Meter. Each committed
+        Dash spends one ready 20-point box to cache a Dimension Cut. Normal Attack
+        spends one cached cut against an enemy; continue the combo to spend the remaining
+        cuts. Stores 2 meter boxes, up to 5 through Potential.
       track: 2
       level: 0
       fragmentCost: 0
       unlockedByDefault: 1
     potentialNodes:
-    - statModifiers: []
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
       cooldownModifiers: []
       actionModifiers:
       - category: 1
@@ -374,6 +474,8 @@ MonoBehaviour:
         requiredCounters: []
         damageMultiplierOperation: 0
         damageMultiplierValue: 0
+        criticalRateOperation: 0
+        criticalRateValue: 0
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 0
@@ -385,6 +487,7 @@ MonoBehaviour:
         energyCostOperation: 0
         energyCostValue: 0
         ignoreDefense: 0
+        ignoreDefenseRequiresCriticalHit: 0
         ignoreDamageResistance: 0
         ignoreTypeReduction: 0
         hitboxScaleMultiplier: 1
@@ -419,7 +522,9 @@ MonoBehaviour:
       level: 1
       fragmentCost: 1
       unlockedByDefault: 0
-    - statModifiers: []
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
       cooldownModifiers: []
       actionModifiers:
       - category: 1
@@ -435,6 +540,8 @@ MonoBehaviour:
         requiredCounters: []
         damageMultiplierOperation: 0
         damageMultiplierValue: 0
+        criticalRateOperation: 0
+        criticalRateValue: 0
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 0
@@ -446,6 +553,7 @@ MonoBehaviour:
         energyCostOperation: 0
         energyCostValue: 0
         ignoreDefense: 0
+        ignoreDefenseRequiresCriticalHit: 0
         ignoreDamageResistance: 0
         ignoreTypeReduction: 0
         hitboxScaleMultiplier: 1
@@ -480,7 +588,9 @@ MonoBehaviour:
       level: 2
       fragmentCost: 1
       unlockedByDefault: 0
-    - statModifiers: []
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
       cooldownModifiers: []
       actionModifiers:
       - category: 1
@@ -496,6 +606,8 @@ MonoBehaviour:
         requiredCounters: []
         damageMultiplierOperation: 3
         damageMultiplierValue: 4
+        criticalRateOperation: 0
+        criticalRateValue: 0
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 0
@@ -507,6 +619,7 @@ MonoBehaviour:
         energyCostOperation: 0
         energyCostValue: 0
         ignoreDefense: 0
+        ignoreDefenseRequiresCriticalHit: 0
         ignoreDamageResistance: 0
         ignoreTypeReduction: 0
         hitboxScaleMultiplier: 1
@@ -542,41 +655,304 @@ MonoBehaviour:
       level: 3
       fragmentCost: 1
       unlockedByDefault: 0
-    - statModifiers: []
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
       cooldownModifiers: []
-      actionModifiers:
-      - category: 1
-        actionId: main.skill.dark_chain
-        actionName: 
-        stepName: 
-        unlocked: 1
-        priorityBonus: 0
-        replacementActionId: 
-        replacementActionName: 
-        startingComboDepthOverride: 0
+      actionModifiers: []
+      runtimeTagEffects: []
+      runtimeEffects:
+      - trigger: 3
+        filter:
+          filterByCategory: 1
+          category: 1
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
         requiredTags: []
         requiredCounters: []
-        damageMultiplierOperation: 0
-        damageMultiplierValue: 0
-        criticalDamageOperation: 0
-        criticalDamageValue: 0
-        finalDamageOperation: 0
-        finalDamageValue: 0
-        finalDamageRequiresCriticalHit: 0
-        auraEnergyRewardAdd: 0
-        cooldownOperation: 0
-        cooldownValue: 0
-        energyCostOperation: 0
-        energyCostValue: 0
-        ignoreDefense: 0
-        ignoreDamageResistance: 0
-        ignoreTypeReduction: 0
-        hitboxScaleMultiplier: 1
-        projectileScaleMultiplier: 1
-        replacementProjectileType: 0
-        replacementProjectileData: {fileID: 11400000, guid: a52aedf2b9dab6f44ad3f0980de374c1, type: 2}
-      runtimeTagEffects: []
-      runtimeEffects: []
+        requiredRuntimeEffectStacks: []
+        requiredValues: []
+        chance: 1
+        rollChancePerEnemyTarget: 0
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
+        enableRandomBuffSelection: 0
+        minRandomBuffCount: 1
+        maxRandomBuffCount: 1
+        allowDuplicateRandomBuffs: 0
+        randomBuffPool: []
+        recipe:
+          recipeId: main.base.skill.effect
+          definition: {fileID: 11400000, guid: 2ea3932c157ddb041bb2ee47a8c6ee5b, type: 2}
+          presentation:
+            effectId: decrease.void.resistence
+            displayName: Damage Taken Increase
+            icon: {fileID: 0}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 1
+            appliesOn: 1
+            durationType: 0
+            durationSeconds: 16
+            stackMode: 1
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: main.skill.damage_taken
+          parameters:
+            overrideStatModifiers: 0
+            statModifiers: []
+            overrideDamageModifier: 1
+            damageModifier:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 40
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreTypeReduction: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              valueSource: 0
+              valueRatio: 0
+              flatValue: 0
+              useSourceStats: 0
+              tickInterval: 0
+            overrideHeal: 0
+            heal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0
+              lowHpThreshold: 0
+              lowHpMultiplier: 0
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              chance: 0
+              internalCooldown: 0
+              attackRatio: 0
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              sourceRuntimeEffectStackKey: 
+              attackRatioPerSourceRuntimeEffectStack: 0
+              maxSourceRuntimeEffectStacks: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 0
+              targetMaxHpDamageCapRatio: 0
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 0
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+          childRecipes: []
+        applicationMode: 0
+        applicationCount: 1
+        effect: {fileID: 0}
+        scope: 0
+        stackMode: 0
+        stackLimit: 0
+        refreshDurationOnReapply: 0
+        durationOverride: 0
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
+      - trigger: 3
+        filter:
+          filterByCategory: 1
+          category: 1
+          filterByActionId: 0
+          actionId: 
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+        requiredTags: []
+        requiredCounters: []
+        requiredRuntimeEffectStacks: []
+        requiredValues: []
+        chance: 1
+        rollChancePerEnemyTarget: 0
+        enemyTargetSource: 0
+        enemyTargetRuntimeTag: 
+        consumeRuntimeTagOnApply: 0
+        enableRandomBuffSelection: 0
+        minRandomBuffCount: 1
+        maxRandomBuffCount: 1
+        allowDuplicateRandomBuffs: 0
+        randomBuffPool: []
+        recipe:
+          recipeId: main.skill.team_crit
+          definition: {fileID: 11400000, guid: a0a8fe17b9576df46a3d0f58f192a0cf, type: 2}
+          presentation:
+            effectId: main.skill.team_crit
+            displayName: Critical Rate Increase
+            icon: {fileID: 0}
+            fieldVisualPrefab: {fileID: 0}
+          policy:
+            kind: 0
+            appliesOn: 2
+            durationType: 0
+            durationSeconds: 7
+            stackMode: 1
+            stackLimit: 1
+            refreshDurationOnReapply: 1
+            stackable: 0
+            removeOnOwnerDamaged: 0
+            stackKey: main.skill.team_crit
+          parameters:
+            overrideStatModifiers: 1
+            statModifiers:
+            - target: 5
+              operation: 0
+              sourceStat: 1
+              statRatioValueSource: 0
+              value: 15
+            overrideDamageModifier: 0
+            damageModifier:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              outgoingDamagePercentAdd: 0
+              incomingDamageTakenPercentAdd: 0
+            overrideDamageInput: 0
+            damageInput:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              defenderDefensePercentAdd: 0
+              defenderDamageResistancePercentAdd: 0
+              ignoreDefense: 0
+              ignoreDamageResistance: 0
+              ignoreTypeReduction: 0
+            overridePeriodicHeal: 0
+            periodicHeal:
+              valueSource: 0
+              valueRatio: 0
+              flatValue: 0
+              useSourceStats: 0
+              tickInterval: 0
+            overrideHeal: 0
+            heal:
+              valueSource: 1
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+            overrideLifesteal: 0
+            lifesteal:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              damageDealtRatio: 0
+              lowHpThreshold: 0
+              lowHpMultiplier: 0
+            overrideAdditionalDamage: 0
+            additionalDamage:
+              filter:
+                filterByDelivery: 0
+                delivery: 0
+                filterByElement: 0
+                elementType: 0
+                filterByCategory: 0
+                category: 0
+              chance: 0
+              internalCooldown: 0
+              attackRatio: 0
+              sourceStatDamageSource: 0
+              sourceStatRatio: 0
+              targetMaxHpRatio: 0
+              sourceRuntimeEffectStackKey: 
+              attackRatioPerSourceRuntimeEffectStack: 0
+              maxSourceRuntimeEffectStacks: 0
+              capTargetMaxHpDamage: 0
+              targetMaxHpDamageCapSource: 0
+              targetMaxHpDamageCapRatio: 0
+              elementType: 0
+            overrideStatus: 0
+            status:
+              status: 0
+            overrideShield: 0
+            shield:
+              valueSource: 0
+              valueRatio: 0.1
+              flatValue: 0
+              useSourceStats: 1
+          childRecipes: []
+        applicationMode: 0
+        applicationCount: 1
+        effect: {fileID: 0}
+        scope: 0
+        stackMode: 0
+        stackLimit: 0
+        refreshDurationOnReapply: 0
+        durationOverride: 0
+        overrideSourceCharacter: 0
+        sourceCharacterId: 
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
       conditionalStateEffects: []
@@ -589,25 +965,19 @@ MonoBehaviour:
       coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.skill.lv4
-      nodeName: Chain Magnetism
-      description: Projectile will gain little magnetism to pull enemy in
-      skillPanelDescriptionOverride: 'Unleash a chain across the field hit <b><color=#FFA500>7</color></b>
-        times, Inflict <b><color=#8B3DFF>Void</color></b> DMG <b><color=#FFA500>400%</color></b>
-        of ATK, <b><color=#C0C0C0>Decrease Enemy <color=#8B3DFF>Void</color> DMG
-        Resistance -15%</b> for 16 seconds</color>
-
-
-
-        <size=20><color=#C0C0C0>-
-        Increase AE Reward gain by 5</color></size>
-
-        <size=20><color=#C0C0C0>-
-        Projectile will gain little magnetism to pull enemy in</color></size>'
+      nodeName: Exposed Dimension
+      description: Skill hits increase enemy damage taken to 40% and grant all allies
+        +15% CRIT RATE for 7 seconds.
+      skillPanelDescriptionOverride: Dark Chain hits 7 times at 400% of ATK. Enemies
+        take 40% increased damage for 16 seconds. Successful Skill hits grant all
+        allies +15% CRIT RATE for 7 seconds. AE reward +5.
       track: 0
       level: 4
       fragmentCost: 1
       unlockedByDefault: 0
-    - statModifiers: []
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects:
@@ -625,6 +995,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         tag: main.void_area
         addTag: 1
         duration: 20
@@ -653,7 +1024,9 @@ MonoBehaviour:
       level: 1
       fragmentCost: 1
       unlockedByDefault: 0
-    - statModifiers: []
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
@@ -672,6 +1045,7 @@ MonoBehaviour:
           elementType: 0
           requireRuntimeTag: 0
           runtimeTag: 
+          requireManualOnFieldActionStart: 0
         requiredTags: []
         requiredCounters: []
         requiredRuntimeEffectStacks: []
@@ -831,7 +1205,9 @@ MonoBehaviour:
       level: 2
       fragmentCost: 1
       unlockedByDefault: 0
-    - statModifiers: []
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
       cooldownModifiers: []
       actionModifiers:
       - category: 2
@@ -847,6 +1223,8 @@ MonoBehaviour:
         requiredCounters: []
         damageMultiplierOperation: 0
         damageMultiplierValue: 0
+        criticalRateOperation: 0
+        criticalRateValue: 0
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 0
@@ -858,6 +1236,7 @@ MonoBehaviour:
         energyCostOperation: 0
         energyCostValue: 0
         ignoreDefense: 0
+        ignoreDefenseRequiresCriticalHit: 0
         ignoreDamageResistance: 0
         ignoreTypeReduction: 0
         hitboxScaleMultiplier: 1
@@ -891,7 +1270,9 @@ MonoBehaviour:
       level: 3
       fragmentCost: 1
       unlockedByDefault: 0
-    - statModifiers: []
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
       cooldownModifiers: []
       actionModifiers:
       - category: 2
@@ -907,6 +1288,8 @@ MonoBehaviour:
         requiredCounters: []
         damageMultiplierOperation: 0
         damageMultiplierValue: 0
+        criticalRateOperation: 0
+        criticalRateValue: 0
         criticalDamageOperation: 0
         criticalDamageValue: 0
         finalDamageOperation: 0
@@ -918,6 +1301,7 @@ MonoBehaviour:
         energyCostOperation: 0
         energyCostValue: 0
         ignoreDefense: 0
+        ignoreDefenseRequiresCriticalHit: 0
         ignoreDamageResistance: 0
         ignoreTypeReduction: 0
         hitboxScaleMultiplier: 1
@@ -951,9 +1335,46 @@ MonoBehaviour:
       level: 4
       fragmentCost: 1
       unlockedByDefault: 0
-    - statModifiers: []
+    - meterCapacityModifiers:
+      - counterId: main.shadow
+        additionalBoxes: 1
+      counterGainModifiers: []
+      statModifiers: []
       cooldownModifiers: []
-      actionModifiers: []
+      actionModifiers:
+      - category: 0
+        actionId: main.dash.dimension_cut
+        actionName: 
+        stepName: 
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags: []
+        requiredCounters: []
+        damageMultiplierOperation: 0
+        damageMultiplierValue: 0
+        criticalRateOperation: 1
+        criticalRateValue: 15
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        ignoreDefense: 1
+        ignoreDefenseRequiresCriticalHit: 1
+        ignoreDamageResistance: 0
+        ignoreTypeReduction: 0
+        hitboxScaleMultiplier: 1
+        projectileScaleMultiplier: 1
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
       runtimeEffects: []
       runtimeEffectStackLimitModifiers: []
@@ -968,22 +1389,20 @@ MonoBehaviour:
       coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.passive.lv1
-      nodeName: Void Area Tempo
-      description: While self is inside Void Area, own Movement Speed increases by
-        1
-      skillPanelDescriptionOverride: 'When Hit an Enemy with <b><color=#8B3DFF>Void</color></b>
-        Debuff, will Increase own <b>DOT Mastery +10%</b> <color=#C0C0C0>(Stackable
-        5 times)</color></i>
-
-
-
-        <size=20><color=#C0C0C0>- While Self within
-        <color=#8B3DFF>Void Area</color>, Own <b>Movement Speed Increase</b> +1</color></size>'
+      nodeName: Shadow Edge
+      description: Shadow Meter capacity +1. Dimension Cut gains +15% CRIT RATE and
+        its critical hits ignore enemy Defense.
+      skillPanelDescriptionOverride: Successful hits build Shadow Meter. Dash spends
+        a full box to cache Dimension Cut; Normal Attack spends cached cuts. Stores
+        3 boxes. Dimension Cut has +15% CRIT RATE; its critical hits ignore enemy
+        Defense.
       track: 2
       level: 1
       fragmentCost: 1
       unlockedByDefault: 0
-    - statModifiers: []
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
@@ -1001,23 +1420,18 @@ MonoBehaviour:
       passiveHookTypeName: 
       nodeId: main.passive.lv2
       nodeName: Chain Release
-      description: Unlock State 4-6 of Basic Attack.
-      skillPanelDescriptionOverride: 'When Hit an Enemy with <b><color=#8B3DFF>Void</color></b>
-        Debuff, will Increase own <b>DOT Mastery +10%</b> <color=#C0C0C0>(Stackable
-        5 times)</color></i>
-
-
-
-        <size=20><color=#C0C0C0>- While Self within
-        <color=#8B3DFF>Void Area</color>, Own <b>Movement Speed Increase</b> +1</color></size>
-
-        <size=20><color=#C0C0C0>-
-        Unlock the Basic Attack <i>State 4 - 6</i></color></size>'
+      description: Shadow Meter stores 3 boxes. Unlock Basic Attack stages 4-6.
+      skillPanelDescriptionOverride: Successful hits build Shadow Meter. Dash spends
+        a full box to cache Dimension Cut; Normal Attack spends cached cuts. Stores
+        3 boxes. Dimension Cut has +15% CRIT RATE; its critical hits ignore enemy
+        Defense. Unlocks NA 4-6.
       track: 2
       level: 2
       fragmentCost: 1
       unlockedByDefault: 0
-    - statModifiers: []
+    - meterCapacityModifiers: []
+      counterGainModifiers: []
+      statModifiers: []
       cooldownModifiers: []
       actionModifiers: []
       runtimeTagEffects: []
@@ -1029,39 +1443,254 @@ MonoBehaviour:
       additionalDamageEffects: []
       dashThroughDamageEffects: []
       defensiveEffects: []
-      resourceEffects: []
+      resourceEffects:
+      - trigger: 3
+        filter:
+          filterByCategory: 1
+          category: 0
+          filterByActionId: 1
+          actionId: main.dash.dimension_cut
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+        requiredTags: []
+        requiredCounters: []
+        requiredRuntimeEffectStacks: []
+        requiredValues: []
+        chance: 1
+        effectType: 0
+        scope: 0
+        valueMode: 1
+        valueSource: 0
+        valueRatio: 0.08
+        flatValue: 0
+        runtimeTag: waive_next_ultimate_cost
+        runtimeTagDuration: 0
+        cooldownActionId: 
+        cooldownActionName: 
+        cooldownTag: 
+        cooldownDuration: 0
       enemyElementModifiers: []
       coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.passive.lv3
-      nodeName: Void Area Formation
-      description: Allies inside Void Area gain DOT Mastery +20.
-      skillPanelDescriptionOverride: 'When Hit an Enemy with <b><color=#8B3DFF>Void</color></b>
-        Debuff, will Increase own <b>DOT Mastery +10%</b> <color=#C0C0C0>(Stackable
-        5 times)</color></i>
-
-
-
-        <size=20><color=#C0C0C0>- While Self within
-        <color=#8B3DFF>Void Area</color>, Own <b>Movement Speed Increase</b> +1</color></size>
-
-        <size=20><color=#C0C0C0>-
-        Unlock the Basic Attack <i>State 4 - 6</i></color></size>
-
-        <size=20><color=#C0C0C0>-
-        Allies inside <color=#8B3DFF>Void Area</color> gain <b>DOT Mastery +20%</b></color></size>'
+      nodeName: Shadow Restoration
+      description: Dimension Cut heals Main for 8% of its damage dealt.
+      skillPanelDescriptionOverride: Successful hits build Shadow Meter. Dash spends
+        a full box to cache Dimension Cut; Normal Attack spends cached cuts. Stores
+        3 boxes. Dimension Cut has +15% CRIT RATE; its critical hits ignore enemy
+        Defense. Unlocks NA 4-6. Dimension Cut heals Main for 8% of damage dealt.
       track: 2
       level: 3
       fragmentCost: 1
       unlockedByDefault: 0
-    - statModifiers: []
+    - meterCapacityModifiers:
+      - counterId: main.shadow
+        additionalBoxes: 2
+      counterGainModifiers:
+      - counterId: main.shadow
+        multiplier: 2
+        requiredRuntimeEffectStacks:
+        - effectIdOrStackKey: main.void_area.shadow_gain
+          comparison: 3
+          value: 1
+      statModifiers: []
       cooldownModifiers: []
-      actionModifiers: []
+      actionModifiers:
+      - category: 1
+        actionId: main.skill.dimension_slash
+        actionName: 
+        stepName: 
+        unlocked: 1
+        priorityBonus: 0
+        replacementActionId: 
+        replacementActionName: 
+        startingComboDepthOverride: 0
+        requiredTags:
+        - tag: main.dimension_slash.ready
+          expectedValue: 1
+        requiredCounters: []
+        damageMultiplierOperation: 0
+        damageMultiplierValue: 0
+        criticalRateOperation: 0
+        criticalRateValue: 0
+        criticalDamageOperation: 0
+        criticalDamageValue: 0
+        finalDamageOperation: 0
+        finalDamageValue: 0
+        finalDamageRequiresCriticalHit: 0
+        auraEnergyRewardAdd: 0
+        cooldownOperation: 0
+        cooldownValue: 0
+        energyCostOperation: 0
+        energyCostValue: 0
+        ignoreDefense: 0
+        ignoreDefenseRequiresCriticalHit: 0
+        ignoreDamageResistance: 0
+        ignoreTypeReduction: 0
+        hitboxScaleMultiplier: 1
+        projectileScaleMultiplier: 1
+        replacementProjectileType: 0
+        replacementProjectileData: {fileID: 0}
       runtimeTagEffects: []
       runtimeEffects: []
       runtimeEffectStackLimitModifiers: []
       counterEffects: []
-      conditionalStateEffects: []
+      conditionalStateEffects:
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 0
+          filterByActionId: 1
+          actionId: main.dash.dimension_cut
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 1
+          stepName: DimensionCut
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 1
+        requiredTags:
+        - tag: main.dimension_slash.ready
+          expectedValue: 0
+        requiredCounters: []
+        requiredRuntimeEffectStacks: []
+        requiredValues: []
+        runtimeTagEffects: []
+        counterEffects:
+        - trigger: 1
+          filter:
+            filterByCategory: 0
+            category: 0
+            filterByActionId: 0
+            actionId: 
+            filterByActionName: 0
+            actionName: 
+            filterByStepName: 0
+            stepName: 
+            filterByElement: 0
+            elementType: 0
+            requireRuntimeTag: 0
+            runtimeTag: 
+            requireManualOnFieldActionStart: 0
+          counterId: main.dimension_slash.cut_count
+          operation: 1
+          value: 1
+          destinationCounterId: 
+          destinationValue: 1
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 0
+          filterByActionId: 1
+          actionId: main.dash.dimension_cut
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 1
+          stepName: DimensionCut
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 1
+        requiredTags:
+        - tag: main.dimension_slash.ready
+          expectedValue: 0
+        requiredCounters:
+        - counterId: main.dimension_slash.cut_count
+          comparison: 3
+          value: 5
+        requiredRuntimeEffectStacks: []
+        requiredValues: []
+        runtimeTagEffects:
+        - trigger: 1
+          filter:
+            filterByCategory: 0
+            category: 0
+            filterByActionId: 0
+            actionId: 
+            filterByActionName: 0
+            actionName: 
+            filterByStepName: 0
+            stepName: 
+            filterByElement: 0
+            elementType: 0
+            requireRuntimeTag: 0
+            runtimeTag: 
+            requireManualOnFieldActionStart: 0
+          tag: main.dimension_slash.ready
+          addTag: 1
+          duration: 1.5
+          rememberEnemyTarget: 0
+        counterEffects:
+        - trigger: 1
+          filter:
+            filterByCategory: 0
+            category: 0
+            filterByActionId: 0
+            actionId: 
+            filterByActionName: 0
+            actionName: 
+            filterByStepName: 0
+            stepName: 
+            filterByElement: 0
+            elementType: 0
+            requireRuntimeTag: 0
+            runtimeTag: 
+            requireManualOnFieldActionStart: 0
+          counterId: main.dimension_slash.cut_count
+          operation: 3
+          value: 0
+          destinationCounterId: 
+          destinationValue: 1
+      - trigger: 1
+        filter:
+          filterByCategory: 1
+          category: 1
+          filterByActionId: 1
+          actionId: main.skill.dimension_slash
+          filterByActionName: 0
+          actionName: 
+          filterByStepName: 0
+          stepName: 
+          filterByElement: 0
+          elementType: 0
+          requireRuntimeTag: 0
+          runtimeTag: 
+          requireManualOnFieldActionStart: 0
+        requiredTags: []
+        requiredCounters: []
+        requiredRuntimeEffectStacks: []
+        requiredValues: []
+        runtimeTagEffects:
+        - trigger: 1
+          filter:
+            filterByCategory: 0
+            category: 0
+            filterByActionId: 0
+            actionId: 
+            filterByActionName: 0
+            actionName: 
+            filterByStepName: 0
+            stepName: 
+            filterByElement: 0
+            elementType: 0
+            requireRuntimeTag: 0
+            runtimeTag: 
+            requireManualOnFieldActionStart: 0
+          tag: main.dimension_slash.ready
+          addTag: 0
+          duration: 0
+          rememberEnemyTarget: 0
+        counterEffects: []
       onHitStatusEffects: []
       additionalDamageEffects: []
       dashThroughDamageEffects: []
@@ -1071,27 +1700,26 @@ MonoBehaviour:
       coordinatedActionEffects: []
       passiveHookTypeName: 
       nodeId: main.passive.lv4
-      nodeName: Void Slow
-      description: Enemies inside Void Area are slowed by 30% via SlowAction status.
-      skillPanelDescriptionOverride: 'When Hit an Enemy with <b><color=#8B3DFF>Void</color></b>
-        Debuff, will Increase own <b>DOT Mastery +10%</b> <color=#C0C0C0>(Stackable
-        5 times)</color></i>
-
-
-
-        <size=20><color=#C0C0C0>- While Self within
-        <color=#8B3DFF>Void Area</color>, Own <b>Movement Speed Increase</b> +1</color></size>
-
-        <size=20><color=#C0C0C0>-
-        Unlock the Basic Attack <i>State 4 - 6</i></color></size>
-
-        <size=20><color=#C0C0C0>-
-        Allies inside <color=#8B3DFF>Void Area</color> gain <b>DOT Mastery +20%</b></color></size>
-
-        <size=20><color=#C0C0C0>-
-        Enemies inside <color=#8B3DFF>Void Area</color> are Slowed by -30%</color></size>'
+      nodeName: Shadow Domain
+      description: Shadow Meter capacity +2, reaching 5 boxes. Main gains 2x Shadow
+        Meter while inside Void Area. Perform 5 paid Dimension Cuts to open a 1.5s
+        Skill follow-up for Dimension Slash.
+      skillPanelDescriptionOverride: Successful hits build Shadow Meter. Dash spends
+        a full box to cache Dimension Cut; Normal Attack spends cached cuts. Stores
+        5 boxes. Dimension Cut has +15% CRIT RATE; its critical hits ignore enemy
+        Defense. Unlocks NA 4-6. Dimension Cut heals Main for 8% of damage dealt.
+        Shadow Meter gain is doubled while Main is inside Void Area. Perform 5 paid
+        Dimension Cuts to open a 1.5s Skill follow-up for Dimension Slash.
       track: 2
       level: 4
       fragmentCost: 1
       unlockedByDefault: 0
+  qteSwap:
+    enabled: 1
+    triggerActionIds:
+    - main.dash.dimension_cut
+    introActionKey: main.dash.dimension_cut
+    introStepName: DimensionCut
+    entryOffset: 3
+    readySfx: {fileID: 8300000, guid: 593a0d385b8e842458eec6a9c0b82630, type: 3}
   actionResolverTable: {fileID: 11400000, guid: 1c5e68805e1f0064d92ecf2652b00e2c, type: 2}
