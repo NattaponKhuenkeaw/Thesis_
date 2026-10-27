@@ -332,9 +332,9 @@ public class BossHealthHUDTests
         finally { Object.DestroyImmediate(root); Object.DestroyImmediate(host); }
     }
 
-    [TestCase("Enm101/Enemy1.prefab",750f)]
-    [TestCase("Enm102/Enemy102.prefab",300f)]
-    [TestCase("Enm103/Enemy103.prefab",900f)]
+    [TestCase("Enm101/Enemy1.prefab",637.5f)]
+    [TestCase("Enm102/Enemy102.prefab",255f)]
+    [TestCase("Enm103/Enemy103.prefab",765f)]
     public void NormalEnemyHealthTuningIsSavedOnTheIndividualPrefab(string path,float hp)
     {
         var enemy = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Character/enemy/enemy/"+path).GetComponent<EnemyController>();
