@@ -13,6 +13,34 @@ using Object=UnityEngine.Object;
 public class LevelDesignSpawnTests
 {
     [TestCase(1)] [TestCase(2)] [TestCase(3)] [TestCase(4)] [TestCase(5)]
+    public void EntrySensorsCoverAirborneCrossingsWithoutMovingTheAuthoredFloorOrSpawnSlots(int level)
+    {
+        var root=PrefabUtility.LoadPrefabContents($"{LevelDesignLayoutBuilder.LayoutFolder}/RoomLayout_LV_{level:00}.prefab");
+        try
+        {
+            var stage=root.GetComponentInChildren<CombatStageController>();
+            var first=root.GetComponentInChildren<RoomWaveManager>().GetComponent<BoxCollider2D>();
+            var ceiling=root.transform.Find("Boundaries/Ceiling").GetComponent<BoxCollider2D>();
+            var plan=LevelDesignLayoutBuilder.GetPlan(level);
+            var rooms=LevelDesignSpawnBuilder.Rooms(level);
+            Physics2D.SyncTransforms();
+            for (int i=0;i<stage.ChamberCount;i++)
+            {
+                var sensor=i==0 ? first : (BoxCollider2D)stage.Chambers[i].enterTrigger;
+                Vector2 entry=LevelDesignLayoutBuilder.ToWorld(plan,rooms[i].entry);
+                Assert.That(sensor.isTrigger,Is.True);
+                Assert.That(sensor.size.x,Is.EqualTo(1.6f));
+                Assert.That(sensor.bounds.min.y,Is.EqualTo(entry.y).Within(.001f));
+                Assert.That(sensor.bounds.max.y,Is.EqualTo(ceiling.bounds.min.y).Within(.001f));
+                Assert.That(sensor.transform.position.x,Is.EqualTo(entry.x).Within(.001f));
+                Assert.That(sensor.OverlapPoint(entry+Vector2.up*7f),Is.True,$"LV{level} Room{i+1} airborne entry");
+                Assert.That(sensor.OverlapPoint(entry-Vector2.up*.1f),Is.False,"Do not extend the trigger into the lower route.");
+            }
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    [TestCase(1)] [TestCase(2)] [TestCase(3)] [TestCase(4)] [TestCase(5)]
     public void StageExitIsFlushWithTheMapEdgeAndReachableBeforeTheWall(int level)
     {
         var root=PrefabUtility.LoadPrefabContents($"{LevelDesignLayoutBuilder.LayoutFolder}/RoomLayout_LV_{level:00}.prefab");
@@ -89,7 +117,8 @@ public class LevelDesignSpawnTests
                 player.tag="Player"; player.layer=LayerMask.NameToLayer("Player");
                 var body=player.AddComponent<Rigidbody2D>(); body.bodyType=RigidbodyType2D.Kinematic;
                 var box=player.AddComponent<BoxCollider2D>(); box.size=new Vector2(1.55f,2.6f);
-                body.position=root.GetComponentInChildren<RoomWaveManager>().transform.position;
+                var start=root.GetComponentInChildren<RoomWaveManager>().GetComponent<Collider2D>();
+                body.position=new Vector2(start.bounds.center.x,start.bounds.min.y+7f);
                 for (int room=0;room<stage.ChamberCount;room++)
                 {
                     float deadline=Time.realtimeSinceStartup+5f;
@@ -111,7 +140,8 @@ public class LevelDesignSpawnTests
                     Assert.That(defeated,Is.EqualTo(4),$"LV{level} Room{room+1} must exhaust its difficulty quota");
                     Assert.That(waiting.GetValue(stage),Is.EqualTo(room+1));
                     Assert.That(stage.Chambers[room].exitWall.isTrigger,Is.True);
-                    body.position=stage.Chambers[room+1].enterTrigger.transform.position;
+                    var next=stage.Chambers[room+1].enterTrigger.bounds;
+                    body.position=new Vector2(next.center.x,next.min.y+7f);
                     Physics2D.SyncTransforms();
                     yield return new WaitForFixedUpdate();
                 }

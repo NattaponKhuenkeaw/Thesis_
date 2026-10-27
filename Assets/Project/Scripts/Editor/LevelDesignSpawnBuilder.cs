@@ -160,6 +160,39 @@ public static class LevelDesignSpawnBuilder
             data.ApplyModifiedPropertiesWithoutUndo();
         }
         ConfigureExit(root,plan);
+        ResizeEntranceSensors(root);
+    }
+
+    public static void ResizeEntranceSensors(GameObject root)
+    {
+        var ceiling=root.transform.Find("Boundaries/Ceiling").GetComponent<BoxCollider2D>();
+        var stage=root.GetComponentInChildren<CombatStageController>(true);
+        var first=root.GetComponentInChildren<RoomWaveManager>(true).GetComponent<BoxCollider2D>();
+        Physics2D.SyncTransforms();
+        foreach (var sensor in stage.Chambers.Select(c=>c.enterTrigger as BoxCollider2D)
+            .Append(first).Where(c=>c!=null).Distinct())
+        {
+            // Keep the authored floor and horizontal crossing; cover airborne entries up to the ceiling.
+            float bottom=sensor.offset.y-sensor.size.y*.5f;
+            float top=sensor.transform.InverseTransformPoint(new Vector3(sensor.bounds.center.x,ceiling.bounds.min.y,0)).y;
+            float height=Mathf.Max(2.8f,top-bottom);
+            sensor.size=new Vector2(sensor.size.x,height);
+            sensor.offset=new Vector2(sensor.offset.x,bottom+height*.5f);
+        }
+    }
+
+    [MenuItem("Tools/Project/Level Design/Extend LV Entry Triggers To Ceiling")]
+    public static void ExtendAllEntryTriggers()
+    {
+        if (EditorApplication.isPlaying) throw new InvalidOperationException("Stop Play Mode first.");
+        for (int level=1;level<=5;level++)
+        {
+            string path=$"{LevelDesignLayoutBuilder.LayoutFolder}/RoomLayout_LV_{level:00}.prefab";
+            var root=PrefabUtility.LoadPrefabContents(path);
+            try { ResizeEntranceSensors(root); PrefabUtility.SaveAsPrefabAsset(root,path); }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
+        }
+        AssetDatabase.SaveAssets();
     }
 
     [MenuItem("Tools/Project/Level Design/Align LV Exits To Map Edge")]
