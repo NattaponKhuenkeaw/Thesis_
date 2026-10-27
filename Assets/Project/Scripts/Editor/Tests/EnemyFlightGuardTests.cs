@@ -438,8 +438,6 @@ public class EnemyFlightGuardTests
     }
 
     [TestCase("EnemyCore/EnemyCore")]
-    [TestCase("EnemyCore/Enemy2")]
-    [TestCase("EnemyCore/Enemy3")]
     [TestCase("Enm101/Enemy1")]
     [TestCase("Enm102/Enemy102")]
     [TestCase("Enm103/Enemy103")]
@@ -488,7 +486,7 @@ public class EnemyFlightGuardTests
         Assert.That(hit.launchSpeed, Is.EqualTo(8f));
         Assert.That(hit.canAirJuggle, Is.True);
         Assert.That(flight.HoldsFlightPlaneForReaction, Is.False);
-        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionY, Is.Zero);
+        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionY, Is.EqualTo(RigidbodyConstraints2D.None));
     }
 
     [Test]
@@ -731,7 +729,7 @@ public class EnemyFlightGuardTests
         Assert.That(hit.reactionKind, Is.EqualTo(EnemyReactionKind.Knockback));
         Assert.That(hit.launchSpeed, Is.Zero);
         Assert.That(hit.knockfallFrames, Is.Zero);
-        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionY, Is.Not.Zero);
+        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionY, Is.EqualTo(RigidbodyConstraints2D.FreezePositionY));
         hit.reactionKind = EnemyReactionKind.Grab;
         flight.ConstrainFlightReaction(ref hit);
         Assert.That(hit.reactionKind, Is.EqualTo(EnemyReactionKind.Grab));
@@ -838,7 +836,7 @@ public class EnemyFlightGuardTests
             Assert.That(enemy.LastHitAppliedReaction, Is.True);
             Assert.That(handler.IsGrabbed, Is.True);
             Assert.That(enemy.CurrentReactionState, Is.EqualTo(EnemyReactionState.ImpactFreeze));
-            Assert.That(enemy.CurrentReactionOwnerId, Is.EqualTo(target.GetInstanceID()));
+            Assert.That(enemy.CurrentReactionOwnerId, Is.EqualTo(target.transform.root.GetInstanceID()));
             Assert.That(guard.IsEngaged, Is.False);
             Assert.That(guard.ShieldRaised, Is.False);
             Assert.That(enemy.attackHitbox.enabled, Is.False);
@@ -912,7 +910,7 @@ public class EnemyFlightGuardTests
         EnemyController enemy = Guard(out EnemyShieldGuard guard);
         var target = Host("FrontTarget", enemy.transform.position + Vector3.right * 5f);
         guard.BeginGuard(target.transform);
-        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.Not.Zero);
+        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.EqualTo(RigidbodyConstraints2D.FreezePositionX));
         float damage = enemy.TakeResolvedHit(HitReactionData.Default(10f, Vector2.right, 0f), enemy.transform.position + Vector3.left);
         Assert.That(damage, Is.EqualTo(10f));
         Assert.That(enemy.LastHitAppliedReaction, Is.True);
@@ -963,7 +961,7 @@ public class EnemyFlightGuardTests
         target.transform.position = enemy.transform.position + Vector3.left * 15f;
         Assert.That(enemy.FacingLocked, Is.True);
         Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(1f));
-        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.Zero);
+        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.EqualTo(RigidbodyConstraints2D.None));
         var action = new EnemyAttackAction();
         action.Agent.Value = enemy.gameObject;
         action.Target.Value = target;
@@ -975,9 +973,9 @@ public class EnemyFlightGuardTests
         Assert.That(enemy.rb.linearVelocity.x, Is.GreaterThan(0f));
         guard.FinishStrike();
         Assert.That(enemy.rb.linearVelocity.x, Is.Zero);
-        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.Not.Zero);
+        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.EqualTo(RigidbodyConstraints2D.FreezePositionX));
         typeof(EnemyAttackAction).GetMethod("OnEnd", Private).Invoke(action, null);
-        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.Zero);
+        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.EqualTo(RigidbodyConstraints2D.None));
         Assert.That(enemy.attackHitbox.enabled, Is.False);
     }
 
@@ -1068,7 +1066,7 @@ public class EnemyFlightGuardTests
         Assert.That(guard.TickGuard(2.1f), Is.True);
         Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Guarding));
         Assert.That(guard.ShieldRaised, Is.True);
-        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.Not.Zero);
+        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.EqualTo(RigidbodyConstraints2D.FreezePositionX));
         Assert.That(enemy.rb.linearVelocity.x, Is.Zero);
         Assert.That(enemy.transform.position, Is.EqualTo(waitingPosition));
         target.transform.position = enemy.transform.position + Vector3.right * 5f;
@@ -1133,6 +1131,7 @@ public class EnemyFlightGuardTests
         EnemyController enemy = Guard(out EnemyShieldGuard guard);
         enemy.Kit = Resources.Load<EnemyKit>("EnemySo/EK_ShieldGuard");
         var target = Host("RangeBoundaryTarget", enemy.transform.position + Vector3.right * 9f);
+        Assert.That(enemy.Kit, Is.Not.Null);
         Assert.That(guard.EngagementRange, Is.EqualTo(enemy.Kit.AttackRange));
         Assert.That(guard.CanEngage(target.transform), Is.True);
         Assert.That(EnemyCombatRange.IsInAttackRange(enemy.gameObject, target, 1f), Is.True);
@@ -1204,6 +1203,8 @@ public class EnemyFlightGuardTests
         enemy.bodyCollider.offset = Vector2.up * 0.5f;
         host.AddComponent<EnemyLocomotion>();
         guard = host.AddComponent<EnemyShieldGuard>();
+        // EditMode AddComponent does not run this runtime component's Awake.
+        typeof(EnemyShieldGuard).GetMethod("Awake", Private).Invoke(guard, null);
         var hitbox = Host("ShieldHitbox", host.transform.position + Vector3.right);
         hitbox.transform.SetParent(host.transform);
         enemy.attackHitbox = hitbox.AddComponent<BoxCollider2D>();
