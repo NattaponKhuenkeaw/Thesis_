@@ -260,7 +260,7 @@ public class UIFeedbackDriver : MonoBehaviour
         float elapsed = 0f;
         canvasGroup.alpha = startAlpha;
 
-        while (elapsed < resolvedDuration)
+        while (canvasGroup != null && elapsed < resolvedDuration)
         {
             elapsed += Time.unscaledDeltaTime;
             float t = Mathf.Clamp01(elapsed / resolvedDuration);
@@ -268,11 +268,12 @@ public class UIFeedbackDriver : MonoBehaviour
             yield return null;
         }
 
+        if (canvasGroup == null) yield break;
         canvasGroup.alpha = targetAlpha;
         onComplete?.Invoke();
     }
 
-    public Coroutine PlaySlide(RectTransform target, Vector2 startPos, Vector2 endPos, float duration = 0.25f, System.Action onComplete = null)
+    public Coroutine PlaySlide(RectTransform target, Vector2 startPos, Vector2 endPos, float duration = 0.25f, System.Action onComplete = null, bool snapToPixels = false)
     {
         if (target == null || !isActiveAndEnabled)
         {
@@ -280,24 +281,27 @@ public class UIFeedbackDriver : MonoBehaviour
             return null;
         }
 
-        return StartCoroutine(SlideRoutine(target, startPos, endPos, duration, onComplete));
+        return StartCoroutine(SlideRoutine(target, startPos, endPos, duration, onComplete, snapToPixels));
     }
 
-    private IEnumerator SlideRoutine(RectTransform target, Vector2 startPos, Vector2 endPos, float duration, System.Action onComplete)
+    private IEnumerator SlideRoutine(RectTransform target, Vector2 startPos, Vector2 endPos, float duration, System.Action onComplete, bool snapToPixels)
     {
         float resolvedDuration = Mathf.Max(0.01f, duration);
         float elapsed = 0f;
         target.anchoredPosition = startPos;
 
-        while (elapsed < resolvedDuration)
+        while (target != null && elapsed < resolvedDuration)
         {
             elapsed += Time.unscaledDeltaTime;
             float t = Mathf.Clamp01(elapsed / resolvedDuration);
             float eased = 1f - Mathf.Pow(1f - t, 3f);
-            target.anchoredPosition = Vector2.Lerp(startPos, endPos, eased);
+            Vector2 offset = Vector2.Lerp(startPos, endPos, eased) - endPos;
+            if (snapToPixels) offset = new Vector2(Mathf.Round(offset.x), Mathf.Round(offset.y));
+            target.anchoredPosition = endPos + offset;
             yield return null;
         }
 
+        if (target == null) yield break;
         target.anchoredPosition = endPos;
         onComplete?.Invoke();
     }

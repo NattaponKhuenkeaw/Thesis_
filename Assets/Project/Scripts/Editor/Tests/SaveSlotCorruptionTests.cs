@@ -24,6 +24,7 @@ public class SaveSlotCorruptionTests
         BackupString(LegacyBossRun);
         BackupString("project.player_meta_progression.boss_lobby.v1");
         BackupInt(MigratedKey);
+        BackupInt("project.save.active_slot");
         for (int slot = 0; slot < SaveSlotStore.SlotCount; slot++)
         {
             BackupString(SaveSlotStore.MetaKey(slot));
@@ -107,6 +108,78 @@ public class SaveSlotCorruptionTests
         Assert.That(PlayerPrefs.GetString("project.save.slot0.header"), Is.EqualTo(existingHeader));
         Assert.That(PlayerPrefs.GetString("project.save.slot1.header"), Is.EqualTo(healthyHeader));
         Assert.That(SaveSlotStore.IsOccupied(1), Is.True);
+    }
+
+    [Test]
+    public void TenSlotsRoundTripIndependentlyWithoutChangingTheOriginalKeyFormat()
+    {
+        Assert.That(SaveSlotStore.SlotCount, Is.EqualTo(10));
+        Assert.That(SaveSlotStore.MetaKey(0), Is.EqualTo("project.save.slot0.meta.v2"));
+        Assert.That(SaveSlotStore.MetaKey(1), Is.EqualTo("project.save.slot1.meta.v2"));
+        for (int i = 0; i < SaveSlotStore.SlotCount; i++)
+        {
+            SaveSlotStore.SetActive(i);
+            SaveSlotStore.WriteActiveHeader(new SaveSlotHeader { currency = 100 + i, globalLevel = i + 1 });
+            Assert.That(SaveSlotStore.ActiveSlot, Is.EqualTo(i));
+            Assert.That(SaveSlotStore.ActiveMetaKey, Is.EqualTo(SaveSlotStore.MetaKey(i)));
+            Assert.That(SaveSlotStore.ActiveBossRunKey, Is.EqualTo(SaveSlotStore.BossRunKey(i)));
+            Assert.That(SaveSlotStore.ActiveBossMetaKey, Is.EqualTo(SaveSlotStore.BossMetaKey(i)));
+        }
+        PlayerPrefs.Save();
+        for (int i = 0; i < SaveSlotStore.SlotCount; i++)
+        {
+            Assert.That(SaveSlotStore.IsOccupied(i), Is.True);
+            Assert.That(SaveSlotStore.TryReadHeader(i, out var header), Is.True);
+            Assert.That(header.currency, Is.EqualTo(100 + i));
+            Assert.That(header.globalLevel, Is.EqualTo(i + 1));
+        }
+        SaveSlotStore.SetActive(10);
+        Assert.That(SaveSlotStore.ActiveSlot, Is.EqualTo(9));
+        SaveSlotStore.SetActive(-1);
+        Assert.That(SaveSlotStore.ActiveSlot, Is.Zero);
+    }
+
+    [Test]
+    public void DeletingTenthSlotDoesNotTouchTheOtherNineSaves()
+    {
+        for (int i = 0; i < SaveSlotStore.SlotCount; i++)
+        {
+            SaveSlotStore.SetActive(i);
+            SaveSlotStore.WriteActiveHeader(new SaveSlotHeader { currency = i * 100 });
+            PlayerPrefs.SetString(SaveSlotStore.MetaKey(i), $"meta-{i}");
+            PlayerPrefs.SetString(SaveSlotStore.BossRunKey(i), $"run-{i}");
+            PlayerPrefs.SetString(SaveSlotStore.BossMetaKey(i), $"checkpoint-{i}");
+        }
+        SaveSlotStore.Delete(9);
+        Assert.That(SaveSlotStore.IsOccupied(9), Is.False);
+        Assert.That(PlayerPrefs.HasKey(SaveSlotStore.MetaKey(9)), Is.False);
+        Assert.That(PlayerPrefs.HasKey(SaveSlotStore.BossRunKey(9)), Is.False);
+        Assert.That(PlayerPrefs.HasKey(SaveSlotStore.BossMetaKey(9)), Is.False);
+        Assert.That(SaveSlotStore.TryReadHeader(9, out _), Is.False);
+        for (int i = 0; i < 9; i++)
+        {
+            Assert.That(SaveSlotStore.IsOccupied(i), Is.True);
+            Assert.That(SaveSlotStore.TryReadHeader(i, out var header), Is.True);
+            Assert.That(header.currency, Is.EqualTo(i * 100));
+            Assert.That(PlayerPrefs.GetString(SaveSlotStore.MetaKey(i)), Is.EqualTo($"meta-{i}"));
+            Assert.That(PlayerPrefs.GetString(SaveSlotStore.BossRunKey(i)), Is.EqualTo($"run-{i}"));
+            Assert.That(PlayerPrefs.GetString(SaveSlotStore.BossMetaKey(i)), Is.EqualTo($"checkpoint-{i}"));
+        }
+    }
+
+    [Test]
+    public void LegacyMigrationDoesNotResetExistingHigherSaveSlots()
+    {
+        PlayerPrefs.DeleteKey(MigratedKey);
+        PlayerPrefs.SetString(LegacyBossRun, "{broken legacy json");
+        string header = JsonUtility.ToJson(new SaveSlotHeader { currency = 999 });
+        PlayerPrefs.SetString("project.save.slot9.header", header);
+        SaveSlotStore.MarkOccupied(9);
+        PlayerPrefs.SetString(SaveSlotStore.MetaKey(9), "existing tenth save");
+        SaveSlotStore.EnsureMigrated();
+        Assert.That(PlayerPrefs.GetString("project.save.slot9.header"), Is.EqualTo(header));
+        Assert.That(PlayerPrefs.GetString(SaveSlotStore.MetaKey(9)), Is.EqualTo("existing tenth save"));
+        Assert.That(SaveSlotStore.IsOccupied(9), Is.True);
     }
 
     private void BackupString(string key)

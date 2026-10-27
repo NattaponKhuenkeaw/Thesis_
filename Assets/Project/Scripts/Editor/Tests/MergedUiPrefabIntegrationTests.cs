@@ -65,6 +65,30 @@ public class MergedUiPrefabIntegrationTests
         Assert.That(Get<Button>(source, "closeButton"), Is.Not.EqualTo(Get<Button>(source, "actionCancelButton")));
     }
 
+    [Test]
+    public void TenAuthoredCardsUseAClippedTwoColumnScrollViewAndVisibleScrollbar()
+    {
+        var panel = Resources.Load<SaveSelectPanel>("UI/SaveSelectPanel");
+        var scroll = Get<ScrollRect>(panel, "slotScrollRect");
+        Assert.That(scroll, Is.Not.Null);
+        Assert.That(scroll.horizontal, Is.False);
+        Assert.That(scroll.vertical, Is.True);
+        Assert.That(scroll.movementType, Is.EqualTo(ScrollRect.MovementType.Clamped));
+        Assert.That(scroll.viewport.GetComponent<RectMask2D>(), Is.Not.Null);
+        Assert.That(scroll.verticalScrollbar, Is.Not.Null);
+        Assert.That(scroll.content.childCount, Is.EqualTo(10));
+        var grid = scroll.content.GetComponent<GridLayoutGroup>();
+        Assert.That(grid.constraintCount, Is.EqualTo(2));
+        Assert.That(grid.cellSize, Is.EqualTo(new Vector2(460, 480)));
+        Assert.That(scroll.content.GetComponent<ContentSizeFitter>().verticalFit, Is.EqualTo(ContentSizeFitter.FitMode.PreferredSize));
+        for (int i = 0; i < 10; i++)
+        {
+            Assert.That(panel.GetSlot(i).transform.parent, Is.EqualTo(scroll.content));
+            Assert.That(Get<Text>(panel.GetSlot(i), "slotNameText").text, Is.EqualTo($"Save {i + 1}"));
+        }
+        Assert.That(panel.GetSlot(10), Is.Null);
+    }
+
     [TestCase(false)]
     [TestCase(true)]
     public void MenuCreatesAndOwnsASceneInstanceFromEitherResourcesOrSerializedPrefab(bool serializedPrefab)
@@ -147,15 +171,19 @@ public class MergedUiPrefabIntegrationTests
             Assert.That(panel.gameObject.scene.IsValid(), Is.True);
             Assert.That(panel.IsOpen, Is.False);
             yield return null;
+            EventSystem.current.SetSelectedGameObject(Get<Button>(menu, "playButton").gameObject);
             Click(Get<Button>(menu, "playButton"));
             Assert.That(panel.IsOpen, Is.True);
             Assert.That(Object.FindObjectsByType<SaveSelectPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length, Is.EqualTo(1));
             panel.Hide();
+            Assert.That(EventSystem.current.currentSelectedGameObject, Is.EqualTo(Get<Button>(menu, "playButton").gameObject));
+            yield return WaitForMotion(panel.gameObject);
             Click(Get<Button>(menu, "settingsButton"));
             Assert.That(Get<GameObject>(menu, "settingsPanel").activeSelf, Is.True);
             yield return null;
             Click(Get<Button>(menu, "settingsBackButton"));
             Assert.That(Get<GameObject>(menu, "mainPanel").activeSelf, Is.True);
+            yield return WaitForMotion(Get<GameObject>(menu, "settingsPanel"));
             Assert.That(Get<GameObject>(menu, "settingsPanel").activeSelf, Is.False);
             yield return null;
             Click(Get<Button>(menu, "playButton"));
@@ -202,6 +230,16 @@ public class MergedUiPrefabIntegrationTests
             yield return null;
             Click(panel.GetSlot(1).GetComponent<Button>());
             Assert.That(created, Is.EqualTo(new[] { 1 }));
+            var scroll = Get<ScrollRect>(panel, "slotScrollRect");
+            scroll.OnScroll(new PointerEventData(EventSystem.current) { scrollDelta = new Vector2(0, -3) });
+            Assert.That(scroll.verticalNormalizedPosition, Is.LessThan(1f), "Mouse wheel must scroll the list");
+            scroll.verticalScrollbar.value = 0;
+            Assert.That(scroll.verticalNormalizedPosition, Is.LessThan(.001f), "Scrollbar must reach the final row");
+            EventSystem.current.SetSelectedGameObject(panel.GetSlot(9).gameObject);
+            yield return null;
+            Click(panel.GetSlot(9).GetComponent<Button>());
+            Assert.That(created, Is.EqualTo(new[] { 1, 9 }));
+            EventSystem.current.SetSelectedGameObject(panel.GetSlot(0).gameObject);
 
             for (int i = 0; i < SaveSlotStore.SlotCount; i++)
             {
@@ -219,6 +257,7 @@ public class MergedUiPrefabIntegrationTests
             Assert.That(Get<Text>(panel, "actionCurrencyText").text, Is.EqualTo("222"));
             yield return null;
             Click(Get<Button>(panel, "actionCancelButton"));
+            yield return WaitForMotion(Get<GameObject>(panel, "actionPanel"));
             Assert.That(Get<GameObject>(panel, "actionPanel").activeSelf, Is.False);
             Assert.That(panel.IsOpen, Is.True);
             Get<Button>(panel, "actionPlayButton").onClick.Invoke();
@@ -233,11 +272,28 @@ public class MergedUiPrefabIntegrationTests
             yield return null;
             Click(Get<Button>(panel, "actionDeleteButton"));
             Assert.That(deleted, Is.EqualTo(new[] { 0 }));
+            yield return WaitForMotion(Get<GameObject>(panel, "actionPanel"));
+            EventSystem.current.SetSelectedGameObject(panel.GetSlot(9).gameObject);
+            yield return null;
+            Assert.That(scroll.verticalNormalizedPosition, Is.LessThan(.02f));
+            Assert.That(scroll.verticalScrollbar.value, Is.EqualTo(scroll.verticalNormalizedPosition).Within(.001f));
+            Assert.That(scroll.verticalScrollbar.size, Is.InRange(.1f, .3f));
+            Bounds last = RectTransformUtility.CalculateRelativeRectTransformBounds(scroll.viewport, panel.GetSlot(9).transform);
+            Assert.That(last.min.y, Is.GreaterThanOrEqualTo(scroll.viewport.rect.yMin - .1f));
+            Assert.That(last.max.y, Is.LessThanOrEqualTo(scroll.viewport.rect.yMax + .1f));
+            Click(panel.GetSlot(9).GetComponent<Button>());
+            Assert.That(Get<Text>(panel, "actionTitleText").text, Is.EqualTo("Play Save 10?"));
+            Assert.That(Get<Text>(panel, "actionCurrencyText").text, Is.EqualTo("1,110"));
+            yield return null;
+            Click(Get<Button>(panel, "actionPlayButton"));
+            Assert.That(played, Is.EqualTo(new[] { 1, 9 }));
             panel.GetSlot(1).GetComponent<Button>().onClick.Invoke();
             Get<Button>(panel, "closeButton").onClick.Invoke();
             Assert.That(panel.IsOpen, Is.False);
             panel.Open();
             Assert.That(Get<GameObject>(panel, "actionPanel").activeSelf, Is.False);
+            Assert.That(scroll.verticalNormalizedPosition, Is.EqualTo(1f).Within(.001f));
+            Assert.That(panel.GetComponentsInChildren<SaveSlotCardView>(true).Length, Is.EqualTo(10), "Opening must not generate more UI cards");
         }
         finally
         {
@@ -269,6 +325,7 @@ public class MergedUiPrefabIntegrationTests
         Get<Button>(pause, "returnToTitleButton").onClick.Invoke();
         Assert.That(Get<GameObject>(pause, "confirmPanel").activeSelf, Is.True);
         Get<Button>(pause, "confirmCancelButton").onClick.Invoke();
+        yield return WaitForMotion(Get<GameObject>(pause, "confirmPanel"));
         Assert.That(Get<GameObject>(pause, "confirmPanel").activeSelf, Is.False);
         Get<Button>(pause, "resumeButton").onClick.Invoke();
         Assert.That(PauseMenuController.IsOpen, Is.False);
@@ -307,6 +364,14 @@ public class MergedUiPrefabIntegrationTests
     {
         if (PlayerPrefs.HasKey(key)) existing.Add(key);
         values[key] = PlayerPrefs.GetInt(key, 0);
+    }
+
+    private static IEnumerator WaitForMotion(GameObject root)
+    {
+        var transitions = root.GetComponentsInChildren<UIVisibilityTransition>(true);
+        float deadline = Time.realtimeSinceStartup + 3f;
+        while (transitions.Any(x => x.IsAnimating) && Time.realtimeSinceStartup < deadline) yield return null;
+        Assert.That(transitions.Any(x => x.IsAnimating), Is.False, "UI transition did not finish");
     }
 
     private static void Click(Button button)
