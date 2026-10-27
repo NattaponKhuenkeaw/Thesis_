@@ -311,10 +311,11 @@ namespace Project.Core.ZoneState
         private void FinishCurrentEncounterSegment()
         {
             waveRoutine = null;
-            if (stageController != null && stageController.HasRemainingChambers)
+            if (stageController != null)
             {
+                bool remaining = stageController.HasRemainingChambers;
                 stageController.AdvanceAfterClear();
-                return;
+                if (remaining) return;
             }
 
             CompleteRoom();

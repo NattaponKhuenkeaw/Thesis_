@@ -1,6 +1,8 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 using Project.Core.ZoneState;
 
 namespace Project.UI
@@ -8,7 +10,7 @@ namespace Project.UI
     /// <summary>
     /// Proximity room-choice panel driven by an authored prefab (no runtime UI build).
     /// Assign <see cref="panelRoot"/> + <see cref="cards"/> in the Inspector, or use
-    /// Project → UI → Create Room Choice UI Prefab.
+    /// Project > UI > Open Room Choice UI Prefab.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(UIBlockPlayerClick))]
@@ -24,11 +26,15 @@ namespace Project.UI
 
         [Tooltip("Fixed card slots (typically 3). Unused slots are disabled when fewer offers exist.")]
         [SerializeField] private RoomChoiceCardView[] cards;
+        [SerializeField] private UIVisibilityTransition visibilityTransition;
+        [SerializeField, Min(0f)] private float selectionHoldSeconds = .12f;
 
         private readonly List<RoomChoiceCardView> activeCards = new List<RoomChoiceCardView>(4);
         private bool choiceCommitted;
+        private Coroutine pendingChoice;
+        private bool ownsInputLock;
 
-        public bool IsShowing => panelRoot != null && panelRoot.activeSelf;
+        public bool IsShowing => visibilityTransition != null ? visibilityTransition.IsVisible : panelRoot != null && panelRoot.activeSelf;
         public bool HasCommittedChoice => choiceCommitted;
 
         private void Awake()
@@ -52,6 +58,7 @@ namespace Project.UI
 
         private void OnDestroy()
         {
+            ReleaseInputLock();
             if (Instance == this)
             {
                 Instance = null;
@@ -112,6 +119,8 @@ namespace Project.UI
 
         public void ClearCommittedChoice()
         {
+            if (pendingChoice != null) StopCoroutine(pendingChoice);
+            pendingChoice = null;
             choiceCommitted = false;
         }
 
@@ -180,9 +189,19 @@ namespace Project.UI
                 return;
             }
 
+            ConfigureCardNavigation();
+
             // Level/Rest sequences disable other canvases; ensure ours is drawable again.
             EnsureCanvasEnabled();
-            panelRoot.SetActive(true);
+            if (visibilityTransition != null) visibilityTransition.SetVisible(true);
+            else panelRoot.SetActive(true);
+            if (!ownsInputLock)
+            {
+                InputLockManager.Lock();
+                ownsInputLock = true;
+            }
+            if (EventSystem.current != null && activeCards[0].Button != null)
+                EventSystem.current.SetSelectedGameObject(activeCards[0].Button.gameObject);
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
 
@@ -191,14 +210,17 @@ namespace Project.UI
 
         public void Hide()
         {
+            if (pendingChoice != null) ClearCommittedChoice();
             ClearCardClicks();
             activeCards.Clear();
-            HideImmediate();
+            HideImmediate(true);
         }
 
-        private void HideImmediate()
+        private void HideImmediate(bool animated = false)
         {
-            if (panelRoot != null)
+            ReleaseInputLock();
+            if (visibilityTransition != null) visibilityTransition.SetVisible(false, animated);
+            else if (panelRoot != null)
             {
                 panelRoot.SetActive(false);
             }
@@ -233,6 +255,15 @@ namespace Project.UI
             }
 
             source?.SetInteractable(false);
+            source?.SetConfirmed(true);
+            pendingChoice = StartCoroutine(CommitChoice(offer));
+        }
+
+        private IEnumerator CommitChoice(RoomChoiceOffer offer)
+        {
+            if (selectionHoldSeconds > 0f) yield return new WaitForSecondsRealtime(selectionHoldSeconds);
+            pendingChoice = null;
+            if (!choiceCommitted) yield break;
 
             string roomId = offer.RoomId;
             string entranceId = offer.Room.DefaultEntranceId;
@@ -247,7 +278,7 @@ namespace Project.UI
                 ActiveRouteOffer.Clear();
                 choiceCommitted = false;
                 ResetExitTriggers();
-                return;
+                yield break;
             }
 
             if (!SceneTransitionManager.Instance.TryTransitionToRoom(roomId, entranceId))
@@ -257,6 +288,21 @@ namespace Project.UI
                 choiceCommitted = false;
                 ResetExitTriggers();
             }
+        }
+
+        private void OnDisable()
+        {
+            ClearCommittedChoice();
+            ClearCardClicks();
+            activeCards.Clear();
+            HideImmediate();
+        }
+
+        private void ReleaseInputLock()
+        {
+            if (!ownsInputLock) return;
+            InputLockManager.Unlock();
+            ownsInputLock = false;
         }
 
         private void AutoWireIfNeeded()
@@ -282,6 +328,21 @@ namespace Project.UI
             if (cards == null || cards.Length == 0)
             {
                 cards = GetComponentsInChildren<RoomChoiceCardView>(true);
+            }
+        }
+
+        private void ConfigureCardNavigation()
+        {
+            // Automatic navigation can select unrelated HUD buttons behind this modal.
+            for (int i = 0; i < activeCards.Count; i++)
+            {
+                Button button = activeCards[i].Button;
+                if (button == null) continue;
+                var navigation = button.navigation;
+                navigation.mode = Navigation.Mode.Explicit;
+                navigation.selectOnLeft = navigation.selectOnUp = activeCards[Mathf.Max(0, i - 1)].Button;
+                navigation.selectOnRight = navigation.selectOnDown = activeCards[Mathf.Min(activeCards.Count - 1, i + 1)].Button;
+                button.navigation = navigation;
             }
         }
 

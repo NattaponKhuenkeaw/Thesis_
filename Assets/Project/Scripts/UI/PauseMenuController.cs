@@ -56,6 +56,7 @@ namespace Project.UI
         private bool ownsInputLock;
         private bool isLeaving;
         private bool ownsPauseHold;
+        private GameObject returnFocus;
 
         private void Awake()
         {
@@ -104,13 +105,13 @@ namespace Project.UI
                 return;
             }
 
-            if (confirmPanel != null && confirmPanel.activeSelf)
+            if (IsPanelVisible(confirmPanel))
             {
                 ShowConfirm(false);
                 return;
             }
 
-            if (settingsPanel != null && settingsPanel.activeSelf)
+            if (IsPanelVisible(settingsPanel))
             {
                 CloseSettings();
                 return;
@@ -167,18 +168,18 @@ namespace Project.UI
             }
 
             isPaused = true;
-            if (pauseRoot != null)
-            {
-                pauseRoot.SetActive(true);
-            }
+            returnFocus = EventSystem.current != null ? EventSystem.current.currentSelectedGameObject : null;
+            SetPanelVisible(settingsPanel, false, false);
+            SetPanelVisible(confirmPanel, false, false);
 
             if (mainPanel != null)
             {
                 mainPanel.SetActive(true);
+                SetMainInteractable(true);
             }
 
-            ShowSettings(false);
-            ShowConfirm(false);
+            SetPanelVisible(pauseRoot, true);
+            Focus(resumeButton);
             BeginPauseHold();
             AudioListener.pause = true;
 
@@ -197,7 +198,7 @@ namespace Project.UI
             }
 
             isPaused = false;
-            HideAll();
+            HideAll(true);
             GameSettings.Save();
             AudioListener.pause = false;
             EndPauseHold();
@@ -212,6 +213,9 @@ namespace Project.UI
                 InputLockManager.Unlock();
                 ownsInputLock = false;
             }
+            if (EventSystem.current != null)
+                EventSystem.current.SetSelectedGameObject(returnFocus != null && returnFocus.activeInHierarchy ? returnFocus : null);
+            returnFocus = null;
         }
 
         private void ReturnToTitle()
@@ -328,10 +332,7 @@ namespace Project.UI
 
         private void ShowSettings(bool show)
         {
-            if (settingsPanel != null)
-            {
-                settingsPanel.SetActive(show);
-            }
+            SetPanelVisible(settingsPanel, show);
 
             if (mainPanel != null)
             {
@@ -346,14 +347,43 @@ namespace Project.UI
             {
                 GameSettings.Save();
             }
+            Focus(show ? settingsBackButton : resumeButton);
         }
 
         private void ShowConfirm(bool show)
         {
-            if (confirmPanel != null)
+            SetMainInteractable(!show);
+            SetPanelVisible(confirmPanel, show);
+            Focus(show ? confirmCancelButton : returnToTitleButton);
+        }
+
+        private void SetMainInteractable(bool enabled)
+        {
+            if (mainPanel != null && mainPanel.TryGetComponent<CanvasGroup>(out var group))
             {
-                confirmPanel.SetActive(show);
+                group.interactable = enabled;
+                group.blocksRaycasts = enabled;
             }
+        }
+
+        private static void Focus(Button button)
+        {
+            if (button != null && EventSystem.current != null) EventSystem.current.SetSelectedGameObject(button.gameObject);
+        }
+
+        private static bool IsPanelVisible(GameObject panel)
+        {
+            if (panel == null) return false;
+            var transition = panel.GetComponent<UIVisibilityTransition>();
+            return transition != null ? transition.IsVisible : panel.activeSelf;
+        }
+
+        private static void SetPanelVisible(GameObject panel, bool show, bool animated = true)
+        {
+            if (panel == null) return;
+            var transition = panel.GetComponent<UIVisibilityTransition>();
+            if (transition != null) transition.SetVisible(show, animated);
+            else panel.SetActive(show);
         }
 
         private void SyncSettingsControls()
@@ -379,27 +409,15 @@ namespace Project.UI
             }
         }
 
-        private void HideAll()
+        private void HideAll(bool animated = false)
         {
-            if (settingsPanel != null)
+            if (!animated)
             {
-                settingsPanel.SetActive(false);
+                SetPanelVisible(settingsPanel, false, false);
+                SetPanelVisible(confirmPanel, false, false);
+                if (mainPanel != null) mainPanel.SetActive(false);
             }
-
-            if (confirmPanel != null)
-            {
-                confirmPanel.SetActive(false);
-            }
-
-            if (mainPanel != null)
-            {
-                mainPanel.SetActive(false);
-            }
-
-            if (pauseRoot != null)
-            {
-                pauseRoot.SetActive(false);
-            }
+            SetPanelVisible(pauseRoot, false, animated);
         }
 
         private void BeginPauseHold()

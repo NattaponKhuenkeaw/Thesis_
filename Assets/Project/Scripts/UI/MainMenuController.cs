@@ -35,6 +35,9 @@ namespace Project.UI
         [SerializeField] private Button settingsButton;
         [SerializeField] private Button quitButton;
 
+        [Header("Menu Animation")]
+        [SerializeField] private MainMenuPresentation presentation;
+
         [Header("Settings")]
         [SerializeField] private Slider masterSlider;
         [SerializeField] private Slider bgmSlider;
@@ -51,6 +54,7 @@ namespace Project.UI
         [SerializeField, Range(0f, 1f)] private float menuBgmSourceVolume = 1f;
 
         private bool isLoading;
+        private bool ownsSavePanel;
 
         private void Awake()
         {
@@ -74,7 +78,7 @@ namespace Project.UI
 
             EnsureSavePanel();
             BindSavePanel();
-            saveSelectPanel?.Hide();
+            saveSelectPanel?.HideImmediate();
             PlayMenuBgm();
         }
 
@@ -92,11 +96,11 @@ namespace Project.UI
 
             if (saveSelectPanel != null && saveSelectPanel.IsOpen)
             {
-                saveSelectPanel.Hide();
+                saveSelectPanel.Cancel();
                 return;
             }
 
-            if (settingsPanel != null && settingsPanel.activeSelf)
+            if (IsPanelVisible(settingsPanel))
             {
                 CloseSettings();
             }
@@ -105,6 +109,11 @@ namespace Project.UI
         private void OnDestroy()
         {
             UnbindSavePanel();
+            if (ownsSavePanel && saveSelectPanel != null)
+            {
+                if (Application.isPlaying) Destroy(saveSelectPanel.gameObject);
+                else DestroyImmediate(saveSelectPanel.gameObject);
+            }
         }
 
         public void OnPlayClicked()
@@ -114,6 +123,7 @@ namespace Project.UI
                 return;
             }
 
+            presentation?.CompleteIntro();
             saveSelectPanel.Open();
         }
 
@@ -124,6 +134,7 @@ namespace Project.UI
                 return;
             }
 
+            presentation?.CompleteIntro();
             ShowSettings(true);
         }
 
@@ -134,6 +145,7 @@ namespace Project.UI
                 return;
             }
 
+            presentation?.CompleteIntro();
             GameSettings.Save();
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
@@ -306,18 +318,22 @@ namespace Project.UI
 
         private void EnsureSavePanel()
         {
-            if (saveSelectPanel != null)
+            if (saveSelectPanel != null && saveSelectPanel.gameObject.scene.IsValid())
             {
                 return;
             }
 
-            SaveSelectPanel prefab = Resources.Load<SaveSelectPanel>("UI/SaveSelectPanel");
+            SaveSelectPanel prefab = saveSelectPanel != null
+                ? saveSelectPanel
+                : Resources.Load<SaveSelectPanel>("UI/SaveSelectPanel");
             if (prefab == null)
             {
+                Debug.LogError("[MainMenu] Missing authored SaveSelectPanel prefab.", this);
                 return;
             }
 
             saveSelectPanel = Instantiate(prefab);
+            ownsSavePanel = true;
         }
 
         private void ShowSettings(bool show)
@@ -327,14 +343,17 @@ namespace Project.UI
                 saveSelectPanel.Hide();
             }
 
-            if (settingsPanel != null)
-            {
-                settingsPanel.SetActive(show);
-            }
+            SetPanelVisible(settingsPanel, show);
 
             if (mainPanel != null)
             {
-                mainPanel.SetActive(!show);
+                if (mainPanel.TryGetComponent<CanvasGroup>(out var group))
+                {
+                    mainPanel.SetActive(true);
+                    group.interactable = !show;
+                    group.blocksRaycasts = !show;
+                }
+                else mainPanel.SetActive(!show);
             }
 
             if (show)
@@ -345,14 +364,31 @@ namespace Project.UI
             {
                 GameSettings.Save();
             }
+            if (EventSystem.current != null)
+            {
+                var focus = show ? settingsBackButton : playButton;
+                if (focus != null) EventSystem.current.SetSelectedGameObject(focus.gameObject);
+            }
         }
 
         private void ShowConfirm(bool show)
         {
-            if (confirmPanel != null)
-            {
-                confirmPanel.SetActive(show);
-            }
+            SetPanelVisible(confirmPanel, show);
+        }
+
+        private static bool IsPanelVisible(GameObject panel)
+        {
+            if (panel == null) return false;
+            var transition = panel.GetComponent<UIVisibilityTransition>();
+            return transition != null ? transition.IsVisible : panel.activeSelf;
+        }
+
+        private static void SetPanelVisible(GameObject panel, bool show)
+        {
+            if (panel == null) return;
+            var transition = panel.GetComponent<UIVisibilityTransition>();
+            if (transition != null) transition.SetVisible(show);
+            else panel.SetActive(show);
         }
 
         private void SyncSettingsControls()

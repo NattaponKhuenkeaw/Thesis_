@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Project.UI
@@ -8,7 +9,7 @@ namespace Project.UI
     /// One save-slot card authored in the save panel prefab.
     /// Shows either the New Game label or the saved summary, and toggles the in-slot Play / Delete panel.
     /// </summary>
-    public class SaveSlotCardView : MonoBehaviour
+    public class SaveSlotCardView : MonoBehaviour, ISelectHandler, IPointerEnterHandler
     {
         [SerializeField] private Text slotNameText;
         [SerializeField] private Text biomeText;
@@ -22,10 +23,31 @@ namespace Project.UI
         [SerializeField] private GameObject actionPanel;
         [SerializeField] private Button playButton;
         [SerializeField] private Button deleteButton;
+        [SerializeField] private Image selectionBorder;
+        [SerializeField] private Sprite normalBorder;
+        [SerializeField] private Sprite selectedBorder;
 
         public event Action SlotPressed;
         public event Action PlayPressed;
         public event Action DeletePressed;
+        public event Action Selected;
+
+        public void OnSelect(BaseEventData eventData) => Selected?.Invoke();
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            if (cardButton != null && cardButton.IsInteractable() && EventSystem.current != null)
+                EventSystem.current.SetSelectedGameObject(gameObject);
+        }
+
+        public void SetActionSelection(bool selected)
+        {
+            if (cardButton == null) cardButton = GetComponent<Button>();
+            if (cardButton == null || selectionBorder == null) return;
+            var state = cardButton.spriteState;
+            state.disabledSprite = selected ? selectedBorder : normalBorder;
+            cardButton.spriteState = state;
+        }
 
         private Button cardButton;
 

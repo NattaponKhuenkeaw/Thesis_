@@ -30,6 +30,9 @@ namespace Project.Core.ZoneState
             [Tooltip("Solid wall on the right. Shared with the next room's entrance when rooms are adjacent.")]
             public Collider2D exitWall;
 
+            [Tooltip("Optional barriers for alternate paths. A barrier shared by the next chamber stays locked between rooms.")]
+            public Collider2D[] additionalExitWalls;
+
             [Tooltip("Optional. Starts this room when the player walks in. Chamber 0 can rely on RoomWaveManager instead.")]
             public Collider2D enterTrigger;
 
@@ -233,6 +236,7 @@ namespace Project.Core.ZoneState
         public void AdvanceAfterClear()
         {
             fighting = false;
+            ReleaseAdditionalExitWalls();
             OpenBacktrackFromCurrent();
             if (!HasRemainingChambers)
             {
@@ -242,6 +246,20 @@ namespace Project.Core.ZoneState
             int nextIndex = currentIndex + 1;
             waitingForIndex = nextIndex;
             OpenCorridorToward(nextIndex);
+        }
+
+        private void ReleaseAdditionalExitWalls()
+        {
+            if (chambers == null || currentIndex < 0 || currentIndex >= chambers.Length) return;
+            Chamber current = chambers[currentIndex];
+            Chamber next = HasRemainingChambers ? chambers[currentIndex+1] : null;
+            if (current?.additionalExitWalls == null) return;
+            foreach (Collider2D wall in current.additionalExitWalls)
+            {
+                if (wall == null || (next != null && (next.exitWall == wall ||
+                    (next.additionalExitWalls != null && System.Array.IndexOf(next.additionalExitWalls,wall) >= 0)))) continue;
+                wall.enabled = false;
+            }
         }
 
         private void OpenBacktrackFromCurrent()
@@ -290,6 +308,9 @@ namespace Project.Core.ZoneState
             currentIndex = index;
             waitingForIndex = -1;
             fighting = true;
+            if (chamber.additionalExitWalls != null)
+                foreach (Collider2D wall in chamber.additionalExitWalls)
+                    if (wall != null) { wall.enabled = true; wall.isTrigger = false; }
             if (waitToEnterRoutine != null)
             {
                 StopCoroutine(waitToEnterRoutine);
@@ -314,6 +335,13 @@ namespace Project.Core.ZoneState
             }
 
             Transform[] slots = ResolveSpawnSlots(chamber);
+            if (boundary != null && chamber.exitWall != null && HasAssignedSlots(slots))
+            {
+                float farthest = float.NegativeInfinity;
+                foreach (Transform slot in slots) if (slot != null) farthest = Mathf.Max(farthest,slot.position.x);
+                if (farthest > chamber.exitWall.bounds.min.x)
+                    boundary.OpenWalkTo(farthest+corridorPadding,null);
+            }
             if (!HasAssignedSlots(slots))
             {
                 Debug.LogError(
@@ -352,6 +380,15 @@ namespace Project.Core.ZoneState
             else if (chambers[currentIndex] != null && chambers[currentIndex].exitWall != null)
             {
                 right = chambers[currentIndex].exitWall.bounds.min.x + corridorPadding;
+            }
+
+            if (next != null && next.exitWall != null)
+            {
+                Transform[] slots=ResolveSpawnSlots(next);
+                if (slots != null)
+                    foreach (Transform slot in slots)
+                        if (slot != null && slot.position.x > next.exitWall.bounds.min.x)
+                            right=Mathf.Max(right,slot.position.x+corridorPadding);
             }
 
             Collider2D divider = chambers[currentIndex] != null ? chambers[currentIndex].exitWall : null;

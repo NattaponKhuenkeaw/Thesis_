@@ -30,10 +30,11 @@ namespace Project.AIBehaviour.Boss
         [SerializeField, Min(0f)] private float spawnReturnDuration = 0.6f;
         [SerializeField] private string bossDisplayName = "Executioner";
         [SerializeField] private bool bindScreenHealthHud = true;
+        [SerializeField, Min(1)] private int healthBarCount = 5;
 
         [Header("Default Stats (applied once on Awake if useDefaultStats)")]
         [SerializeField] private bool useDefaultStats = true;
-        [SerializeField] private float defaultMaxHp = 800f;
+        [SerializeField] private float defaultMaxHp = 4000f;
         [SerializeField] private float defaultAttackDamage = 165f;
         [SerializeField] private float defaultDefense = 500f;
 
@@ -239,7 +240,7 @@ namespace Project.AIBehaviour.Boss
             }
 
             if (bindScreenHealthHud && enemy != null)
-                BossHealthHUD.EnsureInstance().Bind(enemy, bossDisplayName);
+                BossHealthHUD.EnsureInstance()?.Bind(enemy, bossDisplayName, healthBarCount);
 
             // Spawn lifecycle blocks camera membership and the boss loop until Active.
             if (revealOnSpawn && !spawnRevealStarted && enemy != null && enemy.IsAlive)

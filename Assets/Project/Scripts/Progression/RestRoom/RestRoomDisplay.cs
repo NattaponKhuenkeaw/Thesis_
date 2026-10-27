@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using Project.UI;
 
 namespace Project.Progression.RestRoom
 {
@@ -10,6 +11,7 @@ namespace Project.Progression.RestRoom
     {
         [SerializeField] private TMP_Text numberText;
         [SerializeField] private TMP_Text statusText;
+        [SerializeField] private UIReadoutFeedback feedback;
         [SerializeField] private Color idleColor = new Color(0.75f, 0.75f, 0.8f, 1f);
         [SerializeField] private Color selectedColor = new Color(0.45f, 0.95f, 0.75f, 1f);
         [SerializeField] private Color healingColor = new Color(0.55f, 1f, 0.85f, 1f);
@@ -39,7 +41,7 @@ namespace Project.Progression.RestRoom
 
         public void ShowHealing()
         {
-            SetNumber("♥", healingColor);
+            SetNumber("HP+", healingColor);
             SetStatus("Restoring team...");
         }
 
@@ -51,20 +53,20 @@ namespace Project.Progression.RestRoom
         public void ShowHealed(float percentOfMaxHp)
         {
             float percent = Mathf.Clamp01(percentOfMaxHp);
-            SetNumber("♥", doneColor);
+            SetNumber("HP+", doneColor);
             if (Mathf.Approximately(percent, 1f))
             {
-                SetStatus("Team restored");
+                SetStatus("Team restored", true);
             }
             else
             {
-                SetStatus($"Restored {percent * 100f:0.#}% Max HP");
+                SetStatus($"Restored {percent * 100f:0.#}% Max HP", true);
             }
         }
 
         public void ShowClaimed()
         {
-            SetNumber("✓", idleColor);
+            SetNumber("OK", idleColor);
             SetStatus("Already rested");
         }
 
@@ -79,11 +81,13 @@ namespace Project.Progression.RestRoom
             numberText.color = color;
         }
 
-        private void SetStatus(string value)
+        private void SetStatus(string value, bool result = false)
         {
             if (statusText != null)
             {
+                bool changed = statusText.text != value;
                 statusText.text = value;
+                if (changed) feedback?.Play(result);
             }
         }
     }

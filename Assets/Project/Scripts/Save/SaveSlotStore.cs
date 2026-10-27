@@ -4,12 +4,12 @@ using UnityEngine;
 namespace Project.Save
 {
     /// <summary>
-    /// Two menu save slots stored in PlayerPrefs.
+    /// Menu save slots stored in PlayerPrefs.
     /// The active slot selects which meta and boss-lobby keys the rest of the game reads.
     /// </summary>
     public static class SaveSlotStore
     {
-        public const int SlotCount = 2;
+        public const int SlotCount = 10;
         public const int PortraitCount = 3;
 
         private const string ActiveKey = "project.save.active_slot";

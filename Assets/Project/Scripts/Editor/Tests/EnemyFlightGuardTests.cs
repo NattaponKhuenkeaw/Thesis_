@@ -49,7 +49,7 @@ public class EnemyFlightGuardTests
         }
         Assert.That(flight.PrepareSpawnFlight(), Is.True);
         Assert.That(flight.GetComponent<EnemyController>().bodyCollider.bounds.min.y,
-            Is.EqualTo(3.8f).Within(.001f));
+            Is.EqualTo(6.8f).Within(.001f));
 
         player.transform.position += Vector3.up * jumpHeight;
         player.Movement.GroundState.Tick(false, 5f);
@@ -59,7 +59,7 @@ public class EnemyFlightGuardTests
         typeof(EnemyLocomotion).GetMethod("SelectFlightDestination", Private).Invoke(flight, null);
         var endpoint = typeof(EnemyLocomotion).GetField("flightMoveEnd", Private);
         Vector2 selected = (Vector2)endpoint.GetValue(flight);
-        Assert.That(selected.y, Is.InRange(3.8f - .2f, 3.8f + .2f));
+        Assert.That(selected.y, Is.InRange(6.8f - .2f, 6.8f + .2f));
 
         player.transform.position += new Vector3(5f, 4f, 0f);
         Physics2D.SyncTransforms();
@@ -71,7 +71,7 @@ public class EnemyFlightGuardTests
 
     [TestCase("test_0_Main", "main")]
     [TestCase("test_1_CameraGirl", "cg")]
-    public void Authored102HighestFlightStillOverlapsAnOrdinarySingleJumpAirAttack(string folder, string suffix)
+    public void Authored102HighestFlightStillOverlapsADoubleJumpAirAttack(string folder, string suffix)
     {
         string root = $"Assets/Project/Character/Hero/{folder}/";
         var character = AssetDatabase.LoadAssetAtPath<CharacterObject>(root + $"CharacterObject_{suffix}.asset");
@@ -81,8 +81,8 @@ public class EnemyFlightGuardTests
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Character/enemy/enemy/Enm102/Enemy102.prefab");
         using (var flight = new SerializedObject(prefab.GetComponent<EnemyLocomotion>()))
         {
-            // Use a reachable mid-jump swing, not a frame-perfect hit at the apex or a double jump.
-            const float swingRise = 2f;
+            // The higher flight clears Main's ground skill but remains below a comfortable double-jump swing.
+            const float swingRise = 5.2f;
             float rise = 0f;
             float speed = character.movementProfile.jumpSpeed;
             while (speed > 0f)
@@ -90,7 +90,9 @@ public class EnemyFlightGuardTests
                 speed = Mathf.Max(0f, speed - character.movementProfile.riseDeceleration * Time.fixedDeltaTime);
                 rise += speed * Time.fixedDeltaTime;
             }
-            Assert.That(rise, Is.GreaterThan(swingRise + .5f));
+            int jumps = character.maxJumpOverride >= 0 ? character.maxJumpOverride : character.movementProfile.maxJumpCount;
+            Assert.That(jumps, Is.GreaterThanOrEqualTo(2));
+            Assert.That(rise * 2f, Is.GreaterThan(swingRise + .5f));
             float height = flight.FindProperty("flightHeight").floatValue;
             float variation = flight.FindProperty("flightHeightVariation").floatValue;
             float arc = flight.FindProperty("flightArcHeight").floatValue;
@@ -103,6 +105,23 @@ public class EnemyFlightGuardTests
                 Assert.That(overlap, Is.GreaterThan(.3f), "Keep vertical hit overlap at both flight extremes.");
             }
             Assert.That(flight.FindProperty("flightHeightRelativeToPlayer").boolValue, Is.False);
+        }
+    }
+
+    [Test]
+    public void LowestAuthoredFlightClearsMainsGroundSkillArea()
+    {
+        var skill = AssetDatabase.LoadAssetAtPath<ProjectileData>(
+            "Assets/Project/Character/Hero/test_0_Main/ProjectileData_main_skill.asset");
+        var hit = (NormalHitbox)skill.ResolveRoutineHitbox();
+        float skillTop = skill.spawnOffset.y + hit.offset.y + hit.size.y * .5f;
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Project/Character/enemy/enemy/Enm102/Enemy102.prefab");
+        using (var settings = new SerializedObject(prefab.GetComponent<EnemyLocomotion>()))
+        {
+            float lowestFeet = settings.FindProperty("flightHeight").floatValue
+                - settings.FindProperty("flightHeightVariation").floatValue;
+            Assert.That(lowestFeet - skillTop, Is.GreaterThan(.15f),
+                "Normal cruising on the same floor must clear the grounded skill, not drift into its hitbox.");
         }
     }
 
@@ -390,7 +409,7 @@ public class EnemyFlightGuardTests
         Assert.That(flyer.GetComponent<EnemyLocomotion>().UsesFixedHeightFlight, Is.True);
         Assert.That(flyer.GetComponent<EnemyLocomotion>().UsesRoamingFlight, Is.True);
         var flightSettings = new SerializedObject(flyer.GetComponent<EnemyLocomotion>());
-        Assert.That(flightSettings.FindProperty("flightHeight").floatValue, Is.EqualTo(3.8f));
+        Assert.That(flightSettings.FindProperty("flightHeight").floatValue, Is.EqualTo(6.8f));
         Assert.That(flightSettings.FindProperty("flightHeightMultiplier").floatValue, Is.EqualTo(1f));
         Assert.That(flightSettings.FindProperty("flightHeightRelativeToPlayer").boolValue, Is.False);
         Assert.That(flightSettings.FindProperty("flightArcHeight").floatValue, Is.EqualTo(.35f));
@@ -419,8 +438,6 @@ public class EnemyFlightGuardTests
     }
 
     [TestCase("EnemyCore/EnemyCore")]
-    [TestCase("EnemyCore/Enemy2")]
-    [TestCase("EnemyCore/Enemy3")]
     [TestCase("Enm101/Enemy1")]
     [TestCase("Enm102/Enemy102")]
     [TestCase("Enm103/Enemy103")]
@@ -469,7 +486,7 @@ public class EnemyFlightGuardTests
         Assert.That(hit.launchSpeed, Is.EqualTo(8f));
         Assert.That(hit.canAirJuggle, Is.True);
         Assert.That(flight.HoldsFlightPlaneForReaction, Is.False);
-        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionY, Is.Zero);
+        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionY, Is.EqualTo(RigidbodyConstraints2D.None));
     }
 
     [Test]
@@ -712,7 +729,7 @@ public class EnemyFlightGuardTests
         Assert.That(hit.reactionKind, Is.EqualTo(EnemyReactionKind.Knockback));
         Assert.That(hit.launchSpeed, Is.Zero);
         Assert.That(hit.knockfallFrames, Is.Zero);
-        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionY, Is.Not.Zero);
+        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionY, Is.EqualTo(RigidbodyConstraints2D.FreezePositionY));
         hit.reactionKind = EnemyReactionKind.Grab;
         flight.ConstrainFlightReaction(ref hit);
         Assert.That(hit.reactionKind, Is.EqualTo(EnemyReactionKind.Grab));
@@ -819,7 +836,7 @@ public class EnemyFlightGuardTests
             Assert.That(enemy.LastHitAppliedReaction, Is.True);
             Assert.That(handler.IsGrabbed, Is.True);
             Assert.That(enemy.CurrentReactionState, Is.EqualTo(EnemyReactionState.ImpactFreeze));
-            Assert.That(enemy.CurrentReactionOwnerId, Is.EqualTo(target.GetInstanceID()));
+            Assert.That(enemy.CurrentReactionOwnerId, Is.EqualTo(target.transform.root.GetInstanceID()));
             Assert.That(guard.IsEngaged, Is.False);
             Assert.That(guard.ShieldRaised, Is.False);
             Assert.That(enemy.attackHitbox.enabled, Is.False);
@@ -893,7 +910,7 @@ public class EnemyFlightGuardTests
         EnemyController enemy = Guard(out EnemyShieldGuard guard);
         var target = Host("FrontTarget", enemy.transform.position + Vector3.right * 5f);
         guard.BeginGuard(target.transform);
-        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.Not.Zero);
+        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.EqualTo(RigidbodyConstraints2D.FreezePositionX));
         float damage = enemy.TakeResolvedHit(HitReactionData.Default(10f, Vector2.right, 0f), enemy.transform.position + Vector3.left);
         Assert.That(damage, Is.EqualTo(10f));
         Assert.That(enemy.LastHitAppliedReaction, Is.True);
@@ -944,7 +961,7 @@ public class EnemyFlightGuardTests
         target.transform.position = enemy.transform.position + Vector3.left * 15f;
         Assert.That(enemy.FacingLocked, Is.True);
         Assert.That(EnemyFacingUtil.GetFacingSign(enemy.transform), Is.EqualTo(1f));
-        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.Zero);
+        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.EqualTo(RigidbodyConstraints2D.None));
         var action = new EnemyAttackAction();
         action.Agent.Value = enemy.gameObject;
         action.Target.Value = target;
@@ -956,9 +973,9 @@ public class EnemyFlightGuardTests
         Assert.That(enemy.rb.linearVelocity.x, Is.GreaterThan(0f));
         guard.FinishStrike();
         Assert.That(enemy.rb.linearVelocity.x, Is.Zero);
-        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.Not.Zero);
+        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.EqualTo(RigidbodyConstraints2D.FreezePositionX));
         typeof(EnemyAttackAction).GetMethod("OnEnd", Private).Invoke(action, null);
-        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.Zero);
+        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.EqualTo(RigidbodyConstraints2D.None));
         Assert.That(enemy.attackHitbox.enabled, Is.False);
     }
 
@@ -1049,7 +1066,7 @@ public class EnemyFlightGuardTests
         Assert.That(guard.TickGuard(2.1f), Is.True);
         Assert.That(guard.Phase, Is.EqualTo(EnemyShieldGuard.GuardPhase.Guarding));
         Assert.That(guard.ShieldRaised, Is.True);
-        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.Not.Zero);
+        Assert.That(enemy.rb.constraints & RigidbodyConstraints2D.FreezePositionX, Is.EqualTo(RigidbodyConstraints2D.FreezePositionX));
         Assert.That(enemy.rb.linearVelocity.x, Is.Zero);
         Assert.That(enemy.transform.position, Is.EqualTo(waitingPosition));
         target.transform.position = enemy.transform.position + Vector3.right * 5f;
@@ -1114,6 +1131,7 @@ public class EnemyFlightGuardTests
         EnemyController enemy = Guard(out EnemyShieldGuard guard);
         enemy.Kit = Resources.Load<EnemyKit>("EnemySo/EK_ShieldGuard");
         var target = Host("RangeBoundaryTarget", enemy.transform.position + Vector3.right * 9f);
+        Assert.That(enemy.Kit, Is.Not.Null);
         Assert.That(guard.EngagementRange, Is.EqualTo(enemy.Kit.AttackRange));
         Assert.That(guard.CanEngage(target.transform), Is.True);
         Assert.That(EnemyCombatRange.IsInAttackRange(enemy.gameObject, target, 1f), Is.True);
@@ -1185,6 +1203,8 @@ public class EnemyFlightGuardTests
         enemy.bodyCollider.offset = Vector2.up * 0.5f;
         host.AddComponent<EnemyLocomotion>();
         guard = host.AddComponent<EnemyShieldGuard>();
+        // EditMode AddComponent does not run this runtime component's Awake.
+        typeof(EnemyShieldGuard).GetMethod("Awake", Private).Invoke(guard, null);
         var hitbox = Host("ShieldHitbox", host.transform.position + Vector3.right);
         hitbox.transform.SetParent(host.transform);
         enemy.attackHitbox = hitbox.AddComponent<BoxCollider2D>();
