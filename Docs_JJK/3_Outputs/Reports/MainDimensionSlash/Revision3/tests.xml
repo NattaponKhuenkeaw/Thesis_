@@ -1,0 +1,1073 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<test-suite type="TestSuite" id="1000" name="Thesis" fullname="Thesis" runstate="Runnable" testcasecount="849" result="Failed" site="Child" start-time="2026-10-27 18:45:38Z" end-time="2026-10-27 18:45:40Z" duration="1.248180" total="154" passed="143" failed="11" inconclusive="0" skipped="0" asserts="0">
+  <properties>
+    <property name="platform" value="EditMode" />
+  </properties>
+  <failure>
+    <message><![CDATA[One or more child tests had errors]]></message>
+  </failure>
+  <test-suite type="Assembly" id="2014" name="Assembly-CSharp-Editor.dll" fullname="C:/Users/Apricha/Documents/GitHub/Thesis_/Library/ScriptAssemblies/Assembly-CSharp-Editor.dll" runstate="Runnable" testcasecount="849" result="Failed" site="Child" start-time="2026-10-27 18:45:38Z" end-time="2026-10-27 18:45:40Z" duration="1.227850" total="154" passed="143" failed="11" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="_PID" value="5484" />
+      <property name="_APPDOMAIN" value="Unity Child Domain" />
+      <property name="platform" value="EditMode" />
+      <property name="EditorOnly" value="True" />
+    </properties>
+    <failure>
+      <message><![CDATA[One or more child tests had errors]]></message>
+    </failure>
+    <test-suite type="TestFixture" id="1001" name="AbilityUIFeedbackTests" fullname="AbilityUIFeedbackTests" classname="AbilityUIFeedbackTests" runstate="Runnable" testcasecount="7" result="Passed" start-time="2026-10-27 18:45:38Z" end-time="2026-10-27 18:45:39Z" duration="0.092992" total="7" passed="7" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <test-case id="1009" name="AuthoredPrefabWiresAllAbilitySlotsAndKeepsControllerOutsideHiddenRoots" fullname="AbilityUIFeedbackTests.AuthoredPrefabWiresAllAbilitySlotsAndKeepsControllerOutsideHiddenRoots" methodname="AuthoredPrefabWiresAllAbilitySlotsAndKeepsControllerOutsideHiddenRoots" classname="AbilityUIFeedbackTests" runstate="Runnable" seed="677205804" result="Passed" start-time="2026-10-27 18:45:38Z" end-time="2026-10-27 18:45:38Z" duration="0.026853" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1002" name="CharacterRefreshDoesNotStartSkillReadyRush" fullname="AbilityUIFeedbackTests.CharacterRefreshDoesNotStartSkillReadyRush" methodname="CharacterRefreshDoesNotStartSkillReadyRush" classname="AbilityUIFeedbackTests" runstate="Runnable" seed="265124736" result="Passed" start-time="2026-10-27 18:45:38Z" end-time="2026-10-27 18:45:39Z" duration="0.009178" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1004" name="DashDisplayReadsMovementFramesAndStartsOneRushOnExpiry" fullname="AbilityUIFeedbackTests.DashDisplayReadsMovementFramesAndStartsOneRushOnExpiry" methodname="DashDisplayReadsMovementFramesAndStartsOneRushOnExpiry" classname="AbilityUIFeedbackTests" runstate="Runnable" seed="994956831" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.020396" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1005" name="RebindingAfterDashExpiryDoesNotQueueReadyFeedback" fullname="AbilityUIFeedbackTests.RebindingAfterDashExpiryDoesNotQueueReadyFeedback" methodname="RebindingAfterDashExpiryDoesNotQueueReadyFeedback" classname="AbilityUIFeedbackTests" runstate="Runnable" seed="1305838438" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.003979" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1003" name="ReenableEstablishesReadyStateWithoutBounce" fullname="AbilityUIFeedbackTests.ReenableEstablishesReadyStateWithoutBounce" methodname="ReenableEstablishesReadyStateWithoutBounce" classname="AbilityUIFeedbackTests" runstate="Runnable" seed="1291592273" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.002916" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-suite type="ParameterizedMethod" id="1008" name="ZoneCommandTogglesCombatRootsEvenWithoutNavigation" fullname="AbilityUIFeedbackTests.ZoneCommandTogglesCombatRootsEvenWithoutNavigation" classname="AbilityUIFeedbackTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.011996" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1006" name="ZoneCommandTogglesCombatRootsEvenWithoutNavigation(True)" fullname="AbilityUIFeedbackTests.ZoneCommandTogglesCombatRootsEvenWithoutNavigation(True)" methodname="ZoneCommandTogglesCombatRootsEvenWithoutNavigation" classname="AbilityUIFeedbackTests" runstate="Runnable" seed="1246808697" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.005738" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1007" name="ZoneCommandTogglesCombatRootsEvenWithoutNavigation(False)" fullname="AbilityUIFeedbackTests.ZoneCommandTogglesCombatRootsEvenWithoutNavigation(False)" methodname="ZoneCommandTogglesCombatRootsEvenWithoutNavigation" classname="AbilityUIFeedbackTests" runstate="Runnable" seed="2017878190" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.004443" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+    </test-suite>
+    <test-suite type="TestFixture" id="1183" name="CombatDamageTypeTests" fullname="CombatDamageTypeTests" classname="CombatDamageTypeTests" runstate="Runnable" testcasecount="18" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.031439" total="18" passed="18" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <test-case id="1201" name="AdditionalDamageTextScale_FollowsDamageRatioAndCriticalRules" fullname="CombatDamageTypeTests.AdditionalDamageTextScale_FollowsDamageRatioAndCriticalRules" methodname="AdditionalDamageTextScale_FollowsDamageRatioAndCriticalRules" classname="CombatDamageTypeTests" runstate="Runnable" seed="26497655" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.001340" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-suite type="ParameterizedMethod" id="1190" name="BuildStatMatrixUsesOnlyEligibleMultipliers" fullname="CombatDamageTypeTests.BuildStatMatrixUsesOnlyEligibleMultipliers" classname="CombatDamageTypeTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.003364" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1185" name="BuildStatMatrixUsesOnlyEligibleMultipliers(Primary,None,120.0f)" fullname="CombatDamageTypeTests.BuildStatMatrixUsesOnlyEligibleMultipliers(Primary,None,120.0f)" methodname="BuildStatMatrixUsesOnlyEligibleMultipliers" classname="CombatDamageTypeTests" runstate="Runnable" seed="914161690" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.002516" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1186" name="BuildStatMatrixUsesOnlyEligibleMultipliers(Primary,Lightning,180.0f)" fullname="CombatDamageTypeTests.BuildStatMatrixUsesOnlyEligibleMultipliers(Primary,Lightning,180.0f)" methodname="BuildStatMatrixUsesOnlyEligibleMultipliers" classname="CombatDamageTypeTests" runstate="Runnable" seed="1754765449" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.000156" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1187" name="BuildStatMatrixUsesOnlyEligibleMultipliers(Dot,Lightning,150.0f)" fullname="CombatDamageTypeTests.BuildStatMatrixUsesOnlyEligibleMultipliers(Dot,Lightning,150.0f)" methodname="BuildStatMatrixUsesOnlyEligibleMultipliers" classname="CombatDamageTypeTests" runstate="Runnable" seed="744789945" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.000052" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1188" name="BuildStatMatrixUsesOnlyEligibleMultipliers(Additional,None,130.0f)" fullname="CombatDamageTypeTests.BuildStatMatrixUsesOnlyEligibleMultipliers(Additional,None,130.0f)" methodname="BuildStatMatrixUsesOnlyEligibleMultipliers" classname="CombatDamageTypeTests" runstate="Runnable" seed="105715240" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.000051" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1189" name="BuildStatMatrixUsesOnlyEligibleMultipliers(Additional,Lightning,195.0f)" fullname="CombatDamageTypeTests.BuildStatMatrixUsesOnlyEligibleMultipliers(Additional,Lightning,195.0f)" methodname="BuildStatMatrixUsesOnlyEligibleMultipliers" classname="CombatDamageTypeTests" runstate="Runnable" seed="2096553020" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.000046" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-case id="1191" name="DeliveryMitigationFollowsPrimaryDotAdditionalContract" fullname="CombatDamageTypeTests.DeliveryMitigationFollowsPrimaryDotAdditionalContract" methodname="DeliveryMitigationFollowsPrimaryDotAdditionalContract" classname="CombatDamageTypeTests" runstate="Runnable" seed="1624854959" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.001020" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1202" name="DotDamageTextScale_FollowsDamageRatioAndCriticalRules" fullname="CombatDamageTypeTests.DotDamageTextScale_FollowsDamageRatioAndCriticalRules" methodname="DotDamageTextScale_FollowsDamageRatioAndCriticalRules" classname="CombatDamageTypeTests" runstate="Runnable" seed="983005753" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.000775" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1199" name="EnemyProfileMapsEveryDamageTypeToItsReduction" fullname="CombatDamageTypeTests.EnemyProfileMapsEveryDamageTypeToItsReduction" methodname="EnemyProfileMapsEveryDamageTypeToItsReduction" classname="CombatDamageTypeTests" runstate="Runnable" seed="244634967" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.000524" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1197" name="FinalDamageIsRoundedOnceAfterDecimalStatCalculation" fullname="CombatDamageTypeTests.FinalDamageIsRoundedOnceAfterDecimalStatCalculation" methodname="FinalDamageIsRoundedOnceAfterDecimalStatCalculation" classname="CombatDamageTypeTests" runstate="Runnable" seed="1998892567" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.000249" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1196" name="NegativeBuildBonusesCannotProduceNegativeDamage" fullname="CombatDamageTypeTests.NegativeBuildBonusesCannotProduceNegativeDamage" methodname="NegativeBuildBonusesCannotProduceNegativeDamage" classname="CombatDamageTypeTests" runstate="Runnable" seed="2029181276" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.000208" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1194" name="OnlyPositiveNonPhysicalPrimaryOrAdditionalCanRequestDot" fullname="CombatDamageTypeTests.OnlyPositiveNonPhysicalPrimaryOrAdditionalCanRequestDot" methodname="OnlyPositiveNonPhysicalPrimaryOrAdditionalCanRequestDot" classname="CombatDamageTypeTests" runstate="Runnable" seed="687668319" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.000349" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1200" name="ParticleDamageAppliesReductionAndMapsElementDefinition" fullname="CombatDamageTypeTests.ParticleDamageAppliesReductionAndMapsElementDefinition" methodname="ParticleDamageAppliesReductionAndMapsElementDefinition" classname="CombatDamageTypeTests" runstate="Runnable" seed="1471640446" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.002504" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1193" name="ProcessorUsesEnemyTypeReductionExactlyOnce" fullname="CombatDamageTypeTests.ProcessorUsesEnemyTypeReductionExactlyOnce" methodname="ProcessorUsesEnemyTypeReductionExactlyOnce" classname="CombatDamageTypeTests" runstate="Runnable" seed="1812135239" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.015046" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1198" name="SameElementDotUsesStrongestSnapshotAndPreservesEqualCadence" fullname="CombatDamageTypeTests.SameElementDotUsesStrongestSnapshotAndPreservesEqualCadence" methodname="SameElementDotUsesStrongestSnapshotAndPreservesEqualCadence" classname="CombatDamageTypeTests" runstate="Runnable" seed="622827347" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.002470" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1195" name="SecondaryDamageDoesNotCritUnlessExplicitlyAllowed" fullname="CombatDamageTypeTests.SecondaryDamageDoesNotCritUnlessExplicitlyAllowed" methodname="SecondaryDamageDoesNotCritUnlessExplicitlyAllowed" classname="CombatDamageTypeTests" runstate="Runnable" seed="1085203247" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.000440" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1184" name="StatCatalogExposesTenBuildableStatsAndHidesSpeed" fullname="CombatDamageTypeTests.StatCatalogExposesTenBuildableStatsAndHidesSpeed" methodname="StatCatalogExposesTenBuildableStatsAndHidesSpeed" classname="CombatDamageTypeTests" runstate="Runnable" seed="609394422" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.001699" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1192" name="TypeReductionIsAppliedExactlyOnceByThePureResolver" fullname="CombatDamageTypeTests.TypeReductionIsAppliedExactlyOnceByThePureResolver" methodname="TypeReductionIsAppliedExactlyOnceByThePureResolver" classname="CombatDamageTypeTests" runstate="Runnable" seed="1986550682" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.000274" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+    </test-suite>
+    <test-suite type="TestFixture" id="1674" name="MainDimensionSlashTests" fullname="MainDimensionSlashTests" classname="MainDimensionSlashTests" runstate="Runnable" testcasecount="28" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.256666" total="28" passed="28" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <test-case id="1690" name="BarrageAndExistingCutProvideTwentyLowImpactBudgetedWindows" fullname="MainDimensionSlashTests.BarrageAndExistingCutProvideTwentyLowImpactBudgetedWindows" methodname="BarrageAndExistingCutProvideTwentyLowImpactBudgetedWindows" classname="MainDimensionSlashTests" runstate="Runnable" seed="346044712" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.044422" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1691" name="CameraEnvelopeRescalesAndCanBeSampledOutOfOrder" fullname="MainDimensionSlashTests.CameraEnvelopeRescalesAndCanBeSampledOutOfOrder" methodname="CameraEnvelopeRescalesAndCanBeSampledOutOfOrder" classname="MainDimensionSlashTests" runstate="Runnable" seed="805240017" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.006064" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1696" name="CriticalBarrageDamageRetainsCritWithoutTriggeringMinimumHitstop" fullname="MainDimensionSlashTests.CriticalBarrageDamageRetainsCritWithoutTriggeringMinimumHitstop" methodname="CriticalBarrageDamageRetainsCritWithoutTriggeringMinimumHitstop" classname="MainDimensionSlashTests" runstate="Runnable" seed="723469983" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.014461" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1701" name="ExecutionKeepsOriginalContactsAndReplacesOnlyFinalSlashWithTransparencyMask" fullname="MainDimensionSlashTests.ExecutionKeepsOriginalContactsAndReplacesOnlyFinalSlashWithTransparencyMask" methodname="ExecutionKeepsOriginalContactsAndReplacesOnlyFinalSlashWithTransparencyMask" classname="MainDimensionSlashTests" runstate="Runnable" seed="528871804" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.007886" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1689" name="ExistingCooldownDoesNotBlockOrChangeReadyFollowUp" fullname="MainDimensionSlashTests.ExistingCooldownDoesNotBlockOrChangeReadyFollowUp" methodname="ExistingCooldownDoesNotBlockOrChangeReadyFollowUp" classname="MainDimensionSlashTests" runstate="Runnable" seed="588141606" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.018658" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1687" name="ExtraCutsCannotBankOrRefreshAndStartConsumesExactlyOnce" fullname="MainDimensionSlashTests.ExtraCutsCannotBankOrRefreshAndStartConsumesExactlyOnce" methodname="ExtraCutsCannotBankOrRefreshAndStartConsumesExactlyOnce" classname="MainDimensionSlashTests" runstate="Runnable" seed="311282977" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.005048" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1680" name="FifthPaidManualRootArmsOneWindowAndResetsCount" fullname="MainDimensionSlashTests.FifthPaidManualRootArmsOneWindowAndResetsCount" methodname="FifthPaidManualRootArmsOneWindowAndResetsCount" classname="MainDimensionSlashTests" runstate="Runnable" seed="79181975" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.006913" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1692" name="FinalCameraViewportIsClampedIncludingExistingCorrection" fullname="MainDimensionSlashTests.FinalCameraViewportIsClampedIncludingExistingCorrection" methodname="FinalCameraViewportIsClampedIncludingExistingCorrection" classname="MainDimensionSlashTests" runstate="Runnable" seed="737236961" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.005194" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1699" name="JudgmentFieldIsDetachedAndThirtyPercentLarger" fullname="MainDimensionSlashTests.JudgmentFieldIsDetachedAndThirtyPercentLarger" methodname="JudgmentFieldIsDetachedAndThirtyPercentLarger" classname="MainDimensionSlashTests" runstate="Runnable" seed="1729286155" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.017618" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-suite type="ParameterizedMethod" id="1679" name="LockedLevelsNeverCountOrSelectFollowUp" fullname="MainDimensionSlashTests.LockedLevelsNeverCountOrSelectFollowUp" classname="MainDimensionSlashTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.019058" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1675" name="LockedLevelsNeverCountOrSelectFollowUp(0)" fullname="MainDimensionSlashTests.LockedLevelsNeverCountOrSelectFollowUp(0)" methodname="LockedLevelsNeverCountOrSelectFollowUp" classname="MainDimensionSlashTests" runstate="Runnable" seed="519248137" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.004906" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1676" name="LockedLevelsNeverCountOrSelectFollowUp(1)" fullname="MainDimensionSlashTests.LockedLevelsNeverCountOrSelectFollowUp(1)" methodname="LockedLevelsNeverCountOrSelectFollowUp" classname="MainDimensionSlashTests" runstate="Runnable" seed="1992987968" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.005181" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1677" name="LockedLevelsNeverCountOrSelectFollowUp(2)" fullname="MainDimensionSlashTests.LockedLevelsNeverCountOrSelectFollowUp(2)" methodname="LockedLevelsNeverCountOrSelectFollowUp" classname="MainDimensionSlashTests" runstate="Runnable" seed="1129856064" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.004808" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1678" name="LockedLevelsNeverCountOrSelectFollowUp(3)" fullname="MainDimensionSlashTests.LockedLevelsNeverCountOrSelectFollowUp(3)" methodname="LockedLevelsNeverCountOrSelectFollowUp" classname="MainDimensionSlashTests" runstate="Runnable" seed="88400503" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.003895" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-case id="1694" name="OlderCameraOwnerCannotSampleOrReleaseReplacement" fullname="MainDimensionSlashTests.OlderCameraOwnerCannotSampleOrReleaseReplacement" methodname="OlderCameraOwnerCannotSampleOrReleaseReplacement" classname="MainDimensionSlashTests" runstate="Runnable" seed="1019923634" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.007174" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1697" name="ProceduralPreviewRestoresHiddenActorAndSeedIsRepeatable" fullname="MainDimensionSlashTests.ProceduralPreviewRestoresHiddenActorAndSeedIsRepeatable" methodname="ProceduralPreviewRestoresHiddenActorAndSeedIsRepeatable" classname="MainDimensionSlashTests" runstate="Runnable" seed="1694889080" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.008361" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1695" name="QteAndInvalidatedFieldExecutionCannotOwnActionCamera" fullname="MainDimensionSlashTests.QteAndInvalidatedFieldExecutionCannotOwnActionCamera" methodname="QteAndInvalidatedFieldExecutionCannotOwnActionCamera" classname="MainDimensionSlashTests" runstate="Runnable" seed="1424907835" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.005895" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1700" name="QteComboUsesRecoveryFramesAndLeavesManualCutTerminal" fullname="MainDimensionSlashTests.QteComboUsesRecoveryFramesAndLeavesManualCutTerminal" methodname="QteComboUsesRecoveryFramesAndLeavesManualCutTerminal" classname="MainDimensionSlashTests" runstate="Runnable" seed="831711018" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.008002" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-suite type="ParameterizedMethod" id="1704" name="QteRecoveryNaAdvancesComboWithoutCachedCostOrGateCount" fullname="MainDimensionSlashTests.QteRecoveryNaAdvancesComboWithoutCachedCostOrGateCount" classname="MainDimensionSlashTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.030960" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1702" name="QteRecoveryNaAdvancesComboWithoutCachedCostOrGateCount(27)" fullname="MainDimensionSlashTests.QteRecoveryNaAdvancesComboWithoutCachedCostOrGateCount(27)" methodname="QteRecoveryNaAdvancesComboWithoutCachedCostOrGateCount" classname="MainDimensionSlashTests" runstate="Runnable" seed="1490939863" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.025723" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1703" name="QteRecoveryNaAdvancesComboWithoutCachedCostOrGateCount(145)" fullname="MainDimensionSlashTests.QteRecoveryNaAdvancesComboWithoutCachedCostOrGateCount(145)" methodname="QteRecoveryNaAdvancesComboWithoutCachedCostOrGateCount" classname="MainDimensionSlashTests" runstate="Runnable" seed="1172029319" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.005087" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="ParameterizedMethod" id="1685" name="QteUnknownOtherActionOrStepCannotCount" fullname="MainDimensionSlashTests.QteUnknownOtherActionOrStepCannotCount" classname="MainDimensionSlashTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.018251" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1681" name="QteUnknownOtherActionOrStepCannotCount(True,&quot;main.dash.dimension_cut&quot;,&quot;DimensionCut&quot;,True)" fullname="MainDimensionSlashTests.QteUnknownOtherActionOrStepCannotCount(True,&quot;main.dash.dimension_cut&quot;,&quot;DimensionCut&quot;,True)" methodname="QteUnknownOtherActionOrStepCannotCount" classname="MainDimensionSlashTests" runstate="Runnable" seed="961864903" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.004841" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1682" name="QteUnknownOtherActionOrStepCannotCount(False,&quot;main.dash.dimension_cut&quot;,&quot;DimensionCut&quot;,False)" fullname="MainDimensionSlashTests.QteUnknownOtherActionOrStepCannotCount(False,&quot;main.dash.dimension_cut&quot;,&quot;DimensionCut&quot;,False)" methodname="QteUnknownOtherActionOrStepCannotCount" classname="MainDimensionSlashTests" runstate="Runnable" seed="785338501" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.005532" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1683" name="QteUnknownOtherActionOrStepCannotCount(False,&quot;other.action&quot;,&quot;DimensionCut&quot;,True)" fullname="MainDimensionSlashTests.QteUnknownOtherActionOrStepCannotCount(False,&quot;other.action&quot;,&quot;DimensionCut&quot;,True)" methodname="QteUnknownOtherActionOrStepCannotCount" classname="MainDimensionSlashTests" runstate="Runnable" seed="95975368" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.003759" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1684" name="QteUnknownOtherActionOrStepCannotCount(False,&quot;main.dash.dimension_cut&quot;,&quot;OtherStep&quot;,True)" fullname="MainDimensionSlashTests.QteUnknownOtherActionOrStepCannotCount(False,&quot;main.dash.dimension_cut&quot;,&quot;OtherStep&quot;,True)" methodname="QteUnknownOtherActionOrStepCannotCount" classname="MainDimensionSlashTests" runstate="Runnable" seed="1865302457" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.003879" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-case id="1688" name="RealFsmSpendsFiveCachedCutsThenSkillConsumesOneOpportunity" fullname="MainDimensionSlashTests.RealFsmSpendsFiveCachedCutsThenSkillConsumesOneOpportunity" methodname="RealFsmSpendsFiveCachedCutsThenSkillConsumesOneOpportunity" classname="MainDimensionSlashTests" runstate="Runnable" seed="1450824232" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.008665" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1705" name="SkippingQteRecoveryEndsComboWithoutAutomaticallyExecutingFollowUp" fullname="MainDimensionSlashTests.SkippingQteRecoveryEndsComboWithoutAutomaticallyExecutingFollowUp" methodname="SkippingQteRecoveryEndsComboWithoutAutomaticallyExecutingFollowUp" classname="MainDimensionSlashTests" runstate="Runnable" seed="1605215715" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.006930" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1686" name="StaleExecutionAndDeadOwnerCannotCount" fullname="MainDimensionSlashTests.StaleExecutionAndDeadOwnerCannotCount" methodname="StaleExecutionAndDeadOwnerCannotCount" classname="MainDimensionSlashTests" runstate="Runnable" seed="1293720429" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.004526" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1693" name="UnsupportedCameraOrSmallRoomRetainsBaseComposition" fullname="MainDimensionSlashTests.UnsupportedCameraOrSmallRoomRetainsBaseComposition" methodname="UnsupportedCameraOrSmallRoomRetainsBaseComposition" classname="MainDimensionSlashTests" runstate="Runnable" seed="1285656278" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.003824" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1698" name="ViewportFittedCutsReachBeyondVisibleWidthAndHeight" fullname="MainDimensionSlashTests.ViewportFittedCutsReachBeyondVisibleWidthAndHeight" methodname="ViewportFittedCutsReachBeyondVisibleWidthAndHeight" classname="MainDimensionSlashTests" runstate="Runnable" seed="2128457116" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.007009" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+    </test-suite>
+    <test-suite type="TestFixture" id="1732" name="PlayerActionInterruptTests" fullname="PlayerActionInterruptTests" classname="PlayerActionInterruptTests" runstate="Runnable" testcasecount="10" result="Failed" site="Child" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.027176" total="10" passed="9" failed="1" inconclusive="0" skipped="0" asserts="0">
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-case id="1733" name="BaseState_AllowsInterruptionByDamage" fullname="PlayerActionInterruptTests.BaseState_AllowsInterruptionByDamage" methodname="BaseState_AllowsInterruptionByDamage" classname="PlayerActionInterruptTests" runstate="Runnable" seed="2075987869" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.000708" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1735" name="FrameDataAction_InActivePhase_HasPseudoSuperArmor" fullname="PlayerActionInterruptTests.FrameDataAction_InActivePhase_HasPseudoSuperArmor" methodname="FrameDataAction_InActivePhase_HasPseudoSuperArmor" classname="PlayerActionInterruptTests" runstate="Runnable" seed="378092360" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.000578" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1737" name="FrameDataAction_InCancelPhase_HasPseudoSuperArmor" fullname="PlayerActionInterruptTests.FrameDataAction_InCancelPhase_HasPseudoSuperArmor" methodname="FrameDataAction_InCancelPhase_HasPseudoSuperArmor" classname="PlayerActionInterruptTests" runstate="Runnable" seed="624929023" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.000382" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1736" name="FrameDataAction_InRecoveryPhase_HasPseudoSuperArmor" fullname="PlayerActionInterruptTests.FrameDataAction_InRecoveryPhase_HasPseudoSuperArmor" methodname="FrameDataAction_InRecoveryPhase_HasPseudoSuperArmor" classname="PlayerActionInterruptTests" runstate="Runnable" seed="481039345" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.000406" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1734" name="FrameDataAction_InStartup_CanBeInterrupted" fullname="PlayerActionInterruptTests.FrameDataAction_InStartup_CanBeInterrupted" methodname="FrameDataAction_InStartup_CanBeInterrupted" classname="PlayerActionInterruptTests" runstate="Runnable" seed="83600419" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.000408" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1738" name="HitstunState_AlwaysAllowsInterruptionByDamage" fullname="PlayerActionInterruptTests.HitstunState_AlwaysAllowsInterruptionByDamage" methodname="HitstunState_AlwaysAllowsInterruptionByDamage" classname="PlayerActionInterruptTests" runstate="Runnable" seed="1567700793" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.000378" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1740" name="TakeDamage_DuringActivePhase_AppliesDamageWithoutEnteringHitstun" fullname="PlayerActionInterruptTests.TakeDamage_DuringActivePhase_AppliesDamageWithoutEnteringHitstun" methodname="TakeDamage_DuringActivePhase_AppliesDamageWithoutEnteringHitstun" classname="PlayerActionInterruptTests" runstate="Runnable" seed="989792974" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.008670" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1741" name="TakeDamage_DuringStartup_InterruptsIntoHitstun" fullname="PlayerActionInterruptTests.TakeDamage_DuringStartup_InterruptsIntoHitstun" methodname="TakeDamage_DuringStartup_InterruptsIntoHitstun" classname="PlayerActionInterruptTests" runstate="Runnable" seed="358566926" result="Failed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.006334" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+        <failure>
+          <message><![CDATA[  Expected: null
+  But was:  <PlayerActionInterruptTests+TestActionState>
+]]></message>
+          <stack-trace><![CDATA[at PlayerActionInterruptTests.TakeDamage_DuringStartup_InterruptsIntoHitstun () [0x000c5] in C:\Users\Apricha\Documents\GitHub\Thesis_\Assets\Project\Scripts\Editor\Tests\PlayerActionInterruptTests.cs:295
+]]></stack-trace>
+        </failure>
+      </test-case>
+      <test-case id="1742" name="TakeDamage_LethalDamage_AlwaysInterruptsAndKills" fullname="PlayerActionInterruptTests.TakeDamage_LethalDamage_AlwaysInterruptsAndKills" methodname="TakeDamage_LethalDamage_AlwaysInterruptsAndKills" classname="PlayerActionInterruptTests" runstate="Runnable" seed="491320334" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.007666" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1739" name="TrueSuperArmor_OverridesStartup_PreventingInterruption" fullname="PlayerActionInterruptTests.TrueSuperArmor_OverridesStartup_PreventingInterruption" methodname="TrueSuperArmor_OverridesStartup_PreventingInterruption" classname="PlayerActionInterruptTests" runstate="Runnable" seed="654451871" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.000809" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+    </test-suite>
+    <test-suite type="TestFixture" id="1750" name="QteTeamSwapTests" fullname="QteTeamSwapTests" classname="QteTeamSwapTests" runstate="Runnable" testcasecount="22" result="Failed" site="Child" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.448789" total="22" passed="20" failed="2" inconclusive="0" skipped="0" asserts="0">
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-case id="1761" name="AcceptedDamagePipelineCarriesExecutionAndArmsWindow" fullname="QteTeamSwapTests.AcceptedDamagePipelineCarriesExecutionAndArmsWindow" methodname="AcceptedDamagePipelineCarriesExecutionAndArmsWindow" classname="QteTeamSwapTests" runstate="Runnable" seed="1923451125" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.033608" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1751" name="AuthoredProfilesReferenceActualAttacksWithoutMutatingTheirNextNode" fullname="QteTeamSwapTests.AuthoredProfilesReferenceActualAttacksWithoutMutatingTheirNextNode" methodname="AuthoredProfilesReferenceActualAttacksWithoutMutatingTheirNextNode" classname="QteTeamSwapTests" runstate="Runnable" seed="1874077123" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.009046" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1758" name="CloneIntroUnrelatedActionAndPreviousFieldSessionCannotArm" fullname="QteTeamSwapTests.CloneIntroUnrelatedActionAndPreviousFieldSessionCannotArm" methodname="CloneIntroUnrelatedActionAndPreviousFieldSessionCannotArm" classname="QteTeamSwapTests" runstate="Runnable" seed="1421124600" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.010699" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1768" name="ConfirmedActiveStepAllowsEarlyQteButUnconfirmedAndAutoChainDoNot" fullname="QteTeamSwapTests.ConfirmedActiveStepAllowsEarlyQteButUnconfirmedAndAutoChainDoNot" methodname="ConfirmedActiveStepAllowsEarlyQteButUnconfirmedAndAutoChainDoNot" classname="QteTeamSwapTests" runstate="Runnable" seed="1155163233" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.016110" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1760" name="EntryUsesOutgoingFacingEvenWhenEnemyIsBehindAfterDashThrough" fullname="QteTeamSwapTests.EntryUsesOutgoingFacingEvenWhenEnemyIsBehindAfterDashThrough" methodname="EntryUsesOutgoingFacingEvenWhenEnemyIsBehindAfterDashThrough" classname="QteTeamSwapTests" runstate="Runnable" seed="685731363" result="Failed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.010093" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+        <failure>
+          <message><![CDATA[  Expected: 19999.0f +/- 0.0299999993f
+  But was:  20002.0f
+]]></message>
+          <stack-trace><![CDATA[at QteTeamSwapTests.EntryUsesOutgoingFacingEvenWhenEnemyIsBehindAfterDashThrough () [0x0007e] in C:\Users\Apricha\Documents\GitHub\Thesis_\Assets\Project\Scripts\Editor\Tests\QteTeamSwapTests.cs:218
+]]></stack-trace>
+        </failure>
+      </test-case>
+      <test-case id="1763" name="FailedCooldownAttemptRetainsWindowAndSafeSwapConsumesIt" fullname="QteTeamSwapTests.FailedCooldownAttemptRetainsWindowAndSafeSwapConsumesIt" methodname="FailedCooldownAttemptRetainsWindowAndSafeSwapConsumesIt" classname="QteTeamSwapTests" runstate="Runnable" seed="1474989593" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.016501" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1759" name="GroundedIntroPlacementUsesOutgoingOffsetAndMirrors" fullname="QteTeamSwapTests.GroundedIntroPlacementUsesOutgoingOffsetAndMirrors" methodname="GroundedIntroPlacementUsesOutgoingOffsetAndMirrors" classname="QteTeamSwapTests" runstate="Runnable" seed="758137458" result="Failed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.008772" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+        <failure>
+          <message><![CDATA[  Expected: 19999.0f +/- 0.0299999993f
+  But was:  19998.0f
+]]></message>
+          <stack-trace><![CDATA[at QteTeamSwapTests.GroundedIntroPlacementUsesOutgoingOffsetAndMirrors () [0x00039] in C:\Users\Apricha\Documents\GitHub\Thesis_\Assets\Project\Scripts\Editor\Tests\QteTeamSwapTests.cs:200
+]]></stack-trace>
+        </failure>
+      </test-case>
+      <test-case id="1771" name="HitHistoryTransferPreventsCloneReplayingAcceptedTarget" fullname="QteTeamSwapTests.HitHistoryTransferPreventsCloneReplayingAcceptedTarget" methodname="HitHistoryTransferPreventsCloneReplayingAcceptedTarget" classname="QteTeamSwapTests" runstate="Runnable" seed="221498768" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.009946" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1766" name="HitstunAndPauseCannotUsePreparedEntry" fullname="QteTeamSwapTests.HitstunAndPauseCannotUsePreparedEntry" methodname="HitstunAndPauseCannotUsePreparedEntry" classname="QteTeamSwapTests" runstate="Runnable" seed="18782683" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.011259" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1769" name="IntroDoesNotAcceptCombatCancelBeforeItsAuthoredBoundary" fullname="QteTeamSwapTests.IntroDoesNotAcceptCombatCancelBeforeItsAuthoredBoundary" methodname="IntroDoesNotAcceptCombatCancelBeforeItsAuthoredBoundary" classname="QteTeamSwapTests" runstate="Runnable" seed="187332652" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.008571" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1767" name="IntroSlowMotionHasEditableStrongHandoffDefaults" fullname="QteTeamSwapTests.IntroSlowMotionHasEditableStrongHandoffDefaults" methodname="IntroSlowMotionHasEditableStrongHandoffDefaults" classname="QteTeamSwapTests" runstate="Runnable" seed="1610785606" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.007159" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1762" name="MainIntroCompletionReturnsToLocomotionWithoutAttack5OrResourceCost" fullname="QteTeamSwapTests.MainIntroCompletionReturnsToLocomotionWithoutAttack5OrResourceCost" methodname="MainIntroCompletionReturnsToLocomotionWithoutAttack5OrResourceCost" classname="QteTeamSwapTests" runstate="Runnable" seed="345503345" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.008819" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1764" name="MainIntroDoesNotRequireCachedCutAndHasOriginalDamageBudget" fullname="QteTeamSwapTests.MainIntroDoesNotRequireCachedCutAndHasOriginalDamageBudget" methodname="MainIntroDoesNotRequireCachedCutAndHasOriginalDamageBudget" classname="QteTeamSwapTests" runstate="Runnable" seed="448377590" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.007366" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1765" name="MissingGroundRejectsPreparedEntry" fullname="QteTeamSwapTests.MissingGroundRejectsPreparedEntry" methodname="MissingGroundRejectsPreparedEntry" classname="QteTeamSwapTests" runstate="Runnable" seed="543221854" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.007430" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1772" name="OutgoingClonePreservesResolvedTargetMotionAndLongActionLifetime" fullname="QteTeamSwapTests.OutgoingClonePreservesResolvedTargetMotionAndLongActionLifetime" methodname="OutgoingClonePreservesResolvedTargetMotionAndLongActionLifetime" classname="QteTeamSwapTests" runstate="Runnable" seed="1295338485" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.016702" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1773" name="PortraitShowsReadyPulseAndClearsAfterEntry" fullname="QteTeamSwapTests.PortraitShowsReadyPulseAndClearsAfterEntry" methodname="PortraitShowsReadyPulseAndClearsAfterEntry" classname="QteTeamSwapTests" runstate="Runnable" seed="1067023114" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.218919" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1752" name="SuccessfulHitRefreshesOneFiveSecondWindow" fullname="QteTeamSwapTests.SuccessfulHitRefreshesOneFiveSecondWindow" methodname="SuccessfulHitRefreshesOneFiveSecondWindow" classname="QteTeamSwapTests" runstate="Runnable" seed="95168839" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.008010" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-suite type="ParameterizedMethod" id="1757" name="UnqualifiedDamageCannotArm" fullname="QteTeamSwapTests.UnqualifiedDamageCannotArm" classname="QteTeamSwapTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.028656" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1753" name="UnqualifiedDamageCannotArm(Primary,0.0f,None)" fullname="QteTeamSwapTests.UnqualifiedDamageCannotArm(Primary,0.0f,None)" methodname="UnqualifiedDamageCannotArm" classname="QteTeamSwapTests" runstate="Runnable" seed="1781043182" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.007035" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1754" name="UnqualifiedDamageCannotArm(Dot,10.0f,None)" fullname="QteTeamSwapTests.UnqualifiedDamageCannotArm(Dot,10.0f,None)" methodname="UnqualifiedDamageCannotArm" classname="QteTeamSwapTests" runstate="Runnable" seed="1802802214" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.006538" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1755" name="UnqualifiedDamageCannotArm(Additional,10.0f,None)" fullname="QteTeamSwapTests.UnqualifiedDamageCannotArm(Additional,10.0f,None)" methodname="UnqualifiedDamageCannotArm" classname="QteTeamSwapTests" runstate="Runnable" seed="520226771" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.007430" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1756" name="UnqualifiedDamageCannotArm(Primary,10.0f,Artifact)" fullname="QteTeamSwapTests.UnqualifiedDamageCannotArm(Primary,10.0f,Artifact)" methodname="UnqualifiedDamageCannotArm" classname="QteTeamSwapTests" runstate="Runnable" seed="2032133197" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.007322" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-case id="1770" name="WallClampsEntryAndGapRejectsIt" fullname="QteTeamSwapTests.WallClampsEntryAndGapRejectsIt" methodname="WallClampsEntryAndGapRejectsIt" classname="QteTeamSwapTests" runstate="Runnable" seed="1761691117" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.008859" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+    </test-suite>
+    <test-suite type="TestFixture" id="1921" name="ShadowMeterTests" fullname="ShadowMeterTests" classname="ShadowMeterTests" runstate="Runnable" testcasecount="69" result="Failed" site="Child" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:40Z" duration="0.368649" total="69" passed="61" failed="8" inconclusive="0" skipped="0" asserts="0">
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-case id="1978" name="ActionRadiusControlAndMotionRadiusUseTheSameSource" fullname="ShadowMeterTests.ActionRadiusControlAndMotionRadiusUseTheSameSource" methodname="ActionRadiusControlAndMotionRadiusUseTheSameSource" classname="ShadowMeterTests" runstate="Runnable" seed="1410267896" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.005088" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1979" name="ActionsWithoutTargetMotionKeepAuthoredFallbackRadius" fullname="ShadowMeterTests.ActionsWithoutTargetMotionKeepAuthoredFallbackRadius" methodname="ActionsWithoutTargetMotionKeepAuthoredFallbackRadius" classname="ShadowMeterTests" runstate="Runnable" seed="1077010733" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.004596" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-suite type="ParameterizedMethod" id="1936" name="CapacityUsesUnlockedPotentialNodes" fullname="ShadowMeterTests.CapacityUsesUnlockedPotentialNodes" classname="ShadowMeterTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.020885" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1931" name="CapacityUsesUnlockedPotentialNodes(0,2)" fullname="ShadowMeterTests.CapacityUsesUnlockedPotentialNodes(0,2)" methodname="CapacityUsesUnlockedPotentialNodes" classname="ShadowMeterTests" runstate="Runnable" seed="522045477" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.003895" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1932" name="CapacityUsesUnlockedPotentialNodes(1,3)" fullname="ShadowMeterTests.CapacityUsesUnlockedPotentialNodes(1,3)" methodname="CapacityUsesUnlockedPotentialNodes" classname="ShadowMeterTests" runstate="Runnable" seed="1918587328" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.003387" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1933" name="CapacityUsesUnlockedPotentialNodes(2,3)" fullname="ShadowMeterTests.CapacityUsesUnlockedPotentialNodes(2,3)" methodname="CapacityUsesUnlockedPotentialNodes" classname="ShadowMeterTests" runstate="Runnable" seed="1191475537" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.004493" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1934" name="CapacityUsesUnlockedPotentialNodes(3,3)" fullname="ShadowMeterTests.CapacityUsesUnlockedPotentialNodes(3,3)" methodname="CapacityUsesUnlockedPotentialNodes" classname="ShadowMeterTests" runstate="Runnable" seed="418289320" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.003477" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1935" name="CapacityUsesUnlockedPotentialNodes(4,5)" fullname="ShadowMeterTests.CapacityUsesUnlockedPotentialNodes(4,5)" methodname="CapacityUsesUnlockedPotentialNodes" classname="ShadowMeterTests" runstate="Runnable" seed="2027898888" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.005333" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="ParameterizedMethod" id="1982" name="CapturedTargetFacesEitherSideIndependentlyOfInput" fullname="ShadowMeterTests.CapturedTargetFacesEitherSideIndependentlyOfInput" classname="ShadowMeterTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.009108" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1980" name="CapturedTargetFacesEitherSideIndependentlyOfInput(-1)" fullname="ShadowMeterTests.CapturedTargetFacesEitherSideIndependentlyOfInput(-1)" methodname="CapturedTargetFacesEitherSideIndependentlyOfInput" classname="ShadowMeterTests" runstate="Runnable" seed="578605695" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.005239" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1981" name="CapturedTargetFacesEitherSideIndependentlyOfInput(1)" fullname="ShadowMeterTests.CapturedTargetFacesEitherSideIndependentlyOfInput(1)" methodname="CapturedTargetFacesEitherSideIndependentlyOfInput" classname="ShadowMeterTests" runstate="Runnable" seed="324133059" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.003706" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-case id="1996" name="CombatAirDashConsumesNormalAirDashAllowance" fullname="ShadowMeterTests.CombatAirDashConsumesNormalAirDashAllowance" methodname="CombatAirDashConsumesNormalAirDashAllowance" classname="ShadowMeterTests" runstate="Runnable" seed="402150114" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.004231" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1959" name="CombatDashLocksDashUntilExitThenStartsNormalCooldown" fullname="ShadowMeterTests.CombatDashLocksDashUntilExitThenStartsNormalCooldown" methodname="CombatDashLocksDashUntilExitThenStartsNormalCooldown" classname="ShadowMeterTests" runstate="Runnable" seed="1487014481" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.003923" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-suite type="ParameterizedMethod" id="1991" name="CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick" fullname="ShadowMeterTests.CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick" classname="ShadowMeterTests" runstate="Runnable" testcasecount="8" result="Failed" site="Child" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.039670" total="8" passed="0" failed="8" inconclusive="0" skipped="0" asserts="0">
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-case id="1983" name="CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick(Normal,1,False,0.0f,-1)" fullname="ShadowMeterTests.CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick(Normal,1,False,0.0f,-1)" methodname="CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick" classname="ShadowMeterTests" runstate="Runnable" seed="1935613184" result="Failed" label="Error" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.008421" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <failure>
+            <message><![CDATA[System.NullReferenceException : Object reference not set to an instance of an object]]></message>
+            <stack-trace><![CDATA[  at ShadowMeterTests.CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick (AttackCategory category, System.Int32 travelDirection, System.Boolean autoChain, System.Single inputX, System.Int32 expectedFacing) [0x000e3] in C:\Users\Apricha\Documents\GitHub\Thesis_\Assets\Project\Scripts\Editor\Tests\ShadowMeterTests.cs:526 
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <1eb9db207454431c84a47bcd81e79c37>:0 ]]></stack-trace>
+          </failure>
+        </test-case>
+        <test-case id="1984" name="CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick(Normal,-1,False,0.0f,1)" fullname="ShadowMeterTests.CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick(Normal,-1,False,0.0f,1)" methodname="CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick" classname="ShadowMeterTests" runstate="Runnable" seed="1335244108" result="Failed" label="Error" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.005123" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <failure>
+            <message><![CDATA[System.NullReferenceException : Object reference not set to an instance of an object]]></message>
+            <stack-trace><![CDATA[  at ShadowMeterTests.CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick (AttackCategory category, System.Int32 travelDirection, System.Boolean autoChain, System.Single inputX, System.Int32 expectedFacing) [0x000e3] in C:\Users\Apricha\Documents\GitHub\Thesis_\Assets\Project\Scripts\Editor\Tests\ShadowMeterTests.cs:526 
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <1eb9db207454431c84a47bcd81e79c37>:0 ]]></stack-trace>
+          </failure>
+        </test-case>
+        <test-case id="1985" name="CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick(Skill,1,False,0.0f,-1)" fullname="ShadowMeterTests.CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick(Skill,1,False,0.0f,-1)" methodname="CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick" classname="ShadowMeterTests" runstate="Runnable" seed="195989711" result="Failed" label="Error" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.003736" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <failure>
+            <message><![CDATA[System.NullReferenceException : Object reference not set to an instance of an object]]></message>
+            <stack-trace><![CDATA[  at ShadowMeterTests.CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick (AttackCategory category, System.Int32 travelDirection, System.Boolean autoChain, System.Single inputX, System.Int32 expectedFacing) [0x000e3] in C:\Users\Apricha\Documents\GitHub\Thesis_\Assets\Project\Scripts\Editor\Tests\ShadowMeterTests.cs:526 
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <1eb9db207454431c84a47bcd81e79c37>:0 ]]></stack-trace>
+          </failure>
+        </test-case>
+        <test-case id="1986" name="CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick(Skill,-1,False,0.0f,1)" fullname="ShadowMeterTests.CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick(Skill,-1,False,0.0f,1)" methodname="CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick" classname="ShadowMeterTests" runstate="Runnable" seed="211718963" result="Failed" label="Error" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.004848" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <failure>
+            <message><![CDATA[System.NullReferenceException : Object reference not set to an instance of an object]]></message>
+            <stack-trace><![CDATA[  at ShadowMeterTests.CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick (AttackCategory category, System.Int32 travelDirection, System.Boolean autoChain, System.Single inputX, System.Int32 expectedFacing) [0x000e3] in C:\Users\Apricha\Documents\GitHub\Thesis_\Assets\Project\Scripts\Editor\Tests\ShadowMeterTests.cs:526 
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <1eb9db207454431c84a47bcd81e79c37>:0 ]]></stack-trace>
+          </failure>
+        </test-case>
+        <test-case id="1987" name="CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick(Ultimate,1,False,0.0f,-1)" fullname="ShadowMeterTests.CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick(Ultimate,1,False,0.0f,-1)" methodname="CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick" classname="ShadowMeterTests" runstate="Runnable" seed="368244568" result="Failed" label="Error" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.004153" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <failure>
+            <message><![CDATA[System.NullReferenceException : Object reference not set to an instance of an object]]></message>
+            <stack-trace><![CDATA[  at ShadowMeterTests.CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick (AttackCategory category, System.Int32 travelDirection, System.Boolean autoChain, System.Single inputX, System.Int32 expectedFacing) [0x000e3] in C:\Users\Apricha\Documents\GitHub\Thesis_\Assets\Project\Scripts\Editor\Tests\ShadowMeterTests.cs:526 
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <1eb9db207454431c84a47bcd81e79c37>:0 ]]></stack-trace>
+          </failure>
+        </test-case>
+        <test-case id="1988" name="CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick(Ultimate,-1,False,0.0f,1)" fullname="ShadowMeterTests.CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick(Ultimate,-1,False,0.0f,1)" methodname="CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick" classname="ShadowMeterTests" runstate="Runnable" seed="736282921" result="Failed" label="Error" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.004589" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <failure>
+            <message><![CDATA[System.NullReferenceException : Object reference not set to an instance of an object]]></message>
+            <stack-trace><![CDATA[  at ShadowMeterTests.CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick (AttackCategory category, System.Int32 travelDirection, System.Boolean autoChain, System.Single inputX, System.Int32 expectedFacing) [0x000e3] in C:\Users\Apricha\Documents\GitHub\Thesis_\Assets\Project\Scripts\Editor\Tests\ShadowMeterTests.cs:526 
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <1eb9db207454431c84a47bcd81e79c37>:0 ]]></stack-trace>
+          </failure>
+        </test-case>
+        <test-case id="1989" name="CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick(Normal,1,True,0.0f,1)" fullname="ShadowMeterTests.CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick(Normal,1,True,0.0f,1)" methodname="CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick" classname="ShadowMeterTests" runstate="Runnable" seed="1981493012" result="Failed" label="Error" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.004581" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <failure>
+            <message><![CDATA[System.NullReferenceException : Object reference not set to an instance of an object]]></message>
+            <stack-trace><![CDATA[  at ShadowMeterTests.CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick (AttackCategory category, System.Int32 travelDirection, System.Boolean autoChain, System.Single inputX, System.Int32 expectedFacing) [0x000e3] in C:\Users\Apricha\Documents\GitHub\Thesis_\Assets\Project\Scripts\Editor\Tests\ShadowMeterTests.cs:526 
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <1eb9db207454431c84a47bcd81e79c37>:0 ]]></stack-trace>
+          </failure>
+        </test-case>
+        <test-case id="1990" name="CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick(Skill,1,False,1.0f,1)" fullname="ShadowMeterTests.CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick(Skill,1,False,1.0f,1)" methodname="CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick" classname="ShadowMeterTests" runstate="Runnable" seed="1752037361" result="Failed" label="Error" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.003705" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+          <failure>
+            <message><![CDATA[System.NullReferenceException : Object reference not set to an instance of an object]]></message>
+            <stack-trace><![CDATA[  at ShadowMeterTests.CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick (AttackCategory category, System.Int32 travelDirection, System.Boolean autoChain, System.Single inputX, System.Int32 expectedFacing) [0x000e3] in C:\Users\Apricha\Documents\GitHub\Thesis_\Assets\Project\Scripts\Editor\Tests\ShadowMeterTests.cs:526 
+  at (wrapper managed-to-native) System.Reflection.RuntimeMethodInfo.InternalInvoke(System.Reflection.RuntimeMethodInfo,object,object[],System.Exception&)
+  at System.Reflection.RuntimeMethodInfo.Invoke (System.Object obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder binder, System.Object[] parameters, System.Globalization.CultureInfo culture) [0x0006a] in <1eb9db207454431c84a47bcd81e79c37>:0 ]]></stack-trace>
+          </failure>
+        </test-case>
+      </test-suite>
+      <test-case id="1942" name="CriticalCutStillRespectsResistanceAndTypeReduction" fullname="ShadowMeterTests.CriticalCutStillRespectsResistanceAndTypeReduction" methodname="CriticalCutStillRespectsResistanceAndTypeReduction" classname="ShadowMeterTests" runstate="Runnable" seed="257009579" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.004760" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-suite type="ParameterizedMethod" id="1941" name="CutCriticalBonusAndDefenseBypassAreScopedPerHit" fullname="ShadowMeterTests.CutCriticalBonusAndDefenseBypassAreScopedPerHit" classname="ShadowMeterTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.014559" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1937" name="CutCriticalBonusAndDefenseBypassAreScopedPerHit(0,&quot;main.dash.dimension_cut&quot;,0.1f,False,50.0f)" fullname="ShadowMeterTests.CutCriticalBonusAndDefenseBypassAreScopedPerHit(0,&quot;main.dash.dimension_cut&quot;,0.1f,False,50.0f)" methodname="CutCriticalBonusAndDefenseBypassAreScopedPerHit" classname="ShadowMeterTests" runstate="Runnable" seed="917245369" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.003838" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1938" name="CutCriticalBonusAndDefenseBypassAreScopedPerHit(1,&quot;main.dash.dimension_cut&quot;,0.1f,True,150.0f)" fullname="ShadowMeterTests.CutCriticalBonusAndDefenseBypassAreScopedPerHit(1,&quot;main.dash.dimension_cut&quot;,0.1f,True,150.0f)" methodname="CutCriticalBonusAndDefenseBypassAreScopedPerHit" classname="ShadowMeterTests" runstate="Runnable" seed="823161055" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.003988" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1939" name="CutCriticalBonusAndDefenseBypassAreScopedPerHit(1,&quot;main.dash.dimension_cut&quot;,0.2f,False,50.0f)" fullname="ShadowMeterTests.CutCriticalBonusAndDefenseBypassAreScopedPerHit(1,&quot;main.dash.dimension_cut&quot;,0.2f,False,50.0f)" methodname="CutCriticalBonusAndDefenseBypassAreScopedPerHit" classname="ShadowMeterTests" runstate="Runnable" seed="1950611521" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.003272" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1940" name="CutCriticalBonusAndDefenseBypassAreScopedPerHit(1,&quot;other.normal.action&quot;,0.1f,False,50.0f)" fullname="ShadowMeterTests.CutCriticalBonusAndDefenseBypassAreScopedPerHit(1,&quot;other.normal.action&quot;,0.1f,False,50.0f)" methodname="CutCriticalBonusAndDefenseBypassAreScopedPerHit" classname="ShadowMeterTests" runstate="Runnable" seed="690313568" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.003248" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="ParameterizedMethod" id="1947" name="CutHealingUsesResolvedDamageAtPassiveThree" fullname="ShadowMeterTests.CutHealingUsesResolvedDamageAtPassiveThree" classname="ShadowMeterTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.017394" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1943" name="CutHealingUsesResolvedDamageAtPassiveThree(2,&quot;main.dash.dimension_cut&quot;,100.0f,100.0f)" fullname="ShadowMeterTests.CutHealingUsesResolvedDamageAtPassiveThree(2,&quot;main.dash.dimension_cut&quot;,100.0f,100.0f)" methodname="CutHealingUsesResolvedDamageAtPassiveThree" classname="ShadowMeterTests" runstate="Runnable" seed="19102262" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.004141" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1944" name="CutHealingUsesResolvedDamageAtPassiveThree(3,&quot;main.dash.dimension_cut&quot;,100.0f,108.0f)" fullname="ShadowMeterTests.CutHealingUsesResolvedDamageAtPassiveThree(3,&quot;main.dash.dimension_cut&quot;,100.0f,108.0f)" methodname="CutHealingUsesResolvedDamageAtPassiveThree" classname="ShadowMeterTests" runstate="Runnable" seed="1045341691" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.004244" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1945" name="CutHealingUsesResolvedDamageAtPassiveThree(3,&quot;main.dash.dimension_cut&quot;,0.0f,100.0f)" fullname="ShadowMeterTests.CutHealingUsesResolvedDamageAtPassiveThree(3,&quot;main.dash.dimension_cut&quot;,0.0f,100.0f)" methodname="CutHealingUsesResolvedDamageAtPassiveThree" classname="ShadowMeterTests" runstate="Runnable" seed="577363804" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.004540" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1946" name="CutHealingUsesResolvedDamageAtPassiveThree(3,&quot;ordinary.attack&quot;,100.0f,100.0f)" fullname="ShadowMeterTests.CutHealingUsesResolvedDamageAtPassiveThree(3,&quot;ordinary.attack&quot;,100.0f,100.0f)" methodname="CutHealingUsesResolvedDamageAtPassiveThree" classname="ShadowMeterTests" runstate="Runnable" seed="682433744" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.004185" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-case id="1955" name="DashCachesBoxesWithoutTargetAndNormalConsumesOneCutPerInput" fullname="ShadowMeterTests.DashCachesBoxesWithoutTargetAndNormalConsumesOneCutPerInput" methodname="DashCachesBoxesWithoutTargetAndNormalConsumesOneCutPerInput" classname="ShadowMeterTests" runstate="Runnable" seed="1223356175" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.007453" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1957" name="FullMeterWithoutDashingCannotTriggerDimensionCut" fullname="ShadowMeterTests.FullMeterWithoutDashingCannotTriggerDimensionCut" methodname="FullMeterWithoutDashingCannotTriggerDimensionCut" classname="ShadowMeterTests" runstate="Runnable" seed="1364176701" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.004258" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-suite type="ParameterizedMethod" id="1994" name="HeldVerticalTargetAlignsToHorizontalCutWithoutMovingPlayer" fullname="ShadowMeterTests.HeldVerticalTargetAlignsToHorizontalCutWithoutMovingPlayer" classname="ShadowMeterTests" runstate="Runnable" testcasecount="2" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.008095" total="2" passed="2" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1992" name="HeldVerticalTargetAlignsToHorizontalCutWithoutMovingPlayer(-5.0f)" fullname="ShadowMeterTests.HeldVerticalTargetAlignsToHorizontalCutWithoutMovingPlayer(-5.0f)" methodname="HeldVerticalTargetAlignsToHorizontalCutWithoutMovingPlayer" classname="ShadowMeterTests" runstate="Runnable" seed="904955719" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.004947" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1993" name="HeldVerticalTargetAlignsToHorizontalCutWithoutMovingPlayer(5.0f)" fullname="ShadowMeterTests.HeldVerticalTargetAlignsToHorizontalCutWithoutMovingPlayer(5.0f)" methodname="HeldVerticalTargetAlignsToHorizontalCutWithoutMovingPlayer" classname="ShadowMeterTests" runstate="Runnable" seed="1602211718" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.003000" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="ParameterizedMethod" id="1929" name="HitGainComesFromAuthoredRules" fullname="ShadowMeterTests.HitGainComesFromAuthoredRules" classname="ShadowMeterTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.024547" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1923" name="HitGainComesFromAuthoredRules(Normal,&quot;Attack1&quot;,2)" fullname="ShadowMeterTests.HitGainComesFromAuthoredRules(Normal,&quot;Attack1&quot;,2)" methodname="HitGainComesFromAuthoredRules" classname="ShadowMeterTests" runstate="Runnable" seed="428224116" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.004064" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1924" name="HitGainComesFromAuthoredRules(Normal,&quot;Attack3&quot;,4)" fullname="ShadowMeterTests.HitGainComesFromAuthoredRules(Normal,&quot;Attack3&quot;,4)" methodname="HitGainComesFromAuthoredRules" classname="ShadowMeterTests" runstate="Runnable" seed="382470791" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.004237" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1925" name="HitGainComesFromAuthoredRules(Normal,&quot;Attack6&quot;,6)" fullname="ShadowMeterTests.HitGainComesFromAuthoredRules(Normal,&quot;Attack6&quot;,6)" methodname="HitGainComesFromAuthoredRules" classname="ShadowMeterTests" runstate="Runnable" seed="1282068506" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.003077" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1926" name="HitGainComesFromAuthoredRules(Skill,&quot;Skill&quot;,8)" fullname="ShadowMeterTests.HitGainComesFromAuthoredRules(Skill,&quot;Skill&quot;,8)" methodname="HitGainComesFromAuthoredRules" classname="ShadowMeterTests" runstate="Runnable" seed="1138619047" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.006067" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1927" name="HitGainComesFromAuthoredRules(Ultimate,&quot;Ult&quot;,10)" fullname="ShadowMeterTests.HitGainComesFromAuthoredRules(Ultimate,&quot;Ult&quot;,10)" methodname="HitGainComesFromAuthoredRules" classname="ShadowMeterTests" runstate="Runnable" seed="1881042903" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.002983" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1928" name="HitGainComesFromAuthoredRules(Normal,&quot;DimensionCut&quot;,0)" fullname="ShadowMeterTests.HitGainComesFromAuthoredRules(Normal,&quot;DimensionCut&quot;,0)" methodname="HitGainComesFromAuthoredRules" classname="ShadowMeterTests" runstate="Runnable" seed="1952370211" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.003776" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="ParameterizedMethod" id="1965" name="HorizontalTargetDashPreservesYAndMinimumTravel" fullname="ShadowMeterTests.HorizontalTargetDashPreservesYAndMinimumTravel" classname="ShadowMeterTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.015125" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1961" name="HorizontalTargetDashPreservesYAndMinimumTravel(2.1f,99.0f,1,5.0f)" fullname="ShadowMeterTests.HorizontalTargetDashPreservesYAndMinimumTravel(2.1f,99.0f,1,5.0f)" methodname="HorizontalTargetDashPreservesYAndMinimumTravel" classname="ShadowMeterTests" runstate="Runnable" seed="176901811" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.004148" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1962" name="HorizontalTargetDashPreservesYAndMinimumTravel(1.9f,-99.0f,1,-1.0f)" fullname="ShadowMeterTests.HorizontalTargetDashPreservesYAndMinimumTravel(1.9f,-99.0f,1,-1.0f)" methodname="HorizontalTargetDashPreservesYAndMinimumTravel" classname="ShadowMeterTests" runstate="Runnable" seed="1428757047" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.003029" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1963" name="HorizontalTargetDashPreservesYAndMinimumTravel(2.0f,99.0f,-1,-1.0f)" fullname="ShadowMeterTests.HorizontalTargetDashPreservesYAndMinimumTravel(2.0f,99.0f,-1,-1.0f)" methodname="HorizontalTargetDashPreservesYAndMinimumTravel" classname="ShadowMeterTests" runstate="Runnable" seed="163658244" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.004283" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1964" name="HorizontalTargetDashPreservesYAndMinimumTravel(10.0f,99.0f,1,11.2f)" fullname="ShadowMeterTests.HorizontalTargetDashPreservesYAndMinimumTravel(10.0f,99.0f,1,11.2f)" methodname="HorizontalTargetDashPreservesYAndMinimumTravel" classname="ShadowMeterTests" runstate="Runnable" seed="1180041435" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.003414" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-case id="1956" name="LessThanOneBoxDoesNotCacheAndNoTargetDoesNotSpendCache" fullname="ShadowMeterTests.LessThanOneBoxDoesNotCacheAndNoTargetDoesNotSpendCache" methodname="LessThanOneBoxDoesNotCacheAndNoTargetDoesNotSpendCache" classname="ShadowMeterTests" runstate="Runnable" seed="1621198862" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:39Z" duration="0.005017" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1954" name="LockingPotentialClampsExistingMeter" fullname="ShadowMeterTests.LockingPotentialClampsExistingMeter" methodname="LockingPotentialClampsExistingMeter" classname="ShadowMeterTests" runstate="Runnable" seed="472727931" result="Passed" start-time="2026-10-27 18:45:39Z" end-time="2026-10-27 18:45:40Z" duration="0.005145" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1930" name="MeterCapsWithoutBankingOverflowAndSpendsWholeBox" fullname="ShadowMeterTests.MeterCapsWithoutBankingOverflowAndSpendsWholeBox" methodname="MeterCapsWithoutBankingOverflowAndSpendsWholeBox" classname="ShadowMeterTests" runstate="Runnable" seed="1269572595" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.006513" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1997" name="MeterDisplaysPartialFillAndPulsesOnlyNewReadyBox" fullname="ShadowMeterTests.MeterDisplaysPartialFillAndPulsesOnlyNewReadyBox" methodname="MeterDisplaysPartialFillAndPulsesOnlyNewReadyBox" classname="ShadowMeterTests" runstate="Runnable" seed="2139614771" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.013451" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-suite type="ParameterizedMethod" id="1977" name="MotionRadiusGatesActionAvailabilityAndCommit" fullname="ShadowMeterTests.MotionRadiusGatesActionAvailabilityAndCommit" classname="ShadowMeterTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.029585" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1971" name="MotionRadiusGatesActionAvailabilityAndCommit(1000.0f,100.0f,True)" fullname="ShadowMeterTests.MotionRadiusGatesActionAvailabilityAndCommit(1000.0f,100.0f,True)" methodname="MotionRadiusGatesActionAvailabilityAndCommit" classname="ShadowMeterTests" runstate="Runnable" seed="355341633" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.007089" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1972" name="MotionRadiusGatesActionAvailabilityAndCommit(1000.0f,-100.0f,True)" fullname="ShadowMeterTests.MotionRadiusGatesActionAvailabilityAndCommit(1000.0f,-100.0f,True)" methodname="MotionRadiusGatesActionAvailabilityAndCommit" classname="ShadowMeterTests" runstate="Runnable" seed="2004287720" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.004047" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1973" name="MotionRadiusGatesActionAvailabilityAndCommit(1000.0f,999.0f,True)" fullname="ShadowMeterTests.MotionRadiusGatesActionAvailabilityAndCommit(1000.0f,999.0f,True)" methodname="MotionRadiusGatesActionAvailabilityAndCommit" classname="ShadowMeterTests" runstate="Runnable" seed="1593427937" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.006175" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1974" name="MotionRadiusGatesActionAvailabilityAndCommit(1000.0f,1001.0f,False)" fullname="ShadowMeterTests.MotionRadiusGatesActionAvailabilityAndCommit(1000.0f,1001.0f,False)" methodname="MotionRadiusGatesActionAvailabilityAndCommit" classname="ShadowMeterTests" runstate="Runnable" seed="1643230013" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.004548" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1975" name="MotionRadiusGatesActionAvailabilityAndCommit(2.0f,3.0f,False)" fullname="ShadowMeterTests.MotionRadiusGatesActionAvailabilityAndCommit(2.0f,3.0f,False)" methodname="MotionRadiusGatesActionAvailabilityAndCommit" classname="ShadowMeterTests" runstate="Runnable" seed="915365609" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.003940" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1976" name="MotionRadiusGatesActionAvailabilityAndCommit(2.0f,1.0f,True)" fullname="ShadowMeterTests.MotionRadiusGatesActionAvailabilityAndCommit(2.0f,1.0f,True)" methodname="MotionRadiusGatesActionAvailabilityAndCommit" classname="ShadowMeterTests" runstate="Runnable" seed="1901341276" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.003446" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-case id="1958" name="NormalComboSpendsCachedCutsThenResumesBasicAttackWithoutAirTransition" fullname="ShadowMeterTests.NormalComboSpendsCachedCutsThenResumesBasicAttackWithoutAirTransition" methodname="NormalComboSpendsCachedCutsThenResumesBasicAttackWithoutAirTransition" classname="ShadowMeterTests" runstate="Runnable" seed="1349660694" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.005383" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1995" name="PrefabMeterLivesBetweenStatusAndStats" fullname="ShadowMeterTests.PrefabMeterLivesBetweenStatusAndStats" methodname="PrefabMeterLivesBetweenStatusAndStats" classname="ShadowMeterTests" runstate="Runnable" seed="1900775110" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.004338" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1960" name="RejectedDashDoesNotCacheAnotherCharge" fullname="ShadowMeterTests.RejectedDashDoesNotCacheAnotherCharge" methodname="RejectedDashDoesNotCacheAnotherCharge" classname="ShadowMeterTests" runstate="Runnable" seed="458316077" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.005517" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1952" name="SkillFourVulnerabilityReplacesBaseInsteadOfStackingToFiftyFive" fullname="ShadowMeterTests.SkillFourVulnerabilityReplacesBaseInsteadOfStackingToFiftyFive" methodname="SkillFourVulnerabilityReplacesBaseInsteadOfStackingToFiftyFive" classname="ShadowMeterTests" runstate="Runnable" seed="185884371" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.014135" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-case id="1953" name="SkillHitsRefreshAlliesCritForSevenSecondsWithoutStacking" fullname="ShadowMeterTests.SkillHitsRefreshAlliesCritForSevenSecondsWithoutStacking" methodname="SkillHitsRefreshAlliesCritForSevenSecondsWithoutStacking" classname="ShadowMeterTests" runstate="Runnable" seed="71614710" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.019445" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+      <test-suite type="ParameterizedMethod" id="1970" name="TargetAcquisitionIncludesEveryDirection" fullname="ShadowMeterTests.TargetAcquisitionIncludesEveryDirection" classname="ShadowMeterTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.019517" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1966" name="TargetAcquisitionIncludesEveryDirection(-3.0f,0.0f)" fullname="ShadowMeterTests.TargetAcquisitionIncludesEveryDirection(-3.0f,0.0f)" methodname="TargetAcquisitionIncludesEveryDirection" classname="ShadowMeterTests" runstate="Runnable" seed="1931686513" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.005324" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1967" name="TargetAcquisitionIncludesEveryDirection(3.0f,0.0f)" fullname="ShadowMeterTests.TargetAcquisitionIncludesEveryDirection(3.0f,0.0f)" methodname="TargetAcquisitionIncludesEveryDirection" classname="ShadowMeterTests" runstate="Runnable" seed="1343877194" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.004554" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1968" name="TargetAcquisitionIncludesEveryDirection(0.0f,3.0f)" fullname="ShadowMeterTests.TargetAcquisitionIncludesEveryDirection(0.0f,3.0f)" methodname="TargetAcquisitionIncludesEveryDirection" classname="ShadowMeterTests" runstate="Runnable" seed="1959392299" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.004535" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1969" name="TargetAcquisitionIncludesEveryDirection(0.0f,-3.0f)" fullname="ShadowMeterTests.TargetAcquisitionIncludesEveryDirection(0.0f,-3.0f)" methodname="TargetAcquisitionIncludesEveryDirection" classname="ShadowMeterTests" runstate="Runnable" seed="630072230" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.004853" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="ParameterizedMethod" id="2002" name="TargetMotionCastsBodyAgainstSolidsInBothAxes" fullname="ShadowMeterTests.TargetMotionCastsBodyAgainstSolidsInBothAxes" classname="ShadowMeterTests" runstate="Runnable" testcasecount="4" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.023947" total="4" passed="4" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1998" name="TargetMotionCastsBodyAgainstSolidsInBothAxes(0.0f,1.0f)" fullname="ShadowMeterTests.TargetMotionCastsBodyAgainstSolidsInBothAxes(0.0f,1.0f)" methodname="TargetMotionCastsBodyAgainstSolidsInBothAxes" classname="ShadowMeterTests" runstate="Runnable" seed="1608087487" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.009306" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1999" name="TargetMotionCastsBodyAgainstSolidsInBothAxes(1.0f,1.0f)" fullname="ShadowMeterTests.TargetMotionCastsBodyAgainstSolidsInBothAxes(1.0f,1.0f)" methodname="TargetMotionCastsBodyAgainstSolidsInBothAxes" classname="ShadowMeterTests" runstate="Runnable" seed="1143689235" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.004000" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2000" name="TargetMotionCastsBodyAgainstSolidsInBothAxes(-1.0f,1.0f)" fullname="ShadowMeterTests.TargetMotionCastsBodyAgainstSolidsInBothAxes(-1.0f,1.0f)" methodname="TargetMotionCastsBodyAgainstSolidsInBothAxes" classname="ShadowMeterTests" runstate="Runnable" seed="419830749" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.006132" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="2001" name="TargetMotionCastsBodyAgainstSolidsInBothAxes(0.0f,-1.0f)" fullname="ShadowMeterTests.TargetMotionCastsBodyAgainstSolidsInBothAxes(0.0f,-1.0f)" methodname="TargetMotionCastsBodyAgainstSolidsInBothAxes" classname="ShadowMeterTests" runstate="Runnable" seed="659486624" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.004238" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="ParameterizedMethod" id="1951" name="VoidOccupancyDoublesGainAndExpiresWithoutChangingDashCost" fullname="ShadowMeterTests.VoidOccupancyDoublesGainAndExpiresWithoutChangingDashCost" classname="ShadowMeterTests" runstate="Runnable" testcasecount="3" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.026035" total="3" passed="3" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <test-case id="1948" name="VoidOccupancyDoublesGainAndExpiresWithoutChangingDashCost(&quot;ProjectileData_main_void_area&quot;)" fullname="ShadowMeterTests.VoidOccupancyDoublesGainAndExpiresWithoutChangingDashCost(&quot;ProjectileData_main_void_area&quot;)" methodname="VoidOccupancyDoublesGainAndExpiresWithoutChangingDashCost" classname="ShadowMeterTests" runstate="Runnable" seed="1341391487" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.008897" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1949" name="VoidOccupancyDoublesGainAndExpiresWithoutChangingDashCost(&quot;ProjectileData_main_void_area_lv3&quot;)" fullname="ShadowMeterTests.VoidOccupancyDoublesGainAndExpiresWithoutChangingDashCost(&quot;ProjectileData_main_void_area_lv3&quot;)" methodname="VoidOccupancyDoublesGainAndExpiresWithoutChangingDashCost" classname="ShadowMeterTests" runstate="Runnable" seed="2120466775" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.008715" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1950" name="VoidOccupancyDoublesGainAndExpiresWithoutChangingDashCost(&quot;ProjectileData_main_void_area_lv4&quot;)" fullname="ShadowMeterTests.VoidOccupancyDoublesGainAndExpiresWithoutChangingDashCost(&quot;ProjectileData_main_void_area_lv4&quot;)" methodname="VoidOccupancyDoublesGainAndExpiresWithoutChangingDashCost" classname="ShadowMeterTests" runstate="Runnable" seed="872383150" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.008235" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-case id="1922" name="WhiffsAndIncomingDamageDoNotBuildMeter" fullname="ShadowMeterTests.WhiffsAndIncomingDamageDoNotBuildMeter" methodname="WhiffsAndIncomingDamageDoNotBuildMeter" classname="ShadowMeterTests" runstate="Runnable" seed="978848685" result="Passed" start-time="2026-10-27 18:45:40Z" end-time="2026-10-27 18:45:40Z" duration="0.004657" asserts="0">
+        <properties>
+          <property name="retryIteration" value="0" />
+          <property name="repeatIteration" value="0" />
+        </properties>
+      </test-case>
+    </test-suite>
+  </test-suite>
+</test-suite>

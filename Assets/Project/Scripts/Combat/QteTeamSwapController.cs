@@ -109,14 +109,7 @@ public sealed class QteTeamSwapController : MonoBehaviour
 
     public bool CanHandoffTo(int index)
     {
-        if (_team == null || !_team.CanSwitchToIndex(index)) return false;
-        if (!TryGetWindow(_team.GetCharacterAtIndex(index), out _, out _) || !CanUsePreparedTransition()) return false;
-        CharacterObject incoming = _team.GetCharacterAtIndex(index);
-        if (!incoming.qteSwap.TryResolveIntro(incoming.actionResolverTable, out CombatAction action, out _)) return false;
-        PlayerCharacter player = _team.playerCharacter;
-        EnemyController target = ResolveTarget(action);
-        if (target == null || player.Movement == null) return false;
-        return TryPlace(incoming, out _);
+        return TryPrepareEntry(index, out _);
     }
 
     public bool CanUsePreparedTransition()
@@ -141,21 +134,48 @@ public sealed class QteTeamSwapController : MonoBehaviour
         target = null;
         position = default;
         facing = 1;
-        if (!CanHandoffTo(index)) return false;
+        if (!TryPrepareEntry(index, out QtePreparedEntry entry)) return false;
+        action = entry.action;
+        step = entry.step;
+        target = entry.target;
+        position = entry.placement.startBodyPosition;
+        facing = entry.placement.landingFacing;
+        return true;
+    }
+
+    public bool TryPrepareEntry(int index, out QtePreparedEntry entry)
+    {
+        entry = default;
+        if (_team == null || !_team.CanSwitchToIndex(index)
+            || !TryGetWindow(_team.GetCharacterAtIndex(index), out _, out _) || !CanUsePreparedTransition()) return false;
         CharacterObject incoming = _team.GetCharacterAtIndex(index);
-        if (!incoming.qteSwap.TryResolveIntro(incoming.actionResolverTable, out action, out step)) return false;
+        if (!incoming.qteSwap.TryResolveIntro(incoming.actionResolverTable, out CombatAction action, out AttackStepData step)) return false;
         PlayerCharacter player = _team.playerCharacter;
-        target = ResolveTarget(action);
+        EnemyController target = ResolveTarget(action);
         if (target == null || player.Movement == null) return false;
-        if (!TryPlace(incoming, out position)) return false;
-        float delta = target.transform.position.x - position.x;
-        facing = Mathf.Abs(delta) > 0.001f ? (delta > 0f ? 1 : -1) : player.Movement.FacingDirection;
+        QteEntryPlacement placement;
+        if (incoming.qteSwap.entryMode == QteEntryMode.LightningPlunge)
+        {
+            QtePlungeSettings plunge = incoming.qteSwap.plunge;
+            if (plunge == null || plunge.prefab == null || !player.Movement.TryFindQtePlungePlacement(
+                target.transform.position, plunge.targetStartOffset, player.Movement.FacingDirection, out placement)) return false;
+        }
+        else
+        {
+            if (!TryPlace(incoming, out Vector2 position)) return false;
+            float delta = target.transform.position.x - position.x;
+            int facing = Mathf.Abs(delta) > 0.001f ? (delta > 0f ? 1 : -1) : player.Movement.FacingDirection;
+            placement = new QteEntryPlacement(position, position, position, Vector2.up,
+                target.transform.position, null, player.Movement.FacingDirection, facing);
+        }
+        entry = new QtePreparedEntry(action, step, target, incoming.qteSwap.entryMode, placement);
         return true;
     }
 
     public void PlayIntroHandoff()
     {
-        if (Application.isPlaying && _team != null && _team.playerCharacter != null)
+        bool plunge = _team?.CurrentCharacter?.qteSwap?.entryMode == QteEntryMode.LightningPlunge;
+        if (!plunge && Application.isPlaying && _team != null && _team.playerCharacter != null)
         {
             CameraManager.instance?.ResetLookAheadForCharacterSwap(_team.playerCharacter.Movement?.RB, introSlowMotionSeconds);
             CameraManager.instance?.PlayQteIntroImpact(introCameraSizeReduction, introCameraImpactFrames);

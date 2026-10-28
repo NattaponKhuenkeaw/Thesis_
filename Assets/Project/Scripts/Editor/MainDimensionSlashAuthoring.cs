@@ -20,9 +20,14 @@ public static class MainDimensionSlashAuthoring
     public static void Author()
     {
         CharacterObject character = AssetDatabase.LoadAssetAtPath<CharacterObject>(MainPath + "CharacterObject_main.asset");
+        BuildProceduralMaterial();
+        ExecutionBreakdownAuthoring.BuildMaterial();
+        BuildAnticipationClip();
         Undo.RecordObjects(new UnityEngine.Object[] { character, character.actionResolverTable }, "Author Main Dimension Slash");
+        ClearUnconfiguredScreenSpanDefaults(character);
         Configure(character);
         BindActorState(character);
+        ExecutionBreakdownAuthoring.BindActor(character);
         EditorUtility.SetDirty(character);
         EditorUtility.SetDirty(character.actionResolverTable);
         AssetDatabase.SaveAssetIfDirty(character);
@@ -30,10 +35,38 @@ public static class MainDimensionSlashAuthoring
         Debug.Log("Dimension Slash: Passive4 / five paid cuts / 1.5s Skill window authored.");
     }
 
+    // screenSpanningCount was introduced for this action. Strip the field's
+    // former initializer value from Main's existing steps before authoring its
+    // explicit five full-screen accents, so unrelated slash fields stay local.
+    private static void ClearUnconfiguredScreenSpanDefaults(CharacterObject character)
+    {
+        var visited = new HashSet<ComboNode>();
+        foreach (var action in character.actionResolverTable.comboActions) ClearScreenSpanDefaults(action?.comboTree?.rootNode, visited);
+        foreach (var action in character.actionResolverTable.skillActions) ClearScreenSpanDefaults(action?.comboTree?.rootNode, visited);
+        foreach (var action in character.actionResolverTable.ultimateActions) ClearScreenSpanDefaults(action?.comboTree?.rootNode, visited);
+        foreach (var action in character.actionResolverTable.standaloneActions) ClearScreenSpanDefaults(action?.comboTree?.rootNode, visited);
+        ClearScreenSpanDefaults(character.qteSwap?.introComboTree?.rootNode, visited);
+    }
+
+    private static void ClearScreenSpanDefaults(ComboNode node, HashSet<ComboNode> visited)
+    {
+        if (node == null || !visited.Add(node)) return;
+        var entries = node.stepData?.eventData?.entries;
+        if (entries != null)
+            foreach (var entry in entries)
+                if (entry?.slashFieldSettings != null) entry.slashFieldSettings.screenSpanningCount = 0;
+        ClearScreenSpanDefaults(node.defaultNext, visited);
+        ClearScreenSpanDefaults(node.onGrabSuccessNode, visited);
+        if (node.routes != null)
+            foreach (var route in node.routes) ClearScreenSpanDefaults(route?.targetNode, visited);
+        if (node.stepData?.triggerWindows != null)
+            foreach (var trigger in node.stepData.triggerWindows) ClearScreenSpanDefaults(trigger?.targetNode, visited);
+    }
+
     private static void BindActorState(CharacterObject character)
     {
         var controller = character.metaData.animatorController as AnimatorController;
-        var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(Root + "Animations/main_dimension_slash_actor.anim");
+        var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(Root + "Animations/main_dimension_slash_prepare.anim");
         if (controller == null || clip == null) throw new InvalidOperationException("Main actor controller/clip is missing.");
         AnimatorStateMachine machine = controller.layers[0].stateMachine;
         AnimatorState state = null;
@@ -95,7 +128,9 @@ public static class MainDimensionSlashAuthoring
             category = AttackCategory.Skill, actionId = ActionId,
             requiredTags = new List<RuntimeTagRequirement> { new RuntimeTagRequirement { tag = ReadyTag } }
         });
-        const string description = " Perform 5 paid Dimension Cuts to open a 1.5s Skill follow-up for Dimension Slash.";
+        const string description = " Perform 5 paid Dimension Cuts to open a 1.5s Skill follow-up for Judgment Cut.";
+        node.description = node.description.Replace("follow-up for Dimension Slash.", "follow-up for Judgment Cut.");
+        node.skillPanelDescriptionOverride = node.skillPanelDescriptionOverride.Replace("follow-up for Dimension Slash.", "follow-up for Judgment Cut.");
         if (!node.description.Contains("1.5s Skill follow-up")) node.description += description;
         if (!node.skillPanelDescriptionOverride.Contains("1.5s Skill follow-up")) node.skillPanelDescriptionOverride += description;
 
@@ -104,7 +139,7 @@ public static class MainDimensionSlashAuthoring
         var step = CreateStep();
         table.skillActions.Add(new SkillAction
         {
-            actionId = ActionId, actionName = "Dimension Slash", priority = 1,
+            actionId = ActionId, actionName = "Judgment Cut", priority = 1,
             context = CombatActionContext.Both, outputContext = CombatActionOutputContext.MatchInput,
             cooldown = 0f, actionDamageMultiplier = 5f, auraEnergyReward = 0f,
             conditions = new List<ActionConditionBase>
@@ -112,8 +147,10 @@ public static class MainDimensionSlashAuthoring
                 new PotentialLevelActionCondition { track = PotentialTrack.Passive, level = 4 },
                 new RuntimeTagActionCondition { tag = ReadyTag }
             },
-            comboTree = new ComboTree { treeName = "Dimension Slash", rootNode = new ComboNode { stepData = step } }
+            comboTree = new ComboTree { treeName = "Dimension Slash", rootNode = new ComboNode
+            { stepData = step, defaultNext = new ComboNode { stepData = CreateFinalCut(table) } } }
         });
+        ExecutionBreakdownAuthoring.Configure(character);
     }
 
     private static PassiveTriggerFilter ManualCutFilter() => new PassiveTriggerFilter
@@ -126,51 +163,114 @@ public static class MainDimensionSlashAuthoring
     {
         var step = new AttackStepData
         {
-            stepName = "DimensionSlash", startupFrames = 11, activeFrames = 48, recoveryFrames = 25,
-            cancelWindowStartFrame = 66, loopActivePhase = false, autoChainToNext = false,
+            stepName = "DimensionSlash", startupFrames = 18, activeFrames = 85, recoveryFrames = 1,
+            cancelWindowStartFrame = 104, loopActivePhase = false, autoChainToNext = true,
             syncAnimationToActionFrames = true,
-            animationClip = AssetDatabase.LoadAssetAtPath<AnimationClip>(Root + "Animations/main_dimension_slash_actor.anim")
+            animationClip = AssetDatabase.LoadAssetAtPath<AnimationClip>(Root + "Animations/main_dimension_slash_prepare.anim")
                 ?? AssetDatabase.LoadAssetAtPath<AnimationClip>(MainPath + "animation/main_Idle.anim"),
             hitData = new HitFrameData(), eventData = new ActionEventFrameData(),
-            vfxData = new VFXFrameData(), audioData = new AudioFrameData()
+            vfxData = new VFXFrameData(), audioData = new AudioFrameData(), motionData = new MotionFrameData()
         };
-        int[] frames = { 12, 20, 27, 33, 38, 42, 54 };
-        for (int i = 0; i < frames.Length; i++)
+        for (int i = 0; i < 19; i++)
         {
-            bool final = i == frames.Length - 1;
             step.hitData.hitboxes.Add(new NormalHitbox
             {
-                startFrameOffset = frames[i] - 12, activeFrames = 2,
+                startFrameOffset = 24 + i * 3 - step.ActivePhaseStart, activeFrames = 2,
                 elementType = ElementType.Darkness,
-                offset = new Vector2(4f, 1.6f), size = new Vector2(final ? 16f : 9f, final ? 7f : 4.5f),
-                damageRatio = final ? 0.52f : 0.08f, impactFreezeFrames = final ? 6 : i == 0 || i == 5 ? 2 : 0,
-                impactTier = final ? DamageImpactTier.Heavy : DamageImpactTier.Low,
-                horizontalSpeed = final ? 5f : 0f, launchSpeed = 0f,
-                knockbackFrames = final ? 12 : 4, recoveryFrames = final ? 12 : 2,
-                flashColor = new Color(0.85f, 0.7f, 1f), flashFrames = final ? 6 : 2
+                offset = new Vector2(4f, 1.6f), size = new Vector2(12f, 6f),
+                damageRatio = 0.58f / 19f, impactFreezeFrames = 0, impactTier = DamageImpactTier.Low,
+                suppressImpactFeedback = true, suppressContactVfx = true,
+                horizontalSpeed = 0f, launchSpeed = 0f, knockbackFrames = 2, recoveryFrames = 1,
+                flashColor = new Color(0.7f, 0.35f, 1f), flashFrames = 1
             });
-            string variant = final ? "final" : i % 3 == 0 ? "burst_a" : i % 3 == 1 ? "burst_b" : "burst_c";
-            AddEffect(step, variant, frames[i], final ? 30 : 4);
-            if (!final) AddEffect(step, "residual", frames[i] + 2, 12);
         }
-        AddEffect(step, "seam", 44, 10);
-        AddEffect(step, "shards", 66, 18);
-        AddAudio(step);
-        var motion = new ActionCameraMotionSettings();
-        int[] cameraFrames = { 0, 12, 42, 44, 50, 54, 56, 60, 66 };
-        float[] sizes = { 1f, 1f, 0.99f, 1f, 1f, 0.96f, 0.98f, 0.99f, 1f };
-        for (int i = 0; i < cameraFrames.Length; i++)
-            motion.keys.Add(new ActionCameraMotionSettings.Key
+        step.motionData.keyframes.Add(new MotionKeyframe { startFrame = 9, endFrame = 18,
+            position = new Vector3(1.2f, 0f), easing = LeanTweenType.easeOutQuad });
+        step.motionData.keyframes.Add(new MotionKeyframe { startFrame = 88, endFrame = 90,
+            position = new Vector3(0f, 2.6f), easing = LeanTweenType.easeOutQuad });
+        step.motionData.keyframes.Add(new MotionKeyframe { startFrame = 94, endFrame = 103,
+            position = new Vector3(0f, -2.6f), easing = LeanTweenType.easeInQuad });
+        step.eventData.entries.Add(new ActionEventEntry { label = "Purple dimension slash field",
+            eventType = ActionEventType.ProceduralSlashField, triggerFrame = 18, freezeWorld = false,
+            slashFieldSettings = new ProceduralSlashFieldSettings
             {
-                frame = cameraFrames[i], sizeMultiplier = sizes[i],
-                horizontalViewportOffset = cameraFrames[i] == 54 ? -0.0035f : cameraFrames[i] == 56 ? 0.001f : 0f
-            });
-        step.eventData.entries.Add(new ActionEventEntry
-        {
-            label = "Dimension Slash framing", eventType = ActionEventType.ActionCameraMotion,
-            triggerFrame = 0, freezeWorld = false, cameraMotionSettings = motion
-        });
+                material = AssetDatabase.LoadAssetAtPath<Material>(Root + "DimensionSlashRibbon.mat"),
+                firstFrame = 0, endFrame = 72, hideFromFrame = 0, showAtFrame = 72,
+                slashCount = 19, intervalFrames = 2, seamCount = 12, screenSpanningCount = 5,
+                lengthRange = new Vector2(3f, 46f), viewportCoverage = 1.8f,
+                widthRange = new Vector2(0.08f, 1.8f), overallScale = 1.3f,
+                foregroundFraction = 0.5f,
+                revealFrames = new Vector2(1f, 3f), decayFrames = new Vector2(16f, 27f)
+            } });
+        AddAudio(step);
         return step;
+    }
+
+    public static AttackStepData CreateFinalCut(ActionResolverTable table)
+    {
+        var cut = table.standaloneActions.Find(a => a != null && a.actionId == CutId)?.comboTree?.rootNode?.stepData;
+        if (cut == null) throw new InvalidOperationException("Existing Dimension Cut root is missing.");
+        var step = new AttackStepData
+        {
+            stepName = "DimensionSlashFinalCut", animationClip = cut.animationClip,
+            startupFrames = cut.startupFrames, activeFrames = cut.activeFrames, recoveryFrames = cut.recoveryFrames,
+            cancelWindowStartFrame = cut.cancelWindowStartFrame, lockAirPosition = cut.lockAirPosition,
+            motionData = cut.motionData != null ? JsonUtility.FromJson<MotionFrameData>(JsonUtility.ToJson(cut.motionData)) : null,
+            audioData = cut.audioData != null ? JsonUtility.FromJson<AudioFrameData>(JsonUtility.ToJson(cut.audioData)) : new AudioFrameData(),
+            hitData = new HitFrameData(), vfxData = new VFXFrameData(), eventData = new ActionEventFrameData()
+        };
+        NormalHitbox source = null;
+        foreach (var hit in cut.hitData.hitboxes) if (hit is NormalHitbox normal) { source = normal; break; }
+        if (source == null) throw new InvalidOperationException("Existing Dimension Cut hit is missing.");
+        var final = JsonUtility.FromJson<NormalHitbox>(JsonUtility.ToJson(source));
+        final.damageRatio = 0.42f; final.impactTier = DamageImpactTier.Low;
+        final.impactFreezeFrames = 0; final.suppressImpactFeedback = true; final.suppressContactVfx = true;
+        step.hitData.hitboxes.Add(final);
+        step.eventData.entries.Add(new ActionEventEntry { label = "Final purple cut", triggerFrame = 0,
+            eventType = ActionEventType.ProceduralSlashField, freezeWorld = false,
+            slashFieldSettings = new ProceduralSlashFieldSettings
+            {
+                material = AssetDatabase.LoadAssetAtPath<Material>(Root + "DimensionSlashRibbon.mat"), hideActor = false,
+                overallScale = 1.3f,
+                slashCount = 1, seamCount = 3, firstFrame = Mathf.Max(0, step.ActivePhaseStart + final.startFrameOffset - 4),
+                endFrame = step.TotalFrames, spread = new Vector2(0.6f, 0.5f),
+                lengthRange = new Vector2(15f, 18f), widthRange = new Vector2(0.7f, 1.2f),
+                revealFrames = new Vector2(4f, 4f), decayFrames = new Vector2(12f, 18f)
+            } });
+        return step;
+    }
+
+    private static void BuildProceduralMaterial()
+    {
+        Shader shader = Shader.Find("Project/DimensionSlashRibbon");
+        if (shader == null) throw new InvalidOperationException("DimensionSlashRibbon shader not imported.");
+        string path = Root + "DimensionSlashRibbon.mat";
+        var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (material == null) { material = new Material(shader); AssetDatabase.CreateAsset(material, path); }
+        else { material.shader = shader; EditorUtility.SetDirty(material); AssetDatabase.SaveAssetIfDirty(material); }
+    }
+
+    private static void BuildAnticipationClip()
+    {
+        var original = AssetDatabase.LoadAssetAtPath<AnimationClip>(Root + "Animations/main_dimension_slash_actor.anim");
+        var jump = AssetDatabase.LoadAssetAtPath<AnimationClip>(MainPath + "animation/main_Jump.anim");
+        if (original == null || jump == null) throw new InvalidOperationException("Actor anticipation/plunge sources missing.");
+        var binding = EditorCurveBinding.PPtrCurve("", typeof(SpriteRenderer), "m_Sprite");
+        var originalKeys = AnimationUtility.GetObjectReferenceCurve(original, binding);
+        var jumpKeys = AnimationUtility.GetObjectReferenceCurve(jump, binding);
+        if (originalKeys == null || originalKeys.Length < 3 || jumpKeys == null || jumpKeys.Length == 0)
+            throw new InvalidOperationException("Actor source sprite binding missing.");
+        string path = Root + "Animations/main_dimension_slash_prepare.anim";
+        var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(path); bool create = clip == null;
+        if (create) clip = new AnimationClip(); clip.frameRate = 60f;
+        int[] frames = { 0, 6, 12, 18, 90, 94, 103, 104 };
+        UnityEngine.Object[] sprites = { originalKeys[0].value, originalKeys[1].value, originalKeys[2].value,
+            originalKeys[2].value, jumpKeys[0].value, jumpKeys[jumpKeys.Length - 1].value,
+            jumpKeys[jumpKeys.Length - 1].value, jumpKeys[jumpKeys.Length - 1].value };
+        var keys = new ObjectReferenceKeyframe[frames.Length];
+        for (int i = 0; i < keys.Length; i++) keys[i] = new ObjectReferenceKeyframe { time = frames[i] / 60f, value = sprites[i] };
+        AnimationUtility.SetObjectReferenceCurve(clip, binding, keys);
+        if (create) AssetDatabase.CreateAsset(clip, path); else { EditorUtility.SetDirty(clip); AssetDatabase.SaveAssetIfDirty(clip); }
     }
 
     private static void AddEffect(AttackStepData step, string name, int frame, int duration)
@@ -198,14 +298,14 @@ public static class MainDimensionSlashAuthoring
         foreach (var action in table.comboActions) CollectAudio(action.comboTree?.rootNode, sounds, new HashSet<ComboNode>());
         foreach (var action in table.ultimateActions) CollectAudio(action.comboTree?.rootNode, sounds, new HashSet<ComboNode>());
         if (sounds.Count == 0) return;
-        int[] frames = { 0, 12, 20, 27, 33, 38, 42, 50, 54 };
+        int[] frames = { 0, 18, 27, 36, 45, 54, 63, 72, 90 };
         for (int i = 0; i < frames.Length; i++)
             step.audioData.entries.Add(new AudioEntry
             {
-                label = frames[i] == 54 ? "Dimension tear release" : "Slash accent",
-                clip = sounds[i % sounds.Count], triggerFrame = frames[i], duration = frames[i] == 54 ? 20 : 4,
-                channel = AudioChannel.ActionSFX, volume = frames[i] == 54 ? 1f : frames[i] == 50 ? 0.3f : 0.55f,
-                pitchVariation = frames[i] == 54 ? 0.8f : 1f + i * 0.025f
+                label = "Dimension field accent",
+                clip = sounds[i % sounds.Count], triggerFrame = frames[i], duration = 4,
+                channel = AudioChannel.ActionSFX, volume = frames[i] == 0 ? 0.4f : 0.3f,
+                pitchVariation = 1f + i * 0.025f
             });
     }
 

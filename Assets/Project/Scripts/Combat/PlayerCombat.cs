@@ -234,6 +234,8 @@ public class PlayerCombat : MonoBehaviour, ICharacterCombat
         hitboxActiveCount = 0;
         cachedStartupFrames = step.startupFrames;
 
+        movement?.BeginCombatStepFacing(isAutoChain);
+
         if (playerCharacter != null && playerCharacter.StateMachine != null && playerCharacter.StateMachine.showCombatLogs)
         {
             Debug.Log($"[Combat] ExecuteStep: {step.stepName}, isAutoChain={isAutoChain}");

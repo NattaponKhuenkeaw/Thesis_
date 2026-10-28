@@ -32,6 +32,10 @@ public abstract class HitboxBase
     [Header("Damage")]
     public ElementType elementType = ElementType.None;
     public CombatDamageTag damageTags = CombatDamageTag.None;
+    [Tooltip("Skip camera impulse and global hitstop, including the critical-hit minimum. Does not change damage or enemy reaction.")]
+    public bool suppressImpactFeedback;
+    [Tooltip("Skip generic contact sparks; the authored action VFX still plays.")]
+    public bool suppressContactVfx;
 
     [Header("Debug")]
     public Color debugColor = Color.red;

@@ -4,7 +4,7 @@ using System.Collections;
 using System;
 
 [RequireComponent(typeof(Rigidbody2D))]
-public class PlayerMovement : MonoBehaviour
+public partial class PlayerMovement : MonoBehaviour
 {
     private const string PlayerLayerName = "Player";
     private const string EnemyLayerName = "Enemy";
@@ -659,6 +659,8 @@ public class PlayerMovement : MonoBehaviour
 
     public void ApplyAttackMovement(MotionKeyframe keyframe)
     {
+        // Captured paths are sampled before hit processing by the owning action state.
+        if (keyframe != null && keyframe.taskType == MotionTaskType.CapturedWorldPoint) return;
         StopAttackMotionVelocityOnly();
         if (keyframe != null) attackMotionCoroutine = StartCoroutine(AttackMovementCoroutine(keyframe));
     }
@@ -666,6 +668,7 @@ public class PlayerMovement : MonoBehaviour
     public void SetUseUnscaledAttackMotion(bool useUnscaled) => useUnscaledAttackMotion = useUnscaled;
     public void CancelAttackMotion()
     {
+        ClearCapturedWorldMotion();
         StopAttackMotion();
         ClearActionMotionTarget();
         resolvedTargetMotion = null;
@@ -673,6 +676,8 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnDisable()
     {
+        if (fsm != null) fsm.QteIntroState?.OnOwnerDisabled();
+        ClearCapturedWorldMotion();
         StopAttackMotion();
         ClearActionMotionTarget();
         FinishDash();
@@ -982,6 +987,12 @@ public class PlayerMovement : MonoBehaviour
     private void ApplyMotorVelocity()
     {
         if (rb == null) return;
+        if (_hasCapturedWorldMotion)
+        {
+            rb.linearVelocity = Vector2.zero;
+            lastAppliedMotionVelocityY = 0f;
+            return;
+        }
 
         float baseVerticalVelocity = rb.linearVelocity.y - lastAppliedMotionVelocityY;
         float motionVelocityX = isAttackMotionActive ? attackMotionVelocityX : 0f;
@@ -1144,6 +1155,18 @@ public class PlayerMovement : MonoBehaviour
         }
         if (Mathf.Abs(horizontalInput) >= AttackFacingCancelInputThreshold) attackFacingLockOnCancelledForCurrentAttack = true;
         wasAttackLockOnActive = true; lastObservedComboStep = step;
+    }
+
+    // Buffered actions can replace a step at the same combo depth without an idle
+    // movement tick. Reset on commitment so they get their own initial target turn.
+    public void BeginCombatStepFacing(bool isAutoChain)
+    {
+        attackFacingLockOnCancelledForCurrentAttack =
+            Mathf.Abs(horizontalInput) >= AttackFacingCancelInputThreshold;
+        wasAttackLockOnActive = combat != null && combat.IsAttacking();
+        lastObservedComboStep = combat != null ? combat.GetComboStep() : -1;
+        hasPerformedInitialLockOnForCurrentStep = isAutoChain;
+        TryHandleAttackFacingLockOn();
     }
 
     private bool TryHandleAttackFacingLockOn()

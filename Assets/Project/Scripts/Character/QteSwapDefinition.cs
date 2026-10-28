@@ -13,6 +13,11 @@ public sealed class QteSwapDefinition
     public string introActionKey;
     [Tooltip("Empty selects the action root; otherwise selects this exact authored step.")]
     public string introStepName;
+    [Tooltip("Optional combo for the QTE entry. Subsequent NA inputs use ordinary Recovery/Cancel combo routing. Empty preserves a single-step intro.")]
+    public ComboTree introComboTree;
+    [Header("Entry Presentation")]
+    public QteEntryMode entryMode;
+    public QtePlungeSettings plunge;
     [Tooltip("Spawn behind the outgoing character on X, mirrored by their facing direction. Then face the enemy.")]
     [FormerlySerializedAs("targetOffset"), Min(0f)] public float entryOffset = 1f;
     public AudioClip readySfx;
@@ -33,6 +38,12 @@ public sealed class QteSwapDefinition
         action = null;
         step = null;
         if (!enabled || table == null || string.IsNullOrEmpty(introActionKey)) return false;
+        if (introComboTree?.rootNode?.stepData != null)
+        {
+            action = FindAction(table.standaloneActions) ?? FindAction(table.comboActions);
+            step = action != null ? introComboTree.rootNode.stepData : null;
+            return step != null;
+        }
         if (_cachedTable == table && _cachedAction != null && _cachedStep != null
             && string.Equals(_cachedAction.ActionKey, introActionKey, StringComparison.Ordinal)
             && (string.IsNullOrEmpty(introStepName) || string.Equals(_cachedStep.stepName, introStepName, StringComparison.Ordinal)))

@@ -17,7 +17,7 @@ MonoBehaviour:
   - sourceItemId: char-0-main
     displayName: Asura Shin Fragment
     fragmentType: 0
-    quantity: 884
+    quantity: 85
   characterPotentials:
   - characterId: char-0-main
     skillLevel: 0

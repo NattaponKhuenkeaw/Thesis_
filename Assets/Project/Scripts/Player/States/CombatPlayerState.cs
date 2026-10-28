@@ -15,6 +15,13 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     private CombatAction counterCostCommittedAction;
     private ActionCameraToken _actionCameraToken;
     private CameraManager _actionCameraOwner;
+    private ProceduralSlashField _slashField;
+    private int _slashFieldStartFrame;
+
+    private void ReleaseSlashField()
+    {
+        if (_slashField != null) _slashField.Stop();
+    }
 
     private void ReleaseActionCamera()
     {
@@ -58,6 +65,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
     public override void Exit()
     {
+        ReleaseSlashField();
         ReleaseActionCamera();
         CommitResolvedActionOutput();
         EndActiveActionEventSequence();
@@ -199,9 +207,9 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
     protected virtual bool IsQteIntroExecution => false;
 
-    protected void BeginQteIntro(CombatAction action, AttackStepData step, EnemyController target)
+    protected void BeginQteIntro(CombatAction action, AttackStepData step, EnemyController target, ComboTree combo = null)
     {
-        resolver.BeginExplicitStep(action, step, true);
+        resolver.BeginExplicitStep(action, step, true, combo);
         counterCostCommittedAction = action;
         InputContext context = BuildInputContext();
         context.directionalInput = Vector2.zero;
@@ -222,6 +230,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     {
         player.Combat?.ProcessFrameFromState(frame, phase);
         ProcessActionEvents(frame);
+        if (_slashField != null && _slashField.IsPlaying) _slashField.SetLogicFrame(frame - _slashFieldStartFrame);
         if (_actionCameraOwner != null) _actionCameraOwner.SampleActionCamera(_actionCameraToken, frame);
     }
 
@@ -327,11 +336,11 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         };
     }
 
-    protected bool TryResolveNextStep(bool isAutoChain = false)
+    protected bool TryResolveNextStep(bool isAutoChain = false, bool preserveAuthoredCombo = false)
     {
         if (!resolver.IsActive) return false;
 
-        InputContext ctx = BuildStepBoundaryInputContext();
+        InputContext ctx = preserveAuthoredCombo ? BuildInputContext() : BuildStepBoundaryInputContext();
         bool contextChanged = ctx.isGrounded != resolver.StartedGrounded;
         AttackStepData nextStep;
 
@@ -402,6 +411,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         EnemyController target = beginsNewCounterAction && action != null && action.requiresEnemyTarget
             ? player.Combat?.FindNearestEnemyTarget(action.GetTargetSearchRadius()) : null;
         ReleaseActionCamera();
+        ReleaseSlashField();
         EndActiveActionEventSequence();
         StopAfterImageTrails();
         triggeredActionEvents.Clear();
@@ -531,6 +541,20 @@ public abstract class CombatPlayerState : FrameDataPlayerState
                 if (_actionCameraOwner != null)
                     _actionCameraToken = _actionCameraOwner.BeginActionCamera(player.Combat?.CurrentExecution,
                         entry.cameraMotionSettings, entry.triggerFrame, player.Movement != null ? player.Movement.FacingDirection : 1);
+                break;
+
+            case ActionEventType.ProceduralSlashField:
+                ReleaseSlashField();
+                if (_slashField == null)
+                {
+                    var host = new GameObject("Action Slash Presentation");
+                    host.transform.SetParent(player.transform, false);
+                    _slashField = host.AddComponent<ProceduralSlashField>();
+                }
+                _slashFieldStartFrame = entry.triggerFrame;
+                _slashField.Begin(player.Combat?.CurrentExecution, entry.slashFieldSettings, player.transform.position,
+                    player.Movement != null ? player.Movement.FacingDirection : 1,
+                    player.Animator != null ? player.Animator.GetComponent<SpriteRenderer>() : null);
                 break;
         }
     }
@@ -973,6 +997,14 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
         hasCommittedActionOutput = true;
         fsm.CommitActionOutputContext(outputContext, startedGrounded);
+    }
+
+    // A blocked prepared path must resume from physical support, not snap through terrain.
+    protected void CommitAbortedActionOutput(bool physicallyGrounded)
+    {
+        hasCommittedActionOutput = true;
+        fsm.CommitActionOutputContext(physicallyGrounded ? CombatActionOutputContext.Ground
+            : CombatActionOutputContext.Air, capturedActionStartedGrounded);
     }
 
     protected void CaptureCompletedStepBoundaryContext()

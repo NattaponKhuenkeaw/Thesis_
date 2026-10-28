@@ -1646,6 +1646,10 @@ namespace CombatEditor.UI
                         case ActionEventType.ActionCameraMotion:
                             BuildActionCameraMotionFields(inner, entry);
                             break;
+
+                        case ActionEventType.ProceduralSlashField:
+                            BuildProceduralSlashFields(inner, entry);
+                            break;
                     }
                 }, () =>
                 {
@@ -1877,6 +1881,39 @@ namespace CombatEditor.UI
             });
         }
 
+        private void BuildProceduralSlashFields(VisualElement inner, ActionEventEntry entry)
+        {
+            var settings = entry.slashFieldSettings ??= new ProceduralSlashFieldSettings();
+            AddObjectField(inner, "Ribbon Material", settings.material, value => { RecordUndo("Edit Slash Material"); settings.material = value as Material; MarkDirty(); });
+            AddFloatField(inner, "Overall VFX Scale", settings.overallScale, value => { RecordUndo("Edit Slash Scale"); settings.overallScale = Mathf.Max(0.1f, value); MarkDirty(); });
+            AddToggleField(inner, "Screen Transparency Mask", settings.screenMaskMode, value => { RecordUndo("Edit Slash Mask Mode"); settings.screenMaskMode = value; MarkDirty(); });
+            AddToggleField(inner, "Fit Visible Screen", settings.fitViewport, value => { RecordUndo("Edit Slash Viewport"); settings.fitViewport = value; MarkDirty(); });
+            AddFloatField(inner, "Screen Coverage", settings.viewportCoverage, value => { RecordUndo("Edit Slash Coverage"); settings.viewportCoverage = Mathf.Clamp(value, 0.5f, 2f); MarkDirty(); });
+            AddIntField(inner, "Full Screen Slashes", settings.screenSpanningCount, value => { RecordUndo("Edit Full Screen Slashes"); settings.screenSpanningCount = Mathf.Max(0, value); MarkDirty(); });
+            AddFloatField(inner, "Foreground Share", settings.foregroundFraction, value => { RecordUndo("Edit Slash Depth Share"); settings.foregroundFraction = Mathf.Clamp01(value); MarkDirty(); });
+            AddTextField(inner, "Normal Sorting Layer", settings.normalSortingLayer, value => { RecordUndo("Edit Slash Normal Layer"); settings.normalSortingLayer = value; MarkDirty(); });
+            AddIntField(inner, "Normal Order", settings.normalSortingOrder, value => { RecordUndo("Edit Slash Normal Order"); settings.normalSortingOrder = value; MarkDirty(); });
+            AddTextField(inner, "Foreground Sorting Layer", settings.foregroundSortingLayer, value => { RecordUndo("Edit Slash Front Layer"); settings.foregroundSortingLayer = value; MarkDirty(); });
+            AddIntField(inner, "Foreground Order", settings.foregroundSortingOrder, value => { RecordUndo("Edit Slash Front Order"); settings.foregroundSortingOrder = value; MarkDirty(); });
+            AddIntField(inner, "Slash Count", settings.slashCount, value => { RecordUndo("Edit Slash Count"); settings.slashCount = Mathf.Clamp(value, 1, 64); MarkDirty(); });
+            AddIntField(inner, "Seam Count", settings.seamCount, value => { RecordUndo("Edit Seam Count"); settings.seamCount = Mathf.Clamp(value, 0, 32); MarkDirty(); });
+            AddIntField(inner, "First Frame", settings.firstFrame, value => { RecordUndo("Edit Slash Start"); settings.firstFrame = Mathf.Max(0, value); MarkDirty(); });
+            AddIntField(inner, "Interval", settings.intervalFrames, value => { RecordUndo("Edit Slash Interval"); settings.intervalFrames = Mathf.Max(1, value); MarkDirty(); });
+            AddIntField(inner, "End Frame", settings.endFrame, value => { RecordUndo("Edit Slash End"); settings.endFrame = Mathf.Max(1, value); MarkDirty(); });
+            AddIntField(inner, "Seed (0 random)", settings.seed, value => { RecordUndo("Edit Slash Seed"); settings.seed = value; MarkDirty(); });
+            AddVector2Field(inner, "Field Center", settings.center, value => { RecordUndo("Edit Slash Center"); settings.center = value; MarkDirty(); });
+            AddVector2Field(inner, "Field Spread", settings.spread, value => { RecordUndo("Edit Slash Spread"); settings.spread = value; MarkDirty(); });
+            AddVector2Field(inner, "Length Range", settings.lengthRange, value => { RecordUndo("Edit Slash Length"); settings.lengthRange = value; MarkDirty(); });
+            AddVector2Field(inner, "Width Range", settings.widthRange, value => { RecordUndo("Edit Slash Width"); settings.widthRange = value; MarkDirty(); });
+            AddVector2Field(inner, "Slash Angle Range (deg)", settings.angleRange, value => { RecordUndo("Edit Slash Angles"); settings.angleRange = value; MarkDirty(); });
+            AddFloatField(inner, "Screen Cut Angle (deg)", settings.screenMaskAngle, value => { RecordUndo("Edit Screen Cut Angle"); settings.screenMaskAngle = value; MarkDirty(); });
+            AddVector2Field(inner, "Reveal Frames", settings.revealFrames, value => { RecordUndo("Edit Slash Reveal"); settings.revealFrames = value; MarkDirty(); });
+            AddVector2Field(inner, "Decay Frames", settings.decayFrames, value => { RecordUndo("Edit Slash Decay"); settings.decayFrames = value; MarkDirty(); });
+            AddToggleField(inner, "Hide Actor", settings.hideActor, value => { RecordUndo("Edit Slash Visibility"); settings.hideActor = value; MarkDirty(); });
+            AddIntField(inner, "Hide At", settings.hideFromFrame, value => { RecordUndo("Edit Actor Hide Frame"); settings.hideFromFrame = Mathf.Max(0, value); MarkDirty(); });
+            AddIntField(inner, "Show At", settings.showAtFrame, value => { RecordUndo("Edit Actor Show Frame"); settings.showAtFrame = Mathf.Max(0, value); MarkDirty(); });
+        }
+
         private void BuildActionCameraMotionFields(VisualElement inner, ActionEventEntry entry)
         {
             var settings = entry.cameraMotionSettings ??= new ActionCameraMotionSettings();
@@ -2095,10 +2132,12 @@ namespace CombatEditor.UI
 
                 if (hitbox is NormalHitbox normalHitbox)
                 {
+                    BuildDirectHitFeedbackFields(inner, hitbox);
                     BuildNormalHitboxFields(inner, normalHitbox);
                 }
                 else if (hitbox is GrabHitbox grabHitbox)
                 {
+                    BuildDirectHitFeedbackFields(inner, hitbox);
                     BuildGrabHitboxFields(inner, grabHitbox);
                 }
                 else if (hitbox is ProjectileSpawnHitbox projectileHitbox)
@@ -2114,6 +2153,14 @@ namespace CombatEditor.UI
             {
                 ReorderListItem(hitData.hitboxes, idx, newIndex, "Reorder Hitbox");
             }, reorderIndex: idx, reorderCount: hitData.hitboxes.Count);
+        }
+
+        private void BuildDirectHitFeedbackFields(VisualElement body, HitboxBase hitbox)
+        {
+            AddToggleField(body, "Suppress Hitstop / Camera Impulse", hitbox.suppressImpactFeedback, value =>
+            { RecordUndo("Edit Impact Feedback"); hitbox.suppressImpactFeedback = value; MarkDirty(); });
+            AddToggleField(body, "Suppress Generic Contact VFX", hitbox.suppressContactVfx, value =>
+            { RecordUndo("Edit Contact VFX"); hitbox.suppressContactVfx = value; MarkDirty(); });
         }
 
         private void BuildNormalHitboxFields(VisualElement body, NormalHitbox hitbox)

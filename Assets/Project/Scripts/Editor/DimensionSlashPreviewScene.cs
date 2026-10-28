@@ -10,6 +10,7 @@ public static class DimensionSlashPreviewScene
 {
     private const string ReturnSceneKey = "DimensionSlash.ReturnScene";
     private const string RootStateKey = "DimensionSlash.RootStates";
+    private const string StartSceneKey = "DimensionSlash.PreviousPlayStartScene";
     [System.Serializable] private sealed class RootStates
     {
         public string[] names;
@@ -32,6 +33,7 @@ public static class DimensionSlashPreviewScene
             rootStates.names[i] = roots[i].name; rootStates.active[i] = roots[i].activeSelf;
         }
         SessionState.SetString(RootStateKey, JsonUtility.ToJson(rootStates));
+        SessionState.SetString(StartSceneKey, AssetDatabase.GetAssetPath(EditorSceneManager.playModeStartScene));
         try
         {
         // Keep the user's scene loaded, including unsaved edits, but out of the Play-mode simulation.
@@ -73,6 +75,9 @@ public static class DimensionSlashPreviewScene
         probe.captureCamera = cameraRig.GetComponentInChildren<Camera>();
         probe.characterSource = main;
         EditorSceneManager.SaveScene(scene, "Assets/Project/Scenes/DimensionSlash_Validation.unity");
+        // Run only the validation scene; scene-level Awake order across additive
+        // scenes can otherwise initialize the retained user's persistent managers.
+        EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>("Assets/Project/Scenes/DimensionSlash_Validation.unity");
         EditorApplication.isPlaying = true;
         }
         catch
@@ -89,6 +94,9 @@ public static class DimensionSlashPreviewScene
         if (state != PlayModeStateChange.EnteredEditMode) return;
         string path = SessionState.GetString(ReturnSceneKey, "");
         if (string.IsNullOrEmpty(path)) return;
+        string previousStart = SessionState.GetString(StartSceneKey, "");
+        EditorSceneManager.playModeStartScene = string.IsNullOrEmpty(previousStart) ? null : AssetDatabase.LoadAssetAtPath<SceneAsset>(previousStart);
+        SessionState.EraseString(StartSceneKey);
         SessionState.EraseString(ReturnSceneKey);
         Scene original = SceneManager.GetSceneByPath(path);
         if (!original.IsValid() || !original.isLoaded) return;

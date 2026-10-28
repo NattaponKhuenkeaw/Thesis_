@@ -750,6 +750,8 @@ public class HitBoxDamage : MonoBehaviour
 
     private int GetConfiguredHitstopFrames()
     {
+        if (currentGrabHitbox != null && currentGrabHitbox.suppressImpactFeedback
+            || currentNormalHitbox != null && currentNormalHitbox.suppressImpactFeedback) return 0;
         if (currentGrabHitbox != null)
             return currentIsCrit ? Mathf.Max(2, currentGrabHitbox.impactFreezeFrames) : currentGrabHitbox.impactFreezeFrames;
 

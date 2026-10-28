@@ -500,6 +500,50 @@ public class ShadowMeterTests
         finally { Object.DestroyImmediate(targetObject); }
     }
 
+    [TestCase(AttackCategory.Normal, 1, false, 0f, -1)]
+    [TestCase(AttackCategory.Normal, -1, false, 0f, 1)]
+    [TestCase(AttackCategory.Skill, 1, false, 0f, -1)]
+    [TestCase(AttackCategory.Skill, -1, false, 0f, 1)]
+    [TestCase(AttackCategory.Ultimate, 1, false, 0f, -1)]
+    [TestCase(AttackCategory.Ultimate, -1, false, 0f, 1)]
+    [TestCase(AttackCategory.Normal, 1, true, 0f, 1)]
+    [TestCase(AttackCategory.Skill, 1, false, 1f, 1)]
+    public void CommittedStepRetargetsAfterCutWithoutAnIdleMovementTick(
+        AttackCategory category, int travelDirection, bool autoChain, float inputX, int expectedFacing)
+    {
+        var targetObject = new GameObject("BufferedCutFacingTarget", typeof(BoxCollider2D), typeof(EnemyController));
+        try
+        {
+            owner.transform.position = new Vector2(10000f, 10000f);
+            targetObject.layer = LayerMask.NameToLayer("Enemy");
+            targetObject.transform.position = owner.transform.position + Vector3.right * (3f * travelDirection);
+            var enemy = targetObject.GetComponent<EnemyController>();
+            typeof(EnemyController).GetField("lifecycleState", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(enemy, EnemyLifecycleStateId.Active);
+            var movement = owner.AddComponent<PlayerMovement>();
+            var combat = owner.AddComponent<PlayerCombat>();
+            combat.playerCharacter = owner.GetComponent<PlayerCharacter>();
+            combat.movement = movement;
+            typeof(PlayerMovement).GetField("combat", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(movement, combat);
+            typeof(PlayerMovement).GetField("enemyLayer", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(movement, targetObject.layer);
+            var step = new AttackStepData { stepName = "FacingRegression", startupFrames = 5, activeFrames = 5, recoveryFrames = 5 };
+            Physics2D.SyncTransforms();
+            combat.ExecuteStep(step, 1, false, AttackCategory.Normal, "Dimension Cut", "main.dash.dimension_cut");
+            movement.SetActionMotionTarget(enemy);
+            Assert.That(movement.FacingDirection, Is.EqualTo(travelDirection));
+
+            // Reproduce Face Target On Arrival disabled: pass the enemy while retaining travel facing.
+            owner.transform.position += Vector3.right * (6f * travelDirection);
+            Physics2D.SyncTransforms();
+            typeof(PlayerMovement).GetField("horizontalInput", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(movement, inputX);
+            combat.ExecuteStep(step, 1, false, category, "Buffered Followup", "test.buffered.followup", autoChain);
+            Assert.That(movement.FacingDirection, Is.EqualTo(expectedFacing),
+                "The next committed step must retarget even when combo depth is unchanged and no Update ran between steps.");
+        }
+        finally { Object.DestroyImmediate(targetObject); }
+    }
+
     [TestCase(-5f)]
     [TestCase(5f)]
     public void HeldVerticalTargetAlignsToHorizontalCutWithoutMovingPlayer(float targetY)

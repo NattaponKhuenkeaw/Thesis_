@@ -22,13 +22,15 @@ public class ActionResolver
     // Logging
     private PlayerStateMachine fsm;
 
-    public void BeginExplicitStep(CombatAction action, AttackStepData step, bool grounded)
+    public void BeginExplicitStep(CombatAction action, AttackStepData step, bool grounded, ComboTree combo = null)
     {
         Reset();
         ActiveCombatAction = action;
         activeActionStartedAirborne = !grounded;
-        // A terminal runtime node keeps the source tree and its follow-ups untouched.
-        currentNode = new ComboNode { stepData = step };
+        // Optional authored QTE combo; legacy intros remain terminal and never
+        // walk or mutate the source action's unrelated follow-ups.
+        activeTree = combo;
+        currentNode = combo?.rootNode?.stepData == step ? combo.rootNode : new ComboNode { stepData = step };
         treeDepth = 1;
     }
 

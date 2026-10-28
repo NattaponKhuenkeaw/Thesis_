@@ -1908,8 +1908,16 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7900271300000000001, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
+      propertyPath: introSlowMotionSeconds
+      value: 0.15
+      objectReference: {fileID: 0}
+    - target: {fileID: 7900271300000000001, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: introCameraImpactFrames
       value: 80
+      objectReference: {fileID: 0}
+    - target: {fileID: 7900271300000000001, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
+      propertyPath: introCameraSizeReduction
+      value: 0.25
       objectReference: {fileID: 0}
     - target: {fileID: 8528783629480161128, guid: c978a591a8f8184478b0d576d8f51576, type: 3}
       propertyPath: cameraShake
@@ -5049,6 +5057,10 @@ PrefabInstance:
     - target: {fileID: 21085691361500703, guid: 35c30a4832336874f83c1d60b7c60b70, type: 3}
       propertyPath: m_Name
       value: AdminCanvas
+      objectReference: {fileID: 0}
+    - target: {fileID: 21085691361500703, guid: 35c30a4832336874f83c1d60b7c60b70, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 755117924368461441, guid: 35c30a4832336874f83c1d60b7c60b70, type: 3}
       propertyPath: m_AnchorMax.y

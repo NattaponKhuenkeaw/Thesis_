@@ -18,35 +18,39 @@ MonoBehaviour:
   artifactInstances: []
   artifactRollTable: {fileID: 11400000, guid: acf4a418dd90362438e80ff299bc7b30, type: 2}
   itemStacks: []
-  currency: 999982018
+  currency: 999981098
   _globalLevel: 1
   _globalMaxLevel: 30
   runCharacters:
+  - character: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
+    upgrade:
+      level: 1
+      maxLevel: 30
+      currentExp: 0
+      attackPerLevel: 6.1
+      defensePerLevel: 4.2
+      maxHpPerLevel: 81
+    currentHP: 813
+    currentAE: 100
   - character: {fileID: 11400000, guid: 6e1cc08e7eba57845b7bac14d8757b51, type: 2}
     upgrade:
-      level: 0
-      maxLevel: 0
+      level: 1
+      maxLevel: 30
       currentExp: 0
-      attackPerLevel: 0
-      defensePerLevel: 0
-      maxHpPerLevel: 0
-    currentHP: 10000
-    currentAE: 0
+      attackPerLevel: 4.3
+      defensePerLevel: 4.8
+      maxHpPerLevel: 83
+    currentHP: 973
+    currentAE: 60
   teamSlots:
-  - character: {fileID: 0}
-    legacyArtifacts:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
+  - character: {fileID: 11400000, guid: 949e94b5d6b171a4599ddba0abb450a9, type: 2}
+    legacyArtifacts: []
     artifactRefs:
     - instanceId: 
     - instanceId: 
     - instanceId: 
-  - character: {fileID: 0}
-    legacyArtifacts:
-    - {fileID: 0}
-    - {fileID: 0}
-    - {fileID: 0}
+  - character: {fileID: 11400000, guid: 6e1cc08e7eba57845b7bac14d8757b51, type: 2}
+    legacyArtifacts: []
     artifactRefs:
     - instanceId: 
     - instanceId: 

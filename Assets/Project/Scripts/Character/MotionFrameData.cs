@@ -12,7 +12,8 @@ public enum MotionTaskType
     Relative,    // Incremental displacement (cumulative)
     Absolute,    // Snap to a specific relative anchor position
     SnapToEnemy,  // Smoothly move towards the nearest or locked target
-    DashThroughTarget
+    DashThroughTarget,
+    CapturedWorldPoint
 }
 
 /// <summary>

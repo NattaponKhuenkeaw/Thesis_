@@ -71,6 +71,8 @@ public class HitFeedbackResolver : MonoBehaviour
             }
         }
 
+        if (hitbox != null && hitbox.suppressContactVfx) return;
+
         // 2. Resolve VFX
         Project.Combat.VFXType vfxType = Project.Combat.VFXType.None;
         GameObject vfxPrefab = null;

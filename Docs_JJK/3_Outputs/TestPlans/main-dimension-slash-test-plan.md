@@ -11,6 +11,12 @@ blocked_by: []
 
 # Main Dimension Slash: QA Plan
 
+## Current Procedural Revision — 2026-10-28
+
+The user's new feedback supersedes the original seven-hit sprite choreography. The implemented revision is an almost full-screen procedural purple field,25 normal-depth /6 foreground ribbons,19 Low barrage contacts plus one Low final contact, actor disappearance/reappearance/plunge and reused Dimension Cut motion/clip. Crits remain enabled; these contacts opt out of global hitstop/impulse. See [current revision results](../Reports/MainDimensionSlash/Revision2/implementation-report.md):22 focused tests pass; six live casts register20 contacts each and restore visibility. The historical38-case plan below remains useful for gate/lifecycle/performance coverage, but its old seven-hit/timing expectations must not override the latest direct user direction.
+
+Revision-specific checks: full-screen extent at actual aspect ratios;25/6 render triangle groups and sorting999/12000; independent reveal/head-glow/thickness-and-length collapse; private random seed without gameplay RNG changes; fractional sampling held on pause; actor visible before18, hidden18–89, returning at90;19+1 contacts and crits without global freeze; full cleanup on hidden-actor disable/state exit; final copied Dimension Cut animation and MotionData. Runtime/automated evidence and remaining coverage are linked in the current report.
+
 Updated 2026-10-27 after approved implementation. See [implementation results](../Reports/MainDimensionSlash/implementation-report.md) for executed checks, current captures, failure classification and remaining cases. The detailed procedures below are the full planned matrix; they are not all certified by the smoke pass. Architecture approval was received (“LGTM, arch approval”).
 
 Fresh pre-implementation baseline:79/79 passing tests (61 ShadowMeterTests,18 CombatDamageTypeTests). Post-implementation:19/19 new action tests pass, with134/137 passing across the six selected fixtures. The three failing assertions and limits of the runtime capture are documented in the implementation report rather than waived as a full pass.
@@ -122,6 +128,17 @@ Run accepted cancel, attempted illegal cancel, nonlethal damage, lethal damage, 
 - **DS-36, P0:** for the proposed scoped action-camera event/profile, hold the action clock with hitstop and pause, then cancel, switch/QTE-handoff, start another action and unload the scene. Framing progress follows its approved action-clock semantics; another owner is never overwritten by a stale sample or release. Verify left/right facing, center/room-edge/static-room bounds, normal combat camera and Ultimate/QTE camera composition. A preview curve and successful sample-unit test do not certify the real CameraManager result.
 - **DS-37, P1:** inspect actual phase and end sampling at frames0/11/12/59/60/65/66/83/84/85 with the proposed finite step. Total84 and Done>84 must not leave a hitbox alive, omit the last cleanup, duplicate frame0 events or create a one-frame pose flash; active-relative contact offsets must resolve to the intended absolute frames.
 - **DS-38, P1:** author/save/undo the new camera event, rescale authored FPS/key durations and scrub it in the existing action editor, then compare runtime samples. Same evaluator and relative-frame mapping agree; serialized pre-existing event enum values remain unchanged. Runtime bounds tests must inspect final corrected viewport with lens/aspect/PositionCorrection, suppress unsupported bounds/tilted/static-room translation and leave unrelated room/confiner assets unchanged.
+
+## Revision3: Execution Breakdown and world-anchored Judgment Cut
+
+Latest direct user direction supersedes the old standalone/timer proposal: QTE DimensionCut root followed by ExecutionBreakdown as an input-driven combo node. Starting Recovery120 frames27–146; Done147. Manual paid cut keeps its existing timing, target motion and cost.
+
+- **R3-01:** Start Main QTE with0 and2 cached cuts; press NA at first and last Recovery frames. ResolveNext enters ExecutionBreakdown exactly once at depth2, without another cached cost or five-cut count. An active-phase press uses the existing short input buffer; it must not create a custom two-second queue.
+- **R3-02:** Skip Recovery input, cancel with another permitted action, take startup damage, disable or change character. The combo is discarded; ordinary NA cannot resurrect ExecutionBreakdown. A QTE profile without an authored intro combo stays terminal. Pause holds Recovery progression with the ordinary combat clock.
+- **R3-03:** QTE dash briefly crosses physical ground contact. Its explicitly authored follow-up remains the same combo; normal ground/air action reselection behavior remains in the existing manual states.
+- **R3-04:** Confirm seven live Primary contacts at12/20/27/33/38/42/54, retained legacy burst/residual/seam/shards and actor animation. Final Heavy contact keeps prior feedback. At54, a white/lilac foreground sheet contains a real transparent diagonal tear; jagged fragments open holes as the sheet dissolves. No old final-slash sprite overlays it.
+- **R3-05:** Move/rotate the actor during Judgment Cut. Visual root remains unparented and at one world position throughout each field. Verify30% geometry scale, broad size range, thin seams plus large accents and25/6 normal/foreground ribbon split.
+- **R3-06:** Scrub both QTE steps in Animation Editor → QTE Entry Combo; edit Recovery, hit/VFX timing and mask event with undo/save/reload. Re-authoring through the menu deliberately replaces generated action tuning. Inspect bright/dark backgrounds, HUD occlusion, camera edges and alternate aspect ratios before final feel approval.
 
 ## 7. Presentation and Pixel Verification
 

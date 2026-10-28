@@ -38,6 +38,12 @@ Check the actual Skill Lv4 enemy effect replaces 15% with 40% rather than adding
 
 Latest Potential run: **79/79 passed** (61 ShadowMeterTests and 18 CombatDamageTypeTests), with zero Unity console errors. Results: `../Reports/MainPotential/tests.xml`. Tests use cloned kit/table data and an isolated team inventory for runtime effects. Live animation, combat feel and the field boundary refresh tolerance remain part of the requester smoke test.
 
+## Buffered facing regression
+
+Disable Face Target On Arrival, cut past an enemy on each side, then buffer NA, Skill and Ultimate. Each manual action should face the enemy before its startup payload. Check chained actions with the same combo depth and no intermediate movement tick. Automatic follow-ups should retain their facing; holding horizontal input should retain the existing manual-direction override. Automated cases exercise actual PlayerCombat.ExecuteStep commitments with the previous target behind the player.
+
+Facing correction verification: Unity compiled the changed runtime and Editor assemblies; eight new regression cases are compiled but unrun. The connector was unavailable and computer-use capture timed out. The previous 79/79 Potential result predates this correction.
+
 No automated result certifies final animation alignment, live target choice or game feel. Final run results are recorded below.
 
 Latest checks also cover radial target selection left/right/above/below, captured-target facing against opposite movement input, vertical target anchoring without player lift, and absence of a text label. Render the actual prefab and verify its larger meter in the status/stat gap.

@@ -15,6 +15,22 @@ blocked_by: []
 
 # Task Card: Main Dimension Slash
 
+## Current Revision — 2026-10-28
+
+Facing/angle follow-up: both ribbon geometry and the fullscreen transparency tear mirror with the player's facing captured when the event starts. The world field stays anchored after launch. Animation Editor exposes a min/max ribbon angle range in degrees (equal endpoints fix the angle) and a separate fullscreen cut angle. Angle selection stays inside the authored range. No gameplay tests or captures are run for this follow-up, per the user's instruction. Compilation/domain reload completed; the console also logged a disposed SerializedProperty exception from AnimationEditorWindow.CleanupPreview → AnimationMode.StopAnimationMode during OnDisable. That editor cleanup issue has not been changed by this follow-up.
+
+Latest user corrections: keep Judgment Cut world-anchored, enlarge it30%, and widen the generated size range so thin cuts coexist with substantially larger accents. Reuse the original seven-contact sprite sequence as **Execution Breakdown**, replacing only its final upper-cut VFX with a screen-length foreground transparency tear through a white overlay. After the user's architecture correction, this is a QTE combo: Dimension Cut → NA during authored Recovery → Execution Breakdown. Starting Recovery is120 logic frames; no standalone action, passive ready tag or custom long input queue is needed. An optional generic QTE entry ComboTree feeds the existing ActionResolver, and the Animation Editor exposes both steps under **QTE Entry Combo**.
+
+Latest size/speed follow-up uses range3–46 with1.8-diagonal viewport coverage; five slashes cross the viewport with both endpoints offscreen. Inter-cut spacing is2 frames, reveal1–3 frames, and decay is restored to16–27 frames. Foreground sorting now receives50% of the slash ribbons. This tuning has not been recaptured yet.
+
+Workflow: `/implement-feature` within the approved action architecture. [Current routing and presentation](../Reports/MainDimensionSlash/Revision3/design-and-routing.md); [implementation, videos and verification](../Reports/MainDimensionSlash/Revision3/implementation-report.md).28 focused tests pass. Live capture confirms20 hits per Judgment Cut and7 hits after QTE Recovery NA, with cached cuts preserved. The following procedural revision and original research are retained as history.
+
+### Prior procedural revision
+
+The user rejected the first implementation's reference likeness/smoothness and requested a procedural/Particle-System-style purple Judgment Cut field: independent sliding-alpha reveal, luminous leading edge, then shrinking width/height; varied size/length/timing/direction; almost full-screen coverage; approximately20% foreground-depth cuts and80% normal VFX sorting. Actor anticipation/lunge → hidden barrage → reappearance/plunge → existing Dimension Cut sprite/motion. About20 Low-impact hits, without screen impulse. The user corrected a typo and confirmed critical hits do not need an opt-out; they remain enabled.
+
+Workflow for this revision: `/fix-bug`, with the earlier research/design packet retained as history. [Concrete revision and validation direction](../Reports/MainDimensionSlash/Revision2/revision-design.md); [implemented result, updated gameplay video and test evidence](../Reports/MainDimensionSlash/Revision2/implementation-report.md). Existing Passive4/five-cut/Skill gate remains; latest direct user corrections supersede the old seven-hit sprite choreography.22 focused tests pass and six live casts register20 contacts each, with no global freeze and correct actor cleanup. Human feel review is the current stage.
+
 ## Player-Facing Goal
 
 Make a NEW standalone action for CharacterObject_main, unlocked by a Potential, evoke the supplied BBEEx reference: multiple slashing bursts followed by a giant Dimension Cut, with deliberate impact, rhythm, and camera motion. Keep actor sprites and slash VFX as separate authored layers, with high-quality pixel-art VFX and actor consistency based exclusively on test_0_Main/sprite/New_sprite. Preserve the existing Ultimate and cached-resource Dimension Cut dash.

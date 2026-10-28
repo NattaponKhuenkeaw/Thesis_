@@ -11,7 +11,8 @@ public enum ActionEventType
     AfterImage,
     SetFacingDirection,
     BackgroundOverlayFlash,
-    ActionCameraMotion
+    ActionCameraMotion,
+    ProceduralSlashField
 }
 
 public enum ActionFacingMode
@@ -125,6 +126,9 @@ public class ActionEventEntry
     [Header("Action Camera Motion")]
     public ActionCameraMotionSettings cameraMotionSettings = new ActionCameraMotionSettings();
 
+    [Header("Procedural Slash Field")]
+    public ProceduralSlashFieldSettings slashFieldSettings;
+
     [Header("Ultimate Zoom Settings")]
     [Tooltip("If true, the camera will instantly zoom in on the player during the sequence.")]
     public bool enableUltimateZoom = false;
@@ -133,6 +137,8 @@ public class ActionEventEntry
 
     public int GetTimelineDurationFrames(int actionTotalFrames = -1)
     {
+        if (eventType == ActionEventType.ProceduralSlashField && slashFieldSettings != null)
+            return slashFieldSettings.endFrame;
         if (eventType == ActionEventType.ActionCameraMotion && cameraMotionSettings != null)
             return cameraMotionSettings.DurationFrames;
 
@@ -279,6 +285,8 @@ public class ActionEventFrameData : ActionStepComponent
             entry.triggerFrame = Mathf.RoundToInt(entry.triggerFrame * ratio);
             if (entry.eventType == ActionEventType.ActionCameraMotion)
                 entry.cameraMotionSettings?.Rescale(ratio);
+            if (entry.eventType == ActionEventType.ProceduralSlashField)
+                entry.slashFieldSettings?.Rescale(ratio);
         }
     }
 }

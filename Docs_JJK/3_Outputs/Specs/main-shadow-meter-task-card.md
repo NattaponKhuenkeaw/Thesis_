@@ -54,3 +54,9 @@ Source: Apricha's follow-up in this chat. Skill Lv1-3 and the Ultimate track kee
 - Passive Lv4: capacity +2, totaling 5 boxes, and 2x positive Shadow Meter gains while inside Void Area (multiplier explicitly chosen by Apricha). Dash conversion costs and cached charges are not multiplied.
 
 The old Void Area speed, ally DOT Mastery and enemy slow applications are replaced in every Main field variant by a short refreshed occupancy effect. It gates the authored counter gain multiplier and expires after leaving the field (0.3-second duration, 0.25-second refresh). Crit and Defense behavior use generic action modifiers matched by the stable Dimension Cut action id; healing uses the existing triggered-damage resource effect.
+
+## Buffered action facing correction — 2026-10-27
+
+User report: with Face Target On Arrival disabled on DashThroughTarget, buffered NA, Skill and Ultimate retain travel facing after passing the enemy. Workflow: `/fix-bug`. Each manually committed step must receive its own initial auto-target turn, even if the next step has the same combo depth and no idle movement tick occurs. The arrival-facing option still controls the cut's endpoint; automatic chains retain facing and held horizontal input keeps its existing targeting override.
+
+Root cause: PlayerMovement inferred step starts from attacking/idle samples and combo-depth changes. Buffered replacements at the same depth retained the previous step's completed or cancelled initial-lock flag. PlayerCombat now explicitly calls BeginCombatStepFacing after committing the new step metadata and before animation/payload processing.

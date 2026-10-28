@@ -2422,6 +2422,6 @@ MonoBehaviour:
     - cg.skill.ex
     introActionKey: Ground
     introStepName: Attack4
-    entryOffset: 3
+    entryOffset: 2
     readySfx: {fileID: 8300000, guid: 593a0d385b8e842458eec6a9c0b82630, type: 3}
   actionResolverTable: {fileID: 11400000, guid: 90f3f5c1e3c9d334a90282b1605414b6, type: 2}

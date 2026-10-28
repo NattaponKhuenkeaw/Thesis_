@@ -427,13 +427,8 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
         PlayerStateMachine fsm = playerCharacter.StateMachine;
         bool ordinaryAllowed = fsm.CanSwitchCharacter();
-        CombatAction introAction = null;
-        AttackStepData introStep = null;
-        EnemyController introTarget = null;
-        Vector2 introPosition = default;
-        int introFacing = 1;
-        bool useQte = QteSwaps != null && QteSwaps.TryPrepare(index, out introAction, out introStep,
-            out introTarget, out introPosition, out introFacing);
+        QtePreparedEntry preparedEntry = default;
+        bool useQte = QteSwaps != null && QteSwaps.TryPrepareEntry(index, out preparedEntry);
         if (!ordinaryAllowed && !useQte) return false;
 
         if (fsm.CurrentState is CombatPlayerState)
@@ -454,10 +449,12 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
         if (useQte)
         {
-            playerCharacter.Movement.ApplyQteGroundPosition(introPosition);
-            playerCharacter.Movement.SnapFacingDirection(introFacing);
+            if (preparedEntry.mode == QteEntryMode.LightningPlunge)
+                playerCharacter.Movement.ApplyQteEntryPosition(preparedEntry.placement);
+            else playerCharacter.Movement.ApplyQteGroundPosition(preparedEntry.placement.startBodyPosition);
+            playerCharacter.Movement.SnapFacingDirection(preparedEntry.placement.landingFacing);
             fsm.InputBuffer?.ClearAll();
-            fsm.QteIntroState.Prepare(introAction, introStep, introTarget);
+            fsm.QteIntroState.Prepare(preparedEntry);
             fsm.ChangeState(fsm.QteIntroState);
             QteSwaps.PlayIntroHandoff();
         }

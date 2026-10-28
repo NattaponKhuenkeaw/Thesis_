@@ -269,7 +269,7 @@ MonoBehaviour:
       obeyHitstop: 0
     - type: 148
       clip: {fileID: 7400000, guid: 9428c20ff6c0f9a44b48dc12ba1952bf, type: 2}
-      localScale: {x: 2, y: 1, z: 1}
+      localScale: {x: 1.5, y: 1, z: 1}
       tint: {r: 1, g: 1, b: 1, a: 1}
       flipWithCharacter: 1
       isLocalSpace: 0

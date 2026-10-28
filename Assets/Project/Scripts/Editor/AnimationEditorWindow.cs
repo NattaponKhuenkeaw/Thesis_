@@ -23,6 +23,9 @@ public class AnimationEditorWindow : EditorWindow
     private GameObject previewInstance;
     private int selectedSceneHitboxIndex = -1;
     private Dictionary<VFXEntry, GameObject> vfxPreviewInstances = new Dictionary<VFXEntry, GameObject>();
+    private ProceduralSlashField _slashPreview;
+    private ActionEventEntry _slashPreviewEntry;
+    private string _slashPreviewSettings;
     
     // Persistent State
     private object lastSelectedDataRef;
@@ -881,6 +884,7 @@ public class AnimationEditorWindow : EditorWindow
     // =========================================================
     private void UpdateVFXPreviews(AttackStepData step, int absoluteFrame)
     {
+        UpdateProceduralSlashPreview(step, absoluteFrame);
         if (step?.vfxData == null)
         {
             CleanupVfxPreviews();
@@ -946,6 +950,35 @@ public class AnimationEditorWindow : EditorWindow
             }
         }
         foreach (var key in toRemove) vfxPreviewInstances.Remove(key);
+    }
+
+    private void UpdateProceduralSlashPreview(AttackStepData step, int frame)
+    {
+        ActionEventEntry active = null;
+        if (step?.eventData?.entries != null)
+            foreach (var entry in step.eventData.entries)
+                if (entry != null && entry.eventType == ActionEventType.ProceduralSlashField
+                    && entry.slashFieldSettings != null && frame >= entry.triggerFrame
+                    && frame < entry.triggerFrame + entry.slashFieldSettings.endFrame) { active = entry; break; }
+        if (active == null || previewInstance == null)
+        {
+            if (_slashPreview != null) _slashPreview.Stop();
+            _slashPreviewEntry = null; return;
+        }
+        string settings = JsonUtility.ToJson(active.slashFieldSettings);
+        if (_slashPreview == null)
+        {
+            var host = new GameObject("Slash Field Preview") { hideFlags = HideFlags.HideAndDontSave };
+            _slashPreview = host.AddComponent<ProceduralSlashField>();
+        }
+        if (_slashPreviewEntry != active || _slashPreviewSettings != settings)
+        {
+            var renderer = previewInstance.GetComponentInChildren<SpriteRenderer>();
+            Vector3 origin = step.motionData != null ? EvaluateMotionOffset(step.motionData, active.triggerFrame) : Vector3.zero;
+            _slashPreview.Begin(null, active.slashFieldSettings, origin, 1, renderer, true);
+            _slashPreviewEntry = active; _slashPreviewSettings = settings;
+        }
+        _slashPreview.Sample(frame - active.triggerFrame);
     }
 
     private GameObject GetOrCreateVfxInstance(VFXEntry entry)
@@ -1260,6 +1293,8 @@ public class AnimationEditorWindow : EditorWindow
 
     private void CleanupPreview()
     {
+        if (_slashPreview != null) DestroyImmediate(_slashPreview.gameObject);
+        _slashPreview = null; _slashPreviewEntry = null; _slashPreviewSettings = null;
         CleanupVfxPreviews();
 
         if (AnimationMode.InAnimationMode())

@@ -74,7 +74,7 @@ MonoBehaviour:
       comboResetDelay: 0.8
       rootNode:
         rid: 1588256193077837992
-    cooldown: 10
+    cooldown: 0
   - actionId: cg.skill.ex
     actionName: Shadow Attack
     resourceCounterId: 
@@ -182,6 +182,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Attack1
           animationClip: {fileID: 7400000, guid: 8ed8dd52852448641940ded130bb068d, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows: []
@@ -237,6 +238,8 @@ MonoBehaviour:
         activeFrames: 5
         elementType: 0
         damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.73862654, y: 1.4408524}
         size: {x: 1.5960404, y: 1.9701918}
@@ -276,6 +279,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Attack3
           animationClip: {fileID: 7400000, guid: af997704e0a683f418c56ff69c850ee9, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows: []
@@ -313,6 +317,8 @@ MonoBehaviour:
         activeFrames: 6
         elementType: 0
         damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.9269958, y: 1.5639287}
         size: {x: 4.696252, y: 3.6193118}
@@ -352,6 +358,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Attack2
           animationClip: {fileID: 7400000, guid: 34574ddc930fae2478adc759ba9e51f5, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows: []
@@ -407,6 +414,8 @@ MonoBehaviour:
         activeFrames: 5
         elementType: 0
         damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.9164111, y: 1.3354383}
         size: {x: 1.9984351, y: 2.5544248}
@@ -446,6 +455,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Attack4
           animationClip: {fileID: 7400000, guid: 955b3ad4bd0279645b28d25425c4d14b, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows: []
@@ -481,6 +491,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Attack5
           animationClip: {fileID: 7400000, guid: e0f3bede55a90654d9e36c90d8f4cd5f, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows: []
@@ -516,6 +527,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: air_attack1
           animationClip: {fileID: 7400000, guid: e553ba7c362dc864c925c07bf7edb2e5, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows: []
@@ -551,6 +563,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Capture Da Soul
           animationClip: {fileID: 7400000, guid: af997704e0a683f418c56ff69c850ee9, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows: []
@@ -586,6 +599,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Send Da Btch
           animationClip: {fileID: 7400000, guid: 24b523414923418418e1068c62660af5, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows:
@@ -692,6 +706,8 @@ MonoBehaviour:
         activeFrames: 5
         elementType: 0
         damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.04266739, y: 1.4082842}
         size: {x: 2.4200406, y: 3.1476989}
@@ -757,6 +773,8 @@ MonoBehaviour:
         activeFrames: 3
         elementType: 0
         damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.7002583, y: 1.4658246}
         size: {x: 3.2558231, y: 2.5591278}
@@ -797,6 +815,8 @@ MonoBehaviour:
         activeFrames: 5
         elementType: 0
         damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 2.404759, y: 2.8986833}
         size: {x: 7.1714125, y: 6.0871053}
@@ -832,6 +852,8 @@ MonoBehaviour:
         activeFrames: 5
         elementType: 0
         damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.1752834, y: 1.7673931}
         size: {x: 4.0189457, y: 4.088813}
@@ -921,6 +943,38 @@ MonoBehaviour:
             endFrame: 1
           facingDirectionSettings:
             mode: 0
+          cameraMotionSettings:
+            keys: []
+          slashFieldSettings:
+            material: {fileID: 0}
+            overallScale: 1
+            screenMaskMode: 0
+            fitViewport: 1
+            viewportCoverage: 1.15
+            screenSpanningCount: 0
+            foregroundFraction: 0.2
+            normalSortingLayer: WorldUI
+            normalSortingOrder: 999
+            foregroundSortingLayer: WorldUI
+            foregroundSortingOrder: 12000
+            center: {x: 4, y: 1.6}
+            spread: {x: 7, y: 4}
+            slashCount: 19
+            seamCount: 12
+            firstFrame: 14
+            intervalFrames: 3
+            endFrame: 90
+            lengthRange: {x: 7, y: 15}
+            widthRange: {x: 0.08, y: 0.48}
+            angleRange: {x: 0, y: 180}
+            screenMaskAngle: 104
+            revealFrames: {x: 4, y: 9}
+            decayFrames: {x: 16, y: 27}
+            pixelsPerUnit: 26.25
+            seed: 0
+            hideActor: 1
+            hideFromFrame: 18
+            showAtFrame: 90
           enableUltimateZoom: 1
           ultimateZoomSize: 5
     - rid: 1588256193077838061
@@ -1087,6 +1141,38 @@ MonoBehaviour:
             endFrame: 1
           facingDirectionSettings:
             mode: 0
+          cameraMotionSettings:
+            keys: []
+          slashFieldSettings:
+            material: {fileID: 0}
+            overallScale: 1
+            screenMaskMode: 0
+            fitViewport: 1
+            viewportCoverage: 1.15
+            screenSpanningCount: 0
+            foregroundFraction: 0.2
+            normalSortingLayer: WorldUI
+            normalSortingOrder: 999
+            foregroundSortingLayer: WorldUI
+            foregroundSortingOrder: 12000
+            center: {x: 4, y: 1.6}
+            spread: {x: 7, y: 4}
+            slashCount: 19
+            seamCount: 12
+            firstFrame: 14
+            intervalFrames: 3
+            endFrame: 90
+            lengthRange: {x: 7, y: 15}
+            widthRange: {x: 0.08, y: 0.48}
+            angleRange: {x: 0, y: 180}
+            screenMaskAngle: 104
+            revealFrames: {x: 4, y: 9}
+            decayFrames: {x: 16, y: 27}
+            pixelsPerUnit: 26.25
+            seed: 0
+            hideActor: 1
+            hideFromFrame: 18
+            showAtFrame: 90
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 1588256211525697666
@@ -1148,6 +1234,7 @@ MonoBehaviour:
           loopActivePhase: 0
           stepName: Shadow attack
           animationClip: {fileID: 7400000, guid: af997704e0a683f418c56ff69c850ee9, type: 2}
+          syncAnimationToActionFrames: 0
           lockAirPosition: 1
           autoChainToNext: 0
           triggerWindows: []
@@ -1269,6 +1356,38 @@ MonoBehaviour:
             endFrame: 1
           facingDirectionSettings:
             mode: 0
+          cameraMotionSettings:
+            keys: []
+          slashFieldSettings:
+            material: {fileID: 0}
+            overallScale: 1
+            screenMaskMode: 0
+            fitViewport: 1
+            viewportCoverage: 1.15
+            screenSpanningCount: 0
+            foregroundFraction: 0.2
+            normalSortingLayer: WorldUI
+            normalSortingOrder: 999
+            foregroundSortingLayer: WorldUI
+            foregroundSortingOrder: 12000
+            center: {x: 4, y: 1.6}
+            spread: {x: 7, y: 4}
+            slashCount: 19
+            seamCount: 12
+            firstFrame: 14
+            intervalFrames: 3
+            endFrame: 90
+            lengthRange: {x: 7, y: 15}
+            widthRange: {x: 0.08, y: 0.48}
+            angleRange: {x: 0, y: 180}
+            screenMaskAngle: 104
+            revealFrames: {x: 4, y: 9}
+            decayFrames: {x: 16, y: 27}
+            pixelsPerUnit: 26.25
+            seed: 0
+            hideActor: 1
+            hideFromFrame: 18
+            showAtFrame: 90
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 7060639382869639292
@@ -1278,6 +1397,8 @@ MonoBehaviour:
         activeFrames: 8
         elementType: 4
         damageTags: 2
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 1.157036, y: 1.4228604}
         size: {x: 2.9106262, y: 3.11591}
@@ -1339,6 +1460,8 @@ MonoBehaviour:
         activeFrames: 5
         elementType: 0
         damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.23655891, y: 1.325858}
         size: {x: 2.1472588, y: 2.6517158}
@@ -1374,6 +1497,8 @@ MonoBehaviour:
         activeFrames: 5
         elementType: 0
         damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.06547618, y: 1.3258576}
         size: {x: 2.3686597, y: 2.8127346}
@@ -1409,6 +1534,8 @@ MonoBehaviour:
         activeFrames: 5
         elementType: 0
         damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.0050935745, y: 1.2856028}
         size: {x: 2.28815, y: 2.8127341}
@@ -1444,6 +1571,8 @@ MonoBehaviour:
         activeFrames: 1
         elementType: 0
         damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.11965704, y: 1.2654756}
         size: {x: 2.4615698, y: 2.7322252}
@@ -1479,6 +1608,8 @@ MonoBehaviour:
         activeFrames: 2
         elementType: 0
         damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.27681375, y: 1.2956668}
         size: {x: 1.9459867, y: 2.7926068}
@@ -1568,6 +1699,38 @@ MonoBehaviour:
             endFrame: 1
           facingDirectionSettings:
             mode: 0
+          cameraMotionSettings:
+            keys: []
+          slashFieldSettings:
+            material: {fileID: 0}
+            overallScale: 1
+            screenMaskMode: 0
+            fitViewport: 1
+            viewportCoverage: 1.15
+            screenSpanningCount: 0
+            foregroundFraction: 0.2
+            normalSortingLayer: WorldUI
+            normalSortingOrder: 999
+            foregroundSortingLayer: WorldUI
+            foregroundSortingOrder: 12000
+            center: {x: 4, y: 1.6}
+            spread: {x: 7, y: 4}
+            slashCount: 19
+            seamCount: 12
+            firstFrame: 14
+            intervalFrames: 3
+            endFrame: 90
+            lengthRange: {x: 7, y: 15}
+            widthRange: {x: 0.08, y: 0.48}
+            angleRange: {x: 0, y: 180}
+            screenMaskAngle: 104
+            revealFrames: {x: 4, y: 9}
+            decayFrames: {x: 16, y: 27}
+            pixelsPerUnit: 26.25
+            seed: 0
+            hideActor: 1
+            hideFromFrame: 18
+            showAtFrame: 90
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 8312694097921703943
@@ -1577,6 +1740,8 @@ MonoBehaviour:
         activeFrames: 6
         elementType: 0
         damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: 0.6659267, y: 1.3864373}
         size: {x: 6.431534, y: 3.1351666}
@@ -1666,6 +1831,8 @@ MonoBehaviour:
         activeFrames: 3
         elementType: 0
         damageTags: 0
+        suppressImpactFeedback: 0
+        suppressContactVfx: 0
         debugColor: {r: 0.42, g: 0.81, b: 1, a: 1}
         projectileType: 0
         projectileData: {fileID: 11400000, guid: 4b14a01658a80154d92da3812e8587c2, type: 2}
