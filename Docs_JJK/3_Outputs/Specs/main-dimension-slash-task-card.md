@@ -15,6 +15,8 @@ blocked_by: []
 
 # Task Card: Main Dimension Slash
 
+Latest fullscreen presentation revision — 2026-10-29: replace Execution Breakdown's transparency mask with a single fast purple glow ribbon using the exact DimensionSlashRibbon material, an existing background white flash and much stronger cut-following shockwave. Remove the mask shader/material and its rendering routine entirely. No grain/noise/dissolve. This supersedes earlier mask/tear descriptions below. [Implementation and manual review](fullscreen-execution-slash-task-card.md). Source/asset edits only; no Unity scripts or tests executed.
+
 ## Current Revision — 2026-10-28
 
 Expanded refraction request: enable on ordinary DimensionCut's primary sprite VFX, Lightning Plunge's rendered bolt, and Execution Breakdown's six primary burst sprites plus its existing final tear. VFXEntry has optional cut-impact settings sampled from current transformed sprite bounds; the plunge supplies its sampled bolt endpoints and onset. Default plunge tuning: 12 frames, band width0.04, refraction4 reference pixels, RGB split0 and blur0. The pipeline default Volume has chromatic intensity0.1; this is a possible contributor to the reported lightning fringe. During the plunge's visible presentation the feature suppresses chromatic aberration only in the camera's evaluated Volume stack and restores it after that camera renders. No saved Volume profile changes. Compilation/saved-data checks only; no gameplay tests or captures.

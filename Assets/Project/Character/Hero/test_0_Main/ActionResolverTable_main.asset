@@ -439,7 +439,7 @@ MonoBehaviour:
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
-            screenMaskMode: 0
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.15
             screenSpanningCount: 0
@@ -458,7 +458,7 @@ MonoBehaviour:
             lengthRange: {x: 7, y: 15}
             widthRange: {x: 0.08, y: 0.48}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 4, y: 9}
             decayFrames: {x: 16, y: 27}
             pixelsPerUnit: 26.25
@@ -476,6 +476,125 @@ MonoBehaviour:
             hideFromFrame: 18
             showAtFrame: 90
           enableUltimateZoom: 1
+          ultimateZoomSize: 5
+        - label: Ultimate Sequence
+          eventType: 6
+          triggerFrame: 0
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          backgroundOverlayFlashSettings:
+            fadeOutFrames: 18
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            peakAlpha: 1
+          freezeWorld: 1
+          freezeDurationOverride: 0
+          timelineMode: 0
+          activationVFXType: 0
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 0, z: 0}
+          activationVoice: {fileID: 0}
+          activationSFX: {fileID: 0}
+          activationSFXVolume: 1
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0.4
+              endStrength: 0.08
+              duration: 0.14
+              pulseInterval: 0.025
+              slowMotion:
+                enabled: 0
+                timeScale: 0.35
+                duration: 0.08
+                delaySeconds: 0
+            cameraControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          facingDirectionSettings:
+            mode: 0
+          cameraMotionSettings:
+            keys: []
+            zoomControl:
+              enabled: 1
+              zoomMultiplier: 0.95
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+            holdFrames: 0
+            returnFrames: 0
+          slashFieldSettings:
+            material: {fileID: 0}
+            overallScale: 1
+            fullScreenSlash: 0
+            fitViewport: 1
+            viewportCoverage: 1.15
+            screenSpanningCount: 0
+            foregroundFraction: 0.2
+            normalSortingLayer: WorldUI
+            normalSortingOrder: 999
+            foregroundSortingLayer: WorldUI
+            foregroundSortingOrder: 12000
+            center: {x: 4, y: 1.6}
+            spread: {x: 7, y: 4}
+            slashCount: 19
+            seamCount: 12
+            firstFrame: 14
+            intervalFrames: 3
+            endFrame: 90
+            lengthRange: {x: 7, y: 15}
+            widthRange: {x: 0.08, y: 0.48}
+            angleRange: {x: 0, y: 180}
+            fullScreenAngle: 104
+            revealFrames: {x: 4, y: 9}
+            decayFrames: {x: 16, y: 27}
+            pixelsPerUnit: 26.25
+            seed: 0
+            impactDistortion:
+              enabled: 0
+              startFrame: 0
+              durationFrames: 18
+              waveWidth: 0.08
+              refractionPixels: 6
+              chromaticPixels: 0
+              blurPixels: 1
+              referenceHeight: 270
+            hideActor: 1
+            hideFromFrame: 18
+            showAtFrame: 90
+          enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 1267093193736847457
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
@@ -668,7 +787,7 @@ MonoBehaviour:
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
-            screenMaskMode: 0
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.15
             screenSpanningCount: 0
@@ -687,7 +806,7 @@ MonoBehaviour:
             lengthRange: {x: 7, y: 15}
             widthRange: {x: 0.08, y: 0.48}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 4, y: 9}
             decayFrames: {x: 16, y: 27}
             pixelsPerUnit: 26.25
@@ -787,7 +906,7 @@ MonoBehaviour:
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
-            screenMaskMode: 0
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.15
             screenSpanningCount: 0
@@ -806,7 +925,7 @@ MonoBehaviour:
             lengthRange: {x: 7, y: 15}
             widthRange: {x: 0.08, y: 0.48}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 4, y: 9}
             decayFrames: {x: 16, y: 27}
             pixelsPerUnit: 26.25
@@ -906,7 +1025,7 @@ MonoBehaviour:
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
-            screenMaskMode: 0
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.15
             screenSpanningCount: 0
@@ -925,7 +1044,7 @@ MonoBehaviour:
             lengthRange: {x: 7, y: 15}
             widthRange: {x: 0.08, y: 0.48}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 4, y: 9}
             decayFrames: {x: 16, y: 27}
             pixelsPerUnit: 26.25
@@ -1502,8 +1621,8 @@ MonoBehaviour:
             returnFrames: 0
           slashFieldSettings:
             material: {fileID: 2100000, guid: a2dd817b7f7eb394f82f49ef7ffdd5f1, type: 2}
-            overallScale: 1.95
-            screenMaskMode: 0
+            overallScale: 4
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.8
             screenSpanningCount: 5
@@ -1522,7 +1641,7 @@ MonoBehaviour:
             lengthRange: {x: 3, y: 46}
             widthRange: {x: 0.08, y: 1.8}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 1, y: 3}
             decayFrames: {x: 16, y: 27}
             pixelsPerUnit: 26.25
@@ -2449,8 +2568,8 @@ MonoBehaviour:
             returnFrames: 0
           slashFieldSettings:
             material: {fileID: 2100000, guid: a2dd817b7f7eb394f82f49ef7ffdd5f1, type: 2}
-            overallScale: 1.95
-            screenMaskMode: 0
+            overallScale: 4
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.15
             screenSpanningCount: 0
@@ -2469,7 +2588,7 @@ MonoBehaviour:
             lengthRange: {x: 15, y: 18}
             widthRange: {x: 0.7, y: 1.2}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 4, y: 4}
             decayFrames: {x: 12, y: 18}
             pixelsPerUnit: 26.25
@@ -2612,7 +2731,7 @@ MonoBehaviour:
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
-            screenMaskMode: 0
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.15
             screenSpanningCount: 0
@@ -2631,7 +2750,7 @@ MonoBehaviour:
             lengthRange: {x: 7, y: 15}
             widthRange: {x: 0.08, y: 0.48}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 4, y: 9}
             decayFrames: {x: 16, y: 27}
             pixelsPerUnit: 26.25
@@ -2731,7 +2850,7 @@ MonoBehaviour:
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
-            screenMaskMode: 0
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.15
             screenSpanningCount: 0
@@ -2750,7 +2869,7 @@ MonoBehaviour:
             lengthRange: {x: 7, y: 15}
             widthRange: {x: 0.08, y: 0.48}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 4, y: 9}
             decayFrames: {x: 16, y: 27}
             pixelsPerUnit: 26.25
@@ -2850,7 +2969,7 @@ MonoBehaviour:
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
-            screenMaskMode: 0
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.15
             screenSpanningCount: 0
@@ -2869,7 +2988,7 @@ MonoBehaviour:
             lengthRange: {x: 7, y: 15}
             widthRange: {x: 0.08, y: 0.48}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 4, y: 9}
             decayFrames: {x: 16, y: 27}
             pixelsPerUnit: 26.25
@@ -3969,7 +4088,7 @@ MonoBehaviour:
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
-            screenMaskMode: 0
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.15
             screenSpanningCount: 0
@@ -3988,7 +4107,7 @@ MonoBehaviour:
             lengthRange: {x: 7, y: 15}
             widthRange: {x: 0.08, y: 0.48}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 4, y: 9}
             decayFrames: {x: 16, y: 27}
             pixelsPerUnit: 26.25
@@ -4088,7 +4207,7 @@ MonoBehaviour:
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
-            screenMaskMode: 0
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.15
             screenSpanningCount: 0
@@ -4107,7 +4226,7 @@ MonoBehaviour:
             lengthRange: {x: 7, y: 15}
             widthRange: {x: 0.08, y: 0.48}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 4, y: 9}
             decayFrames: {x: 16, y: 27}
             pixelsPerUnit: 26.25
@@ -4547,7 +4666,7 @@ MonoBehaviour:
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
-            screenMaskMode: 0
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.15
             screenSpanningCount: 0
@@ -4566,7 +4685,7 @@ MonoBehaviour:
             lengthRange: {x: 7, y: 15}
             widthRange: {x: 0.08, y: 0.48}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 4, y: 9}
             decayFrames: {x: 16, y: 27}
             pixelsPerUnit: 26.25
@@ -4666,7 +4785,7 @@ MonoBehaviour:
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
-            screenMaskMode: 0
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.15
             screenSpanningCount: 0
@@ -4685,7 +4804,7 @@ MonoBehaviour:
             lengthRange: {x: 7, y: 15}
             widthRange: {x: 0.08, y: 0.48}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 4, y: 9}
             decayFrames: {x: 16, y: 27}
             pixelsPerUnit: 26.25
@@ -4785,7 +4904,7 @@ MonoBehaviour:
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
-            screenMaskMode: 0
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.15
             screenSpanningCount: 0
@@ -4804,7 +4923,7 @@ MonoBehaviour:
             lengthRange: {x: 7, y: 15}
             widthRange: {x: 0.08, y: 0.48}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 4, y: 9}
             decayFrames: {x: 16, y: 27}
             pixelsPerUnit: 26.25
@@ -4904,7 +5023,7 @@ MonoBehaviour:
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
-            screenMaskMode: 0
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.15
             screenSpanningCount: 0
@@ -4923,7 +5042,7 @@ MonoBehaviour:
             lengthRange: {x: 7, y: 15}
             widthRange: {x: 0.08, y: 0.48}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 4, y: 9}
             decayFrames: {x: 16, y: 27}
             pixelsPerUnit: 26.25
@@ -4942,6 +5061,125 @@ MonoBehaviour:
             showAtFrame: 90
           enableUltimateZoom: 0
           ultimateZoomSize: 5
+        - label: Fullscreen purple execution slash
+          eventType: 7
+          triggerFrame: 17
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          backgroundOverlayFlashSettings:
+            fadeOutFrames: 8
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            peakAlpha: 1
+          freezeWorld: 0
+          freezeDurationOverride: 0
+          timelineMode: 0
+          activationVFXType: 0
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 0, z: 0}
+          activationVoice: {fileID: 0}
+          activationSFX: {fileID: 0}
+          activationSFXVolume: 1
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0.4
+              endStrength: 0.08
+              duration: 0.14
+              pulseInterval: 0.025
+              slowMotion:
+                enabled: 0
+                timeScale: 0.35
+                duration: 0.08
+                delaySeconds: 0
+            cameraControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          facingDirectionSettings:
+            mode: 0
+          cameraMotionSettings:
+            keys: []
+            zoomControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+            holdFrames: 0
+            returnFrames: 0
+          slashFieldSettings:
+            material: {fileID: 2100000, guid: a2dd817b7f7eb394f82f49ef7ffdd5f1, type: 2}
+            overallScale: 2
+            fullScreenSlash: 1
+            fitViewport: 1
+            viewportCoverage: 1.15
+            screenSpanningCount: 1
+            foregroundFraction: 1
+            normalSortingLayer: WorldUI
+            normalSortingOrder: 999
+            foregroundSortingLayer: WorldUI
+            foregroundSortingOrder: 12000
+            center: {x: 4, y: 1.6}
+            spread: {x: 7, y: 4}
+            slashCount: 1
+            seamCount: 1
+            firstFrame: 0
+            intervalFrames: 3
+            endFrame: 50
+            lengthRange: {x: 7, y: 100}
+            widthRange: {x: 7, y: 7}
+            angleRange: {x: 0, y: 180}
+            fullScreenAngle: 180
+            revealFrames: {x: 1, y: 1}
+            decayFrames: {x: 20, y: 20}
+            pixelsPerUnit: 26.25
+            seed: 0
+            impactDistortion:
+              enabled: 1
+              startFrame: 0
+              durationFrames: 10
+              waveWidth: 0.18
+              refractionPixels: 48
+              chromaticPixels: 0
+              blurPixels: 2
+              referenceHeight: 270
+            hideActor: 0
+            hideFromFrame: 39
+            showAtFrame: 193
+          enableUltimateZoom: 0
+          ultimateZoomSize: 5
     - rid: 1588256193077838071
       type: {class: VFXFrameData, ns: , asm: Assembly-CSharp}
       data:
@@ -4950,7 +5188,7 @@ MonoBehaviour:
           vfxType: 146
           vfxClip: {fileID: 0}
           vfxPrefab: {fileID: 0}
-          triggerFrame: 41
+          triggerFrame: 45
           duration: 42
           trackColor: {r: 0.55, g: 0.3, b: 1, a: 1}
           transformKeys:
@@ -5003,7 +5241,7 @@ MonoBehaviour:
     - rid: 1588256193077838073
       type: {class: NormalHitbox, ns: , asm: Assembly-CSharp}
       data:
-        startFrameOffset: 23
+        startFrameOffset: 27
         activeFrames: 4
         elementType: 0
         damageTags: 0
@@ -5233,7 +5471,7 @@ MonoBehaviour:
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
-            screenMaskMode: 0
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.15
             screenSpanningCount: 0
@@ -5252,7 +5490,7 @@ MonoBehaviour:
             lengthRange: {x: 7, y: 15}
             widthRange: {x: 0.08, y: 0.48}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 4, y: 9}
             decayFrames: {x: 16, y: 27}
             pixelsPerUnit: 26.25
@@ -5356,7 +5594,7 @@ MonoBehaviour:
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
-            screenMaskMode: 0
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.15
             screenSpanningCount: 0
@@ -5375,7 +5613,7 @@ MonoBehaviour:
             lengthRange: {x: 7, y: 15}
             widthRange: {x: 0.08, y: 0.48}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 4, y: 9}
             decayFrames: {x: 16, y: 27}
             pixelsPerUnit: 26.25
@@ -5475,7 +5713,7 @@ MonoBehaviour:
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
-            screenMaskMode: 0
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.15
             screenSpanningCount: 0
@@ -5494,7 +5732,7 @@ MonoBehaviour:
             lengthRange: {x: 7, y: 15}
             widthRange: {x: 0.08, y: 0.48}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 4, y: 9}
             decayFrames: {x: 16, y: 27}
             pixelsPerUnit: 26.25
@@ -6300,7 +6538,7 @@ MonoBehaviour:
       type: {class: ActionEventFrameData, ns: , asm: Assembly-CSharp}
       data:
         entries:
-        - label: Foreground execution screen tear
+        - label: Fullscreen purple execution slash
           eventType: 7
           triggerFrame: 136
           trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
@@ -6313,7 +6551,7 @@ MonoBehaviour:
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
           backgroundOverlayFlashSettings:
-            fadeOutFrames: 18
+            fadeOutFrames: 8
             flashColor: {r: 1, g: 1, b: 1, a: 1}
             peakAlpha: 1
           freezeWorld: 0
@@ -6379,12 +6617,12 @@ MonoBehaviour:
             holdFrames: 0
             returnFrames: 0
           slashFieldSettings:
-            material: {fileID: 2100000, guid: ad5e974c3ddcb3946ad64aff126b1636, type: 2}
-            overallScale: 1
-            screenMaskMode: 1
+            material: {fileID: 2100000, guid: a2dd817b7f7eb394f82f49ef7ffdd5f1, type: 2}
+            overallScale: 2
+            fullScreenSlash: 1
             fitViewport: 1
             viewportCoverage: 1.15
-            screenSpanningCount: 0
+            screenSpanningCount: 1
             foregroundFraction: 1
             normalSortingLayer: WorldUI
             normalSortingOrder: 999
@@ -6393,26 +6631,26 @@ MonoBehaviour:
             center: {x: 4, y: 1.6}
             spread: {x: 7, y: 4}
             slashCount: 1
-            seamCount: 0
-            firstFrame: 1
+            seamCount: 1
+            firstFrame: 0
             intervalFrames: 3
-            endFrame: 30
-            lengthRange: {x: 7, y: 15}
-            widthRange: {x: 0.08, y: 0.28}
+            endFrame: 50
+            lengthRange: {x: 7, y: 100}
+            widthRange: {x: 7, y: 7}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 24.2
-            revealFrames: {x: 8.571428, y: 19.285713}
-            decayFrames: {x: 34.285713, y: 57.85714}
+            fullScreenAngle: 23.5
+            revealFrames: {x: 1, y: 1}
+            decayFrames: {x: 20, y: 20}
             pixelsPerUnit: 26.25
             seed: 0
             impactDistortion:
               enabled: 1
               startFrame: 0
-              durationFrames: 39
-              waveWidth: 0.08
-              refractionPixels: 6
+              durationFrames: 10
+              waveWidth: 0.18
+              refractionPixels: 48
               chromaticPixels: 0
-              blurPixels: 1
+              blurPixels: 2
               referenceHeight: 270
             hideActor: 0
             hideFromFrame: 39
@@ -6520,14 +6758,14 @@ MonoBehaviour:
               jumpCutLock: 0
               horizontalViewportOffset: 0.1
               transitionInFrames: 0
-              holdFrames: 80
+              holdFrames: 52
               returnFrames: 30
             holdFrames: 100
             returnFrames: 100
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
-            screenMaskMode: 0
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.15
             screenSpanningCount: 0
@@ -6546,7 +6784,7 @@ MonoBehaviour:
             lengthRange: {x: 7, y: 15}
             widthRange: {x: 0.08, y: 0.48}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 4, y: 9}
             decayFrames: {x: 16, y: 27}
             pixelsPerUnit: 26.25
@@ -6646,7 +6884,7 @@ MonoBehaviour:
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
-            screenMaskMode: 0
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.15
             screenSpanningCount: 0
@@ -6665,7 +6903,7 @@ MonoBehaviour:
             lengthRange: {x: 7, y: 15}
             widthRange: {x: 0.08, y: 0.48}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 4, y: 9}
             decayFrames: {x: 16, y: 27}
             pixelsPerUnit: 26.25
@@ -6765,7 +7003,7 @@ MonoBehaviour:
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
-            screenMaskMode: 0
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.15
             screenSpanningCount: 0
@@ -6784,7 +7022,7 @@ MonoBehaviour:
             lengthRange: {x: 7, y: 15}
             widthRange: {x: 0.08, y: 0.48}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 4, y: 9}
             decayFrames: {x: 16, y: 27}
             pixelsPerUnit: 26.25
@@ -6884,7 +7122,7 @@ MonoBehaviour:
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
-            screenMaskMode: 0
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.15
             screenSpanningCount: 0
@@ -6903,7 +7141,7 @@ MonoBehaviour:
             lengthRange: {x: 7, y: 15}
             widthRange: {x: 0.08, y: 0.48}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 4, y: 9}
             decayFrames: {x: 16, y: 27}
             pixelsPerUnit: 26.25
@@ -7003,7 +7241,7 @@ MonoBehaviour:
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
-            screenMaskMode: 0
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.15
             screenSpanningCount: 0
@@ -7022,7 +7260,7 @@ MonoBehaviour:
             lengthRange: {x: 7, y: 15}
             widthRange: {x: 0.08, y: 0.48}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 4, y: 9}
             decayFrames: {x: 16, y: 27}
             pixelsPerUnit: 26.25
@@ -7043,7 +7281,7 @@ MonoBehaviour:
           ultimateZoomSize: 5
         - label: Ultimate Sequence
           eventType: 6
-          triggerFrame: 93
+          triggerFrame: 95
           trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
           overlaySettings:
             fadeInDuration: 0.03
@@ -7110,19 +7348,19 @@ MonoBehaviour:
           cameraMotionSettings:
             keys: []
             zoomControl:
-              enabled: 0
-              zoomMultiplier: 1
+              enabled: 1
+              zoomMultiplier: 0.9
               jumpCutLock: 1
-              horizontalViewportOffset: 0
-              transitionInFrames: 0
-              holdFrames: 0
-              returnFrames: 0
+              horizontalViewportOffset: 0.05
+              transitionInFrames: 10
+              holdFrames: 25
+              returnFrames: 50
             holdFrames: 0
             returnFrames: 0
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
-            screenMaskMode: 0
+            fullScreenSlash: 0
             fitViewport: 1
             viewportCoverage: 1.15
             screenSpanningCount: 0
@@ -7141,7 +7379,7 @@ MonoBehaviour:
             lengthRange: {x: 7, y: 15}
             widthRange: {x: 0.08, y: 0.48}
             angleRange: {x: 0, y: 180}
-            screenMaskAngle: 104
+            fullScreenAngle: 104
             revealFrames: {x: 4, y: 9}
             decayFrames: {x: 16, y: 27}
             pixelsPerUnit: 26.25

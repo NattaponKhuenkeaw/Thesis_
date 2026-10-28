@@ -11,8 +11,9 @@ public enum ActionEventType
     AfterImage,
     SetFacingDirection,
     BackgroundOverlayFlash,
-    ActionCameraMotion,
-    ProceduralSlashField
+    [InspectorName("Action Camera Motion (Legacy)")] ActionCameraMotion,
+    ProceduralSlashField,
+    [InspectorName("Camera Animation Control")] CameraAnimationControl
 }
 
 public enum ActionFacingMode
@@ -127,6 +128,7 @@ public class ActionEventEntry
 
     [Header("Action Camera Motion")]
     public ActionCameraMotionSettings cameraMotionSettings = new ActionCameraMotionSettings();
+    public CameraAnimationFrameData cameraAnimation;
 
     [Header("Procedural Slash Field")]
     public ProceduralSlashFieldSettings slashFieldSettings;
@@ -139,6 +141,8 @@ public class ActionEventEntry
 
     public int GetTimelineDurationFrames(int actionTotalFrames = -1)
     {
+        if (eventType == ActionEventType.CameraAnimationControl)
+            return cameraAnimation?.DurationFrames ?? 1;
         if (eventType == ActionEventType.ProceduralSlashField && slashFieldSettings != null)
             return slashFieldSettings.endFrame;
         if (eventType == ActionEventType.ActionCameraMotion && cameraMotionSettings != null)
@@ -325,6 +329,8 @@ public class ActionEventFrameData : ActionStepComponent
             }
 
             entry.triggerFrame = Mathf.RoundToInt(entry.triggerFrame * ratio);
+            if (entry.eventType == ActionEventType.CameraAnimationControl)
+                entry.cameraAnimation?.Rescale(ratio);
             if (entry.eventType == ActionEventType.ScreenImpulse)
                 entry.screenImpulseSettings?.cameraControl?.Rescale(ratio);
             if (entry.eventType == ActionEventType.ActionCameraMotion)

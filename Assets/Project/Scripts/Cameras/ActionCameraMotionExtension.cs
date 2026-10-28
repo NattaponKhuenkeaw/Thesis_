@@ -16,12 +16,17 @@ public sealed class ActionCameraMotionExtension : CinemachineExtension
     protected override void PostPipelineStageCallback(CinemachineVirtualCameraBase vcam,
         CinemachineCore.Stage stage, ref CameraState state, float deltaTime)
     {
-        if (stage != CinemachineCore.Stage.Finalize || _owner == null
-            || !_owner.TrySampleActionCamera(out float size, out float offset)) return;
+        if (stage != CinemachineCore.Stage.Finalize || _owner == null) return;
+        var normal = new CameraAnimationPose(state.GetCorrectedPosition(), state.Lens.OrthographicSize);
+        _owner.RecordNormalCamera(vcam, normal);
+        if (!_owner.TrySampleActionCamera(out float size, out float offset)) return;
         var bounds = _confiner != null && _confiner.enabled ? _confiner.BoundingShape2D as BoxCollider2D : null;
         if (bounds == null || !bounds.enabled || Mathf.Abs(Mathf.DeltaAngle(bounds.transform.eulerAngles.z, 0f)) > 0.01f)
             return;
-        if (_owner.TrySampleScreenImpulseCamera(out float zoom, out Vector3 lockedPosition, out float lockWeight))
+        if (_owner.TrySampleCameraAnimation(normal, out var pose))
+            ApplyBounded(ref state, bounds.bounds, pose.Size / normal.Size, 0f, true,
+                new Vector3(pose.Position.x, pose.Position.y, state.GetCorrectedPosition().z), 1f);
+        else if (_owner.TrySampleScreenImpulseCamera(out float zoom, out Vector3 lockedPosition, out float lockWeight))
             ApplyBounded(ref state, bounds.bounds, zoom, offset, true, lockedPosition, lockWeight);
         else
             ApplyBounded(ref state, bounds.bounds, size, offset);

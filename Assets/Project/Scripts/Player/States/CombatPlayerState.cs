@@ -535,6 +535,14 @@ public abstract class CombatPlayerState : FrameDataPlayerState
                 PlayBackgroundImpactFlash(entry);
                 break;
 
+            case ActionEventType.CameraAnimationControl:
+                ReleaseActionCamera();
+                _actionCameraOwner = CameraManager.instance;
+                if (_actionCameraOwner != null)
+                    _actionCameraToken = _actionCameraOwner.BeginCameraAnimation(player.Combat?.CurrentExecution,
+                        entry.cameraAnimation, entry.triggerFrame, player.Movement != null ? player.Movement.FacingDirection : 1);
+                break;
+
             case ActionEventType.ActionCameraMotion:
                 ReleaseActionCamera();
                 _actionCameraOwner = CameraManager.instance;
@@ -561,6 +569,8 @@ public abstract class CombatPlayerState : FrameDataPlayerState
                 _slashField.Begin(player.Combat?.CurrentExecution, entry.slashFieldSettings, player.transform.position,
                     player.Movement != null ? player.Movement.FacingDirection : 1,
                     player.Animator != null ? player.Animator.GetComponent<SpriteRenderer>() : null);
+                if (entry.slashFieldSettings?.fullScreenSlash == true)
+                    PlayBackgroundImpactFlash(entry);
                 break;
         }
     }

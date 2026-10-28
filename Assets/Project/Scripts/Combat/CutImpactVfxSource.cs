@@ -104,7 +104,7 @@ public sealed class CutImpactVfxSource : MonoBehaviour
             sample.cutEndpoints = new Vector4(a.x, a.y, b.x, b.y);
             sample.cutShape = new Vector4(new Vector2(width.x * camera.aspect, width.y).magnitude, 1f, 0f, 0f);
             sample.wave = new Vector4(0f, Mathf.Max(0.01f, settings.waveWidth),
-                Mathf.Clamp(settings.refractionPixels, 0f, 16f), Mathf.Clamp(settings.chromaticPixels, 0f, 8f));
+                Mathf.Clamp(settings.refractionPixels, 0f, 64f), Mathf.Clamp(settings.chromaticPixels, 0f, 8f));
             sample.detail = new Vector4(Mathf.Clamp(settings.blurPixels, 0f, 4f), Mathf.Max(1, settings.referenceHeight), camera.aspect, 0f);
             return true;
         }

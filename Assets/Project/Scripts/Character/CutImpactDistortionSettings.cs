@@ -10,7 +10,7 @@ public sealed class CutImpactDistortionSettings
     [Min(1)] public int durationFrames = 18;
     [Tooltip("Distortion band around the visible cut, as a fraction of viewport height.")]
     [Min(0.01f)] public float waveWidth = 0.08f;
-    [Range(0f, 16f)] public float refractionPixels = 6f;
+    [Range(0f, 64f)] public float refractionPixels = 6f;
     [Range(0f, 8f)] public float chromaticPixels;
     [Range(0f, 4f)] public float blurPixels = 1f;
     [Min(1)] public int referenceHeight = 270;

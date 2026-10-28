@@ -173,13 +173,14 @@ namespace CombatEditor.UI
             foreach (var track in Tracks)
             {
                 string display = track.label.Length > 8 ? track.label.Substring(0, 7) + "…" : track.label;
-                AddLabelRow(labelCol, display, TRACK_H, ColBg);
+                AddLabelRow(labelCol, display, TRACK_H, ColBg, track.label);
             }
         }
 
-        private void AddLabelRow(VisualElement col, string text, float h, Color bg)
+        private void AddLabelRow(VisualElement col, string text, float h, Color bg, string tooltip = null)
         {
             var row = new VisualElement();
+            row.tooltip = tooltip ?? text;
             row.style.height     = h;
             row.style.minHeight  = h;
             row.style.marginBottom = ROW_GAP;

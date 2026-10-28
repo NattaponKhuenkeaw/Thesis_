@@ -51,12 +51,16 @@ public static class ExecutionBreakdownAuthoring
             }
         }
         AddEffect(step, "seam",44,10); AddEffect(step,"shards",66,18);
-        step.eventData.entries.Add(new ActionEventEntry { label = "Foreground execution screen tear", triggerFrame = 54,
+        step.eventData.entries.Add(new ActionEventEntry { label = "Fullscreen purple execution slash", triggerFrame = 54,
             eventType = ActionEventType.ProceduralSlashField, freezeWorld = false,
-            slashFieldSettings = new ProceduralSlashFieldSettings { screenMaskMode = true, hideActor = false,
-                material = AssetDatabase.LoadAssetAtPath<Material>(Root + "ExecutionBreakdownMask.mat"),
-                slashCount = 1, seamCount = 0, endFrame = 30, foregroundFraction = 1f,
-                impactDistortion = new CutImpactDistortionSettings { enabled = true } } });
+            backgroundOverlayFlashSettings = new BackgroundOverlayFlashSettings { fadeOutFrames = 8, flashColor = Color.white },
+            slashFieldSettings = new ProceduralSlashFieldSettings { fullScreenSlash = true, hideActor = false,
+                material = AssetDatabase.LoadAssetAtPath<Material>(Root + "DimensionSlashRibbon.mat"),
+                slashCount = 1, seamCount = 0, firstFrame = 0, endFrame = 12, foregroundFraction = 1f,
+                fullScreenAngle = 24.2f,
+                widthRange = new Vector2(1.2f, 1.2f), revealFrames = Vector2.one, decayFrames = new Vector2(8f, 8f),
+                impactDistortion = new CutImpactDistortionSettings { enabled = true, durationFrames = 10,
+                    waveWidth = 0.18f, refractionPixels = 48f, blurPixels = 2f } } });
         var camera = new ActionCameraMotionSettings();
         int[] cameraFrames = { 0,12,42,44,50,54,56,60,66 };
         float[] sizes = { 1,1,0.99f,1,1,0.96f,0.98f,0.99f,1 };
@@ -78,10 +82,8 @@ public static class ExecutionBreakdownAuthoring
 
     public static void BuildMaterial()
     {
-        var shader = Shader.Find("Project/ExecutionBreakdownMask");
-        if (shader == null) throw new System.InvalidOperationException("Execution screen-mask shader missing.");
-        string path = Root + "ExecutionBreakdownMask.mat";
-        if (AssetDatabase.LoadAssetAtPath<Material>(path) == null) AssetDatabase.CreateAsset(new Material(shader), path);
+        if (AssetDatabase.LoadAssetAtPath<Material>(Root + "DimensionSlashRibbon.mat") == null)
+            throw new System.InvalidOperationException("Dimension Slash ribbon material is missing.");
     }
 
     public static void BindActor(CharacterObject character)

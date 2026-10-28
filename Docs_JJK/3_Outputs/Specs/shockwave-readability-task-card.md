@@ -41,3 +41,5 @@ Owner requested Shockwave "larger it like 150%" and Dimension Slash width and he
 Dimension Slash's judgment field and final-cut ribbon use the existing overallScale setting: 1.3 -> 1.95 (50% increase to both dimensions). Updated saved action data and authoring defaults, preserving all other in-progress action edits. No damage dimensions or timings changed. Updated regression expectations, including explicit mesh width and height checks.
 
 Use the same combat-zoom readability test for the enlarged waves and both Dimension Slash stages. If effects obscure danger cues, reduce scale. Runtime tests and visual review remain pending.
+
+Latest owner tuning: Shockwave is now 300% larger than original (4x radius/diameter), across all four saved prefabs and the component default. Extended duration and Dimension Slash settings remain as above. Updated dimension regression expectations. Combat-view validation remains pending; use the same readability criteria.

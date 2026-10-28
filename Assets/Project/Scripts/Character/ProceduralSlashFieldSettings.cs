@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [Serializable]
 public sealed class ProceduralSlashFieldSettings
@@ -7,7 +8,8 @@ public sealed class ProceduralSlashFieldSettings
     [Header("Render")]
     public Material material;
     [Min(0.1f)] public float overallScale = 1f;
-    public bool screenMaskMode;
+    [FormerlySerializedAs("screenMaskMode")]
+    public bool fullScreenSlash;
     public bool fitViewport = true;
     [Range(0.5f, 2f)] public float viewportCoverage = 1.15f;
     [Min(0)] public int screenSpanningCount;
@@ -28,8 +30,9 @@ public sealed class ProceduralSlashFieldSettings
     public Vector2 widthRange = new Vector2(0.08f, 0.48f);
     [Tooltip("Random ribbon rotation in degrees before mirroring for player facing. Equal values give a fixed angle.")]
     public Vector2 angleRange = new Vector2(0f, 180f);
-    [Tooltip("Fullscreen transparency-cut rotation in degrees before mirroring for player facing.")]
-    public float screenMaskAngle = 104f;
+    [FormerlySerializedAs("screenMaskAngle")]
+    [Tooltip("Fullscreen glow-slash rotation in degrees before mirroring for player facing.")]
+    public float fullScreenAngle = 104f;
     public Vector2 revealFrames = new Vector2(4f, 9f);
     public Vector2 decayFrames = new Vector2(16f, 27f);
     [Min(1f)] public float pixelsPerUnit = 26.25f;

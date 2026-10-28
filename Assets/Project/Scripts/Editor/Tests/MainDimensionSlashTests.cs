@@ -292,6 +292,48 @@ public class MainDimensionSlashTests
     }
 
     [Test]
+    public void CameraSequenceSurvivesNaturalCompletionAndStaleReleaseCannotCancelReplacement()
+    {
+        var cameraHost = new GameObject("Camera Sequence Output");
+        var managerHost = new GameObject("Camera Sequence Manager");
+        try
+        {
+            cameraHost.tag = "MainCamera";
+            var output = cameraHost.AddComponent<Camera>(); output.orthographic = true; output.orthographicSize = 10f;
+            var manager = managerHost.AddComponent<CameraManager>();
+            typeof(CameraManager).GetField("_ultimateCam", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(manager, null);
+            typeof(CameraManager).GetField("_brain", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(manager, null);
+            _combat.ExecuteStep(Slash.comboTree.rootNode.stepData, 1, false, AttackCategory.Skill, "Sequence", MainDimensionSlashAuthoring.ActionId);
+            var data = new CameraAnimationFrameData();
+            data.segments.Add(new CameraAnimationSegment { task = CameraAnimationTask.Zoom, zoomMultiplier = 0.5f });
+            data.segments.Add(new CameraAnimationSegment { task = CameraAnimationTask.Hold, channels = CameraAnimationChannels.Zoom, endFrame = 1000 });
+            data.segments.Add(new CameraAnimationSegment { task = CameraAnimationTask.Return, channels = CameraAnimationChannels.Zoom,
+                startFrame = 1000, endFrame = 1100, easing = CameraAnimationEasing.Linear });
+            var execution = _combat.CurrentExecution;
+            var first = manager.BeginCameraAnimation(execution, data, 20, 1);
+            Assert.That(first.Generation, Is.Not.Zero);
+            manager.ReleaseActionCamera(first, true); _combat.ResetCombo();
+            manager.SampleActionCamera(first, 5000);
+            manager.AdvanceTimedCamera(1000f / CombatCore.FrameDataConstants.LOGIC_FPS);
+            var normal = new CameraAnimationPose(Vector2.zero, 10f);
+            Assert.That(manager.TrySampleCameraAnimation(normal, out var pose), Is.True);
+            Assert.That(pose.Size, Is.EqualTo(5f).Within(0.001f));
+            manager.AdvanceTimedCamera(50f / CombatCore.FrameDataConstants.LOGIC_FPS);
+            manager.TrySampleCameraAnimation(normal, out pose);
+            Assert.That(pose.Size, Is.EqualTo(7.5f).Within(0.001f));
+            var replacement = manager.BeginCameraAnimation(execution, data, 0, 1);
+            manager.ReleaseActionCamera(first); manager.SampleActionCamera(first, 9000);
+            Assert.That(manager.TrySampleCameraAnimation(normal, out _), Is.True);
+            manager.ReleaseActionCamera(replacement);
+            Assert.That(manager.HasActionCamera, Is.False);
+            manager.BeginCameraAnimation(execution, data, 0, 1);
+            _combat.InvalidateFieldExecutions(); manager.AdvanceTimedCamera(0f);
+            Assert.That(manager.HasActionCamera, Is.False);
+        }
+        finally { Object.DestroyImmediate(managerHost); Object.DestroyImmediate(cameraHost); }
+    }
+
+    [Test]
     public void QteAndInvalidatedFieldExecutionCannotOwnActionCamera()
     {
         var host = new GameObject("Dimension Slash Camera Exclusions");
@@ -442,7 +484,7 @@ public class MainDimensionSlashTests
     }
 
     [Test]
-    public void ExecutionKeepsOriginalContactsAndReplacesOnlyFinalSlashWithTransparencyMask()
+    public void ExecutionKeepsOriginalContactsAndUsesFullscreenGlowSlash()
     {
         var step = _character.qteSwap.GetIntroComboTree(_table).rootNode.defaultNext.stepData;
         Assert.That(step.hitData.hitboxes.Select(h => h.startFrameOffset + step.ActivePhaseStart), Is.EqualTo(new[] {12,20,27,33,38,42,54}));
@@ -450,7 +492,7 @@ public class MainDimensionSlashTests
         Assert.That(step.hitData.hitboxes.Cast<NormalHitbox>().Last().impactTier, Is.EqualTo(DamageImpactTier.Heavy));
         Assert.That(step.vfxData.entries.Count, Is.EqualTo(14));
         var mask = step.eventData.entries.Single(e => e.eventType == ActionEventType.ProceduralSlashField);
-        Assert.That(mask.triggerFrame, Is.EqualTo(54)); Assert.That(mask.slashFieldSettings.screenMaskMode, Is.True);
+        Assert.That(mask.triggerFrame, Is.EqualTo(54)); Assert.That(mask.slashFieldSettings.fullScreenSlash, Is.True);
         Assert.That(mask.slashFieldSettings.foregroundFraction, Is.EqualTo(1f));
         Assert.That(step.animationClip.name, Is.EqualTo("main_dimension_slash_actor"));
     }

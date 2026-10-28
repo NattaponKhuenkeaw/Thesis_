@@ -282,7 +282,8 @@ public static class MainLightningPlungeAuthoring
                 if (layer == null) { layer = new GameObject(name, typeof(MeshFilter), typeof(MeshRenderer)).transform; layer.SetParent(geometry, false); }
                 var renderer = layer.GetComponent<MeshRenderer>();
                 renderer.sharedMaterial = name == "DarkPurpleAura" || name == "DarkImpactShards" ? effect.auraMaterial
-                    : name == "SoftGlow" ? effect.glowMaterial : name == "GroundGlow" ? effect.radialMaterial : material;
+                    : name == "SoftGlow" || name == "WindArcs" ? effect.glowMaterial
+                    : name == "GroundGlow" ? effect.radialMaterial : material;
                 renderer.enabled = false;
             }
             Transform particles = root.transform.Find("Particles");

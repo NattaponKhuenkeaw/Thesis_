@@ -34,6 +34,8 @@ public class AnimationEditorWindow : EditorWindow
     private ActionTreeController treeController;
     private PropertyCardBuilder cardBuilder;
     private TimelineGridElement timelineGrid;
+    private CameraAnimationPreviewElement cameraAnimationPreview;
+    private Label cameraAnimationPreviewLabel;
 
     // ── Element References ──
     private Label breadcrumbLabel;
@@ -250,6 +252,14 @@ public class AnimationEditorWindow : EditorWindow
         previewClipLabel = new Label("");
         previewClipLabel.AddToClassList("preview-viewport__clip-name");
         viewport.Add(previewClipLabel);
+
+        cameraAnimationPreviewLabel = new Label();
+        cameraAnimationPreviewLabel.style.fontSize = 10;
+        cameraAnimationPreviewLabel.style.whiteSpace = WhiteSpace.Normal;
+        viewport.Add(cameraAnimationPreviewLabel);
+        cameraAnimationPreview = new CameraAnimationPreviewElement();
+        cameraAnimationPreview.style.display = DisplayStyle.None;
+        viewport.Add(cameraAnimationPreview);
 
         return viewport;
     }
@@ -600,7 +610,7 @@ public class AnimationEditorWindow : EditorWindow
             cancel = step.cancelWindowStartFrame;
             int phaseTotal = su + act + rec;
             int clipFrames = clip != null ? Mathf.CeilToInt(clip.length * LOGIC_FPS) : 0;
-            totalFrames = Mathf.Max(phaseTotal, clipFrames);
+            totalFrames = GetStepDisplayFrames(step);
 
             timelineGrid.Setup(totalFrames, LOGIC_FPS);
 
@@ -711,6 +721,16 @@ public class AnimationEditorWindow : EditorWindow
                             };
                             eventTrack.ranges.Add((eventEntry.triggerFrame, eventEntry.GetTimelineDurationFrames(step.TotalFrames)));
                             timelineGrid.Tracks.Add(eventTrack);
+                            if (eventEntry.eventType == ActionEventType.CameraAnimationControl && eventEntry.cameraAnimation?.segments != null)
+                                foreach (var segment in eventEntry.cameraAnimation.segments)
+                                {
+                                    if (segment == null) continue;
+                                    var segmentTrack = new TimelineGridElement.TimelineTrack
+                                    { label = $"{segment.task}: {segment.label}", color = eventEntry.trackColor };
+                                    segmentTrack.ranges.Add((eventEntry.triggerFrame + segment.startFrame,
+                                        Mathf.Max(1, segment.endFrame - segment.startFrame + 1)));
+                                    timelineGrid.Tracks.Add(segmentTrack);
+                                }
                         }
                         break;
                     }
@@ -749,6 +769,7 @@ public class AnimationEditorWindow : EditorWindow
         timelineGrid.PlayheadFrame = scrubberFrame;
 
         timelineGrid.Refresh();
+        RefreshCameraAnimationPreview(step);
 
         // Update frame counter
         if (frameCounterLabel != null)
@@ -822,12 +843,8 @@ public class AnimationEditorWindow : EditorWindow
     private int GetCurrentTotalFrames()
     {
         var node = treeController?.SelectedNode;
-        if (node?.DataType == "AttackStep" && node.DataRef is AttackStepData step)
-        {
-            int phaseTotal = step.startupFrames + step.activeFrames + step.recoveryFrames;
-            int clipFrames = step.animationClip != null ? Mathf.CeilToInt(step.animationClip.length * FrameDataConstants.LOGIC_FPS) : 0;
-            return Mathf.Max(phaseTotal, clipFrames);
-        }
+        var step = node?.GetStepData();
+        if (step != null) return GetStepDisplayFrames(step);
         if (node?.DataType == "Dash" && node.DataRef is DashData dash)
         {
             int phaseTotal = dash.startupFrames + dash.activeFrames + dash.recoveryFrames;
@@ -835,6 +852,42 @@ public class AnimationEditorWindow : EditorWindow
             return Mathf.Max(phaseTotal, clipFrames);
         }
         return 0;
+    }
+
+    private static int GetStepDisplayFrames(AttackStepData step)
+    {
+        int clipFrames = step.animationClip != null ? Mathf.CeilToInt(step.animationClip.length * LOGIC_FPS) : 0;
+        int total = Mathf.Max(step.TotalFrames, clipFrames);
+        if (step.eventData?.entries != null)
+            foreach (var entry in step.eventData.entries)
+                if (entry?.eventType == ActionEventType.CameraAnimationControl)
+                    total = Mathf.Max(total, entry.triggerFrame + entry.GetTimelineDurationFrames());
+        return total;
+    }
+
+    private void RefreshCameraAnimationPreview(AttackStepData step)
+    {
+        if (cameraAnimationPreview == null) return;
+        cameraAnimationPreview.style.display = DisplayStyle.None;
+        cameraAnimationPreviewLabel.text = "";
+        ActionEventEntry chosen = null;
+        if (step?.eventData?.entries != null)
+            foreach (var entry in step.eventData.entries)
+                if (entry?.eventType == ActionEventType.CameraAnimationControl
+                    && entry.triggerFrame <= scrubberFrame && (chosen == null || entry.triggerFrame >= chosen.triggerFrame)) chosen = entry;
+        if (chosen == null) return;
+        string error = chosen.cameraAnimation?.GetValidationError() ?? (chosen.cameraAnimation == null ? "Missing sequence" : null);
+        if (error != null) { cameraAnimationPreviewLabel.text = "Camera preview: " + error; return; }
+        Camera output = Camera.main;
+        bool hasCamera = output != null && output.orthographic;
+        var baseline = new CameraAnimationPose(hasCamera ? (Vector2)output.transform.position : Vector2.zero, hasCamera ? output.orthographicSize : 5f);
+        float aspect = hasCamera ? output.aspect : 16f / 9f;
+        int frame = scrubberFrame - chosen.triggerFrame;
+        var sampler = new CameraAnimationSampler(chosen.cameraAnimation, baseline, aspect);
+        var pose = frame >= sampler.DurationFrames ? baseline : sampler.Sample(frame, baseline);
+        cameraAnimationPreview.SetPose(baseline, pose, aspect);
+        cameraAnimationPreview.style.display = DisplayStyle.Flex;
+        cameraAnimationPreviewLabel.text = $"Camera schematic — local frame {frame}, size {pose.Size:0.###}, XY {pose.Position}";
     }
 
     private AttackStepData GetCurrentStep()

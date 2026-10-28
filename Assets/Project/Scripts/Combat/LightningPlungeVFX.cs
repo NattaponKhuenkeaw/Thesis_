@@ -272,9 +272,10 @@ public sealed class LightningPlungeVFX : MonoBehaviour
         float finish = release + Mathf.Max(1, _settings.exitFrames);
         float travel = Mathf.Clamp01((age - release) / Mathf.Max(1, _settings.exitFrames));
         float light = 1f - Mathf.SmoothStep(release, finish, age);
-        _groundGlow.Radial(_normal * 0.1f * s,
-            new Vector2(radius * (0.55f + travel * 0.55f), radius * 0.18f),
-            Fade(_settings.glowColor, light));
+        if (_settings.groundShockwaveEnabled)
+            _groundGlow.Radial(_normal * 0.1f * s,
+                new Vector2(radius * (0.55f + travel * 0.55f), radius * 0.18f),
+                Fade(_settings.glowColor, light));
 
         // Keep the approved broad blast silhouette; motion clears its center during the exit.
         for (int i = 0; i < _settings.branches; i++)
@@ -290,7 +291,7 @@ public sealed class LightningPlungeVFX : MonoBehaviour
             _core.Line(new Vector2(-1.3f, 0.05f) * s, new Vector2(1.3f, 0.05f) * s,
                 0.12f * flash * s, 0.02f * s, hot);
         }
-        for (int ring = 0; ring < 3; ring++)
+        for (int ring = 0; _settings.groundShockwaveEnabled && ring < 3; ring++)
         {
             float t = (age - ring * 3f) / Mathf.Max(1, _settings.windFrames);
             if (t < 0f || t >= 1f) continue;
@@ -462,15 +463,20 @@ public sealed class LightningPlungeVFX : MonoBehaviour
     private void Arc(GeometryLayer layer, Vector2 center, float width, float height,
         float start, float sweep, float stroke, Color color)
     {
+        if (width <= 0f || height <= 0f || stroke <= 0f || Mathf.Abs(sweep) < 0.0001f) return;
         Vector2 previous = center + _tangent * Mathf.Cos(start) * width + _normal * Mathf.Sin(start) * height;
+        Vector2 previousCross = Vector2.zero;
         for (int i = 1; i <= 28; i++)
         {
             float t = (float)i / 28;
             float angle = start + sweep * t;
             Vector2 point = center + _tangent * Mathf.Cos(angle) * width + _normal * Mathf.Sin(angle) * height;
-            layer.Line(previous, point, stroke * Mathf.Sin(Mathf.PI * (t - 1f / 28f)),
-                stroke * Mathf.Sin(Mathf.PI * t), color);
-            previous = point;
+            Vector2 tangent = -_tangent * Mathf.Sin(angle) * width + _normal * Mathf.Cos(angle) * height;
+            float taper = i == 28 ? 0f : Mathf.Max(0f, Mathf.Sin(Mathf.PI * t));
+            Vector2 cross = new Vector2(-tangent.y, tangent.x).normalized * (stroke * taper * 0.5f);
+            // Adjacent sections share the same edge, avoiding overlapping wedges at the flat ellipse tips.
+            layer.Strip(previous, point, previousCross, cross, color);
+            previous = point; previousCross = cross;
         }
     }
 
@@ -556,7 +562,7 @@ public sealed class LightningPlungeVFX : MonoBehaviour
         _envelope = new GeometryLayer(geometry, "VioletEnvelope", material);
         _core = new GeometryLayer(geometry, "BoltCore", material);
         _cracks = new GeometryLayer(geometry, "GroundCracks", material);
-        _wind = new GeometryLayer(geometry, "WindArcs", material);
+        _wind = new GeometryLayer(geometry, "WindArcs", glowMaterial != null ? glowMaterial : material);
         _layers = new[] { _aura, _groundGlow, _halo, _shards, _envelope, _cracks, _wind, _core };
         _particleMesh = new Mesh { name = "Lightning particle shard" };
         _particleMesh.vertices = new[] { new Vector3(0f, 0.8f, 0f), new Vector3(-0.25f, 0f, 0f), new Vector3(0f, -0.8f, 0f), new Vector3(0.25f, 0f, 0f) };

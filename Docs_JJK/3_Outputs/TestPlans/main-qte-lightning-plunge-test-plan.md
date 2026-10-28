@@ -70,6 +70,17 @@ No automated tests are authorized, added or run. Use the existing Test_Playgroun
 - [ ] Hold/fade settings keep the ground burst strong around halfway through recovery, then fade cleanly before completion. If too busy, reduce hold or burst fade; if still too fast, increase hold first. Do not extend damage to lengthen visuals.
 - [ ] Confirm column and local light persist through their configurable holds/fades; pause/hitstop continues to hold the shared action clock.
 
+## Ground ring rendering repair - 2026-10-29
+
+- [x] Ground Shockwave Enabled restored ON; WindArcs and wide GroundGlow remain rendered.
+- [x] Shared shader is texture-free; wind uses existing soft additive glow material in saved prefab, authoring and runtime.
+- [x] Arc sections share analytical ellipse-edge vertices, taper stays nonnegative, endpoints have zero width.
+- [x] Runtime and Editor C# compiled with Unity's cached references into OS temp. No automated tests added or run.
+- [ ] Once Unity tools reconnect: import shader, verify no shader errors, repeat the exact Game-view hit and inspect expanding purple ring for green/black bands.
+- [ ] Observe smooth outward travel/fade with blast/electricity retained; verify reuse/interruption clears old geometry and pause/hitstop holds it.
+
+No fresh GPU/Game-view validation is claimed while Unity MCP and UI tool initialization remain unavailable. The earlier ring-disable workaround was rejected and has been reversed.
+
 ## Purple electrical accent revision
 
 - [x] Unity sequential preview: falling frame 0 / impact 15 / tail 54 inspected with short purple arcs and halos around the main shapes.

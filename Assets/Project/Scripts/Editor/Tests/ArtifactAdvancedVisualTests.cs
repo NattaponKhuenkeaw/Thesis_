@@ -176,8 +176,8 @@ public sealed class ArtifactAdvancedVisualTests
             visual.Pulse(Vector2.zero, 3f, 2f);
         Sample(visual, visual.expansionSeconds * visual.shockwaveDurationMultiplier);
         Assert.That(visual.CurrentAttackRadii, Is.EqualTo(new Vector2(3f, 6f)));
-        Assert.That(visual.wave.transform.localScale.x, Is.EqualTo(15f).Within(0.001f));
-        Assert.That(visual.wave.transform.localScale.y, Is.EqualTo(30f).Within(0.001f));
+        Assert.That(visual.wave.transform.localScale.x, Is.EqualTo(24f).Within(0.001f));
+        Assert.That(visual.wave.transform.localScale.y, Is.EqualTo(48f).Within(0.001f));
         Sample(visual, visual.attackFadeSeconds);
         Assert.That(visual.attackRing.startColor.a, Is.Zero);
         Assert.That(visual.wave.color.a, Is.GreaterThan(0f));

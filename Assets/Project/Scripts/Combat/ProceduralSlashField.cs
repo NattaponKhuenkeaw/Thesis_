@@ -8,7 +8,6 @@ public sealed class ProceduralSlashField : MonoBehaviour
 {
     private static readonly int FrameId = Shader.PropertyToID("_ActionFrame");
     private static readonly int EndId = Shader.PropertyToID("_EndFrame");
-    private static readonly int CutAngleId = Shader.PropertyToID("_CutAngle");
     private static uint _seedSequence = 0x9e3779b9;
     private static readonly List<ProceduralSlashField> ImpactFields = new List<ProceduralSlashField>();
     private Mesh _mesh;
@@ -87,7 +86,7 @@ public sealed class ProceduralSlashField : MonoBehaviour
         }
         unchecked { _seedSequence += 0x6d2b79f5; }
         ActiveSeed = settings.seed != 0 ? settings.seed : (int)_seedSequence;
-        if (settings.screenMaskMode) BuildScreenMask(settings, facing); else BuildMesh(settings, ActiveSeed, facing);
+        if (settings.fullScreenSlash) BuildFullScreenSlash(settings); else BuildMesh(settings, ActiveSeed, facing);
         _playing = true; Sample(0f);
         if (settings.impactDistortion != null && settings.impactDistortion.enabled) ImpactFields.Add(this);
     }
@@ -97,7 +96,7 @@ public sealed class ProceduralSlashField : MonoBehaviour
     private void LateUpdate()
     {
         if (!_playing || _preview) return;
-        if (_settings.screenMaskMode && _camera != null)
+        if (_settings.fullScreenSlash && _camera != null)
             _visualRoot.position = new Vector3(_camera.transform.position.x, _camera.transform.position.y, _origin.z);
         if (_execution == null || !_execution.IsOnField
             || _execution.owner.CurrentExecution != _execution || !_execution.owner.IsAttacking())
@@ -112,7 +111,6 @@ public sealed class ProceduralSlashField : MonoBehaviour
         if (!_playing) return;
         SampledFrame = frame;
         _properties.SetFloat(FrameId, frame); _properties.SetFloat(EndId, _settings.endFrame);
-        if (_settings.screenMaskMode) _properties.SetFloat(CutAngleId, _settings.screenMaskAngle);
         _renderer.SetPropertyBlock(_properties);
         _foregroundRenderer.SetPropertyBlock(_properties);
         _renderer.enabled = frame < _settings.endFrame;
@@ -176,7 +174,7 @@ public sealed class ProceduralSlashField : MonoBehaviour
             float envelope = (1f - progress) * (1f - progress) * cut.opacity;
             sample.centerTime = new Vector4(viewport.x, viewport.y, progress, envelope);
             sample.wave = new Vector4(0f, Mathf.Max(0.01f, settings.waveWidth),
-                Mathf.Clamp(settings.refractionPixels, 0f, 16f), Mathf.Clamp(settings.chromaticPixels, 0f, 8f));
+                Mathf.Clamp(settings.refractionPixels, 0f, 64f), Mathf.Clamp(settings.chromaticPixels, 0f, 8f));
             sample.detail = new Vector4(Mathf.Clamp(settings.blurPixels, 0f, 4f), Mathf.Max(1, settings.referenceHeight), camera.aspect, 0f);
             sample.cutEndpoints = new Vector4(start.x, start.y, end.x, end.y);
             sample.cutShape = new Vector4(halfWidth, cut.reveal, 0f, 0f);
@@ -188,22 +186,6 @@ public sealed class ProceduralSlashField : MonoBehaviour
     private bool TrySampleCutShape(out CutShape shape)
     {
         shape = default;
-        if (_settings.screenMaskMode)
-        {
-            // Match the actual screen-mask mesh, mirrored angle, opening and fade; never use the hitbox anchor.
-            Vector3 size = _foregroundMesh.bounds.size;
-            float angle = _settings.screenMaskAngle * Mathf.Deg2Rad;
-            Vector3 axis = new Vector3(Mathf.Cos(angle) * _capturedFacing, Mathf.Sin(angle), 0f);
-            Vector3 extent = axis * (size.magnitude * 0.5f);
-            shape.center = _visualRoot.TransformPoint(Vector3.zero);
-            shape.start = _visualRoot.TransformPoint(-extent);
-            shape.end = _visualRoot.TransformPoint(extent);
-            shape.halfWidth = Mathf.Lerp(0.14f, 0.008f, Mathf.Clamp01(SampledFrame / 20f)) * size.y;
-            shape.reveal = 1f;
-            shape.opacity = Mathf.SmoothStep(0f, 1f, SampledFrame / 2f)
-                * (1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(8f, Mathf.Max(9f, _settings.endFrame), SampledFrame)));
-            return shape.opacity > 0.002f;
-        }
         for (int i = _cutRibbons.Count - 1; i >= 0; i--)
         {
             CutRibbon ribbon = _cutRibbons[i];
@@ -334,18 +316,39 @@ public sealed class ProceduralSlashField : MonoBehaviour
         _foregroundMesh.SetTriangles(frontIndices, 0); _foregroundMesh.RecalculateBounds();
     }
 
-    private void BuildScreenMask(ProceduralSlashFieldSettings settings, int facing)
+    private void BuildFullScreenSlash(ProceduralSlashFieldSettings settings)
     {
-        float height = _camera != null && _camera.orthographic ? _camera.orthographicSize * 2.2f : 18f;
+        float height = _camera != null && _camera.orthographic ? _camera.orthographicSize * 2f : 18f;
         float width = height * (_camera != null ? _camera.aspect : 16f / 9f);
         if (_camera != null) _visualRoot.position = new Vector3(_camera.transform.position.x, _camera.transform.position.y, _origin.z);
-        var vertices = new[] { new Vector3(-width/2,-height/2),new Vector3(width/2,-height/2),
-            new Vector3(width/2,height/2),new Vector3(-width/2,height/2) };
-        _foregroundMesh.Clear(); _foregroundMesh.vertices = vertices;
-        // Mirror the shader's tear and fragment pattern with the launch facing, just like the ribbons.
-        _foregroundMesh.uv = facing < 0
-            ? new[] { Vector2.right, Vector2.zero, Vector2.up, Vector2.one }
-            : new[] { Vector2.zero, Vector2.right, Vector2.one, Vector2.up };
+        float scale = Mathf.Max(0.1f, settings.overallScale);
+        float length = Mathf.Sqrt(width * width + height * height) * Mathf.Max(1f, settings.viewportCoverage) * scale;
+        float thickness = Mathf.Max(0.01f, settings.widthRange.y) * scale;
+        float angle = settings.fullScreenAngle * Mathf.Deg2Rad;
+        Vector2 axis = new Vector2(Mathf.Cos(angle) * _capturedFacing, Mathf.Sin(angle));
+        Vector2 normal = new Vector2(-axis.y, axis.x);
+        float start = Mathf.Max(0, settings.firstFrame);
+        float reveal = Mathf.Max(1f, settings.revealFrames.x);
+        float decay = Mathf.Max(1f, settings.decayFrames.x);
+        _cutRibbons.Add(new CutRibbon { center = Vector2.zero, axis = axis, length = length,
+            width = thickness, start = start, reveal = reveal, hold = 1f, decay = decay });
+        var vertices = new List<Vector3>(4);
+        var timing = new List<Vector4>(4);
+        var shape = new List<Vector4>(4);
+        for (int corner = 0; corner < 4; corner++)
+        {
+            float u = corner == 1 || corner == 2 ? 1f : 0f;
+            float v = corner >= 2 ? 1f : 0f;
+            Vector2 point = axis * ((u - 0.5f) * length) + normal * ((v - 0.5f) * thickness * 8f);
+            vertices.Add(new Vector3(point.x, point.y, -0.05f));
+            timing.Add(new Vector4(start, reveal, 1f, decay));
+            shape.Add(new Vector4(length * settings.pixelsPerUnit,
+                Mathf.Max(4f, thickness * 8f * settings.pixelsPerUnit), 1f, 1f));
+        }
+        // Use the same ribbon geometry/shader inputs for glow, reveal and refraction sampling.
+        _foregroundMesh.Clear(); _foregroundMesh.SetVertices(vertices);
+        _foregroundMesh.uv = new[] { Vector2.zero, Vector2.right, Vector2.one, Vector2.up };
+        _foregroundMesh.SetUVs(1, timing); _foregroundMesh.SetUVs(2, shape);
         _foregroundMesh.triangles = new[] { 0,1,2,0,2,3 }; _foregroundMesh.RecalculateBounds();
         _mesh.Clear(); TotalSlashCount = ForegroundSlashCount = 1;
     }

@@ -2,7 +2,6 @@ Shader "Project/LightningPlungeEnergy"
 {
     Properties
     {
-        [PerRendererData] _MainTex ("Texture", 2D) = "white" {}
         [HDR] _Color ("Tint", Color) = (1,1,1,1)
         _Emission ("Emission", Range(0,5)) = 1.5
         _Softness ("Soft Edge", Range(0.02,1)) = 0.6
@@ -25,7 +24,6 @@ Shader "Project/LightningPlungeEnergy"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             struct Attributes { float4 positionOS:POSITION; float2 uv:TEXCOORD0; half4 color:COLOR; };
             struct Varyings { float4 positionCS:SV_POSITION; float2 uv:TEXCOORD0; half4 color:COLOR; float2 world:TEXCOORD1; };
-            TEXTURE2D(_MainTex); SAMPLER(sampler_MainTex);
             CBUFFER_START(UnityPerMaterial)
                 half4 _Color;
                 float _Emission, _Softness, _Profile, _ActionFrame;
@@ -45,9 +43,11 @@ Shader "Project/LightningPlungeEnergy"
                 float edge = 1 - smoothstep(1 - _Softness, 1, distance);
                 float gaussian = exp2(-4.5 * distance * distance);
                 float shape = lerp(edge, gaussian * edge, saturate(_Profile + _Softness * 0.45));
-                half4 color = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv) * input.color;
-                color.rgb *= _Emission;
-                color.a *= shape;
+                // Meshes and particle meshes supply their own color/UVs. Sampling the sprite
+                // renderer's per-renderer texture can pick up an unrelated atlas binding.
+                half4 color = input.color;
+                color.rgb = max(half3(0, 0, 0), color.rgb) * max(0, _Emission);
+                color.a = saturate(color.a * shape);
                 return color;
             }
             ENDHLSL

@@ -57,6 +57,7 @@ Filenames for ADR-006/007/011/012 still use older numbers from the pre-merge bra
 | [013](013-action-owned-camera-presentation.md) | Action-Owned Camera Presentation | **Accepted** | Combat presentation | User-approved Dimension Slash action-frame camera envelope |
 | [014](014-prepared-qte-plunge-motion-and-presentation.md) | Prepared QTE Plunge Motion and Presentation | **Accepted** | Combat presentation | User approved Main's prepared physical plunge, reusable VFX and scoped camera architecture |
 | [015](015-action-owned-cut-refraction.md) | Action-Owned Cut Refraction | **Implemented; feel review pending** | Combat presentation | Gated URP distortion band follows the rendered cut with chromatic separation and edge blur |
+| [016](016-camera-animation-control-sequence.md) | Camera Animation Control Sequence | **Accepted; implemented, native verification pending** | Camera authoring | User-approved frame-range Zoom/Move/Hold/Return event, explicit legacy conversion and read-only preview |
 
 ## Phase Mapping
 

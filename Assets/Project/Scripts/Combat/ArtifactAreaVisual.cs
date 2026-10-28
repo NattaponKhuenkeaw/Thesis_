@@ -27,7 +27,7 @@ public sealed class ArtifactAreaVisual : MonoBehaviour
     [Min(0.01f)] public float attackFadeSeconds = 0.16f;
     [Range(0f, 1f)] public float loopOpacity = 0.14f;
     [Tooltip("Presentation-only shockwave size relative to the damage radius.")]
-    [Min(1f)] public float shockwaveScale = 2.5f;
+    [Min(1f)] public float shockwaveScale = 4f;
     [Tooltip("Presentation-only multiplier for shockwave expansion and fade time.")]
     [Min(1f)] public float shockwaveDurationMultiplier = 2f;
 

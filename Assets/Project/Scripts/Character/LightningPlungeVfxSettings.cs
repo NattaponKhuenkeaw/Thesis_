@@ -48,6 +48,10 @@ public sealed class LightningPlungeVfxSettings
     [Tooltip("Upward drift of the clearing explosion lobes, before impact scale.")]
     [Min(0f)] public float stormLift = 0.6f;
 
+    [Header("Ground shockwave")]
+    [Tooltip("Optional expanding ground rings and wide ground-glow pool. Independent of the lightning blast and electrical accents.")]
+    public bool groundShockwaveEnabled = true;
+
     [Header("Purple electrical accents (starting values)")]
     [Range(0, 12)] public int fallingArcCount = 6;
     [Range(0, 16)] public int impactArcCount = 9;

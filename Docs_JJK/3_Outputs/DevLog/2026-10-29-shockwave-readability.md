@@ -7,3 +7,5 @@ Updated ArtifactAreaVisual and all four affected prefabs with 1.5x decorative wa
 Scoped `git diff --check` passes. Unity execution and in-game visual review remain unverified. No CI, dependency, build, or gameplay configuration changed.
 
 Owner follow-up: increased Shockwave to 2.5x its original size (150% larger), retaining the extended duration. Enlarged Dimension Slash judgment and final-cut ribbons by 50% in width and height through overallScale 1.3 -> 1.95 in saved action data and authoring defaults. Updated relevant regression expectations; visual review and Unity execution remain pending.
+
+Latest owner follow-up: increased Shockwave to 4x original size (300% larger) across all four prefabs and its component default, retaining duration. Updated regression dimension assertions. Unity execution and combat-view validation remain pending.

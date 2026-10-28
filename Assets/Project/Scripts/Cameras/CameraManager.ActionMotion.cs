@@ -21,9 +21,13 @@ public partial class CameraManager
     private int _actionMotionFacing;
     private float _actionMotionFrame;
     private int _timedCameraStartUnityFrame;
+    private CameraAnimationSampler _cameraAnimation;
+    private CameraAnimationPose _normalCameraPose;
+    private int _normalCameraPoseFrame = -1;
+    private bool HasTimedCamera => _screenImpulseCameraSettings != null || _cameraAnimation != null;
 
     public bool HasActionCamera => _actionMotionExecution != null && _actionMotionExecution.IsOnField
-        && (_screenImpulseCameraSettings != null
+        && (HasTimedCamera
             || (_actionMotionExecution.owner.CurrentExecution == _actionMotionExecution
                 && _actionMotionExecution.owner.IsAttacking()));
 
@@ -71,7 +75,7 @@ public partial class CameraManager
 
     private void Update()
     {
-        if (_screenImpulseCameraSettings == null) return;
+        if (!HasTimedCamera) return;
         if (!HasActionCamera) { ClearActionCamera(); return; }
         var stateMachine = _actionMotionExecution.owner.playerCharacter.StateMachine;
         if (stateMachine != null && (stateMachine.CurrentStateId == PlayerStateId.Hitstun
@@ -87,11 +91,49 @@ public partial class CameraManager
 
     public void AdvanceTimedCamera(float deltaSeconds)
     {
-        if (_screenImpulseCameraSettings == null) return;
+        if (!HasTimedCamera) return;
         if (!HasActionCamera) { ClearActionCamera(); return; }
         _actionMotionFrame += Mathf.Max(0f, deltaSeconds) * FrameDataConstants.LOGIC_FPS;
-        if (_actionMotionFrame - _actionMotionStartFrame >= _screenImpulseCameraSettings.DurationFrames)
+        int duration = _cameraAnimation != null ? _cameraAnimation.DurationFrames : _screenImpulseCameraSettings.DurationFrames;
+        if (_actionMotionFrame - _actionMotionStartFrame >= duration)
             ClearActionCamera();
+    }
+
+    public ActionCameraToken BeginCameraAnimation(CombatExecutionContext execution, CameraAnimationFrameData data,
+        int eventStartFrame, int facing)
+    {
+        string error = data?.GetValidationError();
+        if (data == null || error != null)
+        {
+            Debug.LogWarning($"[Camera Animation] {error ?? "Sequence is missing."}", this);
+            return default;
+        }
+        Camera output = _brain != null ? _brain.OutputCamera : Camera.main;
+        if (output == null || !output.orthographic
+            || (_ultimateCam != null && _ultimateCam.Priority.Value >= _activePriority)) return default;
+        // Replacement events must reference normal framing rather than multiplying the previous event's zoom.
+        var baseline = _normalCameraPoseFrame >= 0 && _normalCameraPoseFrame >= Time.frameCount - 1
+            ? _normalCameraPose : new CameraAnimationPose(output.transform.position, output.orthographicSize);
+        var token = BeginActionCamera(execution, new ActionCameraMotionSettings(), eventStartFrame, facing);
+        if (token.Generation == 0) return default;
+        _cameraAnimation = new CameraAnimationSampler(data, baseline, output.aspect, facing);
+        _timedCameraStartUnityFrame = Time.frameCount;
+        return token;
+    }
+
+    public void RecordNormalCamera(CinemachineVirtualCameraBase camera, CameraAnimationPose pose)
+    {
+        if (_brain == null || _brain.ActiveVirtualCamera != (ICinemachineCamera)camera) return;
+        _normalCameraPose = pose;
+        _normalCameraPoseFrame = Time.frameCount;
+    }
+
+    public bool TrySampleCameraAnimation(CameraAnimationPose normal, out CameraAnimationPose pose)
+    {
+        pose = normal;
+        if (!HasActionCamera || _cameraAnimation == null) return false;
+        pose = _cameraAnimation.Sample(_actionMotionFrame - _actionMotionStartFrame, normal);
+        return true;
     }
 
     public bool TrySampleScreenImpulseCamera(out float zoomMultiplier, out Vector3 lockedPosition, out float lockWeight)
@@ -117,7 +159,7 @@ public partial class CameraManager
     {
         if (token.Generation == 0 || token.Generation != _actionMotionGeneration) return;
         if (!HasActionCamera) { ClearActionCamera(); return; }
-        if (_screenImpulseCameraSettings != null) return;
+        if (HasTimedCamera) return;
         _actionMotionFrame = actionFrame;
         if (_actionMotionSettings != null
             && actionFrame - _actionMotionStartFrame >= _actionMotionSettings.DurationFrames)
@@ -128,7 +170,7 @@ public partial class CameraManager
 
     public void ReleaseActionCamera(ActionCameraToken token, bool allowTimedCompletion = false)
     {
-        if (allowTimedCompletion && _screenImpulseCameraSettings != null) return;
+        if (allowTimedCompletion && HasTimedCamera) return;
         if (token.Generation != 0 && token.Generation == _actionMotionGeneration) ClearActionCamera();
     }
 
@@ -137,6 +179,8 @@ public partial class CameraManager
         _actionMotionExecution = null;
         _actionMotionSettings = null;
         _screenImpulseCameraSettings = null;
+        _cameraAnimation = null;
+        _normalCameraPoseFrame = -1;
         unchecked { _actionMotionGeneration++; }
         if (_actionMotionGeneration == 0) _actionMotionGeneration = 1;
     }

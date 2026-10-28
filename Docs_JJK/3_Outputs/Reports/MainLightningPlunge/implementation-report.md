@@ -13,6 +13,14 @@ blocked_by: []
 
 Implemented after separate design and architecture approvals on 2026-10-28. Apricha then playtested and requested larger/longer impact VFX, Heavy tier and a camera correction. **Latest requested height is Y+5**; it supersedes the temporary Y+10. Current revision workflow: `/fix-bug`. The approved initial feature workflow was `/implement-feature`.
 
+## Ground shockwave rendering repair - 2026-10-29
+
+Ground shockwave rendering repair (2026-10-29) — supersedes disabling it: Apricha explicitly requested fixing the ground wave, not hiding it. Restored Ground Shockwave Enabled=true in Main's saved asset and class default. The shared procedural energy shader no longer samples the per-renderer sprite _MainTex: mesh/particle geometry already supplies UV/color and does not need an external texture, eliminating a potentially stale atlas-texture dependency. Alpha is saturated and emitted RGB is nonnegative. This removes a plausible colored-artifact path; it is not a live reproduction proving that binding was the sole cause of the reported green/black ring.
+
+Rebuilt Arc as a joined ellipse ribbon with analytic edge normals shared between segments, clamped nonnegative taper and explicit zero-width endpoints. This avoids independent overlapping/turned wedges at flat ellipse tips. WindArcs uses the existing soft additive glow material in runtime initialization, prefab and authoring. The expanding ground ring, wide ground glow, lightning, large explosion, purple accents and existing exit motion are all retained. Damage, timing, camera and placement are unchanged.
+
+Validation: Runtime and Editor C# compilation using Unity's cached response files and bundled Roslyn, with output DLLs only in OS temp; no game assemblies overwritten. No automated tests added or run. Unity MCP remains unavailable on localhost:8080; both Windows UI tool entry points also failed to initialize (missing kernel-assets path). Therefore shader import/GPU rendering and the exact Game-view reproduction remain unverified. Manual acceptance: reimport in Unity and repeat the Main hit; ring must visibly expand and fade purple with no green/black band. Do not treat the prior disable pass as resolution.
+
 ## Current behavior
 
 Main's prepared QTE uses captured enemy-relative entry (latest saved user tuning observed during the atomized-exit revision: X -1.5 / Y 5), physical vertical plunge and a verified floor contact before the existing hit pipeline. The thunderstrike has **two pre-impact logic ticks**, impact at tick 3, and a long near-vertical bolt extending above the visible camera top. Fine kinks/forks replace the old winding body. **Main's intro slow motion is restored** after the user rejected its removal: it uses the existing QteTeamSwapController values, saved on the Player prefab as 0.08× for 0.5 real seconds when inspected. The class default duration is 0.24 seconds; saved prefab tuning is retained. Other characters' intro behavior and normal hitstop/pause remain authoritative.
@@ -71,6 +79,7 @@ Electrical accents are exposed separately under **Purple Electrical Accents**: F
 
 | Setting | Current value / effect |
 | --- | --- |
+| Ground Shockwave Enabled | ON for Main: restored expanding wind rings and wide ground pool, using repaired procedural rendering |
 | Target Start Offset | Enemy-relative, X follows approach facing. Latest saved user tuning X -1.5 / Y 5 is preserved; older offsets below are historical. |
 | Camera Actor Offset Y | 1.5 world units above the body root, independent of zoom |
 | Camera Return Seconds | 0.45 scaled seconds, starting at contact or early release; blends toward the live preferred camera |

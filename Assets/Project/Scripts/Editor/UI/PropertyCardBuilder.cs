@@ -11,7 +11,7 @@ namespace CombatEditor.UI
     /// <summary>
     /// Builds Inspector-style foldout component cards for the right panel.
     /// </summary>
-    public class PropertyCardBuilder
+    public partial class PropertyCardBuilder
     {
         private readonly VisualElement container;
         private readonly Action onDataChanged;
@@ -1561,39 +1561,28 @@ namespace CombatEditor.UI
             {
                 int idx = i;
                 ActionEventEntry entry = eventData.entries[i];
-                if (entry.overlaySettings == null)
+                if (entry == null) continue;
+                if (entry.eventType == ActionEventType.UltimateOverlaySequence && entry.overlaySettings == null)
                 {
                     entry.overlaySettings = new UltimateOverlaySequenceSettings();
                 }
-                if (entry.teleportSettings == null)
+                if (entry.eventType == ActionEventType.TeleportToNearestEnemy && entry.teleportSettings == null)
                 {
                     entry.teleportSettings = new TeleportEventSettings();
                 }
-                if (entry.teleportSettings.screenFlickSettings == null)
+                if (entry.eventType == ActionEventType.TeleportToNearestEnemy && entry.teleportSettings.screenFlickSettings == null)
                 {
                     entry.teleportSettings.screenFlickSettings = new UltimateOverlaySequenceSettings();
                 }
-                if (entry.screenImpulseSettings == null)
-                {
-                    entry.screenImpulseSettings = new ScreenImpulseEventSettings();
-                }
-                if (entry.screenImpulseSettings.impulse == null)
-                {
-                    entry.screenImpulseSettings.impulse = GameImpulseRequest.CreateActionEventDefault();
-                }
-                if (entry.screenImpulseSettings.impulse.slowMotion == null)
-                {
-                    entry.screenImpulseSettings.impulse.slowMotion = new SlowMotionSettings();
-                }
-                if (entry.afterImageSettings == null)
+                if (entry.eventType == ActionEventType.AfterImage && entry.afterImageSettings == null)
                 {
                     entry.afterImageSettings = new AfterImageEventSettings();
                 }
-                if (entry.facingDirectionSettings == null)
+                if (entry.eventType == ActionEventType.SetFacingDirection && entry.facingDirectionSettings == null)
                 {
                     entry.facingDirectionSettings = new FacingDirectionEventSettings();
                 }
-                if (entry.backgroundOverlayFlashSettings == null)
+                if (entry.eventType == ActionEventType.BackgroundOverlayFlash && entry.backgroundOverlayFlashSettings == null)
                 {
                     entry.backgroundOverlayFlashSettings = new BackgroundOverlayFlashSettings();
                 }
@@ -1610,6 +1599,8 @@ namespace CombatEditor.UI
                     {
                         RecordUndo("Edit Event Type");
                         entry.eventType = (ActionEventType)value;
+                        if (entry.eventType == ActionEventType.CameraAnimationControl)
+                            entry.cameraAnimation ??= new CameraAnimationFrameData();
                         MarkDirtyAndRebuild();
                     });
                     AddIntField(inner, "Trigger Frame", entry.triggerFrame, value =>
@@ -1655,6 +1646,10 @@ namespace CombatEditor.UI
                             BuildActionCameraMotionFields(inner, entry);
                             break;
 
+                        case ActionEventType.CameraAnimationControl:
+                            BuildCameraAnimationFields(inner, entry);
+                            break;
+
                         case ActionEventType.ProceduralSlashField:
                             BuildProceduralSlashFields(inner, entry);
                             break;
@@ -1668,6 +1663,10 @@ namespace CombatEditor.UI
                 {
                     ReorderListItem(eventData.entries, idx, newIndex, "Reorder Action Event");
                 }, reorderIndex: idx, reorderCount: eventData.entries.Count);
+
+                if (entry.eventType == ActionEventType.ActionCameraMotion
+                    || (entry.eventType == ActionEventType.ScreenImpulse && entry.screenImpulseSettings?.cameraControl?.enabled == true))
+                    BuildCameraConversion(itemList, eventData, entry);
             }
 
             Button addButton = new Button(() =>
@@ -1681,6 +1680,13 @@ namespace CombatEditor.UI
             };
             addButton.AddToClassList("component-add-entry-btn");
             body.Add(addButton);
+            body.Add(new Button(() =>
+            {
+                RecordUndo("Add Camera Animation Event");
+                eventData.entries.Add(new ActionEventEntry { eventType = ActionEventType.CameraAnimationControl,
+                    label = "Camera Animation", cameraAnimation = new CameraAnimationFrameData() });
+                MarkDirtyAndRebuild();
+            }) { text = "Add Camera Animation Control" });
         }
 
         private void BuildUltimateActionEventFields(VisualElement inner, ActionEventEntry entry)
@@ -1820,61 +1826,21 @@ namespace CombatEditor.UI
 
         private void BuildScreenImpulseActionEventFields(VisualElement inner, ActionEventEntry entry)
         {
-            ScreenImpulseEventSettings settings = entry.screenImpulseSettings ??= new ScreenImpulseEventSettings();
-            settings.impulse ??= GameImpulseRequest.CreateActionEventDefault();
-            settings.impulse.slowMotion ??= new SlowMotionSettings();
+            ScreenImpulseEventSettings settings = entry.screenImpulseSettings;
 
             AddSeparator(inner, "Screen Impulse");
-            BuildGameImpulseRequestFields(inner, settings.impulse, "Screen Impulse");
-            BuildCameraControlFields(inner, settings.cameraControl ??= new ScreenImpulseCameraSettings());
-        }
-
-        private void BuildCameraControlFields(VisualElement inner, ScreenImpulseCameraSettings camera)
-        {
-            AddSeparator(inner, "Camera Control");
-            AddToggleField(inner, "Enable Camera Control", camera.enabled, value =>
-            {
-                RecordUndo("Toggle Screen Impulse Camera Control");
-                camera.enabled = value;
-                MarkDirtyAndRebuild();
-            });
-            if (!camera.enabled) return;
-            AddFloatField(inner, "Zoom Multiplier (<1 In / >1 Out)", camera.zoomMultiplier, value =>
-            {
-                RecordUndo("Edit Screen Impulse Zoom");
-                camera.zoomMultiplier = Mathf.Max(0.01f, value);
-                MarkDirty();
-            });
-            AddToggleField(inner, "Jump Cut (Lock Position)", camera.jumpCutLock, value =>
-            {
-                RecordUndo("Toggle Screen Impulse Camera Lock");
-                camera.jumpCutLock = value;
-                MarkDirty();
-            });
-            AddIntField(inner, "Transition In Frames (0 = Cut)", camera.transitionInFrames, value =>
-            {
-                RecordUndo("Edit Screen Impulse Camera Transition");
-                camera.transitionInFrames = Mathf.Max(0, value);
-                MarkDirty();
-            });
-            AddFloatField(inner, "Horizontal Offset (-1 to 1 Screens)", camera.horizontalViewportOffset, value =>
-            {
-                RecordUndo("Edit Camera Offset");
-                camera.horizontalViewportOffset = Mathf.Clamp(value, -1f, 1f);
-                MarkDirty();
-            });
-            AddIntField(inner, "Peak Zoom Hold Frames", camera.holdFrames, value =>
-            {
-                RecordUndo("Edit Screen Impulse Camera Hold");
-                camera.holdFrames = Mathf.Max(0, value);
-                MarkDirty();
-            });
-            AddIntField(inner, "Return To Normal Frames (0 = Cut)", camera.returnFrames, value =>
-            {
-                RecordUndo("Edit Screen Impulse Camera Return");
-                camera.returnFrames = Mathf.Max(0, value);
-                MarkDirty();
-            });
+            if (settings?.impulse?.slowMotion != null)
+                BuildGameImpulseRequestFields(inner, settings.impulse, "Screen Impulse");
+            else
+                inner.Add(new Button(() =>
+                {
+                    RecordUndo("Initialize Screen Impulse");
+                    entry.screenImpulseSettings ??= new ScreenImpulseEventSettings();
+                    entry.screenImpulseSettings.impulse ??= GameImpulseRequest.CreateActionEventDefault();
+                    entry.screenImpulseSettings.impulse.slowMotion ??= new SlowMotionSettings();
+                    MarkDirtyAndRebuild();
+                }) { text = "Initialize Impulse Settings" });
+            inner.Add(new HelpBox(settings?.cameraControl?.enabled == true ? "Legacy embedded camera control is active. Use the conversion preview below to split it into a Camera Animation Control event." : "Author camera motion with a separate Camera Animation Control event.", HelpBoxMessageType.Info));
         }
 
         private void BuildAfterImageActionEventFields(VisualElement inner, ActionEventEntry entry)
@@ -1949,7 +1915,7 @@ namespace CombatEditor.UI
             var settings = entry.slashFieldSettings ??= new ProceduralSlashFieldSettings();
             AddObjectField(inner, "Ribbon Material", settings.material, value => { RecordUndo("Edit Slash Material"); settings.material = value as Material; MarkDirty(); });
             AddFloatField(inner, "Overall VFX Scale", settings.overallScale, value => { RecordUndo("Edit Slash Scale"); settings.overallScale = Mathf.Max(0.1f, value); MarkDirty(); });
-            AddToggleField(inner, "Screen Transparency Mask", settings.screenMaskMode, value => { RecordUndo("Edit Slash Mask Mode"); settings.screenMaskMode = value; MarkDirty(); });
+            AddToggleField(inner, "Fullscreen Glow Slash", settings.fullScreenSlash, value => { RecordUndo("Edit Fullscreen Slash"); settings.fullScreenSlash = value; MarkDirtyAndRebuild(); });
             AddToggleField(inner, "Fit Visible Screen", settings.fitViewport, value => { RecordUndo("Edit Slash Viewport"); settings.fitViewport = value; MarkDirty(); });
             AddFloatField(inner, "Screen Coverage", settings.viewportCoverage, value => { RecordUndo("Edit Slash Coverage"); settings.viewportCoverage = Mathf.Clamp(value, 0.5f, 2f); MarkDirty(); });
             AddIntField(inner, "Full Screen Slashes", settings.screenSpanningCount, value => { RecordUndo("Edit Full Screen Slashes"); settings.screenSpanningCount = Mathf.Max(0, value); MarkDirty(); });
@@ -1969,9 +1935,11 @@ namespace CombatEditor.UI
             AddVector2Field(inner, "Length Range", settings.lengthRange, value => { RecordUndo("Edit Slash Length"); settings.lengthRange = value; MarkDirty(); });
             AddVector2Field(inner, "Width Range", settings.widthRange, value => { RecordUndo("Edit Slash Width"); settings.widthRange = value; MarkDirty(); });
             AddVector2Field(inner, "Slash Angle Range (deg)", settings.angleRange, value => { RecordUndo("Edit Slash Angles"); settings.angleRange = value; MarkDirty(); });
-            AddFloatField(inner, "Screen Cut Angle (deg)", settings.screenMaskAngle, value => { RecordUndo("Edit Screen Cut Angle"); settings.screenMaskAngle = value; MarkDirty(); });
+            AddFloatField(inner, "Screen Cut Angle (deg)", settings.fullScreenAngle, value => { RecordUndo("Edit Screen Cut Angle"); settings.fullScreenAngle = value; MarkDirty(); });
             AddVector2Field(inner, "Reveal Frames", settings.revealFrames, value => { RecordUndo("Edit Slash Reveal"); settings.revealFrames = value; MarkDirty(); });
             AddVector2Field(inner, "Decay Frames", settings.decayFrames, value => { RecordUndo("Edit Slash Decay"); settings.decayFrames = value; MarkDirty(); });
+            if (settings.fullScreenSlash)
+                BuildBackgroundOverlayFlashFields(inner, entry);
             BuildCutImpactFields(inner, settings.impactDistortion ??= new CutImpactDistortionSettings());
             AddToggleField(inner, "Hide Actor", settings.hideActor, value => { RecordUndo("Edit Slash Visibility"); settings.hideActor = value; MarkDirty(); });
             AddIntField(inner, "Hide At", settings.hideFromFrame, value => { RecordUndo("Edit Actor Hide Frame"); settings.hideFromFrame = Mathf.Max(0, value); MarkDirty(); });
@@ -1985,25 +1953,18 @@ namespace CombatEditor.UI
             AddIntField(inner, "Impact Start Frame", impact.startFrame, value => { RecordUndo("Edit Cut Impact Start"); impact.startFrame = Mathf.Max(0, value); MarkDirty(); });
             AddIntField(inner, "Impact Duration", impact.durationFrames, value => { RecordUndo("Edit Cut Impact Duration"); impact.durationFrames = Mathf.Max(1, value); MarkDirty(); });
             AddFloatField(inner, "Cut Distortion Width (screen height)", impact.waveWidth, value => { RecordUndo("Edit Cut Wave Width"); impact.waveWidth = Mathf.Max(0.01f, value); MarkDirty(); });
-            AddFloatField(inner, "Refraction (pixels)", impact.refractionPixels, value => { RecordUndo("Edit Cut Refraction Strength"); impact.refractionPixels = Mathf.Clamp(value, 0f, 16f); MarkDirty(); });
+            AddFloatField(inner, "Refraction (pixels)", impact.refractionPixels, value => { RecordUndo("Edit Cut Refraction Strength"); impact.refractionPixels = Mathf.Clamp(value, 0f, 64f); MarkDirty(); });
             AddFloatField(inner, "Chromatic Split (pixels)", impact.chromaticPixels, value => { RecordUndo("Edit Cut Chromatic Split"); impact.chromaticPixels = Mathf.Clamp(value, 0f, 8f); MarkDirty(); });
             AddFloatField(inner, "Wave Blur (pixels)", impact.blurPixels, value => { RecordUndo("Edit Cut Wave Blur"); impact.blurPixels = Mathf.Clamp(value, 0f, 4f); MarkDirty(); });
             AddIntField(inner, "Impact Reference Height", impact.referenceHeight, value => { RecordUndo("Edit Cut Pixel Reference"); impact.referenceHeight = Mathf.Max(1, value); MarkDirty(); });
         }
 
-                private void BuildActionCameraMotionFields(VisualElement inner, ActionEventEntry entry)
+        private void BuildActionCameraMotionFields(VisualElement inner, ActionEventEntry entry)
         {
-            var settings = entry.cameraMotionSettings ??= new ActionCameraMotionSettings();
-            if (settings.zoomControl == null)
-            {
-                RecordUndo("Convert Camera Event To Single Zoom");
-                settings.zoomControl = settings.CreateSingleZoomSettings();
-                MarkDirty();
-            }
-            inner.Add(new HelpBox("One zoom per event: transition to the target, hold that zoom, then return to normal camera scale. Durations use gameplay frames and can finish after the action ends. Pause/hitstop pause the timer. A newer camera event replaces this one.", HelpBoxMessageType.Info));
-            BuildCameraControlFields(inner, settings.zoomControl);
+            inner.Add(new HelpBox("Legacy camera event. Playback is preserved. Use the conversion preview below to edit this as a Camera Animation Control sequence.", HelpBoxMessageType.Info));
         }
-private void BuildGameImpulseRequestFields(VisualElement inner, GameImpulseRequest request, string undoPrefix)
+
+        private void BuildGameImpulseRequestFields(VisualElement inner, GameImpulseRequest request, string undoPrefix)
         {
             if (request == null)
             {
