@@ -55,7 +55,8 @@ public static class ExecutionBreakdownAuthoring
             eventType = ActionEventType.ProceduralSlashField, freezeWorld = false,
             slashFieldSettings = new ProceduralSlashFieldSettings { screenMaskMode = true, hideActor = false,
                 material = AssetDatabase.LoadAssetAtPath<Material>(Root + "ExecutionBreakdownMask.mat"),
-                slashCount = 1, seamCount = 0, endFrame = 30, foregroundFraction = 1f } });
+                slashCount = 1, seamCount = 0, endFrame = 30, foregroundFraction = 1f,
+                impactDistortion = new CutImpactDistortionSettings { enabled = true } } });
         var camera = new ActionCameraMotionSettings();
         int[] cameraFrames = { 0,12,42,44,50,54,56,60,66 };
         float[] sizes = { 1,1,0.99f,1,1,0.96f,0.98f,0.99f,1 };
@@ -98,6 +99,7 @@ public static class ExecutionBreakdownAuthoring
     {
         var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(Root + "Animations/main_dimension_slash_" + name + ".anim");
         step.vfxData.entries.Add(new VFXEntry { label = "Execution " + name, triggerFrame = frame, duration = duration, vfxClip = clip,
+            impactDistortion = name.StartsWith("burst") ? new CutImpactDistortionSettings { enabled = true, durationFrames = duration } : null,
             vfxType = (Project.Combat.VFXType)(name == "burst_a" ? 160 : name == "burst_b" ? 161 : name == "burst_c" ? 162 : name == "residual" ? 163 : name == "seam" ? 164 : 166),
             transformKeys = new List<VFXTransformKey> { new VFXTransformKey { position = Vector3.zero, scale = Vector3.one } } });
     }

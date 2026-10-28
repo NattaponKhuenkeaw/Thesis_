@@ -10,7 +10,40 @@ public static class MainLightningPlungeAuthoring
 {
     public const string Root = MainDimensionSlashAuthoring.MainPath + "LightningPlunge/";
     public const string StepName = "LightningPlunge";
+    public const string ActionId = "main.qte.lightning_plunge";
     public const int StartupFrames = 2, ActiveFrames = 3, RecoveryFrames = 120, LandingHoldFrames = 8;
+
+    [MenuItem("Tools/Project/Combat/Remove Main Plunge Contact Sprite")]
+    public static void RemovePlungeContactSprite()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Author in edit mode.");
+        var character = AssetDatabase.LoadAssetAtPath<CharacterObject>(MainDimensionSlashAuthoring.MainPath + "CharacterObject_main.asset");
+        if (character?.qteSwap == null || !character.qteSwap.TryResolveIntro(character.actionResolverTable, out _, out var step)
+            || step.stepName != StepName) throw new InvalidOperationException("Main plunge entry is missing.");
+        Undo.RecordObjects(new UnityEngine.Object[] { character, character.actionResolverTable }, "Remove Main Plunge Contact Sprite");
+        foreach (var hitbox in step.hitData.hitboxes)
+            if (hitbox != null) hitbox.suppressContactVfx = true;
+        EditorUtility.SetDirty(character); EditorUtility.SetDirty(character.actionResolverTable);
+        AssetDatabase.SaveAssetIfDirty(character); AssetDatabase.SaveAssetIfDirty(character.actionResolverTable);
+        Debug.Log("Main plunge generic contact sprite disabled. Authored purple blast, hit audio, Heavy tier, damage and hitstop retained.");
+    }
+
+    [MenuItem("Tools/Project/Combat/Add Main Plunge Electrical Accents")]
+    public static void AddElectricalAccents()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Author in edit mode.");
+        var character = AssetDatabase.LoadAssetAtPath<CharacterObject>(MainDimensionSlashAuthoring.MainPath + "CharacterObject_main.asset");
+        var settings = character?.qteSwap?.plunge?.visuals;
+        if (settings == null) throw new InvalidOperationException("Main plunge visuals are missing.");
+        Undo.RecordObject(character, "Add Main Plunge Electrical Accents");
+        settings.fallingArcCount = 6; settings.impactArcCount = 9;
+        settings.electricalSpread = 1f; settings.electricalArcLength = 0.8f;
+        settings.electricalWidth = 0.028f; settings.electricalGlow = 1.2f;
+        settings.electricalColor = new Color(0.95f, 0.28f, 2.4f, 1f);
+        settings.fallingSparkCount = 8;
+        EditorUtility.SetDirty(character); AssetDatabase.SaveAssetIfDirty(character);
+        Debug.Log("Added purple glow arcs and falling sparks as secondary plunge accents. Broad blast, exit, combat, placement and disabled chromatic/refraction settings preserved.");
+    }
 
     [MenuItem("Tools/Project/Combat/Author Main Plunge Dissipation")]
     public static void AuthorDissipation()
@@ -20,26 +53,37 @@ public static class MainLightningPlungeAuthoring
         var profile = character?.qteSwap?.plunge;
         if (profile?.visuals == null || profile.prefab == null) throw new InvalidOperationException("Main's plunge profile is missing.");
         Undo.RecordObject(character, "Author Main Plunge Dissipation");
-        profile.visuals.exitDelayFrames = 12; profile.visuals.exitFrames = 78;
-        profile.visuals.exitScatter = 0.65f; profile.visuals.exitFragmentCount = 24;
+        profile.visuals.exitFrames = 78;
+        profile.visuals.stormLift = 0.6f;
+        profile.visuals.impactDistortion ??= new CutImpactDistortionSettings();
+        profile.visuals.impactDistortion.enabled = false;
+        profile.visuals.impactDistortion.chromaticPixels = 0f;
+        var table = character.actionResolverTable;
+        if (table != null)
+        {
+            Undo.RecordObject(table, "Remove Main Chromatic Split");
+            var serialized = new SerializedObject(table);
+            var property = serialized.GetIterator();
+            while (property.Next(true))
+                if (property.name == "chromaticPixels" && property.propertyType == SerializedPropertyType.Float)
+                    property.floatValue = 0f;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(table); AssetDatabase.SaveAssetIfDirty(table);
+        }
+        profile.visuals.exitScatter = 0.65f;
+        profile.visuals.sparkCount = 18; profile.visuals.debrisCount = 10; profile.visuals.residualCount = 4;
         string path = AssetDatabase.GetAssetPath(profile.prefab);
         var root = PrefabUtility.LoadPrefabContents(path);
         try
         {
             Transform geometry = root.transform.Find("Geometry");
-            if (geometry.Find("ExitFragments") == null)
-            {
-                var fragments = new GameObject("ExitFragments", typeof(MeshFilter), typeof(MeshRenderer));
-                fragments.transform.SetParent(geometry, false);
-                var renderer = fragments.GetComponent<MeshRenderer>();
-                renderer.sharedMaterial = root.GetComponent<LightningPlungeVFX>().material;
-                renderer.enabled = false;
-            }
+            Transform legacy = geometry.Find("ExitFragments");
+            if (legacy != null) UnityEngine.Object.DestroyImmediate(legacy.gameObject);
             PrefabUtility.SaveAsPrefabAsset(root, path);
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
         EditorUtility.SetDirty(character); AssetDatabase.SaveAssetIfDirty(character);
-        Debug.Log("Main plunge exit: staggered retracting spikes, contracting/eroding column, outward fragments, unwinding rings and draining cracks. Existing timing/camera/slowdown/palette retained.");
+        Debug.Log("Main plunge: restored broad jagged explosion lobes, white/violet impact and dark aura; expanding inner opening and outward lift clear the blast over time. Plunge refraction disabled; no grain/dissolve/sparkle-wisp pass. Combat and placement tuning retained.");
     }
 
     [MenuItem("Tools/Project/Combat/Lengthen Main Thunderstrike Impact")]
@@ -62,7 +106,7 @@ public static class MainLightningPlungeAuthoring
     {
         Author();
         var character = AssetDatabase.LoadAssetAtPath<CharacterObject>(MainDimensionSlashAuthoring.MainPath + "CharacterObject_main.asset");
-        var intro = character.qteSwap.introComboTree.rootNode.stepData;
+        var intro = character.qteSwap.GetIntroComboTree(character.actionResolverTable).rootNode.stepData;
         intro.startupFrames = StartupFrames;
         if (intro.motionData?.keyframes != null)
             foreach (var key in intro.motionData.keyframes)
@@ -78,6 +122,8 @@ public static class MainLightningPlungeAuthoring
         settings.boltJitter = 0.12f; settings.minimumBoltLength = 14f; settings.aboveScreenPadding = 2f;
         settings.glowWidth = 3.8f; settings.impactLightIntensity = 0.8f; settings.impactLightRadius = 7f;
         AlignActorTimeline(intro.animationClip, intro);
+        EditorUtility.SetDirty(character.actionResolverTable);
+        AssetDatabase.SaveAssetIfDirty(character.actionResolverTable);
         EditorUtility.SetDirty(character); AssetDatabase.SaveAssetIfDirty(character);
         Debug.Log("Main Thunderstrike: 2 pre-impact logic ticks, off-screen straight bolt, dark-purple aura / HDR glow and local URP light. Height/camera/recovery/follow-up retained.");
     }
@@ -104,15 +150,16 @@ public static class MainLightningPlungeAuthoring
         if (EditorApplication.isPlayingOrWillChangePlaymode) throw new InvalidOperationException("Author in edit mode.");
         var character = AssetDatabase.LoadAssetAtPath<CharacterObject>(MainDimensionSlashAuthoring.MainPath + "CharacterObject_main.asset");
         if (character == null) throw new InvalidOperationException("Main's CharacterObject is missing.");
-        var previous = character.qteSwap?.introComboTree?.rootNode;
+        var previous = character.qteSwap?.GetIntroComboTree(character.actionResolverTable)?.rootNode;
         AttackStepData source = previous?.stepData;
         if (source == null)
             source = character.actionResolverTable.standaloneActions.Find(a => a.actionId == MainDimensionSlashAuthoring.CutId)?.GetEntryStep();
         if (source == null) throw new InvalidOperationException("Main's existing QTE damage payload is missing.");
-        Undo.RecordObject(character, "Author Main Lightning Plunge");
+        Undo.RecordObjects(new UnityEngine.Object[] { character, character.actionResolverTable }, "Author Main Lightning Plunge");
         Configure(character, source, previous?.defaultNext);
         EditorUtility.SetDirty(character);
         AssetDatabase.SaveAssetIfDirty(character);
+        AssetDatabase.SaveAssetIfDirty(character.actionResolverTable);
         Debug.Log("Main QTE authored: LightningPlunge → existing ExecutionBreakdown; enemy-relative start and Heavy impact.");
     }
 
@@ -128,7 +175,7 @@ public static class MainLightningPlungeAuthoring
         profile.plunge ??= new QtePlungeSettings();
         profile.plunge.prefab = prefab;
         profile.plunge.visuals ??= new LightningPlungeVfxSettings();
-        profile.introActionKey = MainDimensionSlashAuthoring.CutId;
+        profile.introActionKey = ActionId;
         profile.introStepName = StepName;
         AttackStepData intro = source.stepName == StepName ? source : CreateIntro(source, clip);
         intro.animationClip = clip;
@@ -136,11 +183,30 @@ public static class MainLightningPlungeAuthoring
         AlignActorTimeline(clip, intro);
         if (intro.hitData?.hitboxes != null)
             foreach (var hit in intro.hitData.hitboxes)
-                if (hit is NormalHitbox normal) normal.impactTier = DamageImpactTier.Heavy;
-        followup ??= profile.introComboTree?.rootNode?.defaultNext;
+                if (hit is NormalHitbox normal)
+                {
+                    normal.impactTier = DamageImpactTier.Heavy;
+                    normal.suppressContactVfx = true;
+                }
+        followup ??= profile.GetIntroComboTree(character.actionResolverTable)?.rootNode?.defaultNext;
         followup ??= new ComboNode { stepData = ExecutionBreakdownAuthoring.CreateStep() };
-        profile.introComboTree = new ComboTree { treeName = "QTE Lightning Plunge → Execution Breakdown",
+        var table = character.actionResolverTable;
+        table.qteActions ??= new System.Collections.Generic.List<ComboAction>();
+        var action = table.qteActions.Find(a => a != null && a.actionId == ActionId);
+        if (action == null)
+        {
+            var sourceAction = table.standaloneActions.Find(a => a != null && a.actionId == MainDimensionSlashAuthoring.CutId);
+            action = new ComboAction { actionId = ActionId, actionName = "Lightning Plunge",
+                context = CombatActionContext.Both, outputContext = CombatActionOutputContext.Ground,
+                requiresEnemyTarget = true, targetRadius = sourceAction?.GetTargetSearchRadius() ?? 15f,
+                damageSourceStat = sourceAction?.damageSourceStat ?? ActionDamageSourceStat.Attack,
+                actionDamageMultiplier = sourceAction?.actionDamageMultiplier ?? 0f };
+            table.qteActions.Add(action);
+        }
+        action.comboTree = new ComboTree { treeName = "QTE Lightning Plunge → Execution Breakdown",
             rootNode = new ComboNode { stepData = intro, defaultNext = followup } };
+        profile.introComboTree = null;
+        EditorUtility.SetDirty(table);
         BindActor(character, clip);
     }
 
@@ -210,7 +276,7 @@ public static class MainLightningPlungeAuthoring
             effect.radialMaterial = EnergyMaterial("LightningPlungeGroundGlow", 1f, 1.35f, false, true);
             Transform geometry = root.transform.Find("Geometry");
             if (geometry == null) { geometry = new GameObject("Geometry").transform; geometry.SetParent(root.transform, false); }
-            foreach (string name in new[] { "BoltCore", "VioletEnvelope", "DarkImpactShards", "GroundCracks", "WindArcs", "DarkPurpleAura", "SoftGlow", "GroundGlow", "ExitFragments" })
+            foreach (string name in new[] { "BoltCore", "VioletEnvelope", "DarkImpactShards", "GroundCracks", "WindArcs", "DarkPurpleAura", "SoftGlow", "GroundGlow" })
             {
                 Transform layer = geometry.Find(name);
                 if (layer == null) { layer = new GameObject(name, typeof(MeshFilter), typeof(MeshRenderer)).transform; layer.SetParent(geometry, false); }

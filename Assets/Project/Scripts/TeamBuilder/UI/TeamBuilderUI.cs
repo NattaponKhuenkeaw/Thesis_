@@ -91,6 +91,7 @@ namespace Project.TeamBuilder.UI
         public InspectScreenUI InspectScreenUI => inspectScreenUI;
         public PlayerRunInventory RunInventory => playerInventory;
         public PlayerRunInventory PlayerInventory => playerInventory;
+        public int SelectedCharacterSlotIndex => selectedCharacterSwitchSlotIndex;
 
         private void OnEnable()
         {
@@ -110,6 +111,7 @@ namespace Project.TeamBuilder.UI
             }
 
             ClearArtifactSwitchSelection();
+            ResetInventorySelection();
             if (zoneStateProvider != null)
             {
                 zoneStateProvider.OnZoneModeChanged -= HandleZoneChanged;
@@ -216,6 +218,11 @@ namespace Project.TeamBuilder.UI
                 inventoryPanel.SubscribeToArtifactClicks(HandleArtifactClicked);
                 inventoryPanel.SubscribeToArtifactDoubleClicks(HandleArtifactDoubleClicked);
             }
+            if (artifactPreviewPanel != null)
+            {
+                artifactPreviewPanel.SetEquipAction(HandleArtifactDoubleClicked);
+                artifactPreviewPanel.Close();
+            }
 
             // Initialize each team slot
             for (int i = 0; i < teamSlots.Length; i++)
@@ -232,6 +239,7 @@ namespace Project.TeamBuilder.UI
         public void OnPanelOpened()
         {
             EnsureInitialized();
+            ResetInventorySelection();
             ClearArtifactSwitchSelection();
             selectedCharacterSwitchSlotIndex = -1;
             if (isPanelSessionActive)
@@ -358,6 +366,9 @@ namespace Project.TeamBuilder.UI
             currentMode = mode;
             if (currentMode == ZoneMode.CombatZone)
             {
+                isInventoryPanelOpen = false;
+                ResetInventorySelection();
+                inventoryPanel?.SetVisible(false, false);
                 inventoryPanel?.CloseAll();
                 selectedCharacterSwitchSlotIndex = -1;
                 ClearArtifactSwitchSelection();
@@ -374,7 +385,6 @@ namespace Project.TeamBuilder.UI
         {
             if (inventoryPanel != null)
             {
-                inventoryPanel.CloseAll();
                 inventoryPanel.SetVisible(false);
             }
             isInventoryPanelOpen = false;
@@ -385,6 +395,12 @@ namespace Project.TeamBuilder.UI
                 artifactPreviewPanel.ShowEmpty();
             }
             ApplyModeVisualState();
+        }
+
+        private void ResetInventorySelection()
+        {
+            inventoryPanel?.ClearSelection();
+            artifactPreviewPanel?.Close();
         }
 
         public void ToggleInventoryPanel()
@@ -410,7 +426,6 @@ namespace Project.TeamBuilder.UI
                 }
                 else
                 {
-                    inventoryPanel.CloseAll();
                     inventoryPanel.SetVisible(false);
                     selectedCharacterSwitchSlotIndex = -1;
                     ClearArtifactSwitchSelection();
@@ -421,20 +436,16 @@ namespace Project.TeamBuilder.UI
 
         public void CloseCharacterGridPanel()
         {
-            if (inventoryPanel != null && inventoryPanel.IsCharacterGridOpen)
-            {
-                inventoryPanel.CloseAll();
-            }
-            isInventoryPanelOpen = inventoryPanel != null && inventoryPanel.IsAnyPanelOpen;
-            if (!isInventoryPanelOpen)
-            {
-                selectedCharacterSwitchSlotIndex = -1;
-            }
-            ApplyModeVisualState();
+            if (inventoryPanel != null && inventoryPanel.IsCharacterGridOpen) CloseInventoryPanel();
         }
 
         public void ToggleCharacterGridPanel()
         {
+            if (selectedCharacterSwitchSlotIndex < 0)
+            {
+                var slot = GetActiveOrFirstTeamSlot();
+                if (slot != null) { BeginCharacterSwitch(slot.SlotIndex); return; }
+            }
             if (currentMode != ZoneMode.SafeZone)
             {
                 CloseInventoryPanel();
@@ -442,6 +453,7 @@ namespace Project.TeamBuilder.UI
             }
 
             ClearArtifactSwitchSelection();
+            ResetInventorySelection();
             if (inventoryPanel != null)
             {
                 inventoryPanel.SetVisible(true);
@@ -476,6 +488,7 @@ namespace Project.TeamBuilder.UI
             }
 
             ClearArtifactSwitchSelection();
+            ResetInventorySelection();
             selectedCharacterSwitchSlotIndex = slotIndex;
             isInventoryPanelOpen = true;
 
@@ -491,6 +504,7 @@ namespace Project.TeamBuilder.UI
             }
 
             ApplyModeVisualState();
+            inventoryPanel?.SetContext($"TEAM SLOT {slotIndex + 1:00}");
         }
 
         public void TryAssignCharacterToSelectedSlot(CharacterItem incomingChar)
@@ -539,6 +553,7 @@ namespace Project.TeamBuilder.UI
             }
 
             ClearArtifactSwitchSelection();
+            ResetInventorySelection();
             selectedCharacterSwitchSlotIndex = -1;
             if (inventoryPanel != null)
             {
@@ -552,21 +567,12 @@ namespace Project.TeamBuilder.UI
                 }
             }
             ApplyModeVisualState();
+            inventoryPanel?.SetContext("ARTIFACT INVENTORY");
         }
 
         public void CloseArtifactGridPanel()
         {
-            if (inventoryPanel != null && inventoryPanel.IsArtifactGridOpen)
-            {
-                inventoryPanel.CloseAll();
-            }
-            isInventoryPanelOpen = inventoryPanel != null && inventoryPanel.IsAnyPanelOpen;
-            ClearArtifactSwitchSelection();
-            if (artifactPreviewPanel != null)
-            {
-                artifactPreviewPanel.ShowEmpty();
-            }
-            ApplyModeVisualState();
+            if (inventoryPanel != null && inventoryPanel.IsArtifactGridOpen) CloseInventoryPanel();
         }
 
         public void BeginArtifactSwitch(ArtifactSlotUI destinationSlot)
@@ -593,20 +599,7 @@ namespace Project.TeamBuilder.UI
 
             ClearArtifactSwitchSelection();
             selectedCharacterSwitchSlotIndex = -1;
-            if (artifactPreviewPanel != null)
-            {
-                if (destinationSlot.CurrentArtifact != null && playerInventory != null)
-                {
-                    artifactPreviewPanel.Open(
-                        destinationSlot.CurrentArtifact,
-                        playerInventory.ResolveArtifactDefinition(destinationSlot.CurrentArtifact.definitionId),
-                        playerInventory.ArtifactRollTable);
-                }
-                else
-                {
-                    artifactPreviewPanel.ShowEmpty();
-                }
-            }
+            ResetInventorySelection();
             selectedArtifactSwitchSlot = destinationSlot;
             selectedArtifactSwitchSlot.SetSelectionDestination(true);
             isInventoryPanelOpen = true;
@@ -627,6 +620,7 @@ namespace Project.TeamBuilder.UI
             }
 
             ApplyModeVisualState();
+            inventoryPanel?.SetContext($"TEAM SLOT {destinationSlot.ParentSlot.SlotIndex + 1:00} / ARTIFACT");
         }
 
         public HashSet<string> GetDraftEquippedArtifactInstanceIds(HashSet<string> destination = null)
@@ -1257,7 +1251,7 @@ namespace Project.TeamBuilder.UI
 
         private void HandleArtifactDoubleClicked(ArtifactInstance artifact)
         {
-            TryEquipArtifact(artifact);
+            if (TryEquipArtifact(artifact)) CloseInventoryPanel();
         }
 
 

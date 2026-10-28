@@ -42,19 +42,10 @@ Shader "Project/ExecutionBreakdownMask"
                 float opening=lerp(0.14,0.008,saturate(frame/20));
                 float jagged=(Hash(floor(float2(along*55,0)))-0.5)*0.018;
                 float slit=(1-smoothstep(opening+jagged,opening+jagged+0.006,abs(across)))*reveal;
-                // Irregular fragments cut real alpha holes in the bright layer;
-                // the dark shape is the scene showing through, not painted black.
-                float2 shardUV=float2(across*48,along*18);
-                float2 cell=floor(shardUV), local=frac(shardUV)-0.5;
-                float noise=Hash(cell);
-                float dissolve=smoothstep(5,duration,frame);
-                float shardSize=lerp(0.2,0.72,Hash(cell+7));
-                float shard=1-step(shardSize,abs(local.x)*1.2+abs(local.y)*0.75);
-                float fragments=step(noise,dissolve)*shard*(1-smoothstep(0.02,0.65,abs(across)));
                 float fade=1-smoothstep(8,duration,frame);
                 float edge=1-smoothstep(0.003,0.024,abs(abs(across)-opening-jagged));
                 half3 color=lerp(_FlashColor.rgb,_EdgeColor.rgb,edge*0.65);
-                float alpha=saturate(fade*(1-slit)*(1-fragments));
+                float alpha=saturate(fade*(1-slit));
                 return half4(color,alpha);
             }
             ENDHLSL

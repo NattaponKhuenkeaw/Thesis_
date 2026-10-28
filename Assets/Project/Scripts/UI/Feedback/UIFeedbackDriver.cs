@@ -10,7 +10,7 @@ public class UIFeedbackDriver : MonoBehaviour
 {
     private static Sprite fallbackSprite;
     private readonly Dictionary<Transform, Coroutine> activePulseCoroutines = new Dictionary<Transform, Coroutine>();
-    private readonly Dictionary<Transform, Vector3> pulseBaseScales = new Dictionary<Transform, Vector3>();
+    private readonly Dictionary<Transform, Image> pulseOverlays = new Dictionary<Transform, Image>();
 
     public static UIFeedbackDriver GetOrAdd(GameObject host)
     {
@@ -29,25 +29,28 @@ public class UIFeedbackDriver : MonoBehaviour
 
     public Coroutine PlayPulse(Transform target, float peakScale = 1.2f, float duration = 0.2f)
     {
-        if (target == null || !isActiveAndEnabled)
+        if (!Application.isPlaying || !(target is RectTransform rect) || !isActiveAndEnabled)
         {
             return null;
         }
 
-        bool alreadyPulsing = activePulseCoroutines.TryGetValue(target, out Coroutine activePulse);
-        Vector3 baseScale = alreadyPulsing && pulseBaseScales.TryGetValue(target, out Vector3 storedBaseScale)
-            ? storedBaseScale
-            : target.localScale;
-
-        if (alreadyPulsing && activePulse != null)
+        if (activePulseCoroutines.TryGetValue(target, out Coroutine activePulse) && activePulse != null) StopCoroutine(activePulse);
+        if (pulseOverlays.TryGetValue(target, out Image previous) && previous != null)
         {
-            StopCoroutine(activePulse);
+            previous.gameObject.SetActive(false);
+            Destroy(previous.gameObject);
         }
-
-        target.localScale = baseScale;
-        Coroutine coroutine = StartCoroutine(PulseRoutine(target, baseScale, peakScale, duration));
+        var host = new GameObject("Feedback Overlay", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(LayoutElement));
+        host.layer = target.gameObject.layer;
+        host.transform.SetParent(rect, false);
+        host.GetComponent<LayoutElement>().ignoreLayout = true;
+        var overlay = host.GetComponent<Image>(); overlay.raycastTarget = false;
+        var overlayRect = overlay.rectTransform;
+        overlayRect.anchorMin = Vector2.zero; overlayRect.anchorMax = Vector2.one;
+        overlayRect.offsetMin = overlayRect.offsetMax = Vector2.zero;
+        pulseOverlays[target] = overlay;
+        Coroutine coroutine = StartCoroutine(PulseRoutine(target, overlay, peakScale, duration));
         activePulseCoroutines[target] = coroutine;
-        pulseBaseScales[target] = baseScale;
         return coroutine;
     }
 
@@ -91,23 +94,31 @@ public class UIFeedbackDriver : MonoBehaviour
         return StartCoroutine(RadialBurstRoutine(parent, color, Mathf.Max(1, count), distance, duration));
     }
 
-    private IEnumerator PulseRoutine(Transform target, Vector3 originalScale, float peakScale, float duration)
+    private IEnumerator PulseRoutine(Transform target, Image overlay, float peakScale, float duration)
     {
         float resolvedDuration = Mathf.Max(0.01f, duration);
         float elapsed = 0f;
 
-        while (elapsed < resolvedDuration)
+        while (overlay != null && elapsed < resolvedDuration)
         {
-            elapsed += Time.unscaledDeltaTime;
             float t = Mathf.Clamp01(elapsed / resolvedDuration);
-            float wave = Mathf.Sin(t * Mathf.PI);
-            target.localScale = originalScale * Mathf.Lerp(1f, peakScale, wave);
+            float eased = 1f - (1f - t) * (1f - t);
+            overlay.rectTransform.localScale = Vector3.one * Mathf.Lerp(1f, Mathf.Max(1f, peakScale), eased);
+            overlay.color = new Color(1f, 1f, 1f, 1f - eased);
+            elapsed += Time.unscaledDeltaTime;
             yield return null;
         }
 
-        target.localScale = originalScale;
+        if (overlay != null) Destroy(overlay.gameObject);
         activePulseCoroutines.Remove(target);
-        pulseBaseScales.Remove(target);
+        pulseOverlays.Remove(target);
+    }
+
+    private void OnDisable()
+    {
+        foreach (var coroutine in activePulseCoroutines.Values) if (coroutine != null) StopCoroutine(coroutine);
+        foreach (var overlay in pulseOverlays.Values) if (overlay != null) Destroy(overlay.gameObject);
+        activePulseCoroutines.Clear(); pulseOverlays.Clear();
     }
 
     private IEnumerator WiggleRoutine(RectTransform target, Vector2 basePosition, float distance, float duration)

@@ -10,6 +10,7 @@ public sealed class ProceduralSlashField : MonoBehaviour
     private static readonly int EndId = Shader.PropertyToID("_EndFrame");
     private static readonly int CutAngleId = Shader.PropertyToID("_CutAngle");
     private static uint _seedSequence = 0x9e3779b9;
+    private static readonly List<ProceduralSlashField> ImpactFields = new List<ProceduralSlashField>();
     private Mesh _mesh;
     private MeshRenderer _renderer;
     private Mesh _foregroundMesh;
@@ -25,6 +26,18 @@ public sealed class ProceduralSlashField : MonoBehaviour
     private Vector3 _origin;
     private Transform _visualRoot;
     private Camera _camera;
+    private int _capturedFacing;
+    private readonly List<CutRibbon> _cutRibbons = new List<CutRibbon>();
+    private struct CutRibbon
+    {
+        public Vector2 center, axis;
+        public float length, width, start, reveal, hold, decay;
+    }
+    private struct CutShape
+    {
+        public Vector3 start, end, center;
+        public float halfWidth, reveal, opacity, startFrame;
+    }
     public bool IsPlaying => _playing;
     public float SampledFrame { get; private set; }
     public int ActiveSeed { get; private set; }
@@ -37,7 +50,7 @@ public sealed class ProceduralSlashField : MonoBehaviour
     {
         Stop();
         if (settings == null || settings.material == null) return;
-        _settings = settings; _execution = execution; _preview = preview;
+        _settings = settings; _execution = execution; _preview = preview; _frame = 0f;
         if (_renderer == null)
         {
             _visualRoot = new GameObject("World Anchored Slash Field").transform;
@@ -57,6 +70,7 @@ public sealed class ProceduralSlashField : MonoBehaviour
             foreground.GetComponent<MeshFilter>().sharedMesh = _foregroundMesh;
         }
         _origin = origin;
+        _capturedFacing = facing >= 0 ? 1 : -1;
         _visualRoot.SetPositionAndRotation(origin, Quaternion.identity);
         _camera = Camera.main;
         _renderer.sharedMaterial = settings.material;
@@ -75,6 +89,7 @@ public sealed class ProceduralSlashField : MonoBehaviour
         ActiveSeed = settings.seed != 0 ? settings.seed : (int)_seedSequence;
         if (settings.screenMaskMode) BuildScreenMask(settings, facing); else BuildMesh(settings, ActiveSeed, facing);
         _playing = true; Sample(0f);
+        if (settings.impactDistortion != null && settings.impactDistortion.enabled) ImpactFields.Add(this);
     }
 
     public void SetLogicFrame(float frame) { _frame = frame; Sample(frame); }
@@ -109,6 +124,8 @@ public sealed class ProceduralSlashField : MonoBehaviour
 
     public void Stop()
     {
+        ImpactFields.Remove(this);
+        _cutRibbons.Clear();
         for (int i = 0; _actorRenderers != null && i < _actorRenderers.Length; i++)
             if (_actorRenderers[i] != null) _actorRenderers[i].forceRenderingOff = _originalHidden[i];
         _actorRenderers = null; _originalHidden = null;
@@ -118,6 +135,98 @@ public sealed class ProceduralSlashField : MonoBehaviour
     }
 
     private void OnDisable() => Stop();
+
+    public struct CutImpactSample
+    {
+        public Vector4 centerTime;
+        public Vector4 wave;
+        public Vector4 detail;
+        public Vector4 cutEndpoints;
+        public Vector4 cutShape;
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetImpactFields() => ImpactFields.Clear();
+
+    /// <summary>The latest visible active event owns the pulse; effects never accumulate globally.</summary>
+    public static bool TryGetCutImpact(Camera camera, out CutImpactSample sample)
+    {
+        sample = default;
+        for (int i = ImpactFields.Count - 1; i >= 0; i--)
+        {
+            var field = ImpactFields[i];
+            if (field == null || !field._playing || !field.isActiveAndEnabled) continue;
+            bool previewCamera = field._preview && camera.cameraType == CameraType.SceneView;
+            if (camera != field._camera && !previewCamera) continue;
+            if (!field._preview && (field._execution == null || !field._execution.IsOnField
+                || field._execution.owner.CurrentExecution != field._execution
+                || !field._execution.owner.IsAttacking())) continue;
+            var settings = field._settings?.impactDistortion;
+            if (settings == null || !settings.enabled || field.SampledFrame >= field._settings.endFrame) continue;
+            if (field.SampledFrame < settings.startFrame || !field.TrySampleCutShape(out var cut)) continue;
+            float pulseStart = Mathf.Max(settings.startFrame, cut.startFrame);
+            float progress = (field.SampledFrame - pulseStart) / Mathf.Max(1, settings.durationFrames);
+            if (progress < 0f || progress >= 1f) continue;
+            Vector3 viewport = camera.WorldToViewportPoint(cut.center);
+            if (viewport.z <= 0f) continue;
+            Vector3 start = camera.WorldToViewportPoint(cut.start), end = camera.WorldToViewportPoint(cut.end);
+            Vector3 normal = Vector3.Cross((cut.end - cut.start).normalized, Vector3.forward);
+            Vector3 width = camera.WorldToViewportPoint(cut.center + normal * cut.halfWidth) - viewport;
+            float halfWidth = new Vector2(width.x * camera.aspect, width.y).magnitude;
+            float envelope = (1f - progress) * (1f - progress) * cut.opacity;
+            sample.centerTime = new Vector4(viewport.x, viewport.y, progress, envelope);
+            sample.wave = new Vector4(0f, Mathf.Max(0.01f, settings.waveWidth),
+                Mathf.Clamp(settings.refractionPixels, 0f, 16f), Mathf.Clamp(settings.chromaticPixels, 0f, 8f));
+            sample.detail = new Vector4(Mathf.Clamp(settings.blurPixels, 0f, 4f), Mathf.Max(1, settings.referenceHeight), camera.aspect, 0f);
+            sample.cutEndpoints = new Vector4(start.x, start.y, end.x, end.y);
+            sample.cutShape = new Vector4(halfWidth, cut.reveal, 0f, 0f);
+            return true;
+        }
+        return false;
+    }
+
+    private bool TrySampleCutShape(out CutShape shape)
+    {
+        shape = default;
+        if (_settings.screenMaskMode)
+        {
+            // Match the actual screen-mask mesh, mirrored angle, opening and fade; never use the hitbox anchor.
+            Vector3 size = _foregroundMesh.bounds.size;
+            float angle = _settings.screenMaskAngle * Mathf.Deg2Rad;
+            Vector3 axis = new Vector3(Mathf.Cos(angle) * _capturedFacing, Mathf.Sin(angle), 0f);
+            Vector3 extent = axis * (size.magnitude * 0.5f);
+            shape.center = _visualRoot.TransformPoint(Vector3.zero);
+            shape.start = _visualRoot.TransformPoint(-extent);
+            shape.end = _visualRoot.TransformPoint(extent);
+            shape.halfWidth = Mathf.Lerp(0.14f, 0.008f, Mathf.Clamp01(SampledFrame / 20f)) * size.y;
+            shape.reveal = 1f;
+            shape.opacity = Mathf.SmoothStep(0f, 1f, SampledFrame / 2f)
+                * (1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(8f, Mathf.Max(9f, _settings.endFrame), SampledFrame)));
+            return shape.opacity > 0.002f;
+        }
+        for (int i = _cutRibbons.Count - 1; i >= 0; i--)
+        {
+            CutRibbon ribbon = _cutRibbons[i];
+            float age = SampledFrame - ribbon.start;
+            if (age < 0f) continue;
+            float decay = Mathf.Clamp01((age - ribbon.reveal - ribbon.hold) / Mathf.Max(1f, ribbon.decay));
+            float opacity = (1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.55f, 1f, decay)))
+                * Mathf.Clamp01((_settings.endFrame - SampledFrame) / 8f);
+            if (opacity < 0.002f) continue;
+            float shrink = Mathf.Lerp(1f, 0.62f, decay * decay);
+            Vector3 center = new Vector3(ribbon.center.x, ribbon.center.y, -0.05f);
+            Vector3 extent = new Vector3(ribbon.axis.x, ribbon.axis.y) * (ribbon.length * shrink * 0.5f);
+            shape.center = _visualRoot.TransformPoint(center);
+            shape.start = _visualRoot.TransformPoint(center - extent);
+            shape.end = _visualRoot.TransformPoint(center + extent);
+            shape.halfWidth = ribbon.width * Mathf.Lerp(1f, 0.012f, Mathf.Pow(decay, 0.7f)) * 0.5f;
+            shape.reveal = Mathf.Clamp01(age / Mathf.Max(1f, ribbon.reveal));
+            shape.opacity = opacity;
+            shape.startFrame = ribbon.start;
+            return true;
+        }
+        return false;
+    }
     private void OnDestroy()
     {
         Stop();
@@ -196,6 +305,12 @@ public sealed class ProceduralSlashField : MonoBehaviour
             Vector2 axis = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
             Vector2 normal = new Vector2(-axis.y, axis.x);
             float reverse = Next(ref random) > 0.5f ? 1f : -1f;
+            if (!seam) _cutRibbons.Add(new CutRibbon
+            {
+                center = new Vector2(center.x * _capturedFacing, center.y),
+                axis = new Vector2(axis.x * _capturedFacing, axis.y) * reverse,
+                length = length, width = width, start = start, reveal = reveal, hold = hold, decay = decay
+            });
             int first = vertices.Count;
             for (int corner = 0; corner < 4; corner++)
             {

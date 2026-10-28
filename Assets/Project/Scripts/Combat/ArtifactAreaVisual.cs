@@ -26,6 +26,12 @@ public sealed class ArtifactAreaVisual : MonoBehaviour
     [Min(0.01f)] public float expansionSeconds = 0.22f;
     [Min(0.01f)] public float attackFadeSeconds = 0.16f;
     [Range(0f, 1f)] public float loopOpacity = 0.14f;
+    [Tooltip("Presentation-only shockwave size relative to the damage radius.")]
+    [Min(1f)] public float shockwaveScale = 2.5f;
+    [Tooltip("Presentation-only multiplier for shockwave expansion and fade time.")]
+    [Min(1f)] public float shockwaveDurationMultiplier = 2f;
+
+    private float ShockwaveDuration => (expansionSeconds + attackFadeSeconds) * shockwaveDurationMultiplier;
 
     public FieldEffectVisual.AnimationPhase Phase { get; private set; }
     public bool IsFinished => Phase == FieldEffectVisual.AnimationPhase.Inactive;
@@ -195,7 +201,7 @@ public sealed class ArtifactAreaVisual : MonoBehaviour
         _lifetime += dt;
         if (_attackTime >= 0f) _attackTime += dt;
         if ((style == VisualStyle.BloodExplosion || style == VisualStyle.ThunderStrike)
-            && _attackTime >= expansionSeconds + attackFadeSeconds)
+            && _attackTime >= Mathf.Max(expansionSeconds + attackFadeSeconds, wave != null ? ShockwaveDuration : 0f))
         { ClearImmediately(); return; }
         if ((style != VisualStyle.ThunderStrike || _attackTime < 0f)
             && Phase == FieldEffectVisual.AnimationPhase.Ending && _time >= exitSeconds)
@@ -272,10 +278,18 @@ public sealed class ArtifactAreaVisual : MonoBehaviour
             attackRing.startColor = attackRing.endColor = color;
             if (wave != null)
             {
+                // The decorative wave has its own tail; the attack ring still shows the true hit radius.
+                float waveProgress = _attackTime < 0f ? 0f
+                    : Mathf.Clamp01(_attackTime / (expansionSeconds * shockwaveDurationMultiplier));
+                Vector2 waveRadii = Vector2.Lerp(new Vector2(_attackStartRadius, _attackStartRadius * shieldAspect),
+                    HitRadii * shockwaveScale, Mathf.SmoothStep(0f, 1f, waveProgress));
+                float waveOpacity = _attackTime < 0f ? 0f
+                    : 1f - Mathf.Clamp01((_attackTime - expansionSeconds * shockwaveDurationMultiplier)
+                        / (attackFadeSeconds * shockwaveDurationMultiplier));
                 wave.transform.position = attackRing.transform.position;
-                wave.transform.localScale = new Vector3(CurrentAttackRadii.x * 2f, CurrentAttackRadii.y * 2f, 1f);
+                wave.transform.localScale = new Vector3(waveRadii.x * 2f, waveRadii.y * 2f, 1f);
                 Color waveColor = Color.Lerp(tint, Color.white, style == VisualStyle.HexShield ? 0.35f : 0.08f);
-                waveColor.a = attackOpacity * (style == VisualStyle.DarkFlameMark ? 0.3f : 0.65f);
+                waveColor.a = waveOpacity * (style == VisualStyle.DarkFlameMark ? 0.55f : 0.85f);
                 if (Phase == FieldEffectVisual.AnimationPhase.Ending) waveColor.a *= _opacity;
                 wave.color = waveColor;
             }

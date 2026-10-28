@@ -797,6 +797,11 @@ namespace CombatEditor.UI
                         ultimate.activationSFX = value;
                         MarkDirty();
                     });
+                    AddFloatField(body, "Activation SFX Volume", ultimate.activationSFXVolume, value => {
+                        RecordUndo("Edit Activation SFX Volume");
+                        ultimate.activationSFXVolume = Mathf.Clamp01(value);
+                        MarkDirty();
+                    });
                     AddFloatField(body, "Voice Delay", ultimate.voiceDelay, value => {
                         RecordUndo("Edit Delay");
                         ultimate.voiceDelay = value;
@@ -840,6 +845,8 @@ namespace CombatEditor.UI
             if (string.IsNullOrEmpty(cat)) return null;
 
             int idx = -1;
+            if (cat.StartsWith("QTE_") && int.TryParse(cat.Substring(4), out idx) && idx < character.actionResolverTable.qteActions.Count)
+                return character.actionResolverTable.qteActions[idx];
             if (cat.StartsWith("Combo_") && int.TryParse(cat.Substring(6), out idx) && idx < character.actionResolverTable.comboActions.Count)
                 return character.actionResolverTable.comboActions[idx];
             if (cat.StartsWith("Skill_") && int.TryParse(cat.Substring(6), out idx) && idx < character.actionResolverTable.skillActions.Count)
@@ -1400,6 +1407,7 @@ namespace CombatEditor.UI
                         MarkDirty();
                     });
 
+                    BuildCutImpactFields(inner, entry.impactDistortion ??= new CutImpactDistortionSettings());
                     AddSeparator(inner, "Transform Keys");
                     if (entry.transformKeys == null) entry.transformKeys = new List<VFXTransformKey>();
 
@@ -1745,6 +1753,12 @@ namespace CombatEditor.UI
                 entry.activationSFX = value as AudioClip;
                 MarkDirty();
             });
+            AddFloatField(inner, "SFX Volume", entry.activationSFXVolume, value =>
+            {
+                RecordUndo("Edit Event SFX Volume");
+                entry.activationSFXVolume = Mathf.Clamp01(value);
+                MarkDirty();
+            });
             AddFloatField(inner, "Voice Delay", entry.voiceDelay, value =>
             {
                 RecordUndo("Edit Event Voice Delay");
@@ -1812,6 +1826,55 @@ namespace CombatEditor.UI
 
             AddSeparator(inner, "Screen Impulse");
             BuildGameImpulseRequestFields(inner, settings.impulse, "Screen Impulse");
+            BuildCameraControlFields(inner, settings.cameraControl ??= new ScreenImpulseCameraSettings());
+        }
+
+        private void BuildCameraControlFields(VisualElement inner, ScreenImpulseCameraSettings camera)
+        {
+            AddSeparator(inner, "Camera Control");
+            AddToggleField(inner, "Enable Camera Control", camera.enabled, value =>
+            {
+                RecordUndo("Toggle Screen Impulse Camera Control");
+                camera.enabled = value;
+                MarkDirtyAndRebuild();
+            });
+            if (!camera.enabled) return;
+            AddFloatField(inner, "Zoom Multiplier (<1 In / >1 Out)", camera.zoomMultiplier, value =>
+            {
+                RecordUndo("Edit Screen Impulse Zoom");
+                camera.zoomMultiplier = Mathf.Max(0.01f, value);
+                MarkDirty();
+            });
+            AddToggleField(inner, "Jump Cut (Lock Position)", camera.jumpCutLock, value =>
+            {
+                RecordUndo("Toggle Screen Impulse Camera Lock");
+                camera.jumpCutLock = value;
+                MarkDirty();
+            });
+            AddIntField(inner, "Transition In Frames (0 = Cut)", camera.transitionInFrames, value =>
+            {
+                RecordUndo("Edit Screen Impulse Camera Transition");
+                camera.transitionInFrames = Mathf.Max(0, value);
+                MarkDirty();
+            });
+            AddFloatField(inner, "Horizontal Offset (-1 to 1 Screens)", camera.horizontalViewportOffset, value =>
+            {
+                RecordUndo("Edit Camera Offset");
+                camera.horizontalViewportOffset = Mathf.Clamp(value, -1f, 1f);
+                MarkDirty();
+            });
+            AddIntField(inner, "Peak Zoom Hold Frames", camera.holdFrames, value =>
+            {
+                RecordUndo("Edit Screen Impulse Camera Hold");
+                camera.holdFrames = Mathf.Max(0, value);
+                MarkDirty();
+            });
+            AddIntField(inner, "Return To Normal Frames (0 = Cut)", camera.returnFrames, value =>
+            {
+                RecordUndo("Edit Screen Impulse Camera Return");
+                camera.returnFrames = Mathf.Max(0, value);
+                MarkDirty();
+            });
         }
 
         private void BuildAfterImageActionEventFields(VisualElement inner, ActionEventEntry entry)
@@ -1909,46 +1972,38 @@ namespace CombatEditor.UI
             AddFloatField(inner, "Screen Cut Angle (deg)", settings.screenMaskAngle, value => { RecordUndo("Edit Screen Cut Angle"); settings.screenMaskAngle = value; MarkDirty(); });
             AddVector2Field(inner, "Reveal Frames", settings.revealFrames, value => { RecordUndo("Edit Slash Reveal"); settings.revealFrames = value; MarkDirty(); });
             AddVector2Field(inner, "Decay Frames", settings.decayFrames, value => { RecordUndo("Edit Slash Decay"); settings.decayFrames = value; MarkDirty(); });
+            BuildCutImpactFields(inner, settings.impactDistortion ??= new CutImpactDistortionSettings());
             AddToggleField(inner, "Hide Actor", settings.hideActor, value => { RecordUndo("Edit Slash Visibility"); settings.hideActor = value; MarkDirty(); });
             AddIntField(inner, "Hide At", settings.hideFromFrame, value => { RecordUndo("Edit Actor Hide Frame"); settings.hideFromFrame = Mathf.Max(0, value); MarkDirty(); });
             AddIntField(inner, "Show At", settings.showAtFrame, value => { RecordUndo("Edit Actor Show Frame"); settings.showAtFrame = Mathf.Max(0, value); MarkDirty(); });
         }
 
-        private void BuildActionCameraMotionFields(VisualElement inner, ActionEventEntry entry)
+        private void BuildCutImpactFields(VisualElement inner, CutImpactDistortionSettings impact)
         {
-            var settings = entry.cameraMotionSettings ??= new ActionCameraMotionSettings();
-            settings.keys ??= new List<ActionCameraMotionSettings.Key>();
-            AddSeparator(inner, "Action-frame Camera Envelope");
-            foreach (var key in settings.keys)
-            {
-                AddIntField(inner, "Relative Frame", key.frame, value =>
-                {
-                    RecordUndo("Edit Camera Frame"); key.frame = Mathf.Max(0, value); MarkDirty();
-                });
-                AddFloatField(inner, "Size Multiplier", key.sizeMultiplier, value =>
-                {
-                    RecordUndo("Edit Camera Lens"); key.sizeMultiplier = Mathf.Clamp(value, 0.8f, 1f); MarkDirty();
-                });
-                AddFloatField(inner, "Horizontal Viewport Offset", key.horizontalViewportOffset, value =>
-                {
-                    RecordUndo("Edit Camera Offset"); key.horizontalViewportOffset = Mathf.Clamp(value, -0.03f, 0.03f); MarkDirty();
-                });
-            }
-            inner.Add(new Button(() =>
-            {
-                RecordUndo("Add Camera Key");
-                settings.keys.Add(new ActionCameraMotionSettings.Key { frame = settings.DurationFrames - 1 });
-                MarkDirtyAndRebuild();
-            }) { text = "Add Camera Key" });
-            if (settings.keys.Count > 0)
-                inner.Add(new Button(() =>
-                {
-                    RecordUndo("Remove Last Camera Key"); settings.keys.RemoveAt(settings.keys.Count - 1);
-                    MarkDirtyAndRebuild();
-                }) { text = "Remove Last Key" });
+            AddSeparator(inner, "Cut Impact Distortion");
+            AddToggleField(inner, "Cut-following Refraction", impact.enabled, value => { RecordUndo("Edit Cut Refraction"); impact.enabled = value; MarkDirty(); });
+            AddIntField(inner, "Impact Start Frame", impact.startFrame, value => { RecordUndo("Edit Cut Impact Start"); impact.startFrame = Mathf.Max(0, value); MarkDirty(); });
+            AddIntField(inner, "Impact Duration", impact.durationFrames, value => { RecordUndo("Edit Cut Impact Duration"); impact.durationFrames = Mathf.Max(1, value); MarkDirty(); });
+            AddFloatField(inner, "Cut Distortion Width (screen height)", impact.waveWidth, value => { RecordUndo("Edit Cut Wave Width"); impact.waveWidth = Mathf.Max(0.01f, value); MarkDirty(); });
+            AddFloatField(inner, "Refraction (pixels)", impact.refractionPixels, value => { RecordUndo("Edit Cut Refraction Strength"); impact.refractionPixels = Mathf.Clamp(value, 0f, 16f); MarkDirty(); });
+            AddFloatField(inner, "Chromatic Split (pixels)", impact.chromaticPixels, value => { RecordUndo("Edit Cut Chromatic Split"); impact.chromaticPixels = Mathf.Clamp(value, 0f, 8f); MarkDirty(); });
+            AddFloatField(inner, "Wave Blur (pixels)", impact.blurPixels, value => { RecordUndo("Edit Cut Wave Blur"); impact.blurPixels = Mathf.Clamp(value, 0f, 4f); MarkDirty(); });
+            AddIntField(inner, "Impact Reference Height", impact.referenceHeight, value => { RecordUndo("Edit Cut Pixel Reference"); impact.referenceHeight = Mathf.Max(1, value); MarkDirty(); });
         }
 
-        private void BuildGameImpulseRequestFields(VisualElement inner, GameImpulseRequest request, string undoPrefix)
+                private void BuildActionCameraMotionFields(VisualElement inner, ActionEventEntry entry)
+        {
+            var settings = entry.cameraMotionSettings ??= new ActionCameraMotionSettings();
+            if (settings.zoomControl == null)
+            {
+                RecordUndo("Convert Camera Event To Single Zoom");
+                settings.zoomControl = settings.CreateSingleZoomSettings();
+                MarkDirty();
+            }
+            inner.Add(new HelpBox("One zoom per event: transition to the target, hold that zoom, then return to normal camera scale. Durations use gameplay frames and can finish after the action ends. Pause/hitstop pause the timer. A newer camera event replaces this one.", HelpBoxMessageType.Info));
+            BuildCameraControlFields(inner, settings.zoomControl);
+        }
+private void BuildGameImpulseRequestFields(VisualElement inner, GameImpulseRequest request, string undoPrefix)
         {
             if (request == null)
             {
@@ -2361,6 +2416,18 @@ namespace CombatEditor.UI
                 hitbox.hitSFX = value;
                 MarkDirty();
             });
+            AddFloatSlider(body, "Volume", hitbox.hitSFXVolume, 0f, 2f, value =>
+            {
+                RecordUndo("Edit Hit SFX Volume");
+                hitbox.hitSFXVolume = Mathf.Clamp(value, 0f, 2f);
+                MarkDirty();
+            });
+            AddFloatSlider(body, "Pitch", hitbox.hitSFXPitch, 0.1f, 3f, value =>
+            {
+                RecordUndo("Edit Hit SFX Pitch");
+                hitbox.hitSFXPitch = Mathf.Clamp(value, 0.1f, 3f);
+                MarkDirty();
+            });
             AddEnumField(body, "Hit VFX Type", hitbox.hitVFXType, value =>
             {
                 RecordUndo("Edit Hit VFX Type");
@@ -2460,6 +2527,18 @@ namespace CombatEditor.UI
             {
                 RecordUndo("Edit Grab Hit SFX");
                 hitbox.hitSFX = value;
+                MarkDirty();
+            });
+            AddFloatSlider(body, "Volume", hitbox.hitSFXVolume, 0f, 2f, value =>
+            {
+                RecordUndo("Edit Hit SFX Volume");
+                hitbox.hitSFXVolume = Mathf.Clamp(value, 0f, 2f);
+                MarkDirty();
+            });
+            AddFloatSlider(body, "Pitch", hitbox.hitSFXPitch, 0.1f, 3f, value =>
+            {
+                RecordUndo("Edit Hit SFX Pitch");
+                hitbox.hitSFXPitch = Mathf.Clamp(value, 0.1f, 3f);
                 MarkDirty();
             });
             AddEnumField(body, "Hit VFX Type", hitbox.hitVFXType, value =>

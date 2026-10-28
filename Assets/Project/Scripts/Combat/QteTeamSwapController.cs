@@ -23,6 +23,9 @@ public sealed class QteTeamSwapController : MonoBehaviour
     private CharacterObject _source;
     private EnemyController _target;
     private float _expiresAt = float.NegativeInfinity;
+    private CharacterObject[] _windowTeam;
+    private int _windowTeamCount;
+    private int _sourceFieldSession;
     private AudioSource _audio;
     private readonly Collider2D[] _targetHits = new Collider2D[64];
 
@@ -43,11 +46,11 @@ public sealed class QteTeamSwapController : MonoBehaviour
         SceneManager.activeSceneChanged += HandleSceneChanged;
         if (_team != null)
         {
-            _team.OnTeamChanged -= Clear;
-            _team.OnCurrentCharacterChanged -= Clear;
+            _team.OnTeamChanged -= HandleTeamChanged;
+            _team.OnCurrentCharacterChanged -= HandleCurrentCharacterChanged;
             _team.OnCharacterHealthUpdated -= HandleHealth;
-            _team.OnTeamChanged += Clear;
-            _team.OnCurrentCharacterChanged += Clear;
+            _team.OnTeamChanged += HandleTeamChanged;
+            _team.OnCurrentCharacterChanged += HandleCurrentCharacterChanged;
             _team.OnCharacterHealthUpdated += HandleHealth;
         }
     }
@@ -58,14 +61,29 @@ public sealed class QteTeamSwapController : MonoBehaviour
         SceneManager.activeSceneChanged -= HandleSceneChanged;
         if (_team != null)
         {
-            _team.OnTeamChanged -= Clear;
-            _team.OnCurrentCharacterChanged -= Clear;
+            _team.OnTeamChanged -= HandleTeamChanged;
+            _team.OnCurrentCharacterChanged -= HandleCurrentCharacterChanged;
             _team.OnCharacterHealthUpdated -= HandleHealth;
         }
         Clear();
     }
 
     private void HandleSceneChanged(Scene previous, Scene next) => Clear();
+    private void HandleCurrentCharacterChanged()
+    {
+        if (_source != null && (_team.CurrentCharacter != _source
+            || _team.playerCharacter?.Combat?.FieldSession != _sourceFieldSession)) Clear();
+    }
+
+    private void HandleTeamChanged()
+    {
+        if (_source == null) return;
+        // TeamChanged also reports HP/stat/buff refreshes; only roster changes invalidate readiness.
+        if (_windowTeam == null || _team.CharacterCount != _windowTeamCount) { Clear(); return; }
+        for (int i = 0; i < _windowTeam.Length; i++)
+            if (_team.GetCharacterAtIndex(i) != _windowTeam[i]) { Clear(); return; }
+        HandleCurrentCharacterChanged();
+    }
     private void HandleHealth(CharacterObject character, float current, float maximum)
     {
         if (character == _source && current <= 0f) Clear();
@@ -76,6 +94,8 @@ public sealed class QteTeamSwapController : MonoBehaviour
         _source = null;
         _target = null;
         _expiresAt = float.NegativeInfinity;
+        _windowTeam = null;
+        _windowTeamCount = 0;
     }
 
     public bool TryGetWindow(CharacterObject incoming, out float remaining, out float total)
@@ -83,6 +103,7 @@ public sealed class QteTeamSwapController : MonoBehaviour
         total = windowSeconds;
         remaining = Mathf.Max(0f, _expiresAt - Time.time);
         return isActiveAndEnabled && _team != null && _source != null && _team.CurrentCharacter == _source
+            && _team.playerCharacter?.Combat?.FieldSession == _sourceFieldSession
             && incoming != null && incoming != _source && incoming.qteSwap != null && incoming.qteSwap.enabled
             && remaining > 0f && _team.ContainsCharacter(incoming) && _team.IsCharacterAlive(incoming)
             && _team.IsCharacterAlive(_source);
@@ -101,7 +122,13 @@ public sealed class QteTeamSwapController : MonoBehaviour
         QteSwapDefinition profile = hit.sourceCharacter.qteSwap;
         if (profile == null || !profile.MatchesTrigger(hit.actionId)) return;
         bool wasReady = _source == hit.sourceCharacter && Time.time < _expiresAt;
+        if (_source != hit.sourceCharacter || _windowTeam == null)
+        {
+            _windowTeam = _team.GetTeamSnapshot();
+            _windowTeamCount = _team.CharacterCount;
+        }
         _source = hit.sourceCharacter;
+        _sourceFieldSession = execution.fieldSession;
         _target = hit.target;
         _expiresAt = Time.time + Mathf.Max(0f, windowSeconds);
         if (!wasReady && profile.readySfx != null && _audio != null) _audio.PlayOneShot(profile.readySfx);
@@ -114,16 +141,7 @@ public sealed class QteTeamSwapController : MonoBehaviour
 
     public bool CanUsePreparedTransition()
     {
-        PlayerCharacter player = _team != null ? _team.playerCharacter : null;
-        PlayerStateMachine fsm = player != null ? player.StateMachine : null;
-        if (player == null || player.IsDead || fsm == null || !fsm.IsGroundedContext
-            || Project.UI.InputLockManager.IsLocked || Time.timeScale <= 0f || _team.IsSwitchOnCooldown
-            || player.Combat?.HasGrabbedEnemy() == true) return false;
-        if (fsm.CurrentStateId == PlayerStateId.Idle || fsm.CurrentStateId == PlayerStateId.Running) return true;
-        if (fsm.CurrentStateId != PlayerStateId.Attacking && fsm.CurrentStateId != PlayerStateId.Skill
-            && fsm.CurrentStateId != PlayerStateId.Ultimate && fsm.CurrentStateId != PlayerStateId.QteIntro) return false;
-        AttackStepData step = player.Combat?.GetCurrentStepData();
-        return step != null && !step.autoChainToNext && player.Combat.CurrentExecution?.HasConfirmedHit == true;
+        return _team?.playerCharacter?.StateMachine?.CanSwitchCharacter(ignoreCooldown: true) == true;
     }
 
     public bool TryPrepare(int index, out CombatAction action, out AttackStepData step,
@@ -146,7 +164,7 @@ public sealed class QteTeamSwapController : MonoBehaviour
     public bool TryPrepareEntry(int index, out QtePreparedEntry entry)
     {
         entry = default;
-        if (_team == null || !_team.CanSwitchToIndex(index)
+        if (_team == null || !_team.CanSwitchToIndex(index, ignoreCooldown: true)
             || !TryGetWindow(_team.GetCharacterAtIndex(index), out _, out _) || !CanUsePreparedTransition()) return false;
         CharacterObject incoming = _team.GetCharacterAtIndex(index);
         if (!incoming.qteSwap.TryResolveIntro(incoming.actionResolverTable, out CombatAction action, out AttackStepData step)) return false;
@@ -174,8 +192,7 @@ public sealed class QteTeamSwapController : MonoBehaviour
 
     public void PlayIntroHandoff()
     {
-        bool plunge = _team?.CurrentCharacter?.qteSwap?.entryMode == QteEntryMode.LightningPlunge;
-        if (!plunge && Application.isPlaying && _team != null && _team.playerCharacter != null)
+        if (Application.isPlaying && _team != null && _team.playerCharacter != null)
         {
             CameraManager.instance?.ResetLookAheadForCharacterSwap(_team.playerCharacter.Movement?.RB, introSlowMotionSeconds);
             CameraManager.instance?.PlayQteIntroImpact(introCameraSizeReduction, introCameraImpactFrames);

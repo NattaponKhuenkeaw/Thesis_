@@ -15,15 +15,19 @@ Implemented after separate design and architecture approvals on 2026-10-28. Apri
 
 ## Current behavior
 
-Main's prepared QTE uses captured enemy-relative entry (latest saved user tuning observed during the exit revision: X 1.5 / Y 4), physical vertical plunge and a verified floor contact before the existing hit pipeline. The thunderstrike has **two pre-impact logic ticks**, impact at tick 3, and a long near-vertical bolt extending above the visible camera top. Fine kinks/forks replace the old winding body. **Main's intro slow motion is restored** after the user rejected its removal: it uses the existing QteTeamSwapController values, saved on the Player prefab as 0.08× for 0.5 real seconds when inspected. The class default duration is 0.24 seconds; saved prefab tuning is retained. Other characters' intro behavior and normal hitstop/pause remain authoritative.
+Main's prepared QTE uses captured enemy-relative entry (latest saved user tuning observed during the atomized-exit revision: X -1.5 / Y 5), physical vertical plunge and a verified floor contact before the existing hit pipeline. The thunderstrike has **two pre-impact logic ticks**, impact at tick 3, and a long near-vertical bolt extending above the visible camera top. Fine kinks/forks replace the old winding body. **Main's intro slow motion is restored** after the user rejected its removal: it uses the existing QteTeamSwapController values, saved on the Player prefab as 0.08× for 0.5 real seconds when inspected. The class default duration is 0.24 seconds; saved prefab tuning is retained. Other characters' intro behavior and normal hitstop/pause remain authoritative.
 
-The body is hidden during flight, revealed in its landing pose at impact and sampled into Standing during the existing 120-tick recovery. Existing normal attack continuation executes the saved Execution Breakdown next node. No new resource charge or damage multiplier was added.
+The body is hidden during flight, revealed in its landing pose at impact and sampled into Standing during the saved recovery. Existing normal attack continuation executes the saved Execution Breakdown next node. No new resource charge or damage multiplier was added.
 
-The ground effect is 2.5 times its original size without scaling the falling bolt. Latest readable-impact starting values at 60 Hz: hold 18 ticks (0.30 s), then burst fade 90 ticks (1.50 s), for a 1.80-second burst envelope; column fade 54 ticks after hold (1.20 seconds total); local light fade 36 ticks after hold (0.90 seconds total); local flash 10 ticks; wind 108 ticks (1.80 s); electrical cracks/remnants 118 ticks (1.97 s). Spark/debris/residual lifetimes were lengthened too. These fit inside the long recovery without extending damage. Early continuation or cancellation still releases the owned tail to hand presentation cleanly to the next action.
+The ground effect uses impactScale 2.5 while the falling bolt stays narrow. Readable impact hold is 18 ticks. Existing light, column, wind and residual settings remain independently editable. The current action timing is 2 startup / 24 active / 26 recovery (52 ticks total); the longer cosmetic tail now continues after normal completion or authored follow-up, with no added damage or action lockout. Cancellation and disable clear it.
 
-The latest exit adds structural dissipation after that readable hold: the column contracts down and thins, staggered spike tips retract while narrowing, charged chips detach/rotate/drift outward, cracks drain toward the center, and wind arcs rotate/shorten while traveling outward. UV/world-cell shader erosion breaks the surviving silhouettes into fine glowing remnants. Alpha remains for final cleanup, but the exit is no longer a stationary image losing opacity. Soft halos/pools remain smooth rather than inheriting the erosion mask.
+The latest revision restores the earlier broad explosion silhouette at Apricha's request. Thick irregular dark-purple lobes and bright white/violet branches radiate around the long column. Their exit opens from the contact point toward the outer tips, with lateral drift and upward float. The lobes become shorter/sparser at staggered times and fade, while low wind spreads. No grain, shatter, noise dissolve, overall root-scale animation or separate curved sparkle-wisp pass. Ground-plane clamping prevents solid lobe geometry drawing below the impact surface.
 
-Exit starting values: 12 ticks of extra delay after the 18-tick hold, so breakup starts about 0.5 seconds after contact; up to 78 ticks of breakup, bounded by each layer's existing lifetime. Column contraction finishes within its existing 72-tick hold+fade envelope; ground spikes finish by 108 ticks, cracks by 118. The sequence still fits the 120-tick recovery. Intro slowdown, strike/contact/damage timing, palette, camera, saved height and follow-up are not changed by the exit design.
+Current cosmetic starting values: saved hold 18 / delay 0, exit duration 78, scatter 0.65, lift 0.6; sparks 18, debris 10, residual sparks 4. Current saved action and entry tuning remain untouched. Cosmetic tail ownership, interruption cleanup, action-clock sampling and normal follow-up behavior remain as implemented previously.
+
+The reported colored artifact prompted inspection of both global and action-local chromatic paths. DefaultVolumeProfile had ChromaticAberration active at intensity 0.1; it is now inactive with intensity 0. Main's saved cut chromaticPixels strengths (2/3) are now 0, including follow-up effects; new distortion profiles default to 0. Main plunge's optional refraction is disabled, and MainCutImpactAuthoring preserves that disabled state. The shared cut refraction/blur capability remains for other authored effects. No dependencies or renderer-feature configuration changed in this correction. Procedural Slash remains free of noise dissolve.
+
+Secondary purple electricity now surrounds both phases: short angular arcs with occasional forks, bright HDR purple cores and soft additive halos pulse beside the falling bolt and around the impact perimeter. Eight sparse falling sparks use the existing ImpactSparks Particle System. The existing broad blast/exit is unchanged. The formerly unused GroundCracks geometry layer carries accent cores, with existing VioletEnvelope / SoftGlow / GroundGlow layers supplying edge and halo; prefab hierarchy is unchanged. No chromatic splitting, screen-space distortion, new package/material or whole-object scaling was added.
 
 The QTE root's NormalHitbox is **Heavy**, preserving its existing damage ratio, type, dimensions and reaction data. The much larger effect is cosmetic; the actual hitbox has not been enlarged to match its wind/crack reach.
 
@@ -46,7 +50,6 @@ LightningPlungeVFX [LightningPlungeVFX]
     DarkPurpleAura
     SoftGlow
     GroundGlow
-    ExitFragments
   Particles
     ImpactSparks
     Debris
@@ -64,9 +67,11 @@ The asset folder also contains `main_qte_lightning_plunge_actor.anim` and a QTE-
 
 Select Main's CharacterObject in Unity and expand **Qte Swap → Plunge**:
 
+Electrical accents are exposed separately under **Purple Electrical Accents**: Falling Arc Count 6, Impact Arc Count 9, Spread 1, Arc Length 0.8, Width 0.028, Glow 1.2, HDR purple tint, Falling Spark Count 8. These are tunable starting values. Reduce count if arcs compete with the broad silhouette; increase Glow for stronger soft halos rather than increasing flash area. **Add Main Plunge Electrical Accents** saves only these controls.
+
 | Setting | Current value / effect |
 | --- | --- |
-| Target Start Offset | Enemy-relative, X follows approach facing. Latest saved user tuning X 1.5 / Y 4 is preserved; older offsets below are historical. |
+| Target Start Offset | Enemy-relative, X follows approach facing. Latest saved user tuning X -1.5 / Y 5 is preserved; older offsets below are historical. |
 | Camera Actor Offset Y | 1.5 world units above the body root, independent of zoom |
 | Camera Return Seconds | 0.45 scaled seconds, starting at contact or early release; blends toward the live preferred camera |
 | Visuals / Scale | Overall shape size, including falling bolt |
@@ -75,10 +80,11 @@ Select Main's CharacterObject in Unity and expand **Qte Swap → Plunge**:
 | Impact Hold Frames | 18; keep the silhouette at full strength before fading |
 | Column / Light Fade Frames | 54 / 36 after hold; replaces earlier hard-coded 14 / 18-tick fades |
 | Flash / Burst / Wind / Residual Frames | 10 / 90 / 108 / 118 logic ticks; burst fade follows the hold |
-| Exit Delay Frames | 12 ticks after the impact hold; increase to keep the full silhouette longer |
-| Exit Frames | 78-tick starting value; capped to each layer's remaining visual lifetime |
-| Exit Scatter | 0.65 before effect scale; outward displacement during retraction and fragment travel |
-| Exit Fragment Count | 24; deterministic rotating chips from the impact spokes, not new damage particles |
+| Exit Delay Frames | Saved 0 after the 18-tick hold; later delays the outward release |
+| Exit Frames | 78-tick starting value for the broad blast clearing motion |
+| Exit Scatter | 0.65 additional outward wavefront travel relative to impact radius |
+| Storm Lift | 0.6 upward drift of clearing explosion lobes before impact scale |
+| Sparks / Debris / Residual | 18 / 10 / 4 supporting particles; impact silhouette comes from broad geometry |
 | Core / Envelope Width | Bright path thickness |
 | Minimum Bolt Length / Above Screen Padding | 14 / 2 world units; the upper endpoint also follows the camera top so the strike enters from outside the frame |
 | Bolt Jitter | 0.12 world units; bounded side deflection, not a fraction of bolt length |
@@ -96,7 +102,7 @@ Use **Tools → Project → Combat → Preview Main Lightning Plunge** to scrub 
 
 **Polish Main Thunderstrike** explicitly reapplies the two-tick startup and dark-purple/HDR palette while preserving current height, camera settings, Heavy damage data, recovery and follow-up. **Lengthen Main Thunderstrike Impact** applies only the latest hold/fade values; it does not regenerate palette, actor clip, motion or camera settings. These are revision authoring commands, not automatic runtime resets. Shader/material controls include `_Emission`, `_Softness`, `_Profile` (ribbon/radial) and `_DstBlend` (additive/alpha). No reference image pixels/text were imported into the project.
 
-**Author Main Plunge Dissipation** applies only the exit starting values and adds the saved ExitFragments geometry group; it preserves existing impact timing, shaders/material tuning and gameplay data. `_Dissolve` is driven through per-renderer MaterialPropertyBlocks from the same action frame as retraction/fragments; pool reuse resets it on the next sample. New meshes are cached like the other effect layers, with no per-frame fragment GameObject creation or independent exit coroutine.
+**Author Main Plunge Dissipation** now applies the broad blast exit starting values and disables Main plunge refraction plus Main's saved cut RGB split. It preserves saved hold/delay and gameplay tuning. No fragment or sparkle-wisp group is created. **Capture Main Lightning Plunge Motion** renders sequential preview frames to the OS temp folder without changing gameplay scenes.
 
 Standalone use: obtain/reuse a LightningPlungeVFX prefab instance, call `Begin(settings, start, contact, surfaceNormal, seed)`, then `Sample(actionFrame, impactFrame, endFrame)` from its owner's clock and `Stop()` before release. It has no damage, target search, camera or actor visibility authority. The QTE state manages those gameplay concerns.
 
@@ -116,7 +122,9 @@ All script paths above are relative to `Assets/Project/`. Unity generated actual
 
 ## Validation and limitations
 
-**Latest exit-animation validation:** compiled and rendered through Unity with zero console errors in the pass. Captures at action frames 55 and 90 were visually inspected: the former shows a shortened/thinned column, retreating broken spike geometry and detached chips; the latter shows small ground remnants and shortened drifting arcs. Early impact hold/startup were kept, and fragment/erosion geometry is sampled deterministically so scrubbing or skipped render frames do not require replaying a coroutine. This is isolated visual validation, not a full prepared-swap or subjective game-feel acceptance claim. No automated tests were added or run.
+**Electrical-accent validation:** Compiled and captured 41 sequential Unity preview frames. Inspected falling frame 0, impact frame 15 and tail frame 54; purple forks/halos are visible around the approved blast. Fresh [electrical-motion.gif](electrical-motion.gif), electrical-falling.png, electrical-impact.png and electrical-tail.png contain this revision. Standard phase capture encountered a Windows mapped-file lock on the old phase-000.png; motion capture used a separate output folder successfully. No new compile/invalid-bounds errors appeared in the completed motion capture. Existing unrelated editor NullReferenceException persists. No automated tests added or run; live readability and pause/cancel/reuse remain human review items.
+
+**Latest exit-animation validation:** Unity compiled. Isolated phases 14, 55 and 72 were inspected for the restored broad blast, opening center and floating smaller lobes; 41 sequential frames regenerated [storm-motion.gif](storm-motion.gif). Saved Main cut chromatic strengths were checked to be 0, the plunge refraction flag is off and the default profile's chromatic override is inactive. No new compilation or invalid-bounds errors appeared in the final motion capture log. Existing unrelated Unity editor NullReferenceException persists; a clean full-game console or live verification of the user's exact colored-artifact reproduction is not claimed. No automated tests were added or run.
 
 **Latest pacing correction:** source/asset inspection confirms Main once again uses PlayIntroHandoff's saved slowdown. The Player prefab remains 0.08× / 0.5 real seconds; its settings were not edited. The live artist preview now includes that same handoff presentation, while the isolated visual scrubber remains at normal logic speed. The narrow timing authoring command saved hold/column/light/flash/burst/wind/residual values 18/54/36/10/90/108/118. Regenerated phase 55 and 90 captures were inspected: the large burst remains strong around 0.9 seconds and visibly fades around 1.5 seconds instead of disappearing early. No damage, startup, recovery, Heavy tier, camera or saved height was reset. Compilation and visual rendering checks were used; no automated tests were added/run.
 

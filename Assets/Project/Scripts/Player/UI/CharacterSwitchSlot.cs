@@ -312,11 +312,10 @@ public class CharacterSwitchSlot : MonoBehaviour
         float remaining = 0f;
         float total = 0f;
         bool ready = !isCurrent && qte != null && qte.TryGetWindow(boundCharacter, out remaining, out total);
-        bool actionable = ready && qte.CanHandoffTo(slotIndex);
         if (qteReadyOverlay != null)
         {
-            qteReadyOverlay.gameObject.SetActive(actionable);
-            if (actionable)
+            qteReadyOverlay.gameObject.SetActive(ready);
+            if (ready)
             {
                 float pulse = qte.reduceUiMotion ? 0.5f : (Mathf.Sin(Time.unscaledTime * (Mathf.PI * 2f / 0.8f)) + 1f) * 0.5f;
                 qteReadyOverlay.color = new Color(1f, 1f, 1f, Mathf.Lerp(0.15f, 0.4f, pulse));
@@ -326,7 +325,7 @@ public class CharacterSwitchSlot : MonoBehaviour
         if (qteWindowFill != null)
         {
             qteWindowFill.gameObject.SetActive(ready);
-            if (ready) qteWindowFill.rectTransform.anchorMax = new Vector2(Mathf.Clamp01(remaining / total), 0f);
+            if (ready) qteWindowFill.rectTransform.anchorMax = new Vector2(total > 0f ? Mathf.Clamp01(remaining / total) : 0f, 0f);
         }
     }
 

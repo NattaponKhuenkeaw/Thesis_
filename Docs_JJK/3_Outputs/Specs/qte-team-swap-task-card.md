@@ -19,6 +19,8 @@ Tuning test: try both swaps and ten quick exchanges with a target behind and ahe
 
 # QTE Team Swap
 
+Latest correction (2026-10-28): Apricha requires QTE to use the ordinary Team Swap Policy, superseding the early Active hit-confirm exception below. Five-second readiness persists through health/stat refreshes and temporary policy restrictions; only valid lifecycle changes/expiry/consumption clear it. CameraGirl Skill and EX keep their accepted-primary-hit triggers. [Fix and validation limits](qte-window-policy-fix-task-card.md).
+
 ## Player-facing goal
 
 Make character switching continue the attack rhythm: a confirmed outgoing hit opens a readable opportunity to bring in a teammate with their own attack, while the outgoing character finishes the current action.

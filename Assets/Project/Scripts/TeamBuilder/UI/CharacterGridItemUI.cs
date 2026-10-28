@@ -21,6 +21,8 @@ namespace Project.TeamBuilder.UI
         [Header("UI References")]
         [SerializeField] private Image iconImage;
         [SerializeField] private Image frameImage;
+        [SerializeField] private Sprite normalFrameSprite;
+        [SerializeField] private Sprite selectedFrameSprite;
         [SerializeField] private TMP_Text nameText;
         [SerializeField] private TMP_Text levelText;
         [SerializeField] private TMP_Text equippedText;
@@ -41,6 +43,13 @@ namespace Project.TeamBuilder.UI
         private Action<CharacterItem> clickCallback;
         private PlayerRunInventory runInventory;
         private bool isInTeam = false;
+        private bool isSelected;
+
+        public void SetSelected(bool selected)
+        {
+            isSelected = selected;
+            SetInTeamState(isInTeam);
+        }
 
         // =========================================================
         // Properties
@@ -105,6 +114,7 @@ namespace Project.TeamBuilder.UI
         public void SetInTeamState(bool inTeam)
         {
             isInTeam = inTeam;
+            if (frameImage != null && normalFrameSprite != null) frameImage.sprite = isSelected ? selectedFrameSprite : normalFrameSprite;
             canvasGroup = canvasGroup != null ? canvasGroup : GetComponent<CanvasGroup>();
 
             if (inTeam)
@@ -123,11 +133,16 @@ namespace Project.TeamBuilder.UI
                 equippedText.text = "Equipped";
                 equippedText.gameObject.SetActive(inTeam);
             }
+            if (isSelected)
+            {
+                canvasGroup.alpha = 1f;
+                if (frameImage != null) frameImage.color = selectedFrameSprite != null ? Color.white : new Color(1f, .9f, .15f);
+            }
         }
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            clickCallback?.Invoke(characterItem);
+            if (eventData.button == PointerEventData.InputButton.Left) clickCallback?.Invoke(characterItem);
         }
     }
 }

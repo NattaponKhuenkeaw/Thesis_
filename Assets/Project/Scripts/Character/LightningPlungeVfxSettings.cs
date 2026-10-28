@@ -40,11 +40,24 @@ public sealed class LightningPlungeVfxSettings
     [Min(1)] public int windFrames = 108;
     [Min(1)] public int residualFrames = 118;
     [Header("Exit motion (tunable starting values)")]
-    [Tooltip("Additional readable hold before structural breakup starts.")]
+    [Tooltip("Additional readable hold before the storm flows away from the contact point.")]
     [Min(0)] public int exitDelayFrames = 12;
     [Min(1)] public int exitFrames = 78;
+    [Tooltip("Additional outward travel of the storm front relative to its impact radius.")]
     [Min(0f)] public float exitScatter = 0.65f;
-    [Range(0, 48)] public int exitFragmentCount = 24;
+    [Tooltip("Upward drift of the clearing explosion lobes, before impact scale.")]
+    [Min(0f)] public float stormLift = 0.6f;
+
+    [Header("Purple electrical accents (starting values)")]
+    [Range(0, 12)] public int fallingArcCount = 6;
+    [Range(0, 16)] public int impactArcCount = 9;
+    [Min(0.1f)] public float electricalSpread = 1f;
+    [Min(0.1f)] public float electricalArcLength = 0.8f;
+    [Min(0.005f)] public float electricalWidth = 0.028f;
+    [Min(0f)] public float electricalGlow = 1.2f;
+    [ColorUsage(true, true)] public Color electricalColor = new Color(0.95f, 0.28f, 2.4f, 1f);
+    [Range(0, 24)] public int fallingSparkCount = 8;
+
     [Header("Particles")]
     [Range(0, 128)] public int sparkCount = 36;
     [Range(0, 64)] public int debrisCount = 18;
@@ -54,4 +67,12 @@ public sealed class LightningPlungeVfxSettings
     public int sortingOrder = 995;
     [Tooltip("Zero selects a private seed at activation. A nonzero value is repeatable.")]
     public int seed;
+    [Header("Refraction")]
+    public CutImpactDistortionSettings impactDistortion = new CutImpactDistortionSettings
+    {
+        enabled = false, durationFrames = 12, waveWidth = 0.04f,
+        refractionPixels = 4f, chromaticPixels = 0f, blurPixels = 0f
+    };
+    [Tooltip("Suppress the camera Volume stack's chromatic aberration while this bolt is visible, without editing its profile.")]
+    public bool suppressChromaticAberration = true;
 }

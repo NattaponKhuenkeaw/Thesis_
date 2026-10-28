@@ -9,11 +9,11 @@ public sealed class QteSwapDefinition
     public bool enabled;
     [Tooltip("Outgoing actions whose accepted primary hits prepare teammates.")]
     public string[] triggerActionIds = Array.Empty<string>();
-    [Tooltip("Existing action to reuse. Empty ids use the authored action name.")]
+    [Tooltip("QTE entry action in the resolver table. Existing ordinary actions can also be referenced by id or name.")]
     public string introActionKey;
     [Tooltip("Empty selects the action root; otherwise selects this exact authored step.")]
     public string introStepName;
-    [Tooltip("Optional combo for the QTE entry. Subsequent NA inputs use ordinary Recovery/Cancel combo routing. Empty preserves a single-step intro.")]
+    [HideInInspector, Tooltip("Legacy character-owned combo. New QTE trees belong to ActionResolverTable.qteActions.")]
     public ComboTree introComboTree;
     [Header("Entry Presentation")]
     public QteEntryMode entryMode;
@@ -38,6 +38,14 @@ public sealed class QteSwapDefinition
         action = null;
         step = null;
         if (!enabled || table == null || string.IsNullOrEmpty(introActionKey)) return false;
+        action = FindAction(table.qteActions);
+        if (action != null)
+        {
+            ComboNode root = action.comboTree?.rootNode;
+            step = string.IsNullOrEmpty(introStepName) || root?.stepData?.stepName == introStepName
+                ? root?.stepData : FindStep(root, new HashSet<ComboNode>());
+            return step != null;
+        }
         if (introComboTree?.rootNode?.stepData != null)
         {
             action = FindAction(table.standaloneActions) ?? FindAction(table.comboActions);
@@ -62,6 +70,12 @@ public sealed class QteSwapDefinition
         _cachedAction = action;
         _cachedStep = step;
         return step != null;
+    }
+
+    public ComboTree GetIntroComboTree(ActionResolverTable table)
+    {
+        CombatAction action = table != null ? FindAction(table.qteActions) : null;
+        return action != null ? action.comboTree : introComboTree;
     }
 
     private CombatAction FindAction<T>(List<T> actions) where T : CombatAction

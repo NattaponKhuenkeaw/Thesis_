@@ -21,6 +21,7 @@ namespace Project.TeamBuilder.UI
         [Header("Grid Setup")]
         [SerializeField] private Transform gridParent;
         [SerializeField] private GameObject gridItemPrefab;
+        [SerializeField] private ArtifactPreviewPanel previewPanel;
 
         [Header("Dependencies")]
         [SerializeField] private Canvas rootCanvas;
@@ -53,6 +54,14 @@ namespace Project.TeamBuilder.UI
         private TMP_Text runtimeNewLabel;
         private int runtimeLineFilter;
         private int runtimeStatFilter;
+        private string selectedInstanceId;
+
+        public void ClearSelection()
+        {
+            selectedInstanceId = null;
+            if (previewPanel != null) previewPanel.Close();
+            foreach (var item in spawnedItems) if (item != null) item.SetSelected(false);
+        }
 
         public event Action<ArtifactInstance> OnArtifactClicked;
         public event Action<ArtifactInstance> OnArtifactDoubleClicked;
@@ -68,6 +77,7 @@ namespace Project.TeamBuilder.UI
 
         private void OnDisable()
         {
+            ClearSelection();
             ExitFavouriteMode();
             UnsubscribeInventory();
         }
@@ -153,6 +163,8 @@ namespace Project.TeamBuilder.UI
                 equippedIds,
                 queryResults);
 
+            if (selectedInstanceId != null && !queryResults.Exists(item => item.instanceId == selectedInstanceId)) ClearSelection();
+
             foreach (ArtifactInstance artifact in queryResults)
             {
                 if (artifact == null) continue;
@@ -167,6 +179,7 @@ namespace Project.TeamBuilder.UI
                     cellUI.transform.SetSiblingIndex(spawnedItems.Count);
                     bool isEquipped = equippedIds.Contains(artifact.instanceId);
                     cellUI.Init(artifact, definition, rootCanvas, playerInventory.ArtifactRollTable, isEquipped);
+                    cellUI.SetSelected(artifact.instanceId == selectedInstanceId);
                     cellUI.OnClicked += HandleArtifactClicked;
                     cellUI.OnDoubleClicked += HandleArtifactDoubleClicked;
                     spawnedItems.Add(cellUI);
@@ -323,6 +336,9 @@ namespace Project.TeamBuilder.UI
             }
 
             OnArtifactClicked?.Invoke(artifact);
+            selectedInstanceId = artifact != null ? artifact.instanceId : null;
+            foreach (var item in spawnedItems)
+                if (item != null) item.SetSelected(item.ArtifactData?.instanceId == selectedInstanceId);
         }
 
         private void HandleArtifactDoubleClicked(ArtifactInstance artifact)

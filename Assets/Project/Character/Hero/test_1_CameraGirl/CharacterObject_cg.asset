@@ -2422,6 +2422,75 @@ MonoBehaviour:
     - cg.skill.ex
     introActionKey: Ground
     introStepName: Attack4
+    introComboTree:
+      treeName: Combo
+      comboResetDelay: 0.8
+      rootNode:
+        rid: -2
+    entryMode: 0
+    plunge:
+      targetStartOffset: {x: 1, y: 3}
+      prefab: {fileID: 0}
+      visuals:
+        scale: 1
+        impactScale: 2.5
+        coreWidth: 0.08
+        envelopeWidth: 0.3
+        groundSpread: 3.3
+        impactHeight: 2.5
+        branches: 11
+        aboveScreenPadding: 2
+        minimumBoltLength: 14
+        boltJitter: 0.12
+        glowWidth: 3.8
+        coreColor: {r: 1.7, g: 1.25, b: 2.4, a: 1}
+        violetColor: {r: 0.32, g: 0.018, b: 0.7, a: 0.88}
+        blueColor: {r: 0.26, g: 0.06, b: 0.65, a: 0.6}
+        shadowColor: {r: 0.035, g: 0.008, b: 0.085, a: 0.95}
+        auraColor: {r: 0.11, g: 0.006, b: 0.25, a: 0.42}
+        glowColor: {r: 0.45, g: 0.045, b: 1.4, a: 0.22}
+        impactLightIntensity: 0.8
+        impactLightRadius: 7
+        impactHoldFrames: 18
+        columnFadeFrames: 54
+        lightFadeFrames: 36
+        flashFrames: 10
+        burstFrames: 90
+        windFrames: 108
+        residualFrames: 118
+        exitDelayFrames: 12
+        exitFrames: 78
+        exitScatter: 0.65
+        stormLift: 0.6
+        fallingArcCount: 6
+        impactArcCount: 9
+        electricalSpread: 1
+        electricalArcLength: 0.8
+        electricalWidth: 0.028
+        electricalGlow: 1.2
+        electricalColor: {r: 0.95, g: 0.28, b: 2.4, a: 1}
+        fallingSparkCount: 8
+        sparkCount: 36
+        debrisCount: 18
+        residualCount: 15
+        sortingLayer: WorldUI
+        sortingOrder: 995
+        seed: 0
+        impactDistortion:
+          enabled: 0
+          startFrame: 0
+          durationFrames: 12
+          waveWidth: 0.04
+          refractionPixels: 4
+          chromaticPixels: 0
+          blurPixels: 0
+          referenceHeight: 270
+        suppressChromaticAberration: 1
     entryOffset: 2
     readySfx: {fileID: 8300000, guid: 593a0d385b8e842458eec6a9c0b82630, type: 3}
   actionResolverTable: {fileID: 11400000, guid: 90f3f5c1e3c9d334a90282b1605414b6, type: 2}
+  references:
+    version: 2
+    RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }

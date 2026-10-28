@@ -435,6 +435,8 @@ public class AnimationEditorWindow : EditorWindow
         if (node == null || selectedCharacter == null) return;
 
         Undo.RecordObject(selectedCharacter, "Change Clip");
+        if (node.Category?.StartsWith("QTE_") == true && selectedCharacter.actionResolverTable != null)
+            Undo.RecordObject(selectedCharacter.actionResolverTable, "Change QTE Clip");
 
         if (node.DataType == "AttackStep" && node.DataRef is AttackStepData step)
             step.animationClip = evt.newValue as AnimationClip;
@@ -444,6 +446,8 @@ public class AnimationEditorWindow : EditorWindow
             dash.animationClip = evt.newValue as AnimationClip;
 
         EditorUtility.SetDirty(selectedCharacter);
+        if (node.Category?.StartsWith("QTE_") == true && selectedCharacter.actionResolverTable != null)
+            EditorUtility.SetDirty(selectedCharacter.actionResolverTable);
         RebuildSelectedNode();
     }
 
@@ -935,6 +939,14 @@ public class AnimationEditorWindow : EditorWindow
                 {
                     UpdateVfxTransform(instance, entry, relativeFrame);
                     SampleVfxState(instance, entry, relativeFrame);
+                    var impact = instance.GetComponent<CutImpactVfxSource>();
+                    if (entry.impactDistortion?.enabled == true)
+                    {
+                        if (impact == null) impact = instance.AddComponent<CutImpactVfxSource>();
+                        impact.BeginSprite(entry.impactDistortion, instance.GetComponentInChildren<SpriteRenderer>(), null, entry.duration, true);
+                        impact.SampleSprite(relativeFrame);
+                    }
+                    else if (impact != null) impact.Stop();
                 }
             }
         }

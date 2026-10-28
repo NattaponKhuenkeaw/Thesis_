@@ -497,7 +497,7 @@ public class PlayerHUD : MonoBehaviour, IZoneStateListener
 
     public static string FormatRunCurrency(int amount)
     {
-        return $"${Mathf.Max(0, amount)}";
+        return $"{Mathf.Max(0, amount)}";
     }
 
     private void EnsureCurrencyText()

@@ -13,8 +13,6 @@ public sealed class PlayerQteIntroState : PlayerAttackState
     private LightningPlungeVFX _plungePrefab;
     private SpriteRenderer[] _plungeRenderers;
     private bool[] _originalRenderFlags;
-    private CameraManager _plungeCamera;
-    private QteIntroCameraToken _plungeCameraToken;
     private bool _plungeActive, _plungeLanded;
     private MotionKeyframe _plungeMotion;
     private float _plungeVisualFrame;
@@ -40,7 +38,7 @@ public sealed class PlayerQteIntroState : PlayerAttackState
         _action = action;
         _step = step;
         _target = target;
-        ComboTree authored = player.characterObject?.qteSwap?.introComboTree;
+        ComboTree authored = player.characterObject?.qteSwap?.GetIntroComboTree(player.characterObject.actionResolverTable);
         _combo = authored?.rootNode?.stepData == step ? authored : null;
     }
 
@@ -80,12 +78,9 @@ public sealed class PlayerQteIntroState : PlayerAttackState
             _plungePrefab = settings.prefab;
         }
         var placement = _preparedEntry.placement;
-        _plungeVfx.Begin(settings.visuals, placement.startBodyPosition, placement.surfacePoint, placement.surfaceNormal);
+        _plungeVfx.Begin(settings.visuals, placement.startBodyPosition, placement.surfacePoint, placement.surfaceNormal,
+            execution: player.Combat?.CurrentExecution);
         _plungeVfx.Sample(0f, _step.ActivePhaseStart, _step.TotalFrames);
-        _plungeCamera = CameraManager.instance;
-        if (_plungeCamera != null)
-            _plungeCameraToken = _plungeCamera.BeginQtePlungeCamera(player.Combat.CurrentExecution,
-                placement.startBodyPosition, placement.surfacePoint, _step.ActivePhaseStart);
     }
 
     protected override void ProcessLogicFrame(int frame, ActionPhase phase)
@@ -133,7 +128,6 @@ public sealed class PlayerQteIntroState : PlayerAttackState
         frame = Mathf.Max(_plungeVisualFrame, frame);
         _plungeVisualFrame = frame;
         _plungeVfx?.Sample(frame, _step.ActivePhaseStart, _step.TotalFrames);
-        _plungeCamera?.SampleQtePlungeCamera(_plungeCameraToken, frame);
     }
 
     private void CachePlungeRenderers()
@@ -153,14 +147,13 @@ public sealed class PlayerQteIntroState : PlayerAttackState
             if (_plungeRenderers[i] != null) _plungeRenderers[i].forceRenderingOff = hidden || _originalRenderFlags[i];
     }
 
-    private void ReleasePlunge()
+    private void ReleasePlunge(bool finishTail = false)
     {
         if (!_plungeActive) return;
         _plungeActive = false;
         SetPlungeActorHidden(false);
-        _plungeVfx?.Stop();
-        _plungeCamera?.ReleaseQtePlungeCamera(_plungeCameraToken);
-        _plungeCamera = null;
+        if (finishTail && _plungeLanded) _plungeVfx?.FinishTail(_step.ActivePhaseStart, player.Combat);
+        else _plungeVfx?.Stop();
         player.Movement?.ClearCapturedWorldMotion();
     }
 
@@ -173,6 +166,7 @@ public sealed class PlayerQteIntroState : PlayerAttackState
 
     public void OnOwnerDisabled()
     {
+        _plungeVfx?.Stop();
         if (fsm.CurrentState != this || !_plungeActive) return;
         ReleasePlunge();
         _plungeNeedsAbort = true;
@@ -180,7 +174,7 @@ public sealed class PlayerQteIntroState : PlayerAttackState
 
     protected override void OnActionComplete()
     {
-        ReleasePlunge();
+        ReleasePlunge(finishTail: true);
         base.OnActionComplete();
     }
 
@@ -190,7 +184,7 @@ public sealed class PlayerQteIntroState : PlayerAttackState
         Buffer?.ConsumeAttack();
         if (_combo != null && !resolver.IsLastStep() && IsRecoveryOrCancelPhase)
         {
-            ReleasePlunge();
+            ReleasePlunge(finishTail: true);
             // This explicitly authored intro combo remains one sequence even
             // if its dash briefly crosses the motor's ground-contact boundary.
             TryResolveNextStep(preserveAuthoredCombo: true);

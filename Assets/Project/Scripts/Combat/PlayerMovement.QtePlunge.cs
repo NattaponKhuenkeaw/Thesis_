@@ -16,13 +16,19 @@ public partial class PlayerMovement
         placement = default;
         if (rb == null || groundCheck == null) return false;
         Vector2 start = targetPosition + new Vector2(startOffset.x * approachFacing, startOffset.y);
-        if (!TryFindQteGroundPosition(start.x, out Vector2 landing)
-            || Mathf.Abs(landing.x - start.x) > MovementWallSkin || start.y <= landing.y + 0.1f) return false;
         Vector2 footOffset = (Vector2)groundCheck.position - rb.position;
-        RaycastHit2D floor = Physics2D.Raycast(landing + footOffset + Vector2.up * 0.15f,
-            Vector2.down, 0.3f, GetGroundCheckMask());
+        // The entry arrives above the target; only its vertical descent crosses terrain.
+        Vector2 startFoot = start + footOffset;
+        float probeDistance = Mathf.Max(0.3f, startFoot.y - Mathf.Min(targetPosition.y, groundCheck.position.y) + 0.3f);
+        var filter = new ContactFilter2D();
+        filter.SetLayerMask(GetGroundCheckMask());
+        filter.useTriggers = false;
+        int hits = Physics2D.Raycast(startFoot, Vector2.down, filter, movementWallHits, probeDistance);
+        if (hits == 0 || hits == movementWallHits.Length) return false;
+        RaycastHit2D floor = movementWallHits[0];
         if (floor.collider == null || floor.collider.isTrigger || floor.normal.y < MinimumGroundNormalY) return false;
-        landing.y += floor.point.y - (landing.y + footOffset.y);
+        Vector2 landing = new Vector2(start.x, floor.point.y - footOffset.y);
+        if (start.y <= landing.y + 0.1f) return false;
         EnsureQteBodyShapes();
         if (!HasQteBodyClearance(start) || !HasQteBodyClearance(landing)
             || !HasQtePathClearance(start, landing, floor.collider)) return false;
@@ -114,8 +120,10 @@ public partial class PlayerMovement
 
     private bool IgnoreQteObstacle(Collider2D body, Collider2D obstacle)
     {
+        // Match grounded QTE placement: finishing swap bodies can overlap the incoming actor.
         return obstacle == null || obstacle.attachedRigidbody == rb
             || obstacle.GetComponentInParent<EnemyController>() != null
+            || obstacle.GetComponentInParent<PlayerTeamSwitchState>() != null
             || Physics2D.GetIgnoreCollision(body, obstacle);
     }
 

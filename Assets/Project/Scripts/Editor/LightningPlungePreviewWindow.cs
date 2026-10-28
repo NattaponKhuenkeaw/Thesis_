@@ -16,6 +16,76 @@ public sealed class LightningPlungePreviewWindow : EditorWindow
     private float PreviewEndFrame => _preview != null ? _preview.EndFrame
         : MainLightningPlungeAuthoring.StartupFrames + MainLightningPlungeAuthoring.ActiveFrames + MainLightningPlungeAuthoring.RecoveryFrames;
     private const string CaptureRoot = "Docs_JJK/3_Outputs/Reports/MainLightningPlunge/";
+    private static EnemyController _hitPreviewTarget;
+
+    [MenuItem("Tools/Project/Combat/Capture Main Plunge Actual Hit (Play Mode)")]
+    public static void CaptureActualHit()
+    {
+        if (!Application.isPlaying) { Debug.LogWarning("Enter Play mode to capture the actual damage frame."); return; }
+        HitFeedbackEvents.FeedbackRequested -= OnActualHit;
+        HitFeedbackEvents.FeedbackRequested += OnActualHit;
+        var player = TeamLoader.Instance?.playerCharacter;
+        var profile = player?.characterObject?.qteSwap;
+        if (profile == null || !profile.TryResolveIntro(player.characterObject.actionResolverTable, out var action, out var step)) return;
+        foreach (var enemy in UnityEngine.Object.FindObjectsByType<EnemyController>(FindObjectsSortMode.None))
+        {
+            if (!enemy.IsTargetable) continue;
+            if (!player.Movement.TryFindQtePlungePlacement(enemy.transform.position,
+                profile.plunge.targetStartOffset, player.Movement.FacingDirection, out var placement)) continue;
+            player.StateMachine.QteIntroState.Prepare(new QtePreparedEntry(action, step, enemy, QteEntryMode.LightningPlunge, placement));
+            player.StateMachine.ChangeState(player.StateMachine.QteIntroState);
+            TeamLoader.Instance.QteSwaps?.PlayIntroHandoff();
+            _hitPreviewTarget = enemy;
+            EditorApplication.update -= SampleHitPreview;
+            EditorApplication.update += SampleHitPreview;
+            Debug.Log($"Actual-hit artist capture targeting {enemy.name}; readiness/search radius bypassed for this temporary Play-mode preview.");
+            return;
+        }
+        HitFeedbackEvents.FeedbackRequested -= OnActualHit;
+        Debug.LogWarning("Actual-hit preview found no enemy with valid floor placement.");
+    }
+
+    private static void SampleHitPreview()
+    {
+        var player = TeamLoader.Instance?.playerCharacter;
+        if (!Application.isPlaying || player == null || _hitPreviewTarget == null)
+        { EditorApplication.update -= SampleHitPreview; return; }
+        var step = player.Combat.GetCurrentStepData();
+        if (step?.stepName != MainLightningPlungeAuthoring.StepName)
+        { EditorApplication.update -= SampleHitPreview; return; }
+        if (step.hitData?.hitboxes == null) return;
+        foreach (var hitbox in step.hitData.hitboxes)
+        {
+            if (hitbox is not NormalHitbox hit) continue;
+            int frame = player.StateMachine.QteIntroState.CurrentFrame;
+            if (frame < step.ActivePhaseStart + hit.startFrameOffset) return;
+            EditorApplication.update -= SampleHitPreview;
+            // Artist diagnostic: bypass trigger overlap only, retaining the real damage/feedback path.
+            player.Combat.hitBoxDamage?.ProcessHit(_hitPreviewTarget);
+            return;
+        }
+    }
+
+    private static void OnActualHit(HitFeedbackRequest request)
+    {
+        var player = TeamLoader.Instance?.playerCharacter;
+        if (player?.Combat.GetCurrentStepData()?.stepName != MainLightningPlungeAuthoring.StepName) return;
+        HitFeedbackEvents.FeedbackRequested -= OnActualHit;
+        EditorApplication.update -= SampleHitPreview;
+        EditorApplication.delayCall += () =>
+        {
+            if (!Application.isPlaying) return;
+            EditorApplication.isPaused = true;
+            Debug.Log($"Actual plunge hit: tier={request.Tier}, contactVfxSuppressed={request.Hitbox?.suppressContactVfx}");
+            var stack = UnityEngine.Rendering.VolumeManager.instance.stack;
+            var chromatic = stack.GetComponent<UnityEngine.Rendering.Universal.ChromaticAberration>();
+            var flare = stack.GetComponent<UnityEngine.Rendering.Universal.ScreenSpaceLensFlare>();
+            Debug.Log($"Actual camera stack: chromatic active={chromatic.active}, intensity={chromatic.intensity.value}; lens flare active={flare.active}, intensity={flare.intensity.value}, chromatic={flare.chromaticAbberationIntensity.value}");
+            foreach (var volume in UnityEngine.Object.FindObjectsByType<UnityEngine.Rendering.Volume>(FindObjectsSortMode.None))
+                Debug.Log($"Actual volume: {volume.name}, weight={volume.weight}, profile={volume.sharedProfile?.name}, global={volume.isGlobal}");
+            CaptureLiveNamed(request.Hitbox?.suppressContactVfx == true ? "contact-clean" : "contact-before");
+        };
+    }
 
     [MenuItem("Tools/Project/Combat/Preview Main Lightning Plunge")]
     public static void Open() => GetWindow<LightningPlungePreviewWindow>("Lightning Plunge");
@@ -25,9 +95,23 @@ public sealed class LightningPlungePreviewWindow : EditorWindow
     {
         Directory.CreateDirectory(CaptureRoot);
         using (var preview = new PreviewContext())
-            foreach (int frame in new[] { 0, 1, 2, 3, 6, 14, 28, 55, 90, 120 })
+            foreach (int frame in new[] { 0, 1, 2, 3, 6, 14, 28, 42, 55, 72, 90, 120 })
             { preview.Sample(frame); preview.Save(CaptureRoot + "phase-" + frame.ToString("D3") + ".png"); }
         Debug.Log("Lightning plunge visual phases captured in " + CaptureRoot);
+    }
+
+    [MenuItem("Tools/Project/Combat/Capture Main Lightning Plunge Motion")]
+    public static void CaptureMotion()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "MainPlungeMotionPreview");
+        Directory.CreateDirectory(folder);
+        using (var preview = new PreviewContext())
+            for (int frame = 0; frame <= preview.EndFrame; frame += 3)
+            {
+                preview.Sample(frame);
+                preview.Save(Path.Combine(folder, "motion-" + frame.ToString("D3") + ".png"), false);
+            }
+        Debug.Log("Lightning plunge motion frames captured in " + folder);
     }
 
     [MenuItem("Tools/Project/Combat/Preview Current Main QTE (Play Mode)")]
@@ -81,7 +165,9 @@ public sealed class LightningPlungePreviewWindow : EditorWindow
     public static void ResumeLive() { if (Application.isPlaying) EditorApplication.isPaused = false; }
 
     [MenuItem("Tools/Project/Combat/Capture Current QTE View (Play Mode)")]
-    public static void CaptureLive()
+    public static void CaptureLive() => CaptureLiveNamed("live");
+
+    private static void CaptureLiveNamed(string label)
     {
         var camera = Camera.main;
         var player = TeamLoader.Instance?.playerCharacter;
@@ -91,7 +177,7 @@ public sealed class LightningPlungePreviewWindow : EditorWindow
         var previousActive = RenderTexture.active;
         var target = new RenderTexture(1280, 720, 24);
         var image = new Texture2D(1280, 720, TextureFormat.RGB24, false);
-        string path = CaptureRoot + "live-" + player.StateMachine.QteIntroState.CurrentFrame.ToString("D3") + ".png";
+        string path = CaptureRoot + label + "-" + player.StateMachine.QteIntroState.CurrentFrame.ToString("D3") + ".png";
         try
         {
             camera.targetTexture = target; camera.Render(); RenderTexture.active = target;
@@ -162,7 +248,7 @@ public sealed class LightningPlungePreviewWindow : EditorWindow
         private readonly float _startHeight;
         private readonly AttackStepData _step;
         public readonly RenderTexture texture;
-        public int EndFrame => _step.TotalFrames;
+        public int EndFrame => Mathf.Max(_step.TotalFrames, _effect.PresentationEndFrame(_step.ActivePhaseStart));
 
         public PreviewContext()
         {
@@ -170,7 +256,7 @@ public sealed class LightningPlungePreviewWindow : EditorWindow
             if (main?.qteSwap?.plunge?.prefab == null) throw new InvalidOperationException("Author Main Lightning Plunge first.");
             _settings = main.qteSwap.plunge.visuals;
             _startHeight = main.qteSwap.plunge.targetStartOffset.y;
-            _step = main.qteSwap.introComboTree.rootNode.stepData;
+            _step = main.qteSwap.GetIntroComboTree(main.actionResolverTable).rootNode.stepData;
             _scene = EditorSceneManager.NewPreviewScene();
             texture = new RenderTexture(1280, 720, 24); texture.Create();
             _camera = Host("Plunge Preview Camera").AddComponent<Camera>();
@@ -214,12 +300,12 @@ public sealed class LightningPlungePreviewWindow : EditorWindow
             _actor.transform.position = Vector3.up * (frame < standingFrame ? _landedOffset : _standingOffset);
             float progress = Mathf.Clamp01(frame / Mathf.Max(1, _step.startupFrames));
             _camera.transform.position = new Vector3(0f, Mathf.Max(_startHeight * (1f - progress * progress * progress) + 1f, 4.4f), -10f);
-            _effect.Sample(frame, _step.ActivePhaseStart, _step.TotalFrames);
+            _effect.Sample(frame, _step.ActivePhaseStart, EndFrame);
             _camera.Render();
         }
-        public void Save(string path)
+        public void Save(string path, bool log = true)
         {
-            Debug.Log($"Plunge phase capture: frame={_effect.SampledFrame}, sparks={_effect.impactSparks.particleCount}, debris={_effect.debris.particleCount}, residual={_effect.residualSparks.particleCount}");
+            if (log) Debug.Log($"Plunge phase capture: frame={_effect.SampledFrame}, sparks={_effect.impactSparks.particleCount}, debris={_effect.debris.particleCount}, residual={_effect.residualSparks.particleCount}");
             var previous = RenderTexture.active;
             var image = new Texture2D(texture.width, texture.height, TextureFormat.RGB24, false);
             try { RenderTexture.active = texture; image.ReadPixels(new Rect(0, 0, texture.width, texture.height), 0, 0); image.Apply(); File.WriteAllBytes(path, image.EncodeToPNG()); }

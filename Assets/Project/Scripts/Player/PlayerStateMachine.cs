@@ -1002,15 +1002,17 @@ public class PlayerStateMachine : MonoBehaviour
 
     public bool CanSwitchCharacterTo(int index)
     {
-        if (teamLoader == null || !teamLoader.CanSwitchToIndex(index)) return false;
-        return CanSwitchCharacter() || teamLoader.QteSwaps != null && teamLoader.QteSwaps.CanHandoffTo(index);
+        if (teamLoader == null || !teamLoader.CanSwitchToIndex(index, ignoreCooldown: true)) return false;
+        if (teamLoader.QteSwaps?.TryGetWindow(teamLoader.GetCharacterAtIndex(index), out _, out _) == true)
+            return teamLoader.QteSwaps.CanHandoffTo(index);
+        return CanSwitchCharacter();
     }
 
-    public bool CanSwitchCharacter(int framesThreshold = 2)
+    public bool CanSwitchCharacter(int framesThreshold = 2, bool ignoreCooldown = false)
     {
         if (Project.UI.InputLockManager.IsLocked || Time.timeScale <= 0f || playerCharacter == null
             || playerCharacter.IsDead || playerCharacter.Combat?.HasGrabbedEnemy() == true) return false;
-        if (teamLoader != null && teamLoader.IsSwitchOnCooldown)
+        if (!ignoreCooldown && teamLoader != null && teamLoader.IsSwitchOnCooldown)
             return false;
 
         if (CurrentState == null) return false;

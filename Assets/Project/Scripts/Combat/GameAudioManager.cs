@@ -549,10 +549,10 @@ public class GameAudioManager : MonoBehaviour
     public void PlayUltimateActivation(UltimateAction ultimate)
     {
         if (ultimate == null) return;
-        PlayUltimateActivation(ultimate.activationVoice, ultimate.activationSFX, ultimate.voiceDelay);
+        PlayUltimateActivation(ultimate.activationVoice, ultimate.activationSFX, ultimate.voiceDelay, ultimate.activationSFXVolume);
     }
 
-    public void PlayUltimateActivation(AudioClip activationVoice, AudioClip activationSFX, float voiceDelay)
+    public void PlayUltimateActivation(AudioClip activationVoice, AudioClip activationSFX, float voiceDelay, float activationSFXVolume = 1f)
     {
         if (activationVoice != null)
         {
@@ -561,11 +561,11 @@ public class GameAudioManager : MonoBehaviour
 
         if (activationSFX != null)
         {
-            StartCoroutine(PlayUnscaledDelayed(activationSFX, 0f, false));
+            StartCoroutine(PlayUnscaledDelayed(activationSFX, 0f, false, Mathf.Clamp01(activationSFXVolume)));
         }
     }
 
-    private IEnumerator PlayUnscaledDelayed(AudioClip clip, float delayRealtime, bool isVoice)
+    private IEnumerator PlayUnscaledDelayed(AudioClip clip, float delayRealtime, bool isVoice, float volume = 1f)
     {
         if (delayRealtime > 0f)
         {
@@ -587,7 +587,7 @@ public class GameAudioManager : MonoBehaviour
         {
             AudioSource src = GetSource();
             src.clip = clip;
-            src.volume = GetEffectiveSFXVolume(1f);
+            src.volume = GetEffectiveSFXVolume(Mathf.Clamp01(volume));
             src.pitch = 1f;
             src.ignoreListenerPause = true; // PLAY THROUGH FREEZE
             src.Play();

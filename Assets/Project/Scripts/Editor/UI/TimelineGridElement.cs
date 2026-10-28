@@ -8,7 +8,7 @@ namespace CombatEditor.UI
 {
     /// <summary>
     /// Multi-track NLE-style timeline grid.
-    /// 1 box = 1 frame at fixed pixel width. Horizontally scrollable.
+    /// 1 box = 1 frame at fixed pixel width. Scrollable on both axes.
     /// Dynamically adds/removes track rows based on ActionStepComponents.
     ///
     /// Layout (top → bottom):
@@ -84,24 +84,40 @@ namespace CombatEditor.UI
         {
             style.flexDirection = FlexDirection.Row;
             style.flexGrow      = 1;
+            style.flexBasis     = 0;
+            style.minHeight     = 0;
             style.overflow      = Overflow.Hidden;
 
         // Fixed left label column
+        var labelViewport = new VisualElement();
+        labelViewport.style.width = LABEL_W;
+        labelViewport.style.minWidth = LABEL_W;
+        labelViewport.style.flexShrink = 0;
+        labelViewport.style.overflow = Overflow.Hidden;
+        Add(labelViewport);
+
         var labelCol = new VisualElement();
+        labelCol.style.position = Position.Absolute;
         labelCol.style.width          = LABEL_W;
         labelCol.style.minWidth       = LABEL_W;
         labelCol.style.flexShrink     = 0;
         labelCol.style.backgroundColor = new StyleColor(ColBg);
         labelCol.name = "label-col";
-        Add(labelCol);
+        labelViewport.Add(labelCol);
 
-        // Horizontally scrollable grid
-        Scroller = new ScrollView(ScrollViewMode.Horizontal);
+        // Labels stay fixed horizontally and follow the grid vertically.
+        Scroller = new ScrollView(ScrollViewMode.VerticalAndHorizontal);
         Scroller.style.flexGrow = 1;
+        Scroller.style.minWidth = 0;
+        Scroller.style.minHeight = 0;
         Scroller.horizontalScrollerVisibility = ScrollerVisibility.Auto;
-        Scroller.verticalScrollerVisibility   = ScrollerVisibility.Hidden;
+        Scroller.verticalScrollerVisibility   = ScrollerVisibility.Auto;
+        Scroller.verticalScroller.valueChanged += offset => labelCol.style.top = -offset;
+        Scroller.contentViewport.RegisterCallback<GeometryChangedEvent>(evt =>
+            labelViewport.style.height = evt.newRect.height);
 
         _scrollContent = new VisualElement();
+        _scrollContent.style.flexShrink = 0;
         _scrollContent.style.flexDirection = FlexDirection.Column;
         _scrollContent.generateVisualContent += DrawGrid;
         _scrollContent.RegisterCallback<PointerDownEvent>(OnPointerDown);
@@ -147,10 +163,11 @@ namespace CombatEditor.UI
             var labelCol = this.Q("label-col");
             if (labelCol == null) return;
             labelCol.Clear();
-            labelCol.style.height = _scrollContent.resolvedStyle.height;
+            labelCol.style.height = _scrollContent.style.height;
 
             // Spacer for ruler + phase
             AddLabelRow(labelCol, "", RULER_H, ColBg);
+            labelCol.ElementAt(0).style.marginBottom = 0;
             AddLabelRow(labelCol, "Phase", PHASE_H, ColBg);
 
             foreach (var track in Tracks)

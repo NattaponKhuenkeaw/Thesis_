@@ -35,6 +35,8 @@ public sealed class ProceduralSlashFieldSettings
     [Min(1f)] public float pixelsPerUnit = 26.25f;
     [Tooltip("Zero chooses a new private seed per execution; nonzero supports repeatable preview.")]
     public int seed;
+    [Header("Finishing Impact")]
+    public CutImpactDistortionSettings impactDistortion = new CutImpactDistortionSettings();
     [Header("Actor")]
     public bool hideActor = true;
     [Min(0)] public int hideFromFrame = 18;
@@ -48,5 +50,6 @@ public sealed class ProceduralSlashFieldSettings
         hideFromFrame = Mathf.Max(0, Mathf.RoundToInt(hideFromFrame * ratio));
         showAtFrame = Mathf.Max(hideFromFrame, Mathf.RoundToInt(showAtFrame * ratio));
         revealFrames *= ratio; decayFrames *= ratio;
+        impactDistortion?.Rescale(ratio);
     }
 }

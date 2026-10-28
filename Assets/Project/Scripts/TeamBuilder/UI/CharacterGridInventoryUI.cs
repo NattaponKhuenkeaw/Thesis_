@@ -17,6 +17,7 @@ namespace Project.TeamBuilder.UI
         [Header("Grid Setup")]
         [SerializeField] private Transform gridParent;
         [SerializeField] private GameObject gridItemPrefab;
+        [SerializeField] private CharacterPreviewPanel previewPanel;
 
         [Header("Dependencies")]
         [SerializeField] private Canvas rootCanvas;
@@ -34,6 +35,21 @@ namespace Project.TeamBuilder.UI
         {
             parentBuilder = builder;
             rootCanvas = canvas;
+            if (previewPanel != null) previewPanel.Init(builder);
+        }
+
+        private void OnDisable() => ClearSelection();
+
+        public void ClearSelection()
+        {
+            if (previewPanel != null) previewPanel.Close();
+            foreach (var item in spawnedItems) if (item != null) item.SetSelected(false);
+        }
+
+        private void PreviewCharacter(CharacterItem character)
+        {
+            foreach (var item in spawnedItems) if (item != null) item.SetSelected(item.CharacterData == character);
+            if (previewPanel != null) previewPanel.Open(character);
         }
 
         // =========================================================
@@ -61,7 +77,7 @@ namespace Project.TeamBuilder.UI
                 {
                     bool isInTeam = (parentBuilder != null) && parentBuilder.IsCharacterInTeam(character);
                     System.Action<CharacterItem> clickHandler = parentBuilder != null
-                        ? (System.Action<CharacterItem>)parentBuilder.TryAssignCharacterToSelectedSlot
+                        ? (System.Action<CharacterItem>)PreviewCharacter
                         : null;
                     PlayerRunInventory runInventory = parentBuilder != null
                         ? parentBuilder.RunInventory
@@ -90,9 +106,14 @@ namespace Project.TeamBuilder.UI
         /// </summary>
         public void ClearGrid()
         {
+            ClearSelection();
             foreach (var item in spawnedItems)
             {
-                if (item != null) Destroy(item.gameObject);
+                if (item != null)
+                {
+                    item.gameObject.SetActive(false);
+                    Destroy(item.gameObject);
+                }
             }
             spawnedItems.Clear();
         }

@@ -67,7 +67,7 @@ public class MainDimensionSlashTests
     {
         Level(level); for (int i = 0; i < 8; i++) Cut();
         Assert.That(_passive.RuntimeState.GetCounter(MainDimensionSlashAuthoring.CountId), Is.Zero);
-        _passive.RuntimeState.SetTag(MainDimensionSlashAuthoring.ReadyTag, 1.5f);
+        _passive.RuntimeState.SetTag(MainDimensionSlashAuthoring.ReadyTag, 5f);
         Assert.That(Resolve(), Is.EqualTo("main.skill.dark_chain"));
     }
 
@@ -84,7 +84,7 @@ public class MainDimensionSlashTests
         Assert.That(Resolve(), Is.EqualTo(MainDimensionSlashAuthoring.ActionId));
         Assert.That(_passive.TryGetActionAvailabilityWindow(AttackCategory.Skill, MainDimensionSlashAuthoring.ActionId,
             "Dimension Slash", out float remaining, out float duration), Is.True);
-        Assert.That(duration, Is.EqualTo(1.5f).Within(0.01f)); Assert.That(remaining, Is.GreaterThan(0f));
+        Assert.That(duration, Is.EqualTo(5f).Within(0.01f)); Assert.That(remaining, Is.GreaterThan(0f));
     }
 
     [TestCase(true, MainDimensionSlashAuthoring.CutId, "DimensionCut", true)]
@@ -248,6 +248,50 @@ public class MainDimensionSlashTests
     }
 
     [Test]
+    public void TimedZoomSurvivesNormalActionEndAndReturnsAfterAuthoredHold()
+    {
+        var cameraHost = new GameObject("Timed Zoom Output");
+        var managerHost = new GameObject("Timed Zoom Manager");
+        try
+        {
+            cameraHost.tag = "MainCamera";
+            cameraHost.AddComponent<Camera>();
+            var manager = managerHost.AddComponent<CameraManager>();
+            typeof(CameraManager).GetField("_ultimateCam", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(manager, null);
+            typeof(CameraManager).GetField("_brain", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(manager, null);
+            _combat.ExecuteStep(Slash.comboTree.rootNode.stepData, 1, false, AttackCategory.Skill,
+                "Dimension Slash", MainDimensionSlashAuthoring.ActionId);
+            var settings = new ScreenImpulseCameraSettings
+                { enabled = true, zoomMultiplier = 0.8f, holdFrames = 1000, returnFrames = 100 };
+            var token = manager.BeginScreenImpulseCamera(_combat.CurrentExecution, settings, 20);
+            Assert.That(token.Generation, Is.Not.Zero);
+            manager.ReleaseActionCamera(token, true);
+            _combat.ResetCombo();
+            manager.SampleActionCamera(token, 2000);
+            manager.AdvanceTimedCamera(500f / CombatCore.FrameDataConstants.LOGIC_FPS);
+            Assert.That(manager.TrySampleScreenImpulseCamera(out float zoom, out _, out _), Is.True);
+            Assert.That(zoom, Is.EqualTo(0.8f).Within(0.001f));
+            manager.AdvanceTimedCamera(550f / CombatCore.FrameDataConstants.LOGIC_FPS);
+            manager.TrySampleScreenImpulseCamera(out zoom, out _, out _);
+            Assert.That(zoom, Is.EqualTo(0.9f).Within(0.001f));
+            manager.AdvanceTimedCamera(52f / CombatCore.FrameDataConstants.LOGIC_FPS);
+            Assert.That(manager.HasActionCamera, Is.False);
+
+            var execution = new CombatExecutionContext(_combat, _character, _combat.FieldSession, false);
+            token = manager.BeginScreenImpulseCamera(execution, settings, 0);
+            Assert.That(token.Generation, Is.Not.Zero);
+            _combat.InvalidateFieldExecutions();
+            manager.AdvanceTimedCamera(0f);
+            Assert.That(manager.HasActionCamera, Is.False);
+        }
+        finally
+        {
+            Object.DestroyImmediate(managerHost);
+            Object.DestroyImmediate(cameraHost);
+        }
+    }
+
+    [Test]
     public void QteAndInvalidatedFieldExecutionCannotOwnActionCamera()
     {
         var host = new GameObject("Dimension Slash Camera Exclusions");
@@ -349,19 +393,21 @@ public class MainDimensionSlashTests
     }
 
     [Test]
-    public void JudgmentFieldIsDetachedAndThirtyPercentLarger()
+    public void JudgmentFieldIsDetachedAndUsesEnlargedWidthAndHeight()
     {
         var host = new GameObject("Anchored judgment field");
         try
         {
             var field = host.AddComponent<ProceduralSlashField>();
             var settings = Slash.comboTree.rootNode.stepData.eventData.entries.Single().slashFieldSettings;
-            Assert.That(settings.overallScale, Is.EqualTo(1.3f).Within(0.001f));
+            Assert.That(settings.overallScale, Is.EqualTo(1.95f).Within(0.001f));
             settings.seed = 1234; settings.fitViewport = false; settings.overallScale = 1f;
             field.Begin(null, settings, new Vector3(3,2,0), 1, null, true);
             var size = field.VisualRoot.GetComponentInChildren<MeshFilter>().sharedMesh.bounds.size;
-            settings.overallScale = 1.3f; field.Begin(null, settings, new Vector3(3,2,0), 1, null, true);
-            Assert.That(field.VisualRoot.GetComponentInChildren<MeshFilter>().sharedMesh.bounds.size.x, Is.EqualTo(size.x*1.3f).Within(0.001f));
+            settings.overallScale = 1.95f; field.Begin(null, settings, new Vector3(3,2,0), 1, null, true);
+            var enlargedSize = field.VisualRoot.GetComponentInChildren<MeshFilter>().sharedMesh.bounds.size;
+            Assert.That(enlargedSize.x, Is.EqualTo(size.x*1.95f).Within(0.001f));
+            Assert.That(enlargedSize.y, Is.EqualTo(size.y*1.95f).Within(0.001f));
             Assert.That(field.VisualRoot.parent, Is.Null);
             Vector3 anchored = field.VisualRoot.position;
             host.transform.position += Vector3.right * 20f; host.transform.rotation = Quaternion.Euler(0,180,0);
@@ -373,23 +419,24 @@ public class MainDimensionSlashTests
     [Test]
     public void QteComboUsesRecoveryFramesAndLeavesManualCutTerminal()
     {
-        Assert.That(_character.qteSwap.TryResolveIntro(_table, out var cut, out var intro), Is.True);
-        var manual = cut.comboTree.rootNode.stepData;
+        Assert.That(_character.qteSwap.TryResolveIntro(_table, out var qte, out var intro), Is.True);
+        var cut = _table.standaloneActions.Single(a => a.actionId == MainDimensionSlashAuthoring.CutId);
+        var manual = cut.GetEntryStep();
+        Assert.That(qte.actionId, Is.EqualTo(MainLightningPlungeAuthoring.ActionId));
+        Assert.That(_table.qteActions, Does.Contain(qte));
         Assert.That(intro, Is.Not.SameAs(manual));
-        Assert.That(intro.animationClip, Is.SameAs(manual.animationClip));
-        Assert.That(JsonUtility.ToJson(intro.motionData), Is.EqualTo(JsonUtility.ToJson(manual.motionData)));
-        Assert.That(JsonUtility.ToJson(intro.hitData), Is.EqualTo(JsonUtility.ToJson(manual.hitData)));
-        Assert.That(manual.recoveryFrames, Is.EqualTo(6));
+        Assert.That(intro.animationClip.name, Is.EqualTo("main_qte_lightning_plunge_actor"));
+        Assert.That(intro.motionData.keyframes.Single().taskType, Is.EqualTo(MotionTaskType.CapturedWorldPoint));
         Assert.That(intro.recoveryFrames, Is.EqualTo(120));
-        Assert.That(intro.GetPhase(26), Is.EqualTo(ActionPhase.Active));
-        Assert.That(intro.GetPhase(27), Is.EqualTo(ActionPhase.Recovery));
-        Assert.That(intro.GetPhase(146), Is.EqualTo(ActionPhase.Recovery));
-        Assert.That(intro.GetPhase(147), Is.EqualTo(ActionPhase.Done));
+        Assert.That(intro.GetPhase(intro.ActivePhaseStart), Is.EqualTo(ActionPhase.Active));
+        Assert.That(intro.GetPhase(intro.RecoveryPhaseStart), Is.EqualTo(ActionPhase.Recovery));
+        Assert.That(intro.GetPhase(intro.TotalFrames + 1), Is.EqualTo(ActionPhase.Done));
         var resolver = new ActionResolver();
         resolver.BeginExplicitStep(cut, manual, true);
         Assert.That(resolver.IsLastStep(), Is.True);
-        resolver.BeginExplicitStep(cut, intro, true, _character.qteSwap.introComboTree);
-        Assert.That(resolver.ResolveNext(new InputContext()), Is.SameAs(_character.qteSwap.introComboTree.rootNode.defaultNext.stepData));
+        var combo = _character.qteSwap.GetIntroComboTree(_table);
+        resolver.BeginExplicitStep(qte, intro, true, combo);
+        Assert.That(resolver.ResolveNext(new InputContext()), Is.SameAs(combo.rootNode.defaultNext.stepData));
         Assert.That(resolver.ResolveNext(new InputContext()), Is.Null);
         Assert.That(_table.standaloneActions.Any(a => a.actionId == "main.qte.execution_breakdown"), Is.False);
     }
@@ -397,7 +444,7 @@ public class MainDimensionSlashTests
     [Test]
     public void ExecutionKeepsOriginalContactsAndReplacesOnlyFinalSlashWithTransparencyMask()
     {
-        var step = _character.qteSwap.introComboTree.rootNode.defaultNext.stepData;
+        var step = _character.qteSwap.GetIntroComboTree(_table).rootNode.defaultNext.stepData;
         Assert.That(step.hitData.hitboxes.Select(h => h.startFrameOffset + step.ActivePhaseStart), Is.EqualTo(new[] {12,20,27,33,38,42,54}));
         Assert.That(step.hitData.hitboxes.Cast<NormalHitbox>().Sum(h => h.damageRatio), Is.EqualTo(1f).Within(0.001f));
         Assert.That(step.hitData.hitboxes.Cast<NormalHitbox>().Last().impactTier, Is.EqualTo(DamageImpactTier.Heavy));
@@ -408,7 +455,7 @@ public class MainDimensionSlashTests
         Assert.That(step.animationClip.name, Is.EqualTo("main_dimension_slash_actor"));
     }
 
-    [TestCase(27)] [TestCase(145)]
+    [TestCase(27)] [TestCase(124)]
     public void QteRecoveryNaAdvancesComboWithoutCachedCostOrGateCount(int inputFrame)
     {
         Level(4);

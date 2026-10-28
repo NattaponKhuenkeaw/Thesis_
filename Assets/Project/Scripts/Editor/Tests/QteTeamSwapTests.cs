@@ -138,9 +138,9 @@ public class QteTeamSwapTests
     public void AuthoredProfilesReferenceActualAttacksWithoutMutatingTheirNextNode()
     {
         Assert.That(_main.qteSwap.TryResolveIntro(_main.actionResolverTable, out CombatAction cut, out AttackStepData mainStep), Is.True);
-        Assert.That(cut.actionId, Is.EqualTo("main.dash.dimension_cut"));
-        Assert.That(mainStep.startupFrames, Is.EqualTo(3));
-        Assert.That(mainStep.animationClip.name, Is.EqualTo("main_attack5"));
+        Assert.That(cut.actionId, Is.EqualTo(MainLightningPlungeAuthoring.ActionId));
+        Assert.That(mainStep.startupFrames, Is.EqualTo(2));
+        Assert.That(mainStep.animationClip.name, Is.EqualTo("main_qte_lightning_plunge_actor"));
         Assert.That(_cg.qteSwap.TryResolveIntro(_cg.actionResolverTable, out CombatAction normal, out AttackStepData cgStep), Is.True);
         Assert.That(cgStep.animationClip.name, Is.EqualTo("cg_attack4"));
         Assert.That(cgStep.hitData.hitboxes.Count, Is.EqualTo(6));
@@ -197,13 +197,13 @@ public class QteTeamSwapTests
     {
         Publish(Execute());
         Assert.That(Qte.TryPrepare(1, out _, out _, out _, out Vector2 position, out int facing), Is.True);
-        Assert.That(position.x, Is.EqualTo(_owner.transform.position.x - 1f).Within(0.03f));
+        Assert.That(position.x, Is.EqualTo(_owner.transform.position.x - _cg.qteSwap.entryOffset).Within(0.03f));
         Assert.That(facing, Is.EqualTo(1));
         _enemy.transform.position = _owner.transform.position - Vector3.right * 3f;
         _movement.SnapFacingDirection(-1);
         Physics2D.SyncTransforms();
         Assert.That(Qte.TryPrepare(1, out _, out _, out _, out position, out facing), Is.True);
-        Assert.That(position.x, Is.EqualTo(_owner.transform.position.x + 1f).Within(0.03f));
+        Assert.That(position.x, Is.EqualTo(_owner.transform.position.x + _cg.qteSwap.entryOffset).Within(0.03f));
         Assert.That(facing, Is.EqualTo(-1));
     }
 
@@ -214,8 +214,9 @@ public class QteTeamSwapTests
         _enemy.transform.position = _owner.transform.position - Vector3.right * 3f;
         Physics2D.SyncTransforms();
         Publish(Execute());
+        _movement.SnapFacingDirection(1);
         Assert.That(Qte.TryPrepare(1, out _, out _, out _, out Vector2 position, out int facing), Is.True);
-        Assert.That(position.x, Is.EqualTo(_owner.transform.position.x - 1f).Within(0.03f));
+        Assert.That(position.x, Is.EqualTo(_owner.transform.position.x - _cg.qteSwap.entryOffset).Within(0.03f));
         Assert.That(facing, Is.EqualTo(-1));
     }
 
@@ -259,19 +260,30 @@ public class QteTeamSwapTests
     }
 
     [Test]
-    public void FailedCooldownAttemptRetainsWindowAndSafeSwapConsumesIt()
+    public void PreparedEntryBypassesSwapCooldownAndRestartsIt()
     {
         Publish(Execute());
         _team.switchCooldownDuration = 1f;
         Set(_team, "lastSwitchTime", Time.time);
-        Assert.That(_team.SwitchToIndex(1), Is.False);
-        Assert.That(Qte.TryGetWindow(_cg, out _, out _), Is.True);
-        _team.switchCooldownDuration = 0f;
+        Assert.That(_team.CanSwitchToIndex(1), Is.False);
+        Assert.That(_fsm.CanSwitchCharacter(), Is.False);
+        Assert.That(_fsm.CanSwitchCharacterTo(1), Is.True);
         Assert.That(_team.SwitchToIndex(1), Is.True);
         Assert.That(_fsm.CurrentStateId, Is.EqualTo(PlayerStateId.QteIntro));
         Assert.That(_combat.GetCurrentStepData().stepName, Is.EqualTo("Attack4"));
         Assert.That(_combat.CurrentExecution.isQteIntro, Is.True);
+        Assert.That(_team.RemainingCooldown, Is.GreaterThan(0.9f));
         Assert.That(Qte.TryGetWindow(_main, out _, out _), Is.False);
+    }
+
+    [Test]
+    public void OrdinarySwapStillRequiresCooldown()
+    {
+        _team.switchCooldownDuration = 1f;
+        Set(_team, "lastSwitchTime", Time.time);
+        Assert.That(_fsm.CanSwitchCharacterTo(1), Is.False);
+        Assert.That(_team.SwitchToIndex(1), Is.False);
+        Assert.That(_team.CurrentCharacter, Is.SameAs(_main));
     }
 
     [Test]
@@ -281,7 +293,7 @@ public class QteTeamSwapTests
         _combat.ResetCombo();
         _fsm.QteIntroState.Prepare(action, step, _enemy);
         _fsm.ChangeState(_fsm.QteIntroState);
-        Assert.That(_combat.CurrentActionId, Is.EqualTo("main.dash.dimension_cut"));
+        Assert.That(_combat.CurrentActionId, Is.EqualTo(MainLightningPlungeAuthoring.ActionId));
         Assert.That(_combat.CurrentActionDamageMultiplier, Is.EqualTo(action.actionDamageMultiplier));
         Assert.That(_combat.CurrentExecution.isQteIntro, Is.True);
         Assert.That(_combat.RuntimeState == null || _combat.RuntimeState.GetCounter("main.shadow.cached_cuts") == 0, Is.True);
@@ -296,6 +308,27 @@ public class QteTeamSwapTests
         Publish(Execute());
         Assert.That(Qte.TryPrepare(1, out _, out _, out _, out _, out _), Is.False);
         Assert.That(Qte.TryGetWindow(_cg, out _, out _), Is.True);
+    }
+
+    [Test]
+    public void PlungeChecksDestinationInsteadOfOutgoingGroundCorridor()
+    {
+        foreach (Object candidate in _objects)
+            if (candidate is GameObject go && go.name == "QTE Test Floor")
+                go.GetComponent<BoxCollider2D>().size = new Vector2(2f, 1f);
+        var platform = Keep(new GameObject("QTE destination platform", typeof(BoxCollider2D)));
+        platform.layer = LayerMask.NameToLayer("Ground");
+        platform.transform.position = _owner.transform.position + new Vector3(6f, -2.5f, 0f);
+        platform.GetComponent<BoxCollider2D>().size = new Vector2(4f, 1f);
+        Vector2 target = (Vector2)_owner.transform.position + new Vector2(6f, -1f);
+        Physics2D.SyncTransforms();
+        Assert.That(_movement.TryFindQteGroundPosition(target.x, out _), Is.False);
+        Assert.That(_movement.TryFindQtePlungePlacement(target, new Vector2(0f, 6f), 1, out var entry), Is.True);
+        Assert.That(entry.support, Is.SameAs(platform.GetComponent<BoxCollider2D>()));
+        Assert.That(entry.landingBodyPosition.x, Is.EqualTo(target.x));
+        platform.SetActive(false);
+        Physics2D.SyncTransforms();
+        Assert.That(_movement.TryFindQtePlungePlacement(target, new Vector2(0f, 6f), 1, out _), Is.False);
     }
 
     [Test]
@@ -321,28 +354,90 @@ public class QteTeamSwapTests
     }
 
     [Test]
-    public void ConfirmedActiveStepAllowsEarlyQteButUnconfirmedAndAutoChainDoNot()
+    public void PreparedQteUsesTheOrdinaryTeamSwapPolicy()
     {
-        Assert.That(_main.qteSwap.TryResolveIntro(_main.actionResolverTable, out CombatAction action, out AttackStepData step), Is.True);
+        _main.qteSwap.TryResolveIntro(_main.actionResolverTable, out CombatAction action, out _);
+        var step = new AttackStepData { startupFrames = 10, activeFrames = 20, recoveryFrames = 10 };
         _fsm.ChangeState(_fsm.AttackState);
         _combat.BeginResolvedAction(false, action);
         _combat.ExecuteStep(step, 1, false, AttackCategory.Normal, action.actionName, action.actionId);
         typeof(FrameDataPlayerState).GetMethod("StartAction", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(_fsm.AttackState, null);
-        typeof(FrameDataPlayerState).GetField("currentPhase", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(_fsm.AttackState, ActionPhase.Active);
-        typeof(FrameDataPlayerState).GetField("currentFrame", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(_fsm.AttackState, 5);
+        var phase = typeof(FrameDataPlayerState).GetField("currentPhase", BindingFlags.Instance | BindingFlags.NonPublic);
+        var frame = typeof(FrameDataPlayerState).GetField("currentFrame", BindingFlags.Instance | BindingFlags.NonPublic);
+        phase.SetValue(_fsm.AttackState, ActionPhase.Active); frame.SetValue(_fsm.AttackState, 15);
+        Publish(_combat.CurrentExecution);
+        Assert.That(Qte.TryGetWindow(_cg, out _, out _), Is.True);
         Assert.That(_fsm.CanSwitchCharacter(), Is.False);
-        Publish(_combat.CurrentExecution);
-        Assert.That(Qte.CanHandoffTo(1), Is.True);
-        _combat.ExecuteStep(step, 1, false, AttackCategory.Normal, action.actionName, action.actionId);
-        Assert.That(Qte.CanHandoffTo(1), Is.False);
-        Publish(_combat.CurrentExecution);
-        bool autoChain = step.autoChainToNext;
-        try
-        {
-            step.autoChainToNext = true;
-            Assert.That(Qte.CanHandoffTo(1), Is.False);
-        }
-        finally { step.autoChainToNext = autoChain; }
+        Assert.That(Qte.CanUsePreparedTransition(), Is.False);
+        Assert.That(_fsm.CanSwitchCharacterTo(1), Is.False);
+        phase.SetValue(_fsm.AttackState, ActionPhase.Recovery); frame.SetValue(_fsm.AttackState, 31);
+        Assert.That(_fsm.CanSwitchCharacter(), Is.True);
+        Assert.That(Qte.CanUsePreparedTransition(), Is.True);
+        Assert.That(_fsm.CanSwitchCharacterTo(1), Is.True);
+        step.autoChainToNext = true;
+        Assert.That(_fsm.CanSwitchCharacter(), Is.False);
+        Assert.That(Qte.CanUsePreparedTransition(), Is.False);
+        Assert.That(Qte.TryGetWindow(_cg, out _, out _), Is.True);
+    }
+
+    [Test]
+    public void HealthAndStatRefreshDoNotConsumeOrRestartPreparedWindow()
+    {
+        Publish(Execute());
+        float expiry = (float)typeof(QteTeamSwapController).GetField("_expiresAt", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Qte);
+        _team.SetCharacterCurrentHP(_main, _team.GetCharacterMaxHP(_main) * 0.9f);
+        typeof(TeamLoader).GetMethod("RefreshRuntimeStatsOnly", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(_team, new object[] { _main });
+        Call(_team, "NotifyCurrentCharacterChanged");
+        Assert.That(Qte.TryGetWindow(_cg, out float remaining, out float total), Is.True);
+        Assert.That(total, Is.EqualTo(5f));
+        Assert.That(remaining, Is.GreaterThan(4.9f));
+        Assert.That((float)typeof(QteTeamSwapController).GetField("_expiresAt", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Qte), Is.EqualTo(expiry));
+        Set(Qte, "_expiresAt", Time.time - 0.01f);
+        Assert.That(Qte.TryGetWindow(_cg, out _, out _), Is.False);
+    }
+
+    [TestCase("cg.skill")]
+    [TestCase("cg.skill.ex")]
+    public void CameraGirlAcceptedSkillHitRunsMainIntroDuringSwapCooldown(string actionId)
+    {
+        var visual = new GameObject("QTE Test Actor", typeof(SpriteRenderer));
+        visual.transform.SetParent(_owner.transform, false);
+        var animator = visual.AddComponent<PlayerAnimator>();
+        animator.anim = visual.GetComponent<Animator>();
+        animator.anim.runtimeAnimatorController = _main.metaData.animatorController;
+        animator.movement = _movement;
+        animator.combat = _combat;
+        Call(animator, "Awake");
+        _player.Animator = animator;
+        Assert.That(_team.SwitchToIndex(1), Is.True);
+        SkillAction skill = _cg.actionResolverTable.skillActions.Find(a => a.actionId == actionId);
+        var step = skill.comboTree.rootNode.stepData;
+        _combat.BeginResolvedAction(false, skill);
+        _combat.ExecuteStep(step, 1, false, AttackCategory.Skill, skill.actionName, skill.actionId);
+        _enemy.currentHP = _enemy.maxHP = 1000f;
+        var request = new DamageRequest { target = _enemy, sourceCharacter = _cg, sourceCombat = _combat,
+            sourceStats = _player.Stats, execution = _combat.CurrentExecution, actionId = skill.actionId,
+            category = AttackCategory.Skill, baseDamage = 10f, attackerPosition = _owner.transform.position,
+            hitDirection = Vector2.right, descriptor = new DamageDescriptor(DamageDelivery.Primary, ElementType.None, DamageCriticalPolicy.Prevent),
+            hasExplicitProcPolicy = true, procPolicy = DamageProcPolicy.PublishResolvedEvent };
+        Assert.That(CombatDamageProcessor.Apply(request).Damage, Is.GreaterThan(0f));
+        Assert.That(Qte.TryGetWindow(_main, out _, out float total), Is.True);
+        typeof(TeamLoader).GetMethod("RefreshRuntimeStatsOnly", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(_team, new object[] { _cg });
+        Assert.That(Qte.TryGetWindow(_main, out _, out _), Is.True);
+        Assert.That(total, Is.EqualTo(5f));
+        _fsm.ChangeState(_fsm.IdleState);
+        _team.switchCooldownDuration = 10f;
+        Set(_team, "lastSwitchTime", Time.time);
+        Assert.That(_fsm.CanSwitchCharacterTo(0), Is.True);
+        Assert.That(_team.SwitchToIndex(0), Is.True);
+        Assert.That(_fsm.CurrentStateId, Is.EqualTo(PlayerStateId.QteIntro));
+        Assert.That(_combat.CurrentActionId, Is.EqualTo(MainLightningPlungeAuthoring.ActionId));
+        Assert.That(_combat.GetCurrentStepData().stepName, Is.EqualTo("LightningPlunge"));
+        Assert.That(_movement.HasCapturedWorldMotion, Is.True);
+        for (int i = 0; i < 8; i++) _fsm.QteIntroState.FixedUpdate();
+        Assert.That(_fsm.CurrentStateId, Is.EqualTo(PlayerStateId.QteIntro));
+        Assert.That(_movement.IsPhysicallyGrounded(), Is.True);
+        Assert.That(visual.GetComponent<SpriteRenderer>().forceRenderingOff, Is.False);
     }
 
     [Test]
@@ -444,6 +539,13 @@ public class QteTeamSwapTests
         Assert.That(slot.qteReadyOverlay.gameObject.activeSelf, Is.True);
         Assert.That(slot.qteWindowFill.gameObject.activeSelf, Is.True);
         Assert.That(slot.qteReadyOverlay.raycastTarget, Is.False);
+        _team.switchCooldownDuration = 1f;
+        Set(_team, "lastSwitchTime", Time.time);
+        Call(slot, "Update");
+        Assert.That(_fsm.CanSwitchCharacterTo(1), Is.True);
+        Assert.That(slot.qteReadyOverlay.gameObject.activeSelf, Is.True);
+        Assert.That(slot.qteWindowFill.gameObject.activeSelf, Is.True);
+        _team.switchCooldownDuration = 0f;
         var target = Keep(new RenderTexture(520, 220, 24));
         var capture = Keep(new Texture2D(520, 220, TextureFormat.RGB24, false));
         RenderTexture previous = RenderTexture.active;

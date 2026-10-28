@@ -422,14 +422,17 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
 
     public bool SwitchToIndex(int index)
     {
-        if (!CanSwitchToIndex(index) || playerCharacter == null || playerCharacter.StateMachine == null)
+        if (!CanSwitchToIndex(index, ignoreCooldown: true) || playerCharacter == null || playerCharacter.StateMachine == null)
             return false;
 
         PlayerStateMachine fsm = playerCharacter.StateMachine;
-        bool ordinaryAllowed = fsm.CanSwitchCharacter();
+        bool readyQte = QteSwaps != null && QteSwaps.TryGetWindow(GetCharacterAtIndex(index), out _, out _);
+        if (!fsm.CanSwitchCharacter(ignoreCooldown: readyQte)) return false;
         QtePreparedEntry preparedEntry = default;
         bool useQte = QteSwaps != null && QteSwaps.TryPrepareEntry(index, out preparedEntry);
-        if (!ordinaryAllowed && !useQte) return false;
+        // A ready entry must succeed before committing the switch or spending its opportunity.
+        if (readyQte && !useQte) return false;
+        if (!useQte && IsSwitchOnCooldown) return false;
 
         if (fsm.CurrentState is CombatPlayerState)
         {
@@ -464,7 +467,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
         return true;
     }
 
-    public bool CanSwitchToIndex(int index)
+    public bool CanSwitchToIndex(int index, bool ignoreCooldown = false)
     {
         SyncTeamSnapshotFromInventory();
         if (teamSnapshot == null || index < 0 || index >= teamSnapshot.Length)
@@ -478,7 +481,7 @@ public class TeamLoader : MonoBehaviour, ITeamEnergySystem
             && (playerCharacter == null || !playerCharacter.IsDead)
             && index != currentIndex
             && IsCharacterAliveFromInventory(character)
-            && !IsSwitchOnCooldown;
+            && (ignoreCooldown || !IsSwitchOnCooldown);
     }
 
     public bool HasAnyLivingCharacter(CharacterObject excludeCharacter = null)

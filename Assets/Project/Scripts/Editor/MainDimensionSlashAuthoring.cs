@@ -32,7 +32,7 @@ public static class MainDimensionSlashAuthoring
         EditorUtility.SetDirty(character.actionResolverTable);
         AssetDatabase.SaveAssetIfDirty(character);
         AssetDatabase.SaveAssetIfDirty(character.actionResolverTable);
-        Debug.Log("Dimension Slash: Passive4 / five paid cuts / 1.5s Skill window authored.");
+        Debug.Log("Dimension Slash: Passive4 / five paid cuts / 5s Skill window authored.");
     }
 
     // screenSpanningCount was introduced for this action. Strip the field's
@@ -45,7 +45,7 @@ public static class MainDimensionSlashAuthoring
         foreach (var action in character.actionResolverTable.skillActions) ClearScreenSpanDefaults(action?.comboTree?.rootNode, visited);
         foreach (var action in character.actionResolverTable.ultimateActions) ClearScreenSpanDefaults(action?.comboTree?.rootNode, visited);
         foreach (var action in character.actionResolverTable.standaloneActions) ClearScreenSpanDefaults(action?.comboTree?.rootNode, visited);
-        ClearScreenSpanDefaults(character.qteSwap?.introComboTree?.rootNode, visited);
+        ClearScreenSpanDefaults(character.qteSwap?.GetIntroComboTree(character.actionResolverTable)?.rootNode, visited);
     }
 
     private static void ClearScreenSpanDefaults(ComboNode node, HashSet<ComboNode> visited)
@@ -105,7 +105,7 @@ public static class MainDimensionSlashAuthoring
             },
             runtimeTagEffects = new List<PassiveRuntimeTagEffectDefinition>
             {
-                new PassiveRuntimeTagEffectDefinition { tag = ReadyTag, addTag = true, duration = 1.5f }
+                new PassiveRuntimeTagEffectDefinition { tag = ReadyTag, addTag = true, duration = 5f }
             },
             counterEffects = new List<PassiveCounterEffectDefinition>
             {
@@ -128,11 +128,13 @@ public static class MainDimensionSlashAuthoring
             category = AttackCategory.Skill, actionId = ActionId,
             requiredTags = new List<RuntimeTagRequirement> { new RuntimeTagRequirement { tag = ReadyTag } }
         });
-        const string description = " Perform 5 paid Dimension Cuts to open a 1.5s Skill follow-up for Judgment Cut.";
+        const string description = " Perform 5 paid Dimension Cuts to open a 5s Skill follow-up for Judgment Cut.";
+        node.description = node.description.Replace("1.5s Skill follow-up", "5s Skill follow-up");
+        node.skillPanelDescriptionOverride = node.skillPanelDescriptionOverride.Replace("1.5s Skill follow-up", "5s Skill follow-up");
         node.description = node.description.Replace("follow-up for Dimension Slash.", "follow-up for Judgment Cut.");
         node.skillPanelDescriptionOverride = node.skillPanelDescriptionOverride.Replace("follow-up for Dimension Slash.", "follow-up for Judgment Cut.");
-        if (!node.description.Contains("1.5s Skill follow-up")) node.description += description;
-        if (!node.skillPanelDescriptionOverride.Contains("1.5s Skill follow-up")) node.skillPanelDescriptionOverride += description;
+        if (!node.description.Contains("5s Skill follow-up")) node.description += description;
+        if (!node.skillPanelDescriptionOverride.Contains("5s Skill follow-up")) node.skillPanelDescriptionOverride += description;
 
         var table = character.actionResolverTable;
         table.skillActions.RemoveAll(a => a != null && a.actionId == ActionId);
@@ -198,9 +200,10 @@ public static class MainDimensionSlashAuthoring
                 firstFrame = 0, endFrame = 72, hideFromFrame = 0, showAtFrame = 72,
                 slashCount = 19, intervalFrames = 2, seamCount = 12, screenSpanningCount = 5,
                 lengthRange = new Vector2(3f, 46f), viewportCoverage = 1.8f,
-                widthRange = new Vector2(0.08f, 1.8f), overallScale = 1.3f,
+                widthRange = new Vector2(0.08f, 1.8f), overallScale = 1.95f,
                 foregroundFraction = 0.5f,
-                revealFrames = new Vector2(1f, 3f), decayFrames = new Vector2(16f, 27f)
+                revealFrames = new Vector2(1f, 3f), decayFrames = new Vector2(16f, 27f),
+                impactDistortion = new CutImpactDistortionSettings { enabled = true }
             } });
         AddAudio(step);
         return step;
@@ -231,11 +234,12 @@ public static class MainDimensionSlashAuthoring
             slashFieldSettings = new ProceduralSlashFieldSettings
             {
                 material = AssetDatabase.LoadAssetAtPath<Material>(Root + "DimensionSlashRibbon.mat"), hideActor = false,
-                overallScale = 1.3f,
+                overallScale = 1.95f,
                 slashCount = 1, seamCount = 3, firstFrame = Mathf.Max(0, step.ActivePhaseStart + final.startFrameOffset - 4),
                 endFrame = step.TotalFrames, spread = new Vector2(0.6f, 0.5f),
                 lengthRange = new Vector2(15f, 18f), widthRange = new Vector2(0.7f, 1.2f),
-                revealFrames = new Vector2(4f, 4f), decayFrames = new Vector2(12f, 18f)
+                revealFrames = new Vector2(4f, 4f), decayFrames = new Vector2(12f, 18f),
+                impactDistortion = new CutImpactDistortionSettings { enabled = true }
             } });
         return step;
     }

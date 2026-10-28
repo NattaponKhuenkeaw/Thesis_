@@ -38,6 +38,8 @@ public class PlayerTeamSwitchState : MonoBehaviour
     private Vector2 capturedTargetMotionDelta;
     private Rigidbody2D cachedBody;
     private Animator cachedCloneAnimator;
+    private int syncedAnimationLayer = -1;
+    private int syncedAnimationStateHash;
 
     public static PlayerTeamSwitchState Spawn(
         GameObject playerGameObject,
@@ -255,6 +257,21 @@ public class PlayerTeamSwitchState : MonoBehaviour
                 AnimatorStateInfo stateInfo = playerAnim.GetCurrentAnimatorStateInfo(0);
                 anim.Play(stateInfo.shortNameHash, 0, stateInfo.normalizedTime);
             }
+
+            if (step != null && step.syncAnimationToActionFrames && step.animationClip != null)
+            {
+                int stateHash = Animator.StringToHash(step.animationClip.name);
+                for (int layer = 0; layer < anim.layerCount; layer++)
+                {
+                    if (!anim.HasState(layer, stateHash)) continue;
+                    syncedAnimationLayer = layer;
+                    syncedAnimationStateHash = stateHash;
+                    // These states are driven by the action clock on the live actor too.
+                    anim.speed = 0f;
+                    SampleSyncedAnimation(startFrame);
+                    break;
+                }
+            }
         }
 
         SetupHitbox();
@@ -351,7 +368,8 @@ public class PlayerTeamSwitchState : MonoBehaviour
         int targetFrame = Mathf.FloorToInt(logicTimeCounter * LOGIC_FPS + 0.001f);
         int maxExecutionFrame = GetMaxExecutionFrame();
 
-        bool frameSequenceDone = false;
+        targetFrame = Mathf.Min(targetFrame, maxExecutionFrame);
+        bool frameSequenceDone = currentFrame >= maxExecutionFrame;
         while (currentFrame < targetFrame)
         {
             currentFrame++;
@@ -373,7 +391,7 @@ public class PlayerTeamSwitchState : MonoBehaviour
         if (frameSequenceDone)
         {
             bool animatorDone = true;
-            if (cachedCloneAnimator != null)
+            if (cachedCloneAnimator != null && syncedAnimationLayer < 0)
             {
                 Animator anim = cachedCloneAnimator;
                 if (anim != null && anim.runtimeAnimatorController != null && !anim.IsInTransition(0))
@@ -393,11 +411,20 @@ public class PlayerTeamSwitchState : MonoBehaviour
         }
     }
 
+    private void SampleSyncedAnimation(int frame)
+    {
+        if (cachedCloneAnimator == null || syncedAnimationLayer < 0 || actionStep.TotalFrames <= 0) return;
+        cachedCloneAnimator.Play(syncedAnimationStateHash, syncedAnimationLayer,
+            Mathf.Clamp01((float)frame / actionStep.TotalFrames));
+        cachedCloneAnimator.Update(0f);
+    }
+
     /// <summary>Processes hitboxes, spawns VFX, and applies damage formulas.</summary>
     private void ProcessLogicFrame(int frame, ActionPhase phase)
     {
         if (actionStep == null) return;
 
+        SampleSyncedAnimation(frame);
         ProcessMotionData(frame);
 
         int frameInActivePhase = frame - actionStep.startupFrames - 1;

@@ -50,6 +50,8 @@ public class VFXEntry
 
     [Tooltip("If true, scales the VFX to fit the screen size, similar to the Ultimate Flash Overlay.")]
     public bool fitScreenSize = false;
+    [Tooltip("Optional refraction follows the rendered sprite's transformed bounds and lifetime.")]
+    public CutImpactDistortionSettings impactDistortion;
 }
 
 /// <summary>
@@ -70,6 +72,7 @@ public class VFXFrameData : ActionStepComponent
         {
             entry.triggerFrame = Mathf.RoundToInt(entry.triggerFrame * ratio);
             entry.duration = Mathf.Max(1, Mathf.RoundToInt(entry.duration * ratio));
+            entry.impactDistortion?.Rescale(ratio);
             foreach (var key in entry.transformKeys)
             {
                 key.frame = Mathf.RoundToInt(key.frame * ratio);

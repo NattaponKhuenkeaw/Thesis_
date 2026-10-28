@@ -102,6 +102,8 @@ public class NormalHitbox : HitboxBase
     // ── Hit Feedback ──
     [Header("Hit Feedback")]
     public AudioClip hitSFX;
+    [Range(0f, 2f)] public float hitSFXVolume = 1f;
+    [Range(0.1f, 3f)] public float hitSFXPitch = 1f;
     public Project.Combat.VFXType hitVFXType = Project.Combat.VFXType.None;
     public GameObject hitVFXPrefab;
     public Vector2 hitVFXOffset;
@@ -151,6 +153,8 @@ public class GrabHitbox : HitboxBase
     // ── Hit Feedback ──
     [Header("Hit Feedback")]
     public AudioClip hitSFX;
+    [Range(0f, 2f)] public float hitSFXVolume = 1f;
+    [Range(0.1f, 3f)] public float hitSFXPitch = 1f;
     public Project.Combat.VFXType hitVFXType = Project.Combat.VFXType.None;
     public GameObject hitVFXPrefab;
     public Vector2 hitVFXOffset;

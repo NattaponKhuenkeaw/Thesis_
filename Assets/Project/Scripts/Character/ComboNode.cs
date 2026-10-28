@@ -144,6 +144,8 @@ public class UltimateAction : SkillAction
     [Header("Activation Audio")]
     public AudioClip activationVoice;
     public AudioClip activationSFX;
+    [Tooltip("Master activation SFX gain, multiplied by the timeline event's SFX Volume.")]
+    [Range(0f, 1f)] public float activationSFXVolume = 1f;
     public float voiceDelay = 0.1f;
 
     [Header("Visual Effects")]

@@ -11,6 +11,16 @@ blocked_by: []
 
 # ADR-013: Action-Owned Camera Presentation
 
+## Approved extension — 2026-10-29
+
+### Single zoom duration clarification — 2026-10-29
+
+After reporting that a 1000-frame hold was cut short and selecting the single-zoom option, the user clarified: “One zoom per event, the hold mean a Zoom Hold Freeze(at peak zoom) and the return duration is the cam return to it original scale.” Single-zoom events now own a scaled-gameplay-time envelope measured at LOGIC_FPS, independent of step length. Natural action completion and auto-chain steps allow that envelope to finish; interruption of its owning combat state releases it. Field-session invalidation, death, hitstun, room change, higher-priority focus/Ultimate, disabling the manager, and a replacement camera event cancel it. Pause and hitstop stop the clock. This supersedes the action-end release and action-frame-only clock contract for single-zoom events. Legacy unconverted keyframe tracks retain their previous step-owned contract.
+
+The editor presents one target zoom, transition-in frames, peak-hold frames and return-to-normal frames, plus optional lock and horizontal offset. Opening a legacy ActionCameraMotion event converts its authoring settings to this envelope using its strongest zoom-in key and that key's frame as the transition duration, retaining explicit hold/return values. Original keys remain serialized for recovery; the single-zoom settings become authoritative. The return blends to the camera system's current base lens, avoiding a stale cached lens that could overwrite newer room framing.
+
+User approved Screen Impulse Camera Control with “lgtm” after reviewing `../Specs/screen-impulse-camera-control-task-card.md`. Screen Impulse may opt into action-frame zoom-in/out and a captured rendered-world-position lock, with transition, hold and return frames. Reuse generation-scoped action-camera ownership and the existing bounded Cinemachine extension. Screen Impulse zoom-out is limited to the supported room rectangle; existing ActionCameraMotion limits remain unchanged. The lock cuts immediately, the lens follows its authored transition, and return blends toward current base composition. Finish/interruption releases ownership. This approval extends the original restrained lens/additive-only contract for this opt-in event; it does not change existing action assets.
+
 | Field | Value |
 | --- | --- |
 | Status | **Accepted — user “LGTM, arch approval”,2026-10-27** |

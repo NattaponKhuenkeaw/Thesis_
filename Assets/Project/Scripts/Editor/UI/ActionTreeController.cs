@@ -78,7 +78,8 @@ namespace CombatEditor.UI
             }
 
             BuildSingleCategory("🎯 Dash", "Dash", "Dash Move", "Dash", character.DashData);
-            if (character.qteSwap?.introComboTree?.rootNode != null)
+            if (character.actionResolverTable?.qteActions?.Count is not > 0 && character.qteSwap?.enabled == true
+                && character.qteSwap.TryResolveIntro(character.actionResolverTable, out _, out var introStep))
             {
                 const string category = "QteIntro";
                 if (!expandedState.ContainsKey(category)) expandedState[category] = true;
@@ -86,8 +87,11 @@ namespace CombatEditor.UI
                 if (expandedState[category])
                 {
                     var items = new VisualElement(); items.AddToClassList("sidebar-items");
-                    BuildTreeNodeRecursive(items, character.qteSwap.introComboTree.rootNode,
-                        category, 0, null, null, new HashSet<ComboNode>());
+                    ComboNode introRoot = character.qteSwap.introComboTree?.rootNode;
+                    if (introRoot != null)
+                        BuildTreeNodeRecursive(items, introRoot, category, 0, null, null, new HashSet<ComboNode>());
+                    else
+                        items.Add(CreateLeafItem(new ActionNode(introStep.stepName, category, "AttackStep", introStep)));
                     qteRoot.Add(items);
                 }
                 container.Add(qteRoot);
@@ -100,6 +104,7 @@ namespace CombatEditor.UI
 
         private void BuildResolverTableCategories(ActionResolverTable table)
         {
+            BuildActionsForList("QTE Entry", "QTE", table.qteActions, table, AttackCategory.Normal);
             BuildActionsForList("⚁ECombo", "Combo", table.comboActions, table, AttackCategory.Normal);
             BuildActionsForList("🌀 Skill", "Skill", table.skillActions, table, AttackCategory.Skill);
             BuildActionsForList("⚡ Ultimate", "Ultimate", table.ultimateActions, table, AttackCategory.Ultimate);

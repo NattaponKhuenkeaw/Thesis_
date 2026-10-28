@@ -61,9 +61,22 @@ public class HitFeedbackResolver : MonoBehaviour
         {
             if (GameAudioManager.Instance != null)
             {
-                // Add slight pitch randomization for variety
-                float pitch = Random.Range(0.95f, 1.05f);
-                GameAudioManager.Instance.PlayHitSFX(sfxToPlay, 1f, pitch);
+                float volume = 1f;
+                float basePitch = 1f;
+                if (hitbox is NormalHitbox normal)
+                {
+                    volume = normal.hitSFXVolume;
+                    basePitch = normal.hitSFXPitch;
+                }
+                else if (hitbox is GrabHitbox grab)
+                {
+                    volume = grab.hitSFXVolume;
+                    basePitch = grab.hitSFXPitch;
+                }
+
+                // Preserve the existing variation around the authored pitch.
+                float pitch = Mathf.Clamp(basePitch * Random.Range(0.95f, 1.05f), 0.1f, 3f);
+                GameAudioManager.Instance.PlayHitSFX(sfxToPlay, GameAudioManager.ClampSFXGain(volume), pitch);
             }
             else
             {

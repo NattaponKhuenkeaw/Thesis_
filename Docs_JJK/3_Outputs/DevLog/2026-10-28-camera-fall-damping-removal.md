@@ -29,3 +29,13 @@ The removal direction comes directly from the user. Final feel remains for an in
 ## Suggested Commit
 
 `fix(camera): remove fall and landing damping overrides`
+
+## Follow-up — Lightning Plunge Camera Removal
+
+The user also approved removing Lightning Plunge's independent camera path after inspection identified its forced body-relative position and 0.45-second return as a separate source of vertical movement.
+
+- Deleted the plunge camera controller and its Unity metadata; removed begin/sample/release hooks from PlayerQteIntroState and all plunge state/position/lens overrides from QteIntroCameraImpact.
+- Removed obsolete camera offset/return settings from QtePlungeSettings and Main's asset. Preserved the existing unrelated combo-resolution edit and saved placement tuning.
+- Normal follow and confinement now own the plunge view. Screen impulse, physical motion, damage, VFX and slowdown paths are unchanged; other QTE horizontal centering and intro pulse remain.
+- Updated the canonical GDD camera direction and marked older plunge camera checklist expectations as superseded by the user's latest decision.
+- Recompiled Assembly-CSharp successfully (exit 0) with temporary outputs and the deleted source removed from the cached response file. Scoped whitespace and removed-reference checks pass. No automated tests or manual gameplay were run; final subjective feel still needs an in-editor playtest.

@@ -19,6 +19,16 @@ Tuning test: try both swaps and ten quick exchanges with a target behind and ahe
 
 # QTE Team Swap — validation plan
 
+## Latest window / shared-policy regression — 2026-10-28
+
+- Land CameraGirl Skill and EX separately. Each accepted primary hit should open/refresh Main's five-second readiness; missing must not open it.
+- Apply a team buff, heal/damage the source, and refresh stats during readiness. The same deadline and portrait objects must persist. Do not restart or consume the opportunity.
+- During cooldown, Startup/Active, auto-chain, airborne and hitstun, verify the ready pulse/timer remain visible while the ordinary switch policy blocks input. Recovery/Cancel must allow the same switch for ordinary and QTE cases.
+- Let the five seconds expire without input; pause/slow motion should use combat time. Then repeat with successful swap, source death, roster replacement and scene transition to verify valid clearing.
+- Perform Main's fifth paid cut. Dimension Slash/Judgment Cut should use a five-second authored ready tag and consume it on use.
+
+Runtime/Editor compilation passed. Updated focused regression cases are compiled but unrun; live Editor connection is unavailable. Earlier execution totals below predate this fix.
+
 Prepared 2026-10-27. Not yet run: this is a design-stage test plan, not a QA pass.
 
 ## Functional checks
@@ -33,7 +43,7 @@ Prepared 2026-10-27. Not yet run: this is a design-stage test plan, not a QA pas
 | Swap CameraGirl during Skill cooldown | Her Attack4 intro remains available through valid readiness; Skill cooldown and AE are not consumed/reset. |
 | Attack data comparison | Main intro matches Dimension Cut clip, frame phases, motion, hit payload and action passives; CameraGirl matches all Attack4 hit entries, motion, audio and afterimage. |
 | Intro completion and fresh input | No automatic Attack5. Fresh legal attack chains into incoming normal combat at authored cancel; outgoing inputs are cleared. |
-| Hit-confirm handoff | A ready QTE accepts from the current grounded step after its accepted hit, while an unconfirmed startup does not gain an early cancel. |
+| Shared swap policy | QTE and ordinary swaps use the same grounded Recovery/Cancel policy; a confirmed Active hit does not bypass it. The ready timer survives temporary restrictions. |
 | Outgoing continuation | Executor begins at captured frame and animation phase. No already-processed hit or once-only AE reward replays. Damage retains outgoing source attribution. |
 | Long outgoing animation | Executor remains until legitimate action/animation completion, including durations beyond its current three-second safety cap. |
 | Ordinary swap regression | Without readiness, existing recovery gate, cooldown, clone and locomotion behavior remain correct. |

@@ -23,9 +23,9 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         if (_slashField != null) _slashField.Stop();
     }
 
-    private void ReleaseActionCamera()
+    private void ReleaseActionCamera(bool allowTimedCompletion = false)
     {
-        if (_actionCameraOwner != null) _actionCameraOwner.ReleaseActionCamera(_actionCameraToken);
+        if (_actionCameraOwner != null) _actionCameraOwner.ReleaseActionCamera(_actionCameraToken, allowTimedCompletion);
         _actionCameraOwner = null;
         _actionCameraToken = default;
     }
@@ -66,7 +66,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
     public override void Exit()
     {
         ReleaseSlashField();
-        ReleaseActionCamera();
+        ReleaseActionCamera(currentPhase == ActionPhase.Done);
         CommitResolvedActionOutput();
         EndActiveActionEventSequence();
         StopAfterImageTrails();
@@ -410,7 +410,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
         counterCostCommittedAction = action;
         EnemyController target = beginsNewCounterAction && action != null && action.requiresEnemyTarget
             ? player.Combat?.FindNearestEnemyTarget(action.GetTargetSearchRadius()) : null;
-        ReleaseActionCamera();
+        ReleaseActionCamera(isAutoChain || currentPhase == ActionPhase.Done);
         ReleaseSlashField();
         EndActiveActionEventSequence();
         StopAfterImageTrails();
@@ -539,8 +539,14 @@ public abstract class CombatPlayerState : FrameDataPlayerState
                 ReleaseActionCamera();
                 _actionCameraOwner = CameraManager.instance;
                 if (_actionCameraOwner != null)
-                    _actionCameraToken = _actionCameraOwner.BeginActionCamera(player.Combat?.CurrentExecution,
-                        entry.cameraMotionSettings, entry.triggerFrame, player.Movement != null ? player.Movement.FacingDirection : 1);
+                {
+                    int facing = player.Movement != null ? player.Movement.FacingDirection : 1;
+                    _actionCameraToken = entry.cameraMotionSettings?.zoomControl != null
+                        ? _actionCameraOwner.BeginScreenImpulseCamera(player.Combat?.CurrentExecution,
+                            entry.cameraMotionSettings.zoomControl, entry.triggerFrame, facing)
+                        : _actionCameraOwner.BeginActionCamera(player.Combat?.CurrentExecution,
+                            entry.cameraMotionSettings, entry.triggerFrame, facing);
+                }
                 break;
 
             case ActionEventType.ProceduralSlashField:
@@ -733,12 +739,18 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
     private void TriggerScreenImpulse(ActionEventEntry entry)
     {
-        if (entry?.screenImpulseSettings?.impulse == null || GameImpulseController.Instance == null)
-        {
-            return;
-        }
+        ScreenImpulseEventSettings settings = entry?.screenImpulseSettings;
+        if (settings == null) return;
+        if (settings.impulse != null && GameImpulseController.Instance != null)
+            GameImpulseController.Instance.Play(settings.impulse);
 
-        GameImpulseController.Instance.Play(entry.screenImpulseSettings.impulse);
+        if (settings.cameraControl != null && settings.cameraControl.enabled && CameraManager.instance != null)
+        {
+            ReleaseActionCamera();
+            _actionCameraOwner = CameraManager.instance;
+            _actionCameraToken = _actionCameraOwner.BeginScreenImpulseCamera(player.Combat?.CurrentExecution,
+                settings.cameraControl, entry.triggerFrame, player.Movement != null ? player.Movement.FacingDirection : 1);
+        }
     }
 
     private void StartAfterImageTrail(ActionEventEntry entry)
@@ -819,7 +831,10 @@ public abstract class CombatPlayerState : FrameDataPlayerState
 
         if (GameAudioManager.Instance != null)
         {
-            GameAudioManager.Instance.PlayUltimateActivation(entry.activationVoice, entry.activationSFX, entry.voiceDelay);
+            float activationVolume = Mathf.Clamp01(entry.activationSFXVolume);
+            if (resolver.ActiveCombatAction is UltimateAction ultimate)
+                activationVolume *= Mathf.Clamp01(ultimate.activationSFXVolume);
+            GameAudioManager.Instance.PlayUltimateActivation(entry.activationVoice, entry.activationSFX, entry.voiceDelay, activationVolume);
         }
     }
 

@@ -11,6 +11,28 @@ blocked_by: []
 
 # Main Lightning Plunge — Manual Regression Checklist
 
+## Resolver identity / CameraGirl handoff correction
+
+- Open Main's Combat Animation Editor. QTE Entry appears before Combo with Lightning Plunge setup and LightningPlunge → ExecutionBreakdown. The resolver table itself contains the QTE action; editing/saving/reopening retains changes.
+- Main's QTE profile references `main.qte.lightning_plunge`; ordinary Dimension Cut still uses `main.dash.dimension_cut`. QTE entry/follow-up consumes no cached cuts or dash quota.
+- Land CameraGirl's Skill and EX Skill separately, then swap to Main while ready. Repeat both facings and with an outgoing finishing body at the landing/path. The body must not block readiness or abort descent; solid terrain must still reject unsafe entries.
+- Compare Lightning Plunge timing, damage, VFX and saved placement/camera controls with the current authored settings. Run early recovery follow-up and no-input expiry.
+
+Current validation is compilation plus serialized-reference/payload checks. No live gameplay pass is claimed; the Editor has no connected MCP session and native UI initialization failed. See [fix task card](../Specs/qte-resolver-entry-fix-task-card.md).
+
+## Camera removal revision — 2026-10-28
+
+2026-10-29 correction: Main now uses the same shared intro zoom pulse and horizontal centering as CameraGirl. The removed plunge-specific lens lock, vertical positioning and position-return blend stay removed. Verify this through a prepared swap and the plunge preview; no automated tests were added or run.
+
+- [ ] Main and CameraGirl both trigger the shared intro zoom using the saved Intro Camera Impact settings; setting size reduction to zero disables the pulse for both.
+
+The user approved removing the plunge-specific camera lock and return blend. This supersedes the earlier midair body-lock, vertical bound bypass and 0.45-second return expectations below; those observations are historical.
+
+- [ ] Plunge entry, descent and contact use ordinary camera follow and room bounds, without a dedicated vertical lock, forced lens or post-impact position blend.
+- [ ] Heavy-hit screen impulse still plays on a confirmed hit. Other characters retain their existing QTE horizontal centering and intro zoom pulse.
+- [ ] No-input recovery, early Execution Breakdown, interruption and repeated entries leave no plunge camera state behind.
+- [ ] Plunge placement, body visibility, lightning VFX, slowdown and damage timing remain unchanged.
+
 No automated tests are authorized, added or run. Use the existing Test_Playground or a normal gameplay room. Do not save Play-mode state into progression or scenes.
 
 - [x] Compile new scripts through Unity; inspect compilation diagnostics.
@@ -48,13 +70,23 @@ No automated tests are authorized, added or run. Use the existing Test_Playgroun
 - [ ] Hold/fade settings keep the ground burst strong around halfway through recovery, then fade cleanly before completion. If too busy, reduce hold or burst fade; if still too fast, increase hold first. Do not extend damage to lengthen visuals.
 - [ ] Confirm column and local light persist through their configurable holds/fades; pause/hitstop continues to hold the shared action clock.
 
-## Dissipating exit animation
+## Purple electrical accent revision
 
-- [x] Unity compile/render pass completed without console errors; inspected mid/late exit renders at action frames 55 and 90.
-- [x] Rendered geometry contracts and fragments rather than staying at the original silhouette with reduced opacity.
-- [ ] In continuous gameplay, the impact retains its initial readable hold, then the column contracts downward, spikes withdraw at different times, chips drift/rotate and wind arcs unwind.
-- [ ] Exit remains readable against bright backgrounds; erosion should resemble charged breakup rather than noisy transparency. If too granular, adjust shader grain/coverage rather than lengthening damage.
-- [ ] Pause/slow motion holds the same fragment/retraction progress; frame skipping and preview rewind preserve deterministic sampling.
-- [ ] Repeated use clears old meshes/particles/light and starts with zero erosion. Early Execution Breakdown still takes presentation ownership cleanly.
+- [x] Unity sequential preview: falling frame 0 / impact 15 / tail 54 inspected with short purple arcs and halos around the main shapes.
+- [ ] Live: falling arcs point down, impact arcs remain secondary, and the large explosion/actor silhouette remains readable.
+- [ ] Pause/hitstop freezes arc pulses and falling sparks. Skipping across contact emits the impact burst at the correct sampled time; rewind/reuse has no duplicate bursts.
+- [ ] Tail reduces arc density with the existing exit; cancellation/disable clears accents and particles.
+- [ ] Chromatic/refraction remain disabled. Tune counts/spread/glow only; preserve action/contact timing.
+
+## Broad explosion exit and chromatic removal (current)
+
+- [x] Isolated renders inspected at 14/55/72: broad initial starburst, clearing center, smaller floating energy lobes.
+- [x] Saved Main cut chromaticPixels values are zero, plunge impactDistortion.enabled is false, DefaultVolumeProfile ChromaticAberration is inactive at zero.
+- [ ] Live Main plunge and Execution Breakdown show no colored RGB fringes or reported green/black distortion. If another colored artifact remains, capture its active source rather than changing the blast shape again.
+- [ ] Broad explosion dominates at contact; exit opens outward and loses density without grain, shatter, shrinking root or sparkle-wisp animation.
+- [ ] Above-ground lobe clamp remains correct on slopes; normal completion/follow-up lets cosmetic motion finish, cancel/disable/reuse clears it.
+- [ ] Pause/hitstop and rewind preserve deterministic timing; authored damage, Heavy tier, camera and placement are unchanged.
+
+Starting values and tuning directions are in the implementation report. No automated tests added or run.
 
 Performed observations and limitations are in the [implementation report](../Reports/MainLightningPlunge/implementation-report.md). The latest user-approved height is Y+5, replacing the initial Y+3 and interim Y+10. Scale/tail starting values require human feel review; this checklist is not an automated pass report.

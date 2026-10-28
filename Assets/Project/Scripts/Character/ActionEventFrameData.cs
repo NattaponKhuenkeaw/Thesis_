@@ -109,6 +109,8 @@ public class ActionEventEntry
     public Vector3 activationVFXOffset;
     public AudioClip activationVoice;
     public AudioClip activationSFX;
+    [Tooltip("Payload SFX gain, multiplied by the Ultimate action's Activation SFX Volume when applicable.")]
+    [Range(0f, 1f)] public float activationSFXVolume = 1f;
     public float voiceDelay = 0.1f;
 
     [Header("Teleport")]
@@ -152,9 +154,10 @@ public class ActionEventEntry
             return Mathf.Max(1, Mathf.CeilToInt(teleportSettings.GetTotalDurationSeconds() * FrameDataConstants.LOGIC_FPS));
         }
 
-        if (eventType == ActionEventType.ScreenImpulse && screenImpulseSettings?.impulse != null)
+        if (eventType == ActionEventType.ScreenImpulse && screenImpulseSettings != null)
         {
-            return Mathf.Max(1, Mathf.CeilToInt(screenImpulseSettings.impulse.GetTotalDurationSeconds() * FrameDataConstants.LOGIC_FPS));
+            int impulseFrames = Mathf.CeilToInt((screenImpulseSettings.impulse?.GetTotalDurationSeconds() ?? 0f) * FrameDataConstants.LOGIC_FPS);
+            return Mathf.Max(1, Mathf.Max(impulseFrames, screenImpulseSettings.cameraControl?.DurationFrames ?? 0));
         }
 
         if (eventType == ActionEventType.AfterImage && afterImageSettings != null)
@@ -239,6 +242,45 @@ public class TeleportEventSettings
 public class ScreenImpulseEventSettings
 {
     public GameImpulseRequest impulse = GameImpulseRequest.CreateActionEventDefault();
+    public ScreenImpulseCameraSettings cameraControl = new ScreenImpulseCameraSettings();
+}
+
+[Serializable]
+public class ScreenImpulseCameraSettings
+{
+    public bool enabled;
+    [Tooltip("Below 1 zooms in; above 1 zooms out. Room bounds may limit the result.")]
+    [Min(0.01f)] public float zoomMultiplier = 1f;
+    [Tooltip("Hold the rendered world position captured when the event fires. Does not lock the player.")]
+    public bool jumpCutLock;
+    [Range(-1f, 1f)] public float horizontalViewportOffset;
+    [Min(0)] public int transitionInFrames;
+    [Min(0)] public int holdFrames;
+    [Min(0)] public int returnFrames;
+
+    public int DurationFrames => enabled
+        ? Mathf.Max(0, transitionInFrames) + Mathf.Max(0, holdFrames) + Mathf.Max(0, returnFrames) + 1
+        : 0;
+
+    public float SampleWeight(float frame)
+    {
+        if (!enabled || frame < 0f) return 0f;
+        int transition = Mathf.Max(0, transitionInFrames);
+        int holdEnd = transition + Mathf.Max(0, holdFrames);
+        int restore = Mathf.Max(0, returnFrames);
+        if (transition > 0 && frame < transition)
+            return Mathf.SmoothStep(0f, 1f, frame / transition);
+        if (frame <= holdEnd) return 1f;
+        if (restore == 0 || frame >= holdEnd + restore) return 0f;
+        return 1f - Mathf.SmoothStep(0f, 1f, (frame - holdEnd) / restore);
+    }
+
+    public void Rescale(float ratio)
+    {
+        transitionInFrames = Mathf.Max(0, Mathf.RoundToInt(transitionInFrames * ratio));
+        holdFrames = Mathf.Max(0, Mathf.RoundToInt(holdFrames * ratio));
+        returnFrames = Mathf.Max(0, Mathf.RoundToInt(returnFrames * ratio));
+    }
 }
 
 public enum AfterImageEndMode
@@ -283,6 +325,8 @@ public class ActionEventFrameData : ActionStepComponent
             }
 
             entry.triggerFrame = Mathf.RoundToInt(entry.triggerFrame * ratio);
+            if (entry.eventType == ActionEventType.ScreenImpulse)
+                entry.screenImpulseSettings?.cameraControl?.Rescale(ratio);
             if (entry.eventType == ActionEventType.ActionCameraMotion)
                 entry.cameraMotionSettings?.Rescale(ratio);
             if (entry.eventType == ActionEventType.ProceduralSlashField)

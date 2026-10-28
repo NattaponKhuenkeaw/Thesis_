@@ -1,3 +1,4 @@
+using CombatCore;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -49,7 +50,7 @@ public sealed class LightningPlungeVFX : MonoBehaviour
         public void Triangle(Vector2 a, Vector2 b, Vector2 c, Color color)
             => TriangleUv(a, b, c, color, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 1f));
 
-        private void TriangleUv(Vector2 a, Vector2 b, Vector2 c, Color color, Vector2 uvA, Vector2 uvB, Vector2 uvC)
+        public void TriangleUv(Vector2 a, Vector2 b, Vector2 c, Color color, Vector2 uvA, Vector2 uvB, Vector2 uvC)
         {
             if (_count + 3 > _vertices.Length) return;
             _vertices[_count] = a; _vertices[_count + 1] = b; _vertices[_count + 2] = c;
@@ -74,6 +75,17 @@ public sealed class LightningPlungeVFX : MonoBehaviour
             TriangleUv(a, b, c, color, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(1f, 1f));
             TriangleUv(a, c, d, color, new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(0f, 1f));
         }
+        public void Strip(Vector2 a, Vector2 b, Vector2 crossA, Vector2 crossB, Color color, Vector2 surfaceNormal = default)
+        {
+            Vector2 p0 = AboveSurface(a - crossA, surfaceNormal), p1 = AboveSurface(a + crossA, surfaceNormal);
+            Vector2 p2 = AboveSurface(b + crossB, surfaceNormal), p3 = AboveSurface(b - crossB, surfaceNormal);
+            TriangleUv(p0, p1, p2, color,
+                new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(1f, 1f));
+            TriangleUv(p0, p2, p3, color,
+                new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(0f, 1f));
+        }
+        private static Vector2 AboveSurface(Vector2 point, Vector2 normal)
+            => point - normal * Mathf.Min(0f, Vector2.Dot(point, normal));
         public void Upload()
         {
             mesh.Clear();
@@ -90,11 +102,10 @@ public sealed class LightningPlungeVFX : MonoBehaviour
 
     private GeometryLayer _core, _envelope, _shards, _cracks, _wind;
     private GeometryLayer _aura, _halo, _groundGlow;
-    private GeometryLayer _fragments;
     private MaterialPropertyBlock _shaderProperties;
     private static readonly int ActionFrameId = Shader.PropertyToID("_ActionFrame");
-    private static readonly int DissolveId = Shader.PropertyToID("_Dissolve");
     private Camera _presentationCamera;
+    private CutImpactVfxSource _cutImpact;
     private GeometryLayer[] _layers;
     private ParticleSystem[] _particles;
     private Mesh _particleMesh;
@@ -102,8 +113,12 @@ public sealed class LightningPlungeVFX : MonoBehaviour
     private Vector3 _start, _contact;
     private Vector2 _tangent = Vector2.right, _normal = Vector2.up;
     private uint _random;
+    private uint _initialParticleRandom;
     private float _lastFrame;
-    private bool _emitted;
+    private bool _emitted, _fallEmitted;
+    private bool _finishingTail;
+    private int _tailImpactFrame;
+    private PlayerCombat _tailClockOwner;
     private readonly float[] _noise = new float[256];
     private static int _seedSequence;
     public bool IsPlaying { get; private set; }
@@ -111,18 +126,22 @@ public sealed class LightningPlungeVFX : MonoBehaviour
     public int ActiveSeed { get; private set; }
 
     public void Begin(LightningPlungeVfxSettings settings, Vector3 start, Vector3 contact,
-        Vector2 surfaceNormal, int seed = 0)
+        Vector2 surfaceNormal, int seed = 0, CombatExecutionContext execution = null)
     {
         Stop();
         if (settings == null || material == null) return;
         Initialize();
         _settings = settings; _start = start; _contact = contact;
         _presentationCamera = Camera.main;
+        _cutImpact = GetComponent<CutImpactVfxSource>();
+        if (_cutImpact == null) _cutImpact = gameObject.AddComponent<CutImpactVfxSource>();
+        _cutImpact.BeginBolt(settings.impactDistortion, _presentationCamera, execution, settings.suppressChromaticAberration);
         _normal = surfaceNormal.sqrMagnitude > 0.01f ? surfaceNormal.normalized : Vector2.up;
         _tangent = new Vector2(_normal.y, -_normal.x);
         ActiveSeed = seed != 0 ? seed : settings.seed != 0 ? settings.seed : unchecked(++_seedSequence * 7919);
         _random = unchecked((uint)ActiveSeed); if (_random == 0) _random = 1;
         for (int i = 0; i < _noise.Length; i++) _noise[i] = Next();
+        _initialParticleRandom = _random;
         for (int i = 0; i < _layers.Length; i++)
         {
             _layers[i].renderer.sortingLayerID = SortingLayer.NameToID(settings.sortingLayer);
@@ -139,7 +158,7 @@ public sealed class LightningPlungeVFX : MonoBehaviour
             renderer.sortingLayerID = SortingLayer.NameToID(settings.sortingLayer);
             renderer.sortingOrder = settings.sortingOrder + 6 + i;
         }
-        _lastFrame = 0f; _emitted = false; IsPlaying = true;
+        _lastFrame = 0f; _emitted = false; _fallEmitted = false; IsPlaying = true;
         Anchor();
     }
 
@@ -152,19 +171,20 @@ public sealed class LightningPlungeVFX : MonoBehaviour
         if (actionFrame < _lastFrame)
         {
             foreach (var particles in _particles) particles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            _emitted = false;
+            _emitted = false; _fallEmitted = false;
             _lastFrame = 0f;
-            _random = unchecked((uint)ActiveSeed); if (_random == 0) _random = 1;
+            _random = _initialParticleRandom;
         }
         Anchor(); SampledFrame = actionFrame;
         foreach (var layer in _layers) layer.Clear();
         float age = actionFrame - impactFrame;
+        _cutImpact?.SampleBolt(age, _contact + Vector3.up * StrikeCeilingY(), _contact,
+            _settings.coreWidth * _settings.scale * _settings.impactScale * 0.5f, _presentationCamera);
         if (age < 0f) DrawFalling(actionFrame, impactFrame); else DrawImpact(age);
+        DrawElectricalAccents(actionFrame, impactFrame);
         _shaderProperties.SetFloat(ActionFrameId, actionFrame);
         foreach (var layer in _layers)
         {
-            bool erodes = layer == _core || layer == _envelope || layer == _shards || layer == _cracks || layer == _aura;
-            _shaderProperties.SetFloat(DissolveId, erodes ? ExitProgress(age) : 0f);
             layer.Upload(); layer.renderer.SetPropertyBlock(_shaderProperties);
         }
         if (impactLight != null)
@@ -177,19 +197,31 @@ public sealed class LightningPlungeVFX : MonoBehaviour
             impactLight.pointLightInnerRadius = _settings.impactLightRadius * 0.08f;
             impactLight.color = new Color(0.55f, 0.12f, 1f);
         }
-        if (age >= 0f && !_emitted)
-        {
-            Emit(impactSparks, _settings.sparkCount, 0);
-            Emit(debris, _settings.debrisCount, 1);
-            Emit(residualSparks, _settings.residualCount, 2);
-            _emitted = true;
-        }
-        float particleDelta = Mathf.Max(0f, actionFrame - Mathf.Max(_lastFrame, impactFrame)) / 60f;
-        if (particleDelta > 0f)
-            foreach (var particles in _particles)
-            { particles.Simulate(particleDelta, false, false, false); particles.Pause(false); }
+        SampleParticles(actionFrame, impactFrame);
         _lastFrame = actionFrame;
-        if (actionFrame >= endFrame) Stop();
+        if (actionFrame >= Mathf.Max(endFrame, PresentationEndFrame(impactFrame))) Stop();
+    }
+
+    public int PresentationEndFrame(int impactFrame)
+    {
+        if (_settings == null) return impactFrame;
+        return impactFrame + Mathf.Max(Mathf.Max(_settings.residualFrames, _settings.windFrames + 6),
+            _settings.impactHoldFrames + _settings.exitDelayFrames + _settings.exitFrames);
+    }
+
+    public void FinishTail(int impactFrame, PlayerCombat clockOwner)
+    {
+        if (!IsPlaying) return;
+        _tailImpactFrame = impactFrame;
+        _tailClockOwner = clockOwner;
+        _finishingTail = true;
+    }
+
+    private void LateUpdate()
+    {
+        if (!_finishingTail || !IsPlaying || Time.timeScale <= 0f || _tailClockOwner?.HasActiveHitstop == true) return;
+        Sample(SampledFrame + Time.deltaTime * FrameDataConstants.LOGIC_FPS,
+            _tailImpactFrame, PresentationEndFrame(_tailImpactFrame));
     }
 
     private void Anchor()
@@ -235,55 +267,20 @@ public sealed class LightningPlungeVFX : MonoBehaviour
     private void DrawImpact(float age)
     {
         float s = _settings.scale * _settings.impactScale;
-        float fadeAge = Mathf.Max(0f, age - _settings.impactHoldFrames);
-        float burst = Mathf.Clamp01(fadeAge / Mathf.Max(1, _settings.burstFrames));
-        float burstAlpha = Mathf.Pow(1f - burst, 1.15f);
         float radius = _settings.groundSpread * s;
-        Color purple = Fade(_settings.violetColor, burstAlpha);
-        Color white = Fade(_settings.coreColor, burstAlpha);
-        float exit = ExitProgress(age);
-        float settle = Mathf.SmoothStep(0f, 1f, exit);
-        float glowFade = Mathf.Pow(1f - burst, 2f);
-        _groundGlow.Radial(_normal * 0.1f * s, new Vector2(radius * 0.9f * (1f - settle * 0.75f), radius * 0.28f * (1f - settle * 0.88f)),
-            Fade(_settings.glowColor, glowFade * 1.2f));
-        if (burst < 1f)
-        {
-            float growth = 0.55f + 0.45f * Mathf.Min(1f, age / 3f);
-            for (int i = 0; i < _settings.branches; i++)
-            {
-                float angle = Mathf.Lerp(0.12f, Mathf.PI - 0.12f, (i + Noise(i) * 0.55f) / Mathf.Max(1, _settings.branches - 1));
-                Vector2 direction = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
-                float branchExit = ExitProgress(age, Noise(i + 50) * 10f);
-                float collapse = Mathf.SmoothStep(0f, 1f, branchExit);
-                Vector2 originalTip = ImpactTip(i, radius, growth);
-                Vector2 basePoint = direction * 0.1f * s + _tangent * Mathf.Sign(direction.x)
-                    * _settings.exitScatter * s * collapse;
-                Vector2 tip = basePoint + (originalTip - direction * 0.1f * s) * Mathf.Pow(1f - collapse, 0.8f);
-                Vector2 side = new Vector2(-direction.y, direction.x) * (0.11f + Noise(i + 35) * 0.18f)
-                    * s * Mathf.Pow(1f - collapse, 1.3f);
-                _shards.Triangle(basePoint - side * 1.3f, basePoint + side * 1.3f,
-                    tip * 1.05f + Vector2.up * 0.18f * s, Fade(_settings.shadowColor, 1f - burst));
-                _envelope.Triangle(basePoint - side, basePoint + side, tip, purple);
-                _aura.Triangle(basePoint - side * 2f, basePoint + side * 2f, tip * 1.06f, Fade(_settings.auraColor, burstAlpha));
-                float remainingWidth = Mathf.Max(0f, 1f - collapse);
-                Bolt(_halo, basePoint, tip, 0.12f * s * _settings.glowWidth * remainingWidth, Fade(_settings.glowColor, burstAlpha), i + 20);
-                Bolt(_envelope, basePoint, tip, 0.1f * s * remainingWidth, purple, i + 20);
-                Bolt(_core, basePoint, Vector2.Lerp(basePoint, tip, 0.94f), 0.028f * s * remainingWidth, white, i + 20);
-            }
-            float columnFade = Mathf.Pow(1f - Mathf.Clamp01(fadeAge / Mathf.Max(1, _settings.columnFadeFrames)), 1.25f);
-            float columnExit = ExitProgress(age, 0f, _settings.impactHoldFrames + _settings.columnFadeFrames);
-            float columnWidth = Mathf.Pow(1f - columnExit, 1.3f);
-            Vector2 top = Vector2.up * StrikeCeilingY() * (1f - Mathf.SmoothStep(0f, 1f, columnExit));
-            _aura.Line(Vector2.zero, top, _settings.envelopeWidth * s * 2f * columnWidth, _settings.envelopeWidth * s * columnWidth,
-                Fade(_settings.auraColor, columnFade));
-            _halo.Line(Vector2.zero, top, _settings.envelopeWidth * s * _settings.glowWidth * columnWidth,
-                _settings.envelopeWidth * s * _settings.glowWidth * 0.55f * columnWidth, Fade(_settings.glowColor, columnFade));
-            Bolt(_envelope, Vector2.zero, top, _settings.envelopeWidth * s * 0.6f * columnWidth, Fade(_settings.violetColor, columnFade), 7, false);
-            Bolt(_core, Vector2.zero, top, _settings.coreWidth * s * 0.7f * columnWidth, Fade(_settings.coreColor, columnFade), 7, false);
-            if (columnExit > 0f && columnExit < 1f)
-                _groundGlow.Radial(top, new Vector2(0.25f, 0.4f) * s * (1f - columnExit),
-                    Fade(_settings.glowColor, columnFade));
-        }
+        float release = _settings.impactHoldFrames + _settings.exitDelayFrames;
+        float finish = release + Mathf.Max(1, _settings.exitFrames);
+        float travel = Mathf.Clamp01((age - release) / Mathf.Max(1, _settings.exitFrames));
+        float light = 1f - Mathf.SmoothStep(release, finish, age);
+        _groundGlow.Radial(_normal * 0.1f * s,
+            new Vector2(radius * (0.55f + travel * 0.55f), radius * 0.18f),
+            Fade(_settings.glowColor, light));
+
+        // Keep the approved broad blast silhouette; motion clears its center during the exit.
+        for (int i = 0; i < _settings.branches; i++)
+            DrawExplosionLobe(i, age, release, s, radius);
+        DrawColumnSurge(age, release, s);
+
         float flash = 1f - Mathf.Clamp01(age / Mathf.Max(1, _settings.flashFrames));
         if (flash > 0f)
         {
@@ -293,90 +290,156 @@ public sealed class LightningPlungeVFX : MonoBehaviour
             _core.Line(new Vector2(-1.3f, 0.05f) * s, new Vector2(1.3f, 0.05f) * s,
                 0.12f * flash * s, 0.02f * s, hot);
         }
-        float groundFade = 1f - Mathf.Clamp01(age / Mathf.Max(1, _settings.residualFrames));
-        if (groundFade > 0f)
-        {
-            float drain = ExitProgress(age, 0f, _settings.residualFrames);
-            float reach = radius * Mathf.Min(1f, (age + 1f) / 7f) * (1f - Mathf.SmoothStep(0f, 1f, drain));
-            for (int side = -1; side <= 1; side += 2)
-            {
-                Vector2 previous = Vector2.zero;
-                for (int i = 1; i <= 8; i++)
-                {
-                    Vector2 point = _tangent * (side * reach * i / 8f) + _normal * (0.035f + Noise(i + 73) * 0.09f) * s;
-                    _cracks.Line(previous, point, 0.055f * groundFade * s, 0.025f * groundFade * s,
-                        Fade(_settings.violetColor, groundFade));
-                    if (i % 2 == 0)
-                        _cracks.Line(point, point + new Vector2(side * 0.25f, 0.18f) * s,
-                            0.025f * s, 0f, Fade(_settings.blueColor, groundFade));
-                    previous = point;
-                }
-            }
-        }
         for (int ring = 0; ring < 3; ring++)
         {
             float t = (age - ring * 3f) / Mathf.Max(1, _settings.windFrames);
-            if (t < 0f || t > 1f) continue;
-            float r = radius * (0.25f + t * (1.1f + ring * 0.15f));
-            float unwind = ExitProgress(age, ring * 3f, _settings.windFrames + ring * 3f);
-            float sweep = 4.7f * (1f - unwind * 0.86f);
-            float rotation = 0.1f + ring * 0.8f + unwind * (1.1f + ring * 0.25f);
-            Vector2 windCenter = _normal * (0.06f + unwind * unwind * 0.35f) * s;
-            Color color = Fade(ring % 2 == 0 ? _settings.blueColor : _settings.violetColor, (1f - t) * 0.8f);
-            Arc(_wind, windCenter, r, r * 0.12f, rotation, sweep,
-                0.055f * (1f - t) * s, color);
-            Arc(_halo, windCenter, r, r * 0.12f, rotation, sweep,
-                0.14f * (1f - t) * s, Fade(_settings.glowColor, 1f - t));
-            Arc(_wind, windCenter + _normal * 0.09f * s, r * 0.9f, r * 0.25f, 3.3f + unwind * 1.4f, 2.3f * (1f - unwind * 0.9f),
-                0.025f * (1f - t) * s, color);
-        }
-        DrawExitFragments(age, s, radius);
-    }
-
-    private float ExitProgress(float age, float stagger = 0f, float endFrame = -1f)
-    {
-        float start = _settings.impactHoldFrames + _settings.exitDelayFrames + stagger;
-        float end = endFrame > 0f ? endFrame : _settings.impactHoldFrames + _settings.burstFrames;
-        float duration = Mathf.Min(_settings.exitFrames, Mathf.Max(1f, end - start));
-        return Mathf.Clamp01((age - start) / Mathf.Max(1f, duration));
-    }
-
-    private Vector2 ImpactTip(int branch, float radius, float growth)
-    {
-        float angle = Mathf.Lerp(0.12f, Mathf.PI - 0.12f, (branch + Noise(branch) * 0.55f) / Mathf.Max(1, _settings.branches - 1));
-        Vector2 tip = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * (0.45f + Noise(branch + 21) * 0.65f) * radius * growth;
-        tip.y *= 0.65f * _settings.impactHeight / 2.5f;
-        return tip;
-    }
-
-    private void DrawExitFragments(float age, float scale, float radius)
-    {
-        float start = _settings.impactHoldFrames + _settings.exitDelayFrames;
-        if (age < start) return;
-        float duration = Mathf.Min(_settings.exitFrames, Mathf.Max(1f, _settings.impactHoldFrames + _settings.burstFrames - start));
-        for (int i = 0; i < _settings.exitFragmentCount; i++)
-        {
-            float birth = start + Noise(120 + i) * duration * 0.55f;
-            float life = Mathf.Min(20f + Noise(155 + i) * 20f, Mathf.Max(1f, start + duration - birth));
-            float t = (age - birth) / life;
             if (t < 0f || t >= 1f) continue;
-            Vector2 origin = ImpactTip(i % Mathf.Max(1, _settings.branches), radius, 1f)
-                * (0.45f + Noise(190 + i) * 0.55f);
-            float sign = origin.x >= 0f ? 1f : -1f;
-            Vector2 drift = _tangent * sign * _settings.exitScatter * scale * (0.5f + Noise(210 + i)) * t
-                + _normal * scale * (Mathf.Sin(t * Mathf.PI) * 0.32f - t * t * 0.18f);
-            Vector2 center = origin + drift;
-            float angle = Noise(225 + i) * Mathf.PI * 2f + t * sign * 3f;
-            Vector2 axis = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
-            Vector2 cross = new Vector2(-axis.y, axis.x);
-            float size = (0.04f + Noise(240 + i) * 0.11f) * scale * (1f - t);
-            Color color = Color.Lerp(_settings.coreColor, _settings.violetColor, t);
-            color.a *= Mathf.Sin(t * Mathf.PI) * (1f - t);
-            _fragments.Triangle(center + axis * size * 1.8f, center - axis * size + cross * size * 0.35f,
-                center - axis * size - cross * size * 0.35f, color);
-            _halo.Line(center - axis * size * 2f, center + axis * size,
-                size * 2f, 0f, Fade(_settings.glowColor, Mathf.Sin(t * Mathf.PI)));
+            float r = radius * (0.15f + 1.35f * (1f - Mathf.Pow(1f - t, 2f)));
+            float sweep = 4.7f * (1f - Mathf.SmoothStep(0.15f, 1f, t));
+            Vector2 center = _normal * (0.05f + t * t * _settings.stormLift * 0.22f) * s;
+            Color color = Fade(_settings.blueColor, (1f - Mathf.SmoothStep(0.75f, 1f, t)) * 0.65f);
+            Arc(_wind, center, r, r * 0.1f, ring * 1.3f + t * 1.4f, sweep,
+                0.055f * (1f - t) * s, color);
         }
+    }
+
+    private void DrawExplosionLobe(int branch, float age, float release, float scale, float radius)
+    {
+        float duration = Mathf.Max(1, _settings.exitFrames) * (0.78f + 0.22f * Noise(branch + 21));
+        float t = Mathf.Clamp01((age - release) / duration);
+        if (t >= 1f) return;
+        float angle = Mathf.Lerp(0.12f, Mathf.PI - 0.12f,
+            (branch + Noise(branch) * 0.55f) / Mathf.Max(1, _settings.branches - 1));
+        Vector2 direction = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+        float growth = 0.55f + 0.45f * Mathf.Clamp01(age / 3f);
+        Vector2 tip = direction * (0.45f + Noise(branch + 21) * 0.65f) * radius * growth;
+        tip.y *= 0.65f * _settings.impactHeight / 2.5f;
+        Vector2 root = direction * 0.1f * scale;
+        float handed = tip.x >= 0f ? 1f : -1f;
+        Vector2 drift = _tangent * handed * _settings.exitScatter * scale * (1f - Mathf.Pow(1f - t, 2f))
+            + _normal * _settings.stormLift * scale * t * t;
+        tip += drift;
+        root += drift;
+        Vector2 cross = new Vector2(-direction.y, direction.x);
+        float width = (0.22f + Noise(branch + 35) * 0.28f) * scale;
+        // A widening opening overtakes each full-size lobe. The outer silhouette keeps spreading.
+        float inner = Mathf.SmoothStep(0f, 1f, t);
+        float alpha = 1f - Mathf.SmoothStep(0.65f, 1f, t);
+        const int sections = 6;
+        for (int j = 0; j < sections; j++)
+        {
+            float u0 = Mathf.Lerp(inner, 1f, (float)j / sections);
+            float u1 = Mathf.Lerp(inner, 1f, (float)(j + 1) / sections);
+            Vector2 a = Vector2.Lerp(root, tip, u0), b = Vector2.Lerp(root, tip, u1);
+            // Broad angular sides make an explosion silhouette rather than a fan of fine sparkles.
+            float notchA = 1f + 0.16f * Mathf.Sin(u0 * Mathf.PI * 3f + branch);
+            float notchB = 1f + 0.16f * Mathf.Sin(u1 * Mathf.PI * 3f + branch);
+            float wa = width * (1f - u0) * notchA;
+            float wb = width * (1f - u1) * notchB;
+            if (t > 0f && j == 0) wa = 0f;
+            _shards.Strip(a, b, cross * wa * 1.4f, cross * wb * 1.4f,
+                Fade(_settings.shadowColor, alpha), _normal);
+            _aura.Strip(a, b, cross * wa * 2f, cross * wb * 2f,
+                Fade(_settings.auraColor, alpha), _normal);
+            _envelope.Strip(a, b, cross * wa, cross * wb,
+                Fade(_settings.violetColor, alpha), _normal);
+            _halo.Strip(a, b, cross * wa * 1.4f, cross * wb * 1.4f,
+                Fade(_settings.glowColor, alpha * 0.65f), _normal);
+            _core.Strip(a, b, cross * wa * 0.22f, cross * wb * 0.22f,
+                Fade(_settings.coreColor, alpha * (1f - t * 0.45f)), _normal);
+        }
+        Vector2 boltStart = Vector2.Lerp(root, tip, inner);
+        float charge = Mathf.Max(0f, 1f - inner);
+        Bolt(_envelope, boltStart, tip, 0.1f * scale * charge,
+            Fade(_settings.violetColor, alpha), branch + 20);
+        Bolt(_core, boltStart, tip, 0.028f * scale * charge,
+            Fade(_settings.coreColor, alpha), branch + 20);
+    }
+
+    private void DrawElectricalAccents(float frame, int impactFrame)
+    {
+        float age = frame - impactFrame;
+        bool falling = age < 0f;
+        float release = _settings.impactHoldFrames + _settings.exitDelayFrames;
+        float tail = Mathf.Clamp01((age - release) / Mathf.Max(1, _settings.exitFrames));
+        float strength = falling ? 1f : 1f - Mathf.SmoothStep(0.15f, 1f, tail);
+        int count = Mathf.Clamp(falling ? _settings.fallingArcCount : _settings.impactArcCount, 0, 16);
+        float scale = _settings.scale;
+        float spread = _settings.electricalSpread;
+        float progress = Mathf.Clamp01(frame / Mathf.Max(1, impactFrame - 1));
+        float headY = (_start.y - _contact.y) * (1f - progress * progress * progress);
+        float ceiling = StrikeCeilingY();
+        for (int i = 0; i < count; i++)
+        {
+            float period = 8f + Noise(i + 91) * 5f;
+            float clock = frame + Noise(i + 102) * period;
+            int cycle = Mathf.FloorToInt(clock / period);
+            float pulse = (clock / period - cycle);
+            if (pulse > 0.72f) continue;
+            float opacity = Mathf.Sin(pulse / 0.72f * Mathf.PI) * strength;
+            if (opacity < 0.02f) continue;
+            int seed = i * 11 + cycle * 17;
+            float side = i % 2 == 0 ? -1f : 1f;
+            Vector2 origin, direction;
+            if (falling)
+            {
+                origin = new Vector2(side * (0.35f + Noise(seed + 5) * 0.8f) * spread * scale,
+                    Mathf.Lerp(headY + 0.3f, ceiling * 0.85f, Noise(seed + 7)));
+                direction = new Vector2(side * (0.2f + Noise(seed + 8) * 0.4f), -1f).normalized;
+            }
+            else
+            {
+                float impactScale = _settings.impactScale * scale;
+                float reach = _settings.groundSpread * impactScale;
+                origin = _tangent * side * reach * (0.28f + Noise(seed + 5) * 0.65f) * spread
+                    + _normal * (0.12f + Noise(seed + 7) * _settings.impactHeight * 0.45f) * impactScale;
+                origin += _tangent * side * _settings.exitScatter * impactScale * tail;
+                direction = (_tangent * side * 0.7f + _normal * (0.4f + Noise(seed + 8))).normalized;
+            }
+            float length = _settings.electricalArcLength * scale * (0.55f + Noise(seed + 9) * 0.8f);
+            float width = _settings.electricalWidth * scale;
+            DrawAccentArc(origin, direction, length, width, opacity, seed);
+            Vector2 joint = origin + direction * length * 0.6f;
+            if (i % 3 == 0)
+                DrawAccentArc(joint, new Vector2(-direction.y, direction.x) * side,
+                    length * 0.38f, width * 0.6f, opacity * 0.7f, seed + 37);
+        }
+    }
+
+    private void DrawAccentArc(Vector2 origin, Vector2 direction, float length, float width, float opacity, int seed)
+    {
+        Vector2 cross = new Vector2(-direction.y, direction.x);
+        Vector2 previous = origin;
+        Color core = Fade(_settings.electricalColor, opacity);
+        Color edge = Fade(_settings.violetColor, opacity);
+        Color glow = Fade(_settings.glowColor, opacity * _settings.electricalGlow * 2f);
+        for (int j = 1; j <= 5; j++)
+        {
+            float u = j / 5f;
+            float kink = j < 5 ? (Noise(seed + j * 3) - 0.5f) * length * 0.6f : 0f;
+            Vector2 point = origin + direction * length * u + cross * kink;
+            _halo.Line(previous, point, width * 7f, width * 5f, glow);
+            _envelope.Line(previous, point, width * 2.3f, width * 1.6f, edge);
+            _cracks.Line(previous, point, width, j == 5 ? 0f : width * 0.8f, core);
+            previous = point;
+        }
+        _groundGlow.Radial(previous, Vector2.one * width * 4f, Fade(glow, 0.5f));
+    }
+
+    private void DrawColumnSurge(float age, float release, float scale)
+    {
+        float duration = Mathf.Max(8f, Mathf.Min(24f, _settings.columnFadeFrames));
+        float t = Mathf.Clamp01((age - release) / duration);
+        if (t >= 1f) return;
+        // The power source travels down into the impact; it does not turn into a spray of cells.
+        float ceiling = StrikeCeilingY();
+        Vector2 top = Vector2.up * ceiling * (1f - t * t);
+        Vector2 bottom = Vector2.zero;
+        float width = _settings.envelopeWidth * scale;
+        _aura.Line(bottom, top, width * 2f, width, _settings.auraColor);
+        _halo.Line(bottom, top, width * _settings.glowWidth, width * _settings.glowWidth * 0.55f, _settings.glowColor);
+        Bolt(_envelope, bottom, top, width * 0.6f, _settings.violetColor, 7, false);
+        Bolt(_core, bottom, top, _settings.coreWidth * scale * 0.7f, _settings.coreColor, 7, false);
     }
 
     private void Bolt(GeometryLayer layer, Vector2 start, Vector2 end, float width, Color color, int seed, bool pointedTip = true)
@@ -414,6 +477,47 @@ public sealed class LightningPlungeVFX : MonoBehaviour
     private static Color Fade(Color color, float alpha) { color.a *= alpha; return color; }
     private float Noise(int index) => _noise[(index & int.MaxValue) % _noise.Length];
     private float Next() { _random ^= _random << 13; _random ^= _random >> 17; _random ^= _random << 5; return (_random & 0x00ffffff) / 16777215f; }
+
+    private void SampleParticles(float frame, int impactFrame)
+    {
+        if (!_fallEmitted)
+        {
+            float scale = _settings.scale;
+            for (int i = 0; i < Mathf.Clamp(_settings.fallingSparkCount, 0, 24); i++)
+            {
+                var spark = new ParticleSystem.EmitParams
+                {
+                    position = _contact + new Vector3((Next() - 0.5f) * 1.4f * _settings.electricalSpread * scale,
+                        Mathf.Lerp(_start.y - _contact.y, StrikeCeilingY() * 0.8f, Next()), 0f),
+                    velocity = new Vector3((Next() - 0.5f) * 1.5f, -3f - Next() * 3f, 0f) * scale,
+                    startLifetime = 0.18f + Next() * 0.25f,
+                    startSize = (0.035f + Next() * 0.035f) * scale,
+                    startColor = _settings.electricalColor,
+                    rotation = Next() * 360f
+                };
+                impactSparks.Emit(spark, 1);
+            }
+            _fallEmitted = true;
+        }
+        float cursor = _lastFrame;
+        if (frame >= impactFrame && !_emitted)
+        {
+            AdvanceParticles(cursor, impactFrame);
+            Emit(impactSparks, _settings.sparkCount, 0);
+            Emit(debris, _settings.debrisCount, 1);
+            Emit(residualSparks, _settings.residualCount, 2);
+            _emitted = true; cursor = impactFrame;
+        }
+        AdvanceParticles(cursor, frame);
+    }
+
+    private void AdvanceParticles(float fromAge, float toAge)
+    {
+        float seconds = Mathf.Max(0f, toAge - fromAge) / FrameDataConstants.LOGIC_FPS;
+        if (seconds <= 0f) return;
+        foreach (var particles in _particles)
+        { particles.Simulate(seconds, false, false, false); particles.Pause(false); }
+    }
 
     private void Emit(ParticleSystem particles, int count, int kind)
     {
@@ -453,8 +557,7 @@ public sealed class LightningPlungeVFX : MonoBehaviour
         _core = new GeometryLayer(geometry, "BoltCore", material);
         _cracks = new GeometryLayer(geometry, "GroundCracks", material);
         _wind = new GeometryLayer(geometry, "WindArcs", material);
-        _fragments = new GeometryLayer(geometry, "ExitFragments", material);
-        _layers = new[] { _aura, _groundGlow, _halo, _shards, _envelope, _cracks, _wind, _core, _fragments };
+        _layers = new[] { _aura, _groundGlow, _halo, _shards, _envelope, _cracks, _wind, _core };
         _particleMesh = new Mesh { name = "Lightning particle shard" };
         _particleMesh.vertices = new[] { new Vector3(0f, 0.8f, 0f), new Vector3(-0.25f, 0f, 0f), new Vector3(0f, -0.8f, 0f), new Vector3(0.25f, 0f, 0f) };
         _particleMesh.triangles = new[] { 0, 1, 2, 0, 2, 3 };
@@ -480,11 +583,18 @@ public sealed class LightningPlungeVFX : MonoBehaviour
             gradient.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
                 new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) });
             overLife.color = gradient;
+            if (i == 2)
+            {
+                var size = particles.sizeOverLifetime; size.enabled = true;
+                size.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.EaseInOut(0f, 1f, 1f, 0f));
+            }
         }
     }
 
     public void Stop()
     {
+        _cutImpact?.Stop();
+        _finishingTail = false; _tailClockOwner = null;
         if (impactLight != null) { impactLight.intensity = 0f; impactLight.enabled = false; }
         if (_layers != null) foreach (var layer in _layers) layer.renderer.enabled = false;
         if (_particles != null) foreach (var particles in _particles)

@@ -56,6 +56,7 @@ Filenames for ADR-006/007/011/012 still use older numbers from the pre-merge bra
 | [012](007-encounter-so-layout-spawn-slots.md) | EncounterSO + Layout Spawn Slots | **Accepted** | Phase 3 | Waves from EncounterSO; positions stay on layout slots |
 | [013](013-action-owned-camera-presentation.md) | Action-Owned Camera Presentation | **Accepted** | Combat presentation | User-approved Dimension Slash action-frame camera envelope |
 | [014](014-prepared-qte-plunge-motion-and-presentation.md) | Prepared QTE Plunge Motion and Presentation | **Accepted** | Combat presentation | User approved Main's prepared physical plunge, reusable VFX and scoped camera architecture |
+| [015](015-action-owned-cut-refraction.md) | Action-Owned Cut Refraction | **Implemented; feel review pending** | Combat presentation | Gated URP distortion band follows the rendered cut with chromatic separation and edge blur |
 
 ## Phase Mapping
 

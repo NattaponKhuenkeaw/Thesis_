@@ -21,6 +21,8 @@ namespace Project.TeamBuilder.UI
         [Header("UI References")]
         [SerializeField] private Image iconImage;
         [SerializeField] private Image frameImage;
+        [SerializeField] private Sprite normalFrameSprite;
+        [SerializeField] private Sprite selectedFrameSprite;
         [SerializeField] private TMP_Text nameText;
         [SerializeField] private GameObject equippedBadge; // Visual indicator when equipped
         [SerializeField] private GameObject favouriteBadge;
@@ -39,7 +41,15 @@ namespace Project.TeamBuilder.UI
         private ArtifactDefinition artifactDefinition;
         private CanvasGroup canvasGroup;
         private string currentSummary;
-        private float lastClickTime;
+        private float lastClickTime = float.NegativeInfinity;
+        private bool isEquipped;
+        private bool isSelected;
+
+        public void SetSelected(bool selected)
+        {
+            isSelected = selected;
+            SetEquippedState(isEquipped);
+        }
         private const float DoubleClickThreshold = 0.35f;
 
         // Event for preview and double-click to equip
@@ -64,6 +74,8 @@ namespace Project.TeamBuilder.UI
         {
             artifactData = artifact;
             artifactDefinition = definition;
+            lastClickTime = float.NegativeInfinity;
+            isSelected = false;
             canvasGroup = GetComponent<CanvasGroup>();
 
             if (artifact != null)
@@ -128,6 +140,8 @@ namespace Project.TeamBuilder.UI
         /// </summary>
         public void SetEquippedState(bool equipped)
         {
+            isEquipped = equipped;
+            if (frameImage != null && normalFrameSprite != null) frameImage.sprite = isSelected ? selectedFrameSprite : normalFrameSprite;
             canvasGroup = canvasGroup != null ? canvasGroup : GetComponent<CanvasGroup>();
 
             if (equipped)
@@ -141,6 +155,11 @@ namespace Project.TeamBuilder.UI
                 canvasGroup.alpha = 1f;
                 if (frameImage != null) frameImage.color = normalFrameColor;
                 if (equippedBadge != null) equippedBadge.SetActive(false);
+            }
+            if (isSelected)
+            {
+                canvasGroup.alpha = 1f;
+                if (frameImage != null) frameImage.color = selectedFrameSprite != null ? Color.white : new Color(1f, .9f, .15f);
             }
         }
 

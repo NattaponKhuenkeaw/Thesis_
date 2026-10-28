@@ -79,6 +79,19 @@ public class TeamSwitchHUD : MonoBehaviour
 
     private void HandleTeamChanged()
     {
+        if (teamLoader != null && activeSlots.Count == teamLoader.CharacterCount)
+        {
+            bool sameRoster = true;
+            foreach (CharacterSwitchSlot slot in activeSlots)
+                if (slot == null || teamLoader.GetCharacterAtIndex(slot.SlotIndex) != slot.BoundCharacter)
+                { sameRoster = false; break; }
+            if (sameRoster)
+            {
+                foreach (CharacterSwitchSlot slot in activeSlots) slot.RefreshFromHUD();
+                UpdateActiveIndicator(teamLoader.CurrentIndex);
+                return;
+            }
+        }
         InitializeHUD();
     }
 
@@ -160,7 +173,7 @@ public class TeamSwitchHUD : MonoBehaviour
     {
         if (teamLoader == null) return;
 
-        if (!teamLoader.CanSwitchToIndex(index))
+        if (!teamLoader.CanSwitchToIndex(index, ignoreCooldown: true))
         {
             Debug.Log("ไม่สามารถเปลี่ยนไปยังตัวละครนี้ได้ (ตาย / cooldown / ตัวเดิม)!");
             return;
