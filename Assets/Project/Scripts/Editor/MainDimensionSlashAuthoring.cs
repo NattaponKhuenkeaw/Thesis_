@@ -32,7 +32,7 @@ public static class MainDimensionSlashAuthoring
         EditorUtility.SetDirty(character.actionResolverTable);
         AssetDatabase.SaveAssetIfDirty(character);
         AssetDatabase.SaveAssetIfDirty(character.actionResolverTable);
-        Debug.Log("Dimension Slash: Passive4 / five paid cuts / 5s Skill window authored.");
+        Debug.Log("Dimension Slash: Passive4 / five paid cuts / 5s Ultimate window authored.");
     }
 
     // screenSpanningCount was introduced for this action. Strip the field's
@@ -115,7 +115,7 @@ public static class MainDimensionSlashAuthoring
         node.conditionalStateEffects.Add(new PassiveConditionalStateEffectDefinition
         {
             trigger = PassiveTriggerType.OnActionStarted,
-            filter = new PassiveTriggerFilter { filterByCategory = true, category = AttackCategory.Skill, filterByActionId = true, actionId = ActionId },
+            filter = new PassiveTriggerFilter { filterByCategory = true, category = AttackCategory.Ultimate, filterByActionId = true, actionId = ActionId },
             runtimeTagEffects = new List<PassiveRuntimeTagEffectDefinition>
             {
                 new PassiveRuntimeTagEffectDefinition { tag = ReadyTag, addTag = false }
@@ -125,33 +125,49 @@ public static class MainDimensionSlashAuthoring
         node.actionModifiers.RemoveAll(m => m != null && m.actionId == ActionId);
         node.actionModifiers.Add(new PassiveActionModifierDefinition
         {
-            category = AttackCategory.Skill, actionId = ActionId,
+            category = AttackCategory.Ultimate, actionId = ActionId,
             requiredTags = new List<RuntimeTagRequirement> { new RuntimeTagRequirement { tag = ReadyTag } }
         });
-        const string description = " Perform 5 paid Dimension Cuts to open a 5s Skill follow-up for Judgment Cut.";
+        const string description = " Perform 5 paid Dimension Cuts to open a 5s Ultimate follow-up for Judgment Cut.";
         node.description = node.description.Replace("1.5s Skill follow-up", "5s Skill follow-up");
         node.skillPanelDescriptionOverride = node.skillPanelDescriptionOverride.Replace("1.5s Skill follow-up", "5s Skill follow-up");
+        node.description = node.description.Replace("5s Skill follow-up", "5s Ultimate follow-up");
+        node.skillPanelDescriptionOverride = node.skillPanelDescriptionOverride.Replace("5s Skill follow-up", "5s Ultimate follow-up");
         node.description = node.description.Replace("follow-up for Dimension Slash.", "follow-up for Judgment Cut.");
         node.skillPanelDescriptionOverride = node.skillPanelDescriptionOverride.Replace("follow-up for Dimension Slash.", "follow-up for Judgment Cut.");
-        if (!node.description.Contains("5s Skill follow-up")) node.description += description;
-        if (!node.skillPanelDescriptionOverride.Contains("5s Skill follow-up")) node.skillPanelDescriptionOverride += description;
+        if (!node.description.Contains("5s Ultimate follow-up")) node.description += description;
+        if (!node.skillPanelDescriptionOverride.Contains("5s Ultimate follow-up")) node.skillPanelDescriptionOverride += description;
 
         var table = character.actionResolverTable;
+        var legacy = table.skillActions.Find(a => a != null && a.actionId == ActionId);
         table.skillActions.RemoveAll(a => a != null && a.actionId == ActionId);
-        var step = CreateStep();
-        table.skillActions.Add(new SkillAction
+        table.ultimateActions ??= new List<UltimateAction>();
+        var ultimate = table.ultimateActions.Find(a => a != null && a.actionId == ActionId);
+        if (ultimate == null)
         {
-            actionId = ActionId, actionName = "Judgment Cut", priority = 1,
-            context = CombatActionContext.Both, outputContext = CombatActionOutputContext.MatchInput,
-            cooldown = 0f, actionDamageMultiplier = 5f, auraEnergyReward = 0f,
-            conditions = new List<ActionConditionBase>
+            ultimate = new UltimateAction
             {
-                new PotentialLevelActionCondition { track = PotentialTrack.Passive, level = 4 },
-                new RuntimeTagActionCondition { tag = ReadyTag }
-            },
-            comboTree = new ComboTree { treeName = "Dimension Slash", rootNode = new ComboNode
-            { stepData = step, defaultNext = new ComboNode { stepData = CreateFinalCut(table) } } }
-        });
+                actionId = ActionId, actionName = legacy?.actionName ?? "Judgment Cut", priority = legacy?.priority ?? 1,
+                resourceCounterId = legacy?.resourceCounterId, resourceCost = legacy?.resourceCost ?? 0,
+                commitsDash = legacy?.commitsDash ?? false, requiresEnemyTarget = legacy?.requiresEnemyTarget ?? false,
+                reselectOnAttackInput = legacy?.reselectOnAttackInput ?? false, targetRadius = legacy?.targetRadius ?? 8f,
+                context = legacy?.context ?? CombatActionContext.Both,
+                outputContext = legacy?.outputContext ?? CombatActionOutputContext.MatchInput,
+                cooldown = legacy?.cooldown ?? 0f, energyCost = 0f,
+                damageSourceStat = legacy?.damageSourceStat ?? ActionDamageSourceStat.Attack,
+                actionDamageMultiplier = legacy?.actionDamageMultiplier ?? 5f,
+                auraEnergyReward = legacy?.auraEnergyReward ?? 0f,
+                conditions = legacy?.conditions ?? new List<ActionConditionBase>
+                {
+                    new PotentialLevelActionCondition { track = PotentialTrack.Passive, level = 4 },
+                    new RuntimeTagActionCondition { tag = ReadyTag }
+                },
+                comboTree = legacy?.comboTree ?? new ComboTree { treeName = "Dimension Slash", rootNode = new ComboNode
+                { stepData = CreateStep(), defaultNext = new ComboNode { stepData = CreateFinalCut(table) } } }
+            };
+            table.ultimateActions.Add(ultimate);
+        }
+        ultimate.allowUltimateInterrupt = false;
         ExecutionBreakdownAuthoring.Configure(character);
     }
 

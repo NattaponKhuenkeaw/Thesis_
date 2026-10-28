@@ -443,9 +443,11 @@ public abstract class FrameDataPlayerState : PlayerState
             return fsm.CurrentState != this || currentFrame == -1;
         }
 
-        if ((allowed & ActionCategory.Ultimate) != 0 && buffer.ConsumeUltimate())
+        if ((allowed & ActionCategory.Ultimate) != 0 && buffer.HasUltimateBuffer)
         {
-            fsm.RouteUltimateInput();
+            bool held = buffer.UltimateInputHeld;
+            buffer.ConsumeUltimate();
+            fsm.RouteUltimateInput(held);
             return fsm.CurrentState != this || currentFrame == -1;
         }
         if ((allowed & ActionCategory.Skill) != 0 && buffer.ConsumeSkill())

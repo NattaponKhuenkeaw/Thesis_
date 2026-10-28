@@ -330,6 +330,7 @@ public abstract class CombatPlayerState : FrameDataPlayerState
             wasAirborne = wasPhysicallyAirborne || justLanded,
             justLanded = justLanded,
             isAirCombo = player.Combat != null && player.Combat.IsAirCombo,
+            ultimateInputHeld = buffer != null && buffer.UltimateInputHeld,
             passiveController = player.PassiveController,
             runtimeState = player.PassiveController != null ? player.PassiveController.RuntimeState : null,
             actionAvailabilityProvider = player

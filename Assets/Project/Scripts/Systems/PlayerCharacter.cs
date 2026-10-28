@@ -414,7 +414,7 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         return TryResolveActionForContext(category, out _, out _);
     }
 
-    public bool TryResolveActionForContext(AttackCategory category, out CombatAction action, out AttackStepData step, bool requireAvailability = false)
+    public bool TryResolveActionForContext(AttackCategory category, out CombatAction action, out AttackStepData step, bool requireAvailability = false, bool? ultimateInputHeld = null)
     {
         action = null;
         step = null;
@@ -423,6 +423,7 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
             return false;
 
         InputContext ctx = BuildActionInputContext(requireAvailability);
+        if (ultimateInputHeld.HasValue) ctx.ultimateInputHeld = ultimateInputHeld.Value;
 
         // Standard ActionResolver used for one-off validation
         ActionResolver resolver = new ActionResolver();
@@ -461,7 +462,7 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
                 : 0f;
             float requiredAE = loader != null && characterObject != null
                 ? loader.GetUltimateCost(characterObject, ultimateAction)
-                : TeamLoader.DefaultUltimateAuraEnergyCost;
+                : Mathf.Max(0f, ultimateAction.energyCost);
 
             return requiredAE <= 0.01f || currentAE + 0.01f >= requiredAE;
         }
@@ -526,6 +527,7 @@ public class PlayerCharacter : MonoBehaviour, ICombatActionAvailabilityProvider
         return new InputContext
         {
             isGrounded = actionGrounded,
+            ultimateInputHeld = StateMachine?.InputBuffer?.UltimateInputHeld == true,
             directionalInput = StateMachine != null && StateMachine.InputBuffer != null
                 ? StateMachine.InputBuffer.DirectionalInput
                 : Vector2.zero,

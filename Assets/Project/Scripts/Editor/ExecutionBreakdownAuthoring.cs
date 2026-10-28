@@ -7,6 +7,7 @@ using UnityEngine;
 public static class ExecutionBreakdownAuthoring
 {
     public const string StepName = "ExecutionBreakdown";
+    public const string ActionId = "main.ultimate.execution_breakdown";
     private const string LegacyActionId = "main.qte.execution_breakdown";
     private const string LegacyReadyTag = "main.qte.execution_breakdown.ready";
     private const string Root = MainDimensionSlashAuthoring.Root;
@@ -21,10 +22,32 @@ public static class ExecutionBreakdownAuthoring
         node.actionModifiers.RemoveAll(e => e != null && e.actionId == LegacyActionId);
         var table = character.actionResolverTable;
         table.standaloneActions.RemoveAll(a => a != null && a.actionId == LegacyActionId);
-        var cut = table.standaloneActions.Find(a => a != null && a.actionId == MainDimensionSlashAuthoring.CutId);
-        var source = cut?.comboTree?.rootNode?.stepData;
-        if (source == null) throw new System.InvalidOperationException("Dimension Cut root is missing.");
-        MainLightningPlungeAuthoring.Configure(character, source, new ComboNode { stepData = CreateStep() });
+        table.ultimateActions ??= new List<UltimateAction>();
+        var qte = table.qteActions?.Find(a => a != null && a.actionId == MainLightningPlungeAuthoring.ActionId);
+        var intro = qte?.comboTree?.rootNode;
+        var execution = table.ultimateActions.Find(a => a != null && a.actionId == ActionId);
+        if (execution == null)
+        {
+            // Transfer the existing node, including every authored reference.
+            // Only create defaults when no Execution Breakdown exists at all.
+            var existing = intro?.defaultNext;
+            execution = new UltimateAction
+            {
+                actionId = ActionId, actionName = "Execution Breakdown",
+                inputTrigger = UltimateInputTrigger.Hold, holdDuration = 0.35f,
+                context = CombatActionContext.Both, energyCost = 0f,
+                outputContext = qte?.outputContext ?? CombatActionOutputContext.Ground,
+                targetRadius = qte?.targetRadius ?? 15f,
+                auraEnergyReward = qte?.auraEnergyReward ?? 0f,
+                damageSourceStat = qte?.damageSourceStat ?? ActionDamageSourceStat.Attack,
+                actionDamageMultiplier = qte?.actionDamageMultiplier ?? 5f,
+                comboTree = new ComboTree { treeName = "Execution Breakdown", rootNode =
+                    existing?.stepData?.stepName == StepName ? existing : new ComboNode { stepData = CreateStep() } }
+            };
+            table.ultimateActions.Add(execution);
+        }
+        if (intro?.defaultNext?.stepData?.stepName == StepName) intro.defaultNext = null;
+        if (qte?.comboTree != null) qte.comboTree.treeName = "QTE Lightning Plunge";
     }
 
     public static AttackStepData CreateStep()

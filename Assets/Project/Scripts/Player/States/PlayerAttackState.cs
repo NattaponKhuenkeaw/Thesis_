@@ -175,7 +175,6 @@ public class PlayerAttackState : CombatPlayerState
             return;
         }
 
-        Buffer?.ConsumeUltimate();
         fsm.ChangeState(fsm.UltimateState);
         fsm.CurrentState.OnUltimateInput();
     }

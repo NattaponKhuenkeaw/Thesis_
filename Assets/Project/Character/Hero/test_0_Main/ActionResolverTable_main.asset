@@ -75,6 +75,73 @@ MonoBehaviour:
       rootNode:
         rid: 1588256193077837992
     cooldown: 0
+  ultimateActions:
+  - actionId: main.ultimate.jailbreak_punisher
+    actionName: Jailbreak Punisher
+    resourceCounterId: 
+    resourceCost: 0
+    commitsDash: 0
+    requiresEnemyTarget: 0
+    reselectOnAttackInput: 0
+    targetRadius: 8
+    context: 0
+    outputContext: 0
+    priority: 0
+    conditions: []
+    damageSourceStat: 0
+    actionDamageMultiplier: 7
+    auraEnergyReward: 3
+    comboTree:
+      treeName: Combo
+      comboResetDelay: 0.8
+      rootNode:
+        rid: 1588256193077837993
+    cooldown: 0
+    inputTrigger: 0
+    holdDuration: 0.35
+    allowUltimateInterrupt: 1
+    energyCost: 0
+    activationVFXType: 0
+    activationVFXPrefab: {fileID: 0}
+    activationVFXOffset: {x: 0, y: 0, z: 0}
+    activationVoice: {fileID: 0}
+    activationSFX: {fileID: 0}
+    activationSFXVolume: 1
+    voiceDelay: 0.1
+    useDashAfterImage: 0
+  - actionId: main.ultimate.execution_breakdown
+    actionName: Execution Breakdown
+    resourceCounterId: 
+    resourceCost: 0
+    commitsDash: 0
+    requiresEnemyTarget: 0
+    reselectOnAttackInput: 0
+    targetRadius: 15
+    context: 2
+    outputContext: 1
+    priority: 0
+    conditions: []
+    damageSourceStat: 0
+    actionDamageMultiplier: 5
+    auraEnergyReward: 0
+    comboTree:
+      treeName: Execution Breakdown
+      comboResetDelay: 0.8
+      rootNode:
+        rid: 8000281000000000003
+    cooldown: 0
+    inputTrigger: 1
+    holdDuration: 0.35
+    allowUltimateInterrupt: 1
+    energyCost: 0
+    activationVFXType: 0
+    activationVFXPrefab: {fileID: 0}
+    activationVFXOffset: {x: 0, y: 0, z: 0}
+    activationVoice: {fileID: 0}
+    activationSFX: {fileID: 0}
+    activationSFXVolume: 1
+    voiceDelay: 0.1
+    useDashAfterImage: 0
   - actionId: main.skill.dimension_slash
     actionName: Judgment Cut
     resourceCounterId: 
@@ -98,28 +165,9 @@ MonoBehaviour:
       rootNode:
         rid: 1267093219165340303
     cooldown: 0
-  ultimateActions:
-  - actionId: main.ultimate.jailbreak_punisher
-    actionName: Jailbreak Punisher
-    resourceCounterId: 
-    resourceCost: 0
-    commitsDash: 0
-    requiresEnemyTarget: 0
-    reselectOnAttackInput: 0
-    targetRadius: 8
-    context: 0
-    outputContext: 0
-    priority: 0
-    conditions: []
-    damageSourceStat: 0
-    actionDamageMultiplier: 7
-    auraEnergyReward: 3
-    comboTree:
-      treeName: Combo
-      comboResetDelay: 0.8
-      rootNode:
-        rid: 1588256193077837993
-    cooldown: 0
+    inputTrigger: 0
+    holdDuration: 0.35
+    allowUltimateInterrupt: 0
     energyCost: 0
     activationVFXType: 0
     activationVFXPrefab: {fileID: 0}
@@ -146,7 +194,7 @@ MonoBehaviour:
     actionDamageMultiplier: 5
     auraEnergyReward: 0
     comboTree:
-      treeName: "QTE Lightning Plunge \u2192 Execution Breakdown"
+      treeName: QTE Lightning Plunge
       comboResetDelay: 0.8
       rootNode:
         rid: 8000281000000000008
@@ -436,6 +484,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
@@ -555,6 +605,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
@@ -608,7 +660,7 @@ MonoBehaviour:
         debugColor: {r: 1, g: 0.93, b: 0.56, a: 1}
         offset: {x: -0.07513046, y: 3.6861455}
         size: {x: 20, y: 7.372291}
-        damageRatio: 1
+        damageRatio: 0.5
         impactTier: 3
         useDeterministicReaction: 1
         reactionKind: 1
@@ -628,7 +680,7 @@ MonoBehaviour:
         flashColor: {r: 1, g: 0, b: 0, a: 1}
         flashFrames: 7
         hitSFX: {fileID: 8300000, guid: e1140e06f1fa1ff4cb2ea52316129498, type: 3}
-        hitSFXVolume: 1
+        hitSFXVolume: 0.8
         hitSFXPitch: 1
         hitVFXType: 10
         hitVFXPrefab: {fileID: 0}
@@ -784,6 +836,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
@@ -903,6 +957,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
@@ -1022,6 +1078,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
@@ -1619,6 +1677,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 2100000, guid: a2dd817b7f7eb394f82f49ef7ffdd5f1, type: 2}
             overallScale: 4
@@ -2566,6 +2626,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 2100000, guid: a2dd817b7f7eb394f82f49ef7ffdd5f1, type: 2}
             overallScale: 4
@@ -2728,6 +2790,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
@@ -2847,6 +2911,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
@@ -2966,6 +3032,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
@@ -4085,6 +4153,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
@@ -4204,6 +4274,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
@@ -4663,6 +4735,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
@@ -4782,6 +4856,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
@@ -4901,6 +4977,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
@@ -5020,6 +5098,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
@@ -5139,6 +5219,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 2100000, guid: a2dd817b7f7eb394f82f49ef7ffdd5f1, type: 2}
             overallScale: 2
@@ -5178,6 +5260,127 @@ MonoBehaviour:
             hideActor: 0
             hideFromFrame: 39
             showAtFrame: 193
+          enableUltimateZoom: 0
+          ultimateZoomSize: 5
+        - label: Ultimate Sequence
+          eventType: 2
+          triggerFrame: 0
+          trackColor: {r: 1, g: 0.72, b: 0.2, a: 1}
+          overlaySettings:
+            fadeInDuration: 0.03
+            holdDuration: 0.15
+            darkenDuration: 0.12
+            blackHoldDuration: 0.5
+            fadeOutDuration: 0.25
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            darkColor: {r: 0.05, g: 0.02, b: 0.1, a: 1}
+          backgroundOverlayFlashSettings:
+            fadeOutFrames: 18
+            flashColor: {r: 1, g: 1, b: 1, a: 1}
+            peakAlpha: 1
+          freezeWorld: 1
+          freezeDurationOverride: 0
+          timelineMode: 0
+          activationVFXType: 0
+          activationVFXPrefab: {fileID: 0}
+          activationVFXOffset: {x: 0, y: 0, z: 0}
+          activationVoice: {fileID: 0}
+          activationSFX: {fileID: 0}
+          activationSFXVolume: 1
+          voiceDelay: 0.1
+          teleportSettings:
+            targetRadius: 8
+            teleportOffsetX: 1.2
+            snapCameraToPlayer: 1
+            cameraSnapDuration: 0.12
+            playScreenFlick: 1
+            screenFlickSettings:
+              fadeInDuration: 0.01
+              holdDuration: 0.015
+              darkenDuration: 0.015
+              blackHoldDuration: 0.04
+              fadeOutDuration: 0.06
+              flashColor: {r: 1, g: 1, b: 1, a: 1}
+              darkColor: {r: 0, g: 0, b: 0, a: 0.85}
+            cameraImpulseStrength: 0.22
+          screenImpulseSettings:
+            impulse:
+              startStrength: 0
+              endStrength: 0
+              duration: 0
+              pulseInterval: 0.01
+              slowMotion:
+                enabled: 1
+                timeScale: 0.02
+                duration: 0.38
+                delaySeconds: 0
+            cameraControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+          afterImageSettings:
+            spawnIntervalSeconds: 0.05
+            endMode: 0
+            endFrame: 1
+          facingDirectionSettings:
+            mode: 0
+          cameraMotionSettings:
+            keys: []
+            zoomControl:
+              enabled: 0
+              zoomMultiplier: 1
+              jumpCutLock: 0
+              horizontalViewportOffset: 0
+              transitionInFrames: 0
+              holdFrames: 0
+              returnFrames: 0
+            holdFrames: 0
+            returnFrames: 0
+          cameraAnimation:
+            segments: []
+          slashFieldSettings:
+            material: {fileID: 0}
+            overallScale: 1
+            fullScreenSlash: 0
+            fitViewport: 1
+            viewportCoverage: 1.15
+            screenSpanningCount: 0
+            foregroundFraction: 0.2
+            normalSortingLayer: WorldUI
+            normalSortingOrder: 999
+            foregroundSortingLayer: WorldUI
+            foregroundSortingOrder: 12000
+            center: {x: 4, y: 1.6}
+            spread: {x: 7, y: 4}
+            slashCount: 19
+            seamCount: 12
+            firstFrame: 14
+            intervalFrames: 3
+            endFrame: 90
+            lengthRange: {x: 7, y: 15}
+            widthRange: {x: 0.08, y: 0.48}
+            angleRange: {x: 0, y: 180}
+            fullScreenAngle: 104
+            revealFrames: {x: 4, y: 9}
+            decayFrames: {x: 16, y: 27}
+            pixelsPerUnit: 26.25
+            seed: 0
+            impactDistortion:
+              enabled: 0
+              startFrame: 0
+              durationFrames: 18
+              waveWidth: 0.08
+              refractionPixels: 6
+              chromaticPixels: 0
+              blurPixels: 1
+              referenceHeight: 270
+            hideActor: 1
+            hideFromFrame: 18
+            showAtFrame: 90
           enableUltimateZoom: 0
           ultimateZoomSize: 5
     - rid: 1588256193077838071
@@ -5251,12 +5454,12 @@ MonoBehaviour:
         offset: {x: -5.3543725, y: 2.4058695}
         size: {x: 15, y: 5.6019297}
         damageRatio: 0.3
-        impactTier: 1
+        impactTier: 3
         useDeterministicReaction: 1
         reactionKind: 2
         impactFreezeFrames: 5
         knockbackFrames: 18
-        knockupFrames: 100
+        knockupFrames: 30
         knockfallFrames: 10
         recoveryFrames: 30
         horizontalSpeed: 1
@@ -5287,7 +5490,7 @@ MonoBehaviour:
       data:
         entries:
         - label: SFX
-          clip: {fileID: 8300000, guid: f3ad530bcac05fc4aa1a1fa6cc6cba75, type: 3}
+          clip: {fileID: 8300000, guid: 2fec9413e1a2b724f9c5a37c4882c8ae, type: 3}
           triggerFrame: 1
           duration: 64
           channel: 1
@@ -5295,7 +5498,7 @@ MonoBehaviour:
           pitchVariation: 1
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
         - label: SFX
-          clip: {fileID: 8300000, guid: 89828ad405b7a3242a87e2d30d0cadeb, type: 3}
+          clip: {fileID: 8300000, guid: 477858f9938d4a44284f5a66f274a912, type: 3}
           triggerFrame: 9
           duration: 16
           channel: 1
@@ -5303,7 +5506,7 @@ MonoBehaviour:
           pitchVariation: 2
           trackColor: {r: 0.2, g: 0.8, b: 0.4, a: 1}
         - label: SFX
-          clip: {fileID: 8300000, guid: 42de5f418024ff8408960fa139cb75da, type: 3}
+          clip: {fileID: 8300000, guid: d9b852d5a8a5aa04584fa7a7d1953648, type: 3}
           triggerFrame: 41
           duration: 23
           channel: 1
@@ -5468,6 +5671,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
@@ -5591,6 +5796,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
@@ -5710,6 +5917,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
@@ -6616,6 +6825,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 2100000, guid: a2dd817b7f7eb394f82f49ef7ffdd5f1, type: 2}
             overallScale: 2
@@ -6762,6 +6973,8 @@ MonoBehaviour:
               returnFrames: 30
             holdFrames: 100
             returnFrames: 100
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
@@ -6881,6 +7094,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
@@ -7000,6 +7215,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
@@ -7119,6 +7336,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
@@ -7238,6 +7457,8 @@ MonoBehaviour:
               returnFrames: 0
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
@@ -7357,6 +7578,8 @@ MonoBehaviour:
               returnFrames: 50
             holdFrames: 0
             returnFrames: 0
+          cameraAnimation:
+            segments: []
           slashFieldSettings:
             material: {fileID: 0}
             overallScale: 1
@@ -7431,7 +7654,7 @@ MonoBehaviour:
           - events
         routes: []
         defaultNext:
-          rid: 8000281000000000003
+          rid: -2
         onGrabSuccessNode:
           rid: -2
     - rid: 8312694248327348309

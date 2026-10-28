@@ -72,7 +72,8 @@ MonoBehaviour:
       abilityId: main.ultimate.jailbreak_punisher
       abilityName: Jailbreak Punisher
       icon: {fileID: 0}
-      description: Open a Void Area that deals periodic Void damage. Inflict <color=#8B3DFF>Void</color>
+      description: Tap Ultimate for Jailbreak Punisher. Hold Ultimate for Execution
+        Breakdown. Open a Void Area that deals periodic Void damage. Inflict <color=#8B3DFF>Void</color>
         DMG 700% of ATK
     passive:
       abilityId: main.passive
@@ -276,7 +277,8 @@ MonoBehaviour:
       nodeId: base.ultimate
       nodeName: Base Ultimate
       description: 
-      skillPanelDescriptionOverride: Open a Void Area. Inflict <b><color=#8B3DFF>Void</color></b>
+      skillPanelDescriptionOverride: Tap Ultimate for Jailbreak Punisher. Hold Ultimate
+        for Execution Breakdown. Open a Void Area. Inflict <b><color=#8B3DFF>Void</color></b>
         DMG 700% of ATK
       track: 1
       level: 0
@@ -1015,7 +1017,8 @@ MonoBehaviour:
       nodeId: main.ultimate.lv1
       nodeName: Void Area
       description: Jailbreak Punisher opens a 20 seconds Void Area timing window.
-      skillPanelDescriptionOverride: "Open a Void Area, Inflict <b><color=#8B3DFF>Void</color></b>
+      skillPanelDescriptionOverride: "Tap Ultimate for Jailbreak Punisher. Hold Ultimate
+        for Execution Breakdown. Open a Void Area, Inflict <b><color=#8B3DFF>Void</color></b>
         DMG 700% of ATK\r\n\r\n<size=20><color=#C0C0C0>- AfterJailbreak Punisher
         will open <color=#8B3DFF>Void Area</color> for 20 seconds</color></size>\r\n<size=19><color=#00ffff>
         \u2022 Void Area: Deal <color=#8B3DFF>Void</color> DMG 100% of own ATK every
@@ -1194,7 +1197,8 @@ MonoBehaviour:
       nodeName: Void Area Break
       description: Enemies damaged by Void Area take increased damage for 7 seconds,
         unstackable.
-      skillPanelDescriptionOverride: "Open a Void Area, Inflict <b><color=#8B3DFF>Void</color></b>
+      skillPanelDescriptionOverride: "Tap Ultimate for Jailbreak Punisher. Hold Ultimate
+        for Execution Breakdown. Open a Void Area, Inflict <b><color=#8B3DFF>Void</color></b>
         DMG 700% of ATK\r\n\r\n<size=20><color=#C0C0C0>- AfterJailbreak Punisher
         will open <color=#8B3DFF>Void Area</color> for 20 seconds</color></size>\r\n<size=20><color=#C0C0C0>-
         Enemies damaged by <b><color=#8B3DFF>Void Area</color></b> will <b>Their
@@ -1259,7 +1263,8 @@ MonoBehaviour:
       nodeId: main.ultimate.lv3
       nodeName: Void Area Collapse
       description: Void DMG from Void Area deals 500% of ATK.
-      skillPanelDescriptionOverride: "Open a Void Area, Inflict <b><color=#8B3DFF>Void</color></b>
+      skillPanelDescriptionOverride: "Tap Ultimate for Jailbreak Punisher. Hold Ultimate
+        for Execution Breakdown. Open a Void Area, Inflict <b><color=#8B3DFF>Void</color></b>
         DMG 700% of ATK\r\n\r\n<size=20><color=#C0C0C0>- AfterJailbreak Punisher
         will open <color=#8B3DFF>Void Area</color> for 20 seconds</color></size>\r\n<size=20><color=#C0C0C0>-
         Enemies damaged by <b><color=#8B3DFF>Void Area</color></b> will <b>Their
@@ -1324,7 +1329,8 @@ MonoBehaviour:
       nodeId: main.ultimate.lv4
       nodeName: Lasting Void Area
       description: Void Area lasts for 40 seconds.
-      skillPanelDescriptionOverride: "Open a Void Area, Inflict <b><color=#8B3DFF>Void</color></b>
+      skillPanelDescriptionOverride: "Tap Ultimate for Jailbreak Punisher. Hold Ultimate
+        for Execution Breakdown. Open a Void Area, Inflict <b><color=#8B3DFF>Void</color></b>
         DMG 700% of ATK\r\n\r\n<size=20><color=#C0C0C0>- AfterJailbreak Punisher
         will open <color=#8B3DFF>Void Area</color> for <b><color=#FFA500>40</color></b>
         seconds</color></size>\r\n<size=20><color=#C0C0C0>- Enemies damaged by <b><color=#8B3DFF>Void
@@ -1503,7 +1509,7 @@ MonoBehaviour:
       statModifiers: []
       cooldownModifiers: []
       actionModifiers:
-      - category: 1
+      - category: 2
         actionId: main.skill.dimension_slash
         actionName: 
         stepName: 
@@ -1654,7 +1660,7 @@ MonoBehaviour:
       - trigger: 1
         filter:
           filterByCategory: 1
-          category: 1
+          category: 2
           filterByActionId: 1
           actionId: main.skill.dimension_slash
           filterByActionName: 0
@@ -1703,13 +1709,13 @@ MonoBehaviour:
       nodeName: Shadow Domain
       description: Shadow Meter capacity +2, reaching 5 boxes. Main gains 2x Shadow
         Meter while inside Void Area. Perform 5 paid Dimension Cuts to open a 5s
-        Skill follow-up for Judgment Cut.
+        Ultimate follow-up for Judgment Cut.
       skillPanelDescriptionOverride: Successful hits build Shadow Meter. Dash spends
         a full box to cache Dimension Cut; Normal Attack spends cached cuts. Stores
         5 boxes. Dimension Cut has +15% CRIT RATE; its critical hits ignore enemy
         Defense. Unlocks NA 4-6. Dimension Cut heals Main for 8% of damage dealt.
         Shadow Meter gain is doubled while Main is inside Void Area. Perform 5 paid
-        Dimension Cuts to open a 5s Skill follow-up for Judgment Cut.
+        Dimension Cuts to open a 5s Ultimate follow-up for Judgment Cut.
       track: 2
       level: 4
       fragmentCost: 1

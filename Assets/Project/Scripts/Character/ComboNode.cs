@@ -125,10 +125,23 @@ public class SkillAction : CombatAction
     public float cooldown = 0f;
 }
 
+public enum UltimateInputTrigger
+{
+    Press,
+    Hold
+}
+
 [System.Serializable]
 public class UltimateAction : SkillAction
 {
     public override AttackCategory Category => AttackCategory.Ultimate;
+
+    [Header("Input")]
+    public UltimateInputTrigger inputTrigger;
+    [Tooltip("Seconds to hold Ultimate before selecting this action. Tap actions wait for release when a matching hold action exists.")]
+    [Min(0.01f)] public float holdDuration = 0.35f;
+    [Tooltip("Allows another Ultimate input during this action's normal cancel window.")]
+    public bool allowUltimateInterrupt = true;
 
     [Header("Aura Energy Cost")]
     [Tooltip("Authored AE cost. Use 0 for free follow-up ultimates.")]

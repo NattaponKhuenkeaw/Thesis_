@@ -473,6 +473,10 @@ public class ActionResolver
             return false;
         }
 
+        if (action is UltimateAction ultimate
+            && (ultimate.inputTrigger == UltimateInputTrigger.Hold) != ctx.ultimateInputHeld)
+            return false;
+
         CombatRuntimeState counters = ctx.runtimeState ?? ctx.passiveController?.RuntimeState;
         if (action.resourceCost > 0 && (counters == null || string.IsNullOrWhiteSpace(action.resourceCounterId)
             || counters.GetCounter(action.resourceCounterId) < action.resourceCost)) return false;

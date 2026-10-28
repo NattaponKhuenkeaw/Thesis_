@@ -84,9 +84,11 @@ public sealed class PlayerJumpState : PlayerState
             return;
         }
 
-        if (fsm.InputBuffer.HasUltimateBuffer && fsm.InputBuffer.ConsumeUltimate())
+        if (fsm.InputBuffer.HasUltimateBuffer)
         {
-            fsm.RouteUltimateInput();
+            bool held = fsm.InputBuffer.UltimateInputHeld;
+            fsm.InputBuffer.ConsumeUltimate();
+            fsm.RouteUltimateInput(held);
             return;
         }
 

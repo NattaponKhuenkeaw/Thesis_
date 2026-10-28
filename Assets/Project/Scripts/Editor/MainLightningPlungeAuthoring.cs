@@ -156,14 +156,15 @@ public static class MainLightningPlungeAuthoring
             source = character.actionResolverTable.standaloneActions.Find(a => a.actionId == MainDimensionSlashAuthoring.CutId)?.GetEntryStep();
         if (source == null) throw new InvalidOperationException("Main's existing QTE damage payload is missing.");
         Undo.RecordObjects(new UnityEngine.Object[] { character, character.actionResolverTable }, "Author Main Lightning Plunge");
-        Configure(character, source, previous?.defaultNext);
+        ExecutionBreakdownAuthoring.Configure(character);
+        Configure(character, source);
         EditorUtility.SetDirty(character);
         AssetDatabase.SaveAssetIfDirty(character);
         AssetDatabase.SaveAssetIfDirty(character.actionResolverTable);
-        Debug.Log("Main QTE authored: LightningPlunge → existing ExecutionBreakdown; enemy-relative start and Heavy impact.");
+        Debug.Log("Main QTE authored: terminal LightningPlunge; Execution Breakdown is a hold Ultimate.");
     }
 
-    public static void Configure(CharacterObject character, AttackStepData source, ComboNode followup = null)
+    public static void Configure(CharacterObject character, AttackStepData source)
     {
         EnsureFolder(Root.TrimEnd('/'));
         Material material = BuildMaterial();
@@ -188,8 +189,6 @@ public static class MainLightningPlungeAuthoring
                     normal.impactTier = DamageImpactTier.Heavy;
                     normal.suppressContactVfx = true;
                 }
-        followup ??= profile.GetIntroComboTree(character.actionResolverTable)?.rootNode?.defaultNext;
-        followup ??= new ComboNode { stepData = ExecutionBreakdownAuthoring.CreateStep() };
         var table = character.actionResolverTable;
         table.qteActions ??= new System.Collections.Generic.List<ComboAction>();
         var action = table.qteActions.Find(a => a != null && a.actionId == ActionId);
@@ -203,8 +202,8 @@ public static class MainLightningPlungeAuthoring
                 actionDamageMultiplier = sourceAction?.actionDamageMultiplier ?? 0f };
             table.qteActions.Add(action);
         }
-        action.comboTree = new ComboTree { treeName = "QTE Lightning Plunge → Execution Breakdown",
-            rootNode = new ComboNode { stepData = intro, defaultNext = followup } };
+        action.comboTree = new ComboTree { treeName = "QTE Lightning Plunge",
+            rootNode = new ComboNode { stepData = intro } };
         profile.introComboTree = null;
         EditorUtility.SetDirty(table);
         BindActor(character, clip);

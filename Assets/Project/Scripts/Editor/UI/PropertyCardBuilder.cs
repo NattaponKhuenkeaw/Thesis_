@@ -762,6 +762,23 @@ namespace CombatEditor.UI
 
                 if (action is UltimateAction ultimate)
                 {
+                    AddSeparator(body, "Ultimate Input");
+                    AddEnumField(body, "Input Trigger", ultimate.inputTrigger, value => {
+                        RecordUndo("Edit Ultimate Input Trigger");
+                        ultimate.inputTrigger = (UltimateInputTrigger)value;
+                        MarkDirtyAndRebuild();
+                    });
+                    if (ultimate.inputTrigger == UltimateInputTrigger.Hold)
+                        AddFloatField(body, "Hold Seconds", ultimate.holdDuration, value => {
+                            RecordUndo("Edit Ultimate Hold Duration");
+                            ultimate.holdDuration = Mathf.Max(0.01f, value);
+                            MarkDirty();
+                        });
+                    AddToggleField(body, "Allow Ultimate Cancel", ultimate.allowUltimateInterrupt, value => {
+                        RecordUndo("Edit Ultimate Cancel");
+                        ultimate.allowUltimateInterrupt = value;
+                        MarkDirty();
+                    });
                     AddSeparator(body, "Aura Energy Cost");
                     AddFloatField(body, "AE Cost", ultimate.energyCost, value => {
                         RecordUndo("Edit Ultimate AE Cost");

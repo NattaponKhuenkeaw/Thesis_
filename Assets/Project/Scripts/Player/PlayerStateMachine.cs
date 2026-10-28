@@ -664,12 +664,17 @@ public class PlayerStateMachine : MonoBehaviour
     /// <summary>
     /// Route ultimate pressed. State-first routing.
     /// </summary>
-    public void RouteUltimateInput()
+    public void RouteUltimateInput(bool held = false)
     {
         if (CurrentState == null || IsCinematicTraversal) return;
         using ActionOutputRoutingScope outputRouting = BeginCurrentActionOutputRouting();
 
-        InputBuffer.BufferUltimate();
+        InputBuffer.BufferUltimate(held: held);
+
+        // A ready follow-up may cut into other states, but never bypass an
+        // Ultimate's own commitment/cancel rules.
+        if (CurrentState is PlayerUltimateState ultimateState && !ultimateState.CanBeInterruptedBy(ActionCategory.Ultimate))
+            return;
 
         if (HasActiveActionWindow(AttackCategory.Ultimate))
         {
